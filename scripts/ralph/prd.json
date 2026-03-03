@@ -1,463 +1,343 @@
 {
-  "project": "BuildDesk UI/UX Audit Improvements",
-  "branchName": "ralph/ui-ux-audit-improvements",
-  "description": "Comprehensive UI/UX improvements identified through a full platform audit covering the homepage, hero, social proof, pricing, testimonials, FAQ, case studies, implementation, footer, header, and sticky CTA components. Improvements target three key areas: (1) Conversion optimization through better CTAs, trust signals, and value propositions, (2) User engagement through better content hierarchy, missing CTAs in key sections, and mobile experience improvements, (3) SEO enhancement through structured data, internal linking, and content gaps. Expected impact: 25-40% improvement in conversion rates, reduced bounce rates, and improved organic search visibility.",
+  "project": "BuildDesk AI Security Defenses & Internal Penetration Testing",
+  "branchName": "ralph/ai-security-defenses",
+  "description": "Comprehensive security hardening initiative driven by analysis of autonomous AI penetration testing tools like Shannon (github.com/KeygraphHQ/shannon). Shannon is an AI-powered pentest framework that autonomously reads source code, identifies vulnerabilities, and executes live exploits against running applications - achieving 96% success rates. It targets XSS, SQL injection, SSRF, broken auth/authz, and command injection using code-aware dynamic testing. This PRD addresses two critical needs: (1) Harden our attack surface against the specific vectors Shannon exploits - removing CSP unsafe directives, adding CSRF/SSRF/rate-limiting protections, and preventing error information leakage, and (2) Build internal security testing capabilities that mirror Shannon's methodology so we can continuously test ourselves. Current gaps: CSP uses unsafe-inline/unsafe-eval, zero CSRF protection, no SSRF prevention in 166+ edge functions, rate limiting is UI-only with no enforcement, and no automated security test suites.",
   "userStories": [
     {
       "id": "US-001",
-      "title": "Add trust signal bar beneath hero CTA with guarantee messaging",
-      "description": "As a visitor, I want to see trust signals immediately after the hero CTA so that I feel confident clicking 'Start Free Trial'. Currently the hero section (src/components/Hero.tsx) has a CTA button that says 'Start Free Trial' with no qualifying information. Add a trust signal strip below the CTA div (ref={ctaRef}) that includes: '14-day free trial', 'No credit card required', 'Cancel anytime', and 'Setup in 30 minutes'. Use small text with checkmark icons in a horizontal row. This is the single highest-impact conversion optimization since trust signals next to CTAs reduce friction by 15-25%.",
+      "title": "Create SSRF prevention utility with URL allowlisting",
+      "description": "As a security engineer, I want a server-side request forgery (SSRF) prevention utility so that our edge functions cannot be tricked into making requests to internal networks or unintended hosts. Shannon specifically targets SSRF vulnerabilities by analyzing code that makes outbound HTTP requests based on user input. Create src/lib/security/ssrfPrevention.ts with: (1) a validateUrl() function that checks URLs against an allowlist of permitted domains and blocks private IP ranges (10.x, 172.16-31.x, 192.168.x, 127.x, 0.0.0.0, ::1, fd00::/8), (2) a sanitizeUrl() function that normalizes URLs to prevent bypass techniques (double encoding, IPv6 embedding, DNS rebinding via octal/hex IP notation, URL parser differentials), (3) a ALLOWED_EXTERNAL_DOMAINS constant with our known integrations (stripe.com, supabase.co, quickbooks.api.intuit.com, googleapis.com, graph.microsoft.com), (4) detection of redirect-based SSRF (flag URLs with redirect parameters). Create comprehensive tests at src/lib/security/__tests__/ssrfPrevention.test.ts.",
       "acceptanceCriteria": [
-        "A trust signal strip appears below the CTA buttons in src/components/Hero.tsx",
-        "Trust strip contains 4 items: '14-day free trial', 'No credit card required', 'Cancel anytime', 'Setup in 30 minutes'",
-        "Each item has a green CheckCircle icon from lucide-react",
-        "Items display horizontally on desktop and wrap to 2x2 grid on mobile",
-        "Text uses text-sm text-muted-foreground styling for subtlety",
-        "Trust strip is visible without scrolling on both desktop and mobile",
+        "src/lib/security/ssrfPrevention.ts exports validateUrl, sanitizeUrl, isPrivateIp, ALLOWED_EXTERNAL_DOMAINS",
+        "validateUrl rejects private IP ranges: 10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16, 127.0.0.0/8, 0.0.0.0, ::1",
+        "validateUrl rejects URLs not in the allowed domains list when strict mode is enabled",
+        "sanitizeUrl handles double-encoded URLs, octal IP notation (0177.0.0.1), hex IP notation (0x7f000001), IPv6-mapped IPv4 (::ffff:127.0.0.1)",
+        "isPrivateIp correctly identifies all RFC 1918 and loopback addresses",
+        "Tests cover at least 25 SSRF bypass techniques including URL parser differentials",
+        "All functions are exported from src/lib/security/index.ts",
         "npm run build passes",
-        "npm run lint passes"
+        "npm run lint passes",
+        "npm run test:run passes"
       ],
       "priority": 1,
-      "passes": true,
-      "notes": "Trust signals strip added below CTA with 4 items and CheckCircle icons"
+      "passes": false
     },
     {
       "id": "US-002",
-      "title": "Add CTA button to TestimonialsSection after social proof stats",
-      "description": "As a visitor reading testimonials, I want a clear next action so that I can convert after being convinced by social proof. Currently the TestimonialsSection (src/components/TestimonialsSection.tsx) has zero CTA buttons - visitors read 6 compelling testimonials with metrics like '$47K overrun prevented' and '5 min month-end close' but have no button to act. Add a centered CTA section after the summary stats (4.9/5 rating, 500+ contractors) with a primary 'Start Free Trial' button and a secondary 'View Pricing' link. Include a brief trust reinforcer like 'Join 500+ contractors saving an average of $78K/year'.",
+      "title": "Harden Content Security Policy by removing unsafe-eval",
+      "description": "As a security engineer, I want to remove unsafe-eval from our CSP so that Shannon-style XSS attacks cannot execute arbitrary JavaScript via eval(), Function(), or setTimeout(string). Currently public/_headers has both 'unsafe-inline' and 'unsafe-eval' in the script-src directive, which effectively disables CSP protection against XSS - the #1 attack vector Shannon targets. Remove 'unsafe-eval' from script-src. This may break some third-party libraries that use eval - if so, use 'unsafe-hashes' with specific script hashes instead. Keep 'unsafe-inline' for now (US-003 addresses it). Also add: (1) require-trusted-types-for 'script' directive to prevent DOM XSS, (2) block-all-mixed-content directive, (3) upgrade-insecure-requests if not already present. Test that the build still produces valid HTML.",
       "acceptanceCriteria": [
-        "A CTA section is added after the summary stats in TestimonialsSection",
-        "Primary button says 'Start Free Trial' with ArrowRight icon, uses variant='hero', links to /auth",
-        "Secondary link says 'View Pricing' with outline variant, links to /#pricing",
-        "Reinforcement text reads 'Join 500+ contractors saving an average of $78K/year'",
-        "CTA section is centered with py-8 spacing",
-        "Buttons use the existing Button component from @/components/ui/button",
+        "public/_headers Content-Security-Policy no longer contains 'unsafe-eval' in script-src",
+        "If any third-party script needs eval, it is accommodated via 'unsafe-hashes' with a specific SHA hash, not via blanket unsafe-eval",
+        "CSP includes require-trusted-types-for 'script' directive",
+        "CSP includes block-all-mixed-content directive",
+        "CSP includes upgrade-insecure-requests directive",
+        "All existing script-src domain allowlists remain intact",
         "npm run build passes",
         "npm run lint passes"
       ],
       "priority": 1,
-      "passes": true,
-      "notes": "CTA section added after testimonials with 'Start Free Trial' and 'View Pricing' buttons"
+      "passes": false
     },
     {
       "id": "US-003",
-      "title": "Add CTA section to FAQ component after questions",
-      "description": "As a visitor who has read FAQ answers, I want a clear path to sign up so that I can take action after my objections are addressed. The FAQ component (src/components/FAQ.tsx) currently ends with no CTA - visitors have their questions answered but then hit a dead end. Add a CTA section below the accordion with heading 'Still Have Questions?', two action paths: (1) 'Start Free Trial' primary button and (2) 'Contact Sales' secondary button linking to mailto:support@build-desk.com, plus a small reassurance line: '14-day free trial. No credit card required.'",
+      "title": "Add CSRF token protection for state-changing operations",
+      "description": "As a security engineer, I want CSRF protection so that attackers cannot forge requests on behalf of authenticated users. Shannon handles complex auth flows and specifically tests for CSRF vulnerabilities. Our current app has ZERO CSRF protection - relying solely on JWT in the Authorization header, which is safe for API calls but NOT for any form submissions or same-origin requests where cookies are sent automatically. Create src/lib/security/csrfProtection.ts implementing the Synchronizer Token Pattern: (1) generateCsrfToken() that creates a cryptographically random token using crypto.getRandomValues(), (2) validateCsrfToken() that compares with constant-time comparison to prevent timing attacks, (3) useCsrfToken() React hook that manages token lifecycle in sessionStorage and provides it for forms, (4) CsrfTokenField React component that renders a hidden input. Create tests at src/lib/security/__tests__/csrfProtection.test.ts.",
       "acceptanceCriteria": [
-        "A CTA section appears below the FAQ accordion in src/components/FAQ.tsx",
-        "Section has heading 'Still Have Questions?' in text-2xl font-bold",
-        "Primary button 'Start Free Trial' with variant='hero' links to /auth",
-        "Secondary button 'Contact Sales' with variant='outline' links to mailto:support@build-desk.com",
-        "Reassurance text '14-day free trial. No credit card required.' appears below buttons",
-        "Section is centered with appropriate spacing (mt-12 pt-12 border-t)",
+        "src/lib/security/csrfProtection.ts exports generateCsrfToken, validateCsrfToken, getCsrfToken",
+        "src/lib/security/csrfProtection.tsx exports useCsrfToken hook and CsrfTokenField component",
+        "generateCsrfToken creates a 32-byte random hex string using crypto.getRandomValues",
+        "validateCsrfToken uses constant-time string comparison (character-by-character with no early exit)",
+        "useCsrfToken hook stores token in sessionStorage with key 'csrf-token' and regenerates on session start",
+        "CsrfTokenField renders <input type='hidden' name='csrf_token' value={token} />",
+        "Tests verify token generation uniqueness, validation correctness, timing-safe comparison",
+        "All exports are re-exported from src/lib/security/index.ts",
         "npm run build passes",
-        "npm run lint passes"
+        "npm run lint passes",
+        "npm run test:run passes"
       ],
       "priority": 1,
-      "passes": true,
-      "notes": "CTA section added below FAQ accordion with 'Still Have Questions?' heading"
+      "passes": false
     },
     {
       "id": "US-004",
-      "title": "Consolidate duplicate CTAs on Pricing cards to single primary action",
-      "description": "As a visitor on the pricing page, I want one clear action per pricing card so that I'm not confused by multiple buttons. Currently each pricing card in src/components/Pricing.tsx has TWO buttons: 'Start Free Trial' (hero variant) AND 'Get Started Now' (outline). These are functionally identical and create decision paralysis. Remove the 'Get Started Now' button from all pricing cards, keeping only 'Start Free Trial' as the primary CTA. For the Enterprise tier, change the CTA to 'Contact Sales' linking to mailto:support@build-desk.com since enterprise buyers prefer talking to sales.",
+      "title": "Create production-ready client-side rate limiter",
+      "description": "As a security engineer, I want client-side rate limiting so that compromised or abusive clients cannot flood our API endpoints. Shannon runs parallel vulnerability pipelines that send many requests simultaneously - rate limiting is the first defense. Our current rate limiting is just an admin UI with no actual enforcement. Create src/lib/security/rateLimiter.ts implementing a Token Bucket algorithm: (1) RateLimiter class with configurable bucket size and refill rate, (2) per-endpoint rate limits with different tiers (auth endpoints: 5/minute, search: 30/minute, data mutations: 60/minute, reads: 120/minute), (3) checkRateLimit() that returns {allowed: boolean, retryAfter: number, remaining: number}, (4) useRateLimit() React hook that wraps API calls with automatic rate limiting, (5) integration point for the existing supabase client wrapper. Create tests at src/lib/security/__tests__/rateLimiter.test.ts.",
       "acceptanceCriteria": [
-        "Each pricing card in Pricing.tsx has exactly ONE CTA button",
-        "Starter and Professional cards have 'Start Free Trial' button with hero variant",
-        "Enterprise card has 'Contact Sales' button linking to mailto:support@build-desk.com",
-        "No 'Get Started Now' button exists anywhere in the Pricing component",
-        "Button styling and spacing remain visually balanced",
+        "src/lib/security/rateLimiter.ts exports RateLimiter class, createEndpointLimiter, DEFAULT_RATE_LIMITS",
+        "RateLimiter implements token bucket with configurable maxTokens, refillRate, refillInterval",
+        "DEFAULT_RATE_LIMITS defines tiers: auth (5/min), search (30/min), mutation (60/min), read (120/min)",
+        "checkRateLimit returns {allowed, retryAfter, remaining} and does not throw",
+        "Rate limiter uses localStorage to persist state across page navigations within a session",
+        "createEndpointLimiter accepts a URL pattern and returns a configured RateLimiter instance",
+        "Tests cover: token consumption, token refill, bucket exhaustion, retry-after calculation, concurrent requests",
+        "All exports are re-exported from src/lib/security/index.ts",
         "npm run build passes",
-        "npm run lint passes"
+        "npm run lint passes",
+        "npm run test:run passes"
       ],
-      "priority": 2,
-      "passes": true,
-      "notes": "Consolidated to single CTA per card; Enterprise uses 'Contact Sales' mailto link"
+      "priority": 1,
+      "passes": false
     },
     {
       "id": "US-005",
-      "title": "Add CTA section to Implementation component",
-      "description": "As a visitor who just read about the implementation process, I want a way to get started so that I can move forward after seeing how easy onboarding is. The Implementation section (src/components/Implementation.tsx) ends with success metrics but has no CTA. Add a CTA section after the success metrics with heading 'Ready to Get Started?', subtext 'Live in 30 days or your money back', a primary 'Start Free Trial' button, and a secondary 'Schedule a Demo' link to /demo.",
+      "title": "Create error information leakage prevention utility",
+      "description": "As a security engineer, I want error responses sanitized so that Shannon-style tools cannot extract internal details from error messages. Shannon uses error messages to refine its attacks - stack traces reveal file paths, database errors reveal schema, and framework errors reveal technology choices. Create src/lib/security/errorSanitizer.ts with: (1) sanitizeError() that strips stack traces, internal file paths, database column names, SQL fragments, and connection strings from error messages, (2) classifyError() that maps raw errors to safe user-facing categories (validation_error, auth_error, not_found, rate_limited, server_error), (3) SafeErrorBoundary React component that catches errors and renders a safe message without leaking internals, (4) SENSITIVE_PATTERNS constant with regex patterns for detecting information leakage (file paths, SQL, stack frames, IP addresses). Create tests at src/lib/security/__tests__/errorSanitizer.test.ts.",
       "acceptanceCriteria": [
-        "A CTA section appears after the success metrics in Implementation.tsx",
-        "Heading reads 'Ready to Get Started?' in text-2xl font-bold centered",
-        "Subtext reads 'Live in 30 days or your money back' in text-muted-foreground",
-        "Primary button 'Start Free Trial' with hero variant links to /auth",
-        "Secondary button 'Schedule a Demo' with outline variant links to /demo",
-        "Section uses centered layout with mt-12 spacing",
+        "src/lib/security/errorSanitizer.ts exports sanitizeError, classifyError, SENSITIVE_PATTERNS, SafeErrorBoundary",
+        "sanitizeError strips: stack traces, file paths (/home/*, /usr/*, C:\\*), SQL keywords in error context, IP addresses, port numbers, database table/column names",
+        "classifyError maps PostgreSQL error codes, HTTP status codes, and Supabase errors to safe categories",
+        "SafeErrorBoundary catches render errors and displays 'Something went wrong' without any technical details",
+        "SENSITIVE_PATTERNS includes at least 10 regex patterns for common information leakage vectors",
+        "Tests verify that real-world error messages from PostgreSQL, Supabase, and Node.js are properly sanitized",
+        "All exports are re-exported from src/lib/security/index.ts",
         "npm run build passes",
-        "npm run lint passes"
+        "npm run lint passes",
+        "npm run test:run passes"
       ],
-      "priority": 2,
-      "passes": true,
-      "notes": "CTA section added after success metrics with trial and demo buttons"
+      "priority": 1,
+      "passes": false
     },
     {
       "id": "US-006",
-      "title": "Improve hero headline and subheadline for specificity and conversion",
-      "description": "As a visitor, I want to immediately understand the specific value BuildDesk provides so that I know this product solves my problem. The current hero headline 'Build Smarter. Profit Faster.' is generic and could apply to any construction software. Change the headline to 'Know Your Real Profit Margins. Every Day.' which directly addresses the core value prop (real-time job costing). Update the subheadline from 'Stop guessing your margins. Track every dollar in real-time...' to 'Catch $40K+ cost overruns weeks before they happen. The only financial-first platform built for contractors who refuse to fly blind.' This is more specific and includes a quantified benefit.",
+      "title": "Create shared security headers utility for edge functions",
+      "description": "As a security engineer, I want all 166+ edge functions to return consistent security headers so that Shannon cannot exploit header inconsistencies. Currently each edge function crafts its own response headers with no standardization. Create supabase/functions/_shared/security-headers.ts with: (1) getSecurityHeaders() returning standard headers (X-Content-Type-Options, X-Frame-Options, Cache-Control for sensitive data, Strict-Transport-Security, X-Request-ID), (2) corsHeaders() for CORS with strict origin validation against an allowlist, (3) createSecureResponse() helper that wraps new Response() with all security headers applied, (4) validateOrigin() that checks request origin against allowed origins. Also create src/lib/security/edgeFunctionHeaders.ts as a reference type definition for frontend awareness.",
       "acceptanceCriteria": [
-        "Hero h1 in src/components/Hero.tsx reads 'Know Your Real' on line 1 and 'Profit Margins. Every Day.' on line 2 with gradient",
-        "The gradient span wraps 'Profit Margins. Every Day.' (replacing 'Profit Faster.')",
-        "Subheadline paragraph reads 'Catch $40K+ cost overruns weeks before they happen. The only financial-first platform built for contractors who refuse to fly blind.'",
-        "All text is properly responsive (text-4xl sm:text-5xl lg:text-6xl xl:text-7xl)",
-        "No change to CTA buttons or other hero elements",
+        "supabase/functions/_shared/security-headers.ts exports getSecurityHeaders, corsHeaders, createSecureResponse, validateOrigin",
+        "getSecurityHeaders returns X-Content-Type-Options: nosniff, X-Frame-Options: DENY, Cache-Control: no-store for auth endpoints, X-Request-ID with unique value",
+        "corsHeaders validates origin against ALLOWED_ORIGINS list and rejects unknown origins",
+        "createSecureResponse accepts body and status, returns Response with all security headers merged",
+        "validateOrigin returns boolean and logs rejected origins",
+        "src/lib/security/edgeFunctionHeaders.ts exports TypeScript types for SecurityHeaders interface",
         "npm run build passes",
         "npm run lint passes"
       ],
       "priority": 2,
-      "passes": true,
-      "notes": "Headline updated to 'Know Your Real Profit Margins. Every Day.' with specific subheadline"
+      "passes": false
     },
     {
       "id": "US-007",
-      "title": "Add social proof count to pricing section header",
-      "description": "As a visitor evaluating pricing, I want to see that other contractors trust this product so that I feel comfortable with the investment. Currently the Pricing section header says 'Investment in Financial Intelligence, Not Just Software' but includes no social proof near the pricing cards. Add a social proof badge above the heading that says 'Trusted by 500+ Contractors' with a Users icon. Also add a line below the description: 'Average customer ROI payback in under 30 days' with a TrendingUp icon.",
+      "title": "Add API request signing with HMAC for sensitive operations",
+      "description": "As a security engineer, I want request signing so that API requests cannot be tampered with or replayed. Shannon intercepts and modifies HTTP requests during exploitation. Create src/lib/security/requestSigning.ts with: (1) signRequest() that generates HMAC-SHA256 signature over method + URL + body + timestamp, (2) verifySignature() for server-side verification, (3) addTimestamp() that adds a request timestamp for replay protection, (4) isRequestFresh() that checks if a request is within a 5-minute window, (5) REQUEST_SIGNING_CONFIG with configurable signing key source and timestamp tolerance. The signing key should be derived from the user's session token, NOT hardcoded. Create tests at src/lib/security/__tests__/requestSigning.test.ts.",
       "acceptanceCriteria": [
-        "A badge reading 'Trusted by 500+ Contractors' with Users icon appears above the pricing section heading",
-        "Badge uses inline-flex styling with bg-secondary/50 border rounded-full",
-        "Text 'Average customer ROI payback in under 30 days' appears below the section description",
-        "ROI text uses TrendingUp icon and text-sm text-green-600 dark:text-green-400 styling",
-        "Both elements are centered and visually balanced",
+        "src/lib/security/requestSigning.ts exports signRequest, verifySignature, addTimestamp, isRequestFresh",
+        "signRequest creates HMAC-SHA256 over canonical request string (method + path + body hash + timestamp)",
+        "verifySignature performs constant-time comparison of expected vs actual signature",
+        "isRequestFresh rejects requests older than 5 minutes (configurable via REQUEST_SIGNING_CONFIG)",
+        "Signing key is derived from session token using HKDF-like derivation, never hardcoded",
+        "Tests cover: valid signatures, tampered body detection, expired timestamp rejection, replay prevention",
+        "All exports are re-exported from src/lib/security/index.ts",
         "npm run build passes",
-        "npm run lint passes"
+        "npm run lint passes",
+        "npm run test:run passes"
       ],
       "priority": 2,
-      "passes": true,
-      "notes": "Social proof badge and ROI payback line added to pricing section header"
+      "passes": false
     },
     {
       "id": "US-008",
-      "title": "Update footer copyright year and add social media link placeholders",
-      "description": "As a visitor, I want to see current copyright and social media presence so that the company appears active and credible. The footer in src/components/Footer.tsx has a hardcoded '© 2025' which is now outdated (it's 2026). Update to use dynamic year via new Date().getFullYear(). Also add a social media links section in the bottom bar with icon links for LinkedIn, Twitter/X, and Facebook using lucide-react icons. These should link to '#' as placeholders until real URLs are configured.",
+      "title": "Implement Trusted Types policy for DOM XSS prevention",
+      "description": "As a security engineer, I want Trusted Types enforced so that DOM-based XSS attacks via innerHTML, document.write, and eval sinks are blocked at the browser level. Shannon targets DOM XSS by finding code that assigns user-controlled strings to dangerous sinks. Create src/lib/security/trustedTypes.ts with: (1) initTrustedTypes() that creates a default policy using window.trustedTypes.createPolicy, (2) the policy's createHTML handler that runs input through DOMPurify, (3) the policy's createScriptURL handler that validates against allowed script origins, (4) createSafeHtml() utility that returns a TrustedHTML value, (5) a feature detection check so the app gracefully degrades in browsers without Trusted Types support. Create tests at src/lib/security/__tests__/trustedTypes.test.ts.",
       "acceptanceCriteria": [
-        "Copyright year in Footer.tsx uses {new Date().getFullYear()} instead of hardcoded '2025'",
-        "Social media icon links appear in the bottom bar next to trust badges",
-        "Icons include LinkedIn (Linkedin icon), Twitter (Twitter icon), Facebook (Facebook icon) from lucide-react",
-        "Icons link to '#' as placeholder URLs",
-        "Icons use text-white/60 hover:text-white transition-colors styling",
-        "Icons are 5x5 size with gap-4 spacing",
+        "src/lib/security/trustedTypes.ts exports initTrustedTypes, createSafeHtml, createSafeScriptUrl, isTrustedTypesSupported",
+        "initTrustedTypes creates a default policy named 'builddesk' that sanitizes HTML via DOMPurify",
+        "createSafeHtml returns TrustedHTML type when Trusted Types is supported, string fallback otherwise",
+        "createSafeScriptUrl validates URLs against ALLOWED_SCRIPT_ORIGINS before creating TrustedScriptURL",
+        "Feature detection uses typeof window.trustedTypes !== 'undefined' for graceful degradation",
+        "Tests mock window.trustedTypes and verify policy creation, HTML sanitization, and script URL validation",
+        "All exports are re-exported from src/lib/security/index.ts",
         "npm run build passes",
-        "npm run lint passes"
+        "npm run lint passes",
+        "npm run test:run passes"
       ],
-      "priority": 3,
-      "passes": true,
-      "notes": "Dynamic copyright year and LinkedIn/Twitter/Facebook social icons added to footer"
+      "priority": 2,
+      "passes": false
     },
     {
       "id": "US-009",
-      "title": "Add newsletter signup form to footer",
-      "description": "As a visitor not ready to buy, I want to subscribe to updates so that I can stay informed and convert later. The footer currently has no lead capture mechanism. Add a newsletter signup section in the company info column (left column) below the address. Include a simple email input with 'Enter your email' placeholder and a 'Subscribe' button. On submit, show a toast success message 'Thanks for subscribing!' using the existing toast from sonner. This captures leads from visitors not ready for a trial.",
+      "title": "Add Subresource Integrity hashes to external scripts",
+      "description": "As a security engineer, I want SRI (Subresource Integrity) on all external scripts so that supply chain attacks via compromised CDNs are detected and blocked. Shannon's reconnaissance phase (WhatWeb) identifies externally loaded resources that could be compromised. Audit index.html and public/_headers for all externally loaded scripts and stylesheets. Create scripts/generate-sri-hashes.js that: (1) fetches each external resource, (2) generates SHA-384 hash, (3) outputs the integrity attribute value. Add integrity and crossorigin='anonymous' attributes to all external script/link tags in index.html. Also create src/lib/security/sriVerification.ts with a verifySriHash() utility for dynamically loaded scripts.",
       "acceptanceCriteria": [
-        "Newsletter signup form appears in the footer company info section",
-        "Form has an email input with placeholder 'Enter your email' and type='email'",
-        "Submit button says 'Subscribe' with ArrowRight icon, uses variant='ghost' with white text",
-        "Form uses flex row layout with gap-2",
-        "On submit, a success toast shows 'Thanks for subscribing!'",
-        "Form prevents default submission and clears input after success",
-        "Input and button use text-sm sizing to fit the footer",
-        "npm run build passes",
-        "npm run lint passes"
-      ],
-      "priority": 3,
-      "passes": true,
-      "notes": "Newsletter signup form added to footer with toast confirmation"
-    },
-    {
-      "id": "US-010",
-      "title": "Improve mobile hero fallback from placeholder text to animated visual",
-      "description": "As a mobile visitor (60%+ of traffic), I want an engaging hero visual so that I don't see a generic 'Interactive 3D on desktop' placeholder. Currently the Hero3DFallback in src/components/Hero.tsx shows a static icon with text 'Interactive 3D on desktop' which is a poor mobile experience. Replace it with a more engaging fallback: a stylized dashboard mockup card showing a project with real-time metrics (Budget: $125K, Spent: $89K, Margin: 28.8%) with a pulsing 'LIVE' indicator. This gives mobile users a preview of the product's value without the 1.3MB 3D component.",
-      "acceptanceCriteria": [
-        "Hero3DFallback in Hero.tsx shows a dashboard-style card instead of just an icon",
-        "Card displays: project name 'Westside Complex', Budget '$125,000', Spent '$89,200', Margin '28.8%'",
-        "A green 'LIVE' badge with animate-pulse dot appears in the card header",
-        "Card uses rounded-2xl bg-card border shadow-xl styling",
-        "A simple progress bar shows budget utilization (71.4%) in green",
-        "Card is centered in the fallback container with proper padding",
-        "Overall visual fits within the existing h-[400px] sm:h-[500px] container",
+        "scripts/generate-sri-hashes.js exists and can generate SRI hashes for a list of URLs",
+        "All external script tags in index.html have integrity='sha384-...' and crossorigin='anonymous' attributes",
+        "All external stylesheet link tags in index.html have integrity and crossorigin attributes",
+        "src/lib/security/sriVerification.ts exports verifySriHash and loadScriptWithSri functions",
+        "loadScriptWithSri creates script elements with integrity attributes for dynamic script loading",
+        "If no external scripts exist in index.html, document this finding and still create the utilities for future use",
         "npm run build passes",
         "npm run lint passes"
       ],
       "priority": 2,
-      "passes": true,
-      "notes": "Hero3DFallback replaced with dashboard mockup card showing real-time metrics"
+      "passes": false
+    },
+    {
+      "id": "US-010",
+      "title": "Create comprehensive XSS payload test suite",
+      "description": "As a security engineer, I want automated XSS testing so that we catch the same vulnerabilities Shannon would exploit. Shannon achieved 96% success rate partly through comprehensive XSS payload libraries. Create src/lib/security/__tests__/xssPayloads.test.ts with at least 50 XSS test vectors organized by category: (1) Basic script injection (<script>alert(1)</script> and variants), (2) Event handler injection (onerror, onload, onfocus, onmouseover), (3) SVG/MathML-based XSS, (4) Data URI attacks (javascript:, data:text/html), (5) Encoding bypasses (HTML entities, URL encoding, Unicode, double encoding), (6) DOM clobbering, (7) Template literal injection, (8) CSS-based XSS (expression(), url(javascript:)), (9) Mutation XSS (mXSS), (10) Polyglot XSS payloads. Each payload should be tested against sanitizeHtml, sanitizeInput, and stripHtml from our security utilities.",
+      "acceptanceCriteria": [
+        "src/lib/security/__tests__/xssPayloads.test.ts exists with at least 50 distinct XSS payloads",
+        "Payloads are organized into at least 8 categories matching the description",
+        "Each payload is tested against sanitizeHtml(), sanitizeInput(), and stripHtml()",
+        "Every test asserts that the output contains no executable JavaScript (no <script, no javascript:, no on*= event handlers)",
+        "Test file includes a PAYLOADS constant array that can be extended with new vectors",
+        "Tests include polyglot payloads that combine multiple bypass techniques",
+        "All tests pass - if any sanitization function fails, the test documents it as a known gap with a TODO",
+        "npm run build passes",
+        "npm run lint passes",
+        "npm run test:run passes"
+      ],
+      "priority": 3,
+      "passes": false
     },
     {
       "id": "US-011",
-      "title": "Replace text-only company logos with styled logo badges in SocialProof",
-      "description": "As a visitor, I want to see professional company logos so that the social proof feels authentic. Currently the SocialProof component (src/components/SocialProof.tsx) and the Hero component both use plain text spans for company names ('ACME Build', 'ConstructCo', etc.) which looks unprofessional. Replace the text-only company logos in both SocialProof.tsx and Hero.tsx with styled badge components that have a subtle background, border, and monospace font to look like real company logos without requiring actual image assets.",
+      "title": "Create SQL injection payload test suite",
+      "description": "As a security engineer, I want automated SQL injection testing so that we verify our parameterized queries and input sanitization hold up against real attack payloads. Shannon targets SQL injection by analyzing database query patterns in source code. Create src/lib/security/__tests__/sqlInjection.test.ts with at least 40 SQLi test vectors: (1) Classic UNION-based injection, (2) Boolean-based blind injection, (3) Time-based blind injection payloads, (4) Stacked queries, (5) Error-based extraction, (6) Comment-based bypass (--,/**/,#), (7) Encoding bypasses (hex, char(), unicode), (8) Second-order injection payloads, (9) NoSQL injection patterns (for any MongoDB-like queries), (10) ORM bypass techniques. Test each payload against sanitizeSqlInput and the Zod validation schemas to verify they are properly neutralized.",
       "acceptanceCriteria": [
-        "Company names in SocialProof.tsx logo section render as styled badges not plain spans",
-        "Company names in Hero.tsx social proof section render as styled badges not plain spans",
-        "Each badge has bg-secondary/30 border border-border/50 rounded-lg px-4 py-2 styling",
-        "Company text uses font-bold tracking-wider uppercase text-sm",
-        "Badges have subtle hover effect (hover:bg-secondary/50 transition-colors)",
-        "Layout remains responsive: flex-wrap on mobile, single row on desktop",
-        "Both SocialProof.tsx and Hero.tsx use the same badge styling for consistency",
+        "src/lib/security/__tests__/sqlInjection.test.ts exists with at least 40 distinct SQLi payloads",
+        "Payloads are organized into at least 8 categories matching the description",
+        "Each payload is tested against sanitizeSqlInput() from src/lib/security/sanitize.ts",
+        "Each payload is also tested against relevant Zod schemas from src/lib/validation/schemas.ts",
+        "Tests verify that dangerous SQL characters and keywords are stripped or escaped",
+        "Test file includes a SQL_PAYLOADS constant array that can be extended",
+        "Tests include second-order injection payloads (data that becomes dangerous after storage and retrieval)",
+        "All tests pass",
         "npm run build passes",
-        "npm run lint passes"
+        "npm run lint passes",
+        "npm run test:run passes"
       ],
       "priority": 3,
-      "passes": true,
-      "notes": "Company logos styled as badges with bg-secondary/30 border rounded-lg in both SocialProof and Hero"
+      "passes": false
     },
     {
       "id": "US-012",
-      "title": "Add mid-section CTA to ProblemSolution component between problem and solution",
-      "description": "As a visitor who just read about the pain points, I want to take action at peak emotional impact so that I can convert when most motivated. The ProblemSolution component (src/components/ProblemSolution.tsx) has a problem section and solution section but no CTA between them. The gap between problem articulation and solution presentation is the peak attention moment. Add a centered CTA bridge between the problem grid and solution grid with text 'See How BuildDesk Catches Overruns in Real-Time' and a primary CTA button 'Start Free Trial' linking to /auth.",
+      "title": "Create authentication bypass test suite",
+      "description": "As a security engineer, I want automated auth bypass testing so that we verify our authentication flows are resistant to the techniques Shannon uses. Shannon specifically handles complex auth flows including TOTP and OAuth and tests for bypass opportunities. Create src/lib/security/__tests__/authBypass.test.ts testing: (1) Session fixation resistance (verify new session token after login), (2) JWT tampering (modified payload, algorithm confusion, empty signature), (3) Role escalation (modifying role in cached profile), (4) Token replay after logout, (5) Concurrent session limits, (6) Brute force protection effectiveness (verify lockout after MAX_FAILED_ATTEMPTS), (7) OTP bypass attempts (reuse, expired, wrong format), (8) User enumeration via timing differences. Test against checkLoginAttempt, the AuthContext session management, and the securityService permission checks.",
       "acceptanceCriteria": [
-        "A CTA bridge section appears between the problem grid and solution grid in ProblemSolution.tsx",
-        "Bridge has centered text 'See How BuildDesk Catches Overruns in Real-Time' in text-xl font-semibold",
-        "Primary button 'Start Free Trial' with variant='hero' links to /auth with ArrowRight icon",
-        "Bridge section uses py-8 spacing with a subtle border-t and border-b border-border/30",
-        "Section is visually distinct but not overwhelming (uses bg-construction-orange/5 rounded-2xl p-8)",
-        "Imports Link from react-router-dom and Button from ui/button",
+        "src/lib/security/__tests__/authBypass.test.ts exists with at least 30 test cases",
+        "Tests cover all 8 categories listed in the description",
+        "JWT tampering tests verify that modified tokens are rejected (using mock Supabase auth)",
+        "Role escalation tests verify that cached profile role changes are detected via authoritative RPC lookup",
+        "Brute force tests verify lockout triggers at exactly MAX_FAILED_ATTEMPTS (5) and exponential backoff works",
+        "Session management tests verify tokens are invalidated after logout",
+        "Tests use proper mocking of supabase client and AuthContext internals",
+        "All tests pass",
         "npm run build passes",
-        "npm run lint passes"
+        "npm run lint passes",
+        "npm run test:run passes"
       ],
       "priority": 3,
-      "passes": true,
-      "notes": "CTA bridge added between problem and solution grids with 'Start Free Trial' button"
+      "passes": false
     },
     {
       "id": "US-013",
-      "title": "Add competitor names to comparison table in FinancialIntelligenceShowcase",
-      "description": "As a visitor comparing options, I want to see specific competitor names so that I know exactly how BuildDesk compares to alternatives I'm considering. The comparison table in FinancialIntelligenceShowcase.tsx (src/components/FinancialIntelligenceShowcase.tsx) uses the generic label 'Others' in the third column header. Replace 'Others' with 'Traditional PM Tools' and add a subtle note below the table: 'Compared to Procore, Buildertrend, and CoConstruct based on publicly available feature sets.' This is more credible and helps SEO for competitor comparison queries.",
+      "title": "Create SSRF bypass test suite",
+      "description": "As a security engineer, I want automated SSRF bypass testing against our SSRF prevention utility (US-001) so that we verify it catches the techniques Shannon uses for server-side request forgery. Create src/lib/security/__tests__/ssrfBypass.test.ts testing at least 30 bypass techniques: (1) DNS rebinding (domains that resolve to internal IPs), (2) IPv6 address variations (::ffff:127.0.0.1, [::1], 0:0:0:0:0:ffff:7f00:0001), (3) Octal IP notation (0177.0.0.1), (4) Hex IP notation (0x7f000001), (5) Decimal IP notation (2130706433), (6) URL parser differentials (@, #, ?, // tricks), (7) Double URL encoding, (8) Redirect-based SSRF, (9) Protocol smuggling (gopher://, file://, dict://), (10) Cloud metadata endpoints (169.254.169.254, metadata.google.internal). Each bypass attempt should be tested against validateUrl and isPrivateIp from the SSRF prevention utility.",
       "acceptanceCriteria": [
-        "Table header third column reads 'Traditional PM Tools' instead of 'Others'",
-        "A note appears below the table: 'Compared to Procore, Buildertrend, and CoConstruct based on publicly available feature sets.'",
-        "Note uses text-xs text-muted-foreground italic text-center mt-4 styling",
-        "No other changes to the table structure or content",
+        "src/lib/security/__tests__/ssrfBypass.test.ts exists with at least 30 SSRF bypass test cases",
+        "Tests cover all 10 categories listed in the description",
+        "Every test verifies that validateUrl or isPrivateIp correctly blocks the bypass attempt",
+        "Cloud metadata endpoint tests cover AWS (169.254.169.254), GCP (metadata.google.internal), and Azure (169.254.169.254/metadata)",
+        "URL parser differential tests include @ symbol, fragment (#), and backslash tricks",
+        "Protocol smuggling tests verify rejection of gopher://, file://, dict://, ftp:// schemes",
+        "Test file includes a SSRF_BYPASSES constant array that can be extended",
+        "All tests pass (if SSRF utility from US-001 is not yet built, create it as part of this story)",
         "npm run build passes",
-        "npm run lint passes"
+        "npm run lint passes",
+        "npm run test:run passes"
       ],
       "priority": 3,
-      "passes": true,
-      "notes": "Renamed 'Others' to 'Traditional PM Tools' with competitor footnote"
+      "passes": false
     },
     {
       "id": "US-014",
-      "title": "Add structured data (Review schema) to TestimonialsSection for SEO",
-      "description": "As the platform, I want structured review data on the testimonials so that Google can display rich review snippets in search results. The TestimonialsSection (src/components/TestimonialsSection.tsx) displays 6 testimonials but has no Schema.org Review structured data. Add a JSON-LD script block that includes an AggregateRating and individual Review schemas for all 6 testimonials. Use the existing testimonial data (author, quote, rating) to populate the schema. This can significantly improve click-through rates from search results.",
+      "title": "Create security regression test framework with known vulnerability manifest",
+      "description": "As a security engineer, I want a regression test framework so that previously fixed vulnerabilities can never be reintroduced. Shannon finds regressions in previously patched code. Create src/lib/security/__tests__/securityRegression.test.ts that imports and runs ALL security test suites as a single comprehensive gate. Also create src/lib/security/vulnerabilityManifest.ts containing a KNOWN_VULNERABILITIES array documenting each vulnerability that has been identified and fixed, including: CVE/ID, description, affected file, fix date, regression test reference. The regression test file should verify each entry in the manifest still passes. Add a npm script 'test:security' to package.json that runs only the security test files.",
       "acceptanceCriteria": [
-        "A JSON-LD script tag is rendered in TestimonialsSection with @type: 'Product'",
-        "Schema includes aggregateRating with ratingValue 4.9, reviewCount 500, bestRating 5",
-        "Schema includes an array of 6 Review objects with author, reviewBody, and reviewRating",
-        "Each Review has @type 'Review', author as Person, reviewRating as Rating with ratingValue 5",
-        "Schema is valid JSON-LD (can be verified at schema.org)",
-        "Script tag uses type='application/ld+json' and dangerouslySetInnerHTML",
+        "src/lib/security/__tests__/securityRegression.test.ts exists and imports all security test suites",
+        "src/lib/security/vulnerabilityManifest.ts exports KNOWN_VULNERABILITIES array with TypeScript type KnownVulnerability",
+        "KnownVulnerability type includes: id, severity (critical/high/medium/low), description, affectedFile, fixDate, regressionTestFile",
+        "Manifest includes at least 5 entries for known issues (hardcoded JWT removed, CSP gaps, missing CSRF, etc.)",
+        "Regression test iterates the manifest and verifies each listed regression test file exists",
+        "package.json has script 'test:security' that runs 'vitest run src/lib/security'",
         "npm run build passes",
-        "npm run lint passes"
+        "npm run lint passes",
+        "npm run test:security passes (or npm run test:run passes)"
       ],
       "priority": 3,
-      "passes": true,
-      "notes": "JSON-LD Review schema added with AggregateRating and 6 individual Reviews"
+      "passes": false
     },
     {
       "id": "US-015",
-      "title": "Improve FAQ answers with bullet points and internal links",
-      "description": "As a visitor reading FAQ answers, I want scannable answers with links to learn more so that I can quickly find relevant information. Currently FAQ answers in src/components/FAQ.tsx are long paragraphs that are hard to scan. Refactor the top 4 FAQ answers to use bullet points for key information and add internal links where relevant (e.g., link 'real-time job costing' to /features/job-costing, link 'pricing' mentions to /#pricing, link 'QuickBooks' mentions to /integrations). Keep the full answer content but restructure for scannability.",
+      "title": "Create dependency vulnerability scanner script for CI",
+      "description": "As a security engineer, I want automated dependency scanning so that known vulnerabilities in our npm packages are caught before deployment. Shannon's reconnaissance phase (WhatWeb, Schemathesis) identifies technology versions to find known CVEs. Create scripts/security-audit.sh that: (1) runs npm audit --json and parses results, (2) fails on critical or high severity vulnerabilities, (3) supports an allowlist file (scripts/audit-allowlist.json) for known exceptions with expiry dates, (4) outputs a human-readable summary with affected packages and remediation advice, (5) returns exit code 0 (pass) or 1 (fail) for CI integration. Also create scripts/audit-allowlist.json with the initial allowlist structure. Add npm script 'security:audit' to package.json.",
       "acceptanceCriteria": [
-        "First 4 FAQ answers in FAQ.tsx use bullet points (ul/li elements) for key features/comparisons",
-        "FAQ about Procore links 'real-time job costing' to /features/job-costing",
-        "FAQ about pricing links 'pricing page' to /#pricing",
-        "FAQ about QuickBooks links 'integrations' to /integrations",
-        "FAQ about implementation links 'implementation process' to /#implementation",
-        "Links use Link component from react-router-dom or anchor tags for hash links",
-        "Links use text-construction-orange hover:underline styling",
-        "Bullet points maintain the same informational content, just restructured",
+        "scripts/security-audit.sh exists and is executable",
+        "Script runs npm audit --json and parses the JSON output",
+        "Script fails (exit 1) if any critical or high severity vulnerabilities are found not in the allowlist",
+        "scripts/audit-allowlist.json exists with structure: {allowlist: [{id: string, reason: string, expires: string}]}",
+        "Allowlisted vulnerabilities with expired dates are no longer suppressed",
+        "Script outputs a summary table with: package name, severity, advisory URL, and whether it's allowlisted",
+        "package.json has script 'security:audit' that runs 'bash scripts/security-audit.sh'",
         "npm run build passes",
         "npm run lint passes"
       ],
       "priority": 3,
-      "passes": true,
-      "notes": "Top 4 FAQ answers restructured with bullet points, internal links to features/pricing/integrations"
+      "passes": false
     },
     {
       "id": "US-016",
-      "title": "Add annual savings callout to pricing billing toggle",
-      "description": "As a visitor evaluating pricing, I want to see the exact dollar savings for annual billing so that I don't have to calculate it myself. The Pricing component has a monthly/annual toggle but doesn't prominently show the actual dollar amount saved. Add a visible callout next to or below the billing toggle that shows the savings when annual is selected, e.g., 'Save $840/year on Professional plan' in green text with a DollarSign icon. This should dynamically calculate based on the selected plan's monthly price.",
+      "title": "Create security monitoring hooks for client-side anomaly detection",
+      "description": "As a security engineer, I want client-side security monitoring so that suspicious patterns are detected and logged before they become full exploits. Shannon runs parallel attack pipelines - monitoring can detect the recon phase. Create src/hooks/useSecurityMonitor.ts with: (1) detection of rapid sequential failed auth attempts from the client, (2) detection of unusual API call patterns (many different endpoints hit in quick succession - recon behavior), (3) detection of DOM manipulation attempts (MutationObserver watching for injected scripts), (4) detection of devtools open (debugger detection for anti-tampering), (5) logSecurityEvent() that batches events and sends to the audit log. The hook should be lightweight and not impact performance - use requestIdleCallback for non-critical logging. Create tests at src/hooks/__tests__/useSecurityMonitor.test.ts.",
       "acceptanceCriteria": [
-        "When annual billing is selected, a savings callout appears near the toggle",
-        "Callout shows specific dollar savings (e.g., 'Save $840/year' for the Professional plan at $350/mo)",
-        "Callout uses text-green-600 dark:text-green-400 text-sm font-medium styling",
-        "Callout includes a DollarSign or BadgePercent icon",
-        "Callout smoothly appears/disappears with transition when toggling billing period",
-        "When monthly is selected, the callout changes to 'Switch to annual to save 20%'",
+        "src/hooks/useSecurityMonitor.ts exports useSecurityMonitor hook",
+        "Hook detects rapid failed auth attempts (more than 3 in 60 seconds) and logs a 'brute_force_attempt' event",
+        "Hook detects rapid diverse API calls (more than 20 unique endpoints in 30 seconds) and logs a 'recon_behavior' event",
+        "Hook uses MutationObserver to detect injected script elements and logs 'dom_injection_attempt' events",
+        "logSecurityEvent batches events using requestIdleCallback and flushes every 10 seconds or on page unload",
+        "Hook is tree-shakeable and adds less than 2KB to bundle size",
+        "Tests verify detection thresholds and event batching using fake timers",
         "npm run build passes",
-        "npm run lint passes"
+        "npm run lint passes",
+        "npm run test:run passes"
       ],
-      "priority": 3,
-      "passes": true,
-      "notes": "Annual savings callout added near billing toggle showing dollar amount saved"
+      "priority": 4,
+      "passes": false
     },
     {
       "id": "US-017",
-      "title": "Add scroll progress indicator to homepage",
-      "description": "As a visitor scrolling the long homepage, I want to see how far I've scrolled so that I know how much content remains and feel oriented. The homepage (src/pages/Index.tsx) is a very long single page with 12+ sections but no visual progress indicator. Add a thin progress bar fixed at the top of the viewport (below the header) that fills from left to right as the user scrolls. Use construction-orange color and 2px height. This increases engagement metrics and reduces premature exits.",
+      "title": "Create penetration test configuration and attack surface documentation",
+      "description": "As a security engineer, I want a pentest configuration file so that we can run Shannon or similar AI pentest tools against our own application for continuous security validation. Create src/config/pentest.config.ts that documents: (1) all API endpoints and their expected auth requirements, (2) all form inputs and their validation rules, (3) all file upload endpoints and allowed MIME types, (4) all URL parameters that accept user input, (5) all WebSocket channels and their auth requirements. Also create scripts/run-security-scan.sh that sets up the test environment and runs a basic security scan using npm audit and our test:security suite. This configuration serves as the 'scope document' for internal or external penetration testing.",
       "acceptanceCriteria": [
-        "A fixed progress bar appears at the top of the page in Index.tsx, just below the sticky header (top-16 for h-16 header)",
-        "Progress bar is 2px height with bg-construction-orange fill",
-        "Bar width reflects scroll percentage (0% at top, 100% at bottom)",
-        "Bar uses fixed positioning with z-40 (below header z-50)",
-        "Background track is transparent or very subtle (bg-border/20)",
-        "Progress updates smoothly with CSS transition or requestAnimationFrame",
-        "Bar is only visible on the homepage, not on dashboard or other pages",
+        "src/config/pentest.config.ts exports ATTACK_SURFACE with TypeScript types",
+        "ATTACK_SURFACE.endpoints documents at least 20 API endpoints with method, path, auth requirement, input parameters",
+        "ATTACK_SURFACE.forms documents at least 10 form inputs with field names, validation rules, sanitization applied",
+        "ATTACK_SURFACE.fileUploads documents file upload endpoints with allowed MIME types and size limits",
+        "ATTACK_SURFACE.websockets documents real-time channels with auth requirements",
+        "scripts/run-security-scan.sh exists and runs npm audit + npm run test:security in sequence",
+        "Script outputs a combined security report summary",
         "npm run build passes",
         "npm run lint passes"
       ],
       "priority": 4,
-      "passes": true,
-      "notes": "Scroll progress bar added at top-16 below header with construction-orange fill"
+      "passes": false
     },
     {
       "id": "US-018",
-      "title": "Add back-to-top button on homepage",
-      "description": "As a visitor who has scrolled deep into the homepage, I want a quick way to return to the top so that I can navigate back to the hero or header navigation. The homepage has 12+ sections and no back-to-top button. Add a floating back-to-top button that appears after scrolling past 50% of the page. Place it fixed at bottom-20 right-4 (above the sticky CTA). Use a ChevronUp icon in a circular button with the construction-orange color scheme.",
+      "title": "Add security smoke tests to CI pipeline",
+      "description": "As a security engineer, I want security tests to run automatically in CI so that no PR can merge with known security regressions. Shannon finds regressions in patches - CI enforcement prevents this. Update .github/workflows/ci.yml to add a 'security' job that: (1) runs npm run test:security (all security unit tests), (2) runs npm run security:audit (dependency vulnerability check), (3) runs a grep-based secret scan (search for hardcoded tokens, private keys, passwords in source), (4) verifies that public/_headers CSP does not contain unsafe-eval. The security job should run in parallel with existing lint/typecheck/test jobs and must pass for PR merge. Also create scripts/secret-scan.sh that greps for common secret patterns (AWS keys, JWT tokens, private keys, passwords in config).",
       "acceptanceCriteria": [
-        "A back-to-top button appears in Index.tsx after scrolling past 50% of page height",
-        "Button is fixed at bottom-20 right-4 positioning (above StickyDemoCTA)",
-        "Button uses a circular shape (rounded-full h-10 w-10)",
-        "Button contains ChevronUp icon from lucide-react",
-        "Button uses bg-construction-orange text-white hover:bg-construction-orange/90 styling",
-        "Clicking scrolls to top with smooth behavior (window.scrollTo with behavior: 'smooth')",
-        "Button has subtle shadow and transition animation on appear/disappear",
-        "Button has aria-label='Back to top' for accessibility",
+        ".github/workflows/ci.yml has a 'security' job that runs security-related checks",
+        "Security job runs: npm run test:security, npm run security:audit, bash scripts/secret-scan.sh",
+        "Security job includes a step that greps public/_headers for unsafe-eval and fails if found",
+        "scripts/secret-scan.sh exists and scans for: AWS access keys (AKIA*), JWT tokens (eyJ*), RSA private keys, password= in config files",
+        "Secret scan excludes node_modules, .git, dist, and test fixture files",
+        "Security job runs in parallel with existing CI jobs (not blocking lint or tests)",
         "npm run build passes",
         "npm run lint passes"
       ],
       "priority": 4,
-      "passes": true,
-      "notes": "Back-to-top floating button added at bottom-20 right-4, appears after 50% scroll"
-    },
-    {
-      "id": "US-019",
-      "title": "Add date timestamps to testimonials for recency proof",
-      "description": "As a visitor reading testimonials, I want to see when reviews were written so that I know they're recent and the platform is actively used. Currently the 6 testimonials in TestimonialsSection.tsx have no dates, which makes them feel potentially outdated. Add a date field to each testimonial object and display it in the card. Use dates within the last 6 months (e.g., 'January 2026', 'December 2025') to show recency. Display the date in text-xs text-muted-foreground below the author info.",
-      "acceptanceCriteria": [
-        "Each testimonial object in TestimonialsSection.tsx has a 'date' field (string format: 'Month YYYY')",
-        "Dates are distributed across recent months (October 2025 through February 2026)",
-        "Date is displayed below the author/company info in each testimonial card",
-        "Date text uses text-xs text-muted-foreground styling",
-        "Date format is consistent across all 6 testimonials",
-        "No other changes to testimonial card layout or content",
-        "npm run build passes",
-        "npm run lint passes"
-      ],
-      "priority": 4,
-      "passes": true,
-      "notes": "Date timestamps added to all 6 testimonials (Oct 2025 - Feb 2026)"
-    },
-    {
-      "id": "US-020",
-      "title": "Add Offer structured data schema to Pricing component for SEO",
-      "description": "As the platform, I want structured pricing data so that Google can display pricing information in search results. The Pricing component has no Schema.org structured data for its pricing tiers. Add a JSON-LD script block with Product schema containing multiple Offer entries for each pricing tier (Starter, Professional, Enterprise) including price, currency, availability, and billing cycle. This helps search engines understand the pricing model and can improve visibility for 'construction software pricing' queries.",
-      "acceptanceCriteria": [
-        "A JSON-LD script tag is rendered in the Pricing component",
-        "Schema uses @type 'Product' with name 'BuildDesk Construction Management Software'",
-        "Schema includes offers array with one Offer per pricing tier",
-        "Each Offer has @type 'Offer', price, priceCurrency 'USD', availability 'InStock'",
-        "Offers include priceValidUntil set to end of current year",
-        "Each offer has description matching the tier name",
-        "Script tag uses type='application/ld+json'",
-        "npm run build passes",
-        "npm run lint passes"
-      ],
-      "priority": 4,
-      "passes": true,
-      "notes": "JSON-LD Offer schema added for all 3 pricing tiers with price, currency, availability"
-    },
-    {
-      "id": "US-021",
-      "title": "Add loading text to lazy section fallbacks on homepage",
-      "description": "As a visitor on a slow connection, I want to see meaningful loading indicators so that I don't think the page is broken when sections are still loading. Currently the homepage uses SectionFallback components that are just animated pulse divs with no text. On slow connections, these appear as grey rectangles which can seem broken. Update the SectionFallback component in Index.tsx to include a subtle 'Loading...' text centered in the fallback area. Also update the PerformanceLazyWrapper fallbacks to match.",
-      "acceptanceCriteria": [
-        "SectionFallback component in Index.tsx shows centered 'Loading...' text",
-        "Text uses text-sm text-muted-foreground/50 styling",
-        "Text is vertically and horizontally centered within the fallback div (flex items-center justify-center)",
-        "Fallback still has the animate-pulse background effect",
-        "PerformanceLazyWrapper fallbacks in Index.tsx are updated to use SectionFallback instead of plain divs",
-        "Loading text does not flash on fast connections (only visible during actual loading)",
-        "npm run build passes",
-        "npm run lint passes"
-      ],
-      "priority": 4,
-      "passes": true,
-      "notes": "SectionFallback updated with centered 'Loading...' text"
-    },
-    {
-      "id": "US-022",
-      "title": "Add StickyDemoCTA mobile optimization",
-      "description": "As a mobile visitor, I want the sticky CTA to not obstruct my view so that I can read content without interruption. The StickyDemoCTA (src/components/StickyDemoCTA.tsx) appears as a floating card at bottom-4 right-4 on all screen sizes. On mobile, this takes up significant screen real estate and can be intrusive. Modify it to render as a slim bottom bar on mobile (screens below md breakpoint) instead of the floating card. The mobile version should be a full-width bar with just the CTA text and button in a single row.",
-      "acceptanceCriteria": [
-        "On screens below md breakpoint, StickyDemoCTA renders as a full-width bottom bar",
-        "Mobile bar is fixed at bottom-0 with full width and h-12 height",
-        "Mobile bar shows 'Try BuildDesk Free' text and a compact 'Start Trial' button in a single row",
-        "Mobile bar has bg-construction-dark text-white styling for visibility",
-        "On md and above screens, the existing floating card design is preserved",
-        "Close/dismiss functionality works for both mobile bar and desktop card",
-        "Mobile bar has subtle shadow-lg for elevation",
-        "npm run build passes",
-        "npm run lint passes"
-      ],
-      "priority": 4,
-      "passes": true,
-      "notes": "Mobile: slim bottom bar; Desktop: floating card preserved. Dismiss works for both"
-    },
-    {
-      "id": "US-023",
-      "title": "Add industry-specific value props to hero badge rotation",
-      "description": "As a visitor from a specific construction niche, I want to see that BuildDesk understands my industry so that I know it's relevant to me. The hero badge currently shows a static 'New: AI-Powered Estimation' message. Add a rotating badge that cycles through 3-4 messages every 4 seconds: 'New: AI-Powered Estimation', 'Residential Contractors Save 23% on Margins', 'Commercial Builders: 5-Min Monthly Close', 'Trusted by 500+ Construction Pros'. Use a simple fade transition between messages.",
-      "acceptanceCriteria": [
-        "Hero badge in Hero.tsx rotates through 4 different messages",
-        "Messages cycle every 4 seconds using setInterval in useEffect",
-        "Transition uses opacity fade (transition-opacity duration-300)",
-        "Messages are: 'New: AI-Powered Estimation', 'Residential: Save 23% on Margins', 'Commercial: 5-Min Monthly Close', 'Trusted by 500+ Contractors'",
-        "Rotation pauses on hover for readability",
-        "Rotation uses functional state update to avoid stale closures",
-        "Interval is cleaned up in useEffect return function",
-        "npm run build passes",
-        "npm run lint passes"
-      ],
-      "priority": 4,
-      "passes": true,
-      "notes": "4 rotating badge messages with 4s interval, pause on hover, cleanup on unmount"
-    },
-    {
-      "id": "US-024",
-      "title": "Add comparison table rows to FinancialIntelligenceShowcase",
-      "description": "As a visitor evaluating BuildDesk, I want to see more feature comparisons so that I understand the full scope of BuildDesk's advantages. The comparison table in FinancialIntelligenceShowcase.tsx only has 4 rows, all showing BuildDesk as 'yes' and others as 'no'. This feels one-sided and lacks credibility. Add 4 more comparison rows including some where competitors also have checkmarks to add honesty: 'Gantt Chart Scheduling' (both yes), 'Photo Documentation' (both yes), 'GPS Time Tracking' (BuildDesk yes, others partial), 'QuickBooks 2-Way Sync' (BuildDesk yes, others partial). Add a partial/yellow indicator for 'partial' support.",
-      "acceptanceCriteria": [
-        "Comparison table has 8 rows total (4 existing + 4 new)",
-        "New rows: 'Gantt Chart Scheduling' (both true), 'Photo Documentation' (both true), 'GPS Time Tracking' (us true, them 'partial'), 'QuickBooks 2-Way Sync' (us true, them 'partial')",
-        "Partial support shows an amber/yellow circle with a minus icon instead of check or X",
-        "Partial indicator uses bg-amber-500 text-white styling",
-        "Existing 4 rows remain unchanged",
-        "Table remains horizontally scrollable on mobile",
-        "npm run build passes",
-        "npm run lint passes"
-      ],
-      "priority": 4,
-      "passes": true,
-      "notes": "4 new rows added with partial amber indicator; table now has 8 honest comparison rows"
-    },
-    {
-      "id": "US-025",
-      "title": "Add dark mode hover state fix for navigation links in header",
-      "description": "As a user in dark mode, I want navigation links to be clearly visible so that I can navigate the site easily. The Header.tsx navigation links use text-construction-dark for their default color which may have poor contrast in dark mode. Add dark:text-white to the navigation link classes in both desktop nav and mobile menu. Also ensure the hover state (hover:text-construction-orange) works correctly in dark mode.",
-      "acceptanceCriteria": [
-        "Desktop nav links in Header.tsx include dark:text-gray-200 class",
-        "Mobile menu links include dark:text-gray-200 class",
-        "Hover state text-construction-orange works in both light and dark mode",
-        "Sign In button includes dark mode text color",
-        "Mobile menu border color is visible in dark mode",
-        "No change to the overall header background or structure",
-        "npm run build passes",
-        "npm run lint passes"
-      ],
-      "priority": 5,
-      "passes": true,
-      "notes": "dark:text-gray-200 added to desktop/mobile nav links and sign-in button"
+      "passes": false
     }
   ]
 }
