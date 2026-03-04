@@ -188,6 +188,10 @@
     </script>
 
     <!-- Google Analytics - Deferred loading for better FCP (web only) -->
+    <!-- US-009 SRI Note: GTM is loaded dynamically below. Its content changes on every
+         request so a static integrity hash is not feasible. For any future version-pinned
+         external scripts, use loadScriptWithSri() from src/lib/security/sriVerification.ts
+         or add integrity="sha384-..." crossorigin="anonymous" attributes directly. -->
     <script>
       // Defer GA loading until after first paint (skip in Capacitor native)
       window.dataLayer = window.dataLayer || [];

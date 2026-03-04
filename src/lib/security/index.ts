@@ -22,6 +22,9 @@
 // Types
 export * from './types';
 
+// Edge Function Security Headers Types (US-006)
+export type { SecurityHeaders, SecurityHeaderName } from './edgeFunctionHeaders';
+
 // Security Service (Layer 2 & 3)
 export {
   hasPermission,
@@ -58,3 +61,88 @@ export {
   clearFailedAttempts,
   getLockoutMessage,
 } from './loginProtection';
+
+// CSRF Protection (US-003)
+export {
+  generateCsrfToken,
+  validateCsrfToken,
+  getCsrfToken,
+  storeCsrfToken,
+} from './csrfProtection';
+
+// CSRF React Components & Hooks (US-003)
+export {
+  useCsrfToken,
+  CsrfTokenField,
+} from './csrfProtection.tsx';
+
+// Client-Side Rate Limiting (US-004)
+export {
+  RateLimiter,
+  createEndpointLimiter,
+  DEFAULT_RATE_LIMITS,
+} from './rateLimiter';
+export type { RateLimitResult, RateLimiterConfig } from './rateLimiter';
+
+// Trusted Types (DOM XSS Prevention — US-008)
+export {
+  initTrustedTypes,
+  createSafeHtml,
+  createSafeScriptUrl,
+  isTrustedTypesSupported,
+  ALLOWED_SCRIPT_ORIGINS,
+} from './trustedTypes';
+
+// Subresource Integrity (US-009)
+export {
+  computeSriHash,
+  verifySriHash,
+  loadScriptWithSri,
+  loadStylesheetWithSri,
+} from './sriVerification';
+export type { LoadScriptWithSriOptions } from './sriVerification';
+
+// API Request Signing (US-007)
+export {
+  signRequest,
+  verifySignature,
+  addTimestamp,
+  isRequestFresh,
+  deriveSigningKey,
+  buildCanonicalRequest,
+  constantTimeEqual,
+  REQUEST_SIGNING_CONFIG,
+} from './requestSigning';
+
+// Vulnerability Manifest (US-014)
+export {
+  KNOWN_VULNERABILITIES,
+  type KnownVulnerability,
+  type VulnerabilitySeverity,
+} from './vulnerabilityManifest';
+
+// SSRF Prevention (US-001)
+export {
+  validateUrl,
+  sanitizeUrl,
+  isPrivateIp,
+  ALLOWED_EXTERNAL_DOMAINS,
+} from './ssrfPrevention';
+export type {
+  UrlValidationOptions,
+  UrlValidationResult,
+} from './ssrfPrevention';
+
+// Error Information Leakage Prevention (US-005)
+export {
+  sanitizeError,
+  sanitizeErrorMessage,
+  classifyError,
+  containsSensitiveContent,
+  SENSITIVE_PATTERNS,
+  SafeErrorBoundary,
+} from './errorSanitizer';
+export type {
+  SafeErrorCategory,
+  SanitizedError,
+} from './errorSanitizer';
