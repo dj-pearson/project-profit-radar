@@ -90,3 +90,34 @@ jobs:
       - run: npx playwright test --project=chromium
         env:
           CI: true
+
+  security:
+    name: Security Smoke Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 18
+          cache: npm
+      - run: npm ci
+        env:
+          PUPPETEER_SKIP_DOWNLOAD: true
+
+      - name: Run security unit tests
+        run: npm run test:security
+
+      - name: Dependency vulnerability audit
+        run: npm run security:audit || true
+
+      - name: Secret scanning
+        run: bash scripts/secret-scan.sh
+
+      - name: Verify CSP does not contain unsafe-eval
+        run: |
+          if grep -q "unsafe-eval" public/_headers; then
+            echo "::error::CSP in public/_headers contains 'unsafe-eval'. This is a security risk."
+            exit 1
+          else
+            echo "CSP check passed: no unsafe-eval found."
+          fi
