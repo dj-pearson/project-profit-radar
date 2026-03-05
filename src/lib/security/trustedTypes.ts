@@ -5,8 +5,13 @@ import DOMPurify from 'dompurify';
  *
  * Trusted Types is a browser API that locks down dangerous DOM sink functions
  * (innerHTML, document.write, etc.) so they only accept typed objects instead
- * of raw strings. This module creates a 'builddesk' policy that sanitizes
- * HTML through DOMPurify and validates script URLs against an allowlist.
+ * of raw strings.
+ *
+ * The 'default' Trusted Types policy is created in index.html (as an inline
+ * script) so it intercepts ALL DOM sink assignments before any other code runs.
+ * This module creates a secondary named 'builddesk' policy that sanitizes HTML
+ * through DOMPurify and validates script URLs against an allowlist, for use in
+ * application code that needs explicit sanitization.
  *
  * @see https://developer.mozilla.org/en-US/docs/Web/API/Trusted_Types_API
  */
@@ -18,6 +23,7 @@ export const ALLOWED_SCRIPT_ORIGINS: readonly string[] = [
   'https://www.googletagmanager.com',
   'https://cdn.jsdelivr.net',
   'https://unpkg.com',
+  'https://static.cloudflareinsights.com',
 ] as const;
 
 /** The name used when creating the Trusted Types policy */

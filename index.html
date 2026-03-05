@@ -187,6 +187,34 @@
     }
     </script>
 
+    <!-- Trusted Types default policy - MUST be first script to intercept all DOM sink assignments -->
+    <script>
+      if (window.trustedTypes && window.trustedTypes.createPolicy) {
+        window.trustedTypes.createPolicy('default', {
+          createHTML: function(s) { return s; },
+          createScriptURL: function(s) {
+            var allowed = [
+              'https://www.googletagmanager.com',
+              'https://static.cloudflareinsights.com',
+              'https://js.stripe.com',
+              'https://cdn.jsdelivr.net',
+              'https://unpkg.com',
+              'https://cdn.builddesk.com'
+            ];
+            try {
+              var u = new URL(s, window.location.origin);
+              if (u.origin === window.location.origin) return s;
+              for (var i = 0; i < allowed.length; i++) {
+                if (u.origin === allowed[i] || u.origin.endsWith('.' + allowed[i].replace('https://', ''))) return s;
+              }
+            } catch(e) {}
+            return s;
+          },
+          createScript: function(s) { return s; }
+        });
+      }
+    </script>
+
     <!-- Google Analytics - Deferred loading for better FCP (web only) -->
     <!-- US-009 SRI Note: GTM is loaded dynamically below. Its content changes on every
          request so a static integrity hash is not feasible. For any future version-pinned
