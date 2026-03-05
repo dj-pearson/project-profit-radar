@@ -1,7 +1,7 @@
 {
   "project": "BuildDesk Enterprise Production Readiness",
   "branchName": "enterprise-production-readiness",
-  "description": "Comprehensive initiative to bring BuildDesk construction management platform from its current ~95% feature-complete state to enterprise-grade, production-ready status. Phase 1 (US-001 through US-051) addressed TypeScript strict mode, security hardening, CI/CD, testing, accessibility, and new feature development - all 51 stories COMPLETE. Phase 2 (US-052 through US-062) addresses performance optimization findings from a comprehensive platform audit covering: bundle size & code splitting, React performance (context memoization, useCallback), data fetching patterns, image/asset optimization, service worker caching, and CSS performance. Priority fixes target 15-20% bundle reduction, 10-15% fewer re-renders, and 30-50% faster analytics load times.",
+  "description": "Comprehensive initiative to bring BuildDesk construction management platform from its current ~95% feature-complete state to enterprise-grade, production-ready status. Phase 1 (US-001 through US-051) addressed TypeScript strict mode, security hardening, CI/CD, testing, accessibility, and new feature development - all 51 stories COMPLETE. Phase 2 (US-052 through US-062) addresses performance optimization findings from a comprehensive platform audit - all 11 stories COMPLETE. Phase 3 (US-063 through US-112) is a comprehensive UX overhaul and feature completeness initiative based on a deep platform audit. It covers: dashboard personalization and project health visibility, list view sorting/filtering/bulk actions across all modules, project detail navigation restructuring, financial workflow completion (recurring invoices, aging reports, QuickBooks sync UI), time tracking reports and GPS UI, CRM pipeline kanban views, daily report templates and weather integration, notification center, global search, onboarding wizard, mobile UX polish, export/reporting capabilities, approval workflow builder, client portal improvements, subcontractor management, equipment tracking, and document management enhancements. The goal is to deliver a polished, intuitive UX that construction PMs actually want to use daily.",
   "userStories": [
     {
       "id": "US-001",
@@ -1070,6 +1070,860 @@
       "priority": 5,
       "passes": true,
       "notes": "COMPLETED. Created src/lib/animation-utils.ts with shared animation utilities (createRevealVariants, createStaggerVariants, EASE_OUT, prefersReducedMotion). Documented animation strategy: Framer Motion for scroll/viewport animations, GSAP only for Hero timeline (loaded lazily via requestIdleCallback), CSS/Tailwind for simple transitions. GSAP is already lazily loaded. Both libraries are in separate chunks via code splitting."
+    },
+    {
+      "id": "US-063",
+      "title": "Add dashboard widget personalization and layout persistence",
+      "description": "As a project manager, I want to customize my dashboard layout so that I see the metrics most relevant to my role and projects. Add a 'Customize Dashboard' button that opens a widget picker where users can toggle visibility of dashboard cards (active projects, budget overview, upcoming deadlines, recent activity, team status, weather). Persist the layout configuration per user in localStorage with a fallback to a sensible default. Include a 'Reset to Default' option.",
+      "acceptanceCriteria": [
+        "Dashboard page has a 'Customize' button in the header area",
+        "Widget picker modal shows all available dashboard widgets with toggle switches",
+        "User can show/hide at least 6 different dashboard widgets",
+        "Layout configuration persists across page refreshes via localStorage",
+        "Reset to Default button restores the original widget configuration",
+        "npm run build completes successfully"
+      ],
+      "priority": 2,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-064",
+      "title": "Add project health score indicator to project list and dashboard",
+      "description": "As a construction company owner, I want to see at-a-glance project health scores so that I can quickly identify projects needing attention. Create a ProjectHealthBadge component that computes a health score (green/yellow/red) based on: budget variance (>10% over = red), schedule variance (>1 week behind = red), and open issues count. Display this badge on the projects list page next to each project name and on the main dashboard's active projects widget.",
+      "acceptanceCriteria": [
+        "ProjectHealthBadge component created in src/components/projects/",
+        "Health score computed from budget variance, schedule variance, and open issues",
+        "Badge displays green (healthy), yellow (at risk), or red (critical) with tooltip explanation",
+        "Badge appears on the projects list page for each project row",
+        "Badge appears on the dashboard active projects widget",
+        "npm run build completes successfully"
+      ],
+      "priority": 2,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-065",
+      "title": "Add sortable column headers and saved filter presets to projects list",
+      "description": "As a project manager, I want to sort and filter my project list so that I can find projects quickly. Add clickable column headers to the projects list that sort ascending/descending (name, status, budget, start date, health). Add a filter bar with status filter, date range filter, and budget range filter. Integrate with the existing saved_filter_presets table to let users save and recall filter configurations.",
+      "acceptanceCriteria": [
+        "Project list columns are sortable by clicking headers (name, status, budget, start date)",
+        "Sort direction indicator (arrow) shows on active sort column",
+        "Filter bar with status dropdown, date range picker, and budget range inputs",
+        "Users can save current filter configuration with a name",
+        "Users can load saved filter presets from a dropdown",
+        "Filters persist in URL query params for shareability",
+        "npm run build completes successfully"
+      ],
+      "priority": 2,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-066",
+      "title": "Add bulk actions toolbar to projects list page",
+      "description": "As a project manager, I want to perform bulk actions on multiple projects so that I can efficiently manage my portfolio. Add row checkboxes to the projects list with a select-all checkbox in the header. When rows are selected, show a floating action bar with options: Change Status, Assign PM, Export Selected, and Archive Selected. Include a count of selected items and a 'Clear Selection' button.",
+      "acceptanceCriteria": [
+        "Each project row has a checkbox for selection",
+        "Header checkbox selects/deselects all visible projects",
+        "Floating action bar appears when 1+ projects are selected",
+        "Action bar shows selected count and Clear Selection button",
+        "Bulk Change Status action updates all selected projects",
+        "Bulk Export Selected exports a CSV/PDF of selected projects",
+        "Confirmation dialog shown before destructive bulk actions (archive)",
+        "npm run build completes successfully"
+      ],
+      "priority": 3,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-067",
+      "title": "Restructure project detail page with tabbed navigation",
+      "description": "As a project manager, I want a well-organized project detail page so that I can navigate between project aspects without leaving the page. Refactor the project detail page to use a horizontal tab bar with tabs: Overview, Financials, Schedule, Documents, Team, Daily Reports, Change Orders. Each tab lazy-loads its content. The Overview tab shows a project summary card with health score, key dates, budget summary, and recent activity feed.",
+      "acceptanceCriteria": [
+        "Project detail page has horizontal tab navigation with at least 7 tabs",
+        "Each tab content is lazy-loaded (not mounted until tab is selected)",
+        "Overview tab shows project summary with health badge, key dates, and budget snapshot",
+        "Active tab persists in URL hash for direct linking",
+        "Tab navigation is keyboard accessible (arrow keys to switch)",
+        "Mobile: tabs become a scrollable horizontal strip or dropdown",
+        "npm run build completes successfully"
+      ],
+      "priority": 2,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-068",
+      "title": "Add recurring invoice generation for retainer and progress billing",
+      "description": "As an accounting user, I want to set up recurring invoices so that monthly retainer billing is automated. Add a 'Create Recurring Invoice' option to the invoice creation flow that lets users define: frequency (weekly, biweekly, monthly), start date, end date or number of occurrences, and template line items. Store recurring invoice configurations in the database and display them in a 'Recurring' tab on the invoices page with status, next run date, and the ability to pause/resume/edit.",
+      "acceptanceCriteria": [
+        "New 'Recurring' tab on the Invoices page listing all recurring invoice configurations",
+        "Create Recurring Invoice form with frequency, start date, end date, and template line items",
+        "Each recurring config shows status (active/paused), next invoice date, and total generated count",
+        "Users can pause, resume, edit, or delete recurring invoice configurations",
+        "Recurring invoices display the frequency and remaining occurrences",
+        "npm run build completes successfully"
+      ],
+      "priority": 3,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-069",
+      "title": "Add accounts receivable aging report",
+      "description": "As an accounting user, I want an aging report for outstanding invoices so that I can manage cash flow and follow up on late payments. Create an Aging Report page accessible from the Financial section that groups unpaid invoices into aging buckets: Current (0-30 days), 31-60 days, 61-90 days, and 90+ days. Show totals per bucket, a stacked bar chart visualization, and a drill-down table listing individual invoices per bucket with client name, invoice number, amount, and days outstanding.",
+      "acceptanceCriteria": [
+        "Aging Report page accessible from Financial navigation or Reports section",
+        "Invoices grouped into 4 aging buckets: Current, 31-60, 61-90, 90+ days",
+        "Summary cards showing total amount per aging bucket",
+        "Stacked bar chart (Recharts) visualizing aging distribution",
+        "Drill-down table listing individual invoices per bucket",
+        "Table shows client name, invoice number, amount, due date, and days outstanding",
+        "Export to PDF and CSV buttons",
+        "npm run build completes successfully"
+      ],
+      "priority": 3,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-070",
+      "title": "Add QuickBooks sync status dashboard and manual sync trigger",
+      "description": "As an accounting user, I want to see the status of my QuickBooks sync and trigger manual syncs so that I can ensure data is up to date. Create a QuickBooks Integration panel in Settings > Integrations showing: connection status (connected/disconnected), last sync timestamp, sync history log (last 20 syncs with status and record counts), and a 'Sync Now' button. Show sync progress with a progress bar when syncing. Display any sync errors with details and retry options.",
+      "acceptanceCriteria": [
+        "QuickBooks panel in Settings > Integrations page showing connection status",
+        "Last sync timestamp displayed prominently",
+        "Sync history table showing last 20 syncs with date, status, and record counts",
+        "'Sync Now' button triggers a manual sync with progress indicator",
+        "Sync errors displayed with error details and 'Retry' button",
+        "Connect/Disconnect QuickBooks buttons with OAuth flow",
+        "npm run build completes successfully"
+      ],
+      "priority": 4,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-071",
+      "title": "Add time tracking summary reports with visualizations",
+      "description": "As a project manager, I want time tracking reports so that I can analyze labor costs and productivity across projects and crews. Create a Time Reports page with: hours by project (bar chart), hours by employee (table with totals), hours by day of week (heatmap or bar chart), and overtime tracking. Include date range filtering, project filtering, and export to CSV/PDF. Show comparison of budgeted vs actual hours per project.",
+      "acceptanceCriteria": [
+        "Time Reports page accessible from Time Tracking navigation",
+        "Hours by project bar chart (Recharts) with date range filter",
+        "Hours by employee table with weekly totals and overtime flagging",
+        "Date range picker and project filter controls",
+        "Budgeted vs actual hours comparison per project",
+        "Export to CSV and PDF buttons",
+        "npm run build completes successfully"
+      ],
+      "priority": 3,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-072",
+      "title": "Add GPS geofence visualization map to time tracking",
+      "description": "As a field supervisor, I want to see geofence boundaries on a map so that I can verify crew locations and manage job site boundaries. Add a map view to the GPS/Time Tracking section that displays: job site geofence polygons, crew member current locations as pins, check-in/check-out event markers, and a timeline scrubber to replay crew movements throughout the day. Use a free map tile provider (OpenStreetMap via Leaflet).",
+      "acceptanceCriteria": [
+        "Map component displaying job site geofence boundaries as polygons",
+        "Crew member locations shown as pins on the map with name labels",
+        "Check-in and check-out events shown as markers with timestamps",
+        "Map controls: zoom, pan, layer toggle (satellite/street)",
+        "Geofence management: add, edit, delete geofence boundaries on the map",
+        "Leaflet or similar free map library integrated (no paid API key required for basic use)",
+        "npm run build completes successfully"
+      ],
+      "priority": 4,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-073",
+      "title": "Add CRM pipeline kanban board view",
+      "description": "As a sales user, I want a kanban board view of my CRM pipeline so that I can drag leads between stages and see my pipeline at a glance. Add a Kanban tab to the CRM/Leads page with columns for each pipeline stage (New Lead, Contacted, Proposal Sent, Negotiation, Won, Lost). Each card shows lead name, company, estimated value, and days in stage. Support drag-and-drop between columns to update lead stage. Show column totals (count and value).",
+      "acceptanceCriteria": [
+        "Kanban board view available as a tab on the CRM/Leads page",
+        "Columns for each pipeline stage with lead cards",
+        "Each card shows lead name, company, estimated value, and days in current stage",
+        "Drag-and-drop between columns updates lead stage in database",
+        "Column headers show count of leads and total estimated value",
+        "Cards are color-coded by priority or value tier",
+        "npm run build completes successfully"
+      ],
+      "priority": 3,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-074",
+      "title": "Add daily report templates and quick-fill from previous day",
+      "description": "As a field supervisor, I want daily report templates so that I can quickly fill out reports without retyping common information. Add a template system to daily reports: users can save a report as a template, load a template when creating a new report, and use 'Copy from Yesterday' to pre-fill with the previous day's report data. Templates should include: weather fields, crew list, equipment list, and standard work description sections.",
+      "acceptanceCriteria": [
+        "Save current daily report as a template with a name",
+        "Template picker shown when creating a new daily report",
+        "'Copy from Yesterday' button pre-fills from the most recent report for the same project",
+        "Templates include weather, crew, equipment, and work description sections",
+        "Templates can be edited, renamed, and deleted from a management view",
+        "npm run build completes successfully"
+      ],
+      "priority": 3,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-075",
+      "title": "Add weather integration to daily reports and dashboard",
+      "description": "As a field supervisor, I want current weather conditions automatically populated in daily reports so that I don't have to manually look up and type weather data. Integrate a free weather API (Open-Meteo, no API key required) to: auto-fill weather fields in daily reports based on project GPS coordinates, show current weather on the dashboard for active project locations, and flag severe weather alerts. Display temperature, conditions, wind speed, and precipitation.",
+      "acceptanceCriteria": [
+        "Weather service using Open-Meteo API (free, no key) in src/services/weather.ts",
+        "Daily report weather fields auto-populated from API based on project location",
+        "Dashboard weather widget showing conditions for active project sites",
+        "Weather data includes temperature, conditions icon, wind speed, precipitation",
+        "Severe weather alerts displayed prominently (high wind, extreme temperatures)",
+        "Graceful fallback when API is unavailable (manual entry still works)",
+        "npm run build completes successfully"
+      ],
+      "priority": 2,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-076",
+      "title": "Build real-time notification center with event integration",
+      "description": "As a user, I want real-time notifications for important events so that I stay informed about budget alerts, schedule changes, approvals needed, and team activity. Replace the mock notification data in NotificationCenter.tsx with real Supabase Realtime subscriptions. Create a notifications table and trigger notifications for: budget threshold exceeded (>90%), timesheet approval requests, change order submissions, daily report submissions, and mentions in comments. Show an unread count badge on the notification bell icon in the header.",
+      "acceptanceCriteria": [
+        "Notification bell icon in the main app header with unread count badge",
+        "Clicking bell opens the existing NotificationCenter component",
+        "Notifications stored in a notifications database table",
+        "Real-time delivery via Supabase Realtime subscriptions",
+        "At least 5 event types trigger notifications (budget, timesheet, change order, daily report, mention)",
+        "Mark as read, mark all as read, and delete actions work with the database",
+        "Notification preferences (Settings) control which event types generate notifications",
+        "npm run build completes successfully"
+      ],
+      "priority": 1,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-077",
+      "title": "Add global search with keyboard shortcut and cross-entity results",
+      "description": "As a user, I want a fast global search accessible via Ctrl+K so that I can quickly find projects, documents, contacts, invoices, and tasks from anywhere in the app. Enhance the existing GlobalSearch component to: open via Ctrl+K (or Cmd+K on Mac), show categorized results (Projects, Documents, Contacts, Invoices), support keyboard navigation (arrow keys to select, Enter to navigate), and show recent searches. Search should query Supabase across multiple tables with debounced input.",
+      "acceptanceCriteria": [
+        "Ctrl+K (Cmd+K on Mac) opens the global search modal from any page",
+        "Search input with debounced queries (300ms) across projects, documents, contacts, invoices",
+        "Results grouped by category with icons and result count per category",
+        "Keyboard navigation: arrow keys to move between results, Enter to navigate, Escape to close",
+        "Recent searches stored in localStorage and shown when search is empty",
+        "Search result items show relevant preview text and metadata",
+        "npm run build completes successfully"
+      ],
+      "priority": 1,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-078",
+      "title": "Build guided onboarding wizard for new users",
+      "description": "As a new user, I want a step-by-step onboarding wizard so that I can set up my company and learn the platform quickly. Replace the single-form Setup page with a multi-step wizard: Step 1 - Company Profile (name, logo, address), Step 2 - Invite Team Members (email invites with role selection), Step 3 - Create First Project (guided project creation), Step 4 - Quick Tour (interactive highlights of key features). Show a progress bar, allow skipping steps, and persist progress so users can resume later.",
+      "acceptanceCriteria": [
+        "Multi-step onboarding wizard with 4 steps and a progress bar",
+        "Step 1: Company profile with name, logo upload placeholder, and address",
+        "Step 2: Invite team members with email input and role selector",
+        "Step 3: Guided first project creation with pre-filled template options",
+        "Step 4: Interactive feature tour highlighting dashboard, projects, financials, time tracking",
+        "Skip button on each step, Back button to return to previous steps",
+        "Onboarding progress persisted (user can close and resume)",
+        "npm run build completes successfully"
+      ],
+      "priority": 1,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-079",
+      "title": "Add contextual help tooltips and in-app help launcher",
+      "description": "As a user, I want contextual help available on every page so that I can learn features without leaving my workflow. Add a floating help button (? icon) to the app layout that opens the HelpCenter component in a slide-over panel. Make the help content context-aware by passing the current route to the help system to show relevant articles first. Add HelpTooltip components to complex form fields across the top 10 most-used pages (Dashboard, Projects, Invoices, Time Tracking, Estimates, etc.).",
+      "acceptanceCriteria": [
+        "Floating help button (?) visible on all pages in bottom-right corner",
+        "Clicking help button opens HelpCenter in a slide-over panel (not a new page)",
+        "Help content filtered by current page context (route-based)",
+        "HelpTooltip components added to at least 20 complex form fields across 5+ pages",
+        "Help panel can be dismissed with Escape key or clicking outside",
+        "Help panel is accessible (focus trap, ARIA labels)",
+        "npm run build completes successfully"
+      ],
+      "priority": 3,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-080",
+      "title": "Add equipment assignment tracking and utilization dashboard",
+      "description": "As a project manager, I want to assign equipment to projects and track utilization so that I can optimize equipment allocation across job sites. Add an 'Assignments' tab to the Equipment page showing which equipment is assigned to which project, with date ranges. Create an assignment form to check out/return equipment. Add a utilization dashboard showing: utilization rate per equipment (hours used / hours available), idle equipment list, and assignment timeline (Gantt-style horizontal bars).",
+      "acceptanceCriteria": [
+        "Assignments tab on Equipment page listing current equipment-to-project assignments",
+        "Check Out form: select equipment, project, expected return date",
+        "Return Equipment action updates assignment end date and sets equipment to available",
+        "Utilization dashboard showing utilization percentage per equipment item",
+        "Idle equipment list highlighting equipment not assigned for 7+ days",
+        "Assignment history viewable per equipment item",
+        "npm run build completes successfully"
+      ],
+      "priority": 3,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-081",
+      "title": "Add document preview, sharing, and template management",
+      "description": "As a project manager, I want to preview documents without downloading and share them with clients so that collaboration is faster. Add an inline document preview modal that renders PDFs (using an iframe or pdf.js) and images without requiring a download. Add a 'Share Link' button that generates a time-limited public URL for the document. Create a document templates section where users can upload template files (contracts, scope of work, RFIs) that can be cloned for new projects.",
+      "acceptanceCriteria": [
+        "Clicking a document opens an inline preview modal (PDF renders in iframe, images display directly)",
+        "Preview modal has download, share, and close buttons",
+        "Share Link generates a URL with expiration (24hr, 7 days, 30 days options)",
+        "Document Templates section listing reusable document templates",
+        "Clone Template action creates a copy of a template for a specific project",
+        "Templates can be uploaded, edited (metadata), and deleted",
+        "npm run build completes successfully"
+      ],
+      "priority": 3,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-082",
+      "title": "Build subcontractor management with prequalification and insurance tracking",
+      "description": "As a project manager, I want a subcontractor database with prequalification and insurance tracking so that I can manage sub compliance and select qualified vendors. Create a Subcontractors page with: vendor database (name, trade, contact, rating), prequalification checklist (license, insurance, safety record, references), insurance certificate tracking with expiration alerts, and a performance rating system. Allow filtering subs by trade, rating, and insurance status.",
+      "acceptanceCriteria": [
+        "Subcontractors page listing all subcontractors with search and filter",
+        "Add Subcontractor form with name, trade, contact info, and license details",
+        "Prequalification checklist per sub with checkable items (license, insurance, safety, refs)",
+        "Insurance certificates section with upload, expiration date, and alert when expiring within 30 days",
+        "Performance rating (1-5 stars) per subcontractor with notes",
+        "Filter by trade type, rating minimum, and insurance status (valid/expiring/expired)",
+        "npm run build completes successfully"
+      ],
+      "priority": 2,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-083",
+      "title": "Add client portal document gallery and RFI submission",
+      "description": "As a client, I want to view project photos and submit RFIs through the portal so that I can stay informed and communicate efficiently with my contractor. Enhance the Client Portal with: a photo gallery tab showing daily report photos organized by date, an RFI (Request for Information) submission form where clients can ask questions with attachments, and an RFI tracking list showing status (submitted, in review, answered). Replace the 'coming soon' document gallery stub with actual functionality.",
+      "acceptanceCriteria": [
+        "Client Portal has a Photos/Gallery tab showing project photos from daily reports",
+        "Photos organized by date with thumbnail grid and lightbox view",
+        "RFI submission form with subject, description, and file attachment",
+        "RFI list view showing all RFIs with status (submitted, in review, answered)",
+        "Client receives a notification when their RFI is answered",
+        "Contractor can respond to RFIs from the project detail page",
+        "npm run build completes successfully"
+      ],
+      "priority": 3,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-084",
+      "title": "Add calendar view for project scheduling with event management",
+      "description": "As a project manager, I want a calendar view showing all project milestones, deadlines, and crew schedules so that I can visualize my timeline. Create a Calendar page with month/week/day views using a calendar library (e.g., @fullcalendar/react or custom with date-fns). Show project milestones, crew assignments, equipment bookings, and meeting events. Allow creating and editing events by clicking on the calendar. Color-code events by type.",
+      "acceptanceCriteria": [
+        "Calendar page with month, week, and day view toggles",
+        "Events displayed: project milestones, deadlines, crew schedules",
+        "Events color-coded by type (milestone=blue, deadline=red, crew=green, meeting=purple)",
+        "Click on a day to create a new event",
+        "Click on an event to view details and edit",
+        "Calendar navigation: previous/next month, today button",
+        "npm run build completes successfully"
+      ],
+      "priority": 3,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-085",
+      "title": "Add mobile-optimized dashboard with swipe navigation",
+      "description": "As a field worker using my phone, I want a mobile-optimized dashboard so that I can quickly access time tracking, daily reports, and project info on the job site. Create a mobile dashboard layout (detected via viewport width <768px) with: large tap targets for Clock In/Out, swipeable cards for recent projects, quick action buttons (New Daily Report, Take Photo, Submit Time), and a bottom navigation bar. Use existing mobile components (PullToRefresh, SwipeableListItem) to enhance the touch experience.",
+      "acceptanceCriteria": [
+        "Mobile dashboard layout activates at viewport width <768px",
+        "Prominent Clock In/Out button at the top of the mobile dashboard",
+        "Quick action buttons: New Daily Report, Take Photo, Log Time",
+        "Swipeable project cards showing project name, status, and health",
+        "Pull-to-refresh refreshes dashboard data",
+        "Bottom navigation bar with icons for Dashboard, Projects, Time, Reports, More",
+        "All touch targets are at least 44x44px per WCAG guidelines",
+        "npm run build completes successfully"
+      ],
+      "priority": 2,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-086",
+      "title": "Add export center with scheduled report delivery",
+      "description": "As a project manager, I want to export reports in multiple formats and schedule recurring report emails so that stakeholders get regular updates. Create an Export Center accessible from the Reports section with: export format selection (PDF, Excel, CSV), report template selection, date range and project filters, and a scheduling option to email reports on a recurring basis (daily, weekly, monthly). Include a history of past exports with re-download links.",
+      "acceptanceCriteria": [
+        "Export Center page accessible from Reports navigation",
+        "Report template selector with at least 5 report types (Project Summary, Financial, Time, Equipment, Aging)",
+        "Export format options: PDF, Excel (xlsx), CSV",
+        "Date range and project filters for scoping report data",
+        "Schedule delivery form: frequency, recipient emails, start date",
+        "Export history table showing past exports with download links",
+        "npm run build completes successfully"
+      ],
+      "priority": 4,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-087",
+      "title": "Add configurable approval workflow builder",
+      "description": "As an admin, I want to configure approval workflows so that timesheets, change orders, invoices, and expenses follow our company's approval chain. Create an Approval Workflows page in Settings where admins can define workflow rules: select entity type (timesheet, change order, invoice, expense), define approval steps (approver role or specific user), set conditions (e.g., amount > $5000 requires VP approval), and enable/disable workflows. Show a visual workflow diagram.",
+      "acceptanceCriteria": [
+        "Approval Workflows page in Settings listing configured workflows",
+        "Create Workflow form: entity type selection, name, and description",
+        "Add approval steps with approver (role-based or specific user) and order",
+        "Conditional rules: amount threshold, project type, or other field conditions",
+        "Visual workflow diagram showing steps as connected nodes",
+        "Enable/disable toggle per workflow",
+        "npm run build completes successfully"
+      ],
+      "priority": 4,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-088",
+      "title": "Add sortable columns and bulk actions to invoices list",
+      "description": "As an accounting user, I want to sort and bulk-manage invoices so that I can efficiently handle billing operations. Add sortable column headers to the invoices list (number, client, amount, date, status, due date). Add row checkboxes with bulk actions: Mark as Sent, Mark as Paid, Export Selected, and Delete Selected. Include a status filter dropdown and date range filter.",
+      "acceptanceCriteria": [
+        "Invoice list columns sortable by clicking headers (number, client, amount, date, status, due date)",
+        "Sort direction indicator on active column",
+        "Row checkboxes with select-all in header",
+        "Bulk action toolbar: Mark as Sent, Mark as Paid, Export Selected, Delete Selected",
+        "Status filter dropdown (All, Draft, Sent, Paid, Overdue)",
+        "Date range filter for invoice date and due date",
+        "npm run build completes successfully"
+      ],
+      "priority": 3,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-089",
+      "title": "Add sortable columns and bulk actions to expenses list",
+      "description": "As an accounting user, I want to sort and bulk-manage expenses so that I can efficiently review and approve expense submissions. Add sortable column headers to the expenses list (date, description, category, amount, project, status). Add row checkboxes with bulk actions: Approve Selected, Reject Selected, Export Selected, and Categorize Selected. Include category filter and project filter.",
+      "acceptanceCriteria": [
+        "Expense list columns sortable by clicking headers",
+        "Row checkboxes with select-all in header",
+        "Bulk action toolbar: Approve Selected, Reject Selected, Export Selected, Categorize Selected",
+        "Category filter dropdown",
+        "Project filter dropdown",
+        "Amount range filter",
+        "npm run build completes successfully"
+      ],
+      "priority": 3,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-090",
+      "title": "Add sortable columns and bulk actions to contacts/CRM list",
+      "description": "As a sales user, I want to sort and bulk-manage contacts so that I can efficiently organize my contact database. Add sortable column headers to the contacts list (name, company, email, phone, type, last contact). Add row checkboxes with bulk actions: Send Email, Add Tag, Export Selected, and Delete Selected. Include contact type filter (client, lead, subcontractor, vendor) and search.",
+      "acceptanceCriteria": [
+        "Contact list columns sortable by clicking headers",
+        "Row checkboxes with select-all in header",
+        "Bulk action toolbar: Send Email, Add Tag, Export Selected, Delete Selected",
+        "Contact type filter (client, lead, subcontractor, vendor)",
+        "Search input filtering across name, company, email",
+        "Tag filter for contacts with tags",
+        "npm run build completes successfully"
+      ],
+      "priority": 4,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-091",
+      "title": "Add sortable columns and bulk actions to documents list",
+      "description": "As a project manager, I want to sort and bulk-manage documents so that I can efficiently organize project files. Add sortable column headers to the documents list (name, type, project, uploaded by, date, size). Add row checkboxes with bulk actions: Download Selected, Move to Folder, Tag Selected, and Delete Selected. Include document type filter and project filter.",
+      "acceptanceCriteria": [
+        "Document list columns sortable by clicking headers",
+        "Row checkboxes with select-all in header",
+        "Bulk action toolbar: Download Selected, Move to Folder, Tag Selected, Delete Selected",
+        "Document type filter (PDF, image, spreadsheet, etc.)",
+        "Project filter dropdown",
+        "Confirmation dialog for bulk delete",
+        "npm run build completes successfully"
+      ],
+      "priority": 4,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-092",
+      "title": "Add user profile page with avatar and personal preferences",
+      "description": "As a user, I want a personal profile page so that I can manage my account details, notification preferences, and display settings in one place. Create a Profile page accessible from the user avatar dropdown with sections: Personal Info (name, email, phone, avatar upload), Notification Preferences (toggles for each notification type), Display Preferences (theme, language, date format, timezone), and Security (change password, MFA setup link). This consolidates settings that are currently fragmented.",
+      "acceptanceCriteria": [
+        "Profile page accessible from user avatar dropdown in header",
+        "Personal Info section with editable name, email, phone fields",
+        "Avatar upload with image preview (stores in Supabase Storage)",
+        "Notification Preferences with toggles for email and push per event type",
+        "Display Preferences: theme toggle (light/dark), date format, timezone selector",
+        "Security section with change password form and link to MFA setup",
+        "npm run build completes successfully"
+      ],
+      "priority": 2,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-093",
+      "title": "Add empty state illustrations and CTAs across all list pages",
+      "description": "As a new user, I want helpful empty states on pages with no data so that I know what the page is for and how to get started. Audit all list/table pages and replace blank states with illustrated empty state components showing: a relevant illustration or icon, a descriptive message explaining the page's purpose, and a primary CTA button to create the first item. Create a reusable EmptyState component and apply it to at least 15 pages (Projects, Invoices, Expenses, Documents, Time Entries, Estimates, Equipment, Contacts, Daily Reports, Change Orders, Subcontractors, Calendar events, Reports, Templates, Saved Filters).",
+      "acceptanceCriteria": [
+        "Reusable EmptyState component in src/components/ui/ with icon, title, description, and CTA props",
+        "EmptyState applied to at least 15 list/table pages",
+        "Each empty state has a contextual message and Create/Add CTA button",
+        "Empty state icon or illustration is relevant to the entity type",
+        "CTA button navigates to the creation form for that entity",
+        "npm run build completes successfully"
+      ],
+      "priority": 3,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-094",
+      "title": "Add breadcrumb navigation to all nested pages",
+      "description": "As a user, I want breadcrumb navigation so that I always know where I am in the app and can navigate back quickly. Create a Breadcrumb component and add it to all pages that are more than one level deep. Breadcrumbs should be auto-generated from the route path with human-readable labels. For entity detail pages (e.g., /projects/:id), show the entity name in the breadcrumb. Breadcrumbs should be clickable links for navigation.",
+      "acceptanceCriteria": [
+        "Breadcrumb component in src/components/ui/ with auto-generation from route",
+        "Breadcrumbs shown on all pages that are 2+ levels deep in navigation",
+        "Entity detail pages show entity name (e.g., Projects > Riverside Apartments)",
+        "Each breadcrumb segment is a clickable link",
+        "Breadcrumbs are responsive (truncate with ellipsis on mobile)",
+        "Breadcrumb component uses nav element with aria-label='Breadcrumb'",
+        "npm run build completes successfully"
+      ],
+      "priority": 3,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-095",
+      "title": "Add keyboard shortcuts overlay and navigation shortcuts",
+      "description": "As a power user, I want keyboard shortcuts so that I can navigate the app and perform common actions quickly. Add a keyboard shortcuts system with: a shortcuts overlay (shown via Shift+?) listing all available shortcuts, navigation shortcuts (G then P for Projects, G then I for Invoices, G then T for Time, G then D for Dashboard), and action shortcuts (N for New, E for Edit, Delete for Remove). Use a lightweight key binding library or custom hook.",
+      "acceptanceCriteria": [
+        "Shift+? opens a keyboard shortcuts overlay modal",
+        "Shortcuts overlay lists all available shortcuts grouped by category",
+        "Navigation shortcuts: G+P (Projects), G+I (Invoices), G+T (Time), G+D (Dashboard)",
+        "Action shortcuts: N (New item in current context), Escape (close modal/panel)",
+        "Shortcuts disabled when typing in input/textarea fields",
+        "Shortcuts are context-aware (N creates a project on Projects page, invoice on Invoices page)",
+        "npm run build completes successfully"
+      ],
+      "priority": 4,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-096",
+      "title": "Add estimate comparison and version history",
+      "description": "As a project manager, I want to compare estimate versions and track changes so that I can manage scope changes and client negotiations. Add version history to estimates: each save creates a new version, users can view previous versions, and a side-by-side comparison view shows differences between two versions (added/removed/changed line items highlighted). Show version number and date on each estimate.",
+      "acceptanceCriteria": [
+        "Estimates display version number (v1, v2, etc.) and last modified date",
+        "Each significant edit creates a new version (not every keystroke)",
+        "Version history panel showing all versions with date and editor name",
+        "Click a version to view it as read-only",
+        "Compare button to select two versions for side-by-side diff",
+        "Comparison view highlights added (green), removed (red), and changed (yellow) line items",
+        "npm run build completes successfully"
+      ],
+      "priority": 4,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-097",
+      "title": "Add change order impact summary on project financials",
+      "description": "As a project manager, I want to see the cumulative impact of change orders on project financials so that I can track scope creep and budget changes. Add a Change Order Impact section to the project financials tab showing: original contract amount, total approved change orders (positive and negative), current contract amount, pending change orders amount, and a line chart showing contract amount over time as change orders were approved.",
+      "acceptanceCriteria": [
+        "Change Order Impact section on project financials tab",
+        "Original contract amount, approved COs total, current contract amount displayed",
+        "Separate totals for additions vs deductions from change orders",
+        "Pending change orders shown separately with total",
+        "Line chart showing contract amount progression over time",
+        "Drill-down: clicking the CO total navigates to the change orders list",
+        "npm run build completes successfully"
+      ],
+      "priority": 3,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-098",
+      "title": "Add offline indicator and sync queue visibility",
+      "description": "As a field worker, I want to know when I'm offline and see pending sync items so that I trust my data will be saved when connectivity returns. Add an offline status banner that appears at the top of the app when the device loses connectivity. Show a sync queue indicator (number of pending actions) in the header. When back online, show a 'Syncing...' animation and success confirmation. Tapping the sync indicator shows a list of pending actions.",
+      "acceptanceCriteria": [
+        "Offline banner appears at top of app when navigator.onLine is false",
+        "Banner dismissible but re-appears on navigation",
+        "Sync queue count badge visible in header when there are pending offline actions",
+        "Tapping sync badge shows list of pending actions (type, entity, timestamp)",
+        "When connectivity returns, 'Syncing...' animation shown",
+        "Success toast after all pending items sync",
+        "npm run build completes successfully"
+      ],
+      "priority": 2,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-099",
+      "title": "Add project cost code management and budget tracking per code",
+      "description": "As a project manager, I want to manage cost codes per project and track budget vs actual per code so that I get detailed job costing visibility. Add a Cost Codes tab to the project detail page showing: project-specific cost codes with budgeted amount, actual spent to date, committed (POs/contracts), and remaining budget. Include a progress bar per cost code showing budget consumption. Allow adding/editing cost codes and importing from company-wide default codes.",
+      "acceptanceCriteria": [
+        "Cost Codes tab on project detail page",
+        "Table showing cost code, description, budgeted, actual, committed, remaining",
+        "Progress bar per cost code showing percentage of budget consumed",
+        "Color coding: green (<80%), yellow (80-100%), red (>100% over budget)",
+        "Add cost code form with code, description, and budget amount",
+        "Import from company default cost codes button",
+        "npm run build completes successfully"
+      ],
+      "priority": 2,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-100",
+      "title": "Add recently viewed items and quick navigation sidebar",
+      "description": "As a user, I want to quickly access recently viewed items so that I can jump back to projects, documents, and pages I was just working on. Add a 'Recent' section to the sidebar navigation showing the last 10 viewed items (projects, documents, invoices, contacts) with their type icon and name. Store recent items in localStorage. Include a 'Favorites' section where users can pin items for quick access by clicking a star icon on any entity detail page.",
+      "acceptanceCriteria": [
+        "Recent section in sidebar showing last 10 viewed entities",
+        "Each recent item shows type icon, name, and timestamp",
+        "Clicking a recent item navigates to its detail page",
+        "Star/favorite icon on entity detail pages (projects, invoices, documents)",
+        "Favorites section in sidebar above Recent showing pinned items",
+        "Recent items stored in localStorage, favorites stored in database",
+        "npm run build completes successfully"
+      ],
+      "priority": 3,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-101",
+      "title": "Add estimate-to-invoice conversion workflow",
+      "description": "As an accounting user, I want to convert approved estimates into invoices so that billing flows seamlessly from the estimation phase. Add a 'Convert to Invoice' button on approved estimates that opens a conversion dialog. The dialog pre-fills invoice line items from the estimate, allows selecting which line items to include, applying a percentage (for progress billing, e.g., 50% milestone), and adjusting amounts. The created invoice links back to the source estimate.",
+      "acceptanceCriteria": [
+        "'Convert to Invoice' button visible on approved/accepted estimates",
+        "Conversion dialog shows estimate line items with checkboxes to include/exclude",
+        "Percentage input for progress billing (e.g., bill 30% of total)",
+        "Line item amounts adjustable before creating the invoice",
+        "Created invoice has a reference link back to the source estimate",
+        "Source estimate shows linked invoices with amounts billed",
+        "npm run build completes successfully"
+      ],
+      "priority": 3,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-102",
+      "title": "Add drag-and-drop task board for project tasks",
+      "description": "As a project manager, I want a drag-and-drop task board so that I can visually manage task status and prioritize work. Add a Kanban board view to project tasks with columns: To Do, In Progress, Review, Done. Each task card shows title, assignee avatar, priority badge, and due date. Support drag-and-drop between columns to update task status. Include quick-add task input at the bottom of each column.",
+      "acceptanceCriteria": [
+        "Task board view available as a tab alongside task list view",
+        "Four columns: To Do, In Progress, Review, Done",
+        "Task cards show title, assignee, priority badge, and due date",
+        "Drag-and-drop between columns updates task status",
+        "Quick-add input at bottom of each column for fast task creation",
+        "Column headers show task count",
+        "npm run build completes successfully"
+      ],
+      "priority": 3,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-103",
+      "title": "Add safety incident reporting and tracking",
+      "description": "As a safety officer, I want to log and track safety incidents so that we maintain compliance and improve job site safety. Create a Safety Incidents section with: incident report form (date, location, description, severity, involved parties, photos), incident list with filtering by severity and date, incident detail page with investigation notes and corrective actions, and a safety dashboard showing incident counts by type, severity trends, and days since last incident.",
+      "acceptanceCriteria": [
+        "Safety Incidents section accessible from Safety or Projects navigation",
+        "Incident report form with date, project, location, severity (minor/major/critical), description, photos",
+        "Incident list with sorting and filtering by severity, date, and project",
+        "Incident detail page with investigation notes and corrective action items",
+        "Safety dashboard showing: total incidents, severity breakdown, days since last incident",
+        "Trend chart showing incidents per month",
+        "npm run build completes successfully"
+      ],
+      "priority": 3,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-104",
+      "title": "Add punch list management for project closeout",
+      "description": "As a project manager, I want a punch list tool so that I can track deficiency items during project closeout and ensure everything is completed before final payment. Add a Punch List tab to the project detail page with: add punch item form (location, description, assigned to, photo, priority), status tracking (open, in progress, complete, verified), photo before/after comparison, and a completion percentage bar. Allow clients to add punch items from the client portal.",
+      "acceptanceCriteria": [
+        "Punch List tab on project detail page",
+        "Add punch item form with location, description, assignee, photo upload, priority",
+        "Status workflow: Open -> In Progress -> Complete -> Verified",
+        "Photo support with before and after images per item",
+        "Completion progress bar showing percentage of verified items",
+        "Filter and sort by status, priority, assignee, location",
+        "npm run build completes successfully"
+      ],
+      "priority": 3,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-105",
+      "title": "Add material cost tracking and purchase order management",
+      "description": "As a project manager, I want to track material costs and manage purchase orders so that I can control procurement spending. Create a Materials/Procurement section per project with: create purchase order form (vendor, items, quantities, unit costs), PO approval workflow (draft, submitted, approved, received), material cost tracking against budget, and a materials summary showing budgeted vs actual material costs per cost code.",
+      "acceptanceCriteria": [
+        "Materials/Procurement tab on project detail page",
+        "Create Purchase Order form with vendor, line items, quantities, and unit costs",
+        "PO status workflow: Draft -> Submitted -> Approved -> Ordered -> Received",
+        "PO list with sorting and filtering by status, vendor, and date",
+        "Material cost summary: budgeted vs actual per cost code",
+        "Total committed (approved POs) shown separately from spent (received POs)",
+        "npm run build completes successfully"
+      ],
+      "priority": 3,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-106",
+      "title": "Add crew scheduling board with drag-and-drop assignment",
+      "description": "As a project manager, I want a visual crew scheduling board so that I can assign workers to projects and see availability at a glance. Create a Crew Schedule page with a weekly view: rows for each crew member, columns for each day, and cells showing project assignments as colored blocks. Support drag-and-drop to move assignments between days and crew members. Show conflicts (double-booking) highlighted in red. Include an unassigned crew list for easy scheduling.",
+      "acceptanceCriteria": [
+        "Crew Schedule page with weekly grid view",
+        "Rows for crew members, columns for days of the week",
+        "Project assignments shown as colored blocks in cells",
+        "Drag-and-drop to move assignments between days and crew members",
+        "Double-booking conflicts highlighted in red",
+        "Unassigned crew list sidebar for easy assignment",
+        "Week navigation (previous/next week, today button)",
+        "npm run build completes successfully"
+      ],
+      "priority": 3,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-107",
+      "title": "Add project photo timeline with AI tagging",
+      "description": "As a project manager, I want a visual timeline of project photos so that I can see construction progress over time. Create a Photos tab on the project detail page showing photos in chronological order as a timeline. Photos sourced from daily reports and document uploads. Each photo shows date, uploader, and description. Add basic AI tagging using the existing image analysis edge function to auto-categorize photos (foundation, framing, electrical, plumbing, finishing, etc.).",
+      "acceptanceCriteria": [
+        "Photos tab on project detail page",
+        "Photos displayed in chronological timeline layout",
+        "Each photo shows date, uploader name, and description/caption",
+        "Photos sourced from daily reports and document uploads for the project",
+        "Lightbox view for full-size photo viewing",
+        "Photo categories/tags shown as badges (auto-generated or manual)",
+        "Filter by date range and category",
+        "npm run build completes successfully"
+      ],
+      "priority": 4,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-108",
+      "title": "Add digital signature capture for daily reports and change orders",
+      "description": "As a field supervisor, I want to capture digital signatures on daily reports and change orders so that we have documented approvals on record. Create a SignatureCapture component that renders a canvas for drawing signatures (touch and mouse support). Integrate it into daily report submission and change order approval flows. Store the signature as a base64 PNG image associated with the record. Show the captured signature on the printed/exported version of the document.",
+      "acceptanceCriteria": [
+        "SignatureCapture component with canvas for drawing signatures",
+        "Works with both mouse (desktop) and touch (mobile) input",
+        "Clear button to reset the signature canvas",
+        "Signature stored as base64 PNG image",
+        "Integrated into daily report submission flow",
+        "Integrated into change order approval flow",
+        "Signature displayed on exported PDF versions of documents",
+        "npm run build completes successfully"
+      ],
+      "priority": 4,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-109",
+      "title": "Add project financial dashboard with cash flow chart",
+      "description": "As a company owner, I want a financial dashboard for each project showing cash flow, profitability, and budget health so that I can make informed decisions. Add a Financial Summary section to the project overview tab with: total revenue vs total costs donut chart, cash flow chart (monthly income vs expenses line chart), profit margin percentage with trend indicator, and key financial KPIs (contract value, billed to date, collected, outstanding, costs, profit).",
+      "acceptanceCriteria": [
+        "Financial Summary section on project overview tab",
+        "Revenue vs Costs donut chart (Recharts)",
+        "Monthly cash flow line chart showing income and expenses over time",
+        "Profit margin percentage displayed with up/down trend arrow",
+        "KPI cards: contract value, billed to date, collected, outstanding, total costs, net profit",
+        "All financial data sourced from invoices, payments, and expense records",
+        "npm run build completes successfully"
+      ],
+      "priority": 2,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-110",
+      "title": "Add company-wide financial overview dashboard",
+      "description": "As a company owner, I want a company-wide financial overview so that I can see total revenue, profit, and cash position across all projects. Create a Financial Overview page showing: total revenue, total expenses, and net profit for the selected period, revenue by project (horizontal bar chart), monthly revenue trend (line chart), top 5 projects by profitability, accounts receivable total, and accounts payable total. Include period selector (this month, quarter, year, custom).",
+      "acceptanceCriteria": [
+        "Financial Overview page accessible from main Financial navigation",
+        "Period selector: This Month, This Quarter, This Year, Custom Range",
+        "Summary cards: Total Revenue, Total Expenses, Net Profit, Profit Margin %",
+        "Revenue by project horizontal bar chart",
+        "Monthly revenue trend line chart",
+        "Top 5 projects by profitability table",
+        "Accounts receivable and accounts payable totals",
+        "npm run build completes successfully"
+      ],
+      "priority": 2,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-111",
+      "title": "Add activity feed with filtering on dashboard and project pages",
+      "description": "As a project manager, I want an activity feed so that I can see what's happening across my projects in real time. Create an ActivityFeed component showing a chronological list of events: new time entries, daily reports submitted, invoices created/paid, change orders submitted/approved, documents uploaded, and team member actions. Include on the main dashboard and project detail pages. Add filter by event type and user. Use Supabase Realtime for live updates.",
+      "acceptanceCriteria": [
+        "ActivityFeed component showing chronological events with icon, description, user, and timestamp",
+        "At least 6 event types tracked: time entry, daily report, invoice, change order, document, team update",
+        "Activity feed on main dashboard showing company-wide activity",
+        "Activity feed on project detail page showing project-specific activity",
+        "Filter by event type dropdown",
+        "Real-time updates via Supabase Realtime (new events appear without refresh)",
+        "npm run build completes successfully"
+      ],
+      "priority": 2,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-112",
+      "title": "Add loading skeletons and optimistic updates across all pages",
+      "description": "As a user, I want the app to feel fast and responsive so that I don't stare at blank screens or spinners while data loads. Audit all pages and replace loading spinners with skeleton loading states that match the page layout. Implement optimistic updates for common actions: creating/editing/deleting items should update the UI immediately before the server confirms. Create reusable skeleton components for common patterns (table rows, cards, form fields). Apply to at least 15 pages.",
+      "acceptanceCriteria": [
+        "Reusable skeleton components: SkeletonTable, SkeletonCard, SkeletonForm in src/components/ui/",
+        "Skeleton loading states replace spinners on at least 15 pages",
+        "Skeletons match the approximate layout of the loaded content",
+        "Optimistic updates for create/edit/delete on projects, invoices, expenses, time entries, and tasks",
+        "Optimistic updates rollback gracefully on server error with toast notification",
+        "No blank white screens during data loading on any major page",
+        "npm run build completes successfully"
+      ],
+      "priority": 2,
+      "passes": false,
+      "notes": ""
     }
   ]
 }
