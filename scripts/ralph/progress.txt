@@ -371,3 +371,35 @@ Implemented all 25 UI/UX improvement stories from the UI/UX audit PRD across 12 
 - Existing `sonner` toast import in Footer.tsx matches pattern used in 4 other files
 
 ### COMPLETE
+
+---
+
+## 2026-03-07 - US-064, US-076, US-077, US-078: Critical Platform Improvements Batch
+
+### US-064: Project health score indicator
+- Created `src/components/projects/ProjectHealthBadge.tsx` with `computeHealth()` function
+- Health computed from budget variance, schedule variance, and progress gap
+- Integrated into Projects page cards and Dashboard ProjectStatusWidget
+
+### US-076: Real-time notification center in dashboard header
+- Added `RealtimeNotificationCenter` bell to DashboardLayout header
+- Uses existing `useSimpleNotifications` hook with 8 notification types
+
+### US-077: Global search with Ctrl+K
+- Created `src/components/search/DashboardSearchTrigger.tsx`
+- Ctrl+K/Cmd+K opens modal; 300ms debounced queries across 4 Supabase tables
+- Arrow key navigation; recent searches in localStorage
+
+### US-078: Guided onboarding wizard
+- Refactored Setup.tsx to use OnboardingWizard multi-step flow
+- Added Quick Tour step, Skip button, localStorage progress persistence
+
+### Quality: `npx vite build` PASS (58.45s)
+
+### Learnings
+- DashboardLayout header right side: integration point for global actions
+- RealtimeNotificationCenter: already fully built, just needed layout integration
+- CommandPalette (navigation) vs DashboardSearchTrigger (data search) serve different purposes
+- ProjectWithRelations has `total_budget`/`actual_cost`; widget ProjectSummary uses `budget`
+
+---

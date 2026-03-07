@@ -13,8 +13,10 @@ import { useImpersonation } from '@/hooks/useImpersonation';
 import TrialStatusBanner from '@/components/TrialStatusBanner';
 import { ImpersonationBanner } from '@/components/admin/ImpersonationBanner';
 import { SkipLinks } from '@/components/accessibility/SkipLinks';
-import { Home, Building2, DollarSign, Users, Settings } from 'lucide-react';
+import { Home, Building2, DollarSign, Users, Settings, Search } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { RealtimeNotificationCenter } from '@/components/realtime/RealtimeNotificationCenter';
+import { DashboardSearchTrigger } from '@/components/search/DashboardSearchTrigger';
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -94,6 +96,12 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
               {/* Right: Actions + User */}
               <div className="flex items-center gap-2 md:gap-3 flex-shrink-0">
                 {actions}
+
+                {/* Global Search Trigger */}
+                <DashboardSearchTrigger />
+
+                {/* Notification Bell */}
+                <RealtimeNotificationCenter />
 
                 {/* Desktop User Info */}
                 <span
