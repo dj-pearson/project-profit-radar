@@ -87,7 +87,7 @@ const SocialProof = () => {
             </div>
 
             <div className="flex items-center gap-4 pt-4 border-t border-border/50">
-              <img src={t.image} alt={t.author} className="w-10 h-10 rounded-full object-cover ring-2 ring-construction-orange/20" />
+              <img src={t.image} alt={`${t.author}, ${t.role} at ${t.company}`} width={40} height={40} loading="lazy" className="w-10 h-10 rounded-full object-cover ring-2 ring-construction-orange/20" />
               <div>
                 <div className="font-bold text-construction-dark dark:text-white">{t.author}</div>
                 <div className="text-xs text-muted-foreground">{t.role}, {t.company}</div>

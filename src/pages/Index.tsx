@@ -2,9 +2,6 @@ import React, { lazy, Suspense, useState, useEffect, useCallback } from "react";
 import { ChevronUp } from "lucide-react";
 import Header from "@/components/Header";
 import Hero from "@/components/Hero";
-import SocialProof from "@/components/SocialProof";
-import ProblemSolution from "@/components/ProblemSolution";
-import FinancialIntelligenceShowcase from "@/components/FinancialIntelligenceShowcase";
 import { SkipLink } from "@/components/accessibility/AccessibilityUtils";
 import { PageSEO, createOrganizationSchema, createSoftwareApplicationSchema, createBreadcrumbSchema, createWebSiteSchema } from "@/components/seo/PageSEO";
 import { LazyFeatures, LazyPricing, LazyIndustries, PerformanceLazyWrapper } from "@/components/performance/LazyComponents";
@@ -15,6 +12,9 @@ import { BreadcrumbsNavigation } from "@/components/BreadcrumbsNavigation";
 import { SaaSProductSchema } from "@/components/seo/SaaSProductSchema";
 
 // Lazy load below-the-fold components
+const SocialProof = lazy(() => import("@/components/SocialProof"));
+const ProblemSolution = lazy(() => import("@/components/ProblemSolution"));
+const FinancialIntelligenceShowcase = lazy(() => import("@/components/FinancialIntelligenceShowcase"));
 const FinancialHealthCheckBanner = lazy(() => import("@/components/FinancialHealthCheckBanner"));
 const Implementation = lazy(() => import("@/components/Implementation"));
 const FAQ = lazy(() => import("@/components/FAQ"));
@@ -124,15 +124,21 @@ const Index = () => {
           <Hero />
 
           <ModernSection delay={0.2} background="glass" className="border-b border-border/40">
-            <SocialProof />
+            <Suspense fallback={<SectionFallback height="h-64" />}>
+              <SocialProof />
+            </Suspense>
           </ModernSection>
 
           <ModernSection direction="up" background="mesh" className="py-24">
-            <ProblemSolution />
+            <Suspense fallback={<SectionFallback height="h-96" />}>
+              <ProblemSolution />
+            </Suspense>
           </ModernSection>
 
           <ModernSection background="grid" className="bg-secondary/20">
-            <FinancialIntelligenceShowcase />
+            <Suspense fallback={<SectionFallback height="h-64" />}>
+              <FinancialIntelligenceShowcase />
+            </Suspense>
           </ModernSection>
 
           <PerformanceLazyWrapper fallback={<div className="h-96 bg-muted animate-pulse rounded-lg" />}>
@@ -203,16 +209,17 @@ const Index = () => {
           <StickyDemoCTA />
         </Suspense>
 
-        {/* Back to Top Button */}
-        {showBackToTop && (
-          <button
-            onClick={scrollToTop}
-            className="fixed bottom-20 right-4 z-40 rounded-full h-10 w-10 flex items-center justify-center bg-construction-orange text-white hover:bg-construction-orange/90 shadow-lg transition-all duration-300"
-            aria-label="Back to top"
-          >
-            <ChevronUp className="h-5 w-5" />
-          </button>
-        )}
+        {/* Back to Top Button - always rendered, visibility toggled via CSS to avoid CLS */}
+        <button
+          onClick={scrollToTop}
+          className={`fixed bottom-20 right-4 z-40 rounded-full h-10 w-10 flex items-center justify-center bg-construction-orange text-white hover:bg-construction-orange/90 shadow-lg transition-all duration-300 ${
+            showBackToTop ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4 pointer-events-none'
+          }`}
+          aria-label="Back to top"
+          aria-hidden={!showBackToTop}
+        >
+          <ChevronUp className="h-5 w-5" />
+        </button>
       </div>
   );
 };
