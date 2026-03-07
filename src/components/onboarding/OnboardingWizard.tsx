@@ -29,7 +29,13 @@ import {
   ChevronLeft,
   Sparkles,
   Mail,
-  Calendar
+  Calendar,
+  LayoutDashboard,
+  DollarSign,
+  Clock,
+  FileText,
+  ArrowRight,
+  SkipForward
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
@@ -39,11 +45,22 @@ interface OnboardingWizardProps {
   onComplete?: () => void;
 }
 
+const ONBOARDING_PROGRESS_KEY = 'builddesk_onboarding_progress';
+
 export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ onComplete }) => {
   const { toast } = useToast();
   const { user, userProfile } = useAuth();
-  const [currentStep, setCurrentStep] = useState(1);
   const [loading, setLoading] = useState(false);
+
+  // Persist onboarding progress
+  const getSavedStep = (): number => {
+    try {
+      const saved = localStorage.getItem(ONBOARDING_PROGRESS_KEY);
+      if (saved) return Math.min(JSON.parse(saved), 4);
+    } catch { /* ignore */ }
+    return 1;
+  };
+  const [currentStep, setCurrentStep] = useState(getSavedStep);
 
   // Company details
   const [companyName, setCompanyName] = useState('');
@@ -73,7 +90,7 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ onComplete }
       case 3:
         return 'Create Your First Project';
       case 4:
-        return 'Invite Your Team';
+        return 'Quick Tour';
       default:
         return '';
     }
@@ -88,7 +105,7 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ onComplete }
       case 3:
         return 'Optional: Start with a project to track';
       case 4:
-        return 'Optional: Invite team members to collaborate';
+        return 'See what BuildDesk can do for your business';
       default:
         return '';
     }
@@ -125,10 +142,15 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ onComplete }
     }
   };
 
+  const goToStep = (step: number) => {
+    setCurrentStep(step);
+    try { localStorage.setItem(ONBOARDING_PROGRESS_KEY, JSON.stringify(step)); } catch { /* ignore */ }
+  };
+
   const handleNext = () => {
     if (validateCurrentStep()) {
       if (currentStep < totalSteps) {
-        setCurrentStep(currentStep + 1);
+        goToStep(currentStep + 1);
       } else {
         handleComplete();
       }
@@ -137,7 +159,15 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ onComplete }
 
   const handleBack = () => {
     if (currentStep > 1) {
-      setCurrentStep(currentStep - 1);
+      goToStep(currentStep - 1);
+    }
+  };
+
+  const handleSkipStep = () => {
+    if (currentStep < totalSteps) {
+      goToStep(currentStep + 1);
+    } else {
+      handleComplete();
     }
   };
 
@@ -194,8 +224,11 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ onComplete }
 
       if (profileError) throw profileError;
 
+      // Clear persisted progress
+      try { localStorage.removeItem(ONBOARDING_PROGRESS_KEY); } catch { /* ignore */ }
+
       toast({
-        title: '✓ Setup Complete!',
+        title: 'Setup Complete!',
         description: 'Your BuildDesk account is ready to use',
       });
 
@@ -382,57 +415,45 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ onComplete }
 
       case 4:
         return (
-          <div className="space-y-6 max-w-2xl mx-auto">
+          <div className="space-y-6 max-w-3xl mx-auto">
             <div className="text-center mb-6">
-              <Users className="h-12 w-12 text-blue-600 mx-auto mb-3" />
-              <h2 className="text-2xl font-bold">Invite your team</h2>
-              <p className="text-muted-foreground mt-2">Collaborate with your team members</p>
+              <Sparkles className="h-12 w-12 text-blue-600 mx-auto mb-3" />
+              <h2 className="text-2xl font-bold">Here's what you can do</h2>
+              <p className="text-muted-foreground mt-2">Explore the key features of BuildDesk</p>
             </div>
 
-            <div className="flex items-center justify-center gap-4 mb-6">
-              <Button
-                variant={inviteTeam ? "default" : "outline"}
-                onClick={() => setInviteTeam(true)}
-              >
-                Invite Team
-              </Button>
-              <Button
-                variant={!inviteTeam ? "default" : "outline"}
-                onClick={() => setInviteTeam(false)}
-              >
-                Skip for Now
-              </Button>
-            </div>
-
-            {inviteTeam && (
-              <div className="space-y-4">
-                <div>
-                  <Label htmlFor="team-emails">Team Email Addresses</Label>
-                  <Textarea
-                    id="team-emails"
-                    value={teamEmails}
-                    onChange={(e) => setTeamEmails(e.target.value)}
-                    placeholder="Enter email addresses separated by commas&#10;john@example.com, jane@example.com"
-                    rows={4}
-                  />
-                  <p className="text-xs text-muted-foreground mt-2">
-                    Separate multiple emails with commas
-                  </p>
-                </div>
-
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                  <div className="flex items-start gap-3">
-                    <Mail className="h-5 w-5 text-blue-600 mt-0.5" />
-                    <div className="text-sm">
-                      <p className="font-medium text-blue-900">Invitation emails will be sent</p>
-                      <p className="text-blue-700 mt-1">
-                        Team members will receive an email with instructions to join your BuildDesk workspace.
-                      </p>
-                    </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {[
+                { icon: LayoutDashboard, title: 'Dashboard', desc: 'Real-time project overview with health scores, budget tracking, and team activity.', color: 'text-blue-600 bg-blue-50' },
+                { icon: Building, title: 'Projects', desc: 'Manage projects from planning to closeout with schedules, documents, and change orders.', color: 'text-green-600 bg-green-50' },
+                { icon: DollarSign, title: 'Financials', desc: 'Job costing, invoicing, expenses, and budget vs actual tracking in real time.', color: 'text-orange-600 bg-orange-50' },
+                { icon: Clock, title: 'Time Tracking', desc: 'GPS-based clock in/out, timesheet approvals, and crew scheduling.', color: 'text-purple-600 bg-purple-50' },
+                { icon: FileText, title: 'Daily Reports', desc: 'Field reports with photos, weather, crew counts, and equipment tracking.', color: 'text-red-600 bg-red-50' },
+                { icon: Users, title: 'Team & CRM', desc: 'Manage crew, subcontractors, clients, and leads all in one place.', color: 'text-teal-600 bg-teal-50' },
+              ].map((feature) => (
+                <div key={feature.title} className="flex items-start gap-3 p-4 border rounded-lg hover:bg-accent/50 transition-colors">
+                  <div className={`p-2 rounded-lg ${feature.color.split(' ')[1]}`}>
+                    <feature.icon className={`h-5 w-5 ${feature.color.split(' ')[0]}`} />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-sm">{feature.title}</h3>
+                    <p className="text-xs text-muted-foreground mt-1">{feature.desc}</p>
                   </div>
                 </div>
+              ))}
+            </div>
+
+            <div className="bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-lg p-4 mt-4">
+              <div className="flex items-start gap-3">
+                <Mail className="h-5 w-5 text-blue-600 mt-0.5 flex-shrink-0" />
+                <div className="text-sm">
+                  <p className="font-medium text-blue-900 dark:text-blue-300">Invite your team anytime</p>
+                  <p className="text-blue-700 dark:text-blue-400 mt-1">
+                    Go to Settings &gt; Team to invite team members after setup.
+                  </p>
+                </div>
               </div>
-            )}
+            </div>
           </div>
         );
 
@@ -475,26 +496,39 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ onComplete }
                 Back
               </Button>
 
-              <Button
-                onClick={handleNext}
-                disabled={loading}
-              >
-                {currentStep === totalSteps ? (
-                  loading ? (
-                    'Completing Setup...'
+              <div className="flex items-center gap-2">
+                {currentStep > 1 && currentStep < totalSteps && (
+                  <Button
+                    variant="ghost"
+                    onClick={handleSkipStep}
+                    className="text-muted-foreground"
+                  >
+                    <SkipForward className="h-4 w-4 mr-1" />
+                    Skip
+                  </Button>
+                )}
+
+                <Button
+                  onClick={handleNext}
+                  disabled={loading}
+                >
+                  {currentStep === totalSteps ? (
+                    loading ? (
+                      'Completing Setup...'
+                    ) : (
+                      <>
+                        <CheckCircle className="h-4 w-4 mr-2" />
+                        Complete Setup
+                      </>
+                    )
                   ) : (
                     <>
-                      <CheckCircle className="h-4 w-4 mr-2" />
-                      Complete Setup
+                      Next
+                      <ChevronRight className="h-4 w-4 ml-2" />
                     </>
-                  )
-                ) : (
-                  <>
-                    Next
-                    <ChevronRight className="h-4 w-4 ml-2" />
-                  </>
-                )}
-              </Button>
+                  )}
+                </Button>
+              </div>
             </div>
           </CardContent>
         </Card>

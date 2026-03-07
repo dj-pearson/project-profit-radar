@@ -4,6 +4,7 @@ import { Progress } from '@/components/ui/progress';
 import { Building2, DollarSign } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { ProjectHealthBadge } from '@/components/projects/ProjectHealthBadge';
 
 interface ProjectSummary {
   id: string;
@@ -12,6 +13,10 @@ interface ProjectSummary {
   completion_percentage: number;
   budget: number;
   client_name: string;
+  start_date?: string;
+  end_date?: string;
+  total_budget?: number;
+  actual_cost?: number;
 }
 
 export const ProjectStatusWidget = () => {
@@ -29,7 +34,7 @@ export const ProjectStatusWidget = () => {
     try {
       const { data } = await supabase
         .from('projects')
-        .select('id, name, status, completion_percentage, budget, client_name')
+        .select('id, name, status, completion_percentage, budget, client_name, start_date, end_date, total_budget, actual_cost')
         .eq('company_id', userProfile.company_id)
         .in('status', ['active', 'in_progress'])
         .order('created_at', { ascending: false })
@@ -76,9 +81,14 @@ export const ProjectStatusWidget = () => {
                 <p className="text-xs text-muted-foreground truncate">{project.client_name}</p>
               </div>
             </div>
-            <Badge variant={getStatusColor(project.status)} className="text-xs">
-              {project.status.replace('_', ' ')}
-            </Badge>
+            <ProjectHealthBadge
+              budget={project.total_budget || project.budget}
+              spent={project.actual_cost || 0}
+              completion_percentage={project.completion_percentage}
+              start_date={project.start_date}
+              end_date={project.end_date}
+              status={project.status}
+            />
           </div>
           
           <div className="space-y-1">

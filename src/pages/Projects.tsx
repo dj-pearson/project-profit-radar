@@ -71,6 +71,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { FilterPresetsManager } from "@/components/filters/FilterPresetsManager";
 import { CSVImportButton } from "@/components/smart-import";
 import { AccessiblePageWrapper } from "@/components/accessibility/AccessiblePageWrapper";
+import { ProjectHealthBadge } from "@/components/projects/ProjectHealthBadge";
 
 interface Project {
   id: string;
@@ -424,6 +425,15 @@ const Projects = () => {
                 </div>
               </div>
               <div className="flex items-center gap-1 sm:gap-2 shrink-0">
+                <ProjectHealthBadge
+                  budget={project.total_budget}
+                  spent={project.actual_cost || 0}
+                  completion_percentage={project.completion_percentage}
+                  start_date={project.start_date}
+                  end_date={project.end_date}
+                  status={project.status}
+                  className="hidden sm:flex"
+                />
                 <Badge
                   variant={getStatusColor(project.status)}
                   className="text-xs px-1.5 py-0.5"
