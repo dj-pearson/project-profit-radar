@@ -25,6 +25,7 @@ const OfflineIndicator = lazy(() => import("@/components/OfflineIndicator").then
 const NotificationPermission = lazy(() => import("@/components/NotificationPermission").then(m => ({ default: m.NotificationPermission })));
 const ShortcutsHelp = lazy(() => import("@/components/ui/shortcuts-help").then(m => ({ default: m.ShortcutsHelp })));
 const UnifiedSEOSystem = lazy(() => import("@/components/seo/UnifiedSEOSystem").then(m => ({ default: m.UnifiedSEOSystem })));
+const AutoSchemaInjector = lazy(() => import("@/components/seo/AutoSchemaInjector"));
 const CommandPalette = lazy(() => import("@/components/navigation/CommandPalette").then(m => ({ default: m.CommandPalette })));
 const KeyboardShortcutsPanel = lazy(() => import("@/components/help/KeyboardShortcutsPanel").then(m => ({ default: m.KeyboardShortcutsPanel })));
 
@@ -37,6 +38,7 @@ const AppContent = () => {
       {/* SEO - deferred to not block initial render */}
       <Suspense fallback={null}>
         <UnifiedSEOSystem autoOptimize={true} enableAnalytics={true} />
+        <AutoSchemaInjector />
       </Suspense>
 
       {/* Main Routes */}

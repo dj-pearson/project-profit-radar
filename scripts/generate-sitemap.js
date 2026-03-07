@@ -165,7 +165,7 @@ function generateSitemapXML(pages) {
 }
 
 /**
- * Generate robots.txt with sitemap reference
+ * Generate robots.txt with sitemap reference and AI crawler governance
  */
 function generateRobotsTxt() {
   return `# BuildDesk Robots.txt
@@ -174,6 +174,9 @@ function generateRobotsTxt() {
 
 # ===========================================
 # AI SEARCH ENGINE CRAWLERS - ALLOW
+# These bots retrieve content for AI-powered search results.
+# Allowing them enables visibility in AI Overviews,
+# ChatGPT Search, Perplexity answers, and similar.
 # ===========================================
 
 # OpenAI Search Bots (ChatGPT Search, SearchGPT)
@@ -201,14 +204,37 @@ Crawl-delay: 1
 User-agent: Google-Extended
 Allow: /
 
+# Apple AI (Siri, Apple Intelligence)
+User-agent: Applebot
+Allow: /
+
+User-agent: Applebot-Extended
+Allow: /
+
+# Microsoft Copilot / Bing AI
+User-agent: Bingbot
+Allow: /
+
+# Meta AI search
+User-agent: Meta-ExternalAgent
+Allow: /
+Crawl-delay: 2
+
+# Cohere AI (retrieval-augmented generation)
+User-agent: cohere-ai
+Allow: /
+Crawl-delay: 2
+
+# You.com AI search
+User-agent: YouBot
+Allow: /
+Crawl-delay: 1
+
 # ===========================================
 # TRADITIONAL SEARCH ENGINE CRAWLERS - ALLOW
 # ===========================================
 
 User-agent: Googlebot
-Allow: /
-
-User-agent: Bingbot
 Allow: /
 
 User-agent: Slurp
@@ -217,8 +243,13 @@ Allow: /
 User-agent: DuckDuckBot
 Allow: /
 
+User-agent: Yandex
+Allow: /
+
 # ===========================================
 # AI TRAINING-ONLY BOTS - BLOCK
+# These bots scrape content solely for model training
+# without providing search visibility in return.
 # ===========================================
 
 User-agent: CCBot
@@ -233,6 +264,18 @@ Disallow: /
 User-agent: FacebookBot
 Disallow: /
 
+User-agent: omgili
+Disallow: /
+
+User-agent: Diffbot
+Disallow: /
+
+User-agent: ImagesiftBot
+Disallow: /
+
+User-agent: Timpibot
+Disallow: /
+
 # ===========================================
 # DEFAULT RULES - ALL OTHER CRAWLERS
 # ===========================================
@@ -240,13 +283,14 @@ Disallow: /
 User-agent: *
 Allow: /
 
-# Block authenticated/app pages
+# Block authenticated/app pages (not indexable)
 Disallow: /dashboard/
 Disallow: /admin/
 Disallow: /auth/
 Disallow: /setup/
 Disallow: /api/
 Disallow: /payment-center/
+Disallow: /settings/
 
 # Block URL parameters that create duplicate content
 Disallow: /*?*refreshed=
@@ -258,6 +302,11 @@ Disallow: /*?*cache=
 Disallow: /testing/
 Disallow: /test/
 Disallow: /debug/
+Disallow: /component-showcase
+
+# Index pruning: block thin/auto-generated pages
+Disallow: /404
+Disallow: /not-found
 
 # Allow all marketing pages explicitly
 Allow: /features
@@ -269,6 +318,9 @@ Allow: /faq
 Allow: /solutions
 Allow: /procore-alternative
 Allow: /buildertrend-alternative
+Allow: /roi-calculator
+Allow: /knowledge-base
+Allow: /help
 
 # Allow marketing URL parameters
 Allow: /*?utm_source=
