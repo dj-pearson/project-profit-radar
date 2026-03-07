@@ -192,9 +192,9 @@ const Hero = () => {
 
   return (
     <section ref={containerRef} className="relative min-h-[90vh] flex items-center bg-background overflow-hidden">
-      {/* Enhanced Background */}
-      <div className="absolute inset-0 bg-grid-pattern opacity-[0.4] pointer-events-none" />
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+      {/* Enhanced Background - decorative only */}
+      <div className="absolute inset-0 bg-grid-pattern opacity-[0.4] pointer-events-none" aria-hidden="true" />
+      <div className="absolute inset-0 overflow-hidden pointer-events-none" aria-hidden="true">
         <div className="hero-blob absolute -top-[20%] -left-[10%] w-[60%] h-[60%] bg-construction-orange-light/10 rounded-full blur-[100px] mix-blend-multiply filter dark:mix-blend-normal dark:opacity-20" />
         <div className="hero-blob absolute top-[10%] -right-[10%] w-[50%] h-[50%] bg-construction-blue-light/10 rounded-full blur-[100px] mix-blend-multiply filter dark:mix-blend-normal dark:opacity-20" />
         <div className="hero-blob absolute -bottom-[20%] left-[20%] w-[40%] h-[40%] bg-gray-200/20 rounded-full blur-[100px] mix-blend-multiply filter dark:mix-blend-normal dark:opacity-10" />
