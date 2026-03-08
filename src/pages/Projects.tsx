@@ -49,6 +49,9 @@ import {
   Package,
   FilterX,
   SlidersHorizontal,
+  ArrowUpDown,
+  ArrowUp,
+  ArrowDown,
 } from "lucide-react";
 import { projectService, ProjectWithRelations } from "@/services/projectService";
 import {
@@ -120,6 +123,28 @@ const Projects = () => {
   const [materialFilter, setMaterialFilter] = usePersistedState<string>("projects-material-filter", "");
   const [taskFilter, setTaskFilter] = usePersistedState<string>("projects-task-filter", "");
   const [documentFilter, setDocumentFilter] = usePersistedState<string>("projects-document-filter", "");
+
+  // Sort state
+  type SortField = 'name' | 'status' | 'budget' | 'start_date' | 'completion_percentage';
+  type SortDirection = 'asc' | 'desc';
+  const [sortField, setSortField] = usePersistedState<SortField>("projects-sort-field", "name");
+  const [sortDirection, setSortDirection] = usePersistedState<SortDirection>("projects-sort-dir", "asc");
+
+  const toggleSort = (field: SortField) => {
+    if (sortField === field) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortField(field);
+      setSortDirection('asc');
+    }
+  };
+
+  const SortIcon = ({ field }: { field: SortField }) => {
+    if (sortField !== field) return <ArrowUpDown className="h-3 w-3 ml-1 opacity-50" aria-hidden="true" />;
+    return sortDirection === 'asc'
+      ? <ArrowUp className="h-3 w-3 ml-1" aria-hidden="true" />
+      : <ArrowDown className="h-3 w-3 ml-1" aria-hidden="true" />;
+  };
 
   useEffect(() => {
     loadProjects();
@@ -273,7 +298,9 @@ const Projects = () => {
       endDate: endDate?.toISOString(),
       materialFilter,
       taskFilter,
-      documentFilter
+      documentFilter,
+      sortField,
+      sortDirection
     };
   };
 
@@ -287,6 +314,8 @@ const Projects = () => {
     setMaterialFilter((filters.materialFilter as string) || "");
     setTaskFilter((filters.taskFilter as string) || "");
     setDocumentFilter((filters.documentFilter as string) || "");
+    if (filters.sortField) setSortField(filters.sortField as SortField);
+    if (filters.sortDirection) setSortDirection(filters.sortDirection as SortDirection);
   };
 
   const toggleProjectSelection = (projectId: string) => {
@@ -379,6 +408,22 @@ const Projects = () => {
       matchesTask &&
       matchesDocument
     );
+  }).sort((a, b) => {
+    const dir = sortDirection === 'asc' ? 1 : -1;
+    switch (sortField) {
+      case 'name':
+        return dir * a.name.localeCompare(b.name);
+      case 'status':
+        return dir * a.status.localeCompare(b.status);
+      case 'budget':
+        return dir * ((a.budget || 0) - (b.budget || 0));
+      case 'start_date':
+        return dir * (new Date(a.start_date).getTime() - new Date(b.start_date).getTime());
+      case 'completion_percentage':
+        return dir * ((a.completion_percentage || 0) - (b.completion_percentage || 0));
+      default:
+        return 0;
+    }
   });
 
   const getProjectsByStatus = (status: string) => {
@@ -799,6 +844,31 @@ const Projects = () => {
             </span>
           )}
         </div>
+      </div>
+
+      {/* Sort Bar */}
+      <div className="flex items-center gap-1 mb-4 text-xs text-muted-foreground overflow-x-auto pb-1" role="toolbar" aria-label="Sort projects">
+        <span className="font-medium mr-1 whitespace-nowrap">Sort by:</span>
+        {([
+          { field: 'name' as SortField, label: 'Name' },
+          { field: 'status' as SortField, label: 'Status' },
+          { field: 'budget' as SortField, label: 'Budget' },
+          { field: 'start_date' as SortField, label: 'Start Date' },
+          { field: 'completion_percentage' as SortField, label: 'Progress' },
+        ]).map(({ field, label }) => (
+          <Button
+            key={field}
+            variant={sortField === field ? "secondary" : "ghost"}
+            size="sm"
+            className="h-7 text-xs px-2"
+            onClick={() => toggleSort(field)}
+            aria-label={`Sort by ${label} ${sortField === field ? (sortDirection === 'asc' ? 'descending' : 'ascending') : 'ascending'}`}
+            aria-pressed={sortField === field}
+          >
+            {label}
+            <SortIcon field={field} />
+          </Button>
+        ))}
       </div>
 
       {/* Bulk Actions Toolbar */}

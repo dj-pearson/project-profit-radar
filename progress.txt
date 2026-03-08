@@ -391,3 +391,68 @@
 - `public/sw.js` - cache limits + LRU eviction
 - `scripts/update-sw-version.js` - git hash versioning
 - `prd.json` - all 62 stories marked as passes: true (100% complete)
+
+## 2026-03-08 - US-063, US-065, US-067, US-075: Critical Platform Improvements Batch 2
+
+### US-067: Restructure project detail page with tabbed navigation (P2)
+- Replaced sidebar-based navigation with horizontal tab bar on desktop
+- 7 primary tabs: Overview, Financials, Schedule, Documents, Team, Daily Reports, Change Orders
+- "More" button opens Sheet with full ProjectSubSidebar for all 18 sections
+- Active tab persists in URL hash (#overview, #estimates, etc.) for direct linking
+- Arrow key navigation between tabs (keyboard accessible)
+- Scrollable tab bar with ScrollArea on desktop
+- ProjectHealthBadge, budget, dates, and location in header summary
+- Suspense wrapper for lazy-loaded tab content
+- Mobile layout preserved with existing Sheet-based navigation
+
+### US-075: Add weather integration to daily reports and dashboard (P2)
+- Created `src/services/weather.ts` using Open-Meteo API (free, no API key)
+- Full WMO weather code mapping to human-readable descriptions with emoji icons
+- Severe weather detection for construction: high wind (>30mph), extreme temps, thunderstorms, heavy precipitation
+- 15-minute in-memory cache to avoid excessive API calls
+- Created `src/components/dashboard/widgets/WeatherWidget.tsx` for dashboard sidebar
+- Displays temperature, conditions icon, wind speed, precipitation, humidity
+- Severe weather alerts shown prominently with red text and warning icons
+- Added "Auto-fill" button to DailyReports weather_conditions field
+- Uses geolocation API for location-based weather, with fallback to default coords
+- Graceful error handling when API or geolocation unavailable
+
+### US-063: Dashboard widget personalization and layout persistence (P2)
+- Created `src/components/dashboard/DashboardCustomizer.tsx` with modal UI
+- `useDashboardWidgets()` hook manages widget config with localStorage persistence
+- 6 toggleable widgets: KPIs, Project Health, Alerts, Weather, Quick Actions, Recent Activity
+- Each widget has Switch toggle, icon, label, and description
+- "Reset to Default" button restores original configuration
+- "Customize" button in RoleDashboard header replaces old Settings button
+- All dashboard sections conditionally rendered via `isWidgetEnabled()`
+- Config uses `builddesk-dashboard-widgets` localStorage key
+
+### US-065: Sortable column headers and saved filter presets (P2)
+- Added sort bar with 5 sortable fields: Name, Status, Budget, Start Date, Progress
+- Sort buttons show active state (secondary variant) and direction arrows (up/down/neutral)
+- Sort state persists via `usePersistedState` in localStorage
+- Sort config included in filter preset save/load cycle
+- Sorting applied to filteredProjects array with proper comparators for each field type
+- FilterPresetsManager integration preserved and enhanced with sort fields
+
+### Quality: `vite build` PASS (1m 1s), post-build scripts PASS
+
+### New Files Created
+- `src/services/weather.ts` - Weather service with Open-Meteo API
+- `src/components/dashboard/widgets/WeatherWidget.tsx` - Dashboard weather widget
+- `src/components/dashboard/DashboardCustomizer.tsx` - Widget personalization modal + hook
+
+### Files Modified
+- `src/pages/ProjectDetail.tsx` - Horizontal tab bar replacing sidebar, URL hash persistence
+- `src/pages/DailyReports.tsx` - Weather auto-fill button
+- `src/pages/Projects.tsx` - Sort bar, sort state, sort logic
+- `src/components/dashboard/RoleDashboard.tsx` - WeatherWidget, DashboardCustomizer, conditional rendering
+- `prd.json` - US-063, US-065, US-067, US-075 marked as passes: true
+
+### Learnings
+- **URL hash for tab state**: Use `location.hash.slice(1)` for reading, `navigate(pathname + '#' + tab, { replace: true })` for setting
+- **Open-Meteo API**: Free, no key, supports Fahrenheit/mph/inch units via query params. WMO weather codes need manual mapping.
+- **localStorage widget config**: Store only ID→enabled map, not full widget config objects, to avoid stale descriptions
+- **Sort state in filter presets**: Include sort field/direction when saving presets so users can recall full view configurations
+
+---
