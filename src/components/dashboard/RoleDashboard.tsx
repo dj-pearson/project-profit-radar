@@ -6,6 +6,8 @@ import { useToast } from "@/hooks/use-toast";
 import { KPICard } from "./KPICard";
 import { ProjectHealthIndicator } from "./ProjectHealthIndicator";
 import { QuickActions } from "./QuickActions";
+import { WeatherWidget } from "./widgets/WeatherWidget";
+import { DashboardCustomizer, useDashboardWidgets } from "./DashboardCustomizer";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -31,6 +33,8 @@ export const RoleDashboard = () => {
   const { userProfile } = useAuth();
   const { data: dashboardData, loading, error, refetch } = useDashboardData();
   const [activeTab, setActiveTab] = useState("overview");
+  const [customizerOpen, setCustomizerOpen] = useState(false);
+  const { widgets, updateWidgets, resetToDefaults, isWidgetEnabled } = useDashboardWidgets();
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -355,9 +359,9 @@ export const RoleDashboard = () => {
                 <Bell className="h-4 w-4 mr-2" />
                 Notifications
               </Button>
-              <Button variant="outline" size="sm">
+              <Button variant="outline" size="sm" onClick={() => setCustomizerOpen(true)}>
                 <Settings className="h-4 w-4 mr-2" />
-                Settings
+                Customize
               </Button>
             </div>
           </div>
@@ -376,23 +380,25 @@ export const RoleDashboard = () => {
 
           <TabsContent value="overview" className="space-y-6">
             {/* KPI Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              {getRoleSpecificKPIs().map((kpi, index) => (
-                <KPICard key={index} {...kpi} />
-              ))}
-            </div>
+            {isWidgetEnabled('kpis') && (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                {getRoleSpecificKPIs().map((kpi, index) => (
+                  <KPICard key={index} {...kpi} />
+                ))}
+              </div>
+            )}
 
             {/* Main Content Grid */}
             <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
               {/* Left Column - 3/4 width */}
               <div className="lg:col-span-3 space-y-6">
                 {/* Project Health - only show for relevant roles */}
-                {['admin', 'project_manager', 'root_admin'].includes(userProfile?.role || '') && dashboardData && (
+                {isWidgetEnabled('projectHealth') && ['admin', 'project_manager', 'root_admin'].includes(userProfile?.role || '') && dashboardData && (
                   <ProjectHealthIndicator projects={dashboardData.projects} />
                 )}
                 
                 {/* Critical Alerts */}
-                {dashboardData && dashboardData.alerts.length > 0 && (
+                {isWidgetEnabled('alerts') && dashboardData && dashboardData.alerts.length > 0 && (
                   <Card>
                     <CardHeader>
                       <CardTitle className="flex items-center gap-2">
@@ -424,13 +430,18 @@ export const RoleDashboard = () => {
 
               {/* Right Sidebar - 1/4 width */}
               <div className="space-y-6">
-                <QuickActions 
-                  userRole={userProfile?.role || ''} 
-                  onAction={handleQuickAction}
-                />
+                {/* Weather Widget */}
+                {isWidgetEnabled('weather') && <WeatherWidget />}
+
+                {isWidgetEnabled('quickActions') && (
+                  <QuickActions
+                    userRole={userProfile?.role || ''}
+                    onAction={handleQuickAction}
+                  />
+                )}
                 
                 {/* Recent Activity */}
-                {dashboardData && (
+                {isWidgetEnabled('recentActivity') && dashboardData && (
                   <Card>
                     <CardHeader>
                       <CardTitle className="text-base">Recent Activity</CardTitle>
@@ -534,6 +545,15 @@ export const RoleDashboard = () => {
           </TabsContent>
         </Tabs>
       </main>
+
+      {/* Dashboard Customizer Modal */}
+      <DashboardCustomizer
+        isOpen={customizerOpen}
+        onClose={() => setCustomizerOpen(false)}
+        widgets={widgets}
+        onSave={updateWidgets}
+        onReset={resetToDefaults}
+      />
     </div>
   );
 };

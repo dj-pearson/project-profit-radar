@@ -19,8 +19,8 @@ import { ResponsiveContainer } from '@/components/layout/ResponsiveContainer';
 import { mobileGridClasses, mobileFilterClasses, mobileButtonClasses, mobileTextClasses, mobileCardClasses } from '@/utils/mobileHelpers';
 import MobileDailyReport from '@/components/mobile/MobileDailyReport';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { 
-  ArrowLeft, 
+import {
+  ArrowLeft,
   Calendar,
   Users,
   AlertTriangle,
@@ -31,8 +31,10 @@ import {
   Camera,
   X,
   Upload,
-  Smartphone
+  Smartphone,
+  RefreshCw
 } from 'lucide-react';
+import { fetchWeather, formatWeatherForReport } from '@/services/weather';
 
 interface Project {
   id: string;
@@ -329,12 +331,44 @@ const DailyReports = () => {
                     </div>
                     <div>
                       <Label htmlFor="weather_conditions">Weather Conditions</Label>
-                      <Input
-                        id="weather_conditions"
-                        placeholder="e.g., Sunny, 75°F"
-                        value={newReport.weather_conditions}
-                        onChange={(e) => setNewReport({...newReport, weather_conditions: e.target.value})}
-                      />
+                      <div className="flex gap-2">
+                        <Input
+                          id="weather_conditions"
+                          placeholder="e.g., Sunny, 75°F"
+                          value={newReport.weather_conditions}
+                          onChange={(e) => setNewReport({...newReport, weather_conditions: e.target.value})}
+                          className="flex-1"
+                        />
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          className="whitespace-nowrap"
+                          onClick={async () => {
+                            try {
+                              // Try getting user location for weather auto-fill
+                              const pos = await new Promise<GeolocationPosition>((resolve, reject) =>
+                                navigator.geolocation.getCurrentPosition(resolve, reject, { timeout: 5000 })
+                              );
+                              const weather = await fetchWeather(pos.coords.latitude, pos.coords.longitude);
+                              setNewReport({ ...newReport, weather_conditions: formatWeatherForReport(weather) });
+                              toast({ title: 'Weather updated', description: `${weather.conditions}, ${weather.temperature}${weather.temperatureUnit}` });
+                            } catch {
+                              // Fallback to default location
+                              try {
+                                const weather = await fetchWeather(39.83, -98.58);
+                                setNewReport({ ...newReport, weather_conditions: formatWeatherForReport(weather) });
+                              } catch {
+                                toast({ variant: 'destructive', title: 'Weather unavailable', description: 'Could not fetch weather data. Please enter manually.' });
+                              }
+                            }
+                          }}
+                          aria-label="Auto-fill weather from current location"
+                        >
+                          <Cloud className="h-4 w-4 mr-1" aria-hidden="true" />
+                          Auto-fill
+                        </Button>
+                      </div>
                     </div>
                   </div>
 

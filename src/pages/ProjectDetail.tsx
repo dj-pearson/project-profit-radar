@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import React, { useState, useEffect, useCallback, Suspense } from 'react';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -12,9 +12,13 @@ import { usePlatform } from '@/contexts/PlatformContext';
 import { AIProjectInsights } from '@/components/ai/AIProjectInsights';
 import { ProjectSubSidebar } from '@/components/project/ProjectSubSidebar';
 import { ProjectContent } from '@/components/project/ProjectContent';
+import { ProjectHealthBadge } from '@/components/projects/ProjectHealthBadge';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { MobileBottomNav } from '@/components/mobile/MobileBottomNav';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
+import { Card, CardContent } from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton';
 import {
   ArrowLeft,
   User,
@@ -24,21 +28,47 @@ import {
   Building2,
   DollarSign,
   Users,
-  Settings
+  Settings,
+  BarChart3,
+  FileText,
+  Calendar,
+  FolderOpen,
+  Clock,
+  ListTodo,
+  Receipt,
+  MapPin
 } from 'lucide-react';
 import { AccessiblePageWrapper } from "@/components/accessibility/AccessiblePageWrapper";
+import { cn } from '@/lib/utils';
+
+// Tab definitions for the horizontal tab bar
+const projectTabs = [
+  { id: 'overview', label: 'Overview', icon: Home },
+  { id: 'estimates', label: 'Financials', icon: DollarSign },
+  { id: 'progress', label: 'Schedule', icon: Calendar },
+  { id: 'documents', label: 'Documents', icon: FolderOpen },
+  { id: 'tasks', label: 'Team', icon: Users },
+  { id: 'dailyreports', label: 'Daily Reports', icon: FileText },
+  { id: 'changeorders', label: 'Change Orders', icon: Receipt },
+];
 
 const ProjectDetail = () => {
   const { projectId } = useParams<{ projectId: string }>();
   const { userProfile } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const { setNavigationContext } = usePlatform();
   const isMobile = useIsMobile();
-  
+
   const [project, setProject] = useState<ProjectWithRelations | null>(null);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState('overview');
   const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  // Read active tab from URL hash, default to 'overview'
+  const activeTab = location.hash ? location.hash.slice(1) : 'overview';
+  const setActiveTab = useCallback((tab: string) => {
+    navigate(`${location.pathname}#${tab}`, { replace: true });
+  }, [navigate, location.pathname]);
 
   useEffect(() => {
     // Check role-based access - only allow roles that can view projects
@@ -236,70 +266,158 @@ const ProjectDetail = () => {
   return (
     <AccessiblePageWrapper pageTitle="Project Details">
     <DashboardLayout title={project.name} hasAccessibleWrapper>
-      <div className="flex h-full">
-        <ProjectSubSidebar
-          activeTab={activeTab}
-          onTabChange={setActiveTab}
-        />
-
-        <main className="flex-1 overflow-auto" role="main" aria-label={`${project.name} project details`}>
-          <div className="p-6 space-y-6">
-            {/* Header */}
-            <header className="flex items-start justify-between">
-              <div className="space-y-1">
-                <div className="flex items-center gap-2">
-                  <Button variant="ghost" size="sm" onClick={() => navigate('/projects')} aria-label="Back to projects">
-                    <ArrowLeft className="h-4 w-4" aria-hidden="true" />
-                  </Button>
-                  <h1 className="text-2xl font-bold">{project.name}</h1>
-                </div>
-                <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                  <div className="flex items-center">
-                    <User className="h-4 w-4 mr-1" aria-hidden="true" />
-                    <span className="sr-only">Client: </span>{project.client_name}
-                  </div>
-                  <Badge variant={getStatusColor(project.status)} aria-label={`Status: ${project.status.replace('_', ' ')}`}>
-                    {project.status.replace('_', ' ')}
-                  </Badge>
-                </div>
-              </div>
-              <div className="flex gap-4">
-                <div className="w-64">
-                  <ContextualActions
-                    context={{
-                      module: 'projects',
-                      entityType: 'project',
-                      entityId: project.id,
-                      entityData: project
-                    }}
-                    className="mb-4"
-                  />
-                </div>
-                <Button onClick={() => navigate('/projects')} aria-label={`Edit ${project.name}`}>
-                  <Edit className="h-4 w-4 mr-2" aria-hidden="true" />
-                  Edit Project
+      <main className="flex-1 overflow-auto" role="main" aria-label={`${project.name} project details`}>
+        <div className="p-6 space-y-6">
+          {/* Header with project summary */}
+          <header className="flex items-start justify-between">
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <Button variant="ghost" size="sm" onClick={() => navigate('/projects')} aria-label="Back to projects">
+                  <ArrowLeft className="h-4 w-4" aria-hidden="true" />
                 </Button>
+                <h1 className="text-2xl font-bold">{project.name}</h1>
+                <ProjectHealthBadge project={project} />
               </div>
-            </header>
+              <div className="flex items-center gap-4 text-sm text-muted-foreground flex-wrap">
+                <div className="flex items-center">
+                  <User className="h-4 w-4 mr-1" aria-hidden="true" />
+                  <span className="sr-only">Client: </span>{project.client_name}
+                </div>
+                {project.site_address && (
+                  <div className="flex items-center">
+                    <MapPin className="h-4 w-4 mr-1" aria-hidden="true" />
+                    <span className="sr-only">Location: </span>{project.site_address}
+                  </div>
+                )}
+                <Badge variant={getStatusColor(project.status)} aria-label={`Status: ${project.status.replace('_', ' ')}`}>
+                  {project.status.replace('_', ' ')}
+                </Badge>
+                {project.start_date && (
+                  <div className="flex items-center text-xs">
+                    <Calendar className="h-3.5 w-3.5 mr-1" aria-hidden="true" />
+                    <span className="sr-only">Dates: </span>
+                    {new Date(project.start_date).toLocaleDateString()} - {project.end_date ? new Date(project.end_date).toLocaleDateString() : 'TBD'}
+                  </div>
+                )}
+                {project.budget > 0 && (
+                  <div className="flex items-center text-xs font-medium">
+                    <DollarSign className="h-3.5 w-3.5 mr-0.5" aria-hidden="true" />
+                    <span className="sr-only">Budget: </span>
+                    {new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(project.budget)}
+                  </div>
+                )}
+              </div>
+            </div>
+            <div className="flex gap-4">
+              <div className="w-64">
+                <ContextualActions
+                  context={{
+                    module: 'projects',
+                    entityType: 'project',
+                    entityId: project.id,
+                    entityData: project
+                  }}
+                  className="mb-4"
+                />
+              </div>
+              <Button onClick={() => navigate('/projects')} aria-label={`Edit ${project.name}`}>
+                <Edit className="h-4 w-4 mr-2" aria-hidden="true" />
+                Edit Project
+              </Button>
+            </div>
+          </header>
 
-            {/* AI Insights - Show on overview tab */}
-            {activeTab === 'overview' && (
-              <section className="mb-6" aria-label="AI-powered project insights">
-                <AIProjectInsights projectId={project.id} />
-              </section>
-            )}
+          {/* Horizontal Tab Navigation */}
+          <nav aria-label="Project sections" className="border-b">
+            <ScrollArea className="w-full">
+              <div className="flex" role="tablist">
+                {projectTabs.map((tab) => {
+                  const Icon = tab.icon;
+                  const isActive = activeTab === tab.id;
+                  return (
+                    <button
+                      key={tab.id}
+                      role="tab"
+                      aria-selected={isActive}
+                      aria-controls={`panel-${tab.id}`}
+                      onClick={() => setActiveTab(tab.id)}
+                      onKeyDown={(e) => {
+                        const currentIndex = projectTabs.findIndex(t => t.id === activeTab);
+                        if (e.key === 'ArrowRight') {
+                          const next = projectTabs[(currentIndex + 1) % projectTabs.length];
+                          setActiveTab(next.id);
+                        } else if (e.key === 'ArrowLeft') {
+                          const prev = projectTabs[(currentIndex - 1 + projectTabs.length) % projectTabs.length];
+                          setActiveTab(prev.id);
+                        }
+                      }}
+                      className={cn(
+                        "flex items-center gap-2 px-4 py-3 text-sm font-medium whitespace-nowrap border-b-2 transition-colors",
+                        "hover:text-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                        isActive
+                          ? "border-primary text-primary"
+                          : "border-transparent text-muted-foreground hover:border-muted-foreground/30"
+                      )}
+                    >
+                      <Icon className="h-4 w-4" aria-hidden="true" />
+                      {tab.label}
+                    </button>
+                  );
+                })}
+                {/* "More" button for sidebar access to all sections */}
+                <button
+                  onClick={() => setSidebarOpen(true)}
+                  className="flex items-center gap-2 px-4 py-3 text-sm font-medium whitespace-nowrap border-b-2 border-transparent text-muted-foreground hover:text-foreground hover:border-muted-foreground/30 transition-colors"
+                  aria-label="More project sections"
+                >
+                  <Menu className="h-4 w-4" aria-hidden="true" />
+                  More
+                </button>
+              </div>
+              <ScrollBar orientation="horizontal" />
+            </ScrollArea>
+          </nav>
 
-            {/* Dynamic Content */}
-            <section aria-label={`Project ${activeTab} content`}>
+          {/* Full sidebar in a Sheet for accessing all 18 sections */}
+          <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
+            <SheetContent side="right" className="w-80 p-0" aria-label="All project sections">
+              <div className="p-4 border-b">
+                <h2 className="font-semibold">All Sections</h2>
+                <p className="text-xs text-muted-foreground">{project.name}</p>
+              </div>
+              <ProjectSubSidebar
+                activeTab={activeTab}
+                onTabChange={(tab) => {
+                  setActiveTab(tab);
+                  setSidebarOpen(false);
+                }}
+              />
+            </SheetContent>
+          </Sheet>
+
+          {/* AI Insights - Show on overview tab */}
+          {activeTab === 'overview' && (
+            <section className="mb-6" aria-label="AI-powered project insights">
+              <AIProjectInsights projectId={project.id} />
+            </section>
+          )}
+
+          {/* Tab Content Panel */}
+          <section
+            id={`panel-${activeTab}`}
+            role="tabpanel"
+            aria-label={`Project ${activeTab} content`}
+          >
+            <Suspense fallback={<Skeleton className="h-64 w-full" />}>
               <ProjectContent
                 project={project}
                 activeTab={activeTab}
                 onNavigate={navigate}
               />
-            </section>
-          </div>
-        </main>
-      </div>
+            </Suspense>
+          </section>
+        </div>
+      </main>
     </DashboardLayout>
     </AccessiblePageWrapper>
   );
