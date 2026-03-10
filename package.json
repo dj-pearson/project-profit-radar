@@ -61,7 +61,7 @@
     "mcp:puppeteer": "npx @modelcontextprotocol/server-puppeteer",
     "mcp:context7": "npx @upstash/context7-mcp",
     "mcp:supabase": "npx -y @supabase/mcp-server-supabase@latest --project-id builddesk --access-token \"${SUPABASE_ACCESS_TOKEN}\"",
-    "security:audit": "npm audit --audit-level=high",
+    "security:audit": "bash scripts/security-audit.sh",
     "security-check": "powershell -ExecutionPolicy Bypass -File scripts/security-check.ps1",
     "analyze": "node scripts/analyze-bundle.js",
     "optimize:fonts": "powershell -ExecutionPolicy Bypass -File scripts/optimize-fonts.ps1",

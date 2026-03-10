@@ -87,6 +87,7 @@ supabase/.env
 supabase/functions/.env
 **/secrets.json
 **/*secret*
+!scripts/secret-scan.sh
 **/*private*
 
 # Supabase MCP specific
