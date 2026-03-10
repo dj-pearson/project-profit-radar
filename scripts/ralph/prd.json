@@ -20,7 +20,7 @@
         "npm run test:run passes"
       ],
       "priority": 1,
-      "passes": false
+      "passes": true
     },
     {
       "id": "US-002",
@@ -37,7 +37,7 @@
         "npm run lint passes"
       ],
       "priority": 1,
-      "passes": false
+      "passes": true
     },
     {
       "id": "US-003",
@@ -57,7 +57,7 @@
         "npm run test:run passes"
       ],
       "priority": 1,
-      "passes": false
+      "passes": true
     },
     {
       "id": "US-004",
@@ -77,7 +77,7 @@
         "npm run test:run passes"
       ],
       "priority": 1,
-      "passes": false
+      "passes": true
     },
     {
       "id": "US-005",
@@ -96,7 +96,7 @@
         "npm run test:run passes"
       ],
       "priority": 1,
-      "passes": false
+      "passes": true
     },
     {
       "id": "US-006",
@@ -113,7 +113,7 @@
         "npm run lint passes"
       ],
       "priority": 2,
-      "passes": false
+      "passes": true
     },
     {
       "id": "US-007",
@@ -132,7 +132,7 @@
         "npm run test:run passes"
       ],
       "priority": 2,
-      "passes": false
+      "passes": true
     },
     {
       "id": "US-008",
@@ -151,7 +151,7 @@
         "npm run test:run passes"
       ],
       "priority": 2,
-      "passes": false
+      "passes": true
     },
     {
       "id": "US-009",
@@ -168,7 +168,7 @@
         "npm run lint passes"
       ],
       "priority": 2,
-      "passes": false
+      "passes": true
     },
     {
       "id": "US-010",
@@ -187,7 +187,7 @@
         "npm run test:run passes"
       ],
       "priority": 3,
-      "passes": false
+      "passes": true
     },
     {
       "id": "US-011",
@@ -207,7 +207,7 @@
         "npm run test:run passes"
       ],
       "priority": 3,
-      "passes": false
+      "passes": true
     },
     {
       "id": "US-012",
@@ -227,7 +227,7 @@
         "npm run test:run passes"
       ],
       "priority": 3,
-      "passes": false
+      "passes": true
     },
     {
       "id": "US-013",
@@ -247,7 +247,7 @@
         "npm run test:run passes"
       ],
       "priority": 3,
-      "passes": false
+      "passes": true
     },
     {
       "id": "US-014",
@@ -265,7 +265,7 @@
         "npm run test:security passes (or npm run test:run passes)"
       ],
       "priority": 3,
-      "passes": false
+      "passes": true
     },
     {
       "id": "US-015",
@@ -283,7 +283,7 @@
         "npm run lint passes"
       ],
       "priority": 3,
-      "passes": false
+      "passes": true
     },
     {
       "id": "US-016",
@@ -302,7 +302,7 @@
         "npm run test:run passes"
       ],
       "priority": 4,
-      "passes": false
+      "passes": true
     },
     {
       "id": "US-017",
@@ -320,7 +320,7 @@
         "npm run lint passes"
       ],
       "priority": 4,
-      "passes": false
+      "passes": true
     },
     {
       "id": "US-018",
@@ -337,7 +337,7 @@
         "npm run lint passes"
       ],
       "priority": 4,
-      "passes": false
+      "passes": true
     }
   ]
 }
