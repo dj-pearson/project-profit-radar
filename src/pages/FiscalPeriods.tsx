@@ -397,7 +397,7 @@ export default function FiscalPeriods() {
         {isLoading ? (
           <Card>
             <CardContent className="pt-6">
-              <div className="text-center py-8" role="status" aria-live="polite">Loading fiscal periods...</div>
+              <div className="space-y-3">{[1,2,3,4,5].map(i => <div key={i} className="h-8 bg-muted animate-pulse rounded" />)}</div>
             </CardContent>
           </Card>
         ) : fiscalYears && fiscalYears.length > 0 ? (

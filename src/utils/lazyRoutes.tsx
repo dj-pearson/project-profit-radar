@@ -77,6 +77,8 @@ export const LazyInvoices = createLazyRoute(() => import('@/pages/Invoices'));
 export const LazyExpenses = createLazyRoute(() => import('@/pages/Expenses'));
 export const LazyBudgetManagement = createLazyRoute(() => import('@/pages/BudgetManagement'));
 export const LazyFinancialReports = createLazyRoute(() => import('@/pages/FinancialReports'));
+export const LazyFinancialOverview = createLazyRoute(() => import('@/pages/FinancialOverview'));
+export const LazyUserProfile = createLazyRoute(() => import('@/pages/UserProfile'));
 export const LazyTaxManagement = createLazyRoute(() => import('@/pages/TaxManagement'));
 
 // CRM area pages

@@ -442,7 +442,7 @@ export const MyTasksDashboard = () => {
   if (loading) {
     return (
       <DashboardLayout title="My Tasks Dashboard">
-        <div className="text-center py-8">Loading your tasks...</div>
+        <div className="space-y-4"><div className="grid gap-4 md:grid-cols-3">{[1,2,3].map(i => <div key={i} className="h-20 bg-muted animate-pulse rounded-lg" />)}</div><div className="h-[200px] bg-muted animate-pulse rounded-lg" /></div>
       </DashboardLayout>
     );
   }

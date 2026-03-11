@@ -330,7 +330,7 @@ export default function GeneralLedger() {
                 Please select an account to view its general ledger
               </div>
             ) : isLoading ? (
-              <div className="text-center py-8" role="status" aria-live="polite">Loading transactions...</div>
+              <div className="space-y-3">{[1,2,3,4,5].map(i => <div key={i} className="h-8 bg-muted animate-pulse rounded" />)}</div>
             ) : transactionsWithBalance && transactionsWithBalance.length > 0 ? (
             <div className="space-y-6">
               {groupBy === 'month' && groupedTransactions ? (

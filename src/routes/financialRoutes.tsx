@@ -17,6 +17,7 @@ import {
   LazyVendors,
   LazyQuickBooksRouting,
   LazyQuickBooksCallback,
+  LazyFinancialOverview,
 } from '@/utils/lazyRoutes';
 
 // Enterprise Finance Module - Lazy loaded with ErrorBoundary + Suspense
@@ -36,6 +37,9 @@ export const financialRoutes = (
   <>
     {/* Financial Dashboard */}
     <Route path="/financial" element={<RouteGuard><LazyFinancialDashboard /></RouteGuard>} />
+
+    {/* Company-Wide Financial Overview */}
+    <Route path="/financial-overview" element={<RouteGuard><LazyFinancialOverview /></RouteGuard>} />
 
     {/* Enterprise Finance Hub */}
     <Route path="/finance-hub" element={<RouteGuard><FinanceHub /></RouteGuard>} />

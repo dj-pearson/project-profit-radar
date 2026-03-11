@@ -35,6 +35,7 @@ import {
   LazyTools,
   LazyResources,
   LazyBlogPost,
+  LazyUserProfile,
 } from '@/utils/lazyRoutes';
 
 // Lazy-loaded feature pages (with ErrorBoundary + Suspense via createLazyRoute)
@@ -69,7 +70,8 @@ export const appRoutes = (
     <Route path="/operations-hub" element={<RouteGuard><LazyOperationsHub /></RouteGuard>} />
     <Route path="/admin-hub" element={<RouteGuard><LazyAdminHub /></RouteGuard>} />
 
-    {/* Settings */}
+    {/* Profile & Settings */}
+    <Route path="/profile" element={<RouteGuard><LazyUserProfile /></RouteGuard>} />
     <Route path="/user-settings" element={<RouteGuard><LazyUserSettings /></RouteGuard>} />
     <Route path="/subscription-settings" element={<RouteGuard><LazySubscriptionSettings /></RouteGuard>} />
     <Route path="/settings/custom-domain" element={<RouteGuard><CustomDomain /></RouteGuard>} />

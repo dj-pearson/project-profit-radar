@@ -482,7 +482,7 @@ export const LeadManagement = () => {
               </CardHeader>
               <CardContent>
                 {loading ? (
-                  <div className="text-center py-8">Loading...</div>
+                  <div className="space-y-3">{[1,2,3,4,5].map(i => <div key={i} className="h-8 bg-muted animate-pulse rounded" />)}</div>
                 ) : filteredLeads.length === 0 ? (
                   <div className="text-center py-8 text-muted-foreground">
                     No leads found

@@ -160,7 +160,7 @@ export default function TrialBalance() {
           </CardHeader>
           <CardContent>
             {isLoading ? (
-              <div className="text-center py-8" role="status" aria-live="polite">Loading trial balance...</div>
+              <div className="space-y-3">{[1,2,3,4,5].map(i => <div key={i} className="h-8 bg-muted animate-pulse rounded" />)}</div>
             ) : (
               <Table aria-label="Trial Balance">
                 <TableHeader>
