@@ -617,7 +617,7 @@ export default function BillPayments() {
           </CardHeader>
           <CardContent>
             {paymentsLoading ? (
-              <div className="text-center py-8" role="status" aria-live="polite">Loading payments...</div>
+              <div className="space-y-3">{[1,2,3,4,5].map(i => <div key={i} className="h-8 bg-muted animate-pulse rounded" />)}</div>
             ) : payments && payments.length > 0 ? (
               <Table aria-label="Payment history">
                 <TableHeader>

@@ -263,3 +263,8 @@ export function PageSkeleton() {
     </div>
   );
 }
+
+// Alias exports matching acceptance criteria naming convention
+export { TableSkeleton as SkeletonTable };
+export { CardSkeleton as SkeletonCard };
+export { FormSkeleton as SkeletonForm };

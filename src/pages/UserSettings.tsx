@@ -266,7 +266,7 @@ const UserSettings = () => {
     return (
       <AccessiblePageWrapper pageTitle="User Settings">
       <DashboardLayout title="User Settings" hasAccessibleWrapper>
-        <div className="text-center py-8">Loading your settings...</div>
+        <div className="space-y-6"><div className="grid gap-4 md:grid-cols-2">{[1,2].map(i => <div key={i} className="h-24 bg-muted animate-pulse rounded-lg" />)}</div><div className="h-[200px] bg-muted animate-pulse rounded-lg" /></div>
       </DashboardLayout>
       </AccessiblePageWrapper>
     );

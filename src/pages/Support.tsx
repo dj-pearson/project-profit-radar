@@ -229,7 +229,7 @@ export default function Support() {
 
           <TabsContent value="tickets" className="space-y-4">
             {loading ? (
-              <div className="text-center py-8">Loading tickets...</div>
+              <div className="space-y-3">{[1,2,3,4].map(i => <div key={i} className="h-16 bg-muted animate-pulse rounded-lg" />)}</div>
             ) : (
               <div className="grid gap-4">
                 {tickets.length === 0 ? (

@@ -382,10 +382,7 @@ const Vendors = () => {
           </CardHeader>
           <CardContent>
             {loading ? (
-              <div className="text-center py-8" role="status" aria-label="Loading vendors">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
-                <p className="text-sm text-muted-foreground mt-2">Loading vendors...</p>
-              </div>
+              <div className="space-y-3">{[1,2,3,4,5].map(i => <div key={i} className="h-8 bg-muted animate-pulse rounded" />)}</div>
             ) : filteredVendors.length === 0 ? (
               <div className="text-center py-8">
                 <Building2 className="h-12 w-12 text-muted-foreground mx-auto mb-4" aria-hidden="true" />

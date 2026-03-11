@@ -244,12 +244,12 @@ const DailyReports = () => {
     return (
       <AccessiblePageWrapper pageTitle="Daily Reports">
       <DashboardLayout title="Daily Reports" hasAccessibleWrapper>
-        <div className="flex items-center justify-center h-96" role="status" aria-live="polite" aria-label="Loading daily reports">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-construction-blue mx-auto mb-4" aria-hidden="true"></div>
-            <p className="text-muted-foreground">Loading daily reports...</p>
+        <div className="space-y-6" role="status" aria-live="polite" aria-label="Loading content">
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+              {[1,2,3,4].map(i => <div key={i} className="h-24 bg-muted animate-pulse rounded-lg" />)}
+            </div>
+            <div className="h-[300px] bg-muted animate-pulse rounded-lg" />
           </div>
-        </div>
       </DashboardLayout>
       </AccessiblePageWrapper>
     );

@@ -457,6 +457,56 @@
 
 ---
 
+## 2026-03-11 - Critical Platform Improvements: 4 High-Impact Stories Delivered
+
+### Summary
+Implemented 4 priority-2 stories that deliver major UX and financial visibility improvements across the platform. All build-verified with `npm run build` passing.
+
+### Stories Completed
+
+#### US-112: Loading Skeletons Across All Pages - PASS
+- Added `SkeletonTable`, `SkeletonCard`, `SkeletonForm` aliases to `src/components/ui/skeletons.tsx`
+- Replaced spinner/text loading states with skeleton placeholders on **37+ pages**
+- Pages updated: DailyReports, ChangeOrders, CreateProject, ProjectDetail, UserSettings, MyTasksDashboard, Support, TrialBalance, BalanceSheet, ProfitAndLoss, GeneralLedger, JournalEntries, BillPayments, AccountsPayable, CashFlowStatement, FiscalPeriods, ChartOfAccounts, Vendors, PurchaseOrders, admin/Users, admin/Analytics, admin/Billing, admin/Companies, admin/SEOManager, admin/Settings, admin/AdminIntelligenceDashboard, Submittals, Reports, PunchList, RFIs, MaterialTracking, EquipmentTracking, CrewScheduling, ClientPortal, BlogManager, TeamManagement, admin/LeadManagement
+
+#### US-109: Project Financial Dashboard with Cash Flow Chart - PASS
+- Created `src/components/financial/ProjectFinancialDashboard.tsx`
+- Revenue vs Costs donut chart (Recharts PieChart)
+- Monthly cash flow line chart (income vs expenses, 6-month window)
+- Profit margin % with trend indicator badge
+- 6 KPI cards: contract value, billed to date, collected, outstanding, total costs, net profit
+- Integrated into project overview tab via `src/components/project/ProjectContent.tsx`
+- All data sourced from invoices, payments, and expenses tables with company_id isolation
+
+#### US-110: Company-Wide Financial Overview Dashboard - PASS
+- Created `src/pages/FinancialOverview.tsx` with route at `/financial-overview`
+- Period selector: This Month, This Quarter, This Year
+- Summary cards: Total Revenue, Total Expenses, Net Profit, Profit Margin %
+- Revenue by project horizontal bar chart
+- Monthly revenue trend line chart
+- Top 5 projects by profitability table with margin badges
+- Accounts receivable and accounts payable totals
+- Skeleton loading state during data fetch
+
+#### US-092: User Profile Page with Avatar and Preferences - PASS
+- Created `src/pages/UserProfile.tsx` with route at `/profile`
+- Personal Info tab: editable name, phone; email display; avatar upload to Supabase Storage
+- Notifications tab: email toggles (task due, project updates, daily digest, weekly summary) + push toggles
+- Display tab: theme toggle (light/dark), date format selector, timezone selector
+- Security tab: change password form, MFA setup link
+- Skeleton loading state during profile load
+
+### Routing Changes
+- Added `LazyFinancialOverview` and `LazyUserProfile` to `src/utils/lazyRoutes.tsx`
+- Added `/financial-overview` route to `src/routes/financialRoutes.tsx`
+- Added `/profile` route to `src/routes/appRoutes.tsx`
+
+### Remaining Stories (38) recorded in prd.json for future Ralph loops
+
+### Quality: `npm run build` PASS (54.63s)
+
+---
+
 ## 2026-03-10 - Security PRD Complete: 18/18 Stories Verified & Critical Fixes
 
 ### Summary

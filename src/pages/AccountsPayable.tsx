@@ -533,7 +533,7 @@ export default function AccountsPayable() {
           </CardHeader>
           <CardContent>
             {isLoading ? (
-              <div className="text-center py-8" role="status" aria-live="polite">Loading bills...</div>
+              <div className="space-y-3">{[1,2,3,4,5].map(i => <div key={i} className="h-8 bg-muted animate-pulse rounded" />)}</div>
             ) : bills && bills.length > 0 ? (
               <Table aria-label="Vendor bills">
                 <TableHeader>

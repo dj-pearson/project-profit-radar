@@ -265,10 +265,12 @@ const ClientPortal = () => {
 
   if (loading || loadingData) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-construction-blue mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Loading your projects...</p>
+      <div className="min-h-screen bg-background p-6">
+        <div className="space-y-6">
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+            {[1,2,3,4].map(i => <div key={i} className="h-24 bg-muted animate-pulse rounded-lg" />)}
+          </div>
+          <div className="h-[300px] bg-muted animate-pulse rounded-lg" />
         </div>
       </div>
     );

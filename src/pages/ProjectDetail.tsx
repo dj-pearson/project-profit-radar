@@ -135,7 +135,23 @@ const ProjectDetail = () => {
   };
 
   if (loading) {
-    return <LoadingState message="Loading project details..." />;
+    return (
+      <AccessiblePageWrapper pageTitle="Loading Project">
+        <DashboardLayout title="" hasAccessibleWrapper>
+          <div className="space-y-6" role="status" aria-live="polite">
+            <div className="flex items-center gap-4">
+              <Skeleton className="h-8 w-64" />
+              <Skeleton className="h-6 w-20 rounded-full" />
+            </div>
+            <Skeleton className="h-10 w-full" />
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              {[1,2,3,4].map(i => <Card key={i}><CardContent className="pt-6"><Skeleton className="h-20" /></CardContent></Card>)}
+            </div>
+            <Card><CardContent className="pt-6"><Skeleton className="h-[300px]" /></CardContent></Card>
+          </div>
+        </DashboardLayout>
+      </AccessiblePageWrapper>
+    );
   }
 
   if (!project) {

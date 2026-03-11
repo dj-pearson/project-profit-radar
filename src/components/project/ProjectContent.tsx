@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { ProjectWithRelations } from '@/services/projectService';
 import ProjectEquipmentView from '@/components/equipment/ProjectEquipmentView';
+import { ProjectFinancialDashboard } from '@/components/financial/ProjectFinancialDashboard';
 import { ConstructionTimelineManager } from '@/components/construction/ConstructionTimelineManager';
 import { ProjectDailyReports } from '@/components/project/tabs/ProjectDailyReports';
 import { ProjectEstimates } from '@/components/project/tabs/ProjectEstimates';
@@ -172,6 +173,19 @@ export const ProjectContent: React.FC<ProjectContentProps> = ({
               <p className="text-sm text-muted-foreground">{project.description}</p>
             </div>
           )}
+        </CardContent>
+      </Card>
+
+      {/* Financial Summary */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center">
+            <DollarSign className="h-5 w-5 mr-2" aria-hidden="true" />
+            Financial Summary
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <ProjectFinancialDashboard projectId={project.id} />
         </CardContent>
       </Card>
     </div>
