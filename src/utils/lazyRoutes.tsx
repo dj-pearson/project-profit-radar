@@ -134,6 +134,8 @@ export const LazyChurnPrediction = createLazyRoute(() => import('@/pages/admin/C
 export const LazyUnifiedSEODashboard = createLazyRoute(() => import('@/pages/UnifiedSEODashboard'));
 export const LazySEODashboard = createLazyRoute(() => import('@/pages/SEODashboard'));
 export const LazySearchTrafficDashboard = createLazyRoute(() => import('@/pages/admin/SearchTrafficDashboard'));
+export const LazyPSEOAdminDashboard = createLazyRoute(() => import('@/pages/admin/pseo/PSEOAdminDashboard'));
+export const LazyPSEOPageRenderer = createLazyRoute(() => import('@/pages/pseo/PSEOPageRenderer'));
 export const LazyBlogManager = createLazyRoute(() => import('@/pages/BlogManager'));
 export const LazySocialMediaManager = createLazyRoute(() => import('@/pages/admin/SocialMediaManager'));
 export const LazyLeadManagementAdmin = createLazyRoute(() => import('@/pages/admin/LeadManagement'));

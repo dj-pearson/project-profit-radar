@@ -46,6 +46,7 @@ import {
   LazyUnifiedSEODashboard,
   LazySEODashboard,
   LazySearchTrafficDashboard,
+  LazyPSEOAdminDashboard,
   LazyBlogManager,
   LazySocialMediaManager,
   LazyLeadManagementAdmin,
@@ -302,6 +303,14 @@ export const adminRoutes = (
       element={
         <SecureRoute requireAuth allowedRoles={['root_admin', 'admin']}>
           <LazySearchTrafficDashboard />
+        </SecureRoute>
+      }
+    />
+    <Route
+      path="/admin/pseo"
+      element={
+        <SecureRoute requireAuth allowedRoles={['root_admin', 'admin']}>
+          <LazyPSEOAdminDashboard />
         </SecureRoute>
       }
     />

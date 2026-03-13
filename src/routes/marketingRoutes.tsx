@@ -7,7 +7,7 @@
  */
 
 import { Route } from 'react-router-dom';
-import { createLazyRoute } from '@/utils/lazyRoutes';
+import { createLazyRoute, LazyPSEOPageRenderer } from '@/utils/lazyRoutes';
 
 // Marketing pages - Lazy loaded with ErrorBoundary + Suspense
 const PricingPage = createLazyRoute(() => import('@/pages/Pricing'));
@@ -172,5 +172,10 @@ export const marketingRoutes = (
     <Route path="/profitability-calculator" element={<ProfitabilityCalculator />} />
     <Route path="/financial-health-check" element={<FinancialHealthCheckPage />} />
     <Route path="/health-check" element={<FinancialHealthCheckPage />} />
+
+    {/* pSEO (Programmatic SEO) Pages */}
+    <Route path="/software/:dim1/:dim2" element={<LazyPSEOPageRenderer />} />
+    <Route path="/compare/:competitorSlug" element={<LazyPSEOPageRenderer />} />
+    <Route path="/features/:feature/:contractorType" element={<LazyPSEOPageRenderer />} />
   </>
 );
