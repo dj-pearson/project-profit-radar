@@ -521,3 +521,82 @@ Verified all 18 security stories from `scripts/ralph/prd.json` (AI Security Defe
 ### Quality: `npm run build` PASS (56.64s, 6322 modules)
 
 ---
+
+## 2026-03-15 - Critical Platform Improvements: 4 High-Impact P2 Stories Delivered
+
+### Summary
+Implemented 4 priority-2 stories delivering major platform capabilities: cost code tracking, subcontractor management, real-time activity feed, and offline sync visibility. All build-verified with `npx vite build` passing (49.91s, 6341 modules).
+
+### Stories Completed
+
+#### US-099: Project Cost Code Management and Budget Tracking - PASS
+- Created `src/components/project/tabs/ProjectCostCodes.tsx`
+- Cost Codes tab added to ProjectDetail page (horizontal tab bar + sub-sidebar)
+- Table showing code, description, budgeted, actual, committed, remaining, % used
+- Progress bar per cost code with color coding: green (<80%), yellow (80-100%), red (>100%)
+- Inline budget editing per cost code
+- Add Cost Code dialog with code, name, description, budget amount
+- Import Default Codes button fetches company `cost_codes` from Supabase
+- Summary cards: Total Budgeted, Actual Spent, Committed, Remaining
+- Skeleton loading state
+
+#### US-082: Subcontractor Management with Prequalification and Insurance Tracking - PASS
+- Created `src/pages/Subcontractors.tsx` with route at `/subcontractors`
+- Card grid layout (responsive: 1/2/3 cols) with search and filter
+- Each card: name, trade, contact info, star rating (1-5), prequalification checklist
+- Insurance tracking with status badges (Valid/Expiring/Expired) and color coding
+- Prequalification checklist: license, insurance, safety record, references (checkable)
+- Insurance expiry alerts for items expiring within 30 days
+- Filter by: trade type, minimum rating, insurance status
+- Add Subcontractor dialog with comprehensive form
+- Empty state and skeleton loading
+
+#### US-111: Activity Feed with Filtering on Dashboard and Project Pages - PASS
+- Created `src/components/activity/DashboardActivityFeed.tsx`
+- 6 event types with icons: time_entry (Clock/blue), daily_report (FileText/green), invoice (Receipt/purple), change_order (GitBranch/orange), document (FolderOpen/yellow), team_update (Users/emerald)
+- Accepts optional `projectId` prop for project-specific filtering
+- Supabase Realtime subscription for live INSERT events
+- Filter dropdown by event type
+- User avatar with initials + relative timestamps
+- Integrated into RoleDashboard activity tab (replaces static activity list)
+- Integrated into ProjectContent via "Activity Feed" section in sub-sidebar
+- Skeleton loading state and empty state
+
+#### US-098: Offline Indicator and Sync Queue Visibility - PASS
+- Created `src/components/offline/OfflineIndicator.tsx` with two components
+- **OfflineBanner**: Amber banner at top of app when offline, dismissible with X, re-appears on navigation, green "Back online! Syncing..." with spinner on reconnect
+- **SyncQueueIndicator**: Header button with Cloud icon + badge count for pending actions, opens Sheet with list of pending actions (type, entity, timestamp), Sync Now button, localStorage-based queue (`builddesk-offline-queue`)
+- Updated existing `src/components/OfflineIndicator.tsx` to re-export enhanced components
+- Both components accessible (ARIA roles, labels, live regions)
+
+### Routing & Integration Changes
+- Added `LazySubcontractors` to `src/utils/lazyRoutes.tsx`
+- Added `/subcontractors` route to `src/routes/peopleRoutes.tsx`
+- Added `costcodes` tab to `ProjectDetail.tsx` tabs array
+- Added `costcodes` and `activity` to `ProjectContent.tsx` content map
+- Added Cost Codes and Activity Feed items to `ProjectSubSidebar.tsx`
+- Added `DashboardActivityFeed` import to `RoleDashboard.tsx`
+- Updated `App.tsx` with `SyncQueueIndicator` lazy import
+
+### New Files Created
+- `src/components/project/tabs/ProjectCostCodes.tsx`
+- `src/pages/Subcontractors.tsx`
+- `src/components/activity/DashboardActivityFeed.tsx`
+- `src/components/offline/OfflineIndicator.tsx`
+
+### Files Modified
+- `src/pages/ProjectDetail.tsx` - Added costcodes tab + Hash icon
+- `src/components/project/ProjectContent.tsx` - Added costcodes + activity render functions and imports
+- `src/components/project/ProjectSubSidebar.tsx` - Added Cost Codes + Activity Feed nav items
+- `src/components/dashboard/RoleDashboard.tsx` - Replaced static activity with DashboardActivityFeed
+- `src/components/OfflineIndicator.tsx` - Re-exports from new offline module
+- `src/App.tsx` - Added SyncQueueIndicator lazy import
+- `src/utils/lazyRoutes.tsx` - Added LazySubcontractors
+- `src/routes/peopleRoutes.tsx` - Added /subcontractors route
+- `prd.json` - US-082, US-098, US-099, US-111 marked as passes: true
+
+### Remaining Stories (34) recorded in prd.json for future Ralph loops
+
+### Quality: `npx vite build` PASS (49.91s, 6341 modules)
+
+---

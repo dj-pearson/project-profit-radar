@@ -7,7 +7,7 @@
 
 import { Route } from 'react-router-dom';
 import { RouteGuard } from '@/components/ProtectedRoute';
-import { createLazyRoute, LazyTimeTracking, LazyCRMDashboard } from '@/utils/lazyRoutes';
+import { createLazyRoute, LazyTimeTracking, LazyCRMDashboard, LazySubcontractors } from '@/utils/lazyRoutes';
 
 // Team Management - Lazy loaded with ErrorBoundary + Suspense
 const TeamManagement = createLazyRoute(() => import('@/pages/TeamManagement'));
@@ -40,6 +40,7 @@ export const peopleRoutes = (
     <Route path="/time-tracking" element={<RouteGuard><LazyTimeTracking /></RouteGuard>} />
     <Route path="/timesheets" element={<RouteGuard><Timesheets /></RouteGuard>} />
     <Route path="/support" element={<RouteGuard><Support /></RouteGuard>} />
+    <Route path="/subcontractors" element={<RouteGuard><LazySubcontractors /></RouteGuard>} />
 
     {/* CRM */}
     <Route path="/crm" element={<RouteGuard><LazyCRMDashboard /></RouteGuard>} />

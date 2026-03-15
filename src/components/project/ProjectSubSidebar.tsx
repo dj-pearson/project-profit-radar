@@ -13,14 +13,16 @@ import {
   CheckSquare, 
   Hammer, 
   Shield, 
-  Clock, 
-  Users, 
+  Clock,
+  Users,
   Receipt,
   ListTodo,
   FolderOpen,
   Home,
   Calculator,
-  MessageSquare
+  MessageSquare,
+  Hash,
+  Activity
 } from 'lucide-react';
 
 interface ProjectSubSidebarProps {
@@ -55,6 +57,7 @@ const navigationSections = [
     items: [
       { id: 'estimates', label: 'Estimates', icon: Calculator },
       { id: 'jobcosting', label: 'Job Costing', icon: DollarSign },
+      { id: 'costcodes', label: 'Cost Codes', icon: Hash },
       { id: 'invoicing', label: 'Invoicing', icon: Receipt },
       { id: 'changeorders', label: 'Change Orders', icon: FileX },
     ]
@@ -80,6 +83,12 @@ const navigationSections = [
     title: 'Documentation',
     items: [
       { id: 'documents', label: 'Documents', icon: FolderOpen },
+    ]
+  },
+  {
+    title: 'Activity',
+    items: [
+      { id: 'activity', label: 'Activity Feed', icon: Activity },
     ]
   },
 ];

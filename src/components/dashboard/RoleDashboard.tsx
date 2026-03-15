@@ -8,6 +8,7 @@ import { ProjectHealthIndicator } from "./ProjectHealthIndicator";
 import { QuickActions } from "./QuickActions";
 import { WeatherWidget } from "./widgets/WeatherWidget";
 import { DashboardCustomizer, useDashboardWidgets } from "./DashboardCustomizer";
+import { DashboardActivityFeed } from "@/components/activity/DashboardActivityFeed";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -514,34 +515,7 @@ export const RoleDashboard = () => {
           </TabsContent>
 
           <TabsContent value="activity" className="space-y-6">
-            {dashboardData && (
-              <Card>
-                <CardHeader>
-                  <CardTitle>Activity Feed</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  {dashboardData.recentActivity.map((activity) => (
-                    <div key={activity.id} className="flex items-start gap-4 p-3 border-l-2 border-primary/20">
-                      <div className="w-3 h-3 rounded-full bg-primary mt-1"></div>
-                      <div className="flex-1">
-                        <p className="font-medium">{activity.action}</p>
-                        <p className="text-sm text-muted-foreground">
-                          by {activity.user}
-                        </p>
-                        {activity.project && (
-                          <p className="text-sm text-muted-foreground">
-                            Project: {activity.project}
-                          </p>
-                        )}
-                        <p className="text-xs text-muted-foreground mt-1">
-                          {activity.timestamp}
-                        </p>
-                      </div>
-                    </div>
-                  ))}
-                </CardContent>
-              </Card>
-            )}
+            <DashboardActivityFeed maxItems={30} />
           </TabsContent>
         </Tabs>
       </main>
