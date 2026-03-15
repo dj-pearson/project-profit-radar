@@ -17,6 +17,8 @@ import { ProjectJobCosting } from '@/components/project/tabs/ProjectJobCosting';
 import { ProjectContacts } from '@/components/project/tabs/ProjectContacts';
 import { ProjectPermits } from '@/components/project/tabs/ProjectPermits';
 import { ProjectPunchList } from '@/components/project/tabs/ProjectPunchList';
+import { ProjectCostCodes } from '@/components/project/tabs/ProjectCostCodes';
+import { DashboardActivityFeed } from '@/components/activity/DashboardActivityFeed';
 import {
   Building2,
   Calendar,
@@ -434,6 +436,14 @@ export const ProjectContent: React.FC<ProjectContentProps> = ({
     </Card>
   );
 
+  const renderCostCodes = () => (
+    <ProjectCostCodes projectId={project.id} />
+  );
+
+  const renderActivity = () => (
+    <DashboardActivityFeed projectId={project.id} maxItems={30} />
+  );
+
   // Content mapping
   const contentMap: Record<string, () => React.ReactNode> = {
     overview: renderOverview,
@@ -454,6 +464,8 @@ export const ProjectContent: React.FC<ProjectContentProps> = ({
     warranties: renderWarranties,
     punchlist: renderPunchList,
     documents: renderDocuments,
+    costcodes: renderCostCodes,
+    activity: renderActivity,
   };
 
   const renderContent = contentMap[activeTab] || renderOverview;

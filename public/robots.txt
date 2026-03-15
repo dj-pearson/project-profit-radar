@@ -1,6 +1,6 @@
 # BuildDesk Robots.txt
 # https://builddesk.com
-# Last Updated: 2026-03-11
+# Last Updated: 2026-03-15
 
 # ===========================================
 # AI SEARCH ENGINE CRAWLERS - ALLOW

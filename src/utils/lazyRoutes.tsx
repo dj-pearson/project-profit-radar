@@ -64,6 +64,7 @@ export const LazyDocumentManagement = createLazyRoute(() => import('@/pages/Docu
 export const LazyMaterials = createLazyRoute(() => import('@/pages/Materials'));
 export const LazyMaterialTracking = createLazyRoute(() => import('@/pages/MaterialTracking'));
 export const LazyEquipment = createLazyRoute(() => import('@/pages/Equipment'));
+export const LazySubcontractors = createLazyRoute(() => import('@/pages/Subcontractors'));
 
 // Financial area pages
 export const LazyFinancialDashboard = createLazyRoute(() => import('@/pages/FinancialDashboard'));

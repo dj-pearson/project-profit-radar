@@ -36,7 +36,8 @@ import {
   Clock,
   ListTodo,
   Receipt,
-  MapPin
+  MapPin,
+  Hash
 } from 'lucide-react';
 import { AccessiblePageWrapper } from "@/components/accessibility/AccessiblePageWrapper";
 import { cn } from '@/lib/utils';
@@ -50,6 +51,7 @@ const projectTabs = [
   { id: 'tasks', label: 'Team', icon: Users },
   { id: 'dailyreports', label: 'Daily Reports', icon: FileText },
   { id: 'changeorders', label: 'Change Orders', icon: Receipt },
+  { id: 'costcodes', label: 'Cost Codes', icon: Hash },
 ];
 
 const ProjectDetail = () => {
