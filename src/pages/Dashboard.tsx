@@ -6,9 +6,11 @@ import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { AccessiblePageWrapper } from "@/components/accessibility/AccessiblePageWrapper";
 import { OnboardingChecklist } from "@/components/onboarding/OnboardingChecklist";
 import { SubscriptionUsageWidget } from "@/components/subscription/SubscriptionUsageWidget";
+import { MobileDashboard } from "@/components/mobile/MobileDashboard";
 import { useAuth } from "@/contexts/AuthContext";
 import { useDashboardData } from "@/hooks/useDashboardData";
 import { useCriticalCSS } from "@/utils/criticalCSSExtractor";
+import { useIsMobile } from "@/hooks/useMediaQuery";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -20,6 +22,7 @@ const Dashboard = () => {
   const { data, loading: dataLoading, error: dataError, refetch } = useDashboardData();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const isMobile = useIsMobile();
 
   // Inject critical CSS for dashboard
   useCriticalCSS('dashboard');
@@ -151,6 +154,17 @@ const Dashboard = () => {
           <section aria-label="Onboarding progress">
             <OnboardingChecklist />
           </section>
+        </DashboardLayout>
+      </AccessiblePageWrapper>
+    );
+  }
+
+  // Mobile-optimized dashboard for field workers (<768px)
+  if (isMobile) {
+    return (
+      <AccessiblePageWrapper pageTitle="Dashboard">
+        <DashboardLayout title="Dashboard" hasAccessibleWrapper>
+          <MobileDashboard />
         </DashboardLayout>
       </AccessiblePageWrapper>
     );

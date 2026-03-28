@@ -27,6 +27,7 @@ import { MobilePageWrapper, MobileStatsGrid, MobileFilters, mobileGridClasses, m
 import { useEquipmentWithMaintenance, useMaintenanceRecords, useEquipmentStats, useCreateEquipment } from '@/hooks/useEquipment';
 import { Skeleton } from '@/components/ui/skeleton';
 import { formatCurrency } from '@/lib/utils';
+import { NoEquipment } from '@/components/ui/EmptyStates';
 
 export default function Equipment() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -307,21 +308,7 @@ export default function Equipment() {
                   data={filteredEquipment}
                   loading={equipmentLoading}
                   emptyContent={
-                    <div className="text-center py-8">
-                      <Truck className="h-12 w-12 text-muted-foreground mx-auto mb-4" aria-hidden="true" />
-                      <h3 className="text-lg font-semibold mb-2">No Equipment Found</h3>
-                      <p className="text-muted-foreground text-center max-w-md">
-                        {searchTerm
-                          ? 'No equipment matches your search criteria.'
-                          : 'Get started by adding your first piece of equipment to your fleet.'}
-                      </p>
-                      {!searchTerm && (
-                        <Button className="mt-4" onClick={() => setIsAddDialogOpen(true)}>
-                          <Plus className="mr-2 h-4 w-4" aria-hidden="true" />
-                          Add Your First Equipment
-                        </Button>
-                      )}
-                    </div>
+                    <NoEquipment onCreate={searchTerm ? undefined : () => setIsAddDialogOpen(true)} />
                   }
                 />
               );

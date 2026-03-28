@@ -1135,8 +1135,8 @@
         "npm run build completes successfully"
       ],
       "priority": 3,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "COMPLETED. BulkActionsToolbar with checkbox selection, select-all, bulk status change, archive with confirmation dialog, export CSV, and BulkOperationProgress tracking implemented in Projects.tsx and src/components/projects/BulkActionsToolbar.tsx."
     },
     {
       "id": "US-067",
@@ -1460,8 +1460,8 @@
         "npm run build completes successfully"
       ],
       "priority": 2,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "COMPLETED. MobileDashboard component with Clock In/Out, quick actions (Daily Report, Take Photo, Log Time), project cards with status. Bottom nav updated to Dashboard/Projects/Time/Reports/More. All touch targets enforce 44px min via style and touch-manipulation. Dashboard.tsx conditionally renders MobileDashboard at <768px via useIsMobile."
     },
     {
       "id": "US-086",
@@ -1595,8 +1595,8 @@
         "npm run build completes successfully"
       ],
       "priority": 3,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "COMPLETED. Extended EmptyStates.tsx with 7 new entity-specific components (NoEstimates, NoTimeEntries, NoDailyReports, NoChangeOrders, NoEquipment, NoSafetyIncidents, NoContacts). Replaced inline empty states in 6 pages: Projects.tsx (4 tabs), Equipment.tsx, DailyReports.tsx, ChangeOrders.tsx, Safety.tsx, DocumentManagement.tsx. Total 18 entity-specific empty state components available."
     },
     {
       "id": "US-094",
@@ -1612,8 +1612,8 @@
         "npm run build completes successfully"
       ],
       "priority": 3,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "COMPLETED. Created AutoBreadcrumb component at src/components/navigation/AutoBreadcrumb.tsx using shadcn/ui breadcrumb primitives. Auto-generates from URL path with 100+ route-to-label mappings. Handles dynamic segments (UUIDs). Integrated into DashboardLayout header. Uses nav with aria-label='breadcrumb', responsive via flex-wrap. Shows Home icon as root, clickable links for all non-current segments."
     },
     {
       "id": "US-095",

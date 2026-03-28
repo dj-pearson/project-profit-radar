@@ -36,6 +36,7 @@ import {
   RefreshCw
 } from 'lucide-react';
 import { fetchWeather, formatWeatherForReport } from '@/services/weather';
+import { NoDailyReports } from '@/components/ui/EmptyStates';
 
 interface Project {
   id: string;
@@ -623,17 +624,7 @@ const DailyReports = () => {
                 data={filteredReports}
                 loading={loadingReports}
                 emptyContent={
-                  <div className="text-center py-8">
-                    <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" aria-hidden="true" />
-                    <h3 className="text-lg font-medium mb-2">No Daily Reports</h3>
-                    <p className="text-muted-foreground mb-4">
-                      {selectedProject ? 'No reports found for selected project' : 'No reports have been created yet'}
-                    </p>
-                    <Button onClick={() => setIsCreateDialogOpen(true)} aria-label="Create your first daily report">
-                      <PlusCircle className="h-4 w-4 mr-2" aria-hidden="true" />
-                      Create First Report
-                    </Button>
-                  </div>
+                  <NoDailyReports onCreate={() => setIsCreateDialogOpen(true)} />
                 }
               />
             );

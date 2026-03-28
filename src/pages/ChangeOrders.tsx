@@ -33,6 +33,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { format } from "date-fns";
 import { AccessiblePageWrapper } from "@/components/accessibility/AccessiblePageWrapper";
 import { AccessibleTable, type TableColumn } from "@/components/accessibility/AccessibleTable";
+import { NoChangeOrders } from "@/components/ui/EmptyStates";
 
 interface Project {
   id: string;
@@ -753,17 +754,7 @@ const ChangeOrders = () => {
               columns={changeOrderColumns}
               data={filteredOrders}
               emptyContent={
-                <div className="text-center py-8">
-                  <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" aria-hidden="true" />
-                  <h3 className="font-medium mb-2">No Change Orders</h3>
-                  <p className="text-muted-foreground mb-4">
-                    {selectedProject && selectedProject !== 'all' ? 'No change orders found for selected project' : 'No change orders have been created yet'}
-                  </p>
-                  <Button onClick={() => setIsCreateDialogOpen(true)}>
-                    <PlusCircle className="h-4 w-4 mr-2" aria-hidden="true" />
-                    Create First Change Order
-                  </Button>
-                </div>
+                <NoChangeOrders onCreate={() => setIsCreateDialogOpen(true)} />
               }
             />
           </CardContent>

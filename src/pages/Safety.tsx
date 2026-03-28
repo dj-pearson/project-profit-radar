@@ -26,6 +26,7 @@ import SafetyChecklistBuilder from '@/components/safety/SafetyChecklistBuilder';
 import TrainingCertificationManager from '@/components/safety/TrainingCertificationManager';
 import OSHAComplianceManager from '@/components/safety/OSHAComplianceManager';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
+import { NoSafetyIncidents } from '@/components/ui/EmptyStates';
 
 interface SafetyStats {
   totalIncidents: number;
@@ -414,11 +415,7 @@ const Safety = () => {
               </CardHeader>
               <CardContent>
                 {recentIncidents.length === 0 ? (
-                  <div className="text-center py-8 text-muted-foreground">
-                    <CheckCircle className="mx-auto h-12 w-12 mb-4 text-green-600" aria-hidden="true" />
-                    <p className="text-lg font-medium mb-2">No Recent Incidents</p>
-                    <p>Great job maintaining a safe workplace!</p>
-                  </div>
+                  <NoSafetyIncidents onCreate={() => setShowIncidentDialog(true)} />
                 ) : (
                   <div className="space-y-4">
                     {recentIncidents.map(incident => (

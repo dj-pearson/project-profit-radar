@@ -20,7 +20,14 @@ import {
   Filter,
   AlertCircle,
   Building,
-  ClipboardList
+  ClipboardList,
+  Clock,
+  Clipboard,
+  ArrowRightLeft,
+  Shield,
+  Wrench,
+  Calculator,
+  UserPlus
 } from 'lucide-react';
 
 interface EmptyStateProps {
@@ -300,6 +307,146 @@ export const NoTasks: React.FC<{ onCreate?: () => void }> = ({ onCreate }) => {
         onCreate
           ? {
               label: 'Create Task',
+              onClick: onCreate,
+              icon: <Plus className="h-4 w-4 mr-2" />
+            }
+          : undefined
+      }
+    />
+  );
+};
+
+// No Estimates
+export const NoEstimates: React.FC<{ onCreate?: () => void }> = ({ onCreate }) => {
+  return (
+    <EmptyState
+      icon={<Calculator className="h-8 w-8 text-gray-400" />}
+      title="No estimates yet"
+      description="Create your first estimate to start bidding on projects"
+      action={
+        onCreate
+          ? {
+              label: 'Create Estimate',
+              onClick: onCreate,
+              icon: <Plus className="h-4 w-4 mr-2" />
+            }
+          : undefined
+      }
+    />
+  );
+};
+
+// No Time Entries
+export const NoTimeEntries: React.FC<{ onCreate?: () => void }> = ({ onCreate }) => {
+  return (
+    <EmptyState
+      icon={<Clock className="h-8 w-8 text-gray-400" />}
+      title="No time entries"
+      description="Start tracking time to monitor labor costs and productivity"
+      action={
+        onCreate
+          ? {
+              label: 'Log Time',
+              onClick: onCreate,
+              icon: <Plus className="h-4 w-4 mr-2" />
+            }
+          : undefined
+      }
+    />
+  );
+};
+
+// No Daily Reports
+export const NoDailyReports: React.FC<{ onCreate?: () => void }> = ({ onCreate }) => {
+  return (
+    <EmptyState
+      icon={<Clipboard className="h-8 w-8 text-gray-400" />}
+      title="No daily reports"
+      description="Create daily reports to track progress, weather, and crew activities"
+      action={
+        onCreate
+          ? {
+              label: 'Create Report',
+              onClick: onCreate,
+              icon: <Plus className="h-4 w-4 mr-2" />
+            }
+          : undefined
+      }
+    />
+  );
+};
+
+// No Change Orders
+export const NoChangeOrders: React.FC<{ onCreate?: () => void }> = ({ onCreate }) => {
+  return (
+    <EmptyState
+      icon={<ArrowRightLeft className="h-8 w-8 text-gray-400" />}
+      title="No change orders"
+      description="Change orders will appear here when scope changes are submitted"
+      action={
+        onCreate
+          ? {
+              label: 'Create Change Order',
+              onClick: onCreate,
+              icon: <Plus className="h-4 w-4 mr-2" />
+            }
+          : undefined
+      }
+    />
+  );
+};
+
+// No Equipment
+export const NoEquipment: React.FC<{ onCreate?: () => void }> = ({ onCreate }) => {
+  return (
+    <EmptyState
+      icon={<Wrench className="h-8 w-8 text-gray-400" />}
+      title="No equipment tracked"
+      description="Add equipment to track assignments, maintenance, and utilization"
+      action={
+        onCreate
+          ? {
+              label: 'Add Equipment',
+              onClick: onCreate,
+              icon: <Plus className="h-4 w-4 mr-2" />
+            }
+          : undefined
+      }
+    />
+  );
+};
+
+// No Safety Incidents
+export const NoSafetyIncidents: React.FC<{ onCreate?: () => void }> = ({ onCreate }) => {
+  return (
+    <EmptyState
+      icon={<Shield className="h-8 w-8 text-green-500" />}
+      title="No safety incidents"
+      description="Great news! No safety incidents have been reported. Keep up the safe work practices."
+      action={
+        onCreate
+          ? {
+              label: 'Report Incident',
+              onClick: onCreate,
+              icon: <Plus className="h-4 w-4 mr-2" />
+            }
+          : undefined
+      }
+    />
+  );
+};
+
+// No Contacts
+export const NoContacts: React.FC<{ onCreate?: () => void }> = ({ onCreate }) => {
+  return (
+    <EmptyState
+      icon={<UserPlus className="h-8 w-8 text-gray-400" />}
+      title="No contacts yet"
+      description="Add contacts to build your client and vendor network"
+      action={
+        onCreate
+          ? {
+              label: 'Add Contact',
               onClick: onCreate,
               icon: <Plus className="h-4 w-4 mr-2" />
             }

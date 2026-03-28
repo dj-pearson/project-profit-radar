@@ -72,6 +72,7 @@ import { SaveAsTemplateDialog } from "@/components/projects/SaveAsTemplateDialog
 import { BulkActionsToolbar } from "@/components/projects/BulkActionsToolbar";
 import { Checkbox } from "@/components/ui/checkbox";
 import { FilterPresetsManager } from "@/components/filters/FilterPresetsManager";
+import { NoProjects, NoFilterResults } from "@/components/ui/EmptyStates";
 import { CSVImportButton } from "@/components/smart-import";
 import { AccessiblePageWrapper } from "@/components/accessibility/AccessiblePageWrapper";
 import { ProjectHealthBadge } from "@/components/projects/ProjectHealthBadge";
@@ -913,21 +914,7 @@ const Projects = () => {
 
         <TabsContent value="active" className="space-y-4">
           {activeProjects.length === 0 ? (
-            <Card>
-              <CardContent className="flex flex-col items-center justify-center py-12">
-                <Building2 className="h-12 w-12 text-muted-foreground mb-4" aria-hidden="true" />
-                <h3 className="text-lg font-semibold mb-2">
-                  No active projects
-                </h3>
-                <p className="text-muted-foreground mb-4">
-                  Get started by creating your first project.
-                </p>
-                <Button onClick={() => handleCreateProject("empty_state_click")}>
-                  <Plus className="h-4 w-4 mr-2" aria-hidden="true" />
-                  Create Project
-                </Button>
-              </CardContent>
-            </Card>
+            <NoProjects onCreate={() => handleCreateProject("empty_state_click")} />
           ) : (
             <VirtualizedGrid
               items={activeProjects}
@@ -943,17 +930,7 @@ const Projects = () => {
 
         <TabsContent value="completed" className="space-y-4">
           {completedProjects.length === 0 ? (
-            <Card>
-              <CardContent className="flex flex-col items-center justify-center py-12">
-                <Building2 className="h-12 w-12 text-muted-foreground mb-4" aria-hidden="true" />
-                <h3 className="text-lg font-semibold mb-2">
-                  No completed projects
-                </h3>
-                <p className="text-muted-foreground">
-                  Completed projects will appear here.
-                </p>
-              </CardContent>
-            </Card>
+            <NoFilterResults onReset={() => setActiveTab("active")} />
           ) : (
             <VirtualizedGrid
               items={completedProjects}
@@ -969,17 +946,7 @@ const Projects = () => {
 
         <TabsContent value="on_hold" className="space-y-4">
           {onHoldProjects.length === 0 ? (
-            <Card>
-              <CardContent className="flex flex-col items-center justify-center py-12">
-                <Building2 className="h-12 w-12 text-muted-foreground mb-4" aria-hidden="true" />
-                <h3 className="text-lg font-semibold mb-2">
-                  No projects on hold
-                </h3>
-                <p className="text-muted-foreground">
-                  Projects on hold will appear here.
-                </p>
-              </CardContent>
-            </Card>
+            <NoFilterResults onReset={() => setActiveTab("active")} />
           ) : (
             <VirtualizedGrid
               items={onHoldProjects}
@@ -995,17 +962,7 @@ const Projects = () => {
 
         <TabsContent value="planning" className="space-y-4">
           {planningProjects.length === 0 ? (
-            <Card>
-              <CardContent className="flex flex-col items-center justify-center py-12">
-                <Building2 className="h-12 w-12 text-muted-foreground mb-4" aria-hidden="true" />
-                <h3 className="text-lg font-semibold mb-2">
-                  No projects in planning
-                </h3>
-                <p className="text-muted-foreground">
-                  Projects in planning phase will appear here.
-                </p>
-              </CardContent>
-            </Card>
+            <NoProjects onCreate={() => handleCreateProject("empty_state_click")} />
           ) : (
             <VirtualizedGrid
               items={planningProjects}

@@ -227,10 +227,13 @@ export const MobileDashboard: React.FC = () => {
         <h3 className={mobileTextClasses.header}>Quick Actions</h3>
         <div className="grid grid-cols-2 gap-4 mt-4">
           {quickActions.map((action) => (
-            <Card 
-              key={action.id} 
-              className={`${mobileCardClasses.container} cursor-pointer hover:shadow-md transition-all duration-200 active:scale-95`}
+            <Card
+              key={action.id}
+              className={`${mobileCardClasses.container} cursor-pointer hover:shadow-md transition-all duration-200 active:scale-95 touch-manipulation`}
               onClick={() => handleActionClick(action)}
+              role="button"
+              aria-label={action.title}
+              style={{ minHeight: '88px' }}
             >
               <CardContent className="pt-4">
                 <div className="flex flex-col items-center text-center space-y-2">

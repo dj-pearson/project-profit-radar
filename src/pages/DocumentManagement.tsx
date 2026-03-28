@@ -44,6 +44,7 @@ import {
   Download,
   Trash2
 } from 'lucide-react';
+import { NoDocuments } from '@/components/ui/EmptyStates';
 
 interface Document {
   id: string;
@@ -682,21 +683,7 @@ const DocumentManagement = () => {
               data={filteredDocuments}
               loading={loadingDocs}
               emptyContent={
-                <div className="text-center py-8">
-                  <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" aria-hidden="true" />
-                  <h3 className="text-lg font-medium mb-2">No documents found</h3>
-                  <p className="text-muted-foreground mb-4">
-                    {searchTerm || filterCategory || filterType
-                      ? 'Try adjusting your filters or search terms.'
-                      : `Upload your first ${isProjectContext ? 'project' : 'company'} document to get started.`}
-                  </p>
-                  {!searchTerm && !filterCategory && !filterType && (
-                    <Button onClick={() => setIsUploadOpen(true)}>
-                      <Upload className="h-4 w-4 mr-2" aria-hidden="true" />
-                      Upload Files
-                    </Button>
-                  )}
-                </div>
+                <NoDocuments onUpload={(!searchTerm && !filterCategory && !filterType) ? () => setIsUploadOpen(true) : undefined} />
               }
             />
           );

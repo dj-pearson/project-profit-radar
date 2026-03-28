@@ -13,10 +13,11 @@ import { useImpersonation } from '@/hooks/useImpersonation';
 import TrialStatusBanner from '@/components/TrialStatusBanner';
 import { ImpersonationBanner } from '@/components/admin/ImpersonationBanner';
 import { SkipLinks } from '@/components/accessibility/SkipLinks';
-import { Home, Building2, DollarSign, Users, Settings, Search } from 'lucide-react';
+import { Home, Building2, DollarSign, Users, Settings, Search, Clock, FileText } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { RealtimeNotificationCenter } from '@/components/realtime/RealtimeNotificationCenter';
 import { DashboardSearchTrigger } from '@/components/search/DashboardSearchTrigger';
+import { AutoBreadcrumb } from '@/components/navigation/AutoBreadcrumb';
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -46,13 +47,13 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
     navigate('/auth');
   };
 
-  // Mobile bottom navigation items
+  // Mobile bottom navigation items - optimized for field workers
   const bottomNavItems = [
-    { icon: Home, label: 'Home', href: '/dashboard' },
-    { icon: Building2, label: 'Projects', href: '/projects-hub' },
-    { icon: DollarSign, label: 'Financial', href: '/financial-hub' },
-    { icon: Users, label: 'People', href: '/people-hub' },
-    { icon: Settings, label: 'Admin', href: '/admin-hub' },
+    { icon: Home, label: 'Dashboard', href: '/dashboard' },
+    { icon: Building2, label: 'Projects', href: '/projects' },
+    { icon: Clock, label: 'Time', href: '/time-tracking' },
+    { icon: FileText, label: 'Reports', href: '/daily-reports' },
+    { icon: Settings, label: 'More', href: '/admin-hub' },
   ];
 
   return (
@@ -137,6 +138,11 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
               </div>
             </div>
           </header>
+
+          {/* Breadcrumb Navigation */}
+          <div className="px-3 md:px-6 pt-2">
+            <AutoBreadcrumb />
+          </div>
 
           {/* Main Content Area - renders as <div> when outer AccessiblePageWrapper provides <main> */}
           {hasAccessibleWrapper ? (

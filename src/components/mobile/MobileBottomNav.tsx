@@ -59,7 +59,7 @@ function NavButton({ icon: Icon, label, href, active }: NavButtonProps) {
       to={href}
       className={cn(
         'flex flex-col items-center justify-center',
-        'min-w-[64px] min-h-[48px] py-2 px-3',
+        'min-w-[64px] min-h-[44px] py-2 px-3',
         'space-y-1',
         'transition-all duration-150',
         'touch-manipulation',
@@ -69,6 +69,7 @@ function NavButton({ icon: Icon, label, href, active }: NavButtonProps) {
         'active:scale-95 active:opacity-70',
         'rounded-lg'
       )}
+      style={{ minHeight: '44px', minWidth: '44px' }}
       aria-current={active ? 'page' : undefined}
     >
       <Icon className={cn('h-5 w-5', active && 'drop-shadow-sm')} />

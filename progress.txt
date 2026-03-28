@@ -600,3 +600,54 @@ Implemented 4 priority-2 stories delivering major platform capabilities: cost co
 ### Quality: `npx vite build` PASS (49.91s, 6341 modules)
 
 ---
+
+## 2026-03-28 - Ralph Loop: UX Polish Batch (US-066, US-085, US-093, US-094)
+
+### PRD Progress: 4 stories completed this session. 30 remaining.
+
+### US-094: Breadcrumb Navigation for All Nested Pages (P3)
+- Created `src/components/navigation/AutoBreadcrumb.tsx` using shadcn/ui breadcrumb primitives
+- Auto-generates breadcrumbs from URL path with 100+ route-to-label mappings
+- Handles dynamic segments (UUIDs shown as "Details")
+- Home icon as root, clickable links for non-current segments
+- Uses `<nav aria-label="breadcrumb">` for accessibility
+- Responsive via flex-wrap, hidden for single-segment routes
+- Integrated into DashboardLayout header (shows on all nested pages)
+
+### US-093: Empty State Illustrations and CTAs Across List Pages (P3)
+- Extended `src/components/ui/EmptyStates.tsx` with 7 new components: NoEstimates, NoTimeEntries, NoDailyReports, NoChangeOrders, NoEquipment, NoSafetyIncidents, NoContacts
+- Total: 18 entity-specific empty state components available
+- Replaced inline empty states in 6 pages: Projects.tsx (4 tabs), Equipment.tsx, DailyReports.tsx, ChangeOrders.tsx, Safety.tsx, DocumentManagement.tsx
+- Each uses contextual icon, description, and CTA button
+
+### US-066: Bulk Actions Toolbar on Projects List (P3)
+- Already implemented: BulkActionsToolbar with checkbox selection, select-all, bulk status change, archive with confirmation, export CSV
+- BulkOperationProgress component for real-time operation tracking with retry
+- Marked as complete in prd.json
+
+### US-085: Mobile-Optimized Dashboard with Bottom Navigation (P2)
+- MobileDashboard component (already existed) integrated into Dashboard.tsx for <768px viewports via `useIsMobile()`
+- Updated DashboardLayout bottom nav items to: Dashboard, Projects, Time, Reports, More
+- All touch targets enforce 44px minimum via inline style + touch-manipulation class
+- Quick actions: Time Tracking, Safety Report, Daily Report, Equipment, Materials, Camera, Location
+
+### New Files Created
+- `src/components/navigation/AutoBreadcrumb.tsx` - Auto-generating breadcrumb component
+
+### Files Modified
+- `src/components/layout/DashboardLayout.tsx` - Added AutoBreadcrumb, updated bottom nav items
+- `src/components/mobile/MobileBottomNav.tsx` - 44px min touch targets
+- `src/components/mobile/MobileDashboard.tsx` - 44px touch targets on action cards
+- `src/components/ui/EmptyStates.tsx` - 7 new entity-specific empty states
+- `src/pages/Dashboard.tsx` - Conditional MobileDashboard for mobile viewports
+- `src/pages/Projects.tsx` - Replaced inline empty states with EmptyState components
+- `src/pages/Equipment.tsx` - NoEquipment empty state
+- `src/pages/DailyReports.tsx` - NoDailyReports empty state
+- `src/pages/ChangeOrders.tsx` - NoChangeOrders empty state
+- `src/pages/Safety.tsx` - NoSafetyIncidents empty state
+- `src/pages/DocumentManagement.tsx` - NoDocuments empty state
+- `prd.json` - US-066, US-085, US-093, US-094 marked as passes: true
+
+### Quality: `npx vite build` PASS (57.89s)
+
+---
