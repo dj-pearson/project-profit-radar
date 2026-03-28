@@ -780,3 +780,18 @@ Implemented 4 priority-2 stories delivering major platform capabilities: cost co
 ### Quality: `npx vite build` PASS (57.10s)
 
 ---
+
+## 2026-03-28 - Ralph Loop: Safety Incident Reporting (US-103)
+
+### Stories Completed
+- **US-103**: Safety Incident Reporting - Enhanced Safety.tsx incidents tab with full AccessibleTable, severity/project/date filters, incident detail dialog with investigation notes and corrective actions, severity breakdown badges, days since last incident counter, monthly trend BarChart
+- **US-100 (addendum)**: Added useRecentlyViewed tracking to ProjectDetail.tsx on mount
+
+### Files Modified
+- `src/pages/Safety.tsx` - Full incidents tab with table, filters, detail dialog, trend chart
+- `src/pages/ProjectDetail.tsx` - Added recently viewed tracking integration
+- `prd.json` - US-103 marked as passes: true
+
+### Quality: `npx vite build` PASS (54.67s)
+
+---

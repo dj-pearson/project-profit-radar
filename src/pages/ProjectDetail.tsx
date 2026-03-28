@@ -41,6 +41,7 @@ import {
 } from 'lucide-react';
 import { AccessiblePageWrapper } from "@/components/accessibility/AccessiblePageWrapper";
 import { cn } from '@/lib/utils';
+import { useRecentlyViewed } from '@/hooks/useRecentlyViewed';
 
 // Tab definitions for the horizontal tab bar
 const projectTabs = [
@@ -61,6 +62,7 @@ const ProjectDetail = () => {
   const location = useLocation();
   const { setNavigationContext } = usePlatform();
   const isMobile = useIsMobile();
+  const { addRecentItem } = useRecentlyViewed();
 
   const [project, setProject] = useState<ProjectWithRelations | null>(null);
   const [loading, setLoading] = useState(true);
@@ -108,6 +110,12 @@ const ProjectDetail = () => {
       }
 
       setProject(data);
+      addRecentItem({
+        id: data.id,
+        type: 'project',
+        name: data.name || 'Untitled Project',
+        path: `/projects/${data.id}`,
+      });
     } catch (error: any) {
       toast({
         variant: "destructive",
