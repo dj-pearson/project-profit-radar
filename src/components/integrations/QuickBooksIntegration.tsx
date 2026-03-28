@@ -7,12 +7,13 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { 
-  RefreshCw, 
-  CheckCircle, 
-  AlertCircle, 
-  DollarSign, 
-  FileText, 
+import { validateRedirectUrl } from '@/lib/security/urlValidation';
+import {
+  RefreshCw,
+  CheckCircle,
+  AlertCircle,
+  DollarSign,
+  FileText,
   Users, 
   Calendar,
   ArrowUpDown,
@@ -144,7 +145,11 @@ export const QuickBooksIntegration = () => {
 
       if (error) throw error;
 
-      // Redirect to QuickBooks OAuth
+      // Redirect to QuickBooks OAuth (validate URL first)
+      const urlCheck = validateRedirectUrl(data.auth_url);
+      if (!urlCheck.valid) {
+        throw new Error('Invalid OAuth URL received from server.');
+      }
       window.location.href = data.auth_url;
 
     } catch (error: any) {

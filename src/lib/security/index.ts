@@ -133,6 +133,28 @@ export type {
   UrlValidationResult,
 } from './ssrfPrevention';
 
+// URL Validation for Open Redirect Prevention
+export {
+  validateRedirectUrl,
+  isTrustedDomain,
+  TRUSTED_REDIRECT_DOMAINS,
+} from './urlValidation';
+export type { RedirectValidationResult } from './urlValidation';
+
+// File Upload Validation
+export {
+  validateFileUpload,
+  generateSecureFilename,
+  sanitizeFilename,
+  ALLOWED_FILE_TYPES,
+  MAX_FILE_SIZES,
+  ALLOWED_EXTENSIONS,
+} from './fileUploadValidation';
+export type {
+  FileValidationResult,
+  FileValidationOptions,
+} from './fileUploadValidation';
+
 // Error Information Leakage Prevention (US-005)
 export {
   sanitizeError,

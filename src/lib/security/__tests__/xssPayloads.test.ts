@@ -525,27 +525,26 @@ describe('US-010: XSS Payload Test Suite', () => {
       expect(sanitizeInput(long).length).toBe(5000);
     });
 
-    // TODO: sanitizeInput uses simple regex stripping of < and >.
-    // It does NOT handle HTML-entity encoded payloads (e.g. &lt;script&gt;)
-    // or URL-encoded payloads (%3Cscript%3E). If the output of sanitizeInput
-    // is later rendered via dangerouslySetInnerHTML or innerHTML, those
-    // encoded payloads could decode into executable HTML. Currently this is
-    // acceptable because sanitizeInput output is only used in text contexts
-    // (React JSX auto-escapes), but this is a known limitation.
-    it('does not decode HTML entities (known limitation)', () => {
+    // FIXED: sanitizeInput now decodes HTML entities and strips the resulting angle brackets
+    it('decodes and strips HTML-entity-encoded script tags', () => {
       const output = sanitizeInput('&lt;script&gt;alert(1)&lt;/script&gt;');
-      // The entities pass through unchanged -- safe ONLY in text contexts
-      expect(output).toContain('&lt;script&gt;');
+      expect(output).not.toContain('<script');
+      expect(output).not.toContain('&lt;script');
+      expect(output).toBe('scriptalert(1)/script');
     });
 
-    // TODO: sanitizeInput does not strip URL-encoded angle brackets.
-    // The %3C and %3E pass through. This is safe when output is placed in
-    // text content (React auto-escapes), but would be dangerous if the
-    // output were used in an href or injected via innerHTML after
-    // decodeURIComponent.
-    it('does not decode URL-encoded brackets (known limitation)', () => {
+    // FIXED: sanitizeInput now decodes URL-encoded characters and strips angle brackets
+    it('decodes and strips URL-encoded script tags', () => {
       const output = sanitizeInput('%3Cscript%3Ealert(1)%3C/script%3E');
-      expect(output).toContain('%3Cscript%3E');
+      expect(output).not.toContain('<script');
+      expect(output).not.toContain('%3Cscript');
+      expect(output).toBe('scriptalert(1)/script');
+    });
+
+    it('handles double-encoded XSS payloads', () => {
+      const output = sanitizeInput('%253Cscript%253Ealert(1)%253C/script%253E');
+      expect(output).not.toContain('<script');
+      expect(output).toBe('scriptalert(1)/script');
     });
   });
 

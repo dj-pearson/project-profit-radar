@@ -10,7 +10,8 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-import { 
+import { validateRedirectUrl } from '@/lib/security/urlValidation';
+import {
   Calendar,
   RefreshCw,
   Settings,
@@ -110,7 +111,11 @@ const CalendarIntegration = () => {
 
       if (error) throw error;
 
-      // Redirect to Google OAuth
+      // Redirect to Google OAuth (validate URL first)
+      const googleUrlCheck = validateRedirectUrl(data.auth_url);
+      if (!googleUrlCheck.valid) {
+        throw new Error('Invalid Google OAuth URL received.');
+      }
       window.location.href = data.auth_url;
     } catch (error) {
       console.error('Google auth error:', error);
@@ -131,7 +136,11 @@ const CalendarIntegration = () => {
 
       if (error) throw error;
 
-      // Redirect to Microsoft OAuth
+      // Redirect to Microsoft OAuth (validate URL first)
+      const outlookUrlCheck = validateRedirectUrl(data.auth_url);
+      if (!outlookUrlCheck.valid) {
+        throw new Error('Invalid Microsoft OAuth URL received.');
+      }
       window.location.href = data.auth_url;
     } catch (error) {
       console.error('Outlook auth error:', error);

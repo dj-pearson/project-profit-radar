@@ -8,6 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { usePromotions } from "@/hooks/usePromotions";
 import { PRICING_PLANS, getPlanPrice, getAnnualSavings, type BillingPeriod } from "@/config/pricing";
+import { validateRedirectUrl } from "@/lib/security/urlValidation";
 
 const Pricing = () => {
   const navigate = useNavigate();
@@ -50,7 +51,11 @@ const Pricing = () => {
       if (error) throw error;
 
       if (data?.url) {
-        // Redirect to Stripe checkout in same tab for clearer flow
+        // Validate redirect URL before navigating
+        const urlCheck = validateRedirectUrl(data.url);
+        if (!urlCheck.valid) {
+          throw new Error('Invalid checkout URL received.');
+        }
         window.location.href = data.url;
       } else {
         throw new Error('No checkout URL received');
