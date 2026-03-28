@@ -14,6 +14,7 @@ import { Separator } from '@/components/ui/separator';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { validateFileUpload, generateSecureFilename } from '@/lib/security/fileUploadValidation';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { ResponsiveContainer } from '@/components/layout/ResponsiveContainer';
 import { mobileGridClasses, mobileFilterClasses, mobileButtonClasses, mobileTextClasses, mobileCardClasses } from '@/utils/mobileHelpers';
@@ -173,8 +174,19 @@ const DailyReports = () => {
       const photoUrls: string[] = [];
       if (selectedPhotos.length > 0) {
         for (const photo of selectedPhotos) {
-          const fileExt = photo.name.split('.').pop();
-          const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
+          // Validate file before upload
+          const validation = validateFileUpload(photo, {
+            allowedTypes: ['image/jpeg', 'image/png', 'image/gif', 'image/webp'],
+          });
+          if (!validation.valid) {
+            toast({
+              variant: "destructive",
+              title: "Invalid Photo",
+              description: validation.error || `Photo "${photo.name}" is not valid.`
+            });
+            continue;
+          }
+          const fileName = generateSecureFilename(photo.name);
           const filePath = `daily-reports/${newReport.project_id}/${fileName}`;
 
           const { error: uploadError } = await supabase.storage

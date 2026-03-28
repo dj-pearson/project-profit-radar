@@ -46,13 +46,70 @@ export function encodeWhatsAppUrl(phone: string, message: string): string {
 }
 
 /**
- * Sanitize user input for display
+ * Decode HTML entities to their character equivalents for sanitization.
+ * Handles named entities (&lt; &gt; &amp; &quot; &apos;) and
+ * numeric entities (&#60; &#x3C; etc).
+ */
+function decodeHtmlEntities(input: string): string {
+  return input
+    // Named entities
+    .replace(/&lt;/gi, '<')
+    .replace(/&gt;/gi, '>')
+    .replace(/&amp;/gi, '&')
+    .replace(/&quot;/gi, '"')
+    .replace(/&apos;/gi, "'")
+    // Decimal numeric entities for < and >
+    .replace(/&#0*60;?/g, '<')
+    .replace(/&#0*62;?/g, '>')
+    .replace(/&#0*34;?/g, '"')
+    .replace(/&#0*39;?/g, "'")
+    // Hex numeric entities for < and >
+    .replace(/&#x0*3[cC];?/g, '<')
+    .replace(/&#x0*3[eE];?/g, '>')
+    .replace(/&#x0*22;?/g, '"')
+    .replace(/&#x0*27;?/g, "'");
+}
+
+/**
+ * Decode URL-encoded characters that could be used for XSS
+ */
+function decodeUrlEncodedXss(input: string): string {
+  let decoded = input;
+  // Handle double-encoding: %253C -> %3C -> <
+  // Run up to 3 passes to catch multi-layer encoding
+  for (let i = 0; i < 3; i++) {
+    const previous = decoded;
+    try {
+      decoded = decodeURIComponent(decoded);
+    } catch {
+      // Invalid encoding, stop decoding
+      break;
+    }
+    if (decoded === previous) break;
+  }
+  return decoded;
+}
+
+/**
+ * Sanitize user input for display.
+ *
+ * Handles raw angle brackets, HTML-entity-encoded payloads,
+ * URL-encoded payloads, and double-encoded attack vectors.
  */
 export function sanitizeInput(input: string): string {
-  return input
-    .trim()
-    .replace(/[<>]/g, '') // Remove angle brackets
-    .slice(0, 5000); // Limit length
+  let sanitized = input.trim();
+
+  // Decode URL-encoded characters first (handles double-encoding)
+  sanitized = decodeUrlEncodedXss(sanitized);
+
+  // Decode HTML entities
+  sanitized = decodeHtmlEntities(sanitized);
+
+  // Remove angle brackets and other dangerous characters
+  sanitized = sanitized.replace(/[<>]/g, '');
+
+  // Limit length
+  return sanitized.slice(0, 5000);
 }
 
 /**

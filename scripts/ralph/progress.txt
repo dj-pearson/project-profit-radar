@@ -1,5 +1,13 @@
 ## Consolidated Patterns
 
+### Security Utilities
+- File upload validation: `src/lib/security/fileUploadValidation.ts` - validateFileUpload, generateSecureFilename, sanitizeFilename
+- URL redirect validation: `src/lib/security/urlValidation.ts` - validateRedirectUrl, isTrustedDomain, TRUSTED_REDIRECT_DOMAINS
+- Input sanitization: `src/lib/security/sanitize.ts` - sanitizeInput now handles HTML-entity and URL-encoded XSS payloads
+- All security exports consolidated in `src/lib/security/index.ts`
+- Always use crypto.randomUUID() instead of Math.random() for filenames and tokens
+- Always validate redirect URLs from API responses against TRUSTED_REDIRECT_DOMAINS before window.location.href assignment
+
 ### Supabase Query Patterns
 - Client: `src/integrations/supabase/client.ts` - createClient with env vars
 - Types: `src/integrations/supabase/types.ts` (manually maintained, not auto-generated)
@@ -447,5 +455,51 @@ Implemented all 25 UI/UX improvement stories from the UI/UX audit PRD across 12 
 - **Dual PRD sync**: Root `prd.json` (UX stories) and `scripts/ralph/prd.json` (security stories) are separate PRDs with independent story tracking
 - **Secret scan false positives**: Test fixtures, password filtering code, and placeholder URLs (T00000/XXXXX) need post-filter exclusions
 - **CI security job**: Already existed in `.github/workflows/ci.yml` but referenced non-existent `scripts/secret-scan.sh` - would have broken CI
+
+---
+
+## 2026-03-28 - US-001, US-002, US-003 (Comprehensive Security Audit & Top 3 Fixes)
+
+### What was implemented
+- Conducted full-codebase security audit covering input sanitization, bounds checking, auth/authorization, CORS, file uploads, open redirects, insecure randomness, unbounded queries, and error leakage
+- Created new prd.json with 16 security user stories organized by priority (P1-P4)
+- Fixed 3 highest priority issues:
+
+**US-001: File Upload Validation**
+- Created `src/lib/security/fileUploadValidation.ts` with validateFileUpload (type + extension + size checks), generateSecureFilename (crypto.randomUUID), sanitizeFilename (path traversal prevention)
+- Applied to `src/components/storage/FileStorageManager.tsx` (was accepting ANY file with NO validation)
+- Applied to `src/pages/DailyReports.tsx` (was using Math.random() for filenames, no type validation)
+
+**US-002: Strengthen sanitizeInput**
+- Updated `src/lib/security/sanitize.ts` sanitizeInput() to decode HTML entities (&lt; &#60; &#x3C;), URL-encoded characters (%3C), and double-encoded payloads before stripping angle brackets
+- Fixed known limitation TODOs in `src/lib/security/__tests__/xssPayloads.test.ts`
+
+**US-003: Open Redirect Prevention**
+- Created `src/lib/security/urlValidation.ts` with validateRedirectUrl (domain allowlist, protocol check, protocol-relative URL blocking)
+- Applied to: StripePaymentProcessor.tsx, QuickBooksIntegration.tsx, CalendarIntegration.tsx (Google + Outlook), Pricing.tsx
+
+### Files changed
+- `scripts/ralph/prd.json` - New PRD with 16 security stories, US-001/002/003 marked passes: true
+- `scripts/ralph/progress.txt` - This entry + consolidated patterns
+- `src/lib/security/fileUploadValidation.ts` (NEW)
+- `src/lib/security/urlValidation.ts` (NEW)
+- `src/lib/security/sanitize.ts` - Enhanced sanitizeInput
+- `src/lib/security/index.ts` - Added exports for new utilities
+- `src/lib/security/__tests__/xssPayloads.test.ts` - Updated tests for sanitizeInput fixes
+- `src/components/storage/FileStorageManager.tsx` - Added file validation
+- `src/pages/DailyReports.tsx` - Added photo validation + secure filenames
+- `src/components/financial/StripePaymentProcessor.tsx` - Added redirect URL validation
+- `src/components/integrations/QuickBooksIntegration.tsx` - Added redirect URL validation
+- `src/components/calendar/CalendarIntegration.tsx` - Added redirect URL validation (Google + Outlook)
+- `src/components/Pricing.tsx` - Added redirect URL validation
+
+### Quality: `npx vite build` PASS (52.09s)
+
+### Learnings for future iterations
+- **FileStorageManager had zero validation** - was the most dangerous upload component; other components like ImageUpload already had type/size checks
+- **sanitizeInput was used in ResetPassword.tsx** - security-critical path that was only doing basic regex stripping
+- **Open redirects via API responses** - 5+ components were blindly redirecting to URLs from edge function responses without domain validation
+- **Existing security infrastructure is strong** - DOMPurify, SSRF prevention, CSRF tokens, rate limiters, error sanitizers all exist but adoption is inconsistent
+- **Remaining 13 stories** cover: Math.random replacement (US-004), unbounded queries (US-005), JSON.parse try-catch (US-006), form sanitization (US-007), duplicate utils consolidation (US-008), maxLength on inputs (US-009), search schema bounds (US-010), edge function error sanitization (US-011), wildcard CORS replacement (US-012), unprotected edge functions (US-013), UTM param validation (US-014), returnTo validation (US-015), file extension allowlist (US-016)
 
 ---

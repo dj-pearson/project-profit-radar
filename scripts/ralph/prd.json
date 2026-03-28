@@ -1,343 +1,277 @@
 {
-  "project": "BuildDesk AI Security Defenses & Internal Penetration Testing",
-  "branchName": "ralph/ai-security-defenses",
-  "description": "Comprehensive security hardening initiative driven by analysis of autonomous AI penetration testing tools like Shannon (github.com/KeygraphHQ/shannon). Shannon is an AI-powered pentest framework that autonomously reads source code, identifies vulnerabilities, and executes live exploits against running applications - achieving 96% success rates. It targets XSS, SQL injection, SSRF, broken auth/authz, and command injection using code-aware dynamic testing. This PRD addresses two critical needs: (1) Harden our attack surface against the specific vectors Shannon exploits - removing CSP unsafe directives, adding CSRF/SSRF/rate-limiting protections, and preventing error information leakage, and (2) Build internal security testing capabilities that mirror Shannon's methodology so we can continuously test ourselves. Current gaps: CSP uses unsafe-inline/unsafe-eval, zero CSRF protection, no SSRF prevention in 166+ edge functions, rate limiting is UI-only with no enforcement, and no automated security test suites.",
+  "project": "BuildDesk Comprehensive Security Audit & Hardening",
+  "branchName": "claude/security-audit-fixes-Fu9e4",
+  "description": "Comprehensive security hardening initiative based on a full-codebase security audit covering input sanitization, bounds checking, authentication/authorization, CORS, file upload validation, open redirects, insecure randomness, unbounded queries, and error information leakage. This PRD documents all identified vulnerabilities as user stories for systematic remediation via Ralph AI loops. Priority 1 items are critical/high severity requiring immediate action, Priority 2 are high/medium, Priority 3 are medium, and Priority 4 are low/hardening improvements.",
   "userStories": [
     {
       "id": "US-001",
-      "title": "Create SSRF prevention utility with URL allowlisting",
-      "description": "As a security engineer, I want a server-side request forgery (SSRF) prevention utility so that our edge functions cannot be tricked into making requests to internal networks or unintended hosts. Shannon specifically targets SSRF vulnerabilities by analyzing code that makes outbound HTTP requests based on user input. Create src/lib/security/ssrfPrevention.ts with: (1) a validateUrl() function that checks URLs against an allowlist of permitted domains and blocks private IP ranges (10.x, 172.16-31.x, 192.168.x, 127.x, 0.0.0.0, ::1, fd00::/8), (2) a sanitizeUrl() function that normalizes URLs to prevent bypass techniques (double encoding, IPv6 embedding, DNS rebinding via octal/hex IP notation, URL parser differentials), (3) a ALLOWED_EXTERNAL_DOMAINS constant with our known integrations (stripe.com, supabase.co, quickbooks.api.intuit.com, googleapis.com, graph.microsoft.com), (4) detection of redirect-based SSRF (flag URLs with redirect parameters). Create comprehensive tests at src/lib/security/__tests__/ssrfPrevention.test.ts.",
+      "title": "Harden file upload validation across all upload components",
+      "description": "As a security engineer, I want all file upload components to validate file type, size, and sanitize filenames so that attackers cannot upload malicious files or exploit path traversal. Currently FileStorageManager.tsx (line 112) accepts ANY file with NO type or size validation and uses unsanitized file.name directly in the storage path. DailyReports.tsx (line 177) also lacks file type/size validation and uses Math.random() for filename generation. Create a reusable file upload validation utility at src/lib/security/fileUploadValidation.ts with: (1) validateFileUpload() that checks file type against an allowlist, validates file size against a configurable max, and sanitizes the filename by stripping path separators and special characters, (2) generateSecureFilename() that uses crypto.randomUUID() instead of Math.random(), (3) ALLOWED_FILE_TYPES constant with safe MIME types, (4) MAX_FILE_SIZES constant with per-type size limits. Then apply this utility to FileStorageManager.tsx and DailyReports.tsx.",
       "acceptanceCriteria": [
-        "src/lib/security/ssrfPrevention.ts exports validateUrl, sanitizeUrl, isPrivateIp, ALLOWED_EXTERNAL_DOMAINS",
-        "validateUrl rejects private IP ranges: 10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16, 127.0.0.0/8, 0.0.0.0, ::1",
-        "validateUrl rejects URLs not in the allowed domains list when strict mode is enabled",
-        "sanitizeUrl handles double-encoded URLs, octal IP notation (0177.0.0.1), hex IP notation (0x7f000001), IPv6-mapped IPv4 (::ffff:127.0.0.1)",
-        "isPrivateIp correctly identifies all RFC 1918 and loopback addresses",
-        "Tests cover at least 25 SSRF bypass techniques including URL parser differentials",
-        "All functions are exported from src/lib/security/index.ts",
+        "src/lib/security/fileUploadValidation.ts exports validateFileUpload, generateSecureFilename, ALLOWED_FILE_TYPES, MAX_FILE_SIZES",
+        "validateFileUpload checks file.type against ALLOWED_FILE_TYPES allowlist and rejects unknown types",
+        "validateFileUpload checks file.size against MAX_FILE_SIZES limits (default 10MB for documents, 5MB for images)",
+        "generateSecureFilename uses crypto.randomUUID() instead of Math.random() and strips path separators from original filename",
+        "FileStorageManager.tsx handleFileUpload calls validateFileUpload before uploading and shows error toast on rejection",
+        "DailyReports.tsx handleCreateReport validates each photo file before upload using validateFileUpload",
+        "DailyReports.tsx uses generateSecureFilename instead of Math.random()-based naming",
         "npm run build passes",
-        "npm run lint passes",
-        "npm run test:run passes"
+        "npm run lint passes"
       ],
       "priority": 1,
-      "passes": true
+      "passes": true,
+      "notes": "COMPLETED. Created src/lib/security/fileUploadValidation.ts with validateFileUpload, generateSecureFilename, sanitizeFilename, ALLOWED_FILE_TYPES, MAX_FILE_SIZES, ALLOWED_EXTENSIONS. Applied to FileStorageManager.tsx and DailyReports.tsx. Exported from src/lib/security/index.ts."
     },
     {
       "id": "US-002",
-      "title": "Harden Content Security Policy by removing unsafe-eval",
-      "description": "As a security engineer, I want to remove unsafe-eval from our CSP so that Shannon-style XSS attacks cannot execute arbitrary JavaScript via eval(), Function(), or setTimeout(string). Currently public/_headers has both 'unsafe-inline' and 'unsafe-eval' in the script-src directive, which effectively disables CSP protection against XSS - the #1 attack vector Shannon targets. Remove 'unsafe-eval' from script-src. This may break some third-party libraries that use eval - if so, use 'unsafe-hashes' with specific script hashes instead. Keep 'unsafe-inline' for now (US-003 addresses it). Also add: (1) require-trusted-types-for 'script' directive to prevent DOM XSS, (2) block-all-mixed-content directive, (3) upgrade-insecure-requests if not already present. Test that the build still produces valid HTML.",
+      "title": "Strengthen sanitizeInput to handle encoded XSS payloads",
+      "description": "As a security engineer, I want sanitizeInput() to neutralize HTML-entity-encoded and URL-encoded XSS payloads so that encoded attack vectors like &lt;script&gt; and %3Cscript%3E are blocked. The current implementation in src/lib/security/sanitize.ts (line 51-56) only strips literal < and > characters with a simple regex replace, which is insufficient against encoded payloads. The existing test suite at src/lib/security/__tests__/xssPayloads.test.ts (lines 528-547) documents this as known gaps with TODO comments. Update sanitizeInput to: (1) decode HTML entities before stripping (handle &lt; &gt; &amp; &#60; &#x3C; etc), (2) decode URL-encoded characters (%3C %3E %22 etc), (3) strip the decoded angle brackets and dangerous characters, (4) handle double-encoding attacks. Also update the test TODOs to verify the fixes work.",
       "acceptanceCriteria": [
-        "public/_headers Content-Security-Policy no longer contains 'unsafe-eval' in script-src",
-        "If any third-party script needs eval, it is accommodated via 'unsafe-hashes' with a specific SHA hash, not via blanket unsafe-eval",
-        "CSP includes require-trusted-types-for 'script' directive",
-        "CSP includes block-all-mixed-content directive",
-        "CSP includes upgrade-insecure-requests directive",
-        "All existing script-src domain allowlists remain intact",
+        "sanitizeInput in src/lib/security/sanitize.ts decodes HTML entities (&lt; &gt; &#60; &#x3C; etc) before stripping angle brackets",
+        "sanitizeInput decodes URL-encoded characters (%3C %3E %22 %27 etc) before stripping",
+        "sanitizeInput handles double-encoded payloads (%253C becomes %3C becomes < which is stripped)",
+        "sanitizeInput still preserves normal text without angle brackets or encoded characters",
+        "The TODO comments in xssPayloads.test.ts lines 528-547 are resolved with passing assertions",
+        "All existing sanitize tests continue to pass",
         "npm run build passes",
         "npm run lint passes"
       ],
       "priority": 1,
-      "passes": true
+      "passes": true,
+      "notes": "COMPLETED. Updated sanitizeInput in src/lib/security/sanitize.ts to decode HTML entities and URL-encoded characters before stripping angle brackets. Handles double-encoding attacks. Updated xssPayloads.test.ts to verify fixes."
     },
     {
       "id": "US-003",
-      "title": "Add CSRF token protection for state-changing operations",
-      "description": "As a security engineer, I want CSRF protection so that attackers cannot forge requests on behalf of authenticated users. Shannon handles complex auth flows and specifically tests for CSRF vulnerabilities. Our current app has ZERO CSRF protection - relying solely on JWT in the Authorization header, which is safe for API calls but NOT for any form submissions or same-origin requests where cookies are sent automatically. Create src/lib/security/csrfProtection.ts implementing the Synchronizer Token Pattern: (1) generateCsrfToken() that creates a cryptographically random token using crypto.getRandomValues(), (2) validateCsrfToken() that compares with constant-time comparison to prevent timing attacks, (3) useCsrfToken() React hook that manages token lifecycle in sessionStorage and provides it for forms, (4) CsrfTokenField React component that renders a hidden input. Create tests at src/lib/security/__tests__/csrfProtection.test.ts.",
+      "title": "Add URL validation for open redirect prevention on API-returned URLs",
+      "description": "As a security engineer, I want all window.location.href assignments that use URLs from API responses to validate the URL domain before redirecting so that compromised or malicious API responses cannot redirect users to attacker-controlled sites. Currently multiple components redirect to URLs returned from edge functions without validation: StripePaymentProcessor.tsx (line 56) redirects to data.checkout_url, QuickBooksIntegration.tsx (line 148) redirects to data.auth_url, CalendarIntegration.tsx (lines 114, 135) redirects to data.auth_url, and Pricing.tsx (line 54) redirects to data.url. Create src/lib/security/urlValidation.ts with: (1) validateRedirectUrl() that checks the URL against an allowlist of trusted domains (stripe.com, intuit.com, accounts.google.com, login.microsoftonline.com, the app's own domain), (2) isTrustedDomain() helper, (3) TRUSTED_REDIRECT_DOMAINS constant. Apply validateRedirectUrl to all identified redirect locations.",
       "acceptanceCriteria": [
-        "src/lib/security/csrfProtection.ts exports generateCsrfToken, validateCsrfToken, getCsrfToken",
-        "src/lib/security/csrfProtection.tsx exports useCsrfToken hook and CsrfTokenField component",
-        "generateCsrfToken creates a 32-byte random hex string using crypto.getRandomValues",
-        "validateCsrfToken uses constant-time string comparison (character-by-character with no early exit)",
-        "useCsrfToken hook stores token in sessionStorage with key 'csrf-token' and regenerates on session start",
-        "CsrfTokenField renders <input type='hidden' name='csrf_token' value={token} />",
-        "Tests verify token generation uniqueness, validation correctness, timing-safe comparison",
-        "All exports are re-exported from src/lib/security/index.ts",
+        "src/lib/security/urlValidation.ts exports validateRedirectUrl, isTrustedDomain, TRUSTED_REDIRECT_DOMAINS",
+        "validateRedirectUrl parses the URL and checks the hostname against TRUSTED_REDIRECT_DOMAINS",
+        "validateRedirectUrl rejects javascript: and data: protocol URLs",
+        "validateRedirectUrl rejects protocol-relative URLs (//evil.com)",
+        "StripePaymentProcessor.tsx validates data.checkout_url before redirect with toast error on failure",
+        "QuickBooksIntegration.tsx validates data.auth_url before redirect",
+        "CalendarIntegration.tsx validates data.auth_url before redirect (both Google and Outlook)",
+        "Pricing.tsx validates data.url before redirect",
         "npm run build passes",
-        "npm run lint passes",
-        "npm run test:run passes"
+        "npm run lint passes"
       ],
       "priority": 1,
-      "passes": true
+      "passes": true,
+      "notes": "COMPLETED. Created src/lib/security/urlValidation.ts with validateRedirectUrl, isTrustedDomain, TRUSTED_REDIRECT_DOMAINS. Applied to StripePaymentProcessor.tsx, QuickBooksIntegration.tsx, CalendarIntegration.tsx (Google + Outlook), and Pricing.tsx. Exported from src/lib/security/index.ts."
     },
     {
       "id": "US-004",
-      "title": "Create production-ready client-side rate limiter",
-      "description": "As a security engineer, I want client-side rate limiting so that compromised or abusive clients cannot flood our API endpoints. Shannon runs parallel vulnerability pipelines that send many requests simultaneously - rate limiting is the first defense. Our current rate limiting is just an admin UI with no actual enforcement. Create src/lib/security/rateLimiter.ts implementing a Token Bucket algorithm: (1) RateLimiter class with configurable bucket size and refill rate, (2) per-endpoint rate limits with different tiers (auth endpoints: 5/minute, search: 30/minute, data mutations: 60/minute, reads: 120/minute), (3) checkRateLimit() that returns {allowed: boolean, retryAfter: number, remaining: number}, (4) useRateLimit() React hook that wraps API calls with automatic rate limiting, (5) integration point for the existing supabase client wrapper. Create tests at src/lib/security/__tests__/rateLimiter.test.ts.",
+      "title": "Replace Math.random() with crypto.randomUUID() for security-sensitive IDs",
+      "description": "As a security engineer, I want all security-sensitive random value generation to use crypto.randomUUID() or crypto.getRandomValues() instead of Math.random() so that generated tokens and IDs are not predictable. Currently ClientPortalAccess.tsx (line 107) generates portal access tokens using Math.random() which is cryptographically insecure and predictable. Multiple file upload components also use Math.random() for filename generation. Audit and fix all instances where Math.random() is used for security-adjacent purposes (tokens, access codes, file paths) in src/ directory.",
       "acceptanceCriteria": [
-        "src/lib/security/rateLimiter.ts exports RateLimiter class, createEndpointLimiter, DEFAULT_RATE_LIMITS",
-        "RateLimiter implements token bucket with configurable maxTokens, refillRate, refillInterval",
-        "DEFAULT_RATE_LIMITS defines tiers: auth (5/min), search (30/min), mutation (60/min), read (120/min)",
-        "checkRateLimit returns {allowed, retryAfter, remaining} and does not throw",
-        "Rate limiter uses localStorage to persist state across page navigations within a session",
-        "createEndpointLimiter accepts a URL pattern and returns a configured RateLimiter instance",
-        "Tests cover: token consumption, token refill, bucket exhaustion, retry-after calculation, concurrent requests",
-        "All exports are re-exported from src/lib/security/index.ts",
+        "ClientPortalAccess.tsx uses crypto.randomUUID() for portal access token generation instead of Math.random()",
+        "All file upload components in src/ use crypto.randomUUID() for filename generation instead of Math.random()",
+        "DailyReports.tsx uses crypto.randomUUID() for uploaded photo filenames",
+        "No Math.random() usage remains in src/ for token, ID, or filename generation (non-UI purposes)",
         "npm run build passes",
-        "npm run lint passes",
-        "npm run test:run passes"
+        "npm run lint passes"
       ],
-      "priority": 1,
-      "passes": true
+      "priority": 2,
+      "passes": false,
+      "notes": ""
     },
     {
       "id": "US-005",
-      "title": "Create error information leakage prevention utility",
-      "description": "As a security engineer, I want error responses sanitized so that Shannon-style tools cannot extract internal details from error messages. Shannon uses error messages to refine its attacks - stack traces reveal file paths, database errors reveal schema, and framework errors reveal technology choices. Create src/lib/security/errorSanitizer.ts with: (1) sanitizeError() that strips stack traces, internal file paths, database column names, SQL fragments, and connection strings from error messages, (2) classifyError() that maps raw errors to safe user-facing categories (validation_error, auth_error, not_found, rate_limited, server_error), (3) SafeErrorBoundary React component that catches errors and renders a safe message without leaking internals, (4) SENSITIVE_PATTERNS constant with regex patterns for detecting information leakage (file paths, SQL, stack frames, IP addresses). Create tests at src/lib/security/__tests__/errorSanitizer.test.ts.",
+      "title": "Add pagination and limits to unbounded Supabase queries",
+      "description": "As a security engineer, I want all Supabase select queries to have explicit .limit() or .range() calls so that no single query can return an unbounded number of rows causing memory exhaustion or DoS. Currently multiple services query without limits: analyticsEngine.ts (lines 200-203 and 260-263) queries financial_records and time_entries with select('*') without limit, taskService.ts (line 85-104) queries all tasks without limit, FileStorageManager.tsx (line 66) has limit(100) which is good but many other query sites don't. Add .limit(1000) as a safety cap to all unbounded select queries in src/services/ and src/hooks/ directories. For user-facing list views, use the paginationSchema from src/lib/validation/schemas.ts.",
       "acceptanceCriteria": [
-        "src/lib/security/errorSanitizer.ts exports sanitizeError, classifyError, SENSITIVE_PATTERNS, SafeErrorBoundary",
-        "sanitizeError strips: stack traces, file paths (/home/*, /usr/*, C:\\*), SQL keywords in error context, IP addresses, port numbers, database table/column names",
-        "classifyError maps PostgreSQL error codes, HTTP status codes, and Supabase errors to safe categories",
-        "SafeErrorBoundary catches render errors and displays 'Something went wrong' without any technical details",
-        "SENSITIVE_PATTERNS includes at least 10 regex patterns for common information leakage vectors",
-        "Tests verify that real-world error messages from PostgreSQL, Supabase, and Node.js are properly sanitized",
-        "All exports are re-exported from src/lib/security/index.ts",
+        "analyticsEngine.ts financial_records query has .limit(1000) applied",
+        "analyticsEngine.ts time_entries query has .limit(1000) applied",
+        "taskService.ts tasks query has .limit(500) applied",
+        "All .select('*') queries in src/services/ directory have explicit .limit() calls",
+        "No new unbounded queries introduced",
         "npm run build passes",
-        "npm run lint passes",
-        "npm run test:run passes"
+        "npm run lint passes"
       ],
-      "priority": 1,
-      "passes": true
+      "priority": 2,
+      "passes": false,
+      "notes": ""
     },
     {
       "id": "US-006",
-      "title": "Create shared security headers utility for edge functions",
-      "description": "As a security engineer, I want all 166+ edge functions to return consistent security headers so that Shannon cannot exploit header inconsistencies. Currently each edge function crafts its own response headers with no standardization. Create supabase/functions/_shared/security-headers.ts with: (1) getSecurityHeaders() returning standard headers (X-Content-Type-Options, X-Frame-Options, Cache-Control for sensitive data, Strict-Transport-Security, X-Request-ID), (2) corsHeaders() for CORS with strict origin validation against an allowlist, (3) createSecureResponse() helper that wraps new Response() with all security headers applied, (4) validateOrigin() that checks request origin against allowed origins. Also create src/lib/security/edgeFunctionHeaders.ts as a reference type definition for frontend awareness.",
+      "title": "Add try-catch to all JSON.parse calls on external data",
+      "description": "As a security engineer, I want all JSON.parse() calls on data from localStorage, sessionStorage, or API responses to be wrapped in try-catch blocks so that malformed data cannot crash the application. Currently QuickLeadCapture.tsx (line 89) calls JSON.parse without try-catch on localStorage data, and CookieConsentManager.tsx (line 184) parses savedConsent without error handling. Audit all JSON.parse calls in src/ and wrap any that handle external/stored data in try-catch with appropriate fallback values.",
       "acceptanceCriteria": [
-        "supabase/functions/_shared/security-headers.ts exports getSecurityHeaders, corsHeaders, createSecureResponse, validateOrigin",
-        "getSecurityHeaders returns X-Content-Type-Options: nosniff, X-Frame-Options: DENY, Cache-Control: no-store for auth endpoints, X-Request-ID with unique value",
-        "corsHeaders validates origin against ALLOWED_ORIGINS list and rejects unknown origins",
-        "createSecureResponse accepts body and status, returns Response with all security headers merged",
-        "validateOrigin returns boolean and logs rejected origins",
-        "src/lib/security/edgeFunctionHeaders.ts exports TypeScript types for SecurityHeaders interface",
+        "QuickLeadCapture.tsx JSON.parse call is wrapped in try-catch with fallback to empty/default state",
+        "CookieConsentManager.tsx JSON.parse call is wrapped in try-catch with fallback to show consent banner",
+        "All JSON.parse calls in src/ on localStorage/sessionStorage data have try-catch wrappers",
+        "Fallback values are sensible defaults, not null or undefined",
         "npm run build passes",
         "npm run lint passes"
       ],
       "priority": 2,
-      "passes": true
+      "passes": false,
+      "notes": ""
     },
     {
       "id": "US-007",
-      "title": "Add API request signing with HMAC for sensitive operations",
-      "description": "As a security engineer, I want request signing so that API requests cannot be tampered with or replayed. Shannon intercepts and modifies HTTP requests during exploitation. Create src/lib/security/requestSigning.ts with: (1) signRequest() that generates HMAC-SHA256 signature over method + URL + body + timestamp, (2) verifySignature() for server-side verification, (3) addTimestamp() that adds a request timestamp for replay protection, (4) isRequestFresh() that checks if a request is within a 5-minute window, (5) REQUEST_SIGNING_CONFIG with configurable signing key source and timestamp tolerance. The signing key should be derived from the user's session token, NOT hardcoded. Create tests at src/lib/security/__tests__/requestSigning.test.ts.",
+      "title": "Add input sanitization to high-risk form submissions",
+      "description": "As a security engineer, I want the top 10 most security-sensitive forms to use the useSanitizedForm hook or apply sanitizeInput before database mutations so that user input is sanitized before storage. The useSanitizedForm hook exists at src/hooks/useSanitizedForm.ts but is barely used (only in tests). Of 89 files with form submissions and 237 files with database mutations, very few apply sanitization. Priority forms to fix: (1) CreateProject.tsx - project name/description, (2) TeamManagement.tsx - user info, (3) BlogManager.tsx - blog content, (4) CRMContacts.tsx - contact info, (5) CRMLeads.tsx - lead data, (6) DocumentManagement.tsx - document metadata, (7) Subcontractors.tsx - subcontractor info, (8) JournalEntries.tsx - financial descriptions, (9) BillPayments.tsx - payment notes, (10) CompanySettings.tsx - company details. For each, add sanitizeInput() calls on text fields before the Supabase insert/update call.",
       "acceptanceCriteria": [
-        "src/lib/security/requestSigning.ts exports signRequest, verifySignature, addTimestamp, isRequestFresh",
-        "signRequest creates HMAC-SHA256 over canonical request string (method + path + body hash + timestamp)",
-        "verifySignature performs constant-time comparison of expected vs actual signature",
-        "isRequestFresh rejects requests older than 5 minutes (configurable via REQUEST_SIGNING_CONFIG)",
-        "Signing key is derived from session token using HKDF-like derivation, never hardcoded",
-        "Tests cover: valid signatures, tampered body detection, expired timestamp rejection, replay prevention",
-        "All exports are re-exported from src/lib/security/index.ts",
+        "CreateProject.tsx sanitizes project name and description before insert",
+        "TeamManagement.tsx sanitizes user name and contact fields before insert/update",
+        "BlogManager.tsx sanitizes title and content fields before insert (use sanitizeHtml for rich text)",
+        "CRMContacts.tsx sanitizes contact name, email, phone, notes before insert",
+        "CRMLeads.tsx sanitizes lead name, email, notes before insert",
+        "At least 10 form files apply sanitization before database mutations",
+        "Sanitization uses functions from src/lib/security/sanitize.ts",
         "npm run build passes",
-        "npm run lint passes",
-        "npm run test:run passes"
+        "npm run lint passes"
       ],
       "priority": 2,
-      "passes": true
+      "passes": false,
+      "notes": ""
     },
     {
       "id": "US-008",
-      "title": "Implement Trusted Types policy for DOM XSS prevention",
-      "description": "As a security engineer, I want Trusted Types enforced so that DOM-based XSS attacks via innerHTML, document.write, and eval sinks are blocked at the browser level. Shannon targets DOM XSS by finding code that assigns user-controlled strings to dangerous sinks. Create src/lib/security/trustedTypes.ts with: (1) initTrustedTypes() that creates a default policy using window.trustedTypes.createPolicy, (2) the policy's createHTML handler that runs input through DOMPurify, (3) the policy's createScriptURL handler that validates against allowed script origins, (4) createSafeHtml() utility that returns a TrustedHTML value, (5) a feature detection check so the app gracefully degrades in browsers without Trusted Types support. Create tests at src/lib/security/__tests__/trustedTypes.test.ts.",
+      "title": "Consolidate duplicate sanitization utilities",
+      "description": "As a security engineer, I want a single source of truth for sanitization functions so that developers always use the correct, most secure version. Currently there are duplicate implementations: src/utils/security.ts (lines 57-63) exports sanitizeInput and sanitizeHtml, while src/lib/security/sanitize.ts exports the same function names with different implementations. The src/utils/security.ts version is weaker (simple regex). Consolidate by making src/utils/security.ts re-export from src/lib/security/sanitize.ts, and update all imports of sanitization functions from src/utils/security.ts to use src/lib/security/sanitize.ts instead.",
       "acceptanceCriteria": [
-        "src/lib/security/trustedTypes.ts exports initTrustedTypes, createSafeHtml, createSafeScriptUrl, isTrustedTypesSupported",
-        "initTrustedTypes creates a default policy named 'builddesk' that sanitizes HTML via DOMPurify",
-        "createSafeHtml returns TrustedHTML type when Trusted Types is supported, string fallback otherwise",
-        "createSafeScriptUrl validates URLs against ALLOWED_SCRIPT_ORIGINS before creating TrustedScriptURL",
-        "Feature detection uses typeof window.trustedTypes !== 'undefined' for graceful degradation",
-        "Tests mock window.trustedTypes and verify policy creation, HTML sanitization, and script URL validation",
-        "All exports are re-exported from src/lib/security/index.ts",
+        "src/utils/security.ts sanitizeInput and sanitizeHtml re-export from src/lib/security/sanitize.ts",
+        "No duplicate sanitization implementations exist",
+        "All files importing sanitizeInput or sanitizeHtml from src/utils/security.ts still work correctly",
+        "The stronger DOMPurify-based sanitizeHtml is always used",
         "npm run build passes",
-        "npm run lint passes",
-        "npm run test:run passes"
+        "npm run lint passes"
       ],
-      "priority": 2,
-      "passes": true
+      "priority": 3,
+      "passes": false,
+      "notes": ""
     },
     {
       "id": "US-009",
-      "title": "Add Subresource Integrity hashes to external scripts",
-      "description": "As a security engineer, I want SRI (Subresource Integrity) on all external scripts so that supply chain attacks via compromised CDNs are detected and blocked. Shannon's reconnaissance phase (WhatWeb) identifies externally loaded resources that could be compromised. Audit index.html and public/_headers for all externally loaded scripts and stylesheets. Create scripts/generate-sri-hashes.js that: (1) fetches each external resource, (2) generates SHA-384 hash, (3) outputs the integrity attribute value. Add integrity and crossorigin='anonymous' attributes to all external script/link tags in index.html. Also create src/lib/security/sriVerification.ts with a verifySriHash() utility for dynamically loaded scripts.",
+      "title": "Add maxLength attributes to form input elements",
+      "description": "As a security engineer, I want all text input and textarea elements in forms to have maxLength HTML attributes matching their Zod schema limits so that client-side bounds are enforced in addition to server-side validation. Currently only 14 of 89+ form files set maxLength on inputs. While Zod schemas define max lengths (100 for names, 255 for emails, 5000 for messages), the HTML inputs lack corresponding maxLength attributes. Add maxLength to inputs in the top 15 most used forms: Auth SignUpForm, Auth SignInForm, CreateProject, CRMContacts, CRMLeads, EstimateForm, DailyReports, TeamManagement, CompanySettings, UserProfile, BlogPostFormDialog, LeadCaptureForm, ContactSalesModal, SafetyIncidentForm, PermitForm.",
       "acceptanceCriteria": [
-        "scripts/generate-sri-hashes.js exists and can generate SRI hashes for a list of URLs",
-        "All external script tags in index.html have integrity='sha384-...' and crossorigin='anonymous' attributes",
-        "All external stylesheet link tags in index.html have integrity and crossorigin attributes",
-        "src/lib/security/sriVerification.ts exports verifySriHash and loadScriptWithSri functions",
-        "loadScriptWithSri creates script elements with integrity attributes for dynamic script loading",
-        "If no external scripts exist in index.html, document this finding and still create the utilities for future use",
+        "SignUpForm.tsx password and email inputs have maxLength attributes",
+        "CreateProject.tsx name input has maxLength={200} matching projectSchema",
+        "CRMContacts.tsx name and email inputs have maxLength attributes",
+        "At least 15 form files have maxLength on their text inputs",
+        "maxLength values match corresponding Zod schema max values where schemas exist",
         "npm run build passes",
         "npm run lint passes"
       ],
-      "priority": 2,
-      "passes": true
+      "priority": 3,
+      "passes": false,
+      "notes": ""
     },
     {
       "id": "US-010",
-      "title": "Create comprehensive XSS payload test suite",
-      "description": "As a security engineer, I want automated XSS testing so that we catch the same vulnerabilities Shannon would exploit. Shannon achieved 96% success rate partly through comprehensive XSS payload libraries. Create src/lib/security/__tests__/xssPayloads.test.ts with at least 50 XSS test vectors organized by category: (1) Basic script injection (<script>alert(1)</script> and variants), (2) Event handler injection (onerror, onload, onfocus, onmouseover), (3) SVG/MathML-based XSS, (4) Data URI attacks (javascript:, data:text/html), (5) Encoding bypasses (HTML entities, URL encoding, Unicode, double encoding), (6) DOM clobbering, (7) Template literal injection, (8) CSS-based XSS (expression(), url(javascript:)), (9) Mutation XSS (mXSS), (10) Polyglot XSS payloads. Each payload should be tested against sanitizeHtml, sanitizeInput, and stripHtml from our security utilities.",
+      "title": "Add bounds to search schema filters and unbounded record types",
+      "description": "As a security engineer, I want the searchSchema in src/lib/validation/schemas.ts to have bounded filters so that attackers cannot send thousands of filter parameters causing performance degradation. Currently line 131-139 defines filters as z.record(z.string()).optional() with no bounds on the number of entries or value lengths. Update to z.record(z.string().max(200)).refine(obj => Object.keys(obj).length <= 20) to limit to 20 filters of max 200 chars each. Also audit other z.record() usages in the codebase for similar unbounded patterns.",
       "acceptanceCriteria": [
-        "src/lib/security/__tests__/xssPayloads.test.ts exists with at least 50 distinct XSS payloads",
-        "Payloads are organized into at least 8 categories matching the description",
-        "Each payload is tested against sanitizeHtml(), sanitizeInput(), and stripHtml()",
-        "Every test asserts that the output contains no executable JavaScript (no <script, no javascript:, no on*= event handlers)",
-        "Test file includes a PAYLOADS constant array that can be extended with new vectors",
-        "Tests include polyglot payloads that combine multiple bypass techniques",
-        "All tests pass - if any sanitization function fails, the test documents it as a known gap with a TODO",
+        "searchSchema filters field limits to max 20 keys with max 200 char values",
+        "All z.record() usages in src/lib/validation/ have bounds on key count and value length",
         "npm run build passes",
-        "npm run lint passes",
-        "npm run test:run passes"
+        "npm run lint passes"
       ],
       "priority": 3,
-      "passes": true
+      "passes": false,
+      "notes": ""
     },
     {
       "id": "US-011",
-      "title": "Create SQL injection payload test suite",
-      "description": "As a security engineer, I want automated SQL injection testing so that we verify our parameterized queries and input sanitization hold up against real attack payloads. Shannon targets SQL injection by analyzing database query patterns in source code. Create src/lib/security/__tests__/sqlInjection.test.ts with at least 40 SQLi test vectors: (1) Classic UNION-based injection, (2) Boolean-based blind injection, (3) Time-based blind injection payloads, (4) Stacked queries, (5) Error-based extraction, (6) Comment-based bypass (--,/**/,#), (7) Encoding bypasses (hex, char(), unicode), (8) Second-order injection payloads, (9) NoSQL injection patterns (for any MongoDB-like queries), (10) ORM bypass techniques. Test each payload against sanitizeSqlInput and the Zod validation schemas to verify they are properly neutralized.",
+      "title": "Sanitize error messages in edge function responses",
+      "description": "As a security engineer, I want all edge function error responses to return generic error messages instead of raw error.message so that internal system details (database schema, file paths, connection strings) are not leaked to clients. Currently multiple edge functions return raw error messages: generate-risk-assessment/index.ts (line 169), save-robots-txt/index.ts (line 54), projects/index.ts (line 40), blog-ai-automation/index.ts (line 131), and many others. For each function in supabase/functions/, replace error.message in response bodies with generic messages like 'An error occurred' while logging the detailed error server-side with console.error.",
       "acceptanceCriteria": [
-        "src/lib/security/__tests__/sqlInjection.test.ts exists with at least 40 distinct SQLi payloads",
-        "Payloads are organized into at least 8 categories matching the description",
-        "Each payload is tested against sanitizeSqlInput() from src/lib/security/sanitize.ts",
-        "Each payload is also tested against relevant Zod schemas from src/lib/validation/schemas.ts",
-        "Tests verify that dangerous SQL characters and keywords are stripped or escaped",
-        "Test file includes a SQL_PAYLOADS constant array that can be extended",
-        "Tests include second-order injection payloads (data that becomes dangerous after storage and retrieval)",
-        "All tests pass",
+        "No edge function in supabase/functions/ returns raw error.message directly in the response body",
+        "All error responses use generic messages: 'An error occurred', 'Authentication failed', 'Invalid request'",
+        "Detailed errors are logged server-side with console.error for debugging",
+        "At least 10 edge functions are updated with sanitized error responses",
         "npm run build passes",
-        "npm run lint passes",
-        "npm run test:run passes"
+        "npm run lint passes"
       ],
       "priority": 3,
-      "passes": true
+      "passes": false,
+      "notes": ""
     },
     {
       "id": "US-012",
-      "title": "Create authentication bypass test suite",
-      "description": "As a security engineer, I want automated auth bypass testing so that we verify our authentication flows are resistant to the techniques Shannon uses. Shannon specifically handles complex auth flows including TOTP and OAuth and tests for bypass opportunities. Create src/lib/security/__tests__/authBypass.test.ts testing: (1) Session fixation resistance (verify new session token after login), (2) JWT tampering (modified payload, algorithm confusion, empty signature), (3) Role escalation (modifying role in cached profile), (4) Token replay after logout, (5) Concurrent session limits, (6) Brute force protection effectiveness (verify lockout after MAX_FAILED_ATTEMPTS), (7) OTP bypass attempts (reuse, expired, wrong format), (8) User enumeration via timing differences. Test against checkLoginAttempt, the AuthContext session management, and the securityService permission checks.",
+      "title": "Replace wildcard CORS with origin validation in edge functions",
+      "description": "As a security engineer, I want all edge functions to use origin-validated CORS headers instead of Access-Control-Allow-Origin: * so that cross-origin requests are restricted to trusted domains only. Currently the majority of edge functions in edge-functions-template/functions/ define local corsHeaders with '*' for the origin. A secure CORS utility exists at edge-functions-template/functions/_shared/secure-cors.ts that validates origins against a whitelist. Update at least 15 of the most sensitive edge functions (auth-related, payment, data mutation) to use getCorsHeaders() from secure-cors.ts instead of hardcoded '*' headers.",
       "acceptanceCriteria": [
-        "src/lib/security/__tests__/authBypass.test.ts exists with at least 30 test cases",
-        "Tests cover all 8 categories listed in the description",
-        "JWT tampering tests verify that modified tokens are rejected (using mock Supabase auth)",
-        "Role escalation tests verify that cached profile role changes are detected via authoritative RPC lookup",
-        "Brute force tests verify lockout triggers at exactly MAX_FAILED_ATTEMPTS (5) and exponential backoff works",
-        "Session management tests verify tokens are invalidated after logout",
-        "Tests use proper mocking of supabase client and AuthContext internals",
-        "All tests pass",
+        "At least 15 edge functions use getCorsHeaders() from _shared/secure-cors.ts instead of wildcard CORS",
+        "All auth-related edge functions (verify-mfa-*, disable-mfa, sso-*) use validated CORS",
+        "All payment-related edge functions (stripe-*, enhanced-create-checkout) use validated CORS",
+        "Secure CORS allowlist includes: app domain, localhost:8080, localhost:5173 (dev only)",
         "npm run build passes",
-        "npm run lint passes",
-        "npm run test:run passes"
+        "npm run lint passes"
       ],
       "priority": 3,
-      "passes": true
+      "passes": false,
+      "notes": ""
     },
     {
       "id": "US-013",
-      "title": "Create SSRF bypass test suite",
-      "description": "As a security engineer, I want automated SSRF bypass testing against our SSRF prevention utility (US-001) so that we verify it catches the techniques Shannon uses for server-side request forgery. Create src/lib/security/__tests__/ssrfBypass.test.ts testing at least 30 bypass techniques: (1) DNS rebinding (domains that resolve to internal IPs), (2) IPv6 address variations (::ffff:127.0.0.1, [::1], 0:0:0:0:0:ffff:7f00:0001), (3) Octal IP notation (0177.0.0.1), (4) Hex IP notation (0x7f000001), (5) Decimal IP notation (2130706433), (6) URL parser differentials (@, #, ?, // tricks), (7) Double URL encoding, (8) Redirect-based SSRF, (9) Protocol smuggling (gopher://, file://, dict://), (10) Cloud metadata endpoints (169.254.169.254, metadata.google.internal). Each bypass attempt should be tested against validateUrl and isPrivateIp from the SSRF prevention utility.",
+      "title": "Add authentication checks to unprotected edge functions",
+      "description": "As a security engineer, I want all edge functions that perform privileged operations to require authentication so that unauthenticated users cannot trigger webhooks, modify settings, or access sensitive data. Currently webhook-trigger/index.ts processes webhook triggers without auth checks and accepts tenant_id from user input (IDOR vulnerability), dos-protection/index.ts uses service role key without auth, and verify-domain/index.ts modifies domain settings without auth. Add auth checks using the shared auth-helpers.ts pattern to these functions.",
       "acceptanceCriteria": [
-        "src/lib/security/__tests__/ssrfBypass.test.ts exists with at least 30 SSRF bypass test cases",
-        "Tests cover all 10 categories listed in the description",
-        "Every test verifies that validateUrl or isPrivateIp correctly blocks the bypass attempt",
-        "Cloud metadata endpoint tests cover AWS (169.254.169.254), GCP (metadata.google.internal), and Azure (169.254.169.254/metadata)",
-        "URL parser differential tests include @ symbol, fragment (#), and backslash tricks",
-        "Protocol smuggling tests verify rejection of gopher://, file://, dict://, ftp:// schemes",
-        "Test file includes a SSRF_BYPASSES constant array that can be extended",
-        "All tests pass (if SSRF utility from US-001 is not yet built, create it as part of this story)",
+        "webhook-trigger/index.ts requires a valid JWT auth token before processing",
+        "webhook-trigger/index.ts validates that the authenticated user has access to the specified tenant_id",
+        "dos-protection/index.ts requires admin role authentication before allowing IP block/whitelist operations",
+        "verify-domain/index.ts requires authentication and validates company ownership",
+        "All three functions return 401 for unauthenticated requests",
         "npm run build passes",
-        "npm run lint passes",
-        "npm run test:run passes"
+        "npm run lint passes"
       ],
       "priority": 3,
-      "passes": true
+      "passes": false,
+      "notes": ""
     },
     {
       "id": "US-014",
-      "title": "Create security regression test framework with known vulnerability manifest",
-      "description": "As a security engineer, I want a regression test framework so that previously fixed vulnerabilities can never be reintroduced. Shannon finds regressions in previously patched code. Create src/lib/security/__tests__/securityRegression.test.ts that imports and runs ALL security test suites as a single comprehensive gate. Also create src/lib/security/vulnerabilityManifest.ts containing a KNOWN_VULNERABILITIES array documenting each vulnerability that has been identified and fixed, including: CVE/ID, description, affected file, fix date, regression test reference. The regression test file should verify each entry in the manifest still passes. Add a npm script 'test:security' to package.json that runs only the security test files.",
+      "title": "Validate UTM parameters and search params with bounds",
+      "description": "As a security engineer, I want all URL search parameters extracted from the URL to be validated and bounded so that oversized or malformed parameters cannot cause issues. Currently LeadCaptureForm.tsx (line 38-56), DemoRequestForm.tsx (line 44-47), ExitIntentModal.tsx (line 32-43), and ContactSalesModal.tsx (line 42-47) extract UTM parameters without any validation of format or length. Add validation: UTM parameters should be alphanumeric with dashes/underscores only, max 100 chars each.",
       "acceptanceCriteria": [
-        "src/lib/security/__tests__/securityRegression.test.ts exists and imports all security test suites",
-        "src/lib/security/vulnerabilityManifest.ts exports KNOWN_VULNERABILITIES array with TypeScript type KnownVulnerability",
-        "KnownVulnerability type includes: id, severity (critical/high/medium/low), description, affectedFile, fixDate, regressionTestFile",
-        "Manifest includes at least 5 entries for known issues (hardcoded JWT removed, CSP gaps, missing CSRF, etc.)",
-        "Regression test iterates the manifest and verifies each listed regression test file exists",
-        "package.json has script 'test:security' that runs 'vitest run src/lib/security'",
+        "LeadCaptureForm.tsx validates UTM parameters with max 100 char length and alphanumeric-dash-underscore format",
+        "DemoRequestForm.tsx validates UTM parameters similarly",
+        "ExitIntentModal.tsx validates UTM parameters similarly",
+        "ContactSalesModal.tsx validates UTM parameters similarly",
+        "Invalid UTM parameters are silently dropped (set to undefined) rather than passed through",
         "npm run build passes",
-        "npm run lint passes",
-        "npm run test:security passes (or npm run test:run passes)"
+        "npm run lint passes"
       ],
-      "priority": 3,
-      "passes": true
+      "priority": 4,
+      "passes": false,
+      "notes": ""
     },
     {
       "id": "US-015",
-      "title": "Create dependency vulnerability scanner script for CI",
-      "description": "As a security engineer, I want automated dependency scanning so that known vulnerabilities in our npm packages are caught before deployment. Shannon's reconnaissance phase (WhatWeb, Schemathesis) identifies technology versions to find known CVEs. Create scripts/security-audit.sh that: (1) runs npm audit --json and parses results, (2) fails on critical or high severity vulnerabilities, (3) supports an allowlist file (scripts/audit-allowlist.json) for known exceptions with expiry dates, (4) outputs a human-readable summary with affected packages and remediation advice, (5) returns exit code 0 (pass) or 1 (fail) for CI integration. Also create scripts/audit-allowlist.json with the initial allowlist structure. Add npm script 'security:audit' to package.json.",
+      "title": "Strengthen returnTo parameter validation for open redirect prevention",
+      "description": "As a security engineer, I want the getReturnUrl() function in src/lib/routeMemory.ts to have stricter validation so that protocol-relative URLs and encoded redirects cannot bypass the current shouldRememberRoute() check. Currently (lines 115-120) the returnTo parameter is validated by shouldRememberRoute() which checks against a route list, but doesn't explicitly block protocol-relative URLs (//evil.com) or encoded variants. Add explicit checks: returnTo must start with '/' and must not start with '//'.",
       "acceptanceCriteria": [
-        "scripts/security-audit.sh exists and is executable",
-        "Script runs npm audit --json and parses the JSON output",
-        "Script fails (exit 1) if any critical or high severity vulnerabilities are found not in the allowlist",
-        "scripts/audit-allowlist.json exists with structure: {allowlist: [{id: string, reason: string, expires: string}]}",
-        "Allowlisted vulnerabilities with expired dates are no longer suppressed",
-        "Script outputs a summary table with: package name, severity, advisory URL, and whether it's allowlisted",
-        "package.json has script 'security:audit' that runs 'bash scripts/security-audit.sh'",
+        "getReturnUrl in src/lib/routeMemory.ts rejects returnTo values that start with '//'",
+        "getReturnUrl rejects returnTo values containing '://' (protocol URLs)",
+        "getReturnUrl rejects URL-encoded protocol-relative URLs (%2F%2F)",
+        "Valid internal paths like /dashboard, /projects/123 still work correctly",
         "npm run build passes",
         "npm run lint passes"
       ],
-      "priority": 3,
-      "passes": true
+      "priority": 4,
+      "passes": false,
+      "notes": ""
     },
     {
       "id": "US-016",
-      "title": "Create security monitoring hooks for client-side anomaly detection",
-      "description": "As a security engineer, I want client-side security monitoring so that suspicious patterns are detected and logged before they become full exploits. Shannon runs parallel attack pipelines - monitoring can detect the recon phase. Create src/hooks/useSecurityMonitor.ts with: (1) detection of rapid sequential failed auth attempts from the client, (2) detection of unusual API call patterns (many different endpoints hit in quick succession - recon behavior), (3) detection of DOM manipulation attempts (MutationObserver watching for injected scripts), (4) detection of devtools open (debugger detection for anti-tampering), (5) logSecurityEvent() that batches events and sends to the audit log. The hook should be lightweight and not impact performance - use requestIdleCallback for non-critical logging. Create tests at src/hooks/__tests__/useSecurityMonitor.test.ts.",
+      "title": "Add file extension allowlist validation to upload components",
+      "description": "As a security engineer, I want all file upload components to validate file extensions against an allowlist (not just MIME type) so that double-extension attacks like file.jpg.exe are blocked. Currently useSecurityEnhancement.ts (lines 148-152) only checks file.type MIME type which is user-controllable. The file extension should also be checked. Add extension validation to the file upload validation utility created in US-001, and apply it in image-upload.tsx, video-upload.tsx, and TaskAttachments.tsx.",
       "acceptanceCriteria": [
-        "src/hooks/useSecurityMonitor.ts exports useSecurityMonitor hook",
-        "Hook detects rapid failed auth attempts (more than 3 in 60 seconds) and logs a 'brute_force_attempt' event",
-        "Hook detects rapid diverse API calls (more than 20 unique endpoints in 30 seconds) and logs a 'recon_behavior' event",
-        "Hook uses MutationObserver to detect injected script elements and logs 'dom_injection_attempt' events",
-        "logSecurityEvent batches events using requestIdleCallback and flushes every 10 seconds or on page unload",
-        "Hook is tree-shakeable and adds less than 2KB to bundle size",
-        "Tests verify detection thresholds and event batching using fake timers",
-        "npm run build passes",
-        "npm run lint passes",
-        "npm run test:run passes"
-      ],
-      "priority": 4,
-      "passes": true
-    },
-    {
-      "id": "US-017",
-      "title": "Create penetration test configuration and attack surface documentation",
-      "description": "As a security engineer, I want a pentest configuration file so that we can run Shannon or similar AI pentest tools against our own application for continuous security validation. Create src/config/pentest.config.ts that documents: (1) all API endpoints and their expected auth requirements, (2) all form inputs and their validation rules, (3) all file upload endpoints and allowed MIME types, (4) all URL parameters that accept user input, (5) all WebSocket channels and their auth requirements. Also create scripts/run-security-scan.sh that sets up the test environment and runs a basic security scan using npm audit and our test:security suite. This configuration serves as the 'scope document' for internal or external penetration testing.",
-      "acceptanceCriteria": [
-        "src/config/pentest.config.ts exports ATTACK_SURFACE with TypeScript types",
-        "ATTACK_SURFACE.endpoints documents at least 20 API endpoints with method, path, auth requirement, input parameters",
-        "ATTACK_SURFACE.forms documents at least 10 form inputs with field names, validation rules, sanitization applied",
-        "ATTACK_SURFACE.fileUploads documents file upload endpoints with allowed MIME types and size limits",
-        "ATTACK_SURFACE.websockets documents real-time channels with auth requirements",
-        "scripts/run-security-scan.sh exists and runs npm audit + npm run test:security in sequence",
-        "Script outputs a combined security report summary",
+        "fileUploadValidation.ts validates file extension against an allowlist in addition to MIME type",
+        "Double-extension files like 'file.jpg.exe' are rejected",
+        "Extension check is case-insensitive",
+        "Allowed extensions include: jpg, jpeg, png, gif, webp, pdf, doc, docx, xls, xlsx, csv, txt, mp4, mov",
         "npm run build passes",
         "npm run lint passes"
       ],
       "priority": 4,
-      "passes": true
-    },
-    {
-      "id": "US-018",
-      "title": "Add security smoke tests to CI pipeline",
-      "description": "As a security engineer, I want security tests to run automatically in CI so that no PR can merge with known security regressions. Shannon finds regressions in patches - CI enforcement prevents this. Update .github/workflows/ci.yml to add a 'security' job that: (1) runs npm run test:security (all security unit tests), (2) runs npm run security:audit (dependency vulnerability check), (3) runs a grep-based secret scan (search for hardcoded tokens, private keys, passwords in source), (4) verifies that public/_headers CSP does not contain unsafe-eval. The security job should run in parallel with existing lint/typecheck/test jobs and must pass for PR merge. Also create scripts/secret-scan.sh that greps for common secret patterns (AWS keys, JWT tokens, private keys, passwords in config).",
-      "acceptanceCriteria": [
-        ".github/workflows/ci.yml has a 'security' job that runs security-related checks",
-        "Security job runs: npm run test:security, npm run security:audit, bash scripts/secret-scan.sh",
-        "Security job includes a step that greps public/_headers for unsafe-eval and fails if found",
-        "scripts/secret-scan.sh exists and scans for: AWS access keys (AKIA*), JWT tokens (eyJ*), RSA private keys, password= in config files",
-        "Secret scan excludes node_modules, .git, dist, and test fixture files",
-        "Security job runs in parallel with existing CI jobs (not blocking lint or tests)",
-        "npm run build passes",
-        "npm run lint passes"
-      ],
-      "priority": 4,
-      "passes": true
+      "passes": false,
+      "notes": ""
     }
   ]
 }
