@@ -1374,8 +1374,8 @@
         "npm run build completes successfully"
       ],
       "priority": 3,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "COMPLETED. EquipmentUtilizationDashboard.tsx implements three-tab dashboard (Current Assignments/Utilization/Idle Equipment) with check-out form, return equipment action, utilization Progress bars, idle equipment warnings (7+ days), assignment history dialog."
     },
     {
       "id": "US-081",
@@ -1391,8 +1391,8 @@
         "npm run build completes successfully"
       ],
       "priority": 3,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "COMPLETED. DocumentPreviewModal.tsx implements inline preview (PDF iframe, image display), download/share/close buttons, share link with 24hr/7day/30day expiration. DocumentTemplateManager component provides template listing, clone-to-project, upload, edit metadata, and delete."
     },
     {
       "id": "US-082",
@@ -1748,8 +1748,8 @@
         "npm run build completes successfully"
       ],
       "priority": 3,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "COMPLETED. TaskKanbanBoard.tsx implements drag-and-drop board with @hello-pangea/dnd, four columns (To Do/In Progress/Review/Done), task cards with title/assignee/priority/due date, quick-add inputs at column bottoms, task count badges. Integrated in MyTasksDashboard.tsx kanban view mode."
     },
     {
       "id": "US-103",
@@ -1782,8 +1782,8 @@
         "npm run build completes successfully"
       ],
       "priority": 3,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "COMPLETED. ProjectPunchList.tsx already implements full punch list with CRUD, status workflow (open/in_progress/completed/verified/closed), photo before/after support, priority/category filters, completion tracking, location and assignee fields. Integrated in ProjectContent.tsx punchlist tab."
     },
     {
       "id": "US-105",
@@ -1799,8 +1799,8 @@
         "npm run build completes successfully"
       ],
       "priority": 3,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "COMPLETED. ProjectMaterials.tsx implements material tracking with cost per unit, usage recording. PurchaseOrderForm.tsx and PurchaseOrders.tsx page provide full PO management with status workflow (draft/sent/approved/received/cancelled), line items, vendor selection. Materials.tsx page has inventory, PO, and reports tabs."
     },
     {
       "id": "US-106",
@@ -1817,8 +1817,8 @@
         "npm run build completes successfully"
       ],
       "priority": 3,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "COMPLETED. VisualScheduler.tsx implements weekly grid crew scheduling with drag-and-drop assignment, color-coded status blocks, conflict detection for double-booking. CrewScheduling.tsx page integrates scheduler with assignment creation, date navigation, and crew availability sidebar."
     },
     {
       "id": "US-107",
