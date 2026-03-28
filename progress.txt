@@ -726,3 +726,57 @@ Implemented 4 priority-2 stories delivering major platform capabilities: cost co
 ### Quality: `npx vite build` PASS (55.93s)
 
 ---
+
+## 2026-03-28 - Ralph Loop: Bulk Actions, Help, Recent Items, Conversions (US-079, US-088, US-089, US-100, US-101)
+
+### PRD Progress: 5 more stories completed. 19 remaining.
+
+### US-088: Sortable Columns and Bulk Actions to Invoices (P3)
+- Enhanced `src/components/invoices/InvoiceList.tsx` with checkbox selection, select-all
+- Bulk actions bar: Mark as Sent, Mark as Paid, Export Selected, Delete Selected
+- Status filter dropdown and date range filter above table
+- Supabase bulk update handlers for status changes
+
+### US-089: Sortable Columns and Bulk Actions to Expenses (P3)
+- Enhanced `src/components/expenses/ExpenseTracker.tsx` with checkbox selection, select-all
+- Bulk actions bar: Approve, Reject, Export, Categorize Selected
+- Category and project filter dropdowns
+- Supabase bulk update handlers
+
+### US-079: Contextual Help Tooltips and In-App Help Launcher (P3)
+- Created `src/components/help/HelpButton.tsx` with floating ? button and Sheet slide-over
+- Route-based help content for 10+ page contexts (projects, invoices, financial, time, etc.)
+- Search filtering for help items
+- Accessible: focus trap, ARIA labels, Escape to close
+- Integrated into DashboardLayout
+
+### US-100: Recently Viewed Items and Quick Navigation (P3)
+- Created `src/hooks/useRecentlyViewed.ts` with localStorage persistence
+- 10 item max, deduplication by path, favorites support
+- Created `src/components/navigation/RecentItemsSidebar.tsx` with Favorites and Recent sections
+- Type icons, relative timestamps, star toggle
+- Integrated into SimplifiedSidebar
+
+### US-101: Estimate-to-Invoice Conversion (P3)
+- Created `src/components/estimates/ConvertToInvoiceDialog.tsx`
+- Line item checkboxes, billing percentage input, adjustable amounts
+- Creates invoice in Supabase with estimate reference
+- Integrated into EstimatesTable actions dropdown for accepted/sent estimates
+
+### New Files Created
+- `src/components/help/HelpButton.tsx`
+- `src/hooks/useRecentlyViewed.ts`
+- `src/components/navigation/RecentItemsSidebar.tsx`
+- `src/components/estimates/ConvertToInvoiceDialog.tsx`
+
+### Files Modified
+- `src/components/invoices/InvoiceList.tsx` - Bulk actions, selection, filters
+- `src/components/expenses/ExpenseTracker.tsx` - Bulk actions, selection, filters
+- `src/components/estimates/EstimatesTable.tsx` - Convert to Invoice action
+- `src/components/layout/DashboardLayout.tsx` - HelpButton integration
+- `src/components/navigation/SimplifiedSidebar.tsx` - RecentItemsSidebar integration
+- `prd.json` - US-079, US-088, US-089, US-100, US-101 marked as passes: true
+
+### Quality: `npx vite build` PASS (57.10s)
+
+---

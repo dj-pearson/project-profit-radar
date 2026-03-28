@@ -3,6 +3,10 @@ import { useVirtualizer } from '@tanstack/react-virtual';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import {
   Eye,
   Edit,
@@ -12,7 +16,10 @@ import {
   MoreHorizontal,
   Calendar,
   User,
-  Building
+  Building,
+  Trash2,
+  CheckCircle,
+  XCircle,
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -25,6 +32,8 @@ import { format } from 'date-fns';
 import PaymentProcessor from '@/components/PaymentProcessor';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { AccessibleTable, type TableColumn } from '@/components/accessibility/AccessibleTable';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 
 interface InvoiceListProps {
   invoices: any[];
@@ -33,14 +42,98 @@ interface InvoiceListProps {
   highlightOverdue?: boolean;
 }
 
-const InvoiceList: React.FC<InvoiceListProps> = ({ 
-  invoices, 
-  loading, 
+const INVOICE_STATUSES = ['draft', 'sent', 'viewed', 'partial', 'paid', 'overdue', 'cancelled'] as const;
+
+const InvoiceList: React.FC<InvoiceListProps> = ({
+  invoices,
+  loading,
   onInvoiceUpdate,
-  highlightOverdue = false 
+  highlightOverdue = false
 }) => {
   const [selectedInvoice, setSelectedInvoice] = useState<any>(null);
   const [showPaymentDialog, setShowPaymentDialog] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [dateFrom, setDateFrom] = useState<string>('');
+  const [dateTo, setDateTo] = useState<string>('');
+  const { toast } = useToast();
+
+  // Filter invoices
+  const filteredInvoices = invoices.filter((inv) => {
+    if (statusFilter !== 'all' && inv.status !== statusFilter) return false;
+    if (dateFrom && inv.due_date < dateFrom) return false;
+    if (dateTo && inv.due_date > dateTo) return false;
+    return true;
+  });
+
+  const toggleSelect = (id: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedIds.size === filteredInvoices.length) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(filteredInvoices.map((inv) => inv.id)));
+    }
+  };
+
+  const handleBulkStatusUpdate = async (status: string) => {
+    const ids = Array.from(selectedIds);
+    const { error } = await supabase
+      .from('invoices')
+      .update({ status })
+      .in('id', ids);
+
+    if (error) {
+      toast({ title: 'Error', description: `Failed to update invoices: ${error.message}`, variant: 'destructive' });
+      return;
+    }
+
+    toast({ title: 'Success', description: `${ids.length} invoice(s) marked as ${status}` });
+    setSelectedIds(new Set());
+    onInvoiceUpdate();
+  };
+
+  const handleBulkExport = () => {
+    const selected = filteredInvoices.filter((inv) => selectedIds.has(inv.id));
+    const csvRows = [
+      ['Invoice #', 'Client', 'Status', 'Due Date', 'Amount'].join(','),
+      ...selected.map((inv) =>
+        [inv.invoice_number, inv.client_name, inv.status, inv.due_date, inv.total_amount].join(',')
+      ),
+    ];
+    const blob = new Blob([csvRows.join('\n')], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `invoices-export-${format(new Date(), 'yyyy-MM-dd')}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast({ title: 'Exported', description: `${selected.length} invoice(s) exported to CSV` });
+  };
+
+  const handleBulkDelete = async () => {
+    const ids = Array.from(selectedIds);
+    const { error } = await supabase
+      .from('invoices')
+      .delete()
+      .in('id', ids);
+
+    if (error) {
+      toast({ title: 'Error', description: `Failed to delete invoices: ${error.message}`, variant: 'destructive' });
+      return;
+    }
+
+    toast({ title: 'Deleted', description: `${ids.length} invoice(s) deleted` });
+    setSelectedIds(new Set());
+    onInvoiceUpdate();
+  };
 
   const getStatusBadge = (status: string) => {
     const variants = {
@@ -117,6 +210,24 @@ const InvoiceList: React.FC<InvoiceListProps> = ({
   }
 
   const invoiceColumns: TableColumn<any>[] = [
+    {
+      key: 'select',
+      header: 'Select',
+      headerRender: () => (
+        <Checkbox
+          checked={filteredInvoices.length > 0 && selectedIds.size === filteredInvoices.length}
+          onCheckedChange={toggleSelectAll}
+          aria-label="Select all invoices"
+        />
+      ),
+      render: (_value, row) => (
+        <Checkbox
+          checked={selectedIds.has(row.id)}
+          onCheckedChange={() => toggleSelect(row.id)}
+          aria-label={`Select invoice ${row.invoice_number}`}
+        />
+      ),
+    },
     {
       key: 'invoice_number',
       header: 'Invoice #',
@@ -219,17 +330,73 @@ const InvoiceList: React.FC<InvoiceListProps> = ({
   const VIRTUALIZE_THRESHOLD = 50;
   const parentRef = useRef<HTMLDivElement>(null);
   const virtualizer = useVirtualizer({
-    count: invoices.length,
+    count: filteredInvoices.length,
     getScrollElement: () => parentRef.current,
     estimateSize: () => 56,
     overscan: 10,
-    enabled: invoices.length > VIRTUALIZE_THRESHOLD,
+    enabled: filteredInvoices.length > VIRTUALIZE_THRESHOLD,
   });
 
+  const filtersBar = (
+    <div className="flex items-center gap-3 flex-wrap mb-4">
+      <div className="flex items-center gap-2">
+        <Label htmlFor="status-filter" className="text-sm whitespace-nowrap">Status</Label>
+        <Select value={statusFilter} onValueChange={setStatusFilter}>
+          <SelectTrigger id="status-filter" className="w-[150px]">
+            <SelectValue placeholder="All statuses" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All statuses</SelectItem>
+            {INVOICE_STATUSES.map((s) => (
+              <SelectItem key={s} value={s}>{s.charAt(0).toUpperCase() + s.slice(1)}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+      <div className="flex items-center gap-2">
+        <Label htmlFor="date-from" className="text-sm whitespace-nowrap">From</Label>
+        <Input id="date-from" type="date" className="w-[160px]" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} />
+      </div>
+      <div className="flex items-center gap-2">
+        <Label htmlFor="date-to" className="text-sm whitespace-nowrap">To</Label>
+        <Input id="date-to" type="date" className="w-[160px]" value={dateTo} onChange={(e) => setDateTo(e.target.value)} />
+      </div>
+    </div>
+  );
+
+  const bulkActionsBar = selectedIds.size > 0 && (
+    <Card className="border-primary/20 bg-primary/5 mb-4">
+      <CardContent className="py-3 flex items-center justify-between flex-wrap gap-2">
+        <span className="text-sm font-medium">{selectedIds.size} selected</span>
+        <div className="flex items-center gap-2 flex-wrap">
+          <Button variant="outline" size="sm" onClick={() => handleBulkStatusUpdate('sent')}>
+            <Send className="mr-1 h-4 w-4" />
+            Mark as Sent
+          </Button>
+          <Button variant="outline" size="sm" onClick={() => handleBulkStatusUpdate('paid')}>
+            <CheckCircle className="mr-1 h-4 w-4" />
+            Mark as Paid
+          </Button>
+          <Button variant="outline" size="sm" onClick={handleBulkExport}>
+            <Download className="mr-1 h-4 w-4" />
+            Export Selected
+          </Button>
+          <Button variant="destructive" size="sm" onClick={handleBulkDelete}>
+            <Trash2 className="mr-1 h-4 w-4" />
+            Delete Selected
+          </Button>
+          <Button variant="ghost" size="sm" onClick={() => setSelectedIds(new Set())}>Clear</Button>
+        </div>
+      </CardContent>
+    </Card>
+  );
+
   // For large lists, use virtualized rendering
-  if (invoices.length > VIRTUALIZE_THRESHOLD) {
+  if (filteredInvoices.length > VIRTUALIZE_THRESHOLD) {
     return (
       <>
+        {filtersBar}
+        {bulkActionsBar}
         <div ref={parentRef} style={{ maxHeight: '70vh', overflow: 'auto' }}>
           <table className="w-full caption-bottom text-sm">
             <thead className="sticky top-0 bg-background z-10 [&_tr]:border-b">
@@ -245,7 +412,7 @@ const InvoiceList: React.FC<InvoiceListProps> = ({
               <tr style={{ height: `${virtualizer.getTotalSize()}px` }}>
                 <td colSpan={invoiceColumns.length} style={{ padding: 0, position: 'relative' }}>
                   {virtualizer.getVirtualItems().map((virtualRow) => {
-                    const invoice = invoices[virtualRow.index];
+                    const invoice = filteredInvoices[virtualRow.index];
                     return (
                       <div
                         key={virtualRow.key}
@@ -298,11 +465,13 @@ const InvoiceList: React.FC<InvoiceListProps> = ({
 
   return (
     <>
+      {filtersBar}
+      {bulkActionsBar}
       <AccessibleTable
         caption={highlightOverdue ? "Overdue Invoices" : "Invoices"}
         hideCaption
         columns={invoiceColumns}
-        data={invoices}
+        data={filteredInvoices}
         loading={loading}
         emptyContent="No invoices found"
         className={highlightOverdue ? '[&_tr]:border-red-100' : ''}

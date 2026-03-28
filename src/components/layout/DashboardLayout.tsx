@@ -18,6 +18,7 @@ import { cn } from '@/lib/utils';
 import { RealtimeNotificationCenter } from '@/components/realtime/RealtimeNotificationCenter';
 import { DashboardSearchTrigger } from '@/components/search/DashboardSearchTrigger';
 import { AutoBreadcrumb } from '@/components/navigation/AutoBreadcrumb';
+import { HelpButton } from '@/components/help/HelpButton';
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -185,6 +186,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
             </nav>
           )}
         </div>
+        <HelpButton />
       </div>
     </SidebarProvider>
   );

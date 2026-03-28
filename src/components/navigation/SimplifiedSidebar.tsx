@@ -26,6 +26,7 @@ import { usePermissions } from '@/hooks/usePermissions';
 import { getNavigationForRole } from './NavigationConfig';
 import { hierarchicalNavigation, NavigationSection, findSectionByUrl } from './HierarchicalNavigationConfig';
 import { SubscriptionStatusBadge } from '@/components/subscription/SubscriptionStatusBadge';
+import { RecentItemsSidebar } from '@/components/navigation/RecentItemsSidebar';
 
 // Fix mobile navigation issues in SimplifiedSidebar
 // Improved responsive behavior and touch handling
@@ -255,7 +256,8 @@ export const SimplifiedSidebar = () => {
         </SidebarGroup>
       </SidebarContent>
       
-      <SidebarFooter className="p-4">
+      <SidebarFooter className="p-4 space-y-2">
+        <RecentItemsSidebar />
         <div className="flex items-center justify-center">
           <SubscriptionStatusBadge variant={collapsed ? 'compact' : 'full'} showIcon={true} />
         </div>

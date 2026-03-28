@@ -10,7 +10,8 @@ import {
   ExternalLink,
   Archive,
   Trash2,
-  Building2
+  Building2,
+  FileText
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -25,6 +26,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { EstimateForm } from "./EstimateForm";
 import { ConvertToProjectDialog } from "./ConvertToProjectDialog";
+import { ConvertToInvoiceDialog } from "./ConvertToInvoiceDialog";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
@@ -56,6 +58,7 @@ export function EstimatesTable({ searchTerm, statusFilter, onEstimateChange }: E
   const [loading, setLoading] = useState(true);
   const [editingEstimate, setEditingEstimate] = useState<string | null>(null);
   const [convertingEstimate, setConvertingEstimate] = useState<string | null>(null);
+  const [convertingToInvoice, setConvertingToInvoice] = useState<string | null>(null);
   const [deletingEstimate, setDeletingEstimate] = useState<string | null>(null);
   const { toast } = useToast();
 
@@ -348,6 +351,15 @@ export function EstimatesTable({ searchTerm, statusFilter, onEstimateChange }: E
                 Convert to Project
               </DropdownMenuItem>
             )}
+            {(estimate.status === "accepted" || estimate.status === "sent") && (
+              <DropdownMenuItem
+                onClick={() => setConvertingToInvoice(estimate.id)}
+                className="text-green-600 font-medium"
+              >
+                <FileText className="mr-2 h-4 w-4" aria-hidden="true" />
+                Convert to Invoice
+              </DropdownMenuItem>
+            )}
             <DropdownMenuItem>
               <Download className="mr-2 h-4 w-4" aria-hidden="true" />
               Download PDF
@@ -414,6 +426,20 @@ export function EstimatesTable({ searchTerm, statusFilter, onEstimateChange }: E
           onEstimateChange?.();
         }}
       />
+
+      {/* Convert to Invoice Dialog */}
+      {convertingToInvoice && (
+        <ConvertToInvoiceDialog
+          estimateId={convertingToInvoice}
+          isOpen={!!convertingToInvoice}
+          onClose={() => setConvertingToInvoice(null)}
+          onConverted={() => {
+            setConvertingToInvoice(null);
+            fetchEstimates();
+            onEstimateChange?.();
+          }}
+        />
+      )}
 
       {/* Delete Confirmation Modal */}
       <AccessibleModal

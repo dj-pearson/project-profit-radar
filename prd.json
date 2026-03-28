@@ -1357,8 +1357,8 @@
         "npm run build completes successfully"
       ],
       "priority": 3,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "COMPLETED. Created HelpButton with floating ? button, Sheet slide-over panel with route-based help content for 10+ page contexts, search filtering. HelpTooltip wrapper component. Integrated into DashboardLayout."
     },
     {
       "id": "US-080",
@@ -1511,8 +1511,8 @@
         "npm run build completes successfully"
       ],
       "priority": 3,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "COMPLETED. Added checkbox selection, select-all, bulk actions bar (Mark Sent, Mark Paid, Export, Delete) to InvoiceList. Status and date range filters added."
     },
     {
       "id": "US-089",
@@ -1528,8 +1528,8 @@
         "npm run build completes successfully"
       ],
       "priority": 3,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "COMPLETED. Added checkbox selection, select-all, bulk actions bar (Approve, Reject, Export, Categorize) to ExpenseTracker. Category and project filter dropdowns added."
     },
     {
       "id": "US-090",
@@ -1714,8 +1714,8 @@
         "npm run build completes successfully"
       ],
       "priority": 3,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "COMPLETED. Created useRecentlyViewed hook with localStorage persistence (10 items max, deduplication). RecentItemsSidebar with Favorites and Recent sections. Integrated into SimplifiedSidebar."
     },
     {
       "id": "US-101",
@@ -1731,8 +1731,8 @@
         "npm run build completes successfully"
       ],
       "priority": 3,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "COMPLETED. Created ConvertToInvoiceDialog with line item checkboxes, billing percentage input, adjustable amounts, invoice creation. Integrated into EstimatesTable actions dropdown for accepted/sent estimates."
     },
     {
       "id": "US-102",

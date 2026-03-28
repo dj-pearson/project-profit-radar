@@ -17,10 +17,12 @@ import { LoadingState, TableSkeleton } from '@/components/common/LoadingState';
 import { ErrorState, EmptyState } from '@/components/common/ErrorState';
 import { Pagination } from '@/components/common/Pagination';
 import { AccessibleModal } from '@/components/accessibility/AccessibleModal';
-import { Plus, Edit, Trash2, Receipt, DollarSign, Calendar, Tag, FileText, AlertCircle, Loader2 } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Plus, Edit, Trash2, Receipt, DollarSign, Calendar, Tag, FileText, AlertCircle, Loader2, Download, CheckCircle, XCircle, FolderOpen } from 'lucide-react';
 import { format } from 'date-fns';
 import { expenseSchema, type ExpenseInput } from '@/lib/validations';
 import { AccessibleTable, type TableColumn } from '@/components/accessibility/AccessibleTable';
+import { supabase } from '@/integrations/supabase/client';
 
 interface Expense {
   id: string;
@@ -74,6 +76,9 @@ export function ExpenseTracker({ projectId }: { projectId?: string }) {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingExpense, setEditingExpense] = useState<Expense | null>(null);
   const [deletingExpenseId, setDeletingExpenseId] = useState<string | null>(null);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [categoryFilter, setCategoryFilter] = useState<string>('all');
+  const [bulkCategory, setBulkCategory] = useState<string>('');
 
   // Form with validation
   const {
@@ -212,10 +217,105 @@ export function ExpenseTracker({ projectId }: { projectId?: string }) {
     });
   };
 
+  // Filtered expenses
+  const filteredExpenses = (expensesData?.data || []).filter((exp) => {
+    if (categoryFilter !== 'all' && exp.description !== categoryFilter) return false;
+    return true;
+  });
+
+  const toggleSelect = (id: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedIds.size === filteredExpenses.length) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(filteredExpenses.map((e) => e.id)));
+    }
+  };
+
+  const handleBulkStatusUpdate = async (status: string) => {
+    const ids = Array.from(selectedIds);
+    const { error } = await supabase
+      .from('expenses')
+      .update({ payment_status: status })
+      .in('id', ids);
+
+    if (error) {
+      toast({ title: 'Error', description: `Failed to update expenses: ${error.message}`, variant: 'destructive' });
+      return;
+    }
+
+    toast({ title: 'Success', description: `${ids.length} expense(s) marked as ${status}` });
+    setSelectedIds(new Set());
+    refetch();
+  };
+
+  const handleBulkExport = () => {
+    const selected = filteredExpenses.filter((exp) => selectedIds.has(exp.id));
+    const csvRows = [
+      ['Date', 'Vendor', 'Description', 'Amount', 'Payment Method', 'Status'].join(','),
+      ...selected.map((exp) =>
+        [exp.expense_date, exp.vendor_name || '', `"${(exp.description || '').replace(/"/g, '""')}"`, exp.amount, exp.payment_method || '', exp.payment_status || ''].join(',')
+      ),
+    ];
+    const blob = new Blob([csvRows.join('\n')], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `expenses-export-${format(new Date(), 'yyyy-MM-dd')}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast({ title: 'Exported', description: `${selected.length} expense(s) exported to CSV` });
+  };
+
+  const handleBulkCategorize = async () => {
+    if (!bulkCategory) return;
+    const ids = Array.from(selectedIds);
+    const { error } = await supabase
+      .from('expenses')
+      .update({ description: bulkCategory })
+      .in('id', ids);
+
+    if (error) {
+      toast({ title: 'Error', description: `Failed to categorize expenses: ${error.message}`, variant: 'destructive' });
+      return;
+    }
+
+    toast({ title: 'Success', description: `${ids.length} expense(s) categorized as ${bulkCategory}` });
+    setSelectedIds(new Set());
+    setBulkCategory('');
+    refetch();
+  };
+
   const totalExpenses = expensesData?.data.reduce((sum, exp) => sum + exp.amount, 0) || 0;
   const totalPages = expensesData?.count ? Math.ceil(expensesData.count / pageSize) : 1;
 
   const expenseColumns: TableColumn<Expense>[] = [
+    {
+      key: 'select' as any,
+      header: 'Select',
+      headerRender: () => (
+        <Checkbox
+          checked={filteredExpenses.length > 0 && selectedIds.size === filteredExpenses.length}
+          onCheckedChange={toggleSelectAll}
+          aria-label="Select all expenses"
+        />
+      ),
+      render: (_value: any, row: Expense) => (
+        <Checkbox
+          checked={selectedIds.has(row.id)}
+          onCheckedChange={() => toggleSelect(row.id)}
+          aria-label={`Select expense from ${row.vendor_name || 'unknown vendor'}`}
+        />
+      ),
+    },
     {
       key: 'expense_date',
       header: 'Date',
@@ -356,9 +456,67 @@ export function ExpenseTracker({ projectId }: { projectId?: string }) {
           </div>
         </CardHeader>
         <CardContent>
+          {/* Category Filter */}
+          <div className="flex items-center gap-3 flex-wrap mb-4">
+            <div className="flex items-center gap-2">
+              <Label htmlFor="category-filter" className="text-sm whitespace-nowrap">Category</Label>
+              <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+                <SelectTrigger id="category-filter" className="w-[180px]">
+                  <SelectValue placeholder="All categories" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All categories</SelectItem>
+                  {EXPENSE_CATEGORIES.map((cat) => (
+                    <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          {/* Bulk Actions Bar */}
+          {selectedIds.size > 0 && (
+            <Card className="border-primary/20 bg-primary/5 mb-4">
+              <CardContent className="py-3 flex items-center justify-between flex-wrap gap-2">
+                <span className="text-sm font-medium">{selectedIds.size} selected</span>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <Button variant="outline" size="sm" onClick={() => handleBulkStatusUpdate('approved')}>
+                    <CheckCircle className="mr-1 h-4 w-4" />
+                    Approve Selected
+                  </Button>
+                  <Button variant="outline" size="sm" onClick={() => handleBulkStatusUpdate('rejected')}>
+                    <XCircle className="mr-1 h-4 w-4" />
+                    Reject Selected
+                  </Button>
+                  <Button variant="outline" size="sm" onClick={handleBulkExport}>
+                    <Download className="mr-1 h-4 w-4" />
+                    Export Selected
+                  </Button>
+                  <div className="flex items-center gap-1">
+                    <Select value={bulkCategory} onValueChange={setBulkCategory}>
+                      <SelectTrigger className="w-[150px] h-8 text-sm">
+                        <SelectValue placeholder="Category..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {EXPENSE_CATEGORIES.map((cat) => (
+                          <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <Button variant="outline" size="sm" onClick={handleBulkCategorize} disabled={!bulkCategory}>
+                      <FolderOpen className="mr-1 h-4 w-4" />
+                      Categorize
+                    </Button>
+                  </div>
+                  <Button variant="ghost" size="sm" onClick={() => setSelectedIds(new Set())}>Clear</Button>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
           {isLoading ? (
             <TableSkeleton rows={5} columns={7} />
-          ) : expensesData?.data.length === 0 ? (
+          ) : filteredExpenses.length === 0 ? (
             <EmptyState
               title="No expenses recorded"
               description="Start tracking expenses by clicking the button above"
@@ -370,7 +528,7 @@ export function ExpenseTracker({ projectId }: { projectId?: string }) {
                 caption="Expenses"
                 hideCaption
                 columns={expenseColumns}
-                data={expensesData?.data || []}
+                data={filteredExpenses}
               />
 
               <Pagination
