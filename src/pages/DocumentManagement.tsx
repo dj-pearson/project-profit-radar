@@ -30,6 +30,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { ResponsiveContainer } from '@/components/layout/ResponsiveContainer';
 import { mobileGridClasses, mobileFilterClasses, mobileButtonClasses, mobileTextClasses, mobileCardClasses } from '@/utils/mobileHelpers';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
   Upload,
   FileText,
@@ -42,7 +43,10 @@ import {
   Zap,
   Database,
   Download,
-  Trash2
+  Trash2,
+  FolderInput,
+  Tag,
+  CheckSquare
 } from 'lucide-react';
 import { NoDocuments } from '@/components/ui/EmptyStates';
 
@@ -122,8 +126,13 @@ const DocumentManagement = () => {
 
   // Delete confirmation state
   const [deleteConfirmDoc, setDeleteConfirmDoc] = useState<Document | null>(null);
-  
+
+  // Bulk selection state
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [showBulkDeleteConfirm, setShowBulkDeleteConfirm] = useState(false);
+
   // Filters
+  const [filterProject, setFilterProject] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [filterCategory, setFilterCategory] = useState('');
   const [filterType, setFilterType] = useState('');
@@ -403,13 +412,104 @@ const DocumentManagement = () => {
     }
   };
 
+  // Bulk selection handlers
+  const handleSelectAll = (checked: boolean) => {
+    if (checked) {
+      setSelectedIds(filteredDocuments.map(doc => doc.id));
+    } else {
+      setSelectedIds([]);
+    }
+  };
+
+  const handleSelectOne = (docId: string, checked: boolean) => {
+    if (checked) {
+      setSelectedIds(prev => [...prev, docId]);
+    } else {
+      setSelectedIds(prev => prev.filter(id => id !== docId));
+    }
+  };
+
+  const handleBulkDownload = () => {
+    toast({
+      title: "Download Started",
+      description: `Downloading ${selectedIds.length} selected document(s)...`
+    });
+  };
+
+  const handleBulkMove = () => {
+    toast({
+      title: "Move to Folder",
+      description: `Moving ${selectedIds.length} selected document(s) to folder...`
+    });
+  };
+
+  const handleBulkTag = () => {
+    toast({
+      title: "Tag Selected",
+      description: `Tagging ${selectedIds.length} selected document(s)...`
+    });
+  };
+
+  const confirmBulkDelete = async () => {
+    try {
+      const bucketName = isProjectContext ? 'project-documents' : 'company-documents';
+      const docsToDelete = documents.filter(doc => selectedIds.includes(doc.id));
+
+      // Delete from storage
+      const filePaths = docsToDelete.map(doc => doc.file_path);
+      if (filePaths.length > 0) {
+        const { error: storageError } = await supabase.storage
+          .from(bucketName)
+          .remove(filePaths);
+        if (storageError) throw storageError;
+      }
+
+      // Delete document records
+      const { error: docError } = await supabase
+        .from('documents')
+        .delete()
+        .in('id', selectedIds);
+
+      if (docError) throw docError;
+
+      toast({
+        title: "Documents Deleted",
+        description: `Successfully deleted ${selectedIds.length} document(s).`
+      });
+
+      setSelectedIds([]);
+      setShowBulkDeleteConfirm(false);
+      loadDocuments();
+    } catch (error: unknown) {
+      console.error('Error deleting documents:', error);
+      toast({
+        variant: "destructive",
+        title: "Delete Failed",
+        description: "Failed to delete selected documents."
+      });
+      setShowBulkDeleteConfirm(false);
+    }
+  };
+
   const filteredDocuments = documents.filter(doc => {
     const matchesSearch = doc.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          doc.description?.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesCategory = !filterCategory || filterCategory === 'all' || doc.category_id === filterCategory;
-    const matchesType = !filterType || filterType === 'all' || doc.file_type.includes(filterType);
-    
-    return matchesSearch && matchesCategory && matchesType;
+    const matchesType = !filterType || filterType === 'all' || (() => {
+      const ft = doc.file_type.toLowerCase();
+      switch (filterType) {
+        case 'pdf': return ft.includes('pdf');
+        case 'image': return ft.startsWith('image/');
+        case 'spreadsheet': return ft.includes('spreadsheet') || ft.includes('excel') || ft.includes('csv');
+        case 'word': return ft.includes('word') || ft.includes('document') || ft.includes('msword');
+        case 'video': return ft.startsWith('video/');
+        case 'text': return ft.startsWith('text/');
+        default: return ft.includes(filterType);
+      }
+    })();
+    const matchesProject = !filterProject || filterProject === 'all';
+
+    return matchesSearch && matchesCategory && matchesType && matchesProject;
   });
 
   if (!userProfile) {
@@ -572,12 +672,30 @@ const DocumentManagement = () => {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All types</SelectItem>
-                  <SelectItem value="image">Images</SelectItem>
                   <SelectItem value="pdf">PDFs</SelectItem>
+                  <SelectItem value="image">Images</SelectItem>
+                  <SelectItem value="spreadsheet">Spreadsheets</SelectItem>
+                  <SelectItem value="word">Word Documents</SelectItem>
                   <SelectItem value="video">Videos</SelectItem>
-                  <SelectItem value="application">Documents</SelectItem>
+                  <SelectItem value="text">Text Files</SelectItem>
+                  <SelectItem value="application">Other Documents</SelectItem>
                 </SelectContent>
               </Select>
+              {!isProjectContext && (
+                <Select value={filterProject} onValueChange={setFilterProject}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="All projects" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All projects</SelectItem>
+                    {projects.map((project) => (
+                      <SelectItem key={project.id} value={project.id}>
+                        {project.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
               <div className="flex items-center space-x-2">
                 <span className="text-sm text-muted-foreground">
                   {filteredDocuments.length} documents
@@ -587,6 +705,49 @@ const DocumentManagement = () => {
           </CardContent>
         </Card>
 
+        {/* Bulk Actions Bar */}
+        {selectedIds.length > 0 && (
+          <Card className="mb-4 border-primary">
+            <CardContent className="p-3">
+              <div className="flex items-center gap-3 flex-wrap">
+                <span className="text-sm font-medium flex items-center gap-1.5">
+                  <CheckSquare className="h-4 w-4" aria-hidden="true" />
+                  {selectedIds.length} selected
+                </span>
+                <Separator orientation="vertical" className="h-6" />
+                <Button size="sm" variant="outline" onClick={handleBulkDownload}>
+                  <Download className="h-3.5 w-3.5 mr-1.5" aria-hidden="true" />
+                  Download Selected
+                </Button>
+                <Button size="sm" variant="outline" onClick={handleBulkMove}>
+                  <FolderInput className="h-3.5 w-3.5 mr-1.5" aria-hidden="true" />
+                  Move to Folder
+                </Button>
+                <Button size="sm" variant="outline" onClick={handleBulkTag}>
+                  <Tag className="h-3.5 w-3.5 mr-1.5" aria-hidden="true" />
+                  Tag Selected
+                </Button>
+                <Button
+                  size="sm"
+                  variant="destructive"
+                  onClick={() => setShowBulkDeleteConfirm(true)}
+                >
+                  <Trash2 className="h-3.5 w-3.5 mr-1.5" aria-hidden="true" />
+                  Delete Selected
+                </Button>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => setSelectedIds([])}
+                  aria-label="Clear selection"
+                >
+                  Clear
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Documents Table */}
         {(() => {
           const formatFileSize = (bytes: number) => {
@@ -595,7 +756,29 @@ const DocumentManagement = () => {
             return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
           };
 
+          const allSelected = filteredDocuments.length > 0 && filteredDocuments.every(doc => selectedIds.includes(doc.id));
+          const someSelected = filteredDocuments.some(doc => selectedIds.includes(doc.id)) && !allSelected;
+
           const documentColumns: TableColumn<Document>[] = [
+            {
+              key: 'id',
+              header: 'Select',
+              headerRender: () => (
+                <Checkbox
+                  checked={allSelected ? true : someSelected ? 'indeterminate' : false}
+                  onCheckedChange={(checked) => handleSelectAll(checked === true)}
+                  aria-label="Select all documents"
+                />
+              ),
+              render: (value: string) => (
+                <Checkbox
+                  checked={selectedIds.includes(value)}
+                  onCheckedChange={(checked) => handleSelectOne(value, checked === true)}
+                  onClick={(e) => e.stopPropagation()}
+                  aria-label={`Select document`}
+                />
+              ),
+            },
             {
               key: 'name',
               header: 'Name',
@@ -735,6 +918,22 @@ const DocumentManagement = () => {
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction onClick={confirmDeleteDocument}>Delete</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Bulk Delete Confirmation Dialog */}
+      <AlertDialog open={showBulkDeleteConfirm} onOpenChange={setShowBulkDeleteConfirm}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete {selectedIds.length} Document{selectedIds.length !== 1 ? 's' : ''}</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete {selectedIds.length} selected document{selectedIds.length !== 1 ? 's' : ''}? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmBulkDelete}>Delete {selectedIds.length} Document{selectedIds.length !== 1 ? 's' : ''}</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

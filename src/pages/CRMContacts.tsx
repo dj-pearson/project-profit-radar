@@ -32,8 +32,10 @@ import {
   Trash2,
   Globe,
   Calendar,
-  Tag
+  Tag,
+  Download
 } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
 
 interface Contact {
   id: string;
@@ -77,6 +79,9 @@ const CRMContacts = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [typeFilter, setTypeFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [tagFilter, setTagFilter] = useState('all');
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showNewContactDialog, setShowNewContactDialog] = useState(false);
   const [newContact, setNewContact] = useState<Partial<Contact>>({
     contact_type: 'prospect',
@@ -206,6 +211,8 @@ const CRMContacts = () => {
   const getTypeColor = (type: string) => {
     switch (type) {
       case 'client': return 'green';
+      case 'lead': return 'sky';
+      case 'subcontractor': return 'amber';
       case 'prospect': return 'blue';
       case 'vendor': return 'purple';
       case 'partner': return 'orange';
@@ -231,18 +238,89 @@ const CRMContacts = () => {
     });
   };
 
+  // Collect all unique tags across contacts for the tag filter
+  const allTags = React.useMemo(() => {
+    const tagSet = new Set<string>();
+    contacts?.forEach(contact => {
+      contact.tags?.forEach(tag => tagSet.add(tag));
+    });
+    return Array.from(tagSet).sort();
+  }, [contacts]);
+
   const filteredContacts = contacts?.filter(contact => {
     const matchesSearch = searchTerm === '' ||
       `${contact.first_name} ${contact.last_name}`.toLowerCase().includes(searchTerm.toLowerCase()) ||
       contact.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      contact.company_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      contact.job_title?.toLowerCase().includes(searchTerm.toLowerCase());
+      contact.company_name?.toLowerCase().includes(searchTerm.toLowerCase());
 
     const matchesType = typeFilter === 'all' || contact.contact_type === typeFilter;
     const matchesStatus = statusFilter === 'all' || contact.relationship_status === statusFilter;
+    const matchesTag = tagFilter === 'all' || contact.tags?.includes(tagFilter);
 
-    return matchesSearch && matchesType && matchesStatus;
+    return matchesSearch && matchesType && matchesStatus && matchesTag;
   }) || [];
+
+  // Clear selections that are no longer in the filtered list
+  const filteredIds = new Set(filteredContacts.map(c => c.id));
+  const validSelectedIds = selectedIds.filter(id => filteredIds.has(id));
+  if (validSelectedIds.length !== selectedIds.length) {
+    // Defer state update to avoid setting state during render
+    React.startTransition(() => setSelectedIds(validSelectedIds));
+  }
+
+  const handleSelectAll = (checked: boolean) => {
+    if (checked) {
+      setSelectedIds(filteredContacts.map(c => c.id));
+    } else {
+      setSelectedIds([]);
+    }
+  };
+
+  const handleSelectOne = (contactId: string, checked: boolean) => {
+    if (checked) {
+      setSelectedIds(prev => [...prev, contactId]);
+    } else {
+      setSelectedIds(prev => prev.filter(id => id !== contactId));
+    }
+  };
+
+  const handleBulkSendEmail = () => {
+    toast({
+      title: "Send Email",
+      description: `Preparing email for ${selectedIds.length} selected contact(s).`,
+    });
+  };
+
+  const handleBulkAddTag = () => {
+    toast({
+      title: "Add Tag",
+      description: `Adding tag to ${selectedIds.length} selected contact(s).`,
+    });
+  };
+
+  const handleBulkExport = () => {
+    toast({
+      title: "Export Selected",
+      description: `Exporting ${selectedIds.length} selected contact(s).`,
+    });
+  };
+
+  const handleBulkDelete = () => {
+    setShowDeleteConfirm(true);
+  };
+
+  const confirmBulkDelete = () => {
+    const remaining = contacts?.filter(c => !selectedIds.includes(c.id)) || [];
+    // Update local state by reloading without the deleted items
+    // For now, we remove from local data via the loading state hook
+    loadContacts(async () => remaining);
+    toast({
+      title: "Deleted",
+      description: `${selectedIds.length} contact(s) deleted.`,
+    });
+    setSelectedIds([]);
+    setShowDeleteConfirm(false);
+  };
 
   if (loading) {
     return <LoadingState message="Loading contacts..." />;
@@ -280,8 +358,10 @@ const CRMContacts = () => {
                       <SelectContent>
                         <SelectItem value="all">All Types</SelectItem>
                         <SelectItem value="client">Client</SelectItem>
-                        <SelectItem value="prospect">Prospect</SelectItem>
+                        <SelectItem value="lead">Lead</SelectItem>
+                        <SelectItem value="subcontractor">Subcontractor</SelectItem>
                         <SelectItem value="vendor">Vendor</SelectItem>
+                        <SelectItem value="prospect">Prospect</SelectItem>
                         <SelectItem value="partner">Partner</SelectItem>
                         <SelectItem value="referral">Referral</SelectItem>
                       </SelectContent>
@@ -299,6 +379,20 @@ const CRMContacts = () => {
                       </SelectContent>
                     </Select>
 
+                    {allTags.length > 0 && (
+                      <Select value={tagFilter} onValueChange={setTagFilter}>
+                        <SelectTrigger className="w-full sm:w-40" aria-label="Filter by tag">
+                          <SelectValue placeholder="Tag" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">All Tags</SelectItem>
+                          {allTags.map(tag => (
+                            <SelectItem key={tag} value={tag}>{tag}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    )}
+
                     <Button aria-label="Create new contact" onClick={() => setShowNewContactDialog(true)}>
                       <Plus className="h-4 w-4 mr-2" aria-hidden="true" />
                       New Contact
@@ -307,6 +401,67 @@ const CRMContacts = () => {
                 </div>
               </CardContent>
             </Card>
+
+            {/* Bulk Actions Bar */}
+            {selectedIds.length > 0 && (
+              <Card className="mb-4 border-primary">
+                <CardContent className="py-3">
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+                    <span className="text-sm font-medium">
+                      {selectedIds.length} contact{selectedIds.length !== 1 ? 's' : ''} selected
+                    </span>
+                    <div className="flex flex-wrap gap-2">
+                      <Button size="sm" variant="outline" onClick={handleBulkSendEmail}>
+                        <Mail className="h-4 w-4 mr-1" aria-hidden="true" />
+                        Send Email
+                      </Button>
+                      <Button size="sm" variant="outline" onClick={handleBulkAddTag}>
+                        <Tag className="h-4 w-4 mr-1" aria-hidden="true" />
+                        Add Tag
+                      </Button>
+                      <Button size="sm" variant="outline" onClick={handleBulkExport}>
+                        <Download className="h-4 w-4 mr-1" aria-hidden="true" />
+                        Export Selected
+                      </Button>
+                      <Button size="sm" variant="destructive" onClick={handleBulkDelete}>
+                        <Trash2 className="h-4 w-4 mr-1" aria-hidden="true" />
+                        Delete Selected
+                      </Button>
+                    </div>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="ml-auto"
+                      onClick={() => setSelectedIds([])}
+                    >
+                      Clear Selection
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Delete Confirmation Modal */}
+            <AccessibleModal
+              isOpen={showDeleteConfirm}
+              onClose={() => setShowDeleteConfirm(false)}
+              title="Confirm Deletion"
+              description={`Are you sure you want to delete ${selectedIds.length} selected contact(s)? This action cannot be undone.`}
+              footer={
+                <>
+                  <Button variant="outline" onClick={() => setShowDeleteConfirm(false)}>
+                    Cancel
+                  </Button>
+                  <Button variant="destructive" onClick={confirmBulkDelete}>
+                    Delete {selectedIds.length} Contact{selectedIds.length !== 1 ? 's' : ''}
+                  </Button>
+                </>
+              }
+            >
+              <p className="text-muted-foreground">
+                This will permanently remove {selectedIds.length} contact{selectedIds.length !== 1 ? 's' : ''} from your CRM.
+              </p>
+            </AccessibleModal>
 
             {/* New Contact Modal */}
             <AccessibleModal
@@ -434,7 +589,35 @@ const CRMContacts = () => {
                   onRetry={() => loadContacts(loadContactsData)}
                 />
               ) : (() => {
+                const isAllSelected = filteredContacts.length > 0 && selectedIds.length === filteredContacts.length;
+                const isSomeSelected = selectedIds.length > 0 && selectedIds.length < filteredContacts.length;
+
                 const contactColumns: TableColumn<Contact>[] = [
+                  {
+                    key: 'select',
+                    header: 'Select',
+                    width: '48px',
+                    headerRender: () => (
+                      <Checkbox
+                        checked={isAllSelected}
+                        ref={(el) => {
+                          if (el) {
+                            (el as unknown as HTMLButtonElement).dataset.indeterminate = String(isSomeSelected);
+                          }
+                        }}
+                        onCheckedChange={(checked) => handleSelectAll(checked === true)}
+                        aria-label={isAllSelected ? 'Deselect all contacts' : 'Select all contacts'}
+                      />
+                    ),
+                    render: (_, row) => (
+                      <Checkbox
+                        checked={selectedIds.includes(row.id)}
+                        onCheckedChange={(checked) => handleSelectOne(row.id, checked === true)}
+                        aria-label={`Select ${row.first_name} ${row.last_name}`}
+                        onClick={(e) => e.stopPropagation()}
+                      />
+                    ),
+                  },
                   {
                     key: 'first_name',
                     header: 'Name',

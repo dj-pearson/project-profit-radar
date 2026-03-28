@@ -30,6 +30,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { format, isToday, isTomorrow, isThisWeek, isPast } from 'date-fns';
 import { TaskCard } from '@/components/tasks/TaskCard';
+import { TaskKanbanBoard } from '@/components/tasks/TaskKanbanBoard';
 
 interface TaskItem {
   id: string;
@@ -662,21 +663,7 @@ export const MyTasksDashboard = () => {
         )}
 
         {viewMode === 'kanban' && (
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            {['todo', 'in_progress', 'pending', 'on_hold'].map(status => (
-              <Card key={status}>
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-sm font-medium capitalize flex items-center justify-between">
-                    {status.replace('_', ' ')}
-                    <Badge variant="outline">{getItemsByStatus(status).length}</Badge>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  {getItemsByStatus(status).map(renderItemCard)}
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+          <TaskKanbanBoard projectId={userProfile?.company_id || ''} />
         )}
 
         {filteredItems.length === 0 && (
