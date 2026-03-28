@@ -8,6 +8,7 @@ import { Navigate, useLocation } from 'react-router-dom';
 import { Clock, Plus, BarChart3 } from 'lucide-react';
 import { rememberCurrentRoute } from '@/lib/routeMemory';
 import { AccessiblePageWrapper } from "@/components/accessibility/AccessiblePageWrapper";
+import { TimeTrackingReports } from '@/components/time-tracking/TimeTrackingReports';
 
 const TimeTracking = () => {
   const { user } = useAuth();
@@ -144,15 +145,7 @@ const TimeTracking = () => {
             <QuickTimeEntry onEntryCreated={handleEntryCreated} />
           )}
           
-          {activeView === 'reports' && (
-            <div className="text-center py-12">
-              <BarChart3 className="h-12 w-12 mx-auto mb-4 text-muted-foreground" aria-hidden="true" />
-              <h3 className="text-lg font-medium mb-2">Time Reports</h3>
-              <p className="text-muted-foreground max-w-md mx-auto">
-                Detailed time tracking reports and analytics coming soon
-              </p>
-            </div>
-          )}
+          {activeView === 'reports' && <TimeTrackingReports />}
         </div>
 
         {/* Mobile FAB */}

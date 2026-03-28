@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Plus, Search, Filter, FileText, DollarSign, Clock, AlertTriangle } from 'lucide-react';
+import { Plus, Search, Filter, FileText, DollarSign, Clock, AlertTriangle, Repeat, BarChart3 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
@@ -19,6 +19,8 @@ import InvoiceList from '@/components/invoices/InvoiceList';
 import InvoiceStats from '@/components/invoices/InvoiceStats';
 import ProgressBillingManager from '@/components/invoices/ProgressBillingManager';
 import RetentionManager from '@/components/invoices/RetentionManager';
+import RecurringInvoiceManager from '@/components/invoices/RecurringInvoiceManager';
+import AgingReport from '@/components/invoices/AgingReport';
 
 const Invoices: React.FC = () => {
   const [activeTab, setActiveTab] = usePersistedState<string>('invoices-active-tab', 'overview');
@@ -142,7 +144,7 @@ const Invoices: React.FC = () => {
 
       {/* Main Content Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6" aria-label="Invoice management sections">
-        <TabsList className="grid w-full grid-cols-4" aria-label="Invoice categories">
+        <TabsList className="grid w-full grid-cols-6" aria-label="Invoice categories">
           <TabsTrigger value="overview" className="flex items-center gap-2">
             <FileText className="h-4 w-4" aria-hidden="true" />
             Overview
@@ -158,6 +160,14 @@ const Invoices: React.FC = () => {
           <TabsTrigger value="overdue" className="flex items-center gap-2">
             <AlertTriangle className="h-4 w-4" aria-hidden="true" />
             Overdue
+          </TabsTrigger>
+          <TabsTrigger value="recurring" className="flex items-center gap-2">
+            <Repeat className="h-4 w-4" aria-hidden="true" />
+            Recurring
+          </TabsTrigger>
+          <TabsTrigger value="aging" className="flex items-center gap-2">
+            <BarChart3 className="h-4 w-4" aria-hidden="true" />
+            Aging
           </TabsTrigger>
         </TabsList>
 
@@ -234,6 +244,14 @@ const Invoices: React.FC = () => {
               />
             </CardContent>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="recurring" className="space-y-4">
+          <RecurringInvoiceManager />
+        </TabsContent>
+
+        <TabsContent value="aging" className="space-y-4">
+          <AgingReport invoices={invoices} />
         </TabsContent>
       </Tabs>
     </div>

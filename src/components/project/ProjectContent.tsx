@@ -6,6 +6,7 @@ import { Progress } from '@/components/ui/progress';
 import { ProjectWithRelations } from '@/services/projectService';
 import ProjectEquipmentView from '@/components/equipment/ProjectEquipmentView';
 import { ProjectFinancialDashboard } from '@/components/financial/ProjectFinancialDashboard';
+import { ChangeOrderImpact } from '@/components/financial/ChangeOrderImpact';
 import { ConstructionTimelineManager } from '@/components/construction/ConstructionTimelineManager';
 import { ProjectDailyReports } from '@/components/project/tabs/ProjectDailyReports';
 import { ProjectEstimates } from '@/components/project/tabs/ProjectEstimates';
@@ -190,6 +191,7 @@ export const ProjectContent: React.FC<ProjectContentProps> = ({
           <ProjectFinancialDashboard projectId={project.id} />
         </CardContent>
       </Card>
+      <ChangeOrderImpact projectId={project.id} />
     </div>
   );
 

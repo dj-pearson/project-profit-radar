@@ -40,7 +40,9 @@ import {
   CheckCircle2
 } from 'lucide-react';
 import { LeadDetailView } from '@/components/crm/LeadDetailView';
+import { LeadKanbanBoard } from '@/components/crm/LeadKanbanBoard';
 import { CSVImportButton } from '@/components/smart-import';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 interface Lead {
   id: string;
@@ -288,6 +290,10 @@ const CRMLeads = () => {
     }
   };
 
+  const handleStatusChange = async (leadId: string, newStatus: string) => {
+    await updateLead(leadId, { status: newStatus } as Partial<Lead>);
+  };
+
   const filteredLeads = leads?.filter(lead => {
     const matchesSearch = searchTerm === '' || 
       `${lead.first_name} ${lead.last_name}`.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -335,7 +341,13 @@ const CRMLeads = () => {
 
   return (
     <DashboardLayout title="Leads Management">
-            
+            <Tabs defaultValue="list" className="w-full">
+              <TabsList className="mb-4">
+                <TabsTrigger value="list">List</TabsTrigger>
+                <TabsTrigger value="kanban">Kanban</TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="list">
             {/* Filters and Actions */}
             <Card className="mb-6">
               <CardContent className="pt-6">
@@ -854,6 +866,15 @@ const CRMLeads = () => {
                 </ErrorBoundary>
               </CardContent>
             </Card>
+              </TabsContent>
+
+              <TabsContent value="kanban">
+                <LeadKanbanBoard
+                  leads={filteredLeads}
+                  onStatusChange={handleStatusChange}
+                />
+              </TabsContent>
+            </Tabs>
     </DashboardLayout>
   );
 };

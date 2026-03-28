@@ -19,6 +19,8 @@ import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { ResponsiveContainer } from '@/components/layout/ResponsiveContainer';
 import { mobileGridClasses, mobileFilterClasses, mobileButtonClasses, mobileTextClasses, mobileCardClasses } from '@/utils/mobileHelpers';
 import MobileDailyReport from '@/components/mobile/MobileDailyReport';
+import DailyReportTemplateManager from '@/components/daily-reports/DailyReportTemplateManager';
+import type { DailyReportTemplate } from '@/components/daily-reports/DailyReportTemplateManager';
 import { useIsMobile } from '@/hooks/use-mobile';
 import {
   ArrowLeft,
@@ -33,10 +35,30 @@ import {
   X,
   Upload,
   Smartphone,
-  RefreshCw
+  RefreshCw,
+  Copy,
+  LayoutTemplate,
+  Save
 } from 'lucide-react';
 import { fetchWeather, formatWeatherForReport } from '@/services/weather';
 import { NoDailyReports } from '@/components/ui/EmptyStates';
+
+const TEMPLATE_STORAGE_KEY = 'builddesk-daily-report-templates';
+
+function loadTemplatesFromStorage(): DailyReportTemplate[] {
+  try {
+    const raw = localStorage.getItem(TEMPLATE_STORAGE_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch {
+    return [];
+  }
+}
+
+function saveTemplateToStorage(template: DailyReportTemplate) {
+  const existing = loadTemplatesFromStorage();
+  existing.push(template);
+  localStorage.setItem(TEMPLATE_STORAGE_KEY, JSON.stringify(existing));
+}
 
 interface Project {
   id: string;
@@ -84,6 +106,10 @@ const DailyReports = () => {
   
   const [selectedPhotos, setSelectedPhotos] = useState<File[]>([]);
   const [showMobileReport, setShowMobileReport] = useState(false);
+  const [isTemplateManagerOpen, setIsTemplateManagerOpen] = useState(false);
+  const [isSaveTemplateOpen, setIsSaveTemplateOpen] = useState(false);
+  const [templateName, setTemplateName] = useState('');
+  const [savedTemplates, setSavedTemplates] = useState<DailyReportTemplate[]>(loadTemplatesFromStorage);
 
   useEffect(() => {
     if (!loading && !user) {
@@ -288,6 +314,23 @@ const DailyReports = () => {
                 Mobile Report
               </Button>
             )}
+            <Dialog open={isTemplateManagerOpen} onOpenChange={setIsTemplateManagerOpen}>
+              <DialogTrigger asChild>
+                <Button variant="outline" aria-label="Manage daily report templates">
+                  <LayoutTemplate className="h-4 w-4 mr-2" aria-hidden="true" />
+                  Templates
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-2xl" aria-describedby="template-manager-description">
+                <DialogHeader>
+                  <DialogTitle>Daily Report Templates</DialogTitle>
+                  <DialogDescription id="template-manager-description">
+                    Manage reusable templates for daily reports.
+                  </DialogDescription>
+                </DialogHeader>
+                <DailyReportTemplateManager />
+              </DialogContent>
+            </Dialog>
             <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
               <DialogTrigger asChild>
                 <Button aria-label="Create new daily report">
@@ -303,6 +346,82 @@ const DailyReports = () => {
                   </DialogDescription>
                 </DialogHeader>
                 <form className="space-y-4" aria-label="Create daily report form" onSubmit={(e) => { e.preventDefault(); handleCreateReport(); }}>
+                  {/* Template & Copy Actions */}
+                  <div className="flex flex-wrap gap-2">
+                    <div className="flex-1 min-w-[200px]">
+                      <Label htmlFor="load-template">Load Template</Label>
+                      <Select
+                        value=""
+                        onValueChange={(templateId) => {
+                          const templates = loadTemplatesFromStorage();
+                          const tpl = templates.find(t => t.id === templateId);
+                          if (tpl) {
+                            setNewReport(prev => ({
+                              ...prev,
+                              weather_conditions: tpl.weather_conditions || prev.weather_conditions,
+                              crew_count: tpl.crew_count || prev.crew_count,
+                              equipment_used: tpl.equipment_used || prev.equipment_used,
+                              materials_delivered: tpl.materials_delivered || prev.materials_delivered,
+                              work_performed: tpl.work_performed || prev.work_performed,
+                            }));
+                            toast({ title: 'Template loaded', description: `Loaded "${tpl.name}" template values.` });
+                          }
+                        }}
+                      >
+                        <SelectTrigger id="load-template" aria-label="Select template to load">
+                          <SelectValue placeholder="Select a template..." />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {savedTemplates.length === 0 ? (
+                            <SelectItem value="__none__" disabled>No templates saved</SelectItem>
+                          ) : (
+                            savedTemplates.map((tpl) => (
+                              <SelectItem key={tpl.id} value={tpl.id}>{tpl.name}</SelectItem>
+                            ))
+                          )}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="flex items-end">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => {
+                          const projectId = newReport.project_id;
+                          if (!projectId) {
+                            toast({ variant: 'destructive', title: 'Select a project first', description: 'Choose a project before copying from yesterday.' });
+                            return;
+                          }
+                          const projectReports = dailyReports
+                            .filter(r => r.project_id === projectId)
+                            .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+                          if (projectReports.length === 0) {
+                            toast({ variant: 'destructive', title: 'No previous reports', description: 'No reports found for this project.' });
+                            return;
+                          }
+                          const latest = projectReports[0];
+                          setNewReport(prev => ({
+                            ...prev,
+                            work_performed: latest.work_performed || '',
+                            crew_count: latest.crew_count || 0,
+                            weather_conditions: latest.weather_conditions || '',
+                            materials_delivered: latest.materials_delivered || '',
+                            equipment_used: latest.equipment_used || '',
+                            delays_issues: latest.delays_issues || '',
+                            safety_incidents: latest.safety_incidents || '',
+                          }));
+                          toast({ title: 'Copied from latest report', description: `Loaded data from ${new Date(latest.date).toLocaleDateString()}.` });
+                        }}
+                        aria-label="Copy values from the most recent report"
+                      >
+                        <Copy className="h-4 w-4 mr-2" aria-hidden="true" />
+                        Copy from Yesterday
+                      </Button>
+                    </div>
+                  </div>
+
+                  <Separator />
+
                   <div>
                     <Label htmlFor="project">Project *</Label>
                     <Select value={newReport.project_id} onValueChange={(value) => setNewReport({...newReport, project_id: value})} required>
@@ -487,15 +606,77 @@ const DailyReports = () => {
                       </div>
                     </fieldset>
 
-                    <div className="flex justify-end space-x-2">
-                    <Button variant="outline" type="button" onClick={() => setIsCreateDialogOpen(false)}>
-                      Cancel
+                    <div className="flex justify-between items-center">
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setIsSaveTemplateOpen(true)}
+                      aria-label="Save current form values as a template"
+                    >
+                      <Save className="h-4 w-4 mr-2" aria-hidden="true" />
+                      Save as Template
                     </Button>
-                    <Button type="submit">
-                      Create Report
-                    </Button>
+                    <div className="flex space-x-2">
+                      <Button variant="outline" type="button" onClick={() => setIsCreateDialogOpen(false)}>
+                        Cancel
+                      </Button>
+                      <Button type="submit">
+                        Create Report
+                      </Button>
+                    </div>
                   </div>
                 </form>
+
+                {/* Save as Template Dialog */}
+                <Dialog open={isSaveTemplateOpen} onOpenChange={setIsSaveTemplateOpen}>
+                  <DialogContent className="max-w-sm" aria-describedby="save-template-description">
+                    <DialogHeader>
+                      <DialogTitle>Save as Template</DialogTitle>
+                      <DialogDescription id="save-template-description">
+                        Save the current form values as a reusable template.
+                      </DialogDescription>
+                    </DialogHeader>
+                    <div>
+                      <Label htmlFor="template-name">Template Name *</Label>
+                      <Input
+                        id="template-name"
+                        value={templateName}
+                        onChange={(e) => setTemplateName(e.target.value)}
+                        placeholder="e.g., Standard Residential"
+                        aria-required="true"
+                      />
+                    </div>
+                    <div className="flex justify-end space-x-2">
+                      <Button variant="outline" onClick={() => { setIsSaveTemplateOpen(false); setTemplateName(''); }}>
+                        Cancel
+                      </Button>
+                      <Button
+                        disabled={!templateName.trim()}
+                        onClick={() => {
+                          const template: DailyReportTemplate = {
+                            id: crypto.randomUUID?.() ?? Date.now().toString(),
+                            name: templateName.trim(),
+                            weather_conditions: newReport.weather_conditions,
+                            crew_count: newReport.crew_count,
+                            equipment_used: newReport.equipment_used,
+                            materials_delivered: newReport.materials_delivered,
+                            work_performed: newReport.work_performed,
+                            created_at: new Date().toISOString(),
+                          };
+                          saveTemplateToStorage(template);
+                          setSavedTemplates(loadTemplatesFromStorage());
+                          setIsSaveTemplateOpen(false);
+                          setTemplateName('');
+                          toast({ title: 'Template saved', description: `"${template.name}" has been saved.` });
+                        }}
+                      >
+                        <Save className="h-4 w-4 mr-2" aria-hidden="true" />
+                        Save Template
+                      </Button>
+                    </div>
+                  </DialogContent>
+                </Dialog>
               </DialogContent>
               </Dialog>
           </div>
