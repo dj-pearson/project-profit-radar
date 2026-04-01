@@ -1,11 +1,8 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.3";
 import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
+import { getCorsHeaders, handleCorsPreflightRequest } from "../_shared/secure-cors.ts";
+import { checkRateLimit, getClientIP, rateLimitResponse } from "../_shared/rate-limiter.ts";
 
 // SECURITY: Input validation schema
 const DisableMFARequestSchema = z.object({
@@ -13,19 +10,21 @@ const DisableMFARequestSchema = z.object({
 });
 
 // SECURITY: Sanitize errors to prevent information disclosure
-function createSafeErrorResponse(statusCode: number, message: string) {
+function createSafeErrorResponse(statusCode: number, message: string, headers: Record<string, string> = {}) {
   return new Response(
     JSON.stringify({ error: message }),
     {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      headers: { ...headers, "Content-Type": "application/json" },
       status: statusCode,
     }
   );
 }
 
 serve(async (req) => {
+  const corsHeaders = getCorsHeaders(req);
+
   if (req.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders });
+    return handleCorsPreflightRequest(req);
   }
 
   try {
@@ -34,10 +33,23 @@ serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
     );
 
+    // Rate limit: 3 disable MFA attempts per hour per IP (prevents abuse)
+    const clientIP = getClientIP(req);
+    const rateLimitResult = await checkRateLimit(supabaseClient, {
+      identifier: clientIP,
+      endpoint: 'disable-mfa',
+      maxRequests: 3,
+      windowMinutes: 60,
+    });
+
+    if (!rateLimitResult.allowed) {
+      return rateLimitResponse(rateLimitResult, corsHeaders);
+    }
+
     // Verify authentication
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) {
-      return createSafeErrorResponse(401, "Authentication required");
+      return createSafeErrorResponse(401, "Authentication required", corsHeaders);
     }
 
     const token = authHeader.replace("Bearer ", "");
@@ -45,7 +57,7 @@ serve(async (req) => {
     
     if (userError || !userData.user) {
       console.error("[MFA] Auth verification failed:", userError);
-      return createSafeErrorResponse(401, "Invalid authentication");
+      return createSafeErrorResponse(401, "Invalid authentication", corsHeaders);
     }
 
     // SECURITY: Validate input with Zod schema
@@ -53,13 +65,13 @@ serve(async (req) => {
     try {
       requestBody = await req.json();
     } catch {
-      return createSafeErrorResponse(400, "Invalid request body");
+      return createSafeErrorResponse(400, "Invalid request body", corsHeaders);
     }
 
     const validation = DisableMFARequestSchema.safeParse(requestBody);
     if (!validation.success) {
       console.error("[MFA] Validation failed:", validation.error.errors);
-      return createSafeErrorResponse(400, "Invalid request parameters");
+      return createSafeErrorResponse(400, "Invalid request parameters", corsHeaders);
     }
 
     const { user_id } = validation.data;
@@ -73,7 +85,7 @@ serve(async (req) => {
 
     if (roleError) {
       console.error("[MFA] Role check failed:", roleError);
-      return createSafeErrorResponse(500, "Authorization check failed");
+      return createSafeErrorResponse(500, "Authorization check failed", corsHeaders);
     }
 
     const isAdmin = hasRole === true;
@@ -84,7 +96,7 @@ serve(async (req) => {
         requester: userData.user.id,
         target: user_id
       });
-      return createSafeErrorResponse(403, "Insufficient permissions");
+      return createSafeErrorResponse(403, "Insufficient permissions", corsHeaders);
     }
 
     // Disable MFA
@@ -101,7 +113,7 @@ serve(async (req) => {
     if (updateError) {
       // SECURITY: Log detailed error server-side, return generic message to client
       console.error("[MFA] Database update failed:", updateError);
-      return createSafeErrorResponse(500, "Failed to update MFA settings");
+      return createSafeErrorResponse(500, "Failed to update MFA settings", corsHeaders);
     }
 
     // Log security event
@@ -129,6 +141,6 @@ serve(async (req) => {
   } catch (error) {
     // SECURITY: Never expose internal errors to clients
     console.error("[MFA] Unexpected error:", error);
-    return createSafeErrorResponse(500, "An unexpected error occurred");
+    return createSafeErrorResponse(500, "An unexpected error occurred", corsHeaders);
   }
 });
