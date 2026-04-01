@@ -18,6 +18,7 @@ import {
   Eye,
   EyeOff,
 } from "lucide-react";
+import { CsrfTokenField } from "@/lib/security/csrfProtection.tsx";
 
 type OTPFlowState = 'idle' | 'sending' | 'verifying' | 'submitted' | 'verified' | 'setting_password';
 
@@ -170,6 +171,7 @@ const SignUpForm: React.FC<SignUpFormProps> = ({
           {renderOAuthButtons()}
 
           <form onSubmit={onSubmit} className="space-y-4" aria-label="Create account form">
+            <CsrfTokenField />
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-2">
                 <Label htmlFor="firstName" className="text-slate-300 text-sm">First name</Label>
@@ -178,6 +180,7 @@ const SignUpForm: React.FC<SignUpFormProps> = ({
                   value={firstName}
                   onChange={(e) => setFirstName(e.target.value)}
                   required
+                  maxLength={50}
                   autoComplete="given-name"
                   aria-required="true"
                   placeholder="John"
@@ -191,6 +194,7 @@ const SignUpForm: React.FC<SignUpFormProps> = ({
                   value={lastName}
                   onChange={(e) => setLastName(e.target.value)}
                   required
+                  maxLength={50}
                   autoComplete="family-name"
                   aria-required="true"
                   placeholder="Doe"
@@ -207,7 +211,8 @@ const SignUpForm: React.FC<SignUpFormProps> = ({
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                autoComplete="email"
+                maxLength={255}
+                autoComplete="username email"
                 aria-required="true"
                 placeholder="you@company.com"
                 className={inputClassName}
@@ -227,6 +232,7 @@ const SignUpForm: React.FC<SignUpFormProps> = ({
                   }}
                   required
                   minLength={8}
+                  maxLength={128}
                   autoComplete="new-password"
                   aria-required="true"
                   aria-describedby={showPasswordRequirements ? "signup-password-requirements" : undefined}

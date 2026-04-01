@@ -22,6 +22,10 @@ import {
   clearFailedAttempts,
   getLockoutMessage,
 } from "@/lib/security/loginProtection";
+import {
+  registerSession,
+  checkSessionLimit,
+} from "@/lib/security/sessionManagement";
 // Site-resolver removed - single-tenant architecture
 import type { ReactNode, FC } from "react";
 
@@ -822,6 +826,12 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
       // SECURITY: Clear failed attempts on successful login
       if (data.user) {
         await clearFailedAttempts(data.user.id);
+
+        // SECURITY: Enforce concurrent session limits and register new session
+        await checkSessionLimit(data.user.id);
+        if (data.session?.access_token) {
+          await registerSession(data.user.id, data.session.access_token.slice(0, 64));
+        }
       }
 
       logger.debug("Sign in successful");

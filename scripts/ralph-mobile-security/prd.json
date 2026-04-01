@@ -1,0 +1,266 @@
+{
+  "project": "BuildDesk Mobile & Auth Security Hardening",
+  "branchName": "claude/audit-mobile-security-obTr5",
+  "description": "Comprehensive mobile app and authentication security hardening initiative based on deep audits of the iOS/Android apps, auth flow, and security posture. Covers server-side password policy enforcement, CSRF protection on auth endpoints, concurrent session management, enhanced mobile auth UX, MFA enforcement during login, session invalidation on credential changes, account lockout recovery, device trust and anomaly detection, step-up authentication, and mobile-specific security improvements. Priority 1 items are critical security gaps. Priority 2 are high-impact UX/security. Priority 3 are polish and completeness.",
+  "userStories": [
+    {
+      "id": "MS-001",
+      "title": "Add server-side password policy enforcement to edge functions",
+      "description": "As a security engineer, I want server-side password policy enforcement in the verify-auth-otp and reset-password-otp edge functions so that weak passwords cannot bypass client-side validation. Currently the verify-auth-otp schema only enforces min 8 chars (z.string().min(8)) and reset-password-otp does the same. Neither checks for uppercase, lowercase, numeric, or special character requirements. Add a shared validatePasswordStrength() function in supabase/functions/_shared/password-policy.ts that enforces: min 8 chars, at least 1 uppercase, 1 lowercase, 1 digit, 1 special character, and rejects the top 100 most common passwords. Apply this validation in verify-auth-otp (for invite_user and reset_password types) and reset-password-otp (verify action) before password is set.",
+      "acceptanceCriteria": [
+        "supabase/functions/_shared/password-policy.ts exports validatePasswordStrength(password) returning { valid: boolean, errors: string[] }",
+        "Password policy requires: min 8 chars, 1 uppercase, 1 lowercase, 1 digit, 1 special character",
+        "Common passwords list (top 100) is rejected with a specific error message",
+        "verify-auth-otp/index.ts calls validatePasswordStrength before setting password for invite_user and reset_password types",
+        "reset-password-otp/index.ts calls validatePasswordStrength before updating password in verify action",
+        "Invalid passwords return 400 with specific validation error messages",
+        "npm run build passes"
+      ],
+      "priority": 1,
+      "passes": true,
+      "notes": "COMPLETED. Created supabase/functions/_shared/password-policy.ts with validatePasswordStrength(). Applied to verify-auth-otp/index.ts (invite_user and reset_password types) and reset-password-otp/index.ts (verify action). Enforces min 8 chars, uppercase, lowercase, digit, special char, and rejects top 100 common passwords."
+    },
+    {
+      "id": "MS-002",
+      "title": "Add CSRF token validation to auth forms (SignIn, SignUp, ForgotPassword)",
+      "description": "As a security engineer, I want CSRF tokens validated on all auth form submissions so that cross-site request forgery attacks cannot hijack authentication flows. The CSRF infrastructure exists (csrfProtection.ts generates/stores tokens, csrfProtection.tsx provides useCsrfToken hook and CsrfTokenField component) but is NOT used in any auth forms. Wire up CSRF protection: (1) In SignInForm.tsx, add CsrfTokenField to the form, (2) In SignUpForm.tsx, add CsrfTokenField to the signup form, (3) In the parent Auth.tsx page, validate the CSRF token before calling signIn/signUp by reading the token from the form data and comparing with getCsrfToken() using validateCsrfToken(), (4) Add a useCsrfToken() call in the Auth page component to ensure a token is generated on mount, (5) Show an error toast if CSRF validation fails.",
+      "acceptanceCriteria": [
+        "SignInForm.tsx includes CsrfTokenField hidden input inside the form",
+        "SignUpForm.tsx includes CsrfTokenField hidden input inside the signup form",
+        "Auth.tsx validates CSRF token before calling signIn using validateCsrfToken",
+        "Auth.tsx validates CSRF token before calling signUp using validateCsrfToken",
+        "Failed CSRF validation shows error toast and prevents form submission",
+        "useCsrfToken is called in Auth.tsx to ensure token generation",
+        "npm run build passes"
+      ],
+      "priority": 1,
+      "passes": true,
+      "notes": "COMPLETED. Added CsrfTokenField to SignInForm.tsx and SignUpForm.tsx. Added useCsrfToken() and verifyCsrf() validation in Auth.tsx for both handleSignIn and handleSignUp. Failed CSRF shows error toast."
+    },
+    {
+      "id": "MS-003",
+      "title": "Add concurrent session management with configurable limits",
+      "description": "As a security engineer, I want concurrent session limits so that credential sharing is detectable and controllable. Currently users can have unlimited concurrent sessions with no visibility or control. Create a session management service: (1) Create src/lib/security/sessionManagement.ts with functions: registerSession(userId, deviceInfo), checkSessionLimit(userId, maxSessions=3), getActiveSessions(userId), terminateSession(sessionId), terminateAllOtherSessions(userId, currentSessionId). (2) The functions should use the existing user_sessions table in Supabase. (3) On login success in AuthContext.tsx, call registerSession with device info (user agent, screen size). (4) If session limit is exceeded, prompt user to terminate oldest session or cancel login. (5) Add a useActiveSessions hook that returns active session list for settings pages.",
+      "acceptanceCriteria": [
+        "src/lib/security/sessionManagement.ts exports registerSession, checkSessionLimit, getActiveSessions, terminateSession, terminateAllOtherSessions",
+        "registerSession records userId, device info, IP address, and login timestamp in user_sessions table",
+        "checkSessionLimit returns { allowed: boolean, activeSessions: number, maxSessions: number, sessions: Session[] }",
+        "On login in AuthContext.tsx, registerSession is called after successful authentication",
+        "When session limit is exceeded, oldest session is automatically terminated to make room",
+        "src/hooks/useActiveSessions.ts hook exists for UI consumption",
+        "npm run build passes"
+      ],
+      "priority": 1,
+      "passes": true,
+      "notes": "COMPLETED. Created src/lib/security/sessionManagement.ts with all 5 exported functions. Created src/hooks/useActiveSessions.ts hook. Integrated registerSession and checkSessionLimit into AuthContext.tsx signIn flow. Oldest session auto-terminated when limit exceeded."
+    },
+    {
+      "id": "MS-004",
+      "title": "Enhance mobile auth forms with security indicators, validation, and maxLength",
+      "description": "As a mobile user, I want the auth forms to feel secure and prevent mistakes with proper validation feedback and input constraints. Currently SignInForm.tsx and SignUpForm.tsx lack maxLength attributes, have no client-side rate limit feedback, and don't show security indicators. Enhance: (1) Add maxLength={255} to email inputs and maxLength={128} to password inputs in both forms, (2) Add maxLength={50} to firstName and lastName inputs in SignUpForm, (3) Add client-side rate limiting to sign-in form using createEndpointLimiter from rateLimiter.ts - show a toast with retry time when rate limited, (4) Add a security indicator badge showing 'Secure Connection' with a lock icon below the sign-in button, (5) Add aria-describedby for password requirements on the signup form linking to the requirements component, (6) Add autocomplete='username' to email fields for better mobile autofill support.",
+      "acceptanceCriteria": [
+        "SignInForm.tsx email input has maxLength={255}",
+        "SignInForm.tsx password input has maxLength={128}",
+        "SignUpForm.tsx firstName input has maxLength={50}",
+        "SignUpForm.tsx lastName input has maxLength={50}",
+        "SignUpForm.tsx email input has maxLength={255}",
+        "SignUpForm.tsx password input has maxLength={128}",
+        "Auth.tsx integrates client-side rate limiting for sign-in attempts using createEndpointLimiter",
+        "Rate limit exceeded shows toast with retry time",
+        "Security indicator with lock icon appears below sign-in button",
+        "npm run build passes"
+      ],
+      "priority": 1,
+      "passes": true,
+      "notes": "COMPLETED. Added maxLength to all auth form inputs (255 email, 128 password, 50 names). Added client-side rate limiting with createEndpointLimiter in Auth.tsx. Added Lock icon security indicator below sign-in button. Updated autocomplete to 'username email' for better mobile autofill."
+    },
+    {
+      "id": "MS-005",
+      "title": "Add MFA verification step during login flow",
+      "description": "As a security engineer, I want MFA-enrolled users to be prompted for TOTP code during login so that stolen passwords alone cannot compromise accounts. Currently MFA setup exists but is never checked during the login flow. After successful password auth in AuthContext signIn(), check if the user has MFA devices enabled via Supabase MFA API. If they do, return a { mfaRequired: true } response instead of completing login. Create an MFA challenge step in the auth flow that prompts for TOTP code and verifies it before establishing the full session.",
+      "acceptanceCriteria": [
+        "AuthContext signIn checks for enrolled MFA factors after successful password auth",
+        "If MFA is enrolled, signIn returns { mfaRequired: true, factorId: string }",
+        "Auth.tsx shows MFA verification UI when mfaRequired is returned",
+        "MFA verification calls supabase.auth.mfa.challengeAndVerify with the TOTP code",
+        "Successful MFA verification completes the login flow",
+        "Failed MFA shows error and allows retry (max 5 attempts)",
+        "npm run build passes"
+      ],
+      "priority": 2,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "MS-006",
+      "title": "Invalidate all sessions on password change",
+      "description": "As a security engineer, I want all other sessions invalidated when a user changes their password so that compromised sessions are terminated. Currently password changes don't revoke existing sessions. Add session invalidation logic: after a successful password update (via reset-password-otp verify action or profile password change), terminate all sessions except the current one using terminateAllOtherSessions from sessionManagement.ts. Also log a security event for the password change.",
+      "acceptanceCriteria": [
+        "reset-password-otp verify action invalidates all user sessions after password update",
+        "verify-auth-otp reset_password with password invalidates all user sessions",
+        "Password change logs a security event with event_type 'password_changed'",
+        "Current session (if authenticated) is preserved",
+        "npm run build passes"
+      ],
+      "priority": 2,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "MS-007",
+      "title": "Add account lockout recovery via email",
+      "description": "As a locked-out user, I want to unlock my account via email verification so I don't have to wait for the lockout timer. Currently users locked after 5 failed attempts must wait up to 60 minutes with no self-service option. Add: (1) An 'Account Locked - Unlock via Email' button on the lockout message in the sign-in form, (2) When clicked, send an OTP via send-auth-otp with type 'reauthentication', (3) On successful OTP verification, clear the failed login attempts via an edge function call, (4) The unlock flow should rate-limit to 3 unlock attempts per hour per email.",
+      "acceptanceCriteria": [
+        "When account is locked, sign-in form shows 'Unlock via Email' button",
+        "Clicking unlock sends OTP to the locked account's email",
+        "Successful OTP verification clears failed_login_attempts and account_locked_until",
+        "Unlock attempt is rate limited to 3 per hour per email",
+        "After unlock, user can attempt login immediately",
+        "npm run build passes"
+      ],
+      "priority": 2,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "MS-008",
+      "title": "Add rate limiting to OTP verification endpoints",
+      "description": "As a security engineer, I want per-email rate limiting on OTP verification attempts so that attackers cannot brute-force 6-digit codes. Currently verify-auth-otp has IP-based rate limiting but no per-email rate limiting on verification attempts. Similarly reset-password-otp verify action lacks per-email rate limiting. Add: (1) In verify-auth-otp, after parsing the request, check rate limit of 5 verification attempts per 15 minutes per email using checkRateLimit, (2) In reset-password-otp handleVerifyReset, add the same per-email rate limit check, (3) Return 429 with Retry-After header when exceeded.",
+      "acceptanceCriteria": [
+        "verify-auth-otp/index.ts has per-email rate limiting on verification: 5 attempts per 15 minutes",
+        "reset-password-otp/index.ts handleVerifyReset has per-email rate limiting: 5 attempts per 15 minutes",
+        "Rate limit check uses checkRateLimit with email as identifier",
+        "429 responses include Retry-After header",
+        "npm run build passes"
+      ],
+      "priority": 2,
+      "passes": false,
+      "notes": "This overlaps with IOS-004 in the iOS PRD but targets different endpoints and adds per-email limiting"
+    },
+    {
+      "id": "MS-009",
+      "title": "Add step-up authentication for sensitive operations",
+      "description": "As a security engineer, I want sensitive operations (password change, email change, account deletion, API key management) to require re-authentication so that session hijacking alone cannot perform destructive actions. Create src/lib/security/stepUpAuth.ts with: (1) requireReauth(action: string) that checks if user has verified within last 5 minutes (stored in sessionStorage), (2) A useStepUpAuth hook that returns { isVerified, requireVerification, verifyWithPassword }, (3) verifyWithPassword calls supabase.auth.reauthenticate or validates password against the server. Apply the hook to CompanySettings password change and email change forms.",
+      "acceptanceCriteria": [
+        "src/lib/security/stepUpAuth.ts exports requireReauth, isRecentlyVerified",
+        "src/hooks/useStepUpAuth.ts hook exists with isVerified, requireVerification, verifyWithPassword",
+        "Verification state stored in sessionStorage with 5-minute expiry",
+        "verifyWithPassword authenticates against Supabase to confirm identity",
+        "npm run build passes"
+      ],
+      "priority": 3,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "MS-010",
+      "title": "Add device fingerprinting and new device detection",
+      "description": "As a security engineer, I want device fingerprinting so that logins from new or unknown devices trigger additional verification. Create src/lib/security/deviceFingerprint.ts with: (1) generateDeviceFingerprint() that creates a hash from user agent, screen resolution, timezone, language, and platform, (2) isKnownDevice(userId, fingerprint) that checks against stored devices in user_sessions, (3) registerDevice(userId, fingerprint, deviceName) for marking a device as trusted. On login, check if the device is known - if not, log a security event with type 'new_device_login'.",
+      "acceptanceCriteria": [
+        "src/lib/security/deviceFingerprint.ts exports generateDeviceFingerprint, isKnownDevice, registerDevice",
+        "Device fingerprint includes user agent, screen dimensions, timezone, language",
+        "Unknown device logins are logged as security events",
+        "Known devices are checked from user_sessions table",
+        "npm run build passes"
+      ],
+      "priority": 3,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "MS-011",
+      "title": "Add mobile-optimized error handling and Sentry integration for native apps",
+      "description": "As a mobile developer, I want proper error tracking in the mobile app so crashes and errors are captured in Sentry. Currently Sentry is configured for web but not integrated into the mobile-specific components. Add: (1) Mobile error boundary component at src/components/mobile/MobileErrorBoundary.tsx that catches errors and shows a mobile-friendly error screen with retry button, (2) Add captureException calls to mobile service error handlers (MobileBackgroundService, useOfflineSync, useNotifications), (3) Add breadcrumbs for key mobile actions (clock in/out, photo capture, sync events).",
+      "acceptanceCriteria": [
+        "src/components/mobile/MobileErrorBoundary.tsx exists with mobile-friendly error UI and retry button",
+        "MobileErrorBoundary captures exceptions to Sentry with mobile context tags",
+        "Key mobile hooks add Sentry breadcrumbs for important actions",
+        "Error boundary shows user-friendly message with option to retry or go to dashboard",
+        "npm run build passes"
+      ],
+      "priority": 3,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "MS-012",
+      "title": "Add secure token storage wrapper for mobile platforms",
+      "description": "As a mobile security engineer, I want auth tokens stored securely using platform-appropriate storage so that tokens aren't accessible to other apps. Create src/mobile/services/secureStorage.ts that: (1) On Capacitor/native platforms, uses @capacitor/preferences with encryption prefix, (2) On web, falls back to sessionStorage (already done), (3) Provides get/set/remove/clear methods, (4) Automatically clears tokens on logout, (5) Includes a token expiry check that clears expired tokens on app start.",
+      "acceptanceCriteria": [
+        "src/mobile/services/secureStorage.ts exports SecureStorage class with get, set, remove, clear methods",
+        "Uses Capacitor Preferences API on native platforms",
+        "Falls back to sessionStorage on web platforms",
+        "Token expiry check runs on initialization",
+        "Expired tokens are automatically cleared",
+        "npm run build passes"
+      ],
+      "priority": 3,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "MS-013",
+      "title": "Add comprehensive audit logging for auth events",
+      "description": "As a security engineer, I want all authentication events (login success, login failure, logout, password change, MFA setup, session termination) comprehensively logged for security monitoring. Currently only failed logins and successful logins are logged. Extend the security logging: (1) Log logout events with session duration, (2) Log MFA enrollment and verification events, (3) Log session termination events, (4) Log password reset request and completion events, (5) Add a logAuthEvent helper that standardizes event format with timestamp, userId, eventType, ipAddress, userAgent, and metadata.",
+      "acceptanceCriteria": [
+        "src/lib/security/authAuditLog.ts exports logAuthEvent helper function",
+        "logAuthEvent standardizes format: { eventType, userId, ip, userAgent, metadata, timestamp }",
+        "Logout events are logged with session duration",
+        "Password reset requests and completions are logged",
+        "Session termination events are logged",
+        "All auth events call log_security_event RPC",
+        "npm run build passes"
+      ],
+      "priority": 3,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "MS-014",
+      "title": "Add password breach checking against common password lists",
+      "description": "As a security engineer, I want passwords checked against known breach databases so that users are warned when choosing compromised credentials. Extend the password-policy.ts created in MS-001 with: (1) An expanded common passwords list (top 1000), (2) A checkPasswordBreach function that hashes the password with SHA-1 and checks the first 5 chars against the Have I Been Pwned API (k-anonymity model), (3) Make breach checking optional and non-blocking (show warning, not error) since it requires network. Integrate as an async check in the signup form that shows a warning badge if the password appears in breaches.",
+      "acceptanceCriteria": [
+        "password-policy.ts exports checkPasswordBreach(password) returning { breached: boolean, count?: number }",
+        "Breach check uses k-anonymity model (SHA-1 prefix) for privacy",
+        "Common passwords list expanded to top 1000",
+        "Network failure in breach check does not block signup (graceful degradation)",
+        "npm run build passes"
+      ],
+      "priority": 4,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "MS-015",
+      "title": "Add mobile biometric session refresh",
+      "description": "As a mobile user, I want to re-authenticate with Face ID/Touch ID when my session expires instead of re-entering my password. Currently session expiry forces full re-login. Add: (1) When biometric auth is enabled and session expires, show biometric prompt instead of redirect to login, (2) On successful biometric auth, refresh the session token, (3) Store encrypted refresh token in secure storage that can only be unlocked with biometrics, (4) Fall back to password login if biometric fails 3 times.",
+      "acceptanceCriteria": [
+        "Session expiry shows biometric prompt when biometric auth is enabled",
+        "Successful biometric verification refreshes the session",
+        "Three failed biometric attempts fall back to password login",
+        "Refresh token stored in platform secure storage",
+        "npm run build passes"
+      ],
+      "priority": 4,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "MS-016",
+      "title": "Add security headers to all edge function responses via middleware",
+      "description": "As a security engineer, I want all edge function responses to include security headers (CSP, HSTS, X-Content-Type-Options, X-Frame-Options, Referrer-Policy) automatically. Update supabase/functions/_shared/secure-cors.ts to: (1) Add getSecurityHeaders() export that returns standard security headers, (2) Merge security headers into getCorsHeaders() automatically so all functions using it get security headers for free, (3) Headers: Content-Security-Policy, Strict-Transport-Security (max-age=31536000; includeSubDomains), X-Content-Type-Options: nosniff, X-Frame-Options: DENY, Referrer-Policy: strict-origin-when-cross-origin.",
+      "acceptanceCriteria": [
+        "secure-cors.ts exports getSecurityHeaders() function",
+        "getCorsHeaders() automatically merges security headers into response",
+        "HSTS header set to max-age=31536000; includeSubDomains",
+        "X-Content-Type-Options: nosniff included",
+        "X-Frame-Options: DENY included",
+        "Referrer-Policy: strict-origin-when-cross-origin included",
+        "npm run build passes"
+      ],
+      "priority": 4,
+      "passes": false,
+      "notes": "Overlaps with IOS-016 but provides broader coverage"
+    }
+  ]
+}
