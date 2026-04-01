@@ -5,11 +5,8 @@ import QRCode from "https://esm.sh/qrcode@1.5.4";
 import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
 import { validateRequest, sanitizeError, createErrorResponse } from "../_shared/validation.ts";
 import { initializeAuthContext, errorResponse } from '../_shared/auth-helpers.ts';
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
+import { getCorsHeaders, handleCorsPreflightRequest } from "../_shared/secure-cors.ts";
+import { checkRateLimit, getClientIP, rateLimitResponse } from "../_shared/rate-limiter.ts";
 
 // SECURITY: Input validation schema
 const SetupMFASchema = z.object({
@@ -17,17 +14,31 @@ const SetupMFASchema = z.object({
 });
 
 serve(async (req) => {
+  const corsHeaders = getCorsHeaders(req);
+
   if (req.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders });
+    return handleCorsPreflightRequest(req);
   }
 
   try {
-        const authContext = await initializeAuthContext(req);
+    const authContext = await initializeAuthContext(req);
     if (!authContext) {
       return errorResponse('Unauthorized', 401);
     }
 
     const { user, supabase: supabaseClient } = authContext;
+
+    // Rate limit: 3 MFA setup attempts per hour per user (prevents secret regeneration abuse)
+    const rateLimitResult = await checkRateLimit(supabaseClient, {
+      identifier: user.id,
+      endpoint: 'setup-mfa',
+      maxRequests: 3,
+      windowMinutes: 60,
+    });
+
+    if (!rateLimitResult.allowed) {
+      return rateLimitResponse(rateLimitResult, corsHeaders);
+    }
 
     // SECURITY: Validate request body
     const requestBody = await req.json();

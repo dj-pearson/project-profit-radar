@@ -10,11 +10,8 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.3";
 import { TOTP } from "https://deno.land/x/otpauth@v9.2.4/dist/otpauth.esm.js";
 import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
 import { validateRequest, createErrorResponse, sanitizeError } from "../_shared/validation.ts";
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
+import { getCorsHeaders, handleCorsPreflightRequest } from "../_shared/secure-cors.ts";
+import { checkRateLimit, getClientIP, rateLimitResponse, RATE_LIMITS } from "../_shared/rate-limiter.ts";
 
 // Input validation schema
 const VerifyMFALoginSchema = z.object({
@@ -48,8 +45,10 @@ const CheckMFAStatusSchema = z.object({
 });
 
 serve(async (req) => {
+  const corsHeaders = getCorsHeaders(req);
+
   if (req.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders });
+    return handleCorsPreflightRequest(req);
   }
 
   try {
@@ -58,6 +57,19 @@ serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
       { auth: { persistSession: false } }
     );
+
+    // Rate limit: 5 attempts per minute for MFA verification (prevents brute-force on 6-digit codes)
+    const clientIP = getClientIP(req);
+    const rateLimitResult = await checkRateLimit(supabaseClient, {
+      identifier: clientIP,
+      endpoint: 'verify-mfa-login',
+      maxRequests: 5,
+      windowMinutes: 1,
+    });
+
+    if (!rateLimitResult.allowed) {
+      return rateLimitResponse(rateLimitResult, corsHeaders);
+    }
 
     // Parse request body
     let requestBody;
