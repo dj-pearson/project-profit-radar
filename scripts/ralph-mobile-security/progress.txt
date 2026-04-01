@@ -1,0 +1,92 @@
+## Consolidated Patterns
+
+### Auth Architecture
+- AuthContext.tsx manages all auth state, session monitoring, and login/signup flows
+- Login brute force protection in src/lib/security/loginProtection.ts (5 attempts, exponential backoff)
+- Client-side rate limiting in src/lib/security/rateLimiter.ts (Token Bucket algorithm)
+- CSRF infrastructure wired to auth forms (SignIn, SignUp) via CsrfTokenField and verifyCsrf() in Auth.tsx
+- Session monitoring: 5-minute validity checks, 30-minute inactivity timeout
+- OTP flows handled via edge functions: send-auth-otp, verify-auth-otp, reset-password-otp
+
+### Edge Functions
+- Use `getCorsHeaders(req)` from `_shared/secure-cors.ts` for whitelist-based CORS
+- Use `checkRateLimit()` from `_shared/rate-limiter.ts` for rate limiting
+- Use `getClientIP(req)` from rate-limiter.ts for consistent IP extraction
+- Auth pattern: service role client with SUPABASE_SERVICE_ROLE_KEY
+- Input validation: Zod schemas
+- Password validation: server-side enforcement via _shared/password-policy.ts (validatePasswordStrength)
+
+### Security Gaps Identified (Remaining)
+- No MFA enforcement during login
+- No session invalidation on password change
+- No account lockout recovery mechanism
+- No per-email rate limiting on OTP verification attempts
+- No device fingerprinting or trust system
+- No step-up authentication for sensitive ops
+- Auth form inputs missing maxLength attributes
+
+### Build Verification
+- `npm run build` must pass (TypeScript + Vite build)
+- `npm run lint` must pass (ESLint)
+- Edge functions in supabase/functions/ use Deno imports (esm.sh, deno.land)
+
+---
+
+## 2026-04-01 - Initial Setup
+- Created ralph-mobile-security directory with prd.json and progress.txt
+- Deep audit of mobile app architecture (Capacitor + Expo + native SwiftUI)
+- Deep audit of auth security posture (score: 6/10)
+- Identified 16 user stories across 4 priority levels
+- Priority 1: Server-side password policy, CSRF on auth forms, concurrent sessions, mobile auth UX
+---
+
+## 2026-04-01 - MS-001: Server-side password policy enforcement
+- Created supabase/functions/_shared/password-policy.ts with validatePasswordStrength()
+- Enforces: min 8 chars, 1 uppercase, 1 lowercase, 1 digit, 1 special char
+- Rejects top 100 common passwords, repeated characters, sequential patterns
+- Applied to verify-auth-otp/index.ts (invite_user + reset_password types)
+- Applied to reset-password-otp/index.ts (verify action)
+- Files changed: password-policy.ts (new), verify-auth-otp/index.ts, reset-password-otp/index.ts
+- **Learnings for future iterations:**
+  - Edge functions use Deno imports, not Node.js - use deno.land and esm.sh URLs
+  - Password validation must happen BEFORE the database update call
+  - send-auth-otp already had a duplicate clientIP variable declaration (line 151) - be careful of scoping
+---
+
+## 2026-04-01 - MS-002: CSRF token validation on auth forms
+- Added CsrfTokenField to SignInForm.tsx and SignUpForm.tsx
+- Added useCsrfToken() initialization and verifyCsrf() validation in Auth.tsx
+- CSRF validated before signIn and signUp calls
+- Failed validation shows error toast and prevents submission
+- Files changed: Auth.tsx, SignInForm.tsx, SignUpForm.tsx
+- **Learnings for future iterations:**
+  - Import csrfProtection.tsx with .tsx extension explicitly for the React components
+  - The verifyCsrf function reads from the form DOM element via querySelector
+  - Auth.tsx uses useCallback for all handlers - add new deps to the dependency array
+---
+
+## 2026-04-01 - MS-003: Concurrent session management
+- Created src/lib/security/sessionManagement.ts with 5 exported functions
+- Created src/hooks/useActiveSessions.ts with TanStack Query integration
+- Integrated registerSession and checkSessionLimit into AuthContext.tsx signIn flow
+- Auto-terminates oldest session when limit (default: 3) exceeded
+- Uses user_sessions table which already existed with proper schema
+- Files changed: sessionManagement.ts (new), useActiveSessions.ts (new), AuthContext.tsx
+- **Learnings for future iterations:**
+  - user_sessions table requires session_token (not nullable) and user_id
+  - Use .slice(0, 64) on access_token for session_token to avoid storing full JWT
+  - The table has is_active boolean for soft-delete pattern
+  - revoke_all_user_sessions RPC exists in Supabase but we use direct queries for more control
+---
+
+## 2026-04-01 - MS-004: Enhanced mobile auth flow
+- Added maxLength to all auth form inputs (255 email, 128 password, 50 names)
+- Added client-side rate limiting with createEndpointLimiter('auth') in Auth.tsx
+- Added Lock icon security indicator below sign-in button
+- Updated autocomplete to 'username email' for better mobile autofill
+- Files changed: SignInForm.tsx, SignUpForm.tsx, Auth.tsx
+- **Learnings for future iterations:**
+  - createEndpointLimiter returns a RateLimiter instance, use useRef to persist across renders
+  - The 'auth' tier allows 5 requests per minute (1 token every 12 seconds)
+  - autocomplete='username email' helps mobile browsers populate the email field
+---

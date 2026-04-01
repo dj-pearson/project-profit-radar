@@ -15,6 +15,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.49.1';
 import { z } from 'https://deno.land/x/zod@v3.22.4/mod.ts';
 import { getCorsHeaders } from '../_shared/secure-cors.ts';
 import { checkRateLimit, getClientIP, rateLimitResponse, RATE_LIMITS } from '../_shared/rate-limiter.ts';
+import { validatePasswordStrength } from '../_shared/password-policy.ts';
 
 // Helper function to get user by email (works with all Supabase client versions)
 async function getUserByEmail(supabaseAdmin: any, email: string) {
@@ -166,6 +167,16 @@ const handler = async (req: Request): Promise<Response> => {
           );
         }
 
+        // SECURITY: Server-side password policy enforcement
+        const invitePasswordCheck = validatePasswordStrength(password);
+        if (!invitePasswordCheck.valid) {
+          console.log('[VerifyAuthOTP] Password policy violation for invite_user:', invitePasswordCheck.errors);
+          return new Response(
+            JSON.stringify({ error: 'Password does not meet security requirements', details: invitePasswordCheck.errors }),
+            { status: 400, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
+          );
+        }
+
         // Create the user with the invitation details
         const { data: newUser, error: createError } = await supabaseAdmin.auth.admin.createUser({
           email,
@@ -311,6 +322,16 @@ const handler = async (req: Request): Promise<Response> => {
 
         // If password is provided, update it directly
         if (password) {
+          // SECURITY: Server-side password policy enforcement
+          const resetPasswordCheck = validatePasswordStrength(password);
+          if (!resetPasswordCheck.valid) {
+            console.log('[VerifyAuthOTP] Password policy violation for reset_password:', resetPasswordCheck.errors);
+            return new Response(
+              JSON.stringify({ error: 'Password does not meet security requirements', details: resetPasswordCheck.errors }),
+              { status: 400, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
+            );
+          }
+
           const { error: updateError } = await supabaseAdmin.auth.admin.updateUserById(
             authUser.id,
             { password }

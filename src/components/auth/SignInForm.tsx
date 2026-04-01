@@ -2,7 +2,8 @@ import type { FormEvent } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff, Lock } from "lucide-react";
+import { CsrfTokenField } from "@/lib/security/csrfProtection.tsx";
 
 interface SignInFormProps {
   email: string;
@@ -34,6 +35,7 @@ const SignInForm: React.FC<SignInFormProps> = ({
       {renderOAuthButtons()}
 
       <form onSubmit={onSubmit} className="space-y-4" aria-label="Sign in form">
+        <CsrfTokenField />
         <div className="space-y-2">
           <Label htmlFor="email" className="text-slate-300 text-sm">Email</Label>
           <Input
@@ -42,7 +44,8 @@ const SignInForm: React.FC<SignInFormProps> = ({
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
-            autoComplete="email"
+            maxLength={255}
+            autoComplete="username email"
             aria-required="true"
             placeholder="you@company.com"
             className={inputClassName}
@@ -66,6 +69,7 @@ const SignInForm: React.FC<SignInFormProps> = ({
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
+              maxLength={128}
               autoComplete="current-password"
               aria-required="true"
               placeholder="Enter your password"
@@ -89,6 +93,11 @@ const SignInForm: React.FC<SignInFormProps> = ({
         >
           {loading ? "Signing in..." : "Sign in"}
         </Button>
+
+        <div className="flex items-center justify-center gap-1.5 text-xs text-slate-500" aria-label="Secure connection indicator">
+          <Lock className="w-3 h-3" aria-hidden="true" />
+          <span>Secure Connection</span>
+        </div>
       </form>
 
       <p className="text-center text-sm text-slate-500">

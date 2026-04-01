@@ -15,6 +15,7 @@ import { z } from 'https://deno.land/x/zod@v3.22.4/mod.ts';
 import { getCorsHeaders, handleCorsPreflightRequest } from '../_shared/secure-cors.ts';
 import { sendEmail, getSiteEmailConfig } from '../_shared/ses-email-service.ts';
 import { generateAuthEmail, generateOTPCode } from '../_shared/auth-email-templates.ts';
+import { validatePasswordStrength } from '../_shared/password-policy.ts';
 
 // Validation schemas
 const requestResetSchema = z.object({
@@ -225,6 +226,16 @@ async function handleVerifyReset(
   const { email, otpCode, newPassword } = validation.data;
 
   console.log(`[ResetPasswordOTP] Verify reset for ${email}`);
+
+  // SECURITY: Server-side password policy enforcement
+  const passwordCheck = validatePasswordStrength(newPassword);
+  if (!passwordCheck.valid) {
+    console.log('[ResetPasswordOTP] Password policy violation:', passwordCheck.errors);
+    return new Response(
+      JSON.stringify({ error: 'Password does not meet security requirements', details: passwordCheck.errors }),
+      { status: 400, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
+    );
+  }
 
   // Verify OTP code
   const { data: verifyResult, error: verifyError } = await supabaseAdmin.rpc('verify_otp_code', {

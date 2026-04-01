@@ -12,6 +12,9 @@ import SignUpForm from "@/components/auth/SignUpForm";
 import PasswordResetFlow from "@/components/auth/PasswordResetFlow";
 import { OAuthButtons } from "@/components/auth/OAuthButtons";
 import { PasswordRequirements } from "@/components/auth/PasswordRequirements";
+import { useCsrfToken } from "@/lib/security/csrfProtection.tsx";
+import { validateCsrfToken, getCsrfToken } from "@/lib/security/csrfProtection";
+import { createEndpointLimiter } from "@/lib/security/rateLimiter";
 
 type OTPFlowState = 'idle' | 'sending' | 'verifying' | 'submitted' | 'verified' | 'setting_password';
 type AuthView = 'signin' | 'signup' | 'forgot';
@@ -40,6 +43,11 @@ const Auth = () => {
   const otpResendTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const hasAttemptedRedirect = useRef(false);
   const redirectStabilityTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // SECURITY: Initialize CSRF token for auth forms
+  const csrfToken = useCsrfToken();
+  // SECURITY: Client-side rate limiter for sign-in attempts
+  const signInLimiter = useRef(createEndpointLimiter('/auth/signin', 'auth'));
 
   const {
     signIn, signInWithGoogle, signInWithApple, signUp,
@@ -146,8 +154,28 @@ const Auth = () => {
   }, []);
 
   // --- Form handlers ---
+  // SECURITY: Validate CSRF token from form submission
+  const verifyCsrf = useCallback((e: FormEvent): boolean => {
+    const form = e.target as HTMLFormElement;
+    const formCsrfInput = form.querySelector<HTMLInputElement>('input[name="csrf_token"]');
+    const formToken = formCsrfInput?.value || '';
+    const storedToken = getCsrfToken();
+    if (!storedToken || !validateCsrfToken(storedToken, formToken)) {
+      toast({ variant: "destructive", title: "Security Error", description: "Form validation failed. Please refresh the page and try again." });
+      return false;
+    }
+    return true;
+  }, []);
+
   const handleSignIn = useCallback(async (e: FormEvent) => {
     e.preventDefault();
+    if (!verifyCsrf(e)) return;
+    // SECURITY: Client-side rate limiting
+    const rlResult = signInLimiter.current.checkRateLimit();
+    if (!rlResult.allowed) {
+      toast({ variant: "destructive", title: "Too Many Attempts", description: `Please wait ${rlResult.retryAfter} seconds before trying again.` });
+      return;
+    }
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       toast({ variant: "destructive", title: "Invalid Email", description: "Please enter a valid email address." }); return;
     }
@@ -155,10 +183,11 @@ const Auth = () => {
     const { error } = await signIn(email, password);
     if (!error) toast({ title: "Welcome back!", description: "You've been successfully signed in." });
     setLoading(false);
-  }, [email, password, signIn]);
+  }, [email, password, signIn, verifyCsrf]);
 
   const handleSignUp = useCallback(async (e: FormEvent) => {
     e.preventDefault();
+    if (!verifyCsrf(e)) return;
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       toast({ variant: "destructive", title: "Invalid Email", description: "Please enter a valid email address." }); return;
     }
@@ -170,7 +199,7 @@ const Auth = () => {
     if (result.error) { toast({ variant: "destructive", title: "Sign Up Failed", description: result.error }); setOtpFlowState('idle'); }
     else { setOtpExpiresIn(result.expiresInMinutes || 15); setOtpFlowState('verifying'); setEmailSent(true); setEmailSentType('signup'); startResendCooldown(60); toast({ title: "Verification Code Sent!", description: "Check your email for the 6-digit code." }); }
     setLoading(false);
-  }, [email, password, firstName, lastName, passwordValidation, signUp]);
+  }, [email, password, firstName, lastName, passwordValidation, signUp, verifyCsrf]);
 
   const handleVerifySignupOTP = useCallback(async () => {
     if (otpCode.length !== 6) { toast({ variant: "destructive", title: "Invalid Code", description: "Enter the complete 6-digit code." }); return; }
