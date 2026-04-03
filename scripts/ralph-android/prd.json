@@ -1,0 +1,236 @@
+{
+  "project": "BuildDesk Android App Audit & Hardening",
+  "branchName": "claude/android-app-audit-RWLB7",
+  "description": "Comprehensive Android app audit covering UI elements, UX features, performance optimization, and security hardening. The Android project was freshly initialized via Capacitor 7.4.4 and needs production-ready configuration including network security, permissions, ProGuard rules, deep linking, biometric auth, offline support, and Play Store compliance. Priority 1 items are critical security and platform requirements, Priority 2 are UX/performance improvements, Priority 3 are polish items.",
+  "userStories": [
+    {
+      "id": "AA-001",
+      "title": "Add Android network security configuration for HTTPS enforcement and certificate pinning",
+      "description": "As a security engineer, I want the Android app to enforce HTTPS-only connections with certificate pinning for critical domains so that man-in-the-middle attacks are prevented. Currently the Android project has NO network_security_config.xml file, meaning it uses default Android behavior which allows cleartext on older APIs. Create android/app/src/main/res/xml/network_security_config.xml with: (1) cleartextTrafficPermitted=false globally, (2) certificate pinning for build-desk.com and supabase.co domains, (3) debug overrides for local development. Update AndroidManifest.xml to reference the network security config via android:networkSecurityConfig attribute on the <application> tag.",
+      "acceptanceCriteria": [
+        "android/app/src/main/res/xml/network_security_config.xml exists with cleartextTrafficPermitted=false",
+        "Certificate pinning configured for *.build-desk.com and *.supabase.co domains",
+        "Debug overrides allow localhost/10.0.2.2 for emulator development",
+        "AndroidManifest.xml references @xml/network_security_config on <application> tag",
+        "npm run build passes"
+      ],
+      "priority": 1,
+      "passes": true,
+      "notes": "COMPLETED. Created android/app/src/main/res/xml/network_security_config.xml with cleartextTrafficPermitted=false, certificate pinning for build-desk.com and supabase.co, and debug overrides. Updated AndroidManifest.xml with android:networkSecurityConfig reference."
+    },
+    {
+      "id": "AA-002",
+      "title": "Add comprehensive Android permissions for camera, GPS, biometric, and notifications",
+      "description": "As a mobile developer, I want the AndroidManifest.xml to declare all required permissions so that Capacitor plugins for camera, geolocation, push notifications, biometric auth, and offline storage work correctly. Currently only android.permission.INTERNET is declared. The app needs: CAMERA, ACCESS_FINE_LOCATION, ACCESS_COARSE_LOCATION, ACCESS_BACKGROUND_LOCATION (with foreground service), VIBRATE, RECEIVE_BOOT_COMPLETED, POST_NOTIFICATIONS (Android 13+), USE_BIOMETRIC, USE_FINGERPRINT, READ_EXTERNAL_STORAGE/READ_MEDIA_IMAGES (Android 13+), FOREGROUND_SERVICE, FOREGROUND_SERVICE_LOCATION, ACCESS_NETWORK_STATE, and WAKE_LOCK. Also add uses-feature declarations for camera and location hardware.",
+      "acceptanceCriteria": [
+        "AndroidManifest.xml declares CAMERA, ACCESS_FINE_LOCATION, ACCESS_COARSE_LOCATION permissions",
+        "AndroidManifest.xml declares ACCESS_BACKGROUND_LOCATION with foreground service permission",
+        "AndroidManifest.xml declares POST_NOTIFICATIONS for Android 13+",
+        "AndroidManifest.xml declares USE_BIOMETRIC and USE_FINGERPRINT permissions",
+        "AndroidManifest.xml declares ACCESS_NETWORK_STATE, VIBRATE, WAKE_LOCK",
+        "AndroidManifest.xml has uses-feature for camera and location (required=false)",
+        "AndroidManifest.xml declares FOREGROUND_SERVICE and FOREGROUND_SERVICE_LOCATION",
+        "npm run build passes"
+      ],
+      "priority": 1,
+      "passes": true,
+      "notes": "COMPLETED. Added 17 permissions (CAMERA, ACCESS_FINE_LOCATION, ACCESS_COARSE_LOCATION, ACCESS_BACKGROUND_LOCATION, FOREGROUND_SERVICE, FOREGROUND_SERVICE_LOCATION, POST_NOTIFICATIONS, USE_BIOMETRIC, USE_FINGERPRINT, READ_MEDIA_IMAGES, READ_EXTERNAL_STORAGE with maxSdkVersion=32, ACCESS_NETWORK_STATE, VIBRATE, WAKE_LOCK, RECEIVE_BOOT_COMPLETED) and 5 uses-feature declarations."
+    },
+    {
+      "id": "AA-003",
+      "title": "Configure ProGuard rules for production release builds with WebView and Capacitor support",
+      "description": "As a security engineer, I want ProGuard/R8 enabled for release builds so that the APK is minified, obfuscated, and protected against reverse engineering. Currently proguard-rules.pro is empty (just comments) and minifyEnabled is false in build.gradle. Enable minification for release builds and add ProGuard rules to: (1) keep Capacitor bridge classes, (2) keep WebView JavaScript interfaces, (3) keep Gson/serialization models, (4) keep push notification receivers, (5) keep biometric API classes, (6) strip logging in release. Update android/app/build.gradle to set minifyEnabled=true and shrinkResources=true for release buildType.",
+      "acceptanceCriteria": [
+        "android/app/build.gradle has minifyEnabled true for release buildType",
+        "android/app/build.gradle has shrinkResources true for release buildType",
+        "proguard-rules.pro keeps Capacitor BridgeActivity and Plugin classes",
+        "proguard-rules.pro keeps WebView JavaScript interface classes",
+        "proguard-rules.pro keeps classes annotated with @CapacitorPlugin",
+        "proguard-rules.pro strips Log.d and Log.v calls in release",
+        "npm run build passes"
+      ],
+      "priority": 1,
+      "passes": true,
+      "notes": "COMPLETED. Enabled minifyEnabled=true and shrinkResources=true in build.gradle release buildType. Updated proguard-rules.pro with comprehensive rules for Capacitor core, plugins, WebView JS interfaces, AndroidX, Firebase, serialization, and release log stripping."
+    },
+    {
+      "id": "AA-004",
+      "title": "Harden AndroidManifest.xml with backup rules, exported controls, and data extraction prevention",
+      "description": "As a security engineer, I want the AndroidManifest.xml hardened against data leakage and unauthorized access so that sensitive construction and financial data is protected on Android devices. Currently android:allowBackup=true which exposes app data via ADB backup, and there are no data extraction rules. Changes needed: (1) set android:allowBackup=false to prevent ADB backup of app data, (2) add android:dataExtractionRules for Android 12+ backup control, (3) add android:fullBackupContent=false, (4) set android:usesCleartextTraffic=false explicitly, (5) add android:hardwareAccelerated=true for WebView performance. Create android/app/src/main/res/xml/data_extraction_rules.xml with deny-all rules for cloud and device-to-device transfer.",
+      "acceptanceCriteria": [
+        "AndroidManifest.xml has android:allowBackup=false",
+        "AndroidManifest.xml has android:fullBackupContent=false",
+        "AndroidManifest.xml has android:usesCleartextTraffic=false",
+        "AndroidManifest.xml references android:dataExtractionRules=@xml/data_extraction_rules",
+        "android/app/src/main/res/xml/data_extraction_rules.xml exists with deny rules",
+        "AndroidManifest.xml has android:hardwareAccelerated=true",
+        "npm run build passes"
+      ],
+      "priority": 1,
+      "passes": true,
+      "notes": "COMPLETED. Set allowBackup=false, fullBackupContent=false, usesCleartextTraffic=false, hardwareAccelerated=true, dataExtractionRules=@xml/data_extraction_rules. Created data_extraction_rules.xml with deny-all for cloud-backup and device-transfer. Also added WebView SafeBrowsing meta-data, deep linking intent filters for app.build-desk.com and com.builddesk.app:// OAuth scheme, and foreground location service declaration with LocationTrackingService.java."
+    },
+    {
+      "id": "AA-005",
+      "title": "Add deep linking and OAuth callback intent filters for authentication flows",
+      "description": "As a mobile developer, I want deep linking configured for OAuth callbacks (Google, Apple Sign-In) and app navigation so that authentication redirects return to the app correctly. Currently the MainActivity only has the MAIN/LAUNCHER intent filter. Add intent filters for: (1) HTTPS deep links for app.build-desk.com/*, (2) Custom scheme com.builddesk.app:// for OAuth callbacks, (3) Supabase auth callback handling. Also add android:autoVerify=true for App Links verification.",
+      "acceptanceCriteria": [
+        "AndroidManifest.xml has intent-filter for https://app.build-desk.com with autoVerify=true",
+        "AndroidManifest.xml has intent-filter for com.builddesk.app:// custom scheme",
+        "Deep link intent filters include VIEW action and BROWSABLE category",
+        "OAuth callback URLs properly handled for Google and Apple Sign-In",
+        "npm run build passes"
+      ],
+      "priority": 2,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "AA-006",
+      "title": "Create mobile-optimized splash screen and app icon resources for all Android densities",
+      "description": "As a UX designer, I want proper branded splash screen and app icon assets for BuildDesk so that the app looks professional on all Android devices. Currently using default Capacitor placeholder icons (green robot). Need: (1) Update styles.xml splash theme to use BuildDesk brand colors (#4A90E2 primary, #ffffff background), (2) Configure splash screen with proper dimensions and theme colors matching the web app, (3) Add night mode theme variant for dark mode splash screen. Update values/colors.xml with BuildDesk brand colors.",
+      "acceptanceCriteria": [
+        "android/app/src/main/res/values/colors.xml has BuildDesk brand colors (#4A90E2 primary, #2E6BC6 dark, #7BB3F0 accent)",
+        "styles.xml splash theme uses BuildDesk brand colors",
+        "Night mode values exist at values-night/styles.xml with dark theme splash",
+        "npm run build passes"
+      ],
+      "priority": 2,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "AA-007",
+      "title": "Configure Android Gradle build for optimal APK size and performance",
+      "description": "As a mobile developer, I want the Android build optimized for smaller APK size and better runtime performance so that the app installs quickly and runs smoothly on construction workers' devices. Changes needed in build.gradle: (1) Enable Android App Bundle (AAB) for Play Store, (2) Add ndk abiFilters for arm64-v8a and armeabi-v7a only (exclude x86 for production), (3) Enable viewBinding, (4) Add Java 17 compile options for modern Android, (5) Configure splits for density-specific APKs, (6) Add signingConfigs placeholder for release signing.",
+      "acceptanceCriteria": [
+        "build.gradle has compileOptions set to Java 17 (sourceCompatibility/targetCompatibility)",
+        "build.gradle has ndk abiFilters for arm64-v8a and armeabi-v7a",
+        "build.gradle has buildFeatures with viewBinding enabled",
+        "build.gradle has signingConfigs block with release placeholder referencing environment variables",
+        "npm run build passes"
+      ],
+      "priority": 2,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "AA-008",
+      "title": "Add foreground service for GPS time tracking and geofencing in background",
+      "description": "As a field worker, I want GPS time tracking to continue working when the app is in the background so that my hours are accurately recorded while I'm on the job site. Add a foreground service declaration in AndroidManifest.xml for location tracking: (1) Declare foreground service with type 'location', (2) Add notification channel for ongoing GPS tracking notification, (3) Configure service to work with Capacitor geolocation plugin background mode.",
+      "acceptanceCriteria": [
+        "AndroidManifest.xml declares a foreground service component with foregroundServiceType=location",
+        "AndroidManifest.xml has service declaration for background location tracking",
+        "FOREGROUND_SERVICE_LOCATION permission is declared",
+        "npm run build passes"
+      ],
+      "priority": 2,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "AA-009",
+      "title": "Add Play Store metadata and content rating configuration files",
+      "description": "As a product owner, I want Play Store listing metadata prepared so that the app can be submitted to Google Play. Create: (1) A fastlane metadata directory structure with en-US locale, (2) Short description (80 chars) and full description for Play Store listing, (3) Privacy policy URL reference, (4) Content rating questionnaire answers noting the app handles financial data but no violent/sexual content.",
+      "acceptanceCriteria": [
+        "android/fastlane/metadata/android/en-US/short_description.txt exists (max 80 chars)",
+        "android/fastlane/metadata/android/en-US/full_description.txt exists with app description",
+        "android/fastlane/metadata/android/en-US/title.txt contains 'BuildDesk'",
+        "npm run build passes"
+      ],
+      "priority": 3,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "AA-010",
+      "title": "Add WebView security hardening for Capacitor bridge",
+      "description": "As a security engineer, I want the WebView configuration hardened so that JavaScript injection and data exfiltration through the WebView are prevented. Create a custom Application class that configures WebView security: (1) Disable file access from file URLs (setAllowFileAccessFromFileURLs), (2) Disable universal access from file URLs, (3) Configure safe browsing, (4) Set proper WebView cache mode. Also add meta-data in AndroidManifest.xml for WebView safe browsing opt-in.",
+      "acceptanceCriteria": [
+        "AndroidManifest.xml has meta-data for android.webkit.WebView.EnableSafeBrowsing set to true",
+        "AndroidManifest.xml has meta-data for android.webkit.WebView.MetricsOptOut set to true",
+        "npm run build passes"
+      ],
+      "priority": 3,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "AA-011",
+      "title": "Configure Android backup rules to exclude sensitive authentication tokens",
+      "description": "As a security engineer, I want Android auto-backup configured to exclude sensitive data so that authentication tokens, API keys, and user credentials are not backed up to Google Drive. Create android/app/src/main/res/xml/backup_rules.xml that excludes: (1) shared_preferences containing auth tokens, (2) databases with cached credentials, (3) WebView local storage containing session data, (4) Any files in the app's cache directory.",
+      "acceptanceCriteria": [
+        "android/app/src/main/res/xml/backup_rules.xml exists with exclude rules",
+        "Backup rules exclude shared_preferences, databases, and cache directories",
+        "AndroidManifest.xml references @xml/backup_rules via android:fullBackupContent",
+        "npm run build passes"
+      ],
+      "priority": 3,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "AA-012",
+      "title": "Add runtime permission request handling component for Android 13+ requirements",
+      "description": "As a mobile developer, I want a React component that handles Android runtime permission requests with proper UX so that users understand why each permission is needed before granting it. Create src/components/mobile/AndroidPermissionManager.tsx that: (1) Shows permission rationale dialogs before requesting, (2) Handles POST_NOTIFICATIONS permission for Android 13+, (3) Handles camera, location, and storage permissions with context-specific explanations, (4) Provides a settings deep link if permission was permanently denied, (5) Integrates with existing Capacitor permission APIs.",
+      "acceptanceCriteria": [
+        "src/components/mobile/AndroidPermissionManager.tsx exists with permission request UI",
+        "Component handles POST_NOTIFICATIONS for Android 13+ with proper rationale",
+        "Component provides 'Open Settings' option for permanently denied permissions",
+        "Component integrates with @capacitor/camera and @capacitor/geolocation permission checks",
+        "npm run build passes",
+        "npm run lint passes"
+      ],
+      "priority": 3,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "AA-013",
+      "title": "Add Android-specific status bar and navigation bar theming for immersive UX",
+      "description": "As a UX designer, I want the Android status bar and navigation bar to match the BuildDesk theme so that the app looks native and professional. Create src/hooks/useAndroidStatusBar.ts that: (1) Sets status bar color to match the current theme (light/dark), (2) Configures navigation bar color, (3) Handles edge-to-edge display for Android 15+, (4) Uses Capacitor StatusBar plugin for native control.",
+      "acceptanceCriteria": [
+        "src/hooks/useAndroidStatusBar.ts exists with status bar theming logic",
+        "Hook sets status bar background color matching BuildDesk brand",
+        "Hook handles both light and dark theme variants",
+        "Hook is platform-aware (only runs on Android via Capacitor.isNativePlatform)",
+        "npm run build passes",
+        "npm run lint passes"
+      ],
+      "priority": 3,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "AA-014",
+      "title": "Add Android back button handling for proper in-app navigation",
+      "description": "As a mobile user, I want the Android hardware back button to navigate within the app correctly (instead of closing the app) so that navigation feels native. Create src/hooks/useAndroidBackButton.ts that: (1) Intercepts the hardware back button press, (2) Navigates back in React Router history if available, (3) Shows an 'exit confirmation' dialog if on the root screen, (4) Handles back button in modals/sheets by closing them first. Integrate with existing MobileNavigationPattern component.",
+      "acceptanceCriteria": [
+        "src/hooks/useAndroidBackButton.ts exists with back button handling",
+        "Hook navigates back in React Router history when available",
+        "Hook shows exit confirmation when on root screen",
+        "Hook closes modals/bottom sheets before navigating back",
+        "Hook only activates on Android platform",
+        "npm run build passes",
+        "npm run lint passes"
+      ],
+      "priority": 3,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "AA-015",
+      "title": "Add Ralph CLAUDE.md instructions for android audit script directory",
+      "description": "As a developer, I want a CLAUDE.md file in scripts/ralph-android/ so that Ralph agents can autonomously pick up and complete remaining user stories. Create scripts/ralph-android/CLAUDE.md following the same pattern as scripts/ralph/CLAUDE.md with context specific to Android app development.",
+      "acceptanceCriteria": [
+        "scripts/ralph-android/CLAUDE.md exists with Ralph agent instructions",
+        "CLAUDE.md references scripts/ralph-android/prd.json and progress.txt",
+        "CLAUDE.md includes Android-specific development context",
+        "npm run build passes"
+      ],
+      "priority": 4,
+      "passes": false,
+      "notes": ""
+    }
+  ]
+}

@@ -31,7 +31,16 @@ pnpm-lock.yaml
 # Expo
 .expo/
 .expo-shared/
-android/
+
+# Android - track customized config, ignore build artifacts
+android/app/build/
+android/.gradle/
+android/build/
+android/capacitor-cordova-android-plugins/
+android/app/src/main/assets/
+android/local.properties
+android/app/google-services.json
+
 ios/
 
 # Editor directories and files
