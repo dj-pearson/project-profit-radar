@@ -1,0 +1,40 @@
+BuildDesk is the all-in-one construction management platform built for small to medium-sized contractors. Take control of your projects, finances, and crew — all from your phone.
+
+KEY FEATURES:
+
+Real-Time Job Costing
+Track costs as they happen. See budget vs. actual in real time, get variance alerts, and know your profit margin on every job before it's too late.
+
+GPS Time Tracking & Geofencing
+Automatic clock in/out when crew members arrive at or leave a job site. Background GPS tracking ensures accurate time entries without manual input.
+
+Project Management
+Manage schedules, change orders, daily reports, and documents from the field. Use templates to set up new projects fast.
+
+Financial Control
+Invoice clients, track expenses, manage payments, and sync with QuickBooks. Cash flow forecasting helps you plan ahead.
+
+Crew Management
+Track your team's time, location, and assignments. Approve timesheets with a multi-level workflow.
+
+Document Management
+Capture photos, scan receipts with OCR, and organize project documents. Everything is stored securely in the cloud.
+
+Safety & Compliance
+Report safety incidents, manage permits, and maintain compliance records — all from your mobile device.
+
+Client Portal
+Share project updates, photos, and progress with clients through a dedicated portal.
+
+Offline Support
+Work without connectivity in the field. Data syncs automatically when you're back online.
+
+SECURITY:
+- Biometric login (fingerprint/face)
+- Multi-factor authentication
+- End-to-end encryption
+- Role-based access control
+
+BuildDesk is trusted by construction companies to manage their projects, track their money, and keep their crews productive.
+
+Start your free trial at build-desk.com
