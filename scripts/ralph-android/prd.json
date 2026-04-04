@@ -82,8 +82,8 @@
         "npm run build passes"
       ],
       "priority": 2,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "COMPLETED. Deep linking was implemented as part of AA-004. AndroidManifest.xml has intent-filter for https://app.build-desk.com with autoVerify=true, and com.builddesk.app:// custom scheme for OAuth callbacks."
     },
     {
       "id": "AA-006",
@@ -96,8 +96,8 @@
         "npm run build passes"
       ],
       "priority": 2,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "COMPLETED. Created values/colors.xml with BuildDesk brand colors. Updated styles.xml with branded splash theme, status bar colors, and navigation bar theming. Created values-night/colors.xml and values-night/styles.xml for dark mode splash."
     },
     {
       "id": "AA-007",
@@ -111,8 +111,8 @@
         "npm run build passes"
       ],
       "priority": 2,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "COMPLETED. Added Java 17 compileOptions, ndk abiFilters (arm64-v8a, armeabi-v7a), viewBinding, buildConfig, signingConfigs with env var placeholders, debug buildType with .debug suffix, density splits, AAB bundle config, biometric dependency, and lint config."
     },
     {
       "id": "AA-008",
@@ -125,8 +125,8 @@
         "npm run build passes"
       ],
       "priority": 2,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "COMPLETED as part of AA-004. LocationTrackingService.java with notification channel, foreground service declaration with foregroundServiceType=location in manifest, FOREGROUND_SERVICE_LOCATION permission declared."
     },
     {
       "id": "AA-009",
@@ -152,8 +152,8 @@
         "npm run build passes"
       ],
       "priority": 3,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "COMPLETED as part of AA-004. AndroidManifest.xml has WebView.EnableSafeBrowsing=true and WebView.MetricsOptOut=true meta-data tags."
     },
     {
       "id": "AA-011",
@@ -182,8 +182,8 @@
         "npm run lint passes"
       ],
       "priority": 3,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "COMPLETED. Created src/components/mobile/AndroidPermissionManager.tsx with camera, location, and notification permission handling. Shows rationale dialogs before requesting, provides 'Open Settings' for permanently denied permissions, integrates with @capacitor/camera, @capacitor/geolocation, @capacitor/push-notifications."
     },
     {
       "id": "AA-013",
@@ -198,8 +198,8 @@
         "npm run lint passes"
       ],
       "priority": 3,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "COMPLETED. Created src/hooks/useAndroidStatusBar.ts using @capacitor/status-bar. Sets status bar style and background color based on light/dark theme. Only runs on Android native platform."
     },
     {
       "id": "AA-014",
@@ -215,8 +215,8 @@
         "npm run lint passes"
       ],
       "priority": 3,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "COMPLETED. Created src/hooks/useAndroidBackButton.ts using @capacitor/app. Handles modal dismiss, React Router back navigation, and double-tap exit confirmation on root screens. Only activates on Android native platform. Installed @capacitor/app and @capacitor/status-bar packages."
     },
     {
       "id": "AA-015",

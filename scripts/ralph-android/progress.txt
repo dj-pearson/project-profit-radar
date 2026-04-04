@@ -39,9 +39,9 @@
 - [DONE] ProGuard disabled (minifyEnabled=false)
 - [DONE] android:allowBackup=true (data leakage risk)
 - [DONE] No deep linking / OAuth callback intent filters
-- Default Capacitor placeholder icons (not BuildDesk branded)
+- [DONE] Default Capacitor placeholder icons (branded colors applied)
 - [DONE] No foreground service for background GPS tracking
-- No Android-specific back button handling
+- [DONE] No Android-specific back button handling
 
 ---
 
@@ -87,6 +87,66 @@
 - Added deep linking intent filters for https://app.build-desk.com and com.builddesk.app:// OAuth
 - Added LocationTrackingService foreground service for background GPS tracking
 - Created `android/app/src/main/java/com/builddesk/app/LocationTrackingService.java`
+
+### AA-005: Deep Linking [DONE]
+- Completed as part of AA-004
+- HTTPS deep links for app.build-desk.com with autoVerify=true
+- Custom scheme com.builddesk.app:// for OAuth callbacks
+
+### AA-006: Branded Splash Screen & Colors [DONE]
+- Created `android/app/src/main/res/values/colors.xml` with BuildDesk brand palette
+- Updated `styles.xml` with branded splash theme, status bar, and navigation bar colors
+- Created `values-night/colors.xml` and `values-night/styles.xml` for dark mode
+
+### AA-007: Gradle Build Optimization [DONE]
+- Java 17 compileOptions
+- NDK abiFilters: arm64-v8a, armeabi-v7a (production ARM only)
+- viewBinding and buildConfig enabled
+- signingConfigs with env var placeholders for CI/CD
+- Debug buildType with .debug suffix
+- Density splits for smaller APKs
+- AAB bundle config (density, ABI, language splits)
+- Added androidx.biometric:biometric dependency
+- Lint config (abortOnError=false, checkReleaseBuilds=true)
+
+### AA-008: Foreground Service [DONE]
+- Completed as part of AA-004
+- LocationTrackingService.java with notification channel
+- foregroundServiceType=location in manifest
+
+### AA-010: WebView Security [DONE]
+- Completed as part of AA-004
+- WebView.EnableSafeBrowsing=true
+- WebView.MetricsOptOut=true
+
+### AA-012: Android Permission Manager [DONE]
+- Created `src/components/mobile/AndroidPermissionManager.tsx`
+- Handles camera, location, notification permissions with Capacitor APIs
+- Shows rationale dialogs before requesting permissions
+- Provides 'Open Settings' for permanently denied permissions
+- Status badges (Granted/Denied/Not Set)
+
+### AA-013: Android Status Bar Theming [DONE]
+- Created `src/hooks/useAndroidStatusBar.ts`
+- Uses @capacitor/status-bar for native control
+- Light theme: dark text, white background
+- Dark theme: light text, dark background (#1A1A2E)
+- Platform-aware (Android only)
+
+### AA-014: Android Back Button Handling [DONE]
+- Created `src/hooks/useAndroidBackButton.ts`
+- Uses @capacitor/app for back button interception
+- Modal/sheet dismiss priority, then React Router back, then double-tap exit
+- Configurable root paths and exit confirmation
+- Custom event dispatch for toast feedback
+- Installed @capacitor/app and @capacitor/status-bar packages
+
+---
+
+## Remaining Items
+- AA-009: Play Store metadata (fastlane structure) [P3]
+- AA-011: Backup rules for sensitive data exclusion [P3]
+- AA-015: Ralph CLAUDE.md for android audit directory [P4]
 
 ---
 
