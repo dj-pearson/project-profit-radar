@@ -15,13 +15,88 @@ android {
              // Default: https://android.googlesource.com/platform/frameworks/base/+/282e181b58cf72b6ca770dc7ca5f91f135444502/tools/aapt/AaptAssets.cpp#61
             ignoreAssetsPattern '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
         }
+
+        // Only include ARM ABIs for production (covers 99%+ of Android devices)
+        ndk {
+            abiFilters "arm64-v8a", "armeabi-v7a"
+        }
     }
+
+    // Java 17 for modern Android development
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+
+    buildFeatures {
+        viewBinding true
+        buildConfig true
+    }
+
+    signingConfigs {
+        release {
+            // Release signing - values from environment variables or local properties
+            // Set these in CI/CD or local.properties:
+            //   BUILDDESK_KEYSTORE_PATH, BUILDDESK_KEYSTORE_PASSWORD,
+            //   BUILDDESK_KEY_ALIAS, BUILDDESK_KEY_PASSWORD
+            def keystorePath = System.getenv("BUILDDESK_KEYSTORE_PATH") ?: project.findProperty("BUILDDESK_KEYSTORE_PATH")
+            def keystorePassword = System.getenv("BUILDDESK_KEYSTORE_PASSWORD") ?: project.findProperty("BUILDDESK_KEYSTORE_PASSWORD")
+            def keyAlias = System.getenv("BUILDDESK_KEY_ALIAS") ?: project.findProperty("BUILDDESK_KEY_ALIAS")
+            def keyPassword = System.getenv("BUILDDESK_KEY_PASSWORD") ?: project.findProperty("BUILDDESK_KEY_PASSWORD")
+
+            if (keystorePath != null && keystorePassword != null && keyAlias != null && keyPassword != null) {
+                storeFile file(keystorePath)
+                storePassword keystorePassword
+                keyAlias keyAlias
+                keyPassword keyPassword
+            }
+        }
+    }
+
     buildTypes {
+        debug {
+            applicationIdSuffix ".debug"
+            versionNameSuffix "-debug"
+            debuggable true
+        }
         release {
             minifyEnabled true
             shrinkResources true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            // Use release signing config when keystore is available
+            def releaseSigningConfig = signingConfigs.release
+            if (releaseSigningConfig.storeFile != null) {
+                signingConfig releaseSigningConfig
+            }
         }
+    }
+
+    // Generate density-specific APKs for smaller download sizes
+    splits {
+        density {
+            enable true
+            reset()
+            include "mdpi", "hdpi", "xhdpi", "xxhdpi", "xxxhdpi"
+            compatibleScreens 'small', 'normal', 'large', 'xlarge'
+        }
+    }
+
+    // Bundle configuration for Play Store (AAB)
+    bundle {
+        density {
+            enableSplit true
+        }
+        abi {
+            enableSplit true
+        }
+        language {
+            enableSplit true
+        }
+    }
+
+    lint {
+        abortOnError false
+        checkReleaseBuilds true
     }
 }
 
@@ -37,6 +112,10 @@ dependencies {
     implementation "androidx.coordinatorlayout:coordinatorlayout:$androidxCoordinatorLayoutVersion"
     implementation "androidx.core:core-splashscreen:$coreSplashScreenVersion"
     implementation project(':capacitor-android')
+
+    // Biometric authentication
+    implementation "androidx.biometric:biometric:1.1.0"
+
     testImplementation "junit:junit:$junitVersion"
     androidTestImplementation "androidx.test.ext:junit:$androidxJunitVersion"
     androidTestImplementation "androidx.test.espresso:espresso-core:$androidxEspressoCoreVersion"

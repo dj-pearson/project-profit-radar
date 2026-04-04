@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Backup rules for Android Auto Backup (API 23-30).
+    Excludes sensitive authentication tokens, session data, and cached credentials.
+
+    For Android 12+ (API 31+), see data_extraction_rules.xml which uses the newer format.
+-->
+<full-backup-content>
+    <!-- Exclude shared preferences containing auth tokens and session data -->
+    <exclude domain="sharedpref" path="CapacitorStorage.xml" />
+    <exclude domain="sharedpref" path="WebViewChromiumPrefs.xml" />
+    <exclude domain="sharedpref" path="com.google.firebase.messaging.xml" />
+
+    <!-- Exclude databases with cached credentials and user data -->
+    <exclude domain="database" path="CapacitorDatabase.db" />
+    <exclude domain="database" path="CapacitorDatabase.db-journal" />
+
+    <!-- Exclude WebView local storage (contains session tokens, IndexedDB data) -->
+    <exclude domain="file" path="app_webview/Local Storage/" />
+    <exclude domain="file" path="app_webview/Session Storage/" />
+    <exclude domain="file" path="app_webview/IndexedDB/" />
+    <exclude domain="file" path="app_webview/Cookies" />
+    <exclude domain="file" path="app_webview/Cookies-journal" />
+
+    <!-- Exclude all cache data -->
+    <exclude domain="external" path="." />
+    <exclude domain="root" path="cache/" />
+    <exclude domain="file" path="cache/" />
+</full-backup-content>
