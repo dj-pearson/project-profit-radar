@@ -28,7 +28,9 @@ import { MobileMaterialTracker } from './MobileMaterialTracker';
 import { EnhancedMobileCamera } from './EnhancedMobileCamera';
 import MobileTimeTracker from './MobileTimeTracker';
 import { mobileCardClasses, mobileButtonClasses, mobileTextClasses } from '@/utils/mobileHelpers';
+import { cn } from '@/lib/utils';
 import { MobileSkeletonDashboard } from './MobileSkeletons';
+import { MobileDashboardLayout, type MobileDashboardWidget } from './MobileDashboardLayout';
 import { toast } from 'sonner';
 
 interface DashboardStats {
@@ -162,9 +164,11 @@ export const MobileDashboard: React.FC = () => {
     }
   };
 
-  const renderDashboardView = () => (
-    <div className="space-y-6">
-      {/* Welcome Header */}
+  const welcomeWidget: MobileDashboardWidget = {
+    id: 'welcome',
+    title: 'Welcome header',
+    description: 'Greeting and current location',
+    render: () => (
       <div className="bg-gradient-to-r from-primary/10 to-primary/5 rounded-lg p-4">
         <h2 className={mobileTextClasses.header}>Welcome to BuildDesk Mobile</h2>
         <p className={mobileTextClasses.muted}>
@@ -179,8 +183,14 @@ export const MobileDashboard: React.FC = () => {
           </div>
         )}
       </div>
+    ),
+  };
 
-      {/* Stats Overview */}
+  const statsWidget: MobileDashboardWidget = {
+    id: 'stats',
+    title: 'Stats overview',
+    description: 'Projects, reports, equipment, photos',
+    render: () => (
       <div className="grid grid-cols-2 gap-4">
         <Card className={mobileCardClasses.container}>
           <CardContent className="pt-4">
@@ -230,14 +240,20 @@ export const MobileDashboard: React.FC = () => {
           </CardContent>
         </Card>
       </div>
+    ),
+  };
 
-      {/* Quick Actions */}
+  const quickActionsWidget: MobileDashboardWidget = {
+    id: 'quick-actions',
+    title: 'Quick actions',
+    description: 'Time, safety, reports, equipment, camera',
+    render: () => (
       <div>
         <h3 className={mobileTextClasses.header}>Quick Actions</h3>
         <div className="grid grid-cols-2 gap-4 mt-4">
           {quickActions.map((action) => (
-            <Card 
-              key={action.id} 
+            <Card
+              key={action.id}
               className={`${mobileCardClasses.container} cursor-pointer hover:shadow-md transition-all duration-200 active:scale-95`}
               onClick={() => handleActionClick(action)}
             >
@@ -261,8 +277,71 @@ export const MobileDashboard: React.FC = () => {
           ))}
         </div>
       </div>
+    ),
+  };
 
-      {/* Device Info */}
+  const scheduleWidget: MobileDashboardWidget = {
+    id: 'schedule',
+    title: "Today's schedule",
+    description: 'Upcoming jobs and visits',
+    render: () => (
+      <Card className={mobileCardClasses.container}>
+        <CardHeader>
+          <CardTitle className="text-base">Today&apos;s Schedule</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className={cn(mobileTextClasses.muted, 'text-sm')}>
+            No upcoming visits today. Check back tomorrow.
+          </p>
+        </CardContent>
+      </Card>
+    ),
+  };
+
+  const recentReportsWidget: MobileDashboardWidget = {
+    id: 'recent-reports',
+    title: 'Recent daily reports',
+    description: 'Latest field updates',
+    render: () => (
+      <Card className={mobileCardClasses.container}>
+        <CardHeader>
+          <CardTitle className="text-base">Recent Reports</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className={cn(mobileTextClasses.muted, 'text-sm')}>
+            {stats.dailyReports} report{stats.dailyReports === 1 ? '' : 's'} submitted today.
+          </p>
+        </CardContent>
+      </Card>
+    ),
+  };
+
+  const financialSnapshotWidget: MobileDashboardWidget = {
+    id: 'financial-snapshot',
+    title: 'Financial snapshot',
+    description: 'AR / AP / profitability glance',
+    render: () => (
+      <Card className={mobileCardClasses.container}>
+        <CardHeader>
+          <CardTitle className="text-base flex items-center gap-2">
+            <TrendingUp className="h-4 w-4 text-primary" />
+            Financial snapshot
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className={cn(mobileTextClasses.muted, 'text-sm')}>
+            Connect QuickBooks to see live AR, AP, and margin.
+          </p>
+        </CardContent>
+      </Card>
+    ),
+  };
+
+  const deviceInfoWidget: MobileDashboardWidget = {
+    id: 'device-info',
+    title: 'Device information',
+    description: 'Platform, GPS, camera status',
+    render: () => (
       <Card className={mobileCardClasses.container}>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -289,7 +368,7 @@ export const MobileDashboard: React.FC = () => {
               <p className="font-medium">{capabilities.hasGeolocation ? 'Yes' : 'No'}</p>
             </div>
           </div>
-          
+
           <div className="flex gap-2">
             <Button
               onClick={handleLocationTest}
@@ -314,7 +393,21 @@ export const MobileDashboard: React.FC = () => {
           </div>
         </CardContent>
       </Card>
-    </div>
+    ),
+  };
+
+  const dashboardWidgets: MobileDashboardWidget[] = [
+    welcomeWidget,
+    statsWidget,
+    quickActionsWidget,
+    scheduleWidget,
+    recentReportsWidget,
+    financialSnapshotWidget,
+    deviceInfoWidget,
+  ];
+
+  const renderDashboardView = () => (
+    <MobileDashboardLayout widgets={dashboardWidgets} />
   );
 
   const renderActiveComponent = () => {

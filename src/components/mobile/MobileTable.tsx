@@ -1,7 +1,20 @@
 import { ReactNode } from 'react';
+import { Inbox, type LucideIcon } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 import { useIsMobile } from '@/hooks/useMediaQuery';
+import { MobileEmptyState } from './MobileEmptyState';
+
+export interface MobileTableEmptyState {
+  icon?: LucideIcon;
+  title: string;
+  description: string;
+  primaryLabel?: string;
+  onPrimary?: () => void;
+  secondaryLabel?: string;
+  onSecondary?: () => void;
+  accentClass?: string;
+}
 
 interface Column<T> {
   key: keyof T | string;
@@ -18,6 +31,12 @@ interface MobileTableProps<T> {
   onRowClick?: (item: T) => void;
   className?: string;
   emptyMessage?: string;
+  /**
+   * Rich empty state. When provided, renders a MobileEmptyState (illustrated
+   * icon medallion, title, description, CTAs) instead of the plain
+   * emptyMessage text.
+   */
+  emptyState?: MobileTableEmptyState;
   keyExtractor?: (item: T, index: number) => string;
 }
 
@@ -30,11 +49,26 @@ export function MobileTable<T extends Record<string, any>>({
   onRowClick,
   className,
   emptyMessage = 'No data available',
+  emptyState,
   keyExtractor = (item, index) => index.toString(),
 }: MobileTableProps<T>) {
   const isMobile = useIsMobile();
 
   if (data.length === 0) {
+    if (emptyState) {
+      return (
+        <MobileEmptyState
+          icon={emptyState.icon ?? Inbox}
+          title={emptyState.title}
+          description={emptyState.description}
+          primaryLabel={emptyState.primaryLabel}
+          onPrimary={emptyState.onPrimary}
+          secondaryLabel={emptyState.secondaryLabel}
+          onSecondary={emptyState.onSecondary}
+          accentClass={emptyState.accentClass}
+        />
+      );
+    }
     return (
       <div className="text-center py-8 text-muted-foreground">
         {emptyMessage}
@@ -153,6 +187,7 @@ export function MobileList<T extends Record<string, any>>({
   onItemClick,
   className,
   emptyMessage = 'No items',
+  emptyState,
   keyExtractor = (item, index) => index.toString(),
 }: {
   data: T[];
@@ -160,9 +195,24 @@ export function MobileList<T extends Record<string, any>>({
   onItemClick?: (item: T) => void;
   className?: string;
   emptyMessage?: string;
+  emptyState?: MobileTableEmptyState;
   keyExtractor?: (item: T, index: number) => string;
 }) {
   if (data.length === 0) {
+    if (emptyState) {
+      return (
+        <MobileEmptyState
+          icon={emptyState.icon ?? Inbox}
+          title={emptyState.title}
+          description={emptyState.description}
+          primaryLabel={emptyState.primaryLabel}
+          onPrimary={emptyState.onPrimary}
+          secondaryLabel={emptyState.secondaryLabel}
+          onSecondary={emptyState.onSecondary}
+          accentClass={emptyState.accentClass}
+        />
+      );
+    }
     return (
       <div className="text-center py-8 text-muted-foreground">
         {emptyMessage}
