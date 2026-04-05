@@ -1,8 +1,10 @@
+import { useEffect, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
+import { motion, useReducedMotion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { useMobileNavigation, type MobileNavItem } from '@/hooks/useMobileNavigation';
-import { vibrate } from '@/lib/mobile-utils';
+import { useHaptics } from '@/hooks/useHaptics';
 
 interface EnhancedMobileBottomNavProps {
   customItems?: MobileNavItem[];
@@ -12,7 +14,14 @@ interface EnhancedMobileBottomNavProps {
 }
 
 /**
- * Enhanced mobile bottom navigation with role-based and context-aware items
+ * Enhanced mobile bottom navigation with role-based and context-aware items.
+ *
+ * Premium polish (US-117):
+ *  - Spring-animated active pill indicator via framer-motion shared layoutId
+ *  - Active icon springs to 1.1 scale
+ *  - Badge pulses subtly when present
+ *  - Light haptic on tab tap
+ *  - Honors prefers-reduced-motion
  */
 export function EnhancedMobileBottomNav({
   customItems,
@@ -20,13 +29,13 @@ export function EnhancedMobileBottomNav({
   variant = 'default',
   className,
 }: EnhancedMobileBottomNavProps) {
-  const { items: defaultItems, activeHref, isCustomContext } = useMobileNavigation();
+  const { items: defaultItems, isCustomContext } = useMobileNavigation();
   const location = useLocation();
   const items = customItems || defaultItems;
+  const haptics = useHaptics();
 
   const handleNavClick = () => {
-    // Provide haptic feedback on navigation
-    vibrate(10);
+    haptics.impact('light');
   };
 
   const isActive = (href: string) => {
@@ -42,14 +51,13 @@ export function EnhancedMobileBottomNav({
     <nav
       className={cn(
         'fixed bottom-0 left-0 right-0',
-        'bg-background/95 backdrop-blur-sm border-t',
-        'md:hidden', // Only show on mobile
+        'bg-background/95 backdrop-blur-md border-t',
+        'md:hidden',
         'z-50',
         'safe-area-inset-bottom',
         className
       )}
     >
-      {/* Context indicator */}
       {isCustomContext && (
         <div className="absolute top-0 left-0 right-0 h-0.5 bg-primary" />
       )}
@@ -94,6 +102,14 @@ function NavButton({
   variant,
   onClick,
 }: NavButtonProps) {
+  const reduceMotion = useReducedMotion();
+  const [pulseKey, setPulseKey] = useState(0);
+
+  // Re-trigger pulse animation whenever the badge value changes.
+  useEffect(() => {
+    if (badge !== undefined) setPulseKey((k) => k + 1);
+  }, [badge]);
+
   const iconSize = variant === 'compact' ? 'h-5 w-5' : 'h-6 w-6';
   const fontSize = variant === 'compact' ? 'text-[10px]' : 'text-xs';
 
@@ -107,44 +123,69 @@ function NavButton({
         'min-w-[64px] min-h-[48px]',
         'px-2',
         'space-y-1',
-        'transition-all duration-200',
+        'transition-colors duration-200',
         active ? 'text-primary' : 'text-muted-foreground',
-        'active:scale-95',
-        // Improved touch feedback
-        'touch-manipulation',
-        'tap-highlight-transparent',
+        'touch-manipulation tap-highlight-transparent'
       )}
       aria-label={label}
       aria-current={active ? 'page' : undefined}
     >
-      {/* Badge indicator */}
-      {badge && (
-        <Badge
-          variant="destructive"
-          className={cn(
-            'absolute top-1 right-2',
-            'h-4 min-w-4 px-1',
-            'text-[10px] leading-none',
-            'flex items-center justify-center'
-          )}
-        >
-          {badge}
-        </Badge>
+      {/* Active pill background — shared layoutId springs between tabs */}
+      {active && (
+        <motion.div
+          layoutId="mobile-nav-active-pill"
+          className="absolute inset-x-2 inset-y-1 rounded-xl bg-primary/10"
+          transition={
+            reduceMotion
+              ? { duration: 0 }
+              : { type: 'spring', stiffness: 500, damping: 34 }
+          }
+          aria-hidden="true"
+        />
       )}
 
-      {/* Icon */}
-      <Icon className={iconSize} />
+      {badge && (
+        <motion.div
+          key={pulseKey}
+          initial={reduceMotion ? false : { scale: 0.6, opacity: 0 }}
+          animate={
+            reduceMotion
+              ? undefined
+              : {
+                  scale: [0.6, 1.15, 1],
+                  opacity: [0, 1, 1],
+                }
+          }
+          transition={{ duration: 0.45, ease: 'easeOut' }}
+          className="absolute top-1 right-2 z-10"
+        >
+          <Badge
+            variant="destructive"
+            className={cn(
+              'h-4 min-w-4 px-1',
+              'text-[10px] leading-none',
+              'flex items-center justify-center'
+            )}
+          >
+            {badge}
+          </Badge>
+        </motion.div>
+      )}
 
-      {/* Label */}
+      <motion.div
+        animate={reduceMotion ? undefined : { scale: active ? 1.1 : 1 }}
+        transition={
+          reduceMotion ? { duration: 0 } : { type: 'spring', stiffness: 520, damping: 24 }
+        }
+        className="relative z-[1]"
+      >
+        <Icon className={iconSize} />
+      </motion.div>
+
       {showLabel && (
-        <span className={cn('font-medium leading-tight', fontSize)}>
+        <span className={cn('font-medium leading-tight relative z-[1]', fontSize)}>
           {label}
         </span>
-      )}
-
-      {/* Active indicator */}
-      {active && (
-        <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-8 h-0.5 bg-primary rounded-full" />
       )}
     </Link>
   );

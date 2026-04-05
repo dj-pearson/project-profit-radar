@@ -3,6 +3,7 @@ import { X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { preventBodyScroll } from '@/lib/mobile-utils';
+import { useHaptics } from '@/hooks/useHaptics';
 
 interface MobileActionSheetProps {
   isOpen: boolean;
@@ -22,10 +23,16 @@ export function MobileActionSheet({
   children,
   className,
 }: MobileActionSheetProps) {
+  const haptics = useHaptics();
   useEffect(() => {
     preventBodyScroll(isOpen);
     return () => preventBodyScroll(false);
   }, [isOpen]);
+
+  const handleClose = () => {
+    haptics.impact('light');
+    onClose();
+  };
 
   if (!isOpen) return null;
 
@@ -34,7 +41,7 @@ export function MobileActionSheet({
       {/* Backdrop */}
       <div
         className="fixed inset-0 bg-black/50 z-50 animate-in fade-in"
-        onClick={onClose}
+        onClick={handleClose}
       />
 
       {/* Sheet */}
@@ -60,7 +67,7 @@ export function MobileActionSheet({
             <Button
               variant="ghost"
               size="sm"
-              onClick={onClose}
+              onClick={handleClose}
               className="h-8 w-8 p-0"
             >
               <X className="h-4 w-4" />
@@ -93,9 +100,13 @@ export function MobileActionSheetItem({
   variant?: 'default' | 'destructive';
   className?: string;
 }) {
+  const haptics = useHaptics();
   return (
     <button
-      onClick={onClick}
+      onClick={() => {
+        haptics.selection();
+        onClick();
+      }}
       className={cn(
         'w-full flex items-center gap-3 p-4 rounded-lg',
         'text-left transition-colors min-h-[56px]',

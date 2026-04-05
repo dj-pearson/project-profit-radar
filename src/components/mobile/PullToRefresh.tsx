@@ -1,6 +1,7 @@
 import { useState, useRef, ReactNode } from 'react';
 import { RefreshCw } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useHaptics } from '@/hooks/useHaptics';
 
 interface PullToRefreshProps {
   onRefresh: () => Promise<void>;
@@ -23,6 +24,8 @@ export function PullToRefresh({
   const [isRefreshing, setIsRefreshing] = useState(false);
   const startY = useRef(0);
   const containerRef = useRef<HTMLDivElement>(null);
+  const hasCrossedThreshold = useRef(false);
+  const haptics = useHaptics();
 
   const handleTouchStart = (e: React.TouchEvent) => {
     if (disabled || isRefreshing) return;
@@ -43,22 +46,31 @@ export function PullToRefresh({
     if (distance > 0) {
       // Add resistance - gets harder to pull as you go further
       const resistance = 0.5;
-      setPullDistance(Math.min(distance * resistance, threshold * 1.5));
+      const next = Math.min(distance * resistance, threshold * 1.5);
+      setPullDistance(next);
+      if (!hasCrossedThreshold.current && next >= threshold) {
+        hasCrossedThreshold.current = true;
+        haptics.impact('medium');
+      } else if (hasCrossedThreshold.current && next < threshold) {
+        hasCrossedThreshold.current = false;
+      }
     }
   };
 
   const handleTouchEnd = async () => {
     if (disabled) return;
-    
+
     if (pullDistance >= threshold && !isRefreshing) {
       setIsRefreshing(true);
       try {
         await onRefresh();
+        haptics.success();
       } finally {
         setIsRefreshing(false);
       }
     }
 
+    hasCrossedThreshold.current = false;
     setIsPulling(false);
     setPullDistance(0);
   };

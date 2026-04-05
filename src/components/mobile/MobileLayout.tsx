@@ -1,6 +1,9 @@
 import { ReactNode } from 'react';
 import { cn } from '@/lib/utils';
 import { useIsMobile } from '@/hooks/useMediaQuery';
+import { useNativeStatusBar } from '@/hooks/useNativeStatusBar';
+import { useEdgeSwipeBack } from '@/hooks/useEdgeSwipeBack';
+import { MobileOfflineIndicator } from '@/components/mobile/MobileOfflineIndicator';
 
 interface MobileLayoutProps {
   children: ReactNode;
@@ -19,6 +22,8 @@ export function MobileLayout({
   withBottomNav = false,
 }: MobileLayoutProps) {
   const isMobile = useIsMobile();
+  useNativeStatusBar();
+  useEdgeSwipeBack({ disabled: !isMobile });
 
   return (
     <div
@@ -33,6 +38,7 @@ export function MobileLayout({
         paddingBottom: 'calc(80px + env(safe-area-inset-bottom, 0px))',
       } : undefined}
     >
+      {isMobile && <MobileOfflineIndicator />}
       {children}
     </div>
   );

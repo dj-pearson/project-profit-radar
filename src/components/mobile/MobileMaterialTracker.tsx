@@ -13,6 +13,7 @@ import { useDeviceInfo } from '@/hooks/useDeviceInfo';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { mobileCardClasses, mobileButtonClasses, mobileTextClasses } from '@/utils/mobileHelpers';
+import { MobileEmptyState } from './MobileEmptyState';
 
 interface MaterialDelivery {
   id: string;
@@ -350,12 +351,14 @@ export const MobileMaterialTracker: React.FC = () => {
           <TabsContent value="deliveries" className="mt-4">
             <div className="space-y-4">
               {filteredDeliveries.length === 0 ? (
-                <Card className={mobileCardClasses.container}>
-                  <CardContent className="pt-6 text-center">
-                    <Package className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                    <p className={mobileTextClasses.body}>No deliveries found</p>
-                  </CardContent>
-                </Card>
+                <MobileEmptyState
+                  icon={Package}
+                  title="No deliveries yet"
+                  description="Log incoming material shipments to track quantities, photos, and issues on-site."
+                  primaryLabel="Log delivery"
+                  onPrimary={() => setShowNewDelivery(true)}
+                  accentClass="bg-blue-500/10 text-blue-600"
+                />
               ) : (
                 filteredDeliveries.map((delivery) => (
                   <Card key={delivery.id} className={mobileCardClasses.container}>

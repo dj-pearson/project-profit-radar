@@ -90,6 +90,10 @@ export default defineConfig(({ mode }) => ({
         __dirname,
         "./src/lib/capacitor-web-fallback.ts"
       ),
+      "@capacitor/haptics": path.resolve(
+        __dirname,
+        "./src/lib/capacitor-web-fallback.ts"
+      ),
     },
     dedupe: [
       "react",
