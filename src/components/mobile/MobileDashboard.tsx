@@ -28,6 +28,7 @@ import { MobileMaterialTracker } from './MobileMaterialTracker';
 import { EnhancedMobileCamera } from './EnhancedMobileCamera';
 import MobileTimeTracker from './MobileTimeTracker';
 import { mobileCardClasses, mobileButtonClasses, mobileTextClasses } from '@/utils/mobileHelpers';
+import { MobileSkeletonDashboard } from './MobileSkeletons';
 import { toast } from 'sonner';
 
 interface DashboardStats {
@@ -51,6 +52,7 @@ interface QuickAction {
 
 export const MobileDashboard: React.FC = () => {
   const [activeView, setActiveView] = useState('dashboard');
+  const [isInitializing, setIsInitializing] = useState(true);
   const [stats, setStats] = useState<DashboardStats>({
     safetyIncidents: 0,
     dailyReports: 3,
@@ -133,6 +135,13 @@ export const MobileDashboard: React.FC = () => {
       getCurrentPosition();
     }
   }, [capabilities.hasGeolocation, position, getCurrentPosition]);
+
+  useEffect(() => {
+    // Briefly show mobile skeleton on first mount so initial paint matches
+    // the final layout without a spinner flash.
+    const t = window.setTimeout(() => setIsInitializing(false), 250);
+    return () => window.clearTimeout(t);
+  }, []);
 
   const handleActionClick = (action: QuickAction) => {
     setActiveView(action.component);
@@ -394,6 +403,14 @@ export const MobileDashboard: React.FC = () => {
         return renderDashboardView();
     }
   };
+
+  if (isInitializing && activeView === 'dashboard') {
+    return (
+      <div className="min-h-screen bg-background p-4">
+        <MobileSkeletonDashboard />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">

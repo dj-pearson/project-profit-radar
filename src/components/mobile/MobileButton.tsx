@@ -1,7 +1,8 @@
-import { ReactNode, ButtonHTMLAttributes } from 'react';
+import { ReactNode, ButtonHTMLAttributes, MouseEvent as ReactMouseEvent } from 'react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { Loader2 } from 'lucide-react';
+import { useHaptics } from '@/hooks/useHaptics';
 
 interface MobileButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   children: ReactNode;
@@ -26,18 +27,27 @@ export function MobileButton({
   loading = false,
   className,
   disabled,
+  onClick,
   ...props
 }: MobileButtonProps) {
+  const haptics = useHaptics();
   const sizeClasses = {
     sm: 'h-10 px-4 text-sm',
     md: 'h-12 px-6 text-base',
     lg: 'h-14 px-8 text-lg',
   };
 
+  const handleClick = (e: ReactMouseEvent<HTMLButtonElement>) => {
+    if (disabled || loading) return;
+    haptics.impact(variant === 'destructive' ? 'medium' : 'light');
+    onClick?.(e);
+  };
+
   return (
     <Button
       variant={variant}
       disabled={disabled || loading}
+      onClick={handleClick}
       className={cn(
         sizeClasses[size],
         fullWidth && 'w-full',
@@ -77,6 +87,7 @@ export function MobileFAB({
   position?: 'bottom-right' | 'bottom-left' | 'bottom-center';
   className?: string;
 }) {
+  const haptics = useHaptics();
   const positionClasses = {
     'bottom-right': 'bottom-6 right-6',
     'bottom-left': 'bottom-6 left-6',
@@ -85,7 +96,10 @@ export function MobileFAB({
 
   return (
     <button
-      onClick={onClick}
+      onClick={() => {
+        haptics.impact('medium');
+        onClick();
+      }}
       className={cn(
         'fixed z-40 md:hidden',
         'w-14 h-14 rounded-full',
@@ -147,6 +161,7 @@ export function MobileIconButton({
   variant?: 'default' | 'ghost' | 'outline';
   size?: 'sm' | 'md' | 'lg';
 } & ButtonHTMLAttributes<HTMLButtonElement>) {
+  const haptics = useHaptics();
   const sizeClasses = {
     sm: 'h-10 w-10',
     md: 'h-12 w-12',
@@ -156,7 +171,10 @@ export function MobileIconButton({
   return (
     <Button
       variant={variant}
-      onClick={onClick}
+      onClick={() => {
+        haptics.selection();
+        onClick?.();
+      }}
       className={cn(
         sizeClasses[size],
         'p-0 flex-shrink-0',

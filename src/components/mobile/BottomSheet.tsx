@@ -1,6 +1,7 @@
 import { useState, useEffect, ReactNode } from 'react';
 import { X } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useHaptics } from '@/hooks/useHaptics';
 
 interface BottomSheetProps {
   isOpen: boolean;
@@ -23,6 +24,12 @@ export function BottomSheet({
   const [startY, setStartY] = useState(0);
   const [currentY, setCurrentY] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
+  const haptics = useHaptics();
+
+  const handleClose = () => {
+    haptics.impact('medium');
+    onClose();
+  };
 
   useEffect(() => {
     if (isOpen) {
@@ -51,6 +58,7 @@ export function BottomSheet({
     const distance = currentY - startY;
     
     if (distance > 100) {
+      haptics.impact('medium');
       onClose();
     }
     
@@ -71,7 +79,7 @@ export function BottomSheet({
           'fixed inset-0 bg-black/50 z-40 transition-opacity',
           isOpen ? 'opacity-100' : 'opacity-0'
         )}
-        onClick={onClose}
+        onClick={handleClose}
       />
 
       {/* Sheet */}
@@ -102,7 +110,7 @@ export function BottomSheet({
           <div className="flex items-center justify-between px-6 pb-4 border-b">
             <h2 className="text-lg font-semibold">{title}</h2>
             <button
-              onClick={onClose}
+              onClick={handleClose}
               className="p-2 rounded-full hover:bg-muted active:scale-95 transition-transform"
             >
               <X className="h-4 w-4" />
@@ -113,7 +121,7 @@ export function BottomSheet({
         {/* Close button (if no title) */}
         {!title && (
           <button
-            onClick={onClose}
+            onClick={handleClose}
             className="absolute right-4 top-4 p-2 rounded-full hover:bg-muted active:scale-95 transition-transform z-10"
           >
             <X className="h-4 w-4" />

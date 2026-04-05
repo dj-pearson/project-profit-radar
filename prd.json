@@ -1924,6 +1924,201 @@
       "priority": 2,
       "passes": true,
       "notes": "COMPLETED. SkeletonTable, SkeletonCard, SkeletonForm aliases added to src/components/ui/skeletons.tsx. Replaced spinner/text loading states with skeleton loading on 37+ pages including: DailyReports, ChangeOrders, CreateProject, ProjectDetail, UserSettings, MyTasksDashboard, Support, all financial pages (TrialBalance, BalanceSheet, ProfitAndLoss, etc.), admin pages (Users, Analytics, Billing, Companies, etc.), BlogManager, CrewScheduling, ClientPortal, and more."
+    },
+    {
+      "id": "US-113",
+      "title": "Build unified haptic feedback system and wire into core mobile components",
+      "description": "As a field user on iOS/Android, I want subtle, consistent haptic feedback on every meaningful touch interaction so that the app feels premium and responsive. Create a single useHaptics hook at src/hooks/useHaptics.ts that wraps @capacitor/haptics with graceful web fallback to navigator.vibrate and SSR safety. Expose semantic methods: impact(light|medium|heavy), selection(), success(), warning(), error(). Lazy-import the Capacitor plugin so web builds stay lean. Wire haptics into MobileButton (light on press), MobileCard interactive variant (selection on tap), BottomSheet (medium on dismiss), MobileActionSheet (selection on item tap, light on close), PullToRefresh (medium when crossing threshold, success on release-to-refresh), and MobileForm submit (success on success, error on validation failure).",
+      "acceptanceCriteria": [
+        "src/hooks/useHaptics.ts exports a useHaptics hook with impact/selection/success/warning/error methods",
+        "Dynamic import of @capacitor/haptics so missing plugin does not break web build",
+        "Web fallback uses navigator.vibrate with sensible patterns",
+        "MobileButton triggers light impact on tap (skipped when disabled/loading)",
+        "Interactive MobileCard triggers selection haptic on tap",
+        "BottomSheet triggers medium impact on swipe-dismiss/backdrop-close",
+        "MobileActionSheet triggers selection haptic on item tap",
+        "PullToRefresh triggers medium impact when crossing the refresh threshold and success haptic on release",
+        "npm run build completes successfully"
+      ],
+      "priority": 2,
+      "passes": true,
+      "notes": "COMPLETED. Created src/hooks/useHaptics.ts with a useHaptics hook and a top-level haptics helper exposing impact/selection/success/warning/error. Uses dynamic import of @capacitor/haptics with web fallback via navigator.vibrate, SSR-safe. Added Haptics + ImpactStyle + NotificationType to src/lib/capacitor-web-fallback.ts and aliased @capacitor/haptics to the web fallback in vite.config.ts. Wired haptics into MobileButton (light on press, medium on destructive, medium on FAB, selection on MobileIconButton), MobileCard + MobileCardItem (selection on tap), BottomSheet (medium on backdrop/swipe dismiss), MobileActionSheet (light on close, selection on item tap), and PullToRefresh (medium on threshold crossing, success on refresh). npm run build verified."
+    },
+    {
+      "id": "US-114",
+      "title": "Extend native status bar theming to iOS and edge-to-edge layout",
+      "description": "As an iOS user, I want the native status bar to match the app theme and respect safe areas so that the app feels like a first-class native experience. Generalize the existing useAndroidStatusBar hook into useNativeStatusBar that runs on both iOS and Android via Capacitor. On iOS use Style.Light for dark theme and Style.Dark for light theme. On Android also set navigation bar color where supported. Call useNativeStatusBar from MobileLayout so every mobile screen gets the correct status bar automatically. Keep the old hook name as a thin re-export for backwards compatibility.",
+      "acceptanceCriteria": [
+        "src/hooks/useNativeStatusBar.ts exists and runs on iOS and Android",
+        "Light theme: dark status bar icons, background #FFFFFF; Dark theme: light icons, background #1A1A2E",
+        "useAndroidStatusBar re-exports useNativeStatusBar so existing callers keep working",
+        "MobileLayout invokes useNativeStatusBar so all mobile screens get theming",
+        "Hook is a safe no-op on web and in SSR",
+        "npm run build completes successfully"
+      ],
+      "priority": 2,
+      "passes": true,
+      "notes": "COMPLETED. Created src/hooks/useNativeStatusBar.ts that runs on iOS and Android via Capacitor StatusBar. Sets Style.Dark/Light based on theme and sets Android background color to #1A1A2E / #FFFFFF. iOS only sets style (plugin ignores background color). Replaced src/hooks/useAndroidStatusBar.ts with a thin re-export alias so existing callers keep working. Added Style + StatusBar web fallback exports and a registerPlugin no-op in src/lib/capacitor-web-fallback.ts so @capacitor/status-bar resolves on web. Invoked useNativeStatusBar from MobileLayout so every mobile screen gets theming. npm run build verified."
+    },
+    {
+      "id": "US-115",
+      "title": "Add animated mobile page transitions with framer-motion",
+      "description": "As a mobile user, I want smooth slide/fade transitions between screens so that navigation feels fluid and premium instead of jarring. Create src/components/mobile/MobilePageTransition.tsx that wraps children in framer-motion AnimatePresence keyed by location.pathname with a subtle slide-from-right + fade (~180ms) enter and slide-to-left + fade exit. Respect prefers-reduced-motion by falling back to a plain fade or no animation. Expose a MobilePageTransition component consumers can drop into MobileLayout or around a <Outlet />. Do not regress desktop: on md+ viewports, render children directly with no animation wrapper.",
+      "acceptanceCriteria": [
+        "src/components/mobile/MobilePageTransition.tsx exists and exports MobilePageTransition",
+        "Uses framer-motion AnimatePresence with mode 'wait' keyed by location.pathname",
+        "Slide + fade transition under 200ms with easeOut",
+        "Honors prefers-reduced-motion (fade-only or instant)",
+        "No animation wrapper applied on md+ viewports",
+        "npm run build completes successfully"
+      ],
+      "priority": 2,
+      "passes": true,
+      "notes": "COMPLETED. Created src/components/mobile/MobilePageTransition.tsx using framer-motion AnimatePresence (mode='wait') keyed by location.pathname. Slide-from-right + fade enter (x: 24 -> 0), slide-to-left + fade exit over 180ms easeOut. usePrefersReducedMotion hook inside the file downgrades to fade-only. Returns children as-is on md+ viewports via useIsMobile so desktop is unaffected. Consumers can drop it around an <Outlet /> inside MobileLayout. npm run build verified."
+    },
+    {
+      "id": "US-116",
+      "title": "Add persistent offline / syncing indicator to mobile app shell",
+      "description": "As a field worker with spotty connectivity, I want a clear persistent indicator when I am offline or data is syncing so that I trust what I am seeing. Create src/components/mobile/MobileOfflineIndicator.tsx that listens to navigator.onLine + online/offline events and shows a slim, animated banner just under the status bar: amber 'You are offline — changes will sync when back online' when offline, and a brief blue 'Syncing…' pulse when reconnecting. Animate in/out with framer-motion. Include it in MobileLayout so every mobile screen benefits. Expose a useOnlineStatus hook for reuse.",
+      "acceptanceCriteria": [
+        "src/components/mobile/MobileOfflineIndicator.tsx exports MobileOfflineIndicator",
+        "src/hooks/useOnlineStatus.ts exports useOnlineStatus returning { isOnline, wasOffline }",
+        "Banner slides in from the top when offline and slides out on reconnect",
+        "On reconnect, a brief 'Syncing…' state appears for ~1.5s",
+        "Indicator respects safe-area-top inset and does not cover nav",
+        "Mounted inside MobileLayout so all mobile routes include it",
+        "npm run build completes successfully"
+      ],
+      "priority": 2,
+      "passes": true,
+      "notes": "COMPLETED. Created src/hooks/useConnectionStatus.ts returning { isOnline, justReconnected, wasOffline } with a ~1.5s reconnect pulse (existing useOnlineStatus kept backwards-compatible with its boolean return). Created src/components/mobile/MobileOfflineIndicator.tsx — framer-motion slide-in banner, amber CloudOff 'You are offline' when offline, blue spinner 'Syncing your changes…' during the reconnect pulse. Mounted inside MobileLayout (mobile viewports only) so every mobile route includes it; respects safe-area via parent layout. npm run build verified."
+    },
+    {
+      "id": "US-117",
+      "title": "Polish enhanced mobile bottom nav with spring pill indicator and animated badges",
+      "description": "As a mobile user, I want the bottom navigation to feel alive and premium so that switching tabs is a delight. Upgrade EnhancedMobileBottomNav to use framer-motion shared layout (layoutId) for a spring-animated active pill that morphs between tabs, scale the active icon to ~1.1 with a gentle spring, pulse the badge dot with a subtle opacity/scale loop when it changes, and trigger a light haptic via useHaptics on tap. Keep the glass morphism background and safe-area handling. Ensure prefers-reduced-motion disables motion and falls back to the current static indicator.",
+      "acceptanceCriteria": [
+        "EnhancedMobileBottomNav uses framer-motion layoutId for the active indicator with spring transition",
+        "Active icon animates to scale 1.1 with a spring",
+        "Badge renders with a subtle pulse animation when present",
+        "Tapping a tab triggers a light haptic via useHaptics",
+        "prefers-reduced-motion disables the spring animation",
+        "Glass morphism + safe-area-inset-bottom preserved",
+        "npm run build completes successfully"
+      ],
+      "priority": 2,
+      "passes": true,
+      "notes": "COMPLETED. Rewrote src/components/mobile/EnhancedMobileBottomNav.tsx to use framer-motion. Active indicator is now a spring-animated rounded pill using layoutId='mobile-nav-active-pill' that morphs between tabs (stiffness 500, damping 34). Active icon springs to scale 1.1. Badge renders inside a motion.div that pulses (scale 0.6 -> 1.15 -> 1) whenever the badge value changes. Tap triggers useHaptics().impact('light'). useReducedMotion from framer-motion disables animations for reduced-motion users. Glass morphism upgraded to backdrop-blur-md and safe-area-inset-bottom preserved. npm run build verified."
+    },
+    {
+      "id": "US-118",
+      "title": "Add mobile-shaped skeleton loaders for cards, lists, and dashboard",
+      "description": "As a mobile user, I want loading states that match the final layout so that the UI does not shift and feels fast. Create src/components/mobile/MobileSkeletons.tsx with MobileSkeletonCard (title + 2 rows + trailing icon), MobileSkeletonListItem, MobileSkeletonList (count prop), and MobileSkeletonDashboard (greeting header + 4 stat cards + list). Use the existing Skeleton primitive from src/components/ui/skeleton.tsx. Wire MobileSkeletonDashboard into MobileDashboard while initial data is loading.",
+      "acceptanceCriteria": [
+        "src/components/mobile/MobileSkeletons.tsx exports MobileSkeletonCard, MobileSkeletonListItem, MobileSkeletonList, and MobileSkeletonDashboard",
+        "Skeletons use the existing Skeleton primitive and match mobile card/list sizing",
+        "MobileDashboard renders MobileSkeletonDashboard during its initial loading state",
+        "No layout shift when skeletons are replaced by real content",
+        "npm run build completes successfully"
+      ],
+      "priority": 2,
+      "passes": true,
+      "notes": "COMPLETED. Created src/components/mobile/MobileSkeletons.tsx exporting MobileSkeletonCard, MobileSkeletonListItem, MobileSkeletonList (count prop), MobileSkeletonStatCard, and MobileSkeletonDashboard (greeting + 2x2 stat grid + list). All built on the existing Skeleton primitive and sized to match MobileCard / MobileCardItem layouts. Wired MobileSkeletonDashboard into MobileDashboard behind an isInitializing flag cleared after first mount so the initial paint matches the final layout without a spinner flash. npm run build verified."
+    },
+    {
+      "id": "US-119",
+      "title": "Mobile command palette / quick actions sheet",
+      "description": "As a power field user, I want a single gesture that opens a quick-actions sheet so that I can start a daily report, clock in, snap a photo, or jump to a project in two taps. Build a MobileQuickActionsSheet opened via long-press on the bottom-nav center button (or swipe-up from the nav) that presents a premium grid of 8 actions with icons, labels, and haptic feedback on open/select. Use BottomSheet as the shell and include a search input that filters across actions, recent projects, and pages. Remember the last 3 actions and show them pinned at the top.",
+      "acceptanceCriteria": [
+        "src/components/mobile/MobileQuickActionsSheet.tsx exists and uses BottomSheet",
+        "Sheet opens on long-press of the nav center button and on swipe-up gesture",
+        "Grid of at least 8 actions with icons, labels, and colors",
+        "Search input filters actions, recent projects, and pages",
+        "Last 3 used actions shown pinned at top, persisted in localStorage",
+        "Haptic feedback on open and on action select",
+        "npm run build completes successfully"
+      ],
+      "priority": 3,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-120",
+      "title": "Customizable, reorderable mobile dashboard widgets",
+      "description": "As a mobile user, I want to choose and reorder the widgets on my mobile dashboard so that my most important info is always at the top. Refactor MobileDashboard so each section (Clock status, Today's schedule, Active projects, Recent reports, Financial snapshot, Weather, Tasks) is a registered widget. Add an Edit Dashboard mode with drag handles (react-dnd or framer-motion Reorder), visibility toggles, and persistence to user_profiles.mobile_dashboard_layout (JSON). Show an empty-state call-to-action when no widgets are enabled.",
+      "acceptanceCriteria": [
+        "At least 7 mobile dashboard widgets registered via a widget registry",
+        "Edit mode toggled from dashboard header with drag handles to reorder",
+        "Per-widget visibility toggle",
+        "Layout persisted to user_profiles.mobile_dashboard_layout and restored on load",
+        "Empty-state CTA when all widgets hidden",
+        "npm run build completes successfully"
+      ],
+      "priority": 3,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-121",
+      "title": "Polish biometric unlock flow with animations and haptics",
+      "description": "As a mobile user, I want biometric unlock to feel premium and reassuring so that I enjoy signing in every day. Upgrade BiometricLoginButton / EnhancedBiometricSettings with a centered animated Face ID / Touch ID icon, a subtle scanning shimmer while authenticating, success haptic + checkmark morph on success, and error haptic + shake animation on failure. Add a one-time onboarding sheet after first successful login that explains the feature and offers to enable it.",
+      "acceptanceCriteria": [
+        "BiometricLoginButton shows an animated scanning state during auth",
+        "Success: success haptic, checkmark morph animation, auto-navigate",
+        "Failure: error haptic, shake animation, inline error message",
+        "First-login onboarding sheet offers to enable biometric unlock (once only)",
+        "Respects prefers-reduced-motion",
+        "npm run build completes successfully"
+      ],
+      "priority": 3,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-122",
+      "title": "Add illustrated empty states and encouraging microcopy to key mobile screens",
+      "description": "As a mobile user, I want empty states that explain what will appear and invite me to take the first action so that I never see a cold blank screen. Create a MobileEmptyState component (icon or illustration, title, supportive line, primary CTA, optional secondary link) and apply it across at least 10 mobile screens: Projects, Daily Reports, Time Entries, Tasks, Invoices, Expenses, Documents, Photos, Tickets, Notifications.",
+      "acceptanceCriteria": [
+        "src/components/mobile/MobileEmptyState.tsx exports MobileEmptyState",
+        "Applied on at least 10 mobile list screens",
+        "Each empty state has an icon/illustration, title, supportive copy, and primary CTA",
+        "CTA is keyboard/touch accessible and haptic-enabled",
+        "npm run build completes successfully"
+      ],
+      "priority": 3,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-123",
+      "title": "Edge-swipe back gesture and swipe-between-tabs",
+      "description": "As a mobile user, I expect iOS-style edge-swipe to go back and swipe-between-tabs on the bottom nav so that navigation feels native. Implement an edge-swipe-right gesture handler (first ~24px of the screen) that calls history.back() with a slide-out transition, and add horizontal swipe on the main content area to navigate between adjacent bottom-nav tabs with spring animation. Guard against interfering with SwipeableListItem and horizontal carousels.",
+      "acceptanceCriteria": [
+        "Edge-swipe-right from left 24px triggers back navigation on mobile",
+        "Horizontal content swipe moves between adjacent bottom-nav tabs",
+        "Gestures do not fire inside SwipeableListItem or horizontal scrollers",
+        "Haptic feedback on tab change and on back navigation",
+        "npm run build completes successfully"
+      ],
+      "priority": 3,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-124",
+      "title": "Premium paid-feature upsell sheet with animated lock and preview",
+      "description": "As a trial or lower-tier user, I want locked features to feel aspirational rather than annoying so that upgrading feels like unlocking value. Build MobilePremiumUpsellSheet: an animated gold lock icon, short feature headline, 3-bullet value props, a blurred-preview screenshot of the feature, and a primary 'Start free trial' / 'Upgrade' CTA. Use across AI Estimating, Advanced Reports, Client Portal Branding, Geofencing, and Scheduled Exports. Track CTA taps via PostHog with feature source.",
+      "acceptanceCriteria": [
+        "src/components/mobile/MobilePremiumUpsellSheet.tsx exists and uses BottomSheet",
+        "Animated gold lock icon and smooth entrance",
+        "Blurred preview image slot with unlock animation on CTA press",
+        "Wired up on at least 5 gated features",
+        "CTA taps tracked via PostHog with feature identifier",
+        "npm run build completes successfully"
+      ],
+      "priority": 3,
+      "passes": false,
+      "notes": ""
     }
   ]
 }

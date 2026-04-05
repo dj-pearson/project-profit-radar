@@ -2,6 +2,7 @@ import React, { ReactNode, KeyboardEvent } from 'react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 import { ChevronRight } from 'lucide-react';
+import { useHaptics } from '@/hooks/useHaptics';
 
 interface MobileCardProps {
   children: ReactNode;
@@ -23,11 +24,18 @@ export function MobileCard({
   ariaLabel,
 }: MobileCardProps) {
   const isClickable = onClick || interactive;
+  const haptics = useHaptics();
+
+  const triggerClick = () => {
+    if (!onClick) return;
+    haptics.selection();
+    onClick();
+  };
 
   const handleKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
     if (onClick && (e.key === 'Enter' || e.key === ' ')) {
       e.preventDefault();
-      onClick();
+      triggerClick();
     }
   };
 
@@ -40,7 +48,7 @@ export function MobileCard({
           : '',
         className
       )}
-      onClick={onClick}
+      onClick={onClick ? triggerClick : undefined}
       onKeyDown={isClickable ? handleKeyDown : undefined}
       role={isClickable ? 'button' : undefined}
       tabIndex={isClickable ? 0 : undefined}
@@ -76,10 +84,18 @@ export function MobileCardItem({
   className,
   ariaLabel,
 }: MobileCardItemProps) {
+  const haptics = useHaptics();
+
+  const triggerClick = () => {
+    if (!onClick) return;
+    haptics.selection();
+    onClick();
+  };
+
   const handleKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
     if (onClick && (e.key === 'Enter' || e.key === ' ')) {
       e.preventDefault();
-      onClick();
+      triggerClick();
     }
   };
 
@@ -90,7 +106,7 @@ export function MobileCardItem({
         onClick && 'cursor-pointer active:bg-muted/50 transition-colors focus:outline-none focus:ring-2 focus:ring-inset focus:ring-primary',
         className
       )}
-      onClick={onClick}
+      onClick={onClick ? triggerClick : undefined}
       onKeyDown={onClick ? handleKeyDown : undefined}
       role={onClick ? 'button' : undefined}
       tabIndex={onClick ? 0 : undefined}
