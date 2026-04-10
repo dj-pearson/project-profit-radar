@@ -103,6 +103,7 @@ export const usePermissions = () => {
       '/rate-limiting': ['root_admin'],
       '/admin/companies': ['root_admin'],
       '/admin/users': ['root_admin'],
+      '/admin/disposable-email-domains': ['root_admin'],
       '/admin/billing': ['root_admin'],
       '/admin/analytics': ['root_admin'],
       '/admin/settings': ['root_admin'],

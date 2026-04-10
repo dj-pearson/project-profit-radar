@@ -15,6 +15,7 @@ import { PasswordRequirements } from "@/components/auth/PasswordRequirements";
 import { useCsrfToken } from "@/lib/security/csrfProtection.tsx";
 import { validateCsrfToken, getCsrfToken } from "@/lib/security/csrfProtection";
 import { createEndpointLimiter } from "@/lib/security/rateLimiter";
+import { supabase } from "@/integrations/supabase/client";
 
 type OTPFlowState = 'idle' | 'sending' | 'verifying' | 'submitted' | 'verified' | 'setting_password';
 type AuthView = 'signin' | 'signup' | 'forgot';
@@ -193,6 +194,22 @@ const Auth = () => {
     }
     if (!passwordValidation.isValid) {
       toast({ variant: "destructive", title: "Password Requirements Not Met", description: passwordValidation.errors[0] }); return;
+    }
+    // Pre-check against disposable email blocklist for fast UX feedback.
+    // The edge function re-validates server-side regardless of this result.
+    try {
+      const { data: isDisposable } = await supabase.rpc('is_disposable_email_domain', { p_email: email });
+      if (isDisposable === true) {
+        toast({
+          variant: "destructive",
+          title: "Disposable Email Not Allowed",
+          description: "Please use a permanent work or personal email address to sign up.",
+        });
+        return;
+      }
+    } catch (err) {
+      // Non-fatal: fall through and let the server enforce the check
+      console.warn('[Auth] Disposable email pre-check failed:', err);
     }
     setLoading(true); setOtpFlowState('sending');
     const result = await signUp(email, password, { first_name: firstName, last_name: lastName, role: "admin" });

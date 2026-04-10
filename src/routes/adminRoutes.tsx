@@ -27,6 +27,7 @@ import {
   LazyCompanies,
   LazyUsers,
   LazyPermissionManagement,
+  LazyDisposableEmailDomains,
 
   // Billing & Revenue
   LazyBilling,
@@ -176,6 +177,14 @@ export const adminRoutes = (
           allowedRoles={['root_admin', 'admin']}
         >
           <LazyPermissionManagement />
+        </SecureRoute>
+      }
+    />
+    <Route
+      path="/admin/disposable-email-domains"
+      element={
+        <SecureRoute requireAuth allowedRoles={['root_admin']}>
+          <LazyDisposableEmailDomains />
         </SecureRoute>
       }
     />
