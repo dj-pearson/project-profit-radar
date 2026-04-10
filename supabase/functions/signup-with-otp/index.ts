@@ -17,6 +17,7 @@ import { z } from 'https://deno.land/x/zod@v3.22.4/mod.ts';
 import { getCorsHeaders } from '../_shared/secure-cors.ts';
 import { sendEmail, getSiteEmailConfig } from '../_shared/ses-email-service.ts';
 import { generateAuthEmail, generateOTPCode } from '../_shared/auth-email-templates.ts';
+import { isDisposableEmail } from '../_shared/disposable-email.ts';
 
 // Validation schema
 const signupSchema = z.object({
@@ -75,6 +76,17 @@ const handler = async (req: Request): Promise<Response> => {
       Deno.env.get('SUPABASE_URL')!,
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     );
+
+    // Reject disposable / throwaway email domains (blocklist maintained by root admins)
+    if (await isDisposableEmail(supabaseAdmin, email)) {
+      console.log('[SignupWithOTP] Blocked disposable email:', email);
+      return new Response(
+        JSON.stringify({
+          error: 'Disposable email addresses are not allowed. Please use a permanent work or personal email address.',
+        }),
+        { status: 400, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
+      );
+    }
 
     // Check if user already exists
     const { data: existingUser } = await supabaseAdmin.auth.admin.listUsers();

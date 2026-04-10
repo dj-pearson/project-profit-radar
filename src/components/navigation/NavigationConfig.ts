@@ -25,6 +25,7 @@ import {
   Share,
   Zap,
   Smartphone,
+  MailX,
   LucideIcon
 } from 'lucide-react';
 
@@ -296,7 +297,8 @@ export const dashboardAreas: DashboardArea[] = [
           { title: "Custom Domain", url: "/settings/custom-domain", icon: Globe, roles: ["admin", "root_admin"], description: "Configure white-label domain" },
           { title: "Security Settings", url: "/security-settings", icon: Shield, roles: ["admin", "root_admin"] },
           { title: "Companies", url: "/admin/companies", icon: Building2, roles: ["root_admin"], badge: "Root Admin" },
-          { title: "Users", url: "/admin/users", icon: Users, roles: ["root_admin"], badge: "Root Admin" }
+          { title: "Users", url: "/admin/users", icon: Users, roles: ["root_admin"], badge: "Root Admin" },
+          { title: "Email Blocklist", url: "/admin/disposable-email-domains", icon: MailX, roles: ["root_admin"], badge: "Root Admin", description: "Block disposable email domains at sign-up" }
         ]
       },
       {

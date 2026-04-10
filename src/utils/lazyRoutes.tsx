@@ -116,6 +116,7 @@ export const LazyRateLimitingDashboard = createLazyRoute(() => import('@/pages/R
 export const LazyCompanies = createLazyRoute(() => import('@/pages/admin/Companies'));
 export const LazyUsers = createLazyRoute(() => import('@/pages/admin/Users'));
 export const LazyPermissionManagement = createLazyRoute(() => import('@/pages/admin/PermissionManagement'));
+export const LazyDisposableEmailDomains = createLazyRoute(() => import('@/pages/admin/DisposableEmailDomains'));
 
 // Admin - Billing & Revenue
 export const LazyBilling = createLazyRoute(() => import('@/pages/admin/Billing'));
