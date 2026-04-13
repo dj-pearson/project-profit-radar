@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Brikly Logo Test</title>
+    <style>
+        :root {
+            --construction-orange: hsl(24, 100%, 38%);
+            --construction-blue: hsl(210, 100%, 20%);
+        }
+        body {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            background-color: #f0f0f0;
+            font-family: 'Inter', sans-serif;
+        }
+        .logo-container {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            background: white;
+            padding: 2rem 4rem;
+            border-radius: 1rem;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+        .icon {
+            width: 80px;
+            height: 80px;
+        }
+        .text {
+            font-size: 3rem;
+            font-weight: 800;
+            letter-spacing: -0.05em;
+        }
+        .text-blue { color: var(--construction-blue); }
+        .text-orange { color: var(--construction-orange); }
+    </style>
+</head>
+<body>
+    <div class="logo-container">
+        <svg class="icon" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <!-- Left Pillar -->
+            <rect fill="var(--construction-blue)" x="16" y="14" width="22" height="72" rx="11" />
+            <!-- Top Loop -->
+            <rect fill="var(--construction-orange)" x="42" y="14" width="36" height="32" rx="16" />
+            <!-- Bottom Loop -->
+            <rect fill="var(--construction-blue)" x="42" y="54" width="46" height="32" rx="16" />
+            
+            <!-- Upward Profit Arrow inside Top Loop -->
+            <path d="M 52 32 l 6 -6 l 4 4 l 8 -8" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" />
+            <path d="M 64 22 h 6 v 6" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" />
+        </svg>
+        <div class="text">
+            <span class="text-blue">Brik</span><span class="text-orange">ly</span>
+        </div>
+    </div>
+</body>
+</html>

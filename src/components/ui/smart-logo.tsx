@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { HardHat, Building } from "lucide-react";
+import { HardHat } from "lucide-react";
+import { BriklyLogoIcon } from "./BriklyLogoIcon";
 import { useTenant } from "@/contexts/TenantContext";
 import { BRIKLY_LOGO_URL } from "@/lib/utils";
 
@@ -25,7 +26,6 @@ const SmartLogo = ({
   const [imageState, setImageState] = useState<
     "loading" | "remote" | "local" | "text"
   >("loading");
-  const [imageError, setImageError] = useState(false);
 
   // Size configurations with max-width constraints
   const sizeClasses = {
@@ -75,7 +75,6 @@ const SmartLogo = ({
 
     // Reset state when priority changes
     setImageState("loading");
-    setImageError(false);
   }, [showText, priority]);
 
   // Try loading images with fallback logic
@@ -120,74 +119,50 @@ const SmartLogo = ({
 
   // Render the logo content
   const renderLogo = () => {
-    // Text fallback version matching the brand design
-    if (imageState === "text" || showText) {
-      // For white-label tenants, show simple text
-      if (useTenantLogo) {
-        return (
-          <div className={`flex items-center gap-2 ${textClassName}`}>
-            <div className={`font-bold tracking-tight ${textSizes[size]}`}>
-              <span style={{ color: tenant?.branding?.primary_color || '#F97316' }}>
-                {brandName}
-              </span>
-            </div>
-          </div>
-        );
-      }
+    // Image version (Tenant or Brikly native image)
+    if (imageState !== "text" && !showText) {
+      const currentSrc =
+        imageState === "remote" ? imageSources.remote : imageSources.local;
 
-      // Default Brikly logo
       return (
-        <div className={`flex items-center gap-2 ${textClassName}`}>
-          {/* Icon representation */}
-          <div className="relative flex items-center justify-center">
-            <div className="w-8 h-8 bg-construction-blue rounded-full flex items-center justify-center relative overflow-hidden">
-              {/* Background pattern */}
-              <div className="absolute inset-0 opacity-20">
-                <Building className="h-4 w-4 absolute top-1 left-1 text-white" />
-                <div className="absolute bottom-1 right-1 w-2 h-2 bg-white/30 rounded-sm" />
-                <div className="absolute bottom-1 left-1 w-1 h-3 bg-white/30 rounded-sm" />
-                <div className="absolute bottom-1 left-2.5 w-1 h-2 bg-white/30 rounded-sm" />
-              </div>
-              {/* Hard hat icon */}
-              <HardHat className="h-4 w-4 text-construction-orange relative z-10" />
-            </div>
-          </div>
-
-          {/* Text */}
-          <div className={`font-bold tracking-tight ${textSizes[size]}`}>
-            <span className="text-construction-orange">Build</span>
-            <span className="text-construction-blue">Desk</span>
-          </div>
-        </div>
+        <img
+          src={currentSrc}
+          alt={brandName}
+          height={heightValues[size]}
+          width="auto"
+          className={`${sizeClasses[size]} ${className}`}
+          style={{ 
+            maxHeight: `${heightValues[size]}px`, 
+            height: `${heightValues[size]}px`,
+            objectFit: "contain",
+            display: "block"
+          }}
+          onError={() => {
+            if (imageState === "remote") {
+              setImageState("local");
+            } else {
+              setImageState("text");
+            }
+          }}
+          loading="eager"
+        />
       );
     }
 
-    // Image version
-    const currentSrc =
-      imageState === "remote" ? imageSources.remote : imageSources.local;
-
+    // Default Brikly Vector Logo (always shown if not a white-labeled tenant)
     return (
-      <img
-        src={currentSrc}
-        alt={brandName}
-        height={heightValues[size]}
-        width="auto"
-        className={`${sizeClasses[size]} ${className}`}
-        style={{ 
-          maxHeight: `${heightValues[size]}px`, 
-          height: `${heightValues[size]}px`,
-          objectFit: "contain",
-          display: "block"
-        }}
-        onError={() => {
-          if (imageState === "remote") {
-            setImageState("local");
-          } else {
-            setImageState("text");
-          }
-        }}
-        loading="eager"
-      />
+      <div className={`flex items-center gap-2 ${textClassName}`}>
+        {/* Icon representation */}
+        <div className="relative flex items-center justify-center">
+          <BriklyLogoIcon className="w-8 h-8 drop-shadow-sm" />
+        </div>
+
+        {/* Text */}
+        <div className={`font-bold tracking-tighter ${textSizes[size]} ml-1`}>
+          <span className="text-construction-blue dark:text-white">Brik</span>
+          <span className="text-construction-orange">ly</span>
+        </div>
+      </div>
     );
   };
 
