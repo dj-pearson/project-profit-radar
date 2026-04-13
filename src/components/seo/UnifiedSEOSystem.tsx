@@ -115,7 +115,7 @@ export const UnifiedSEOSystem: React.FC<UnifiedSEOProps> = ({
   };
 
   // Determine final values using priority system
-  const siteUrl = 'https://brikly.com';
+  const siteUrl = 'https://brikly.net';
   const finalTitle = getFinalValue(
     title,
     dbConfig?.title,
@@ -400,7 +400,7 @@ function generateEnhancedSchema(pathname: string, config: any): any {
     '@type': 'WebPage',
     name: config.title,
     description: config.description,
-    url: `https://brikly.com${pathname}`
+    url: `https://brikly.net${pathname}`
   };
 
   if (pathname === '/') {

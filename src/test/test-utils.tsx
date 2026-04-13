@@ -86,7 +86,7 @@ export const useMockTheme = () => {
 // Default mock values
 export const defaultMockUser: MockUser = {
   id: 'test-user-123',
-  email: 'test@brikly.com',
+  email: 'test@brikly.net',
   app_metadata: {},
   user_metadata: {},
   aud: 'authenticated',
@@ -95,7 +95,7 @@ export const defaultMockUser: MockUser = {
 
 export const defaultMockUserProfile: MockUserProfile = {
   id: 'test-user-123',
-  email: 'test@brikly.com',
+  email: 'test@brikly.net',
   first_name: 'Test',
   last_name: 'User',
   company_id: 'test-company-123',

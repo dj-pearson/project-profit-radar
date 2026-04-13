@@ -31,14 +31,14 @@ const QuickBooksVsConstructionSoftware = () => {
       "name": "Brikly",
       "logo": {
         "@type": "ImageObject",
-        "url": "https://brikly.com/logo.png"
+        "url": "https://brikly.net/logo.png"
       }
     },
     "datePublished": "2025-01-14",
     "dateModified": "2025-01-14",
     "mainEntityOfPage": {
       "@type": "WebPage",
-      "@id": "https://brikly.com/resources/quickbooks-vs-construction-software"
+      "@id": "https://brikly.net/resources/quickbooks-vs-construction-software"
     },
     "keywords": "quickbooks vs construction software, quickbooks for construction, construction management software, quickbooks limitations, construction accounting software"
   };
@@ -102,7 +102,7 @@ const QuickBooksVsConstructionSoftware = () => {
           name="keywords"
           content="quickbooks vs construction software, quickbooks for construction, construction management software, quickbooks limitations, construction accounting software, quickbooks integration"
         />
-        <link rel="canonical" href="https://brikly.com/resources/quickbooks-vs-construction-software" />
+        <link rel="canonical" href="https://brikly.net/resources/quickbooks-vs-construction-software" />
         <script type="application/ld+json">
           {JSON.stringify(articleSchema)}
         </script>

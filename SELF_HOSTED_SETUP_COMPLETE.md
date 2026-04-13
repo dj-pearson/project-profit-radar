@@ -223,8 +223,8 @@ Access monitoring at:
 **Solution**: Check Kong configuration in your self-hosted Supabase:
 ```yaml
 cors_origins:
-  - https://brikly.com
-  - https://www.brikly.com
+  - https://brikly.net
+  - https://www.brikly.net
   - https://*.brikly.net
 ```
 

@@ -47,7 +47,7 @@ export const organizationStructuredData = {
   "@context": "https://schema.org",
   "@type": "Organization",
   "name": "Brikly",
-  "url": "https://brikly.com",
+  "url": "https://brikly.net",
   "logo": BRIKLY_LOGO_URL,
   "sameAs": [
     "https://linkedin.com/company/brikly",

@@ -109,8 +109,8 @@ const ProcoreVsBriklyComparison = () => {
         title="Procore vs Brikly: Which is Better for Small GC Teams?"
         author="Brikly Team"
         datePublished="2025-01-24"
-        image="https://brikly.com/images/procore-vs-brikly-comparison.jpg"
-        url="https://brikly.com/resources/procore-vs-brikly-small-contractors"
+        image="https://brikly.net/images/procore-vs-brikly-comparison.jpg"
+        url="https://brikly.net/resources/procore-vs-brikly-small-contractors"
       />
       
       <FAQSchema questions={faqData} />

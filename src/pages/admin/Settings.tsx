@@ -49,7 +49,7 @@ const AdminSettings = () => {
   const [settings, setSettings] = useState<SystemSettings>({
     platformName: 'Brikly',
     platformDescription: 'Construction Management Platform for SMB Contractors',
-    supportEmail: 'support@brikly.com',
+    supportEmail: 'support@brikly.net',
     maintenanceMode: false,
     allowRegistration: true,
     emailVerificationRequired: false,

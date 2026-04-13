@@ -197,8 +197,8 @@ const TermsOfService = () => {
                   For questions about these Terms of Service, please contact us at:
                 </p>
                 <div className="mt-3 p-4 bg-muted rounded-lg">
-                  <p><strong>Email:</strong> support@brikly.com</p>
-                  <p><strong>Legal:</strong> legal@brikly.com</p>
+                  <p><strong>Email:</strong> support@brikly.net</p>
+                  <p><strong>Legal:</strong> legal@brikly.net</p>
                   <p><strong>Address:</strong> Brikly Construction Management</p>
                   <p>123 Construction Way, Suite 100</p>
                   <p>Builder City, BC 12345</p>

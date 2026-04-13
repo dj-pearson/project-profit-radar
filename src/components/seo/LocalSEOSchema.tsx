@@ -26,8 +26,8 @@ export const LocalBusinessSchema: React.FC<LocalBusinessSchemaProps> = ({
     addressCountry: "US"
   },
   phone = "+1-800-BRIKLY",
-  email = "hello@brikly.com",
-  website = "https://brikly.com",
+  email = "hello@brikly.net",
+  website = "https://brikly.net",
   serviceArea = ["Colorado", "Wyoming", "Utah", "New Mexico"],
   businessType = "SoftwareCompany"
 }) => {
@@ -122,7 +122,7 @@ export const ServiceAreaSchema: React.FC<ServiceAreaSchemaProps> = ({
     "provider": {
       "@type": "Organization",
       "name": provider,
-      "url": "https://brikly.com"
+      "url": "https://brikly.net"
     },
     "areaServed": serviceAreas.map(area => ({
       "@type": "Place",

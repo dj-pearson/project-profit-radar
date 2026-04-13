@@ -219,7 +219,7 @@ export const CheckoutSuccess = () => {
 
         {/* Support */}
         <p className="text-center text-sm text-muted-foreground mt-6 animate-in fade-in duration-700 delay-1000">
-          Questions? Contact us at <a href="mailto:support@brikly.com" className="text-construction-blue hover:text-construction-orange">support@brikly.com</a> or use the chat in your dashboard.
+          Questions? Contact us at <a href="mailto:support@brikly.net" className="text-construction-blue hover:text-construction-orange">support@brikly.net</a> or use the chat in your dashboard.
         </p>
       </div>
     </div>

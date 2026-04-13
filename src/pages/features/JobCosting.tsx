@@ -66,7 +66,7 @@ const JobCostingPage = () => {
           'contractor job costing',
           'real-time construction budgeting'
         ]}
-        canonicalUrl="https://brikly.com/features/job-costing"
+        canonicalUrl="https://brikly.net/features/job-costing"
         schema={[
           createHowToSchema("How to Track Construction Job Costs in Real-Time", howToSteps),
           createFAQSchema(faqs)

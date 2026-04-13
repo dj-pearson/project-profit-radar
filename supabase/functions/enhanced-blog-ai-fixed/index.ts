@@ -153,7 +153,7 @@ export default async (req: Request) => {
           company_id: finalCompanyId,
           title: blogPost.title,
           excerpt: blogPost.excerpt || '',
-          url: `https://brikly.com/blog/${blogPost.slug}`
+          url: `https://brikly.net/blog/${blogPost.slug}`
         }
       });
       logStep("Social media automation triggered successfully");

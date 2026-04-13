@@ -48,7 +48,7 @@ const RealCostDelayedJobCosting = () => {
           'job cost tracking',
           'construction cost overruns'
         ]}
-        canonicalUrl="https://brikly.com/resources/real-cost-delayed-job-costing"
+        canonicalUrl="https://brikly.net/resources/real-cost-delayed-job-costing"
         schema={[
           createArticleSchema(
             "The Real Cost of Delayed Job Costing (And How to Fix It)",

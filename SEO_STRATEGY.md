@@ -329,8 +329,8 @@ Job costing, scheduling, and OSHA compliance for small contractors. 50% less tha
   "@context": "https://schema.org",
   "@type": "Organization",
   "name": "Brikly",
-  "url": "https://brikly.com",
-  "logo": "https://brikly.com/logo.png",
+  "url": "https://brikly.net",
+  "logo": "https://brikly.net/logo.png",
   "description": "Construction management software for small contractors",
   "foundingDate": "2024",
   "address": {
@@ -409,13 +409,13 @@ Job costing, scheduling, and OSHA compliance for small contractors. 50% less tha
       "@type": "ListItem",
       "position": 1,
       "name": "Home",
-      "item": "https://brikly.com"
+      "item": "https://brikly.net"
     },
     {
       "@type": "ListItem",
       "position": 2,
       "name": "Features",
-      "item": "https://brikly.com/features"
+      "item": "https://brikly.net/features"
     }
   ]
 }
@@ -470,7 +470,7 @@ Disallow: /setup/
 Disallow: /*?*refreshed=
 Disallow: /*?*v=
 
-Sitemap: https://brikly.com/sitemap.xml
+Sitemap: https://brikly.net/sitemap.xml
 ```
 
 ### 3. Meta Tags Template

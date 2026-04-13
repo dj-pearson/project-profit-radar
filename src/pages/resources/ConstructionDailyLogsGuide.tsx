@@ -95,8 +95,8 @@ const ConstructionDailyLogsGuide = () => {
         title="Construction Daily Logs: What to Track and Why It Pays"
         author="Brikly Team"
         datePublished="2025-01-24"
-        image="https://brikly.com/images/daily-logs-guide.jpg"
-        url="https://brikly.com/resources/construction-daily-logs-best-practices"
+        image="https://brikly.net/images/daily-logs-guide.jpg"
+        url="https://brikly.net/resources/construction-daily-logs-best-practices"
       />
       
       <FAQSchema questions={faqData} />

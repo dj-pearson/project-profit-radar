@@ -101,7 +101,7 @@ const QuickBooksIntegrationGuide = () => {
           'construction cost tracking',
           'quickbooks for contractors'
         ]}
-        canonicalUrl="https://brikly.com/resources/quickbooks-integration-guide"
+        canonicalUrl="https://brikly.net/resources/quickbooks-integration-guide"
       />
       
       <HowToSchema
@@ -115,7 +115,7 @@ const QuickBooksIntegrationGuide = () => {
         supply={["QuickBooks Account", "Brikly Account", "Internet Connection"]}
         tool={["Computer", "Web Browser"]}
         steps={howToSteps}
-        url="https://brikly.com/resources/quickbooks-integration-guide"
+        url="https://brikly.net/resources/quickbooks-integration-guide"
       />
 
       <div className="container mx-auto px-4 py-8">

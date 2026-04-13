@@ -82,9 +82,9 @@ const Index = () => {
             'construction cost tracking',
             'real-time job costing'
           ]}
-          canonicalUrl="https://brikly.com"
+          canonicalUrl="https://brikly.net"
           schema={[createOrganizationSchema(), createSoftwareApplicationSchema(), createWebSiteSchema(), createBreadcrumbSchema([
-            { name: "Home", url: "https://brikly.com" }
+            { name: "Home", url: "https://brikly.net" }
           ])]}
           lastModified="2026-02-08"
         />
@@ -95,7 +95,7 @@ const Index = () => {
           itemName="Brikly - Construction Management Software"
           itemDescription="Real-time job costing and construction management software for contractors"
           itemImage="https://ilhzuvemiuyfuxfegtlv.supabase.co/storage/v1/object/public/assets/brikly-logo.png"
-          itemUrl="https://brikly.com"
+          itemUrl="https://brikly.net"
         />
 
         {/* Enhanced SEO: Comprehensive SaaS Product Schema with Subscription Details */}

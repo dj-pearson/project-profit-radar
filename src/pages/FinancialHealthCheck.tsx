@@ -20,7 +20,7 @@ const FinancialHealthCheckPage = () => {
           'construction financial audit',
           'contractor profitability tool'
         ]}
-        canonicalUrl="https://brikly.com/financial-health-check"
+        canonicalUrl="https://brikly.net/financial-health-check"
         lastModified="2025-11-11"
       />
 

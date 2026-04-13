@@ -256,7 +256,7 @@ Run `scripts/setup-stripe-products.sh` (or `.ps1` on Windows) to create products
 | Secret | Description | Default |
 |--------|-------------|---------|
 | `SITE_URL` | Main application URL | `https://brikly.net` |
-| `APP_URL` | Application URL (alt) | `https://brikly.com/subscription` |
+| `APP_URL` | Application URL (alt) | `https://brikly.net/subscription` |
 
 ### Admin & Security
 

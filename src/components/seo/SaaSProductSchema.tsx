@@ -71,20 +71,20 @@ export const SaaSProductSchema: React.FC<SaaSProductSchemaProps> = ({
     applicationCategory: applicationCategory,
     applicationSubCategory: 'Construction Management Software',
     operatingSystem: 'Web, iOS, Android',
-    url: 'https://brikly.com',
+    url: 'https://brikly.net',
     description: 'Comprehensive construction management software for small to medium-sized contractors. Features real-time job costing, project scheduling, mobile crew tracking, OSHA compliance, and QuickBooks integration. Built specifically for the construction industry.',
 
     // Publisher/Developer Information
     author: {
       '@type': 'Organization',
       name: 'Brikly',
-      url: 'https://brikly.com',
-      logo: 'https://brikly.com/logo.png',
+      url: 'https://brikly.net',
+      logo: 'https://brikly.net/logo.png',
     },
 
     // Download/Access URLs
-    downloadUrl: 'https://brikly.com/get-started',
-    installUrl: 'https://brikly.com/get-started',
+    downloadUrl: 'https://brikly.net/get-started',
+    installUrl: 'https://brikly.net/get-started',
 
     // Screenshots and Media
     screenshot: [
@@ -97,7 +97,7 @@ export const SaaSProductSchema: React.FC<SaaSProductSchemaProps> = ({
     // Software metadata
     datePublished: '2024-01-01',
     softwareVersion: '2.0',
-    releaseNotes: 'https://brikly.com/changelog',
+    releaseNotes: 'https://brikly.net/changelog',
 
     // Support Information
     offers: includeOffers ? {
@@ -106,7 +106,7 @@ export const SaaSProductSchema: React.FC<SaaSProductSchemaProps> = ({
       priceCurrency: 'USD',
       priceValidUntil: '2026-12-31',
       availability: 'https://schema.org/InStock',
-      url: 'https://brikly.com/pricing',
+      url: 'https://brikly.net/pricing',
 
       // Subscription Details
       priceSpecification: {
@@ -141,7 +141,7 @@ export const SaaSProductSchema: React.FC<SaaSProductSchemaProps> = ({
       seller: {
         '@type': 'Organization',
         name: 'Brikly',
-        url: 'https://brikly.com',
+        url: 'https://brikly.net',
       },
 
       // Accepted payment methods
@@ -203,7 +203,7 @@ export const SaaSProductSchema: React.FC<SaaSProductSchemaProps> = ({
     // Support and Help
     softwareHelp: {
       '@type': 'CreativeWork',
-      url: 'https://brikly.com/help',
+      url: 'https://brikly.net/help',
       name: 'Brikly Help Center',
     },
 
@@ -217,7 +217,7 @@ export const SaaSProductSchema: React.FC<SaaSProductSchemaProps> = ({
         areaServed: 'US',
         availableLanguage: 'English',
         telephone: '+1-800-BRIKLY',
-        email: 'support@brikly.com',
+        email: 'support@brikly.net',
       },
     },
 
@@ -254,10 +254,10 @@ export const BriklyServiceSchema: React.FC = () => {
     provider: {
       '@type': 'Organization',
       name: 'Brikly',
-      url: 'https://brikly.com',
-      logo: 'https://brikly.com/logo.png',
+      url: 'https://brikly.net',
+      logo: 'https://brikly.net/logo.png',
       telephone: '+1-800-BRIKLY',
-      email: 'sales@brikly.com',
+      email: 'sales@brikly.net',
 
       address: {
         '@type': 'PostalAddress',
@@ -313,7 +313,7 @@ export const BriklyServiceSchema: React.FC = () => {
       '@type': 'Offer',
       price: '350',
       priceCurrency: 'USD',
-      url: 'https://brikly.com/pricing',
+      url: 'https://brikly.net/pricing',
     },
 
     aggregateRating: {

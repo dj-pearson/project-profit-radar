@@ -32,14 +32,14 @@ const BestConstructionSoftwareSmallBusiness2025 = () => {
       "name": "Brikly",
       "logo": {
         "@type": "ImageObject",
-        "url": "https://brikly.com/logo.png"
+        "url": "https://brikly.net/logo.png"
       }
     },
     "datePublished": "2025-01-14",
     "dateModified": "2025-01-14",
     "mainEntityOfPage": {
       "@type": "WebPage",
-      "@id": "https://brikly.com/resources/best-construction-management-software-small-business-2025"
+      "@id": "https://brikly.net/resources/best-construction-management-software-small-business-2025"
     },
     "keywords": "best construction management software, construction software for small business, contractor software comparison, construction management tools 2025"
   };
@@ -103,7 +103,7 @@ const BestConstructionSoftwareSmallBusiness2025 = () => {
           name="keywords"
           content="best construction management software, construction software for small business, contractor software comparison, construction management tools 2025, small contractor software"
         />
-        <link rel="canonical" href="https://brikly.com/resources/best-construction-management-software-small-business-2025" />
+        <link rel="canonical" href="https://brikly.net/resources/best-construction-management-software-small-business-2025" />
         <script type="application/ld+json">
           {JSON.stringify(articleSchema)}
         </script>

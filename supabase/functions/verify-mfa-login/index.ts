@@ -155,7 +155,7 @@ serve(async (req) => {
 
         // Get user email for TOTP validation
         const { data: userData } = await supabaseClient.auth.admin.getUserById(userId);
-        const userEmail = userData?.user?.email || "user@brikly.com";
+        const userEmail = userData?.user?.email || "user@brikly.net";
 
         // Verify the TOTP code
         const totp = new TOTP({

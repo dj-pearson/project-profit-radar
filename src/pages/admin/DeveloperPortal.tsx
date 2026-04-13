@@ -422,7 +422,7 @@ export function DeveloperPortal() {
                             variant="ghost"
                             size="sm"
                             onClick={() => handleCopyCode(
-                              `fetch('https://api.brikly.com${selectedDoc.endpoint}', {\n  method: '${selectedDoc.method}',\n  headers: {\n    'Authorization': 'Bearer YOUR_API_KEY',\n    'Content-Type': 'application/json'\n  }${selectedDoc.method !== 'GET' ? ',\n  body: JSON.stringify({\n    // Your request data\n  })' : ''}\n})\n.then(response => response.json())\n.then(data => console.log(data))\n.catch(error => console.error(error));`,
+                              `fetch('https://api.brikly.net${selectedDoc.endpoint}', {\n  method: '${selectedDoc.method}',\n  headers: {\n    'Authorization': 'Bearer YOUR_API_KEY',\n    'Content-Type': 'application/json'\n  }${selectedDoc.method !== 'GET' ? ',\n  body: JSON.stringify({\n    // Your request data\n  })' : ''}\n})\n.then(response => response.json())\n.then(data => console.log(data))\n.catch(error => console.error(error));`,
                               'js'
                             )}
                           >
@@ -435,7 +435,7 @@ export function DeveloperPortal() {
                         </div>
                         <pre className="bg-muted p-4 rounded-lg overflow-x-auto">
                           <code className="text-sm">
-{`fetch('https://api.brikly.com${selectedDoc.endpoint}', {
+{`fetch('https://api.brikly.net${selectedDoc.endpoint}', {
   method: '${selectedDoc.method}',
   headers: {
     'Authorization': 'Bearer YOUR_API_KEY',
@@ -461,7 +461,7 @@ export function DeveloperPortal() {
                             variant="ghost"
                             size="sm"
                             onClick={() => handleCopyCode(
-                              `import requests\n\nurl = 'https://api.brikly.com${selectedDoc.endpoint}'\nheaders = {\n    'Authorization': 'Bearer YOUR_API_KEY',\n    'Content-Type': 'application/json'\n}\n${selectedDoc.method !== 'GET' ? `data = {\n    # Your request data\n}\n\nresponse = requests.${selectedDoc.method.toLowerCase()}(url, headers=headers, json=data)` : `\nresponse = requests.get(url, headers=headers)`}\nprint(response.json())`,
+                              `import requests\n\nurl = 'https://api.brikly.net${selectedDoc.endpoint}'\nheaders = {\n    'Authorization': 'Bearer YOUR_API_KEY',\n    'Content-Type': 'application/json'\n}\n${selectedDoc.method !== 'GET' ? `data = {\n    # Your request data\n}\n\nresponse = requests.${selectedDoc.method.toLowerCase()}(url, headers=headers, json=data)` : `\nresponse = requests.get(url, headers=headers)`}\nprint(response.json())`,
                               'py'
                             )}
                           >
@@ -476,7 +476,7 @@ export function DeveloperPortal() {
                           <code className="text-sm">
 {`import requests
 
-url = 'https://api.brikly.com${selectedDoc.endpoint}'
+url = 'https://api.brikly.net${selectedDoc.endpoint}'
 headers = {
     'Authorization': 'Bearer YOUR_API_KEY',
     'Content-Type': 'application/json'
@@ -501,7 +501,7 @@ print(response.json())`}
                             variant="ghost"
                             size="sm"
                             onClick={() => handleCopyCode(
-                              `curl -X ${selectedDoc.method} 'https://api.brikly.com${selectedDoc.endpoint}' \\\n  -H 'Authorization: Bearer YOUR_API_KEY' \\\n  -H 'Content-Type: application/json'${selectedDoc.method !== 'GET' ? ` \\\n  -d '{\n    "key": "value"\n  }'` : ''}`,
+                              `curl -X ${selectedDoc.method} 'https://api.brikly.net${selectedDoc.endpoint}' \\\n  -H 'Authorization: Bearer YOUR_API_KEY' \\\n  -H 'Content-Type: application/json'${selectedDoc.method !== 'GET' ? ` \\\n  -d '{\n    "key": "value"\n  }'` : ''}`,
                               'curl'
                             )}
                           >
@@ -514,7 +514,7 @@ print(response.json())`}
                         </div>
                         <pre className="bg-muted p-4 rounded-lg overflow-x-auto">
                           <code className="text-sm">
-{`curl -X ${selectedDoc.method} 'https://api.brikly.com${selectedDoc.endpoint}' \\
+{`curl -X ${selectedDoc.method} 'https://api.brikly.net${selectedDoc.endpoint}' \\
   -H 'Authorization: Bearer YOUR_API_KEY' \\
   -H 'Content-Type: application/json'${selectedDoc.method !== 'GET' ? ` \\
   -d '{

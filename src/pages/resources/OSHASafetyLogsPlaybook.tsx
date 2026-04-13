@@ -76,8 +76,8 @@ const OSHASafetyLogsPlaybook = () => {
         title="OSHA Safety Logs: Digital Playbook for Construction Teams"
         author="Brikly Team"
         datePublished="2025-01-24"
-        image="https://brikly.com/images/osha-safety-guide.jpg"
-        url="https://brikly.com/resources/osha-safety-logs-digital-playbook"
+        image="https://brikly.net/images/osha-safety-guide.jpg"
+        url="https://brikly.net/resources/osha-safety-logs-digital-playbook"
       />
       
       <FAQSchema questions={faqData} />

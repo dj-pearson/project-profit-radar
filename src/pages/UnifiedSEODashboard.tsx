@@ -99,7 +99,7 @@ const UnifiedSEODashboard = () => {
     default_og_image: '',
     google_analytics_id: '',
     google_search_console_id: '',
-    canonical_domain: 'https://brikly.com',
+    canonical_domain: 'https://brikly.net',
     robots_txt: 'User-agent: *\nAllow: /',
     sitemap_enabled: true,
     schema_org_enabled: true

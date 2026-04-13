@@ -100,7 +100,7 @@ export function TenantProvider({ children }: { children: React.ReactNode }) {
       const isDefaultDomain =
         hostname === 'localhost' ||
         hostname.includes('127.0.0.1') ||
-        hostname.includes('brikly.com') ||
+        hostname.includes('brikly.net') ||
         hostname.includes('brikly.net') ||
         hostname.includes('brikly.pearsonperformance.workers.dev') ||
         hostname.includes('.pages.dev');

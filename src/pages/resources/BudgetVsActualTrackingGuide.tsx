@@ -71,7 +71,7 @@ const BudgetVsActualTrackingGuide = () => {
           'construction budget vs actual reporting',
           'real-time budget tracking'
         ]}
-        canonicalUrl="https://brikly.com/resources/budget-vs-actual-tracking-guide"
+        canonicalUrl="https://brikly.net/resources/budget-vs-actual-tracking-guide"
         schema={[
           createArticleSchema(
             "Construction Budget vs Actual: Complete Tracking Guide",

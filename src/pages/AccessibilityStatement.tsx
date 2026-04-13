@@ -384,10 +384,10 @@ const AccessibilityStatement = () => {
                       <div>
                         <strong>Email:</strong>{' '}
                         <a
-                          href="mailto:accessibility@brikly.com"
+                          href="mailto:accessibility@brikly.net"
                           className="text-primary hover:underline"
                         >
-                          accessibility@brikly.com
+                          accessibility@brikly.net
                         </a>
                       </div>
                     </div>
@@ -507,7 +507,7 @@ const AccessibilityStatement = () => {
                   asChild
                 >
                   <a
-                    href="mailto:accessibility@brikly.com"
+                    href="mailto:accessibility@brikly.net"
                     className="flex items-center gap-2"
                   >
                     <Mail className="h-4 w-4" aria-hidden="true" />

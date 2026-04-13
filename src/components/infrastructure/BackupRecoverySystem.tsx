@@ -631,7 +631,7 @@ const BackupRecoverySystem = () => {
                   <Input 
                     id="notification-email" 
                     type="email" 
-                    placeholder="admin@brikly.com" 
+                    placeholder="admin@brikly.net" 
                   />
                 </div>
               </CardContent>

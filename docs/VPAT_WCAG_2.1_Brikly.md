@@ -4,7 +4,7 @@
 **Product Name:** Brikly Construction Management Platform
 **Product Version:** 2.4
 **Report Date:** January 22, 2026
-**Contact:** accessibility@brikly.com
+**Contact:** accessibility@brikly.net
 **Evaluation Methods:** Automated testing (axe-core, Lighthouse, Playwright), manual testing, screen reader testing (NVDA, VoiceOver)
 
 ---
@@ -168,12 +168,12 @@ Brikly is committed to providing accessible software that conforms to WCAG 2.1 L
 ## Contact Information
 
 **Accessibility Feedback:**
-- Email: accessibility@brikly.com
+- Email: accessibility@brikly.net
 - Phone: 1-800-BUILD-DK (1-800-284-5335)
 - Response Time: 2 business days
 
-**Accessibility Statement:** https://brikly.com/accessibility-statement
-**Accessibility Settings:** https://brikly.com/accessibility
+**Accessibility Statement:** https://brikly.net/accessibility-statement
+**Accessibility Settings:** https://brikly.net/accessibility
 
 ---
 

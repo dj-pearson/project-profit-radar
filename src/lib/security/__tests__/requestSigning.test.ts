@@ -128,7 +128,7 @@ describe('buildCanonicalRequest', () => {
   it('extracts path from a full URL', () => {
     const canonical = buildCanonicalRequest(
       'GET',
-      'https://app.brikly.com/api/projects?status=active',
+      'https://app.brikly.net/api/projects?status=active',
       'hash',
       'ts',
     );
@@ -349,14 +349,14 @@ describe('end-to-end signing flow', () => {
 
     const { signature, timestamp } = await signRequest(
       'POST',
-      'https://app.brikly.com/api/projects',
+      'https://app.brikly.net/api/projects',
       '{"name":"New Project","budget":50000}',
       signingKey,
     );
 
     const valid = await verifySignature(
       'POST',
-      'https://app.brikly.com/api/projects',
+      'https://app.brikly.net/api/projects',
       '{"name":"New Project","budget":50000}',
       signature,
       timestamp,

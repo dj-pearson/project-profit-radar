@@ -93,7 +93,7 @@ const FinancialIntelligenceGuide = () => {
           'construction budget tracking',
           'cash flow forecasting construction'
         ]}
-        canonicalUrl="https://brikly.com/resources/financial-intelligence-guide"
+        canonicalUrl="https://brikly.net/resources/financial-intelligence-guide"
         schema={[
           createArticleSchema(
             "Financial Intelligence for Construction Contractors: Complete Guide",

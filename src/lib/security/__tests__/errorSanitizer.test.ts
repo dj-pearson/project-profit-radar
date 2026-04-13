@@ -421,9 +421,9 @@ describe('Security / Error Sanitizer', () => {
     });
 
     it('should strip PostgreSQL DETAIL lines', () => {
-      const message = 'Insert failed DETAIL: Key (email)=(admin@brikly.com) already exists.';
+      const message = 'Insert failed DETAIL: Key (email)=(admin@brikly.net) already exists.';
       const result = sanitizeErrorMessage(message);
-      expect(result).not.toContain('admin@brikly.com');
+      expect(result).not.toContain('admin@brikly.net');
     });
 
     it('should return generic message when everything is redacted', () => {

@@ -49,17 +49,17 @@ const ProcoreAlternative = () => {
         title="Best Procore Alternative for Small Contractors 2026"
         description="Brikly is the #1 Procore alternative for small contractors. 50% less cost ($350 vs $500+/month), unlimited users, 1-2 day setup. Same features without enterprise complexity."
         keywords={['Procore alternative', 'Procore competitor', 'Procore vs Brikly', 'cheaper than Procore', 'Procore for small contractors', 'construction management software alternative', 'small business construction software']}
-        canonicalUrl="https://brikly.com/procore-alternative"
+        canonicalUrl="https://brikly.net/procore-alternative"
         lastModified="2026-02-08"
         schema={[
           createOrganizationSchema(),
           createComparisonSchema('Brikly vs Procore Comparison', [
-            { name: 'Brikly', description: 'Construction management software for small contractors with real-time job costing, unlimited users at $350/month', price: '350', url: 'https://brikly.com' },
+            { name: 'Brikly', description: 'Construction management software for small contractors with real-time job costing, unlimited users at $350/month', price: '350', url: 'https://brikly.net' },
             { name: 'Procore', description: 'Enterprise construction management platform with per-seat pricing starting at $500+/month', price: '500', url: 'https://www.procore.com' },
           ]),
           createBreadcrumbSchema([
-            { name: 'Home', url: 'https://brikly.com' },
-            { name: 'Procore Alternative', url: 'https://brikly.com/procore-alternative' },
+            { name: 'Home', url: 'https://brikly.net' },
+            { name: 'Procore Alternative', url: 'https://brikly.net/procore-alternative' },
           ]),
         ]}
       />

@@ -95,8 +95,8 @@ const ConstructionSchedulingSoftwareGuide = () => {
         title="Construction Scheduling Software: Stop Project Delays"
         author="Brikly Team"
         datePublished="2025-01-24"
-        image="https://brikly.com/images/construction-scheduling-guide.jpg"
-        url="https://brikly.com/resources/construction-scheduling-software-prevent-delays"
+        image="https://brikly.net/images/construction-scheduling-guide.jpg"
+        url="https://brikly.net/resources/construction-scheduling-software-prevent-delays"
       />
       
       <FAQSchema questions={faqData} />

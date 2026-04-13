@@ -107,8 +107,8 @@ export const SystemSettings: React.FC = () => {
     state: 'CA',
     zipCode: '94105',
     phone: '(555) 123-4567',
-    email: 'info@brikly.com',
-    website: 'https://brikly.com',
+    email: 'info@brikly.net',
+    website: 'https://brikly.net',
     licenseNumber: 'CA-CON-123456',
     insuranceNumber: 'INS-987654321',
     taxId: '12-3456789',
@@ -174,7 +174,7 @@ export const SystemSettings: React.FC = () => {
       host: 'smtp.gmail.com',
       port: 587,
       username: 'brikly@gmail.com',
-      fromAddress: 'noreply@brikly.com'
+      fromAddress: 'noreply@brikly.net'
     },
     storage: {
       provider: 's3',

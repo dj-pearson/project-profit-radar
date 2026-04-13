@@ -515,7 +515,7 @@ Test that users from different sites cannot see each other's data:
 
 ```typescript
 // As user from Site A, try to access Site B project
-const siteAUser = 'user-a@brikly.com';
+const siteAUser = 'user-a@brikly.net';
 const siteBProjectId = 'project-from-realestatebio';
 
 const { data, error } = await supabase

@@ -12,8 +12,8 @@ import { SaaSProductSchema } from "@/components/seo/SaaSProductSchema";
 const PricingPage = () => {
   // Structured data for pricing page
   const breadcrumbSchema = createBreadcrumbSchema([
-    { name: "Home", url: "https://brikly.com" },
-    { name: "Pricing", url: "https://brikly.com/pricing" }
+    { name: "Home", url: "https://brikly.net" },
+    { name: "Pricing", url: "https://brikly.net/pricing" }
   ]);
 
   const productSchema = createProductSchema(

@@ -218,7 +218,7 @@ ${siteDescription}
 
 ## Commercial AI Training:
 For partnerships involving large-scale AI training on our content:
-- Email: legal@brikly.com
+- Email: legal@brikly.net
 - Subject: "AI Training Partnership Inquiry"
 - Include details about intended use, scale, and attribution plans
 
@@ -238,9 +238,9 @@ Our content is specialized for:
 
 ## Contact Information:
 Website: ${canonicalDomain}
-Support: support@brikly.com
-Legal: legal@brikly.com
-Partnership: partnerships@brikly.com
+Support: support@brikly.net
+Legal: legal@brikly.net
+Partnership: partnerships@brikly.net
 
 ## Last Updated: ${currentDate}
 ---

@@ -71,7 +71,7 @@ const CashFlowManagementGuide = () => {
           'construction payment cycle',
           'contractor cash flow solutions'
         ]}
-        canonicalUrl="https://brikly.com/resources/cash-flow-management-guide"
+        canonicalUrl="https://brikly.net/resources/cash-flow-management-guide"
         schema={[
           createArticleSchema(
             "Construction Cash Flow Management: Complete Guide for Small Contractors",

@@ -88,7 +88,7 @@ const SEOManager = () => {
     google_ads_id: '',
     facebook_pixel_id: '',
     twitter_site: '@brikly',
-    canonical_domain: 'https://brikly.com',
+    canonical_domain: 'https://brikly.net',
     robots_txt: 'User-agent: *\nAllow: /',
     sitemap_enabled: true,
     schema_org_enabled: true

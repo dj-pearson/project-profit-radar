@@ -117,7 +117,7 @@ const BriklyVsCoConstruct = () => {
           'contractor software comparison',
           'construction management platform'
         ]}
-        canonicalUrl="https://brikly.com/brikly-vs-coconstruct"
+        canonicalUrl="https://brikly.net/brikly-vs-coconstruct"
       />
 
       <div className="container mx-auto px-4 py-8">

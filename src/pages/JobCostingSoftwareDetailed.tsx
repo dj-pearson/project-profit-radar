@@ -160,8 +160,8 @@ const JobCostingSoftwareDetailed = () => {
   );
 
   const breadcrumbSchema = createBreadcrumbSchema([
-    { name: "Home", url: "https://brikly.com" },
-    { name: "Job Costing Software", url: "https://brikly.com/job-costing-software" }
+    { name: "Home", url: "https://brikly.net" },
+    { name: "Job Costing Software", url: "https://brikly.net/job-costing-software" }
   ]);
 
   const howToSchema = createHowToSchema(

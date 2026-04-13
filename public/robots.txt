@@ -1,5 +1,5 @@
 # Brikly Robots.txt
-# https://brikly.com
+# https://brikly.net
 # Last Updated: 2026-04-04
 
 # ===========================================
@@ -163,10 +163,10 @@ Allow: /*?ref=
 # ===========================================
 
 # Sitemap location
-Sitemap: https://brikly.com/sitemap.xml
+Sitemap: https://brikly.net/sitemap.xml
 
 # LLM discovery support
-LLMs-txt: https://brikly.com/.well-known/llms.txt
+LLMs-txt: https://brikly.net/.well-known/llms.txt
 
 # Crawl delay for unspecified bots
 Crawl-delay: 1

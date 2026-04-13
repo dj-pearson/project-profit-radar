@@ -79,8 +79,8 @@ const BestConstructionManagementSoftware2025 = () => {
         title="Best Construction Management Software for Small Business (2025)"
         author="Brikly Team"
         datePublished="2025-01-24"
-        image="https://brikly.com/images/best-construction-software-2025.jpg"
-        url="https://brikly.com/resources/best-construction-management-software-small-business-2025"
+        image="https://brikly.net/images/best-construction-software-2025.jpg"
+        url="https://brikly.net/resources/best-construction-management-software-small-business-2025"
       />
       
       <FAQSchema questions={faqData} />

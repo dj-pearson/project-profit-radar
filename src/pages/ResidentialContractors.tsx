@@ -18,8 +18,8 @@ const ResidentialContractors = () => {
   );
 
   const breadcrumbSchema = createBreadcrumbSchema([
-    { name: "Home", url: "https://brikly.com" },
-    { name: "Residential Contractors", url: "https://brikly.com/residential-contractors" }
+    { name: "Home", url: "https://brikly.net" },
+    { name: "Residential Contractors", url: "https://brikly.net/residential-contractors" }
   ]);
 
   const features = [

@@ -78,7 +78,7 @@ async function sendReminder(supabase: any, tenant_id: string, invoice_id: string
   // Send email using Resend
   try {
     const { data, error } = await resend.emails.send({
-      from: 'Brikly <noreply@brikly.com>',
+      from: 'Brikly <noreply@brikly.net>',
       to: [reminder.projects?.client_email],
       subject: emailSubject,
       html: `
@@ -146,7 +146,7 @@ async function sendReportEmail(report: any, csvContent: string, recipients: stri
     const base64Content = btoa(csvContent)
 
     const { data, error } = await resend.emails.send({
-      from: 'Brikly Reports <reports@brikly.com>',
+      from: 'Brikly Reports <reports@brikly.net>',
       to: recipients,
       subject: `Scheduled Report: ${report.report_name}`,
       html: `

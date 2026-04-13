@@ -208,8 +208,8 @@ const ConstructionSchedulingSoftware = () => {
   );
 
   const breadcrumbSchema = createBreadcrumbSchema([
-    { name: "Home", url: "https://brikly.com" },
-    { name: "Construction Scheduling Software", url: "https://brikly.com/construction-scheduling-software" }
+    { name: "Home", url: "https://brikly.net" },
+    { name: "Construction Scheduling Software", url: "https://brikly.net/construction-scheduling-software" }
   ]);
 
   const howToSchema = createHowToSchema(

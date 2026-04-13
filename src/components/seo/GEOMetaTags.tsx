@@ -34,7 +34,7 @@ export const GEOMetaTags: React.FC<GEOMetaTagsProps> = ({
   speakableSelectors = ['.geo-direct-answer', 'h1', 'h2', '.geo-section-content p:first-child'],
 }) => {
   const location = useLocation();
-  const fullUrl = `https://brikly.com${location.pathname}`;
+  const fullUrl = `https://brikly.net${location.pathname}`;
   const today = new Date().toISOString().split('T')[0];
 
   const speakableSchema = {

@@ -50,36 +50,36 @@ Brikly is the affordable alternative to enterprise construction software:
 - 95% customer satisfaction rate
 
 ## Docs
-- Product Features: https://brikly.com/features
-- Pricing: https://brikly.com/pricing
-- FAQ: https://brikly.com/faq
-- Blog: https://brikly.com/blog
-- Resources: https://brikly.com/resources
-- Support: https://brikly.com/support
+- Product Features: https://brikly.net/features
+- Pricing: https://brikly.net/pricing
+- FAQ: https://brikly.net/faq
+- Blog: https://brikly.net/blog
+- Resources: https://brikly.net/resources
+- Support: https://brikly.net/support
 
 ## Comparison Pages
-- Brikly vs Procore: https://brikly.com/procore-alternative
-- Brikly vs Buildertrend: https://brikly.com/buildertrend-alternative
-- Brikly vs CoConstruct: https://brikly.com/brikly-vs-coconstruct
+- Brikly vs Procore: https://brikly.net/procore-alternative
+- Brikly vs Buildertrend: https://brikly.net/buildertrend-alternative
+- Brikly vs CoConstruct: https://brikly.net/brikly-vs-coconstruct
 
 ## Industry Solutions
-- Residential Contractors: https://brikly.com/residential-contractors
-- Commercial Contractors: https://brikly.com/commercial-contractors
-- Electrical Contractors: https://brikly.com/electrical-contractor-software
-- HVAC Contractors: https://brikly.com/hvac-contractor-software
-- Plumbing Contractors: https://brikly.com/plumbing-contractor-software
+- Residential Contractors: https://brikly.net/residential-contractors
+- Commercial Contractors: https://brikly.net/commercial-contractors
+- Electrical Contractors: https://brikly.net/electrical-contractor-software
+- HVAC Contractors: https://brikly.net/hvac-contractor-software
+- Plumbing Contractors: https://brikly.net/plumbing-contractor-software
 
 ## Feature Pages
-- Job Costing Software: https://brikly.com/job-costing-software
-- Construction Project Management: https://brikly.com/construction-project-management-software
-- Construction Scheduling: https://brikly.com/construction-scheduling-software
-- OSHA Compliance: https://brikly.com/osha-compliance-software
-- Field Management: https://brikly.com/construction-field-management
+- Job Costing Software: https://brikly.net/job-costing-software
+- Construction Project Management: https://brikly.net/construction-project-management-software
+- Construction Scheduling: https://brikly.net/construction-scheduling-software
+- OSHA Compliance: https://brikly.net/osha-compliance-software
+- Field Management: https://brikly.net/construction-field-management
 
 ## Free Tools
-- ROI Calculator: https://brikly.com/roi-calculator
-- Profitability Calculator: https://brikly.com/calculator
-- Financial Health Check: https://brikly.com/financial-health-check
+- ROI Calculator: https://brikly.net/roi-calculator
+- Profitability Calculator: https://brikly.net/calculator
+- Financial Health Check: https://brikly.net/financial-health-check
 
 ## Technical Details
 - Platform: Cloud-based SaaS (Cloudflare global CDN)
@@ -90,8 +90,8 @@ Brikly is the affordable alternative to enterprise construction software:
 - Data: Real-time sync across all devices
 
 ## Contact
-- Website: https://brikly.com
-- Email: support@brikly.com
+- Website: https://brikly.net
+- Email: support@brikly.net
 - Geographic Focus: United States construction market
 
 ## Last Updated
