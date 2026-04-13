@@ -395,7 +395,7 @@ describe('AuthContext', () => {
     const { result } = renderHook(() => useAuth());
     
     await act(async () => {
-      await result.current.signIn('test@brikly.com', 'password');
+      await result.current.signIn('test@brikly.net', 'password');
     });
     
     expect(result.current.siteId).toBeTruthy();
@@ -448,7 +448,7 @@ test.describe('Multi-Site Isolation', () => {
   test('Site A user cannot see Site B data', async ({ page }) => {
     // Login as Site A user
     await page.goto('https://brikly.net/login');
-    await page.fill('[name="email"]', 'usera@brikly.com');
+    await page.fill('[name="email"]', 'usera@brikly.net');
     await page.fill('[name="password"]', 'password');
     await page.click('button[type="submit"]');
     

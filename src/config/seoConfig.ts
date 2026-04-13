@@ -46,21 +46,23 @@ export type SEOCategory =
   | 'support';
 
 // Base URL for all canonical URLs
-export const SITE_URL = 'https://brikly.com';
+export const SITE_URL = 'https://brikly.net';
 
 // Default OG Image
-export const DEFAULT_OG_IMAGE = 'https://brikly.com/og-image.png';
+export const DEFAULT_OG_IMAGE = 'https://brikly.net/og-image.png';
 
 // Company info for schema
 export const COMPANY_INFO = {
   name: 'Brikly',
-  description: 'Construction management software for small and mid-size contractors in the United States.',
+  legalName: 'Brikly, Inc.',
+  alternateName: 'Brikly Construction Management',
+  description: 'Brikly is construction management software built for small and mid-size contractors in the United States. Real-time job costing, mobile crew tracking, scheduling, and OSHA compliance.',
   url: SITE_URL,
-  logo: `${SITE_URL}/logo.png`,
+  logo: `${SITE_URL}/BriklyLogo.png`,
   foundingDate: '2024',
   priceRange: '$199 - $799',
-  telephone: '+1-555-BUILD-01',
-  email: 'support@brikly.com',
+  telephone: '+1-555-BRIKLY1',
+  email: 'support@brikly.net',
   address: {
     '@type': 'PostalAddress' as const,
     addressCountry: 'US',
@@ -69,6 +71,8 @@ export const COMPANY_INFO = {
     'https://linkedin.com/company/brikly',
     'https://twitter.com/brikly',
     'https://facebook.com/brikly',
+    'https://www.youtube.com/@brikly',
+    'https://www.instagram.com/brikly',
   ],
 };
 
@@ -102,21 +106,31 @@ export const SOFTWARE_INFO = {
 export const corePages: SEOPageConfig[] = [
   {
     path: '/',
-    title: 'Construction Management Software for Small Contractors | Brikly',
-    description: 'Brikly is the #1 construction management software for small contractors. Real-time job costing, mobile crew tracking, and OSHA compliance. Start your free trial today.',
+    title: 'Brikly — Construction Management Software for Small Contractors',
+    description: 'Brikly is construction management software built for small and mid-size contractors. Real-time job costing, mobile crew tracking, scheduling, and OSHA compliance — without enterprise complexity. Start your free trial today.',
     keywords: [
+      // Branded (build Brikly name recognition)
+      'brikly',
+      'brikly construction',
+      'brikly software',
+      'brikly construction software',
+      'brikly app',
+      'brikly pricing',
+      'brikly reviews',
+      // Core category
       'construction management software',
       'contractor software',
-      'construction project management',
+      'construction project management software',
       'job costing software',
       'procore alternative',
       'buildertrend alternative',
+      'small business construction software',
     ],
     priority: 1.0,
     changeFreq: 'daily',
     schemaType: 'SoftwareApplication',
     category: 'core',
-    relatedPages: ['/features', '/pricing', '/procore-alternative'],
+    relatedPages: ['/features', '/pricing', '/procore-alternative', '/about'],
   },
   {
     path: '/features',
@@ -199,6 +213,44 @@ export const corePages: SEOPageConfig[] = [
     schemaType: 'WebPage',
     category: 'core',
     relatedPages: ['/residential-contractors', '/commercial-contractors', '/features'],
+  },
+  {
+    path: '/about',
+    title: 'About Brikly — The Construction Management Platform for Small Contractors',
+    description: 'Meet Brikly: construction management software built from the ground up for small and mid-size contractors. Learn our story, mission, and why thousands of contractors trust Brikly to run their business.',
+    keywords: [
+      'about brikly',
+      'what is brikly',
+      'brikly company',
+      'brikly construction software',
+      'who makes brikly',
+      'brikly team',
+    ],
+    priority: 0.8,
+    changeFreq: 'monthly',
+    schemaType: 'Organization',
+    category: 'core',
+    relatedPages: ['/', '/features', '/pricing', '/contact'],
+  },
+  {
+    path: '/brikly',
+    title: 'Brikly — Construction Software That Actually Works for Small Contractors',
+    description: 'Brikly is purpose-built construction management software for small and mid-size contractors. Real-time job costing, mobile crews, OSHA compliance, QuickBooks sync — $350/month with unlimited users.',
+    keywords: [
+      'brikly',
+      'brikly construction',
+      'brikly software',
+      'brikly.net',
+      'brikly platform',
+      'brikly reviews',
+      'brikly vs procore',
+      'brikly vs buildertrend',
+    ],
+    priority: 0.95,
+    changeFreq: 'weekly',
+    schemaType: 'SoftwareApplication',
+    category: 'core',
+    relatedPages: ['/features', '/pricing', '/procore-alternative', '/buildertrend-alternative'],
   },
 ];
 
@@ -472,6 +524,25 @@ export const comparisonPages: SEOPageConfig[] = [
  * Resource Guide Pages
  */
 export const resourcePages: SEOPageConfig[] = [
+  {
+    path: '/resources/brikly-rebrand-announcement',
+    title: 'We Rebranded to Brikly — Same Platform, New Name | Brikly',
+    description: 'Important announcement for our customers: we have rebranded from our previous name to Brikly. Same team, same software, same commitment to small contractors — now under the Brikly name and brikly.net domain.',
+    keywords: [
+      'brikly rebrand',
+      'brikly announcement',
+      'brikly new name',
+      'brikly.net',
+      'brikly rename',
+      'brikly construction software',
+    ],
+    priority: 0.9,
+    changeFreq: 'monthly',
+    ogType: 'article',
+    schemaType: 'Article',
+    category: 'resources',
+    relatedPages: ['/', '/about', '/brikly', '/features'],
+  },
   {
     path: '/resources/complete-guide-construction-job-costing',
     title: 'Complete Guide to Construction Job Costing (2026) | Brikly',

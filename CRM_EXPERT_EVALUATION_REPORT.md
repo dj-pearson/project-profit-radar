@@ -747,7 +747,7 @@ CREATE TABLE email_messages (
 
 **Implementation:**
 - User availability rules (Monday-Friday 9am-5pm, etc.)
-- Booking page per user: `brikly.com/book/john-smith`
+- Booking page per user: `brikly.net/book/john-smith`
 - Calendar integration (Google Calendar, Outlook)
 - Automatic meeting creation in activities
 - Email confirmations and reminders

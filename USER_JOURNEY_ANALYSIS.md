@@ -2678,7 +2678,7 @@ export const CheckoutSuccess = () => {
 
         {/* Support */}
         <p className="text-center text-sm text-muted-foreground mt-6">
-          Questions? Contact us at support@brikly.com or chat with us in the dashboard.
+          Questions? Contact us at support@brikly.net or chat with us in the dashboard.
         </p>
       </div>
     </div>

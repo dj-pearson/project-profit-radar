@@ -8,8 +8,8 @@ export const OrganizationSchema = () => (
         "@context": "https://schema.org",
         "@type": "Organization",
         "name": "Brikly",
-        "url": "https://brikly.com",
-        "logo": "https://brikly.com/logo.png",
+        "url": "https://brikly.net",
+        "logo": "https://brikly.net/logo.png",
         "address": {
           "@type": "PostalAddress",
           "addressCountry": "US"
@@ -38,7 +38,7 @@ export const SoftwareSchema = () => (
         "name": "Brikly",
         "applicationCategory": "BusinessApplication",
         "operatingSystem": "Web, iOS, Android",
-        "url": "https://brikly.com",
+        "url": "https://brikly.net",
         "description": "Construction management software for small and mid-size contractors in the U.S. with job costing, scheduling, safety logs, and time tracking.",
         "offers": {
           "@type": "Offer",

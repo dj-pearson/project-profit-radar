@@ -24,7 +24,7 @@ export const VideoSEOSchema: React.FC<VideoSEOProps> = ({
   embedUrl,
   publisher = {
     name: "Brikly",
-    logo: "https://brikly.com/logo.png"
+    logo: "https://brikly.net/logo.png"
   }
 }) => {
   const schemaData = {
@@ -107,10 +107,10 @@ export const WebPageSEOSchema: React.FC<WebPageSEOProps> = ({
     publisher: {
       "@type": "Organization",
       name: "Brikly",
-      url: "https://brikly.com",
+      url: "https://brikly.net",
       logo: {
         "@type": "ImageObject",
-        url: "https://brikly.com/logo.png"
+        url: "https://brikly.net/logo.png"
       }
     }
   };

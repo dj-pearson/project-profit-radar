@@ -16,7 +16,7 @@ AI search engines like ChatGPT, Claude, Perplexity, and Google Bard are increasi
 **Setup Steps:**
 1. Log into Semrush dashboard
 2. Navigate to "Visibility" → "AI Overview"
-3. Add Brikly domain (brikly.com)
+3. Add Brikly domain (brikly.net)
 4. Configure competitor monitoring:
    - Procore (procore.com)
    - Buildertrend (buildertrend.net)

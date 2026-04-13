@@ -191,8 +191,8 @@ const BuildertrendAlternativeDetailed = () => {
   );
 
   const breadcrumbSchema = createBreadcrumbSchema([
-    { name: "Home", url: "https://brikly.com" },
-    { name: "Buildertrend Alternative", url: "https://brikly.com/buildertrend-alternative" }
+    { name: "Home", url: "https://brikly.net" },
+    { name: "Buildertrend Alternative", url: "https://brikly.net/buildertrend-alternative" }
   ]);
 
   return (

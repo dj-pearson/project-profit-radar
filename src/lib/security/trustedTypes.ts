@@ -18,7 +18,7 @@ import DOMPurify from 'dompurify';
 
 /** Origins permitted to load scripts from */
 export const ALLOWED_SCRIPT_ORIGINS: readonly string[] = [
-  'https://cdn.brikly.com',
+  'https://cdn.brikly.net',
   'https://js.stripe.com',
   'https://www.googletagmanager.com',
   'https://cdn.jsdelivr.net',

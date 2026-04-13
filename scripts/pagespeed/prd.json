@@ -149,7 +149,7 @@
     {
       "id": "PSI-011",
       "title": "Add meta robots and canonical URL consistency for SEO",
-      "description": "As a search engine, I want consistent canonical URLs so I don't get confused about the primary domain. The index.html has canonical URL as 'https://brikly.com' but the site is served from 'brikly.net'. This mismatch can hurt SEO rankings. Verify the correct canonical domain and ensure consistency across all meta tags (og:url, twitter, canonical). Also ensure all pages have proper meta robots tags.",
+      "description": "As a search engine, I want consistent canonical URLs so I don't get confused about the primary domain. The index.html has canonical URL as 'https://brikly.net' but the site is served from 'brikly.net'. This mismatch can hurt SEO rankings. Verify the correct canonical domain and ensure consistency across all meta tags (og:url, twitter, canonical). Also ensure all pages have proper meta robots tags.",
       "acceptanceCriteria": [
         "Canonical URL in index.html matches the actual serving domain",
         "og:url matches the canonical URL",

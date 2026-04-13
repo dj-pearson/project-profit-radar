@@ -199,7 +199,7 @@ export const syncSEOPagesToBackend = async (): Promise<{ success: boolean; messa
 export const updateSEOConfiguration = async () => {
   try {
     const seoConfig = {
-      canonical_domain: 'https://brikly.com',
+      canonical_domain: 'https://brikly.net',
       site_name: 'Brikly',
       site_description: 'Construction Management Platform for SMB Contractors',
       meta_defaults: {
@@ -224,7 +224,7 @@ export const updateSEOConfiguration = async () => {
     const { error } = await supabase
       .from('seo_configurations')
       .upsert({
-        canonical_domain: 'https://brikly.com',
+        canonical_domain: 'https://brikly.net',
         site_name: 'Brikly',
         site_description: 'Construction Management Platform for SMB Contractors',
         updated_at: new Date().toISOString()

@@ -82,7 +82,7 @@ export const createMockUserProfile = (
   overrides: Partial<MockUserProfile> = {}
 ): MockUserProfile => ({
   id: generateId('user'),
-  email: `user-${idCounter}@brikly.com`,
+  email: `user-${idCounter}@brikly.net`,
   first_name: 'Test',
   last_name: 'User',
   phone: '555-000-0000',

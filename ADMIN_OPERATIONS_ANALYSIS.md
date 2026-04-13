@@ -806,7 +806,7 @@ After clicking "View as User":
 ┌────────────────────────────────────────┐
 │ ⚠️  IMPERSONATION MODE ACTIVE           │
 │ Viewing as: John Smith (Acme Corp)      │
-│ Your admin session: admin@brikly.com │
+│ Your admin session: admin@brikly.net │
 │ [🚪 Exit Impersonation] [🐛 Debug]      │
 └────────────────────────────────────────┘
 ```

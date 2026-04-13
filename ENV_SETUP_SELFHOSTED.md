@@ -190,8 +190,8 @@ VITE_SUPABASE_PUBLISHABLE_KEY=your-key
 ```yaml
 # In Kong configuration
 cors_origins:
-  - https://brikly.com
-  - https://www.brikly.com
+  - https://brikly.net
+  - https://www.brikly.net
   - https://*.brikly.net
 ```
 

@@ -48,7 +48,7 @@ const QuickBooksLimitationsConstruction = () => {
           'construction job costing software',
           'quickbooks construction problems'
         ]}
-        canonicalUrl="https://brikly.com/resources/quickbooks-limitations-construction"
+        canonicalUrl="https://brikly.net/resources/quickbooks-limitations-construction"
         schema={[
           createArticleSchema(
             "Why QuickBooks Alone Isn't Enough for Construction Companies",

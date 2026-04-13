@@ -291,4 +291,4 @@ tests/e2e/smoke.spec.ts
 
 ## New Environment Variable Added
 
-- `APP_URL` - Used by `send-renewal-notification` edge function for email links (defaults to `https://brikly.com`)
+- `APP_URL` - Used by `send-renewal-notification` edge function for email links (defaults to `https://brikly.net`)

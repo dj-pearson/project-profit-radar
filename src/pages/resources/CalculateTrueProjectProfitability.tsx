@@ -31,14 +31,14 @@ const CalculateTrueProjectProfitability = () => {
       "name": "Brikly",
       "logo": {
         "@type": "ImageObject",
-        "url": "https://brikly.com/logo.png"
+        "url": "https://brikly.net/logo.png"
       }
     },
     "datePublished": "2025-01-14",
     "dateModified": "2025-01-14",
     "mainEntityOfPage": {
       "@type": "WebPage",
-      "@id": "https://brikly.com/resources/calculate-true-project-profitability"
+      "@id": "https://brikly.net/resources/calculate-true-project-profitability"
     },
     "keywords": "construction project profitability, calculate construction profit margin, job profit calculation, construction profitability metrics, true project profit"
   };
@@ -141,7 +141,7 @@ const CalculateTrueProjectProfitability = () => {
           name="keywords"
           content="construction project profitability, calculate construction profit margin, job profit calculation, construction profitability metrics, true project profit, construction overhead allocation"
         />
-        <link rel="canonical" href="https://brikly.com/resources/calculate-true-project-profitability" />
+        <link rel="canonical" href="https://brikly.net/resources/calculate-true-project-profitability" />
         <script type="application/ld+json">
           {JSON.stringify(articleSchema)}
         </script>

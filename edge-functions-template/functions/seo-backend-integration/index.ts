@@ -232,7 +232,7 @@ async function updateSchemaMarkup(supabaseClient: any) {
     .from('seo_configurations')
     .upsert({
       id: 1,
-      canonical_domain: 'https://brikly.com',
+      canonical_domain: 'https://brikly.net',
       site_name: 'Brikly',
       site_description: 'Construction Management Platform for SMB Contractors',
       global_schema: globalSchemas,
@@ -320,7 +320,7 @@ function generateArticleSchema(title: string) {
       "name": "Brikly",
       "logo": {
         "@type": "ImageObject",
-        "url": "https://brikly.com/logo.png"
+        "url": "https://brikly.net/logo.png"
       }
     },
     "datePublished": new Date().toISOString(),
@@ -345,7 +345,7 @@ function generateComparisonSchema(title: string) {
   return {
     "@context": "https://schema.org",
     "@type": "Article",
-    "@id": `https://brikly.com#${title.replace(/\s+/g, '-').toLowerCase()}`,
+    "@id": `https://brikly.net#${title.replace(/\s+/g, '-').toLowerCase()}`,
     "headline": title,
     "description": `Detailed comparison of construction management software platforms`,
     "author": {
@@ -368,13 +368,13 @@ function generateTopicHubSchema(name: string) {
           "@type": "ListItem",
           "position": 1,
           "name": "Home",
-          "item": "https://brikly.com"
+          "item": "https://brikly.net"
         },
         {
           "@type": "ListItem",
           "position": 2,
           "name": "Topics",
-          "item": "https://brikly.com/topics"
+          "item": "https://brikly.net/topics"
         },
         {
           "@type": "ListItem",
@@ -408,8 +408,8 @@ function generateOrganizationSchema() {
     "@context": "https://schema.org",
     "@type": "Organization",
     "name": "Brikly",
-    "url": "https://brikly.com",
-    "logo": "https://brikly.com/logo.png",
+    "url": "https://brikly.net",
+    "logo": "https://brikly.net/logo.png",
     "sameAs": [
       "https://linkedin.com/company/brikly",
       "https://twitter.com/brikly"
@@ -432,10 +432,10 @@ function generateWebsiteSchema() {
     "@context": "https://schema.org",
     "@type": "WebSite",
     "name": "Brikly",
-    "url": "https://brikly.com",
+    "url": "https://brikly.net",
     "potentialAction": {
       "@type": "SearchAction",
-      "target": "https://brikly.com/search?q={search_term_string}",
+      "target": "https://brikly.net/search?q={search_term_string}",
       "query-input": "required name=search_term_string"
     }
   }

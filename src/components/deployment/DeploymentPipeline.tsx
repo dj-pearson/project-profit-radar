@@ -68,7 +68,7 @@ const DeploymentPipeline = () => {
     {
       id: 'prod',
       name: 'Production',
-      url: 'https://app.brikly.com',
+      url: 'https://app.brikly.net',
       status: 'active',
       lastDeploy: new Date(Date.now() - 86400000).toISOString(),
       version: 'v1.2.1',
@@ -416,11 +416,11 @@ const DeploymentPipeline = () => {
                   </div>
                   <div className="flex items-center justify-between p-2 bg-muted rounded">
                     <span className="font-mono text-sm">API_URL</span>
-                    <span className="text-sm">https://api.brikly.com</span>
+                    <span className="text-sm">https://api.brikly.net</span>
                   </div>
                   <div className="flex items-center justify-between p-2 bg-muted rounded">
                     <span className="font-mono text-sm">CDN_URL</span>
-                    <span className="text-sm">https://cdn.brikly.com</span>
+                    <span className="text-sm">https://cdn.brikly.net</span>
                   </div>
                 </div>
 

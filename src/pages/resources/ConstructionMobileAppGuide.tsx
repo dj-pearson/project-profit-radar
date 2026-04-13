@@ -78,7 +78,7 @@ const ConstructionMobileAppGuide = () => {
           'construction project app',
           'mobile construction tools'
         ]}
-        canonicalUrl="https://brikly.com/resources/construction-mobile-app-guide"
+        canonicalUrl="https://brikly.net/resources/construction-mobile-app-guide"
       />
 
       <div className="container mx-auto px-4 py-8">

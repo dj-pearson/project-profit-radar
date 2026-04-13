@@ -63,8 +63,8 @@ export class EstimatePDFGenerator {
       name: 'Brikly',
       address: '123 Construction Way, Builder City, ST 12345',
       phone: '(555) 123-4567',
-      email: 'estimates@brikly.com',
-      website: 'www.brikly.com',
+      email: 'estimates@brikly.net',
+      website: 'www.brikly.net',
       license: 'License #123456',
       ...companyInfo,
     };

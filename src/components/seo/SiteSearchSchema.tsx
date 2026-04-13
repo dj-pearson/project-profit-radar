@@ -6,14 +6,14 @@ interface SiteSearchSchemaProps {
 }
 
 export const SiteSearchSchema: React.FC<SiteSearchSchemaProps> = ({
-  searchUrl = "https://brikly.com/search?q={search_term_string}",
+  searchUrl = "https://brikly.net/search?q={search_term_string}",
   placeholder = "Search construction management resources..."
 }) => {
   const schemaData = {
     "@context": "https://schema.org",
     "@type": "WebSite",
     "name": "Brikly",
-    "url": "https://brikly.com",
+    "url": "https://brikly.net",
     "potentialAction": {
       "@type": "SearchAction",
       "target": {

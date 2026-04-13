@@ -33,14 +33,14 @@ const ReadingFinancialStatementsGuide = () => {
       "name": "Brikly",
       "logo": {
         "@type": "ImageObject",
-        "url": "https://brikly.com/logo.png"
+        "url": "https://brikly.net/logo.png"
       }
     },
     "datePublished": "2025-01-14",
     "dateModified": "2025-01-14",
     "mainEntityOfPage": {
       "@type": "WebPage",
-      "@id": "https://brikly.com/resources/reading-financial-statements-guide"
+      "@id": "https://brikly.net/resources/reading-financial-statements-guide"
     },
     "keywords": "construction financial statements, read construction P&L, construction balance sheet, contractor financial reports, understand construction financials"
   };
@@ -143,7 +143,7 @@ const ReadingFinancialStatementsGuide = () => {
           name="keywords"
           content="construction financial statements, read construction P&L, construction balance sheet, contractor financial reports, understand construction financials, WIP report, construction accounting"
         />
-        <link rel="canonical" href="https://brikly.com/resources/reading-financial-statements-guide" />
+        <link rel="canonical" href="https://brikly.net/resources/reading-financial-statements-guide" />
         <script type="application/ld+json">
           {JSON.stringify(articleSchema)}
         </script>

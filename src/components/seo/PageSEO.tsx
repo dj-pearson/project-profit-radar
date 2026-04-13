@@ -61,7 +61,7 @@ export const PageSEO: React.FC<PageSEOProps> = ({
   const location = useLocation();
 
   // Construct full URL
-  const baseUrl = 'https://brikly.com';
+  const baseUrl = 'https://brikly.net';
   const fullUrl = canonicalUrl || `${baseUrl}${location.pathname}`;
 
   // Robots meta tag
@@ -137,8 +137,8 @@ export const createOrganizationSchema = () => ({
   "@context": "https://schema.org",
   "@type": "Organization",
   "name": "Brikly",
-  "url": "https://brikly.com",
-  "logo": "https://brikly.com/logo.png",
+  "url": "https://brikly.net",
+  "logo": "https://brikly.net/logo.png",
   "description": "Construction management software for small and mid-size contractors in the United States.",
   "foundingDate": "2024",
   "address": {
@@ -252,7 +252,7 @@ export const createProductSchema = (
     "price": price,
     "priceCurrency": "USD",
     "availability": "https://schema.org/InStock",
-    "url": "https://brikly.com/pricing"
+    "url": "https://brikly.net/pricing"
   },
   ...additionalProps
 });
@@ -277,7 +277,7 @@ export const createArticleSchema = (
     "name": "Brikly",
     "logo": {
       "@type": "ImageObject",
-      "url": "https://brikly.com/logo.png"
+      "url": "https://brikly.net/logo.png"
     }
   },
   "datePublished": datePublished,
@@ -308,7 +308,7 @@ export const createWebSiteSchema = () => ({
   "@context": "https://schema.org",
   "@type": "WebSite",
   "name": "Brikly",
-  "url": "https://brikly.com",
+  "url": "https://brikly.net",
   "description": "Construction management software for small and mid-size contractors. Real-time job costing, mobile crew tracking, and OSHA compliance.",
   "publisher": {
     "@type": "Organization",
@@ -318,7 +318,7 @@ export const createWebSiteSchema = () => ({
     "@type": "SearchAction",
     "target": {
       "@type": "EntryPoint",
-      "urlTemplate": "https://brikly.com/search?q={search_term_string}"
+      "urlTemplate": "https://brikly.net/search?q={search_term_string}"
     },
     "query-input": "required name=search_term_string"
   }

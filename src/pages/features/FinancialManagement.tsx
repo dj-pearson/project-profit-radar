@@ -64,7 +64,7 @@ const FinancialManagementPage = () => {
           'construction financial dashboard',
           'contractor accounting software'
         ]}
-        canonicalUrl="https://brikly.com/features/financial-management"
+        canonicalUrl="https://brikly.net/features/financial-management"
         schema={[
           createHowToSchema("How to Implement Construction Financial Management", howToSteps),
           createFAQSchema(faqs)

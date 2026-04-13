@@ -143,7 +143,7 @@ You have the right to:
 We retain data as long as your account is active or as needed to provide services.
 
 ## 7. Contact Information
-For privacy questions, contact: privacy@brikly.com
+For privacy questions, contact: privacy@brikly.net
 
 Last updated: ${new Date().toLocaleDateString()}`,
           version: '3.0',

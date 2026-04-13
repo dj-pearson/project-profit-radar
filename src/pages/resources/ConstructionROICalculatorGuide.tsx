@@ -32,14 +32,14 @@ const ConstructionROICalculatorGuide = () => {
       "name": "Brikly",
       "logo": {
         "@type": "ImageObject",
-        "url": "https://brikly.com/logo.png"
+        "url": "https://brikly.net/logo.png"
       }
     },
     "datePublished": "2025-01-14",
     "dateModified": "2025-01-14",
     "mainEntityOfPage": {
       "@type": "WebPage",
-      "@id": "https://brikly.com/resources/construction-roi-calculator-guide"
+      "@id": "https://brikly.net/resources/construction-roi-calculator-guide"
     },
     "keywords": "construction ROI calculator, calculate construction software ROI, construction management software ROI, equipment ROI calculator, contractor ROI tool"
   };
@@ -142,7 +142,7 @@ const ConstructionROICalculatorGuide = () => {
           name="keywords"
           content="construction ROI calculator, calculate construction software ROI, construction management software ROI, equipment ROI calculator, contractor ROI tool, Brikly ROI"
         />
-        <link rel="canonical" href="https://brikly.com/resources/construction-roi-calculator-guide" />
+        <link rel="canonical" href="https://brikly.net/resources/construction-roi-calculator-guide" />
         <script type="application/ld+json">
           {JSON.stringify(articleSchema)}
         </script>

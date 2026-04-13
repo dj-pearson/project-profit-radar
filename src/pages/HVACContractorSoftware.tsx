@@ -18,8 +18,8 @@ const HVACContractorSoftware = () => {
   );
 
   const breadcrumbSchema = createBreadcrumbSchema([
-    { name: "Home", url: "https://brikly.com" },
-    { name: "HVAC Contractor Software", url: "https://brikly.com/hvac-contractor-software" }
+    { name: "Home", url: "https://brikly.net" },
+    { name: "HVAC Contractor Software", url: "https://brikly.net/hvac-contractor-software" }
   ]);
 
   // HVAC-specific FAQs

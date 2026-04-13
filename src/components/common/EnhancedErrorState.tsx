@@ -128,7 +128,7 @@ const ERROR_METADATA: Record<
       },
       {
         text: "Check our status page for ongoing incidents",
-        action: () => window.open("https://status.brikly.com", "_blank"),
+        action: () => window.open("https://status.brikly.net", "_blank"),
         actionLabel: "Status Page",
         icon: ExternalLink,
       },

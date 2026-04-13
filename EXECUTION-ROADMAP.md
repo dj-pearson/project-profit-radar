@@ -1582,7 +1582,7 @@ performance_trends (company_id, metric, value, period, comparison)
 ### Support Strategy
 
 **Support Channels**
-- Email: support@brikly.com (4-hour response)
+- Email: support@brikly.net (4-hour response)
 - Chat: In-app messaging (business hours)
 - Phone: Enterprise tier only (priority support)
 - Help center: Self-service knowledge base

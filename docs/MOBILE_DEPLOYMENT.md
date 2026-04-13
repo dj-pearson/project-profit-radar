@@ -326,7 +326,7 @@ Unlike complicated enterprise software, Brikly is designed specifically for SMB 
 • In-app chat support
 • Knowledge base
 • Video tutorials
-• Email support: support@brikly.com
+• Email support: support@brikly.net
 
 Built by contractors, for contractors. Start managing your projects more profitably today.
 

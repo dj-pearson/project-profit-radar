@@ -1656,7 +1656,7 @@ export const generateLocalBusinessSchema = (company: Company) => ({
   '@type': 'LocalBusiness',
   name: company.name,
   image: company.logo,
-  '@id': `https://brikly.com/company/${company.id}`,
+  '@id': `https://brikly.net/company/${company.id}`,
   url: company.website,
   telephone: company.phone,
   address: {

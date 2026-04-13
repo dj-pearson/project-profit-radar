@@ -128,8 +128,8 @@ const ProcoreAlternativeDetailed = () => {
   );
 
   const breadcrumbSchema = createBreadcrumbSchema([
-    { name: "Home", url: "https://brikly.com" },
-    { name: "Procore Alternative", url: "https://brikly.com/procore-alternative" }
+    { name: "Home", url: "https://brikly.net" },
+    { name: "Procore Alternative", url: "https://brikly.net/procore-alternative" }
   ]);
 
   return (

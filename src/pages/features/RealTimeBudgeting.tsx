@@ -64,7 +64,7 @@ const RealTimeBudgetingPage = () => {
           'construction cost overrun alerts',
           'construction budget software'
         ]}
-        canonicalUrl="https://brikly.com/features/real-time-budgeting"
+        canonicalUrl="https://brikly.net/features/real-time-budgeting"
         schema={[
           createHowToSchema("How to Implement Real-Time Construction Budgeting", howToSteps),
           createFAQSchema(faqs)

@@ -260,7 +260,7 @@ getTTFB(sendToAnalytics);
 npm install -g @lhci/cli
 
 # Run tests
-lhci collect --url=https://brikly.com
+lhci collect --url=https://brikly.net
 lhci upload --target=temporary-public-storage
 ```
 

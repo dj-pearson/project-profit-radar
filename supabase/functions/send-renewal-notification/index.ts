@@ -125,7 +125,7 @@ serve(async (req) => {
         month: 'long',
         day: 'numeric'
       });
-      const manageUrl = Deno.env.get("APP_URL") || 'https://brikly.com/subscription';
+      const manageUrl = Deno.env.get("APP_URL") || 'https://brikly.net/subscription';
       
       const html = `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
@@ -164,7 +164,7 @@ serve(async (req) => {
           </div>
           
           <p style="color: #64748b; font-size: 14px; line-height: 1.5; margin-top: 30px;">
-            Questions? Contact our support team at support@brikly.com or visit our help center.
+            Questions? Contact our support team at support@brikly.net or visit our help center.
           </p>
           
           <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 30px 0;">
@@ -178,7 +178,7 @@ serve(async (req) => {
 
       // Send the email
       const { error: emailError } = await resend.emails.send({
-        from: 'Brikly <notifications@brikly.com>',
+        from: 'Brikly <notifications@brikly.net>',
         to: [subscriber.email],
         subject: `Your subscription renews in ${daysUntilRenewal} days`,
         html,

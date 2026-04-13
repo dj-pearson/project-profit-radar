@@ -154,7 +154,7 @@ const PrivacyPolicy = () => {
                   please contact us at:
                 </p>
                 <div className="mt-3 p-4 bg-muted rounded-lg">
-                  <p><strong>Email:</strong> privacy@brikly.com</p>
+                  <p><strong>Email:</strong> privacy@brikly.net</p>
                   <p><strong>Address:</strong> Brikly Construction Management</p>
                   <p>123 Construction Way, Suite 100</p>
                   <p>Builder City, BC 12345</p>

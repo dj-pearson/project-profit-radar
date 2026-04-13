@@ -59,8 +59,8 @@ export class InvoicePDFGenerator {
       name: 'Brikly',
       address: '123 Construction Way, Builder City, ST 12345',
       phone: '(555) 123-4567',
-      email: 'billing@brikly.com',
-      website: 'www.brikly.com',
+      email: 'billing@brikly.net',
+      website: 'www.brikly.net',
       ...companyInfo,
     };
 

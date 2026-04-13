@@ -309,7 +309,7 @@ On-Page SEO
 Title Tag: "Free Construction Schedule Builder | Create Professional Timelines | Brikly"
 Meta Description: "Build professional construction schedules in minutes with our free drag-and-drop tool. Choose from 6 project templates, export PDFs, and eliminate scheduling errors."
 H1: "Free Construction Schedule Builder"
-URL: brikly.com/tools/schedule-builder
+URL: brikly.net/tools/schedule-builder
 
 Lead Nurturing Sequence
 Email Automation Flow

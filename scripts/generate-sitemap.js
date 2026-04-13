@@ -20,7 +20,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // Domain configuration
-const DOMAIN = 'https://brikly.com';
+const DOMAIN = 'https://brikly.net';
 const CURRENT_DATE = new Date().toISOString().split('T')[0];
 
 /**

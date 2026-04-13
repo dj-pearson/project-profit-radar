@@ -73,8 +73,8 @@ const JobCostingConstructionGuide = () => {
         title="Job Costing in Construction: Setup Guide & Common Mistakes"
         author="Brikly Team"
         datePublished="2025-01-24"
-        image="https://brikly.com/images/job-costing-guide.jpg"
-        url="https://brikly.com/resources/job-costing-construction-setup-guide"
+        image="https://brikly.net/images/job-costing-guide.jpg"
+        url="https://brikly.net/resources/job-costing-construction-setup-guide"
       />
       
       <HowToSchema
@@ -101,7 +101,7 @@ const JobCostingConstructionGuide = () => {
             text: "Build reusable budget templates for common project types like residential renovation, commercial tenant improvement, and site work with per-square-foot or per-unit pricing."
           }
         ]}
-        url="https://brikly.com/resources/job-costing-construction-setup-guide"
+        url="https://brikly.net/resources/job-costing-construction-setup-guide"
       />
       
       <FAQSchema questions={faqData} />
