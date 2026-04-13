@@ -26,8 +26,8 @@
 
 **If FAIL:** Your user doesn't have `site_id` in their JWT yet. Run this SQL in Supabase SQL Editor:
 ```sql
--- Get the builddesk site_id
-SELECT id FROM sites WHERE key = 'builddesk';
+-- Get the brikly site_id
+SELECT id FROM sites WHERE key = 'brikly';
 
 -- Update your user (replace YOUR_EMAIL and SITE_ID_HERE)
 UPDATE auth.users
@@ -56,7 +56,7 @@ console.log('Has session:', hasSession);
 
 // Check if site resolver is working:
 console.log('Current domain:', window.location.hostname);
-console.log('Should resolve to: builddesk');
+console.log('Should resolve to: brikly');
 ```
 
 ---

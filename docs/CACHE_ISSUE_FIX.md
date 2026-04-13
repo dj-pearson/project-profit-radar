@@ -36,11 +36,11 @@ The service worker now uses a build-time timestamp instead of a manual version:
 
 ```javascript
 // Before
-const CACHE_NAME = 'builddesk-v2025.1.12';
+const CACHE_NAME = 'brikly-v2025.1.12';
 
 // After
 const BUILD_VERSION = '__BUILD_VERSION__';
-const CACHE_NAME = `builddesk-v${BUILD_VERSION}`;
+const CACHE_NAME = `brikly-v${BUILD_VERSION}`;
 ```
 
 #### 2. Build-Time Version Injection

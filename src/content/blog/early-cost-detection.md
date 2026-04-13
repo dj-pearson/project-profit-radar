@@ -3,7 +3,7 @@
 **Target Keyword:** construction cost overrun prevention
 **Published:** November 11, 2025
 **Reading Time:** 12 minutes
-**Author:** BuildDesk Team
+**Author:** Brikly Team
 
 ---
 
@@ -827,7 +827,7 @@ Get your first predictive cost alert within 7 days.
 ---
 
 **About the Author:**
-The BuildDesk Team has helped 500+ construction companies implement predictive cost alert systems. Collectively, our customers have prevented over $12M in cost overruns by catching problems early.
+The Brikly Team has helped 500+ construction companies implement predictive cost alert systems. Collectively, our customers have prevented over $12M in cost overruns by catching problems early.
 
 **Related Reading:**
 - [Why Contractors Fail: Financial Blindness →](/blog/why-contractors-fail-financial-blindness)

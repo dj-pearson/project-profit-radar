@@ -49,7 +49,7 @@ serve(async (req) => {
 
     const requestData: DemoRequest = await req.json();
 
-    // Resolve site_id from request or default to builddesk
+    // Resolve site_id from request or default to brikly
     let siteId = requestData.site_id;
     if (!siteId && requestData.site_key) {
       const { data: siteData } = await supabaseClient
@@ -63,7 +63,7 @@ serve(async (req) => {
       const { data: defaultSite } = await supabaseClient
         .from('sites')
         .select('id')
-        .eq('key', 'builddesk')
+        .eq('key', 'brikly')
         .single();
       siteId = defaultSite?.id;
     }

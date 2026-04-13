@@ -1,6 +1,6 @@
 {
-  "name": "BuildDesk - Construction Management",
-  "short_name": "BuildDesk",
+  "name": "Brikly - Construction Management",
+  "short_name": "Brikly",
   "description": "Construction management platform with real-time job costing, time tracking, and project management.",
   "start_url": "/",
   "display": "standalone",

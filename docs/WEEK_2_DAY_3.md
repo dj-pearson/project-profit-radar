@@ -143,7 +143,7 @@ navigator.serviceWorker.getRegistration()
 ```javascript
 // In DevTools Console
 caches.keys().then(names => console.log('Caches:', names));
-caches.open('builddesk-v1-images')
+caches.open('brikly-v1-images')
   .then(cache => cache.keys())
   .then(keys => console.log('Cached images:', keys.length));
 ```

@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 /**
- * Simplified Performance Budget Checker for BuildDesk
+ * Simplified Performance Budget Checker for Brikly
  */
 
 import fs from 'fs';
@@ -22,7 +22,7 @@ const performanceBudget = {
 };
 
 function main() {
-  console.log('🚀 BuildDesk Performance Budget Check');
+  console.log('🚀 Brikly Performance Budget Check');
   console.log('=====================================');
   console.log('');
 

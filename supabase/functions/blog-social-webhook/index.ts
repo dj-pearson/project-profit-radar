@@ -12,12 +12,12 @@ const logStep = (step: string, data?: any) => {
 };
 
 // Use existing container env vars for URL rewriting
-const FRONTEND_URL = Deno.env.get("FRONTEND_URL") || "https://build-desk.com";
-const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "https://api.build-desk.com";
+const FRONTEND_URL = Deno.env.get("FRONTEND_URL") || "https://brikly.net";
+const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "https://api.brikly.net";
 
 /**
  * Rewrite any old Supabase storage URLs (*.supabase.co/storage/...)
- * to the public API domain (api.build-desk.com/storage/...)
+ * to the public API domain (api.brikly.net/storage/...)
  */
 function rewriteStorageUrls(text: string | null | undefined): string | null {
   if (!text) return null;

@@ -14,7 +14,7 @@
 import React from 'react';
 import { Helmet } from 'react-helmet-async';
 import { useLocation } from 'react-router-dom';
-import { BUILDDESK_LOGO_URL } from '@/lib/utils';
+import { BRIKLY_LOGO_URL } from '@/lib/utils';
 
 export interface PageSEOProps {
   // Basic SEO
@@ -48,29 +48,29 @@ export const PageSEO: React.FC<PageSEOProps> = ({
   description,
   keywords = [],
   canonicalUrl,
-  ogImage = BUILDDESK_LOGO_URL,
+  ogImage = BRIKLY_LOGO_URL,
   ogType = 'website',
   twitterCard = 'summary_large_image',
   schema = [],
   noIndex = false,
   noFollow = false,
   lastModified,
-  author = 'BuildDesk',
+  author = 'Brikly',
   articlePublishDate
 }) => {
   const location = useLocation();
 
   // Construct full URL
-  const baseUrl = 'https://builddesk.com';
+  const baseUrl = 'https://brikly.com';
   const fullUrl = canonicalUrl || `${baseUrl}${location.pathname}`;
 
   // Robots meta tag
   const robotsContent = `${noIndex ? 'noindex' : 'index'}, ${noFollow ? 'nofollow' : 'follow'}`;
 
   // Full title with branding
-  const fullTitle = title.includes('BuildDesk')
+  const fullTitle = title.includes('Brikly')
     ? title
-    : `${title} | BuildDesk`;
+    : `${title} | Brikly`;
 
   return (
     <Helmet>
@@ -95,11 +95,11 @@ export const PageSEO: React.FC<PageSEOProps> = ({
       <meta property="og:type" content={ogType} />
       <meta property="og:url" content={fullUrl} />
       <meta property="og:image" content={ogImage} />
-      <meta property="og:site_name" content="BuildDesk" />
+      <meta property="og:site_name" content="Brikly" />
 
       {/* Twitter Card Tags */}
       <meta name="twitter:card" content={twitterCard} />
-      <meta name="twitter:site" content="@builddesk" />
+      <meta name="twitter:site" content="@brikly" />
       <meta name="twitter:title" content={title} />
       <meta name="twitter:description" content={description} />
       <meta name="twitter:image" content={ogImage} />
@@ -136,9 +136,9 @@ export const PageSEO: React.FC<PageSEOProps> = ({
 export const createOrganizationSchema = () => ({
   "@context": "https://schema.org",
   "@type": "Organization",
-  "name": "BuildDesk",
-  "url": "https://builddesk.com",
-  "logo": "https://builddesk.com/logo.png",
+  "name": "Brikly",
+  "url": "https://brikly.com",
+  "logo": "https://brikly.com/logo.png",
   "description": "Construction management software for small and mid-size contractors in the United States.",
   "foundingDate": "2024",
   "address": {
@@ -146,8 +146,8 @@ export const createOrganizationSchema = () => ({
     "addressCountry": "US"
   },
   "sameAs": [
-    "https://linkedin.com/company/builddesk",
-    "https://twitter.com/builddesk"
+    "https://linkedin.com/company/brikly",
+    "https://twitter.com/brikly"
   ],
   "contactPoint": {
     "@type": "ContactPoint",
@@ -160,7 +160,7 @@ export const createOrganizationSchema = () => ({
 export const createSoftwareApplicationSchema = (additionalProps?: object) => ({
   "@context": "https://schema.org",
   "@type": "SoftwareApplication",
-  "name": "BuildDesk",
+  "name": "Brikly",
   "applicationCategory": "BusinessApplication",
   "operatingSystem": "Web, iOS, Android",
   "offers": {
@@ -245,14 +245,14 @@ export const createProductSchema = (
   "description": description,
   "brand": {
     "@type": "Brand",
-    "name": "BuildDesk"
+    "name": "Brikly"
   },
   "offers": {
     "@type": "Offer",
     "price": price,
     "priceCurrency": "USD",
     "availability": "https://schema.org/InStock",
-    "url": "https://builddesk.com/pricing"
+    "url": "https://brikly.com/pricing"
   },
   ...additionalProps
 });
@@ -262,7 +262,7 @@ export const createArticleSchema = (
   description: string,
   datePublished: string,
   dateModified: string,
-  author: string = "BuildDesk Team"
+  author: string = "Brikly Team"
 ) => ({
   "@context": "https://schema.org",
   "@type": "Article",
@@ -274,10 +274,10 @@ export const createArticleSchema = (
   },
   "publisher": {
     "@type": "Organization",
-    "name": "BuildDesk",
+    "name": "Brikly",
     "logo": {
       "@type": "ImageObject",
-      "url": "https://builddesk.com/logo.png"
+      "url": "https://brikly.com/logo.png"
     }
   },
   "datePublished": datePublished,
@@ -296,7 +296,7 @@ export const createWebPageSchema = (
   "url": url,
   "publisher": {
     "@type": "Organization",
-    "name": "BuildDesk"
+    "name": "Brikly"
   }
 });
 
@@ -307,18 +307,18 @@ export const createWebPageSchema = (
 export const createWebSiteSchema = () => ({
   "@context": "https://schema.org",
   "@type": "WebSite",
-  "name": "BuildDesk",
-  "url": "https://builddesk.com",
+  "name": "Brikly",
+  "url": "https://brikly.com",
   "description": "Construction management software for small and mid-size contractors. Real-time job costing, mobile crew tracking, and OSHA compliance.",
   "publisher": {
     "@type": "Organization",
-    "name": "BuildDesk"
+    "name": "Brikly"
   },
   "potentialAction": {
     "@type": "SearchAction",
     "target": {
       "@type": "EntryPoint",
-      "urlTemplate": "https://builddesk.com/search?q={search_term_string}"
+      "urlTemplate": "https://brikly.com/search?q={search_term_string}"
     },
     "query-input": "required name=search_term_string"
   }

@@ -60,7 +60,7 @@ export default function Support() {
   const knowledgeBase = [
     {
       id: "1",
-      title: "Getting Started with BuildDesk",
+      title: "Getting Started with Brikly",
       category: "Getting Started",
       views: 1250,
       helpful_votes: 95,
@@ -361,11 +361,11 @@ export default function Support() {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-2">
-                    <p className="text-sm font-medium">support@build-desk.com</p>
+                    <p className="text-sm font-medium">support@brikly.net</p>
                     <p className="text-xs text-muted-foreground">Response within 24 hours</p>
                     <Button 
                       className="w-full"
-                      onClick={() => window.open('mailto:support@build-desk.com', '_blank')}
+                      onClick={() => window.open('mailto:support@brikly.net', '_blank')}
                     >
                       Send Email
                     </Button>

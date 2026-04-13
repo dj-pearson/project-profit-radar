@@ -45,7 +45,7 @@ const TermsOfService = () => {
               <section>
                 <h2 className="text-xl font-semibold mb-3">1. Acceptance of Terms</h2>
                 <p>
-                  By accessing and using BuildDesk Construction Management platform ("Service"), 
+                  By accessing and using Brikly Construction Management platform ("Service"), 
                   you accept and agree to be bound by the terms and provision of this agreement.
                 </p>
               </section>
@@ -53,7 +53,7 @@ const TermsOfService = () => {
               <section>
                 <h2 className="text-xl font-semibold mb-3">2. Description of Service</h2>
                 <p className="mb-3">
-                  BuildDesk provides a comprehensive construction management platform that includes:
+                  Brikly provides a comprehensive construction management platform that includes:
                 </p>
                 <ul className="list-disc pl-6 space-y-1">
                   <li>Project management and tracking</li>
@@ -197,9 +197,9 @@ const TermsOfService = () => {
                   For questions about these Terms of Service, please contact us at:
                 </p>
                 <div className="mt-3 p-4 bg-muted rounded-lg">
-                  <p><strong>Email:</strong> support@builddesk.com</p>
-                  <p><strong>Legal:</strong> legal@builddesk.com</p>
-                  <p><strong>Address:</strong> BuildDesk Construction Management</p>
+                  <p><strong>Email:</strong> support@brikly.com</p>
+                  <p><strong>Legal:</strong> legal@brikly.com</p>
+                  <p><strong>Address:</strong> Brikly Construction Management</p>
                   <p>123 Construction Way, Suite 100</p>
                   <p>Builder City, BC 12345</p>
                 </div>

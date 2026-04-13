@@ -86,8 +86,8 @@ The social-content-generator sends this structured data:
     "social_posts": [
       {
         "platform": "twitter",
-        "content": "💰 Real-time budget monitoring prevents cost overruns! Our latest feature helps contractors track expenses automatically, saving 5+ hours weekly. #Construction #ProjectManagement #BuildDesk",
-        "hashtags": ["#Construction", "#ProjectManagement", "#BuildDesk"],
+        "content": "💰 Real-time budget monitoring prevents cost overruns! Our latest feature helps contractors track expenses automatically, saving 5+ hours weekly. #Construction #ProjectManagement #Brikly",
+        "hashtags": ["#Construction", "#ProjectManagement", "#Brikly"],
         "media_urls": ["https://example.com/image.jpg"],
         "optimal_length": 280,
         "post_type": "short",
@@ -96,7 +96,7 @@ The social-content-generator sends this structured data:
       {
         "platform": "linkedin",
         "content": "Effective project cost tracking is crucial for construction success. Here's how real-time budget monitoring can transform your operations:\n\n✅ Automated expense categorization\n✅ Predictive analytics for early issue detection\n✅ QuickBooks integration for seamless reporting\n\nReady to improve your project budgeting? Learn more about our construction management platform.",
-        "hashtags": ["#Construction", "#ProjectManagement", "#BuildDesk"],
+        "hashtags": ["#Construction", "#ProjectManagement", "#Brikly"],
         "media_urls": ["https://example.com/image.jpg"],
         "optimal_length": 3000,
         "post_type": "long",
@@ -104,8 +104,8 @@ The social-content-generator sends this structured data:
       },
       {
         "platform": "instagram",
-        "content": "📊 Smart project tracking = better profits! ✨ See how our platform helps contractors stay on budget and ahead of schedule. 💪\n\n#Construction #ProjectManagement #BuildDesk #ConstructionTech",
-        "hashtags": ["#Construction", "#ProjectManagement", "#BuildDesk", "#ConstructionTech"],
+        "content": "📊 Smart project tracking = better profits! ✨ See how our platform helps contractors stay on budget and ahead of schedule. 💪\n\n#Construction #ProjectManagement #Brikly #ConstructionTech",
+        "hashtags": ["#Construction", "#ProjectManagement", "#Brikly", "#ConstructionTech"],
         "media_urls": ["https://random-selected-image.jpg"],
         "optimal_length": 2200,
         "post_type": "medium",
@@ -114,7 +114,7 @@ The social-content-generator sends this structured data:
       {
         "platform": "facebook",
         "content": "Managing construction project budgets just got easier! Our real-time cost tracking feature helps contractors:\n\n🔹 Monitor expenses automatically\n🔹 Prevent budget overruns\n🔹 Save hours on financial reporting\n🔹 Make data-driven decisions\n\nDiscover how technology can boost your project profitability!",
-        "hashtags": ["#Construction", "#ProjectManagement", "#BuildDesk"],
+        "hashtags": ["#Construction", "#ProjectManagement", "#Brikly"],
         "media_urls": ["https://example.com/image.jpg"],
         "optimal_length": 2000,
         "post_type": "medium",

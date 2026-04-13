@@ -18,7 +18,7 @@
 
 ### **Current Setup:**
 ```
-BuildDesk Codebase
+Brikly Codebase
 ├── Web (React + Vite) ──────────► Deployed to web hosting
 ├── iOS (Capacitor) ─────────────► Built with Xcode → App Store
 └── Android (Capacitor) ─────────► Built with Android Studio → Play Store
@@ -26,7 +26,7 @@ BuildDesk Codebase
 
 ### **After Full Expo Migration:**
 ```
-BuildDesk Codebase
+Brikly Codebase
 ├── Web (React + Vite) ──────────► Deployed to web hosting (UNCHANGED)
 ├── iOS (Expo) ──────────────────► Built with EAS → App Store
 └── Android (Expo) ──────────────► Built with EAS → Play Store
@@ -141,7 +141,7 @@ If you want to **only migrate iOS** and keep Android with Capacitor:
 
 ### **Hybrid Approach:**
 ```
-BuildDesk Codebase
+Brikly Codebase
 ├── Web (React + Vite) ──────────► Deployed to web hosting
 ├── iOS (Expo) ──────────────────► Built with EAS → App Store
 └── Android (Capacitor) ─────────► Built with Android Studio → Play Store
@@ -156,10 +156,10 @@ BuildDesk Codebase
 ### **iOS-Only Migration Commands:**
 ```bash
 # Create iOS-specific Expo project
-npx create-expo-app BuildDeskiOS --template blank-typescript
+npx create-expo-app BriklyiOS --template blank-typescript
 
 # Copy your src/ directory to new project
-cp -r src/ ../BuildDeskiOS/
+cp -r src/ ../BriklyiOS/
 
 # Configure for iOS only
 # Build iOS with Expo
@@ -200,7 +200,7 @@ npx cap build android
 
 **The main question is:** Do you want to improve both iOS and Android builds together, or start with just iOS?
 
-For BuildDesk, I'd recommend the **full migration** because:
+For Brikly, I'd recommend the **full migration** because:
 1. You get consistent benefits on both platforms
 2. Simpler long-term maintenance
 3. Both App Store and Play Store submissions become easier

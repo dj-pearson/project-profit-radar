@@ -1,6 +1,6 @@
 /**
  * pSEO (Programmatic SEO) Type Definitions
- * Based on BuildDesk pSEO Full System Specification v1.0
+ * Based on Brikly pSEO Full System Specification v1.0
  */
 
 // =============================================
@@ -62,7 +62,7 @@ export interface PainPointContext {
   user_persona: string;
   search_intent_stage: string;
   competing_solutions: string[];
-  builddesk_advantage: string;
+  brikly_advantage: string;
 }
 
 export interface BusinessSizeContext {
@@ -73,7 +73,7 @@ export interface BusinessSizeContext {
   price_sensitivity: string;
   decision_maker: string;
   primary_concern: string;
-  builddesk_fit: string;
+  brikly_fit: string;
 }
 
 export interface GeographyContext {
@@ -313,18 +313,18 @@ export interface ComparisonPageSchema {
   comparison_table: {
     features: Array<{
       feature_name: string;
-      builddesk_value: string;
+      brikly_value: string;
       competitor_value: string;
-      winner: 'builddesk' | 'competitor' | 'tie';
+      winner: 'brikly' | 'competitor' | 'tie';
       why_it_matters: string;
     }>;
     pricing: {
-      builddesk_price: string;
+      brikly_price: string;
       competitor_price: string;
       pricing_note: string;
     };
   };
-  when_to_choose_builddesk: {
+  when_to_choose_brikly: {
     section_title: string;
     scenarios: string[];
   };

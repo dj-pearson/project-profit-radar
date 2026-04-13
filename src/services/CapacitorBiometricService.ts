@@ -54,12 +54,12 @@ export interface StoredCredentials {
 
 // Storage keys for secure preferences
 const STORAGE_KEYS = {
-  BIOMETRIC_ENABLED: 'builddesk_biometric_enabled',
-  BIOMETRIC_CREDENTIALS: 'builddesk_biometric_credentials',
-  APP_LOCK_ENABLED: 'builddesk_app_lock_enabled',
-  LAST_BACKGROUND_TIME: 'builddesk_last_background_time',
-  DEVICE_TRUST_ID: 'builddesk_device_trust_id',
-  BIOMETRIC_TYPE: 'builddesk_biometric_type',
+  BIOMETRIC_ENABLED: 'brikly_biometric_enabled',
+  BIOMETRIC_CREDENTIALS: 'brikly_biometric_credentials',
+  APP_LOCK_ENABLED: 'brikly_app_lock_enabled',
+  LAST_BACKGROUND_TIME: 'brikly_last_background_time',
+  DEVICE_TRUST_ID: 'brikly_device_trust_id',
+  BIOMETRIC_TYPE: 'brikly_biometric_type',
 } as const;
 
 // App lock timeout (5 minutes)
@@ -214,7 +214,7 @@ class CapacitorBiometricService {
    * Authenticate user with biometrics
    */
   async authenticate(
-    reason: string = 'Authenticate to access BuildDesk'
+    reason: string = 'Authenticate to access Brikly'
   ): Promise<BiometricAuthResult> {
     if (!Capacitor.isNativePlatform()) {
       return {
@@ -249,7 +249,7 @@ class CapacitorBiometricService {
       // Attempt authentication
       const result = await BiometricAuth.authenticate({
         reason,
-        title: 'BuildDesk Authentication',
+        title: 'Brikly Authentication',
         subtitle: 'Verify your identity',
         description: 'Use your biometric or device PIN to continue',
         negativeButtonText: 'Cancel',

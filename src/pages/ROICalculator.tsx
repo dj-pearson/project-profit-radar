@@ -53,7 +53,7 @@ const ROICalculator = () => {
     const delayLoss = (projectValue * projectsYear * delayPercent) / 100 * 0.5; // Assume 50% of delay value as loss
     const adminCost = adminHours * 52 * hourlyRate;
     
-    // Calculate potential savings with Build Desk
+    // Calculate potential savings with Brikly
     const overrunReduction = 0.7; // 70% reduction
     const delayReduction = 0.6; // 60% reduction
     const adminEfficiency = 0.5; // 50% time savings
@@ -65,7 +65,7 @@ const ROICalculator = () => {
     const totalCurrentLoss = overrunLoss + delayLoss + adminCost;
     const totalSavings = savedOverruns + savedDelays + savedAdmin;
     
-    // Build Desk cost estimation
+    // Brikly cost estimation
     let monthlyPlan = 149; // Starter
     if (formData.companySize === '5-15') monthlyPlan = 299; // Professional
     if (formData.companySize === '15+') monthlyPlan = 599; // Enterprise
@@ -87,7 +87,7 @@ const ROICalculator = () => {
         admin: savedAdmin,
         total: totalSavings
       },
-      buildDeskCost: annualCost,
+      briklyCost: annualCost,
       netSavings,
       roi,
       monthlyPlan,
@@ -347,9 +347,9 @@ const ROICalculator = () => {
                       </div>
                       <div>
                         <div className="text-2xl font-bold text-construction-orange">
-                          {formatCurrency(results.buildDeskCost)}
+                          {formatCurrency(results.briklyCost)}
                         </div>
-                        <p className="text-sm text-muted-foreground">Build Desk Cost</p>
+                        <p className="text-sm text-muted-foreground">Brikly Cost</p>
                       </div>
                     </div>
 
@@ -423,7 +423,7 @@ const ROICalculator = () => {
                   <CardContent className="p-6 text-center">
                     <h3 className="text-xl font-bold mb-4">Ready to Start Saving?</h3>
                     <p className="mb-6 opacity-90">
-                      Join hundreds of contractors already saving money with Build Desk
+                      Join hundreds of contractors already saving money with Brikly
                     </p>
                     <Button 
                       variant="secondary" 
@@ -447,7 +447,7 @@ const ROICalculator = () => {
                     Calculate Your Potential Savings
                   </h3>
                   <p className="text-muted-foreground">
-                    Fill out the form to see how much you could save with Build Desk
+                    Fill out the form to see how much you could save with Brikly
                   </p>
                 </CardContent>
               </Card>

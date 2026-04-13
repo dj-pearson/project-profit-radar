@@ -256,8 +256,8 @@ async function notifyUser(userEmail: string, adminEmail: string) {
   // await supabase.functions.invoke('send-email', {
   //   body: {
   //     to: userEmail,
-  //     subject: 'BuildDesk Support Access',
-  //     message: `BuildDesk support team accessed your account for debugging purposes.`,
+  //     subject: 'Brikly Support Access',
+  //     message: `Brikly support team accessed your account for debugging purposes.`,
   //   },
   // });
 }

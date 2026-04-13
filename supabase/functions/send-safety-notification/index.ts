@@ -98,12 +98,12 @@ const generateIncidentHTML = (incident: any) => {
       
       <div style="border-top: 2px solid #dee2e6; padding-top: 20px; text-align: center;">
         <p style="margin: 0; color: #6c757d; font-size: 14px;">
-          This is an automated safety notification from BuildDesk.<br>
+          This is an automated safety notification from Brikly.<br>
           Please review and take appropriate action immediately.
         </p>
         
         <div style="margin-top: 15px;">
-          <a href="https://builddesk.app/safety/incidents/${incident.id}" 
+          <a href="https://brikly.app/safety/incidents/${incident.id}" 
              style="background-color: ${severityColor}; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block; font-weight: bold;">
             View Full Report
           </a>
@@ -141,7 +141,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     // For now, we'll use a default recipient - in production this would query the database
     // for project managers, safety officers, and supervisors
-    recipients.push('safety@builddesk.app'); // Replace with actual supervisor emails
+    recipients.push('safety@brikly.app'); // Replace with actual supervisor emails
 
     // Generate email content
     const emailHTML = generateIncidentHTML(incident);
@@ -152,7 +152,7 @@ const handler = async (req: Request): Promise<Response> => {
     // Send notifications to all recipients
     const emailPromises = recipients.map(async (email) => {
       return await resend.emails.send({
-        from: "BuildDesk Safety <safety@builddesk.dev>",
+        from: "Brikly Safety <safety@brikly.dev>",
         to: [email],
         subject: subject,
         html: emailHTML,

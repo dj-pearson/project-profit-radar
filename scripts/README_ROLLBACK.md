@@ -1,6 +1,6 @@
 # Rollback Scripts
 
-This directory contains scripts to revert BuildDesk from multi-tenant to single-tenant architecture.
+This directory contains scripts to revert Brikly from multi-tenant to single-tenant architecture.
 
 ## Available Scripts
 

@@ -13,11 +13,11 @@ interface SocialShareProps {
 }
 
 export function SocialShare({ onShare }: SocialShareProps) {
-  const calculatorUrl = 'https://build-desk.com/calculator';
-  const shareText = 'Just validated project profitability in 2 minutes with BuildDesk\'s free calculator. Game changer for contractors.';
+  const calculatorUrl = 'https://brikly.net/calculator';
+  const shareText = 'Just validated project profitability in 2 minutes with Brikly\'s free calculator. Game changer for contractors.';
 
   const handleTwitterShare = () => {
-    const url = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(calculatorUrl)}&via=BuildDesk`;
+    const url = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(calculatorUrl)}&via=Brikly`;
     window.open(url, '_blank', 'width=600,height=400');
     onShare('twitter');
   };

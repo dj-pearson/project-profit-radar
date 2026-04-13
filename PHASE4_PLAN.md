@@ -8,7 +8,7 @@
 
 ## 🎯 Phase 4 Objectives
 
-Phase 4 focuses on **scaling BuildDesk for enterprise customers** and delivering **world-class mobile experiences** to compete with industry leaders like Procore and Buildertrend.
+Phase 4 focuses on **scaling Brikly for enterprise customers** and delivering **world-class mobile experiences** to compete with industry leaders like Procore and Buildertrend.
 
 ### Strategic Goals:
 1. **Enterprise-Ready**: Multi-tenant, SSO, advanced permissions, audit logging
@@ -43,7 +43,7 @@ Phase 4 focuses on **scaling BuildDesk for enterprise customers** and delivering
 
 ### 1. Multi-Tenant Architecture ⭐
 
-**Goal**: Transform BuildDesk into a true multi-tenant platform for enterprise and white-label deployments.
+**Goal**: Transform Brikly into a true multi-tenant platform for enterprise and white-label deployments.
 
 **Database Changes:**
 ```sql
@@ -484,8 +484,8 @@ async function deliverWebhook(endpoint, event, payload) {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'X-BuildDesk-Signature': signature,
-      'X-BuildDesk-Event': event,
+      'X-Brikly-Signature': signature,
+      'X-Brikly-Event': event,
     },
     body: JSON.stringify(payload),
   });
@@ -663,4 +663,4 @@ async function deliverWebhook(endpoint, event, payload) {
 ---
 
 *Phase 4 Planning Document*
-*BuildDesk Enterprise Scale & Mobile Excellence*
+*Brikly Enterprise Scale & Mobile Excellence*

@@ -113,7 +113,7 @@ serve(async (req) => {
     logStep("Pricing calculated", { amount, interval });
 
     // Create checkout session with secure configuration
-    const origin = req.headers.get("origin") || "https://build-desk.com";
+    const origin = req.headers.get("origin") || "https://brikly.net";
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
       customer_email: customerId ? undefined : user.email,
@@ -122,8 +122,8 @@ serve(async (req) => {
           price_data: {
             currency: "usd",
             product_data: {
-              name: `BuildDesk ${subscription_tier.charAt(0).toUpperCase() + subscription_tier.slice(1)} Plan`,
-              description: `BuildDesk ${subscription_tier} subscription - ${billing_period} billing`
+              name: `Brikly ${subscription_tier.charAt(0).toUpperCase() + subscription_tier.slice(1)} Plan`,
+              description: `Brikly ${subscription_tier} subscription - ${billing_period} billing`
             },
             unit_amount: amount,
             recurring: { interval },

@@ -145,9 +145,9 @@ GOOGLE_CLIENT_ID=your-google-client-id
 GOOGLE_CLIENT_SECRET=your-google-client-secret
 APPLE_CLIENT_ID=your-apple-client-id
 APPLE_CLIENT_SECRET=your-apple-client-secret
-FRONTEND_URL=https://build-desk.com
-FUNCTIONS_URL=https://functions.build-desk.com
-SUPABASE_URL=https://api.build-desk.com
+FRONTEND_URL=https://brikly.net
+FUNCTIONS_URL=https://functions.brikly.net
+SUPABASE_URL=https://api.brikly.net
 SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
 ```
 
@@ -158,14 +158,14 @@ SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
 2. Create/select project
 3. Enable Google+ API
 4. Create OAuth 2.0 credentials
-5. Add authorized redirect URI: `https://functions.build-desk.com/oauth-proxy?action=callback`
+5. Add authorized redirect URI: `https://functions.brikly.net/oauth-proxy?action=callback`
 6. Copy Client ID and Secret to environment variables
 
 ### Apple Sign In Setup
 1. Go to [Apple Developer Portal](https://developer.apple.com/)
 2. Create Service ID
 3. Configure Sign in with Apple
-4. Add return URL: `https://functions.build-desk.com/oauth-proxy?action=callback`
+4. Add return URL: `https://functions.brikly.net/oauth-proxy?action=callback`
 5. Generate client secret (JWT)
 6. Copy Service ID and Secret to environment variables
 
@@ -184,7 +184,7 @@ SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
    ```
 
 3. **Test OAuth flow:**
-   - Visit https://build-desk.com/auth
+   - Visit https://brikly.net/auth
    - Click "Sign in with Google"
    - Verify redirect and authentication
    - Click "Sign in with Apple"

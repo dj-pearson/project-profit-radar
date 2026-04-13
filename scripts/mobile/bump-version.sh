@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# BuildDesk Version Bump Script
+# Brikly Version Bump Script
 # Bumps version across all project configs (root, mobile-app, Expo, Android, iOS)
 # Usage: ./scripts/mobile/bump-version.sh 1.0.1
 

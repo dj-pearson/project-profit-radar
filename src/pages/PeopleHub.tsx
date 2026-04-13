@@ -13,7 +13,7 @@ const PeopleHub: React.FC = () => {
   return (
     <DashboardLayout title="People Hub">
       <Helmet>
-        <title>People Hub | BuildDesk</title>
+        <title>People Hub | Brikly</title>
         <meta name="description" content="People hub – team, CRM, and communications." />
         <link rel="canonical" href="/people-hub" />
       </Helmet>

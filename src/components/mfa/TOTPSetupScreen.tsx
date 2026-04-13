@@ -231,12 +231,12 @@ export const TOTPSetupScreen: React.FC<TOTPSetupScreenProps> = ({
   };
 
   const handleDownloadBackupCodes = () => {
-    const codesText = `BuildDesk Backup Codes\n${'='.repeat(30)}\n\nSave these codes in a safe place. Each code can only be used once.\n\n${backupCodes.map((code, i) => `${i + 1}. ${code}`).join('\n')}\n\nGenerated: ${new Date().toISOString()}`;
+    const codesText = `Brikly Backup Codes\n${'='.repeat(30)}\n\nSave these codes in a safe place. Each code can only be used once.\n\n${backupCodes.map((code, i) => `${i + 1}. ${code}`).join('\n')}\n\nGenerated: ${new Date().toISOString()}`;
     const blob = new Blob([codesText], { type: 'text/plain' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = 'builddesk-backup-codes.txt';
+    a.download = 'brikly-backup-codes.txt';
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);

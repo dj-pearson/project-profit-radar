@@ -9,7 +9,7 @@ import { checkRateLimit, getClientIP, rateLimitResponse, RATE_LIMITS } from "../
 // Webhook endpoints from Stripe don't need CORS (server-to-server)
 // But we keep minimal headers for potential health checks
 const corsHeaders = {
-  "Access-Control-Allow-Origin": "https://build-desk.com",
+  "Access-Control-Allow-Origin": "https://brikly.net",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, stripe-signature",
 };
 

@@ -2,7 +2,7 @@
 -- ENTERPRISE FINANCE MODULE - COMPLETE ACCOUNTING SYSTEM
 -- =====================================================
 -- This migration creates a full double-entry accounting system
--- integrated with BuildDesk's construction management features
+-- integrated with Brikly's construction management features
 -- =====================================================
 
 -- =====================================================

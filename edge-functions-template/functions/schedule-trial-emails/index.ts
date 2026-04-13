@@ -8,8 +8,8 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-site-key",
 };
 
-// Default site key for BuildDesk
-const DEFAULT_SITE_KEY = 'builddesk';
+// Default site key for Brikly
+const DEFAULT_SITE_KEY = 'brikly';
 
 interface TrialEmailSchedule {
   day: number;
@@ -125,9 +125,9 @@ serve(async (req) => {
           trigger_type: 'lifecycle',
           subject_line: getSubjectLine(schedule.emailType, firstName),
           preview_text: getPreviewText(schedule.emailType),
-          from_name: 'BuildDesk Team',
-          from_email: 'hello@build-desk.com',
-          reply_to: 'support@build-desk.com',
+          from_name: 'Brikly Team',
+          from_email: 'hello@brikly.net',
+          reply_to: 'support@brikly.net',
           send_delay_minutes: schedule.day * 24 * 60, // Convert days to minutes
           sequence_name: 'trial_nurture',
           sequence_order: schedule.day,
@@ -242,30 +242,30 @@ serve(async (req) => {
 // Helper functions for email content
 function getSubjectLine(emailType: string, firstName: string): string {
   const subjects: Record<string, string> = {
-    day0_welcome: `Welcome to BuildDesk, ${firstName}! 🎉`,
+    day0_welcome: `Welcome to Brikly, ${firstName}! 🎉`,
     day1_getting_started: `${firstName}, ready to create your first project?`,
     day3_time_tracking: `Stop losing money on time tracking`,
     day7_case_study: `How contractors increased profit margins by 12%`,
     day11_trial_expiring: `${firstName}, your trial ends in 3 days`,
-    day12_testimonials: `Why 500+ contractors choose BuildDesk`,
+    day12_testimonials: `Why 500+ contractors choose Brikly`,
     day13_last_chance: `⚠️ LAST CHANCE: Your trial ends tomorrow`,
     day15_grace_period: `Your trial expired - but you still have time`,
   };
 
-  return subjects[emailType] || `Update from BuildDesk`;
+  return subjects[emailType] || `Update from Brikly`;
 }
 
 function getPreviewText(emailType: string): string {
   const previews: Record<string, string> = {
-    day0_welcome: `Let's get you started with BuildDesk - your 14-day free trial begins now`,
+    day0_welcome: `Let's get you started with Brikly - your 14-day free trial begins now`,
     day1_getting_started: `Create your first project in 2 minutes - step-by-step guide inside`,
-    day3_time_tracking: `See how BuildDesk's time tracking saves contractors 5+ hours per week`,
-    day7_case_study: `Real results from real construction companies using BuildDesk`,
+    day3_time_tracking: `See how Brikly's time tracking saves contractors 5+ hours per week`,
+    day7_case_study: `Real results from real construction companies using Brikly`,
     day11_trial_expiring: `Don't lose access to your data - upgrade now to continue`,
-    day12_testimonials: `Hear from contractors who made the switch to BuildDesk`,
+    day12_testimonials: `Hear from contractors who made the switch to Brikly`,
     day13_last_chance: `Your trial ends tomorrow! Upgrade now and save $50 on your first month`,
     day15_grace_period: `You have 7 days to upgrade and recover all your data`,
   };
 
-  return previews[emailType] || `Update from BuildDesk`;
+  return previews[emailType] || `Update from Brikly`;
 }

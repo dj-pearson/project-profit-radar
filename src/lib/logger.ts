@@ -26,7 +26,7 @@ class Logger {
     this.config = {
       enabled: import.meta.env.DEV,
       level: import.meta.env.DEV ? 'debug' : 'error',
-      prefix: '[BuildDesk]',
+      prefix: '[Brikly]',
       ...config,
     };
     // Enable error tracking in production

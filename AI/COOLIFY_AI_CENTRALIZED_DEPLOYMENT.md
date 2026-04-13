@@ -527,7 +527,7 @@ Document all changes:
 ## 2026-02-04
 - Updated DEFAULT_AI_MODEL: claude-sonnet-4-5-20250929
 - Added LIGHTWEIGHT_AI_MODEL support
-- Deployed to: Build-Desk, Project-Alpha, Client-Portal
+- Deployed to: Brikly, Project-Alpha, Client-Portal
 
 ## 2026-02-10
 - Upgraded to Claude 4 Opus
@@ -545,7 +545,7 @@ Document all changes:
 
 ## 📚 Part 9: Platform-Specific Notes
 
-### Build-Desk (Reference Implementation)
+### Brikly (Reference Implementation)
 
 - ✅ **Status:** Fully deployed and tested
 - **Features:**
@@ -687,4 +687,4 @@ You now have centralized AI configuration across your entire portfolio. Any chan
 
 **Document Version:** 1.0.0  
 **Last Updated:** 2026-02-04  
-**Maintained By:** Build-Desk Team
+**Maintained By:** Brikly Team

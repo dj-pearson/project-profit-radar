@@ -29,8 +29,8 @@ const mockCampaigns: EmailCampaign[] = [
   {
     id: "1",
     name: "Welcome Series - New Leads",
-    subject: "Welcome to BuildDesk - Your Construction Management Solution",
-    content: "Thank you for your interest in BuildDesk...",
+    subject: "Welcome to Brikly - Your Construction Management Solution",
+    content: "Thank you for your interest in Brikly...",
     audience: "New Leads",
     status: "sent",
     stats: { sent: 1250, delivered: 1225, opened: 588, clicked: 94 }

@@ -196,7 +196,7 @@ export const GanttChart: React.FC<GanttChartProps> = ({
           includeCriticalPath: true,
           includeTaskList: true,
           includeAnalytics: true,
-          companyName: 'BuildDesk'
+          companyName: 'Brikly'
         });
         
         await exporter.generatePDF();

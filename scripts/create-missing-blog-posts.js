@@ -145,7 +145,7 @@ Track these key metrics to measure CRM success:
 
 A well-implemented CRM system can significantly improve your construction business operations. Take time to plan properly, train your team thoroughly, and continuously optimize your processes for maximum benefit.
 
-Ready to implement a CRM system designed specifically for construction? BuildDesk offers integrated CRM functionality built into our construction management platform, making implementation seamless and adoption natural.`,
+Ready to implement a CRM system designed specifically for construction? Brikly offers integrated CRM functionality built into our construction management platform, making implementation seamless and adoption natural.`,
     seo_title: "Construction CRM Implementation Guide - Step-by-Step Setup",
     seo_description: "Complete guide to implementing CRM in construction businesses. Best practices, common pitfalls, and step-by-step implementation strategies for contractors.",
     status: "published",
@@ -304,9 +304,9 @@ Use this template to calculate ROI for any construction investment:
 - Process refinement
 - Additional feature adoption
 
-## BuildDesk ROI Calculator
+## Brikly ROI Calculator
 
-Ready to calculate your potential ROI with BuildDesk? Our interactive ROI calculator helps you:
+Ready to calculate your potential ROI with Brikly? Our interactive ROI calculator helps you:
 
 - Estimate time and cost savings
 - Project revenue improvements

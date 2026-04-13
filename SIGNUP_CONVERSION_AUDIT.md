@@ -1,4 +1,4 @@
-# BuildDesk Signup & Conversion Flow Audit
+# Brikly Signup & Conversion Flow Audit
 **Date:** November 2, 2025
 **Auditor:** Claude Code Analysis
 **Scope:** Complete evaluation of signup, trial, subscription, and retention processes
@@ -7,7 +7,7 @@
 
 ## Executive Summary
 
-BuildDesk has a **functional but incomplete** conversion funnel. The core infrastructure for trial-to-paid conversion exists and is well-architected, but there are **critical gaps** in lead capture, qualification, nurturing, and conversion optimization that are likely costing significant revenue.
+Brikly has a **functional but incomplete** conversion funnel. The core infrastructure for trial-to-paid conversion exists and is well-architected, but there are **critical gaps** in lead capture, qualification, nurturing, and conversion optimization that are likely costing significant revenue.
 
 ### Key Findings:
 - ✅ **Solid Infrastructure**: Stripe integration, trial management, and subscription handling are well-implemented
@@ -338,7 +338,7 @@ Sales-Assisted (Enterprise, Custom):
 #### A/B Testing Framework:
 ```typescript
 // Test variations:
-- CTA copy ("Start Free Trial" vs "Try BuildDesk Free" vs "Get Started")
+- CTA copy ("Start Free Trial" vs "Try Brikly Free" vs "Get Started")
 - CTA color/placement
 - Signup form fields (minimal vs detailed)
 - Pricing page layout
@@ -994,7 +994,7 @@ describe('Signup and Trial Flow', () => {
 
   test('User can sign up and start trial', async () => {
     // Navigate to homepage
-    await page.goto('https://build-desk.com');
+    await page.goto('https://brikly.net');
 
     // Click Start Free Trial
     await page.click('a[href="/auth"]');
@@ -1018,7 +1018,7 @@ describe('Signup and Trial Flow', () => {
 
   test('Trial banner displays correctly', async () => {
     // Login as test user
-    await page.goto('https://build-desk.com/auth');
+    await page.goto('https://brikly.net/auth');
     await page.type('#email', 'testuser@example.com');
     await page.type('#password', 'TestPass123!');
     await page.click('button[type="submit"]');
@@ -1064,7 +1064,7 @@ import { test, expect } from '@playwright/test';
 test.describe('Trial to Paid Conversion', () => {
   test('Complete conversion flow', async ({ page, context }) => {
     // Start at pricing page
-    await page.goto('https://build-desk.com/pricing');
+    await page.goto('https://brikly.net/pricing');
 
     // Click on Professional plan CTA
     await page.click('text=Get Started with Professional');
@@ -1114,7 +1114,7 @@ test.describe('Trial to Paid Conversion', () => {
     await checkoutPage.click('button[type="submit"]');
 
     // Wait for return to app
-    await page.waitForURL(/build-desk\.com/, { timeout: 15000 });
+    await page.waitForURL(/brikly\.com/, { timeout: 15000 });
 
     // Verify subscription active
     await expect(page.locator('text="Active"')).toBeVisible();
@@ -1159,7 +1159,7 @@ export default function () {
     },
   };
 
-  const res = http.post('https://build-desk.com/auth/signup', payload, params);
+  const res = http.post('https://brikly.net/auth/signup', payload, params);
 
   check(res, {
     'signup succeeded': (r) => r.status === 200,
@@ -1379,8 +1379,8 @@ CREATE TABLE IF NOT EXISTS email_campaigns (
   -- Email config
   subject_line TEXT,
   preview_text TEXT,
-  from_name TEXT DEFAULT 'BuildDesk Team',
-  from_email TEXT DEFAULT 'hello@build-desk.com',
+  from_name TEXT DEFAULT 'Brikly Team',
+  from_email TEXT DEFAULT 'hello@brikly.net',
   reply_to TEXT,
 
   -- Content
@@ -1550,7 +1550,7 @@ Recommended: SendGrid or Postmark
 
 Setup:
 1. Create account
-2. Verify domain (build-desk.com)
+2. Verify domain (brikly.net)
 3. Set up SPF/DKIM/DMARC
 4. Create API key
 5. Set up webhook for events
@@ -1882,7 +1882,7 @@ Week 7-8:
 
 ## 12. Conclusion
 
-BuildDesk has a **solid foundation** for subscription management and payment processing, but is **leaving significant revenue on the table** due to gaps in lead capture, nurturing, and conversion optimization.
+Brikly has a **solid foundation** for subscription management and payment processing, but is **leaving significant revenue on the table** due to gaps in lead capture, nurturing, and conversion optimization.
 
 ### Key Takeaways:
 

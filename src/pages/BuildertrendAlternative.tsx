@@ -11,40 +11,40 @@ const BuildertrendAlternative = () => {
   const comparison = [
     {
       feature: "Mobile App Quality",
-      builddesk: "Native performance",
+      brikly: "Native performance",
       buildertrend: "Web-based mobile",
-      advantage: "builddesk"
+      advantage: "brikly"
     },
     {
       feature: "Customer Support",
-      builddesk: "Phone & chat support",
+      brikly: "Phone & chat support",
       buildertrend: "Email support only",
-      advantage: "builddesk"
+      advantage: "brikly"
     },
     {
       feature: "Setup Complexity",
-      builddesk: "Simple 3-step setup",
+      brikly: "Simple 3-step setup",
       buildertrend: "Complex configuration",
-      advantage: "builddesk"
+      advantage: "brikly"
     },
     {
       feature: "Pricing Transparency",
-      builddesk: "Clear, simple pricing",
+      brikly: "Clear, simple pricing",
       buildertrend: "Complex pricing tiers",
-      advantage: "builddesk"
+      advantage: "brikly"
     },
     {
       feature: "QuickBooks Integration",
-      builddesk: "Real-time sync",
+      brikly: "Real-time sync",
       buildertrend: "Basic integration",
-      advantage: "builddesk"
+      advantage: "brikly"
     }
   ];
 
   return (
     <>
       <SEOMetaTags
-        title="Buildertrend Alternative - Modern Construction Software | BuildDesk"
+        title="Buildertrend Alternative - Modern Construction Software | Brikly"
         description="Better Buildertrend alternative with superior mobile apps, simpler pricing, and better support. Built for modern construction contractors who demand more."
         keywords={['Buildertrend alternative', 'construction software alternative', 'residential construction software', 'home builder software', 'construction management alternative', 'contractor software comparison']}
         canonicalUrl="/buildertrend-alternative"
@@ -80,14 +80,14 @@ const BuildertrendAlternative = () => {
             {/* Comparison Table */}
             <div className="bg-white rounded-lg border p-8 mb-16">
               <h2 className="text-3xl font-bold text-construction-dark mb-8 text-center">
-                BuildDesk vs. Buildertrend Comparison
+                Brikly vs. Buildertrend Comparison
               </h2>
               <div className="overflow-x-auto">
                 <table className="w-full">
                   <thead>
                     <tr className="border-b">
                       <th className="text-left py-3 px-4">Feature</th>
-                      <th className="text-center py-3 px-4 text-construction-blue font-bold">BuildDesk</th>
+                      <th className="text-center py-3 px-4 text-construction-blue font-bold">Brikly</th>
                       <th className="text-center py-3 px-4">Buildertrend</th>
                       <th className="text-center py-3 px-4">Winner</th>
                     </tr>
@@ -97,13 +97,13 @@ const BuildertrendAlternative = () => {
                       <tr key={index} className="border-b hover:bg-gray-50">
                         <td className="py-4 px-4 font-medium">{row.feature}</td>
                         <td className="py-4 px-4 text-center text-construction-blue font-semibold">
-                          {row.builddesk}
+                          {row.brikly}
                         </td>
                         <td className="py-4 px-4 text-center text-gray-600">
                           {row.buildertrend}
                         </td>
                         <td className="py-4 px-4 text-center">
-                          {row.advantage === "builddesk" ? (
+                          {row.advantage === "brikly" ? (
                             <Check className="h-5 w-5 text-green-500 mx-auto" />
                           ) : (
                             <X className="h-5 w-5 text-gray-400 mx-auto" />
@@ -119,7 +119,7 @@ const BuildertrendAlternative = () => {
             {/* Benefits Section */}
             <div className="bg-white rounded-lg border p-8 mb-16">
               <h2 className="text-3xl font-bold text-construction-dark mb-8 text-center">
-                Why Contractors Switch to BuildDesk
+                Why Contractors Switch to Brikly
               </h2>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div className="text-center">

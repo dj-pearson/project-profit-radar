@@ -30,7 +30,7 @@ interface DashboardLayoutProps {
 
 export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
   children,
-  title = "BuildDesk",
+  title = "Brikly",
   showTrialBanner = true,
   showBottomNav = true,
   actions,

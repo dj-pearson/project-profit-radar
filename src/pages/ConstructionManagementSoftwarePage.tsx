@@ -44,7 +44,7 @@ const ConstructionManagementSoftwarePage = () => {
   return (
     <>
       <SEOMetaTags
-        title="Construction Management Software - Complete Business Solution | BuildDesk"
+        title="Construction Management Software - Complete Business Solution | Brikly"
         description="All-in-one construction management software for contractors. Project management, job costing, scheduling, safety compliance, and team collaboration in one platform."
         keywords={['construction management software', 'construction project management software', 'contractor business software', 'construction ERP', 'construction platform', 'contractor management system']}
         canonicalUrl="/construction-management-software"
@@ -140,7 +140,7 @@ const ConstructionManagementSoftwarePage = () => {
                 Ready to Modernize Your Construction Management?
               </h2>
               <p className="text-lg mb-6 opacity-90">
-                Join the growing number of contractors who have transformed their business operations with BuildDesk.
+                Join the growing number of contractors who have transformed their business operations with Brikly.
               </p>
               <Link to="/auth">
                 <Button size="lg" variant="secondary">

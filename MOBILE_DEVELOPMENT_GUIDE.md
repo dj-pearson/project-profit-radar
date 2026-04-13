@@ -1,8 +1,8 @@
-# BuildDesk Mobile Development Guide
+# Brikly Mobile Development Guide
 
 ## Overview
 
-BuildDesk is now configured for cross-platform mobile development using Expo and React Native. This guide covers the complete mobile development setup, architecture, and deployment process.
+Brikly is now configured for cross-platform mobile development using Expo and React Native. This guide covers the complete mobile development setup, architecture, and deployment process.
 
 ## 🚀 Quick Start
 
@@ -255,14 +255,14 @@ EXPO_PUBLIC_SUPABASE_ANON_KEY=your_prod_anon_key
 ### App Store Configuration
 
 #### iOS (App Store Connect)
-- **Bundle ID**: `com.builddesk.app`
-- **App Name**: BuildDesk
+- **Bundle ID**: `com.brikly.app`
+- **App Name**: Brikly
 - **Categories**: Business, Productivity
 - **Age Rating**: 4+ (Business apps)
 
 #### Android (Google Play Console)
-- **Package Name**: `com.builddesk.app`
-- **App Name**: BuildDesk
+- **Package Name**: `com.brikly.app`
+- **App Name**: Brikly
 - **Category**: Business
 - **Content Rating**: Everyone
 
@@ -414,4 +414,4 @@ npx expo export --dump-assetmap
 - EAS Build setup for iOS/Android
 - App store submission preparation
 
-Your BuildDesk mobile app is now ready for development and testing! 🚀
+Your Brikly mobile app is now ready for development and testing! 🚀

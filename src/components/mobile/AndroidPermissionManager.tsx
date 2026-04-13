@@ -36,7 +36,7 @@ export function AndroidPermissionManager() {
       key: 'camera',
       name: 'Camera',
       description: 'Take photos for daily reports, document damage, and capture receipts',
-      rationale: 'BuildDesk uses your camera to capture photos for daily job reports, document site conditions, and scan receipts for expense tracking.',
+      rationale: 'Brikly uses your camera to capture photos for daily job reports, document site conditions, and scan receipts for expense tracking.',
       icon: <CameraIcon className="h-5 w-5" />,
       status: 'checking',
       required: false,
@@ -45,7 +45,7 @@ export function AndroidPermissionManager() {
       key: 'location',
       name: 'Location',
       description: 'GPS time tracking, geofencing, and crew check-ins',
-      rationale: 'BuildDesk uses your location for automatic clock in/out at job sites, GPS crew tracking, and geofence-based time entries. Your location is only tracked during work hours.',
+      rationale: 'Brikly uses your location for automatic clock in/out at job sites, GPS crew tracking, and geofence-based time entries. Your location is only tracked during work hours.',
       icon: <MapPin className="h-5 w-5" />,
       status: 'checking',
       required: true,
@@ -54,7 +54,7 @@ export function AndroidPermissionManager() {
       key: 'notifications',
       name: 'Notifications',
       description: 'Project updates, schedule changes, and safety alerts',
-      rationale: 'BuildDesk sends notifications for schedule changes, project updates, safety alerts, and time tracking reminders so you never miss important job site information.',
+      rationale: 'Brikly sends notifications for schedule changes, project updates, safety alerts, and time tracking reminders so you never miss important job site information.',
       icon: <Bell className="h-5 w-5" />,
       status: 'checking',
       required: false,
@@ -189,10 +189,10 @@ export function AndroidPermissionManager() {
           </div>
           <CardDescription>
             {allGranted
-              ? 'All permissions granted. BuildDesk has full functionality.'
+              ? 'All permissions granted. Brikly has full functionality.'
               : requiredGranted
                 ? 'Core permissions granted. Some features may be limited.'
-                : 'Required permissions needed for BuildDesk to work properly.'}
+                : 'Required permissions needed for Brikly to work properly.'}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-3">
@@ -269,7 +269,7 @@ export function AndroidPermissionManager() {
           <AlertDialogHeader>
             <AlertDialogTitle>Permission Required</AlertDialogTitle>
             <AlertDialogDescription>
-              This permission was previously denied. To enable it, please open your device Settings and grant the permission for BuildDesk manually.
+              This permission was previously denied. To enable it, please open your device Settings and grant the permission for Brikly manually.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

@@ -1,7 +1,7 @@
-# BuildDesk Feature Connections - Implementation Plan
+# Brikly Feature Connections - Implementation Plan
 
 ## Overview
-This document tracks the implementation of feature connection improvements identified in the BuildDesk platform review.
+This document tracks the implementation of feature connection improvements identified in the Brikly platform review.
 
 **Review Date**: 2025-11-08
 **Implementation Start**: 2025-11-08

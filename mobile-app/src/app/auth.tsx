@@ -39,7 +39,7 @@ export default function AuthScreen() {
       <View style={styles.content}>
         {/* Logo/Header */}
         <View style={styles.header}>
-          <Text style={styles.logo}>BuildDesk</Text>
+          <Text style={styles.logo}>Brikly</Text>
           <Text style={styles.tagline}>Construction Management</Text>
         </View>
 

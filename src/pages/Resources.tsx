@@ -56,7 +56,7 @@ const Resources = () => {
           title: "Best Construction Management Software for Small Business (2025)",
           description: "Complete guide to choosing construction management software for small contractors. Compare features, pricing, and ROI.",
           readTime: "12 min read",
-          author: "BuildDesk Team",
+          author: "Brikly Team",
           slug: "best-construction-management-software-small-business-2025",
           category: "Software Guides"
         },
@@ -64,7 +64,7 @@ const Resources = () => {
           title: "Job Costing in Construction: Setup Guide & Common Mistakes",
           description: "Master job costing with our step-by-step guide. Learn to track costs, improve margins, and avoid costly mistakes.",
           readTime: "8 min read",
-          author: "BuildDesk Team",
+          author: "Brikly Team",
           slug: "job-costing-construction-setup-guide",
           category: "Financial Management"
         },
@@ -72,7 +72,7 @@ const Resources = () => {
           title: "OSHA Safety Logs: Digital Playbook for Construction Teams",
           description: "Complete guide to OSHA compliance. Templates, workflows, and digital tools to keep your team safe and compliant.",
           readTime: "15 min read",
-          author: "BuildDesk Team", 
+          author: "Brikly Team", 
           slug: "osha-safety-logs-digital-playbook",
           category: "Safety"
         },
@@ -80,7 +80,7 @@ const Resources = () => {
           title: "Construction Scheduling Software: Stop Project Delays",
           description: "Simple scheduling rules that prevent delays. Learn how small contractors can improve project timelines.",
           readTime: "10 min read",
-          author: "BuildDesk Team",
+          author: "Brikly Team",
           slug: "construction-scheduling-software-prevent-delays",
           category: "Project Management"
         },
@@ -88,7 +88,7 @@ const Resources = () => {
           title: "Construction Daily Logs: What to Track and Why It Pays",
           description: "Essential guide to daily logs that reduce rework and improve project outcomes. Templates and best practices included.",
           readTime: "9 min read",
-          author: "BuildDesk Team",
+          author: "Brikly Team",
           slug: "construction-daily-logs-best-practices",
           category: "Field Management"
         }
@@ -98,18 +98,18 @@ const Resources = () => {
       title: "Software Comparisons",
       posts: [
         {
-          title: "Procore vs BuildDesk: Which is Better for Small GC Teams?",
-          description: "Honest comparison of Procore and BuildDesk for small contractors. Features, pricing, and ease of use compared.",
+          title: "Procore vs Brikly: Which is Better for Small GC Teams?",
+          description: "Honest comparison of Procore and Brikly for small contractors. Features, pricing, and ease of use compared.",
           readTime: "6 min read",
-          author: "BuildDesk Team",
-          slug: "procore-vs-builddesk-small-contractors",
+          author: "Brikly Team",
+          slug: "procore-vs-brikly-small-contractors",
           category: "Comparisons"
         },
         {
           title: "QuickBooks Integration Guide",
           description: "Step-by-step guide to integrate QuickBooks with construction management software for automated accounting.",
           readTime: "8 min read",
-          author: "BuildDesk Team",
+          author: "Brikly Team",
           slug: "quickbooks-integration-guide",
           category: "Integration"
         },
@@ -117,16 +117,16 @@ const Resources = () => {
           title: "Construction Mobile App Guide",
           description: "Best construction mobile apps for field teams. Compare features and find the perfect field management solution.",
           readTime: "10 min read",
-          author: "BuildDesk Team",
+          author: "Brikly Team",
           slug: "construction-mobile-app-guide",
           category: "Mobile"
         },
         {
-          title: "BuildDesk vs Buildertrend: Feature & Pricing Comparison",
-          description: "Side-by-side comparison of BuildDesk and Buildertrend for residential and commercial contractors.",
+          title: "Brikly vs Buildertrend: Feature & Pricing Comparison",
+          description: "Side-by-side comparison of Brikly and Buildertrend for residential and commercial contractors.",
           readTime: "7 min read",
-          author: "BuildDesk Team",
-          slug: "builddesk-vs-buildertrend-comparison",
+          author: "Brikly Team",
+          slug: "brikly-vs-buildertrend-comparison",
           category: "Comparisons"
         }
       ]
@@ -138,7 +138,7 @@ const Resources = () => {
           title: "OSHA Safety Logs: Digital Playbook for Construction Teams",
           description: "Complete guide to OSHA compliance. Templates, workflows, and digital tools to keep your team safe and compliant.",
           readTime: "15 min read",
-          author: "BuildDesk Team",
+          author: "Brikly Team",
           slug: "osha-safety-logs-digital-playbook",
           category: "Safety"
         },
@@ -146,7 +146,7 @@ const Resources = () => {
           title: "Construction Daily Logs: What to Track and Why It Pays",
           description: "Essential guide to daily logs that reduce rework and improve project outcomes. Templates and best practices included.",
           readTime: "9 min read",
-          author: "BuildDesk Team",
+          author: "Brikly Team",
           slug: "construction-daily-logs-best-practices",
           category: "Field Management"
         },
@@ -154,7 +154,7 @@ const Resources = () => {
           title: "Construction Scheduling Software: Stop Project Delays",
           description: "Simple scheduling rules that prevent delays. Learn how small contractors can improve project timelines.",
           readTime: "10 min read",
-          author: "BuildDesk Team",
+          author: "Brikly Team",
           slug: "construction-scheduling-software-prevent-delays",
           category: "Project Management"
         }
@@ -165,7 +165,7 @@ const Resources = () => {
   return (
     <div className="min-h-screen bg-background">
       <SEOMetaTags
-        title="Construction Management Resources & Guides | BuildDesk"
+        title="Construction Management Resources & Guides | Brikly"
         description="Free construction management guides, software comparisons, and best practices for small contractors. Job costing, OSHA compliance, scheduling tips, and more."
         keywords={[
           'construction management resources',
@@ -199,7 +199,7 @@ const Resources = () => {
         
         <QuickAnswerSnippet
           question="Where can I find construction management guides and resources?"
-          answer="BuildDesk offers free construction management guides covering job costing, OSHA compliance, scheduling, software comparisons (Procore vs BuildDesk, Buildertrend alternatives), and best practices specifically for small contractors."
+          answer="Brikly offers free construction management guides covering job costing, OSHA compliance, scheduling, software comparisons (Procore vs Brikly, Buildertrend alternatives), and best practices specifically for small contractors."
         />
 
         {/* Topic Hubs Section */}
@@ -275,7 +275,7 @@ const Resources = () => {
                 });
                 const imageUrl = post.featured_image_url?.replace(
                   /https?:\/\/[a-z0-9]+\.supabase\.co\/storage\//gi,
-                  "https://api.build-desk.com/storage/"
+                  "https://api.brikly.net/storage/"
                 );
 
                 return (
@@ -376,7 +376,7 @@ const Resources = () => {
             Ready to Improve Your Project Management?
           </h2>
           <p className="text-muted-foreground mb-6 max-w-2xl mx-auto">
-            See how BuildDesk helps small contractors reduce delays, improve margins, 
+            See how Brikly helps small contractors reduce delays, improve margins, 
             and stay compliant with simple, powerful project management tools.
           </p>
           <Button asChild size="lg">

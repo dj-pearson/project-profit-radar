@@ -13,7 +13,7 @@ const ProjectsHub: React.FC = () => {
   return (
     <DashboardLayout title="Projects Hub">
       <Helmet>
-        <title>Projects Hub | BuildDesk</title>
+        <title>Projects Hub | Brikly</title>
         <meta name="description" content="Projects hub – manage projects, resources, and communication in one place." />
         <link rel="canonical" href="/projects-hub" />
       </Helmet>

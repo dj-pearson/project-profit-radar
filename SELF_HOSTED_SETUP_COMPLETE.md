@@ -5,8 +5,8 @@
 Your codebase has been updated to support your self-hosted Supabase infrastructure:
 
 ### ✅ Infrastructure
-- **Main API** (Kong, Auth, Database, Storage): `https://api.build-desk.com`
-- **Edge Functions** (163 functions): `https://functions.build-desk.com`
+- **Main API** (Kong, Auth, Database, Storage): `https://api.brikly.net`
+- **Edge Functions** (163 functions): `https://functions.brikly.net`
 
 ### ✅ Code Updates
 
@@ -36,9 +36,9 @@ Create `.env` in your project root:
 
 ```env
 # Self-Hosted Supabase
-VITE_SUPABASE_URL=https://api.build-desk.com
+VITE_SUPABASE_URL=https://api.brikly.net
 VITE_SUPABASE_PUBLISHABLE_KEY=your-anon-key-here
-VITE_EDGE_FUNCTIONS_URL=https://functions.build-desk.com
+VITE_EDGE_FUNCTIONS_URL=https://functions.brikly.net
 ```
 
 ### 2️⃣ Get Your Keys
@@ -63,8 +63,8 @@ npm run dev
 You should see in the console:
 ```
 Supabase Configuration: {
-  mainApiUrl: "https://api.build-desk.com",
-  edgeFunctionsUrl: "https://functions.build-desk.com",
+  mainApiUrl: "https://api.brikly.net",
+  edgeFunctionsUrl: "https://functions.brikly.net",
   isSelfHosted: true
 }
 ```
@@ -73,10 +73,10 @@ Supabase Configuration: {
 
 ```bash
 # Test main API
-curl https://api.build-desk.com/auth/v1/health
+curl https://api.brikly.net/auth/v1/health
 
 # Test edge functions
-curl https://functions.build-desk.com/_health
+curl https://functions.brikly.net/_health
 ```
 
 ### 5️⃣ Update Production
@@ -86,18 +86,18 @@ curl https://functions.build-desk.com/_health
 2. Navigate to: Your Project → Settings → Environment variables
 3. Update:
    ```
-   VITE_SUPABASE_URL=https://api.build-desk.com
+   VITE_SUPABASE_URL=https://api.brikly.net
    VITE_SUPABASE_PUBLISHABLE_KEY=your-anon-key
-   VITE_EDGE_FUNCTIONS_URL=https://functions.build-desk.com
+   VITE_EDGE_FUNCTIONS_URL=https://functions.brikly.net
    ```
 4. Click "Save" and redeploy
 
 #### Mobile App (if applicable)
 1. Create `mobile-app/.env`:
    ```env
-   EXPO_PUBLIC_SUPABASE_URL=https://api.build-desk.com
+   EXPO_PUBLIC_SUPABASE_URL=https://api.brikly.net
    EXPO_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
-   EXPO_PUBLIC_EDGE_FUNCTIONS_URL=https://functions.build-desk.com
+   EXPO_PUBLIC_EDGE_FUNCTIONS_URL=https://functions.brikly.net
    ```
 2. Rebuild: `npm run build`
 
@@ -107,7 +107,7 @@ curl https://functions.build-desk.com/_health
 
 ### URL Routing
 
-**Main API** (`https://api.build-desk.com`):
+**Main API** (`https://api.brikly.net`):
 ```
 /auth/v1/*      → Supabase Auth
 /rest/v1/*      → PostgREST (Database)
@@ -115,7 +115,7 @@ curl https://functions.build-desk.com/_health
 /realtime/v1/*  → Realtime subscriptions
 ```
 
-**Edge Functions** (`https://functions.build-desk.com`):
+**Edge Functions** (`https://functions.brikly.net`):
 ```
 /function-name  → Your edge functions
 /_health        → Health check endpoint
@@ -134,10 +134,10 @@ The updated client automatically:
 ```typescript
 import { supabase, invokeEdgeFunction } from '@/integrations/supabase/client';
 
-// Database query - uses api.build-desk.com
+// Database query - uses api.brikly.net
 const { data } = await supabase.from('companies').select('*');
 
-// Edge function call - uses functions.build-desk.com
+// Edge function call - uses functions.brikly.net
 const { data, error } = await invokeEdgeFunction('ai-content-generator', {
   body: { prompt: 'Generate content' }
 });
@@ -181,7 +181,7 @@ The code is backward compatible, so no code changes needed!
 ### Check Edge Functions Health
 
 ```bash
-curl https://functions.build-desk.com/_health
+curl https://functions.brikly.net/_health
 ```
 
 Returns:
@@ -223,23 +223,23 @@ Access monitoring at:
 **Solution**: Check Kong configuration in your self-hosted Supabase:
 ```yaml
 cors_origins:
-  - https://builddesk.com
-  - https://www.builddesk.com
-  - https://*.build-desk.com
+  - https://brikly.com
+  - https://www.brikly.com
+  - https://*.brikly.net
 ```
 
 ### Issue: Edge functions return 404
 
 **Solution**:
 1. Check functions are running: `docker ps | grep edge-functions`
-2. Verify health endpoint: `curl https://functions.build-desk.com/_health`
+2. Verify health endpoint: `curl https://functions.brikly.net/_health`
 3. Check function name matches exactly
 
 ### Issue: Authentication fails
 
 **Solution**:
 1. Verify anon key is correct
-2. Test auth endpoint: `curl https://api.build-desk.com/auth/v1/health`
+2. Test auth endpoint: `curl https://api.brikly.net/auth/v1/health`
 3. Check Network tab in browser DevTools
 
 ---
@@ -259,8 +259,8 @@ Your application is now configured to use:
 
 | Service | Cloud Supabase (Old) | Self-Hosted (New) |
 |---------|---------------------|-------------------|
-| **Main API** | `*.supabase.co` | `api.build-desk.com` |
-| **Edge Functions** | `*.supabase.co/functions/v1/*` | `functions.build-desk.com/*` |
+| **Main API** | `*.supabase.co` | `api.brikly.net` |
+| **Edge Functions** | `*.supabase.co/functions/v1/*` | `functions.brikly.net/*` |
 | **Functions Count** | 163 | 163 ✓ |
 | **Configuration** | Single URL | Separate URLs |
 | **Code Changes** | None needed | Updated client |

@@ -1,7 +1,7 @@
-# BuildDesk UX Improvement Roadmap
+# Brikly UX Improvement Roadmap
 
 ## Overview
-This document outlines strategic UX improvements for the BuildDesk construction management platform, prioritized for maximum user impact and implementation efficiency.
+This document outlines strategic UX improvements for the Brikly construction management platform, prioritized for maximum user impact and implementation efficiency.
 
 ---
 

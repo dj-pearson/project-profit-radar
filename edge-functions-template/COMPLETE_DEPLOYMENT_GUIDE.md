@@ -42,7 +42,7 @@ From your self-hosted Supabase instance:
 
 ```bash
 # Navigate to your project
-cd C:\Users\dpearson\Documents\Build-Desk\project-profit-radar
+cd C:\Users\dpearson\Documents\Brikly\project-profit-radar
 
 # Verify edge-functions-template exists
 cd edge-functions-template

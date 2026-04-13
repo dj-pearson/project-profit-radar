@@ -1,6 +1,6 @@
 /**
  * Video Tutorial Library
- * Organized library of video tutorials for learning BuildDesk features
+ * Organized library of video tutorials for learning Brikly features
  */
 
 import React, { useState } from 'react';
@@ -47,8 +47,8 @@ export const VideoTutorialLibrary: React.FC = () => {
   const tutorials: VideoTutorial[] = [
     {
       id: '1',
-      title: 'BuildDesk Overview - Getting Started',
-      description: 'A comprehensive introduction to BuildDesk and its main features',
+      title: 'Brikly Overview - Getting Started',
+      description: 'A comprehensive introduction to Brikly and its main features',
       duration: '8:45',
       category: 'Getting Started',
       difficulty: 'beginner',
@@ -98,7 +98,7 @@ export const VideoTutorialLibrary: React.FC = () => {
     {
       id: '7',
       title: 'QuickBooks Integration Setup',
-      description: 'Connect BuildDesk with QuickBooks for automated sync',
+      description: 'Connect Brikly with QuickBooks for automated sync',
       duration: '10:30',
       category: 'Integrations',
       difficulty: 'advanced'
@@ -160,7 +160,7 @@ export const VideoTutorialLibrary: React.FC = () => {
       <div>
         <h1 className="text-3xl font-bold mb-2">Video Tutorials</h1>
         <p className="text-muted-foreground">
-          Learn how to use BuildDesk with our step-by-step video guides
+          Learn how to use Brikly with our step-by-step video guides
         </p>
       </div>
 

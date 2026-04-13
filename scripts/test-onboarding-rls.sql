@@ -22,10 +22,10 @@ SELECT
   domain,
   is_active
 FROM sites 
-WHERE key = 'builddesk';
+WHERE key = 'brikly';
 
 \echo ''
-\echo 'Expected: Should return 1 row with BuildDesk site'
+\echo 'Expected: Should return 1 row with Brikly site'
 \echo ''
 
 \echo '========================================'
@@ -34,10 +34,10 @@ WHERE key = 'builddesk';
 RESET ROLE;
 SELECT public.is_valid_site(id) as is_valid, key, name
 FROM sites 
-WHERE key = 'builddesk';
+WHERE key = 'brikly';
 
 \echo ''
-\echo 'Expected: Should return TRUE for BuildDesk'
+\echo 'Expected: Should return TRUE for Brikly'
 \echo ''
 
 \echo '========================================'
@@ -94,12 +94,12 @@ ORDER BY policyname;
 \echo 'TEST 6: Simulate authenticated user creating company'
 \echo '========================================'
 -- Note: This test requires a real authenticated user UUID
--- Replace <test_user_uuid> and <builddesk_site_id> with actual values
+-- Replace <test_user_uuid> and <brikly_site_id> with actual values
 
 \echo 'To manually test company creation:'
 \echo '1. Sign up a test user'
 \echo '2. Get their UUID from auth.users'
-\echo '3. Get BuildDesk site_id from sites table'
+\echo '3. Get Brikly site_id from sites table'
 \echo '4. Run this query as the authenticated user:'
 \echo ''
 \echo 'SET ROLE authenticated;'
@@ -108,7 +108,7 @@ ORDER BY policyname;
 \echo 'INSERT INTO companies ('
 \echo '  name, site_id, industry_type, company_size, annual_revenue_range'
 \echo ') VALUES ('
-\echo '  ''Test Company'', ''<builddesk_site_id>'', ''residential'', ''1-10'', ''startup'''
+\echo '  ''Test Company'', ''<brikly_site_id>'', ''residential'', ''1-10'', ''startup'''
 \echo ') RETURNING id, name, site_id;'
 \echo ''
 

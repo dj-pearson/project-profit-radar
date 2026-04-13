@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Duplicate File Detector for BuildDesk
+ * Duplicate File Detector for Brikly
  *
  * Scans src/ for:
  *   1. Same base name with .ts AND .tsx in the same directory (import ambiguity)
@@ -115,7 +115,7 @@ function countImports(relPath, allFiles) {
 const checkMode = process.argv.includes('--check');
 
 console.log('='.repeat(60));
-console.log('  BuildDesk Duplicate File Report');
+console.log('  Brikly Duplicate File Report');
 console.log('='.repeat(60));
 console.log();
 

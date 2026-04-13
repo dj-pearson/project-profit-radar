@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!-- Push Notifications -->
+	<key>aps-environment</key>
+	<string>production</string>
+
+	<!-- Keychain Access Groups for secure token storage -->
+	<key>keychain-access-groups</key>
+	<array>
+		<string>$(AppIdentifierPrefix)com.brikly.app</string>
+	</array>
+
+	<!-- Associated Domains for universal links and web credentials -->
+	<key>com.apple.developer.associated-domains</key>
+	<array>
+		<string>applinks:brikly.net</string>
+		<string>applinks:app.brikly.net</string>
+		<string>webcredentials:brikly.net</string>
+	</array>
+
+	<!-- Sign in with Apple -->
+	<key>com.apple.developer.applesignin</key>
+	<array>
+		<string>Default</string>
+	</array>
+
+	<!-- Background Location Updates -->
+	<key>com.apple.developer.location.push</key>
+	<true/>
+</dict>
+</plist>

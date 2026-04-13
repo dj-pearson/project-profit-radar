@@ -3,7 +3,7 @@
 **Target Keyword:** fast month end close construction
 **Published:** November 11, 2025
 **Reading Time:** 11 minutes
-**Author:** BuildDesk Team
+**Author:** Brikly Team
 
 ---
 
@@ -800,7 +800,7 @@ No credit card required. See your first 5-minute close in 30 days.
 ---
 
 **About the Author:**
-The BuildDesk Team has helped 500+ construction companies eliminate month-end accounting marathons. Our contractors average 6-minute closes and have reclaimed over 140,000 hours collectively.
+The Brikly Team has helped 500+ construction companies eliminate month-end accounting marathons. Our contractors average 6-minute closes and have reclaimed over 140,000 hours collectively.
 
 **Related Reading:**
 - [Why Contractors Fail: Financial Blindness →](/blog/why-contractors-fail-financial-blindness)

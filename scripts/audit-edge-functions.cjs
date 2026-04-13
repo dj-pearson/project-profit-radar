@@ -171,7 +171,7 @@ function checkEntryPointContent(funcInfo) {
 
 function main() {
   console.log('='.repeat(70));
-  console.log('  BUILDDESK EDGE FUNCTION AUDIT');
+  console.log('  BRIKLY EDGE FUNCTION AUDIT');
   console.log('  ' + new Date().toISOString());
   console.log('='.repeat(70));
   console.log();

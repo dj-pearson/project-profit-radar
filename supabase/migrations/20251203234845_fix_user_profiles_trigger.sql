@@ -34,12 +34,12 @@ BEGIN
     v_site_id := (NEW.raw_user_meta_data->>'site_id')::UUID;
   END IF;
   
-  -- If still NULL, default to BuildDesk site
+  -- If still NULL, default to Brikly site
   -- This ensures onboarding can proceed even if site_id isn't passed
   IF v_site_id IS NULL THEN
     SELECT id INTO v_site_id
     FROM sites
-    WHERE key = 'builddesk'
+    WHERE key = 'brikly'
     AND is_active = TRUE
     LIMIT 1;
   END IF;
@@ -127,7 +127,7 @@ END $$;
 -- COMMENTS
 -- =====================================================
 COMMENT ON FUNCTION public.handle_new_user() IS
-  'Automatically creates a user_profiles record when a new user signs up. Resolves site_id from JWT metadata or defaults to BuildDesk. Required for onboarding flow.';
+  'Automatically creates a user_profiles record when a new user signs up. Resolves site_id from JWT metadata or defaults to Brikly. Required for onboarding flow.';
 
 COMMENT ON TRIGGER on_auth_user_created ON auth.users IS
   'Triggers handle_new_user() after a new user is inserted into auth.users. Ensures every user gets a user_profiles record with site_id for multi-tenant isolation.';

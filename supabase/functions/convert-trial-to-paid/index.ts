@@ -110,7 +110,7 @@ serve(async (req) => {
               currency: "usd",
               product_data: { 
                 name: `${subscription_tier.charAt(0).toUpperCase() + subscription_tier.slice(1)} Plan`,
-                description: `Build Desk ${subscription_tier} subscription - ${billing_period} billing`
+                description: `Brikly ${subscription_tier} subscription - ${billing_period} billing`
               },
               unit_amount: amount,
               recurring: { interval },
@@ -154,7 +154,7 @@ serve(async (req) => {
             currency: "usd",
             product_data: { 
               name: `${subscription_tier.charAt(0).toUpperCase() + subscription_tier.slice(1)} Plan`,
-              description: `Build Desk ${subscription_tier} subscription - ${billing_period} billing`
+              description: `Brikly ${subscription_tier} subscription - ${billing_period} billing`
             },
             unit_amount: amount,
             recurring: { interval },

@@ -1,6 +1,6 @@
 # iOS App Store Deployment Checklist
 
-**BuildDesk** - Complete setup guide for automated iOS builds and TestFlight/App Store deployment via GitHub Actions.
+**Brikly** - Complete setup guide for automated iOS builds and TestFlight/App Store deployment via GitHub Actions.
 
 ---
 
@@ -41,8 +41,8 @@ According to your message, you've completed:
 1. Go to: https://developer.apple.com/account/resources/identifiers/list
 2. Click **"+"** → **App IDs** → **App**
 3. Enter:
-   - **Description**: `BuildDesk`
-   - **Bundle ID**: `com.builddesk.app` _(matches capacitor.config.ts)_
+   - **Description**: `Brikly`
+   - **Bundle ID**: `com.brikly.app` _(matches capacitor.config.ts)_
 4. Enable capabilities:
    - [x] Push Notifications
    - [x] Sign in with Apple (if needed)
@@ -78,11 +78,11 @@ You'll need to create a certificate locally first, then export it.
 # 9. Export as .p12:
 # - In Keychain Access, find "Apple Distribution: [Your Name]"
 # - Right-click → Export "Apple Distribution: [Your Name]"
-# - Save as: BuildDesk-Distribution.p12
+# - Save as: Brikly-Distribution.p12
 # - Set a password (remember it!)
 
 # 10. Convert to base64 for GitHub Secret:
-base64 -i BuildDesk-Distribution.p12 | pbcopy
+base64 -i Brikly-Distribution.p12 | pbcopy
 # (Now paste into GitHub Secret: IOS_DISTRIBUTION_CERT_P12)
 
 # 11. Save the password as GitHub Secret: IOS_DISTRIBUTION_CERT_PASSWORD
@@ -100,21 +100,21 @@ If you have multiple apps, consider using Fastlane Match to store certificates i
 
 1. Go to: https://developer.apple.com/account/resources/profiles/list
 2. Click **"+"** → **App Store** (under Distribution)
-3. Select your Bundle ID: `com.builddesk.app`
+3. Select your Bundle ID: `com.brikly.app`
 4. Select your Distribution Certificate
-5. Name it: `BuildDesk App Store Profile`
+5. Name it: `Brikly App Store Profile`
 6. Click **Generate** and **Download**
 
 **Save for GitHub:**
 
 ```bash
 # Convert to base64:
-base64 -i BuildDesk_App_Store_Profile.mobileprovision | pbcopy
+base64 -i Brikly_App_Store_Profile.mobileprovision | pbcopy
 # Paste into GitHub Secret: IOS_PROVISIONING_PROFILE
 
 # Also save the NAME (not the filename) as:
 # GitHub Secret: IOS_PROVISIONING_PROFILE_NAME
-# Value: "BuildDesk App Store Profile"
+# Value: "Brikly App Store Profile"
 ```
 
 **Status**: ⏳ To be completed
@@ -127,10 +127,10 @@ base64 -i BuildDesk_App_Store_Profile.mobileprovision | pbcopy
 2. Click **"+"** → **New App**
 3. Fill in:
    - **Platform**: iOS
-   - **Name**: BuildDesk
+   - **Name**: Brikly
    - **Primary Language**: English (U.S.)
-   - **Bundle ID**: Select `com.builddesk.app`
-   - **SKU**: `builddesk-ios-001` (any unique string)
+   - **Bundle ID**: Select `com.brikly.app`
+   - **SKU**: `brikly-ios-001` (any unique string)
    - **User Access**: Full Access
 4. Click **Create**
 
@@ -303,7 +303,7 @@ The build takes approximately **20-40 minutes**. Watch the progress:
 ### 6.1 After Successful Upload
 
 1. Go to: https://appstoreconnect.apple.com
-2. Select **BuildDesk** → **TestFlight** tab
+2. Select **Brikly** → **TestFlight** tab
 3. Wait for **"Processing"** to complete (5-30 minutes)
 4. Build will appear under **iOS Builds**
 
@@ -317,7 +317,7 @@ Apple will prompt you about export compliance:
 
 **Answer for most apps**:
 
-- ✅ **Yes** - if your app uses HTTPS (which BuildDesk does)
+- ✅ **Yes** - if your app uses HTTPS (which Brikly does)
 - Select: "Your app uses standard encryption"
 - No additional compliance required
 
@@ -500,7 +500,7 @@ Monitor in App Store Connect:
 
 **Fix**:
 
-1. Verify bundle ID in `capacitor.config.ts`: `com.builddesk.app`
+1. Verify bundle ID in `capacitor.config.ts`: `com.brikly.app`
 2. Check Apple Developer Portal → Profiles
 3. Ensure profile is "App Store" (not "Development")
 4. Re-download and re-encode profile
@@ -559,7 +559,7 @@ Before triggering your first GitHub Actions build:
 
 - [ ] Enrolled in Apple Developer Program ($99/year)
 - [ ] Created App Store Connect API Key
-- [ ] Registered Bundle ID: `com.builddesk.app`
+- [ ] Registered Bundle ID: `com.brikly.app`
 - [ ] Created Distribution Certificate (exported as .p12)
 - [ ] Created App Store Provisioning Profile
 - [ ] Created App in App Store Connect
@@ -608,7 +608,7 @@ Once all checklist items are complete, you're ready to:
 ---
 
 **Last Updated**: February 12, 2026  
-**BuildDesk Version**: 1.0.0  
+**Brikly Version**: 1.0.0  
 **Workflow Version**: 1.0
 
 ---

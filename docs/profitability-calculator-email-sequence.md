@@ -1,10 +1,10 @@
 # Profitability Calculator Email Nurture Sequence
 
-This document outlines the 7-day automated email nurture sequence for leads captured through the BuildDesk Profitability Calculator.
+This document outlines the 7-day automated email nurture sequence for leads captured through the Brikly Profitability Calculator.
 
 ## Overview
 
-- **Goal**: Convert calculator users into BuildDesk trial users and paying customers
+- **Goal**: Convert calculator users into Brikly trial users and paying customers
 - **Duration**: 7 days
 - **Target Conversion Rate**: 5% of email captures → trial sign-ups
 - **Email Service**: Resend (recommended) or SendGrid
@@ -16,13 +16,13 @@ This document outlines the 7-day automated email nurture sequence for leads capt
 
 **Subject**: Your Project Profitability Report + One Critical Tip
 
-**From**: BuildDesk Team <team@build-desk.com>
+**From**: Brikly Team <team@brikly.net>
 
 **Content**:
 ```
 Hi [First Name],
 
-Thanks for using the BuildDesk Profitability Calculator!
+Thanks for using the Brikly Profitability Calculator!
 
 Attached is your complete profitability report for your [Project Type] project.
 
@@ -38,19 +38,19 @@ For your [Project Type] project with [X] labor hours, consider adding an extra
 [Y] hours to your estimate to avoid margin erosion.
 
 Want to automatically track actual vs estimated hours on every job?
-BuildDesk tracks crew time in real-time and alerts you when you're approaching budget limits.
+Brikly tracks crew time in real-time and alerts you when you're approaching budget limits.
 
 [Start Free Trial - No Credit Card Required]
 
 Best,
-The BuildDesk Team
+The Brikly Team
 
 P.S. Reply to this email with any questions about your profitability report.
 We're here to help!
 
 ---
-BuildDesk | Real-Time Construction Management
-build-desk.com | 1-800-BUILD-DESK
+Brikly | Real-Time Construction Management
+brikly.net | 1-800-BRIKLY
 ```
 
 **Attachments**: PDF profitability report
@@ -65,7 +65,7 @@ build-desk.com | 1-800-BUILD-DESK
 
 **Subject**: The #1 reason contractors lose money (it's not what you think)
 
-**From**: Sarah Chen, BuildDesk <sarah@build-desk.com>
+**From**: Sarah Chen, Brikly <sarah@brikly.net>
 
 **Content**:
 ```
@@ -89,7 +89,7 @@ small changes that add up over time:
 Each "small favor" chips away at your margins until a 20% profit job
 becomes a break-even or even a loss.
 
-🛡️ HOW BUILDDESK PROTECTS YOUR MARGINS
+🛡️ HOW BRIKLY PROTECTS YOUR MARGINS
 
 1. **Change Order Impact Calculator**: See exactly how each request affects
    your profit before saying yes
@@ -111,14 +111,14 @@ before it was too late. The system alerted them when labor hours exceeded
 They adjusted, communicated with the client, and still finished with
 18% margins intact.
 
-[See How BuildDesk Protects Your Margins →]
+[See How Brikly Protects Your Margins →]
 
 Want to discuss your specific profit challenges?
 Just reply - I read every response.
 
 Best,
 Sarah Chen
-Customer Success, BuildDesk
+Customer Success, Brikly
 
 P.S. Your [Project Type] project has [Risk Level] risk based on our analysis.
 Want tips to mitigate these specific risks? [Download Risk Mitigation Guide]
@@ -134,7 +134,7 @@ Want tips to mitigate these specific risks? [Download Risk Mitigation Guide]
 
 **Subject**: Case Study: How Martinez Construction increased margins by 12%
 
-**From**: BuildDesk Success Stories <stories@build-desk.com>
+**From**: Brikly Success Stories <stories@brikly.net>
 
 **Content**:
 ```
@@ -142,7 +142,7 @@ Hi [First Name],
 
 I want to share a real story from one of our contractors.
 
-👷 MARTINEZ CONSTRUCTION - BEFORE BUILDDESK:
+👷 MARTINEZ CONSTRUCTION - BEFORE BRIKLY:
 
 - Average profit margin: 11%
 - 30% of projects went over budget
@@ -159,7 +159,7 @@ creep that wasn't captured until invoices came due.
 
 💡 THE SOLUTION:
 
-After implementing BuildDesk:
+After implementing Brikly:
 
 **Month 1**:
 - Set up crew mobile time tracking (took 15 minutes)
@@ -184,7 +184,7 @@ After implementing BuildDesk:
 - Annual Profit Increase: $47,000
 - Time Saved: 10 hours/week on paperwork
 
-"BuildDesk didn't just help us make more money - it reduced my stress
+"Brikly didn't just help us make more money - it reduced my stress
 level dramatically. I sleep better knowing exactly where every project
 stands." - John Martinez, Owner
 
@@ -197,7 +197,7 @@ Ready to get similar results?
 Questions? I'm here to help.
 
 Best,
-The BuildDesk Team
+The Brikly Team
 
 P.S. Want to see how this would work for YOUR company?
 [Book a 15-minute personalized demo] - we'll use your actual project data.
@@ -213,7 +213,7 @@ P.S. Want to see how this would work for YOUR company?
 
 **Subject**: Track labor costs in real-time (without the paperwork)
 
-**From**: BuildDesk Product Team <product@build-desk.com>
+**From**: Brikly Product Team <product@brikly.net>
 
 **Content**:
 ```
@@ -227,10 +227,10 @@ Quick question: How much time do you spend each week:
 
 If you answered "Too much" - this email is for you.
 
-📱 BUILDDESK MOBILE TIME TRACKING
+📱 BRIKLY MOBILE TIME TRACKING
 
 Your crew clocks in/out with 2 taps:
-1. Open BuildDesk app
+1. Open Brikly app
 2. Tap "Clock In" on their assigned project
 
 That's it. No paper, no spreadsheets, no headaches.
@@ -248,7 +248,7 @@ That's it. No paper, no spreadsheets, no headaches.
 
 💰 THE FINANCIAL IMPACT:
 
-Average contractors using BuildDesk mobile tracking report:
+Average contractors using Brikly mobile tracking report:
 
 - 6% reduction in labor costs (accountability effect)
 - 10 hours/week saved on timesheet management
@@ -266,7 +266,7 @@ Questions about implementation?
 Reply and I'll walk you through it.
 
 Best,
-The BuildDesk Product Team
+The Brikly Product Team
 
 P.S. Concerned about crew adoption? We have a proven 3-day rollout plan
 that gets 95%+ crew compliance. [Get the Rollout Checklist]
@@ -280,9 +280,9 @@ that gets 95%+ crew compliance. [Get the Rollout Checklist]
 
 ### EMAIL 5: Social Proof (Day 5)
 
-**Subject**: "BuildDesk saved us from a $15K loss on the Johnson remodel"
+**Subject**: "Brikly saved us from a $15K loss on the Johnson remodel"
 
-**From**: BuildDesk <team@build-desk.com>
+**From**: Brikly <team@brikly.net>
 
 **Content**:
 ```
@@ -292,21 +292,21 @@ Don't take our word for it. Here's what contractors are saying:
 
 ---
 
-💬 "The change order impact calculator alone pays for BuildDesk.
+💬 "The change order impact calculator alone pays for Brikly.
 We can show clients exactly how their 'small changes' affect the budget.
 Increased our change order approval rate from 60% to 95%."
 - Sarah Thompson, Thompson Home Remodeling
 
 ---
 
-💬 "I was skeptical about another software system. But BuildDesk setup
+💬 "I was skeptical about another software system. But Brikly setup
 took 15 minutes and my crew figured out the mobile app instantly.
 Worth every penny."
 - Mike Rodriguez, Rodriguez Construction
 
 ---
 
-💬 "BuildDesk caught a material overrun that would have cost us $8K.
+💬 "Brikly caught a material overrun that would have cost us $8K.
 The system alerted me when lumber costs exceeded 85% of budget at only
 60% project completion. We adjusted immediately."
 - Lisa Chen, Chen Contracting
@@ -328,7 +328,7 @@ Adjusted our bidding strategy and increased margins by 9%."
 
 📊 BY THE NUMBERS:
 
-✓ 1,200+ contractors trust BuildDesk
+✓ 1,200+ contractors trust Brikly
 ✓ 4.9/5 average rating
 ✓ 96% customer retention rate
 ✓ $28 average ROI for every $1 spent
@@ -358,7 +358,7 @@ A: Bank-level encryption. Daily backups. SOC 2 compliant.
 [Get Started Now] or [Book a Demo Call]
 
 Best,
-The BuildDesk Team
+The Brikly Team
 
 P.S. Limited time offer: Start your trial this week and get 20% off
 your first 3 months. [Claim Discount →]
@@ -374,15 +374,15 @@ your first 3 months. [Claim Discount →]
 
 **Subject**: Common objections we hear (and honest answers)
 
-**From**: David Park, BuildDesk CEO <david@build-desk.com>
+**From**: David Park, Brikly CEO <david@brikly.net>
 
 **Content**:
 ```
 Hi [First Name],
 
-I'm David, founder of BuildDesk. I want to be straight with you.
+I'm David, founder of Brikly. I want to be straight with you.
 
-You've been receiving emails about BuildDesk for almost a week.
+You've been receiving emails about Brikly for almost a week.
 You haven't signed up yet.
 
 That's okay. I get it.
@@ -393,25 +393,25 @@ Let me address the concerns I hear most often:
 
 🤔 "IT'S TOO EXPENSIVE"
 
-Fair concern. BuildDesk is $350/month.
+Fair concern. Brikly is $350/month.
 
 But let's do the math on your [Project Type] project:
 
 - Your calculated profit margin: [X]%
 - Your profit amount: $[Y]
 
-If BuildDesk helps you:
+If Brikly helps you:
 - Prevent ONE 5% margin leak → $[Z] saved
 - Catch ONE material overrun → $[A] saved
 - Win ONE additional bid with accurate pricing → $[B] gained
 
 Monthly savings: $[C]
-BuildDesk cost: $350
+Brikly cost: $350
 Net benefit: $[D]
 
 ROI: [E]x return
 
-Most contractors report BuildDesk pays for itself in Week 2.
+Most contractors report Brikly pays for itself in Week 2.
 
 ---
 
@@ -419,14 +419,14 @@ Most contractors report BuildDesk pays for itself in Week 2.
 
 I won't lie - some construction software is overcomplicated garbage.
 
-That's WHY we built BuildDesk.
+That's WHY we built Brikly.
 
 Setup time: 15 minutes (we have a getting started video)
 Crew training: 5 minutes (seriously, it's 2 buttons)
 Time to first project tracked: Same day
 
 If it takes you longer than 30 minutes to get value,
-I'll personally help you set it up. Email me: david@build-desk.com
+I'll personally help you set it up. Email me: david@brikly.net
 
 ---
 
@@ -443,7 +443,7 @@ But answer this honestly:
 - Do they sync with QuickBooks automatically?
 
 Spreadsheets = looking backward at what happened
-BuildDesk = looking forward to prevent problems
+Brikly = looking forward to prevent problems
 
 ---
 
@@ -470,23 +470,23 @@ you get a full refund. No questions asked.
 
 🎯 HERE'S MY OFFER:
 
-Try BuildDesk for 14 days. Free. No credit card required.
+Try Brikly for 14 days. Free. No credit card required.
 
 If you're not seeing value by Day 7, email me personally.
 I'll either:
 a) Help you get more value, or
-b) Tell you honestly if BuildDesk isn't right for your business
+b) Tell you honestly if Brikly isn't right for your business
 
 [Start Your Risk-Free Trial →]
 
-I built BuildDesk because I was a contractor who lost money on jobs
+I built Brikly because I was a contractor who lost money on jobs
 I thought were profitable. I know your pain.
 
 We're here to help.
 
 David Park
-Founder & CEO, BuildDesk
-david@build-desk.com
+Founder & CEO, Brikly
+david@brikly.net
 Direct: (555) 123-4567
 
 P.S. Got a specific concern I didn't address?
@@ -503,7 +503,7 @@ Hit reply. I read every email.
 
 **Subject**: Last chance: 20% off your first 3 months
 
-**From**: BuildDesk <team@build-desk.com>
+**From**: Brikly <team@brikly.net>
 
 **Content**:
 ```
@@ -545,7 +545,7 @@ Offer expires in 48 hours.
 
 📊 WHAT YOU'RE MISSING:
 
-Without BuildDesk, every day you're:
+Without Brikly, every day you're:
 
 ❌ Losing 3-7% margins to scope creep
 ❌ Spending 10+ hours/week on manual tracking
@@ -553,7 +553,7 @@ Without BuildDesk, every day you're:
 ❌ Losing bids because your pricing is unclear
 ❌ Stressing about whether projects are profitable
 
-With BuildDesk:
+With Brikly:
 
 ✅ Real-time profit tracking on every project
 ✅ Automated crew time tracking
@@ -570,7 +570,7 @@ With BuildDesk:
 - Cancel anytime, no penalties
 - Export all your data if you leave
 
-We're confident you'll love BuildDesk.
+We're confident you'll love Brikly.
 But if you don't, get a full refund.
 
 [Start Your Trial + Claim 20% Discount →]
@@ -581,7 +581,7 @@ But if you don't, get a full refund.
 
 That's okay! Not every tool is right for every contractor.
 
-If BuildDesk isn't a fit right now, we understand.
+If Brikly isn't a fit right now, we understand.
 
 But here are some free resources to help:
 
@@ -607,19 +607,19 @@ Imagine automatically tracking profit on EVERY project:
 
 All in one place. All in real-time.
 
-That's BuildDesk.
+That's Brikly.
 
 [Claim Your 20% Discount - 48 Hours Only →]
 
 Thank you for your time this week.
 
-Whether you choose BuildDesk or not, I hope you found value in these emails.
+Whether you choose Brikly or not, I hope you found value in these emails.
 
 Build profitably,
-The BuildDesk Team
+The Brikly Team
 
-P.S. Questions about the discount or BuildDesk?
-Reply to this email or call us: 1-800-BUILD-DESK
+P.S. Questions about the discount or Brikly?
+Reply to this email or call us: 1-800-BRIKLY
 
 ---
 
@@ -638,7 +638,7 @@ This is the last email in this sequence. If you'd like to stay in touch:
 ### Email Service Setup (Resend Recommended)
 
 1. **Create account** at resend.com
-2. **Verify domain**: build-desk.com
+2. **Verify domain**: brikly.net
 3. **Set up audience**: Calculator leads
 4. **Create automation**: Trigger on email capture
 5. **Add delays**: 2min, 1day, 1day, 1day, 2days, 1day, 1day
@@ -747,4 +747,4 @@ Review and update quarterly:
 
 ## Questions or Issues?
 
-Contact: david@build-desk.com
+Contact: david@brikly.net

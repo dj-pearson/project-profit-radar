@@ -106,7 +106,7 @@ Remaining questions or areas needing clarification.
 
 ---
 
-## BuildDesk-Specific Context
+## Brikly-Specific Context
 
 - **Stack**: React 19 + TypeScript + Vite + Tailwind CSS + shadcn/ui
 - **Backend**: Supabase (PostgreSQL + Auth + Edge Functions)

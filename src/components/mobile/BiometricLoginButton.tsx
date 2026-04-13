@@ -64,7 +64,7 @@ export const BiometricLoginButton = ({
 
     try {
       // First authenticate with biometrics
-      const authResult = await authenticate('Sign in to BuildDesk');
+      const authResult = await authenticate('Sign in to Brikly');
 
       if (!authResult.success) {
         const errorMessage = authResult.error || 'Biometric authentication failed';

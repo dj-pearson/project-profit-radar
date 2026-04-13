@@ -2,19 +2,19 @@
 
 ## Overview
 
-The Supabase MCP server has been added to your BuildDesk project, providing Claude Code with comprehensive access to your Supabase database and platform features.
+The Supabase MCP server has been added to your Brikly project, providing Claude Code with comprehensive access to your Supabase database and platform features.
 
 ## What This Enables
 
 With the Supabase MCP server, Claude Code can now:
 
 ### Database Operations
-- **CRUD Operations**: Create, read, update, and delete records across all your BuildDesk tables
+- **CRUD Operations**: Create, read, update, and delete records across all your Brikly tables
 - **Advanced Queries**: Complex filtering, joins, and aggregations using natural language
 - **Schema Management**: View and modify table structures, relationships, and constraints
 - **Data Analysis**: Generate reports on projects, financials, users, and business metrics
 
-### Specific BuildDesk Capabilities
+### Specific Brikly Capabilities
 - **Project Management**: Query project data, budgets, timelines, and completion rates
 - **Financial Analysis**: Analyze profit margins, costs, revenue, and financial performance
 - **User Management**: Handle user accounts, permissions, and company relationships
@@ -37,7 +37,7 @@ With the Supabase MCP server, Claude Code can now:
 1. Visit [Supabase Dashboard - Account Tokens](https://supabase.com/dashboard/account/tokens)
 2. Click "Generate new token"
 3. Token Configuration:
-   - **Name**: `BuildDesk MCP`
+   - **Name**: `Brikly MCP`
    - **Scopes**: Select at minimum:
      - `read:projects` - Read access to your projects
      - `write:projects` - Write access for project modifications
@@ -187,4 +187,4 @@ For automated workflows, you can:
 - Generate database documentation automatically
 - Validate schema changes before deployment
 
-This integration transforms your BuildDesk development workflow, allowing natural language interaction with your entire Supabase infrastructure through Claude Code. 
+This integration transforms your Brikly development workflow, allowing natural language interaction with your entire Supabase infrastructure through Claude Code. 

@@ -6,7 +6,7 @@
 ```sql
 -- Check if sites table is readable by anon
 SET ROLE anon;
-SELECT * FROM sites WHERE key = 'builddesk';
+SELECT * FROM sites WHERE key = 'brikly';
 -- Should return 1 row. If error "permission denied", apply fix #1
 ```
 
@@ -117,9 +117,9 @@ Look for:
 ### Verify Site Resolution
 ```typescript
 // In browser console
-const siteConfig = await window.supabase.from('sites').select('*').eq('key', 'builddesk').single();
+const siteConfig = await window.supabase.from('sites').select('*').eq('key', 'brikly').single();
 console.log('Site config:', siteConfig);
-// Should return BuildDesk site data
+// Should return Brikly site data
 ```
 
 ## Database Checks
@@ -147,9 +147,9 @@ WHERE tablename IN ('sites', 'companies', 'user_profiles')
 ORDER BY tablename, policyname;
 ```
 
-### Verify BuildDesk Site Exists
+### Verify Brikly Site Exists
 ```sql
-SELECT * FROM sites WHERE key = 'builddesk';
+SELECT * FROM sites WHERE key = 'brikly';
 -- Should return 1 active row
 ```
 
@@ -173,10 +173,10 @@ ORDER BY u.created_at DESC;
 ### Test 1: Anonymous Site Resolution
 ```bash
 # Using curl (no auth)
-curl 'https://<project-ref>.supabase.co/rest/v1/sites?key=eq.builddesk&select=*' \
+curl 'https://<project-ref>.supabase.co/rest/v1/sites?key=eq.brikly&select=*' \
   -H "apikey: <anon-key>"
 
-# Should return BuildDesk site data
+# Should return Brikly site data
 ```
 
 ### Test 2: New User Signup
@@ -212,7 +212,7 @@ console.log('Profile created:', profile);
 const { data: siteData } = await supabase
   .from('sites')
   .select('id')
-  .eq('key', 'builddesk')
+  .eq('key', 'brikly')
   .single();
 
 const { data: company, error } = await supabase
@@ -249,7 +249,7 @@ CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER AS $$
 DECLARE v_site_id UUID;
 BEGIN
-  SELECT id INTO v_site_id FROM sites WHERE key = 'builddesk' LIMIT 1;
+  SELECT id INTO v_site_id FROM sites WHERE key = 'brikly' LIMIT 1;
   
   INSERT INTO public.user_profiles (id, email, role, site_id, is_active)
   VALUES (NEW.id, NEW.email, 'admin', v_site_id, TRUE)

@@ -1,4 +1,4 @@
-# BuildDesk SEO Strategy: Complete Implementation Roadmap for Construction Management Software
+# Brikly SEO Strategy: Complete Implementation Roadmap for Construction Management Software
 
 The construction management software market presents exceptional SEO opportunities in 2025, particularly for companies that can navigate AI-powered search changes while targeting the underserved mid-market segment between residential-focused solutions like Buildertrend and enterprise platforms like Procore. This roadmap provides a systematic approach to capturing organic growth through technical excellence, strategic content optimization, and industry-specific authority building.
 
@@ -6,7 +6,7 @@ The construction management software market presents exceptional SEO opportuniti
 
 **Market opportunity**: The construction software market is expanding at 9.2% CAGR toward $7.5B by 2032, while major competitors leave gaps in the small-to-medium commercial construction segment. **Key insight**: AI overviews now appear in 20% of search results, fundamentally shifting strategy toward high-intent, conversion-focused keywords rather than broad informational terms.
 
-**Competitive landscape**: Procore dominates enterprise with comprehensive but complex positioning, while Buildertrend leads residential with user-friendly approaches. **Strategic positioning**: BuildDesk should target the SMB commercial market with transparent pricing, simplified user experience, and integration-first messaging that capitalizes on competitors' complexity and pricing opacity.
+**Competitive landscape**: Procore dominates enterprise with comprehensive but complex positioning, while Buildertrend leads residential with user-friendly approaches. **Strategic positioning**: Brikly should target the SMB commercial market with transparent pricing, simplified user experience, and integration-first messaging that capitalizes on competitors' complexity and pricing opacity.
 
 **Implementation priority**: Focus on bottom-funnel keywords like "procore alternative" and "construction management software comparison" that still drive clicks despite AI changes, while building technical SEO foundation for sustained organic growth.
 
@@ -34,7 +34,7 @@ The construction management software market presents exceptional SEO opportuniti
 
 **Review and rating schema** builds trust and improves click-through rates. **Strategy**: Implement aggregateRating with bestRating, worstRating, and reviewCount properties, plus individual review arrays with author information, ratings, review body, and publication dates. **Critical**: Ensure visible content matches schema data exactly.
 
-**FAQ schema** captures featured snippets for software comparison content. **Target questions**: "What's the difference between CRM and project management software?", "Which software is best for small businesses?", "How does BuildDesk compare to Procore?". **Implementation**: Use FAQPage schema with mainEntity arrays containing Question and Answer objects with comprehensive responses.
+**FAQ schema** captures featured snippets for software comparison content. **Target questions**: "What's the difference between CRM and project management software?", "Which software is best for small businesses?", "How does Brikly compare to Procore?". **Implementation**: Use FAQPage schema with mainEntity arrays containing Question and Answer objects with comprehensive responses.
 
 ### Organization and navigation schema
 
@@ -52,7 +52,7 @@ The construction management software market presents exceptional SEO opportuniti
 
 ### B2B SaaS conversion optimization
 
-**Landing page structure** follows proven B2B conversion patterns: clear value proposition addressing competitor limitations, benefit-focused headlines, single prominent CTA buttons, social proof elements, product screenshots. **Content framework**: Pain-Agitation-Solution structure, feature comparison tables highlighting advantages, "Why choose BuildDesk?" sections addressing competitor weaknesses, customer success stories from switchers.
+**Landing page structure** follows proven B2B conversion patterns: clear value proposition addressing competitor limitations, benefit-focused headlines, single prominent CTA buttons, social proof elements, product screenshots. **Content framework**: Pain-Agitation-Solution structure, feature comparison tables highlighting advantages, "Why choose Brikly?" sections addressing competitor weaknesses, customer success stories from switchers.
 
 **Call-to-action optimization** shows "Start Free Trial" outperforms "Book Demo" for SaaS, personalized CTAs perform 202% better than generic ones, single CTA focus increases conversions (multiple CTAs decrease by 266%). **Placement strategy**: Above fold in hero sections, after comparison tables, following social proof sections, within case study content.
 
@@ -154,4 +154,4 @@ The construction management software market presents exceptional SEO opportuniti
 
 **Long-term benefits**: Reduced customer acquisition costs, improved brand visibility in construction industry, enhanced user experience driving higher conversions, scalable organic growth foundation, competitive intelligence and market positioning advantages.
 
-This comprehensive SEO strategy positions BuildDesk to capture significant organic growth in the expanding construction software market through technical excellence, strategic content optimization, and industry-specific authority building that directly supports business objectives and revenue growth.
+This comprehensive SEO strategy positions Brikly to capture significant organic growth in the expanding construction software market through technical excellence, strategic content optimization, and industry-specific authority building that directly supports business objectives and revenue growth.

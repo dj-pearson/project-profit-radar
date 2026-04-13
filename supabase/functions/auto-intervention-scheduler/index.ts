@@ -28,7 +28,7 @@ const INTERVENTION_RULES: InterventionRule[] = [
     template: "low_engagement",
     subject: "We noticed you haven't been active lately",
     getMessage: (company, health) =>
-      `Hi ${company.name} team,\n\nWe noticed you haven't logged into BuildDesk recently. We're here to help you get the most out of the platform.\n\nWould you like to schedule a quick call to discuss your needs?\n\nBest regards,\nBuildDesk Team`,
+      `Hi ${company.name} team,\n\nWe noticed you haven't logged into Brikly recently. We're here to help you get the most out of the platform.\n\nWould you like to schedule a quick call to discuss your needs?\n\nBest regards,\nBrikly Team`,
   },
   {
     type: "trial_ending_high_engagement",
@@ -47,7 +47,7 @@ const INTERVENTION_RULES: InterventionRule[] = [
         (new Date(company.trial_end_date).getTime() - new Date().getTime()) /
           (1000 * 60 * 60 * 24)
       );
-      return `Hi ${company.name} team,\n\nWe're excited to see how actively you're using BuildDesk! Your trial expires in ${daysLeft} days.\n\nAs a thank you for being an engaged user, we're offering you 20% off your first 3 months.\n\nUpgrade now to keep all your data and continue building great projects.\n\nBest regards,\nBuildDesk Team`;
+      return `Hi ${company.name} team,\n\nWe're excited to see how actively you're using Brikly! Your trial expires in ${daysLeft} days.\n\nAs a thank you for being an engaged user, we're offering you 20% off your first 3 months.\n\nUpgrade now to keep all your data and continue building great projects.\n\nBest regards,\nBrikly Team`;
     },
   },
   {
@@ -61,13 +61,13 @@ const INTERVENTION_RULES: InterventionRule[] = [
       return daysUntilExpiry <= 3 && daysUntilExpiry >= 0 && health.score < 50;
     },
     template: "trial_onboarding_help",
-    subject: "Need help getting started with BuildDesk?",
+    subject: "Need help getting started with Brikly?",
     getMessage: (company, health) => {
       const daysLeft = Math.floor(
         (new Date(company.trial_end_date).getTime() - new Date().getTime()) /
           (1000 * 60 * 60 * 24)
       );
-      return `Hi ${company.name} team,\n\nYour trial expires in ${daysLeft} days, and we want to make sure you get the most out of BuildDesk.\n\nWould you like a personalized onboarding session? We'll help you:\n- Set up your first project\n- Import your team\n- Configure integrations\n- Answer any questions\n\nBook a free 30-minute session here: [link]\n\nBest regards,\nBuildDesk Team`;
+      return `Hi ${company.name} team,\n\nYour trial expires in ${daysLeft} days, and we want to make sure you get the most out of Brikly.\n\nWould you like a personalized onboarding session? We'll help you:\n- Set up your first project\n- Import your team\n- Configure integrations\n- Answer any questions\n\nBook a free 30-minute session here: [link]\n\nBest regards,\nBrikly Team`;
     },
   },
   {
@@ -76,9 +76,9 @@ const INTERVENTION_RULES: InterventionRule[] = [
       health.feature_adoption_score < 30 &&
       company.subscription_status === "active",
     template: "feature_adoption",
-    subject: "Unlock more value from BuildDesk",
+    subject: "Unlock more value from Brikly",
     getMessage: (company, health) =>
-      `Hi ${company.name} team,\n\nWe noticed you're only using a few of BuildDesk's features. There's so much more you can do!\n\nHere are some features that could help your team:\n- Real-time job costing\n- Mobile time tracking\n- QuickBooks integration\n- Document management\n\nWant a quick walkthrough? Reply to this email and we'll set it up.\n\nBest regards,\nBuildDesk Team`,
+      `Hi ${company.name} team,\n\nWe noticed you're only using a few of Brikly's features. There's so much more you can do!\n\nHere are some features that could help your team:\n- Real-time job costing\n- Mobile time tracking\n- QuickBooks integration\n- Document management\n\nWant a quick walkthrough? Reply to this email and we'll set it up.\n\nBest regards,\nBrikly Team`,
   },
   {
     type: "no_projects_week_one",
@@ -96,7 +96,7 @@ const INTERVENTION_RULES: InterventionRule[] = [
     template: "quick_start_guide",
     subject: "Quick Start: Create your first project in 5 minutes",
     getMessage: (company, health) =>
-      `Hi ${company.name} team,\n\nWelcome to BuildDesk! We noticed you haven't created your first project yet.\n\nHere's a quick 5-minute video guide to get you started: [link]\n\nOr check out our Quick Start Guide: [link]\n\nNeed help? Just reply to this email!\n\nBest regards,\nBuildDesk Team`,
+      `Hi ${company.name} team,\n\nWelcome to Brikly! We noticed you haven't created your first project yet.\n\nHere's a quick 5-minute video guide to get you started: [link]\n\nOr check out our Quick Start Guide: [link]\n\nNeed help? Just reply to this email!\n\nBest regards,\nBrikly Team`,
   },
   {
     type: "health_score_drop",
@@ -105,9 +105,9 @@ const INTERVENTION_RULES: InterventionRule[] = [
       health.score < 60 &&
       company.subscription_status === "active",
     template: "check_in",
-    subject: "Everything okay with BuildDesk?",
+    subject: "Everything okay with Brikly?",
     getMessage: (company, health) =>
-      `Hi ${company.name} team,\n\nWe noticed your activity on BuildDesk has decreased recently. Is everything okay?\n\nWe're here to help if you're experiencing any issues or if something isn't working as expected.\n\nWould you like to schedule a quick call to discuss?\n\nBest regards,\nBuildDesk Team`,
+      `Hi ${company.name} team,\n\nWe noticed your activity on Brikly has decreased recently. Is everything okay?\n\nWe're here to help if you're experiencing any issues or if something isn't working as expected.\n\nWould you like to schedule a quick call to discuss?\n\nBest regards,\nBrikly Team`,
   },
 ];
 

@@ -57,7 +57,7 @@ const JobCostingConstructionGuide = () => {
   return (
     <div className="min-h-screen bg-background">
       <SEOMetaTags
-        title="Job Costing in Construction: Complete Setup Guide & Common Mistakes | BuildDesk"
+        title="Job Costing in Construction: Complete Setup Guide & Common Mistakes | Brikly"
         description="Master construction job costing with our step-by-step guide. Learn to track costs, improve margins, and avoid costly mistakes that hurt profitability."
         keywords={[
           'job costing construction',
@@ -71,10 +71,10 @@ const JobCostingConstructionGuide = () => {
       
       <ArticleSchema
         title="Job Costing in Construction: Setup Guide & Common Mistakes"
-        author="BuildDesk Team"
+        author="Brikly Team"
         datePublished="2025-01-24"
-        image="https://builddesk.com/images/job-costing-guide.jpg"
-        url="https://builddesk.com/resources/job-costing-construction-setup-guide"
+        image="https://brikly.com/images/job-costing-guide.jpg"
+        url="https://brikly.com/resources/job-costing-construction-setup-guide"
       />
       
       <HowToSchema
@@ -86,7 +86,7 @@ const JobCostingConstructionGuide = () => {
           value: "299"
         }}
         supply={["Construction management software", "Cost code templates", "Project budget templates"]}
-        tool={["BuildDesk platform", "QuickBooks integration", "Mobile apps"]}
+        tool={["Brikly platform", "QuickBooks integration", "Mobile apps"]}
         steps={[
           {
             name: "Organize Your Cost Codes",
@@ -101,7 +101,7 @@ const JobCostingConstructionGuide = () => {
             text: "Build reusable budget templates for common project types like residential renovation, commercial tenant improvement, and site work with per-square-foot or per-unit pricing."
           }
         ]}
-        url="https://builddesk.com/resources/job-costing-construction-setup-guide"
+        url="https://brikly.com/resources/job-costing-construction-setup-guide"
       />
       
       <FAQSchema questions={faqData} />
@@ -274,7 +274,7 @@ const JobCostingConstructionGuide = () => {
                   <p className="text-muted-foreground">Summit Contractors (12 employees, residential/commercial)</p>
                 </div>
                 <div>
-                  <h4 className="font-semibold mb-2">Before BuildDesk:</h4>
+                  <h4 className="font-semibold mb-2">Before Brikly:</h4>
                   <p className="text-muted-foreground">Using spreadsheets, 23% cost overruns, bidding based on guesswork</p>
                 </div>
                 <div>
@@ -320,13 +320,13 @@ const JobCostingConstructionGuide = () => {
                 <Link to="/job-costing-software" className="font-medium hover:text-primary">
                   Job Costing Software Features →
                 </Link>
-                <p className="text-sm text-muted-foreground mt-1">See BuildDesk's job costing tools</p>
+                <p className="text-sm text-muted-foreground mt-1">See Brikly's job costing tools</p>
               </CardContent>
             </Card>
             <Card>
               <CardContent className="p-4">
-                <Link to="/resources/procore-vs-builddesk-small-contractors" className="font-medium hover:text-primary">
-                  Procore vs BuildDesk →
+                <Link to="/resources/procore-vs-brikly-small-contractors" className="font-medium hover:text-primary">
+                  Procore vs Brikly →
                 </Link>
                 <p className="text-sm text-muted-foreground mt-1">Compare job costing features</p>
               </CardContent>
@@ -340,7 +340,7 @@ const JobCostingConstructionGuide = () => {
             Ready to Master Job Costing?
           </h2>
           <p className="text-muted-foreground mb-6 max-w-2xl mx-auto">
-            Stop guessing at project profitability. BuildDesk's real-time job costing 
+            Stop guessing at project profitability. Brikly's real-time job costing 
             helps small contractors improve margins by 15-25% in the first year.
           </p>
           <Button asChild size="lg">

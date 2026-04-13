@@ -1,7 +1,7 @@
 # Financial Intelligence Email Nurture Sequence
 ## For Health Check Completers
 
-**Purpose:** Educate leads who completed the Financial Health Check about BuildDesk's Financial Intelligence platform and guide them toward trial signup.
+**Purpose:** Educate leads who completed the Financial Health Check about Brikly's Financial Intelligence platform and guide them toward trial signup.
 
 **Sequence Length:** 7 emails over 14 days
 **Target Audience:** Construction company owners/managers who completed Financial Health Check
@@ -19,7 +19,7 @@
 ```
 Hi [First Name],
 
-Thanks for completing the BuildDesk Financial Intelligence Health Check.
+Thanks for completing the Brikly Financial Intelligence Health Check.
 
 Your Results:
 ━━━━━━━━━━━━━━━━━━━━━━━━
@@ -72,14 +72,14 @@ Based on your specific assessment results, here are your top 3 priorities:
 
 **See Financial Intelligence in Action**
 
-I've put together a personal 3-minute demo showing how contractors with your score profile have improved to 85+ using BuildDesk:
+I've put together a personal 3-minute demo showing how contractors with your score profile have improved to 85+ using Brikly:
 
 → Watch Your Custom Demo
 
 Over the next two weeks, I'll send you specific insights on transforming each area of your financial intelligence. Each email will be short (2-3 minutes) with actionable takeaways you can implement immediately.
 
 To your success,
-The BuildDesk Team
+The Brikly Team
 
 P.S. Want to skip the emails and talk to a Financial Intelligence specialist now? Book a 15-minute call: [CALENDAR LINK]
 ```
@@ -167,7 +167,7 @@ How many projects are in motion right now that might be losing money without you
 I'll be back in 2 days with the story of how Sarah Chen went from 3-day month-end close to 5 minutes.
 
 Best,
-The BuildDesk Team
+The Brikly Team
 
 P.S. Mike's full case study (with real project numbers) is here: [LINK]
 ```
@@ -315,7 +315,7 @@ What could you do with an extra 35 work days per year?
 Next email: The $47K alert that saved Rodriguez Construction.
 
 Talk soon,
-The BuildDesk Team
+The Brikly Team
 
 P.S. Wondering if your business is complex enough to automate? Sarah thought the same thing. Turns out, the MORE complex your business, the MORE you need automation. See why: [LINK]
 ```
@@ -463,7 +463,7 @@ You'll see the actual alert Rodriguez received, and how the system calculates 87
 Tomorrow: How Metro Build discovered they'd been pursuing the WRONG type of work for 3 years.
 
 Best,
-The BuildDesk Team
+The Brikly Team
 
 P.S. Curious how the system achieves 87% accuracy? It's not magic—it's machine learning trained on 50,000+ construction projects. Learn how: [LINK]
 ```
@@ -618,7 +618,7 @@ You'll see the exact dashboard that showed Metro Build they'd been pursuing the 
 Next email: The decision that saves $4,800 per project.
 
 Talk soon,
-The BuildDesk Team
+The Brikly Team
 
 P.S. Curious what YOUR most profitable project type is? You might be surprised. Book a Profitability Analysis session and we'll show you: [CALENDAR LINK]
 ```
@@ -822,7 +822,7 @@ You'll see exactly how it calculates margin impact BEFORE you commit.
 Final email tomorrow: Your roadmap from [SCORE]/100 to 85+.
 
 Best,
-The BuildDesk Team
+The Brikly Team
 
 P.S. Want to run YOUR numbers through the calculator? Book a 15-minute Decision Analysis session: [CALENDAR LINK]
 ```
@@ -1033,7 +1033,7 @@ The only question: When do you start?
 I hope you choose to take action.
 
 To your success,
-The BuildDesk Team
+The Brikly Team
 
 P.S. This is the last email in the Financial Intelligence series. If you're not ready to act yet, no problem—we'll check back in 30 days to see how things are going. But if you ARE ready, the trial is waiting: [TRIAL LINK]
 ```
@@ -1171,7 +1171,7 @@ P.S. This is the last email in the Financial Intelligence series. If you're not 
 
 ## Conclusion
 
-This 7-email nurture sequence transforms Financial Health Check leads into BuildDesk customers by:
+This 7-email nurture sequence transforms Financial Health Check leads into Brikly customers by:
 
 1. **Immediate value delivery** (personalized assessment results)
 2. **Education through stories** (real contractor transformations)
@@ -1179,6 +1179,6 @@ This 7-email nurture sequence transforms Financial Health Check leads into Build
 4. **Clear solution demonstration** (decision calculator, predictive alerts)
 5. **Actionable roadmap** (from current score to 85+)
 
-Each email builds on the previous, creating a cohesive narrative that positions BuildDesk as the category leader in construction financial intelligence.
+Each email builds on the previous, creating a cohesive narrative that positions Brikly as the category leader in construction financial intelligence.
 
 The sequence is designed to work for all score levels while providing personalized content based on the recipient's specific assessment results, maximizing relevance and conversion potential.

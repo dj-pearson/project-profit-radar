@@ -12,7 +12,7 @@ DECLARE
 BEGIN
   -- Get context
   v_user_id := auth.uid();
-  v_site_id := (SELECT id FROM sites WHERE key = 'builddesk');
+  v_site_id := (SELECT id FROM sites WHERE key = 'brikly');
   
   RAISE NOTICE 'User ID: %', v_user_id;
   RAISE NOTICE 'Site ID: %', v_site_id;

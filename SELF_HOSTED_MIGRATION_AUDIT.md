@@ -8,8 +8,8 @@
 
 | Service | Self-Hosted URL | Purpose |
 |---------|----------------|---------|
-| Main API (Kong) | `https://api.build-desk.com` | Auth, REST, Storage, Realtime |
-| Edge Functions | `https://functions.build-desk.com` | 154+ serverless functions |
+| Main API (Kong) | `https://api.brikly.net` | Auth, REST, Storage, Realtime |
+| Edge Functions | `https://functions.brikly.net` | 154+ serverless functions |
 
 ---
 
@@ -21,12 +21,12 @@ All critical source code files have been updated to use self-hosted Supabase inf
 
 | File | Issue | Status |
 |------|-------|--------|
-| `supabase/config.toml` | Changed `project_id` to `builddesk` | FIXED |
-| `src/config/sessionConfig.ts` | Changed token prefix to `sb-builddesk-auth-token` | FIXED |
+| `supabase/config.toml` | Changed `project_id` to `brikly` | FIXED |
+| `src/config/sessionConfig.ts` | Changed token prefix to `sb-brikly-auth-token` | FIXED |
 | `src/config/__tests__/sessionConfig.test.ts` | Updated test expectations | FIXED |
 | `mobile-app/src/services/supabase.ts` | Removed hardcoded fallbacks, requires env vars | FIXED |
 | `mobile-app/scripts/setup.sh` | Updated example .env to use self-hosted URLs | FIXED |
-| `package.json` | Changed MCP project-id to `builddesk` | FIXED |
+| `package.json` | Changed MCP project-id to `brikly` | FIXED |
 | `.mcprc.example` | Updated to use self-hosted URLs | FIXED |
 | `src/contexts/AuthContext.tsx` | Made auth token cleanup pattern generic | FIXED |
 | `src/hooks/__tests__/useSessionRefresh.test.ts` | Updated test token references | FIXED |
@@ -36,18 +36,18 @@ All critical source code files have been updated to use self-hosted Supabase inf
 
 | File | Status |
 |------|--------|
-| `src/components/SEOMetaTags.tsx` | Updated to `api.build-desk.com` | FIXED |
-| `src/components/seo/UnifiedSEOSystem.tsx` | Updated to `api.build-desk.com` | FIXED |
-| `src/components/seo/PageSEO.tsx` | Updated to `api.build-desk.com` | FIXED |
-| `src/components/ui/smart-logo.tsx` | Updated to `api.build-desk.com` | FIXED |
-| `src/components/ui/responsive-logo.tsx` | Updated to `api.build-desk.com` | FIXED |
+| `src/components/SEOMetaTags.tsx` | Updated to `api.brikly.net` | FIXED |
+| `src/components/seo/UnifiedSEOSystem.tsx` | Updated to `api.brikly.net` | FIXED |
+| `src/components/seo/PageSEO.tsx` | Updated to `api.brikly.net` | FIXED |
+| `src/components/ui/smart-logo.tsx` | Updated to `api.brikly.net` | FIXED |
+| `src/components/ui/responsive-logo.tsx` | Updated to `api.brikly.net` | FIXED |
 
 ### Files Already Correctly Configured
 
 | File | Status | Notes |
 |------|--------|-------|
 | `src/integrations/supabase/client.ts` | OK | Uses `VITE_SUPABASE_URL`, `VITE_EDGE_FUNCTIONS_URL` |
-| `wrangler.toml` | OK | Already configured for `api.build-desk.com` |
+| `wrangler.toml` | OK | Already configured for `api.brikly.net` |
 | `ENV_SETUP_SELFHOSTED.md` | OK | Documentation for self-hosted setup |
 
 ### Documentation Files (Not Runtime Critical)
@@ -66,12 +66,12 @@ All critical source code files have been updated to use self-hosted Supabase inf
 
 ```env
 # REQUIRED - Supabase Connection
-VITE_SUPABASE_URL=https://api.build-desk.com
+VITE_SUPABASE_URL=https://api.brikly.net
 VITE_SUPABASE_PUBLISHABLE_KEY=your-anon-key-from-self-hosted
-VITE_EDGE_FUNCTIONS_URL=https://functions.build-desk.com
+VITE_EDGE_FUNCTIONS_URL=https://functions.brikly.net
 
 # OPTIONAL - Project Identification
-VITE_SUPABASE_PROJECT_ID=builddesk
+VITE_SUPABASE_PROJECT_ID=brikly
 
 # OPTIONAL - Analytics
 VITE_POSTHOG_API_KEY=your-posthog-key
@@ -85,13 +85,13 @@ VITE_SENTRY_DSN=your-sentry-dsn
 
 ```env
 # REQUIRED - Supabase Connection
-EXPO_PUBLIC_SUPABASE_URL=https://api.build-desk.com
+EXPO_PUBLIC_SUPABASE_URL=https://api.brikly.net
 EXPO_PUBLIC_SUPABASE_ANON_KEY=your-anon-key-from-self-hosted
-EXPO_PUBLIC_EDGE_FUNCTIONS_URL=https://functions.build-desk.com
-EXPO_PUBLIC_API_BASE_URL=https://api.build-desk.com
+EXPO_PUBLIC_EDGE_FUNCTIONS_URL=https://functions.brikly.net
+EXPO_PUBLIC_API_BASE_URL=https://api.brikly.net
 
 # OPTIONAL - App Configuration
-EXPO_PUBLIC_APP_NAME=BuildDesk
+EXPO_PUBLIC_APP_NAME=Brikly
 EXPO_PUBLIC_APP_VERSION=1.0.0
 
 # OPTIONAL - Third-Party Services
@@ -104,7 +104,7 @@ EXPO_PUBLIC_WEATHER_API_KEY=your-weather-api-key
 
 ```bash
 # Core Supabase (REQUIRED - set in edge function environment)
-SUPABASE_URL=https://api.build-desk.com
+SUPABASE_URL=https://api.brikly.net
 SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
 SUPABASE_ANON_KEY=your-anon-key
 
@@ -180,7 +180,7 @@ CLOUDFLARE_API_TOKEN            # Cloudflare API token
 
 ```env
 SUPABASE_ACCESS_TOKEN           # Personal access token for MCP server
-SUPABASE_PROJECT_ID=builddesk   # Project ID for MCP commands
+SUPABASE_PROJECT_ID=brikly   # Project ID for MCP commands
 UPSTASH_REDIS_REST_URL          # Upstash Redis URL (for context7)
 UPSTASH_REDIS_REST_TOKEN        # Upstash Redis token
 ```
@@ -201,7 +201,7 @@ const supabaseClient = createClient(
 ```
 
 **Important**: Ensure these environment variables are set in your self-hosted edge function runtime:
-- `SUPABASE_URL=https://api.build-desk.com`
+- `SUPABASE_URL=https://api.brikly.net`
 - `SUPABASE_ANON_KEY=your-anon-key`
 - `SUPABASE_SERVICE_ROLE_KEY=your-service-role-key`
 
@@ -226,8 +226,8 @@ These edge functions call other edge functions and rely on `SUPABASE_URL`:
 
 After deployment, verify:
 
-- [ ] Web app connects to `https://api.build-desk.com`
-- [ ] Edge functions route to `https://functions.build-desk.com`
+- [ ] Web app connects to `https://api.brikly.net`
+- [ ] Edge functions route to `https://functions.brikly.net`
 - [ ] Authentication works (login/logout/signup)
 - [ ] Database queries work
 - [ ] File uploads to storage work
@@ -243,9 +243,9 @@ After deployment, verify:
 
 ## Important Notes
 
-1. **Session Tokens**: The session token prefix changed from `sb-ilhzuvemiuyfuxfegtlv-auth-token` to `sb-builddesk-auth-token`. Existing users will need to re-authenticate.
+1. **Session Tokens**: The session token prefix changed from `sb-ilhzuvemiuyfuxfegtlv-auth-token` to `sb-brikly-auth-token`. Existing users will need to re-authenticate.
 
-2. **Storage URLs**: Logo and asset URLs now point to `api.build-desk.com/storage/v1/object/public/`. Ensure these assets are available in your self-hosted storage.
+2. **Storage URLs**: Logo and asset URLs now point to `api.brikly.net/storage/v1/object/public/`. Ensure these assets are available in your self-hosted storage.
 
 3. **Edge Functions**: All edge functions use environment variables correctly. Just configure the environment properly.
 
@@ -291,4 +291,4 @@ tests/e2e/smoke.spec.ts
 
 ## New Environment Variable Added
 
-- `APP_URL` - Used by `send-renewal-notification` edge function for email links (defaults to `https://builddesk.com`)
+- `APP_URL` - Used by `send-renewal-notification` edge function for email links (defaults to `https://brikly.com`)

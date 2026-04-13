@@ -186,7 +186,7 @@ SES_FROM_EMAIL=noreply@yourdomain.com
 
 ### Email Templates
 
-Emails are branded with BuildDesk styling and include:
+Emails are branded with Brikly styling and include:
 - 6-digit OTP codes (large, easy to read)
 - Expiration time warnings
 - Security notices

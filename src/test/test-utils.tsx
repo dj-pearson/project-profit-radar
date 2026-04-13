@@ -1,5 +1,5 @@
 /**
- * Test Utilities for BuildDesk
+ * Test Utilities for Brikly
  *
  * Provides custom render function with all required providers,
  * mock factories, and testing helpers.
@@ -86,7 +86,7 @@ export const useMockTheme = () => {
 // Default mock values
 export const defaultMockUser: MockUser = {
   id: 'test-user-123',
-  email: 'test@builddesk.com',
+  email: 'test@brikly.com',
   app_metadata: {},
   user_metadata: {},
   aud: 'authenticated',
@@ -95,7 +95,7 @@ export const defaultMockUser: MockUser = {
 
 export const defaultMockUserProfile: MockUserProfile = {
   id: 'test-user-123',
-  email: 'test@builddesk.com',
+  email: 'test@brikly.com',
   first_name: 'Test',
   last_name: 'User',
   company_id: 'test-company-123',

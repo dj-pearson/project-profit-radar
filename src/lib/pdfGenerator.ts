@@ -39,7 +39,7 @@ export async function generateProfitabilityPDF(
     return false;
   };
 
-  // Header with BuildDesk branding
+  // Header with Brikly branding
   const addHeader = () => {
     // Logo area (placeholder - replace with actual logo)
     doc.setFillColor(37, 99, 235); // Blue
@@ -47,7 +47,7 @@ export async function generateProfitabilityPDF(
     doc.setTextColor(255, 255, 255);
     doc.setFontSize(14);
     doc.setFont('helvetica', 'bold');
-    doc.text('BuildDesk', margin + 5, yPos + 8);
+    doc.text('Brikly', margin + 5, yPos + 8);
 
     // Title
     doc.setTextColor(0, 0, 0);
@@ -284,7 +284,7 @@ export async function generateProfitabilityPDF(
   doc.setFontSize(14);
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(37, 99, 235);
-  doc.text('Track Every Project Automatically with BuildDesk', margin + 10, yPos + 12);
+  doc.text('Track Every Project Automatically with Brikly', margin + 10, yPos + 12);
 
   doc.setFontSize(11);
   doc.setFont('helvetica', 'normal');
@@ -294,7 +294,7 @@ export async function generateProfitabilityPDF(
 
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(37, 99, 235);
-  doc.text('Start your 14-day free trial at build-desk.com', margin + 10, yPos + 38);
+  doc.text('Start your 14-day free trial at brikly.net', margin + 10, yPos + 38);
 
   yPos += 50;
 
@@ -304,7 +304,7 @@ export async function generateProfitabilityPDF(
     doc.setFontSize(9);
     doc.setFont('helvetica', 'normal');
     doc.setTextColor(150, 150, 150);
-    doc.text('Created with BuildDesk.com - Free Profitability Calculator', pageWidth / 2, footerY, { align: 'center' });
+    doc.text('Created with Brikly.com - Free Profitability Calculator', pageWidth / 2, footerY, { align: 'center' });
 
     if (options.includeQRCode) {
       doc.setFontSize(8);
@@ -313,7 +313,7 @@ export async function generateProfitabilityPDF(
       doc.setDrawColor(150, 150, 150);
       doc.rect(pageWidth - margin - 28, footerY - 23, 20, 20);
       doc.setFontSize(6);
-      doc.text('build-desk.com/calculator', pageWidth - margin - 18, footerY - 10, { align: 'center' });
+      doc.text('brikly.net/calculator', pageWidth - margin - 18, footerY - 10, { align: 'center' });
     }
   };
 

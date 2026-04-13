@@ -104,7 +104,7 @@ export const WarrantyManagementSystem: React.FC = () => {
         'Lack of proper maintenance'
       ],
       terms: 'Standard 24-month comprehensive warranty with immediate response for critical issues',
-      responsibleParty: 'BuildDesk Construction',
+      responsibleParty: 'Brikly Construction',
       notes: 'Premium client - priority service required'
     },
     {
@@ -134,7 +134,7 @@ export const WarrantyManagementSystem: React.FC = () => {
         'Normal settling'
       ],
       terms: 'One-year workmanship warranty with 30-day callback guarantee',
-      responsibleParty: 'BuildDesk Construction'
+      responsibleParty: 'Brikly Construction'
     }
   ]);
 

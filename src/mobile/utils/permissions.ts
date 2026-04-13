@@ -287,7 +287,7 @@ class PermissionManager {
   showPermissionAlert(permissionName: string, onOpenSettings?: () => void) {
     Alert.alert(
       `${permissionName} Permission Required`,
-      `BuildDesk needs ${permissionName.toLowerCase()} permission to provide the best experience. Please enable it in your device settings.`,
+      `Brikly needs ${permissionName.toLowerCase()} permission to provide the best experience. Please enable it in your device settings.`,
       [
         {
           text: 'Cancel',

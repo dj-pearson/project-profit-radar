@@ -1,8 +1,8 @@
-# BuildDesk Platform Improvement Roadmap
+# Brikly Platform Improvement Roadmap
 *SMB Construction Management Platform Enhancement Plan*
 
 ## Overview
-This document outlines the strategic improvements needed to make BuildDesk the go-to platform for small business construction management. Items are prioritized by impact and market differentiation.
+This document outlines the strategic improvements needed to make Brikly the go-to platform for small business construction management. Items are prioritized by impact and market differentiation.
 
 ---
 

@@ -147,10 +147,10 @@ class ContentSEOGenerator {
     targetKeywords: string[]
   ): Promise<GeneratedContent> {
     const config: ContentSEOConfig = {
-      title: `${competitor} Alternative: Why Contractors Choose BuildDesk`,
+      title: `${competitor} Alternative: Why Contractors Choose Brikly`,
       primaryKeyword: `${competitor.toLowerCase()} alternative`,
       secondaryKeywords: [
-        `${competitor.toLowerCase()} vs builddesk`,
+        `${competitor.toLowerCase()} vs brikly`,
         'construction management software comparison',
         'best construction software'
       ],
@@ -241,7 +241,7 @@ class ContentSEOGenerator {
         {
           type: 'heading',
           level: 2,
-          content: 'Why Contractors Switch from [Competitor] to BuildDesk',
+          content: 'Why Contractors Switch from [Competitor] to Brikly',
           seoNotes: 'Address pain points and switching reasons',
           required: true
         },
@@ -254,7 +254,7 @@ class ContentSEOGenerator {
         {
           type: 'heading',
           level: 2,
-          content: 'Pricing Comparison: [Competitor] vs BuildDesk',
+          content: 'Pricing Comparison: [Competitor] vs Brikly',
           seoNotes: 'Include pricing transparency and value proposition',
           required: true
         },
@@ -279,7 +279,7 @@ class ContentSEOGenerator {
         'Address common objections and concerns',
         'Use schema markup for comparison tables'
       ],
-      targetKeywords: ['[competitor] alternative', '[competitor] vs builddesk', 'best construction software']
+      targetKeywords: ['[competitor] alternative', '[competitor] vs brikly', 'best construction software']
     };
 
     // Landing page template
@@ -378,7 +378,7 @@ class ContentSEOGenerator {
 
   private async generateMetaDescription(config: ContentSEOConfig, title: string): Promise<string> {
     const templates: Record<string, string> = {
-      'comparison': `Looking for a ${config.primaryKeyword}? BuildDesk offers better features, lower costs, and faster implementation. Compare features and pricing.`,
+      'comparison': `Looking for a ${config.primaryKeyword}? Brikly offers better features, lower costs, and faster implementation. Compare features and pricing.`,
       'landing_page': `Professional ${config.primaryKeyword} designed for ${config.targetAudience}. Streamline projects, reduce costs, and improve efficiency.`,
       'guide': `Complete ${config.primaryKeyword} guide with best practices, templates, and expert insights. Download free resources and tools.`,
       'blog_post': `Learn about ${config.primaryKeyword} with expert insights, practical tips, and industry best practices from construction professionals.`
@@ -444,8 +444,8 @@ class ContentSEOGenerator {
   private generateParagraph(section: TemplateSection, config: ContentSEOConfig): string {
     // Generate contextual paragraph content
     const templates: Record<string, string> = {
-      'comparison': `If you're searching for a ${config.primaryKeyword}, you're likely facing the same challenges many construction professionals encounter: high costs, complex setup, and poor mobile experience. BuildDesk offers a modern alternative that addresses these pain points while providing the robust features you need to manage projects effectively.`,
-      'landing_page': `${config.primaryKeyword} is essential for modern construction businesses looking to streamline operations and improve profitability. BuildDesk provides specialized tools designed specifically for ${config.targetAudience}, offering the features and functionality you need without unnecessary complexity.`
+      'comparison': `If you're searching for a ${config.primaryKeyword}, you're likely facing the same challenges many construction professionals encounter: high costs, complex setup, and poor mobile experience. Brikly offers a modern alternative that addresses these pain points while providing the robust features you need to manage projects effectively.`,
+      'landing_page': `${config.primaryKeyword} is essential for modern construction businesses looking to streamline operations and improve profitability. Brikly provides specialized tools designed specifically for ${config.targetAudience}, offering the features and functionality you need without unnecessary complexity.`
     };
     
     return templates[config.contentType] || `Professional ${config.primaryKeyword} solution with advanced features and intuitive design.`;
@@ -469,7 +469,7 @@ class ContentSEOGenerator {
   private generateTable(section: TemplateSection, config: ContentSEOConfig, insights?: any): string {
     if (config.contentType === 'comparison') {
       const competitor = this.extractCompetitorName(config.primaryKeyword);
-      return `| Feature | ${competitor} | BuildDesk |
+      return `| Feature | ${competitor} | Brikly |
 |---------|-----------|-----------|
 | Monthly Cost | $300+ | $149 |
 | Setup Time | 2-4 weeks | 1 day |
@@ -518,8 +518,8 @@ class ContentSEOGenerator {
     if (config.contentType === 'comparison') {
       faqs.push(
         {
-          question: `How does BuildDesk compare to ${this.extractCompetitorName(config.primaryKeyword)}?`,
-          answer: 'BuildDesk offers similar functionality at 60% lower cost with better mobile experience and faster setup.',
+          question: `How does Brikly compare to ${this.extractCompetitorName(config.primaryKeyword)}?`,
+          answer: 'Brikly offers similar functionality at 60% lower cost with better mobile experience and faster setup.',
           keywordOptimized: true
         },
         {
@@ -546,14 +546,14 @@ class ContentSEOGenerator {
       description,
       author: {
         '@type': 'Organization',
-        name: 'BuildDesk'
+        name: 'Brikly'
       },
       publisher: {
         '@type': 'Organization',
-        name: 'BuildDesk',
+        name: 'Brikly',
         logo: {
           '@type': 'ImageObject',
-          url: 'https://build-desk.com/logo.png'
+          url: 'https://brikly.net/logo.png'
         }
       },
       datePublished: new Date().toISOString(),

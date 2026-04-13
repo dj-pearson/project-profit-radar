@@ -56,7 +56,7 @@ export const OptimizedSupabaseImage = ({
   }, [priority]);
 
   // Check if URL is from Supabase Storage (cloud or self-hosted)
-  const isSupabaseUrl = src.includes('supabase.co/storage') || src.includes('build-desk.com/storage');
+  const isSupabaseUrl = src.includes('supabase.co/storage') || src.includes('brikly.net/storage');
 
   // Generate transformed URLs for Supabase images
   const getTransformedUrl = (size: number) => {
@@ -129,7 +129,7 @@ export const getOptimizedSupabaseUrl = (
     format?: 'webp' | 'avif';
   } = {}
 ): string => {
-  if (!url.includes('supabase.co/storage') && !url.includes('build-desk.com/storage')) return url;
+  if (!url.includes('supabase.co/storage') && !url.includes('brikly.net/storage')) return url;
 
   const { width, height, quality = 80, format } = options;
   const baseUrl = url.split('?')[0];

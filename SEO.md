@@ -1,4 +1,4 @@
-# Build-Desk SEO + GEO Roadmap (12 Weeks)
+# Brikly SEO + GEO Roadmap (12 Weeks)
 
 Target: rank higher for **construction management software** terms in the U.S., and show up in AI answers (Google AI Overview, Bing Copilot, ChatGPT, Perplexity). Turn visits into demo or trial starts.
 
@@ -63,7 +63,7 @@ Target: rank higher for **construction management software** terms in the U.S., 
 - Tighten homepage H1 + intro for U.S. small/mid contractors and outcomes (on-budget jobs, fewer delays, OSHA).
 - Publish **2 posts per week** (answer-first, 900–1,500 words, cited stats, CTA to demo):
   1) Best Construction Management Software for Small Business (2025)
-  2) Procore vs Build-Desk (for small GC teams)
+  2) Procore vs Brikly (for small GC teams)
   3) Job Costing in Construction: setup + mistakes
   4) OSHA Safety Logs: simple digital playbook
 
@@ -93,8 +93,8 @@ Target: rank higher for **construction management software** terms in the U.S., 
 
 **SEO**
 - Add comparison pages:
-  - Build-Desk vs Buildertrend
-  - Build-Desk vs Fieldwire
+  - Brikly vs Buildertrend
+  - Brikly vs Fieldwire
   (Keep it fair. Call out who each tool fits.)
 
 **OPS**
@@ -196,7 +196,7 @@ Target: rank higher for **construction management software** terms in the U.S., 
 ## Content List (starter set)
 
 1) Best Construction Management Software for Small Business (2025)  
-2) Procore vs Build-Desk (for small GC teams)  
+2) Procore vs Brikly (for small GC teams)  
 3) Job Costing in Construction: setup + mistakes  
 4) OSHA Safety Logs: digital playbook  
 5) Scheduling Software: stop slip  
@@ -273,26 +273,26 @@ Each page: answer-first intro, bullets, a small example with numbers, CTA to dem
 ### robots.txt
 User-agent: *  
 Allow: /  
-Sitemap: https://build-desk.com/sitemap.xml
+Sitemap: https://brikly.net/sitemap.xml
 
 ### sitemap.xml (sample entries)
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url><loc>https://build-desk.com/</loc><changefreq>weekly</changefreq><priority>0.9</priority></url>
-  <url><loc>https://build-desk.com/resources/</loc><changefreq>daily</changefreq><priority>0.8</priority></url>
-  <url><loc>https://build-desk.com/resources/best-construction-management-software-small-business-2025</loc></url>
-  <url><loc>https://build-desk.com/resources/procore-vs-build-desk</loc></url>
+  <url><loc>https://brikly.net/</loc><changefreq>weekly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://brikly.net/resources/</loc><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://brikly.net/resources/best-construction-management-software-small-business-2025</loc></url>
+  <url><loc>https://brikly.net/resources/procore-vs-brikly</loc></url>
 </urlset>
 
 ### <head> block (Next.js or similar)
-<title>Construction Management Software for Small & Mid GC Teams | Build-Desk</title>
+<title>Construction Management Software for Small & Mid GC Teams | Brikly</title>
 <meta name="description" content="Job costing, scheduling, daily logs, OSHA reporting, and time tracking in one simple tool for U.S. contractors." />
-<link rel="canonical" href="https://build-desk.com/" />
+<link rel="canonical" href="https://brikly.net/" />
 <meta property="og:type" content="website" />
 <meta property="og:title" content="Construction Management Software for Small & Mid GC Teams" />
 <meta property="og:description" content="Simple setup, fast onboarding, clear dashboards for jobs, crews, and costs." />
-<meta property="og:url" content="https://build-desk.com/" />
-<meta property="og:image" content="https://build-desk.com/og/hero.jpg" />
+<meta property="og:url" content="https://brikly.net/" />
+<meta property="og:image" content="https://brikly.net/og/hero.jpg" />
 <meta name="twitter:card" content="summary_large_image" />
 
 ### Organization JSON-LD
@@ -300,11 +300,11 @@ Sitemap: https://build-desk.com/sitemap.xml
 {
   "@context":"https://schema.org",
   "@type":"Organization",
-  "name":"Build-Desk",
-  "url":"https://build-desk.com",
-  "logo":"https://build-desk.com/logo.png",
+  "name":"Brikly",
+  "url":"https://brikly.net",
+  "logo":"https://brikly.net/logo.png",
   "address":{"@type":"PostalAddress","addressCountry":"US"},
-  "sameAs":["https://www.linkedin.com/company/build-desk"]
+  "sameAs":["https://www.linkedin.com/company/brikly"]
 }
 </script>
 
@@ -313,10 +313,10 @@ Sitemap: https://build-desk.com/sitemap.xml
 {
   "@context":"https://schema.org",
   "@type":"SoftwareApplication",
-  "name":"Build-Desk",
+  "name":"Brikly",
   "applicationCategory":"BusinessApplication",
   "operatingSystem":"Web",
-  "url":"https://build-desk.com",
+  "url":"https://brikly.net",
   "description":"Construction management software for small and mid-size contractors in the U.S. with job costing, scheduling, safety logs, and time tracking."
 }
 </script>
@@ -329,8 +329,8 @@ Sitemap: https://build-desk.com/sitemap.xml
   "headline":"Best Construction Management Software for Small Business (2025)",
   "author":{"@type":"Person","name":"Author Name"},
   "datePublished":"2025-01-10",
-  "image":"https://build-desk.com/images/cms-small-business-2025.jpg",
-  "mainEntityOfPage":{"@type":"WebPage","@id":"https://build-desk.com/resources/best-construction-management-software-small-business-2025"}
+  "image":"https://brikly.net/images/cms-small-business-2025.jpg",
+  "mainEntityOfPage":{"@type":"WebPage","@id":"https://brikly.net/resources/best-construction-management-software-small-business-2025"}
 }
 </script>
 
@@ -342,12 +342,12 @@ Sitemap: https://build-desk.com/sitemap.xml
   "mainEntity":[
     {
       "@type":"Question",
-      "name":"Is Build-Desk a good alternative to Procore for small GC teams?",
-      "acceptedAnswer":{"@type":"Answer","text":"Yes. Build-Desk focuses on small and mid-size contractors that want job costing, scheduling, daily logs, and OSHA reporting without heavy setup."}
+      "name":"Is Brikly a good alternative to Procore for small GC teams?",
+      "acceptedAnswer":{"@type":"Answer","text":"Yes. Brikly focuses on small and mid-size contractors that want job costing, scheduling, daily logs, and OSHA reporting without heavy setup."}
     },
     {
       "@type":"Question",
-      "name":"Does Build-Desk support OSHA safety logs?",
+      "name":"Does Brikly support OSHA safety logs?",
       "acceptedAnswer":{"@type":"Answer","text":"Yes. You can create and store safety reports and daily logs, and track incidents in one place."}
     }
   ]
@@ -377,9 +377,9 @@ Related: /resources/job-costing-construction-setup
 ## Example (numbers help)
 - Company: {size/type}
 - Problem: {one line}
-- Result with Build-Desk: {number + time frame}
+- Result with Brikly: {number + time frame}
 
-**Next step:** [Start a demo](https://build-desk.com/demo)
+**Next step:** [Start a demo](https://brikly.net/demo)
 
 (Add Article JSON-LD. Add 2–3 internal links. Compress images. Add alt text.)
 

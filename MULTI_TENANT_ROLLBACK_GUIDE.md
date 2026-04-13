@@ -2,7 +2,7 @@
 
 ## Overview
 
-This guide will help you completely revert the multi-tenant architecture changes and return BuildDesk to a single-tenant, isolated database architecture. Since you now have your own self-hosted Supabase instance, you no longer need the multi-tenant cost-saving measures.
+This guide will help you completely revert the multi-tenant architecture changes and return Brikly to a single-tenant, isolated database architecture. Since you now have your own self-hosted Supabase instance, you no longer need the multi-tenant cost-saving measures.
 
 ## ⚠️ CRITICAL: Before You Begin
 
@@ -359,7 +359,7 @@ Edit `CLAUDE.md` and remove the **Multi-Tenant Architecture** section. Replace w
 ```markdown
 ## Single-Tenant Architecture
 
-BuildDesk operates as a single-tenant application with company-level data isolation.
+Brikly operates as a single-tenant application with company-level data isolation.
 
 ### Data Isolation Strategy
 - **Row Level Security (RLS)**: All tables use RLS policies for security
@@ -617,7 +617,7 @@ If you encounter issues during rollback:
 - **Single-Tenant Auth Helpers**: `supabase/functions/_shared/auth-helpers-single-tenant.ts`
 - **Frontend Cleanup Script**: `scripts/rollback-multi-tenant-frontend.js`
 - **Supabase Docs**: https://supabase.com/docs
-- **BuildDesk CLAUDE.md**: Main development reference
+- **Brikly CLAUDE.md**: Main development reference
 
 ---
 

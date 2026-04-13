@@ -279,9 +279,9 @@ export function useCreateMarketingCampaign() {
         .insert({
           ...request,
           company_id: companyId,
-          from_name: request.from_name || 'BuildDesk Team',
-          from_email: request.from_email || 'hello@build-desk.com',
-          reply_to: request.reply_to || 'support@build-desk.com',
+          from_name: request.from_name || 'Brikly Team',
+          from_email: request.from_email || 'hello@brikly.net',
+          reply_to: request.reply_to || 'support@brikly.net',
           send_delay_minutes: request.send_delay_minutes || 0,
           is_active: request.is_active ?? true,
           created_by: user?.id,

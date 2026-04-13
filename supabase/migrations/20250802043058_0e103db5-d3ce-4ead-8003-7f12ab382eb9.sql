@@ -27,7 +27,7 @@ Inspect tools before use and maintain them properly.
 Maintain clear communication with all team members.
 
 ## 5. Training
-Ensure all workers receive proper safety training.', 'published', '5 Essential Construction Safety Practices | BuildDesk Construction', 'Learn the top 5 safety practices that prevent construction site accidents. Expert tips from BuildDesk Construction for safer worksites.', 'https://images.unsplash.com/photo-1504307651254-35680f356dfd?w=800', demo_user_id, current_date - interval '10 days'),
+Ensure all workers receive proper safety training.', 'published', '5 Essential Construction Safety Practices | Brikly Construction', 'Learn the top 5 safety practices that prevent construction site accidents. Expert tips from Brikly Construction for safer worksites.', 'https://images.unsplash.com/photo-1504307651254-35680f356dfd?w=800', demo_user_id, current_date - interval '10 days'),
     ('Modern Construction Technology Trends', 'modern-construction-technology-trends', 'Explore the latest technology trends transforming the construction industry, from drones and IoT to AI and robotics.', 'The construction industry is experiencing a technological revolution. Here are the key trends shaping our future...
 
 ## Building Information Modeling (BIM)
@@ -40,7 +40,7 @@ Drones provide accurate site surveys and progress monitoring.
 Connected devices monitor equipment and site conditions.
 
 ## Artificial Intelligence
-AI helps with project planning and risk assessment.', 'published', 'Construction Technology Trends 2024 | BuildDesk', 'Discover the latest construction technology trends including BIM, drones, IoT, and AI. Stay ahead in the construction industry.', 'https://images.unsplash.com/photo-1581094271901-8022df4466f9?w=800', demo_user_id, current_date - interval '5 days'),
+AI helps with project planning and risk assessment.', 'published', 'Construction Technology Trends 2024 | Brikly', 'Discover the latest construction technology trends including BIM, drones, IoT, and AI. Stay ahead in the construction industry.', 'https://images.unsplash.com/photo-1581094271901-8022df4466f9?w=800', demo_user_id, current_date - interval '5 days'),
     ('Project Management Best Practices', 'project-management-best-practices-construction', 'Effective project management is crucial for construction success. Learn the best practices that top contractors use to deliver projects on time and under budget.', 'Project management in construction requires unique skills and approaches. Here are the proven strategies...
 
 ## Clear Communication Protocols
@@ -53,7 +53,7 @@ Identify potential issues before they become problems.
 Efficiently allocate labor, equipment, and materials.
 
 ## Technology Integration
-Use modern tools to streamline workflows.', 'published', 'Construction Project Management Best Practices | BuildDesk', 'Master construction project management with proven strategies. Learn how to deliver projects on time and under budget.', 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800', demo_user_id, current_date - interval '15 days');
+Use modern tools to streamline workflows.', 'published', 'Construction Project Management Best Practices | Brikly', 'Master construction project management with proven strategies. Learn how to deliver projects on time and under budget.', 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800', demo_user_id, current_date - interval '15 days');
 
     -- Insert demo automated social content library
     INSERT INTO automated_social_content_library (content_type, topic, title, description, key_points, cta_template) VALUES

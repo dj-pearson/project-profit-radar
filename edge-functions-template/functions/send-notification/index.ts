@@ -70,7 +70,7 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     const emailResponse = await resend.emails.send({
-      from: "BuildDesk <notifications@resend.dev>",
+      from: "Brikly <notifications@resend.dev>",
       to: [to],
       subject: subject,
       html: `
@@ -78,7 +78,7 @@ const handler = async (req: Request): Promise<Response> => {
           ${emailContent}
           <hr style="margin: 20px 0; border: none; border-top: 1px solid #eee;">
           <p style="color: #666; font-size: 12px;">
-            This is an automated notification from BuildDesk Construction Management Platform.
+            This is an automated notification from Brikly Construction Management Platform.
           </p>
         </div>
       `,

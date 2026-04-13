@@ -95,7 +95,7 @@ Add this step to your iOS workflow YAML (after privacy descriptions):
 
 **Reference:** https://developer.apple.com/documentation/security/complying-with-encryption-export-regulations
 
-**For BuildDesk:** Uses standard HTTPS only, so `ITSAppUsesNonExemptEncryption` = `false`
+**For Brikly:** Uses standard HTTPS only, so `ITSAppUsesNonExemptEncryption` = `false`
 
 ---
 

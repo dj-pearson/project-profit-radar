@@ -6,7 +6,7 @@ interface AdvancedSEOAnalyticsProps {
 }
 
 export const AdvancedSEOAnalytics: React.FC<AdvancedSEOAnalyticsProps> = ({ 
-  trackingId = 'UA-BUILDDESK-SEO' 
+  trackingId = 'UA-BRIKLY-SEO' 
 }) => {
   const location = useLocation();
 

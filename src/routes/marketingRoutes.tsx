@@ -44,8 +44,8 @@ const ProcoreAlternative = createLazyRoute(() => import('@/pages/ProcoreAlternat
 const ProcoreAlternativeDetailed = createLazyRoute(() => import('@/pages/ProcoreAlternativeDetailed'));
 const BuildertrendAlternative = createLazyRoute(() => import('@/pages/BuildertrendAlternative'));
 const BuildertrendAlternativeDetailed = createLazyRoute(() => import('@/pages/BuildertrendAlternativeDetailed'));
-const BuildDeskVsBuildertrend = createLazyRoute(() => import('@/pages/BuildDeskVsBuildertrend'));
-const BuildDeskVsCoConstruct = createLazyRoute(() => import('@/pages/BuildDeskVsCoConstruct'));
+const BriklyVsBuildertrend = createLazyRoute(() => import('@/pages/BriklyVsBuildertrend'));
+const BriklyVsCoConstruct = createLazyRoute(() => import('@/pages/BriklyVsCoConstruct'));
 
 // Resource pages - Lazy loaded with ErrorBoundary + Suspense
 const BestConstructionManagementSoftware2025 = createLazyRoute(() => import('@/pages/resources/BestConstructionManagementSoftware2025'));
@@ -53,7 +53,7 @@ const JobCostingConstructionGuide = createLazyRoute(() => import('@/pages/resour
 const OSHASafetyLogsPlaybook = createLazyRoute(() => import('@/pages/resources/OSHASafetyLogsPlaybook'));
 const ConstructionSchedulingSoftwareGuide = createLazyRoute(() => import('@/pages/resources/ConstructionSchedulingSoftwareGuide'));
 const ConstructionDailyLogsGuide = createLazyRoute(() => import('@/pages/resources/ConstructionDailyLogsGuide'));
-const ProcoreVsBuildDeskComparison = createLazyRoute(() => import('@/pages/resources/ProcoreVsBuildDeskComparison'));
+const ProcoreVsBriklyComparison = createLazyRoute(() => import('@/pages/resources/ProcoreVsBriklyComparison'));
 const QuickBooksIntegrationGuide = createLazyRoute(() => import('@/pages/resources/QuickBooksIntegrationGuide'));
 const ConstructionMobileAppGuide = createLazyRoute(() => import('@/pages/resources/ConstructionMobileAppGuide'));
 
@@ -126,8 +126,8 @@ export const marketingRoutes = (
     <Route path="/procore-alternative-detailed" element={<ProcoreAlternativeDetailed />} />
     <Route path="/buildertrend-alternative" element={<BuildertrendAlternativeDetailed />} />
     <Route path="/buildertrend-alternative-simple" element={<BuildertrendAlternative />} />
-    <Route path="/builddesk-vs-buildertrend-comparison" element={<BuildDeskVsBuildertrend />} />
-    <Route path="/builddesk-vs-coconstruct" element={<BuildDeskVsCoConstruct />} />
+    <Route path="/brikly-vs-buildertrend-comparison" element={<BriklyVsBuildertrend />} />
+    <Route path="/brikly-vs-coconstruct" element={<BriklyVsCoConstruct />} />
 
     {/* Resource Guides */}
     <Route path="/resources/best-construction-management-software-small-business-2025" element={<BestConstructionManagementSoftware2025 />} />
@@ -135,7 +135,7 @@ export const marketingRoutes = (
     <Route path="/resources/osha-safety-logs-digital-playbook" element={<OSHASafetyLogsPlaybook />} />
     <Route path="/resources/construction-scheduling-software-prevent-delays" element={<ConstructionSchedulingSoftwareGuide />} />
     <Route path="/resources/construction-daily-logs-best-practices" element={<ConstructionDailyLogsGuide />} />
-    <Route path="/resources/procore-vs-builddesk-small-contractors" element={<ProcoreVsBuildDeskComparison />} />
+    <Route path="/resources/procore-vs-brikly-small-contractors" element={<ProcoreVsBriklyComparison />} />
     <Route path="/resources/quickbooks-integration-guide" element={<QuickBooksIntegrationGuide />} />
     <Route path="/resources/construction-mobile-app-guide" element={<ConstructionMobileAppGuide />} />
 

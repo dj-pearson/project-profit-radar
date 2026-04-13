@@ -96,7 +96,7 @@ With the updated function, you should see these logs in order:
 
 Once deployed, test the function manually:
 
-1. Go to your SEO Analytics page: `https://build-desk.com/admin/seo-analytics`
+1. Go to your SEO Analytics page: `https://brikly.net/admin/seo-analytics`
 2. Open browser dev tools (F12)
 3. Look for the POST request to `google-analytics-api`
 4. Check if it returns 200 (success) or 500 (error)

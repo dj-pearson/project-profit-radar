@@ -1,4 +1,4 @@
-# BuildDesk Stripe Products Setup Script
+# Brikly Stripe Products Setup Script
 # Run this script with Stripe CLI installed and authenticated
 # PowerShell script for Windows
 
@@ -16,7 +16,7 @@ param(
 $ErrorActionPreference = "Stop"
 
 Write-Host "============================================" -ForegroundColor Cyan
-Write-Host "  BuildDesk Stripe Products Setup Script" -ForegroundColor Cyan
+Write-Host "  Brikly Stripe Products Setup Script" -ForegroundColor Cyan
 Write-Host "============================================" -ForegroundColor Cyan
 Write-Host ""
 
@@ -40,7 +40,7 @@ Write-Host ""
 # Configuration
 $products = @(
     @{
-        Name = "BuildDesk Starter"
+        Name = "Brikly Starter"
         Description = "Perfect for small teams (1-5 users). Includes basic job costing, mobile time tracking, QuickBooks sync, and email support."
         Features = @(
             "Up to 5 team members",
@@ -66,7 +66,7 @@ $products = @(
         )
     },
     @{
-        Name = "BuildDesk Professional"
+        Name = "Brikly Professional"
         Description = "Most popular choice for growing contractors (5-20 users). Full mobile suite, all integrations, OSHA compliance tools, and priority support."
         Features = @(
             "Up to 20 team members",
@@ -94,7 +94,7 @@ $products = @(
         )
     },
     @{
-        Name = "BuildDesk Enterprise"
+        Name = "Brikly Enterprise"
         Description = "For large operations (20+ users). Unlimited everything, custom integrations, white-label options, and dedicated success manager."
         Features = @(
             "Unlimited team members",
@@ -177,7 +177,7 @@ function Create-StripeProduct {
     # Build features string for metadata
     $featuresJson = ($Product.Features | ConvertTo-Json -Compress) -replace '"', '\"'
 
-    $tierValue = $Product.Name -replace 'BuildDesk ', '' -replace ' ', '_' | ForEach-Object { $_.ToLower() }
+    $tierValue = $Product.Name -replace 'Brikly ', '' -replace ' ', '_' | ForEach-Object { $_.ToLower() }
     
     $command = "products create " +
         "-d `"name=$($Product.Name)`" " +
@@ -235,7 +235,7 @@ function Create-PaymentLink {
         "-d `"allow_promotion_codes=true`" " +
         "-d `"billing_address_collection=auto`" " +
         "-d `"after_completion[type]=redirect`" " +
-        "-d `"after_completion[redirect][url]=https://build-desk.com/setup?session_id={CHECKOUT_SESSION_ID}`""
+        "-d `"after_completion[redirect][url]=https://brikly.net/setup?session_id={CHECKOUT_SESSION_ID}`""
 
     $result = Invoke-StripeCommand -Command $command -Description "Creating payment link"
     $linkData = $result | ConvertFrom-Json
@@ -254,7 +254,7 @@ Write-Host "Starting product creation..." -ForegroundColor White
 Write-Host ""
 
 foreach ($product in $products) {
-    $tier = $product.Name -replace "BuildDesk ", ""
+    $tier = $product.Name -replace "Brikly ", ""
     $tierKey = $tier.ToLower()
 
     # Create product

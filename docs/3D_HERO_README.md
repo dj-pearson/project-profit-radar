@@ -1,4 +1,4 @@
-# BuildDesk 3D Hero - Quick Start Guide
+# Brikly 3D Hero - Quick Start Guide
 
 ## 🎯 What Was Built
 
@@ -40,7 +40,7 @@ src/
   ├── components/
   │   ├── Hero3D.tsx                          # Drop-in replacement for Hero
   │   ├── hero/
-  │   │   ├── BuildDeskHero3D.tsx            # Main 3D hero component
+  │   │   ├── BriklyHero3D.tsx            # Main 3D hero component
   │   │   └── BackgroundEffects.tsx          # Particle system
   │   └── ui/
   │       └── glass-button.tsx               # Glassmorphism buttons
@@ -70,7 +70,7 @@ Added utility classes:
 
 ### 3. New Components
 
-**BuildDeskHero3D**: The main component featuring:
+**BriklyHero3D**: The main component featuring:
 - Building blocks animation using instanced rendering (40x performance boost)
 - Construction-themed color palette (navy, steel, orange, blue)
 - Responsive design with mobile detection
@@ -78,7 +78,7 @@ Added utility classes:
 
 **BackgroundEffects**: Particle system with:
 - 2000 particles on desktop, 500 on mobile
-- BuildDesk brand colors
+- Brikly brand colors
 - Subtle rotation animation
 
 **GlassButton**: Enhanced button component with 4 variants:
@@ -111,7 +111,7 @@ Added utility classes:
 
 ### Change Colors
 
-Edit `src/components/hero/BuildDeskHero3D.tsx` around line 16:
+Edit `src/components/hero/BriklyHero3D.tsx` around line 16:
 
 ```tsx
 const colors = useMemo(() => [
@@ -159,7 +159,7 @@ If you want to completely remove all 3D hero files:
 ```bash
 # Delete new components
 rm src/components/Hero3D.tsx
-rm src/components/hero/BuildDeskHero3D.tsx
+rm src/components/hero/BriklyHero3D.tsx
 rm src/components/hero/BackgroundEffects.tsx
 rm src/components/ui/glass-button.tsx
 
@@ -282,4 +282,4 @@ The component automatically:
 **Status**: ✅ Ready to Test
 **Version**: 1.0
 **Last Updated**: 2025-11-17
-**Built For**: BuildDesk Construction Management Platform
+**Built For**: Brikly Construction Management Platform

@@ -132,7 +132,7 @@ export const WhiteLabelPortal = () => {
   };
 
   const generatePreviewUrl = () => {
-    return `https://${config.subdomain}.builddesk.app`;
+    return `https://${config.subdomain}.brikly.app`;
   };
 
   const copyPortalUrl = () => {
@@ -173,7 +173,7 @@ export const WhiteLabelPortal = () => {
                   className="rounded-r-none"
                 />
                 <div className="flex items-center px-3 bg-muted border border-l-0 rounded-r-md text-sm text-muted-foreground">
-                  .builddesk.app
+                  .brikly.app
                 </div>
               </div>
             </div>

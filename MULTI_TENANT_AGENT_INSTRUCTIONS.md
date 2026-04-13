@@ -9,7 +9,7 @@
 This project uses a **multi-tenant architecture** where multiple Pearson Media products share a single Supabase database (Project: ilhzuvemiuyfuxfegtlv). All tenant data is isolated using a `site_id` column.
 
 **Current Tenants:**
-- **builddesk** - Build-Desk construction management platform
+- **brikly** - Brikly construction management platform
 - **stylist** - Stylist Bio link-in-bio platform for salon professionals (stylbio.com)
 
 **Every query, mutation, and new table MUST respect site isolation.**
@@ -189,10 +189,10 @@ Before committing any database or backend changes, verify:
 SELECT auth.current_site_id();
 
 -- Get site by domain
-SELECT * FROM get_site_by_domain('build-desk.com');
+SELECT * FROM get_site_by_domain('brikly.net');
 
 -- Get site by key
-SELECT * FROM get_site_by_key('builddesk');
+SELECT * FROM get_site_by_key('brikly');
 ```
 
 ### TypeScript (Edge Functions)

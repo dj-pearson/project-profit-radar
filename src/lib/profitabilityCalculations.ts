@@ -311,7 +311,7 @@ function generateRecommendations(
 
   // General best practices
   if (profitMargin >= 15 && profitMargin <= 30) {
-    recommendations.push('Profit margin is healthy - use Build-Desk to track actual costs and protect this margin');
+    recommendations.push('Profit margin is healthy - use Brikly to track actual costs and protect this margin');
   }
 
   recommendations.push('Add a 10% contingency for unexpected costs and change orders');

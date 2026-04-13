@@ -453,7 +453,7 @@ For issues or questions:
 
 ## License
 
-This feature is part of the BuildDesk platform and follows the same license terms.
+This feature is part of the Brikly platform and follows the same license terms.
 
 ## Version History
 
@@ -467,4 +467,4 @@ This feature is part of the BuildDesk platform and follows the same license term
 
 ---
 
-**Built with ❤️ for BuildDesk - Making search traffic analytics simple and powerful**
+**Built with ❤️ for Brikly - Making search traffic analytics simple and powerful**

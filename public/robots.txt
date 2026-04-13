@@ -1,5 +1,5 @@
-# BuildDesk Robots.txt
-# https://builddesk.com
+# Brikly Robots.txt
+# https://brikly.com
 # Last Updated: 2026-04-04
 
 # ===========================================
@@ -163,10 +163,10 @@ Allow: /*?ref=
 # ===========================================
 
 # Sitemap location
-Sitemap: https://builddesk.com/sitemap.xml
+Sitemap: https://brikly.com/sitemap.xml
 
 # LLM discovery support
-LLMs-txt: https://builddesk.com/.well-known/llms.txt
+LLMs-txt: https://brikly.com/.well-known/llms.txt
 
 # Crawl delay for unspecified bots
 Crawl-delay: 1

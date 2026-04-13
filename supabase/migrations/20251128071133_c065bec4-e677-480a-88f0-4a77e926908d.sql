@@ -1,5 +1,5 @@
 -- Fix multi-site JWT site_id casting so user_profiles RLS works
--- and BuildDesk (sites.key = 'builddesk') can be used reliably as the site context
+-- and Brikly (sites.key = 'brikly') can be used reliably as the site context
 
 -- 1) Recreate current_site_id() to safely extract site_id from JWT app_metadata
 DROP FUNCTION IF EXISTS public.current_site_id() CASCADE;

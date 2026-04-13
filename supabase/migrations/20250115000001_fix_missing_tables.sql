@@ -8,7 +8,7 @@ BEGIN
         -- Create SEO configurations table
         CREATE TABLE public.seo_configurations (
           id UUID NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,
-          site_name TEXT NOT NULL DEFAULT 'Build Desk',
+          site_name TEXT NOT NULL DEFAULT 'Brikly',
           site_description TEXT DEFAULT 'Construction Management Platform for SMB Contractors',
           site_keywords TEXT[] DEFAULT ARRAY['construction', 'project management', 'contractor software', 'building'],
           default_og_image TEXT,
@@ -18,8 +18,8 @@ BEGIN
           yandex_webmaster_id TEXT,
           google_ads_id TEXT,
           facebook_pixel_id TEXT,
-          twitter_site TEXT DEFAULT '@builddesk',
-          canonical_domain TEXT DEFAULT 'https://build-desk.com',
+          twitter_site TEXT DEFAULT '@brikly',
+          canonical_domain TEXT DEFAULT 'https://brikly.net',
           robots_txt TEXT DEFAULT 'User-agent: *\nAllow: /',
           sitemap_enabled BOOLEAN DEFAULT true,
           schema_org_enabled BOOLEAN DEFAULT true,
@@ -49,9 +49,9 @@ BEGIN
           canonical_domain,
           google_analytics_id
         ) VALUES (
-          'Build Desk',
+          'Brikly',
           'Construction Management Platform for SMB Contractors',
-          'https://build-desk.com',
+          'https://brikly.net',
           '496297904'
         );
     END IF;

@@ -553,7 +553,7 @@ async function generateAIContent({
     throw new Error("CLAUDE_API_KEY environment variable is required");
   }
 
-  const prompt = `You are an expert social media copywriter for BuildDesk, a construction management SaaS. Create a ${platform} post that feels COMPLETELY DIFFERENT from typical SaaS marketing.
+  const prompt = `You are an expert social media copywriter for Brikly, a construction management SaaS. Create a ${platform} post that feels COMPLETELY DIFFERENT from typical SaaS marketing.
 
 ═══════════════════════════════════════════════════════════════
 POST FORMAT: ${selectedFormat.name}
@@ -595,7 +595,7 @@ CRITICAL RULES
 3. Follow the ${selectedFormat.name} structure EXACTLY
 4. Make it feel like a peer sharing knowledge, not a salesperson pitching
 5. Be specific with examples (use realistic contractor names, cities, numbers)
-6. Only mention BuildDesk once, naturally, not as a hard sell
+6. Only mention Brikly once, naturally, not as a hard sell
 7. The CTA should feel like a helpful suggestion, not pushy
 
 Platform: ${platform}
@@ -609,7 +609,7 @@ ${requirements.map((req) => `• ${req}`).join("\n")}
 
 Write as if you're a respected voice in the construction industry sharing genuine insights. The post should make readers think, smile, or nod in recognition—not feel marketed to.
 
-End with a natural mention of BuildDesk's 14-day free trial at build-desk.com, but make it flow naturally from the content.
+End with a natural mention of Brikly's 14-day free trial at brikly.net, but make it flow naturally from the content.
 
 Format your response as:
 CONTENT: [your ${selectedFormat.name.toLowerCase()} post here]
@@ -740,8 +740,8 @@ function generateFallbackContent(
     twitter: {
       content: `💡 ${template.key_points[0]} 
 
-Ready to see the difference? Start your 14-day free trial: build-desk.com`,
-      hashtags: ["#BuildDesk", "#Construction", "#ProjectManagement"],
+Ready to see the difference? Start your 14-day free trial: brikly.net`,
+      hashtags: ["#Brikly", "#Construction", "#ProjectManagement"],
     },
     linkedin: {
       content: `🚀 Industry Insight: ${template.topic}
@@ -757,11 +757,11 @@ Here's what this means for ${template.target_audience}:
 
 The construction industry is evolving, and the companies that embrace smart technology are the ones that thrive. Don't get left behind.
 
-Ready to see how BuildDesk can revolutionize your ${
+Ready to see how Brikly can revolutionize your ${
         template.cta_focus
       }? Start your 14-day free trial today.`,
       hashtags: [
-        "#BuildDesk",
+        "#Brikly",
         "#ConstructionTech",
         "#ProjectManagement",
         "#BusinessGrowth",
@@ -773,16 +773,16 @@ Ready to see how BuildDesk can revolutionize your ${
 
 Did you know that ${template.key_points[0]}? 
 
-This is just one of the ways smart construction companies are staying ahead of the curve. With BuildDesk, you get:
+This is just one of the ways smart construction companies are staying ahead of the curve. With Brikly, you get:
 ✅ ${template.key_points[1] || "Streamlined project management"}
 ✅ ${template.key_points[2] || "Real-time cost tracking"}
 ✅ ${template.key_points[3] || "Better team communication"}
 
-Don't let outdated processes hold your business back. Join the growing community of successful contractors who've transformed their operations with BuildDesk.
+Don't let outdated processes hold your business back. Join the growing community of successful contractors who've transformed their operations with Brikly.
 
-🎯 Start your 14-day free trial at build-desk.com and see the difference for yourself!`,
+🎯 Start your 14-day free trial at brikly.net and see the difference for yourself!`,
       hashtags: [
-        "#BuildDesk",
+        "#Brikly",
         "#Construction",
         "#SmallBusiness",
         "#ProjectManagement",
@@ -793,14 +793,14 @@ Don't let outdated processes hold your business back. Join the growing community
 
 ${template.key_points[0]} 🚀
 
-This is what ${template.target_audience} love about BuildDesk:
+This is what ${template.target_audience} love about Brikly:
 📊 ${template.key_points[1] || "Real-time project insights"}
 ⏰ ${template.key_points[2] || "Time-saving automation"}
 💰 ${template.key_points[3] || "Better profit margins"}
 
 Ready to level up your business? 💪`,
       hashtags: [
-        "#BuildDesk",
+        "#Brikly",
         "#Construction",
         "#SmallBusiness",
         "#ProjectManagement",
@@ -868,9 +868,9 @@ async function generatePlatformContent(
 
     platformContents.push({
       platform: "twitter",
-      content: twitterContent.content.includes("build-desk.com")
+      content: twitterContent.content.includes("brikly.net")
         ? twitterContent.content
-        : `${twitterContent.content}\n\n🔗 build-desk.com`,
+        : `${twitterContent.content}\n\n🔗 brikly.net`,
       hashtags: twitterContent.hashtags,
       media_urls: [],
       optimal_length: 280,
@@ -882,7 +882,7 @@ async function generatePlatformContent(
     const fallback = generateFallbackContent("twitter", template);
     platformContents.push({
       platform: "twitter",
-      content: `${fallback.content}\n\n🔗 build-desk.com`,
+      content: `${fallback.content}\n\n🔗 brikly.net`,
       hashtags: fallback.hashtags,
       media_urls: [],
       optimal_length: 280,
@@ -914,9 +914,9 @@ async function generatePlatformContent(
 
     platformContents.push({
       platform: "linkedin",
-      content: linkedinContent.content.includes("build-desk.com")
+      content: linkedinContent.content.includes("brikly.net")
         ? linkedinContent.content
-        : `${linkedinContent.content}\n\n📈 Ready to transform your ${template.cta_focus}? Start your 14-day free trial: build-desk.com`,
+        : `${linkedinContent.content}\n\n📈 Ready to transform your ${template.cta_focus}? Start your 14-day free trial: brikly.net`,
       hashtags: linkedinContent.hashtags,
       media_urls: [],
       optimal_length: 3000,
@@ -928,7 +928,7 @@ async function generatePlatformContent(
     const fallback = generateFallbackContent("linkedin", template);
     platformContents.push({
       platform: "linkedin",
-      content: `${fallback.content}\n\n📈 Ready to transform your ${template.cta_focus}? Start your 14-day free trial: build-desk.com`,
+      content: `${fallback.content}\n\n📈 Ready to transform your ${template.cta_focus}? Start your 14-day free trial: brikly.net`,
       hashtags: fallback.hashtags,
       media_urls: [],
       optimal_length: 3000,
@@ -960,7 +960,7 @@ async function generatePlatformContent(
 
     platformContents.push({
       platform: "facebook",
-      content: `${facebookContent.content}\n\n💼 Transform your business today! Get your 14-day free trial: build-desk.com`,
+      content: `${facebookContent.content}\n\n💼 Transform your business today! Get your 14-day free trial: brikly.net`,
       hashtags: facebookContent.hashtags,
       media_urls: [],
       optimal_length: 2000,
@@ -972,7 +972,7 @@ async function generatePlatformContent(
     const fallback = generateFallbackContent("facebook", template);
     platformContents.push({
       platform: "facebook",
-      content: `${fallback.content}\n\n💼 Transform your business today! Get your 14-day free trial: build-desk.com`,
+      content: `${fallback.content}\n\n💼 Transform your business today! Get your 14-day free trial: brikly.net`,
       hashtags: fallback.hashtags,
       media_urls: [],
       optimal_length: 2000,
@@ -1009,7 +1009,7 @@ async function generatePlatformContent(
       content: `${instagramContent.content}\n\n🔗 Link in bio for your 14-day free trial!`,
       hashtags: [
         ...instagramContent.hashtags,
-        "#BuildDeskTrial",
+        "#BriklyTrial",
         "#ConstructionTech",
         "#SmallBusiness",
       ],
@@ -1026,7 +1026,7 @@ async function generatePlatformContent(
       content: `${fallback.content}\n\n🔗 Link in bio for your 14-day free trial!`,
       hashtags: [
         ...fallback.hashtags,
-        "#BuildDeskTrial",
+        "#BriklyTrial",
         "#ConstructionTech",
         "#SmallBusiness",
       ],
@@ -1048,7 +1048,7 @@ async function sendToExternalWebhook(webhookUrl: string, data: any) {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "User-Agent": "BuildDesk-Social-Content-Generator/1.0",
+        "User-Agent": "Brikly-Social-Content-Generator/1.0",
       },
       body: JSON.stringify(data),
     });

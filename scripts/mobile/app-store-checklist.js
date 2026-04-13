@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 /**
- * BuildDesk App Store Submission Checklist
+ * Brikly App Store Submission Checklist
  *
  * Run before submitting to Apple App Store or Google Play Store.
  * Usage: npm run mobile:checklist

@@ -258,15 +258,15 @@ async function generateReminders(supabase: any, tenant_id: string) {
 function getReminderSubject(reminderType: string): string {
   switch (reminderType) {
     case 'upcoming':
-      return 'Payment Due Soon - BuildDesk Invoice'
+      return 'Payment Due Soon - Brikly Invoice'
     case 'due_today':
-      return 'Payment Due Today - BuildDesk Invoice'
+      return 'Payment Due Today - Brikly Invoice'
     case 'overdue':
-      return 'Overdue Payment Notice - BuildDesk Invoice'
+      return 'Overdue Payment Notice - Brikly Invoice'
     case 'final_notice':
-      return 'Final Notice - Overdue Payment - BuildDesk Invoice'
+      return 'Final Notice - Overdue Payment - Brikly Invoice'
     default:
-      return 'Payment Reminder - BuildDesk Invoice'
+      return 'Payment Reminder - Brikly Invoice'
   }
 }
 

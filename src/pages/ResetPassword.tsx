@@ -211,7 +211,7 @@ const ResetPassword = () => {
           <header className="text-center mb-6">
             <Link to="/" className="inline-block">
               <h1 className="text-3xl font-bold text-construction-blue hover:text-construction-orange transition-colors">
-                Build Desk
+                Brikly
               </h1>
             </Link>
             <p className="text-muted-foreground mt-2">
@@ -259,7 +259,7 @@ const ResetPassword = () => {
         <header className="text-center mb-6">
           <Link to="/" className="inline-block">
             <h1 className="text-3xl font-bold text-construction-blue hover:text-construction-orange transition-colors">
-              Build Desk
+              Brikly
             </h1>
           </Link>
           <p className="text-muted-foreground mt-2">

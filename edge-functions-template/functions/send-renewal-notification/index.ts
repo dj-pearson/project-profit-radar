@@ -131,12 +131,12 @@ serve(async (req) => {
         month: 'long',
         day: 'numeric'
       });
-      const manageUrl = Deno.env.get("APP_URL") || 'https://builddesk.com/subscription';
+      const manageUrl = Deno.env.get("APP_URL") || 'https://brikly.com/subscription';
       
       const html = `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
           <div style="background: linear-gradient(135deg, #1e40af, #3b82f6); padding: 30px; border-radius: 10px; text-align: center; margin-bottom: 30px;">
-            <h1 style="color: white; margin: 0; font-size: 28px;">BuildDesk</h1>
+            <h1 style="color: white; margin: 0; font-size: 28px;">Brikly</h1>
             <p style="color: #e0e7ff; margin: 10px 0 0 0; font-size: 16px;">Construction Management Platform</p>
           </div>
           
@@ -148,7 +148,7 @@ serve(async (req) => {
             </p>
             
             <p style="color: #475569; font-size: 16px; line-height: 1.6; margin-bottom: 30px;">
-              No action is required - your subscription will automatically renew to ensure uninterrupted access to all BuildDesk features.
+              No action is required - your subscription will automatically renew to ensure uninterrupted access to all Brikly features.
             </p>
             
             <div style="text-align: center; margin: 30px 0;">
@@ -170,13 +170,13 @@ serve(async (req) => {
           </div>
           
           <p style="color: #64748b; font-size: 14px; line-height: 1.5; margin-top: 30px;">
-            Questions? Contact our support team at support@builddesk.com or visit our help center.
+            Questions? Contact our support team at support@brikly.com or visit our help center.
           </p>
           
           <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 30px 0;">
           
           <p style="color: #94a3b8; font-size: 12px; text-align: center;">
-            This is an automated notification from BuildDesk Construction Management Platform.<br>
+            This is an automated notification from Brikly Construction Management Platform.<br>
             You're receiving this because your subscription is set to auto-renew.
           </p>
         </div>
@@ -184,7 +184,7 @@ serve(async (req) => {
 
       // Send the email
       const { error: emailError } = await resend.emails.send({
-        from: 'BuildDesk <notifications@builddesk.com>',
+        from: 'Brikly <notifications@brikly.com>',
         to: [subscriber.email],
         subject: `Your subscription renews in ${daysUntilRenewal} days`,
         html,

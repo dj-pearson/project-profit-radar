@@ -11,8 +11,8 @@ const corsHeaders = {
   "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
 };
 
-// Default site key for BuildDesk
-const DEFAULT_SITE_KEY = 'builddesk';
+// Default site key for Brikly
+const DEFAULT_SITE_KEY = 'brikly';
 
 interface LeadCaptureRequest {
   email: string;
@@ -53,7 +53,7 @@ serve(async (req) => {
       { auth: { persistSession: false } }
     );
 
-    // Get site_id from header or default to BuildDesk
+    // Get site_id from header or default to Brikly
     const siteKey = req.headers.get("x-site-key") || DEFAULT_SITE_KEY;
     const { data: siteData } = await supabaseClient
       .from('sites')

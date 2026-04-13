@@ -50,11 +50,11 @@ export interface StoredCredentials {
 
 // Storage keys
 const STORAGE_KEYS = {
-  BIOMETRIC_ENABLED: 'builddesk_biometric_enabled',
-  BIOMETRIC_CREDENTIALS: 'builddesk_biometric_credentials',
-  APP_LOCK_ENABLED: 'builddesk_app_lock_enabled',
-  LAST_BACKGROUND_TIME: 'builddesk_last_background_time',
-  DEVICE_TRUST_ID: 'builddesk_device_trust_id',
+  BIOMETRIC_ENABLED: 'brikly_biometric_enabled',
+  BIOMETRIC_CREDENTIALS: 'brikly_biometric_credentials',
+  APP_LOCK_ENABLED: 'brikly_app_lock_enabled',
+  LAST_BACKGROUND_TIME: 'brikly_last_background_time',
+  DEVICE_TRUST_ID: 'brikly_device_trust_id',
 };
 
 // App lock timeout (5 minutes)
@@ -296,7 +296,7 @@ class BiometricAuthService {
 
     // Authenticate with biometrics
     const authResult = await this.authenticate({
-      promptMessage: 'Sign in to BuildDesk',
+      promptMessage: 'Sign in to Brikly',
     });
 
     if (!authResult.success) {
@@ -412,7 +412,7 @@ class BiometricAuthService {
    */
   async unlockApp(): Promise<BiometricAuthResult> {
     return this.authenticate({
-      promptMessage: 'Unlock BuildDesk',
+      promptMessage: 'Unlock Brikly',
     });
   }
 

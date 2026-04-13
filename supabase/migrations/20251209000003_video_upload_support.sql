@@ -145,19 +145,19 @@ CREATE POLICY "upload_configurations_admin_manage" ON upload_configurations
 
 DO $$
 DECLARE
-  builddesk_site_id UUID;
+  brikly_site_id UUID;
 BEGIN
-  -- Get BuildDesk site ID
-  SELECT id INTO builddesk_site_id FROM sites WHERE key = 'builddesk' LIMIT 1;
+  -- Get Brikly site ID
+  SELECT id INTO brikly_site_id FROM sites WHERE key = 'brikly' LIMIT 1;
 
-  IF builddesk_site_id IS NOT NULL THEN
+  IF brikly_site_id IS NOT NULL THEN
     -- Default Image Configuration
     INSERT INTO upload_configurations (
       site_id, config_name, file_category, allowed_extensions, allowed_mime_types,
       max_file_size_bytes, max_width, max_height, auto_compress, target_quality,
       generate_thumbnail, thumbnail_size, is_default
     ) VALUES (
-      builddesk_site_id,
+      brikly_site_id,
       'Default Image Upload',
       'image',
       ARRAY['.jpg', '.jpeg', '.png', '.gif', '.webp', '.avif', '.svg'],
@@ -179,7 +179,7 @@ BEGIN
       max_file_size_bytes, max_width, max_height, max_duration_seconds,
       auto_compress, generate_thumbnail, is_default
     ) VALUES (
-      builddesk_site_id,
+      brikly_site_id,
       'Default Video Upload',
       'video',
       ARRAY['.mp4', '.webm', '.mov', '.avi', '.wmv', '.mpeg', '.mpg', '.ogg'],
@@ -199,7 +199,7 @@ BEGIN
       site_id, config_name, file_category, allowed_extensions, allowed_mime_types,
       max_file_size_bytes, is_default
     ) VALUES (
-      builddesk_site_id,
+      brikly_site_id,
       'Default Document Upload',
       'document',
       ARRAY['.pdf', '.doc', '.docx', '.xls', '.xlsx', '.ppt', '.pptx', '.txt', '.rtf', '.csv'],
@@ -226,7 +226,7 @@ BEGIN
       max_file_size_bytes, max_width, max_height, max_duration_seconds,
       auto_compress, generate_thumbnail, is_default
     ) VALUES (
-      builddesk_site_id,
+      brikly_site_id,
       'Large Video Upload (Premium)',
       'video',
       ARRAY['.mp4', '.webm', '.mov', '.avi', '.wmv', '.mpeg', '.mpg', '.ogg'],
@@ -362,4 +362,4 @@ CREATE POLICY "project_videos_delete" ON project_videos
 -- Run to verify:
 -- SELECT column_name, data_type FROM information_schema.columns WHERE table_name = 'documents' AND column_name LIKE 'video%';
 -- SELECT * FROM upload_configurations;
--- SELECT * FROM get_upload_config((SELECT id FROM sites WHERE key = 'builddesk'), NULL, 'video');
+-- SELECT * FROM get_upload_config((SELECT id FROM sites WHERE key = 'brikly'), NULL, 'video');

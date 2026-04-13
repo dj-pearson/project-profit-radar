@@ -112,7 +112,7 @@ const Dashboard = () => {
       },
       'explore': {
         route: '/features',
-        message: 'Exploring BuildDesk features'
+        message: 'Exploring Brikly features'
       }
     };
 

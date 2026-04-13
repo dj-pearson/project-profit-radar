@@ -37,9 +37,9 @@ WHERE tablename = 'sites' AND cmd = 'SELECT';
 
 -- Test if we can read sites table
 SELECT '=== TEST: Can read sites? ===' as test;
-SELECT id, key, is_active FROM sites WHERE key = 'builddesk';
+SELECT id, key, is_active FROM sites WHERE key = 'brikly';
 
 -- Test is_valid_site function
 SELECT '=== TEST: is_valid_site() ===' as test;
-SELECT public.is_valid_site((SELECT id FROM sites WHERE key = 'builddesk'));
+SELECT public.is_valid_site((SELECT id FROM sites WHERE key = 'brikly'));
 

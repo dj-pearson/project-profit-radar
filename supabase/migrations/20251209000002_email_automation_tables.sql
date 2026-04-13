@@ -374,29 +374,29 @@ CREATE TRIGGER trigger_deal_email_automation
 -- 6. INSERT DEFAULT AUTOMATION TEMPLATES
 -- ============================================================================
 
--- Insert default email automations for BuildDesk site
+-- Insert default email automations for Brikly site
 DO $$
 DECLARE
-  builddesk_site_id UUID;
+  brikly_site_id UUID;
 BEGIN
-  -- Get BuildDesk site ID
-  SELECT id INTO builddesk_site_id FROM sites WHERE key = 'builddesk' LIMIT 1;
+  -- Get Brikly site ID
+  SELECT id INTO brikly_site_id FROM sites WHERE key = 'brikly' LIMIT 1;
 
-  IF builddesk_site_id IS NOT NULL THEN
+  IF brikly_site_id IS NOT NULL THEN
     -- New Lead Welcome Email
     INSERT INTO email_automations (site_id, name, description, trigger_type, entity_type, config, is_active)
     VALUES (
-      builddesk_site_id,
+      brikly_site_id,
       'New Lead Welcome',
       'Send welcome email when a new lead is created',
       'lead_created',
       'lead',
       '{
-        "subject": "Welcome to BuildDesk - Let''s Build Something Great!",
-        "fromEmail": "hello@build-desk.com",
-        "fromName": "BuildDesk Team",
+        "subject": "Welcome to Brikly - Let''s Build Something Great!",
+        "fromEmail": "hello@brikly.net",
+        "fromName": "Brikly Team",
         "delay": 0,
-        "htmlContent": "<h1>Welcome, {{first_name}}!</h1><p>Thank you for your interest in BuildDesk. We''re excited to help you streamline your construction management.</p><p>One of our team members will reach out shortly to discuss your needs.</p><p>Best regards,<br>The BuildDesk Team</p>"
+        "htmlContent": "<h1>Welcome, {{first_name}}!</h1><p>Thank you for your interest in Brikly. We''re excited to help you streamline your construction management.</p><p>One of our team members will reach out shortly to discuss your needs.</p><p>Best regards,<br>The Brikly Team</p>"
       }',
       true
     )
@@ -405,17 +405,17 @@ BEGIN
     -- Lead Status Changed - Qualified
     INSERT INTO email_automations (site_id, name, description, trigger_type, entity_type, config, trigger_conditions, is_active)
     VALUES (
-      builddesk_site_id,
+      brikly_site_id,
       'Lead Qualified Notification',
       'Send notification when a lead is marked as qualified',
       'lead_status_changed',
       'lead',
       '{
         "subject": "Great News About Your Project, {{first_name}}!",
-        "fromEmail": "sales@build-desk.com",
-        "fromName": "BuildDesk Sales",
+        "fromEmail": "sales@brikly.net",
+        "fromName": "Brikly Sales",
         "delay": 0,
-        "htmlContent": "<p>Hi {{first_name}},</p><p>We''ve reviewed your requirements and believe BuildDesk is a great fit for {{company_name}}!</p><p>Let''s schedule a personalized demo to show you how we can help with your {{project_type}} projects.</p><p>Best,<br>BuildDesk Team</p>"
+        "htmlContent": "<p>Hi {{first_name}},</p><p>We''ve reviewed your requirements and believe Brikly is a great fit for {{company_name}}!</p><p>Let''s schedule a personalized demo to show you how we can help with your {{project_type}} projects.</p><p>Best,<br>Brikly Team</p>"
       }',
       '{"new_status": "qualified"}',
       true
@@ -425,17 +425,17 @@ BEGIN
     -- Opportunity Stage Changed - Proposal Sent
     INSERT INTO email_automations (site_id, name, description, trigger_type, entity_type, config, trigger_conditions, is_active)
     VALUES (
-      builddesk_site_id,
+      brikly_site_id,
       'Proposal Follow-up',
       'Follow up 2 days after proposal is sent',
       'opportunity_stage_changed',
       'opportunity',
       '{
-        "subject": "Following Up on Your BuildDesk Proposal",
-        "fromEmail": "sales@build-desk.com",
-        "fromName": "BuildDesk Sales",
+        "subject": "Following Up on Your Brikly Proposal",
+        "fromEmail": "sales@brikly.net",
+        "fromName": "Brikly Sales",
         "delay": 2880,
-        "htmlContent": "<p>Hi {{first_name}},</p><p>I wanted to follow up on the proposal we sent for {{project_name}}.</p><p>Do you have any questions about the features or pricing? I''d be happy to schedule a call to discuss.</p><p>Best regards,<br>BuildDesk Team</p>"
+        "htmlContent": "<p>Hi {{first_name}},</p><p>I wanted to follow up on the proposal we sent for {{project_name}}.</p><p>Do you have any questions about the features or pricing? I''d be happy to schedule a call to discuss.</p><p>Best regards,<br>Brikly Team</p>"
       }',
       '{"new_stage": "proposal"}',
       true
@@ -445,17 +445,17 @@ BEGIN
     -- Deal Won - Thank You
     INSERT INTO email_automations (site_id, name, description, trigger_type, entity_type, config, is_active)
     VALUES (
-      builddesk_site_id,
+      brikly_site_id,
       'Deal Won - Welcome Aboard',
       'Welcome new customer when deal is won',
       'deal_won',
       'deal',
       '{
-        "subject": "Welcome to the BuildDesk Family, {{first_name}}!",
-        "fromEmail": "success@build-desk.com",
-        "fromName": "BuildDesk Customer Success",
+        "subject": "Welcome to the Brikly Family, {{first_name}}!",
+        "fromEmail": "success@brikly.net",
+        "fromName": "Brikly Customer Success",
         "delay": 0,
-        "htmlContent": "<h1>Welcome Aboard! 🎉</h1><p>Hi {{first_name}},</p><p>We''re thrilled to welcome {{company_name}} to the BuildDesk family!</p><p>Here''s what happens next:</p><ul><li>You''ll receive your login credentials within 24 hours</li><li>Our onboarding team will schedule a kickoff call</li><li>We''ll help you import your existing project data</li></ul><p>We''re here to make your construction management easier!</p><p>Best,<br>The BuildDesk Team</p>"
+        "htmlContent": "<h1>Welcome Aboard! 🎉</h1><p>Hi {{first_name}},</p><p>We''re thrilled to welcome {{company_name}} to the Brikly family!</p><p>Here''s what happens next:</p><ul><li>You''ll receive your login credentials within 24 hours</li><li>Our onboarding team will schedule a kickoff call</li><li>We''ll help you import your existing project data</li></ul><p>We''re here to make your construction management easier!</p><p>Best,<br>The Brikly Team</p>"
       }',
       true
     )

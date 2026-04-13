@@ -742,4 +742,4 @@ await supabase.from('referrals')
 ---
 
 *Generated on February 2, 2025*
-*BuildDesk Growth & Retention Optimization Project*
+*Brikly Growth & Retention Optimization Project*

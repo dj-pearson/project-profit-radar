@@ -36,7 +36,7 @@ describe('Security / Error Sanitizer', () => {
 
     it('should detect Windows file paths', () => {
       expect(containsSensitiveContent('C:\\Users\\admin\\project\\src\\app.ts')).toBe(true);
-      expect(containsSensitiveContent('D:\\Projects\\builddesk\\dist\\index.js')).toBe(true);
+      expect(containsSensitiveContent('D:\\Projects\\brikly\\dist\\index.js')).toBe(true);
     });
 
     it('should detect stack trace frames', () => {
@@ -57,7 +57,7 @@ describe('Security / Error Sanitizer', () => {
     });
 
     it('should detect connection strings', () => {
-      expect(containsSensitiveContent('postgresql://user:pass@db.example.com:5432/builddesk')).toBe(true);
+      expect(containsSensitiveContent('postgresql://user:pass@db.example.com:5432/brikly')).toBe(true);
       expect(containsSensitiveContent('redis://default:secret@redis.internal:6379')).toBe(true);
     });
 
@@ -130,12 +130,12 @@ describe('Security / Error Sanitizer', () => {
       });
 
       it('should classify invalid_password (28P01) as auth_error', () => {
-        const error = { code: '28P01', message: 'password authentication failed for user "builddesk"' };
+        const error = { code: '28P01', message: 'password authentication failed for user "brikly"' };
         expect(classifyError(error)).toBe('auth_error');
       });
 
       it('should classify too_many_connections (53300) as rate_limited', () => {
-        const error = { code: '53300', message: 'too many connections for role "builddesk"' };
+        const error = { code: '53300', message: 'too many connections for role "brikly"' };
         expect(classifyError(error)).toBe('rate_limited');
       });
 
@@ -336,7 +336,7 @@ describe('Security / Error Sanitizer', () => {
     });
 
     it('should return safe message for connection string leaks', () => {
-      const error = new Error('Connection failed: postgresql://builddesk:s3cret@db.internal.com:5432/production');
+      const error = new Error('Connection failed: postgresql://brikly:s3cret@db.internal.com:5432/production');
       const result = sanitizeError(error);
 
       expect(result.message).not.toContain('postgresql://');
@@ -387,7 +387,7 @@ describe('Security / Error Sanitizer', () => {
     });
 
     it('should strip connection strings', () => {
-      const message = 'Cannot connect to postgres://admin:password123@10.0.0.5:5432/builddesk_prod';
+      const message = 'Cannot connect to postgres://admin:password123@10.0.0.5:5432/brikly_prod';
       const result = sanitizeErrorMessage(message);
       expect(result).not.toContain('password123');
       expect(result).not.toContain('10.0.0.5');
@@ -421,9 +421,9 @@ describe('Security / Error Sanitizer', () => {
     });
 
     it('should strip PostgreSQL DETAIL lines', () => {
-      const message = 'Insert failed DETAIL: Key (email)=(admin@builddesk.com) already exists.';
+      const message = 'Insert failed DETAIL: Key (email)=(admin@brikly.com) already exists.';
       const result = sanitizeErrorMessage(message);
-      expect(result).not.toContain('admin@builddesk.com');
+      expect(result).not.toContain('admin@brikly.com');
     });
 
     it('should return generic message when everything is redacted', () => {

@@ -1,9 +1,9 @@
 import { test, expect } from '@playwright/test';
 
 test.describe('Landing Page', () => {
-  test('should load and display the BuildDesk title', async ({ page }) => {
+  test('should load and display the Brikly title', async ({ page }) => {
     await page.goto('/');
-    await expect(page).toHaveTitle(/BuildDesk/i);
+    await expect(page).toHaveTitle(/Brikly/i);
   });
 
   test('should render key elements (heading, CTA, navigation)', async ({ page }) => {

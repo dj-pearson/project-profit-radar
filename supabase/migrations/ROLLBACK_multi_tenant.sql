@@ -2,7 +2,7 @@
 -- ROLLBACK MULTI-TENANT ARCHITECTURE TO SINGLE-TENANT
 -- ============================================================================
 -- This migration removes all multi-tenant infrastructure and reverts to
--- single-tenant architecture where BuildDesk operates independently.
+-- single-tenant architecture where Brikly operates independently.
 --
 -- WARNING: This is a destructive operation. Backup your database first!
 --

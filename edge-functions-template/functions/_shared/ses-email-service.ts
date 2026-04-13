@@ -32,15 +32,15 @@ export interface SiteEmailConfig {
   domain: string;
 }
 
-// Default BuildDesk configuration
+// Default Brikly configuration
 const DEFAULT_SITE_CONFIG: SiteEmailConfig = {
-  siteName: 'BuildDesk',
-  fromEmail: 'noreply@build-desk.com',
-  fromName: 'BuildDesk',
-  supportEmail: 'support@build-desk.com',
-  logoUrl: 'https://build-desk.com/logo.png',
+  siteName: 'Brikly',
+  fromEmail: 'noreply@brikly.net',
+  fromName: 'Brikly',
+  supportEmail: 'support@brikly.net',
+  logoUrl: 'https://brikly.net/logo.png',
   primaryColor: '#F97316',
-  domain: 'build-desk.com',
+  domain: 'brikly.net',
 };
 
 /**
@@ -112,10 +112,10 @@ export async function sendEmail(
 
 /**
  * Get site email configuration
- * Always returns default BuildDesk configuration
+ * Always returns default Brikly configuration
  */
 export async function getSiteEmailConfig(): Promise<SiteEmailConfig> {
-  console.log('[SES] Using default BuildDesk configuration');
+  console.log('[SES] Using default Brikly configuration');
   return DEFAULT_SITE_CONFIG;
 }
 

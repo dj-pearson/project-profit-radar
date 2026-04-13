@@ -52,15 +52,15 @@ export class InvoicePDFGenerator {
   private margin: number;
   private currentY: number;
 
-  constructor(invoice: InvoiceData, companyInfo: CompanyInfo = { name: 'BuildDesk' }) {
+  constructor(invoice: InvoiceData, companyInfo: CompanyInfo = { name: 'Brikly' }) {
     this.doc = new jsPDF('portrait', 'mm', 'a4');
     this.invoice = invoice;
     this.companyInfo = {
-      name: 'BuildDesk',
+      name: 'Brikly',
       address: '123 Construction Way, Builder City, ST 12345',
       phone: '(555) 123-4567',
-      email: 'billing@builddesk.com',
-      website: 'www.builddesk.com',
+      email: 'billing@brikly.com',
+      website: 'www.brikly.com',
       ...companyInfo,
     };
 

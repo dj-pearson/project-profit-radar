@@ -107,7 +107,7 @@ CREATE TABLE IF NOT EXISTS payment_reminder_settings (
     days_after_due INTEGER[] DEFAULT ARRAY[1, 3, 7, 14, 30],
 
     -- Email settings
-    email_from_name TEXT DEFAULT 'BuildDesk',
+    email_from_name TEXT DEFAULT 'Brikly',
     email_reply_to TEXT,
     include_payment_link BOOLEAN DEFAULT true,
 

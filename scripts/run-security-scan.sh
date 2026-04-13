@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# run-security-scan.sh — Combined security scan for BuildDesk
+# run-security-scan.sh — Combined security scan for Brikly
 #
 # Runs:
 #   1. npm audit        — dependency vulnerability check
@@ -77,7 +77,7 @@ SUMMARY_REPORT="${REPORT_DIR}/security-summary-${DATE_STAMP}.txt"
 cd "${PROJECT_ROOT}"
 
 echo -e "${BOLD}================================================================${RESET}"
-echo -e "${BOLD}  BuildDesk Security Scan${RESET}"
+echo -e "${BOLD}  Brikly Security Scan${RESET}"
 echo -e "${BOLD}================================================================${RESET}"
 echo -e "  Timestamp : ${TIMESTAMP}"
 echo -e "  Project   : ${PROJECT_ROOT}"
@@ -205,7 +205,7 @@ echo ""
 
 # Write summary to file
 {
-  echo "BuildDesk Security Scan Summary"
+  echo "Brikly Security Scan Summary"
   echo "==============================="
   echo "Timestamp: ${TIMESTAMP}"
   echo ""

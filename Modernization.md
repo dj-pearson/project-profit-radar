@@ -1,10 +1,10 @@
-# Build-Desk.com Modern Enhancement Strategy
+# Brikly.com Modern Enhancement Strategy
 
-Build-desk.com has strong technical credibility and professional positioning but needs significant modernization to meet current web standards and user expectations. Based on analysis of the current site and research into cutting-edge professional websites, here's a comprehensive strategy for enhancing the site while preserving its essential business credibility.
+Brikly.net has strong technical credibility and professional positioning but needs significant modernization to meet current web standards and user expectations. Based on analysis of the current site and research into cutting-edge professional websites, here's a comprehensive strategy for enhancing the site while preserving its essential business credibility.
 
 ## Current state assessment reveals solid foundation
 
-Build-desk.com (BuildDesk.co.uk) successfully serves its B2B technical market with comprehensive building physics software information, clear pricing ($254 + VAT annually), and strong industry validation through Cardiff University reviews and professional testimonials. **The site maintains excellent technical credibility** through detailed product specifications and educational content that demonstrates expertise in building regulations compliance.
+Brikly.net (Brikly.co.uk) successfully serves its B2B technical market with comprehensive building physics software information, clear pricing ($254 + VAT annually), and strong industry validation through Cardiff University reviews and professional testimonials. **The site maintains excellent technical credibility** through detailed product specifications and educational content that demonstrates expertise in building regulations compliance.
 
 However, the visual design appears 5-10 years behind current standards, with minimal responsive design, basic navigation patterns, and limited user engagement features. The WordPress-based site relies heavily on text content without modern visual elements or interactive experiences. This creates a significant opportunity to modernize while preserving the professional foundation that clearly resonates with the technical audience.
 
@@ -12,7 +12,7 @@ However, the visual design appears 5-10 years behind current standards, with min
 
 ### Visual modernization with business credibility
 
-Contemporary professional websites like Calendly and Stripe demonstrate how to achieve sophisticated simplicity through **extensive whitespace, clean typography hierarchies, and component-based design systems**. For Build-desk.com, this means implementing a refreshed color palette beyond the current blue-and-white scheme, introducing modern web fonts with clear typographic scales, and creating modular components for project information, software features, and testimonials.
+Contemporary professional websites like Calendly and Stripe demonstrate how to achieve sophisticated simplicity through **extensive whitespace, clean typography hierarchies, and component-based design systems**. For Brikly.net, this means implementing a refreshed color palette beyond the current blue-and-white scheme, introducing modern web fonts with clear typographic scales, and creating modular components for project information, software features, and testimonials.
 
 The homepage should adopt a **content-first hero section** that immediately communicates value proposition - similar to how Calendly presents clear benefits before features. Replace dense text blocks with scannable layouts using the F-pattern reading approach, strategic bolding of key concepts, and visual hierarchy that guides users through complex technical information without overwhelming them.
 
@@ -106,7 +106,7 @@ Include offline access to critical documentation like building regulation guidel
 
 ## Conclusion: Evolution without revolution
 
-The recommended enhancements preserve Build-desk.com's essential professional credibility while modernizing the user experience to meet contemporary standards. **The technical expertise and industry validation that currently drive the site's success remain central**, enhanced by improved presentation and more sophisticated user interactions.
+The recommended enhancements preserve Brikly.net's essential professional credibility while modernizing the user experience to meet contemporary standards. **The technical expertise and industry validation that currently drive the site's success remain central**, enhanced by improved presentation and more sophisticated user interactions.
 
 These improvements address the critical mobile responsiveness gap, introduce performance optimizations that professional users expect, and add intelligent features that demonstrate technical innovation appropriate for a building physics software company. The phased implementation approach allows for measured impact assessment and continuous refinement based on user feedback and business metrics.
 

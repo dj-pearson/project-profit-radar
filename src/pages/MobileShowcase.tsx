@@ -87,7 +87,7 @@ export default function MobileShowcase() {
         {/* Introduction */}
         <MobileSection
           title="Mobile-First Design"
-          description={`This page showcases BuildDesk's mobile-optimized components. ${isMobile ? 'You\'re viewing on mobile!' : 'Try resizing your browser or viewing on a mobile device.'}`}
+          description={`This page showcases Brikly's mobile-optimized components. ${isMobile ? 'You\'re viewing on mobile!' : 'Try resizing your browser or viewing on a mobile device.'}`}
         >
           <div className="bg-primary/10 p-4 rounded-lg">
             <p className="text-sm">

@@ -15,30 +15,30 @@ const FinancialManagementPage = () => {
     },
     {
       question: "How is this different from QuickBooks?",
-      answer: "QuickBooks is designed for general business accounting. BuildDesk is built specifically for construction financial management with real-time job costing, project profitability tracking, change order management, and field cost capture. BuildDesk integrates with QuickBooks to give you both real-time project visibility and proper accounting in one system."
+      answer: "QuickBooks is designed for general business accounting. Brikly is built specifically for construction financial management with real-time job costing, project profitability tracking, change order management, and field cost capture. Brikly integrates with QuickBooks to give you both real-time project visibility and proper accounting in one system."
     },
     {
       question: "Can I see profitability by project in real-time?",
-      answer: "Yes! BuildDesk's financial dashboard shows live profitability for every project. As labor hours are logged and costs are captured, profit margins update in real-time. You can see which projects are profitable, which are losing money, and exactly where costs are trending."
+      answer: "Yes! Brikly's financial dashboard shows live profitability for every project. As labor hours are logged and costs are captured, profit margins update in real-time. You can see which projects are profitable, which are losing money, and exactly where costs are trending."
     },
     {
       question: "How does cash flow forecasting work?",
-      answer: "BuildDesk analyzes your project schedules, upcoming invoices, vendor payment terms, and historical payment patterns to forecast your cash position 30-90 days out. You'll see exactly when money is coming in vs going out, helping you avoid cash crunches before they happen."
+      answer: "Brikly analyzes your project schedules, upcoming invoices, vendor payment terms, and historical payment patterns to forecast your cash position 30-90 days out. You'll see exactly when money is coming in vs going out, helping you avoid cash crunches before they happen."
     },
     {
       question: "Do I still need an accountant?",
-      answer: "Yes, but you'll need them less. BuildDesk handles day-to-day financial management, job costing, and reporting, reducing your accountant's workload significantly. Your accountant can focus on tax planning and strategic advice instead of data cleanup and reconciliation. Most contractors report reducing accountant hours by 50-70%."
+      answer: "Yes, but you'll need them less. Brikly handles day-to-day financial management, job costing, and reporting, reducing your accountant's workload significantly. Your accountant can focus on tax planning and strategic advice instead of data cleanup and reconciliation. Most contractors report reducing accountant hours by 50-70%."
     }
   ];
 
   const howToSteps = [
     {
       name: "Set up your financial structure",
-      text: "Configure your chart of accounts, cost codes, and budget templates. BuildDesk includes construction-specific templates for most trades, or import your existing structure from QuickBooks."
+      text: "Configure your chart of accounts, cost codes, and budget templates. Brikly includes construction-specific templates for most trades, or import your existing structure from QuickBooks."
     },
     {
       name: "Connect your financial systems",
-      text: "Integrate QuickBooks for accounting, connect your bank for real-time balances, and link Stripe for payment processing. BuildDesk becomes your financial command center."
+      text: "Integrate QuickBooks for accounting, connect your bank for real-time balances, and link Stripe for payment processing. Brikly becomes your financial command center."
     },
     {
       name: "Capture costs in real-time",
@@ -64,7 +64,7 @@ const FinancialManagementPage = () => {
           'construction financial dashboard',
           'contractor accounting software'
         ]}
-        canonicalUrl="https://builddesk.com/features/financial-management"
+        canonicalUrl="https://brikly.com/features/financial-management"
         schema={[
           createHowToSchema("How to Implement Construction Financial Management", howToSteps),
           createFAQSchema(faqs)

@@ -49,7 +49,7 @@
   "pages": [
     {
       "url": "http://localhost:8080",
-      "title": "BuildDesk - Construction Management Software for Small Contractors | Job Costing & Scheduling",
+      "title": "Brikly - Construction Management Software for Small Contractors | Job Costing & Scheduling",
       "loadTime": 3819,
       "tests": [
         {
@@ -3005,7 +3005,7 @@
     },
     {
       "url": "http://localhost:8080/accessibility",
-      "title": "BuildDesk - Construction Management Software for Small Contractors | Job Costing & Scheduling",
+      "title": "Brikly - Construction Management Software for Small Contractors | Job Costing & Scheduling",
       "loadTime": 640,
       "tests": [
         {
@@ -5961,7 +5961,7 @@
     },
     {
       "url": "http://localhost:8080/admin-hub",
-      "title": "BuildDesk - Construction Management Software for Small Contractors | Job Costing & Scheduling",
+      "title": "Brikly - Construction Management Software for Small Contractors | Job Costing & Scheduling",
       "loadTime": 684,
       "tests": [
         {
@@ -8917,7 +8917,7 @@
     },
     {
       "url": "http://localhost:8080/admin/advanced-dashboards",
-      "title": "BuildDesk - Construction Management Software for Small Contractors | Job Costing & Scheduling",
+      "title": "Brikly - Construction Management Software for Small Contractors | Job Costing & Scheduling",
       "loadTime": 661,
       "tests": [
         {
@@ -11873,7 +11873,7 @@
     },
     {
       "url": "http://localhost:8080/admin/ai-estimating",
-      "title": "BuildDesk - Construction Management Software for Small Contractors | Job Costing & Scheduling",
+      "title": "Brikly - Construction Management Software for Small Contractors | Job Costing & Scheduling",
       "loadTime": 676,
       "tests": [
         {
@@ -14829,7 +14829,7 @@
     },
     {
       "url": "http://localhost:8080/admin/ai-models",
-      "title": "BuildDesk - Construction Management Software for Small Contractors | Job Costing & Scheduling",
+      "title": "Brikly - Construction Management Software for Small Contractors | Job Costing & Scheduling",
       "loadTime": 666,
       "tests": [
         {
@@ -17785,7 +17785,7 @@
     },
     {
       "url": "http://localhost:8080/admin/analytics",
-      "title": "BuildDesk - Construction Management Software for Small Contractors | Job Costing & Scheduling",
+      "title": "Brikly - Construction Management Software for Small Contractors | Job Costing & Scheduling",
       "loadTime": 674,
       "tests": [
         {
@@ -20712,7 +20712,7 @@
     },
     {
       "url": "http://localhost:8080/admin/api-keys",
-      "title": "BuildDesk - Construction Management Software for Small Contractors | Job Costing & Scheduling",
+      "title": "Brikly - Construction Management Software for Small Contractors | Job Costing & Scheduling",
       "loadTime": 657,
       "tests": [
         {
@@ -23668,7 +23668,7 @@
     },
     {
       "url": "http://localhost:8080/admin/audit",
-      "title": "BuildDesk - Construction Management Software for Small Contractors | Job Costing & Scheduling",
+      "title": "Brikly - Construction Management Software for Small Contractors | Job Costing & Scheduling",
       "loadTime": 653,
       "tests": [
         {

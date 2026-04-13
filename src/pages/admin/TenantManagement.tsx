@@ -533,13 +533,13 @@ export const TenantManagement = () => {
                         <div className="flex-1">
                           <p className="text-xs font-semibold text-muted-foreground">Value</p>
                           <p className="font-mono text-sm break-all">
-                            builddesk.pearsonperformance.workers.dev
+                            brikly.pearsonperformance.workers.dev
                           </p>
                         </div>
                         <Button
                           size="sm"
                           variant="ghost"
-                          onClick={() => copyToClipboard('builddesk.pearsonperformance.workers.dev')}
+                          onClick={() => copyToClipboard('brikly.pearsonperformance.workers.dev')}
                         >
                           <Copy className="w-3 h-3" />
                         </Button>

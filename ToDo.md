@@ -123,11 +123,11 @@ All construction SMBs require these **essential features regardless of industry 
 - Advanced mobile features with offline capabilities
 - Expanded integration ecosystem and API marketplace
 
-## Competitive Analysis: Build-Desk.com Positioning
+## Competitive Analysis: Brikly.com Positioning
 
 ### Current Market Position
 
-Build-Desk.com appears positioned in **building energy calculations and compliance** rather than general construction management. This represents a **specialized niche with expansion opportunities**.
+Brikly.com appears positioned in **building energy calculations and compliance** rather than general construction management. This represents a **specialized niche with expansion opportunities**.
 
 ### Strategic Opportunities
 
@@ -217,7 +217,7 @@ Build-Desk.com appears positioned in **building energy calculations and complian
 - Workflow automation and business intelligence
 - API marketplace and ecosystem development
 
-### Build-Desk.com Specific Recommendations
+### Brikly.com Specific Recommendations
 
 1. **Leverage energy expertise** - integrate building performance into project workflows
 2. **Target sustainability-focused market** - growing segment requiring compliance

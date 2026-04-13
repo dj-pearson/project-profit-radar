@@ -1,5 +1,5 @@
 {
-  "project": "BuildDesk Mobile & Auth Security Hardening",
+  "project": "Brikly Mobile & Auth Security Hardening",
   "branchName": "claude/audit-mobile-security-obTr5",
   "description": "Comprehensive mobile app and authentication security hardening initiative based on deep audits of the iOS/Android apps, auth flow, and security posture. Covers server-side password policy enforcement, CSRF protection on auth endpoints, concurrent session management, enhanced mobile auth UX, MFA enforcement during login, session invalidation on credential changes, account lockout recovery, device trust and anomaly detection, step-up authentication, and mobile-specific security improvements. Priority 1 items are critical security gaps. Priority 2 are high-impact UX/security. Priority 3 are polish and completeness.",
   "userStories": [

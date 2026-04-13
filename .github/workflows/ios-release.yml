@@ -41,9 +41,9 @@ jobs:
 
     env:
       XCODE_VERSION: "26.0"
-      PROJECT_DIR: BuildDesk-iOS
-      SCHEME: BuildDesk
-      BUNDLE_ID: com.builddesk.app
+      PROJECT_DIR: Brikly-iOS
+      SCHEME: Brikly
+      BUNDLE_ID: com.brikly.app
 
     steps:
       # ====================================
@@ -68,11 +68,11 @@ jobs:
 
       - name: Inject Supabase anon key into Info.plist
         run: |
-          INFO_PLIST="${{ env.PROJECT_DIR }}/BuildDesk/Info.plist"
+          INFO_PLIST="${{ env.PROJECT_DIR }}/Brikly/Info.plist"
 
           # Inject the Supabase URL (already hardcoded in AppConfiguration but set here for clarity)
-          /usr/libexec/PlistBuddy -c "Add :SUPABASE_URL string 'https://api.build-desk.com'" "$INFO_PLIST" 2>/dev/null || \
-          /usr/libexec/PlistBuddy -c "Set :SUPABASE_URL 'https://api.build-desk.com'" "$INFO_PLIST"
+          /usr/libexec/PlistBuddy -c "Add :SUPABASE_URL string 'https://api.brikly.net'" "$INFO_PLIST" 2>/dev/null || \
+          /usr/libexec/PlistBuddy -c "Set :SUPABASE_URL 'https://api.brikly.net'" "$INFO_PLIST"
 
           # Inject the Supabase anon key so AppConfiguration.swift can read it
           /usr/libexec/PlistBuddy -c "Add :SUPABASE_ANON_KEY string '${{ secrets.SUPABASE_ANON_KEY }}'" "$INFO_PLIST" 2>/dev/null || \
@@ -82,7 +82,7 @@ jobs:
 
       - name: Set App Version
         run: |
-          INFO_PLIST="${{ env.PROJECT_DIR }}/BuildDesk/Info.plist"
+          INFO_PLIST="${{ env.PROJECT_DIR }}/Brikly/Info.plist"
           APP_VERSION="${{ inputs.app_version }}"
           BUILD_NUMBER="${APP_VERSION}.${{ github.run_number }}"
 
@@ -95,7 +95,7 @@ jobs:
 
       - name: Add Encryption Export Compliance
         run: |
-          INFO_PLIST="${{ env.PROJECT_DIR }}/BuildDesk/Info.plist"
+          INFO_PLIST="${{ env.PROJECT_DIR }}/Brikly/Info.plist"
 
           # Standard HTTPS only, no custom encryption
           /usr/libexec/PlistBuddy -c "Add :ITSAppUsesNonExemptEncryption bool false" "$INFO_PLIST" 2>/dev/null || \
@@ -109,7 +109,7 @@ jobs:
 
       - name: Ensure app icon is 1024x1024 without alpha
         run: |
-          ICON_PATH="${{ env.PROJECT_DIR }}/BuildDesk/Assets.xcassets/AppIcon.appiconset/AppIcon.png"
+          ICON_PATH="${{ env.PROJECT_DIR }}/Brikly/Assets.xcassets/AppIcon.appiconset/AppIcon.png"
 
           if [ ! -f "$ICON_PATH" ]; then
             echo "ERROR: AppIcon.png not found at $ICON_PATH"
@@ -148,7 +148,7 @@ jobs:
           cd ${{ env.PROJECT_DIR }}
 
           xcodebuild -resolvePackageDependencies \
-            -project BuildDesk.xcodeproj \
+            -project Brikly.xcodeproj \
             -scheme ${{ env.SCHEME }} \
             -clonedSourcePackagesDirPath ../SPMCache
 
@@ -158,9 +158,9 @@ jobs:
         run: |
           echo "Checking project structure..."
           ls -la ${{ env.PROJECT_DIR }}/
-          ls -la ${{ env.PROJECT_DIR }}/BuildDesk.xcodeproj/
+          ls -la ${{ env.PROJECT_DIR }}/Brikly.xcodeproj/
 
-          if [ ! -f "${{ env.PROJECT_DIR }}/BuildDesk.xcodeproj/project.pbxproj" ]; then
+          if [ ! -f "${{ env.PROJECT_DIR }}/Brikly.xcodeproj/project.pbxproj" ]; then
             echo "ERROR: project.pbxproj not found!"
             exit 1
           fi
@@ -176,7 +176,7 @@ jobs:
           cd ${{ env.PROJECT_DIR }}
 
           xcodebuild test \
-            -project BuildDesk.xcodeproj \
+            -project Brikly.xcodeproj \
             -scheme ${{ env.SCHEME }} \
             -destination 'platform=iOS Simulator,name=iPhone 16,OS=latest' \
             -clonedSourcePackagesDirPath ../SPMCache \
@@ -201,7 +201,7 @@ jobs:
           PP_PATH=~/Library/MobileDevice/Provisioning\ Profiles
           mkdir -p "$PP_PATH"
 
-          echo "${{ secrets.IOS_PROVISIONING_PROFILE }}" | base64 --decode > "$PP_PATH/BuildDesk.mobileprovision"
+          echo "${{ secrets.IOS_PROVISIONING_PROFILE }}" | base64 --decode > "$PP_PATH/Brikly.mobileprovision"
 
           echo "Provisioning profile installed"
           ls -la "$PP_PATH"
@@ -210,7 +210,7 @@ jobs:
         env:
           TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
           PROFILE_NAME: ${{ secrets.IOS_PROVISIONING_PROFILE_NAME }}
-          PBXPROJ_PATH: ${{ env.PROJECT_DIR }}/BuildDesk.xcodeproj/project.pbxproj
+          PBXPROJ_PATH: ${{ env.PROJECT_DIR }}/Brikly.xcodeproj/project.pbxproj
         run: |
           PBXPROJ="${PBXPROJ_PATH}"
 
@@ -230,11 +230,11 @@ jobs:
           with open(path) as f:
               content = f.read()
           pn = os.environ["PROFILE_NAME"]
-          old = "PRODUCT_BUNDLE_IDENTIFIER = com.builddesk.app;"
+          old = "PRODUCT_BUNDLE_IDENTIFIER = com.brikly.app;"
           new = (
               "CODE_SIGN_IDENTITY = \"Apple Distribution\";\n"
               "\t\t\t\tPROVISIONING_PROFILE_SPECIFIER = \"" + pn + "\";\n"
-              "\t\t\t\tPRODUCT_BUNDLE_IDENTIFIER = com.builddesk.app;"
+              "\t\t\t\tPRODUCT_BUNDLE_IDENTIFIER = com.brikly.app;"
           )
           content = content.replace(old, new)
           with open(path, "w") as f:
@@ -244,7 +244,7 @@ jobs:
 
       - name: Verify code signing configuration
         run: |
-          PBXPROJ="${{ env.PROJECT_DIR }}/BuildDesk.xcodeproj/project.pbxproj"
+          PBXPROJ="${{ env.PROJECT_DIR }}/Brikly.xcodeproj/project.pbxproj"
           grep -c "CODE_SIGN_STYLE = Manual" "$PBXPROJ" || echo "WARNING: No Manual code sign style found"
           grep "PROVISIONING_PROFILE_SPECIFIER" "$PBXPROJ" | head -5
           echo "Code signing configured"
@@ -268,7 +268,7 @@ jobs:
               <string>manual</string>
               <key>provisioningProfiles</key>
               <dict>
-                  <key>com.builddesk.app</key>
+                  <key>com.brikly.app</key>
                   <string>PROFILE_NAME_PLACEHOLDER</string>
               </dict>
               <key>signingCertificate</key>
@@ -301,10 +301,10 @@ jobs:
           cd ${{ env.PROJECT_DIR }}
 
           xcodebuild archive \
-            -project BuildDesk.xcodeproj \
+            -project Brikly.xcodeproj \
             -scheme ${{ env.SCHEME }} \
             -configuration Release \
-            -archivePath build/BuildDesk.xcarchive \
+            -archivePath build/Brikly.xcarchive \
             -destination 'generic/platform=iOS' \
             -clonedSourcePackagesDirPath ../SPMCache \
             -allowProvisioningUpdates \
@@ -318,7 +318,7 @@ jobs:
           cd ${{ env.PROJECT_DIR }}
 
           xcodebuild -exportArchive \
-            -archivePath build/BuildDesk.xcarchive \
+            -archivePath build/Brikly.xcarchive \
             -exportPath build/output \
             -exportOptionsPlist ExportOptions.plist \
             -allowProvisioningUpdates
@@ -336,7 +336,7 @@ jobs:
       - name: Upload IPA as artifact
         uses: actions/upload-artifact@v4
         with:
-          name: BuildDesk-iOS-${{ github.sha }}
+          name: Brikly-iOS-${{ github.sha }}
           path: ${{ env.PROJECT_DIR }}/build/output/*.ipa
           retention-days: 30
           if-no-files-found: error
@@ -358,7 +358,7 @@ jobs:
 
           echo "Uploading IPA to App Store Connect via altool..."
           xcrun altool --upload-app \
-            --file "${{ env.PROJECT_DIR }}/build/output/BuildDesk.ipa" \
+            --file "${{ env.PROJECT_DIR }}/build/output/Brikly.ipa" \
             --type ios \
             --apiKey "$API_KEY_ID" \
             --apiIssuer "$API_ISSUER_ID" \

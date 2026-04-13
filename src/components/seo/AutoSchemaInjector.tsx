@@ -36,8 +36,8 @@ export const AutoSchemaInjector: React.FC = () => {
 
       {/* GEO: Dublin Core metadata for AI attribution */}
       <meta name="dc.title" content={config.title} />
-      <meta name="dc.creator" content="BuildDesk" />
-      <meta name="dc.publisher" content="BuildDesk" />
+      <meta name="dc.creator" content="Brikly" />
+      <meta name="dc.publisher" content="Brikly" />
       <meta name="dc.date" content={modDate} />
       <meta name="dc.language" content="en" />
       <meta name="dc.format" content="text/html" />
@@ -45,8 +45,8 @@ export const AutoSchemaInjector: React.FC = () => {
 
       {/* Citation metadata for RAG systems */}
       <meta name="citation_title" content={config.title} />
-      <meta name="citation_author" content="BuildDesk" />
-      <meta name="citation_publisher" content="BuildDesk" />
+      <meta name="citation_author" content="Brikly" />
+      <meta name="citation_publisher" content="Brikly" />
       <meta name="citation_online_date" content={modDate} />
       <meta name="citation_language" content="en" />
       <meta name="citation_public_url" content={fullUrl} />

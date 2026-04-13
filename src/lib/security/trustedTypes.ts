@@ -9,7 +9,7 @@ import DOMPurify from 'dompurify';
  *
  * The 'default' Trusted Types policy is created in index.html (as an inline
  * script) so it intercepts ALL DOM sink assignments before any other code runs.
- * This module creates a secondary named 'builddesk' policy that sanitizes HTML
+ * This module creates a secondary named 'brikly' policy that sanitizes HTML
  * through DOMPurify and validates script URLs against an allowlist, for use in
  * application code that needs explicit sanitization.
  *
@@ -18,7 +18,7 @@ import DOMPurify from 'dompurify';
 
 /** Origins permitted to load scripts from */
 export const ALLOWED_SCRIPT_ORIGINS: readonly string[] = [
-  'https://cdn.builddesk.com',
+  'https://cdn.brikly.com',
   'https://js.stripe.com',
   'https://www.googletagmanager.com',
   'https://cdn.jsdelivr.net',
@@ -27,7 +27,7 @@ export const ALLOWED_SCRIPT_ORIGINS: readonly string[] = [
 ] as const;
 
 /** The name used when creating the Trusted Types policy */
-const POLICY_NAME = 'builddesk';
+const POLICY_NAME = 'brikly';
 
 /**
  * Cached reference to the created policy so we only create it once.
@@ -69,7 +69,7 @@ function validateScriptUrl(url: string): string {
 }
 
 /**
- * Initialise the 'builddesk' Trusted Types policy.
+ * Initialise the 'brikly' Trusted Types policy.
  *
  * - `createHTML` passes input through DOMPurify.
  * - `createScriptURL` validates the URL against ALLOWED_SCRIPT_ORIGINS.
@@ -101,7 +101,7 @@ export function initTrustedTypes(): any {
  * Create a safe HTML value suitable for use with DOM sinks like innerHTML.
  *
  * When Trusted Types are supported the returned value is a TrustedHTML
- * object created via the 'builddesk' policy (which runs DOMPurify).
+ * object created via the 'brikly' policy (which runs DOMPurify).
  * In unsupported environments a plain DOMPurify-sanitized string is returned.
  */
 export function createSafeHtml(input: string): TrustedHTML | string {

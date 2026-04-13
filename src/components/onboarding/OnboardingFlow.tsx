@@ -36,7 +36,7 @@ interface OnboardingStep {
 const steps: OnboardingStep[] = [
   {
     id: 'welcome',
-    title: 'Welcome to BuildDesk!',
+    title: 'Welcome to Brikly!',
     description: 'Your 14-day free trial starts now',
     icon: <Sparkles className="h-6 w-6 text-construction-orange" />
   },
@@ -308,7 +308,7 @@ export const OnboardingFlow = () => {
                 <Sparkles className="h-10 w-10 text-white" />
               </div>
               <div>
-                <h3 className="text-2xl font-bold mb-2">Welcome to BuildDesk!</h3>
+                <h3 className="text-2xl font-bold mb-2">Welcome to Brikly!</h3>
                 <p className="text-muted-foreground text-lg">
                   Let's get you set up in just a few minutes
                 </p>
@@ -405,7 +405,7 @@ export const OnboardingFlow = () => {
             </Alert>
 
             <div className="space-y-2">
-              <Label htmlFor="teamSize">How many team members will use BuildDesk? *</Label>
+              <Label htmlFor="teamSize">How many team members will use Brikly? *</Label>
               <Select
                 value={formData.teamSize.toString()}
                 onValueChange={(value) => setFormData(prev => ({ ...prev, teamSize: parseInt(value) }))}

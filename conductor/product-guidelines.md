@@ -1,6 +1,6 @@
 # Product Guidelines
 
-This document outlines the guidelines for product messaging, visual identity, and user interaction for the BuildDesk platform.
+This document outlines the guidelines for product messaging, visual identity, and user interaction for the Brikly platform.
 
 ## Prose Style
 
@@ -9,13 +9,13 @@ All user-facing text, including documentation, in-app content, and marketing mat
 ## Brand Message
 
 The core brand message that should be consistently conveyed across all communications is:
-**"BuildDesk: Simplify Construction, Empower Your Team."**
+**"Brikly: Simplify Construction, Empower Your Team."**
 
 This message emphasizes our commitment to making construction management more efficient and collaborative.
 
 ## Visual Identity
 
-The visual identity of the BuildDesk platform should be **clean, modern, and trustworthy**. This will be achieved through:
+The visual identity of the Brikly platform should be **clean, modern, and trustworthy**. This will be achieved through:
 - A professional color palette that inspires confidence.
 - Clean and uncluttered layouts.
 - Modern typography and iconography.
@@ -26,7 +26,7 @@ The tone of voice for all user interactions (e.g., error messages, notifications
 
 ## UI/UX Design Principles
 
-The guiding principles for the UI/UX design of the BuildDesk platform are:
+The guiding principles for the UI/UX design of the Brikly platform are:
 - **Simplicity:** Keep user interfaces intuitive and easy to navigate.
 - **Clarity:** Ensure that information is presented clearly and logically.
 - **Consistency:** Maintain a consistent design language across all parts of the platform to create a cohesive user experience.

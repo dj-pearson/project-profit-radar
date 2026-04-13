@@ -44,34 +44,34 @@ const CommercialContractors = () => {
       category: "Comparison"
     },
     {
-      question: "Does BuildDesk support large commercial projects?",
-      answer: "Yes, BuildDesk manages commercial projects from $500K to $20M+. Features include multi-phase scheduling, subcontractor coordination, cost tracking by work package, compliance documentation, stakeholder reporting, and integration with accounting systems. BuildDesk costs $350/month vs enterprise platforms at $500+/user/month.",
+      question: "Does Brikly support large commercial projects?",
+      answer: "Yes, Brikly manages commercial projects from $500K to $20M+. Features include multi-phase scheduling, subcontractor coordination, cost tracking by work package, compliance documentation, stakeholder reporting, and integration with accounting systems. Brikly costs $350/month vs enterprise platforms at $500+/user/month.",
       category: "Features"
     },
     {
-      question: "Can commercial contractors track multiple subcontractors in BuildDesk?",
-      answer: "Yes, BuildDesk includes comprehensive subcontractor management: track contracts and insurance certificates, manage payment applications and lien waivers, coordinate schedules across trades, process subcontractor invoices with job costing integration, verify compliance documentation, and maintain communication logs. All subcontractor costs automatically flow to project budgets.",
+      question: "Can commercial contractors track multiple subcontractors in Brikly?",
+      answer: "Yes, Brikly includes comprehensive subcontractor management: track contracts and insurance certificates, manage payment applications and lien waivers, coordinate schedules across trades, process subcontractor invoices with job costing integration, verify compliance documentation, and maintain communication logs. All subcontractor costs automatically flow to project budgets.",
       category: "Subcontractors"
     }
   ];
 
   const articleSchema = createArticleSchema(
-    "Commercial Construction Management Software - BuildDesk",
+    "Commercial Construction Management Software - Brikly",
     "Specialized construction management software for commercial contractors managing large-scale projects with multiple subcontractors and stakeholders.",
-    "https://build-desk.com/commercial-contractors",
+    "https://brikly.net/commercial-contractors",
     ["commercial construction software", "commercial contractor management", "large scale construction projects"]
   );
 
   const breadcrumbSchema = createBreadcrumbSchema([
-    { name: "Home", url: "https://build-desk.com" },
-    { name: "Solutions", url: "https://build-desk.com/solutions" },
-    { name: "Commercial Contractors", url: "https://build-desk.com/commercial-contractors" }
+    { name: "Home", url: "https://brikly.net" },
+    { name: "Solutions", url: "https://brikly.net/solutions" },
+    { name: "Commercial Contractors", url: "https://brikly.net/commercial-contractors" }
   ]);
 
   return (
     <>
       <PageSEO
-        title="Commercial Construction Management Software - Multi-Trade Coordination | BuildDesk"
+        title="Commercial Construction Management Software - Multi-Trade Coordination | Brikly"
         description="Commercial construction software for contractors managing $500K-$20M+ projects. Multi-phase scheduling, subcontractor coordination, compliance tracking. $350/month vs $500+/user enterprise platforms. 25% faster project delivery, 18% better cost control."
         keywords={[
           'commercial construction software',
@@ -83,7 +83,7 @@ const CommercialContractors = () => {
           'multi-trade coordination software',
           'commercial project management software'
         ]}
-        canonicalUrl="https://build-desk.com/commercial-contractors"
+        canonicalUrl="https://brikly.net/commercial-contractors"
         schema={[articleSchema, breadcrumbSchema]}
         ogType="article"
         lastModified="2025-11-07"

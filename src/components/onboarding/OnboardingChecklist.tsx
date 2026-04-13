@@ -260,7 +260,7 @@ export const OnboardingChecklist = () => {
       if (newTasksCompleted.length === totalTasks) {
         toast({
           title: "Onboarding Complete! 🏆",
-          description: `You've earned all ${maxPoints} points! You're a BuildDesk pro!`,
+          description: `You've earned all ${maxPoints} points! You're a Brikly pro!`,
         });
       }
     } catch (error) {
@@ -354,7 +354,7 @@ export const OnboardingChecklist = () => {
               )}
             </CardTitle>
             <CardDescription>
-              Complete tasks to unlock BuildDesk's full potential
+              Complete tasks to unlock Brikly's full potential
             </CardDescription>
           </div>
           <div className="flex gap-1">

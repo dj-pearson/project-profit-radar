@@ -9,7 +9,7 @@
 export const getCleanCanonicalUrl = (): string => {
   if (typeof window === 'undefined') return '';
   
-  const baseUrl = 'https://builddesk.com';
+  const baseUrl = 'https://brikly.com';
   const pathname = window.location.pathname;
   
   // Return full absolute URL with pathname

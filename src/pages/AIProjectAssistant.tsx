@@ -78,7 +78,7 @@ const AIProjectAssistant = () => {
                   <span className="text-lg font-bold text-primary">AI</span>
                 </div>
                 <div>
-                  <CardTitle className="text-base">BuildDesk AI</CardTitle>
+                  <CardTitle className="text-base">Brikly AI</CardTitle>
                   <CardDescription>
                     Construction project intelligence
                   </CardDescription>

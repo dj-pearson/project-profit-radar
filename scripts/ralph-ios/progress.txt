@@ -1,7 +1,7 @@
 ## Consolidated Patterns
 
 ### iOS App Architecture
-- Native SwiftUI app at `BuildDesk-iOS/BuildDesk/` using MVVM pattern
+- Native SwiftUI app at `Brikly-iOS/Brikly/` using MVVM pattern
 - ViewModels use `@Observable` macro with `@MainActor` for thread safety
 - Services are actor-based singletons accessing Supabase via `supabase-swift` SPM package
 - All models conform to `Codable`, `Sendable`, `Identifiable`, `Hashable`

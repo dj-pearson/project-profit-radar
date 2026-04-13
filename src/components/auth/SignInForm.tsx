@@ -29,7 +29,7 @@ const SignInForm: React.FC<SignInFormProps> = ({
     <div className="space-y-6">
       <div>
         <h2 className="text-2xl font-bold text-white">Welcome back</h2>
-        <p className="text-slate-400 mt-1 text-sm">Sign in to your BuildDesk account</p>
+        <p className="text-slate-400 mt-1 text-sm">Sign in to your Brikly account</p>
       </div>
 
       {renderOAuthButtons()}

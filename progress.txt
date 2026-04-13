@@ -321,7 +321,7 @@
 ### US-058: Dynamic Imports for Heavy Viz Libraries (P3)
 - Analytics.tsx: 6 components converted to React.lazy (PredictiveAnalytics, RiskAssessment, TimelineOptimization, PerformanceBenchmarking, ResourceOptimization, WorkflowAutomation) with Suspense + LoadingState fallback
 - Reports.tsx: ExecutiveDashboard + CustomReportBuilder converted to React.lazy with Suspense
-- Hero3D.tsx: BuildDeskHero3D already uses React.lazy for Three.js
+- Hero3D.tsx: BriklyHero3D already uses React.lazy for Three.js
 - Build output confirms separate chunks: charts-cELRl4Et.js (489KB), three-B7WJ4NKJ.js (869KB), xlsx-Cy0wn7Pa.js (428KB)
 - No static imports of recharts or three.js remain in page-level components
 
@@ -425,7 +425,7 @@
 - "Reset to Default" button restores original configuration
 - "Customize" button in RoleDashboard header replaces old Settings button
 - All dashboard sections conditionally rendered via `isWidgetEnabled()`
-- Config uses `builddesk-dashboard-widgets` localStorage key
+- Config uses `brikly-dashboard-widgets` localStorage key
 
 ### US-065: Sortable column headers and saved filter presets (P2)
 - Added sort bar with 5 sortable fields: Name, Status, Budget, Start Date, Progress
@@ -565,7 +565,7 @@ Implemented 4 priority-2 stories delivering major platform capabilities: cost co
 #### US-098: Offline Indicator and Sync Queue Visibility - PASS
 - Created `src/components/offline/OfflineIndicator.tsx` with two components
 - **OfflineBanner**: Amber banner at top of app when offline, dismissible with X, re-appears on navigation, green "Back online! Syncing..." with spinner on reconnect
-- **SyncQueueIndicator**: Header button with Cloud icon + badge count for pending actions, opens Sheet with list of pending actions (type, entity, timestamp), Sync Now button, localStorage-based queue (`builddesk-offline-queue`)
+- **SyncQueueIndicator**: Header button with Cloud icon + badge count for pending actions, opens Sheet with list of pending actions (type, entity, timestamp), Sync Now button, localStorage-based queue (`brikly-offline-queue`)
 - Updated existing `src/components/OfflineIndicator.tsx` to re-export enhanced components
 - Both components accessible (ARIA roles, labels, live regions)
 

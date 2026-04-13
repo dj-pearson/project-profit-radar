@@ -30,7 +30,7 @@ export function PDFExportDialog({ isOpen, onClose, project, templateName }: PDFE
     includeCriticalPath: true,
     includeTaskList: true,
     includeAnalytics: true,
-    companyName: 'BuildDesk',
+    companyName: 'Brikly',
     fileName: `${project.name.replace(/\s+/g, '_')}_Schedule`
   });
   

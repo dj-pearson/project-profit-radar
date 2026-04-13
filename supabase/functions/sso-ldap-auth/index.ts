@@ -280,7 +280,7 @@ serve(async (req) => {
     }
 
     // Create session via magic link
-    const siteUrl = Deno.env.get("SITE_URL") || "https://build-desk.com";
+    const siteUrl = Deno.env.get("SITE_URL") || "https://brikly.net";
     const { data: sessionData, error: sessionError } =
       await supabaseClient.auth.admin.generateLink({
         type: "magiclink",

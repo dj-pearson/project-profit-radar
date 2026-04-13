@@ -1,4 +1,4 @@
-// Offline Sync Engine for BuildDesk Mobile
+// Offline Sync Engine for Brikly Mobile
 // Handles local data storage and synchronization with Supabase
 
 import { openDB, DBSchema, IDBPDatabase } from 'idb';
@@ -21,7 +21,7 @@ interface OfflineRecord {
   [key: string]: unknown;
 }
 
-interface BuildDeskDB extends DBSchema {
+interface BriklyDB extends DBSchema {
   projects: {
     key: string;
     value: OfflineRecord;
@@ -71,13 +71,13 @@ interface BuildDeskDB extends DBSchema {
 }
 
 class OfflineSyncEngine {
-  private db: IDBPDatabase<BuildDeskDB> | null = null;
+  private db: IDBPDatabase<BriklyDB> | null = null;
   private syncInterval: number | null = null;
   private isSyncing = false;
 
   // Initialize the IndexedDB database
   async initialize(): Promise<void> {
-    this.db = await openDB<BuildDeskDB>('BuildDeskOffline', 1, {
+    this.db = await openDB<BriklyDB>('BriklyOffline', 1, {
       upgrade(db) {
         // Projects store
         if (!db.objectStoreNames.contains('projects')) {
@@ -343,7 +343,7 @@ class OfflineSyncEngine {
     const tables = ['projects', 'time_entries', 'daily_reports', 'documents', 'photos', 'sync_queue', 'sync_metadata'];
 
     for (const table of tables) {
-      await this.db.clear(table as keyof BuildDeskDB);
+      await this.db.clear(table as keyof BriklyDB);
     }
 
   }

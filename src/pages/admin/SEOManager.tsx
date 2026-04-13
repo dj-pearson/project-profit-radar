@@ -77,7 +77,7 @@ const SEOManager = () => {
   const navigate = useNavigate();
   
   const [config, setConfig] = useState<SEOConfig>({
-    site_name: 'Build Desk',
+    site_name: 'Brikly',
     site_description: 'Construction Management Platform for SMB Contractors',
     site_keywords: ['construction', 'project management', 'contractor software', 'building'],
     default_og_image: '',
@@ -87,8 +87,8 @@ const SEOManager = () => {
     yandex_webmaster_id: '',
     google_ads_id: '',
     facebook_pixel_id: '',
-    twitter_site: '@builddesk',
-    canonical_domain: 'https://builddesk.com',
+    twitter_site: '@brikly',
+    canonical_domain: 'https://brikly.com',
     robots_txt: 'User-agent: *\nAllow: /',
     sitemap_enabled: true,
     schema_org_enabled: true
@@ -485,26 +485,26 @@ ${content}`;
         "mainEntity": [
           {
             "@type": "Question",
-            "name": "What is BuildDesk?",
+            "name": "What is Brikly?",
             "acceptedAnswer": {
               "@type": "Answer",
-              "text": "BuildDesk is a construction management platform designed for small to medium-sized construction businesses, providing real-time project management, financial tracking, and collaborative tools."
+              "text": "Brikly is a construction management platform designed for small to medium-sized construction businesses, providing real-time project management, financial tracking, and collaborative tools."
             }
           },
           {
             "@type": "Question",
-            "name": "How much does BuildDesk cost?",
+            "name": "How much does Brikly cost?",
             "acceptedAnswer": {
               "@type": "Answer",
-              "text": "BuildDesk costs $350 per month for unlimited users, providing comprehensive construction management features without per-user fees."
+              "text": "Brikly costs $350 per month for unlimited users, providing comprehensive construction management features without per-user fees."
             }
           },
           {
             "@type": "Question",
-            "name": "What industries does BuildDesk serve?",
+            "name": "What industries does Brikly serve?",
             "acceptedAnswer": {
               "@type": "Answer",
-              "text": "BuildDesk serves construction companies, contractors, project managers, and construction professionals across various construction industry sectors."
+              "text": "Brikly serves construction companies, contractors, project managers, and construction professionals across various construction industry sectors."
             }
           }
         ]
@@ -814,7 +814,7 @@ ${JSON.stringify(faqSchema, null, 2)}
                     <Label htmlFor="twitterSite">Twitter Site Handle</Label>
                     <Input
                       id="twitterSite"
-                      placeholder="@builddesk"
+                      placeholder="@brikly"
                       value={config.twitter_site}
                       onChange={(e) => setConfig(prev => ({ ...prev, twitter_site: e.target.value }))}
                     />

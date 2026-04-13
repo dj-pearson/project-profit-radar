@@ -1,7 +1,7 @@
 {
-  "project": "BuildDesk PageSpeed Insights Mobile Optimization",
+  "project": "Brikly PageSpeed Insights Mobile Optimization",
   "branchName": "claude/fix-page-insights-prd-FrIjH",
-  "description": "Address PageSpeed Insights mobile performance issues for build-desk.com. Analysis from March 2026 revealed multiple opportunities across Performance, Accessibility, Best Practices, and SEO categories. Key findings: images missing explicit dimensions causing CLS, below-the-fold components eagerly loaded increasing TBT, scroll event listeners missing passive flag, LCP element lacks fetchpriority hint, framer-motion eagerly imported on landing page, and various accessibility gaps. This PRD prioritizes fixes by impact: Critical (P1) items directly affect Core Web Vitals scores, High (P2) items affect secondary metrics, Medium (P3) items are best practices and SEO improvements.",
+  "description": "Address PageSpeed Insights mobile performance issues for brikly.net. Analysis from March 2026 revealed multiple opportunities across Performance, Accessibility, Best Practices, and SEO categories. Key findings: images missing explicit dimensions causing CLS, below-the-fold components eagerly loaded increasing TBT, scroll event listeners missing passive flag, LCP element lacks fetchpriority hint, framer-motion eagerly imported on landing page, and various accessibility gaps. This PRD prioritizes fixes by impact: Critical (P1) items directly affect Core Web Vitals scores, High (P2) items affect secondary metrics, Medium (P3) items are best practices and SEO improvements.",
   "userStories": [
     {
       "id": "PSI-001",
@@ -149,7 +149,7 @@
     {
       "id": "PSI-011",
       "title": "Add meta robots and canonical URL consistency for SEO",
-      "description": "As a search engine, I want consistent canonical URLs so I don't get confused about the primary domain. The index.html has canonical URL as 'https://builddesk.com' but the site is served from 'build-desk.com'. This mismatch can hurt SEO rankings. Verify the correct canonical domain and ensure consistency across all meta tags (og:url, twitter, canonical). Also ensure all pages have proper meta robots tags.",
+      "description": "As a search engine, I want consistent canonical URLs so I don't get confused about the primary domain. The index.html has canonical URL as 'https://brikly.com' but the site is served from 'brikly.net'. This mismatch can hurt SEO rankings. Verify the correct canonical domain and ensure consistency across all meta tags (og:url, twitter, canonical). Also ensure all pages have proper meta robots tags.",
       "acceptanceCriteria": [
         "Canonical URL in index.html matches the actual serving domain",
         "og:url matches the canonical URL",

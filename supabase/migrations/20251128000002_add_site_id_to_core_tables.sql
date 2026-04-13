@@ -4,7 +4,7 @@
 -- Purpose: Add site_id column to all tenant-visible tables
 -- Migration: Phase 2 - Add site_id columns with foreign keys
 -- Date: 2025-11-28
--- IMPORTANT: This migration adds site_id to core tables and backfills with Build-Desk site_id
+-- IMPORTANT: This migration adds site_id to core tables and backfills with Brikly site_id
 -- =====================================================
 
 -- =====================================================
@@ -13,16 +13,16 @@
 
 DO $$
 DECLARE
-  v_builddesk_site_id UUID;
+  v_brikly_site_id UUID;
 BEGIN
-  -- Get Build-Desk site_id
-  SELECT id INTO v_builddesk_site_id FROM sites WHERE key = 'builddesk' LIMIT 1;
+  -- Get Brikly site_id
+  SELECT id INTO v_brikly_site_id FROM sites WHERE key = 'brikly' LIMIT 1;
   
-  IF v_builddesk_site_id IS NULL THEN
-    RAISE EXCEPTION 'Build-Desk site not found. Run migration 20251128000001_create_sites_table.sql first.';
+  IF v_brikly_site_id IS NULL THEN
+    RAISE EXCEPTION 'Brikly site not found. Run migration 20251128000001_create_sites_table.sql first.';
   END IF;
   
-  RAISE NOTICE 'Using Build-Desk site_id: %', v_builddesk_site_id;
+  RAISE NOTICE 'Using Brikly site_id: %', v_brikly_site_id;
   
   -- =====================================================
   -- COMPANIES TABLE
@@ -31,8 +31,8 @@ BEGIN
   IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'companies' AND column_name = 'site_id') THEN
     ALTER TABLE companies ADD COLUMN site_id UUID REFERENCES sites(id) ON DELETE RESTRICT;
     
-    -- Backfill existing companies with Build-Desk site_id
-    UPDATE companies SET site_id = v_builddesk_site_id WHERE site_id IS NULL;
+    -- Backfill existing companies with Brikly site_id
+    UPDATE companies SET site_id = v_brikly_site_id WHERE site_id IS NULL;
     
     -- Make site_id required for new records
     ALTER TABLE companies ALTER COLUMN site_id SET NOT NULL;
@@ -58,8 +58,8 @@ BEGIN
       WHERE up.company_id = c.id
       AND up.site_id IS NULL;
       
-      -- For users without company, use Build-Desk
-      UPDATE user_profiles SET site_id = v_builddesk_site_id WHERE site_id IS NULL;
+      -- For users without company, use Brikly
+      UPDATE user_profiles SET site_id = v_brikly_site_id WHERE site_id IS NULL;
       
       ALTER TABLE user_profiles ALTER COLUMN site_id SET NOT NULL;
       CREATE INDEX idx_user_profiles_site_id ON user_profiles(site_id);
@@ -78,7 +78,7 @@ BEGIN
       WHERE p.company_id = c.id
       AND p.site_id IS NULL;
       
-      UPDATE profiles SET site_id = v_builddesk_site_id WHERE site_id IS NULL;
+      UPDATE profiles SET site_id = v_brikly_site_id WHERE site_id IS NULL;
       
       ALTER TABLE profiles ALTER COLUMN site_id SET NOT NULL;
       CREATE INDEX idx_profiles_site_id ON profiles(site_id);
@@ -168,7 +168,7 @@ BEGIN
       WHERE d.project_id = p.id
       AND d.site_id IS NULL;
       
-      UPDATE documents SET site_id = v_builddesk_site_id WHERE site_id IS NULL;
+      UPDATE documents SET site_id = v_brikly_site_id WHERE site_id IS NULL;
       
       ALTER TABLE documents ALTER COLUMN site_id SET NOT NULL;
       CREATE INDEX idx_documents_site_id ON documents(site_id);
@@ -196,7 +196,7 @@ BEGIN
       WHERE e.company_id = c.id
       AND e.site_id IS NULL;
       
-      UPDATE expenses SET site_id = v_builddesk_site_id WHERE site_id IS NULL;
+      UPDATE expenses SET site_id = v_brikly_site_id WHERE site_id IS NULL;
       
       ALTER TABLE expenses ALTER COLUMN site_id SET NOT NULL;
       CREATE INDEX idx_expenses_site_id ON expenses(site_id);
@@ -224,7 +224,7 @@ BEGIN
       WHERE i.project_id = p.id
       AND i.site_id IS NULL;
       
-      UPDATE invoices SET site_id = v_builddesk_site_id WHERE site_id IS NULL;
+      UPDATE invoices SET site_id = v_brikly_site_id WHERE site_id IS NULL;
       
       ALTER TABLE invoices ALTER COLUMN site_id SET NOT NULL;
       CREATE INDEX idx_invoices_site_id ON invoices(site_id);
@@ -252,7 +252,7 @@ BEGIN
       WHERE e.project_id = p.id
       AND e.site_id IS NULL;
       
-      UPDATE estimates SET site_id = v_builddesk_site_id WHERE site_id IS NULL;
+      UPDATE estimates SET site_id = v_brikly_site_id WHERE site_id IS NULL;
       
       ALTER TABLE estimates ALTER COLUMN site_id SET NOT NULL;
       CREATE INDEX idx_estimates_site_id ON estimates(site_id);
@@ -274,7 +274,7 @@ BEGIN
       WHERE t.project_id = p.id
       AND t.site_id IS NULL;
       
-      UPDATE tasks SET site_id = v_builddesk_site_id WHERE site_id IS NULL;
+      UPDATE tasks SET site_id = v_brikly_site_id WHERE site_id IS NULL;
       
       ALTER TABLE tasks ALTER COLUMN site_id SET NOT NULL;
       CREATE INDEX idx_tasks_site_id ON tasks(site_id);
@@ -296,7 +296,7 @@ BEGIN
       WHERE cc.company_id = c.id
       AND cc.site_id IS NULL;
       
-      UPDATE crm_contacts SET site_id = v_builddesk_site_id WHERE site_id IS NULL;
+      UPDATE crm_contacts SET site_id = v_brikly_site_id WHERE site_id IS NULL;
       
       ALTER TABLE crm_contacts ALTER COLUMN site_id SET NOT NULL;
       CREATE INDEX idx_crm_contacts_site_id ON crm_contacts(site_id);
@@ -315,7 +315,7 @@ BEGIN
       WHERE cl.company_id = c.id
       AND cl.site_id IS NULL;
       
-      UPDATE crm_leads SET site_id = v_builddesk_site_id WHERE site_id IS NULL;
+      UPDATE crm_leads SET site_id = v_brikly_site_id WHERE site_id IS NULL;
       
       ALTER TABLE crm_leads ALTER COLUMN site_id SET NOT NULL;
       CREATE INDEX idx_crm_leads_site_id ON crm_leads(site_id);
@@ -343,7 +343,7 @@ BEGIN
       WHERE n.user_id = p.id
       AND n.site_id IS NULL;
       
-      UPDATE notifications SET site_id = v_builddesk_site_id WHERE site_id IS NULL;
+      UPDATE notifications SET site_id = v_brikly_site_id WHERE site_id IS NULL;
       
       ALTER TABLE notifications ALTER COLUMN site_id SET NOT NULL;
       CREATE INDEX idx_notifications_site_id ON notifications(site_id);
@@ -371,7 +371,7 @@ BEGIN
       WHERE al.user_id = p.id
       AND al.site_id IS NULL;
       
-      UPDATE audit_logs SET site_id = v_builddesk_site_id WHERE site_id IS NULL;
+      UPDATE audit_logs SET site_id = v_brikly_site_id WHERE site_id IS NULL;
       
       ALTER TABLE audit_logs ALTER COLUMN site_id SET NOT NULL;
       CREATE INDEX idx_audit_logs_site_id ON audit_logs(site_id);
@@ -393,7 +393,7 @@ BEGIN
       WHERE cgc.project_id = p.id
       AND cgc.site_id IS NULL;
       
-      UPDATE crew_gps_checkins SET site_id = v_builddesk_site_id WHERE site_id IS NULL;
+      UPDATE crew_gps_checkins SET site_id = v_brikly_site_id WHERE site_id IS NULL;
       
       ALTER TABLE crew_gps_checkins ALTER COLUMN site_id SET NOT NULL;
       CREATE INDEX idx_crew_gps_checkins_site_id ON crew_gps_checkins(site_id);
@@ -415,7 +415,7 @@ BEGIN
       WHERE dr.project_id = p.id
       AND dr.site_id IS NULL;
       
-      UPDATE daily_reports SET site_id = v_builddesk_site_id WHERE site_id IS NULL;
+      UPDATE daily_reports SET site_id = v_brikly_site_id WHERE site_id IS NULL;
       
       ALTER TABLE daily_reports ALTER COLUMN site_id SET NOT NULL;
       CREATE INDEX idx_daily_reports_site_id ON daily_reports(site_id);
@@ -437,7 +437,7 @@ BEGIN
       WHERE co.project_id = p.id
       AND co.site_id IS NULL;
       
-      UPDATE change_orders SET site_id = v_builddesk_site_id WHERE site_id IS NULL;
+      UPDATE change_orders SET site_id = v_brikly_site_id WHERE site_id IS NULL;
       
       ALTER TABLE change_orders ALTER COLUMN site_id SET NOT NULL;
       CREATE INDEX idx_change_orders_site_id ON change_orders(site_id);

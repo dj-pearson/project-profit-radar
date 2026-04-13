@@ -188,7 +188,7 @@ serve(async (req) => {
     }
 
     // Generate the blog post URL
-    const blogUrl = `https://build-desk.com/blog/${blogPost.slug}`;
+    const blogUrl = `https://brikly.net/blog/${blogPost.slug}`;
 
     // Generate platform-specific content with enhanced structure
     const platformContents = await generateEnhancedPlatformContent(
@@ -578,7 +578,7 @@ function generateTwitterFallback(
   return {
     platform: "twitter",
     content: `🚧 ${blogPost.title}\n\n${excerpt}\n\n${blogUrl}`,
-    hashtags: ["#construction", "#builddesk", "#projectmanagement"],
+    hashtags: ["#construction", "#brikly", "#projectmanagement"],
     media_urls: blogPost.featured_image_url
       ? [blogPost.featured_image_url]
       : [],
@@ -598,7 +598,7 @@ function generateLinkedInFallback(
     hashtags: [
       "#construction",
       "#projectmanagement",
-      "#builddesk",
+      "#brikly",
       "#constructionindustry",
       "#businessgrowth",
     ],
@@ -620,7 +620,7 @@ function generateFacebookFallback(
     content: `🏗️ ${blogPost.title}\n\n${blogPost.excerpt}\n\nEvery construction professional knows the challenges of managing projects, teams, and budgets effectively. This article shares insights that could make a real difference in your daily operations.\n\nWhat's been your biggest project management challenge lately? Share your experiences below! 👇\n\nLearn more: ${blogUrl}`,
     hashtags: [
       "#construction",
-      "#builddesk",
+      "#brikly",
       "#projectmanagement",
       "#contractors",
     ],
@@ -648,7 +648,7 @@ async function generateInstagramFallback(
     )}...\n\nSwipe to see how successful contractors are transforming their businesses with the right tools and strategies! 💪\n\n🔗 Link in bio: ${blogUrl}`,
     hashtags: [
       "#construction",
-      "#builddesk",
+      "#brikly",
       "#projectmanagement",
       "#contractors",
       "#constructionlife",
@@ -684,7 +684,7 @@ async function sendToExternalWebhook(webhookUrl: string, data: any) {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "User-Agent": "BuildDesk-Blog-Social-Automation/2.1",
+        "User-Agent": "Brikly-Blog-Social-Automation/2.1",
       },
       body: JSON.stringify({
         timestamp: new Date().toISOString(),

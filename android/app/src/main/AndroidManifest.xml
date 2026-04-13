@@ -35,13 +35,13 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
 
-            <!-- Deep linking for app.build-desk.com -->
+            <!-- Deep linking for app.brikly.net -->
             <intent-filter android:autoVerify="true">
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
                 <data android:scheme="https"
-                    android:host="app.build-desk.com" />
+                    android:host="app.brikly.net" />
             </intent-filter>
 
             <!-- Custom scheme for OAuth callbacks -->
@@ -49,14 +49,14 @@
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
-                <data android:scheme="com.builddesk.app" />
+                <data android:scheme="com.brikly.app" />
             </intent-filter>
 
         </activity>
 
         <!-- Foreground service for GPS time tracking in background -->
         <service
-            android:name="com.builddesk.app.LocationTrackingService"
+            android:name="com.brikly.app.LocationTrackingService"
             android:exported="false"
             android:foregroundServiceType="location" />
 

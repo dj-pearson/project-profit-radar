@@ -1,7 +1,7 @@
 # Week 3 Day 1: Database Foundation & Optimization
 
 ## 🎯 Objectives
-- Design optimized database schema for BuildDesk core entities
+- Design optimized database schema for Brikly core entities
 - Implement proper indexes for query performance
 - Set up RLS policies for data security
 - Create seed scripts for testing with real data

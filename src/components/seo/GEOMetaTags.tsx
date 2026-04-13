@@ -27,14 +27,14 @@ export interface GEOMetaTagsProps {
 export const GEOMetaTags: React.FC<GEOMetaTagsProps> = ({
   title,
   description,
-  author = 'BuildDesk',
+  author = 'Brikly',
   publishDate,
   modifiedDate,
   contentType = 'software',
   speakableSelectors = ['.geo-direct-answer', 'h1', 'h2', '.geo-section-content p:first-child'],
 }) => {
   const location = useLocation();
-  const fullUrl = `https://builddesk.com${location.pathname}`;
+  const fullUrl = `https://brikly.com${location.pathname}`;
   const today = new Date().toISOString().split('T')[0];
 
   const speakableSchema = {
@@ -52,7 +52,7 @@ export const GEOMetaTags: React.FC<GEOMetaTagsProps> = ({
       {/* Dublin Core metadata for AI attribution */}
       <meta name="dc.title" content={title} />
       <meta name="dc.creator" content={author} />
-      <meta name="dc.publisher" content="BuildDesk" />
+      <meta name="dc.publisher" content="Brikly" />
       <meta name="dc.date" content={modifiedDate || today} />
       <meta name="dc.type" content={contentType === 'article' ? 'Text' : 'Software'} />
       <meta name="dc.language" content="en" />
@@ -63,7 +63,7 @@ export const GEOMetaTags: React.FC<GEOMetaTagsProps> = ({
       {/* Citation metadata for RAG systems */}
       <meta name="citation_title" content={title} />
       <meta name="citation_author" content={author} />
-      <meta name="citation_publisher" content="BuildDesk" />
+      <meta name="citation_publisher" content="Brikly" />
       {publishDate && <meta name="citation_date" content={publishDate} />}
       <meta name="citation_online_date" content={modifiedDate || today} />
       <meta name="citation_language" content="en" />

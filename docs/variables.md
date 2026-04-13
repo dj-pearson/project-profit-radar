@@ -1,7 +1,7 @@
-# BuildDesk Environment Variables Reference
+# Brikly Environment Variables Reference
 
 **Last Updated**: 2025-12-27
-**Purpose**: Master reference for all environment variables required by the BuildDesk platform
+**Purpose**: Master reference for all environment variables required by the Brikly platform
 
 This document lists every environment variable used across the platform, organized by environment type and where each variable should be configured.
 
@@ -31,16 +31,16 @@ This document lists every environment variable used across the platform, organiz
 
 | Variable | Description | Example | Used In |
 |----------|-------------|---------|---------|
-| `VITE_SUPABASE_URL` | Supabase API endpoint | `https://api.build-desk.com` | `src/integrations/supabase/client.ts` |
+| `VITE_SUPABASE_URL` | Supabase API endpoint | `https://api.brikly.net` | `src/integrations/supabase/client.ts` |
 | `VITE_SUPABASE_PUBLISHABLE_KEY` | Supabase anon/public key | `eyJ...` (JWT) | `src/integrations/supabase/client.ts` |
 | `VITE_SUPABASE_ANON_KEY` | Alias for publishable key | `eyJ...` (JWT) | `src/contexts/AuthContext.tsx` |
-| `VITE_EDGE_FUNCTIONS_URL` | Edge functions base URL | `https://functions.build-desk.com` | `src/integrations/supabase/client.ts` |
+| `VITE_EDGE_FUNCTIONS_URL` | Edge functions base URL | `https://functions.brikly.net` | `src/integrations/supabase/client.ts` |
 
 ### Optional Configuration
 
 | Variable | Description | Example | Used In |
 |----------|-------------|---------|---------|
-| `VITE_SUPABASE_PROJECT_ID` | Project identifier | `builddesk` | Documentation only |
+| `VITE_SUPABASE_PROJECT_ID` | Project identifier | `brikly` | Documentation only |
 | `VITE_POSTHOG_API_KEY` | PostHog analytics key | `phc_...` | `src/lib/analytics.ts` |
 | `VITE_POSTHOG_HOST` | PostHog host URL | `https://app.posthog.com` | `src/lib/analytics.ts` |
 | `VITE_SENTRY_DSN` | Sentry error tracking DSN | `https://...@sentry.io/...` | `src/lib/sentry.ts` |
@@ -66,16 +66,16 @@ This document lists every environment variable used across the platform, organiz
 
 | Variable | Description | Example |
 |----------|-------------|---------|
-| `EXPO_PUBLIC_SUPABASE_URL` | Supabase API endpoint | `https://api.build-desk.com` |
+| `EXPO_PUBLIC_SUPABASE_URL` | Supabase API endpoint | `https://api.brikly.net` |
 | `EXPO_PUBLIC_SUPABASE_ANON_KEY` | Supabase anon/public key | `eyJ...` (JWT) |
-| `EXPO_PUBLIC_EDGE_FUNCTIONS_URL` | Edge functions base URL | `https://functions.build-desk.com` |
-| `EXPO_PUBLIC_API_BASE_URL` | API base URL | `https://api.build-desk.com` |
+| `EXPO_PUBLIC_EDGE_FUNCTIONS_URL` | Edge functions base URL | `https://functions.brikly.net` |
+| `EXPO_PUBLIC_API_BASE_URL` | API base URL | `https://api.brikly.net` |
 
 ### App Configuration
 
 | Variable | Description | Default |
 |----------|-------------|---------|
-| `EXPO_PUBLIC_APP_NAME` | Application display name | `BuildDesk` |
+| `EXPO_PUBLIC_APP_NAME` | Application display name | `Brikly` |
 | `EXPO_PUBLIC_APP_VERSION` | App version string | `1.0.0` |
 
 ### Feature Flags
@@ -116,7 +116,7 @@ This document lists every environment variable used across the platform, organiz
 | Variable | Description | Example |
 |----------|-------------|---------|
 | `EXPO_PUBLIC_GOOGLE_CLIENT_ID` | Google OAuth client ID | `xxx.apps.googleusercontent.com` |
-| `EXPO_PUBLIC_APPLE_CLIENT_ID` | Apple Sign-In client ID | `com.builddesk.app` |
+| `EXPO_PUBLIC_APPLE_CLIENT_ID` | Apple Sign-In client ID | `com.brikly.app` |
 | `EXPO_PUBLIC_MICROSOFT_CLIENT_ID` | Microsoft OAuth client ID | `xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx` |
 
 ### Development Settings
@@ -255,8 +255,8 @@ Run `scripts/setup-stripe-products.sh` (or `.ps1` on Windows) to create products
 
 | Secret | Description | Default |
 |--------|-------------|---------|
-| `SITE_URL` | Main application URL | `https://build-desk.com` |
-| `APP_URL` | Application URL (alt) | `https://builddesk.com/subscription` |
+| `SITE_URL` | Main application URL | `https://brikly.net` |
+| `APP_URL` | Application URL (alt) | `https://brikly.com/subscription` |
 
 ### Admin & Security
 
@@ -309,9 +309,9 @@ Run `scripts/setup-stripe-products.sh` (or `.ps1` on Windows) to create products
 
 ```toml
 [vars]
-VITE_SUPABASE_URL = "https://api.build-desk.com"
+VITE_SUPABASE_URL = "https://api.brikly.net"
 VITE_SUPABASE_PUBLISHABLE_KEY = "eyJ..."
-VITE_EDGE_FUNCTIONS_URL = "https://functions.build-desk.com"
+VITE_EDGE_FUNCTIONS_URL = "https://functions.brikly.net"
 ```
 
 ### Cloudflare Dashboard Variables
@@ -331,7 +331,7 @@ VITE_EDGE_FUNCTIONS_URL = "https://functions.build-desk.com"
 | Variable | Description | Used By |
 |----------|-------------|---------|
 | `SUPABASE_ACCESS_TOKEN` | Personal access token | Supabase MCP server |
-| `SUPABASE_PROJECT_ID` | Project ID (`builddesk`) | Supabase MCP commands |
+| `SUPABASE_PROJECT_ID` | Project ID (`brikly`) | Supabase MCP commands |
 | `UPSTASH_REDIS_REST_URL` | Upstash Redis URL | Context7 MCP |
 | `UPSTASH_REDIS_REST_TOKEN` | Upstash Redis token | Context7 MCP |
 
@@ -367,9 +367,9 @@ VITE_EDGE_FUNCTIONS_URL = "https://functions.build-desk.com"
 
 ```bash
 # .env (project root)
-VITE_SUPABASE_URL=https://api.build-desk.com
+VITE_SUPABASE_URL=https://api.brikly.net
 VITE_SUPABASE_PUBLISHABLE_KEY=your-anon-key
-VITE_EDGE_FUNCTIONS_URL=https://functions.build-desk.com
+VITE_EDGE_FUNCTIONS_URL=https://functions.brikly.net
 ```
 
 ### Minimum Required for Production

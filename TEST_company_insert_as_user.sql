@@ -13,12 +13,12 @@ SELECT
   domain, 
   is_active
 FROM sites 
-WHERE key = 'builddesk';
+WHERE key = 'brikly';
 
 -- Test 2: What does is_valid_site return?
 SELECT 
   'TEST 2: is_valid_site() function' as test,
-  public.is_valid_site((SELECT id FROM sites WHERE key = 'builddesk')) as result;
+  public.is_valid_site((SELECT id FROM sites WHERE key = 'brikly')) as result;
 
 -- Test 3: What does current_site_id return?
 SELECT 
@@ -60,8 +60,8 @@ DECLARE
   v_company_id UUID;
   v_error_message TEXT;
 BEGIN
-  -- Get BuildDesk site_id
-  SELECT id INTO v_site_id FROM sites WHERE key = 'builddesk' AND is_active = true;
+  -- Get Brikly site_id
+  SELECT id INTO v_site_id FROM sites WHERE key = 'brikly' AND is_active = true;
   
   RAISE NOTICE '========================================';
   RAISE NOTICE 'TEST 7: Attempting company INSERT';

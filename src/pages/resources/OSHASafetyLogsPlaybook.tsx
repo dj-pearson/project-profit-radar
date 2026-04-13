@@ -60,7 +60,7 @@ const OSHASafetyLogsPlaybook = () => {
   return (
     <div className="min-h-screen bg-background">
       <SEOMetaTags
-        title="OSHA Safety Logs: Digital Playbook for Construction Teams | BuildDesk"
+        title="OSHA Safety Logs: Digital Playbook for Construction Teams | Brikly"
         description="Complete guide to OSHA compliance for construction. Digital templates, workflows, and tools to keep your team safe and compliant. Avoid costly violations."
         keywords={[
           'OSHA safety logs construction',
@@ -74,10 +74,10 @@ const OSHASafetyLogsPlaybook = () => {
       
       <ArticleSchema
         title="OSHA Safety Logs: Digital Playbook for Construction Teams"
-        author="BuildDesk Team"
+        author="Brikly Team"
         datePublished="2025-01-24"
-        image="https://builddesk.com/images/osha-safety-guide.jpg"
-        url="https://builddesk.com/resources/osha-safety-logs-digital-playbook"
+        image="https://brikly.com/images/osha-safety-guide.jpg"
+        url="https://brikly.com/resources/osha-safety-logs-digital-playbook"
       />
       
       <FAQSchema questions={faqData} />
@@ -335,7 +335,7 @@ const OSHASafetyLogsPlaybook = () => {
                 <Link to="/osha-compliance-software" className="font-medium hover:text-primary">
                   OSHA Compliance Software →
                 </Link>
-                <p className="text-sm text-muted-foreground mt-1">See BuildDesk's safety management tools</p>
+                <p className="text-sm text-muted-foreground mt-1">See Brikly's safety management tools</p>
               </CardContent>
             </Card>
             <Card>
@@ -363,7 +363,7 @@ const OSHASafetyLogsPlaybook = () => {
             Simplify OSHA Compliance Today
           </h2>
           <p className="text-muted-foreground mb-6 max-w-2xl mx-auto">
-            Stop struggling with paper forms and spreadsheets. BuildDesk's digital safety 
+            Stop struggling with paper forms and spreadsheets. Brikly's digital safety 
             management reduces compliance burden by 60% while keeping your team safer.
           </p>
           <Button asChild size="lg">

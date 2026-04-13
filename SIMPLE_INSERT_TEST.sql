@@ -14,8 +14,8 @@ DECLARE
   v_site_id UUID;
   v_company_id UUID;
 BEGIN
-  -- Get BuildDesk site
-  SELECT id INTO v_site_id FROM sites WHERE key = 'builddesk';
+  -- Get Brikly site
+  SELECT id INTO v_site_id FROM sites WHERE key = 'brikly';
   
   RAISE NOTICE '========================================';
   RAISE NOTICE 'SIMPLE INSERT TEST';

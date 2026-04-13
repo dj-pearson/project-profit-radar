@@ -2,14 +2,14 @@
 
 ## Overview
 
-This comprehensive guide explains how to add a new Pearson Media website to the shared Build-Desk database. This process ensures complete data isolation while leveraging shared infrastructure.
+This comprehensive guide explains how to add a new Pearson Media website to the shared Brikly database. This process ensures complete data isolation while leveraging shared infrastructure.
 
 **Time Estimate:** 4-6 hours per website
 
 **Prerequisites:**
 - Completed multi-site migration (all 4 migration files applied)
 - Access to Supabase dashboard
-- Access to Build-Desk codebase
+- Access to Brikly codebase
 - Understanding of DNS/domain configuration
 
 ---
@@ -181,7 +181,7 @@ Create a migration script for your data:
 
 ```sql
 -- =====================================================
--- DATA MIGRATION: RealEstate Bio → Build-Desk Database
+-- DATA MIGRATION: RealEstate Bio → Brikly Database
 -- =====================================================
 
 DO $$
@@ -335,13 +335,13 @@ END $$;
 
 ```bash
 # Copy your data files to temp tables
-psql -h db.your-build-desk-project.supabase.co \
+psql -h db.your-brikly-project.supabase.co \
   -U postgres \
   -d postgres \
   -c "\copy temp_companies_import FROM 'companies.csv' CSV HEADER"
 
 # Run migration script
-psql -h db.your-build-desk-project.supabase.co \
+psql -h db.your-brikly-project.supabase.co \
   -U postgres \
   -d postgres \
   -f data_migration.sql
@@ -360,7 +360,7 @@ FROM sites s
 LEFT JOIN companies c ON c.site_id = s.id
 LEFT JOIN user_profiles up ON up.site_id = s.id
 LEFT JOIN projects p ON p.site_id = s.id
-WHERE s.key IN ('builddesk', 'realestate')  -- ← Your sites
+WHERE s.key IN ('brikly', 'realestate')  -- ← Your sites
 GROUP BY s.name;
 ```
 
@@ -374,16 +374,16 @@ Edit `src/lib/site-resolver.ts`:
 
 ```typescript
 const siteKeyMap: Record<string, string> = {
-  'build-desk.com': 'builddesk',
-  'www.build-desk.com': 'builddesk',
-  'builddesk.pearsonperformance.workers.dev': 'builddesk',
+  'brikly.net': 'brikly',
+  'www.brikly.net': 'brikly',
+  'brikly.pearsonperformance.workers.dev': 'brikly',
   
   // ← ADD NEW SITE HERE
   'realestatebio.com': 'realestate',
   'www.realestatebio.com': 'realestate',
   'realestate-staging.pearsonperformance.workers.dev': 'realestate',
   
-  'localhost': 'builddesk',  // Development default
+  'localhost': 'brikly',  // Development default
 };
 ```
 
@@ -515,7 +515,7 @@ Test that users from different sites cannot see each other's data:
 
 ```typescript
 // As user from Site A, try to access Site B project
-const siteAUser = 'user-a@builddesk.com';
+const siteAUser = 'user-a@brikly.com';
 const siteBProjectId = 'project-from-realestatebio';
 
 const { data, error } = await supabase
@@ -532,7 +532,7 @@ console.assert(data === null, 'Data isolation failed!');
 
 ```bash
 # User A tries to access User B's data via API
-curl -X GET https://build-desk.com/api/projects/site-b-project-id \
+curl -X GET https://brikly.net/api/projects/site-b-project-id \
   -H "Authorization: Bearer SITE-A-USER-JWT"
 
 # Should return 404 or 403

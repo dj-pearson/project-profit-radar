@@ -68,7 +68,7 @@ Store these securely — you'll add them as GitHub Secrets later.
 1. Go to https://developer.apple.com/account/resources/identifiers/list
 2. Click **"+"** → **App IDs** → **App**
 3. Enter:
-   - Description: `BuildDesk` (or your app name)
+   - Description: `Brikly` (or your app name)
    - Bundle ID: Explicit → `com.yourcompany.yourapp`
 4. Enable any capabilities you need (Push Notifications, Sign in with Apple, etc.)
 5. Click **Register**
@@ -82,7 +82,7 @@ Store these securely — you'll add them as GitHub Secrets later.
    - Name: Your app's display name
    - Primary Language: English (U.S.)
    - Bundle ID: Select the one you just registered
-   - SKU: Any unique string (e.g., `builddesk-ios-001`)
+   - SKU: Any unique string (e.g., `brikly-ios-001`)
 4. Click **Create**
 
 You don't need to fill out all the metadata yet — just having the app record is enough for TestFlight uploads.
@@ -112,8 +112,8 @@ eas login
 ```json
 {
   "expo": {
-    "name": "BuildDesk",
-    "slug": "builddesk",
+    "name": "Brikly",
+    "slug": "brikly",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -123,16 +123,16 @@ eas login
       "backgroundColor": "#1A2332"
     },
     "ios": {
-      "bundleIdentifier": "com.yourcompany.builddesk",
+      "bundleIdentifier": "com.yourcompany.brikly",
       "buildNumber": "1",
       "supportsTablet": true,
       "infoPlist": {
-        "NSCameraUsageDescription": "BuildDesk uses your camera to capture site photos",
-        "NSLocationWhenInUseUsageDescription": "BuildDesk uses your location for time tracking"
+        "NSCameraUsageDescription": "Brikly uses your camera to capture site photos",
+        "NSLocationWhenInUseUsageDescription": "Brikly uses your location for time tracking"
       }
     },
     "android": {
-      "package": "com.yourcompany.builddesk",
+      "package": "com.yourcompany.brikly",
       "versionCode": 1,
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
@@ -491,9 +491,9 @@ If all your apps are in the same GitHub org:
 
 ---
 
-## Phase 7: Capacitor Apps (BuildDesk Specific)
+## Phase 7: Capacitor Apps (Brikly Specific)
 
-BuildDesk uses Capacitor, not Expo. The workflow differs slightly.
+Brikly uses Capacitor, not Expo. The workflow differs slightly.
 
 ### Capacitor Build Workflow
 
@@ -619,7 +619,7 @@ jobs:
     <string>manual</string>
     <key>provisioningProfiles</key>
     <dict>
-        <key>com.yourcompany.builddesk</key>
+        <key>com.yourcompany.brikly</key>
         <string>Your Provisioning Profile Name</string>
     </dict>
 </dict>
@@ -629,7 +629,7 @@ jobs:
 > **Note:** Capacitor requires more manual certificate management than EAS/Expo.
 > If you're submitting multiple apps, the Expo + EAS route is significantly
 > easier because EAS handles all the signing complexity for you. Consider
-> wrapping BuildDesk's Capacitor project with Expo if you want the simpler
+> wrapping Brikly's Capacitor project with Expo if you want the simpler
 > credential management.
 
 ---
@@ -653,7 +653,7 @@ Apple Developer Account ($99/year)
     │       OR manual .mobileprovision (Capacitor apps)
     │
     └── Bundle IDs (one per app)
-        ├── com.yourcompany.builddesk
+        ├── com.yourcompany.brikly
         ├── com.yourcompany.app2
         └── com.yourcompany.app3
 

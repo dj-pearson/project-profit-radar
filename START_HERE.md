@@ -1,4 +1,4 @@
-# 🚀 Build-Desk AI Configuration - Next Steps
+# 🚀 Brikly AI Configuration - Next Steps
 
 ## What to Do Right Now
 
@@ -31,9 +31,9 @@ AI_ENABLE_CACHING = true
 
 ---
 
-### Step 2: Link Variables to Build-Desk Project (2 minutes)
+### Step 2: Link Variables to Brikly Project (2 minutes)
 
-1. **In Coolify**, go to your Build-Desk project
+1. **In Coolify**, go to your Brikly project
 2. **Click:** Environment Variables
 3. **Add Team Shared Variables** - Select and add:
    - `{{ team.AI_DEFAULT_PROVIDER }}`
@@ -70,7 +70,7 @@ supabase db push
 
 ### Step 4: Test the Configuration (1 minute)
 
-1. **Login** to Build-Desk as root_admin
+1. **Login** to Brikly as root_admin
 2. **Navigate to:** `/admin/ai-models`
 3. **Click:** "Test Configuration" button
 4. **Verify you see:**
@@ -106,7 +106,7 @@ supabase db push
 ## ✅ Success Checklist
 
 - [ ] Coolify Team Variables created
-- [ ] Variables linked to Build-Desk project
+- [ ] Variables linked to Brikly project
 - [ ] Project redeployed successfully
 - [ ] Database migration ran without errors
 - [ ] Test configuration shows all green checkmarks
@@ -135,7 +135,7 @@ After completing these steps, you will have:
 2. **Edit** `DEFAULT_AI_MODEL`
 3. **Change to:** `claude-4-opus-20260301` (example)
 4. **Save**
-5. **Redeploy** Build-Desk (and any other platforms)
+5. **Redeploy** Brikly (and any other platforms)
 6. **Done!** All platforms now use the new model
 
 **Time:** ~5 minutes to update entire portfolio
@@ -177,7 +177,7 @@ After completing these steps, you will have:
 ## 🎊 You're All Set!
 
 Once you complete these steps:
-1. Build-Desk will be fully configured
+1. Brikly will be fully configured
 2. You can deploy to other platforms (7 min each)
 3. All platforms will share the same centralized AI config
 4. You can update models globally in minutes

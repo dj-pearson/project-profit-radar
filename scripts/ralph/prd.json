@@ -1,5 +1,5 @@
 {
-  "project": "BuildDesk Comprehensive Security Audit & Hardening",
+  "project": "Brikly Comprehensive Security Audit & Hardening",
   "branchName": "claude/security-audit-fixes-Fu9e4",
   "description": "Comprehensive security hardening initiative based on a full-codebase security audit covering input sanitization, bounds checking, authentication/authorization, CORS, file upload validation, open redirects, insecure randomness, unbounded queries, and error information leakage. This PRD documents all identified vulnerabilities as user stories for systematic remediation via Ralph AI loops. Priority 1 items are critical/high severity requiring immediate action, Priority 2 are high/medium, Priority 3 are medium, and Priority 4 are low/hardening improvements.",
   "userStories": [

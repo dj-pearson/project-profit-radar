@@ -19,7 +19,7 @@ import {
 const SEOManager = () => {
   const [activeTab, setActiveTab] = useState('audit');
   const [loading, setLoading] = useState(false);
-  const [auditUrl, setAuditUrl] = useState('https://build-desk.com');
+  const [auditUrl, setAuditUrl] = useState('https://brikly.net');
 
   // Results state
   const [auditResult, setAuditResult] = useState<any>(null);
@@ -425,7 +425,7 @@ const SEOManager = () => {
             <CardHeader><CardTitle>robots.txt Editor</CardTitle></CardHeader>
             <CardContent className="space-y-4">
               <Textarea
-                placeholder="User-agent: *&#10;Disallow: /admin&#10;Sitemap: https://build-desk.com/sitemap.xml"
+                placeholder="User-agent: *&#10;Disallow: /admin&#10;Sitemap: https://brikly.net/sitemap.xml"
                 rows={10}
                 className="font-mono text-sm"
                 value={robotsTxt}

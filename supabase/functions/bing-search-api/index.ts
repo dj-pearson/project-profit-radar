@@ -66,7 +66,7 @@ serve(async (req) => {
 
     // Get Bing Search API credentials from Supabase secrets
     const bingSearchApiKey = Deno.env.get('BING_SEARCH_API_KEY')
-    const siteUrl = Deno.env.get('SEARCH_CONSOLE_SITE_URL') || 'build-desk.com'
+    const siteUrl = Deno.env.get('SEARCH_CONSOLE_SITE_URL') || 'brikly.net'
 
     console.log('Bing Search API Key exists:', !!bingSearchApiKey)
     console.log('Site URL:', siteUrl)

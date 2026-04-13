@@ -3,7 +3,7 @@ import { logger } from './logger';
 import { safeStorage } from './safeStorage';
 
 /**
- * Analytics tracking utilities for BuildDesk
+ * Analytics tracking utilities for Brikly
  * Integrates with PostHog (when available) and Supabase for event tracking
  */
 

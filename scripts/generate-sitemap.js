@@ -20,7 +20,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // Domain configuration
-const DOMAIN = 'https://builddesk.com';
+const DOMAIN = 'https://brikly.com';
 const CURRENT_DATE = new Date().toISOString().split('T')[0];
 
 /**
@@ -65,8 +65,8 @@ const seoPages = [
   { path: '/procore-alternative', priority: 0.9, changeFreq: 'weekly' },
   { path: '/procore-alternative-detailed', priority: 0.8, changeFreq: 'weekly' },
   { path: '/buildertrend-alternative', priority: 0.9, changeFreq: 'weekly' },
-  { path: '/builddesk-vs-buildertrend-comparison', priority: 0.8, changeFreq: 'monthly' },
-  { path: '/builddesk-vs-coconstruct', priority: 0.8, changeFreq: 'monthly' },
+  { path: '/brikly-vs-buildertrend-comparison', priority: 0.8, changeFreq: 'monthly' },
+  { path: '/brikly-vs-coconstruct', priority: 0.8, changeFreq: 'monthly' },
 
   // Free Tools
   { path: '/roi-calculator', priority: 0.8, changeFreq: 'monthly' },
@@ -86,7 +86,7 @@ const seoPages = [
   { path: '/resources/osha-safety-logs-digital-playbook', priority: 0.7, changeFreq: 'monthly' },
   { path: '/resources/construction-scheduling-software-prevent-delays', priority: 0.7, changeFreq: 'monthly' },
   { path: '/resources/construction-daily-logs-best-practices', priority: 0.7, changeFreq: 'monthly' },
-  { path: '/resources/procore-vs-builddesk-small-contractors', priority: 0.8, changeFreq: 'monthly' },
+  { path: '/resources/procore-vs-brikly-small-contractors', priority: 0.8, changeFreq: 'monthly' },
   { path: '/resources/quickbooks-integration-guide', priority: 0.7, changeFreq: 'monthly' },
   { path: '/resources/construction-mobile-app-guide', priority: 0.7, changeFreq: 'monthly' },
 
@@ -168,7 +168,7 @@ function generateSitemapXML(pages) {
  * Generate robots.txt with sitemap reference and AI crawler governance
  */
 function generateRobotsTxt() {
-  return `# BuildDesk Robots.txt
+  return `# Brikly Robots.txt
 # ${DOMAIN}
 # Last Updated: ${CURRENT_DATE}
 

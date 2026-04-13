@@ -116,7 +116,7 @@ export async function deriveSigningKey(sessionToken: string): Promise<string> {
   if (!sessionToken) {
     throw new Error('[RequestSigning] Session token is required to derive signing key');
   }
-  return hmacSha256Hex(sessionToken, 'builddesk:request-signing:v1');
+  return hmacSha256Hex(sessionToken, 'brikly:request-signing:v1');
 }
 
 /**

@@ -53,7 +53,7 @@ Added npm script for running Supabase MCP server:
 
 - Added Supabase MCP section with capabilities overview
 - Updated installation instructions
-- Added Supabase-specific use cases for BuildDesk
+- Added Supabase-specific use cases for Brikly
 
 #### 3. `.env.mcp.example`
 
@@ -64,12 +64,12 @@ Added npm script for running Supabase MCP server:
 
 ### Database Operations
 
-- **CRUD Operations**: Full access to all BuildDesk tables
+- **CRUD Operations**: Full access to all Brikly tables
 - **Advanced Queries**: Natural language to SQL translation
 - **Schema Management**: View/modify table structures
 - **Real-time Analytics**: Generate business reports on demand
 
-### BuildDesk-Specific Features
+### Brikly-Specific Features
 
 - **Project Management**: Query project data, budgets, timelines
 - **Financial Analysis**: Profit margins, costs, revenue analysis
@@ -107,7 +107,7 @@ npm run mcp:supabase
 
 - The server is already configured in your MCP files
 - Restart Claude Desktop to pick up the new configuration
-- Start asking questions about your BuildDesk database!
+- Start asking questions about your Brikly database!
 
 ## 💡 Example Usage
 
@@ -148,4 +148,4 @@ If you encounter issues:
 - **Cross-Platform**: Works with Claude Desktop, VS Code, and other MCP clients
 - **Secure**: Uses official Supabase authentication and access controls
 
-Your BuildDesk project now has comprehensive AI-powered database integration through the Model Context Protocol! 🎉
+Your Brikly project now has comprehensive AI-powered database integration through the Model Context Protocol! 🎉

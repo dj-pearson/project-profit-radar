@@ -87,10 +87,10 @@ export const AggregateRatingSchema: React.FC<AggregateRatingSchemaProps> = ({
   showVisual = false,
   className,
   schemaType = 'SoftwareApplication',
-  itemName = 'BuildDesk - Construction Management Software',
+  itemName = 'Brikly - Construction Management Software',
   itemDescription = 'Comprehensive construction management platform for small to medium-sized construction businesses',
-  itemImage = 'https://ilhzuvemiuyfuxfegtlv.supabase.co/storage/v1/object/public/assets/builddesk-logo.png',
-  itemUrl = 'https://builddesk.com'
+  itemImage = 'https://ilhzuvemiuyfuxfegtlv.supabase.co/storage/v1/object/public/assets/brikly-logo.png',
+  itemUrl = 'https://brikly.com'
 }) => {
   const [ratingData, setRatingData] = useState<AggregateRatingData | null>(staticRating || null);
   const [loading, setLoading] = useState(!staticRating);

@@ -1,5 +1,5 @@
 {
-  "name": "builddesk",
+  "name": "brikly",
   "private": true,
   "version": "0.0.0",
   "main": "App.tsx",
@@ -60,7 +60,7 @@
     "generate-sitemap": "node scripts/generate-sitemap.js",
     "mcp:puppeteer": "npx @modelcontextprotocol/server-puppeteer",
     "mcp:context7": "npx @upstash/context7-mcp",
-    "mcp:supabase": "npx -y @supabase/mcp-server-supabase@latest --project-id builddesk --access-token \"${SUPABASE_ACCESS_TOKEN}\"",
+    "mcp:supabase": "npx -y @supabase/mcp-server-supabase@latest --project-id brikly --access-token \"${SUPABASE_ACCESS_TOKEN}\"",
     "security:audit": "bash scripts/security-audit.sh",
     "security-check": "powershell -ExecutionPolicy Bypass -File scripts/security-check.ps1",
     "analyze": "node scripts/analyze-bundle.js",

@@ -1531,8 +1531,8 @@ src/components/help/KeyboardShortcutsPanel.tsx(12,1): error TS6133: 'Badge' is d
 src/components/Hero.tsx(97,18): error TS6133: 'useGSAP' is declared but its value is never read.
 src/components/hero/BackgroundEffects.tsx(48,10): error TS2741: Property 'args' is missing in type '{ attach: string; count: number; array: Float32Array<ArrayBuffer>; itemSize: number; }' but required in type 'Mutable<Overwrite<Partial<Overwrite<BufferAttribute, MathProps<BufferAttribute> & ReactProps<BufferAttribute>>>, Omit<...>>>'.
 src/components/hero/BackgroundEffects.tsx(54,10): error TS2741: Property 'args' is missing in type '{ attach: string; count: number; array: Float32Array<ArrayBuffer>; itemSize: number; }' but required in type 'Mutable<Overwrite<Partial<Overwrite<BufferAttribute, MathProps<BufferAttribute> & ReactProps<BufferAttribute>>>, Omit<...>>>'.
-src/components/hero/BuildDeskHero3D.tsx(1,28): error TS6133: 'useThree' is declared but its value is never read.
-src/components/hero/BuildDeskHero3D.tsx(11,11): error TS6196: 'AnimationState' is declared but never used.
+src/components/hero/BriklyHero3D.tsx(1,28): error TS6133: 'useThree' is declared but its value is never read.
+src/components/hero/BriklyHero3D.tsx(11,11): error TS6196: 'AnimationState' is declared but never used.
 src/components/hub/HubPageLayout.tsx(5,1): error TS6133: 'Button' is declared but its value is never read.
 src/components/hub/HubPageLayout.tsx(10,10): error TS6133: 'NavigationItem' is declared but its value is never read.
 src/components/infrastructure/BackupRecoverySystem.tsx(1,8): error TS6133: 'React' is declared but its value is never read.
@@ -3646,7 +3646,7 @@ src/hooks/useUnifiedBiometric.ts(156,20): error TS2345: Argument of type '(prev:
   Type '(prev: UnifiedBiometricState) => { isLoading: false; capabilities: BiometricCapabilities; isEnabled: boolean; appLockEnabled: boolean; environment: "expo"; error: string | null; }' is not assignable to type '(prevState: UnifiedBiometricState) => UnifiedBiometricState'.
     Call signature return types '{ isLoading: false; capabilities: BiometricCapabilities; isEnabled: boolean; appLockEnabled: boolean; environment: "expo"; error: string | null; }' and 'UnifiedBiometricState' are incompatible.
       The types of 'capabilities' are incompatible between these types.
-        Property 'hasDeviceCredential' is missing in type 'import("C:/Users/pears/Documents/Build-Desk/project-profit-radar/src/services/BiometricAuthService").BiometricCapabilities' but required in type 'import("C:/Users/pears/Documents/Build-Desk/project-profit-radar/src/services/CapacitorBiometricService").BiometricCapabilities'.
+        Property 'hasDeviceCredential' is missing in type 'import("C:/Users/pears/Documents/Brikly/project-profit-radar/src/services/BiometricAuthService").BiometricCapabilities' but required in type 'import("C:/Users/pears/Documents/Brikly/project-profit-radar/src/services/CapacitorBiometricService").BiometricCapabilities'.
 src/hooks/useUnifiedBiometric.ts(210,58): error TS2559: Type 'string' has no properties in common with type '{ promptMessage?: string | undefined; fallbackLabel?: string | undefined; requireConfirmation?: boolean | undefined; }'.
 src/hooks/useUnifiedBiometric.ts(388,43): error TS2339: Property 'shouldRequireReauth' does not exist on type 'BiometricAuthService'.
 src/hooks/useVideoUpload.ts(72,56): error TS2345: Argument of type '"get_upload_config"' is not assignable to parameter of type '"is_within_geofence" | "add_subscriber_to_funnel" | "apply_referral_code" | "apply_retention_policy" | "auto_populate_daily_report" | "bulk_approve_timesheets" | "bulk_reject_timesheets" | ... 106 more ... | "verify_mfa_code"'.
@@ -4312,11 +4312,11 @@ src/pages/BondInsuranceManagement.tsx(110,28): error TS2345: Argument of type '{
       Types of property 'premium_amount' are incompatible.
         Type 'number | null' is not assignable to type 'number'.
           Type 'null' is not assignable to type 'number'.
-src/pages/BuildDeskVsBuildertrend.tsx(1,1): error TS6133: 'React' is declared but its value is never read.
-src/pages/BuildDeskVsBuildertrend.tsx(10,45): error TS6133: 'Users' is declared but its value is never read.
-src/pages/BuildDeskVsCoConstruct.tsx(1,1): error TS6133: 'React' is declared but its value is never read.
-src/pages/BuildDeskVsCoConstruct.tsx(91,9): error TS6133: 'buildDeskCons' is declared but its value is never read.
-src/pages/BuildDeskVsCoConstruct.tsx(96,9): error TS6133: 'coConstructCons' is declared but its value is never read.
+src/pages/BriklyVsBuildertrend.tsx(1,1): error TS6133: 'React' is declared but its value is never read.
+src/pages/BriklyVsBuildertrend.tsx(10,45): error TS6133: 'Users' is declared but its value is never read.
+src/pages/BriklyVsCoConstruct.tsx(1,1): error TS6133: 'React' is declared but its value is never read.
+src/pages/BriklyVsCoConstruct.tsx(91,9): error TS6133: 'briklyCons' is declared but its value is never read.
+src/pages/BriklyVsCoConstruct.tsx(96,9): error TS6133: 'coConstructCons' is declared but its value is never read.
 src/pages/BuildertrendAlternative.tsx(1,1): error TS6133: 'React' is declared but its value is never read.
 src/pages/BuildertrendAlternative.tsx(6,1): error TS6192: All imports in import declaration are unused.
 src/pages/BuildertrendAlternative.tsx(8,10): error TS6133: 'CheckCircle' is declared but its value is never read.
@@ -5208,10 +5208,10 @@ src/pages/resources/ProcoreAlternativeGEO.tsx(20,3): error TS6133: 'DollarSign' 
 src/pages/resources/ProcoreAlternativeGEO.tsx(22,3): error TS6133: 'Users' is declared but its value is never read.
 src/pages/resources/ProcoreAlternativeGEO.tsx(26,3): error TS6133: 'Calculator' is declared but its value is never read.
 src/pages/resources/ProcoreAlternativeGEO.tsx(163,10): error TS2741: Property 'userRole' is missing in type '{}' but required in type 'NavigationProps'.
-src/pages/resources/ProcoreVsBuildDeskComparison.tsx(1,1): error TS6133: 'React' is declared but its value is never read.
-src/pages/resources/ProcoreVsBuildDeskComparison.tsx(10,26): error TS6133: 'DollarSign' is declared but its value is never read.
-src/pages/resources/ProcoreVsBuildDeskComparison.tsx(10,38): error TS6133: 'Clock' is declared but its value is never read.
-src/pages/resources/ProcoreVsBuildDeskComparison.tsx(10,45): error TS6133: 'Users' is declared but its value is never read.
+src/pages/resources/ProcoreVsBriklyComparison.tsx(1,1): error TS6133: 'React' is declared but its value is never read.
+src/pages/resources/ProcoreVsBriklyComparison.tsx(10,26): error TS6133: 'DollarSign' is declared but its value is never read.
+src/pages/resources/ProcoreVsBriklyComparison.tsx(10,38): error TS6133: 'Clock' is declared but its value is never read.
+src/pages/resources/ProcoreVsBriklyComparison.tsx(10,45): error TS6133: 'Users' is declared but its value is never read.
 src/pages/resources/QuickBooksIntegrationGuide.tsx(1,1): error TS6133: 'React' is declared but its value is never read.
 src/pages/resources/QuickBooksIntegrationHub.tsx(1,1): error TS6133: 'React' is declared but its value is never read.
 src/pages/resources/QuickBooksLimitationsConstruction.tsx(1,1): error TS6133: 'React' is declared but its value is never read.
@@ -5854,28 +5854,28 @@ src/utils/estimatePDFGenerator.ts(63,7): error TS2783: 'name' is specified more 
 src/utils/fontOptimization.ts(98,11): error TS6133: 'fonts' is declared but its value is never read.
 src/utils/invoicePDFGenerator.ts(59,7): error TS2783: 'name' is specified more than once, so this usage will be overwritten.
 src/utils/invoicePDFGenerator.ts(216,11): error TS6133: 'boxWidth' is declared but its value is never read.
-src/utils/lazyRoutes.tsx(136,61): error TS2322: Type 'Promise<typeof import("C:/Users/pears/Documents/Build-Desk/project-profit-radar/src/pages/admin/SocialMediaManager")>' is not assignable to type 'Promise<{ default: ComponentType<any>; }>'.
-  Property 'default' is missing in type 'typeof import("C:/Users/pears/Documents/Build-Desk/project-profit-radar/src/pages/admin/SocialMediaManager")' but required in type '{ default: ComponentType<any>; }'.
-src/utils/lazyRoutes.tsx(156,58): error TS2322: Type 'Promise<typeof import("C:/Users/pears/Documents/Build-Desk/project-profit-radar/src/pages/admin/DeveloperPortal")>' is not assignable to type 'Promise<{ default: ComponentType<any>; }>'.
-  Property 'default' is missing in type 'typeof import("C:/Users/pears/Documents/Build-Desk/project-profit-radar/src/pages/admin/DeveloperPortal")' but required in type '{ default: ComponentType<any>; }'.
-src/utils/lazyRoutes.tsx(159,55): error TS2322: Type 'Promise<typeof import("C:/Users/pears/Documents/Build-Desk/project-profit-radar/src/pages/admin/AIEstimating")>' is not assignable to type 'Promise<{ default: ComponentType<any>; }>'.
-  Property 'default' is missing in type 'typeof import("C:/Users/pears/Documents/Build-Desk/project-profit-radar/src/pages/admin/AIEstimating")' but required in type '{ default: ComponentType<any>; }'.
-src/utils/lazyRoutes.tsx(160,57): error TS2322: Type 'Promise<typeof import("C:/Users/pears/Documents/Build-Desk/project-profit-radar/src/pages/admin/RiskPrediction")>' is not assignable to type 'Promise<{ default: ComponentType<any>; }>'.
-  Property 'default' is missing in type 'typeof import("C:/Users/pears/Documents/Build-Desk/project-profit-radar/src/pages/admin/RiskPrediction")' but required in type '{ default: ComponentType<any>; }'.
-src/utils/lazyRoutes.tsx(161,57): error TS2322: Type 'Promise<typeof import("C:/Users/pears/Documents/Build-Desk/project-profit-radar/src/pages/admin/AutoScheduling")>' is not assignable to type 'Promise<{ default: ComponentType<any>; }>'.
-  Property 'default' is missing in type 'typeof import("C:/Users/pears/Documents/Build-Desk/project-profit-radar/src/pages/admin/AutoScheduling")' but required in type '{ default: ComponentType<any>; }'.
-src/utils/lazyRoutes.tsx(162,59): error TS2322: Type 'Promise<typeof import("C:/Users/pears/Documents/Build-Desk/project-profit-radar/src/pages/admin/SafetyAutomation")>' is not assignable to type 'Promise<{ default: ComponentType<any>; }>'.
-  Property 'default' is missing in type 'typeof import("C:/Users/pears/Documents/Build-Desk/project-profit-radar/src/pages/admin/SafetyAutomation")' but required in type '{ default: ComponentType<any>; }'.
-src/utils/lazyRoutes.tsx(163,59): error TS2322: Type 'Promise<typeof import("C:/Users/pears/Documents/Build-Desk/project-profit-radar/src/pages/admin/SmartProcurement")>' is not assignable to type 'Promise<{ default: ComponentType<any>; }>'.
-  Property 'default' is missing in type 'typeof import("C:/Users/pears/Documents/Build-Desk/project-profit-radar/src/pages/admin/SmartProcurement")' but required in type '{ default: ComponentType<any>; }'.
-src/utils/lazyRoutes.tsx(164,61): error TS2322: Type 'Promise<typeof import("C:/Users/pears/Documents/Build-Desk/project-profit-radar/src/pages/admin/AdvancedDashboards")>' is not assignable to type 'Promise<{ default: ComponentType<any>; }>'.
-  Property 'default' is missing in type 'typeof import("C:/Users/pears/Documents/Build-Desk/project-profit-radar/src/pages/admin/AdvancedDashboards")' but required in type '{ default: ComponentType<any>; }'.
-src/utils/lazyRoutes.tsx(165,58): error TS2322: Type 'Promise<typeof import("C:/Users/pears/Documents/Build-Desk/project-profit-radar/src/pages/admin/ClientPortalPro")>' is not assignable to type 'Promise<{ default: ComponentType<any>; }>'.
-  Property 'default' is missing in type 'typeof import("C:/Users/pears/Documents/Build-Desk/project-profit-radar/src/pages/admin/ClientPortalPro")' but required in type '{ default: ComponentType<any>; }'.
-src/utils/lazyRoutes.tsx(166,60): error TS2322: Type 'Promise<typeof import("C:/Users/pears/Documents/Build-Desk/project-profit-radar/src/pages/admin/BillingAutomation")>' is not assignable to type 'Promise<{ default: ComponentType<any>; }>'.
-  Property 'default' is missing in type 'typeof import("C:/Users/pears/Documents/Build-Desk/project-profit-radar/src/pages/admin/BillingAutomation")' but required in type '{ default: ComponentType<any>; }'.
-src/utils/lazyRoutes.tsx(167,58): error TS2322: Type 'Promise<typeof import("C:/Users/pears/Documents/Build-Desk/project-profit-radar/src/pages/admin/ReportingEngine")>' is not assignable to type 'Promise<{ default: ComponentType<any>; }>'.
-  Property 'default' is missing in type 'typeof import("C:/Users/pears/Documents/Build-Desk/project-profit-radar/src/pages/admin/ReportingEngine")' but required in type '{ default: ComponentType<any>; }'.
+src/utils/lazyRoutes.tsx(136,61): error TS2322: Type 'Promise<typeof import("C:/Users/pears/Documents/Brikly/project-profit-radar/src/pages/admin/SocialMediaManager")>' is not assignable to type 'Promise<{ default: ComponentType<any>; }>'.
+  Property 'default' is missing in type 'typeof import("C:/Users/pears/Documents/Brikly/project-profit-radar/src/pages/admin/SocialMediaManager")' but required in type '{ default: ComponentType<any>; }'.
+src/utils/lazyRoutes.tsx(156,58): error TS2322: Type 'Promise<typeof import("C:/Users/pears/Documents/Brikly/project-profit-radar/src/pages/admin/DeveloperPortal")>' is not assignable to type 'Promise<{ default: ComponentType<any>; }>'.
+  Property 'default' is missing in type 'typeof import("C:/Users/pears/Documents/Brikly/project-profit-radar/src/pages/admin/DeveloperPortal")' but required in type '{ default: ComponentType<any>; }'.
+src/utils/lazyRoutes.tsx(159,55): error TS2322: Type 'Promise<typeof import("C:/Users/pears/Documents/Brikly/project-profit-radar/src/pages/admin/AIEstimating")>' is not assignable to type 'Promise<{ default: ComponentType<any>; }>'.
+  Property 'default' is missing in type 'typeof import("C:/Users/pears/Documents/Brikly/project-profit-radar/src/pages/admin/AIEstimating")' but required in type '{ default: ComponentType<any>; }'.
+src/utils/lazyRoutes.tsx(160,57): error TS2322: Type 'Promise<typeof import("C:/Users/pears/Documents/Brikly/project-profit-radar/src/pages/admin/RiskPrediction")>' is not assignable to type 'Promise<{ default: ComponentType<any>; }>'.
+  Property 'default' is missing in type 'typeof import("C:/Users/pears/Documents/Brikly/project-profit-radar/src/pages/admin/RiskPrediction")' but required in type '{ default: ComponentType<any>; }'.
+src/utils/lazyRoutes.tsx(161,57): error TS2322: Type 'Promise<typeof import("C:/Users/pears/Documents/Brikly/project-profit-radar/src/pages/admin/AutoScheduling")>' is not assignable to type 'Promise<{ default: ComponentType<any>; }>'.
+  Property 'default' is missing in type 'typeof import("C:/Users/pears/Documents/Brikly/project-profit-radar/src/pages/admin/AutoScheduling")' but required in type '{ default: ComponentType<any>; }'.
+src/utils/lazyRoutes.tsx(162,59): error TS2322: Type 'Promise<typeof import("C:/Users/pears/Documents/Brikly/project-profit-radar/src/pages/admin/SafetyAutomation")>' is not assignable to type 'Promise<{ default: ComponentType<any>; }>'.
+  Property 'default' is missing in type 'typeof import("C:/Users/pears/Documents/Brikly/project-profit-radar/src/pages/admin/SafetyAutomation")' but required in type '{ default: ComponentType<any>; }'.
+src/utils/lazyRoutes.tsx(163,59): error TS2322: Type 'Promise<typeof import("C:/Users/pears/Documents/Brikly/project-profit-radar/src/pages/admin/SmartProcurement")>' is not assignable to type 'Promise<{ default: ComponentType<any>; }>'.
+  Property 'default' is missing in type 'typeof import("C:/Users/pears/Documents/Brikly/project-profit-radar/src/pages/admin/SmartProcurement")' but required in type '{ default: ComponentType<any>; }'.
+src/utils/lazyRoutes.tsx(164,61): error TS2322: Type 'Promise<typeof import("C:/Users/pears/Documents/Brikly/project-profit-radar/src/pages/admin/AdvancedDashboards")>' is not assignable to type 'Promise<{ default: ComponentType<any>; }>'.
+  Property 'default' is missing in type 'typeof import("C:/Users/pears/Documents/Brikly/project-profit-radar/src/pages/admin/AdvancedDashboards")' but required in type '{ default: ComponentType<any>; }'.
+src/utils/lazyRoutes.tsx(165,58): error TS2322: Type 'Promise<typeof import("C:/Users/pears/Documents/Brikly/project-profit-radar/src/pages/admin/ClientPortalPro")>' is not assignable to type 'Promise<{ default: ComponentType<any>; }>'.
+  Property 'default' is missing in type 'typeof import("C:/Users/pears/Documents/Brikly/project-profit-radar/src/pages/admin/ClientPortalPro")' but required in type '{ default: ComponentType<any>; }'.
+src/utils/lazyRoutes.tsx(166,60): error TS2322: Type 'Promise<typeof import("C:/Users/pears/Documents/Brikly/project-profit-radar/src/pages/admin/BillingAutomation")>' is not assignable to type 'Promise<{ default: ComponentType<any>; }>'.
+  Property 'default' is missing in type 'typeof import("C:/Users/pears/Documents/Brikly/project-profit-radar/src/pages/admin/BillingAutomation")' but required in type '{ default: ComponentType<any>; }'.
+src/utils/lazyRoutes.tsx(167,58): error TS2322: Type 'Promise<typeof import("C:/Users/pears/Documents/Brikly/project-profit-radar/src/pages/admin/ReportingEngine")>' is not assignable to type 'Promise<{ default: ComponentType<any>; }>'.
+  Property 'default' is missing in type 'typeof import("C:/Users/pears/Documents/Brikly/project-profit-radar/src/pages/admin/ReportingEngine")' but required in type '{ default: ComponentType<any>; }'.
 src/utils/migrateOpportunitiesToDeals.ts(54,22): error TS2345: Argument of type '(stage: PipelineStage) => void' is not assignable to parameter of type '(value: { auto_tasks: Json; color_code: string | null; company_id: string; conversion_rate: number | null; created_at: string; description: string | null; expected_duration_days: number | null; ... 11 more ...; updated_at: string; }, index: number, array: { ...; }[]) => void'.
   Types of parameters 'stage' and 'value' are incompatible.
     Type '{ auto_tasks: Json; color_code: string | null; company_id: string; conversion_rate: number | null; created_at: string; description: string | null; expected_duration_days: number | null; ... 11 more ...; updated_at: string; }' is not assignable to type 'PipelineStage'.

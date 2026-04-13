@@ -324,7 +324,7 @@ async function processRefundWithStripe(
       reason: refund.reason === 'fraudulent' ? 'fraudulent' :
               refund.reason === 'duplicate' ? 'duplicate' : 'requested_by_customer',
       metadata: {
-        builddesk_refund_id: refund.id as string,
+        brikly_refund_id: refund.id as string,
         company_id: companyId
       }
     };

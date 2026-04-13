@@ -84,7 +84,7 @@ export const CheckoutSuccess = () => {
             <CheckCircle className="w-12 h-12 text-green-600" />
           </div>
           <h1 className="text-3xl font-bold text-construction-dark mb-2">
-            Welcome to BuildDesk!
+            Welcome to Brikly!
           </h1>
           <p className="text-xl text-muted-foreground">
             Your {planName} trial is now active
@@ -219,7 +219,7 @@ export const CheckoutSuccess = () => {
 
         {/* Support */}
         <p className="text-center text-sm text-muted-foreground mt-6 animate-in fade-in duration-700 delay-1000">
-          Questions? Contact us at <a href="mailto:support@builddesk.com" className="text-construction-blue hover:text-construction-orange">support@builddesk.com</a> or use the chat in your dashboard.
+          Questions? Contact us at <a href="mailto:support@brikly.com" className="text-construction-blue hover:text-construction-orange">support@brikly.com</a> or use the chat in your dashboard.
         </p>
       </div>
     </div>

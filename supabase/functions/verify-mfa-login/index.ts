@@ -155,11 +155,11 @@ serve(async (req) => {
 
         // Get user email for TOTP validation
         const { data: userData } = await supabaseClient.auth.admin.getUserById(userId);
-        const userEmail = userData?.user?.email || "user@builddesk.com";
+        const userEmail = userData?.user?.email || "user@brikly.com";
 
         // Verify the TOTP code
         const totp = new TOTP({
-          issuer: "BuildDesk",
+          issuer: "Brikly",
           label: userEmail,
           algorithm: "SHA1",
           digits: 6,

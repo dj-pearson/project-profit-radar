@@ -25,7 +25,7 @@ const ToolsFooter = () => {
   ];
 
   const companyLinks = [
-    { name: 'About Build-Desk', href: '/', isSection: false },
+    { name: 'About Brikly', href: '/', isSection: false },
     { name: 'All Features', href: '/#features', isSection: true },
     { name: 'Pricing', href: '/#pricing', isSection: true },
     { name: 'Support', href: '/support', isSection: false }
@@ -59,7 +59,7 @@ const ToolsFooter = () => {
                 </div>
                 <div className="flex items-center">
                   <Mail className="h-4 w-4 mr-2 flex-shrink-0" />
-                  <span>support@build-desk.com</span>
+                  <span>support@brikly.net</span>
                 </div>
               </div>
             </div>
@@ -107,9 +107,9 @@ const ToolsFooter = () => {
               </ul>
             </div>
 
-            {/* Build-Desk Platform */}
+            {/* Brikly Platform */}
             <div>
-              <h3 className="font-semibold text-white mb-4">Build-Desk Platform</h3>
+              <h3 className="font-semibold text-white mb-4">Brikly Platform</h3>
               <ul className="space-y-3 mb-6">
                 {companyLinks.map((link) => (
                   <li key={link.name}>
@@ -144,7 +144,7 @@ const ToolsFooter = () => {
                   to="/auth" 
                   className="inline-flex items-center text-construction-orange hover:text-white transition-colors text-sm font-medium"
                 >
-                  Try Build-Desk Free
+                  Try Brikly Free
                   <ExternalLink className="ml-1 h-3 w-3" />
                 </Link>
               </div>
@@ -158,7 +158,7 @@ const ToolsFooter = () => {
         <ResponsiveContainer>
           <div className="flex flex-col md:flex-row justify-between items-center">
             <div className="text-gray-400 text-sm mb-4 md:mb-0">
-              © {new Date().getFullYear()} Build-Desk. Professional construction management tools.
+              © {new Date().getFullYear()} Brikly. Professional construction management tools.
             </div>
             <div className="flex flex-wrap items-center space-x-6">
               {legalLinks.map((link) => (

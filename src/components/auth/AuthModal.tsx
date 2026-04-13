@@ -213,7 +213,7 @@ export const AuthModal = ({ onSuccess }: { onSuccess: () => void }) => {
         <CardHeader className="space-y-1">
           <div className="flex items-center gap-2 justify-center">
             <Building2 className="w-6 h-6 text-primary" />
-            <CardTitle className="text-2xl">BuildDesk</CardTitle>
+            <CardTitle className="text-2xl">Brikly</CardTitle>
           </div>
           <CardDescription className="text-center">
             Construction management for growing teams

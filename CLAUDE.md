@@ -1,8 +1,8 @@
-# BuildDesk - Construction Management Platform
+# Brikly - Construction Management Platform
 
 ## Overview
 
-BuildDesk is a comprehensive construction management platform designed for small to medium-sized construction businesses. It's a B2B SaaS platform that provides real-time project management, financial tracking, and collaborative tools specifically tailored for the construction industry.
+Brikly is a comprehensive construction management platform designed for small to medium-sized construction businesses. It's a B2B SaaS platform that provides real-time project management, financial tracking, and collaborative tools specifically tailored for the construction industry.
 
 ### Key Business Context
 - **Target Market**: SMB construction companies ($199-799/month segment)
@@ -350,7 +350,7 @@ npm run mcp:supabase           # Run Supabase MCP server
 - `webhooks`: Webhook subscriptions
 
 ### Key Database Features
-- **Single-tenant architecture**: Dedicated database instance for BuildDesk
+- **Single-tenant architecture**: Dedicated database instance for Brikly
 - **Company-level isolation**: Data separated by `company_id` for multi-company support
 - **Role-based access control**: 6 user roles with granular permissions
 - **Real-time collaboration**: Supabase Realtime for live updates
@@ -456,7 +456,7 @@ npm run mcp:supabase           # Run Supabase MCP server
 ## Mobile Strategy
 
 ### Multi-Platform Approach
-BuildDesk uses a hybrid mobile strategy:
+Brikly uses a hybrid mobile strategy:
 
 1. **Capacitor (Production)**: Native iOS/Android apps
    - Built on web codebase
@@ -766,7 +766,7 @@ test('user can log in', async ({ page }) => {
 
 ## Accessibility (ADA/WCAG 2.1 Compliance)
 
-BuildDesk is committed to WCAG 2.1 Level AA compliance and ADA accessibility requirements.
+Brikly is committed to WCAG 2.1 Level AA compliance and ADA accessibility requirements.
 
 ### Current Implementation Status
 
@@ -971,7 +971,7 @@ User preferences stored in localStorage and database:
 ### Resources
 
 - **Compliance Checklist**: `docs/ACCESSIBILITY_COMPLIANCE_CHECKLIST.md` - Page-by-page remediation plan
-- **VPAT Document**: `docs/VPAT_WCAG_2.1_BuildDesk.md` - Voluntary Product Accessibility Template
+- **VPAT Document**: `docs/VPAT_WCAG_2.1_Brikly.md` - Voluntary Product Accessibility Template
 - **Reference Implementation**: `src/pages/MyTasks.tsx` - Example of fully accessible page
 - [WCAG 2.1 Guidelines](https://www.w3.org/WAI/WCAG21/quickref/)
 - [WAI-ARIA Authoring Practices](https://www.w3.org/WAI/ARIA/apg/)
@@ -1241,8 +1241,8 @@ Key environment variables (set in Cloudflare):
 - (Edge function secrets managed in Supabase)
 
 ### Domain Configuration
-- **Primary**: builddesk.pearsonperformance.workers.dev
-- **Custom domain**: build-desk.com
+- **Primary**: brikly.pearsonperformance.workers.dev
+- **Custom domain**: brikly.net
 - **SSL/TLS**: Managed by Cloudflare
 - **DNS**: Cloudflare DNS with DNSSEC
 
@@ -1466,4 +1466,4 @@ const { data, error } = await supabase
 
 ---
 
-*This documentation is maintained for AI assistants (Claude, GPT, etc.) to understand the BuildDesk platform architecture, conventions, and best practices. Keep this file updated as the platform evolves.*
+*This documentation is maintained for AI assistants (Claude, GPT, etc.) to understand the Brikly platform architecture, conventions, and best practices. Keep this file updated as the platform evolves.*

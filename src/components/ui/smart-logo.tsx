@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { HardHat, Building } from "lucide-react";
 import { useTenant } from "@/contexts/TenantContext";
-import { BUILDDESK_LOGO_URL } from "@/lib/utils";
+import { BRIKLY_LOGO_URL } from "@/lib/utils";
 
 interface SmartLogoProps {
   className?: string;
@@ -57,14 +57,14 @@ const SmartLogo = ({
   const imageSources = {
     remote: useTenantLogo
       ? tenant.branding.logo_url!
-      : BUILDDESK_LOGO_URL,
-    local: "/BuildDeskLogo.png",
+      : BRIKLY_LOGO_URL,
+    local: "/BriklyLogo.png",
   };
 
   // Get tenant display name for text fallback
   const brandName = useTenantLogo && tenant?.display_name
     ? tenant.display_name
-    : "BuildDesk";
+    : "Brikly";
 
   // Force text mode if requested
   useEffect(() => {
@@ -135,7 +135,7 @@ const SmartLogo = ({
         );
       }
 
-      // Default BuildDesk logo
+      // Default Brikly logo
       return (
         <div className={`flex items-center gap-2 ${textClassName}`}>
           {/* Icon representation */}
@@ -232,7 +232,7 @@ export const useLogoStatus = () => {
           remoteImg.onload = () => resolve("remote");
           remoteImg.onerror = reject;
         });
-        remoteImg.src = BUILDDESK_LOGO_URL;
+        remoteImg.src = BRIKLY_LOGO_URL;
 
         await remotePromise;
         setStatus("remote");
@@ -244,7 +244,7 @@ export const useLogoStatus = () => {
             localImg.onload = () => resolve("local");
             localImg.onerror = reject;
           });
-          localImg.src = "/BuildDeskLogo.png";
+          localImg.src = "/BriklyLogo.png";
 
           await localPromise;
           setStatus("local");

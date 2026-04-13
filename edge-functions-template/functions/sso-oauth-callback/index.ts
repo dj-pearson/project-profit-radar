@@ -140,7 +140,7 @@ serve(async (req) => {
       { auth: { persistSession: false } }
     );
 
-    const siteUrl = Deno.env.get("SITE_URL") || "https://build-desk.com";
+    const siteUrl = Deno.env.get("SITE_URL") || "https://brikly.net";
 
     // Parse callback parameters
     const url = new URL(req.url);
@@ -377,7 +377,7 @@ serve(async (req) => {
     return Response.redirect(sessionData.properties?.action_link || `${siteUrl}/dashboard`);
   } catch (error) {
     console.error("[OAuth] Callback error:", error);
-    const siteUrl = Deno.env.get("SITE_URL") || "https://build-desk.com";
+    const siteUrl = Deno.env.get("SITE_URL") || "https://brikly.net";
     return Response.redirect(`${siteUrl}/auth?error=oauth_callback_failed`);
   }
 });

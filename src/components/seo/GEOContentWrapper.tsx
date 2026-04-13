@@ -13,14 +13,14 @@
  *
  * Usage:
  * <GEOContentWrapper
- *   primaryEntity="BuildDesk"
+ *   primaryEntity="Brikly"
  *   entityType="construction management software"
- *   directAnswer="BuildDesk is construction management software..."
+ *   directAnswer="Brikly is construction management software..."
  *   lastUpdated="2026-02-08"
  * >
- *   <GEOSection question="How does BuildDesk help contractors?">
- *     <p>BuildDesk helps contractors by...</p>
- *     <GEOStatistic value="23%" context="average cost reduction" source="BuildDesk Customer Survey 2025" />
+ *   <GEOSection question="How does Brikly help contractors?">
+ *     <p>Brikly helps contractors by...</p>
+ *     <GEOStatistic value="23%" context="average cost reduction" source="Brikly Customer Survey 2025" />
  *   </GEOSection>
  * </GEOContentWrapper>
  */

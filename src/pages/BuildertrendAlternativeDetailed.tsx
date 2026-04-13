@@ -15,88 +15,88 @@ const BuildertrendAlternativeDetailed = () => {
   // FAQ data for schema markup and AI optimization
   const faqData = [
     {
-      question: "Why are contractors switching from Buildertrend to BuildDesk?",
-      answer: "Contractors switch to BuildDesk because it offers superior job costing, better multi-trade support, and more affordable pricing ($149/month vs $299+/month). While Buildertrend focuses primarily on residential builders, BuildDesk serves all construction trades with advanced financial management and commercial project capabilities."
+      question: "Why are contractors switching from Buildertrend to Brikly?",
+      answer: "Contractors switch to Brikly because it offers superior job costing, better multi-trade support, and more affordable pricing ($149/month vs $299+/month). While Buildertrend focuses primarily on residential builders, Brikly serves all construction trades with advanced financial management and commercial project capabilities."
     },
     {
-      question: "How does BuildDesk compare to Buildertrend for commercial contractors?",
-      answer: "BuildDesk is specifically designed for commercial contractors with advanced job costing, subcontractor management, and multi-project dashboards. Buildertrend is primarily built for residential builders and lacks the sophisticated financial tracking and commercial workflow features that BuildDesk provides."
+      question: "How does Brikly compare to Buildertrend for commercial contractors?",
+      answer: "Brikly is specifically designed for commercial contractors with advanced job costing, subcontractor management, and multi-project dashboards. Buildertrend is primarily built for residential builders and lacks the sophisticated financial tracking and commercial workflow features that Brikly provides."
     },
     {
-      question: "Does BuildDesk have better QuickBooks integration than Buildertrend?",
-      answer: "Yes, BuildDesk has native, real-time QuickBooks integration that automatically syncs job costs, invoices, and financial data. Buildertrend's QuickBooks integration is more limited and often requires manual data entry. BuildDesk eliminates double data entry completely."
+      question: "Does Brikly have better QuickBooks integration than Buildertrend?",
+      answer: "Yes, Brikly has native, real-time QuickBooks integration that automatically syncs job costs, invoices, and financial data. Buildertrend's QuickBooks integration is more limited and often requires manual data entry. Brikly eliminates double data entry completely."
     },
     {
-      question: "Can BuildDesk handle multiple trades better than Buildertrend?",
-      answer: "Absolutely. BuildDesk is designed for general contractors managing multiple trades (plumbing, HVAC, electrical, etc.) with trade-specific workflows, scheduling, and cost tracking. Buildertrend is primarily focused on residential building and lacks the multi-trade coordination features that commercial contractors need."
+      question: "Can Brikly handle multiple trades better than Buildertrend?",
+      answer: "Absolutely. Brikly is designed for general contractors managing multiple trades (plumbing, HVAC, electrical, etc.) with trade-specific workflows, scheduling, and cost tracking. Buildertrend is primarily focused on residential building and lacks the multi-trade coordination features that commercial contractors need."
     },
     {
-      question: "How does BuildDesk pricing compare to Buildertrend?",
-      answer: "BuildDesk costs $149/month with unlimited users and all features included. Buildertrend starts at $299/month and charges extra for additional users and premium features. Most contractors save $150-300 per month by switching to BuildDesk while getting better functionality."
+      question: "How does Brikly pricing compare to Buildertrend?",
+      answer: "Brikly costs $149/month with unlimited users and all features included. Buildertrend starts at $299/month and charges extra for additional users and premium features. Most contractors save $150-300 per month by switching to Brikly while getting better functionality."
     }
   ];
 
-  // Comparison data focusing on BuildDesk's strengths vs Buildertrend
+  // Comparison data focusing on Brikly's strengths vs Buildertrend
   const featureComparison = [
     {
       feature: "Monthly Cost",
-      builddesk: "$149/month",
+      brikly: "$149/month",
       buildertrend: "$299+/month",
-      advantage: "builddesk"
+      advantage: "brikly"
     },
     {
       feature: "User Pricing",
-      builddesk: "Unlimited users included",
+      brikly: "Unlimited users included",
       buildertrend: "$39/month per additional user",
-      advantage: "builddesk"
+      advantage: "brikly"
     },
     {
       feature: "Job Costing",
-      builddesk: "Advanced real-time costing",
+      brikly: "Advanced real-time costing",
       buildertrend: "Basic cost tracking",
-      advantage: "builddesk"
+      advantage: "brikly"
     },
     {
       feature: "Multi-Trade Support",
-      builddesk: "Built for all trades",
+      brikly: "Built for all trades",
       buildertrend: "Residential focus only",
-      advantage: "builddesk"
+      advantage: "brikly"
     },
     {
       feature: "QuickBooks Integration",
-      builddesk: "Native, real-time sync",
+      brikly: "Native, real-time sync",
       buildertrend: "Limited, manual entry",
-      advantage: "builddesk"
+      advantage: "brikly"
     },
     {
       feature: "Commercial Projects",
-      builddesk: "✓ Full commercial support",
+      brikly: "✓ Full commercial support",
       buildertrend: "Limited commercial features",
-      advantage: "builddesk"
+      advantage: "brikly"
     },
     {
       feature: "Mobile App Rating",
-      builddesk: "4.8/5 stars",
+      brikly: "4.8/5 stars",
       buildertrend: "4.1/5 stars",
-      advantage: "builddesk"
+      advantage: "brikly"
     },
     {
       feature: "Customer Support",
-      builddesk: "Live chat, phone, email",
+      brikly: "Live chat, phone, email",
       buildertrend: "Email, limited phone",
-      advantage: "builddesk"
+      advantage: "brikly"
     },
     {
       feature: "Setup Time",
-      builddesk: "1-2 days",
+      brikly: "1-2 days",
       buildertrend: "1-2 weeks",
-      advantage: "builddesk"
+      advantage: "brikly"
     },
     {
       feature: "Contract Length",
-      builddesk: "Month-to-month available",
+      brikly: "Month-to-month available",
       buildertrend: "Annual contracts required",
-      advantage: "builddesk"
+      advantage: "brikly"
     }
   ];
 
@@ -107,7 +107,7 @@ const BuildertrendAlternativeDetailed = () => {
       company: "Martinez General Contracting",
       role: "Owner",
       location: "Phoenix, AZ",
-      quote: "Buildertrend was great when we only did residential, but as we moved into commercial work, we needed better job costing and multi-trade coordination. BuildDesk handles our $2M commercial projects with ease.",
+      quote: "Buildertrend was great when we only did residential, but as we moved into commercial work, we needed better job costing and multi-trade coordination. Brikly handles our $2M commercial projects with ease.",
       savings: "$1,800/month",
       projectTypes: "Commercial & Residential",
       teamSize: "25 employees"
@@ -117,7 +117,7 @@ const BuildertrendAlternativeDetailed = () => {
       company: "Walsh Construction Services",
       role: "Project Manager",
       location: "Denver, CO",
-      quote: "The QuickBooks integration alone made the switch worth it. No more double data entry between Buildertrend and our accounting. BuildDesk syncs everything automatically and our job costing is finally accurate.",
+      quote: "The QuickBooks integration alone made the switch worth it. No more double data entry between Buildertrend and our accounting. Brikly syncs everything automatically and our job costing is finally accurate.",
       savings: "$2,200/month",
       projectTypes: "Multi-family & Commercial",
       teamSize: "18 employees"
@@ -127,14 +127,14 @@ const BuildertrendAlternativeDetailed = () => {
       company: "Thompson Multi-Trade Construction",
       role: "Operations Manager",
       location: "Tampa, FL",
-      quote: "We manage plumbing, HVAC, and electrical crews on the same projects. Buildertrend couldn't handle the complexity, but BuildDesk was built for this. Our project coordination improved dramatically.",
+      quote: "We manage plumbing, HVAC, and electrical crews on the same projects. Buildertrend couldn't handle the complexity, but Brikly was built for this. Our project coordination improved dramatically.",
       savings: "$1,500/month",
       projectTypes: "Commercial Multi-Trade",
       teamSize: "35 employees"
     }
   ];
 
-  // BuildDesk advantages specifically vs Buildertrend
+  // Brikly advantages specifically vs Buildertrend
   const advantages = [
     {
       title: "Superior Job Costing",
@@ -184,28 +184,28 @@ const BuildertrendAlternativeDetailed = () => {
 
   // Create schemas for SEO
   const articleSchema = createArticleSchema(
-    "Buildertrend Alternative: Why Commercial Contractors Choose BuildDesk",
-    "Comprehensive comparison of BuildDesk vs Buildertrend for construction management, focusing on commercial projects, multi-trade support, and advanced job costing.",
+    "Buildertrend Alternative: Why Commercial Contractors Choose Brikly",
+    "Comprehensive comparison of Brikly vs Buildertrend for construction management, focusing on commercial projects, multi-trade support, and advanced job costing.",
     "2025-01-12",
     "2025-11-07"
   );
 
   const breadcrumbSchema = createBreadcrumbSchema([
-    { name: "Home", url: "https://builddesk.com" },
-    { name: "Buildertrend Alternative", url: "https://builddesk.com/buildertrend-alternative" }
+    { name: "Home", url: "https://brikly.com" },
+    { name: "Buildertrend Alternative", url: "https://brikly.com/buildertrend-alternative" }
   ]);
 
   return (
     <>
       {/* Enhanced SEO with PageSEO Component */}
       <PageSEO
-        title="Buildertrend Alternative for Commercial Contractors | BuildDesk"
-        description="Why contractors switched from Buildertrend to BuildDesk. Superior job costing, multi-trade support, commercial projects. $350/month vs Buildertrend's $399+. Better QuickBooks integration. See feature comparison."
+        title="Buildertrend Alternative for Commercial Contractors | Brikly"
+        description="Why contractors switched from Buildertrend to Brikly. Superior job costing, multi-trade support, commercial projects. $350/month vs Buildertrend's $399+. Better QuickBooks integration. See feature comparison."
         keywords={[
           'buildertrend alternative',
           'buildertrend alternative for commercial contractors',
           'construction management software',
-          'buildertrend vs builddesk',
+          'buildertrend vs brikly',
           'buildertrend competitor',
           'commercial construction software',
           'multi-trade construction software',
@@ -230,7 +230,7 @@ const BuildertrendAlternativeDetailed = () => {
               Buildertrend Alternative
             </Badge>
             <h1 className="text-4xl md:text-5xl font-bold text-construction-dark mb-6">
-              Why Commercial Contractors Choose BuildDesk Over Buildertrend
+              Why Commercial Contractors Choose Brikly Over Buildertrend
             </h1>
             <p className="text-xl text-muted-foreground mb-8 leading-relaxed">
               Move beyond residential-focused software to a platform built for commercial contractors. Better job costing, multi-trade coordination, and advanced project management at 50% lower cost.
@@ -270,7 +270,7 @@ const BuildertrendAlternativeDetailed = () => {
           {/* Quick Comparison Table */}
           <div className="max-w-5xl mx-auto mb-16">
             <h2 className="text-3xl font-bold text-center text-construction-dark mb-8">
-              BuildDesk vs Buildertrend: Feature Comparison
+              Brikly vs Buildertrend: Feature Comparison
             </h2>
             <Card>
               <CardContent className="p-0">
@@ -279,7 +279,7 @@ const BuildertrendAlternativeDetailed = () => {
                     <thead>
                       <tr className="border-b bg-gray-50">
                         <th className="text-left p-4 font-semibold">Feature</th>
-                        <th className="text-center p-4 font-semibold text-construction-blue">BuildDesk</th>
+                        <th className="text-center p-4 font-semibold text-construction-blue">Brikly</th>
                         <th className="text-center p-4 font-semibold text-gray-600">Buildertrend</th>
                       </tr>
                     </thead>
@@ -287,9 +287,9 @@ const BuildertrendAlternativeDetailed = () => {
                       {featureComparison.map((item, index) => (
                         <tr key={index} className="border-b hover:bg-gray-50">
                           <td className="p-4 font-medium">{item.feature}</td>
-                          <td className={`text-center p-4 ${item.advantage === 'builddesk' ? 'text-construction-blue font-semibold' : ''}`}>
-                            {item.builddesk}
-                            {item.advantage === 'builddesk' && <CheckCircle className="inline ml-2 h-4 w-4 text-green-600" />}
+                          <td className={`text-center p-4 ${item.advantage === 'brikly' ? 'text-construction-blue font-semibold' : ''}`}>
+                            {item.brikly}
+                            {item.advantage === 'brikly' && <CheckCircle className="inline ml-2 h-4 w-4 text-green-600" />}
                           </td>
                           <td className={`text-center p-4 ${item.advantage === 'buildertrend' ? 'text-gray-900 font-semibold' : 'text-gray-600'}`}>
                             {item.buildertrend}
@@ -303,10 +303,10 @@ const BuildertrendAlternativeDetailed = () => {
             </Card>
           </div>
 
-          {/* Why BuildDesk is Better for Commercial Contractors */}
+          {/* Why Brikly is Better for Commercial Contractors */}
           <div className="max-w-5xl mx-auto mb-16">
             <h2 className="text-3xl font-bold text-construction-dark text-center mb-8">
-              Why BuildDesk Beats Buildertrend for Commercial Work
+              Why Brikly Beats Buildertrend for Commercial Work
             </h2>
             <div className="grid lg:grid-cols-2 gap-8">
               {advantages.map((advantage, index) => {
@@ -456,7 +456,7 @@ const BuildertrendAlternativeDetailed = () => {
               <CardHeader className="text-center">
                 <CardTitle className="text-2xl mb-2">Cost Savings Calculator</CardTitle>
                 <CardDescription className="text-blue-100">
-                  See how much you could save by switching from Buildertrend to BuildDesk
+                  See how much you could save by switching from Buildertrend to Brikly
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -471,7 +471,7 @@ const BuildertrendAlternativeDetailed = () => {
                     </div>
                   </div>
                   <div className="text-center">
-                    <h3 className="text-lg font-semibold mb-4">BuildDesk Cost (Unlimited Users)</h3>
+                    <h3 className="text-lg font-semibold mb-4">Brikly Cost (Unlimited Users)</h3>
                     <div className="space-y-2">
                       <p className="text-sm">All Features Included: $149/month</p>
                       <p className="text-sm">Additional Users: $0/month</p>
@@ -497,7 +497,7 @@ const BuildertrendAlternativeDetailed = () => {
           {/* Migration Process */}
           <div className="max-w-4xl mx-auto mb-16">
             <h2 className="text-3xl font-bold text-construction-dark text-center mb-8">
-              Easy Migration from Buildertrend to BuildDesk
+              Easy Migration from Buildertrend to Brikly
             </h2>
             <div className="grid md:grid-cols-4 gap-6">
               <Card className="text-center">
@@ -523,7 +523,7 @@ const BuildertrendAlternativeDetailed = () => {
                 </CardHeader>
                 <CardContent>
                   <p className="text-sm text-muted-foreground">
-                    Our team imports everything into BuildDesk with proper formatting and organization
+                    Our team imports everything into Brikly with proper formatting and organization
                   </p>
                 </CardContent>
               </Card>
@@ -537,7 +537,7 @@ const BuildertrendAlternativeDetailed = () => {
                 </CardHeader>
                 <CardContent>
                   <p className="text-sm text-muted-foreground">
-                    Customized training focused on the advanced features you'll gain with BuildDesk
+                    Customized training focused on the advanced features you'll gain with Brikly
                   </p>
                 </CardContent>
               </Card>
@@ -551,7 +551,7 @@ const BuildertrendAlternativeDetailed = () => {
                 </CardHeader>
                 <CardContent>
                   <p className="text-sm text-muted-foreground">
-                    Start managing projects with BuildDesk's advanced commercial features
+                    Start managing projects with Brikly's advanced commercial features
                   </p>
                 </CardContent>
               </Card>
@@ -577,8 +577,8 @@ const BuildertrendAlternativeDetailed = () => {
           <div className="max-w-4xl mx-auto mb-16">
             <GEOOptimizedFAQ
               faqs={buildertrendAlternativeFAQs}
-              title="Buildertrend vs BuildDesk: Frequently Asked Questions"
-              description="Get answers to common questions about switching from Buildertrend to BuildDesk"
+              title="Buildertrend vs Brikly: Frequently Asked Questions"
+              description="Get answers to common questions about switching from Buildertrend to Brikly"
             />
           </div>
 
@@ -590,7 +590,7 @@ const BuildertrendAlternativeDetailed = () => {
                   Ready to Upgrade from Buildertrend?
                 </h2>
                 <p className="text-lg text-muted-foreground mb-6">
-                  Join commercial contractors who've switched to BuildDesk for better job costing, 
+                  Join commercial contractors who've switched to Brikly for better job costing, 
                   multi-trade support, and 50% cost savings. Start your free trial today.
                 </p>
                 

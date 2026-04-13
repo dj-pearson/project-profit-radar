@@ -34,7 +34,7 @@ import { test, expect } from '@playwright/test';
 
 test('descriptive name', async ({ page }) => {
   await page.goto('/');
-  await expect(page.locator('text=BuildDesk')).toBeVisible();
+  await expect(page.locator('text=Brikly')).toBeVisible();
 });
 ```
 

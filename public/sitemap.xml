@@ -3,493 +3,493 @@
         xmlns:image="http://www.google.com/schemas/sitemap-image/1.1"
         xmlns:xhtml="http://www.w3.org/1999/xhtml">
   <url>
-    <loc>https://builddesk.com/</loc>
+    <loc>https://brikly.com/</loc>
     <lastmod>2026-04-04</lastmod>
     <changefreq>daily</changefreq>
     <priority>1</priority>
   </url>
   <url>
-    <loc>https://builddesk.com/features</loc>
+    <loc>https://brikly.com/features</loc>
     <lastmod>2026-04-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
-    <loc>https://builddesk.com/pricing</loc>
+    <loc>https://brikly.com/pricing</loc>
     <lastmod>2026-04-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
-    <loc>https://builddesk.com/faq</loc>
+    <loc>https://brikly.com/faq</loc>
     <lastmod>2026-04-04</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://builddesk.com/blog</loc>
+    <loc>https://brikly.com/blog</loc>
     <lastmod>2026-04-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://builddesk.com/solutions</loc>
+    <loc>https://brikly.com/solutions</loc>
     <lastmod>2026-04-04</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://builddesk.com/support</loc>
+    <loc>https://brikly.com/support</loc>
     <lastmod>2026-04-04</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://builddesk.com/resources</loc>
+    <loc>https://brikly.com/resources</loc>
     <lastmod>2026-04-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://builddesk.com/knowledge-base</loc>
-    <lastmod>2026-04-04</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://builddesk.com/tutorials</loc>
+    <loc>https://brikly.com/knowledge-base</loc>
     <lastmod>2026-04-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://builddesk.com/tools</loc>
+    <loc>https://brikly.com/tutorials</loc>
+    <lastmod>2026-04-04</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://brikly.com/tools</loc>
     <lastmod>2026-04-04</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://builddesk.com/plumbing-contractor-software</loc>
+    <loc>https://brikly.com/plumbing-contractor-software</loc>
     <lastmod>2026-04-04</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://builddesk.com/hvac-contractor-software</loc>
+    <loc>https://brikly.com/hvac-contractor-software</loc>
     <lastmod>2026-04-04</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://builddesk.com/electrical-contractor-software</loc>
+    <loc>https://brikly.com/electrical-contractor-software</loc>
     <lastmod>2026-04-04</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://builddesk.com/commercial-contractors</loc>
+    <loc>https://brikly.com/commercial-contractors</loc>
     <lastmod>2026-04-04</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://builddesk.com/residential-contractors</loc>
+    <loc>https://brikly.com/residential-contractors</loc>
     <lastmod>2026-04-04</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://builddesk.com/job-costing-software</loc>
-    <lastmod>2026-04-04</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.9</priority>
-  </url>
-  <url>
-    <loc>https://builddesk.com/construction-management-software</loc>
+    <loc>https://brikly.com/job-costing-software</loc>
     <lastmod>2026-04-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
-    <loc>https://builddesk.com/construction-scheduling-software</loc>
-    <lastmod>2026-04-04</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://builddesk.com/construction-project-management-software</loc>
-    <lastmod>2026-04-04</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://builddesk.com/osha-compliance-software</loc>
-    <lastmod>2026-04-04</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://builddesk.com/construction-field-management</loc>
-    <lastmod>2026-04-04</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://builddesk.com/features/job-costing</loc>
-    <lastmod>2026-04-04</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://builddesk.com/features/real-time-budgeting</loc>
-    <lastmod>2026-04-04</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://builddesk.com/features/financial-management</loc>
-    <lastmod>2026-04-04</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://builddesk.com/procore-alternative</loc>
+    <loc>https://brikly.com/construction-management-software</loc>
     <lastmod>2026-04-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
-    <loc>https://builddesk.com/procore-alternative-detailed</loc>
+    <loc>https://brikly.com/construction-scheduling-software</loc>
     <lastmod>2026-04-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://builddesk.com/buildertrend-alternative</loc>
+    <loc>https://brikly.com/construction-project-management-software</loc>
+    <lastmod>2026-04-04</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://brikly.com/osha-compliance-software</loc>
+    <lastmod>2026-04-04</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://brikly.com/construction-field-management</loc>
+    <lastmod>2026-04-04</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://brikly.com/features/job-costing</loc>
+    <lastmod>2026-04-04</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://brikly.com/features/real-time-budgeting</loc>
+    <lastmod>2026-04-04</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://brikly.com/features/financial-management</loc>
+    <lastmod>2026-04-04</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://brikly.com/procore-alternative</loc>
     <lastmod>2026-04-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
-    <loc>https://builddesk.com/builddesk-vs-buildertrend-comparison</loc>
+    <loc>https://brikly.com/procore-alternative-detailed</loc>
+    <lastmod>2026-04-04</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://brikly.com/buildertrend-alternative</loc>
+    <lastmod>2026-04-04</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://brikly.com/brikly-vs-buildertrend-comparison</loc>
     <lastmod>2026-04-04</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://builddesk.com/builddesk-vs-coconstruct</loc>
+    <loc>https://brikly.com/brikly-vs-coconstruct</loc>
     <lastmod>2026-04-04</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://builddesk.com/roi-calculator</loc>
+    <loc>https://brikly.com/roi-calculator</loc>
     <lastmod>2026-04-04</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://builddesk.com/calculator</loc>
+    <loc>https://brikly.com/calculator</loc>
     <lastmod>2026-04-04</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://builddesk.com/profitability-calculator</loc>
+    <loc>https://brikly.com/profitability-calculator</loc>
     <lastmod>2026-04-04</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://builddesk.com/financial-health-check</loc>
+    <loc>https://brikly.com/financial-health-check</loc>
     <lastmod>2026-04-04</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://builddesk.com/health-check</loc>
+    <loc>https://brikly.com/health-check</loc>
     <lastmod>2026-04-04</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://builddesk.com/tools/schedule-builder</loc>
+    <loc>https://brikly.com/tools/schedule-builder</loc>
     <lastmod>2026-04-04</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://builddesk.com/topics/construction-management-basics</loc>
+    <loc>https://brikly.com/topics/construction-management-basics</loc>
     <lastmod>2026-04-04</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://builddesk.com/topics/safety-and-osha-compliance</loc>
+    <loc>https://brikly.com/topics/safety-and-osha-compliance</loc>
     <lastmod>2026-04-04</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://builddesk.com/resources/best-construction-management-software-small-business-2025</loc>
+    <loc>https://brikly.com/resources/best-construction-management-software-small-business-2025</loc>
     <lastmod>2026-04-04</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://builddesk.com/resources/job-costing-construction-setup-guide</loc>
+    <loc>https://brikly.com/resources/job-costing-construction-setup-guide</loc>
     <lastmod>2026-04-04</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://builddesk.com/resources/osha-safety-logs-digital-playbook</loc>
+    <loc>https://brikly.com/resources/osha-safety-logs-digital-playbook</loc>
     <lastmod>2026-04-04</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://builddesk.com/resources/construction-scheduling-software-prevent-delays</loc>
+    <loc>https://brikly.com/resources/construction-scheduling-software-prevent-delays</loc>
     <lastmod>2026-04-04</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://builddesk.com/resources/construction-daily-logs-best-practices</loc>
+    <loc>https://brikly.com/resources/construction-daily-logs-best-practices</loc>
     <lastmod>2026-04-04</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://builddesk.com/resources/procore-vs-builddesk-small-contractors</loc>
+    <loc>https://brikly.com/resources/procore-vs-brikly-small-contractors</loc>
     <lastmod>2026-04-04</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://builddesk.com/resources/quickbooks-integration-guide</loc>
+    <loc>https://brikly.com/resources/quickbooks-integration-guide</loc>
     <lastmod>2026-04-04</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://builddesk.com/resources/construction-mobile-app-guide</loc>
+    <loc>https://brikly.com/resources/construction-mobile-app-guide</loc>
     <lastmod>2026-04-04</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://builddesk.com/resources/financial-intelligence-guide</loc>
+    <loc>https://brikly.com/resources/financial-intelligence-guide</loc>
     <lastmod>2026-04-04</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://builddesk.com/resources/real-cost-delayed-job-costing</loc>
+    <loc>https://brikly.com/resources/real-cost-delayed-job-costing</loc>
     <lastmod>2026-04-04</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://builddesk.com/resources/budget-vs-actual-tracking-guide</loc>
+    <loc>https://brikly.com/resources/budget-vs-actual-tracking-guide</loc>
     <lastmod>2026-04-04</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://builddesk.com/resources/quickbooks-limitations-construction</loc>
+    <loc>https://brikly.com/resources/quickbooks-limitations-construction</loc>
     <lastmod>2026-04-04</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://builddesk.com/resources/cash-flow-management-guide</loc>
+    <loc>https://brikly.com/resources/cash-flow-management-guide</loc>
     <lastmod>2026-04-04</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://builddesk.com/resources/calculate-true-project-profitability</loc>
+    <loc>https://brikly.com/resources/calculate-true-project-profitability</loc>
     <lastmod>2026-04-04</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://builddesk.com/resources/reading-financial-statements-guide</loc>
+    <loc>https://brikly.com/resources/reading-financial-statements-guide</loc>
     <lastmod>2026-04-04</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://builddesk.com/resources/construction-roi-calculator-guide</loc>
+    <loc>https://brikly.com/resources/construction-roi-calculator-guide</loc>
     <lastmod>2026-04-04</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://builddesk.com/resources/best-construction-software-small-business-2025</loc>
+    <loc>https://brikly.com/resources/best-construction-software-small-business-2025</loc>
     <lastmod>2026-04-04</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://builddesk.com/resources/quickbooks-vs-construction-software</loc>
+    <loc>https://brikly.com/resources/quickbooks-vs-construction-software</loc>
     <lastmod>2026-04-04</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://builddesk.com/resources/job-costing-software-comparison</loc>
+    <loc>https://brikly.com/resources/job-costing-software-comparison</loc>
     <lastmod>2026-04-04</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://builddesk.com/resources/procore-alternative-complete-guide</loc>
+    <loc>https://brikly.com/resources/procore-alternative-complete-guide</loc>
     <lastmod>2026-04-04</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://builddesk.com/resources/buildertrend-alternative-complete-guide</loc>
+    <loc>https://brikly.com/resources/buildertrend-alternative-complete-guide</loc>
     <lastmod>2026-04-04</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://builddesk.com/resources/complete-guide-construction-job-costing</loc>
+    <loc>https://brikly.com/resources/complete-guide-construction-job-costing</loc>
     <lastmod>2026-04-04</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://builddesk.com/resources/construction-financial-management-ultimate-guide</loc>
+    <loc>https://brikly.com/resources/construction-financial-management-ultimate-guide</loc>
     <lastmod>2026-04-04</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://builddesk.com/resources/procore-alternatives-smb-contractors-guide</loc>
+    <loc>https://brikly.com/resources/procore-alternatives-smb-contractors-guide</loc>
     <lastmod>2026-04-04</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://builddesk.com/resources/top-10-construction-platforms-august-2025</loc>
+    <loc>https://brikly.com/resources/top-10-construction-platforms-august-2025</loc>
     <lastmod>2026-04-04</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://builddesk.com/resources/construction-management-software-comparison</loc>
+    <loc>https://brikly.com/resources/construction-management-software-comparison</loc>
     <lastmod>2026-04-04</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://builddesk.com/resources/small-business-construction-software-guide</loc>
+    <loc>https://brikly.com/resources/small-business-construction-software-guide</loc>
     <lastmod>2026-04-04</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://builddesk.com/resources/construction-management-software-small-business-guide</loc>
+    <loc>https://brikly.com/resources/construction-management-software-small-business-guide</loc>
     <lastmod>2026-04-04</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://builddesk.com/resources/construction-project-management-best-practices</loc>
+    <loc>https://brikly.com/resources/construction-project-management-best-practices</loc>
     <lastmod>2026-04-04</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://builddesk.com/resources/construction-scheduling-templates</loc>
+    <loc>https://brikly.com/resources/construction-scheduling-templates</loc>
     <lastmod>2026-04-04</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://builddesk.com/resources/construction-cost-estimation-methods</loc>
+    <loc>https://brikly.com/resources/construction-cost-estimation-methods</loc>
     <lastmod>2026-04-04</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://builddesk.com/resources/construction-compliance-checklist</loc>
+    <loc>https://brikly.com/resources/construction-compliance-checklist</loc>
     <lastmod>2026-04-04</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://builddesk.com/resources/construction-crm-implementation-guide</loc>
+    <loc>https://brikly.com/resources/construction-crm-implementation-guide</loc>
     <lastmod>2026-04-04</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://builddesk.com/resources/7-hidden-costs-of-poor-project-scheduling-and-how-to-avoid-them</loc>
+    <loc>https://brikly.com/resources/7-hidden-costs-of-poor-project-scheduling-and-how-to-avoid-them</loc>
     <lastmod>2026-04-04</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://builddesk.com/resources/construction-material-management-control-costs-reduce-waste-2025</loc>
+    <loc>https://brikly.com/resources/construction-material-management-control-costs-reduce-waste-2025</loc>
     <lastmod>2026-04-04</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://builddesk.com/resources/7-hidden-costs-of-construction-project-delays-and-how-to-avoid-them</loc>
+    <loc>https://brikly.com/resources/7-hidden-costs-of-construction-project-delays-and-how-to-avoid-them</loc>
     <lastmod>2026-04-04</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://builddesk.com/knowledge-base/article/getting-started-complete-setup-guide</loc>
+    <loc>https://brikly.com/knowledge-base/article/getting-started-complete-setup-guide</loc>
     <lastmod>2026-04-04</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://builddesk.com/knowledge-base/article/mobile-app-field-guide</loc>
+    <loc>https://brikly.com/knowledge-base/article/mobile-app-field-guide</loc>
     <lastmod>2026-04-04</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://builddesk.com/privacy-policy</loc>
+    <loc>https://brikly.com/privacy-policy</loc>
     <lastmod>2026-04-04</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.4</priority>
   </url>
   <url>
-    <loc>https://builddesk.com/terms-of-service</loc>
+    <loc>https://brikly.com/terms-of-service</loc>
     <lastmod>2026-04-04</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.4</priority>
   </url>
   <url>
-    <loc>https://builddesk.com/accessibility-statement</loc>
+    <loc>https://brikly.com/accessibility-statement</loc>
     <lastmod>2026-04-04</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.5</priority>
   </url>
   <url>
-    <loc>https://builddesk.com/accessibility</loc>
+    <loc>https://brikly.com/accessibility</loc>
     <lastmod>2026-04-04</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.4</priority>
   </url>
   <url>
-    <loc>https://builddesk.com/auth</loc>
+    <loc>https://brikly.com/auth</loc>
     <lastmod>2026-04-04</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.2</priority>
   </url>
   <url>
-    <loc>https://builddesk.com/setup</loc>
+    <loc>https://brikly.com/setup</loc>
     <lastmod>2026-04-04</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.2</priority>

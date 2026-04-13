@@ -80,7 +80,7 @@ DECLARE
   key_suffix TEXT;
   full_key TEXT;
 BEGIN
-  -- Generate prefix (bdesk for BuildDesk)
+  -- Generate prefix (bdesk for Brikly)
   key_prefix := 'bdesk_';
   
   -- Generate random suffix (32 characters)

@@ -366,11 +366,11 @@ export function getAuthConfig(config: TestConfig): Required<TestConfig>['auth'] 
  * Creates a platform-specific configuration
  */
 export function createPlatformConfig(
-  platform: 'builddesk' | 'generic',
+  platform: 'brikly' | 'generic',
   overrides: Partial<TestConfig> = {}
 ): TestConfig {
   const platformConfigs: Record<string, Partial<TestConfig>> = {
-    builddesk: {
+    brikly: {
       baseUrl: 'http://localhost:8080',
       routesDir: './src/routes',
       edgeFunctionsDir: './supabase/functions',

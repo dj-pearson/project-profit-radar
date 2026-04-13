@@ -180,7 +180,7 @@ export const ProgrammaticSEO: React.FC<ProgrammaticSEOProps> = ({
   const config = useMemo(() => getSEOConfig(currentPath), [currentPath]);
 
   // Compute final values with overrides taking precedence
-  const title = overrideTitle || config?.title || 'BuildDesk - Construction Management Software';
+  const title = overrideTitle || config?.title || 'Brikly - Construction Management Software';
   const description = overrideDescription || config?.description || COMPANY_INFO.description;
   const keywords = overrideKeywords || config?.keywords || [];
   const canonicalUrl = overrideCanonical || `${SITE_URL}${currentPath}`;
@@ -280,8 +280,8 @@ export const ProgrammaticSEO: React.FC<ProgrammaticSEOProps> = ({
       <meta name="twitter:title" content={title} />
       <meta name="twitter:description" content={description} />
       <meta name="twitter:image" content={ogImage} />
-      <meta name="twitter:site" content="@builddesk" />
-      <meta name="twitter:creator" content="@builddesk" />
+      <meta name="twitter:site" content="@brikly" />
+      <meta name="twitter:creator" content="@brikly" />
 
       {/* Article-specific tags */}
       {ogType === 'article' && articlePublishDate && (

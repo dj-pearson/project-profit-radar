@@ -93,13 +93,13 @@ const UnifiedSEODashboard = () => {
   
   // SEO Configuration
   const [config, setConfig] = useState<SEOConfig>({
-    site_name: 'BuildDesk',
+    site_name: 'Brikly',
     site_description: 'Construction Management Platform for SMB Contractors',
     site_keywords: ['construction management', 'contractor software', 'project management', 'construction software'],
     default_og_image: '',
     google_analytics_id: '',
     google_search_console_id: '',
-    canonical_domain: 'https://builddesk.com',
+    canonical_domain: 'https://brikly.com',
     robots_txt: 'User-agent: *\nAllow: /',
     sitemap_enabled: true,
     schema_org_enabled: true
@@ -393,26 +393,26 @@ const UnifiedSEODashboard = () => {
         "mainEntity": [
           {
             "@type": "Question",
-            "name": "What is BuildDesk?",
+            "name": "What is Brikly?",
             "acceptedAnswer": {
               "@type": "Answer",
-              "text": "BuildDesk is a construction management platform designed for small to medium-sized construction businesses, providing real-time project management, financial tracking, and collaborative tools."
+              "text": "Brikly is a construction management platform designed for small to medium-sized construction businesses, providing real-time project management, financial tracking, and collaborative tools."
             }
           },
           {
             "@type": "Question",
-            "name": "How much does BuildDesk cost?",
+            "name": "How much does Brikly cost?",
             "acceptedAnswer": {
               "@type": "Answer",
-              "text": "BuildDesk offers tiered pricing starting at $149/month for unlimited users, providing comprehensive construction management features without per-user fees."
+              "text": "Brikly offers tiered pricing starting at $149/month for unlimited users, providing comprehensive construction management features without per-user fees."
             }
           },
           {
             "@type": "Question",
-            "name": "What industries does BuildDesk serve?",
+            "name": "What industries does Brikly serve?",
             "acceptedAnswer": {
               "@type": "Answer",
-              "text": "BuildDesk serves construction companies, contractors, project managers, and construction professionals across various construction industry sectors."
+              "text": "Brikly serves construction companies, contractors, project managers, and construction professionals across various construction industry sectors."
             }
           }
         ]

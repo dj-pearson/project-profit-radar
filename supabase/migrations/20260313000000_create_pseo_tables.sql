@@ -1,6 +1,6 @@
 -- =============================================
 -- pSEO (Programmatic SEO) Tables
--- Based on BuildDesk pSEO Full System Specification v1.0
+-- Based on Brikly pSEO Full System Specification v1.0
 -- =============================================
 
 -- =============================================

@@ -38,7 +38,7 @@ vi.mock('@/integrations/supabase/client', () => ({
     }),
     rpc: (...args: unknown[]) => mockRpc(...args),
   },
-  getEdgeFunctionUrl: (fn: string) => `https://api.build-desk.com/functions/v1/${fn}`,
+  getEdgeFunctionUrl: (fn: string) => `https://api.brikly.net/functions/v1/${fn}`,
   supabaseAnonKey: 'test-anon-key',
 }));
 

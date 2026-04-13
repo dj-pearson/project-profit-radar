@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="app_name">BuildDesk</string>
-    <string name="title_activity_main">BuildDesk</string>
-    <string name="package_name">com.builddesk.app</string>
-    <string name="custom_url_scheme">com.builddesk.app</string>
+    <string name="app_name">Brikly</string>
+    <string name="title_activity_main">Brikly</string>
+    <string name="package_name">com.brikly.app</string>
+    <string name="custom_url_scheme">com.brikly.app</string>
 </resources>

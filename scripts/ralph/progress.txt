@@ -309,7 +309,7 @@ US-017 (Rate Limiting), US-019 (Monitoring Dashboard), US-020 (E2E Tests), US-02
 
 ## 2026-02-28 - Ralph UI/UX Audit: All 25 Stories Implemented
 
-### PRD: `scripts/ralph/prd.json` (BuildDesk UI/UX Audit Improvements)
+### PRD: `scripts/ralph/prd.json` (Brikly UI/UX Audit Improvements)
 ### Branch: `claude/ralph-loops-prd-progress-HU3yc`
 ### Status: COMPLETE — 25/25 stories passing, build passes
 
@@ -414,7 +414,7 @@ Implemented all 25 UI/UX improvement stories from the UI/UX audit PRD across 12 
 
 ## 2026-03-10 - Security PRD: All 18 Stories Verified & Critical Fixes
 
-### PRD: `scripts/ralph/prd.json` (BuildDesk AI Security Defenses & Internal Penetration Testing)
+### PRD: `scripts/ralph/prd.json` (Brikly AI Security Defenses & Internal Penetration Testing)
 ### Branch: `claude/critical-platform-improvements-082qB`
 ### Status: COMPLETE - 18/18 stories passing, build passes
 
@@ -434,7 +434,7 @@ Implemented all 25 UI/UX improvement stories from the UI/UX audit PRD across 12 
 
 #### 3. US-002: Verified CSP Hardening (already complete)
 - `public/_headers` CSP confirmed: no `unsafe-eval`, has `require-trusted-types-for 'script'`, `block-all-mixed-content`, `upgrade-insecure-requests`
-- Trusted Types policy `builddesk` + `default` enforced
+- Trusted Types policy `brikly` + `default` enforced
 
 #### 4. Verified All 18 Security Stories (US-001 through US-018)
 - All security utilities exist with full implementations and test suites

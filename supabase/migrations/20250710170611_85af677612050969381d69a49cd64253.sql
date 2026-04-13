@@ -1,5 +1,5 @@
 -- =========================================
--- BUILDDESK CRM SYSTEM - CONSTRUCTION FOCUSED
+-- BRIKLY CRM SYSTEM - CONSTRUCTION FOCUSED
 -- =========================================
 -- This migration creates a comprehensive CRM system tailored for construction companies
 -- Based on the requirements in CRM.md and industry best practices

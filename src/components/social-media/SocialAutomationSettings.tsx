@@ -100,14 +100,14 @@ const SocialAutomationSettings: React.FC = () => {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "User-Agent": "BuildDesk-Blog-Social-Test/1.0",
+          "User-Agent": "Brikly-Blog-Social-Test/1.0",
         },
         body: JSON.stringify({
           timestamp: new Date().toISOString(),
           event: "webhook_test",
           data: {
             message:
-              "This is a test webhook from BuildDesk Social Media Automation",
+              "This is a test webhook from Brikly Social Media Automation",
             platforms: formData.platforms_enabled,
           },
         }),

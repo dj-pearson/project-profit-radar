@@ -161,7 +161,7 @@ BEGIN
     END IF;
 
     -- Backfill
-    UPDATE notifications SET site_id = (SELECT id FROM sites WHERE key = 'builddesk' LIMIT 1) WHERE site_id IS NULL;
+    UPDATE notifications SET site_id = (SELECT id FROM sites WHERE key = 'brikly' LIMIT 1) WHERE site_id IS NULL;
 
     -- Create index
     CREATE INDEX IF NOT EXISTS idx_notifications_site_id ON notifications(site_id);
@@ -203,7 +203,7 @@ BEGIN
   IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'document_categories') THEN
     IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'document_categories' AND column_name = 'site_id') THEN
       ALTER TABLE document_categories ADD COLUMN site_id UUID REFERENCES sites(id);
-      UPDATE document_categories SET site_id = (SELECT id FROM sites WHERE key = 'builddesk' LIMIT 1) WHERE site_id IS NULL;
+      UPDATE document_categories SET site_id = (SELECT id FROM sites WHERE key = 'brikly' LIMIT 1) WHERE site_id IS NULL;
       CREATE INDEX IF NOT EXISTS idx_document_categories_site_id ON document_categories(site_id);
     END IF;
   END IF;
@@ -215,7 +215,7 @@ BEGIN
   IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'compliance_reports') THEN
     IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'compliance_reports' AND column_name = 'site_id') THEN
       ALTER TABLE compliance_reports ADD COLUMN site_id UUID REFERENCES sites(id);
-      UPDATE compliance_reports SET site_id = (SELECT id FROM sites WHERE key = 'builddesk' LIMIT 1) WHERE site_id IS NULL;
+      UPDATE compliance_reports SET site_id = (SELECT id FROM sites WHERE key = 'brikly' LIMIT 1) WHERE site_id IS NULL;
       CREATE INDEX IF NOT EXISTS idx_compliance_reports_site_id ON compliance_reports(site_id);
     END IF;
   END IF;

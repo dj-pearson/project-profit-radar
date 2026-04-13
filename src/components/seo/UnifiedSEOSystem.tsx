@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { useLocation } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
-import { BUILDDESK_LOGO_URL } from '@/lib/utils';
+import { BRIKLY_LOGO_URL } from '@/lib/utils';
 
 export interface UnifiedSEOProps {
   // Allow manual override (existing pattern)
@@ -47,11 +47,11 @@ export const UnifiedSEOSystem: React.FC<UnifiedSEOProps> = ({
   keywords,
   ogTitle,
   ogDescription,
-  ogImage = BUILDDESK_LOGO_URL,
+  ogImage = BRIKLY_LOGO_URL,
   ogUrl,
   twitterCard = 'summary_large_image',
-  twitterSite = '@builddesk',
-  twitterCreator = '@builddesk',
+  twitterSite = '@brikly',
+  twitterCreator = '@brikly',
   canonicalUrl,
   noIndex = false,
   noFollow = false,
@@ -115,12 +115,12 @@ export const UnifiedSEOSystem: React.FC<UnifiedSEOProps> = ({
   };
 
   // Determine final values using priority system
-  const siteUrl = 'https://builddesk.com';
+  const siteUrl = 'https://brikly.com';
   const finalTitle = getFinalValue(
     title,
     dbConfig?.title,
     enterpriseConfig?.title,
-    'BuildDesk - Construction Management Platform'
+    'Brikly - Construction Management Platform'
   );
   
   const finalDescription = getFinalValue(
@@ -162,7 +162,7 @@ export const UnifiedSEOSystem: React.FC<UnifiedSEOProps> = ({
     ogImage,
     dbConfig?.og_image,
     enterpriseConfig?.ogImage,
-    BUILDDESK_LOGO_URL
+    BRIKLY_LOGO_URL
   );
 
   const finalOgUrl = getFinalValue(
@@ -227,7 +227,7 @@ export const UnifiedSEOSystem: React.FC<UnifiedSEOProps> = ({
       <title>{finalTitle}</title>
       <meta name="description" content={finalDescription} />
       <meta name="keywords" content={Array.isArray(finalKeywords) ? finalKeywords.join(', ') : finalKeywords} />
-      <meta name="author" content="BuildDesk" />
+      <meta name="author" content="Brikly" />
       <meta name="viewport" content="width=device-width, initial-scale=1.0" />
       
       {/* Canonical URL */}
@@ -243,7 +243,7 @@ export const UnifiedSEOSystem: React.FC<UnifiedSEOProps> = ({
       <meta property="og:image" content={finalOgImage} />
       <meta property="og:url" content={finalOgUrl} />
       <meta property="og:type" content="website" />
-      <meta property="og:site_name" content="BuildDesk" />
+      <meta property="og:site_name" content="Brikly" />
       <meta property="og:locale" content="en_US" />
       
       {/* Twitter Card Meta Tags */}
@@ -316,14 +316,14 @@ async function generateEnterpriseEnhancements(
 
   // Enhanced titles for better CTR
   const titleEnhancements: Record<string, string> = {
-    '/': 'Construction Management Software - Save 40% on Projects | BuildDesk',
-    '/pricing': 'Construction Software Pricing - Transparent, No Hidden Fees | BuildDesk',
-    '/features': 'Construction Management Features - Everything You Need | BuildDesk'
+    '/': 'Construction Management Software - Save 40% on Projects | Brikly',
+    '/pricing': 'Construction Software Pricing - Transparent, No Hidden Fees | Brikly',
+    '/features': 'Construction Management Features - Everything You Need | Brikly'
   };
 
   // Enhanced descriptions for better conversion
   const descriptionEnhancements: Record<string, string> = {
-    '/': 'Stop losing money on construction projects. BuildDesk delivers real-time job costing, mobile field management, and OSHA compliance. Join 500+ contractors saving $50K+ annually.',
+    '/': 'Stop losing money on construction projects. Brikly delivers real-time job costing, mobile field management, and OSHA compliance. Join 500+ contractors saving $50K+ annually.',
     '/pricing': 'Transparent construction management software pricing starting at $149/month. No setup fees, free 14-day trial, and migration assistance included.',
     '/features': 'Complete construction management features including job costing, scheduling, document management, OSHA compliance, and QuickBooks integration.'
   };
@@ -356,22 +356,22 @@ function generateFAQSchema(pathname: string): any {
         answer: 'Construction management software helps construction companies manage projects, track costs, schedule tasks, and collaborate with team members from a centralized platform.'
       },
       {
-        question: 'How much does BuildDesk cost?',
-        answer: 'BuildDesk pricing starts at $149/month with a 14-day free trial. No setup fees or hidden costs.'
+        question: 'How much does Brikly cost?',
+        answer: 'Brikly pricing starts at $149/month with a 14-day free trial. No setup fees or hidden costs.'
       },
       {
-        question: 'Does BuildDesk integrate with QuickBooks?',
-        answer: 'Yes, BuildDesk offers seamless QuickBooks integration for automatic financial data synchronization.'
+        question: 'Does Brikly integrate with QuickBooks?',
+        answer: 'Yes, Brikly offers seamless QuickBooks integration for automatic financial data synchronization.'
       }
     ],
     '/pricing': [
       {
         question: 'Is there a free trial?',
-        answer: 'Yes, BuildDesk offers a 14-day free trial with full access to all features. No credit card required.'
+        answer: 'Yes, Brikly offers a 14-day free trial with full access to all features. No credit card required.'
       },
       {
         question: 'Are there setup fees?',
-        answer: 'No, BuildDesk has no setup fees, hidden costs, or long-term contracts.'
+        answer: 'No, Brikly has no setup fees, hidden costs, or long-term contracts.'
       }
     ]
   };
@@ -400,14 +400,14 @@ function generateEnhancedSchema(pathname: string, config: any): any {
     '@type': 'WebPage',
     name: config.title,
     description: config.description,
-    url: `https://builddesk.com${pathname}`
+    url: `https://brikly.com${pathname}`
   };
 
   if (pathname === '/') {
     return {
       '@context': 'https://schema.org',
       '@type': 'SoftwareApplication',
-      name: 'BuildDesk Construction Management',
+      name: 'Brikly Construction Management',
       applicationCategory: 'Construction Management Software',
       operatingSystem: 'Web, iOS, Android',
       description: config.description,

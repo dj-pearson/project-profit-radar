@@ -108,7 +108,7 @@ const Pricing = () => {
             <span className="font-medium">Average customer ROI payback in under 30 days</span>
           </div>
           <p className="text-base text-construction-orange font-semibold mb-8">
-            Prevent a single $40K+ cost overrun and BuildDesk pays for itself for years
+            Prevent a single $40K+ cost overrun and Brikly pays for itself for years
           </p>
           
           {/* Billing Toggle */}
@@ -225,7 +225,7 @@ const Pricing = () => {
                       className="w-full"
                       asChild
                     >
-                      <a href="mailto:support@build-desk.com">Contact Sales</a>
+                      <a href="mailto:support@brikly.net">Contact Sales</a>
                     </Button>
                   ) : (
                     <Button
@@ -301,7 +301,7 @@ const Pricing = () => {
               What's Early Cost Detection Worth to You?
             </h3>
             <p className="text-muted-foreground mb-4 max-w-2xl mx-auto">
-              If catching one $40K cost overrun 3 weeks early saves your project, BuildDesk pays for itself for the next 10 years.
+              If catching one $40K cost overrun 3 weeks early saves your project, Brikly pays for itself for the next 10 years.
             </p>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-6 max-w-3xl mx-auto">
               <div className="bg-white p-4 rounded-lg shadow-sm">
@@ -334,7 +334,7 @@ const Pricing = () => {
           __html: JSON.stringify({
             "@context": "https://schema.org",
             "@type": "Product",
-            "name": "BuildDesk Construction Management Software",
+            "name": "Brikly Construction Management Software",
             "description": "Real-time job costing and construction management software for contractors",
             "offers": PRICING_PLANS.map((plan) => ({
               "@type": "Offer",

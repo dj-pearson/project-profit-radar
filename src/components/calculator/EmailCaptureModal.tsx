@@ -94,7 +94,7 @@ export function EmailCaptureModal({
             <div className="flex items-start gap-3">
               <Users className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
               <div className="text-sm">
-                <strong>Join 847 contractors</strong> maximizing profits with BuildDesk
+                <strong>Join 847 contractors</strong> maximizing profits with Brikly
               </div>
             </div>
           </div>

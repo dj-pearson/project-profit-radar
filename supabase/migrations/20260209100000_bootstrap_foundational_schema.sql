@@ -4,7 +4,7 @@
 -- This idempotent migration ensures all core tables, functions, enums, RLS
 -- policies, triggers, and indexes exist. Safe to run on fresh or existing DBs.
 --
--- Context: BuildDesk transitioned from cloud Supabase to self-hosted. Two
+-- Context: Brikly transitioned from cloud Supabase to self-hosted. Two
 -- conflicting foundational migrations exist (20250702223641 and 20250804005934)
 -- and several tables referenced in code have no CREATE TABLE migration at all.
 -- This migration reconciles everything.

@@ -66,7 +66,7 @@ export const ConstructionDashboard = () => {
             <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
               <Building2 className="w-8 h-8 text-primary" />
             </div>
-            <CardTitle className="text-2xl">Welcome to BuildDesk</CardTitle>
+            <CardTitle className="text-2xl">Welcome to Brikly</CardTitle>
             <CardDescription>
               Construction management built for mobile field teams
             </CardDescription>
@@ -92,7 +92,7 @@ export const ConstructionDashboard = () => {
                 <Building2 className="w-6 h-6 text-primary" />
               </div>
               <div>
-                <h1 className="text-xl font-semibold">BuildDesk</h1>
+                <h1 className="text-xl font-semibold">Brikly</h1>
                 <p className="text-sm text-muted-foreground">Field Management</p>
               </div>
             </div>

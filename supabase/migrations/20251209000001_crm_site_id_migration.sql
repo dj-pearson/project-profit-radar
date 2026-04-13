@@ -13,7 +13,7 @@
 -- Add site_id column to contacts (nullable first for backfill)
 ALTER TABLE contacts ADD COLUMN IF NOT EXISTS site_id UUID REFERENCES sites(id);
 
--- Backfill existing contacts with BuildDesk site_id via company relationship
+-- Backfill existing contacts with Brikly site_id via company relationship
 UPDATE contacts c
 SET site_id = (
   SELECT comp.site_id
@@ -22,9 +22,9 @@ SET site_id = (
 )
 WHERE c.site_id IS NULL AND c.company_id IS NOT NULL;
 
--- For any remaining records without company_id, use default BuildDesk site
+-- For any remaining records without company_id, use default Brikly site
 UPDATE contacts
-SET site_id = (SELECT id FROM sites WHERE key = 'builddesk' LIMIT 1)
+SET site_id = (SELECT id FROM sites WHERE key = 'brikly' LIMIT 1)
 WHERE site_id IS NULL;
 
 -- Now make site_id NOT NULL
@@ -85,9 +85,9 @@ SET site_id = (
 )
 WHERE ca.site_id IS NULL AND ca.company_id IS NOT NULL;
 
--- Fallback to BuildDesk site
+-- Fallback to Brikly site
 UPDATE crm_activities
-SET site_id = (SELECT id FROM sites WHERE key = 'builddesk' LIMIT 1)
+SET site_id = (SELECT id FROM sites WHERE key = 'brikly' LIMIT 1)
 WHERE site_id IS NULL;
 
 -- Make NOT NULL
@@ -145,9 +145,9 @@ SET site_id = (
 )
 WHERE et.site_id IS NULL AND et.company_id IS NOT NULL;
 
--- Fallback to BuildDesk site
+-- Fallback to Brikly site
 UPDATE email_templates
-SET site_id = (SELECT id FROM sites WHERE key = 'builddesk' LIMIT 1)
+SET site_id = (SELECT id FROM sites WHERE key = 'brikly' LIMIT 1)
 WHERE site_id IS NULL;
 
 -- Make NOT NULL
@@ -205,9 +205,9 @@ SET site_id = (
 )
 WHERE wd.site_id IS NULL AND wd.company_id IS NOT NULL;
 
--- Fallback to BuildDesk site
+-- Fallback to Brikly site
 UPDATE workflow_definitions
-SET site_id = (SELECT id FROM sites WHERE key = 'builddesk' LIMIT 1)
+SET site_id = (SELECT id FROM sites WHERE key = 'brikly' LIMIT 1)
 WHERE site_id IS NULL;
 
 -- Make NOT NULL
@@ -265,9 +265,9 @@ SET site_id = (
 )
 WHERE wel.site_id IS NULL AND wel.workflow_id IS NOT NULL;
 
--- Fallback to BuildDesk site
+-- Fallback to Brikly site
 UPDATE workflow_execution_logs
-SET site_id = (SELECT id FROM sites WHERE key = 'builddesk' LIMIT 1)
+SET site_id = (SELECT id FROM sites WHERE key = 'brikly' LIMIT 1)
 WHERE site_id IS NULL;
 
 -- Make NOT NULL
@@ -309,9 +309,9 @@ SET site_id = (
 )
 WHERE d.site_id IS NULL AND d.company_id IS NOT NULL;
 
--- Fallback to BuildDesk site
+-- Fallback to Brikly site
 UPDATE deals
-SET site_id = (SELECT id FROM sites WHERE key = 'builddesk' LIMIT 1)
+SET site_id = (SELECT id FROM sites WHERE key = 'brikly' LIMIT 1)
 WHERE site_id IS NULL;
 
 -- Make NOT NULL
@@ -369,9 +369,9 @@ SET site_id = (
 )
 WHERE o.site_id IS NULL AND o.company_id IS NOT NULL;
 
--- Fallback to BuildDesk site
+-- Fallback to Brikly site
 UPDATE opportunities
-SET site_id = (SELECT id FROM sites WHERE key = 'builddesk' LIMIT 1)
+SET site_id = (SELECT id FROM sites WHERE key = 'brikly' LIMIT 1)
 WHERE site_id IS NULL;
 
 -- Make NOT NULL

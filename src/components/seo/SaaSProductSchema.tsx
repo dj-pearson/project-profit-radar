@@ -67,37 +67,37 @@ export const SaaSProductSchema: React.FC<SaaSProductSchemaProps> = ({
   const baseSchema = {
     '@context': 'https://schema.org',
     '@type': 'SoftwareApplication',
-    name: 'BuildDesk',
+    name: 'Brikly',
     applicationCategory: applicationCategory,
     applicationSubCategory: 'Construction Management Software',
     operatingSystem: 'Web, iOS, Android',
-    url: 'https://builddesk.com',
+    url: 'https://brikly.com',
     description: 'Comprehensive construction management software for small to medium-sized contractors. Features real-time job costing, project scheduling, mobile crew tracking, OSHA compliance, and QuickBooks integration. Built specifically for the construction industry.',
 
     // Publisher/Developer Information
     author: {
       '@type': 'Organization',
-      name: 'BuildDesk',
-      url: 'https://builddesk.com',
-      logo: 'https://builddesk.com/logo.png',
+      name: 'Brikly',
+      url: 'https://brikly.com',
+      logo: 'https://brikly.com/logo.png',
     },
 
     // Download/Access URLs
-    downloadUrl: 'https://builddesk.com/get-started',
-    installUrl: 'https://builddesk.com/get-started',
+    downloadUrl: 'https://brikly.com/get-started',
+    installUrl: 'https://brikly.com/get-started',
 
     // Screenshots and Media
     screenshot: [
-      'https://api.build-desk.com/storage/v1/object/public/site-assets/screenshots/dashboard.png',
-      'https://api.build-desk.com/storage/v1/object/public/site-assets/screenshots/job-costing.png',
-      'https://api.build-desk.com/storage/v1/object/public/site-assets/screenshots/mobile-app.png',
-      'https://api.build-desk.com/storage/v1/object/public/site-assets/screenshots/scheduling.png',
+      'https://api.brikly.net/storage/v1/object/public/site-assets/screenshots/dashboard.png',
+      'https://api.brikly.net/storage/v1/object/public/site-assets/screenshots/job-costing.png',
+      'https://api.brikly.net/storage/v1/object/public/site-assets/screenshots/mobile-app.png',
+      'https://api.brikly.net/storage/v1/object/public/site-assets/screenshots/scheduling.png',
     ],
 
     // Software metadata
     datePublished: '2024-01-01',
     softwareVersion: '2.0',
-    releaseNotes: 'https://builddesk.com/changelog',
+    releaseNotes: 'https://brikly.com/changelog',
 
     // Support Information
     offers: includeOffers ? {
@@ -106,7 +106,7 @@ export const SaaSProductSchema: React.FC<SaaSProductSchemaProps> = ({
       priceCurrency: 'USD',
       priceValidUntil: '2026-12-31',
       availability: 'https://schema.org/InStock',
-      url: 'https://builddesk.com/pricing',
+      url: 'https://brikly.com/pricing',
 
       // Subscription Details
       priceSpecification: {
@@ -133,15 +133,15 @@ export const SaaSProductSchema: React.FC<SaaSProductSchemaProps> = ({
       // What's included
       itemOffered: {
         '@type': 'Service',
-        name: 'BuildDesk Subscription',
-        description: 'Full access to all BuildDesk features including unlimited users, unlimited projects, mobile apps, and customer support.',
+        name: 'Brikly Subscription',
+        description: 'Full access to all Brikly features including unlimited users, unlimited projects, mobile apps, and customer support.',
       },
 
       // Seller information
       seller: {
         '@type': 'Organization',
-        name: 'BuildDesk',
-        url: 'https://builddesk.com',
+        name: 'Brikly',
+        url: 'https://brikly.com',
       },
 
       // Accepted payment methods
@@ -203,21 +203,21 @@ export const SaaSProductSchema: React.FC<SaaSProductSchemaProps> = ({
     // Support and Help
     softwareHelp: {
       '@type': 'CreativeWork',
-      url: 'https://builddesk.com/help',
-      name: 'BuildDesk Help Center',
+      url: 'https://brikly.com/help',
+      name: 'Brikly Help Center',
     },
 
     // Customer Service
     provider: {
       '@type': 'Organization',
-      name: 'BuildDesk',
+      name: 'Brikly',
       contactPoint: {
         '@type': 'ContactPoint',
         contactType: 'Customer Service',
         areaServed: 'US',
         availableLanguage: 'English',
-        telephone: '+1-800-BUILD-DESK',
-        email: 'support@builddesk.com',
+        telephone: '+1-800-BRIKLY',
+        email: 'support@brikly.com',
       },
     },
 
@@ -240,24 +240,24 @@ export const SaaSProductSchema: React.FC<SaaSProductSchemaProps> = ({
 /**
  * Service Schema Component
  *
- * Describes BuildDesk as a service offering for construction management.
+ * Describes Brikly as a service offering for construction management.
  * Helps with local SEO and service-based searches.
  */
-export const BuildDeskServiceSchema: React.FC = () => {
+export const BriklyServiceSchema: React.FC = () => {
   const serviceSchema = {
     '@context': 'https://schema.org',
     '@type': 'Service',
     serviceType: 'Construction Management Software',
-    name: 'BuildDesk Construction Management Platform',
+    name: 'Brikly Construction Management Platform',
     description: 'Cloud-based construction management software providing job costing, scheduling, compliance, and project management tools for contractors.',
 
     provider: {
       '@type': 'Organization',
-      name: 'BuildDesk',
-      url: 'https://builddesk.com',
-      logo: 'https://builddesk.com/logo.png',
-      telephone: '+1-800-BUILD-DESK',
-      email: 'sales@builddesk.com',
+      name: 'Brikly',
+      url: 'https://brikly.com',
+      logo: 'https://brikly.com/logo.png',
+      telephone: '+1-800-BRIKLY',
+      email: 'sales@brikly.com',
 
       address: {
         '@type': 'PostalAddress',
@@ -272,7 +272,7 @@ export const BuildDeskServiceSchema: React.FC = () => {
 
     hasOfferCatalog: {
       '@type': 'OfferCatalog',
-      name: 'BuildDesk Services',
+      name: 'Brikly Services',
       itemListElement: [
         {
           '@type': 'Offer',
@@ -313,7 +313,7 @@ export const BuildDeskServiceSchema: React.FC = () => {
       '@type': 'Offer',
       price: '350',
       priceCurrency: 'USD',
-      url: 'https://builddesk.com/pricing',
+      url: 'https://brikly.com/pricing',
     },
 
     aggregateRating: {

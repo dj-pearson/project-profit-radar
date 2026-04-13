@@ -1,5 +1,5 @@
 /**
- * BuildDesk Auth Email Templates
+ * Brikly Auth Email Templates
  *
  * OTP-based email templates for authentication flows.
  * All emails use 6-digit OTP codes instead of links to work with Amazon SES.
@@ -27,7 +27,7 @@ export interface AuthEmailData {
 }
 
 /**
- * Base email wrapper with BuildDesk branding
+ * Base email wrapper with Brikly branding
  */
 function baseEmailTemplate(
   content: string,

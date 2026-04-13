@@ -215,13 +215,13 @@ The social media webhook returns structured data for each platform:
     "blog_post": {
       "id": "uuid",
       "title": "Blog Post Title",
-      "url": "https://build-desk.com/blog/post-slug"
+      "url": "https://brikly.net/blog/post-slug"
     },
     "social_posts": [
       {
         "platform": "twitter",
         "content": "Short engaging content... https://link",
-        "hashtags": ["#construction", "#builddesk"],
+        "hashtags": ["#construction", "#brikly"],
         "media_urls": ["https://..."],
         "optimal_length": 280,
         "post_type": "short"
@@ -237,7 +237,7 @@ The social media webhook returns structured data for each platform:
       {
         "platform": "instagram",
         "content": "Visual storytelling content... 🔗 Link in bio",
-        "hashtags": ["#construction", "#builddesk"],
+        "hashtags": ["#construction", "#brikly"],
         "media_urls": ["https://random-asset.jpg"],
         "optimal_length": 2200,
         "post_type": "medium"

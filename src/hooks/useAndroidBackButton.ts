@@ -60,7 +60,7 @@ export function useAndroidBackButton(options: UseAndroidBackButtonOptions = {}) 
         // First press - show toast-like feedback via custom event
         lastBackPress.current = now;
         window.dispatchEvent(
-          new CustomEvent('builddesk:toast', {
+          new CustomEvent('brikly:toast', {
             detail: { message: 'Press back again to exit', type: 'info' },
           })
         );

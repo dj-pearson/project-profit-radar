@@ -1,5 +1,5 @@
 /**
- * BuildDesk App Store & Play Store Screenshot Capture
+ * Brikly App Store & Play Store Screenshot Capture
  *
  * Captures screenshots at all required sizes for Apple App Store
  * and Google Play Store submission.

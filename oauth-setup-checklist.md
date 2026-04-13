@@ -4,7 +4,7 @@
 
 ### □ **Step 1.1: Create/Select Project**
 - [ ] Go to [Google Cloud Console](https://console.cloud.google.com)
-- [ ] Create new project: "BuildDesk SEO Analytics"
+- [ ] Create new project: "Brikly SEO Analytics"
 - [ ] Note the project ID: `_______________________`
 
 ### □ **Step 1.2: Enable Required APIs**
@@ -16,17 +16,17 @@
 - [ ] Go to **APIs & Services** → **OAuth consent screen**
 - [ ] Choose **External** user type
 - [ ] Fill in required fields:
-  - **App name**: BuildDesk SEO Analytics
-  - **User support email**: your-email@build-desk.com
-  - **Developer contact**: your-email@build-desk.com
-- [ ] Add authorized domains: `build-desk.com`, `supabase.co`
+  - **App name**: Brikly SEO Analytics
+  - **User support email**: your-email@brikly.net
+  - **Developer contact**: your-email@brikly.net
+- [ ] Add authorized domains: `brikly.net`, `supabase.co`
 - [ ] Add scopes: `https://www.googleapis.com/auth/webmasters.readonly`
 
 ### □ **Step 1.4: Create OAuth 2.0 Credentials**
 - [ ] Go to **APIs & Services** → **Credentials**
 - [ ] Click **"+ CREATE CREDENTIALS"** → **OAuth 2.0 Client IDs**
 - [ ] Application type: **Web application**
-- [ ] Name: BuildDesk SEO OAuth
+- [ ] Name: Brikly SEO OAuth
 - [ ] **Authorized redirect URIs**: 
   ```
   https://ilhzuvemiuyfuxfegtlv.supabase.co/functions/v1/seo-analytics
@@ -46,7 +46,7 @@
 - [ ] Click **"New registration"**
 
 ### □ **Step 2.2: Configure Application**
-- [ ] **Name**: BuildDesk Bing Analytics
+- [ ] **Name**: Brikly Bing Analytics
 - [ ] **Supported account types**: Accounts in any organizational directory and personal Microsoft accounts
 - [ ] **Redirect URI**: Web platform
   ```
@@ -58,7 +58,7 @@
 - [ ] Note **Application (client) ID**: `_______________________`
 - [ ] Go to **Certificates & secrets**
 - [ ] Click **"New client secret"**
-- [ ] Description: BuildDesk SEO Access
+- [ ] Description: Brikly SEO Access
 - [ ] Expires: 24 months
 - [ ] Note **Client secret value**: `_______________________`
 
@@ -78,7 +78,7 @@ Choose one method:
 
 #### **Option A: Supabase Dashboard**
 - [ ] Go to your [Supabase Dashboard](https://supabase.com/dashboard)
-- [ ] Select your project: BuildDesk
+- [ ] Select your project: Brikly
 - [ ] Navigate to **Settings** → **Edge Functions**
 - [ ] Add environment variables:
   - [ ] `GOOGLE_OAuth_CLIENT_ID` = (from Step 1.4)
@@ -107,7 +107,7 @@ supabase functions deploy seo-analytics
 ### □ **Step 4.1: Google Search Console**
 - [ ] Go to [Google Search Console](https://search.google.com/search-console)
 - [ ] Click **"Add Property"**
-- [ ] Choose **URL prefix**: `https://build-desk.com`
+- [ ] Choose **URL prefix**: `https://brikly.net`
 - [ ] Verify ownership using one of:
   - [ ] HTML file upload to your website root
   - [ ] DNS TXT record
@@ -117,7 +117,7 @@ supabase functions deploy seo-analytics
 ### □ **Step 4.2: Bing Webmaster Tools**
 - [ ] Go to [Bing Webmaster Tools](https://www.bing.com/webmasters)
 - [ ] Click **"Add a site"**
-- [ ] Enter: `https://build-desk.com`
+- [ ] Enter: `https://brikly.net`
 - [ ] Verify ownership using:
   - [ ] XML file upload
   - [ ] Meta tag in HTML head

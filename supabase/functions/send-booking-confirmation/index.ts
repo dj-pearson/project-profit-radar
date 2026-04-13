@@ -117,7 +117,7 @@ const handler = async (req: Request): Promise<Response> => {
         <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 24px 0;">
         
         <p style="color: #64748b; font-size: 12px; text-align: center;">
-          This is an automated confirmation from BuildDesk CRM.<br/>
+          This is an automated confirmation from Brikly CRM.<br/>
           If you need to reschedule or cancel, please contact us directly.
         </p>
       </div>
@@ -125,7 +125,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     // Send email to attendee
     const attendeeEmail = await resend.emails.send({
-      from: "BuildDesk CRM <notifications@resend.dev>",
+      from: "Brikly CRM <notifications@resend.dev>",
       to: [booking.attendee_email],
       subject: `Meeting Confirmed: ${booking.booking_pages?.title || 'Your Appointment'}`,
       html: emailHtml,

@@ -26,8 +26,8 @@ serve(async (req) => {
       .limit(1)
       .single()
 
-    const canonicalDomain = config?.canonical_domain || 'https://build-desk.com'
-    const siteName = config?.site_name || 'BuildDesk'
+    const canonicalDomain = config?.canonical_domain || 'https://brikly.net'
+    const siteName = config?.site_name || 'Brikly'
     const siteDescription = config?.site_description || 'Construction Management Platform for SMB Contractors'
 
     let fileContent = ''
@@ -98,7 +98,7 @@ Disallow: /documents/
 Allow: /resources/
 Allow: /topics/
 Allow: /faq
-Allow: /builddesk-vs-*
+Allow: /brikly-vs-*
 
 # Crawl-delay for respectful crawling
 Crawl-delay: 1
@@ -218,7 +218,7 @@ ${siteDescription}
 
 ## Commercial AI Training:
 For partnerships involving large-scale AI training on our content:
-- Email: legal@builddesk.com
+- Email: legal@brikly.com
 - Subject: "AI Training Partnership Inquiry"
 - Include details about intended use, scale, and attribution plans
 
@@ -238,9 +238,9 @@ Our content is specialized for:
 
 ## Contact Information:
 Website: ${canonicalDomain}
-Support: support@builddesk.com
-Legal: legal@builddesk.com
-Partnership: partnerships@builddesk.com
+Support: support@brikly.com
+Legal: legal@brikly.com
+Partnership: partnerships@brikly.com
 
 ## Last Updated: ${currentDate}
 ---

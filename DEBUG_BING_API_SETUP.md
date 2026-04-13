@@ -13,7 +13,7 @@
 
 2. **Add Your Website**:
    - Click "Add a site"
-   - Enter: `https://build-desk.com`
+   - Enter: `https://brikly.net`
    - Verify ownership (similar to Google Search Console)
 
 3. **Check Site Status**:

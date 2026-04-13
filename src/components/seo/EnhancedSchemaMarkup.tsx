@@ -7,20 +7,20 @@ export const OrganizationSchema = () => (
       __html: JSON.stringify({
         "@context": "https://schema.org",
         "@type": "Organization",
-        "name": "BuildDesk",
-        "url": "https://builddesk.com",
-        "logo": "https://builddesk.com/logo.png",
+        "name": "Brikly",
+        "url": "https://brikly.com",
+        "logo": "https://brikly.com/logo.png",
         "address": {
           "@type": "PostalAddress",
           "addressCountry": "US"
         },
         "sameAs": [
-          "https://linkedin.com/company/builddesk",
-          "https://twitter.com/builddesk"
+          "https://linkedin.com/company/brikly",
+          "https://twitter.com/brikly"
         ],
         "contactPoint": {
           "@type": "ContactPoint",
-          "telephone": "+1-800-BUILD-DESK",
+          "telephone": "+1-800-BRIKLY",
           "contactType": "Customer Service"
         }
       })
@@ -35,10 +35,10 @@ export const SoftwareSchema = () => (
       __html: JSON.stringify({
         "@context": "https://schema.org",
         "@type": "SoftwareApplication",
-        "name": "BuildDesk",
+        "name": "Brikly",
         "applicationCategory": "BusinessApplication",
         "operatingSystem": "Web, iOS, Android",
-        "url": "https://builddesk.com",
+        "url": "https://brikly.com",
         "description": "Construction management software for small and mid-size contractors in the U.S. with job costing, scheduling, safety logs, and time tracking.",
         "offers": {
           "@type": "Offer",

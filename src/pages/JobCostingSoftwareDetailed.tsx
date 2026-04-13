@@ -19,20 +19,20 @@ const JobCostingSoftwareDetailed = () => {
       answer: "Job costing software tracks all costs associated with construction projects in real-time, including labor, materials, equipment, and overhead. It helps contractors understand project profitability, identify cost overruns early, and make data-driven decisions to improve margins."
     },
     {
-      question: "How does BuildDesk's job costing compare to other construction software?",
-      answer: "BuildDesk offers real-time job costing with automatic cost allocation, integrated time tracking, and native QuickBooks synchronization. Unlike basic job costing tools, BuildDesk provides detailed variance reporting, profit margin analysis, and predictive cost forecasting to help contractors maximize profitability."
+      question: "How does Brikly's job costing compare to other construction software?",
+      answer: "Brikly offers real-time job costing with automatic cost allocation, integrated time tracking, and native QuickBooks synchronization. Unlike basic job costing tools, Brikly provides detailed variance reporting, profit margin analysis, and predictive cost forecasting to help contractors maximize profitability."
     },
     {
       question: "Can job costing software integrate with QuickBooks?",
-      answer: "Yes, BuildDesk has native QuickBooks integration that automatically syncs job costs, invoices, and financial data in real-time. This eliminates double data entry and ensures your job costing data matches your accounting records perfectly."
+      answer: "Yes, Brikly has native QuickBooks integration that automatically syncs job costs, invoices, and financial data in real-time. This eliminates double data entry and ensures your job costing data matches your accounting records perfectly."
     },
     {
       question: "What's the ROI of using construction job costing software?",
-      answer: "Most contractors see 15-25% improvement in project profitability within 6 months of implementing job costing software. BuildDesk customers typically save $50,000+ annually through better cost control, reduced waste, and improved project margins."
+      answer: "Most contractors see 15-25% improvement in project profitability within 6 months of implementing job costing software. Brikly customers typically save $50,000+ annually through better cost control, reduced waste, and improved project margins."
     },
     {
       question: "How accurate is real-time job costing?",
-      answer: "BuildDesk's real-time job costing is 95%+ accurate because it automatically captures labor hours, material receipts, and equipment usage as they occur. This eliminates estimation errors and provides contractors with up-to-the-minute project profitability data."
+      answer: "Brikly's real-time job costing is 95%+ accurate because it automatically captures labor hours, material receipts, and equipment usage as they occur. This eliminates estimation errors and provides contractors with up-to-the-minute project profitability data."
     }
   ];
 
@@ -117,7 +117,7 @@ const JobCostingSoftwareDetailed = () => {
       projectSize: "$2M-$5M",
       improvement: "Increased profit margins from 6% to 14%",
       savings: "$180,000 annually",
-      quote: "BuildDesk's job costing showed us exactly where we were losing money. We identified $15K in waste per project and our margins improved dramatically.",
+      quote: "Brikly's job costing showed us exactly where we were losing money. We identified $15K in waste per project and our margins improved dramatically.",
       beforeAfter: {
         before: { margin: 6, visibility: "Monthly estimates" },
         after: { margin: 14, visibility: "Real-time tracking" }
@@ -160,8 +160,8 @@ const JobCostingSoftwareDetailed = () => {
   );
 
   const breadcrumbSchema = createBreadcrumbSchema([
-    { name: "Home", url: "https://builddesk.com" },
-    { name: "Job Costing Software", url: "https://builddesk.com/job-costing-software" }
+    { name: "Home", url: "https://brikly.com" },
+    { name: "Job Costing Software", url: "https://brikly.com/job-costing-software" }
   ]);
 
   const howToSchema = createHowToSchema(
@@ -179,7 +179,7 @@ const JobCostingSoftwareDetailed = () => {
     <>
       {/* Enhanced SEO with PageSEO Component */}
       <PageSEO
-        title="Job Costing Software for Construction - Real-Time Cost Tracking | BuildDesk"
+        title="Job Costing Software for Construction - Real-Time Cost Tracking | Brikly"
         description="Construction job costing software with real-time cost tracking, QuickBooks integration, and predictive analytics. Improve profit margins 15-25%. $350/month. Track labor, materials, equipment costs automatically. See ROI calculator."
         keywords={[
           'job costing software construction',
@@ -484,10 +484,10 @@ const JobCostingSoftwareDetailed = () => {
             </div>
           </div>
 
-          {/* BuildDesk Job Costing Features */}
+          {/* Brikly Job Costing Features */}
           <div className="max-w-4xl mx-auto mb-16">
             <h2 className="text-3xl font-bold text-construction-dark text-center mb-8">
-              Why Choose BuildDesk for Job Costing?
+              Why Choose Brikly for Job Costing?
             </h2>
             <div className="grid md:grid-cols-2 gap-8">
               <div className="space-y-6">
@@ -573,7 +573,7 @@ const JobCostingSoftwareDetailed = () => {
                   Start Improving Your Project Margins Today
                 </h2>
                 <p className="text-lg text-muted-foreground mb-6">
-                  Join contractors who've improved their profit margins by 15-25% with BuildDesk's 
+                  Join contractors who've improved their profit margins by 15-25% with Brikly's 
                   real-time job costing. See the difference accurate cost tracking makes.
                 </p>
                 

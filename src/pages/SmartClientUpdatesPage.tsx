@@ -7,7 +7,7 @@ const SmartClientUpdatesPage: React.FC = () => {
   return (
     <>
       <Helmet>
-        <title>Smart Client Updates - BuildDesk</title>
+        <title>Smart Client Updates - Brikly</title>
         <meta
           name="description"
           content="Automate client communications based on project events with intelligent templates and triggers."

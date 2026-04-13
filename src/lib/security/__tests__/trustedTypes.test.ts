@@ -78,14 +78,14 @@ describe('Security / Trusted Types (US-008)', () => {
       expect(initTrustedTypes()).toBeNull();
     });
 
-    it('creates a policy named "builddesk" when supported', () => {
+    it('creates a policy named "brikly" when supported', () => {
       const { createPolicy } = installTrustedTypesMock();
       const result = initTrustedTypes();
 
       expect(result).not.toBeNull();
       expect(createPolicy).toHaveBeenCalledTimes(1);
       expect(createPolicy).toHaveBeenCalledWith(
-        'builddesk',
+        'brikly',
         expect.objectContaining({
           createHTML: expect.any(Function),
           createScriptURL: expect.any(Function),

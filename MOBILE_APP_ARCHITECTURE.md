@@ -1,14 +1,14 @@
-# BuildDesk Mobile App Architecture
+# Brikly Mobile App Architecture
 
 ## 🎯 Overview
 
-This document describes the **completely isolated** mobile app architecture implemented for BuildDesk. The mobile app is built with Expo and React Native, with native Swift (iOS) and Kotlin (Android) modules, and is fully separated from the web build.
+This document describes the **completely isolated** mobile app architecture implemented for Brikly. The mobile app is built with Expo and React Native, with native Swift (iOS) and Kotlin (Android) modules, and is fully separated from the web build.
 
 ## 🚨 Important: Build Isolation
 
 ### Why Complete Isolation?
 
-Previously, BuildDesk had **three competing mobile implementations**:
+Previously, Brikly had **three competing mobile implementations**:
 1. Capacitor (Android only - iOS missing)
 2. Expo (partially configured)
 3. Standalone React Native (backup)
@@ -83,7 +83,7 @@ mobile-app/
 │       ├── LocationModule.swift
 │       └── BiometricModule.swift
 ├── android/
-│   └── app/src/main/java/com/builddesk/modules/
+│   └── app/src/main/java/com/brikly/modules/
 │       ├── CameraModule.kt
 │       ├── LocationModule.kt
 │       └── BiometricModule.kt
@@ -172,7 +172,7 @@ Located in `mobile-app/ios/modules/`:
 
 ### Kotlin Modules (Android)
 
-Located in `mobile-app/android/app/src/main/java/com/builddesk/modules/`:
+Located in `mobile-app/android/app/src/main/java/com/brikly/modules/`:
 
 #### CameraModule.kt
 - Camera permission handling
@@ -215,7 +215,7 @@ Located in `mobile-app/android/app/src/main/java/com/builddesk/modules/`:
 ### Navigation Features
 - **Persistent bottom tabs** - Always accessible
 - **Swipe gestures** - Natural mobile UX
-- **Deep linking** - `builddesk://` scheme
+- **Deep linking** - `brikly://` scheme
 - **Push notifications** - Navigate to specific screens
 - **Search** - Global search across projects and features
 

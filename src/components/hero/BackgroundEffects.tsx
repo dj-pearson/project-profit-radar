@@ -13,7 +13,7 @@ export function AmbientParticles({ count = 2000 }: AmbientParticlesProps) {
     const positions = new Float32Array(count * 3);
     const colors = new Float32Array(count * 3);
 
-    // BuildDesk accent colors in low opacity
+    // Brikly accent colors in low opacity
     const colorPalette = [
       new THREE.Color('#FF6B35').multiplyScalar(0.5), // Orange
       new THREE.Color('#E3F2FD').multiplyScalar(0.3), // Light blue

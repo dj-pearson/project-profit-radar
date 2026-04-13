@@ -21,19 +21,19 @@ BEGIN
   RAISE NOTICE '========================================';
   RAISE NOTICE '';
 
-  -- Step 1: Get BuildDesk site_id
-  RAISE NOTICE '1. Getting BuildDesk site_id...';
+  -- Step 1: Get Brikly site_id
+  RAISE NOTICE '1. Getting Brikly site_id...';
   SELECT id INTO v_test_site_id
   FROM sites
-  WHERE key = 'builddesk'
+  WHERE key = 'brikly'
   AND is_active = TRUE
   LIMIT 1;
 
   IF v_test_site_id IS NULL THEN
-    RAISE EXCEPTION 'BuildDesk site not found! Cannot proceed with test.';
+    RAISE EXCEPTION 'Brikly site not found! Cannot proceed with test.';
   END IF;
 
-  RAISE NOTICE '   ✓ BuildDesk site_id: %', v_test_site_id;
+  RAISE NOTICE '   ✓ Brikly site_id: %', v_test_site_id;
   RAISE NOTICE '';
 
   -- Step 2: Create a test user (simulating signup)

@@ -43,7 +43,7 @@ interface PersistedState {
 // STORAGE KEY PREFIX
 // =============================================================================
 
-const STORAGE_KEY_PREFIX = 'builddesk_ratelimit_';
+const STORAGE_KEY_PREFIX = 'brikly_ratelimit_';
 
 // =============================================================================
 // RATE LIMITER CLASS

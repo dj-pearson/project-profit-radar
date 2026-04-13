@@ -1,8 +1,8 @@
-# BuildDesk Security - Quick Start Guide 🚀
+# Brikly Security - Quick Start Guide 🚀
 
 ## What Was Done
 
-Your BuildDesk platform now has **complete project filtering and role-based access control**!
+Your Brikly platform now has **complete project filtering and role-based access control**!
 
 ### ✅ Critical Fixes Applied
 
@@ -156,7 +156,7 @@ Read `SECURITY_IMPLEMENTATION_COMPLETE.md` for:
 
 ## 🎉 You're Done!
 
-Your BuildDesk platform now has:
+Your Brikly platform now has:
 - ✅ Enterprise-grade security
 - ✅ Complete company data isolation
 - ✅ Comprehensive role-based access control

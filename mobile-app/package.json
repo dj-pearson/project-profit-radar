@@ -1,7 +1,7 @@
 {
-  "name": "builddesk-mobile",
+  "name": "brikly-mobile",
   "version": "1.0.0",
-  "description": "BuildDesk Mobile App - Native iOS and Android",
+  "description": "Brikly Mobile App - Native iOS and Android",
   "main": "index.js",
   "scripts": {
     "start": "expo start",

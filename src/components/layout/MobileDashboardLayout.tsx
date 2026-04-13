@@ -33,7 +33,7 @@ interface MobileDashboardLayoutProps {
  */
 export const MobileDashboardLayout: React.FC<MobileDashboardLayoutProps> = ({
   children,
-  title = "BuildDesk",
+  title = "Brikly",
   showTrialBanner = true,
   showBottomNav = true,
   actions,

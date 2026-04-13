@@ -1,6 +1,6 @@
 # Geofencing Integration Guide
 
-**BuildDesk Mobile GPS & Geofencing System**
+**Brikly Mobile GPS & Geofencing System**
 **Date:** November 14, 2025
 **Status:** Production Ready
 
@@ -8,7 +8,7 @@
 
 ## Overview
 
-This guide shows how to integrate the new browser-based geofencing system with BuildDesk's existing mobile components.
+This guide shows how to integrate the new browser-based geofencing system with Brikly's existing mobile components.
 
 ### What's New
 

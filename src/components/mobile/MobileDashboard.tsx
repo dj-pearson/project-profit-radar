@@ -170,7 +170,7 @@ export const MobileDashboard: React.FC = () => {
     description: 'Greeting and current location',
     render: () => (
       <div className="bg-gradient-to-r from-primary/10 to-primary/5 rounded-lg p-4">
-        <h2 className={mobileTextClasses.header}>Welcome to BuildDesk Mobile</h2>
+        <h2 className={mobileTextClasses.header}>Welcome to Brikly Mobile</h2>
         <p className={mobileTextClasses.muted}>
           Construction management tools at your fingertips
         </p>

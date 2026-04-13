@@ -14,7 +14,7 @@ export default {
       
       // Fetch from your build output
       try {
-        const assetResponse = await fetch(`https://builddesk-xxx.pages.dev${url.pathname}`, {
+        const assetResponse = await fetch(`https://brikly-xxx.pages.dev${url.pathname}`, {
           method: request.method,
           headers: request.headers,
         });
@@ -29,7 +29,7 @@ export default {
     
     // For all other routes, serve the React app
     try {
-      const indexResponse = await fetch('https://builddesk-xxx.pages.dev/', {
+      const indexResponse = await fetch('https://brikly-xxx.pages.dev/', {
         method: 'GET',
         headers: {
           'User-Agent': request.headers.get('User-Agent') || 'Cloudflare-Worker',

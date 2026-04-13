@@ -6,7 +6,7 @@
 
 ## Executive Summary
 
-Analysis of the BuildDesk application identified several performance issues affecting initial page load times, particularly on the landing page (Index). While lazy loading is implemented, several optimizations can improve Core Web Vitals scores.
+Analysis of the Brikly application identified several performance issues affecting initial page load times, particularly on the landing page (Index). While lazy loading is implemented, several optimizations can improve Core Web Vitals scores.
 
 ## Issues Identified
 

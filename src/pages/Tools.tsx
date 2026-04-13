@@ -36,8 +36,8 @@ const Tools = () => {
     },
     {
       id: 'roi-calculator',
-      title: 'Build-Desk ROI Calculator',
-      description: 'Calculate your return on investment and potential cost savings from implementing Build-Desk construction management software.',
+      title: 'Brikly ROI Calculator',
+      description: 'Calculate your return on investment and potential cost savings from implementing Brikly construction management software.',
       icon: Calculator,
       href: '/roi-calculator',
       features: ['Cost Savings Analysis', 'ROI Projections', 'Payback Period', 'Efficiency Gains'],
@@ -87,7 +87,7 @@ const Tools = () => {
   return (
     <div className="min-h-screen bg-background">
       <SEOMetaTags
-        title="Free Construction Tools | Schedule Builder & Profit Calculator | Build-Desk"
+        title="Free Construction Tools | Schedule Builder & Profit Calculator | Brikly"
         description="Access free construction management tools including project schedule builder, profit calculator, and bid estimator. Professional tools for contractors and project managers."
         keywords={[
           'free construction tools',
@@ -305,7 +305,7 @@ const Tools = () => {
                 Ready for Complete Project Management?
               </h2>
               <p className="text-xl mb-8 opacity-90 max-w-2xl mx-auto">
-                These free tools are just the beginning. See how much you could save with Build-Desk's comprehensive 
+                These free tools are just the beginning. See how much you could save with Brikly's comprehensive 
                 construction management platform using our ROI Calculator, then start building professional schedules today.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">

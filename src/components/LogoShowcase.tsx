@@ -18,7 +18,7 @@ const LogoShowcase = () => {
   return (
     <div className="container mx-auto px-4 py-8 space-y-8">
       <div className="text-center">
-        <h1 className="text-3xl font-bold mb-4">BuildDesk Logo Showcase</h1>
+        <h1 className="text-3xl font-bold mb-4">Brikly Logo Showcase</h1>
         <p className="text-gray-600 max-w-2xl mx-auto">
           Demonstrating the intelligent logo fallback system with multiple image
           sources and responsive design.

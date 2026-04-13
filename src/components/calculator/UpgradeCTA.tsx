@@ -1,6 +1,6 @@
 /**
  * Upgrade CTA Component
- * Encourages users to start a trial of BuildDesk
+ * Encourages users to start a trial of Brikly
  */
 
 import React from 'react';
@@ -23,7 +23,7 @@ export function UpgradeCTA({ onTrialClick, compact = false }: UpgradeCTAProps) {
               Track ALL Projects Automatically
             </h3>
             <p className="text-blue-100 text-sm">
-              You calculated profit for 1 project. Track unlimited projects in real-time with BuildDesk.
+              You calculated profit for 1 project. Track unlimited projects in real-time with Brikly.
             </p>
           </div>
           <Button
@@ -46,7 +46,7 @@ export function UpgradeCTA({ onTrialClick, compact = false }: UpgradeCTAProps) {
     <div className="bg-white rounded-lg border-2 border-blue-600 overflow-hidden">
       <div className="bg-gradient-to-r from-blue-600 to-indigo-600 p-6 text-white text-center">
         <h2 className="text-2xl font-bold mb-2">
-          Upgrade to BuildDesk Platform
+          Upgrade to Brikly Platform
         </h2>
         <p className="text-blue-100">
           Stop calculating one project at a time. Track everything automatically.
@@ -79,10 +79,10 @@ export function UpgradeCTA({ onTrialClick, compact = false }: UpgradeCTAProps) {
             </div>
           </div>
 
-          {/* BuildDesk Platform */}
+          {/* Brikly Platform */}
           <div className="space-y-3 bg-blue-50 p-4 rounded-lg">
             <h3 className="font-semibold text-blue-900 mb-4 pb-2 border-b border-blue-200">
-              BuildDesk Platform
+              Brikly Platform
             </h3>
             <div className="flex items-start gap-2 text-sm text-gray-900">
               <Check className="w-5 h-5 flex-shrink-0 text-blue-600" />
@@ -119,7 +119,7 @@ export function UpgradeCTA({ onTrialClick, compact = false }: UpgradeCTAProps) {
             </div>
             <div>
               <p className="text-gray-700 italic mb-2">
-                "BuildDesk helped us catch a $15K cost overrun on the Johnson remodel before it was too late. The real-time tracking paid for itself in the first month."
+                "Brikly helped us catch a $15K cost overrun on the Johnson remodel before it was too late. The real-time tracking paid for itself in the first month."
               </p>
               <p className="text-sm font-semibold text-gray-900">
                 John Martinez, Martinez Construction
@@ -152,7 +152,7 @@ export function UpgradeCTA({ onTrialClick, compact = false }: UpgradeCTAProps) {
         {/* Social Proof */}
         <div className="mt-6 text-center">
           <p className="text-sm text-gray-600">
-            <strong className="text-gray-900">1,200+ contractors</strong> trust BuildDesk
+            <strong className="text-gray-900">1,200+ contractors</strong> trust Brikly
           </p>
         </div>
       </div>

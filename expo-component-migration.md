@@ -258,10 +258,10 @@ const getStorageItem = async (key: string) => {
 
 ## Complete Migration Component Example
 
-### BuildDesk Native Features Hook (Expo Version):
+### Brikly Native Features Hook (Expo Version):
 
 ```typescript
-// hooks/useBuildDeskNative.ts
+// hooks/useBriklyNative.ts
 import { useState, useEffect } from 'react';
 import * as ImagePicker from 'expo-image-picker';
 import * as Location from 'expo-location';
@@ -269,7 +269,7 @@ import * as Notifications from 'expo-notifications';
 import * as FileSystem from 'expo-file-system';
 import * as Device from 'expo-device';
 
-export const useBuildDeskNative = () => {
+export const useBriklyNative = () => {
   const [permissions, setPermissions] = useState({
     camera: false,
     location: false,
@@ -395,10 +395,10 @@ export const useBuildDeskNative = () => {
 ```typescript
 // components/ProjectPhotoCapture.tsx
 import React from 'react';
-import { useBuildDeskNative } from '../hooks/useBuildDeskNative';
+import { useBriklyNative } from '../hooks/useBriklyNative';
 
 export const ProjectPhotoCapture = ({ projectId }: { projectId: string }) => {
-  const { capturePhoto, saveProjectPhoto, permissions } = useBuildDeskNative();
+  const { capturePhoto, saveProjectPhoto, permissions } = useBriklyNative();
 
   const handleCapturePhoto = async () => {
     const photo = await capturePhoto();

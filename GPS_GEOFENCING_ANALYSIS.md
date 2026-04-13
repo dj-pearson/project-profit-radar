@@ -8,7 +8,7 @@
 
 ## Executive Summary
 
-BuildDesk has a **semi-integrated GPS time tracking system** with significant infrastructure already in place but **critical integration gaps** preventing full geofencing enforcement:
+Brikly has a **semi-integrated GPS time tracking system** with significant infrastructure already in place but **critical integration gaps** preventing full geofencing enforcement:
 
 **What's Working:**
 - GPS location capture in MobileTimeClock component

@@ -33,7 +33,7 @@ DECLARE
   v_site_id UUID;
   v_company_id UUID;
 BEGIN
-  SELECT id INTO v_site_id FROM sites WHERE key = 'builddesk';
+  SELECT id INTO v_site_id FROM sites WHERE key = 'brikly';
   
   RAISE NOTICE '========================================';
   RAISE NOTICE 'TEST: INSERT with trigger DISABLED';

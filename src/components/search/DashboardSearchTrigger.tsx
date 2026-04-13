@@ -33,7 +33,7 @@ const TYPE_CONFIG = {
   invoice: { icon: DollarSign, label: 'Invoice', color: 'text-orange-600' },
 };
 
-const RECENT_SEARCHES_KEY = 'builddesk_recent_searches';
+const RECENT_SEARCHES_KEY = 'brikly_recent_searches';
 const MAX_RECENT = 5;
 
 export const DashboardSearchTrigger: React.FC = () => {

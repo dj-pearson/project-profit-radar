@@ -98,7 +98,7 @@ const { user } = useAuth();
 
 ## Files Most Likely to Need Changes
 
-Based on typical BuildDesk usage:
+Based on typical Brikly usage:
 1. src/hooks/useCompanyData.tsx
 2. src/hooks/useDashboardData.tsx
 3. src/hooks/useProjects.tsx

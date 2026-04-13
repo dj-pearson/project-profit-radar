@@ -1,16 +1,16 @@
 # 14-Day Trial Signup Email Funnel Templates
-## Build-Desk Construction Management Platform
+## Brikly Construction Management Platform
 
 ---
 
 ## **Email 1: Welcome & Setup (Day 0 - Immediate)**
-**Subject:** Welcome to Build-Desk! Let's get you set up in 5 minutes
+**Subject:** Welcome to Brikly! Let's get you set up in 5 minutes
 
 **Content:**
 ```
 Hi [First Name],
 
-Welcome to Build-Desk! 🏗️
+Welcome to Brikly! 🏗️
 
 You just took the smartest step to stop losing time and money on chaotic project management. 
 
@@ -34,7 +34,7 @@ Questions? Just reply to this email - I'm here to help.
 
 Best,
 [Support Team Name]
-Build-Desk Team
+Brikly Team
 
 P.S. Check your email daily - I'll be sending you quick wins and tips to get the most from your trial.
 
@@ -50,7 +50,7 @@ P.S. Check your email daily - I'll be sending you quick wins and tips to get the
 ```
 Hi [First Name],
 
-Yesterday you started your Build-Desk trial. Today, let's get your first quick win.
+Yesterday you started your Brikly trial. Today, let's get your first quick win.
 
 **Meet Sarah, a contractor from Texas:**
 "I used to juggle 8 different spreadsheets for my projects. Now I see everything in one dashboard. Game changer."
@@ -88,7 +88,7 @@ Best,
 ```
 Hi [First Name],
 
-"My foreman hates technology, but he's already using Build-Desk on his phone."
+"My foreman hates technology, but he's already using Brikly on his phone."
 - Mike, General Contractor
 
 **Today's focus: Mobile setup for your crew**
@@ -100,7 +100,7 @@ Here's why contractors love our mobile app:
 📋 Digital safety checklists
 
 **Your 3-minute action:**
-1. Download the Build-Desk mobile app
+1. Download the Brikly mobile app
 2. Add one crew member
 3. Show them the 15-second check-in process
 
@@ -121,7 +121,7 @@ Best,
 ---
 
 ## **Email 4: Automation Magic (Day 3)**
-**Subject:** Stop chasing updates - let Build-Desk do it for you
+**Subject:** Stop chasing updates - let Brikly do it for you
 
 **Content:**
 ```
@@ -168,13 +168,13 @@ Hi [First Name],
 
 **True story:** Last month, contractor David caught a $47,000 change order that was never billed. 
 
-How? Build-Desk's change order tracking.
+How? Brikly's change order tracking.
 
 **The problem:** 
 Most contractors lose $30K-$80K annually on unbilled change orders, forgotten extras, and scope creep.
 
 **The solution:**
-Build-Desk automatically tracks every change:
+Brikly automatically tracks every change:
 💰 Instant change order generation
 📝 Digital client approvals
 🔄 Automatic billing integration
@@ -189,7 +189,7 @@ Build-Desk automatically tracks every change:
 
 **Pro tip:** Enable "Auto-notify" to alert you when verbal changes happen on-site.
 
-This one feature typically pays for Build-Desk within the first month.
+This one feature typically pays for Brikly within the first month.
 
 Tomorrow: How to never lose another receipt or document.
 
@@ -216,7 +216,7 @@ Your foreman starts digging through a milk crate of papers...
 
 **Today's focus: Document Management**
 
-Build-Desk becomes your digital filing cabinet:
+Brikly becomes your digital filing cabinet:
 📁 All documents organized by project
 📸 Mobile photo capture with auto-tagging  
 🔍 Find any document in 3 seconds
@@ -258,7 +258,7 @@ Monday morning. Coffee's cold. Phone's ringing:
 
 **Today's focus: Smart Crew Scheduling**
 
-Build-Desk eliminates the Monday scramble:
+Brikly eliminates the Monday scramble:
 📅 Visual crew calendar with drag-and-drop
 📱 Automatic crew notifications
 🚧 Permit status integration
@@ -291,7 +291,7 @@ Best,
 ```
 Hi [First Name],
 
-**Congratulations!** You've completed week 1 of your Build-Desk trial.
+**Congratulations!** You've completed week 1 of your Brikly trial.
 
 **Week 1 recap - what you've set up:**
 ✅ Project dashboard
@@ -307,7 +307,7 @@ Hi [First Name],
 
 Most contractors think they're profitable... until they actually calculate the numbers.
 
-Build-Desk shows you:
+Brikly shows you:
 💰 True job costs vs estimates
 📊 Real-time profit margins
 ⚠️ Budget overruns before they kill you
@@ -344,7 +344,7 @@ Hi [First Name],
 
 **Today's time-saver: QuickBooks Integration**
 
-Connect Build-Desk to QuickBooks once, save hours forever:
+Connect Brikly to QuickBooks once, save hours forever:
 🔄 Automatic invoice generation
 📊 Real-time expense tracking
 💰 Job cost synchronization
@@ -386,7 +386,7 @@ Hi [First Name],
 
 **Today's focus: Professional Client Updates**
 
-Build-Desk makes you look like the most organized contractor in town:
+Brikly makes you look like the most organized contractor in town:
 📸 Daily photo progress reports
 📊 Milestone completion notifications
 💰 Transparent budget updates
@@ -425,7 +425,7 @@ Hi [First Name],
 
 **Sobering fact:** Construction has the highest rate of workplace fatalities.
 
-**Build-Desk helps keep your crew safe AND compliant.**
+**Brikly helps keep your crew safe AND compliant.**
 
 **Today's focus: Digital Safety Management**
 
@@ -489,7 +489,7 @@ Track every tool and machine:
 
 **[Track Your Equipment →]**
 
-**Money saver:** "We found $25K worth of 'lost' tools in the first month. Build-Desk paid for itself immediately." - Equipment Manager
+**Money saver:** "We found $25K worth of 'lost' tools in the first month. Brikly paid for itself immediately." - Equipment Manager
 
 **Pro tip:** Use the maintenance scheduler to prevent costly breakdowns.
 
@@ -512,7 +512,7 @@ Hi [First Name],
 
 **Today's advantage: Professional Reporting**
 
-Build-Desk reports help you:
+Brikly reports help you:
 📊 Bid more accurately (real historical data)
 💰 Show clients transparent progress
 📈 Prove ROI to stakeholders
@@ -554,7 +554,7 @@ Hi [First Name],
 
 **Your 14-day trial ends tomorrow.**
 
-First, let me ask: How has Build-Desk changed your business?
+First, let me ask: How has Brikly changed your business?
 
 **What you've accomplished:**
 ✅ Streamlined project management
@@ -581,7 +581,7 @@ First, let me ask: How has Build-Desk changed your business?
 - ❌ Miss change orders and profit leaks
 
 **What contractors say after Month 1:**
-"Build-Desk saved us $18,000 in the first month through better change order tracking alone." - Mike T.
+"Brikly saved us $18,000 in the first month through better change order tracking alone." - Mike T.
 
 **Questions?** Book a 10-minute call: **[Schedule Call →]**
 
@@ -591,7 +591,7 @@ Don't go back to the old way. Your business deserves better.
 
 Best,
 [Support Team Name]
-Build-Desk Team
+Brikly Team
 
 P.S. This pricing expires in 48 hours. After that, you'll pay full price.
 ```
@@ -605,7 +605,7 @@ P.S. This pricing expires in 48 hours. After that, you'll pay full price.
 ```
 Hi [First Name],
 
-**Your Build-Desk trial expires at midnight tonight.**
+**Your Brikly trial expires at midnight tonight.**
 
 **Last chance for 50% off (expires in 12 hours):**
 
@@ -636,7 +636,7 @@ This is your final notice. After midnight, your account will be deactivated.
 
 Best,
 [Support Team Name]
-Build-Desk Team
+Brikly Team
 ```
 
 ---
@@ -648,7 +648,7 @@ Build-Desk Team
 ```
 Hi [First Name],
 
-You let your Build-Desk trial expire 2 days ago.
+You let your Brikly trial expire 2 days ago.
 
 **I have one question:** What made you decide not to continue?
 
@@ -686,7 +686,7 @@ P.S. Your data stays safe for 30 days. After that, it's permanently deleted.
 ```
 Hi [First Name],
 
-**Important:** Your Build-Desk data will be permanently deleted in 7 days.
+**Important:** Your Brikly data will be permanently deleted in 7 days.
 
 This includes:
 - All project information
@@ -723,7 +723,7 @@ P.S. After next week, this data is gone forever. Don't lose your work.
 ```
 Hi [First Name],
 
-**Your Build-Desk data will be permanently deleted tomorrow.**
+**Your Brikly data will be permanently deleted tomorrow.**
 
 This is your absolute final chance to save:
 - 14 days of project setup work
@@ -746,7 +746,7 @@ After tomorrow, this data is permanently gone and cannot be recovered.
 
 Final chance,
 [Support Team Name]
-Build-Desk Team
+Brikly Team
 ```
 
 ---

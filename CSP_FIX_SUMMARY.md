@@ -2,7 +2,7 @@
 
 ## Issue
 After fixing the cache issue, the site loaded but **critical API calls were blocked** by Content Security Policy, causing:
-- ❌ Supabase API calls to `api.build-desk.com` blocked
+- ❌ Supabase API calls to `api.brikly.net` blocked
 - ❌ Google Analytics blocked
 - ❌ Cloudflare Insights blocked  
 - ❌ Three.js HDR assets from GitHub blocked
@@ -14,8 +14,8 @@ The CSP `connect-src` directive was missing critical domains:
 connect-src 'self' https://*.supabase.co https://*.stripe.com ... wss://*.supabase.co
 
 # Missing:
-- api.build-desk.com (your self-hosted Supabase API!)
-- functions.build-desk.com (your edge functions)
+- api.brikly.net (your self-hosted Supabase API!)
+- functions.brikly.net (your edge functions)
 - Google Analytics domains
 - raw.githack.com (Three.js assets)
 ```
@@ -30,13 +30,13 @@ connect-src 'self' https://*.supabase.co https://*.stripe.com ... wss://*.supaba
 - `https://*.google-analytics.com` (Google Analytics)
 
 #### `connect-src` - Added (CRITICAL):
-- **`https://api.build-desk.com`** ← Your Supabase API (most important!)
-- **`https://functions.build-desk.com`** ← Your Supabase Edge Functions
+- **`https://api.brikly.net`** ← Your Supabase API (most important!)
+- **`https://functions.brikly.net`** ← Your Supabase Edge Functions
 - `https://www.google-analytics.com` (GA reporting)
 - `https://*.analytics.google.com` (GA data collection)
 - `https://raw.githack.com` (Three.js HDR assets)
 - `https://raw.githubusercontent.com` (GitHub raw content)
-- `wss://api.build-desk.com` (WebSocket for Realtime)
+- `wss://api.brikly.net` (WebSocket for Realtime)
 
 ## Testing the Fix
 
@@ -44,26 +44,26 @@ After deployment completes and cache is purged, verify:
 
 ### 1. Check CSP Headers
 ```bash
-curl -I https://build-desk.com | grep -i "content-security-policy"
+curl -I https://brikly.net | grep -i "content-security-policy"
 ```
 
-Should show updated policy with `api.build-desk.com` included.
+Should show updated policy with `api.brikly.net` included.
 
 ### 2. Test in Browser
 1. Open DevTools (F12) → Console
 2. Hard refresh (Ctrl+Shift+R)
 3. **Should NOT see**:
    - ❌ "Refused to connect because it violates CSP"
-   - ❌ "Fetch API cannot load api.build-desk.com"
+   - ❌ "Fetch API cannot load api.brikly.net"
 4. **Should see**:
-   - ✅ Successful API calls to `api.build-desk.com`
+   - ✅ Successful API calls to `api.brikly.net`
    - ✅ No CSP violation errors
    - ✅ App loading with data
 
 ### 3. Network Tab Verification
 Check Network tab for:
-- ✅ `api.build-desk.com/rest/v1/...` → Status 200
-- ✅ `functions.build-desk.com/...` → Status 200
+- ✅ `api.brikly.net/rest/v1/...` → Status 200
+- ✅ `functions.brikly.net/...` → Status 200
 - ✅ `www.googletagmanager.com/gtag/js` → Status 200
 - ✅ `static.cloudflareinsights.com/beacon.min.js` → Status 200
 

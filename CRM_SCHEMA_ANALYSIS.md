@@ -1,7 +1,7 @@
-# BuildDesk CRM Database Schema Analysis
+# Brikly CRM Database Schema Analysis
 
 ## Executive Summary
-BuildDesk has implemented a comprehensive CRM system with lead tracking, deal pipeline management, contact management, email campaigns, and sales activity tracking. The system is distributed across multiple migration files and is well-structured with Row Level Security (RLS) policies for multi-tenancy.
+Brikly has implemented a comprehensive CRM system with lead tracking, deal pipeline management, contact management, email campaigns, and sales activity tracking. The system is distributed across multiple migration files and is well-structured with Row Level Security (RLS) policies for multi-tenancy.
 
 ---
 

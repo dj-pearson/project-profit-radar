@@ -47,9 +47,9 @@ const AdminSettings = () => {
   const navigate = useNavigate();
   
   const [settings, setSettings] = useState<SystemSettings>({
-    platformName: 'Build Desk',
+    platformName: 'Brikly',
     platformDescription: 'Construction Management Platform for SMB Contractors',
-    supportEmail: 'support@builddesk.com',
+    supportEmail: 'support@brikly.com',
     maintenanceMode: false,
     allowRegistration: true,
     emailVerificationRequired: false,

@@ -37,7 +37,7 @@ export interface PendingSyncAction {
 
 type SyncStatus = "idle" | "syncing" | "success";
 
-const STORAGE_KEY = "builddesk-offline-queue";
+const STORAGE_KEY = "brikly-offline-queue";
 
 // ---------------------------------------------------------------------------
 // Helpers

@@ -24,7 +24,7 @@ else
 fi
 
 echo -e "${BOLD}══════════════════════════════════════════════════════${RESET}"
-echo -e "${BOLD}  BuildDesk Dependency Vulnerability Scanner${RESET}"
+echo -e "${BOLD}  Brikly Dependency Vulnerability Scanner${RESET}"
 echo -e "${BOLD}══════════════════════════════════════════════════════${RESET}"
 echo ""
 echo -e "  Date : ${TODAY}"

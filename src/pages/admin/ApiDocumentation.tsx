@@ -175,7 +175,7 @@ export default function ApiDocumentation() {
       <div>
         <h1 className="text-3xl font-bold">API Documentation</h1>
         <p className="text-muted-foreground mt-1">
-          BuildDesk public API reference for third-party integrations
+          Brikly public API reference for third-party integrations
         </p>
       </div>
 
@@ -186,7 +186,7 @@ export default function ApiDocumentation() {
             <Key className="h-5 w-5" />
             Authentication
           </CardTitle>
-          <CardDescription>How to authenticate with the BuildDesk API</CardDescription>
+          <CardDescription>How to authenticate with the Brikly API</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <p className="text-sm">

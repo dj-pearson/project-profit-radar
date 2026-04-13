@@ -1,5 +1,5 @@
 /**
- * Test Fixtures for BuildDesk
+ * Test Fixtures for Brikly
  *
  * Mock data factories for common entity types.
  * Each factory creates consistent, valid mock data for tests.
@@ -82,7 +82,7 @@ export const createMockUserProfile = (
   overrides: Partial<MockUserProfile> = {}
 ): MockUserProfile => ({
   id: generateId('user'),
-  email: `user-${idCounter}@builddesk.com`,
+  email: `user-${idCounter}@brikly.com`,
   first_name: 'Test',
   last_name: 'User',
   phone: '555-000-0000',

@@ -12,8 +12,8 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, stripe-signature",
 };
 
-// Default site_id for BuildDesk (will be resolved dynamically in production)
-const DEFAULT_BUILDDESK_SITE_KEY = 'builddesk';
+// Default site_id for Brikly (will be resolved dynamically in production)
+const DEFAULT_BRIKLY_SITE_KEY = 'brikly';
 
 const logStep = (step: string, details?: any) => {
   const detailsStr = details ? ` - ${JSON.stringify(details)}` : '';
@@ -61,16 +61,16 @@ serve(async (req) => {
 
     logStep("Processing event", { type: event.type, id: event.id });
 
-    // Get the default site_id for BuildDesk (webhook is platform-level)
+    // Get the default site_id for Brikly (webhook is platform-level)
     const { data: siteData } = await supabaseClient
       .from('sites')
       .select('id')
-      .eq('key', DEFAULT_BUILDDESK_SITE_KEY)
+      .eq('key', DEFAULT_BRIKLY_SITE_KEY)
       .single();
 
     const siteId = siteData?.id;
     if (!siteId) {
-      logStep("Warning: BuildDesk site not found, webhook processing without site isolation");
+      logStep("Warning: Brikly site not found, webhook processing without site isolation");
     }
 
     // Log webhook event with site isolation

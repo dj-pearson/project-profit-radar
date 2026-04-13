@@ -59,13 +59,13 @@ When triggered, the webhook sends this **structured JSON** for easy routing:
       "excerpt": "Post excerpt...",
       "body": "Full content...",
       "featured_image_url": "https://...",
-      "url": "https://build-desk.com/blog/post-slug"
+      "url": "https://brikly.net/blog/post-slug"
     },
     "social_posts": [
       {
         "platform": "twitter",
-        "content": "Short engaging content with insights... https://build-desk.com/blog/post-slug",
-        "hashtags": ["#construction", "#builddesk", "#projectmanagement"],
+        "content": "Short engaging content with insights... https://brikly.net/blog/post-slug",
+        "hashtags": ["#construction", "#brikly", "#projectmanagement"],
         "media_urls": ["https://..."],
         "optimal_length": 280,
         "post_type": "short",
@@ -73,8 +73,8 @@ When triggered, the webhook sends this **structured JSON** for easy routing:
       },
       {
         "platform": "linkedin",
-        "content": "Professional content with detailed insights...\n\nRead the full article: https://build-desk.com/blog/post-slug",
-        "hashtags": ["#construction", "#projectmanagement", "#builddesk"],
+        "content": "Professional content with detailed insights...\n\nRead the full article: https://brikly.net/blog/post-slug",
+        "hashtags": ["#construction", "#projectmanagement", "#brikly"],
         "media_urls": ["https://..."],
         "optimal_length": 3000,
         "post_type": "long",
@@ -82,8 +82,8 @@ When triggered, the webhook sends this **structured JSON** for easy routing:
       },
       {
         "platform": "facebook",
-        "content": "Community-focused content...\n\nLearn more: https://build-desk.com/blog/post-slug",
-        "hashtags": ["#construction", "#builddesk"],
+        "content": "Community-focused content...\n\nLearn more: https://brikly.net/blog/post-slug",
+        "hashtags": ["#construction", "#brikly"],
         "media_urls": ["https://..."],
         "optimal_length": 2000,
         "post_type": "medium",
@@ -91,8 +91,8 @@ When triggered, the webhook sends this **structured JSON** for easy routing:
       },
       {
         "platform": "instagram",
-        "content": "Visual storytelling content...\n\n🔗 Link in bio: https://build-desk.com/blog/post-slug",
-        "hashtags": ["#construction", "#builddesk", "#constructionlife"],
+        "content": "Visual storytelling content...\n\n🔗 Link in bio: https://brikly.net/blog/post-slug",
+        "hashtags": ["#construction", "#brikly", "#constructionlife"],
         "media_urls": ["https://random-github-media-asset.jpg"],
         "optimal_length": 2200,
         "post_type": "medium",
@@ -177,7 +177,7 @@ data.social_posts.forEach((post) => {
 
 1. **Webhook Trigger**
 
-   - Custom webhook listening for BuildDesk automation
+   - Custom webhook listening for Brikly automation
    - Parse enhanced JSON structure
 
 2. **Platform Router Module**

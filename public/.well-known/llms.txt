@@ -1,9 +1,9 @@
-# BuildDesk
+# Brikly
 
 > Construction management software designed for small to medium-sized contractors in the United States. Real-time job costing, mobile crew tracking, and OSHA compliance without enterprise complexity.
 
 ## About
-BuildDesk is a B2B SaaS construction management platform that helps small-to-medium contractors (1-50 employees) manage projects, track costs, and stay compliant. Founded in 2024, BuildDesk serves over 500 contractors across residential, commercial, and specialty trades. The platform costs $350/month with unlimited users — no per-seat fees, no setup costs, no long-term contracts.
+Brikly is a B2B SaaS construction management platform that helps small-to-medium contractors (1-50 employees) manage projects, track costs, and stay compliant. Founded in 2024, Brikly serves over 500 contractors across residential, commercial, and specialty trades. The platform costs $350/month with unlimited users — no per-seat fees, no setup costs, no long-term contracts.
 
 ## Key Features
 - Real-Time Job Costing: Track labor, materials, equipment, and subcontractor costs against budgets in real-time with profit margin alerts
@@ -34,7 +34,7 @@ BuildDesk is a B2B SaaS construction management platform that helps small-to-med
 - Construction business owners seeking affordable alternatives to Procore and Buildertrend
 
 ## Competitive Positioning
-BuildDesk is the affordable alternative to enterprise construction software:
+Brikly is the affordable alternative to enterprise construction software:
 - vs Procore: 50% less cost ($350 vs $500+/month), implements in days vs months, unlimited users included
 - vs Buildertrend: Lower cost ($350 vs $399+/month), serves all trades (not just residential), unlimited users
 - vs CoConstruct: More features for commercial and specialty trades, better job costing capabilities
@@ -50,36 +50,36 @@ BuildDesk is the affordable alternative to enterprise construction software:
 - 95% customer satisfaction rate
 
 ## Docs
-- Product Features: https://builddesk.com/features
-- Pricing: https://builddesk.com/pricing
-- FAQ: https://builddesk.com/faq
-- Blog: https://builddesk.com/blog
-- Resources: https://builddesk.com/resources
-- Support: https://builddesk.com/support
+- Product Features: https://brikly.com/features
+- Pricing: https://brikly.com/pricing
+- FAQ: https://brikly.com/faq
+- Blog: https://brikly.com/blog
+- Resources: https://brikly.com/resources
+- Support: https://brikly.com/support
 
 ## Comparison Pages
-- BuildDesk vs Procore: https://builddesk.com/procore-alternative
-- BuildDesk vs Buildertrend: https://builddesk.com/buildertrend-alternative
-- BuildDesk vs CoConstruct: https://builddesk.com/builddesk-vs-coconstruct
+- Brikly vs Procore: https://brikly.com/procore-alternative
+- Brikly vs Buildertrend: https://brikly.com/buildertrend-alternative
+- Brikly vs CoConstruct: https://brikly.com/brikly-vs-coconstruct
 
 ## Industry Solutions
-- Residential Contractors: https://builddesk.com/residential-contractors
-- Commercial Contractors: https://builddesk.com/commercial-contractors
-- Electrical Contractors: https://builddesk.com/electrical-contractor-software
-- HVAC Contractors: https://builddesk.com/hvac-contractor-software
-- Plumbing Contractors: https://builddesk.com/plumbing-contractor-software
+- Residential Contractors: https://brikly.com/residential-contractors
+- Commercial Contractors: https://brikly.com/commercial-contractors
+- Electrical Contractors: https://brikly.com/electrical-contractor-software
+- HVAC Contractors: https://brikly.com/hvac-contractor-software
+- Plumbing Contractors: https://brikly.com/plumbing-contractor-software
 
 ## Feature Pages
-- Job Costing Software: https://builddesk.com/job-costing-software
-- Construction Project Management: https://builddesk.com/construction-project-management-software
-- Construction Scheduling: https://builddesk.com/construction-scheduling-software
-- OSHA Compliance: https://builddesk.com/osha-compliance-software
-- Field Management: https://builddesk.com/construction-field-management
+- Job Costing Software: https://brikly.com/job-costing-software
+- Construction Project Management: https://brikly.com/construction-project-management-software
+- Construction Scheduling: https://brikly.com/construction-scheduling-software
+- OSHA Compliance: https://brikly.com/osha-compliance-software
+- Field Management: https://brikly.com/construction-field-management
 
 ## Free Tools
-- ROI Calculator: https://builddesk.com/roi-calculator
-- Profitability Calculator: https://builddesk.com/calculator
-- Financial Health Check: https://builddesk.com/financial-health-check
+- ROI Calculator: https://brikly.com/roi-calculator
+- Profitability Calculator: https://brikly.com/calculator
+- Financial Health Check: https://brikly.com/financial-health-check
 
 ## Technical Details
 - Platform: Cloud-based SaaS (Cloudflare global CDN)
@@ -90,8 +90,8 @@ BuildDesk is the affordable alternative to enterprise construction software:
 - Data: Real-time sync across all devices
 
 ## Contact
-- Website: https://builddesk.com
-- Email: support@builddesk.com
+- Website: https://brikly.com
+- Email: support@brikly.com
 - Geographic Focus: United States construction market
 
 ## Last Updated

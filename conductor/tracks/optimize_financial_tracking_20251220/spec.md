@@ -2,7 +2,7 @@
 
 ## 1. Overview
 
-This track focuses on improving the performance and responsiveness of the real-time financial tracking features within the BuildDesk platform. The goal is to enhance the user experience by reducing latency and ensuring a fluid interface, particularly for the real-time job costing and budget vs. actual analysis functionalities.
+This track focuses on improving the performance and responsiveness of the real-time financial tracking features within the Brikly platform. The goal is to enhance the user experience by reducing latency and ensuring a fluid interface, particularly for the real-time job costing and budget vs. actual analysis functionalities.
 
 ## 2. Key Objectives
 

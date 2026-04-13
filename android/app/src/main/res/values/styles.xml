@@ -20,7 +20,7 @@
         <item name="android:navigationBarColor">@color/navigationBarColor</item>
     </style>
 
-    <!-- Splash screen theme with BuildDesk branding -->
+    <!-- Splash screen theme with Brikly branding -->
     <style name="AppTheme.NoActionBarLaunch" parent="Theme.SplashScreen">
         <item name="android:background">@color/splashBackground</item>
         <item name="windowSplashScreenBackground">@color/splashBackground</item>

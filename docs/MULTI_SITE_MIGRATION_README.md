@@ -2,7 +2,7 @@
 
 ## 🎯 Project Overview
 
-This migration transforms Build-Desk from a single-tenant system into a **multi-site architecture** that enables multiple Pearson Media products (Build-Desk, RealEstate Bio, SalonPros Bio, etc.) to share a single Supabase database with complete data isolation.
+This migration transforms Brikly from a single-tenant system into a **multi-site architecture** that enables multiple Pearson Media products (Brikly, RealEstate Bio, SalonPros Bio, etc.) to share a single Supabase database with complete data isolation.
 
 ### Benefits
 
@@ -79,7 +79,7 @@ psql -h db.your-project.supabase.co -U postgres -d postgres \
 
 ```sql
 -- Check sites table exists
-SELECT * FROM sites WHERE key = 'builddesk';
+SELECT * FROM sites WHERE key = 'brikly';
 
 -- Count tables with site_id
 SELECT COUNT(*) FROM information_schema.columns 
@@ -204,12 +204,12 @@ project-profit-radar/
 
 - **Phase 1:** `20251128000001_create_sites_table.sql`
   - Creates `sites` table
-  - Seeds Build-Desk site
+  - Seeds Brikly site
   - Helper functions for site resolution
 
 - **Phase 2:** `20251128000002_add_site_id_to_core_tables.sql`
   - Adds `site_id` to 15+ core tables
-  - Backfills with Build-Desk site_id
+  - Backfills with Brikly site_id
   - Creates indexes
 
 - **Phase 2B:** `20251128000003_add_site_id_to_extended_tables.sql`
@@ -342,7 +342,7 @@ ALTER TABLE projects DROP COLUMN site_id;
 
 ### Database Testing
 
-- [ ] Sites table exists with Build-Desk site
+- [ ] Sites table exists with Brikly site
 - [ ] All tenant tables have site_id column
 - [ ] All rows have site_id (no NULLs)
 - [ ] Foreign keys on site_id exist
@@ -451,7 +451,7 @@ More troubleshooting in `docs/NEW_WEBSITE_ONBOARDING_GUIDE.md` section 9.
 
 - ✅ All apps run on one Supabase project
 - ✅ Zero cross-site data leaks
-- ✅ Build-Desk performance unchanged
+- ✅ Brikly performance unchanged
 - ✅ New site onboarding < 1 day
 - ✅ Cost reduction ~80%
 - ✅ All tests passing
@@ -460,7 +460,7 @@ More troubleshooting in `docs/NEW_WEBSITE_ONBOARDING_GUIDE.md` section 9.
 
 ## 🔗 Related Resources
 
-- [Build-Desk Documentation (CLAUDE.md)](../CLAUDE.md)
+- [Brikly Documentation (CLAUDE.md)](../CLAUDE.md)
 - [Supabase RLS Documentation](https://supabase.com/docs/guides/auth/row-level-security)
 - [Supabase Edge Functions](https://supabase.com/docs/guides/functions)
 - [Multi-Tenant Architecture Best Practices](https://supabase.com/blog/multi-tenant-applications)

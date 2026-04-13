@@ -47,11 +47,11 @@ serve(async (req) => {
     let message = "";
 
     if (prediction.churn_probability >= 70) {
-      subject = `${user.first_name}, we'd love to help you get more value from BuildDesk`;
+      subject = `${user.first_name}, we'd love to help you get more value from Brikly`;
       message = `
         <h2>Hi ${user.first_name},</h2>
 
-        <p>We noticed you haven't been as active on BuildDesk lately, and we want to make sure you're getting the most out of the platform.</p>
+        <p>We noticed you haven't been as active on Brikly lately, and we want to make sure you're getting the most out of the platform.</p>
 
         <p><strong>Here's what we can do to help:</strong></p>
         <ul>
@@ -65,47 +65,47 @@ serve(async (req) => {
           <li>Answer any questions you have</li>
         </ul>
 
-        <p><a href="https://build-desk.com/schedule-support-call?user=${userId}" style="background: #F97316; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block; margin: 16px 0;">Schedule a Call</a></p>
+        <p><a href="https://brikly.net/schedule-support-call?user=${userId}" style="background: #F97316; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block; margin: 16px 0;">Schedule a Call</a></p>
 
         <p>Or reply to this email and let me know what would be most helpful.</p>
 
         <p>Best regards,<br>
-        The BuildDesk Team</p>
+        The Brikly Team</p>
       `;
     } else if (prediction.churn_probability >= 40) {
-      subject = `${user.first_name}, check out these BuildDesk features you might have missed`;
+      subject = `${user.first_name}, check out these Brikly features you might have missed`;
       message = `
         <h2>Hi ${user.first_name},</h2>
 
-        <p>We wanted to share some BuildDesk features that could make your construction management even easier:</p>
+        <p>We wanted to share some Brikly features that could make your construction management even easier:</p>
 
         <p><strong>Based on your usage, we recommend:</strong></p>
         <ul>
           ${prediction.recommended_interventions.map((intervention: string) => `<li>${intervention}</li>`).join('')}
         </ul>
 
-        <p><a href="https://build-desk.com/features-guide?user=${userId}" style="background: #F97316; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block; margin: 16px 0;">Explore Features</a></p>
+        <p><a href="https://brikly.net/features-guide?user=${userId}" style="background: #F97316; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block; margin: 16px 0;">Explore Features</a></p>
 
         <p>Need help getting started? Reply to this email and we'll set up a quick demo.</p>
 
         <p>Best regards,<br>
-        The BuildDesk Team</p>
+        The Brikly Team</p>
       `;
     } else {
-      subject = `${user.first_name}, tips to get more from BuildDesk`;
+      subject = `${user.first_name}, tips to get more from Brikly`;
       message = `
         <h2>Hi ${user.first_name},</h2>
 
-        <p>Thanks for being a BuildDesk customer! Here are some tips to get even more value from the platform:</p>
+        <p>Thanks for being a Brikly customer! Here are some tips to get even more value from the platform:</p>
 
         <ul>
           ${prediction.recommended_interventions.map((intervention: string) => `<li>${intervention}</li>`).join('')}
         </ul>
 
-        <p>Check out our <a href="https://build-desk.com/knowledge-base">Knowledge Base</a> for video tutorials and guides.</p>
+        <p>Check out our <a href="https://brikly.net/knowledge-base">Knowledge Base</a> for video tutorials and guides.</p>
 
         <p>Best regards,<br>
-        The BuildDesk Team</p>
+        The Brikly Team</p>
       `;
     }
 
@@ -117,7 +117,7 @@ serve(async (req) => {
         Authorization: `Bearer ${RESEND_API_KEY}`,
       },
       body: JSON.stringify({
-        from: "BuildDesk <support@build-desk.com>",
+        from: "Brikly <support@brikly.net>",
         to: [user.email],
         subject: subject,
         html: message,
