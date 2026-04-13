@@ -351,7 +351,7 @@ export default function PSEOPageRenderer() {
   const softwareSchema = {
     '@context': 'https://schema.org',
     '@type': 'SoftwareApplication',
-    name: 'BuildDesk',
+    name: 'Brikly',
     applicationCategory: 'BusinessApplication',
     description: page.seo_description,
     offers: {
@@ -370,7 +370,7 @@ export default function PSEOPageRenderer() {
       <Helmet>
         <title>{page.seo_title}</title>
         <meta name="description" content={page.seo_description} />
-        <link rel="canonical" href={`https://build-desk.com${page.canonical_url}`} />
+        <link rel="canonical" href={`https://brikly.net${page.canonical_url}`} />
         {schema.seo?.keywords && (
           <meta name="keywords" content={schema.seo.keywords.join(', ')} />
         )}

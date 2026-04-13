@@ -25,7 +25,7 @@ Three database migrations that:
 
 2. **`supabase/migrations/20251203234845_fix_user_profiles_trigger.sql`**
    - Fixes handle_new_user() trigger to insert into user_profiles
-   - Automatically resolves site_id from JWT or defaults to BuildDesk
+   - Automatically resolves site_id from JWT or defaults to Brikly
    - ~150 lines with error handling
 
 3. **`supabase/migrations/20251203234846_fix_user_profiles_select_rls.sql`**

@@ -1,5 +1,5 @@
 #!/bin/bash
-# BuildDesk Stripe Products Setup Script
+# Brikly Stripe Products Setup Script
 # Run this script with Stripe CLI installed and authenticated
 # Bash script for Linux/Mac
 
@@ -39,7 +39,7 @@ while [[ $# -gt 0 ]]; do
 done
 
 echo -e "${CYAN}============================================${NC}"
-echo -e "${CYAN}  BuildDesk Stripe Products Setup Script${NC}"
+echo -e "${CYAN}  Brikly Stripe Products Setup Script${NC}"
 echo -e "${CYAN}============================================${NC}"
 echo ""
 
@@ -102,9 +102,9 @@ run_stripe() {
 
 # Create Starter Product
 echo ""
-echo -e "${YELLOW}Creating product: BuildDesk Starter${NC}"
+echo -e "${YELLOW}Creating product: Brikly Starter${NC}"
 STARTER_PRODUCT=$(run_stripe "products create \
-    --name='BuildDesk Starter' \
+    --name='Brikly Starter' \
     --description='Perfect for small teams (1-5 users). Includes basic job costing, mobile time tracking, QuickBooks sync, and email support.' \
     --metadata[tier]=starter" \
     "Creating Starter product")
@@ -144,9 +144,9 @@ PRICES[starter_annual]=$STARTER_ANNUAL_ID
 
 # Create Professional Product
 echo ""
-echo -e "${YELLOW}Creating product: BuildDesk Professional${NC}"
+echo -e "${YELLOW}Creating product: Brikly Professional${NC}"
 PROFESSIONAL_PRODUCT=$(run_stripe "products create \
-    --name='BuildDesk Professional' \
+    --name='Brikly Professional' \
     --description='Most popular choice for growing contractors (5-20 users). Full mobile suite, all integrations, OSHA compliance tools, and priority support.' \
     --metadata[tier]=professional" \
     "Creating Professional product")
@@ -186,9 +186,9 @@ PRICES[professional_annual]=$PROFESSIONAL_ANNUAL_ID
 
 # Create Enterprise Product
 echo ""
-echo -e "${YELLOW}Creating product: BuildDesk Enterprise${NC}"
+echo -e "${YELLOW}Creating product: Brikly Enterprise${NC}"
 ENTERPRISE_PRODUCT=$(run_stripe "products create \
-    --name='BuildDesk Enterprise' \
+    --name='Brikly Enterprise' \
     --description='For large operations (20+ users). Unlimited everything, custom integrations, white-label options, and dedicated success manager.' \
     --metadata[tier]=enterprise" \
     "Creating Enterprise product")
@@ -242,7 +242,7 @@ create_payment_link() {
         --allow-promotion-codes \
         --billing-address-collection=auto \
         --after-completion[type]=redirect \
-        --after-completion[redirect][url]='https://build-desk.com/setup?session_id={CHECKOUT_SESSION_ID}'" \
+        --after-completion[redirect][url]='https://brikly.net/setup?session_id={CHECKOUT_SESSION_ID}'" \
         "Creating payment link")
     LINK_URL=$(echo "$LINK" | jq -r '.url')
     LINK_ID=$(echo "$LINK" | jq -r '.id')

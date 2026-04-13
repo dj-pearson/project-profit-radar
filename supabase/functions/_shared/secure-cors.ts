@@ -9,10 +9,10 @@
 
 // Default allowed origins
 const DEFAULT_ALLOWED_ORIGINS = [
-  'https://build-desk.com',
-  'https://www.build-desk.com',
-  'https://builddesk.pearsonperformance.workers.dev',
-  'https://builddesk.pages.dev', // Cloudflare Pages preview
+  'https://brikly.net',
+  'https://www.brikly.net',
+  'https://brikly.pearsonperformance.workers.dev',
+  'https://brikly.pages.dev', // Cloudflare Pages preview
 ];
 
 // Parse custom origins from environment variable (for self-hosted deployments)

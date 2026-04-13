@@ -1,4 +1,4 @@
-# 🎯 High-Converting Content Strategy for BuildDesk
+# 🎯 High-Converting Content Strategy for Brikly
 
 ## Content Strategy Overview
 
@@ -93,13 +93,13 @@ This content strategy targets **high commercial intent keywords** that drive qua
 ### Content Calendar: Q1 2025 High-Converting Content
 
 #### Week 1-2: Comparison Content (Highest Priority)
-1. **"Procore vs BuildDesk: Complete 2025 Comparison"**
+1. **"Procore vs Brikly: Complete 2025 Comparison"**
    - Target: "procore alternative" (1,800 searches)
    - Length: 4,000+ words
    - Include: Feature comparison table, pricing analysis, migration guide
    - CTA: "Switch from Procore" with migration assistance offer
 
-2. **"Buildertrend Alternative: Why Contractors Choose BuildDesk"**
+2. **"Buildertrend Alternative: Why Contractors Choose Brikly"**
    - Target: "buildertrend alternative" (680 searches)  
    - Length: 3,500+ words
    - Include: Side-by-side feature comparison, customer testimonials
@@ -222,7 +222,7 @@ This content strategy targets **high commercial intent keywords** that drive qua
 
 #### Test 1: CTA Button Copy
 - **Variation A**: "Start Free Trial"
-- **Variation B**: "Try BuildDesk Free"  
+- **Variation B**: "Try Brikly Free"  
 - **Variation C**: "Get Started Free"
 - **Metric**: Click-through rate and trial conversion
 

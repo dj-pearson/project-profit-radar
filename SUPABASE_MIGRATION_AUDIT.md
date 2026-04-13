@@ -15,7 +15,7 @@ This audit identifies all remaining references to the old cloud-based Supabase i
 
 | File | Status | Notes |
 |------|--------|-------|
-| `wrangler.toml` | GOOD | Correctly points to `api.build-desk.com` and `functions.build-desk.com` |
+| `wrangler.toml` | GOOD | Correctly points to `api.brikly.net` and `functions.brikly.net` |
 | `src/integrations/supabase/client.ts` | GOOD | Uses environment variables, has proper self-hosted detection |
 | `supabase/functions/_shared/auth-helpers.ts` | GOOD | Uses `Deno.env.get('SUPABASE_URL')` |
 
@@ -43,7 +43,7 @@ These files have hardcoded references to the old Supabase storage. **Assets need
 | `src/components/ui/responsive-logo.tsx` | 78, 241, 250 | Default logo fallback URLs |
 
 **Action Required:**
-1. Upload assets to new self-hosted storage (`storage.build-desk.com` or similar)
+1. Upload assets to new self-hosted storage (`storage.brikly.net` or similar)
 2. Update all references to use environment variable or config-based URL
 
 ### Edge Functions
@@ -240,8 +240,8 @@ After completing the migration, verify:
 ## Notes
 
 1. **Environment Variables**: The self-hosted setup uses:
-   - `VITE_SUPABASE_URL` = `https://api.build-desk.com`
-   - `VITE_EDGE_FUNCTIONS_URL` = `https://functions.build-desk.com`
+   - `VITE_SUPABASE_URL` = `https://api.brikly.net`
+   - `VITE_EDGE_FUNCTIONS_URL` = `https://functions.brikly.net`
 
 2. **Storage**: Need to set up storage endpoints and migrate assets
 

@@ -8,7 +8,7 @@
 
 ## Overview
 
-This guide covers how to implement and use all the new performance, accessibility, and mobile features added to BuildDesk. All components are production-ready, fully tested, and follow WCAG 2.1 AA accessibility standards.
+This guide covers how to implement and use all the new performance, accessibility, and mobile features added to Brikly. All components are production-ready, fully tested, and follow WCAG 2.1 AA accessibility standards.
 
 ---
 

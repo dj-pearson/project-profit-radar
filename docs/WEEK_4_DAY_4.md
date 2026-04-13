@@ -21,8 +21,8 @@ npx cap add android
 import { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'com.builddesk.app',
-  appName: 'BuildDesk',
+  appId: 'com.brikly.app',
+  appName: 'Brikly',
   webDir: 'dist',
   server: {
     androidScheme: 'https',

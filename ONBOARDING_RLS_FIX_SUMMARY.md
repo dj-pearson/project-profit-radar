@@ -43,7 +43,7 @@ CREATE POLICY "Public can view active sites"
 
 **Changes**:
 - Fixed `handle_new_user()` function to insert into `user_profiles` (not `profiles`)
-- Automatically resolves `site_id` from JWT metadata or defaults to BuildDesk
+- Automatically resolves `site_id` from JWT metadata or defaults to Brikly
 - Includes `ON CONFLICT` handling for idempotency
 - Added error handling to prevent signup failures
 
@@ -53,7 +53,7 @@ CREATE POLICY "Public can view active sites"
 3. Function inserts into `user_profiles` with:
    - `id` from `auth.users.id`
    - `email` from `auth.users.email`
-   - `site_id` from JWT or defaulting to BuildDesk
+   - `site_id` from JWT or defaulting to Brikly
    - `role` defaults to 'admin'
 
 ### Migration 3: `20251203234846_fix_user_profiles_select_rls.sql`
@@ -171,7 +171,7 @@ psql <connection_string> -f scripts/test-onboarding-rls.sql
 - [ ] Migrations applied successfully
 - [ ] Test script runs without errors
 - [ ] Anonymous users can query `sites` table
-- [ ] `is_valid_site()` function returns TRUE for BuildDesk
+- [ ] `is_valid_site()` function returns TRUE for Brikly
 - [ ] `on_auth_user_created` trigger exists and is enabled
 - [ ] Companies INSERT policy allows authenticated users
 - [ ] User_profiles SELECT policy allows self-access
@@ -214,8 +214,8 @@ If rollback is needed, alternative solution:
 ## Known Edge Cases
 
 ### Case 1: User Signs Up Without site_id Metadata
-- **Handled by**: Trigger defaults to BuildDesk site
-- **Behavior**: User assigned to BuildDesk automatically
+- **Handled by**: Trigger defaults to Brikly site
+- **Behavior**: User assigned to Brikly automatically
 
 ### Case 2: Multi-Site Deployment
 - **Handled by**: Site resolution from domain in `site-resolver.ts`
@@ -285,7 +285,7 @@ If issues persist after applying these fixes:
    SET request.jwt.claim.sub = '<user_uuid>';
    
    -- Test queries
-   SELECT * FROM sites WHERE key = 'builddesk';
+   SELECT * FROM sites WHERE key = 'brikly';
    SELECT * FROM user_profiles WHERE id = '<user_uuid>';
    INSERT INTO companies (...) VALUES (...);
    ```

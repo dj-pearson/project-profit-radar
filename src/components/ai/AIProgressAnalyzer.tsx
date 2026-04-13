@@ -89,7 +89,7 @@ export const AIProgressAnalyzer: React.FC = () => {
       uploadedAt: new Date('2024-01-29T14:30:00'),
       analyzedAt: new Date('2024-01-29T14:32:00'),
       status: 'completed',
-      aiModel: 'BuildDesk Vision v2.1',
+      aiModel: 'Brikly Vision v2.1',
       confidence: 94.2,
       progressPercentage: 67.5,
       previousProgressPercentage: 62.1,

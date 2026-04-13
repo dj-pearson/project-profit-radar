@@ -513,4 +513,4 @@ With Phase 2 complete, Phase 3 will focus on:
 ---
 
 *Generated on February 2, 2025*
-*BuildDesk Conversion Optimization Project*
+*Brikly Conversion Optimization Project*

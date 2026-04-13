@@ -70,9 +70,9 @@ function isValidRedirectUrl(url: string | null | undefined, siteUrl: string): st
     // Whitelist of allowed redirect domains
     const allowedDomains = [
       parsedSiteUrl.hostname,
-      'build-desk.com',
-      'www.build-desk.com',
-      'builddesk.pearsonperformance.workers.dev',
+      'brikly.net',
+      'www.brikly.net',
+      'brikly.pearsonperformance.workers.dev',
     ];
 
     // Check if the URL's hostname is in the whitelist
@@ -188,7 +188,7 @@ serve(async (req) => {
       { auth: { persistSession: false } }
     );
 
-    const siteUrl = Deno.env.get("SITE_URL") || "https://build-desk.com";
+    const siteUrl = Deno.env.get("SITE_URL") || "https://brikly.net";
 
     // Parse callback parameters
     const url = new URL(req.url);
@@ -430,7 +430,7 @@ serve(async (req) => {
     return Response.redirect(finalRedirectUrl);
   } catch (error) {
     console.error("[OAuth] Callback error:", error);
-    const siteUrl = Deno.env.get("SITE_URL") || "https://build-desk.com";
+    const siteUrl = Deno.env.get("SITE_URL") || "https://brikly.net";
     return Response.redirect(`${siteUrl}/auth?error=oauth_callback_failed`);
   }
 });

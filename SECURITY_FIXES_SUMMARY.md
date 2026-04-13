@@ -105,10 +105,10 @@ secureLogger.error('Login failed:', { email: 'user@example.com', password: '123'
 **Changes:**
 - Created secure CORS module with origin whitelist
 - Added production domains:
-  - `https://build-desk.com`
-  - `https://www.build-desk.com`
-  - `https://builddesk.pearsonperformance.workers.dev`
-  - `https://builddesk.pages.dev`
+  - `https://brikly.net`
+  - `https://www.brikly.net`
+  - `https://brikly.pearsonperformance.workers.dev`
+  - `https://brikly.pages.dev`
 - Development localhost URLs only enabled when `ENVIRONMENT=development`
 - Implements `Vary: Origin` header for proper caching
 
@@ -561,7 +561,7 @@ serve(async (req) => {
 
 **For urgent security issues:**
 - Create GitHub security advisory
-- Email: security@build-desk.com
+- Email: security@brikly.net
 - Slack: #security channel
 
 **For questions about this audit:**

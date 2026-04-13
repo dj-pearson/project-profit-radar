@@ -1,7 +1,7 @@
 /**
  * Usability Improvements Module
  *
- * Comprehensive usability enhancements for BuildDesk platform.
+ * Comprehensive usability enhancements for Brikly platform.
  * Makes the platform more accessible, discoverable, and user-friendly
  * for contractors in the field and office staff.
  *

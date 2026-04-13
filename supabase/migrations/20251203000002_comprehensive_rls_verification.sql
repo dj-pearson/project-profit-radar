@@ -71,16 +71,16 @@ END $$;
 
 DO $$
 DECLARE
-  v_builddesk_site_id UUID;
+  v_brikly_site_id UUID;
 BEGIN
-  SELECT id INTO v_builddesk_site_id FROM sites WHERE key = 'builddesk' LIMIT 1;
+  SELECT id INTO v_brikly_site_id FROM sites WHERE key = 'brikly' LIMIT 1;
 
-  IF v_builddesk_site_id IS NOT NULL THEN
-    UPDATE api_keys SET site_id = v_builddesk_site_id WHERE site_id IS NULL;
-    UPDATE webhook_endpoints SET site_id = v_builddesk_site_id WHERE site_id IS NULL;
-    UPDATE integration_configurations SET site_id = v_builddesk_site_id WHERE site_id IS NULL;
-    UPDATE api_request_logs SET site_id = v_builddesk_site_id WHERE site_id IS NULL;
-    UPDATE webhook_delivery_logs SET site_id = v_builddesk_site_id WHERE site_id IS NULL;
+  IF v_brikly_site_id IS NOT NULL THEN
+    UPDATE api_keys SET site_id = v_brikly_site_id WHERE site_id IS NULL;
+    UPDATE webhook_endpoints SET site_id = v_brikly_site_id WHERE site_id IS NULL;
+    UPDATE integration_configurations SET site_id = v_brikly_site_id WHERE site_id IS NULL;
+    UPDATE api_request_logs SET site_id = v_brikly_site_id WHERE site_id IS NULL;
+    UPDATE webhook_delivery_logs SET site_id = v_brikly_site_id WHERE site_id IS NULL;
 
     RAISE NOTICE 'Backfilled site_id for API and integration tables';
   END IF;
@@ -328,9 +328,9 @@ DECLARE
     'mfa_configurations', 'permission_grants', 'compliance_reports'
   ];
   v_table TEXT;
-  v_builddesk_site_id UUID;
+  v_brikly_site_id UUID;
 BEGIN
-  SELECT id INTO v_builddesk_site_id FROM sites WHERE key = 'builddesk' LIMIT 1;
+  SELECT id INTO v_brikly_site_id FROM sites WHERE key = 'brikly' LIMIT 1;
 
   FOREACH v_table IN ARRAY v_tables_to_update LOOP
     -- Check if table exists
@@ -342,8 +342,8 @@ BEGIN
       END IF;
 
       -- Backfill site_id
-      IF v_builddesk_site_id IS NOT NULL THEN
-        EXECUTE format('UPDATE %I SET site_id = $1 WHERE site_id IS NULL', v_table) USING v_builddesk_site_id;
+      IF v_brikly_site_id IS NOT NULL THEN
+        EXECUTE format('UPDATE %I SET site_id = $1 WHERE site_id IS NULL', v_table) USING v_brikly_site_id;
       END IF;
 
       -- Create index if not exists

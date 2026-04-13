@@ -23,20 +23,20 @@ SELECT
 FROM user_profiles
 WHERE id = auth.uid();
 
--- Step 3: Get BuildDesk site_id (what frontend gets from AuthContext)
+-- Step 3: Get Brikly site_id (what frontend gets from AuthContext)
 SELECT 
-  '=== STEP 3: BuildDesk Site ID ===' as step,
+  '=== STEP 3: Brikly Site ID ===' as step,
   id as site_id,
   key,
   domain,
   is_active
 FROM sites
-WHERE key = 'builddesk';
+WHERE key = 'brikly';
 
--- Step 4: Test is_valid_site with BuildDesk site_id
+-- Step 4: Test is_valid_site with Brikly site_id
 SELECT 
   '=== STEP 4: Test is_valid_site() ===' as step,
-  public.is_valid_site((SELECT id FROM sites WHERE key = 'builddesk')) as is_valid;
+  public.is_valid_site((SELECT id FROM sites WHERE key = 'brikly')) as is_valid;
 
 -- Step 5: Show the WITH CHECK condition details
 SELECT 
@@ -63,7 +63,7 @@ BEGIN
   
   -- Get context
   v_user_id := auth.uid();
-  v_site_id := (SELECT id FROM sites WHERE key = 'builddesk');
+  v_site_id := (SELECT id FROM sites WHERE key = 'brikly');
   v_site_valid := public.is_valid_site(v_site_id);
   
   RAISE NOTICE 'User ID: %', v_user_id;
@@ -77,7 +77,7 @@ BEGIN
   END IF;
   
   IF v_site_id IS NULL THEN
-    RAISE NOTICE '✗ ERROR: BuildDesk site not found!';
+    RAISE NOTICE '✗ ERROR: Brikly site not found!';
     RETURN;
   END IF;
   

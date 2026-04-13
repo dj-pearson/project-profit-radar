@@ -260,7 +260,7 @@ export const IntegrationMarketplace = () => {
         <div>
           <h1 className="text-3xl font-bold text-construction-dark">Integration Marketplace</h1>
           <p className="text-muted-foreground">
-            Connect BuildDesk with your favorite tools and apps
+            Connect Brikly with your favorite tools and apps
           </p>
         </div>
 

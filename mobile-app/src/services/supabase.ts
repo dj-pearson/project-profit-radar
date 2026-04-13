@@ -12,7 +12,7 @@ if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
   throw new Error(
     'Missing Supabase configuration. Please set EXPO_PUBLIC_SUPABASE_URL and EXPO_PUBLIC_SUPABASE_ANON_KEY environment variables.\n' +
     'For self-hosted setup:\n' +
-    '  EXPO_PUBLIC_SUPABASE_URL=https://api.build-desk.com\n' +
+    '  EXPO_PUBLIC_SUPABASE_URL=https://api.brikly.net\n' +
     '  EXPO_PUBLIC_SUPABASE_ANON_KEY=your-anon-key'
   );
 }

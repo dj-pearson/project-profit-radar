@@ -128,7 +128,7 @@ export const QuickTimeEntry = ({ onEntryCreated }: QuickTimeEntryProps) => {
               `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=18`,
               {
                 headers: {
-                  'User-Agent': 'BuildDesk Construction Management App'
+                  'User-Agent': 'Brikly Construction Management App'
                 }
               }
             );

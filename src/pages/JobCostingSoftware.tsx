@@ -34,7 +34,7 @@ const JobCostingSoftware = () => {
   return (
     <>
       <SEOMetaTags
-        title="Job Costing Software for Construction - Real-Time Cost Tracking | BuildDesk"
+        title="Job Costing Software for Construction - Real-Time Cost Tracking | Brikly"
         description="Advanced job costing software for construction contractors. Real-time cost tracking, profitability analysis, budget alerts, and comprehensive reporting. 14-day free trial."
         keywords={['job costing software', 'construction job costing', 'project cost tracking', 'construction profitability', 'budget tracking software', 'construction cost management']}
         canonicalUrl="/job-costing-software"

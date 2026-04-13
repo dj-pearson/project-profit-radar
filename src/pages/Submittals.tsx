@@ -388,7 +388,7 @@ const Submittals = () => {
     <RoleGuard allowedRoles={ROLE_GROUPS.PROJECT_VIEWERS}>
       <DashboardLayout title="Submittals">
         <Helmet>
-        <title>Submittals Tracker – Approvals & Accountability | BuildDesk</title>
+        <title>Submittals Tracker – Approvals & Accountability | Brikly</title>
         <meta name="description" content="Manage submittals with formal approvals, due dates, and review history for full accountability." />
         <link rel="canonical" href="/submittals" />
       </Helmet>

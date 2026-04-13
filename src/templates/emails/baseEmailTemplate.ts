@@ -15,13 +15,13 @@ export interface EmailTemplateProps {
 }
 
 export const baseEmailTemplate = ({
-  previewText = 'BuildDesk - Construction Management Made Simple',
+  previewText = 'Brikly - Construction Management Made Simple',
   headline,
   subheadline,
   bodyContent,
   ctaText,
   ctaUrl,
-  footerText = 'BuildDesk - Construction Management Software',
+  footerText = 'Brikly - Construction Management Software',
   unsubscribeUrl = '{{unsubscribe_url}}',
 }: EmailTemplateProps): string => {
   return `
@@ -104,7 +104,7 @@ export const baseEmailTemplate = ({
           <!-- Header -->
           <tr>
             <td style="padding: 40px 40px 0; text-align: center; background: linear-gradient(135deg, #FEF3C7 0%, #FFFFFF 100%);">
-              <img src="https://build-desk.com/logo.png" alt="BuildDesk" width="150" style="max-width: 150px; height: auto; margin-bottom: 20px;" />
+              <img src="https://brikly.net/logo.png" alt="Brikly" width="150" style="max-width: 150px; height: auto; margin-bottom: 20px;" />
             </td>
           </tr>
 
@@ -154,11 +154,11 @@ export const baseEmailTemplate = ({
                 ${footerText}
               </p>
               <p style="margin: 0 0 8px; color: #9CA3AF; font-size: 12px;">
-                Questions? Reply to this email or visit our <a href="https://build-desk.com/support" style="color: #F97316;">Help Center</a>
+                Questions? Reply to this email or visit our <a href="https://brikly.net/support" style="color: #F97316;">Help Center</a>
               </p>
               <p style="margin: 0; color: #9CA3AF; font-size: 12px;">
                 <a href="${unsubscribeUrl}" style="color: #9CA3AF; text-decoration: underline;">Unsubscribe</a> |
-                <a href="https://build-desk.com/privacy" style="color: #9CA3AF; text-decoration: underline;">Privacy Policy</a>
+                <a href="https://brikly.net/privacy" style="color: #9CA3AF; text-decoration: underline;">Privacy Policy</a>
               </p>
             </td>
           </tr>
@@ -170,7 +170,7 @@ export const baseEmailTemplate = ({
           <tr>
             <td style="padding: 20px; text-align: center; color: #9CA3AF; font-size: 12px;">
               <p style="margin: 0;">
-                © ${new Date().getFullYear()} BuildDesk. All rights reserved.
+                © ${new Date().getFullYear()} Brikly. All rights reserved.
               </p>
             </td>
           </tr>

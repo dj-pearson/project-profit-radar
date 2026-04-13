@@ -148,7 +148,7 @@ export class ErrorBoundary extends Component<Props, State> {
                   <a href="/help" className="text-blue-600 hover:underline">
                     contact support
                   </a>
-                  {' '}or email us at support@builddesk.com
+                  {' '}or email us at support@brikly.com
                 </p>
               </div>
             </CardContent>

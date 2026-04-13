@@ -1,7 +1,7 @@
 import XCTest
-@testable import BuildDesk
+@testable import Brikly
 
-final class BuildDeskTests: XCTestCase {
+final class BriklyTests: XCTestCase {
     func testCurrencyFormatterFull() {
         XCTAssertEqual(CurrencyFormatter.format(1234.56), "$1,234.56")
         XCTAssertEqual(CurrencyFormatter.format(0), "$0")

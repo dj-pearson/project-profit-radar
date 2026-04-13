@@ -12,10 +12,10 @@
 // =============================================================================
 
 const DEFAULT_ALLOWED_ORIGINS = [
-  'https://build-desk.com',
-  'https://www.build-desk.com',
-  'https://builddesk.pearsonperformance.workers.dev',
-  'https://builddesk.pages.dev',
+  'https://brikly.net',
+  'https://www.brikly.net',
+  'https://brikly.pearsonperformance.workers.dev',
+  'https://brikly.pages.dev',
 ];
 
 // Parse custom origins from environment variable (for self-hosted deployments)

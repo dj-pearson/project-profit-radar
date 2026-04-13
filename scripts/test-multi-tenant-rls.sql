@@ -17,10 +17,10 @@ SELECT
   is_active,
   is_production
 FROM sites 
-WHERE key IN ('builddesk', 'stylist')
+WHERE key IN ('brikly', 'stylist')
 ORDER BY key;
 
--- Expected: Should show both BuildDesk and Stylist sites
+-- Expected: Should show both Brikly and Stylist sites
 
 
 -- TEST 2: Verify site_id columns exist on core tables
@@ -154,7 +154,7 @@ WITH site_data AS (
 SELECT * FROM site_data
 ORDER BY site_key;
 
--- Expected: BuildDesk should have data, Stylist should have 0 (new site)
+-- Expected: Brikly should have data, Stylist should have 0 (new site)
 
 
 -- TEST 9: Verify Stylist-specific tables have site_id
@@ -242,14 +242,14 @@ LIMIT 5;
 -- SUMMARY OF EXPECTED RESULTS
 -- =====================================================
 -- 
--- ✅ TEST 1: Both BuildDesk and Stylist sites should exist
+-- ✅ TEST 1: Both Brikly and Stylist sites should exist
 -- ✅ TEST 2: All major tables should have site_id column
 -- ✅ TEST 3: RLS should be enabled on all tenant tables
 -- ✅ TEST 4: current_site_id() helper function should exist
 -- ✅ TEST 5: Companies policies should filter by site_id
 -- ✅ TEST 6: User profiles policies should enforce site isolation
 -- ✅ TEST 7: Performance indexes should exist on site_id
--- ✅ TEST 8: BuildDesk should have data, Stylist should be empty
+-- ✅ TEST 8: Brikly should have data, Stylist should be empty
 -- ✅ TEST 9: Stylist tables should have site_id
 -- ✅ TEST 10: Leads table should have site isolation RLS
 -- ✅ TEST 11: SEO tables should have site_id

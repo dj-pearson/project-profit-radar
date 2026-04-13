@@ -220,7 +220,7 @@ const ScheduleBuilder = () => {
           "@context": "https://schema.org",
           "@type": "WebApplication",
           "name": "Free Construction Schedule Builder",
-          "url": "https://build-desk.com/tools/schedule-builder",
+          "url": "https://brikly.net/tools/schedule-builder",
           "description": "Free construction schedule builder with project templates, Gantt charts, and PDF export. Create professional construction timelines for residential and commercial projects.",
           "applicationCategory": "BusinessApplication",
           "operatingSystem": "Web Browser",
@@ -239,13 +239,13 @@ const ScheduleBuilder = () => {
           ],
           "provider": {
             "@type": "Organization",
-            "name": "Build-Desk",
-            "url": "https://build-desk.com"
+            "name": "Brikly",
+            "url": "https://brikly.net"
           }
         })}
       </script>
       <SEOMetaTags
-        title="Free Construction Schedule Builder | Project Timeline Templates | Gantt Chart Maker | Build-Desk"
+        title="Free Construction Schedule Builder | Project Timeline Templates | Gantt Chart Maker | Brikly"
         description="Free construction schedule builder with 6 project templates. Create professional Gantt charts, analyze critical paths, and export PDF timelines. Used by 10,000+ contractors nationwide for residential, commercial, and renovation projects."
         keywords={[
           'construction schedule builder',
@@ -743,7 +743,7 @@ const ScheduleBuilder = () => {
                 Ready for Advanced Construction Project Management?
               </h2>
               <p className="text-lg mb-8 opacity-90">
-                This free construction schedule builder is just the beginning. Build-Desk offers real-time progress tracking, 
+                This free construction schedule builder is just the beginning. Brikly offers real-time progress tracking, 
                 cost management, team collaboration, and automated reporting for your entire construction operation.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">

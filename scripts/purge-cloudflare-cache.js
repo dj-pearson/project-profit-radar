@@ -10,7 +10,7 @@ const https = require('https');
 // Configuration
 const ZONE_ID = process.env.CLOUDFLARE_ZONE_ID;
 const API_TOKEN = process.env.CLOUDFLARE_API_TOKEN;
-const DOMAIN = 'build-desk.com';
+const DOMAIN = 'brikly.net';
 
 if (!ZONE_ID || !API_TOKEN) {
   console.error('❌ Missing environment variables!');

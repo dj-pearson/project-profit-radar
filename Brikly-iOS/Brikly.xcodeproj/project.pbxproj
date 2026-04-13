@@ -7,7 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		AA000001 /* BuildDeskApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000001; };
+		AA000001 /* BriklyApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000001; };
 		AA000002 /* AppConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000002; };
 		AA000003 /* SupabaseService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000003; };
 		AA000004 /* DateDecoding.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000004; };
@@ -63,7 +63,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		AB000001 /* BuildDeskApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BuildDeskApp.swift; sourceTree = "<group>"; };
+		AB000001 /* BriklyApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BriklyApp.swift; sourceTree = "<group>"; };
 		AB000002 /* AppConfiguration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppConfiguration.swift; sourceTree = "<group>"; };
 		AB000003 /* SupabaseService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SupabaseService.swift; sourceTree = "<group>"; };
 		AB000004 /* DateDecoding.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DateDecoding.swift; sourceTree = "<group>"; };
@@ -118,8 +118,8 @@
 		AB000053 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		AB000054 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		AB000055 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
-		AB000056 /* BuildDesk.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = BuildDesk.entitlements; sourceTree = "<group>"; };
-		AB000099 /* BuildDesk.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = BuildDesk.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		AB000056 /* Brikly.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Brikly.entitlements; sourceTree = "<group>"; };
+		AB000099 /* Brikly.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Brikly.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -136,7 +136,7 @@
 		AD000001 = {
 			isa = PBXGroup;
 			children = (
-				AD000002 /* BuildDesk */,
+				AD000002 /* Brikly */,
 				AD000098 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -144,18 +144,18 @@
 		AD000098 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				AB000099 /* BuildDesk.app */,
+				AB000099 /* Brikly.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
 		};
-		AD000002 /* BuildDesk */ = {
+		AD000002 /* Brikly */ = {
 			isa = PBXGroup;
 			children = (
-				AB000001 /* BuildDeskApp.swift */,
+				AB000001 /* BriklyApp.swift */,
 				AB000054 /* Info.plist */,
 				AB000055 /* PrivacyInfo.xcprivacy */,
-				AB000056 /* BuildDesk.entitlements */,
+				AB000056 /* Brikly.entitlements */,
 				AB000053 /* Assets.xcassets */,
 				AD000003 /* Configuration */,
 				AD000004 /* Models */,
@@ -165,7 +165,7 @@
 				AD000014 /* Utilities */,
 				AD000015 /* Extensions */,
 			);
-			path = BuildDesk;
+			path = Brikly;
 			sourceTree = "<group>";
 		};
 		AD000003 /* Configuration */ = {
@@ -343,9 +343,9 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		AE000001 /* BuildDesk */ = {
+		AE000001 /* Brikly */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = AF000003 /* Build configuration list for PBXNativeTarget "BuildDesk" */;
+			buildConfigurationList = AF000003 /* Build configuration list for PBXNativeTarget "Brikly" */;
 			buildPhases = (
 				AE000002 /* Sources */,
 				AC000001 /* Frameworks */,
@@ -355,12 +355,12 @@
 			);
 			dependencies = (
 			);
-			name = BuildDesk;
+			name = Brikly;
 			packageProductDependencies = (
 				BA000001 /* Supabase */,
 			);
-			productName = BuildDesk;
-			productReference = AB000099 /* BuildDesk.app */;
+			productName = Brikly;
+			productReference = AB000099 /* Brikly.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -378,7 +378,7 @@
 					};
 				};
 			};
-			buildConfigurationList = AF000001 /* Build configuration list for PBXProject "BuildDesk" */;
+			buildConfigurationList = AF000001 /* Build configuration list for PBXProject "Brikly" */;
 			compatibilityVersion = "Xcode 14.0";
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
@@ -394,7 +394,7 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				AE000001 /* BuildDesk */,
+				AE000001 /* Brikly */,
 			);
 		};
 /* End PBXProject section */
@@ -415,7 +415,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				AA000001 /* BuildDeskApp.swift in Sources */,
+				AA000001 /* BriklyApp.swift in Sources */,
 				AA000002 /* AppConfiguration.swift in Sources */,
 				AA000003 /* SupabaseService.swift in Sources */,
 				AA000004 /* DateDecoding.swift in Sources */,
@@ -599,14 +599,14 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_ENTITLEMENTS = BuildDesk/BuildDesk.entitlements;
+				CODE_SIGN_ENTITLEMENTS = Brikly/Brikly.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = "";
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = NO;
-				INFOPLIST_FILE = BuildDesk/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = BuildDesk;
+				INFOPLIST_FILE = Brikly/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = Brikly;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -617,7 +617,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.builddesk.app;
+				PRODUCT_BUNDLE_IDENTIFIER = com.brikly.app;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_STRICT_CONCURRENCY = complete;
@@ -631,14 +631,14 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_ENTITLEMENTS = BuildDesk/BuildDesk.entitlements;
+				CODE_SIGN_ENTITLEMENTS = Brikly/Brikly.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = "";
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = NO;
-				INFOPLIST_FILE = BuildDesk/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = BuildDesk;
+				INFOPLIST_FILE = Brikly/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = Brikly;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -649,7 +649,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.builddesk.app;
+				PRODUCT_BUNDLE_IDENTIFIER = com.brikly.app;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_STRICT_CONCURRENCY = complete;
@@ -661,7 +661,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		AF000001 /* Build configuration list for PBXProject "BuildDesk" */ = {
+		AF000001 /* Build configuration list for PBXProject "Brikly" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				AF000010 /* Debug */,
@@ -670,7 +670,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		AF000003 /* Build configuration list for PBXNativeTarget "BuildDesk" */ = {
+		AF000003 /* Build configuration list for PBXNativeTarget "Brikly" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				AF000020 /* Debug */,

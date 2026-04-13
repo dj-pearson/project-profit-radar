@@ -1,10 +1,10 @@
-# 🎉 BuildDesk EAS Build Configuration - COMPLETE!
+# 🎉 Brikly EAS Build Configuration - COMPLETE!
 
 ## ✅ **What We've Configured**
 
 ### **1. App Configuration (`app.config.js`)**
-- ✅ **Bundle ID**: `com.builddesk.app` (matches Apple Developer)
-- ✅ **iOS Scheme**: `builddesk`
+- ✅ **Bundle ID**: `com.brikly.app` (matches Apple Developer)
+- ✅ **iOS Scheme**: `brikly`
 - ✅ **EAS Updates**: Configured with project ID
 - ✅ **Runtime Version**: Set to app version policy
 - ✅ **All Permissions**: Camera, location, notifications, etc.
@@ -26,7 +26,7 @@
 - ✅ **Compatible**: Works with EAS Build
 
 ### **5. Apple Developer Setup**
-- ✅ **App ID Registered**: `com.builddesk.app`
+- ✅ **App ID Registered**: `com.brikly.app`
 - ✅ **Capabilities Enabled**: Background modes, push notifications, location, camera
 - ✅ **Team ID**: 4G65K64G73
 
@@ -102,7 +102,7 @@ eas build --platform ios --profile production
 - Verify your account has developer access
 
 #### **"Bundle ID mismatch"**
-- Ensure `com.builddesk.app` is registered in Apple Developer
+- Ensure `com.brikly.app` is registered in Apple Developer
 - Check that it matches in `app.config.js` (line 19)
 
 #### **"Provisioning profile error"**
@@ -135,13 +135,13 @@ eas build --platform ios --profile production
 ## 🎯 **Quick Reference**
 
 ### **Your App Details:**
-- **App Name**: BuildDesk
-- **Bundle ID**: com.builddesk.app
+- **App Name**: Brikly
+- **Bundle ID**: com.brikly.app
 - **Team ID**: 4G65K64G73
 - **EAS Project ID**: e9733a8e-5df1-4d6e-9c1f-c13774542b16
 
 ### **Important URLs:**
-- **EAS Dashboard**: https://expo.dev/@djpearson/build-desk-2rirxbgg70kpf2ce6py3e
+- **EAS Dashboard**: https://expo.dev/@djpearson/brikly-2rirxbgg70kpf2ce6py3e
 - **Apple Developer**: https://developer.apple.com/account
 - **App Store Connect**: https://appstoreconnect.apple.com
 
@@ -176,4 +176,4 @@ eas build --platform ios --profile production
 
 And follow the prompts to authenticate with Apple. EAS will handle everything else automatically!
 
-Your BuildDesk mobile app will be ready for the App Store! 🚀📱
+Your Brikly mobile app will be ready for the App Store! 🚀📱

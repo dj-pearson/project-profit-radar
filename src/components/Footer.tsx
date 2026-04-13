@@ -17,7 +17,7 @@ const Footer = () => {
     { name: "Solutions", href: "/solutions" },
     { name: "FAQ", href: "/faq" },
     { name: "Blog", href: "/blog" },
-    { name: "Contact", href: "mailto:support@build-desk.com" },
+    { name: "Contact", href: "mailto:support@brikly.net" },
   ];
 
   const productLinks = [
@@ -92,7 +92,7 @@ const Footer = () => {
               <div className="space-y-3 text-sm">
                 <div className="flex items-center gap-2 text-white/80">
                   <Mail className="h-4 w-4" />
-                  support@build-desk.com
+                  support@brikly.net
                 </div>
                 <div className="flex items-center gap-2 text-white/80">
                   <MapPin className="h-4 w-4" />
@@ -209,7 +209,7 @@ const Footer = () => {
         <div className="py-8 border-t border-white/20">
             <div className="flex flex-col md:flex-row justify-between items-center gap-4">
               <div className="text-white/80 text-sm">
-                © {new Date().getFullYear()} Build Desk. All rights reserved. | <Link to="/privacy-policy" className="hover:text-construction-orange transition-colors">Privacy Policy</Link>
+                © {new Date().getFullYear()} Brikly. All rights reserved. | <Link to="/privacy-policy" className="hover:text-construction-orange transition-colors">Privacy Policy</Link>
               </div>
               <div className="flex items-center gap-6">
                 <div className="flex items-center gap-4">

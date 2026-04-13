@@ -19,9 +19,9 @@ const corsHeaders = {
 };
 
 // Configuration from environment variables
-const FRONTEND_URL = Deno.env.get('FRONTEND_URL') || 'https://build-desk.com';
-const FUNCTIONS_URL = Deno.env.get('FUNCTIONS_URL') || 'https://functions.build-desk.com';
-const SUPABASE_URL = Deno.env.get('SUPABASE_URL') || 'https://api.build-desk.com';
+const FRONTEND_URL = Deno.env.get('FRONTEND_URL') || 'https://brikly.net';
+const FUNCTIONS_URL = Deno.env.get('FUNCTIONS_URL') || 'https://functions.brikly.net';
+const SUPABASE_URL = Deno.env.get('SUPABASE_URL') || 'https://api.brikly.net';
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '';
 const GOOGLE_CLIENT_ID = Deno.env.get('GOOGLE_CLIENT_ID') || '';
 const GOOGLE_CLIENT_SECRET = Deno.env.get('GOOGLE_CLIENT_SECRET') || '';

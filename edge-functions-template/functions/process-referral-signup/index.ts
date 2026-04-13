@@ -1,6 +1,6 @@
 // Process Referral Signup Edge Function
 // Updated with multi-tenant site_id isolation
-// Note: Site_id is determined from X-Site-Key header or default to BuildDesk
+// Note: Site_id is determined from X-Site-Key header or default to Brikly
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.3";
 
@@ -9,8 +9,8 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-site-key',
 };
 
-// Default site key for BuildDesk
-const DEFAULT_SITE_KEY = 'builddesk';
+// Default site key for Brikly
+const DEFAULT_SITE_KEY = 'brikly';
 
 const logStep = (step: string, details?: any) => {
   const detailsStr = details ? ` - ${JSON.stringify(details)}` : '';
@@ -31,7 +31,7 @@ serve(async (req) => {
   try {
     logStep("Function started");
 
-    // Get site_id from header or default to BuildDesk
+    // Get site_id from header or default to Brikly
     const siteKey = req.headers.get("x-site-key") || DEFAULT_SITE_KEY;
     const { data: siteData } = await supabaseClient
       .from('sites')

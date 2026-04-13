@@ -1,6 +1,6 @@
 # Technology Stack
 
-This document outlines the technology stack used in the BuildDesk platform.
+This document outlines the technology stack used in the Brikly platform.
 
 ## Frontend
 

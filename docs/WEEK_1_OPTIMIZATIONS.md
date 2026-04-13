@@ -43,7 +43,7 @@
 **Findings**:
 1. **No local image files detected** in `public/` or `src/assets/`
 2. **External images** mostly from Supabase Storage:
-   - `BuildDeskLogo.png` - Main logo
+   - `BriklyLogo.png` - Main logo
    - Various construction photos in storage buckets
 3. **Placeholder references** in code (don't exist yet):
    - `/logos/*.png` (6 client logos)
@@ -54,7 +54,7 @@
 
 #### A. Optimize External Supabase Images
 ```bash
-# 1. Download BuildDeskLogo.png from Supabase
+# 1. Download BriklyLogo.png from Supabase
 # 2. Compress and convert to WebP
 # 3. Upload optimized version back to Supabase
 # 4. Use Supabase image transformations for responsive sizes
@@ -63,10 +63,10 @@
 **Supabase Image Transformation API**:
 ```typescript
 // Before (no optimization)
-const url = 'https://...supabase.co/storage/v1/object/public/site-assets/BuildDeskLogo.png';
+const url = 'https://...supabase.co/storage/v1/object/public/site-assets/BriklyLogo.png';
 
 // After (with optimization)
-const url = 'https://...supabase.co/storage/v1/object/public/site-assets/BuildDeskLogo.png?width=400&quality=80';
+const url = 'https://...supabase.co/storage/v1/object/public/site-assets/BriklyLogo.png?width=400&quality=80';
 ```
 
 #### B. Create Responsive Image Component

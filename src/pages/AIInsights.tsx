@@ -88,7 +88,7 @@ export const AIInsights = () => {
           type: 'recommendation',
           category: 'feature_adoption',
           title: 'Increase feature adoption to boost productivity',
-          description: "You're only using 40% of BuildDesk features. Enabling time tracking and automated workflows could save you 10+ hours per week.",
+          description: "You're only using 40% of Brikly features. Enabling time tracking and automated workflows could save you 10+ hours per week.",
           impact: 'high',
           confidence: 85,
           action_items: [

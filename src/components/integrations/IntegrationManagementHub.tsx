@@ -213,7 +213,7 @@ export const IntegrationManagementHub: React.FC = () => {
     {
       id: 'w3',
       name: 'Financial Data Export',
-      url: 'https://accounting.company.com/api/builddesk/import',
+      url: 'https://accounting.company.com/api/brikly/import',
       events: ['invoice.created', 'payment.received', 'expense.recorded'],
       status: 'failed',
       lastTriggered: new Date('2024-01-28T14:20:00'),

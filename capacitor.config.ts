@@ -1,19 +1,19 @@
 import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'com.builddesk.app',
-  appName: 'BuildDesk',
+  appId: 'com.brikly.app',
+  appName: 'Brikly',
   webDir: 'dist-mobile',
   server: {
     androidScheme: 'https',
     iosScheme: 'https',
-    hostname: 'app.build-desk.com',
+    hostname: 'app.brikly.net',
     // Allow navigation to Supabase auth and OAuth callback domains
     allowNavigation: [
-      'api.build-desk.com',
-      'app.build-desk.com',
-      'functions.build-desk.com',
-      '*.build-desk.com',
+      'api.brikly.net',
+      'app.brikly.net',
+      'functions.brikly.net',
+      '*.brikly.net',
       '*.supabase.co',
       'accounts.google.com',
       'appleid.apple.com',
@@ -43,10 +43,10 @@ const config: CapacitorConfig = {
     },
     Geolocation: {},
     BiometricAuth: {
-      faceIDReason: 'BuildDesk uses Face ID for secure, quick access to your account',
-      title: 'BuildDesk Authentication',
+      faceIDReason: 'Brikly uses Face ID for secure, quick access to your account',
+      title: 'Brikly Authentication',
       subtitle: 'Log in with your biometric',
-      description: 'Use your fingerprint or face to securely access BuildDesk',
+      description: 'Use your fingerprint or face to securely access Brikly',
       negativeButtonText: 'Use Password',
       allowDeviceCredential: true,
       confirmationRequired: true,

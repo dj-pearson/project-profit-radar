@@ -45,7 +45,7 @@ interface OnboardingWizardProps {
   onComplete?: () => void;
 }
 
-const ONBOARDING_PROGRESS_KEY = 'builddesk_onboarding_progress';
+const ONBOARDING_PROGRESS_KEY = 'brikly_onboarding_progress';
 
 export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ onComplete }) => {
   const { toast } = useToast();
@@ -84,7 +84,7 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ onComplete }
   const getStepTitle = () => {
     switch (currentStep) {
       case 1:
-        return 'Welcome to BuildDesk';
+        return 'Welcome to Brikly';
       case 2:
         return 'Company Setup';
       case 3:
@@ -105,7 +105,7 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ onComplete }
       case 3:
         return 'Optional: Start with a project to track';
       case 4:
-        return 'See what BuildDesk can do for your business';
+        return 'See what Brikly can do for your business';
       default:
         return '';
     }
@@ -229,7 +229,7 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ onComplete }
 
       toast({
         title: 'Setup Complete!',
-        description: 'Your BuildDesk account is ready to use',
+        description: 'Your Brikly account is ready to use',
       });
 
       onComplete?.();
@@ -254,7 +254,7 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ onComplete }
               <Rocket className="h-10 w-10 text-blue-600" />
             </div>
             <div>
-              <h1 className="text-3xl font-bold mb-3">Welcome to BuildDesk!</h1>
+              <h1 className="text-3xl font-bold mb-3">Welcome to Brikly!</h1>
               <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
                 The all-in-one construction management platform built for small to medium-sized businesses.
               </p>
@@ -419,7 +419,7 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ onComplete }
             <div className="text-center mb-6">
               <Sparkles className="h-12 w-12 text-blue-600 mx-auto mb-3" />
               <h2 className="text-2xl font-bold">Here's what you can do</h2>
-              <p className="text-muted-foreground mt-2">Explore the key features of BuildDesk</p>
+              <p className="text-muted-foreground mt-2">Explore the key features of Brikly</p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

@@ -1,4 +1,4 @@
-# Build-Desk.com Feature Development Checklist
+# Brikly.com Feature Development Checklist
 
 _Based on comprehensive market research of 200+ construction management platform features_
 

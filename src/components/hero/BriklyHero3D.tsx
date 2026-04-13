@@ -44,7 +44,7 @@ function ConstructionBlocks({ progress }: { progress: number }) {
   const count = 3000; 
   const gridSize = Math.ceil(Math.pow(count, 1/3));
 
-  // BuildDesk brand colors
+  // Brikly brand colors
   const colors = useMemo(() => [
     new THREE.Color('#1A2332'), // Navy
     new THREE.Color('#516170'), // Steel gray
@@ -202,7 +202,7 @@ function HeroContent({ progress, setProgress }: { progress: number, setProgress:
                 </span>
               </h1>
               <p className="text-xl sm:text-2xl text-slate-300 mb-8 leading-relaxed">
-                BuildDesk gives you live financial intelligence on every project.
+                Brikly gives you live financial intelligence on every project.
                 Know your margins before the invoice hits.
               </p>
 
@@ -282,7 +282,7 @@ function HeroContent({ progress, setProgress }: { progress: number, setProgress:
 }
 
 // Main Hero Component
-export default function BuildDeskHero3D() {
+export default function BriklyHero3D() {
   const [hasWebGL, setHasWebGL] = useState(true);
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
   const [isMobile, setIsMobile] = useState(false);

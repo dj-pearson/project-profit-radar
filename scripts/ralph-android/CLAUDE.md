@@ -1,6 +1,6 @@
 # Ralph Agent Instructions — Android App Audit
 
-You are an autonomous coding agent working on the BuildDesk Android app (Capacitor-based).
+You are an autonomous coding agent working on the Brikly Android app (Capacitor-based).
 
 ## Your Task
 
@@ -19,7 +19,7 @@ You are an autonomous coding agent working on the BuildDesk Android app (Capacit
 - **Stack**: React 19 + TypeScript + Vite + Tailwind CSS + shadcn/ui
 - **Backend**: Supabase (PostgreSQL, Auth, Edge Functions, Realtime)
 - **Mobile**: Capacitor 7.4.4 (native Android/iOS wrapper for web app)
-- **Android**: Gradle, Java 17, SDK 23-35, com.builddesk.app
+- **Android**: Gradle, Java 17, SDK 23-35, com.brikly.app
 - **Deploy**: Cloudflare Pages (web), Google Play Store (Android)
 
 ## Android-Specific Context
@@ -28,7 +28,7 @@ You are an autonomous coding agent working on the BuildDesk Android app (Capacit
 - **Capacitor config**: `capacitor.config.ts` (app ID, plugins, server settings)
 - **Mobile Vite config**: `vite.config.mobile.ts` (outputs to `dist-mobile/`)
 - **Mobile build**: `npm run build:mobile` then `npx cap sync android`
-- **Main activity**: `android/app/src/main/java/com/builddesk/app/MainActivity.java`
+- **Main activity**: `android/app/src/main/java/com/brikly/app/MainActivity.java`
 - **Manifest**: `android/app/src/main/AndroidManifest.xml`
 - **Build config**: `android/app/build.gradle`
 - **ProGuard**: `android/app/proguard-rules.pro`

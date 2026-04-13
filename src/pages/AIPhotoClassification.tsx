@@ -247,7 +247,7 @@ const AIPhotoClassification = () => {
             <CardContent className="space-y-2 text-sm">
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Model</span>
-                <span>BuildDesk Vision v2.1</span>
+                <span>Brikly Vision v2.1</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Accuracy</span>

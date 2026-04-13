@@ -101,14 +101,14 @@ interface IntegrationSettings {
 export const SystemSettings: React.FC = () => {
   const [companySettings, setCompanySettings] = useState<CompanySettings>({
     id: '1',
-    companyName: 'BuildDesk Construction',
+    companyName: 'Brikly Construction',
     address: '123 Construction Ave',
     city: 'San Francisco',
     state: 'CA',
     zipCode: '94105',
     phone: '(555) 123-4567',
-    email: 'info@builddesk.com',
-    website: 'https://builddesk.com',
+    email: 'info@brikly.com',
+    website: 'https://brikly.com',
     licenseNumber: 'CA-CON-123456',
     insuranceNumber: 'INS-987654321',
     taxId: '12-3456789',
@@ -173,12 +173,12 @@ export const SystemSettings: React.FC = () => {
       provider: 'smtp',
       host: 'smtp.gmail.com',
       port: 587,
-      username: 'builddesk@gmail.com',
-      fromAddress: 'noreply@builddesk.com'
+      username: 'brikly@gmail.com',
+      fromAddress: 'noreply@brikly.com'
     },
     storage: {
       provider: 's3',
-      bucket: 'builddesk-storage',
+      bucket: 'brikly-storage',
       region: 'us-west-2',
       maxFileSize: 100 // MB
     }

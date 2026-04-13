@@ -2,7 +2,7 @@
 
 ## Overview
 
-This guide explains how to update Build-Desk Edge Functions (154+ functions) to support the new multi-site architecture. Each function must be updated to:
+This guide explains how to update Brikly Edge Functions (154+ functions) to support the new multi-site architecture. Each function must be updated to:
 
 1. Extract `site_id` from the user's JWT
 2. Apply `site_id` filtering on all database queries
@@ -265,7 +265,7 @@ Functions:
 
 **Special Handling:**
 - These functions set the `site_id` in the JWT during login
-- Extract site from domain: `build-desk.com` → `builddesk`
+- Extract site from domain: `brikly.net` → `brikly`
 - Call `get_site_by_domain()` database function
 
 **Example:**

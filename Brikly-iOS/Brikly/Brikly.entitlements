@@ -9,15 +9,15 @@
 	<!-- Keychain Access Groups for secure token storage -->
 	<key>keychain-access-groups</key>
 	<array>
-		<string>$(AppIdentifierPrefix)com.builddesk.app</string>
+		<string>$(AppIdentifierPrefix)com.brikly.app</string>
 	</array>
 
 	<!-- Associated Domains for universal links and web credentials -->
 	<key>com.apple.developer.associated-domains</key>
 	<array>
-		<string>applinks:build-desk.com</string>
-		<string>applinks:app.build-desk.com</string>
-		<string>webcredentials:build-desk.com</string>
+		<string>applinks:brikly.net</string>
+		<string>applinks:app.brikly.net</string>
+		<string>webcredentials:brikly.net</string>
 	</array>
 
 	<!-- Sign in with Apple -->

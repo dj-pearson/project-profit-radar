@@ -9,7 +9,7 @@
 
     <!-- Pin certificates for critical domains -->
     <domain-config>
-        <domain includeSubdomains="true">build-desk.com</domain>
+        <domain includeSubdomains="true">brikly.net</domain>
         <pin-set expiration="2027-01-01">
             <!-- Primary pin (SHA-256 of SPKI) - update with actual production certificate pins -->
             <!-- Using Let's Encrypt / Cloudflare intermediate CA pins as baseline -->

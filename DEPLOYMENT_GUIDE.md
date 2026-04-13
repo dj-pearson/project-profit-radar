@@ -1,4 +1,4 @@
-# 🚀 BuildDesk Phase 1 Deployment Guide
+# 🚀 Brikly Phase 1 Deployment Guide
 
 **Date:** November 2, 2025
 **Status:** Ready for Deployment
@@ -38,7 +38,7 @@
 
 ```bash
 # Navigate to your project
-cd C:\Users\pears\Documents\Build-Desk\project-profit-radar
+cd C:\Users\pears\Documents\Brikly\project-profit-radar
 
 # Check migrations are ready
 ls supabase/migrations/
@@ -271,7 +271,7 @@ const PricingPage = () => {
             Not Sure Which Plan Is Right?
           </h2>
           <p className="text-muted-foreground mb-6">
-            Schedule a demo with our team to see BuildDesk in action
+            Schedule a demo with our team to see Brikly in action
           </p>
           <div className="flex gap-4 justify-center">
             <Button
@@ -497,7 +497,7 @@ git push origin main
 
 #### Post-Deployment Verification
 
-1. **Visit your live site** (build-desk.com)
+1. **Visit your live site** (brikly.net)
 2. **Test all forms**:
    - Demo request
    - Contact sales
@@ -577,7 +577,7 @@ describe('Lead Capture Flow', () => {
 import { test, expect } from '@playwright/test';
 
 test('demo request flow', async ({ page }) => {
-  await page.goto('https://build-desk.com/demo-request');
+  await page.goto('https://brikly.net/demo-request');
 
   await page.fill('[name="firstName"]', 'Test');
   await page.fill('[name="lastName"]', 'User');

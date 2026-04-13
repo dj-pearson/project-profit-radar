@@ -10,8 +10,8 @@ const corsHeaders = {
   "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
 };
 
-// Default site key for BuildDesk
-const DEFAULT_SITE_KEY = 'builddesk';
+// Default site key for Brikly
+const DEFAULT_SITE_KEY = 'brikly';
 
 interface LeadCaptureRequest {
   email: string;

@@ -511,8 +511,8 @@ import {
   TestOrchestrator,
 } from "./tools/automated-testing";
 
-// Pre-configured for BuildDesk
-const config = createPlatformConfig("builddesk", {
+// Pre-configured for Brikly
+const config = createPlatformConfig("brikly", {
   maxPages: 100,
 });
 
@@ -883,7 +883,7 @@ const chartData = storage.generateChartData("performance.avgLCP", 30);
 
 ## License
 
-Part of the BuildDesk platform. For internal use.
+Part of the Brikly platform. For internal use.
 
 ## Contributing
 

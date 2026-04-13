@@ -91,7 +91,7 @@ function checkCommand(command, description) {
 
 console.log("\n" + "=".repeat(70));
 log("  iOS App Store Setup Verification", "cyan");
-log("  BuildDesk - Automated Build & Deploy", "cyan");
+log("  Brikly - Automated Build & Deploy", "cyan");
 console.log("=".repeat(70) + "\n");
 
 // ============================================================================
@@ -286,7 +286,7 @@ const requiredSecrets = [
   {
     name: "IOS_PROVISIONING_PROFILE_NAME",
     description:
-      'Name of the provisioning profile (e.g., "BuildDesk App Store Profile")',
+      'Name of the provisioning profile (e.g., "Brikly App Store Profile")',
     where: "Apple Developer Portal → Profiles → Name column",
   },
 ];

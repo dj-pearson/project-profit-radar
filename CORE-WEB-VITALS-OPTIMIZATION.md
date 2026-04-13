@@ -1,8 +1,8 @@
-# Core Web Vitals Optimization Guide for BuildDesk
+# Core Web Vitals Optimization Guide for Brikly
 
 ## Current Performance Status
 
-Based on the existing codebase analysis, BuildDesk already has several performance optimizations in place:
+Based on the existing codebase analysis, Brikly already has several performance optimizations in place:
 
 ### ✅ Already Implemented
 - **Font Optimization**: FontOptimization component and font loading strategies
@@ -54,7 +54,7 @@ Based on the existing codebase analysis, BuildDesk already has several performan
 #### Additional Optimizations
 ```javascript
 // Service Worker for caching (add to public/sw.js)
-const CACHE_NAME = 'builddesk-v1';
+const CACHE_NAME = 'brikly-v1';
 const urlsToCache = [
   '/',
   '/static/js/bundle.js',
@@ -260,7 +260,7 @@ getTTFB(sendToAnalytics);
 npm install -g @lhci/cli
 
 # Run tests
-lhci collect --url=https://builddesk.com
+lhci collect --url=https://brikly.com
 lhci upload --target=temporary-public-storage
 ```
 

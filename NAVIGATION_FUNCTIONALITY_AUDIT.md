@@ -1,4 +1,4 @@
-# BuildDesk Navigation & Page Functionality Audit
+# Brikly Navigation & Page Functionality Audit
 **Date**: 2025-12-20
 **Branch**: claude/navigation-page-functionality-zHRD5
 **Server**: http://localhost:8080/
@@ -7,7 +7,7 @@
 
 ## Audit Overview
 
-This document tracks the comprehensive audit of BuildDesk's navigation, routes, and page functionality. We're systematically testing each route, page component, form, button, and submission handler to ensure everything operates correctly.
+This document tracks the comprehensive audit of Brikly's navigation, routes, and page functionality. We're systematically testing each route, page component, form, button, and submission handler to ensure everything operates correctly.
 
 ---
 

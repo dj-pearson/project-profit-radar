@@ -451,14 +451,14 @@ Remember: Safety compliance is not just about avoiding citations - it''s about p
         'mobile-app-field-guide',
         '# Mobile App Field Guide: Maximizing Productivity On-Site
 
-The Build Desk mobile app puts powerful construction management tools in your pocket. This guide shows field teams how to use every feature effectively.
+The Brikly mobile app puts powerful construction management tools in your pocket. This guide shows field teams how to use every feature effectively.
 
 ## Getting Started
 
 ### Download and Setup
 1. **Download the App**
-   - iOS: Search "Build Desk" in App Store
-   - Android: Search "Build Desk" in Google Play
+   - iOS: Search "Brikly" in App Store
+   - Android: Search "Brikly" in Google Play
 
 2. **Login Process**
    - Use your web portal credentials
@@ -693,7 +693,7 @@ Project Structure:
 - Celebrate successful adoption milestones
 
 The mobile app is your most powerful tool for staying connected and productive in the field. Take time to master these features, and you''ll see immediate improvements in efficiency and communication.',
-        'Complete guide to using the Build Desk mobile app effectively in the field, covering time tracking, daily reports, photo management, and offline functionality.',
+        'Complete guide to using the Brikly mobile app effectively in the field, covering time tracking, daily reports, photo management, and offline functionality.',
         'how_to',
         mobile_cat_id,
         admin_user_id,

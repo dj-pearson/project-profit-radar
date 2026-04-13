@@ -1,4 +1,4 @@
-# BuildDesk ProGuard Rules
+# Brikly ProGuard Rules
 # Production release build obfuscation and minification
 
 # ============================================================

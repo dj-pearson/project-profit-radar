@@ -55,7 +55,7 @@ export const PWAInstallPrompt = () => {
           
           <div className="flex-1 min-w-0">
             <h3 className="font-semibold text-sm text-foreground">
-              Install BuildDesk
+              Install Brikly
             </h3>
             <p className="text-xs text-muted-foreground mt-1">
               Add to home screen for quick access and offline use

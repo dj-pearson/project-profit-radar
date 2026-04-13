@@ -422,7 +422,7 @@ export const WebhookManagement = () => {
                   <div>
                     <Label>Webhook URL</Label>
                     <Input
-                      placeholder="https://your-domain.com/webhooks/builddesk"
+                      placeholder="https://your-domain.com/webhooks/brikly"
                       value={newEndpointUrl}
                       onChange={(e) => setNewEndpointUrl(e.target.value)}
                     />

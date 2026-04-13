@@ -1,17 +1,17 @@
 # Voluntary Product Accessibility Template (VPAT)
 # WCAG 2.1 Level AA Conformance Report
 
-**Product Name:** BuildDesk Construction Management Platform
+**Product Name:** Brikly Construction Management Platform
 **Product Version:** 2.4
 **Report Date:** January 22, 2026
-**Contact:** accessibility@builddesk.com
+**Contact:** accessibility@brikly.com
 **Evaluation Methods:** Automated testing (axe-core, Lighthouse, Playwright), manual testing, screen reader testing (NVDA, VoiceOver)
 
 ---
 
 ## Summary
 
-BuildDesk is committed to providing accessible software that conforms to WCAG 2.1 Level AA standards. This VPAT documents the accessibility features and conformance status of the BuildDesk platform.
+Brikly is committed to providing accessible software that conforms to WCAG 2.1 Level AA standards. This VPAT documents the accessibility features and conformance status of the Brikly platform.
 
 **Overall Conformance Level:** WCAG 2.1 Level AA - Supports
 
@@ -168,12 +168,12 @@ BuildDesk is committed to providing accessible software that conforms to WCAG 2.
 ## Contact Information
 
 **Accessibility Feedback:**
-- Email: accessibility@builddesk.com
+- Email: accessibility@brikly.com
 - Phone: 1-800-BUILD-DK (1-800-284-5335)
 - Response Time: 2 business days
 
-**Accessibility Statement:** https://builddesk.com/accessibility-statement
-**Accessibility Settings:** https://builddesk.com/accessibility
+**Accessibility Statement:** https://brikly.com/accessibility-statement
+**Accessibility Settings:** https://brikly.com/accessibility
 
 ---
 

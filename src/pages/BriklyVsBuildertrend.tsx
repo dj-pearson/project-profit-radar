@@ -11,79 +11,79 @@ import { Check, X, Star, DollarSign, Clock, Users, ArrowRight } from "lucide-rea
 import { Link } from "react-router-dom";
 import BreadcrumbsNavigation from "@/components/BreadcrumbsNavigation";
 
-const BuildDeskVsBuildertrend = () => {
+const BriklyVsBuildertrend = () => {
   const faqData = [
     {
-      question: "Is BuildDesk a good alternative to Buildertrend?",
-      answer: "Yes, especially for small-mid contractors who need essential features without complexity. BuildDesk costs 50-60% less than Buildertrend while offering better mobile apps and faster setup for teams under 100 employees."
+      question: "Is Brikly a good alternative to Buildertrend?",
+      answer: "Yes, especially for small-mid contractors who need essential features without complexity. Brikly costs 50-60% less than Buildertrend while offering better mobile apps and faster setup for teams under 100 employees."
     },
     {
-      question: "Which is better for residential contractors: BuildDesk or Buildertrend?",
-      answer: "Both work well for residential, but BuildDesk offers better value with unlimited users, stronger job costing, and faster implementation. Buildertrend has more residential-specific templates but costs significantly more per user."
+      question: "Which is better for residential contractors: Brikly or Buildertrend?",
+      answer: "Both work well for residential, but Brikly offers better value with unlimited users, stronger job costing, and faster implementation. Buildertrend has more residential-specific templates but costs significantly more per user."
     },
     {
       question: "How do the mobile apps compare?",
-      answer: "BuildDesk's mobile app works fully offline and syncs when connectivity returns. Buildertrend requires internet connection for most features. BuildDesk also includes more field management tools like GPS time tracking and safety forms."
+      answer: "Brikly's mobile app works fully offline and syncs when connectivity returns. Buildertrend requires internet connection for most features. Brikly also includes more field management tools like GPS time tracking and safety forms."
     },
     {
-      question: "Can I switch from Buildertrend to BuildDesk easily?",
-      answer: "Yes. BuildDesk's migration team helps import your data from Buildertrend at no extra cost. Most contractors complete the switch within 2-3 weeks with full training included."
+      question: "Can I switch from Buildertrend to Brikly easily?",
+      answer: "Yes. Brikly's migration team helps import your data from Buildertrend at no extra cost. Most contractors complete the switch within 2-3 weeks with full training included."
     }
   ];
 
   const featureComparison = [
     {
       feature: "Monthly Cost (15 users)",
-      builddesk: "$299 (unlimited users)",
+      brikly: "$299 (unlimited users)",
       buildertrend: "$599-899+",
-      winner: "builddesk"
+      winner: "brikly"
     },
     {
       feature: "Setup Time",
-      builddesk: "1-2 weeks",
+      brikly: "1-2 weeks",
       buildertrend: "4-8 weeks", 
-      winner: "builddesk"
+      winner: "brikly"
     },
     {
       feature: "Mobile Offline Access",
-      builddesk: "Full featured offline",
+      brikly: "Full featured offline",
       buildertrend: "Limited offline",
-      winner: "builddesk"
+      winner: "brikly"
     },
     {
       feature: "Job Costing",
-      builddesk: "Real-time with QuickBooks sync",
+      brikly: "Real-time with QuickBooks sync",
       buildertrend: "Basic costing",
-      winner: "builddesk"
+      winner: "brikly"
     },
     {
       feature: "Client Portal",
-      builddesk: "Included",
+      brikly: "Included",
       buildertrend: "Included",
       winner: "tie"
     },
     {
       feature: "Scheduling",
-      builddesk: "Gantt charts + resource optimization",
+      brikly: "Gantt charts + resource optimization",
       buildertrend: "Calendar + basic scheduling",
-      winner: "builddesk"
+      winner: "brikly"
     },
     {
       feature: "OSHA Compliance",
-      builddesk: "Built-in forms and tracking",
+      brikly: "Built-in forms and tracking",
       buildertrend: "Add-on module",
-      winner: "builddesk"
+      winner: "brikly"
     },
     {
       feature: "Learning Curve",
-      builddesk: "Simple (hours to learn)",
+      brikly: "Simple (hours to learn)",
       buildertrend: "Moderate (days to weeks)",
-      winner: "builddesk"
+      winner: "brikly"
     }
   ];
 
   const pros = {
-    builddesk: [
+    brikly: [
       "60% lower cost with unlimited users",
       "Faster setup and training (1-2 weeks)",
       "Superior mobile offline functionality",
@@ -104,16 +104,16 @@ const BuildDeskVsBuildertrend = () => {
   return (
     <div className="min-h-screen bg-background">
       <SEOMetaTags
-        title="BuildDesk vs Buildertrend: Feature & Pricing Comparison 2025 | Construction Software"
-        description="Honest comparison of BuildDesk and Buildertrend for residential and commercial contractors. Features, pricing, and ease of use compared side-by-side."
+        title="Brikly vs Buildertrend: Feature & Pricing Comparison 2025 | Construction Software"
+        description="Honest comparison of Brikly and Buildertrend for residential and commercial contractors. Features, pricing, and ease of use compared side-by-side."
         keywords={[
-          'builddesk vs buildertrend',
+          'brikly vs buildertrend',
           'buildertrend alternative',
           'construction management software comparison',
           'residential contractor software',
-          'builddesk buildertrend comparison'
+          'brikly buildertrend comparison'
         ]}
-        canonicalUrl="/builddesk-vs-buildertrend-comparison"
+        canonicalUrl="/brikly-vs-buildertrend-comparison"
       />
       
       <FAQSchema questions={faqData} />
@@ -127,7 +127,7 @@ const BuildDeskVsBuildertrend = () => {
         <div className="text-center mb-12">
           <Badge className="mb-4">Software Comparison</Badge>
           <h1 className="text-4xl font-bold tracking-tight mb-4">
-            BuildDesk vs Buildertrend: Which is Better for Your Business?
+            Brikly vs Buildertrend: Which is Better for Your Business?
           </h1>
           <LastUpdated date="September 2025" />
           <p className="text-xl text-muted-foreground max-w-3xl mx-auto mb-6">
@@ -137,8 +137,8 @@ const BuildDeskVsBuildertrend = () => {
         </div>
         
         <QuickAnswerSnippet
-          question="Which construction software is better - BuildDesk or Buildertrend?"
-          answer="BuildDesk costs 50-60% less than Buildertrend, offers faster setup (1-2 weeks vs months), better mobile functionality, and unlimited users. Ideal for small-mid contractors looking for essential features without complexity."
+          question="Which construction software is better - Brikly or Buildertrend?"
+          answer="Brikly costs 50-60% less than Buildertrend, offers faster setup (1-2 weeks vs months), better mobile functionality, and unlimited users. Ideal for small-mid contractors looking for essential features without complexity."
         />
 
         {/* Quick Stats */}
@@ -146,7 +146,7 @@ const BuildDeskVsBuildertrend = () => {
           <Card className="border-primary">
             <CardHeader>
               <div className="flex items-center justify-between">
-                <CardTitle className="text-xl">BuildDesk</CardTitle>
+                <CardTitle className="text-xl">Brikly</CardTitle>
                 <Badge className="bg-green-100 text-green-800">Recommended</Badge>
               </div>
               <CardDescription>Best for small-mid contractors seeking value and efficiency</CardDescription>
@@ -214,7 +214,7 @@ const BuildDeskVsBuildertrend = () => {
                   <thead className="border-b bg-muted/50">
                     <tr>
                       <th className="text-left p-4 font-semibold">Feature</th>
-                      <th className="text-center p-4 font-semibold">BuildDesk</th>
+                      <th className="text-center p-4 font-semibold">Brikly</th>
                       <th className="text-center p-4 font-semibold">Buildertrend</th>
                     </tr>
                   </thead>
@@ -223,15 +223,15 @@ const BuildDeskVsBuildertrend = () => {
                       <tr key={index} className="border-b">
                         <td className="p-4 font-medium">{item.feature}</td>
                         <td className="p-4 text-center">
-                          <div className={`flex items-center justify-center gap-2 ${item.winner === 'builddesk' ? 'text-green-700 font-semibold' : ''}`}>
-                            {item.winner === 'builddesk' && <Check className="h-4 w-4" />}
-                            <span>{item.builddesk}</span>
+                          <div className={`flex items-center justify-center gap-2 ${item.winner === 'brikly' ? 'text-green-700 font-semibold' : ''}`}>
+                            {item.winner === 'brikly' && <Check className="h-4 w-4" />}
+                            <span>{item.brikly}</span>
                           </div>
                         </td>
                         <td className="p-4 text-center">
                           <div className={`flex items-center justify-center gap-2 ${item.winner === 'buildertrend' ? 'text-green-700 font-semibold' : ''}`}>
                             {item.winner === 'buildertrend' && <Check className="h-4 w-4" />}
-                            {item.winner === 'builddesk' && <X className="h-4 w-4 text-red-500" />}
+                            {item.winner === 'brikly' && <X className="h-4 w-4 text-red-500" />}
                             <span>{item.buildertrend}</span>
                           </div>
                         </td>
@@ -250,11 +250,11 @@ const BuildDeskVsBuildertrend = () => {
           <div className="grid md:grid-cols-2 gap-8">
             <Card className="border-green-200">
               <CardHeader>
-                <CardTitle className="text-xl text-green-800">BuildDesk Advantages</CardTitle>
+                <CardTitle className="text-xl text-green-800">Brikly Advantages</CardTitle>
               </CardHeader>
               <CardContent>
                 <ul className="space-y-3">
-                  {pros.builddesk.map((pro, i) => (
+                  {pros.brikly.map((pro, i) => (
                     <li key={i} className="flex items-start gap-2">
                       <Check className="h-5 w-5 text-green-600 mt-0.5 flex-shrink-0" />
                       <span>{pro}</span>
@@ -288,7 +288,7 @@ const BuildDeskVsBuildertrend = () => {
           <div className="grid md:grid-cols-2 gap-6">
             <Card className="border-primary">
               <CardHeader>
-                <CardTitle className="text-xl">Choose BuildDesk if you:</CardTitle>
+                <CardTitle className="text-xl">Choose Brikly if you:</CardTitle>
               </CardHeader>
               <CardContent>
                 <ul className="space-y-2">
@@ -344,7 +344,7 @@ const BuildDeskVsBuildertrend = () => {
                   <h4 className="font-semibold mb-2">Team Size: 15 Users</h4>
                   <div className="space-y-2">
                     <div className="bg-green-50 p-4 rounded-lg">
-                      <div className="text-sm text-muted-foreground">BuildDesk (5 years)</div>
+                      <div className="text-sm text-muted-foreground">Brikly (5 years)</div>
                       <div className="text-2xl font-bold text-green-700">$17,940</div>
                     </div>
                     <div className="bg-red-50 p-4 rounded-lg">
@@ -392,10 +392,10 @@ const BuildDeskVsBuildertrend = () => {
         {/* CTA Section */}
         <div className="bg-primary/5 rounded-lg p-8 text-center">
           <h2 className="text-2xl font-semibold mb-4">
-            Ready to Make the Switch to BuildDesk?
+            Ready to Make the Switch to Brikly?
           </h2>
           <p className="text-muted-foreground mb-6 max-w-2xl mx-auto">
-            Join 300+ contractors who switched from Buildertrend to BuildDesk and saved 
+            Join 300+ contractors who switched from Buildertrend to Brikly and saved 
             thousands annually while improving their project management efficiency.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -416,4 +416,4 @@ const BuildDeskVsBuildertrend = () => {
   );
 };
 
-export default BuildDeskVsBuildertrend;
+export default BriklyVsBuildertrend;

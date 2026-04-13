@@ -91,7 +91,7 @@ serve(async (req) => {
       );
     }
 
-    // Resolve site_id if not provided - try to get from tenant or default to BuildDesk
+    // Resolve site_id if not provided - try to get from tenant or default to Brikly
     let siteId = site_id;
     if (!siteId) {
       // Try to get site_id from tenant record first
@@ -103,12 +103,12 @@ serve(async (req) => {
 
       siteId = tenantForSite?.site_id;
 
-      // Fall back to BuildDesk site if tenant doesn't have site_id
+      // Fall back to Brikly site if tenant doesn't have site_id
       if (!siteId) {
         const { data: defaultSite } = await supabase
           .from('sites')
           .select('id')
-          .eq('key', 'builddesk')
+          .eq('key', 'brikly')
           .single();
         siteId = defaultSite?.id;
       }

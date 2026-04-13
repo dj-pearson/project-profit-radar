@@ -186,15 +186,15 @@ async function sendTrialExpirationWarning(
   const daysLeft = warningType === "1-day" ? 1 : 3;
   
   await resend.emails.send({
-    from: "Build Desk <notifications@builddesk.app>",
+    from: "Brikly <notifications@brikly.app>",
     to: [admin.email],
-    subject: `Your Build Desk trial expires in ${daysLeft} day${daysLeft > 1 ? 's' : ''}`,
+    subject: `Your Brikly trial expires in ${daysLeft} day${daysLeft > 1 ? 's' : ''}`,
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
         <h2 style="color: #f97316;">Trial Expiring Soon</h2>
         <p>Hi ${admin.first_name || 'there'},</p>
-        <p>Your Build Desk trial for <strong>${company.name}</strong> will expire in ${daysLeft} day${daysLeft > 1 ? 's' : ''} on ${trialEndDate.toLocaleDateString()}.</p>
-        <p>To continue using all Build Desk features, please upgrade to a paid plan.</p>
+        <p>Your Brikly trial for <strong>${company.name}</strong> will expire in ${daysLeft} day${daysLeft > 1 ? 's' : ''} on ${trialEndDate.toLocaleDateString()}.</p>
+        <p>To continue using all Brikly features, please upgrade to a paid plan.</p>
         <div style="text-align: center; margin: 30px 0;">
           <a href="https://your-domain.com/subscription" 
              style="background-color: #f97316; color: white; padding: 15px 30px; text-decoration: none; border-radius: 5px; font-weight: bold;">
@@ -202,7 +202,7 @@ async function sendTrialExpirationWarning(
           </a>
         </div>
         <p>Need help? Reply to this email and our team will assist you.</p>
-        <p>Best regards,<br>The Build Desk Team</p>
+        <p>Best regards,<br>The Brikly Team</p>
       </div>
     `,
   });
@@ -215,14 +215,14 @@ async function sendGracePeriodEmail(
   gracePeriodEnd: Date
 ) {
   await resend.emails.send({
-    from: "Build Desk <notifications@builddesk.app>",
+    from: "Brikly <notifications@brikly.app>",
     to: [admin.email],
-    subject: "Build Desk Trial Expired - 7-Day Grace Period Active",
+    subject: "Brikly Trial Expired - 7-Day Grace Period Active",
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
         <h2 style="color: #dc2626;">Trial Expired - Grace Period Active</h2>
         <p>Hi ${admin.first_name || 'there'},</p>
-        <p>Your Build Desk trial for <strong>${company.name}</strong> has expired, but we've activated a 7-day grace period.</p>
+        <p>Your Brikly trial for <strong>${company.name}</strong> has expired, but we've activated a 7-day grace period.</p>
         <p><strong>Grace period ends:</strong> ${gracePeriodEnd.toLocaleDateString()}</p>
         <p>During this time, you can still access your account, but some features may be limited. To restore full access, please upgrade to a paid plan.</p>
         <div style="text-align: center; margin: 30px 0;">
@@ -232,7 +232,7 @@ async function sendGracePeriodEmail(
           </a>
         </div>
         <p>If you don't upgrade by ${gracePeriodEnd.toLocaleDateString()}, your account will be suspended.</p>
-        <p>Best regards,<br>The Build Desk Team</p>
+        <p>Best regards,<br>The Brikly Team</p>
       </div>
     `,
   });
@@ -244,14 +244,14 @@ async function sendTrialExpiredEmail(
   company: any
 ) {
   await resend.emails.send({
-    from: "Build Desk <notifications@builddesk.app>",
+    from: "Brikly <notifications@brikly.app>",
     to: [admin.email],
-    subject: "Build Desk Account Suspended - Trial and Grace Period Expired",
+    subject: "Brikly Account Suspended - Trial and Grace Period Expired",
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
         <h2 style="color: #dc2626;">Account Suspended</h2>
         <p>Hi ${admin.first_name || 'there'},</p>
-        <p>Your Build Desk account for <strong>${company.name}</strong> has been suspended because both your trial and grace period have expired.</p>
+        <p>Your Brikly account for <strong>${company.name}</strong> has been suspended because both your trial and grace period have expired.</p>
         <p>Your data is safe and will be preserved for 30 days. To reactivate your account and restore full access, please upgrade to a paid plan.</p>
         <div style="text-align: center; margin: 30px 0;">
           <a href="https://your-domain.com/subscription" 
@@ -260,7 +260,7 @@ async function sendTrialExpiredEmail(
           </a>
         </div>
         <p>Need help? Reply to this email and our team will assist you.</p>
-        <p>Best regards,<br>The Build Desk Team</p>
+        <p>Best regards,<br>The Brikly Team</p>
       </div>
     `,
   });

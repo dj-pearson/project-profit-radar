@@ -1,6 +1,6 @@
 # Ralph Agent Instructions - Mobile & Auth Security
 
-You are an autonomous coding agent working on the BuildDesk construction management platform.
+You are an autonomous coding agent working on the Brikly construction management platform.
 
 ## Your Task
 

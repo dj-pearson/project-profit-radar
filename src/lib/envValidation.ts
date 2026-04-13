@@ -26,7 +26,7 @@ interface EnvConfig {
  * environment variables — no hardcoded tokens in source code.
  */
 const FALLBACK_VALUES: Partial<EnvConfig> = {
-  VITE_SUPABASE_URL: 'https://api.build-desk.com',
+  VITE_SUPABASE_URL: 'https://api.brikly.net',
 };
 
 /**
@@ -211,11 +211,11 @@ export const assertValidEnvironment = (): void => {
 ║                                                               ║
 ║  Please create a .env file in the project root with:         ║
 ║                                                               ║
-║  VITE_SUPABASE_URL=https://api.build-desk.com                ║
+║  VITE_SUPABASE_URL=https://api.brikly.net                ║
 ║  VITE_SUPABASE_PUBLISHABLE_KEY=your-anon-key                 ║
 ║                                                               ║
 ║  Optional variables (for self-hosted):                        ║
-║  VITE_EDGE_FUNCTIONS_URL=https://functions.build-desk.com    ║
+║  VITE_EDGE_FUNCTIONS_URL=https://functions.brikly.net    ║
 ║  VITE_POSTHOG_API_KEY=your-posthog-key                       ║
 ║                                                               ║
 ╚═══════════════════════════════════════════════════════════════╝

@@ -1,7 +1,7 @@
-# BuildDesk Programmatic SEO — Full System Specification
+# Brikly Programmatic SEO — Full System Specification
 
 **Version:** 1.0  
-**Platform:** BuildDesk — Construction Financial Intelligence SaaS  
+**Platform:** Brikly — Construction Financial Intelligence SaaS  
 **Target Market:** SMB Contractors, $1M–$20M revenue, 5–50 employees  
 **Estimated Total Pages at Full Build-out:** 1,400–1,800 pages  
 
@@ -171,7 +171,7 @@
     "user_persona": "Owner, project manager, or estimator who does post-mortems",
     "search_intent_stage": "solution-aware",
     "competing_solutions": ["Spreadsheets", "QuickBooks job tracking", "Procore financials"],
-    "builddesk_advantage": "Real-time job costing visible to field and office without manual data entry"
+    "brikly_advantage": "Real-time job costing visible to field and office without manual data entry"
   },
   "cash-flow": {
     "id": "cash-flow",
@@ -182,7 +182,7 @@
     "user_persona": "Business owner or CFO watching the bank account",
     "search_intent_stage": "problem-aware",
     "competing_solutions": ["QuickBooks cash flow report", "Excel spreadsheets", "gut feel"],
-    "builddesk_advantage": "Automated cash flow forecast tied to actual job billing schedules and AP"
+    "brikly_advantage": "Automated cash flow forecast tied to actual job billing schedules and AP"
   },
   "project-budgeting": {
     "id": "project-budgeting",
@@ -193,7 +193,7 @@
     "user_persona": "Estimator and project manager working together",
     "search_intent_stage": "solution-aware",
     "competing_solutions": ["Excel", "Buildertrend budget module", "QuickBooks"],
-    "builddesk_advantage": "Estimate-to-budget workflow with live actual cost overlay"
+    "brikly_advantage": "Estimate-to-budget workflow with live actual cost overlay"
   },
   "time-tracking": {
     "id": "time-tracking",
@@ -204,7 +204,7 @@
     "user_persona": "Field supervisor, foreman, office admin processing payroll",
     "search_intent_stage": "solution-aware",
     "competing_solutions": ["TSheets/QuickBooks Time", "ClockShark", "paper timesheets"],
-    "builddesk_advantage": "Time entries tied directly to job costing — no re-entry or manual allocation"
+    "brikly_advantage": "Time entries tied directly to job costing — no re-entry or manual allocation"
   },
   "invoicing": {
     "id": "invoicing",
@@ -215,7 +215,7 @@
     "user_persona": "Office manager or owner managing receivables",
     "search_intent_stage": "solution-aware",
     "competing_solutions": ["QuickBooks invoicing", "Excel templates", "FreshBooks"],
-    "builddesk_advantage": "Progress-based invoicing tied to job milestones and approved change orders"
+    "brikly_advantage": "Progress-based invoicing tied to job milestones and approved change orders"
   },
   "change-orders": {
     "id": "change-orders",
@@ -226,7 +226,7 @@
     "user_persona": "Project manager and owner tracking scope creep",
     "search_intent_stage": "solution-aware",
     "competing_solutions": ["Email threads", "Procore change orders", "paper forms"],
-    "builddesk_advantage": "Change order workflow that auto-updates budget and triggers invoice creation"
+    "brikly_advantage": "Change order workflow that auto-updates budget and triggers invoice creation"
   },
   "financial-reporting": {
     "id": "financial-reporting",
@@ -237,7 +237,7 @@
     "user_persona": "Owner and accountant/bookkeeper",
     "search_intent_stage": "solution-aware",
     "competing_solutions": ["QuickBooks reports", "Excel WIP spreadsheets", "Sage"],
-    "builddesk_advantage": "Construction-specific reports (WIP, over/under billing, job margin) built in"
+    "brikly_advantage": "Construction-specific reports (WIP, over/under billing, job margin) built in"
   },
   "quickbooks": {
     "id": "quickbooks",
@@ -248,7 +248,7 @@
     "user_persona": "Owner, office manager, or bookkeeper handling accounting",
     "search_intent_stage": "product-aware (already using QuickBooks)",
     "competing_solutions": ["Manual CSV export/import", "Buildertrend QB sync", "Procore QB connector"],
-    "builddesk_advantage": "Native 2-way QuickBooks Online sync with automatic transaction routing"
+    "brikly_advantage": "Native 2-way QuickBooks Online sync with automatic transaction routing"
   },
   "crew-management": {
     "id": "crew-management",
@@ -259,7 +259,7 @@
     "user_persona": "Field supervisor, dispatcher, project manager",
     "search_intent_stage": "solution-aware",
     "competing_solutions": ["Crew Boss", "Rhumbix", "Google Sheets schedules"],
-    "builddesk_advantage": "Crew scheduling tied to project timelines and automatic labor cost posting"
+    "brikly_advantage": "Crew scheduling tied to project timelines and automatic labor cost posting"
   },
   "client-portal": {
     "id": "client-portal",
@@ -270,7 +270,7 @@
     "user_persona": "Project manager tired of status calls; owner wanting to look professional",
     "search_intent_stage": "solution-aware",
     "competing_solutions": ["Buildertrend client portal", "email updates", "CoConstruct"],
-    "builddesk_advantage": "Real-time client portal with change order approval and invoice payment"
+    "brikly_advantage": "Real-time client portal with change order approval and invoice payment"
   }
 }
 ```
@@ -297,7 +297,7 @@
     "price_sensitivity": "Very high — every dollar counts",
     "decision_maker": "Owner (wears every hat)",
     "primary_concern": "Can't afford enterprise software; need something simple that actually helps",
-    "builddesk_fit": "Starter tier; unlimited users means the owner and 1–2 office staff at no extra cost"
+    "brikly_fit": "Starter tier; unlimited users means the owner and 1–2 office staff at no extra cost"
   },
   "growing": {
     "id": "growing",
@@ -307,7 +307,7 @@
     "price_sensitivity": "Moderate — will pay if ROI is clear",
     "decision_maker": "Owner with input from office manager or PM",
     "primary_concern": "Losing control of job costs as project count grows; need real-time visibility",
-    "builddesk_fit": "Professional tier; the per-seat problem bites hard here — unlimited users is a major win"
+    "brikly_fit": "Professional tier; the per-seat problem bites hard here — unlimited users is a major win"
   },
   "mid-size": {
     "id": "mid-size",
@@ -317,7 +317,7 @@
     "price_sensitivity": "Low — paying $800+/month elsewhere; $350–799 looks great",
     "decision_maker": "Owner or CFO with ops manager input",
     "primary_concern": "Enterprise tools are too complex; spreadsheet-era tools can't handle volume",
-    "builddesk_fit": "Professional/Enterprise tier; real-time financial intelligence replaces expensive platforms"
+    "brikly_fit": "Professional/Enterprise tier; real-time financial intelligence replaces expensive platforms"
   }
 }
 ```
@@ -379,12 +379,12 @@
 
 | ID | Display Name | URL Slug | Competitor Profile |
 |----|-------------|----------|-------------------|
-| `vs-procore` | BuildDesk vs Procore | `vs-procore` | Enterprise tool, $375–$1000+/month per user |
-| `vs-buildertrend` | BuildDesk vs Buildertrend | `vs-buildertrend` | Residential-focused, per-seat pricing |
-| `vs-coconstruct` | BuildDesk vs CoConstruct | `vs-coconstruct` | Custom home builder tool, limited financials |
-| `vs-jobber` | BuildDesk vs Jobber | `vs-jobber` | Service-oriented, not project-cost-focused |
-| `vs-quickbooks` | BuildDesk vs QuickBooks | `vs-quickbooks` | Accounting tool, no field/project integration |
-| `vs-sage` | BuildDesk vs Sage 100 Contractor | `vs-sage` | Legacy accounting tool, steep learning curve |
+| `vs-procore` | Brikly vs Procore | `vs-procore` | Enterprise tool, $375–$1000+/month per user |
+| `vs-buildertrend` | Brikly vs Buildertrend | `vs-buildertrend` | Residential-focused, per-seat pricing |
+| `vs-coconstruct` | Brikly vs CoConstruct | `vs-coconstruct` | Custom home builder tool, limited financials |
+| `vs-jobber` | Brikly vs Jobber | `vs-jobber` | Service-oriented, not project-cost-focused |
+| `vs-quickbooks` | Brikly vs QuickBooks | `vs-quickbooks` | Accounting tool, no field/project integration |
+| `vs-sage` | Brikly vs Sage 100 Contractor | `vs-sage` | Legacy accounting tool, steep learning curve |
 
 ---
 
@@ -398,7 +398,7 @@
 | **Tier 1** | Contractor + Geo (State) | Texas General Contractor Software | 100 | High |
 | **Tier 2** | Pain + Size | Job Costing for Small Contractors | 30 | Medium |
 | **Tier 2** | Contractor + Size | Software for Small Electrical Contractors | 30 | Medium |
-| **Tier 2** | Competitor Comparison | BuildDesk vs Procore | 6 | High intent |
+| **Tier 2** | Competitor Comparison | Brikly vs Procore | 6 | High intent |
 | **Tier 3** | Contractor + Pain + Geo | GC Job Costing in Texas | 200 | Long-tail |
 | **Tier 3** | Contractor + Geo (Metro) | General Contractor Software Houston | 150 | Long-tail |
 | **Tier 3** | Feature + Contractor | QuickBooks Integration Roofing | 80 | Long-tail |
@@ -423,7 +423,7 @@
 → `"[Pain Point Display] for [Contractor Type Display] (2026)"`
 
 **META_DESCRIPTION_TEMPLATE:**  
-`"BuildDesk gives [contractor_type] real-time [pain_point] without spreadsheets or enterprise complexity. [AI-FILL: 1 sentence on specific pain]. Unlimited users, $350/month."`
+`"Brikly gives [contractor_type] real-time [pain_point] without spreadsheets or enterprise complexity. [AI-FILL: 1 sentence on specific pain]. Unlimited users, $350/month."`
 
 **TARGET_QUERY_PATTERN:**  
 `"[pain point] software for [contractor type]"` / `"best [pain point] for [contractor type]"`
@@ -433,7 +433,7 @@
 **DATA_SOURCES:**  
 - `contractor_types` dimension table  
 - `pain_points` dimension table  
-- `builddesk_features` table (features relevant to this pair)  
+- `brikly_features` table (features relevant to this pair)  
 - `testimonials` table filtered by contractor_type  
 - `case_studies` table filtered by contractor_type and pain_point  
 
@@ -451,7 +451,7 @@ At least 3 features directly addressing this contractor+pain combination.
 
 **SCHEMA_MARKUP:** `SoftwareApplication`, `FAQPage`  
 **FRESHNESS_SIGNAL:** Quarterly (pricing, features may update)  
-**USEFUL_WITHOUT_SEARCH:** Yes — answers "does BuildDesk actually solve my specific invoicing problem as an electrical contractor" with specifics, comparisons, and pricing.
+**USEFUL_WITHOUT_SEARCH:** Yes — answers "does Brikly actually solve my specific invoicing problem as an electrical contractor" with specifics, comparisons, and pricing.
 
 ---
 
@@ -467,7 +467,7 @@ At least 3 features directly addressing this contractor+pain combination.
 → `"Construction Management Software for [Geography] [Contractor Type Display] (2026)"`
 
 **META_DESCRIPTION_TEMPLATE:**  
-`"BuildDesk helps [geography] [contractor_type] track job costs, manage crews, and bill clients faster. [AI-FILL: 1 sentence on local market context]. Unlimited users, no per-seat fees."`
+`"Brikly helps [geography] [contractor_type] track job costs, manage crews, and bill clients faster. [AI-FILL: 1 sentence on local market context]. Unlimited users, no per-seat fees."`
 
 **TARGET_QUERY_PATTERN:**  
 `"construction software for [state] [contractor type]"` / `"[contractor type] software [state]"`
@@ -509,7 +509,7 @@ Contractor type context object + geography context object both present.
 → `"[Pain Point Display] for [Size Display] (2026)"`
 
 **META_DESCRIPTION_TEMPLATE:**  
-`"BuildDesk gives [size] contractors real-time [pain_point] at a price that makes sense. [AI-FILL: 1 sentence on size-specific pain]. Unlimited users from $350/month."`
+`"Brikly gives [size] contractors real-time [pain_point] at a price that makes sense. [AI-FILL: 1 sentence on size-specific pain]. Unlimited users from $350/month."`
 
 **TARGET_QUERY_PATTERN:**  
 `"[pain point] for small contractors"` / `"best [pain point] software small construction company"`
@@ -550,7 +550,7 @@ Pain point context object + size context object both present.
 `"Cash Flow Management Software for Texas Contractors (2026)"`
 
 **META_DESCRIPTION_TEMPLATE:**  
-`"Texas contractors face unique cash flow challenges — [AI-FILL: lien deadlines, payment cycles]. BuildDesk's real-time forecasting gives you 90-day visibility. Unlimited users."`
+`"Texas contractors face unique cash flow challenges — [AI-FILL: lien deadlines, payment cycles]. Brikly's real-time forecasting gives you 90-day visibility. Unlimited users."`
 
 **TARGET_QUERY_PATTERN:**  
 `"[pain point] for [state] contractors"` / `"[state] contractor [pain point] software"`
@@ -581,24 +581,24 @@ Geography regulatory notes must contain at least 1 item relevant to the pain poi
 ### PAGE TYPE 5: `COMPARISON`
 
 **PAGE_TYPE_ID:** `comparison`  
-**DISPLAY_NAME:** BuildDesk vs Competitor  
+**DISPLAY_NAME:** Brikly vs Competitor  
 **URL_PATTERN:** `/compare/[competitor-slug]`  
 **Example URL:** `/compare/vs-procore`
 
 **TITLE_TEMPLATE:**  
-`"BuildDesk vs Procore: Best Choice for SMB Contractors in 2026"`
+`"Brikly vs Procore: Best Choice for SMB Contractors in 2026"`
 
 **META_DESCRIPTION_TEMPLATE:**  
-`"BuildDesk vs [competitor]: honest comparison for [target audience]. [AI-FILL: key differentiator]. Unlimited users at $350/month vs [competitor pricing]."`
+`"Brikly vs [competitor]: honest comparison for [target audience]. [AI-FILL: key differentiator]. Unlimited users at $350/month vs [competitor pricing]."`
 
 **TARGET_QUERY_PATTERN:**  
-`"builddesk vs [competitor]"` / `"[competitor] alternative for small contractors"` / `"[competitor] too expensive"`
+`"brikly vs [competitor]"` / `"[competitor] alternative for small contractors"` / `"[competitor] too expensive"`
 
 **SEARCH_VOLUME_TIER:** High intent (bottom-funnel)
 
 **DATA_SOURCES:**  
 - `competitor_profiles` table  
-- `builddesk_features` table  
+- `brikly_features` table  
 - `pricing_comparison` table  
 - `testimonials` where reason for switching = this competitor  
 
@@ -629,7 +629,7 @@ Competitor profile object complete + at least 5 differentiating feature comparis
 `"Construction Software for Growing HVAC Contractors (2026)"`
 
 **META_DESCRIPTION_TEMPLATE:**  
-`"BuildDesk is built for HVAC companies with 10–30 employees outgrowing spreadsheets. [AI-FILL: specific growing pain]. Unlimited users. No per-seat fees."`
+`"Brikly is built for HVAC companies with 10–30 employees outgrowing spreadsheets. [AI-FILL: specific growing pain]. Unlimited users. No per-seat fees."`
 
 **TARGET_QUERY_PATTERN:**  
 `"software for [size] [contractor type]"` / `"[contractor type] software for growing company"`
@@ -653,7 +653,7 @@ Both context objects present.
 
 **SCHEMA_MARKUP:** `SoftwareApplication`, `FAQPage`  
 **FRESHNESS_SIGNAL:** Quarterly  
-**USEFUL_WITHOUT_SEARCH:** Yes — "I'm a growing HVAC company" is a specific identity; this page speaks directly to that stage and validates that BuildDesk fits.
+**USEFUL_WITHOUT_SEARCH:** Yes — "I'm a growing HVAC company" is a specific identity; this page speaks directly to that stage and validates that Brikly fits.
 
 ---
 
@@ -665,10 +665,10 @@ Both context objects present.
 **Example URL:** `/features/quickbooks-integration/roofing-contractor`
 
 **TITLE_TEMPLATE:**  
-`"QuickBooks Integration for Roofing Contractors — BuildDesk (2026)"`
+`"QuickBooks Integration for Roofing Contractors — Brikly (2026)"`
 
 **META_DESCRIPTION_TEMPLATE:**  
-`"BuildDesk's QuickBooks integration eliminates double-entry for roofing companies. [AI-FILL: specific roofing QB pain]. Two-way sync. Unlimited users from $350/month."`
+`"Brikly's QuickBooks integration eliminates double-entry for roofing companies. [AI-FILL: specific roofing QB pain]. Two-way sync. Unlimited users from $350/month."`
 
 **TARGET_QUERY_PATTERN:**  
 `"[feature] for [contractor type]"` / `"[contractor type] [feature] software"`
@@ -745,7 +745,7 @@ interface ContractorPainSchema {
   };
 
   solution_section: {
-    section_title: string;                 // AI-FILL - "How BuildDesk Solves [Pain] for [Contractor Type]"
+    section_title: string;                 // AI-FILL - "How Brikly Solves [Pain] for [Contractor Type]"
     features: {                            // AI-FILL - exactly 4-5 entries
       name: string;                        // AI-FILL - feature name, max 6 words
       description: string;                 // AI-FILL - exactly 2 sentences, how this feature addresses THIS contractor's specific workflow
@@ -846,7 +846,7 @@ interface ContractorGeoSchema {
     regulatory_callout?: {              // Optional - include if geography has relevant contractor-specific regulations
       headline: string;                 // AI-FILL - "Texas Lien Laws and Your Software"
       description: string;             // AI-FILL - 2-3 sentences, specific to this geo + contractor combination
-      builddesk_solution: string;       // AI-FILL - 1 sentence on how BuildDesk addresses this regulatory need
+      brikly_solution: string;       // AI-FILL - 1 sentence on how Brikly addresses this regulatory need
     };
     market_challenges: string[];        // AI-FILL - exactly 3 challenges specific to this geo + contractor
   };
@@ -900,7 +900,7 @@ interface ComparisonSchema {
   };
 
   seo: {
-    title: string;                         // DETERMINISTIC - "BuildDesk vs [Competitor]: Best for SMB Contractors (2026)"
+    title: string;                         // DETERMINISTIC - "Brikly vs [Competitor]: Best for SMB Contractors (2026)"
     description: string;                   // AI-FILL - max 155 chars, mention key differentiator and pricing angle
     keywords: string[];                    // AI-FILL - exactly 6-8 including "[competitor] alternative" terms
     canonical_url: string;                 // DETERMINISTIC
@@ -912,26 +912,26 @@ interface ComparisonSchema {
     headline: string;                      // AI-FILL - honest, not attack-ad tone
     subheadline: string;                   // AI-FILL - "Here's the honest comparison for [target audience]"
     intro: string;                         // AI-FILL - exactly 3 sentences, sets up who this page is for
-    fairness_disclaimer: string;           // AI-FILL - 1 sentence acknowledging BuildDesk has an obvious perspective
+    fairness_disclaimer: string;           // AI-FILL - 1 sentence acknowledging Brikly has an obvious perspective
   };
 
   comparison_table: {
     features: {                            // FROM-DB + AI-FILL - exactly 8-10 features
       feature_name: string;               // FROM-DB - standardized feature names
-      builddesk_value: string;            // FROM-DB - BuildDesk's offering
+      brikly_value: string;            // FROM-DB - Brikly's offering
       competitor_value: string;           // FROM-DB - Competitor's offering (researched, accurate)
-      winner: "builddesk" | "competitor" | "tie"; // FROM-DB - honest assessment
+      winner: "brikly" | "competitor" | "tie"; // FROM-DB - honest assessment
       why_it_matters: string;             // AI-FILL - 1 sentence on why contractors care about this feature
     }[];
     pricing: {
-      builddesk_price: string;            // DETERMINISTIC - "$350/month unlimited users"
+      brikly_price: string;            // DETERMINISTIC - "$350/month unlimited users"
       competitor_price: string;           // FROM-DB - competitor pricing (with source date)
       pricing_note: string;              // AI-FILL - 1 sentence on the real-world cost difference
     };
   };
 
-  when_to_choose_builddesk: {
-    section_title: string;               // DETERMINISTIC - "Choose BuildDesk When..."
+  when_to_choose_brikly: {
+    section_title: string;               // DETERMINISTIC - "Choose Brikly When..."
     scenarios: string[];                 // AI-FILL - exactly 4 scenarios, specific and honest
   };
 
@@ -943,7 +943,7 @@ interface ComparisonSchema {
   switching_guide?: {                   // Optional - include if competitor is used by a significant portion of target market
     headline: string;                   // AI-FILL
     steps: string[];                    // AI-FILL - exactly 4 steps to migrate
-    migration_support: string;          // DETERMINISTIC - "BuildDesk provides free migration support"
+    migration_support: string;          // DETERMINISTIC - "Brikly provides free migration support"
   };
 
   faq: {                               // AI-FILL - exactly 5 entries
@@ -1045,7 +1045,7 @@ interface PainSizeSchema {
 --- PROMPT: contractor_pain ---
 
 SYSTEM:
-You are a B2B content specialist for BuildDesk, a construction management SaaS
+You are a B2B content specialist for Brikly, a construction management SaaS
 platform. You produce structured JSON content for programmatic landing pages
 targeting SMB construction contractors. You never write freeform content. You
 only fill schemas. Your output is always valid JSON that exactly matches the
@@ -1057,14 +1057,14 @@ intelligence. You never use construction clichés like "build your business" or
 CONTEXT INJECTION:
 [CONTRACTOR_CONTEXT]: {{contractor_type_context_object}}
 [PAIN_CONTEXT]: {{pain_point_context_object}}
-[SITE_CONTEXT]: This content appears on build-desk.com, a construction
+[SITE_CONTEXT]: This content appears on brikly.net, a construction
 management platform positioning itself as a "financial command center" for SMB
 contractors. Key differentiators: unlimited users at $350/month, real-time job
 costing, QuickBooks integration. Target buyer: owner or operations manager at
 a $1M–$20M contractor.
 
 DATA INJECTION:
-BuildDesk features relevant to this combination:
+Brikly features relevant to this combination:
 {{relevant_features_json}}
 
 Competitor data for this contractor type:
@@ -1104,7 +1104,7 @@ For each faq entry, ask:
 --- PROMPT: contractor_geo ---
 
 SYSTEM:
-You are a B2B content specialist for BuildDesk. You produce structured JSON
+You are a B2B content specialist for Brikly. You produce structured JSON
 content for geo-targeted landing pages for construction contractors. You
 understand local construction markets, state contractor licensing, lien laws,
 and regional business conditions. You never write tourism-copy about cities.
@@ -1113,7 +1113,7 @@ You write about construction business realities in specific markets.
 CONTEXT INJECTION:
 [CONTRACTOR_CONTEXT]: {{contractor_type_context_object}}
 [GEO_CONTEXT]: {{geography_context_object}}
-[SITE_CONTEXT]: BuildDesk is a construction management platform at build-desk.com.
+[SITE_CONTEXT]: Brikly is a construction management platform at brikly.net.
 Unlimited users, $350/month. Financial intelligence for SMB contractors.
 
 SCHEMA TO FILL:
@@ -1145,7 +1145,7 @@ For each item in solution_section.features:
 --- PROMPT: comparison ---
 
 SYSTEM:
-You are a B2B content writer for BuildDesk. You write honest software
+You are a B2B content writer for Brikly. You write honest software
 comparison content. You acknowledge where competitors are strong. You never
 make false claims about competitors. You never use attack-ad language. Your
 tone is "a contractor's trusted advisor who has evaluated both tools." You
@@ -1155,8 +1155,8 @@ be genuine—reviewers will notice if it's not.
 
 CONTEXT INJECTION:
 [COMPETITOR_CONTEXT]: {{competitor_profile_object}}
-[BUILDDESK_CONTEXT]: {
-  "name": "BuildDesk",
+[BRIKLY_CONTEXT]: {
+  "name": "Brikly",
   "price": "$350/month unlimited users",
   "strengths": ["real-time job costing", "unlimited users", "QuickBooks sync",
                 "construction-specific financial reports", "client portal"],
@@ -1178,7 +1178,7 @@ OUTPUT RULES:
 2. comparison_table.features must be honest — if competitor wins on a feature, winner = "competitor".
 3. when_to_choose_competitor scenarios must be genuine situations where {{competitor_name}} is
    actually the better choice. Do not write straw-man scenarios.
-4. fairness_disclaimer must be a single honest sentence acknowledging BuildDesk's perspective.
+4. fairness_disclaimer must be a single honest sentence acknowledging Brikly's perspective.
 5. Every why_it_matters in comparison_table must explain the BUSINESS impact, not just
    the feature difference.
 6. pricing_note must include the actual math showing the cost difference for a typical
@@ -1197,7 +1197,7 @@ representation of their product's strengths? If no, rewrite.
 --- PROMPT: pain_size ---
 
 SYSTEM:
-You are a B2B content specialist for BuildDesk. You write for specific
+You are a B2B content specialist for Brikly. You write for specific
 stages of contractor business growth. A small contractor (under $1M) has
 completely different concerns than a mid-size contractor ($5M–$20M). The
 same pain point (job costing) looks different at each stage. Your content
@@ -1207,7 +1207,7 @@ their software maturity, their team structure, their price sensitivity.
 CONTEXT INJECTION:
 [PAIN_CONTEXT]: {{pain_point_context_object}}
 [SIZE_CONTEXT]: {{business_size_context_object}}
-[SITE_CONTEXT]: BuildDesk, build-desk.com. Unlimited users. $350–799/month.
+[SITE_CONTEXT]: Brikly, brikly.net. Unlimited users. $350–799/month.
 SMB contractor focus.
 
 SCHEMA TO FILL:
@@ -1262,7 +1262,7 @@ ANY contractor would ask? If generic, make it size-specific.
 const structuredData = {
   "@context": "https://schema.org",
   "@type": "SoftwareApplication",
-  "name": "BuildDesk",
+  "name": "Brikly",
   "applicationCategory": "BusinessApplication",
   "description": pageData.seo.description,
   "offers": {
@@ -1332,7 +1332,7 @@ export default function ContractorPainPage({ data, params }: ContractorPainPageP
 **LAYOUT SECTIONS (in order):**
 1. **Hero** — headline, subheadline, intro, fairness disclaimer in small text
 2. **Comparison Table** — sticky header table, 8–10 feature rows, winner badges
-3. **When to Choose BuildDesk** — 4-item bulleted section
+3. **When to Choose Brikly** — 4-item bulleted section
 4. **When to Choose [Competitor]** — 3-item honest assessment (builds trust)
 5. **Pricing Comparison** — side-by-side with real math
 6. **Switching Guide** (conditional) — 4-step migration if applicable
@@ -1340,7 +1340,7 @@ export default function ContractorPainPage({ data, params }: ContractorPainPageP
 8. **CTA Block** — "Still Deciding? Talk to a Real Contractor User"
 
 **INTERACTIVE FEATURES:**
-- `comparison-table`: Sortable by "winner" column; winner badges (BuildDesk/Competitor/Tie)
+- `comparison-table`: Sortable by "winner" column; winner badges (Brikly/Competitor/Tie)
 - `pricing-calculator`: "Enter your team size → see real cost difference" (vanilla JS)
 
 **PERFORMANCE REQUIREMENTS:**
@@ -1423,7 +1423,7 @@ For each generated page before publishing:
 
 ### 6B. n8n Workflow Structure
 
-**Workflow Name:** `BuildDesk pSEO Page Generator`
+**Workflow Name:** `Brikly pSEO Page Generator`
 
 **Trigger:**
 - Schedule: Every Monday at 6:00 AM CT (weekly batch)
@@ -1830,7 +1830,7 @@ Traffic Projection (Moderate):
 Random sample test (contractor_pain :: hvac :: cash-flow):
 
 **"Would this page still be useful if search engines didn't exist?"**  
-→ Yes. An HVAC contractor evaluating BuildDesk would find real answers about how BuildDesk handles service contract cash flow vs. installation billing — not available anywhere else in this combination.
+→ Yes. An HVAC contractor evaluating Brikly would find real answers about how Brikly handles service contract cash flow vs. installation billing — not available anywhere else in this combination.
 
 **"If someone bookmarked this page, would they find it valuable a week later?"**  
 → Yes. The pain_section and how_it_works content speaks to a persistent business problem, not a trending news item.

@@ -59,7 +59,7 @@ serve(async (req) => {
                   to: [{ email: recipient_email }],
                   subject,
                 }],
-                from: { email: Deno.env.get('FROM_EMAIL') || 'seo@builddesk.com' },
+                from: { email: Deno.env.get('FROM_EMAIL') || 'seo@brikly.com' },
                 content: [{
                   type: 'text/html',
                   value: `

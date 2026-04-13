@@ -2,7 +2,7 @@
 
 **Date:** November 14, 2025
 **Status:** ✅ Complete (100%)
-**Branch:** `claude/builddesk-ux-improvements-01QryFMW3fkWBRY6wa1v4BAn`
+**Branch:** `claude/brikly-ux-improvements-01QryFMW3fkWBRY6wa1v4BAn`
 
 ## Overview
 

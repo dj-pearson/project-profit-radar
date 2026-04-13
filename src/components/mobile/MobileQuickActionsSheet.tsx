@@ -114,7 +114,7 @@ const DEFAULT_ACTIONS: MobileQuickAction[] = [
   },
 ];
 
-const RECENTS_KEY = 'builddesk.mobile.quickActions.recents';
+const RECENTS_KEY = 'brikly.mobile.quickActions.recents';
 const RECENTS_MAX = 3;
 
 function loadRecents(): string[] {

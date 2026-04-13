@@ -1,6 +1,6 @@
 # Expo Build Success Summary
 
-**Project:** BuildDesk Mobile App  
+**Project:** Brikly Mobile App  
 **Build Date:** October 20, 2025  
 **Result:** ✅ SUCCESS - iOS IPA Generated  
 **Build Link:** https://expo.dev/artifacts/eas/wGBHmJ8DHnYvKDYHdpbdEx.ipa
@@ -106,7 +106,7 @@ redirectTo: `${window.location.origin}/dashboard`
 
 // After:
 const location = getWindowLocation();
-const redirectUrl = location ? `${location.origin}/dashboard` : 'builddesk://dashboard';
+const redirectUrl = location ? `${location.origin}/dashboard` : 'brikly://dashboard';
 ```
 
 #### **src/hooks/useGoogleAnalytics.ts**
@@ -197,7 +197,7 @@ module.exports = config;
 // Updated to use existing files
 icon: './public/android-chrome-512x512.png',
 splash: {
-  image: './public/BuildDeskLogo.png',
+  image: './public/BriklyLogo.png',
   backgroundColor: '#4A90E2',
 },
 android: {
@@ -383,10 +383,10 @@ eas build --platform ios --profile production --non-interactive
 
 ## 🔗 Important Links
 
-- **Build Logs:** https://expo.dev/accounts/djpearson/projects/build-desk-2rirxbgg70kpf2ce6py3e/builds/
+- **Build Logs:** https://expo.dev/accounts/djpearson/projects/brikly-2rirxbgg70kpf2ce6py3e/builds/
 - **App IPA:** https://expo.dev/artifacts/eas/wGBHmJ8DHnYvKDYHdpbdEx.ipa
-- **Project:** @djpearson/build-desk-2rirxbgg70kpf2ce6py3e
-- **Bundle ID:** com.builddesk.app
+- **Project:** @djpearson/brikly-2rirxbgg70kpf2ce6py3e
+- **Bundle ID:** com.brikly.app
 
 ---
 

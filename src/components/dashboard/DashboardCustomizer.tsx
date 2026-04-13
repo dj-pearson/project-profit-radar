@@ -33,7 +33,7 @@ const DEFAULT_WIDGETS: DashboardWidgetConfig[] = [
   { id: 'recentActivity', label: 'Recent Activity', icon: <Calendar className="h-4 w-4" />, enabled: true, description: 'Latest team actions and updates' },
 ];
 
-const STORAGE_KEY = 'builddesk-dashboard-widgets';
+const STORAGE_KEY = 'brikly-dashboard-widgets';
 
 function loadWidgetConfig(): DashboardWidgetConfig[] {
   try {

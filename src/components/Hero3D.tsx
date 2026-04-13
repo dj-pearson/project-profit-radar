@@ -21,12 +21,12 @@
 
 import { lazy, Suspense } from 'react';
 
-const BuildDeskHero3D = lazy(() => import('./hero/BuildDeskHero3D'));
+const BriklyHero3D = lazy(() => import('./hero/BriklyHero3D'));
 
 const Hero3D = () => {
   return (
     <Suspense fallback={<div className="h-screen bg-gradient-to-b from-slate-900 to-slate-800" />}>
-      <BuildDeskHero3D />
+      <BriklyHero3D />
     </Suspense>
   );
 };

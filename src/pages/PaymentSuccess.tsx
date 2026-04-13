@@ -171,7 +171,7 @@ export const PaymentSuccess = () => {
         {/* Support Link */}
         <p className="text-center text-sm text-muted-foreground mt-6 animate-in fade-in duration-700 delay-1000">
           Questions about this payment?{' '}
-          <a href="mailto:support@builddesk.com" className="text-construction-blue hover:text-construction-orange">
+          <a href="mailto:support@brikly.com" className="text-construction-blue hover:text-construction-orange">
             Contact support
           </a>
         </p>

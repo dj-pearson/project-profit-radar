@@ -17,7 +17,7 @@ struct DocumentListView: View {
                 EmptyStateView(
                     icon: "folder",
                     title: "No Documents",
-                    message: "Documents uploaded in BuildDesk will appear here."
+                    message: "Documents uploaded in Brikly will appear here."
                 )
             } else {
                 List {

@@ -22,7 +22,7 @@ interface StoredLayout {
   hidden: string[];
 }
 
-const STORAGE_KEY = 'builddesk.mobile.dashboard.layout';
+const STORAGE_KEY = 'brikly.mobile.dashboard.layout';
 
 function loadLayout(): StoredLayout {
   if (typeof window === 'undefined') return { order: [], hidden: [] };

@@ -338,7 +338,7 @@ const FinancialHealthCheck = () => {
                 </li>
                 <li className="flex items-start gap-2">
                   <CheckCircle className="h-4 w-4 text-construction-orange flex-shrink-0 mt-0.5" />
-                  <span>Custom ROI projection for implementing BuildDesk</span>
+                  <span>Custom ROI projection for implementing Brikly</span>
                 </li>
               </ul>
             </div>
@@ -500,7 +500,7 @@ const FinancialHealthCheck = () => {
             {/* ROI Projection */}
             <Card className="border-green-200 bg-green-50">
               <CardHeader>
-                <CardTitle className="text-green-800">Your BuildDesk ROI Projection</CardTitle>
+                <CardTitle className="text-green-800">Your Brikly ROI Projection</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="grid md:grid-cols-3 gap-4 text-center">
@@ -520,7 +520,7 @@ const FinancialHealthCheck = () => {
                   </div>
                 </div>
                 <p className="text-sm text-green-700 text-center">
-                  If you prevent just ONE $40K cost overrun with BuildDesk's early warnings,
+                  If you prevent just ONE $40K cost overrun with Brikly's early warnings,
                   the platform pays for itself for the next 10 years.
                 </p>
               </CardContent>

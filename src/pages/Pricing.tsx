@@ -12,12 +12,12 @@ import { SaaSProductSchema } from "@/components/seo/SaaSProductSchema";
 const PricingPage = () => {
   // Structured data for pricing page
   const breadcrumbSchema = createBreadcrumbSchema([
-    { name: "Home", url: "https://builddesk.com" },
-    { name: "Pricing", url: "https://builddesk.com/pricing" }
+    { name: "Home", url: "https://brikly.com" },
+    { name: "Pricing", url: "https://brikly.com/pricing" }
   ]);
 
   const productSchema = createProductSchema(
-    "BuildDesk Construction Management Software",
+    "Brikly Construction Management Software",
     "Complete construction management platform for small contractors with job costing, scheduling, mobile apps, and OSHA compliance.",
     "350",
     {
@@ -32,12 +32,12 @@ const PricingPage = () => {
   return (
     <>
       <PageSEO
-        title="BuildDesk Pricing - $350/Month Unlimited Users | Construction Software"
+        title="Brikly Pricing - $350/Month Unlimited Users | Construction Software"
         description="Simple, transparent pricing for construction management software. $350/month with unlimited users, job costing, scheduling, mobile apps, OSHA compliance, QuickBooks sync. 14-day free trial. No setup fees."
         keywords={[
           'construction software pricing',
           'construction management software cost',
-          'builddesk pricing',
+          'brikly pricing',
           'contractor software pricing',
           'construction project management pricing',
           'job costing software cost',
@@ -74,8 +74,8 @@ const PricingPage = () => {
             </div>
 
             <QuickAnswerSnippet
-              question="How much does BuildDesk construction management software cost?"
-              answer="BuildDesk costs $350/month with unlimited users and all features included. This is 50% less than Procore ($500+/month per user) and includes no hidden fees, no per-seat charges, and no setup costs. A 14-day free trial is available with no credit card required."
+              question="How much does Brikly construction management software cost?"
+              answer="Brikly costs $350/month with unlimited users and all features included. This is 50% less than Procore ($500+/month per user) and includes no hidden fees, no per-seat charges, and no setup costs. A 14-day free trial is available with no credit card required."
             />
 
             <Pricing />
@@ -85,7 +85,7 @@ const PricingPage = () => {
               <GEOOptimizedFAQ
                 faqs={pricingFAQs}
                 title="Pricing & Billing Questions"
-                description="Get answers to common questions about BuildDesk pricing, billing, and plans"
+                description="Get answers to common questions about Brikly pricing, billing, and plans"
               />
             </div>
           </div>

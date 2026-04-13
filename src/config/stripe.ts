@@ -1,4 +1,4 @@
-// Stripe Configuration for BuildDesk
+// Stripe Configuration for Brikly
 // This file contains Stripe product and price IDs
 //
 // IMPORTANT: After running the setup script (scripts/setup-stripe-products.sh or .ps1),

@@ -13,7 +13,7 @@ const OperationsHub: React.FC = () => {
   return (
     <DashboardLayout title="Operations Hub">
       <Helmet>
-        <title>Operations Hub | BuildDesk</title>
+        <title>Operations Hub | Brikly</title>
         <meta name="description" content="Operations hub – safety, compliance, permits, and more." />
         <link rel="canonical" href="/operations-hub" />
       </Helmet>

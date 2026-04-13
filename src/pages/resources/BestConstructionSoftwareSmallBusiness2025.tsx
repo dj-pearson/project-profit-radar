@@ -25,21 +25,21 @@ const BestConstructionSoftwareSmallBusiness2025 = () => {
     "description": "Unbiased comparison of the 7 best construction management software tools for small contractors. Features, pricing, pros/cons, and honest recommendations for businesses under $5M revenue.",
     "author": {
       "@type": "Organization",
-      "name": "BuildDesk"
+      "name": "Brikly"
     },
     "publisher": {
       "@type": "Organization",
-      "name": "BuildDesk",
+      "name": "Brikly",
       "logo": {
         "@type": "ImageObject",
-        "url": "https://builddesk.com/logo.png"
+        "url": "https://brikly.com/logo.png"
       }
     },
     "datePublished": "2025-01-14",
     "dateModified": "2025-01-14",
     "mainEntityOfPage": {
       "@type": "WebPage",
-      "@id": "https://builddesk.com/resources/best-construction-management-software-small-business-2025"
+      "@id": "https://brikly.com/resources/best-construction-management-software-small-business-2025"
     },
     "keywords": "best construction management software, construction software for small business, contractor software comparison, construction management tools 2025"
   };
@@ -53,7 +53,7 @@ const BestConstructionSoftwareSmallBusiness2025 = () => {
         "name": "What is the best construction management software for small contractors?",
         "acceptedAnswer": {
           "@type": "Answer",
-          "text": "The best construction management software for small contractors depends on your specific needs: BuildDesk is best for real-time job costing and financial control ($350/month unlimited users). Buildertrend is best for residential contractors with strong client communication needs ($399+/month). CoConstruct is best for custom home builders ($499+/month). Procore is best if you need enterprise features and have the budget ($375+/user/month). For contractors under $3M revenue, BuildDesk offers the best value with unlimited users and comprehensive job costing."
+          "text": "The best construction management software for small contractors depends on your specific needs: Brikly is best for real-time job costing and financial control ($350/month unlimited users). Buildertrend is best for residential contractors with strong client communication needs ($399+/month). CoConstruct is best for custom home builders ($499+/month). Procore is best if you need enterprise features and have the budget ($375+/user/month). For contractors under $3M revenue, Brikly offers the best value with unlimited users and comprehensive job costing."
         }
       },
       {
@@ -61,7 +61,7 @@ const BestConstructionSoftwareSmallBusiness2025 = () => {
         "name": "How much should small construction companies spend on software?",
         "acceptedAnswer": {
           "@type": "Answer",
-          "text": "Small construction companies should budget 0.5-1.5% of annual revenue for construction management software. For a $2M/year contractor, that's $10K-$30K annually ($833-$2,500/month). Most small contractors spend $300-$600/month on software. Avoid per-user pricing if you have 5+ users—unlimited user plans like BuildDesk ($350/month) save money as you grow. Calculate ROI: good software should save 10-15 hours/week in admin time, which equals $20K-$30K annual value."
+          "text": "Small construction companies should budget 0.5-1.5% of annual revenue for construction management software. For a $2M/year contractor, that's $10K-$30K annually ($833-$2,500/month). Most small contractors spend $300-$600/month on software. Avoid per-user pricing if you have 5+ users—unlimited user plans like Brikly ($350/month) save money as you grow. Calculate ROI: good software should save 10-15 hours/week in admin time, which equals $20K-$30K annual value."
         }
       },
       {
@@ -69,7 +69,7 @@ const BestConstructionSoftwareSmallBusiness2025 = () => {
         "name": "Do I need construction management software or just QuickBooks?",
         "acceptedAnswer": {
           "@type": "Answer",
-          "text": "QuickBooks alone is NOT enough for construction. QuickBooks handles accounting (invoicing, A/P, A/R) but doesn't do project management, job costing, change orders, daily reports, or field communication. You need construction-specific software that integrates WITH QuickBooks. The best approach: Use QuickBooks for accounting + construction management software (like BuildDesk) for job costing, project tracking, and operations. Most construction software syncs with QuickBooks automatically."
+          "text": "QuickBooks alone is NOT enough for construction. QuickBooks handles accounting (invoicing, A/P, A/R) but doesn't do project management, job costing, change orders, daily reports, or field communication. You need construction-specific software that integrates WITH QuickBooks. The best approach: Use QuickBooks for accounting + construction management software (like Brikly) for job costing, project tracking, and operations. Most construction software syncs with QuickBooks automatically."
         }
       },
       {
@@ -85,7 +85,7 @@ const BestConstructionSoftwareSmallBusiness2025 = () => {
         "name": "How long does it take to implement construction management software?",
         "acceptedAnswer": {
           "@type": "Answer",
-          "text": "Implementation timeline for small contractors: Week 1—Setup and configuration (chart of accounts, cost codes, user accounts). Week 2—Team training (2-4 hours per user for basic features). Week 3-4—Pilot with 1-2 projects while maintaining old system. Week 5+—Full rollout across all projects. Total time to full adoption: 4-6 weeks. Simpler tools like BuildDesk can be up and running in 1-2 weeks. Complex enterprise tools (Procore, CMiC) can take 2-3 months. Budget 20-40 hours of owner/admin time for implementation."
+          "text": "Implementation timeline for small contractors: Week 1—Setup and configuration (chart of accounts, cost codes, user accounts). Week 2—Team training (2-4 hours per user for basic features). Week 3-4—Pilot with 1-2 projects while maintaining old system. Week 5+—Full rollout across all projects. Total time to full adoption: 4-6 weeks. Simpler tools like Brikly can be up and running in 1-2 weeks. Complex enterprise tools (Procore, CMiC) can take 2-3 months. Budget 20-40 hours of owner/admin time for implementation."
         }
       }
     ]
@@ -94,7 +94,7 @@ const BestConstructionSoftwareSmallBusiness2025 = () => {
   return (
     <>
       <Helmet>
-        <title>Best Construction Management Software for Small Business (2025) | BuildDesk</title>
+        <title>Best Construction Management Software for Small Business (2025) | Brikly</title>
         <meta
           name="description"
           content="Unbiased comparison of the 7 best construction management software tools for small contractors. Features, pricing, pros/cons, and honest recommendations for businesses under $5M revenue."
@@ -103,7 +103,7 @@ const BestConstructionSoftwareSmallBusiness2025 = () => {
           name="keywords"
           content="best construction management software, construction software for small business, contractor software comparison, construction management tools 2025, small contractor software"
         />
-        <link rel="canonical" href="https://builddesk.com/resources/best-construction-management-software-small-business-2025" />
+        <link rel="canonical" href="https://brikly.com/resources/best-construction-management-software-small-business-2025" />
         <script type="application/ld+json">
           {JSON.stringify(articleSchema)}
         </script>
@@ -145,7 +145,7 @@ const BestConstructionSoftwareSmallBusiness2025 = () => {
                   The Quick Answer
                 </h2>
                 <p className="text-lg leading-relaxed mb-4">
-                  <strong>Best overall for small contractors:</strong> <Link to="/" className="text-construction-orange hover:underline font-bold">BuildDesk</Link> ($350/month unlimited users) — Best value for real-time job costing and financial control without complexity.
+                  <strong>Best overall for small contractors:</strong> <Link to="/" className="text-construction-orange hover:underline font-bold">Brikly</Link> ($350/month unlimited users) — Best value for real-time job costing and financial control without complexity.
                 </p>
                 <p className="text-lg leading-relaxed mb-4">
                   <strong>Best for residential contractors:</strong> Buildertrend ($399+/month) — Strong client communication and selection tracking.
@@ -188,7 +188,7 @@ const BestConstructionSoftwareSmallBusiness2025 = () => {
                 <tbody>
                   <tr className="border-b border-gray-200 bg-construction-orange/5">
                     <td className="p-4 font-bold">
-                      <Link to="/" className="text-construction-orange hover:underline">BuildDesk</Link>
+                      <Link to="/" className="text-construction-orange hover:underline">Brikly</Link>
                       <div className="text-xs text-green-600 font-semibold mt-1">↑ BEST VALUE</div>
                     </td>
                     <td className="p-4">
@@ -321,13 +321,13 @@ const BestConstructionSoftwareSmallBusiness2025 = () => {
             </h2>
 
             <div className="space-y-12">
-              {/* BuildDesk */}
+              {/* Brikly */}
               <Card className="border-2 border-construction-orange shadow-lg">
                 <CardContent className="pt-8">
                   <div className="flex items-start justify-between mb-6">
                     <div>
                       <h3 className="text-2xl font-bold text-construction-dark mb-2">
-                        1. BuildDesk
+                        1. Brikly
                       </h3>
                       <div className="flex items-center gap-2 text-yellow-500 mb-2">
                         <Star fill="currentColor" className="w-5 h-5" />
@@ -409,13 +409,13 @@ const BestConstructionSoftwareSmallBusiness2025 = () => {
 
                   <div className="bg-blue-50 border border-blue-200 p-4 rounded-lg mb-6">
                     <p className="text-sm text-gray-700">
-                      <strong>💡 Why BuildDesk wins for small contractors:</strong> Most competitors charge $375-$500 PER USER per month. With a 5-person team, Procore costs $1,875/month vs BuildDesk's $350/month—that's $18,300/year in savings. Plus, BuildDesk focuses on what small contractors actually need: real-time job costing and financial control, not enterprise features you'll never use.
+                      <strong>💡 Why Brikly wins for small contractors:</strong> Most competitors charge $375-$500 PER USER per month. With a 5-person team, Procore costs $1,875/month vs Brikly's $350/month—that's $18,300/year in savings. Plus, Brikly focuses on what small contractors actually need: real-time job costing and financial control, not enterprise features you'll never use.
                     </p>
                   </div>
 
                   <Link to="/">
                     <Button size="lg" className="w-full md:w-auto bg-construction-orange hover:bg-construction-orange/90 text-white">
-                      Try BuildDesk Free for 14 Days
+                      Try Brikly Free for 14 Days
                       <ArrowRight className="w-5 h-5 ml-2" />
                     </Button>
                   </Link>
@@ -490,7 +490,7 @@ const BestConstructionSoftwareSmallBusiness2025 = () => {
                         </li>
                         <li className="flex items-start gap-2">
                           <XCircle className="w-4 h-4 text-red-600 flex-shrink-0 mt-0.5" />
-                          <span>Weaker financial/job costing compared to BuildDesk</span>
+                          <span>Weaker financial/job costing compared to Brikly</span>
                         </li>
                         <li className="flex items-start gap-2">
                           <XCircle className="w-4 h-4 text-red-600 flex-shrink-0 mt-0.5" />
@@ -505,7 +505,7 @@ const BestConstructionSoftwareSmallBusiness2025 = () => {
                   </div>
 
                   <p className="text-sm text-gray-600">
-                    <strong>Bottom line:</strong> Good choice if you're a residential contractor who values client communication over financial intelligence. But if job costing is your priority, BuildDesk offers better value.
+                    <strong>Bottom line:</strong> Good choice if you're a residential contractor who values client communication over financial intelligence. But if job costing is your priority, Brikly offers better value.
                   </p>
                 </CardContent>
               </Card>
@@ -586,7 +586,7 @@ const BestConstructionSoftwareSmallBusiness2025 = () => {
 
                   <div className="bg-red-50 border border-red-200 p-4 rounded-lg">
                     <p className="text-sm text-gray-700">
-                      <strong>⚠️ Cost reality check:</strong> A 10-person team on Procore costs $3,750/month = $45,000/year. BuildDesk costs $350/month = $4,200/year. That's a $40,800 annual savings. Unless you're running $20M+ projects, Procore is overkill. See our <Link to="/resources/procore-vs-builddesk-small-contractors" className="text-construction-orange hover:underline font-semibold">detailed Procore vs BuildDesk comparison</Link>.
+                      <strong>⚠️ Cost reality check:</strong> A 10-person team on Procore costs $3,750/month = $45,000/year. Brikly costs $350/month = $4,200/year. That's a $40,800 annual savings. Unless you're running $20M+ projects, Procore is overkill. See our <Link to="/resources/procore-vs-brikly-small-contractors" className="text-construction-orange hover:underline font-semibold">detailed Procore vs Brikly comparison</Link>.
                     </p>
                   </div>
                 </CardContent>
@@ -607,7 +607,7 @@ const BestConstructionSoftwareSmallBusiness2025 = () => {
                 <CardContent className="pt-6">
                   <h3 className="font-bold text-xl mb-4 text-white flex items-center gap-2">
                     <Users className="w-6 h-6 text-construction-orange" />
-                    Choose BuildDesk if:
+                    Choose Brikly if:
                   </h3>
                   <ul className="space-y-2 text-sm text-gray-200">
                     <li className="flex items-start gap-2">
@@ -633,7 +633,7 @@ const BestConstructionSoftwareSmallBusiness2025 = () => {
                   </ul>
                   <Link to="/" className="block mt-6">
                     <Button className="w-full bg-construction-orange hover:bg-construction-orange/90 text-white">
-                      Try BuildDesk Free
+                      Try Brikly Free
                     </Button>
                   </Link>
                 </CardContent>
@@ -683,7 +683,7 @@ const BestConstructionSoftwareSmallBusiness2025 = () => {
                     What is the best construction management software for small contractors?
                   </h3>
                   <p className="text-gray-600 leading-relaxed">
-                    The best construction management software for small contractors depends on your specific needs: BuildDesk is best for real-time job costing and financial control ($350/month unlimited users). Buildertrend is best for residential contractors with strong client communication needs ($399+/month). CoConstruct is best for custom home builders ($499+/month). Procore is best if you need enterprise features and have the budget ($375+/user/month). For contractors under $3M revenue, BuildDesk offers the best value with unlimited users and comprehensive job costing.
+                    The best construction management software for small contractors depends on your specific needs: Brikly is best for real-time job costing and financial control ($350/month unlimited users). Buildertrend is best for residential contractors with strong client communication needs ($399+/month). CoConstruct is best for custom home builders ($499+/month). Procore is best if you need enterprise features and have the budget ($375+/user/month). For contractors under $3M revenue, Brikly offers the best value with unlimited users and comprehensive job costing.
                   </p>
                 </CardContent>
               </Card>
@@ -694,7 +694,7 @@ const BestConstructionSoftwareSmallBusiness2025 = () => {
                     How much should small construction companies spend on software?
                   </h3>
                   <p className="text-gray-600 leading-relaxed">
-                    Small construction companies should budget 0.5-1.5% of annual revenue for construction management software. For a $2M/year contractor, that's $10K-$30K annually ($833-$2,500/month). Most small contractors spend $300-$600/month on software. Avoid per-user pricing if you have 5+ users—unlimited user plans like BuildDesk ($350/month) save money as you grow. Calculate ROI: good software should save 10-15 hours/week in admin time, which equals $20K-$30K annual value.
+                    Small construction companies should budget 0.5-1.5% of annual revenue for construction management software. For a $2M/year contractor, that's $10K-$30K annually ($833-$2,500/month). Most small contractors spend $300-$600/month on software. Avoid per-user pricing if you have 5+ users—unlimited user plans like Brikly ($350/month) save money as you grow. Calculate ROI: good software should save 10-15 hours/week in admin time, which equals $20K-$30K annual value.
                   </p>
                 </CardContent>
               </Card>
@@ -705,7 +705,7 @@ const BestConstructionSoftwareSmallBusiness2025 = () => {
                     Do I need construction management software or just QuickBooks?
                   </h3>
                   <p className="text-gray-600 leading-relaxed">
-                    QuickBooks alone is NOT enough for construction. QuickBooks handles accounting (invoicing, A/P, A/R) but doesn't do project management, job costing, change orders, daily reports, or field communication. You need construction-specific software that integrates WITH QuickBooks. The best approach: Use QuickBooks for accounting + construction management software (like BuildDesk) for job costing, project tracking, and operations. Most construction software syncs with QuickBooks automatically.
+                    QuickBooks alone is NOT enough for construction. QuickBooks handles accounting (invoicing, A/P, A/R) but doesn't do project management, job costing, change orders, daily reports, or field communication. You need construction-specific software that integrates WITH QuickBooks. The best approach: Use QuickBooks for accounting + construction management software (like Brikly) for job costing, project tracking, and operations. Most construction software syncs with QuickBooks automatically.
                   </p>
                 </CardContent>
               </Card>
@@ -727,7 +727,7 @@ const BestConstructionSoftwareSmallBusiness2025 = () => {
                     How long does it take to implement construction management software?
                   </h3>
                   <p className="text-gray-600 leading-relaxed">
-                    Implementation timeline for small contractors: Week 1—Setup and configuration (chart of accounts, cost codes, user accounts). Week 2—Team training (2-4 hours per user for basic features). Week 3-4—Pilot with 1-2 projects while maintaining old system. Week 5+—Full rollout across all projects. Total time to full adoption: 4-6 weeks. Simpler tools like BuildDesk can be up and running in 1-2 weeks. Complex enterprise tools (Procore, CMiC) can take 2-3 months. Budget 20-40 hours of owner/admin time for implementation.
+                    Implementation timeline for small contractors: Week 1—Setup and configuration (chart of accounts, cost codes, user accounts). Week 2—Team training (2-4 hours per user for basic features). Week 3-4—Pilot with 1-2 projects while maintaining old system. Week 5+—Full rollout across all projects. Total time to full adoption: 4-6 weeks. Simpler tools like Brikly can be up and running in 1-2 weeks. Complex enterprise tools (Procore, CMiC) can take 2-3 months. Budget 20-40 hours of owner/admin time for implementation.
                   </p>
                 </CardContent>
               </Card>
@@ -743,11 +743,11 @@ const BestConstructionSoftwareSmallBusiness2025 = () => {
               Ready to Try the Best Value Construction Software?
             </h2>
             <p className="text-xl text-gray-300 mb-8 max-w-2xl mx-auto">
-              Join small contractors who switched to BuildDesk and saved $18K+/year while getting better job costing and financial control.
+              Join small contractors who switched to Brikly and saved $18K+/year while getting better job costing and financial control.
             </p>
             <Link to="/">
               <Button size="lg" className="bg-construction-orange hover:bg-construction-orange/90 text-white mr-4">
-                Try BuildDesk Free for 14 Days
+                Try Brikly Free for 14 Days
               </Button>
             </Link>
             <Link to="/resources/construction-roi-calculator-guide">

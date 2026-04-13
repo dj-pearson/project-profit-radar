@@ -13,7 +13,7 @@ const AdminHub: React.FC = () => {
   return (
     <DashboardLayout title="Admin Hub">
       <Helmet>
-        <title>Admin Hub | BuildDesk</title>
+        <title>Admin Hub | Brikly</title>
         <meta name="description" content="Administration hub – company, billing, and platform settings." />
         <link rel="canonical" href="/admin-hub" />
       </Helmet>

@@ -141,7 +141,7 @@ export const generateBreadcrumbStructuredData = (items: BreadcrumbItem[]) => {
       "@type": "ListItem",
       "position": index + 1,
       "name": item.label,
-      "item": item.href ? `https://builddesk.com${item.href}` : undefined
+      "item": item.href ? `https://brikly.com${item.href}` : undefined
     }))
   };
 };

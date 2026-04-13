@@ -1,10 +1,10 @@
 apply plugin: 'com.android.application'
 
 android {
-    namespace "com.builddesk.app"
+    namespace "com.brikly.app"
     compileSdk rootProject.ext.compileSdkVersion
     defaultConfig {
-        applicationId "com.builddesk.app"
+        applicationId "com.brikly.app"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1
@@ -37,12 +37,12 @@ android {
         release {
             // Release signing - values from environment variables or local properties
             // Set these in CI/CD or local.properties:
-            //   BUILDDESK_KEYSTORE_PATH, BUILDDESK_KEYSTORE_PASSWORD,
-            //   BUILDDESK_KEY_ALIAS, BUILDDESK_KEY_PASSWORD
-            def keystorePath = System.getenv("BUILDDESK_KEYSTORE_PATH") ?: project.findProperty("BUILDDESK_KEYSTORE_PATH")
-            def keystorePassword = System.getenv("BUILDDESK_KEYSTORE_PASSWORD") ?: project.findProperty("BUILDDESK_KEYSTORE_PASSWORD")
-            def keyAlias = System.getenv("BUILDDESK_KEY_ALIAS") ?: project.findProperty("BUILDDESK_KEY_ALIAS")
-            def keyPassword = System.getenv("BUILDDESK_KEY_PASSWORD") ?: project.findProperty("BUILDDESK_KEY_PASSWORD")
+            //   BRIKLY_KEYSTORE_PATH, BRIKLY_KEYSTORE_PASSWORD,
+            //   BRIKLY_KEY_ALIAS, BRIKLY_KEY_PASSWORD
+            def keystorePath = System.getenv("BRIKLY_KEYSTORE_PATH") ?: project.findProperty("BRIKLY_KEYSTORE_PATH")
+            def keystorePassword = System.getenv("BRIKLY_KEYSTORE_PASSWORD") ?: project.findProperty("BRIKLY_KEYSTORE_PASSWORD")
+            def keyAlias = System.getenv("BRIKLY_KEY_ALIAS") ?: project.findProperty("BRIKLY_KEY_ALIAS")
+            def keyPassword = System.getenv("BRIKLY_KEY_PASSWORD") ?: project.findProperty("BRIKLY_KEY_PASSWORD")
 
             if (keystorePath != null && keystorePassword != null && keyAlias != null && keyPassword != null) {
                 storeFile file(keystorePath)

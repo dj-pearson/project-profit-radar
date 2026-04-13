@@ -60,7 +60,7 @@
   ```sql
   -- Test 1: Anonymous can read sites
   SET ROLE anon;
-  SELECT * FROM sites WHERE key = 'builddesk';
+  SELECT * FROM sites WHERE key = 'brikly';
   -- Should return 1 row
   
   RESET ROLE;
@@ -70,7 +70,7 @@
   -- Should show enabled = 'O' (origin enabled)
   
   -- Test 3: is_valid_site function works
-  SELECT public.is_valid_site(id) FROM sites WHERE key = 'builddesk';
+  SELECT public.is_valid_site(id) FROM sites WHERE key = 'brikly';
   -- Should return TRUE
   ```
 
@@ -91,7 +91,7 @@
   WHERE u.email = 'test-rls-fix-XXXXX@example.com';
   ```
   - [ ] user_profiles entry exists
-  - [ ] site_id is set (BuildDesk UUID)
+  - [ ] site_id is set (Brikly UUID)
   - [ ] role is 'admin'
 
 ### Test 2: Complete Onboarding (Critical)
@@ -120,11 +120,11 @@
   const { data, error } = await supabase
     .from('sites')
     .select('*')
-    .eq('key', 'builddesk')
+    .eq('key', 'brikly')
     .single();
   console.log({ data, error });
   ```
-- [ ] Expected: Returns BuildDesk site data
+- [ ] Expected: Returns Brikly site data
 - [ ] No RLS error
 
 ### Test 4: Existing User Login (Regression)

@@ -9,7 +9,7 @@ test.describe('Smoke Tests', () => {
     await page.goto('/');
 
     // Check that page loaded
-    await expect(page).toHaveTitle(/BuildDesk/i);
+    await expect(page).toHaveTitle(/Brikly/i);
 
     // Page should not have crashed
     const bodyText = await page.textContent('body');
@@ -89,7 +89,7 @@ test.describe('Smoke Tests', () => {
 
     // Try to fetch from Supabase (should at least get a response)
     try {
-      const response = await request.get('https://api.build-desk.com/rest/v1/', {
+      const response = await request.get('https://api.brikly.net/rest/v1/', {
         headers: {
           'apikey': 'test', // This will fail auth but proves endpoint is up
         },

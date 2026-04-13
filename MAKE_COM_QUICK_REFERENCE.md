@@ -124,7 +124,7 @@ Authorization: Bearer YOUR_SERVICE_ROLE_KEY_HERE
       {
         "platform": "instagram",
         "content": "Visual content... 🔗 Link in bio",
-        "hashtags": ["#builddesk"],
+        "hashtags": ["#brikly"],
         "media_urls": ["https://random-image.jpg"]
       }
     ],

@@ -14,7 +14,7 @@ const QuickBooksLimitationsConstruction = () => {
   const faqs = [
     {
       question: "Is QuickBooks good for construction companies?",
-      answer: "QuickBooks is excellent for general business accounting but wasn't designed for construction's unique needs. It handles invoicing, expenses, and payroll well, but struggles with real-time job costing, project-level profitability tracking, and field cost capture. Most successful contractors use QuickBooks for accounting PLUS construction-specific software like BuildDesk for project management and real-time financial tracking."
+      answer: "QuickBooks is excellent for general business accounting but wasn't designed for construction's unique needs. It handles invoicing, expenses, and payroll well, but struggles with real-time job costing, project-level profitability tracking, and field cost capture. Most successful contractors use QuickBooks for accounting PLUS construction-specific software like Brikly for project management and real-time financial tracking."
     },
     {
       question: "What can't QuickBooks do for construction?",
@@ -22,11 +22,11 @@ const QuickBooksLimitationsConstruction = () => {
     },
     {
       question: "Should I stop using QuickBooks for construction?",
-      answer: "No! Keep QuickBooks for accounting, tax preparation, and financial statements. But add BuildDesk for real-time job costing, project management, and field operations. BuildDesk integrates with QuickBooks, syncing costs and invoices automatically so you maintain proper books while getting construction-specific insights QuickBooks can't provide."
+      answer: "No! Keep QuickBooks for accounting, tax preparation, and financial statements. But add Brikly for real-time job costing, project management, and field operations. Brikly integrates with QuickBooks, syncing costs and invoices automatically so you maintain proper books while getting construction-specific insights QuickBooks can't provide."
     },
     {
       question: "How much does QuickBooks cost for construction?",
-      answer: "QuickBooks Online Plus (needed for job costing) costs $65-$90/month for one user. But you'll still need separate tools for time tracking ($10-$20/user/month), project management ($20-$50/user/month), and field operations. BuildDesk includes all these features for $350/month with unlimited users, often cheaper than piecing together multiple tools."
+      answer: "QuickBooks Online Plus (needed for job costing) costs $65-$90/month for one user. But you'll still need separate tools for time tracking ($10-$20/user/month), project management ($20-$50/user/month), and field operations. Brikly includes all these features for $350/month with unlimited users, often cheaper than piecing together multiple tools."
     },
     {
       question: "Can QuickBooks track construction project costs in real-time?",
@@ -48,14 +48,14 @@ const QuickBooksLimitationsConstruction = () => {
           'construction job costing software',
           'quickbooks construction problems'
         ]}
-        canonicalUrl="https://builddesk.com/resources/quickbooks-limitations-construction"
+        canonicalUrl="https://brikly.com/resources/quickbooks-limitations-construction"
         schema={[
           createArticleSchema(
             "Why QuickBooks Alone Isn't Enough for Construction Companies",
             "What QuickBooks can't do for construction and how to fill the gaps with construction-specific tools",
             "2025-11-14",
             "2025-11-14",
-            "BuildDesk Team"
+            "Brikly Team"
           ),
           createFAQSchema(faqs)
         ]}
@@ -89,14 +89,14 @@ const QuickBooksLimitationsConstruction = () => {
                   construction's unique needs. It handles invoicing, expenses, and payroll well, but can't provide
                   <span className="font-bold text-construction-orange"> real-time job costing</span>, project-level
                   profitability tracking, or field cost capture. Most successful contractors use QuickBooks for accounting
-                  (taxes, financial statements) PLUS construction-specific software like BuildDesk for project management
+                  (taxes, financial statements) PLUS construction-specific software like Brikly for project management
                   and real-time financial tracking. The two integrate seamlessly.
                 </p>
               </CardContent>
             </Card>
 
             <div className="flex items-center gap-4 text-sm text-muted-foreground mb-8">
-              <span>By BuildDesk Team</span>
+              <span>By Brikly Team</span>
               <span>•</span>
               <span>November 14, 2025</span>
               <span>•</span>
@@ -230,7 +230,7 @@ const QuickBooksLimitationsConstruction = () => {
                       </ul>
                     </div>
                     <div className="bg-construction-orange/10 p-4 rounded border border-construction-orange/20">
-                      <p className="font-semibold text-sm mb-2 text-construction-orange">BuildDesk + QuickBooks:</p>
+                      <p className="font-semibold text-sm mb-2 text-construction-orange">Brikly + QuickBooks:</p>
                       <ul className="text-sm space-y-1">
                         <li>1. Crew logs time via mobile app</li>
                         <li>2. Costs allocated to project instantly</li>
@@ -294,7 +294,7 @@ const QuickBooksLimitationsConstruction = () => {
                       </ul>
                     </div>
                     <div className="bg-construction-orange/10 p-3 rounded border border-construction-orange/20">
-                      <strong className="text-construction-orange">With BuildDesk Alerts:</strong>
+                      <strong className="text-construction-orange">With Brikly Alerts:</strong>
                       <ul className="mt-2 space-y-1">
                         <li>• Automatic notification at 5% variance</li>
                         <li>• Discover variance within 24 hours</li>
@@ -333,7 +333,7 @@ const QuickBooksLimitationsConstruction = () => {
                       </ul>
                     </div>
                     <div>
-                      <strong className="text-construction-orange">BuildDesk Includes:</strong>
+                      <strong className="text-construction-orange">Brikly Includes:</strong>
                       <ul className="mt-2 space-y-1">
                         <li>✓ Change order workflow + budget updates</li>
                         <li>✓ GPS-verified time tracking</li>
@@ -355,19 +355,19 @@ const QuickBooksLimitationsConstruction = () => {
           {/* The Right Solution */}
           <div className="max-w-4xl mx-auto mb-12">
             <h2 className="text-3xl font-bold text-construction-dark mb-6">
-              The Right Solution: QuickBooks + BuildDesk
+              The Right Solution: QuickBooks + Brikly
             </h2>
 
             <Card className="bg-gradient-to-br from-construction-orange/10 to-construction-orange/5 mb-6">
               <CardContent className="pt-6">
                 <p className="text-lg mb-4">
                   <strong>Don't replace QuickBooks—complement it.</strong> Use QuickBooks for what it does best
-                  (accounting, taxes, financial statements) and BuildDesk for what construction needs (real-time
+                  (accounting, taxes, financial statements) and Brikly for what construction needs (real-time
                   job costing, project management, field operations).
                 </p>
                 <p className="text-lg">
                   The two integrate seamlessly, syncing costs and invoices automatically. You get construction-specific
-                  insights in BuildDesk while maintaining proper books in QuickBooks.
+                  insights in Brikly while maintaining proper books in QuickBooks.
                 </p>
               </CardContent>
             </Card>
@@ -409,7 +409,7 @@ const QuickBooksLimitationsConstruction = () => {
 
               <Card>
                 <CardHeader className="bg-construction-orange/10">
-                  <CardTitle>Use BuildDesk For:</CardTitle>
+                  <CardTitle>Use Brikly For:</CardTitle>
                 </CardHeader>
                 <CardContent className="pt-6">
                   <ul className="space-y-2 text-sm">
@@ -448,7 +448,7 @@ const QuickBooksLimitationsConstruction = () => {
                   Best of Both Worlds
                 </h3>
                 <p className="text-lg mb-6 opacity-90">
-                  Keep QuickBooks for accounting. Add BuildDesk for construction. Get real-time project insights
+                  Keep QuickBooks for accounting. Add Brikly for construction. Get real-time project insights
                   while maintaining proper books. They sync automatically.
                 </p>
                 <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -501,7 +501,7 @@ const QuickBooksLimitationsConstruction = () => {
                       Construction Financial Management Software
                     </Link>
                   </CardTitle>
-                  <p className="text-sm text-muted-foreground">See how BuildDesk complements QuickBooks</p>
+                  <p className="text-sm text-muted-foreground">See how Brikly complements QuickBooks</p>
                 </CardHeader>
               </Card>
               <Card>
@@ -521,7 +521,7 @@ const QuickBooksLimitationsConstruction = () => {
                       QuickBooks Integration Guide
                     </Link>
                   </CardTitle>
-                  <p className="text-sm text-muted-foreground">How BuildDesk syncs with QuickBooks</p>
+                  <p className="text-sm text-muted-foreground">How Brikly syncs with QuickBooks</p>
                 </CardHeader>
               </Card>
             </div>

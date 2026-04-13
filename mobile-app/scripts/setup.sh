@@ -1,11 +1,11 @@
 #!/bin/bash
 
-# BuildDesk Mobile App - Setup Script
+# Brikly Mobile App - Setup Script
 # This script sets up the mobile app development environment
 
 set -e
 
-echo "🏗️  BuildDesk Mobile App Setup"
+echo "🏗️  Brikly Mobile App Setup"
 echo "================================"
 echo ""
 
@@ -74,9 +74,9 @@ if [ ! -f ".env" ]; then
   echo "📝 Creating .env file..."
   cat > .env << 'EOL'
 # Supabase Configuration (Self-Hosted)
-EXPO_PUBLIC_SUPABASE_URL=https://api.build-desk.com
+EXPO_PUBLIC_SUPABASE_URL=https://api.brikly.net
 EXPO_PUBLIC_SUPABASE_ANON_KEY=your-anon-key-here
-EXPO_PUBLIC_EDGE_FUNCTIONS_URL=https://functions.build-desk.com
+EXPO_PUBLIC_EDGE_FUNCTIONS_URL=https://functions.brikly.net
 
 # Optional: Add custom environment variables here
 EOL

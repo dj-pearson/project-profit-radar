@@ -44,7 +44,7 @@
 
 4. Verify output shows the new policy was created
 
-5. Test the setup flow at: https://build-desk.com/setup
+5. Test the setup flow at: https://brikly.net/setup
 
 ### Option 2: Apply via Migration (Recommended for production)
 
@@ -100,7 +100,7 @@ CREATE POLICY "Allow company creation for authenticated users"
 
 ## Testing After Fix
 
-1. Navigate to: https://build-desk.com/setup
+1. Navigate to: https://brikly.net/setup
 2. Fill out company setup form
 3. Submit
 4. Should succeed and redirect to dashboard

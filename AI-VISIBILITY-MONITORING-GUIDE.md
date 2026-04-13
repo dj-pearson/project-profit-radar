@@ -1,8 +1,8 @@
-# AI Visibility Monitoring Setup Guide for BuildDesk
+# AI Visibility Monitoring Setup Guide for Brikly
 
 ## Overview
 
-AI search engines like ChatGPT, Claude, Perplexity, and Google Bard are increasingly being used for business research and software selection. This guide outlines how to monitor and improve BuildDesk's visibility in AI-generated responses.
+AI search engines like ChatGPT, Claude, Perplexity, and Google Bard are increasingly being used for business research and software selection. This guide outlines how to monitor and improve Brikly's visibility in AI-generated responses.
 
 ## Phase 1: Monitoring Setup
 
@@ -10,13 +10,13 @@ AI search engines like ChatGPT, Claude, Perplexity, and Google Bard are increasi
 
 **Tools Required:**
 - Semrush subscription with AI Visibility features
-- BuildDesk website access
+- Brikly website access
 - Competitor analysis capabilities
 
 **Setup Steps:**
 1. Log into Semrush dashboard
 2. Navigate to "Visibility" → "AI Overview"
-3. Add BuildDesk domain (builddesk.com)
+3. Add Brikly domain (brikly.com)
 4. Configure competitor monitoring:
    - Procore (procore.com)
    - Buildertrend (buildertrend.net)
@@ -37,7 +37,7 @@ AI search engines like ChatGPT, Claude, Perplexity, and Google Bard are increasi
 Test these prompts monthly across different AI platforms:
 
 1. "What is the best construction management software for small contractors?"
-2. "Compare Procore vs BuildDesk for small construction companies"
+2. "Compare Procore vs Brikly for small construction companies"
 3. "Construction job costing software recommendations"
 4. "OSHA compliance software for contractors"
 5. "QuickBooks integration construction management"
@@ -57,18 +57,18 @@ Test these prompts monthly across different AI platforms:
 ### 3. Response Quality Assessment
 
 **Scoring Criteria (1-5 scale):**
-- **Mention Frequency**: How often BuildDesk is mentioned
-- **Position Ranking**: Where BuildDesk appears in response
+- **Mention Frequency**: How often Brikly is mentioned
+- **Position Ranking**: Where Brikly appears in response
 - **Accuracy**: Correctness of information provided
 - **Context**: Relevance to query intent
-- **Competitor Comparison**: How BuildDesk compares to alternatives
+- **Competitor Comparison**: How Brikly compares to alternatives
 
 **Documentation Template:**
 ```
 Date: [DATE]
 AI Platform: [PLATFORM]
 Query: [QUERY TEXT]
-BuildDesk Mentioned: [YES/NO]
+Brikly Mentioned: [YES/NO]
 Position: [1st/2nd/3rd/Not mentioned]
 Accuracy Score: [1-5]
 Key Points Mentioned: [LIST]
@@ -101,9 +101,9 @@ Overall Assessment: [NOTES]
 ### 2. Authority Building Content
 
 **Statistics and Data Points:**
-- "BuildDesk costs 60% less than Procore"
+- "Brikly costs 60% less than Procore"
 - "Setup in 2 weeks vs 2-4 months for enterprise solutions"
-- "300+ contractors using BuildDesk"
+- "300+ contractors using Brikly"
 - "4.8/5 average customer rating"
 
 **Case Studies with Metrics:**
@@ -118,7 +118,7 @@ Overall Assessment: [NOTES]
 ```json
 {
   "@type": "SoftwareApplication",
-  "name": "BuildDesk",
+  "name": "Brikly",
   "applicationCategory": "Construction Management",
   "offers": {
     "price": "149",
@@ -166,7 +166,7 @@ Overall Assessment: [NOTES]
 - Significant drop in AI mentions
 - Negative sentiment changes
 - New competitor mentions
-- Factual inaccuracies about BuildDesk
+- Factual inaccuracies about Brikly
 - Major algorithm updates
 
 ## Phase 4: Optimization Strategies
@@ -226,7 +226,7 @@ Overall Assessment: [NOTES]
 
 ### Secondary KPIs
 - **Query Coverage**: Responses to 80%+ of target queries
-- **Source Attribution**: Proper citation of BuildDesk content
+- **Source Attribution**: Proper citation of Brikly content
 - **Click-through Impact**: Traffic from AI-generated content
 - **Conversion Correlation**: Lead quality from AI-discovered prospects
 

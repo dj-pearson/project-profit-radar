@@ -1,17 +1,17 @@
-// Service Worker for BuildDesk - Performance and SEO Optimization
+// Service Worker for Brikly - Performance and SEO Optimization
 // Auto-generated version: __BUILD_VERSION__
 const BUILD_VERSION = '__BUILD_VERSION__';
-const CACHE_NAME = `builddesk-v${BUILD_VERSION}`;
-const STATIC_CACHE = `builddesk-static-v${BUILD_VERSION}`;
-const DYNAMIC_CACHE = `builddesk-dynamic-v${BUILD_VERSION}`;
-const API_CACHE = `builddesk-api-v${BUILD_VERSION}`;
-const IMAGE_CACHE = `builddesk-images-v${BUILD_VERSION}`;
+const CACHE_NAME = `brikly-v${BUILD_VERSION}`;
+const STATIC_CACHE = `brikly-static-v${BUILD_VERSION}`;
+const DYNAMIC_CACHE = `brikly-dynamic-v${BUILD_VERSION}`;
+const API_CACHE = `brikly-api-v${BUILD_VERSION}`;
+const IMAGE_CACHE = `brikly-images-v${BUILD_VERSION}`;
 
 // Resources to cache immediately
 const STATIC_ASSETS = [
   '/index.html',
   '/manifest.json',
-  '/BuildDeskLogo.png',
+  '/BriklyLogo.png',
   '/robots.txt',
   '/sitemap.xml'
 ];
@@ -69,7 +69,7 @@ self.addEventListener('install', (event) => {
 
 // Activate event - clean up old caches
 self.addEventListener('activate', (event) => {
-  console.log(`✅ Service Worker activated - BuildDesk v${BUILD_VERSION}`);
+  console.log(`✅ Service Worker activated - Brikly v${BUILD_VERSION}`);
   
   event.waitUntil(
     Promise.all([
@@ -105,7 +105,7 @@ self.addEventListener('fetch', (event) => {
   // This prevents CSP issues and service worker errors with external resources
   if (url.origin !== self.location.origin && 
       !url.hostname.includes('supabase') &&
-      !url.hostname.includes('build-desk.com')) {
+      !url.hostname.includes('brikly.net')) {
     return;
   }
 
@@ -315,13 +315,13 @@ self.addEventListener('push', (event) => {
   const data = event.data.json();
   const options = {
     body: data.body,
-    icon: '/BuildDeskLogo.png',
+    icon: '/BriklyLogo.png',
     badge: '/badge.png',
     data: data.url,
     actions: [
       {
         action: 'open',
-        title: 'Open BuildDesk'
+        title: 'Open Brikly'
       },
       {
         action: 'dismiss',

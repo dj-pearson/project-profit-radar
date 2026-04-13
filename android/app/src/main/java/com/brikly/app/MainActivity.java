@@ -1,4 +1,4 @@
-package com.builddesk.app;
+package com.brikly.app;
 
 import com.getcapacitor.BridgeActivity;
 

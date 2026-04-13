@@ -22,12 +22,12 @@
         "-y",
         "@supabase/mcp-server-supabase@latest",
         "--project-id",
-        "builddesk",
+        "brikly",
         "--access-token",
         "${SUPABASE_ACCESS_TOKEN}"
       ],
       "env": {
-        "SUPABASE_URL": "https://api.build-desk.com",
+        "SUPABASE_URL": "https://api.brikly.net",
         "SUPABASE_ANON_KEY": "${SUPABASE_ANON_KEY}"
       }
     }

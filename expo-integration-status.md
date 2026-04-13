@@ -4,8 +4,8 @@
 
 ### 1. **Expo Project Created**
 - **Project ID**: `689e69f0-18d0-40d6-a878-7d46aae0f2be`
-- **Location**: `C:\Users\dpearson\Documents\Build-Desk\BuildDeskExpo`
-- **Bundle ID**: `com.builddesk.app`
+- **Location**: `C:\Users\dpearson\Documents\Brikly\BriklyExpo`
+- **Bundle ID**: `com.brikly.app`
 - **EAS Configuration**: Ready for builds
 
 ### 2. **Supabase Integration Ready**
@@ -24,26 +24,26 @@ Since you already have `Expo_Access_Token` configured, you can immediately:
 
 ### Option A: Direct EAS Build (Recommended for testing)
 ```bash
-cd C:\Users\dpearson\Documents\Build-Desk\BuildDeskExpo
+cd C:\Users\dpearson\Documents\Brikly\BriklyExpo
 eas build --platform ios --profile development
 ```
 
 ### Option B: API-Triggered Build (via Supabase function)
 ```bash
-cd C:\Users\dpearson\Documents\Build-Desk\project-profit-radar
+cd C:\Users\dpearson\Documents\Brikly\project-profit-radar
 .\test-expo-build.ps1
 ```
 
 ### Option C: Production Build (App Store ready)
 ```bash
-cd C:\Users\dpearson\Documents\Build-Desk\BuildDeskExpo
+cd C:\Users\dpearson\Documents\Brikly\BriklyExpo
 eas build --platform ios --profile production
 ```
 
 ## 📱 Project Structure
 
 ```
-BuildDeskExpo/
+BriklyExpo/
 ├── app.json              # Expo configuration
 ├── eas.json              # Build profiles
 ├── App.tsx               # Main app component (basic template)
@@ -59,7 +59,7 @@ BuildDeskExpo/
 3. **Download the build**: Get .ipa file for testing
 
 ### Migration (Move your app):
-1. **Copy React components** from `project-profit-radar/src/` to `BuildDeskExpo/`
+1. **Copy React components** from `project-profit-radar/src/` to `BriklyExpo/`
 2. **Install additional dependencies** (UI libraries, etc.)
 3. **Update native module usage** (Camera → expo-image-picker, etc.)
 4. **Test functionality** on device
@@ -82,7 +82,7 @@ BuildDeskExpo/
 
 ```bash
 # Test 1: Simple development build
-cd BuildDeskExpo
+cd BriklyExpo
 eas build --platform ios --profile development
 
 # Test 2: Check build status

@@ -2,7 +2,7 @@
 
 ## 🎉 Successfully Created Complete Rollback Package
 
-I've created a comprehensive package to help you completely revert BuildDesk from multi-tenant architecture back to single-tenant architecture. Since you now have self-hosted Supabase, you don't need the multi-tenant complexity.
+I've created a comprehensive package to help you completely revert Brikly from multi-tenant architecture back to single-tenant architecture. Since you now have self-hosted Supabase, you don't need the multi-tenant complexity.
 
 ---
 
@@ -356,7 +356,7 @@ Rollback complete when:
 
 ### After (Single-Tenant)
 
-- Dedicated database for BuildDesk
+- Dedicated database for Brikly
 - Simple company-based filtering
 - No site resolution needed
 - Cleaner, simpler codebase

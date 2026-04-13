@@ -8,7 +8,7 @@ test.describe('Authentication', () => {
 
   test('should display the authentication page', async ({ page }) => {
     // Check that the auth page loads
-    await expect(page).toHaveTitle(/BuildDesk/i);
+    await expect(page).toHaveTitle(/Brikly/i);
 
     // Check for key elements
     await expect(page.getByRole('heading', { name: /sign in/i })).toBeVisible();

@@ -480,7 +480,7 @@ const RFIs = () => {
     <RoleGuard allowedRoles={ROLE_GROUPS.PROJECT_VIEWERS}>
       <DashboardLayout title="Request for Information (RFI)">
         <Helmet>
-        <title>RFIs Tracker – Formal Questions & Approvals | BuildDesk</title>
+        <title>RFIs Tracker – Formal Questions & Approvals | Brikly</title>
         <meta name="description" content="Create and track RFIs with due dates, responses, and audit trail for accountability." />
         <link rel="canonical" href="/rfis" />
       </Helmet>

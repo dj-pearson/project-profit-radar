@@ -127,24 +127,24 @@ const BlogPost = () => {
     "description": post.seo_description || post.excerpt || post.title,
     "author": {
       "@type": "Organization",
-      "name": "BuildDesk",
-      "url": "https://build-desk.com"
+      "name": "Brikly",
+      "url": "https://brikly.net"
     },
     "publisher": {
       "@type": "Organization",
-      "name": "BuildDesk",
+      "name": "Brikly",
       "logo": {
         "@type": "ImageObject",
-        "url": "https://build-desk.com/BuildDeskLogo.png"
+        "url": "https://brikly.net/BriklyLogo.png"
       }
     },
     "datePublished": post.published_at || post.created_at,
     "dateModified": post.updated_at || post.published_at || post.created_at,
     "mainEntityOfPage": {
       "@type": "WebPage",
-      "@id": `https://build-desk.com/resources/${post.slug}`
+      "@id": `https://brikly.net/resources/${post.slug}`
     },
-    "image": post.featured_image_url || "https://build-desk.com/BuildDeskLogo.png",
+    "image": post.featured_image_url || "https://brikly.net/BriklyLogo.png",
     "articleSection": "Construction Management",
     "keywords": "construction management, construction software, project management, contractors"
   };
@@ -244,7 +244,7 @@ const BlogPost = () => {
                 Ready to Transform Your Construction Business?
               </h3>
               <p className="text-muted-foreground mb-4">
-                Discover how BuildDesk can streamline your operations, improve profitability, and keep your projects on track.
+                Discover how Brikly can streamline your operations, improve profitability, and keep your projects on track.
               </p>
               <div className="flex flex-col sm:flex-row gap-3">
                 <Link to="/auth">

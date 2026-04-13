@@ -1,4 +1,4 @@
-BuildDesk is the all-in-one construction management platform built for small to medium-sized contractors. Take control of your projects, finances, and crew — all from your phone.
+Brikly is the all-in-one construction management platform built for small to medium-sized contractors. Take control of your projects, finances, and crew — all from your phone.
 
 KEY FEATURES:
 
@@ -35,6 +35,6 @@ SECURITY:
 - End-to-end encryption
 - Role-based access control
 
-BuildDesk is trusted by construction companies to manage their projects, track their money, and keep their crews productive.
+Brikly is trusted by construction companies to manage their projects, track their money, and keep their crews productive.
 
-Start your free trial at build-desk.com
+Start your free trial at brikly.net

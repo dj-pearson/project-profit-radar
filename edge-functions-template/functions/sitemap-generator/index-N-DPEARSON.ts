@@ -78,11 +78,11 @@ function generateSitemapXML(canonicalDomain: string, metaTags: any[]) {
     { path: '/resources/construction-daily-logs-best-practices', priority: '0.7', changefreq: 'monthly' },
     { path: '/resources/quickbooks-integration-guide', priority: '0.7', changefreq: 'monthly' },
     { path: '/resources/construction-mobile-app-guide', priority: '0.7', changefreq: 'monthly' },
-    { path: '/resources/procore-vs-builddesk-small-contractors', priority: '0.8', changefreq: 'monthly' },
+    { path: '/resources/procore-vs-brikly-small-contractors', priority: '0.8', changefreq: 'monthly' },
     
     // Comparison Pages
-    { path: '/builddesk-vs-buildertrend-comparison', priority: '0.8', changefreq: 'monthly' },
-    { path: '/builddesk-vs-coconstruct', priority: '0.8', changefreq: 'monthly' },
+    { path: '/brikly-vs-buildertrend-comparison', priority: '0.8', changefreq: 'monthly' },
+    { path: '/brikly-vs-coconstruct', priority: '0.8', changefreq: 'monthly' },
   ]
 
   const allPages = [

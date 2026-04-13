@@ -168,7 +168,7 @@ const EmailNotificationSystem = () => {
         body: {
           type: 'test',
           to: testEmail,
-          subject: 'Test Notification from BuildDesk',
+          subject: 'Test Notification from Brikly',
           content: 'This is a test notification to verify your email settings.'
         }
       });

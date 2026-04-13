@@ -2,7 +2,7 @@
 
 ## Overview
 
-This guide explains how to update the Build-Desk frontend to support the new multi-site architecture. The frontend must:
+This guide explains how to update the Brikly frontend to support the new multi-site architecture. The frontend must:
 
 1. Determine which site the user is accessing (by domain)
 2. Set `site_id` in the user's JWT during authentication
@@ -43,11 +43,11 @@ export async function getSiteConfig(): Promise<SiteConfig | null> {
     
     // Map domains to site keys
     const siteKeyMap: Record<string, string> = {
-      'build-desk.com': 'builddesk',
-      'www.build-desk.com': 'builddesk',
-      'builddesk.pearsonperformance.workers.dev': 'builddesk',
-      'localhost': 'builddesk',  // Development
-      '127.0.0.1': 'builddesk',  // Development
+      'brikly.net': 'brikly',
+      'www.brikly.net': 'brikly',
+      'brikly.pearsonperformance.workers.dev': 'brikly',
+      'localhost': 'brikly',  // Development
+      '127.0.0.1': 'brikly',  // Development
       
       // Add future sites here:
       // 'realestatebio.com': 'realestate',
@@ -455,7 +455,7 @@ export function App() {
       }
 
       // Update page title
-      document.title = siteConfig.name || 'Build-Desk';
+      document.title = siteConfig.name || 'Brikly';
     }
   }, [siteConfig]);
 
@@ -477,13 +477,13 @@ Update `capacitor.config.ts`:
 import { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'com.builddesk.app',
-  appName: 'Build-Desk',
+  appId: 'com.brikly.app',
+  appName: 'Brikly',
   webDir: 'dist',
   server: {
     androidScheme: 'https',
     // Add site_id to initial URL
-    url: 'https://build-desk.com?site=builddesk',
+    url: 'https://brikly.net?site=brikly',
   },
   plugins: {
     SplashScreen: {
@@ -507,7 +507,7 @@ const handleMobileLogin = async (email: string, password: string) => {
   const isNative = Capacitor.isNativePlatform();
   
   // For native apps, hardcode the site_id
-  const siteId = isNative ? 'builddesk' : await getCurrentSiteId();
+  const siteId = isNative ? 'brikly' : await getCurrentSiteId();
   
   const { data, error } = await supabase.auth.signInWithPassword({
     email,

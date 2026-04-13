@@ -1,7 +1,7 @@
 import SwiftUI
 
 extension Color {
-    /// BuildDesk brand blue
+    /// Brikly brand blue
     static let brandPrimary = Color(red: 0.2, green: 0.4, blue: 0.9)
 
     /// Secondary accent

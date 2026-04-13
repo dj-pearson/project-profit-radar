@@ -4,7 +4,7 @@ import { StatusBar, Style } from '@capacitor/status-bar';
 import { useTheme } from '@/contexts/ThemeContext';
 
 /**
- * Configures the native status bar to match the BuildDesk theme on iOS and
+ * Configures the native status bar to match the Brikly theme on iOS and
  * Android via Capacitor. Safe no-op on web / SSR.
  *
  * Light theme: dark icons on white status bar (#FFFFFF)

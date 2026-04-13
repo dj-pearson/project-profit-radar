@@ -94,7 +94,7 @@ export const MobileNavigationPattern = () => {
               </SheetTrigger>
               <SheetContent side="left" className="w-72 p-0">
                 <div className="p-6">
-                  <h2 className="text-lg font-semibold mb-4">BuildDesk</h2>
+                  <h2 className="text-lg font-semibold mb-4">Brikly</h2>
                   <nav className="space-y-2">
                     {navItems.map((item) => (
                       <Button

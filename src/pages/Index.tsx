@@ -82,9 +82,9 @@ const Index = () => {
             'construction cost tracking',
             'real-time job costing'
           ]}
-          canonicalUrl="https://builddesk.com"
+          canonicalUrl="https://brikly.com"
           schema={[createOrganizationSchema(), createSoftwareApplicationSchema(), createWebSiteSchema(), createBreadcrumbSchema([
-            { name: "Home", url: "https://builddesk.com" }
+            { name: "Home", url: "https://brikly.com" }
           ])]}
           lastModified="2026-02-08"
         />
@@ -92,10 +92,10 @@ const Index = () => {
         {/* Enhanced SEO: Aggregate Rating Schema for Rich Snippets */}
         <AggregateRatingSchema
           schemaType="SoftwareApplication"
-          itemName="BuildDesk - Construction Management Software"
+          itemName="Brikly - Construction Management Software"
           itemDescription="Real-time job costing and construction management software for contractors"
-          itemImage="https://ilhzuvemiuyfuxfegtlv.supabase.co/storage/v1/object/public/assets/builddesk-logo.png"
-          itemUrl="https://builddesk.com"
+          itemImage="https://ilhzuvemiuyfuxfegtlv.supabase.co/storage/v1/object/public/assets/brikly-logo.png"
+          itemUrl="https://brikly.com"
         />
 
         {/* Enhanced SEO: Comprehensive SaaS Product Schema with Subscription Details */}

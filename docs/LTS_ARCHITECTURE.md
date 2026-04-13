@@ -1,4 +1,4 @@
-# BuildDesk - Long-Term Support Architecture Document
+# Brikly - Long-Term Support Architecture Document
 
 **Last Updated:** 2025-11-13
 **Version:** 2.0
@@ -9,7 +9,7 @@
 
 ## Executive Summary
 
-BuildDesk is a sophisticated, production-ready construction management platform built for SMB construction companies ($199-799/month segment). The platform demonstrates enterprise-grade architecture with **238 route pages**, **581 components**, **77 custom hooks**, and comprehensive feature coverage across project management, financial operations, CRM, compliance, and mobile capabilities.
+Brikly is a sophisticated, production-ready construction management platform built for SMB construction companies ($199-799/month segment). The platform demonstrates enterprise-grade architecture with **238 route pages**, **581 components**, **77 custom hooks**, and comprehensive feature coverage across project management, financial operations, CRM, compliance, and mobile capabilities.
 
 ### Key Metrics
 - **Codebase Size:** 1,011 TypeScript files
@@ -484,8 +484,8 @@ Edge Functions: 150+ Deno-based serverless functions
 ```typescript
 // capacitor.config.ts
 {
-  appId: 'com.builddesk.app',
-  appName: 'BuildDesk',
+  appId: 'com.brikly.app',
+  appName: 'Brikly',
   webDir: 'dist',
   plugins: {
     Camera: { /* configured */ },
@@ -1044,8 +1044,8 @@ const total = useMemo(() => {
 ```typescript
 // capacitor.config.ts
 {
-  appId: 'com.builddesk.app',
-  appName: 'BuildDesk',
+  appId: 'com.brikly.app',
+  appName: 'Brikly',
   webDir: 'dist',
   server: {
     androidScheme: 'https'
@@ -1924,4 +1924,4 @@ jobs:
 
 ---
 
-*This LTS Architecture Document provides a comprehensive technical overview of the BuildDesk platform. For specific implementation details, refer to the code and inline documentation. For improvement recommendations, see IMPROVEMENT_PLAN.md.*
+*This LTS Architecture Document provides a comprehensive technical overview of the Brikly platform. For specific implementation details, refer to the code and inline documentation. For improvement recommendations, see IMPROVEMENT_PLAN.md.*

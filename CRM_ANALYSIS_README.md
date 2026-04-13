@@ -1,8 +1,8 @@
-# BuildDesk CRM Database Schema Analysis - Complete Documentation
+# Brikly CRM Database Schema Analysis - Complete Documentation
 
 ## Overview
 
-This analysis provides a comprehensive examination of the BuildDesk CRM database schema. The BuildDesk platform contains a production-ready CRM system with **30+ tables** covering leads, contacts, deals, pipelines, email campaigns, and sales automation.
+This analysis provides a comprehensive examination of the Brikly CRM database schema. The Brikly platform contains a production-ready CRM system with **30+ tables** covering leads, contacts, deals, pipelines, email campaigns, and sales automation.
 
 ## Analysis Status
 

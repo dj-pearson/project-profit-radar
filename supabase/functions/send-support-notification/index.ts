@@ -43,8 +43,8 @@ const handler = async (req: Request): Promise<Response> => {
 
     // Send notification to admin
     const adminEmailResponse = await resend.emails.send({
-      from: "BuildDesk Support <support@build-desk.com>",
-      to: ["support@build-desk.com"],
+      from: "Brikly Support <support@brikly.net>",
+      to: ["support@brikly.net"],
       subject: `New Support Ticket: ${ticketNumber} - ${subject}`,
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -72,7 +72,7 @@ const handler = async (req: Request): Promise<Response> => {
           </div>
 
           <div style="text-align: center; margin: 30px 0;">
-            <a href="https://build-desk.com/support" 
+            <a href="https://brikly.net/support" 
                style="background: #3b82f6; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block;">
               View Ticket in Dashboard
             </a>
@@ -83,7 +83,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     // Send confirmation to customer
     const customerEmailResponse = await resend.emails.send({
-      from: "BuildDesk Support <support@build-desk.com>",
+      from: "Brikly Support <support@brikly.net>",
       to: [customerEmail],
       subject: `Support Ticket Created: ${ticketNumber}`,
       html: `
@@ -94,7 +94,7 @@ const handler = async (req: Request): Promise<Response> => {
           
           <p>Dear ${customerName},</p>
           
-          <p>Thank you for contacting BuildDesk support. We have received your support request and created ticket <strong>${ticketNumber}</strong>.</p>
+          <p>Thank you for contacting Brikly support. We have received your support request and created ticket <strong>${ticketNumber}</strong>.</p>
           
           <div style="background: #f8fafc; padding: 20px; border-radius: 8px; margin: 20px 0;">
             <h3 style="color: #3b82f6; margin-top: 0;">Your Ticket Details</h3>
@@ -112,9 +112,9 @@ const handler = async (req: Request): Promise<Response> => {
             <li><strong>Low:</strong> 24 hours</li>
           </ul>
           
-          <p>You can reply to this email to add additional information to your ticket, or contact us directly at support@build-desk.com.</p>
+          <p>You can reply to this email to add additional information to your ticket, or contact us directly at support@brikly.net.</p>
           
-          <p>Best regards,<br>BuildDesk Support Team</p>
+          <p>Best regards,<br>Brikly Support Team</p>
         </div>
       `,
     });

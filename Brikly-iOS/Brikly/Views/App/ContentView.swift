@@ -11,7 +11,7 @@ struct ContentView: View {
                     Image(systemName: "building.2.fill")
                         .font(.system(size: 64))
                         .foregroundStyle(.accent)
-                    Text("BuildDesk")
+                    Text("Brikly")
                         .font(.largeTitle.bold())
                     ProgressView()
                 }

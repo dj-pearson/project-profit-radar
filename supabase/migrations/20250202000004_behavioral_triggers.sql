@@ -367,7 +367,7 @@ VALUES
     'schedule',
     NULL,
     'email',
-    '{"campaign_id": "inactive_user_day3", "template": "Come back to BuildDesk"}',
+    '{"campaign_id": "inactive_user_day3", "template": "Come back to Brikly"}',
     3,
     NULL,
     1

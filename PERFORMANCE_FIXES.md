@@ -326,23 +326,23 @@ Apply to all edge functions in `supabase/functions/`
 ### 11. Convert Images to WebP/AVIF (1 hour)
 
 **Public images to convert:**
-- `public/BuildDeskLogo.png` → `BuildDeskLogo.webp`, `BuildDeskLogo.avif`
+- `public/BriklyLogo.png` → `BriklyLogo.webp`, `BriklyLogo.avif`
 - `public/android-chrome-512x512.png` → webp, avif versions
 - `public/android-chrome-192x192.png` → webp, avif versions
 
 **Tools:**
 ```bash
 # Using imagemagick or online converter
-convert BuildDeskLogo.png -quality 80 BuildDeskLogo.webp
-convert BuildDeskLogo.png -quality 80 BuildDeskLogo.avif
+convert BriklyLogo.png -quality 80 BriklyLogo.webp
+convert BriklyLogo.png -quality 80 BriklyLogo.avif
 ```
 
 **Update usage:**
 ```html
 <picture>
-  <source srcSet="/BuildDeskLogo.avif" type="image/avif" />
-  <source srcSet="/BuildDeskLogo.webp" type="image/webp" />
-  <img src="/BuildDeskLogo.png" alt="BuildDesk Logo" width={200} height={200} />
+  <source srcSet="/BriklyLogo.avif" type="image/avif" />
+  <source srcSet="/BriklyLogo.webp" type="image/webp" />
+  <img src="/BriklyLogo.png" alt="Brikly Logo" width={200} height={200} />
 </picture>
 ```
 

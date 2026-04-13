@@ -32,7 +32,7 @@ FROM information_schema.table_privileges
 WHERE table_name = 'companies'
   AND grantee = 'authenticated';
 
--- 4. Check if sites table has the builddesk site and if it's active
+-- 4. Check if sites table has the brikly site and if it's active
 SELECT 
   id,
   key,
@@ -40,7 +40,7 @@ SELECT
   is_active,
   is_production
 FROM sites
-WHERE key = 'builddesk';
+WHERE key = 'brikly';
 
 -- 5. Check current user context
 SELECT 
@@ -65,18 +65,18 @@ DECLARE
   v_site_id UUID;
   v_site_exists BOOLEAN;
 BEGIN
-  -- Get builddesk site_id
-  SELECT id INTO v_site_id FROM sites WHERE key = 'builddesk';
+  -- Get brikly site_id
+  SELECT id INTO v_site_id FROM sites WHERE key = 'brikly';
   
   RAISE NOTICE '==============================================';
-  RAISE NOTICE 'Site ID for builddesk: %', v_site_id;
+  RAISE NOTICE 'Site ID for brikly: %', v_site_id;
   
   -- Test if this site_id would pass the WITH CHECK
   SELECT EXISTS(
     SELECT 1 FROM sites WHERE id = v_site_id AND is_active = true
   ) INTO v_site_exists;
   
-  RAISE NOTICE 'Would builddesk site_id pass WITH CHECK? %', v_site_exists;
+  RAISE NOTICE 'Would brikly site_id pass WITH CHECK? %', v_site_exists;
   RAISE NOTICE '==============================================';
 END $$;
 
@@ -104,8 +104,8 @@ DECLARE
   v_site_id UUID;
   v_company_id UUID;
 BEGIN
-  -- Get builddesk site_id
-  SELECT id INTO v_site_id FROM sites WHERE key = 'builddesk';
+  -- Get brikly site_id
+  SELECT id INTO v_site_id FROM sites WHERE key = 'brikly';
   
   RAISE NOTICE '==============================================';
   RAISE NOTICE 'ATTEMPTING TEST INSERT';

@@ -1,6 +1,6 @@
 # Ralph Agent Instructions
 
-You are an autonomous coding agent working on the BuildDesk construction management platform.
+You are an autonomous coding agent working on the Brikly construction management platform.
 
 ## Your Task
 
@@ -23,18 +23,18 @@ You are an autonomous coding agent working on the BuildDesk construction managem
 - **Routing**: React Router DOM 6
 - **Testing**: Vitest (unit) + Playwright (E2E)
 - **Payments**: Stripe
-- **Mobile**: Capacitor 7 (iOS/Android) + Native SwiftUI iOS app at `BuildDesk-iOS/`
+- **Mobile**: Capacitor 7 (iOS/Android) + Native SwiftUI iOS app at `Brikly-iOS/`
 - **Deploy**: Cloudflare Pages
 
 ## iOS-Specific Context
 
-- **iOS App Location**: `BuildDesk-iOS/BuildDesk/` - Native SwiftUI app
+- **iOS App Location**: `Brikly-iOS/Brikly/` - Native SwiftUI app
 - **Architecture**: MVVM with `@Observable` macro and `@MainActor`
-- **Services**: `BuildDesk-iOS/BuildDesk/Services/` - Supabase service layer
-- **Views**: `BuildDesk-iOS/BuildDesk/Views/` - SwiftUI views
-- **ViewModels**: `BuildDesk-iOS/BuildDesk/ViewModels/` - Observable view models
-- **Models**: `BuildDesk-iOS/BuildDesk/Models/` - Codable data models
-- **Xcode Project**: `BuildDesk-iOS/BuildDesk.xcodeproj/project.pbxproj`
+- **Services**: `Brikly-iOS/Brikly/Services/` - Supabase service layer
+- **Views**: `Brikly-iOS/Brikly/Views/` - SwiftUI views
+- **ViewModels**: `Brikly-iOS/Brikly/ViewModels/` - Observable view models
+- **Models**: `Brikly-iOS/Brikly/Models/` - Codable data models
+- **Xcode Project**: `Brikly-iOS/Brikly.xcodeproj/project.pbxproj`
 - **Capacitor Config**: `capacitor.config.ts`
 - **Mobile Vite Config**: `vite.config.mobile.ts`
 - **Edge Functions**: `supabase/functions/` - Shared between web and iOS

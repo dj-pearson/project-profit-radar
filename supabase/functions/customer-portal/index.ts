@@ -52,7 +52,7 @@ serve(async (req) => {
       apiVersion: "2023-10-16"
     });
 
-    const origin = req.headers.get("origin") || "https://build-desk.com";
+    const origin = req.headers.get("origin") || "https://brikly.net";
 
     // Create customer portal session
     const portalSession = await stripe.billingPortal.sessions.create({

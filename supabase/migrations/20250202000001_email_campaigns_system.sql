@@ -26,9 +26,9 @@ CREATE TABLE email_campaigns (
   -- Email configuration
   subject_line TEXT NOT NULL,
   preview_text TEXT,
-  from_name TEXT DEFAULT 'BuildDesk Team',
-  from_email TEXT DEFAULT 'hello@build-desk.com',
-  reply_to TEXT DEFAULT 'support@build-desk.com',
+  from_name TEXT DEFAULT 'Brikly Team',
+  from_email TEXT DEFAULT 'hello@brikly.net',
+  reply_to TEXT DEFAULT 'support@brikly.net',
 
   -- Content
   html_content TEXT,

@@ -69,13 +69,13 @@ const CookieConsentManager = () => {
             name: '_session',
             purpose: 'Maintains user session and authentication state',
             duration: 'Session',
-            provider: 'BuildDesk'
+            provider: 'Brikly'
           },
           {
             name: '_csrf',
             purpose: 'Security token to prevent cross-site request forgery',
             duration: 'Session',
-            provider: 'BuildDesk'
+            provider: 'Brikly'
           }
         ]
       },
@@ -132,13 +132,13 @@ const CookieConsentManager = () => {
             name: 'theme',
             purpose: 'Remembers your preferred theme (light/dark)',
             duration: '1 year',
-            provider: 'BuildDesk'
+            provider: 'Brikly'
           },
           {
             name: 'language',
             purpose: 'Stores your language preference',
             duration: '1 year',
-            provider: 'BuildDesk'
+            provider: 'Brikly'
           }
         ]
       }

@@ -1,12 +1,12 @@
 {
   "expo": {
-    "name": "BuildDesk",
-    "slug": "build-desk-2rirxbgg70kpf2ce6py3e",
+    "name": "Brikly",
+    "slug": "brikly-2rirxbgg70kpf2ce6py3e",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
-    "scheme": "builddesk",
+    "scheme": "brikly",
     "newArchEnabled": true,
     "splash": {
       "image": "./assets/splash.png",
@@ -18,24 +18,24 @@
     ],
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.builddesk.app",
+      "bundleIdentifier": "com.brikly.app",
       "buildNumber": "1",
       "requireFullScreen": false,
       "infoPlist": {
-        "CFBundleDisplayName": "BuildDesk",
+        "CFBundleDisplayName": "Brikly",
         "ITSAppUsesNonExemptEncryption": false,
-        "NSCameraUsageDescription": "BuildDesk needs camera access to capture photos of job sites, equipment, and documentation.",
-        "NSPhotoLibraryUsageDescription": "BuildDesk needs photo library access to attach photos to projects and reports.",
-        "NSPhotoLibraryAddUsageDescription": "BuildDesk needs permission to save photos to your library.",
-        "NSLocationWhenInUseUsageDescription": "BuildDesk needs location access to track time at job sites and provide GPS-based features.",
-        "NSLocationAlwaysAndWhenInUseUsageDescription": "BuildDesk needs continuous location access for automatic geofencing clock-in/out and background time tracking at job sites.",
-        "NSLocationAlwaysUsageDescription": "BuildDesk needs background location access for geofencing and automatic time tracking at job sites.",
-        "NSMicrophoneUsageDescription": "BuildDesk needs microphone access for voice notes and job site documentation.",
-        "NSContactsUsageDescription": "BuildDesk needs contacts access to help you manage your team and client information.",
-        "NSCalendarsUsageDescription": "BuildDesk needs calendar access to sync your project schedules.",
-        "NSFaceIDUsageDescription": "BuildDesk uses Face ID for secure and quick authentication.",
-        "NSSpeechRecognitionUsageDescription": "BuildDesk uses speech recognition for voice commands and notes.",
-        "NSUserTrackingUsageDescription": "BuildDesk uses anonymous usage data to improve the app experience. No personal data is shared with third parties.",
+        "NSCameraUsageDescription": "Brikly needs camera access to capture photos of job sites, equipment, and documentation.",
+        "NSPhotoLibraryUsageDescription": "Brikly needs photo library access to attach photos to projects and reports.",
+        "NSPhotoLibraryAddUsageDescription": "Brikly needs permission to save photos to your library.",
+        "NSLocationWhenInUseUsageDescription": "Brikly needs location access to track time at job sites and provide GPS-based features.",
+        "NSLocationAlwaysAndWhenInUseUsageDescription": "Brikly needs continuous location access for automatic geofencing clock-in/out and background time tracking at job sites.",
+        "NSLocationAlwaysUsageDescription": "Brikly needs background location access for geofencing and automatic time tracking at job sites.",
+        "NSMicrophoneUsageDescription": "Brikly needs microphone access for voice notes and job site documentation.",
+        "NSContactsUsageDescription": "Brikly needs contacts access to help you manage your team and client information.",
+        "NSCalendarsUsageDescription": "Brikly needs calendar access to sync your project schedules.",
+        "NSFaceIDUsageDescription": "Brikly uses Face ID for secure and quick authentication.",
+        "NSSpeechRecognitionUsageDescription": "Brikly uses speech recognition for voice commands and notes.",
+        "NSUserTrackingUsageDescription": "Brikly uses anonymous usage data to improve the app experience. No personal data is shared with third parties.",
         "UIBackgroundModes": [
           "location",
           "fetch",
@@ -84,7 +84,7 @@
       }
     },
     "android": {
-      "package": "com.builddesk.app",
+      "package": "com.brikly.app",
       "versionCode": 1,
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
@@ -127,15 +127,15 @@
       [
         "expo-camera",
         {
-          "cameraPermission": "BuildDesk needs camera access to capture photos of job sites, equipment, and documentation."
+          "cameraPermission": "Brikly needs camera access to capture photos of job sites, equipment, and documentation."
         }
       ],
       [
         "expo-location",
         {
-          "locationAlwaysAndWhenInUsePermission": "BuildDesk needs continuous location access for automatic geofencing clock-in/out and background time tracking at job sites.",
-          "locationAlwaysPermission": "BuildDesk needs background location access for geofencing and automatic time tracking at job sites.",
-          "locationWhenInUsePermission": "BuildDesk needs location access to track time at job sites.",
+          "locationAlwaysAndWhenInUsePermission": "Brikly needs continuous location access for automatic geofencing clock-in/out and background time tracking at job sites.",
+          "locationAlwaysPermission": "Brikly needs background location access for geofencing and automatic time tracking at job sites.",
+          "locationWhenInUsePermission": "Brikly needs location access to track time at job sites.",
           "isAndroidBackgroundLocationEnabled": true,
           "isAndroidForegroundServiceEnabled": true
         }
@@ -143,7 +143,7 @@
       [
         "expo-local-authentication",
         {
-          "faceIDPermission": "BuildDesk uses Face ID for secure and quick authentication."
+          "faceIDPermission": "Brikly uses Face ID for secure and quick authentication."
         }
       ],
       "expo-secure-store",

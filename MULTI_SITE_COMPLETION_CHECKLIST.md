@@ -1,9 +1,9 @@
 # Multi-Site Migration - Completion Checklist
 
 ## ✅ Phase 1: Core Infrastructure (COMPLETE)
-- [x] Created `sites` table with 'builddesk' entry
+- [x] Created `sites` table with 'brikly' entry
 - [x] Added `site_id` to 25+ core tables
-- [x] Backfilled all existing data with builddesk site_id
+- [x] Backfilled all existing data with brikly site_id
 - [x] Updated RLS policies for site isolation
 - [x] Fixed RLS infinite recursion issue
 - [x] Created site resolver (domain → site_id)
@@ -21,7 +21,7 @@ const { data: { session } } = await supabase.auth.getSession();
 console.log('JWT site_id:', session?.user?.app_metadata?.site_id);
 ```
 
-**Should output:** A UUID (the builddesk site_id)
+**Should output:** A UUID (the brikly site_id)
 
 ---
 
@@ -34,8 +34,8 @@ console.log('Site config:', siteConfig);
 ```
 
 **Expected:**
-- `siteId`: UUID of builddesk
-- `siteConfig.key`: 'builddesk'
+- `siteId`: UUID of brikly
+- `siteConfig.key`: 'brikly'
 
 ---
 
@@ -79,8 +79,8 @@ VALUES ('testsite', 'test.example.com', 'Test Site', true);
 INSERT INTO companies (name, site_id)
 SELECT 'Test Company', id FROM sites WHERE key = 'testsite';
 
--- 3. Verify builddesk users can't see test company
--- (should return 0 when logged in as builddesk user)
+-- 3. Verify brikly users can't see test company
+-- (should return 0 when logged in as brikly user)
 SELECT COUNT(*) FROM companies WHERE name = 'Test Company';
 ```
 
@@ -196,7 +196,7 @@ Deno.serve(async (req) => {
    - [ ] site_id stays in context
 
 2. **Company Management:**
-   - [ ] View company list (should only show builddesk companies)
+   - [ ] View company list (should only show brikly companies)
    - [ ] Create new company (should auto-set site_id)
    - [ ] Edit company
    - [ ] Company data isolated by site

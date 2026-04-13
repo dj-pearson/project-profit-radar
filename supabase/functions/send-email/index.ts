@@ -16,14 +16,14 @@ function buildHtmlBody(subject: string, message: string): string {
 <head><meta charset="utf-8"></head>
 <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
   <div style="background: #F97316; padding: 20px; border-radius: 8px 8px 0 0;">
-    <h1 style="color: white; margin: 0; font-size: 20px;">BuildDesk</h1>
+    <h1 style="color: white; margin: 0; font-size: 20px;">Brikly</h1>
   </div>
   <div style="padding: 24px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 8px 8px;">
     <h2 style="margin-top: 0;">${subject}</h2>
     <div style="line-height: 1.6; color: #374151;">${message}</div>
   </div>
   <p style="text-align: center; color: #9CA3AF; font-size: 12px; margin-top: 24px;">
-    &copy; ${new Date().getFullYear()} BuildDesk. All rights reserved.
+    &copy; ${new Date().getFullYear()} Brikly. All rights reserved.
   </p>
 </body>
 </html>`;

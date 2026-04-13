@@ -35,22 +35,22 @@ const ElectricalContractorSoftware = () => {
   const electricalFAQs = [
     {
       question: "What is electrical contractor software?",
-      answer: "Electrical contractor software is specialized construction management software designed for electrical contractors. It manages electrical projects (residential, commercial, industrial), tracks material costs (wire, conduit, fixtures, panels), monitors electrician licenses and certifications, ensures NEC code compliance, schedules electrical crews, and provides job costing specific to electrical work. BuildDesk includes all electrical features at $350/month.",
+      answer: "Electrical contractor software is specialized construction management software designed for electrical contractors. It manages electrical projects (residential, commercial, industrial), tracks material costs (wire, conduit, fixtures, panels), monitors electrician licenses and certifications, ensures NEC code compliance, schedules electrical crews, and provides job costing specific to electrical work. Brikly includes all electrical features at $350/month.",
       category: "Definition"
     },
     {
       question: "How does electrical contractor software track material costs?",
-      answer: "Electrical contractor software tracks specific electrical materials including wire/cable by gauge and type, conduit and fittings, electrical panels and breakers, switches and outlets, lighting fixtures, and specialized electrical equipment. BuildDesk provides real-time material cost tracking, inventory management, vendor pricing comparison, and automatic job costing for accurate electrical project profitability.",
+      answer: "Electrical contractor software tracks specific electrical materials including wire/cable by gauge and type, conduit and fittings, electrical panels and breakers, switches and outlets, lighting fixtures, and specialized electrical equipment. Brikly provides real-time material cost tracking, inventory management, vendor pricing comparison, and automatic job costing for accurate electrical project profitability.",
       category: "Features"
     },
     {
       question: "Can electrical contractor software manage electrician licenses?",
-      answer: "Yes, electrical contractor software tracks master electrician licenses, journeyman electrician licenses, apprentice electrician hours and training, specialized electrical certifications (low voltage, solar, industrial), license renewal dates with automated reminders, and continuing education requirements. BuildDesk ensures your electrical crew maintains proper licensing and compliance.",
+      answer: "Yes, electrical contractor software tracks master electrician licenses, journeyman electrician licenses, apprentice electrician hours and training, specialized electrical certifications (low voltage, solar, industrial), license renewal dates with automated reminders, and continuing education requirements. Brikly ensures your electrical crew maintains proper licensing and compliance.",
       category: "Licensing"
     },
     {
       question: "Does electrical contractor software help with code compliance?",
-      answer: "Yes, electrical contractor software includes NEC (National Electrical Code) compliance checklists, electrical inspection preparation and documentation, code violation tracking and resolution, electrical safety protocols and procedures, and permit management for electrical work. BuildDesk helps electrical contractors pass inspections consistently and maintain code compliance on all projects.",
+      answer: "Yes, electrical contractor software includes NEC (National Electrical Code) compliance checklists, electrical inspection preparation and documentation, code violation tracking and resolution, electrical safety protocols and procedures, and permit management for electrical work. Brikly helps electrical contractors pass inspections consistently and maintain code compliance on all projects.",
       category: "Compliance"
     }
   ];
@@ -58,20 +58,20 @@ const ElectricalContractorSoftware = () => {
   const articleSchema = createArticleSchema(
     "Electrical Contractor Software - Complete Management for Electrical Businesses",
     "Comprehensive electrical contractor management software for residential, commercial, and industrial electrical projects. Project management, safety compliance, job costing, and electrician license tracking.",
-    "https://build-desk.com/electrical-contractor-software",
+    "https://brikly.net/electrical-contractor-software",
     ["electrical contractor software", "electrical business management", "electrical project management"]
   );
 
   const breadcrumbSchema = createBreadcrumbSchema([
-    { name: "Home", url: "https://build-desk.com" },
-    { name: "Solutions", url: "https://build-desk.com/solutions" },
-    { name: "Electrical Contractor Software", url: "https://build-desk.com/electrical-contractor-software" }
+    { name: "Home", url: "https://brikly.net" },
+    { name: "Solutions", url: "https://brikly.net/solutions" },
+    { name: "Electrical Contractor Software", url: "https://brikly.net/electrical-contractor-software" }
   ]);
 
   return (
     <>
       <PageSEO
-        title="Electrical Contractor Software - Job Costing, Code Compliance & License Tracking | BuildDesk"
+        title="Electrical Contractor Software - Job Costing, Code Compliance & License Tracking | Brikly"
         description="Electrical contractor management software for residential, commercial, and industrial electricians. Track wire/material costs, manage electrician licenses, NEC code compliance, electrical project scheduling. $350/month vs $500+ competitors. 45% fewer delays. Free trial."
         keywords={[
           'electrical contractor software',
@@ -83,7 +83,7 @@ const ElectricalContractorSoftware = () => {
           'electrician license tracking',
           'NEC compliance software'
         ]}
-        canonicalUrl="https://build-desk.com/electrical-contractor-software"
+        canonicalUrl="https://brikly.net/electrical-contractor-software"
         schema={[articleSchema, breadcrumbSchema]}
         ogType="article"
         lastModified="2025-11-07"
@@ -140,7 +140,7 @@ const ElectricalContractorSoftware = () => {
             {/* Benefits Section */}
             <div className="bg-white rounded-lg border p-8 mb-16">
               <h2 className="text-3xl font-bold text-construction-dark mb-8 text-center">
-                Why Electrical Contractors Choose BuildDesk
+                Why Electrical Contractors Choose Brikly
               </h2>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div className="text-center">

@@ -10,7 +10,7 @@ const Blog = () => {
   return (
     <>
       <SEOMetaTags
-        title="Construction Industry Blog - BuildDesk"
+        title="Construction Industry Blog - Brikly"
         description="Expert insights on construction management, project efficiency, safety compliance, and industry best practices. Stay updated with the latest construction technology trends."
         keywords={['construction blog', 'construction management articles', 'construction industry insights', 'construction best practices', 'construction technology']}
         canonicalUrl="/blog"

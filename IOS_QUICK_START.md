@@ -5,7 +5,7 @@
 I've already done these for you:
 
 - ✅ Fixed Capacitor config for production (removed dev server URL)
-- ✅ Updated app name to "BuildDesk"
+- ✅ Updated app name to "Brikly"
 - ✅ Added iOS permission descriptions (Camera, Photos, Location)
 - ✅ Added helpful npm scripts for iOS workflow
 
@@ -56,11 +56,11 @@ Once Xcode opens:
    - Select your `Team` from dropdown
 
 3. **Verify Bundle ID**
-   - Confirm Bundle Identifier is: `com.builddesk.app`
+   - Confirm Bundle Identifier is: `com.brikly.app`
    - If it says "already registered", you'll need to change it to something unique like:
-     - `com.yourcompanyname.builddesk`
-     - `com.builddesk.construction`
-     - `app.builddesk.pro`
+     - `com.yourcompanyname.brikly`
+     - `com.brikly.construction`
+     - `app.brikly.pro`
 
 ---
 

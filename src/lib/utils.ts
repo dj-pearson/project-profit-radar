@@ -17,14 +17,14 @@ export function formatCurrency(amount: number): string {
  * Uses the VITE_SUPABASE_URL environment variable
  */
 export function getStorageUrl(): string {
-  const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://api.build-desk.com';
+  const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://api.brikly.net';
   return `${supabaseUrl}/storage/v1/object/public`;
 }
 
 /**
  * Get the full URL for a storage asset
  * @param bucket - The storage bucket name (e.g., 'site-assets')
- * @param path - The path to the file within the bucket (e.g., 'BuildDeskLogo.png')
+ * @param path - The path to the file within the bucket (e.g., 'BriklyLogo.png')
  * @param options - Optional query params like width, quality
  */
 export function getAssetUrl(bucket: string, path: string, options?: { width?: number; quality?: number }): string {
@@ -42,6 +42,6 @@ export function getAssetUrl(bucket: string, path: string, options?: { width?: nu
 }
 
 /**
- * Default BuildDesk logo URL
+ * Default Brikly logo URL
  */
-export const BUILDDESK_LOGO_URL = getAssetUrl('site-assets', 'BuildDeskLogo.png', { width: 200, quality: 90 });
+export const BRIKLY_LOGO_URL = getAssetUrl('site-assets', 'BriklyLogo.png', { width: 200, quality: 90 });

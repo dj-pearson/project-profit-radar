@@ -74,10 +74,10 @@ BEGIN
   RAISE NOTICE '';
 END $$;
 
--- Test the is_valid_site function with BuildDesk site_id
+-- Test the is_valid_site function with Brikly site_id
 DO $$
 DECLARE
-  v_builddesk_site_id UUID;
+  v_brikly_site_id UUID;
   v_is_valid BOOLEAN;
 BEGIN
   RAISE NOTICE '========================================';
@@ -85,17 +85,17 @@ BEGIN
   RAISE NOTICE '========================================';
   RAISE NOTICE '';
   
-  -- Get BuildDesk site_id
-  SELECT id INTO v_builddesk_site_id FROM sites WHERE key = 'builddesk' LIMIT 1;
+  -- Get Brikly site_id
+  SELECT id INTO v_brikly_site_id FROM sites WHERE key = 'brikly' LIMIT 1;
   
-  IF v_builddesk_site_id IS NULL THEN
-    RAISE NOTICE '✗ BuildDesk site not found!';
+  IF v_brikly_site_id IS NULL THEN
+    RAISE NOTICE '✗ Brikly site not found!';
   ELSE
-    RAISE NOTICE 'BuildDesk site_id: %', v_builddesk_site_id;
+    RAISE NOTICE 'Brikly site_id: %', v_brikly_site_id;
     
     -- Test the function
     BEGIN
-      SELECT public.is_valid_site(v_builddesk_site_id) INTO v_is_valid;
+      SELECT public.is_valid_site(v_brikly_site_id) INTO v_is_valid;
       RAISE NOTICE '✓ is_valid_site() returned: %', v_is_valid;
     EXCEPTION WHEN OTHERS THEN
       RAISE NOTICE '✗ is_valid_site() FAILED: %', SQLERRM;

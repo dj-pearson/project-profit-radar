@@ -87,8 +87,8 @@ export default function MoreScreen() {
 
       {/* Version Info */}
       <View style={styles.footer}>
-        <Text style={styles.versionText}>BuildDesk v1.0.0</Text>
-        <Text style={styles.copyrightText}>© 2024 BuildDesk. All rights reserved.</Text>
+        <Text style={styles.versionText}>Brikly v1.0.0</Text>
+        <Text style={styles.copyrightText}>© 2024 Brikly. All rights reserved.</Text>
       </View>
     </ScrollView>
   );

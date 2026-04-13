@@ -7,7 +7,7 @@ import { supabase } from '@/integrations/supabase/client';
 const mockTeamMembers = [
   {
     id: 'user-001',
-    email: 'mike.johnson@builddesk.com',
+    email: 'mike.johnson@brikly.com',
     first_name: 'Mike',
     last_name: 'Johnson',
     phone: '555-100-2001',
@@ -19,7 +19,7 @@ const mockTeamMembers = [
   },
   {
     id: 'user-002',
-    email: 'sarah.williams@builddesk.com',
+    email: 'sarah.williams@brikly.com',
     first_name: 'Sarah',
     last_name: 'Williams',
     phone: '555-100-2002',
@@ -31,7 +31,7 @@ const mockTeamMembers = [
   },
   {
     id: 'user-003',
-    email: 'james.martinez@builddesk.com',
+    email: 'james.martinez@brikly.com',
     first_name: 'James',
     last_name: 'Martinez',
     phone: '555-100-2003',
@@ -43,7 +43,7 @@ const mockTeamMembers = [
   },
   {
     id: 'user-004',
-    email: 'lisa.chen@builddesk.com',
+    email: 'lisa.chen@brikly.com',
     first_name: 'Lisa',
     last_name: 'Chen',
     phone: '555-100-2004',
@@ -55,7 +55,7 @@ const mockTeamMembers = [
   },
   {
     id: 'user-005',
-    email: 'tom.davis@builddesk.com',
+    email: 'tom.davis@brikly.com',
     first_name: 'Tom',
     last_name: 'Davis',
     phone: '555-100-2005',

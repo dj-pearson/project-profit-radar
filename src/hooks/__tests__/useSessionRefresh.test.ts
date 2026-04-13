@@ -56,9 +56,9 @@ vi.mock('@/lib/logger', () => ({
 vi.mock('@/lib/site-resolver', () => ({
   getSiteConfig: vi.fn().mockResolvedValue({
     id: 'test-site-id',
-    key: 'builddesk',
-    name: 'BuildDesk',
-    domain: 'build-desk.com',
+    key: 'brikly',
+    name: 'Brikly',
+    domain: 'brikly.net',
   }),
   getCurrentSiteId: vi.fn().mockReturnValue('test-site-id'),
   clearSiteCache: vi.fn(),
@@ -301,7 +301,7 @@ describe('Session Storage Security', () => {
 
   it('should clear auth tokens on session expiry', () => {
     // Set up mock localStorage data
-    const authTokenKey = 'sb-builddesk-auth-token';
+    const authTokenKey = 'sb-brikly-auth-token';
     localStorage.setItem(authTokenKey, 'test-token');
 
     // Clear auth tokens

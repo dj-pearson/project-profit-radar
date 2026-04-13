@@ -112,7 +112,7 @@ const handler = async (req: Request): Promise<Response> => {
           const resend = new Resend(resendApiKey);
           
           await resend.emails.send({
-            from: "BuildDesk <notifications@resend.dev>",
+            from: "Brikly <notifications@resend.dev>",
             to: [subscriber.email],
             subject: emailSubject,
             html: `

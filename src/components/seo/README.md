@@ -1,6 +1,6 @@
 # SEO Components Documentation
 
-This directory contains powerful SEO components designed to improve BuildDesk's search engine rankings and visibility.
+This directory contains powerful SEO components designed to improve Brikly's search engine rankings and visibility.
 
 ## 🎯 Overview
 
@@ -27,7 +27,7 @@ Comprehensive Schema.org markup optimized for B2B SaaS products.
 **Usage:**
 
 ```tsx
-import { SaaSProductSchema, BuildDeskServiceSchema } from '@/components/seo/SaaSProductSchema';
+import { SaaSProductSchema, BriklyServiceSchema } from '@/components/seo/SaaSProductSchema';
 
 function App() {
   return (
@@ -40,7 +40,7 @@ function App() {
       />
 
       {/* Optional: Service-based schema for service pages */}
-      <BuildDeskServiceSchema />
+      <BriklyServiceSchema />
     </>
   );
 }
@@ -91,7 +91,7 @@ function HomePage() {
   return (
     <InteractiveFAQ
       title="Frequently Asked Questions"
-      subtitle="Everything you need to know about BuildDesk"
+      subtitle="Everything you need to know about Brikly"
       faqs={constructionSoftwareFAQs}
       theme="gradient"
       defaultExpanded={0}
@@ -105,8 +105,8 @@ function HomePage() {
 function CustomPage() {
   const customFAQs = [
     {
-      question: "How does BuildDesk compare to Procore?",
-      answer: "BuildDesk is designed for small to medium contractors...",
+      question: "How does Brikly compare to Procore?",
+      answer: "Brikly is designed for small to medium contractors...",
       keywords: ["comparison", "Procore", "alternative"],
     },
     // ... more FAQs
@@ -188,7 +188,7 @@ export default function LandingPage() {
     <>
       {/* Meta Tags */}
       <PageSEO
-        title="BuildDesk - Construction Management Software for Small Contractors"
+        title="Brikly - Construction Management Software for Small Contractors"
         description="Affordable construction management software with real-time job costing, scheduling, and mobile apps. 50% less than Procore. Try free for 14 days."
         keywords={[
           'construction management software',
@@ -231,7 +231,7 @@ export default function PricingPage() {
   return (
     <>
       <PageSEO
-        title="BuildDesk Pricing - $350/month Unlimited Users"
+        title="Brikly Pricing - $350/month Unlimited Users"
         description="Simple, transparent pricing for construction contractors. $350/month includes unlimited users, all features, mobile apps, and support. 14-day free trial."
         keywords={['construction software pricing', 'contractor software cost']}
       />

@@ -62,14 +62,14 @@ const VideoTutorialSystem = () => {
       const mockPaths: LearningPath[] = [
         {
           id: '1',
-          name: 'Getting Started with BuildDesk',
+          name: 'Getting Started with Brikly',
           description: 'Complete introduction to the platform for new users',
           estimated_time: '45 minutes',
           completion_percentage: 60,
           tutorials: [
             {
               id: '1',
-              title: 'Welcome to BuildDesk',
+              title: 'Welcome to Brikly',
               description: 'Overview of features and navigation',
               video_url: 'https://example.com/video1',
               duration: '5:30',

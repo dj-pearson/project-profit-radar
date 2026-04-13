@@ -266,8 +266,8 @@ async function generateEmailHtml(campaignName: string, metadata: any): Promise<s
     firstName: metadata.first_name || 'there',
     companyName: metadata.company_name,
     daysRemaining: metadata.days_remaining || 14,
-    dashboardUrl: 'https://build-desk.com/dashboard',
-    unsubscribeUrl: metadata.unsubscribe_url || 'https://build-desk.com/unsubscribe',
+    dashboardUrl: 'https://brikly.net/dashboard',
+    unsubscribeUrl: metadata.unsubscribe_url || 'https://brikly.net/unsubscribe',
   };
 
   // Map campaign names to templates
@@ -283,7 +283,7 @@ async function generateEmailHtml(campaignName: string, metadata: any): Promise<s
   return `
     <html>
       <body>
-        <h1>BuildDesk</h1>
+        <h1>Brikly</h1>
         <p>Hi ${data.firstName},</p>
         <p>This is a ${campaignName} email.</p>
         <p>Dashboard: <a href="${data.dashboardUrl}">Click here</a></p>

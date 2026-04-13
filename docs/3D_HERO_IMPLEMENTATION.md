@@ -1,14 +1,14 @@
-# BuildDesk 3D Hero Implementation Guide
+# Brikly 3D Hero Implementation Guide
 
 ## Overview
 
-This guide documents the implementation of the enhanced 3D hero section for BuildDesk, featuring a building blocks animation that communicates construction sophistication while maintaining performance for field tablet users.
+This guide documents the implementation of the enhanced 3D hero section for Brikly, featuring a building blocks animation that communicates construction sophistication while maintaining performance for field tablet users.
 
 ## What Was Implemented
 
 ### 1. Core Components
 
-#### BuildDeskHero3D (`src/components/hero/BuildDeskHero3D.tsx`)
+#### BriklyHero3D (`src/components/hero/BriklyHero3D.tsx`)
 The main 3D hero component featuring:
 - **Building blocks animation**: 3000 instanced meshes for high performance
 - **Construction-themed colors**: Navy, steel gray, safety orange, light blue
@@ -25,7 +25,7 @@ The main 3D hero component featuring:
 #### BackgroundEffects (`src/components/hero/BackgroundEffects.tsx`)
 Ambient particle system:
 - **2000 particles on desktop** (500 on mobile)
-- BuildDesk brand colors with reduced opacity
+- Brikly brand colors with reduced opacity
 - Additive blending for ethereal effect
 - Minimal performance impact
 
@@ -123,7 +123,7 @@ const Index = () => {
 - **Three.js**: ~600KB (already in project)
 - **@react-three/fiber**: ~100KB (already in project)
 - **@react-three/drei**: ~150KB (already in project)
-- **BuildDeskHero3D component**: ~15KB
+- **BriklyHero3D component**: ~15KB
 - **Total additional**: ~15KB (dependencies already present)
 
 ### Runtime Performance
@@ -244,7 +244,7 @@ All interactive elements (buttons, links) are keyboard accessible.
 
 ### Changing Colors
 
-Edit the colors array in `BuildDeskHero3D.tsx`:
+Edit the colors array in `BriklyHero3D.tsx`:
 
 ```tsx
 const colors = useMemo(() => [
@@ -259,7 +259,7 @@ Replace with your brand colors (hex or RGB).
 
 ### Adjusting Particle Count
 
-In `BuildDeskHero3D.tsx`:
+In `BriklyHero3D.tsx`:
 
 ```tsx
 <AmbientParticles count={isMobile ? 500 : 2000} />
@@ -269,7 +269,7 @@ Reduce both values for better performance.
 
 ### Modifying Building Blocks Count
 
-In `BuildDeskHero3D.tsx`:
+In `BriklyHero3D.tsx`:
 
 ```tsx
 const count = 3000; // Reduce to 1500 or 1000 for better performance
@@ -308,7 +308,7 @@ If you need to revert to the original hero:
 2. **Remove All Files (10 minutes)**:
    ```bash
    # Delete new components
-   rm src/components/hero/BuildDeskHero3D.tsx
+   rm src/components/hero/BriklyHero3D.tsx
    rm src/components/hero/BackgroundEffects.tsx
    rm src/components/ui/glass-button.tsx
    rm src/components/Hero3D.tsx

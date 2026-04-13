@@ -2,7 +2,7 @@
 
 ## 📦 What's Included
 
-This rollback package contains everything you need to revert BuildDesk from multi-tenant architecture back to single-tenant architecture.
+This rollback package contains everything you need to revert Brikly from multi-tenant architecture back to single-tenant architecture.
 
 ### Created Files (7 files)
 
@@ -287,7 +287,7 @@ psql -h YOUR_HOST -U postgres -d postgres < backup.sql
 │        Single Supabase Database             │
 ├─────────────────────────────────────────────┤
 │  Sites Table                                │
-│  ├─ builddesk                              │
+│  ├─ brikly                              │
 │  ├─ realestate                             │
 │  └─ salonpros                              │
 ├─────────────────────────────────────────────┤
@@ -305,7 +305,7 @@ psql -h YOUR_HOST -U postgres -d postgres < backup.sql
 ### After (Single-Tenant)
 ```
 ┌─────────────────────────────────────────────┐
-│        BuildDesk Supabase Database          │
+│        Brikly Supabase Database          │
 ├─────────────────────────────────────────────┤
 │  ❌ No Sites Table                          │
 ├─────────────────────────────────────────────┤
@@ -367,7 +367,7 @@ psql -h YOUR_HOST -U postgres -d postgres < backup.sql
 ### Documentation
 - **Complete Guide**: `MULTI_TENANT_ROLLBACK_GUIDE.md`
 - **Quick Reference**: `QUICK_ROLLBACK_REFERENCE.md`
-- **BuildDesk Docs**: `CLAUDE.md`
+- **Brikly Docs**: `CLAUDE.md`
 
 ### External Resources
 - **Supabase Docs**: https://supabase.com/docs

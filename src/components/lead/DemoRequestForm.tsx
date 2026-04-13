@@ -109,7 +109,7 @@ export const DemoRequestForm = ({ onSuccess, compactMode = false }: DemoRequestF
             </div>
             <h3 className="text-2xl font-bold text-construction-dark">Request Received!</h3>
             <p className="text-muted-foreground max-w-md mx-auto">
-              Thank you for your interest in BuildDesk. A member of our team will reach out within 24 hours to schedule your personalized demo.
+              Thank you for your interest in Brikly. A member of our team will reach out within 24 hours to schedule your personalized demo.
             </p>
             <div className="pt-4">
               <p className="text-sm text-muted-foreground">
@@ -131,7 +131,7 @@ export const DemoRequestForm = ({ onSuccess, compactMode = false }: DemoRequestF
             Request a Personalized Demo
           </CardTitle>
           <CardDescription>
-            See BuildDesk in action. Our construction experts will walk you through the platform and answer your questions.
+            See Brikly in action. Our construction experts will walk you through the platform and answer your questions.
           </CardDescription>
         </CardHeader>
       )}

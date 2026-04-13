@@ -1,4 +1,4 @@
-# BuildDesk Advanced Mobile Features
+# Brikly Advanced Mobile Features
 
 ## Overview
 
@@ -500,4 +500,4 @@ const items: MobileNavItem[] = [
 
 ---
 
-**BuildDesk** - Advanced Mobile Features for Construction Management
+**Brikly** - Advanced Mobile Features for Construction Management

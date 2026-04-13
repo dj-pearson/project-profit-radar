@@ -16,7 +16,7 @@ Cloudflare CDN is serving **old cached `index.html`** that references old asset 
 
 ### Option 1: Cloudflare Dashboard (FASTEST - 2 minutes)
 1. Go to https://dash.cloudflare.com
-2. Select your **build-desk.com** domain
+2. Select your **brikly.net** domain
 3. Click **Caching** → **Configuration**
 4. Click **"Purge Everything"** button (big blue button)
 5. Wait 1-2 minutes for global cache clear
@@ -153,10 +153,10 @@ Try these additional steps:
 # F12 → Console tab → Look for red errors
 
 # 4. Verify deployment succeeded
-# Cloudflare Dashboard → Pages → builddesk → Latest deployment
+# Cloudflare Dashboard → Pages → brikly → Latest deployment
 
 # 5. Check specific asset exists
-# Try accessing: https://build-desk.com/assets/index-ffgAEe4i.css
+# Try accessing: https://brikly.net/assets/index-ffgAEe4i.css
 # (Use actual hash from build logs)
 ```
 

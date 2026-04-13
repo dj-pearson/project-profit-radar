@@ -102,7 +102,7 @@ Object.defineProperty(window, 'sessionStorage', {
 });
 
 // Mock environment variables for tests
-process.env.VITE_SUPABASE_URL = 'https://api.build-desk.com';
+process.env.VITE_SUPABASE_URL = 'https://api.brikly.net';
 process.env.VITE_SUPABASE_PUBLISHABLE_KEY = 'test-key';
 
 // Mock navigator.geolocation

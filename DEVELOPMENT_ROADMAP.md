@@ -1,4 +1,4 @@
-# BuildDesk Development Roadmap
+# Brikly Development Roadmap
 ## Current Platform Status: 97/100 (A+ Grade)
 
 ### Progress Update (Current Status)

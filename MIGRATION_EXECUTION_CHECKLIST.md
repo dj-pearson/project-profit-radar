@@ -58,8 +58,8 @@ Use this checklist to track your migration progress. Copy this file and check of
     -f supabase/migrations/20251128000001_create_sites_table.sql
   ```
 - [ ] Verify sites table exists
-- [ ] Verify Build-Desk site created: `SELECT * FROM sites WHERE key = 'builddesk';`
-- [ ] Test helper functions: `SELECT get_site_by_domain('build-desk.com');`
+- [ ] Verify Brikly site created: `SELECT * FROM sites WHERE key = 'brikly';`
+- [ ] Test helper functions: `SELECT get_site_by_domain('brikly.net');`
 - [ ] **If successful, apply to production**
 
 **Migration 2: Add site_id to Core Tables**
@@ -202,7 +202,7 @@ Use this checklist to track your migration progress. Copy this file and check of
 - [ ] Test mobile app on both iOS and Android
 
 ### Frontend Testing
-- [ ] Local testing with build-desk.com (add to /etc/hosts if needed)
+- [ ] Local testing with brikly.net (add to /etc/hosts if needed)
 - [ ] Test authentication sets site_id
 - [ ] Test all major features work correctly
 - [ ] Test with network inspector (verify site_id in queries)
@@ -295,7 +295,7 @@ Follow `docs/NEW_WEBSITE_ONBOARDING_GUIDE.md`
 - [ ] Create site record in `sites` table
 - [ ] Migrate data (companies, users, projects, etc.)
 - [ ] Verify site_id set correctly on all rows
-- [ ] Test isolation between Build-Desk and new site
+- [ ] Test isolation between Brikly and new site
 
 ### Frontend
 - [ ] Update `site-resolver.ts` with new domain

@@ -13,33 +13,33 @@ const ProcoreAlternative = () => {
   const comparison = [
     {
       feature: "Setup Time",
-      builddesk: "2-3 days",
+      brikly: "2-3 days",
       procore: "2-3 months",
-      advantage: "builddesk"
+      advantage: "brikly"
     },
     {
       feature: "Monthly Cost (10 users)",
-      builddesk: "$299",
+      brikly: "$299",
       procore: "$375+",
-      advantage: "builddesk"
+      advantage: "brikly"
     },
     {
       feature: "Learning Curve",
-      builddesk: "Intuitive interface",
+      brikly: "Intuitive interface",
       procore: "Complex, requires training",
-      advantage: "builddesk"
+      advantage: "brikly"
     },
     {
       feature: "Small Business Focus",
-      builddesk: "Built for SMBs",
+      brikly: "Built for SMBs",
       procore: "Enterprise-focused",
-      advantage: "builddesk"
+      advantage: "brikly"
     },
     {
       feature: "Customer Support",
-      builddesk: "Personal support",
+      brikly: "Personal support",
       procore: "Ticket-based system",
-      advantage: "builddesk"
+      advantage: "brikly"
     }
   ];
 
@@ -47,19 +47,19 @@ const ProcoreAlternative = () => {
     <>
       <PageSEO
         title="Best Procore Alternative for Small Contractors 2026"
-        description="BuildDesk is the #1 Procore alternative for small contractors. 50% less cost ($350 vs $500+/month), unlimited users, 1-2 day setup. Same features without enterprise complexity."
-        keywords={['Procore alternative', 'Procore competitor', 'Procore vs BuildDesk', 'cheaper than Procore', 'Procore for small contractors', 'construction management software alternative', 'small business construction software']}
-        canonicalUrl="https://builddesk.com/procore-alternative"
+        description="Brikly is the #1 Procore alternative for small contractors. 50% less cost ($350 vs $500+/month), unlimited users, 1-2 day setup. Same features without enterprise complexity."
+        keywords={['Procore alternative', 'Procore competitor', 'Procore vs Brikly', 'cheaper than Procore', 'Procore for small contractors', 'construction management software alternative', 'small business construction software']}
+        canonicalUrl="https://brikly.com/procore-alternative"
         lastModified="2026-02-08"
         schema={[
           createOrganizationSchema(),
-          createComparisonSchema('BuildDesk vs Procore Comparison', [
-            { name: 'BuildDesk', description: 'Construction management software for small contractors with real-time job costing, unlimited users at $350/month', price: '350', url: 'https://builddesk.com' },
+          createComparisonSchema('Brikly vs Procore Comparison', [
+            { name: 'Brikly', description: 'Construction management software for small contractors with real-time job costing, unlimited users at $350/month', price: '350', url: 'https://brikly.com' },
             { name: 'Procore', description: 'Enterprise construction management platform with per-seat pricing starting at $500+/month', price: '500', url: 'https://www.procore.com' },
           ]),
           createBreadcrumbSchema([
-            { name: 'Home', url: 'https://builddesk.com' },
-            { name: 'Procore Alternative', url: 'https://builddesk.com/procore-alternative' },
+            { name: 'Home', url: 'https://brikly.com' },
+            { name: 'Procore Alternative', url: 'https://brikly.com/procore-alternative' },
           ]),
         ]}
       />
@@ -74,7 +74,7 @@ const ProcoreAlternative = () => {
               </h1>
               <p className="text-xl text-muted-foreground max-w-3xl mx-auto mb-8">
                 Get enterprise-level construction management without the enterprise complexity and cost. 
-                BuildDesk delivers the power you need with the simplicity you want.
+                Brikly delivers the power you need with the simplicity you want.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <Link to="/auth">
@@ -94,14 +94,14 @@ const ProcoreAlternative = () => {
             {/* Comparison Table */}
             <div className="bg-white rounded-lg border p-8 mb-16">
               <h2 className="text-3xl font-bold text-construction-dark mb-8 text-center">
-                BuildDesk vs. Procore Comparison
+                Brikly vs. Procore Comparison
               </h2>
               <div className="overflow-x-auto">
                 <table className="w-full">
                   <thead>
                     <tr className="border-b">
                       <th className="text-left py-3 px-4">Feature</th>
-                      <th className="text-center py-3 px-4 text-construction-blue font-bold">BuildDesk</th>
+                      <th className="text-center py-3 px-4 text-construction-blue font-bold">Brikly</th>
                       <th className="text-center py-3 px-4">Procore</th>
                       <th className="text-center py-3 px-4">Winner</th>
                     </tr>
@@ -111,13 +111,13 @@ const ProcoreAlternative = () => {
                       <tr key={index} className="border-b hover:bg-gray-50">
                         <td className="py-4 px-4 font-medium">{row.feature}</td>
                         <td className="py-4 px-4 text-center text-construction-blue font-semibold">
-                          {row.builddesk}
+                          {row.brikly}
                         </td>
                         <td className="py-4 px-4 text-center text-gray-600">
                           {row.procore}
                         </td>
                         <td className="py-4 px-4 text-center">
-                          {row.advantage === "builddesk" ? (
+                          {row.advantage === "brikly" ? (
                             <Check className="h-5 w-5 text-green-500 mx-auto" />
                           ) : (
                             <X className="h-5 w-5 text-gray-400 mx-auto" />
@@ -133,7 +133,7 @@ const ProcoreAlternative = () => {
             {/* Benefits Section */}
             <div className="bg-white rounded-lg border p-8 mb-16">
               <h2 className="text-3xl font-bold text-construction-dark mb-8 text-center">
-                Why Switch from Procore to BuildDesk
+                Why Switch from Procore to Brikly
               </h2>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div className="text-center">
@@ -170,15 +170,15 @@ const ProcoreAlternative = () => {
             <div className="mb-16">
               <GEOOptimizedFAQ
                 faqs={procoreAlternativeFAQs}
-                title="Procore vs BuildDesk: Frequently Asked Questions"
-                description="Common questions contractors ask when comparing BuildDesk to Procore."
+                title="Procore vs Brikly: Frequently Asked Questions"
+                description="Common questions contractors ask when comparing Brikly to Procore."
               />
             </div>
 
             {/* CTA Section */}
             <div className="bg-construction-blue text-white rounded-lg p-8 text-center">
               <h2 className="text-3xl font-bold mb-4">
-                Make the Switch to BuildDesk
+                Make the Switch to Brikly
               </h2>
               <p className="text-lg mb-6 opacity-90">
                 Join contractors who switched from Procore and never looked back. Better value, easier to use, faster results.

@@ -1,7 +1,7 @@
 # src/ - Source Code Root
 
 ## Purpose
-Main application source for the BuildDesk construction management SaaS platform.
+Main application source for the Brikly construction management SaaS platform.
 
 ## Key Conventions
 - **Framework**: React 19 + TypeScript 5.9 + Vite

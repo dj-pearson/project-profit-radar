@@ -78,7 +78,7 @@ const ConstructionMobileAppGuide = () => {
           'construction project app',
           'mobile construction tools'
         ]}
-        canonicalUrl="https://builddesk.com/resources/construction-mobile-app-guide"
+        canonicalUrl="https://brikly.com/resources/construction-mobile-app-guide"
       />
 
       <div className="container mx-auto px-4 py-8">
@@ -141,12 +141,12 @@ const ConstructionMobileAppGuide = () => {
             </CardContent>
           </Card>
 
-          {/* BuildDesk Mobile Features */}
+          {/* Brikly Mobile Features */}
           <Card className="mb-8 border-primary/20">
             <CardHeader>
               <div className="flex items-center space-x-2">
                 <Smartphone className="h-6 w-6 text-primary" />
-                <CardTitle>BuildDesk Mobile App</CardTitle>
+                <CardTitle>Brikly Mobile App</CardTitle>
               </div>
               <CardDescription>
                 Complete field management solution with offline capabilities
@@ -214,7 +214,7 @@ const ConstructionMobileAppGuide = () => {
             <CardHeader>
               <CardTitle>Ready to Mobilize Your Construction Team?</CardTitle>
               <CardDescription>
-                See how BuildDesk's mobile app can transform your field operations
+                See how Brikly's mobile app can transform your field operations
               </CardDescription>
             </CardHeader>
             <CardContent>

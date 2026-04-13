@@ -1,7 +1,7 @@
 # 🎉 iOS App Store Setup - Complete!
 
 **Date**: February 12, 2026  
-**Project**: BuildDesk  
+**Project**: Brikly  
 **Status**: Infrastructure Ready ✅
 
 ---
@@ -47,7 +47,7 @@ Pre-configured for App Store distribution with:
 - ✅ App Store distribution method
 - ✅ Manual signing style (for GitHub Actions)
 - ✅ Team ID placeholder (auto-replaced by workflow)
-- ✅ Bundle ID mapping (`com.builddesk.app`)
+- ✅ Bundle ID mapping (`com.brikly.app`)
 - ✅ Symbol upload enabled
 - ✅ Optimized for TestFlight
 
@@ -136,7 +136,7 @@ npm run build:mobile:ios  # Build web + sync to iOS
 
 #### 1. Apple Developer Portal (15-30 min)
 
-- [ ] Register Bundle ID: `com.builddesk.app`
+- [ ] Register Bundle ID: `com.brikly.app`
 - [ ] Create Distribution Certificate (.p12)
 - [ ] Create App Store Provisioning Profile
 - [ ] Create App in App Store Connect
@@ -232,7 +232,7 @@ git push origin main
 ### Step 7: TestFlight
 
 1. Go to: https://appstoreconnect.apple.com
-2. Select: BuildDesk → TestFlight
+2. Select: Brikly → TestFlight
 3. Wait: 5-30 min for processing
 4. Test the build
 
@@ -458,5 +458,5 @@ Everything is configured and ready for iOS deployment. The infrastructure is sol
 
 **Setup completed by**: Claude (Sonnet 4.5)  
 **Date**: February 12, 2026  
-**Project**: BuildDesk  
+**Project**: Brikly  
 **Repository**: project-profit-radar

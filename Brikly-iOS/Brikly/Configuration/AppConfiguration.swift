@@ -11,7 +11,7 @@ enum AppConfiguration {
            !value.isEmpty, !value.hasPrefix("$("), value.hasPrefix("http") {
             return value
         }
-        return "https://api.build-desk.com"
+        return "https://api.brikly.net"
     }
 
     /// Supabase anonymous/publishable key.
@@ -35,6 +35,6 @@ enum AppConfiguration {
 
     /// Edge functions base URL
     static var edgeFunctionsURL: String {
-        "https://functions.build-desk.com"
+        "https://functions.brikly.net"
     }
 }

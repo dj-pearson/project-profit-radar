@@ -211,7 +211,7 @@ async function sendReminder(
     recipientEmail,
     email.subject,
     email.body,
-    reminderSettings.email_from_name || 'BuildDesk',
+    reminderSettings.email_from_name || 'Brikly',
     reminderSettings.email_reply_to
   );
 
@@ -533,7 +533,7 @@ function getDefaultSettings(): PaymentReminderSettings {
     is_enabled: true,
     days_before_due: [7, 3, 1],
     days_after_due: [1, 3, 7, 14, 30],
-    email_from_name: 'BuildDesk',
+    email_from_name: 'Brikly',
     include_payment_link: true,
     upcoming_subject: 'Payment Due Soon - Invoice #{invoice_number}',
     upcoming_body: `Dear {client_name},
@@ -618,10 +618,10 @@ function buildEmailContent(
     '{amount}': formatCurrency(invoice.total_amount as number),
     '{due_date}': formatDate(invoice.due_date as string),
     '{client_name}': (project?.client_name as string) || (invoice.bill_to_name as string) || 'Valued Customer',
-    '{company_name}': 'BuildDesk',
+    '{company_name}': 'Brikly',
     '{days_overdue}': daysOverdue.toString(),
     '{payment_link}': settings.include_payment_link
-      ? `Pay Now: ${Deno.env.get("SITE_URL") || 'https://build-desk.com'}/pay/${invoice.id}`
+      ? `Pay Now: ${Deno.env.get("SITE_URL") || 'https://brikly.net'}/pay/${invoice.id}`
       : ''
   };
 
@@ -671,7 +671,7 @@ async function sendEmailViaProvider(
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        from: `${fromName} <billing@build-desk.com>`,
+        from: `${fromName} <billing@brikly.net>`,
         to: [to],
         reply_to: replyTo,
         subject: subject,

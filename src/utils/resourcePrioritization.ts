@@ -22,7 +22,7 @@ export const resourcePriorities: Record<string, ResourcePriority[]> = {
     { type: 'style', url: '/fonts/inter.css', priority: 'critical' },
 
     // Medium priority
-    { type: 'image', url: '/BuildDeskLogo.png', priority: 'medium' },
+    { type: 'image', url: '/BriklyLogo.png', priority: 'medium' },
   ],
   dashboard: [
     { type: 'font', url: '/fonts/inter-400.woff2', priority: 'critical' },

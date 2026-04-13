@@ -1,6 +1,6 @@
 # Route Organization Guide
 
-This document explains the new modular route structure implemented in the BuildDesk application.
+This document explains the new modular route structure implemented in the Brikly application.
 
 ## Overview
 

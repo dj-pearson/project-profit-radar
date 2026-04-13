@@ -1,10 +1,10 @@
-# BuildDesk API Reference
+# Brikly API Reference
 
 **Version**: 1.0.0
 **Base URL**: `https://ilhzuvemiuyfuxfegtlv.supabase.co/functions/v1`
 **Last Updated**: 2026-02-25
 
-BuildDesk provides a RESTful API built on Supabase Edge Functions. The API allows programmatic access to projects, estimates, invoices, time tracking, financial data, documents, team management, CRM, AI services, and webhooks.
+Brikly provides a RESTful API built on Supabase Edge Functions. The API allows programmatic access to projects, estimates, invoices, time tracking, financial data, documents, team management, CRM, AI services, and webhooks.
 
 ---
 
@@ -31,7 +31,7 @@ BuildDesk provides a RESTful API built on Supabase Edge Functions. The API allow
 
 ## Authentication
 
-All API requests require authentication. BuildDesk supports two authentication methods:
+All API requests require authentication. Brikly supports two authentication methods:
 
 ### 1. API Key Authentication
 
@@ -1633,7 +1633,7 @@ Create a webhook endpoint to receive real-time event notifications.
 {
   "webhook": {
     "id": "uuid",
-    "url": "https://your-server.com/webhooks/builddesk",
+    "url": "https://your-server.com/webhooks/brikly",
     "endpoint_name": "Production Webhook",
     "subscribed_events": ["project.created", "invoice.paid"],
     "is_active": true,
@@ -1644,7 +1644,7 @@ Create a webhook endpoint to receive real-time event notifications.
 
 ### Webhook Payload Format
 
-When an event occurs, BuildDesk sends a POST request to your endpoint:
+When an event occurs, Brikly sends a POST request to your endpoint:
 
 ```json
 {

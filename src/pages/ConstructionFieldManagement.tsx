@@ -34,7 +34,7 @@ const ConstructionFieldManagement = () => {
   return (
     <>
       <SEOMetaTags
-        title="Construction Field Management Software - Mobile Crew Management | BuildDesk"
+        title="Construction Field Management Software - Mobile Crew Management | Brikly"
         description="Powerful field management software for construction crews. Mobile time tracking, photo documentation, GPS verification, and offline capabilities. Designed for the field."
         keywords={['construction field management', 'mobile construction software', 'field crew management', 'construction time tracking', 'mobile project management', 'construction field apps']}
         canonicalUrl="/construction-field-management"

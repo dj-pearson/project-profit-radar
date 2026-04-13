@@ -91,8 +91,8 @@ export const App = {
   exitApp: () => Promise.resolve(),
   getInfo: () =>
     Promise.resolve({
-      name: "BuildDesk",
-      id: "com.builddesk.app",
+      name: "Brikly",
+      id: "com.brikly.app",
       build: "1.0.0",
       version: "1.0.0",
     }),

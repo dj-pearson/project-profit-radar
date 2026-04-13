@@ -1,4 +1,4 @@
-# Headers for build-desk.com
+# Headers for brikly.net
 
 # Default security headers for all pages
 /*
@@ -21,7 +21,7 @@
   Permissions-Policy: camera=(self), microphone=(self), geolocation=(self), payment=(self), usb=(), interest-cohort=()
 
   # Content Security Policy - comprehensive protection
-  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' https://*.supabase.co https://*.stripe.com https://*.sentry.io https://*.posthog.com https://js.stripe.com https://cdn.jsdelivr.net https://static.cloudflareinsights.com https://www.googletagmanager.com https://*.google-analytics.com https://accounts.google.com https://appleid.apple.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' data: blob: https: http: https://images.unsplash.com https://*.googleusercontent.com https://*.apple.com; connect-src 'self' https://*.supabase.co https://api.build-desk.com https://functions.build-desk.com https://*.stripe.com https://*.sentry.io https://*.posthog.com https://www.google-analytics.com https://*.analytics.google.com https://static.cloudflareinsights.com https://www.googletagmanager.com https://*.doubleclick.net https://raw.githack.com https://raw.githubusercontent.com https://accounts.google.com https://oauth2.googleapis.com https://appleid.apple.com https://images.unsplash.com https://hook.us1.make.com wss://*.supabase.co wss://api.build-desk.com; frame-src 'self' https://*.stripe.com https://accounts.google.com https://appleid.apple.com; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self' https://accounts.google.com https://appleid.apple.com; frame-ancestors 'none'; block-all-mixed-content; upgrade-insecure-requests; trusted-types default builddesk; require-trusted-types-for 'script'
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' https://*.supabase.co https://*.stripe.com https://*.sentry.io https://*.posthog.com https://js.stripe.com https://cdn.jsdelivr.net https://static.cloudflareinsights.com https://www.googletagmanager.com https://*.google-analytics.com https://accounts.google.com https://appleid.apple.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' data: blob: https: http: https://images.unsplash.com https://*.googleusercontent.com https://*.apple.com; connect-src 'self' https://*.supabase.co https://api.brikly.net https://functions.brikly.net https://*.stripe.com https://*.sentry.io https://*.posthog.com https://www.google-analytics.com https://*.analytics.google.com https://static.cloudflareinsights.com https://www.googletagmanager.com https://*.doubleclick.net https://raw.githack.com https://raw.githubusercontent.com https://accounts.google.com https://oauth2.googleapis.com https://appleid.apple.com https://images.unsplash.com https://hook.us1.make.com wss://*.supabase.co wss://api.brikly.net; frame-src 'self' https://*.stripe.com https://accounts.google.com https://appleid.apple.com; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self' https://accounts.google.com https://appleid.apple.com; frame-ancestors 'none'; block-all-mixed-content; upgrade-insecure-requests; trusted-types default brikly; require-trusted-types-for 'script'
 
 # Cache control for hashed assets (aggressive caching)
 /assets/*
@@ -59,7 +59,7 @@
   Access-Control-Allow-Origin: *
 
 # Root level images
-/BuildDeskLogo.png
+/BriklyLogo.png
   Cache-Control: public, max-age=31536000, immutable
 
 /images/*

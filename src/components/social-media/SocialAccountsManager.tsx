@@ -141,7 +141,7 @@ export const SocialAccountsManager: React.FC<SocialAccountsManagerProps> = ({
             <DialogHeader>
               <DialogTitle>Connect Social Media Account</DialogTitle>
               <DialogDescription>
-                Choose a platform to connect to your BuildDesk account
+                Choose a platform to connect to your Brikly account
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-4">
@@ -281,7 +281,7 @@ export const SocialAccountsManager: React.FC<SocialAccountsManagerProps> = ({
                 <DialogHeader>
                   <DialogTitle>Connect Social Media Account</DialogTitle>
                   <DialogDescription>
-                    Choose a platform to connect to your BuildDesk account
+                    Choose a platform to connect to your Brikly account
                   </DialogDescription>
                 </DialogHeader>
                 <div className="space-y-4">

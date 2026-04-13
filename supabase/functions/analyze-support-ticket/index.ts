@@ -446,7 +446,7 @@ function generateAutoResponse(ticket: any, analysis: any, context: any): string 
     ? `Hi ${context.companyName || "there"},`
     : "Hi there,";
 
-  let response = `${greeting}\n\nThank you for contacting BuildDesk support.\n\n`;
+  let response = `${greeting}\n\nThank you for contacting Brikly support.\n\n`;
 
   // Category-specific responses
   switch (analysis.category) {
@@ -470,7 +470,7 @@ function generateAutoResponse(ticket: any, analysis: any, context: any): string 
         "I've received your message and will look into this for you. I'll get back to you shortly with a solution.\n";
   }
 
-  response += "\nBest regards,\nBuildDesk Support Team";
+  response += "\nBest regards,\nBrikly Support Team";
 
   return response;
 }

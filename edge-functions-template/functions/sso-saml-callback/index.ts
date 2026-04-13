@@ -159,7 +159,7 @@ serve(async (req) => {
     if (!samlResponse) {
       console.error("[SAML] No SAMLResponse in callback");
       return Response.redirect(
-        `${Deno.env.get("SITE_URL") || "https://build-desk.com"}/auth?error=invalid_saml_response`
+        `${Deno.env.get("SITE_URL") || "https://brikly.net"}/auth?error=invalid_saml_response`
       );
     }
 
@@ -169,7 +169,7 @@ serve(async (req) => {
     if (!assertion || !assertion.email) {
       console.error("[SAML] Invalid SAML assertion");
       return Response.redirect(
-        `${Deno.env.get("SITE_URL") || "https://build-desk.com"}/auth?error=invalid_saml_assertion`
+        `${Deno.env.get("SITE_URL") || "https://brikly.net"}/auth?error=invalid_saml_assertion`
       );
     }
 
@@ -183,7 +183,7 @@ serve(async (req) => {
     if (connectionError || !ssoConnections?.length) {
       console.error("[SAML] No SSO connections found");
       return Response.redirect(
-        `${Deno.env.get("SITE_URL") || "https://build-desk.com"}/auth?error=sso_not_configured`
+        `${Deno.env.get("SITE_URL") || "https://brikly.net"}/auth?error=sso_not_configured`
       );
     }
 
@@ -204,7 +204,7 @@ serve(async (req) => {
     if (!matchedConnection) {
       console.error("[SAML] No matching SSO connection for domain:", emailDomain);
       return Response.redirect(
-        `${Deno.env.get("SITE_URL") || "https://build-desk.com"}/auth?error=domain_not_allowed`
+        `${Deno.env.get("SITE_URL") || "https://brikly.net"}/auth?error=domain_not_allowed`
       );
     }
 
@@ -225,7 +225,7 @@ serve(async (req) => {
         },
       });
       return Response.redirect(
-        `${Deno.env.get("SITE_URL") || "https://build-desk.com"}/auth?error=invalid_signature`
+        `${Deno.env.get("SITE_URL") || "https://brikly.net"}/auth?error=invalid_signature`
       );
     }
 
@@ -258,7 +258,7 @@ serve(async (req) => {
       if (createError || !newUser.user) {
         console.error("[SAML] Failed to create user:", createError);
         return Response.redirect(
-          `${Deno.env.get("SITE_URL") || "https://build-desk.com"}/auth?error=user_creation_failed`
+          `${Deno.env.get("SITE_URL") || "https://brikly.net"}/auth?error=user_creation_failed`
         );
       }
 
@@ -283,14 +283,14 @@ serve(async (req) => {
         type: "magiclink",
         email: assertion.email,
         options: {
-          redirectTo: relayState || `${Deno.env.get("SITE_URL") || "https://build-desk.com"}/dashboard`,
+          redirectTo: relayState || `${Deno.env.get("SITE_URL") || "https://brikly.net"}/dashboard`,
         },
       });
 
     if (sessionError || !sessionData) {
       console.error("[SAML] Failed to create session:", sessionError);
       return Response.redirect(
-        `${Deno.env.get("SITE_URL") || "https://build-desk.com"}/auth?error=session_creation_failed`
+        `${Deno.env.get("SITE_URL") || "https://brikly.net"}/auth?error=session_creation_failed`
       );
     }
 
@@ -325,7 +325,7 @@ serve(async (req) => {
   } catch (error) {
     console.error("[SAML] Callback error:", error);
     return Response.redirect(
-      `${Deno.env.get("SITE_URL") || "https://build-desk.com"}/auth?error=saml_callback_failed`
+      `${Deno.env.get("SITE_URL") || "https://brikly.net"}/auth?error=saml_callback_failed`
     );
   }
 });

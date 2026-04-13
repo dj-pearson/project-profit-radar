@@ -199,8 +199,8 @@ export default function ComponentShowcase() {
                 <h3 className="font-semibold mb-3">Progressive Image</h3>
                 <div className="max-w-md">
                   <ProgressiveImage
-                    src="/BuildDeskLogo.png"
-                    alt="BuildDesk Logo"
+                    src="/BriklyLogo.png"
+                    alt="Brikly Logo"
                     aspectRatio="16/9"
                     className="rounded-lg"
                   />
@@ -214,8 +214,8 @@ export default function ComponentShowcase() {
                 <h3 className="font-semibold mb-3">Lazy Image (Native)</h3>
                 <div className="max-w-md">
                   <LazyImage
-                    src="/BuildDeskLogo.png"
-                    alt="BuildDesk Logo"
+                    src="/BriklyLogo.png"
+                    alt="Brikly Logo"
                     className="rounded-lg w-full"
                   />
                 </div>

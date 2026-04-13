@@ -8,8 +8,8 @@ import { supabaseStorage } from '@/lib/supabaseStorage';
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 
-// Single-tenant production defaults (always api.build-desk.com)
-const PRODUCTION_URL = 'https://api.build-desk.com';
+// Single-tenant production defaults (always api.brikly.net)
+const PRODUCTION_URL = 'https://api.brikly.net';
 
 // Resolve configuration: env vars take priority, then production URL default
 const RESOLVED_SUPABASE_URL = SUPABASE_URL || PRODUCTION_URL;
@@ -21,7 +21,7 @@ export const supabaseAnonKey = RESOLVED_SUPABASE_KEY;
 // Fail fast if the key is missing
 if (!RESOLVED_SUPABASE_KEY) {
   const message =
-    '[BuildDesk] VITE_SUPABASE_PUBLISHABLE_KEY is not set. ' +
+    '[Brikly] VITE_SUPABASE_PUBLISHABLE_KEY is not set. ' +
     'API calls will fail. Set this env var in your .env file or build environment.';
   if (import.meta.env.PROD) {
     // eslint-disable-next-line no-console
@@ -39,7 +39,7 @@ const EDGE_FUNCTIONS_URL = import.meta.env.VITE_EDGE_FUNCTIONS_URL || `${RESOLVE
 // Log fallback usage in development
 if (import.meta.env.DEV && !SUPABASE_URL) {
   console.warn(
-    '[BuildDesk] Using default Supabase URL (api.build-desk.com). ' +
+    '[Brikly] Using default Supabase URL (api.brikly.net). ' +
     'Set VITE_SUPABASE_URL to override.'
   );
 }
@@ -61,7 +61,7 @@ export const supabase = createClient<Database>(RESOLVED_SUPABASE_URL, RESOLVED_S
     // Always include apikey header so Kong never returns "No API key found in request"
     headers: {
       'apikey': RESOLVED_SUPABASE_KEY,
-      'x-client-info': 'builddesk-mobile',
+      'x-client-info': 'brikly-mobile',
     },
     // Override functions URL for self-hosted setup
     fetch: (url, options) => {
@@ -79,14 +79,14 @@ export const supabase = createClient<Database>(RESOLVED_SUPABASE_URL, RESOLVED_S
 
 /**
  * Get edge function URL
- * For self-hosted setup, this points to functions.build-desk.com
+ * For self-hosted setup, this points to functions.brikly.net
  * For cloud setup, this points to your-project.supabase.co/functions/v1
  */
 export const getEdgeFunctionUrl = (functionName: string): string => {
   // Remove /v1 suffix if present in EDGE_FUNCTIONS_URL (we'll add it ourselves)
   const baseUrl = EDGE_FUNCTIONS_URL.replace(/\/v1\/?$/, '');
   
-  // For self-hosted edge functions (functions.build-desk.com), no /v1 prefix
+  // For self-hosted edge functions (functions.brikly.net), no /v1 prefix
   // For cloud Supabase, includes /v1 prefix
   const needsV1Prefix = EDGE_FUNCTIONS_URL.includes('/functions/v1');
   

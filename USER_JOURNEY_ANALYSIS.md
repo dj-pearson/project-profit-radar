@@ -1,4 +1,4 @@
-# Critical User Journey Analysis - BuildDesk
+# Critical User Journey Analysis - Brikly
 
 **Analysis Date**: 2025-11-08
 **Analyst**: Claude Code
@@ -8,7 +8,7 @@
 
 ## Executive Summary
 
-This document provides a comprehensive analysis of BuildDesk's critical user journeys including:
+This document provides a comprehensive analysis of Brikly's critical user journeys including:
 - Signup & Authentication
 - Onboarding Flow
 - Checkout & Payment
@@ -260,7 +260,7 @@ const { error } = await signIn(email, password, {
 - Network errors: "Check your connection and try again"
 
 **7. Add Social Proof**
-- "Join 5,000+ contractors using BuildDesk" banner
+- "Join 5,000+ contractors using Brikly" banner
 - Trust badges (SSL, SOC2, data security)
 - Customer logo carousel
 
@@ -307,7 +307,7 @@ Redirect to Dashboard
 - **File**: `src/components/onboarding/OnboardingFlow.tsx:199-259`
 - **Display**:
   - Large sparkle icon in gradient circle
-  - "Welcome to BuildDesk!" heading
+  - "Welcome to Brikly!" heading
   - "Let's get you set up in just a few minutes" subheading
 - **Trial Announcement**:
   - "Your 14-day free trial starts now!"
@@ -973,7 +973,7 @@ const currentDataStep = currentStep - 1; // Exclude welcome screen
 
 // Step 4 (Priorities)
 <p className="text-sm text-muted-foreground">
-  💡 90% of BuildDesk users prioritize Real-time Job Costing
+  💡 90% of Brikly users prioritize Real-time Job Costing
 </p>
 
 // Step 5 (Plan Selection)
@@ -2143,7 +2143,7 @@ const refreshSubscriptionStatus = async () => {
   // CheckoutSuccess.tsx
   <div className="max-w-2xl mx-auto text-center py-12">
     <CheckCircle className="h-16 w-16 text-green-500 mx-auto mb-4" />
-    <h1 className="text-3xl font-bold mb-2">Welcome to BuildDesk!</h1>
+    <h1 className="text-3xl font-bold mb-2">Welcome to Brikly!</h1>
     <p className="text-xl text-muted-foreground mb-4">
       Your {planName} trial is now active
     </p>
@@ -2597,7 +2597,7 @@ export const CheckoutSuccess = () => {
             <CheckCircle className="w-12 h-12 text-green-600" />
           </div>
           <h1 className="text-3xl font-bold text-construction-dark mb-2">
-            Welcome to BuildDesk!
+            Welcome to Brikly!
           </h1>
           <p className="text-xl text-muted-foreground">
             Your {subscriptionDetails?.plan_name || 'trial'} is now active
@@ -2678,7 +2678,7 @@ export const CheckoutSuccess = () => {
 
         {/* Support */}
         <p className="text-center text-sm text-muted-foreground mt-6">
-          Questions? Contact us at support@builddesk.com or chat with us in the dashboard.
+          Questions? Contact us at support@brikly.com or chat with us in the dashboard.
         </p>
       </div>
     </div>
@@ -3221,7 +3221,7 @@ FINAL CONVERSION RATE: 35%
 
 ## 8. CONCLUSION
 
-BuildDesk has a solid foundation but **critical gaps in the user journey are causing massive conversion losses**.
+Brikly has a solid foundation but **critical gaps in the user journey are causing massive conversion losses**.
 
 **Key Findings**:
 - 🔴 **10 critical broken/incomplete flows** that must be fixed before launch

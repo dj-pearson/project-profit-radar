@@ -14,15 +14,15 @@ interface TrialEmailData {
  */
 export const welcomeEmail = (data: TrialEmailData): string => {
   return baseEmailTemplate({
-    previewText: `Welcome to BuildDesk, ${data.firstName}! Let's get you started.`,
-    headline: `Welcome to BuildDesk!`,
+    previewText: `Welcome to Brikly, ${data.firstName}! Let's get you started.`,
+    headline: `Welcome to Brikly!`,
     subheadline: `Your 14-day free trial starts now`,
     bodyContent: `
       <p>Hi ${data.firstName},</p>
 
-      <p><strong>Welcome to BuildDesk!</strong> We're excited to help ${data.companyName || 'your construction company'} save time and increase profitability.</p>
+      <p><strong>Welcome to Brikly!</strong> We're excited to help ${data.companyName || 'your construction company'} save time and increase profitability.</p>
 
-      <p>Over the next 14 days, you'll discover how BuildDesk makes construction management simple:</p>
+      <p>Over the next 14 days, you'll discover how Brikly makes construction management simple:</p>
 
       <ul style="margin: 20px 0; padding-left: 20px;">
         <li style="margin-bottom: 12px;"><strong>Real-time job costing</strong> - Know your profit on every project, instantly</li>
@@ -34,7 +34,7 @@ export const welcomeEmail = (data: TrialEmailData): string => {
 
       <div style="background: #FEF3C7; border-left: 4px solid #F97316; padding: 16px; margin: 24px 0; border-radius: 4px;">
         <p style="margin: 0; color: #92400E; font-weight: 600;">✨ Quick Start Tip:</p>
-        <p style="margin: 8px 0 0; color: #92400E;">Create your first project today - it only takes 2 minutes and you'll immediately see how BuildDesk organizes everything.</p>
+        <p style="margin: 8px 0 0; color: #92400E;">Create your first project today - it only takes 2 minutes and you'll immediately see how Brikly organizes everything.</p>
       </div>
 
       <p><strong>What's next?</strong></p>
@@ -48,7 +48,7 @@ export const welcomeEmail = (data: TrialEmailData): string => {
       <p>Need help getting started? Reply to this email - we're here to help!</p>
 
       <p>Best regards,<br>
-      <strong>The BuildDesk Team</strong></p>
+      <strong>The Brikly Team</strong></p>
     `,
     ctaText: 'Go to Dashboard',
     ctaUrl: data.dashboardUrl,
@@ -62,13 +62,13 @@ export const welcomeEmail = (data: TrialEmailData): string => {
  */
 export const day1GettingStarted = (data: TrialEmailData): string => {
   return baseEmailTemplate({
-    previewText: `Create your first project in BuildDesk - it's easier than you think!`,
+    previewText: `Create your first project in Brikly - it's easier than you think!`,
     headline: `Ready to create your first project?`,
     subheadline: `Step-by-step guide to get you building`,
     bodyContent: `
       <p>Hey ${data.firstName},</p>
 
-      <p>Yesterday you joined BuildDesk, and today we're going to help you create your first project. This is where the magic happens! ✨</p>
+      <p>Yesterday you joined Brikly, and today we're going to help you create your first project. This is where the magic happens! ✨</p>
 
       <div style="background: #EFF6FF; padding: 24px; border-radius: 8px; margin: 24px 0;">
         <h3 style="margin: 0 0 16px; color: #1F2937; font-size: 20px;">Creating a Project (2 minutes)</h3>
@@ -80,7 +80,7 @@ export const day1GettingStarted = (data: TrialEmailData): string => {
         </ol>
       </div>
 
-      <p><strong>Pro Tip:</strong> Start with a current project, even a small one. You'll immediately see how BuildDesk organizes:</p>
+      <p><strong>Pro Tip:</strong> Start with a current project, even a small one. You'll immediately see how Brikly organizes:</p>
       <ul style="margin: 16px 0; padding-left: 20px;">
         <li>Time tracking by crew member</li>
         <li>Real-time job costing</li>
@@ -90,7 +90,7 @@ export const day1GettingStarted = (data: TrialEmailData): string => {
       </ul>
 
       <div style="background: #FEF3C7; border-left: 4px solid #F97316; padding: 16px; margin: 24px 0; border-radius: 4px;">
-        <p style="margin: 0; color: #92400E;"><strong>💡 Success Story:</strong> "I created my first project in BuildDesk on Monday. By Friday, I had caught a $3,000 cost overrun before it became a problem." - Mike R., General Contractor</p>
+        <p style="margin: 0; color: #92400E;"><strong>💡 Success Story:</strong> "I created my first project in Brikly on Monday. By Friday, I had caught a $3,000 cost overrun before it became a problem." - Mike R., General Contractor</p>
       </div>
 
       <p>You have <strong>${data.daysRemaining} days left</strong> in your trial. Let's make them count!</p>
@@ -98,7 +98,7 @@ export const day1GettingStarted = (data: TrialEmailData): string => {
       <p>Questions? Just reply to this email.</p>
 
       <p>Ready to build,<br>
-      <strong>The BuildDesk Team</strong></p>
+      <strong>The Brikly Team</strong></p>
     `,
     ctaText: 'Create Your First Project',
     ctaUrl: `${data.dashboardUrl}/projects/new`,
@@ -111,7 +111,7 @@ export const day1GettingStarted = (data: TrialEmailData): string => {
  */
 export const day3TimeTracking = (data: TrialEmailData): string => {
   return baseEmailTemplate({
-    previewText: `See how BuildDesk's time tracking saves contractors 5+ hours per week`,
+    previewText: `See how Brikly's time tracking saves contractors 5+ hours per week`,
     headline: `Stop losing money on time tracking`,
     subheadline: `Most contractors undercharge by 20% because of poor time tracking`,
     bodyContent: `
@@ -119,7 +119,7 @@ export const day3TimeTracking = (data: TrialEmailData): string => {
 
       <p>Here's a hard truth: <strong>If you're not tracking time accurately, you're probably losing 15-20% on every job.</strong></p>
 
-      <p>We built BuildDesk's time tracking specifically for construction crews:</p>
+      <p>We built Brikly's time tracking specifically for construction crews:</p>
 
       <div style="background: #F3F4F6; padding: 20px; border-radius: 8px; margin: 24px 0;">
         <h3 style="margin: 0 0 16px; color: #1F2937;">⏱️ Time Tracking Features</h3>
@@ -142,7 +142,7 @@ export const day3TimeTracking = (data: TrialEmailData): string => {
 
       <div style="background: #DCFCE7; border-left: 4px solid #16A34A; padding: 16px; margin: 24px 0; border-radius: 4px;">
         <p style="margin: 0; color: #166534; font-weight: 600;">💰 ROI Example:</p>
-        <p style="margin: 8px 0 0; color: #166534;">A 5-person crew losing just 30 minutes per day = $45/day wasted (at $30/hr). That's <strong>$11,700/year per crew</strong>. BuildDesk pays for itself in week 1.</p>
+        <p style="margin: 8px 0 0; color: #166534;">A 5-person crew losing just 30 minutes per day = $45/day wasted (at $30/hr). That's <strong>$11,700/year per crew</strong>. Brikly pays for itself in week 1.</p>
       </div>
 
       <p>Want to see it in action? Create a time entry for yourself right now - it takes 30 seconds.</p>
@@ -150,7 +150,7 @@ export const day3TimeTracking = (data: TrialEmailData): string => {
       <p><em>P.S. You have ${data.daysRemaining} days left in your trial to test everything risk-free.</em></p>
 
       <p>Saving you time (and money),<br>
-      <strong>The BuildDesk Team</strong></p>
+      <strong>The Brikly Team</strong></p>
     `,
     ctaText: 'Try Time Tracking',
     ctaUrl: `${data.dashboardUrl}/time-tracking`,
@@ -163,13 +163,13 @@ export const day3TimeTracking = (data: TrialEmailData): string => {
  */
 export const day7CaseStudy = (data: TrialEmailData): string => {
   return baseEmailTemplate({
-    previewText: `How ABC Construction increased profit margins by 12% with BuildDesk`,
+    previewText: `How ABC Construction increased profit margins by 12% with Brikly`,
     headline: `How contractors are increasing profits by 12%`,
     subheadline: `Real results from real construction companies`,
     bodyContent: `
       <p>Hi ${data.firstName},</p>
 
-      <p>You're halfway through your trial, so I wanted to share what's possible with BuildDesk.</p>
+      <p>You're halfway through your trial, so I wanted to share what's possible with Brikly.</p>
 
       <div style="background: linear-gradient(135deg, #FEF3C7 0%, #FFFFFF 100%); padding: 24px; border-radius: 12px; margin: 24px 0; border: 2px solid #F97316;">
         <h3 style="margin: 0 0 8px; color: #1F2937; font-size: 22px;">📊 ABC Construction</h3>
@@ -179,7 +179,7 @@ export const day7CaseStudy = (data: TrialEmailData): string => {
         "We were constantly going over budget. By the time we realized a job was underwater, it was too late to fix it. We were flying blind."</p>
 
         <p style="margin: 16px 0 0; color: #4B5563;"><strong>The Solution:</strong><br>
-        ABC implemented BuildDesk's real-time job costing and daily reporting. Within 30 days, they could see:</p>
+        ABC implemented Brikly's real-time job costing and daily reporting. Within 30 days, they could see:</p>
         <ul style="margin: 8px 0; padding-left: 20px; color: #4B5563;">
           <li>Actual costs vs budget on every job, updated daily</li>
           <li>Which crews were most efficient</li>
@@ -207,18 +207,18 @@ export const day7CaseStudy = (data: TrialEmailData): string => {
 
       <p><strong>Want similar results?</strong> Here's what ABC did in their first 30 days:</p>
       <ol style="margin: 16px 0; padding-left: 20px;">
-        <li style="margin-bottom: 8px;">Set up 3 active projects in BuildDesk</li>
+        <li style="margin-bottom: 8px;">Set up 3 active projects in Brikly</li>
         <li style="margin-bottom: 8px;">Connected QuickBooks for automatic sync</li>
         <li style="margin-bottom: 8px;">Trained all crew leads on mobile time tracking</li>
         <li style="margin-bottom: 8px;">Started reviewing daily cost reports every morning</li>
       </ol>
 
-      <p>You have <strong>${data.daysRemaining} days left</strong> to see if BuildDesk can do the same for ${data.companyName || 'your company'}.</p>
+      <p>You have <strong>${data.daysRemaining} days left</strong> to see if Brikly can do the same for ${data.companyName || 'your company'}.</p>
 
       <p>Want help setting up like ABC did? Reply to this email and I'll personally walk you through it.</p>
 
       <p>Cheers,<br>
-      <strong>The BuildDesk Team</strong></p>
+      <strong>The Brikly Team</strong></p>
     `,
     ctaText: 'See Full Case Study',
     ctaUrl: `${data.dashboardUrl}/case-studies`,
@@ -231,13 +231,13 @@ export const day7CaseStudy = (data: TrialEmailData): string => {
  */
 export const day11TrialExpiring = (data: TrialEmailData): string => {
   return baseEmailTemplate({
-    previewText: `Your BuildDesk trial ends in ${data.daysRemaining} days - Don't lose access!`,
+    previewText: `Your Brikly trial ends in ${data.daysRemaining} days - Don't lose access!`,
     headline: `Your trial ends in ${data.daysRemaining} days`,
     subheadline: `Upgrade now to keep all your data and projects`,
     bodyContent: `
       <p>Hi ${data.firstName},</p>
 
-      <p>Just a heads up - your BuildDesk trial expires in <strong>${data.daysRemaining} days</strong>.</p>
+      <p>Just a heads up - your Brikly trial expires in <strong>${data.daysRemaining} days</strong>.</p>
 
       <p>After your trial ends, you'll lose access to:</p>
       <ul style="margin: 16px 0; padding-left: 20px;">
@@ -279,7 +279,7 @@ export const day11TrialExpiring = (data: TrialEmailData): string => {
       <p>Questions about pricing or features? Just reply to this email.</p>
 
       <p>Best regards,<br>
-      <strong>The BuildDesk Team</strong></p>
+      <strong>The Brikly Team</strong></p>
     `,
     ctaText: 'View Pricing & Upgrade',
     ctaUrl: `${data.dashboardUrl}/upgrade`,
@@ -292,8 +292,8 @@ export const day11TrialExpiring = (data: TrialEmailData): string => {
  */
 export const day12Testimonials = (data: TrialEmailData): string => {
   return baseEmailTemplate({
-    previewText: `Join 500+ contractors who switched to BuildDesk - Trial ends in ${data.daysRemaining} days`,
-    headline: `Why contractors choose BuildDesk`,
+    previewText: `Join 500+ contractors who switched to Brikly - Trial ends in ${data.daysRemaining} days`,
+    headline: `Why contractors choose Brikly`,
     subheadline: `Don't just take our word for it`,
     bodyContent: `
       <p>Hey ${data.firstName},</p>
@@ -301,20 +301,20 @@ export const day12Testimonials = (data: TrialEmailData): string => {
       <p>Your trial ends in <strong>${data.daysRemaining} days</strong>. Before you decide, hear from contractors who made the switch:</p>
 
       <div style="background: #F9FAFB; padding: 20px; border-left: 4px solid #F97316; margin: 24px 0; border-radius: 4px;">
-        <p style="margin: 0 0 8px; color: #1F2937; font-weight: 600;">"BuildDesk paid for itself in the first week."</p>
+        <p style="margin: 0 0 8px; color: #1F2937; font-weight: 600;">"Brikly paid for itself in the first week."</p>
         <p style="margin: 0; color: #6B7280; font-size: 14px;">We caught a $12,000 cost overrun that would have killed our margin. The real-time job costing is a game-changer.</p>
         <p style="margin: 12px 0 0; color: #9CA3AF; font-size: 14px;">— David M., Commercial GC, Phoenix AZ</p>
       </div>
 
       <div style="background: #F9FAFB; padding: 20px; border-left: 4px solid #F97316; margin: 24px 0; border-radius: 4px;">
         <p style="margin: 0 0 8px; color: #1F2937; font-weight: 600;">"Finally, software built FOR contractors, not against us."</p>
-        <p style="margin: 0; color: #6B7280; font-size: 14px;">Other software felt like it was designed by people who never set foot on a job site. BuildDesk just works the way we work.</p>
+        <p style="margin: 0; color: #6B7280; font-size: 14px;">Other software felt like it was designed by people who never set foot on a job site. Brikly just works the way we work.</p>
         <p style="margin: 12px 0 0; color: #9CA3AF; font-size: 14px;">— Sarah K., Residential Builder, Austin TX</p>
       </div>
 
       <div style="background: #F9FAFB; padding: 20px; border-left: 4px solid #F97316; margin: 24px 0; border-radius: 4px;">
         <p style="margin: 0 0 8px; color: #1F2937; font-weight: 600;">"My crews actually USE it. That's huge."</p>
-        <p style="margin: 0; color: #6B7280; font-size: 14px;">I've tried 3 other systems. The guys hated them and went back to paper. With BuildDesk's mobile app, everyone's on board.</p>
+        <p style="margin: 0; color: #6B7280; font-size: 14px;">I've tried 3 other systems. The guys hated them and went back to paper. With Brikly's mobile app, everyone's on board.</p>
         <p style="margin: 12px 0 0; color: #9CA3AF; font-size: 14px;">— Mike R., Plumbing Contractor, Denver CO</p>
       </div>
 
@@ -337,10 +337,10 @@ export const day12Testimonials = (data: TrialEmailData): string => {
 
       <p>With <strong>${data.daysRemaining} days left</strong>, now's the time to make your decision.</p>
 
-      <p>Thanks for trying BuildDesk,<br>
-      <strong>The BuildDesk Team</strong></p>
+      <p>Thanks for trying Brikly,<br>
+      <strong>The Brikly Team</strong></p>
     `,
-    ctaText: 'Upgrade to BuildDesk',
+    ctaText: 'Upgrade to Brikly',
     ctaUrl: `${data.dashboardUrl}/upgrade`,
     unsubscribeUrl: data.unsubscribeUrl,
   });
@@ -351,13 +351,13 @@ export const day12Testimonials = (data: TrialEmailData): string => {
  */
 export const day13LastChance = (data: TrialEmailData): string => {
   return baseEmailTemplate({
-    previewText: `LAST CHANCE: Your BuildDesk trial ends tomorrow! Don't lose your data.`,
+    previewText: `LAST CHANCE: Your Brikly trial ends tomorrow! Don't lose your data.`,
     headline: `Your trial ends tomorrow`,
     subheadline: `Last chance to upgrade and keep your data`,
     bodyContent: `
       <p>Hi ${data.firstName},</p>
 
-      <p><strong>This is it - your BuildDesk trial ends tomorrow.</strong></p>
+      <p><strong>This is it - your Brikly trial ends tomorrow.</strong></p>
 
       <p>After tomorrow, you'll lose access to everything you've built:</p>
 
@@ -392,7 +392,7 @@ export const day13LastChance = (data: TrialEmailData): string => {
 
       <div style="background: #FEF3C7; padding: 20px; border-radius: 8px; margin: 24px 0;">
         <p style="margin: 0; color: #92400E; font-weight: 600;">💡 Quick Math:</p>
-        <p style="margin: 12px 0 0; color: #92400E;">BuildDesk costs $299/month ($249 today). If it helps you catch just ONE $500 cost overrun, you're profitable. Most contractors save 5-10x that per month.</p>
+        <p style="margin: 12px 0 0; color: #92400E;">Brikly costs $299/month ($249 today). If it helps you catch just ONE $500 cost overrun, you're profitable. Most contractors save 5-10x that per month.</p>
       </div>
 
       <p><strong>Still not convinced?</strong></p>
@@ -414,7 +414,7 @@ export const day13LastChance = (data: TrialEmailData): string => {
       <p>This is your last chance to upgrade without losing everything.</p>
 
       <p>Make the smart choice,<br>
-      <strong>The BuildDesk Team</strong></p>
+      <strong>The Brikly Team</strong></p>
 
       <p style="margin-top: 32px; padding-top: 16px; border-top: 1px solid #E5E7EB; color: #6B7280; font-size: 14px;">
       <em>P.S. Questions? Need more time? Just reply - we're here to help!</em></p>
@@ -436,7 +436,7 @@ export const day15GracePeriod = (data: TrialEmailData): string => {
     bodyContent: `
       <p>Hi ${data.firstName},</p>
 
-      <p>Your BuildDesk trial expired yesterday, but <strong>we haven't deleted anything yet</strong>.</p>
+      <p>Your Brikly trial expired yesterday, but <strong>we haven't deleted anything yet</strong>.</p>
 
       <p>You have a <strong>7-day grace period</strong> to upgrade and recover all your data:</p>
       <ul style="margin: 16px 0; padding-left: 20px;">
@@ -474,7 +474,7 @@ export const day15GracePeriod = (data: TrialEmailData): string => {
       <p>Your data is safe for ${data.daysRemaining} more days. Don't let it disappear.</p>
 
       <p>Best regards,<br>
-      <strong>The BuildDesk Team</strong></p>
+      <strong>The Brikly Team</strong></p>
     `,
     ctaText: 'Upgrade & Recover Data',
     ctaUrl: `${data.dashboardUrl}/upgrade`,

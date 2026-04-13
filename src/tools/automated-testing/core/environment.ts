@@ -82,8 +82,8 @@ const DEFAULT_ENVIRONMENTS: Record<string, EnvironmentConfig> = {
   },
   staging: {
     name: 'staging',
-    baseUrl: 'https://staging.build-desk.com',
-    apiUrl: 'https://staging-api.build-desk.com',
+    baseUrl: 'https://staging.brikly.net',
+    apiUrl: 'https://staging-api.brikly.net',
     testSettings: {
       headless: true,
       screenshots: true,
@@ -95,8 +95,8 @@ const DEFAULT_ENVIRONMENTS: Record<string, EnvironmentConfig> = {
   },
   production: {
     name: 'production',
-    baseUrl: 'https://build-desk.com',
-    apiUrl: 'https://api.build-desk.com',
+    baseUrl: 'https://brikly.net',
+    apiUrl: 'https://api.brikly.net',
     testSettings: {
       headless: true,
       screenshots: true,

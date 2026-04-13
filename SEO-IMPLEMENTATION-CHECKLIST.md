@@ -1,4 +1,4 @@
-# BuildDesk SEO Technical Audit Checklist
+# Brikly SEO Technical Audit Checklist
 
 ## ✅ Completed (Phase 1)
 
@@ -10,9 +10,9 @@
 
 ### Quick Answer Snippets
 - [x] Created QuickAnswerSnippet component
-- [x] Added to Procore vs BuildDesk comparison page
-- [x] Added to BuildDesk vs CoConstruct comparison page
-- [x] Added to BuildDesk vs Buildertrend comparison page
+- [x] Added to Procore vs Brikly comparison page
+- [x] Added to Brikly vs CoConstruct comparison page
+- [x] Added to Brikly vs Buildertrend comparison page
 
 ### Last Updated Metadata
 - [x] Created LastUpdated component
@@ -80,7 +80,7 @@
 
 ### AI Visibility Monitoring
 - [ ] Set up Semrush AI Visibility tracking
-- [ ] Monitor ChatGPT/Claude responses for BuildDesk mentions
+- [ ] Monitor ChatGPT/Claude responses for Brikly mentions
 - [ ] Track competitor AI visibility
 - [ ] Test key prompts monthly:
   - "best construction management software small business"

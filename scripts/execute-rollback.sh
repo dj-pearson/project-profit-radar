@@ -20,7 +20,7 @@ NC='\033[0m' # No Color
 
 echo -e "${BLUE}"
 echo "═══════════════════════════════════════════════════════════"
-echo "  BuildDesk Multi-Tenant Rollback Execution Script"
+echo "  Brikly Multi-Tenant Rollback Execution Script"
 echo "═══════════════════════════════════════════════════════════"
 echo -e "${NC}\n"
 

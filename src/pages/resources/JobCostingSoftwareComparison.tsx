@@ -37,22 +37,22 @@ export default function JobCostingSoftwareComparison() {
     "description": "Compare the top 7 job costing software tools for contractors. Real pricing, features, pros & cons to help you choose the right solution for your construction business.",
     "author": {
       "@type": "Organization",
-      "name": "BuildDesk",
-      "url": "https://builddesk.ai"
+      "name": "Brikly",
+      "url": "https://brikly.ai"
     },
     "publisher": {
       "@type": "Organization",
-      "name": "BuildDesk",
+      "name": "Brikly",
       "logo": {
         "@type": "ImageObject",
-        "url": "https://builddesk.ai/logo.png"
+        "url": "https://brikly.ai/logo.png"
       }
     },
     "datePublished": "2025-01-14",
     "dateModified": "2025-01-14",
     "mainEntityOfPage": {
       "@type": "WebPage",
-      "@id": "https://builddesk.ai/resources/job-costing-software-comparison"
+      "@id": "https://brikly.ai/resources/job-costing-software-comparison"
     },
     "keywords": "construction job costing software, job costing comparison, construction cost tracking, real-time job costing, contractor software",
     "articleSection": "Construction Technology",
@@ -68,7 +68,7 @@ export default function JobCostingSoftwareComparison() {
         "name": "What is the best job costing software for small contractors?",
         "acceptedAnswer": {
           "@type": "Answer",
-          "text": "BuildDesk is the best value for small contractors, offering unlimited users and real-time job costing at $350/month. For contractors needing basic features on a tight budget, Buildertrend ($299/month) or CoConstruct ($399/month) are solid alternatives."
+          "text": "Brikly is the best value for small contractors, offering unlimited users and real-time job costing at $350/month. For contractors needing basic features on a tight budget, Buildertrend ($299/month) or CoConstruct ($399/month) are solid alternatives."
         }
       },
       {
@@ -100,7 +100,7 @@ export default function JobCostingSoftwareComparison() {
         "name": "How much does job costing software cost?",
         "acceptedAnswer": {
           "@type": "Answer",
-          "text": "Pricing ranges from $299/month (Buildertrend, limited users) to $1,500+/month (Procore enterprise). Most small contractor solutions cost $300-500/month. Watch for per-user fees that add up quickly - BuildDesk offers unlimited users at $350/month flat rate."
+          "text": "Pricing ranges from $299/month (Buildertrend, limited users) to $1,500+/month (Procore enterprise). Most small contractor solutions cost $300-500/month. Watch for per-user fees that add up quickly - Brikly offers unlimited users at $350/month flat rate."
         }
       }
     ]
@@ -109,7 +109,7 @@ export default function JobCostingSoftwareComparison() {
   return (
     <>
       <Helmet>
-        <title>7 Best Job Costing Software for Contractors Compared (2025) | BuildDesk</title>
+        <title>7 Best Job Costing Software for Contractors Compared (2025) | Brikly</title>
         <meta
           name="description"
           content="Compare the top 7 construction job costing software tools. Real pricing, features, pros & cons. Find the best real-time job costing solution for your contracting business."
@@ -120,7 +120,7 @@ export default function JobCostingSoftwareComparison() {
         <meta property="og:title" content="7 Best Job Costing Software for Contractors Compared (2025)" />
         <meta property="og:description" content="Compare the top 7 construction job costing software tools. Real pricing, features, pros & cons to help you choose the right solution." />
         <meta property="og:type" content="article" />
-        <meta property="og:url" content="https://builddesk.ai/resources/job-costing-software-comparison" />
+        <meta property="og:url" content="https://brikly.ai/resources/job-costing-software-comparison" />
 
         {/* Twitter Card */}
         <meta name="twitter:card" content="summary_large_image" />
@@ -135,7 +135,7 @@ export default function JobCostingSoftwareComparison() {
           {JSON.stringify(faqSchema)}
         </script>
 
-        <link rel="canonical" href="https://builddesk.ai/resources/job-costing-software-comparison" />
+        <link rel="canonical" href="https://brikly.ai/resources/job-costing-software-comparison" />
       </Helmet>
 
       <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white">
@@ -181,7 +181,7 @@ export default function JobCostingSoftwareComparison() {
               <div className="space-y-3 text-slate-700">
                 <p className="flex items-start gap-2">
                   <CheckCircle className="w-5 h-5 text-green-600 mt-1 flex-shrink-0" />
-                  <span><strong>Best for Small Contractors (1-10 employees):</strong> BuildDesk ($350/month, unlimited users, real-time job costing)</span>
+                  <span><strong>Best for Small Contractors (1-10 employees):</strong> Brikly ($350/month, unlimited users, real-time job costing)</span>
                 </p>
                 <p className="flex items-start gap-2">
                   <CheckCircle className="w-5 h-5 text-green-600 mt-1 flex-shrink-0" />
@@ -222,7 +222,7 @@ export default function JobCostingSoftwareComparison() {
                     <tbody className="divide-y divide-slate-200">
                       <tr className="bg-construction-orange/5">
                         <td className="px-4 py-4">
-                          <div className="font-bold text-construction-orange">BuildDesk</div>
+                          <div className="font-bold text-construction-orange">Brikly</div>
                           <div className="text-xs text-slate-600 mt-1">Our Pick</div>
                         </td>
                         <td className="px-4 py-4">
@@ -386,11 +386,11 @@ export default function JobCostingSoftwareComparison() {
             <section className="mb-16">
               <h2 className="text-3xl font-bold text-slate-900 mb-8">Detailed Software Reviews</h2>
 
-              {/* BuildDesk */}
+              {/* Brikly */}
               <div className="mb-12 bg-gradient-to-r from-construction-orange/5 to-construction-yellow/5 border-l-4 border-construction-orange p-6 rounded-r-lg">
                 <div className="flex items-start justify-between mb-4">
                   <div>
-                    <h3 className="text-2xl font-bold text-slate-900 mb-2">1. BuildDesk</h3>
+                    <h3 className="text-2xl font-bold text-slate-900 mb-2">1. Brikly</h3>
                     <p className="text-construction-orange font-semibold">Best for Small Contractors</p>
                   </div>
                   <div className="text-right">
@@ -400,7 +400,7 @@ export default function JobCostingSoftwareComparison() {
                 </div>
 
                 <p className="text-slate-700 mb-4">
-                  BuildDesk is purpose-built for small to mid-sized contractors who need real-time job costing without enterprise complexity or per-user fees. Unlimited users at a flat rate makes it the best value for growing teams.
+                  Brikly is purpose-built for small to mid-sized contractors who need real-time job costing without enterprise complexity or per-user fees. Unlimited users at a flat rate makes it the best value for growing teams.
                 </p>
 
                 <div className="grid md:grid-cols-2 gap-6 mb-6">
@@ -471,7 +471,7 @@ export default function JobCostingSoftwareComparison() {
                     to="/pricing"
                     className="inline-flex items-center gap-2 bg-construction-orange text-white px-6 py-3 rounded-lg font-semibold hover:bg-construction-orange/90 transition-colors"
                   >
-                    Try BuildDesk Free <ArrowRight className="w-4 h-4" />
+                    Try Brikly Free <ArrowRight className="w-4 h-4" />
                   </Link>
                 </div>
               </div>
@@ -710,7 +710,7 @@ export default function JobCostingSoftwareComparison() {
                     <li>• <strong>15 users:</strong> $299 + (13 × $50) = $949/month</li>
                   </ul>
                   <p className="text-sm font-semibold text-amber-900 mt-2">
-                    Compare to BuildDesk: $350/month for unlimited users (no additional fees).
+                    Compare to Brikly: $350/month for unlimited users (no additional fees).
                   </p>
                 </div>
 
@@ -978,7 +978,7 @@ export default function JobCostingSoftwareComparison() {
                     3. Consider Your Team Size Growth
                   </h3>
                   <p className="text-slate-700">
-                    If you're growing, per-user pricing adds up quickly. A tool with unlimited users at a flat rate (like BuildDesk or Procore) may cost less long-term than "cheaper" options with per-seat fees.
+                    If you're growing, per-user pricing adds up quickly. A tool with unlimited users at a flat rate (like Brikly or Procore) may cost less long-term than "cheaper" options with per-seat fees.
                   </p>
                 </div>
 
@@ -1014,7 +1014,7 @@ export default function JobCostingSoftwareComparison() {
                     What is the best job costing software for small contractors?
                   </h3>
                   <p className="text-slate-700">
-                    <strong>BuildDesk</strong> is the best value for small contractors, offering unlimited users and real-time job costing at $350/month flat rate. For contractors needing basic features on a tight budget, <strong>Buildertrend</strong> ($299/month) or <strong>CoConstruct</strong> ($399/month) are solid alternatives, though both have per-user fees that add up as you grow.
+                    <strong>Brikly</strong> is the best value for small contractors, offering unlimited users and real-time job costing at $350/month flat rate. For contractors needing basic features on a tight budget, <strong>Buildertrend</strong> ($299/month) or <strong>CoConstruct</strong> ($399/month) are solid alternatives, though both have per-user fees that add up as you grow.
                   </p>
                 </div>
 
@@ -1066,7 +1066,7 @@ export default function JobCostingSoftwareComparison() {
                     Pricing ranges from $169/month (Jobber for service contractors) to $1,500+/month (Procore enterprise). Most small contractor solutions cost $300-500/month.
                   </p>
                   <p className="text-slate-700">
-                    <strong>Watch for per-user fees</strong> that aren't obvious in advertised pricing. A "$299/month" tool can easily become $599/month once you add 6 team members at $50/each. BuildDesk offers unlimited users at $350/month flat rate with no surprise fees.
+                    <strong>Watch for per-user fees</strong> that aren't obvious in advertised pricing. A "$299/month" tool can easily become $599/month once you add 6 team members at $50/each. Brikly offers unlimited users at $350/month flat rate with no surprise fees.
                   </p>
                 </div>
               </div>
@@ -1078,7 +1078,7 @@ export default function JobCostingSoftwareComparison() {
                 See Real-Time Job Costing in Action
               </h2>
               <p className="text-xl text-white/90 mb-6 max-w-2xl mx-auto">
-                Try BuildDesk free for 14 days. No credit card required. See exactly how much profit you're making on every project—in real-time.
+                Try Brikly free for 14 days. No credit card required. See exactly how much profit you're making on every project—in real-time.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
                 <Link

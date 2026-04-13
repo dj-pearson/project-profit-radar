@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 /**
- * Image Optimization Script for BuildDesk
+ * Image Optimization Script for Brikly
  * Converts images to WebP/AVIF formats for better performance
  */
 
@@ -52,7 +52,7 @@ function findImages(dir) {
 }
 
 function generateImageOptimizationManifest() {
-  console.log('🖼️  BuildDesk Image Optimization Report');
+  console.log('🖼️  Brikly Image Optimization Report');
   console.log('=====================================');
   console.log('');
 

@@ -25,7 +25,7 @@ import { createHash } from 'node:crypto';
 async function fetchResource(url) {
   const response = await fetch(url, {
     headers: {
-      'User-Agent': 'BuildDesk-SRI-Generator/1.0',
+      'User-Agent': 'Brikly-SRI-Generator/1.0',
     },
   });
 
@@ -62,7 +62,7 @@ async function generateSriHashForUrl(url) {
 }
 
 /**
- * Known external resource URLs used by BuildDesk.
+ * Known external resource URLs used by Brikly.
  * These are documented here even if SRI is not practical for all of them.
  */
 const KNOWN_EXTERNAL_RESOURCES = [
@@ -82,7 +82,7 @@ async function main() {
 
   if (args.length === 0) {
     // No URL provided - show known resources and generate hashes for them
-    console.log('BuildDesk SRI Hash Generator');
+    console.log('Brikly SRI Hash Generator');
     console.log('============================\n');
     console.log('Usage: node scripts/generate-sri-hashes.js <url>\n');
     console.log('Known external resources:\n');

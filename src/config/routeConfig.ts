@@ -1,5 +1,5 @@
 /**
- * Route Configuration for BuildDesk
+ * Route Configuration for Brikly
  * Centralizes route definitions and access control
  */
 

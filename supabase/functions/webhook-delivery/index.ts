@@ -201,7 +201,7 @@ async function deliverWebhook(
       'X-Webhook-Id': delivery.id,
       'X-Webhook-Event': delivery.event_type,
       'X-Webhook-Timestamp': new Date().toISOString(),
-      'User-Agent': 'BuildDesk-Webhooks/1.0'
+      'User-Agent': 'Brikly-Webhooks/1.0'
     }
 
     // Add custom headers if configured

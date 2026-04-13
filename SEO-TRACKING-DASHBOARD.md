@@ -1,4 +1,4 @@
-# 📊 BuildDesk SEO Performance Tracking Dashboard
+# 📊 Brikly SEO Performance Tracking Dashboard
 
 ## 🎯 Week 1 Baseline Metrics (Capture These Today)
 
@@ -20,7 +20,7 @@ Track these primary keywords in your SEO tools:
 | construction scheduling software | ___ | 720 | Medium | Top 5 |
 | construction project management software | ___ | 1,600 | High | Top 5 |
 | construction software small business | ___ | 320 | Low | Top 3 |
-| procore vs builddesk | ___ | 50 | Low | #1 |
+| procore vs brikly | ___ | 50 | Low | #1 |
 
 ### **Technical SEO Baseline**
 Use DebugBear or PageSpeed Insights:

@@ -18,7 +18,7 @@
 
 ### 3. **Image Optimization** ✓
 - Added Supabase transform parameters to all logo images
-- Applied `?width=200&quality=90` to BuildDesk logos
+- Applied `?width=200&quality=90` to Brikly logos
 - Optimized images in:
   - `responsive-logo.tsx`
   - `smart-logo.tsx`

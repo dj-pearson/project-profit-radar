@@ -37,22 +37,22 @@ export default function ConstructionFinancialManagementGuide() {
     "description": "Complete guide to construction financial management. Learn cash flow management, job costing, financial reporting, tax strategies, and profit optimization for construction businesses.",
     "author": {
       "@type": "Organization",
-      "name": "BuildDesk",
-      "url": "https://builddesk.ai"
+      "name": "Brikly",
+      "url": "https://brikly.ai"
     },
     "publisher": {
       "@type": "Organization",
-      "name": "BuildDesk",
+      "name": "Brikly",
       "logo": {
         "@type": "ImageObject",
-        "url": "https://builddesk.ai/logo.png"
+        "url": "https://brikly.ai/logo.png"
       }
     },
     "datePublished": "2025-01-14",
     "dateModified": "2025-01-14",
     "mainEntityOfPage": {
       "@type": "WebPage",
-      "@id": "https://builddesk.ai/resources/construction-financial-management-ultimate-guide"
+      "@id": "https://brikly.ai/resources/construction-financial-management-ultimate-guide"
     },
     "keywords": "construction financial management, contractor accounting, construction business finances, financial management for contractors, construction cash flow",
     "articleSection": "Construction Financial Management",
@@ -84,7 +84,7 @@ export default function ConstructionFinancialManagementGuide() {
         "name": "Do I need an accountant or can I manage finances myself?",
         "acceptedAnswer": {
           "@type": "Answer",
-          "text": "You need both. A CPA handles tax filings, year-end closes, and compliance. But YOU (the contractor) must manage daily/weekly financial operations: job costing, cash flow forecasting, progress billing, and profitability tracking. Waiting for monthly accountant reports means discovering problems too late to fix them. Modern software like BuildDesk gives you real-time financial visibility between CPA meetings."
+          "text": "You need both. A CPA handles tax filings, year-end closes, and compliance. But YOU (the contractor) must manage daily/weekly financial operations: job costing, cash flow forecasting, progress billing, and profitability tracking. Waiting for monthly accountant reports means discovering problems too late to fix them. Modern software like Brikly gives you real-time financial visibility between CPA meetings."
         }
       },
       {
@@ -120,7 +120,7 @@ export default function ConstructionFinancialManagementGuide() {
         <meta property="og:title" content="Construction Financial Management: The Ultimate Guide (2025)" />
         <meta property="og:description" content="Complete guide covering cash flow, job costing, financial reporting, and profit optimization for construction businesses." />
         <meta property="og:type" content="article" />
-        <meta property="og:url" content="https://builddesk.ai/resources/construction-financial-management-ultimate-guide" />
+        <meta property="og:url" content="https://brikly.ai/resources/construction-financial-management-ultimate-guide" />
 
         {/* Twitter Card */}
         <meta name="twitter:card" content="summary_large_image" />
@@ -135,7 +135,7 @@ export default function ConstructionFinancialManagementGuide() {
           {JSON.stringify(faqSchema)}
         </script>
 
-        <link rel="canonical" href="https://builddesk.ai/resources/construction-financial-management-ultimate-guide" />
+        <link rel="canonical" href="https://brikly.ai/resources/construction-financial-management-ultimate-guide" />
       </Helmet>
 
       <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white">
@@ -466,10 +466,10 @@ export default function ConstructionFinancialManagementGuide() {
             {/* CTA Section */}
             <section className="mb-16 bg-gradient-to-r from-construction-orange to-construction-yellow rounded-xl p-8 text-center">
               <h2 className="text-3xl font-bold text-white mb-4">
-                Master Financial Management with BuildDesk
+                Master Financial Management with Brikly
               </h2>
               <p className="text-xl text-white/90 mb-6 max-w-2xl mx-auto">
-                BuildDesk provides real-time financial visibility: job costing, cash flow forecasting, WIP reporting, and profitability tracking. See exactly where your business stands financially—every day.
+                Brikly provides real-time financial visibility: job costing, cash flow forecasting, WIP reporting, and profitability tracking. See exactly where your business stands financially—every day.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
                 <Link
@@ -515,7 +515,7 @@ export default function ConstructionFinancialManagementGuide() {
                     Do I need an accountant or can I manage finances myself?
                   </h3>
                   <p className="text-slate-700">
-                    You need <strong>both</strong>. A CPA handles tax filings, year-end closes, and compliance. But <strong>YOU</strong> (the contractor) must manage daily/weekly financial operations: job costing, cash flow forecasting, progress billing, and profitability tracking. Waiting for monthly accountant reports means discovering problems too late to fix them. Modern software like BuildDesk gives you real-time financial visibility between CPA meetings.
+                    You need <strong>both</strong>. A CPA handles tax filings, year-end closes, and compliance. But <strong>YOU</strong> (the contractor) must manage daily/weekly financial operations: job costing, cash flow forecasting, progress billing, and profitability tracking. Waiting for monthly accountant reports means discovering problems too late to fix them. Modern software like Brikly gives you real-time financial visibility between CPA meetings.
                   </p>
                 </div>
 

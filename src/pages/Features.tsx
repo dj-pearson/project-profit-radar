@@ -11,7 +11,7 @@ const FeaturesPage = () => {
   return (
     <>
       <SEOMetaTags
-        title="Construction Management Features - Job Costing, Scheduling & OSHA | BuildDesk"
+        title="Construction Management Features - Job Costing, Scheduling & OSHA | Brikly"
         description="Complete construction management suite: real-time job costing, mobile crew tracking, daily logs, OSHA compliance, QuickBooks sync. Built for small & mid-size contractors."
         keywords={['construction management features', 'job costing software construction', 'construction time tracking app', 'OSHA safety reporting software', 'construction field management', 'construction scheduling software']}
         canonicalUrl="/features"
@@ -35,7 +35,7 @@ const FeaturesPage = () => {
             
             <QuickAnswerSnippet
               question="What features should construction management software have?"
-              answer="Essential features include real-time job costing, mobile crew tracking, daily logs, OSHA compliance tools, QuickBooks integration, photo documentation, scheduling, and change order management. BuildDesk includes all these in one platform designed for small contractors."
+              answer="Essential features include real-time job costing, mobile crew tracking, daily logs, OSHA compliance tools, QuickBooks integration, photo documentation, scheduling, and change order management. Brikly includes all these in one platform designed for small contractors."
             />
             <Features />
           </div>

@@ -5,7 +5,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>en</string>
 	<key>CFBundleDisplayName</key>
-	<string>BuildDesk</string>
+	<string>Brikly</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -37,27 +37,27 @@
 	<string>$(SUPABASE_ANON_KEY)</string>
 	<!-- Privacy: Permission Usage Descriptions (Required for App Store) -->
 	<key>NSCameraUsageDescription</key>
-	<string>BuildDesk needs camera access to capture photos for daily reports, document scanning, and project documentation.</string>
+	<string>Brikly needs camera access to capture photos for daily reports, document scanning, and project documentation.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
-	<string>BuildDesk needs photo library access to attach existing photos to daily reports and project documentation.</string>
+	<string>Brikly needs photo library access to attach existing photos to daily reports and project documentation.</string>
 	<key>NSPhotoLibraryAddUsageDescription</key>
-	<string>BuildDesk needs to save photos to your library for project documentation and reports.</string>
+	<string>Brikly needs to save photos to your library for project documentation and reports.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>BuildDesk uses your location for GPS time tracking, job site check-ins, and geofencing to verify on-site attendance.</string>
+	<string>Brikly uses your location for GPS time tracking, job site check-ins, and geofencing to verify on-site attendance.</string>
 	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
-	<string>BuildDesk uses background location for automatic job site geofencing check-in/check-out and accurate time tracking.</string>
+	<string>Brikly uses background location for automatic job site geofencing check-in/check-out and accurate time tracking.</string>
 	<key>NSLocationAlwaysUsageDescription</key>
-	<string>BuildDesk uses background location for automatic geofencing-based time tracking when you arrive at or leave a job site.</string>
+	<string>Brikly uses background location for automatic geofencing-based time tracking when you arrive at or leave a job site.</string>
 	<key>NSMicrophoneUsageDescription</key>
-	<string>BuildDesk needs microphone access for voice notes in daily reports and dictation features.</string>
+	<string>Brikly needs microphone access for voice notes in daily reports and dictation features.</string>
 	<key>NSContactsUsageDescription</key>
-	<string>BuildDesk needs contacts access to quickly add crew members, subcontractors, and client contacts.</string>
+	<string>Brikly needs contacts access to quickly add crew members, subcontractors, and client contacts.</string>
 	<key>NSCalendarsUsageDescription</key>
-	<string>BuildDesk needs calendar access to sync project schedules, deadlines, and meeting reminders.</string>
+	<string>Brikly needs calendar access to sync project schedules, deadlines, and meeting reminders.</string>
 	<key>NSFaceIDUsageDescription</key>
-	<string>BuildDesk uses Face ID for secure, quick access to your account without entering your password.</string>
+	<string>Brikly uses Face ID for secure, quick access to your account without entering your password.</string>
 	<key>NSSpeechRecognitionUsageDescription</key>
-	<string>BuildDesk uses speech recognition for voice-to-text in daily reports and notes.</string>
+	<string>Brikly uses speech recognition for voice-to-text in daily reports and notes.</string>
 
 	<!-- Background Modes -->
 	<key>UIBackgroundModes</key>
@@ -70,10 +70,10 @@
 	<!-- App-Bound Domains (required when limitsNavigationsToAppBoundDomains is true) -->
 	<key>WKAppBoundDomains</key>
 	<array>
-		<string>build-desk.com</string>
-		<string>app.build-desk.com</string>
-		<string>api.build-desk.com</string>
-		<string>functions.build-desk.com</string>
+		<string>brikly.net</string>
+		<string>app.brikly.net</string>
+		<string>api.brikly.net</string>
+		<string>functions.brikly.net</string>
 	</array>
 
 	<!-- App Transport Security -->

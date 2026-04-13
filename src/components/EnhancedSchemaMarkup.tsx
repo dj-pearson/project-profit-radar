@@ -18,12 +18,12 @@ export const EnhancedSchemaMarkup: React.FC<SchemaMarkupProps> = ({ type, data }
         return {
           "@context": "https://schema.org",
           "@type": "Organization",
-          "name": "BuildDesk",
-          "alternateName": "BuildDesk Construction Management",
-          "url": "https://build-desk.com",
+          "name": "Brikly",
+          "alternateName": "Brikly Construction Management",
+          "url": "https://brikly.net",
           "logo": {
             "@type": "ImageObject",
-            "url": "https://build-desk.com/BuildDeskLogo.png",
+            "url": "https://brikly.net/BriklyLogo.png",
             "width": "400",
             "height": "400"
           },
@@ -43,15 +43,15 @@ export const EnhancedSchemaMarkup: React.FC<SchemaMarkupProps> = ({ type, data }
           ],
           "contactPoint": {
             "@type": "ContactPoint",
-            "telephone": "+1-800-BUILD-DESK",
+            "telephone": "+1-800-BRIKLY",
             "contactType": "Customer Service",
             "availableLanguage": "English",
             "areaServed": "US"
           },
           "sameAs": [
-            "https://linkedin.com/company/builddesk",
-            "https://twitter.com/builddesk",
-            "https://facebook.com/builddesk"
+            "https://linkedin.com/company/brikly",
+            "https://twitter.com/brikly",
+            "https://facebook.com/brikly"
           ],
           "hasOfferCatalog": {
             "@type": "OfferCatalog",
@@ -61,7 +61,7 @@ export const EnhancedSchemaMarkup: React.FC<SchemaMarkupProps> = ({ type, data }
                 "@type": "Offer",
                 "itemOffered": {
                   "@type": "SoftwareApplication",
-                  "name": "BuildDesk Starter",
+                  "name": "Brikly Starter",
                   "applicationCategory": "Construction Management",
                   "operatingSystem": "Web, iOS, Android"
                 },
@@ -82,10 +82,10 @@ export const EnhancedSchemaMarkup: React.FC<SchemaMarkupProps> = ({ type, data }
         return {
           "@context": "https://schema.org",
           "@type": "SoftwareApplication",
-          "name": "BuildDesk Construction Management Software",
-          "alternateName": "BuildDesk",
+          "name": "Brikly Construction Management Software",
+          "alternateName": "Brikly",
           "description": "Comprehensive construction management platform for small to medium contractors featuring job costing, project scheduling, mobile field management, and OSHA compliance.",
-          "url": "https://build-desk.com",
+          "url": "https://brikly.net",
           "applicationCategory": "BusinessApplication",
           "applicationSubCategory": "Construction Management Software",
           "operatingSystem": ["Web", "iOS", "Android"],
@@ -94,12 +94,12 @@ export const EnhancedSchemaMarkup: React.FC<SchemaMarkupProps> = ({ type, data }
           "dateModified": new Date().toISOString().split('T')[0],
           "publisher": {
             "@type": "Organization",
-            "name": "BuildDesk",
-            "url": "https://build-desk.com"
+            "name": "Brikly",
+            "url": "https://brikly.net"
           },
           "author": {
             "@type": "Organization",
-            "name": "BuildDesk Development Team"
+            "name": "Brikly Development Team"
           },
           "offers": {
             "@type": "Offer",
@@ -107,10 +107,10 @@ export const EnhancedSchemaMarkup: React.FC<SchemaMarkupProps> = ({ type, data }
             "priceCurrency": "USD",
             "priceValidUntil": "2025-12-31",
             "availability": "https://schema.org/InStock",
-            "url": "https://build-desk.com/pricing",
+            "url": "https://brikly.net/pricing",
             "seller": {
               "@type": "Organization",
-              "name": "BuildDesk"
+              "name": "Brikly"
             },
             "hasFreeTrial": true,
             "trialLength": "P14D"
@@ -135,13 +135,13 @@ export const EnhancedSchemaMarkup: React.FC<SchemaMarkupProps> = ({ type, data }
             "Multi-project dashboard"
           ],
           "requirements": "Internet connection required. Mobile apps available for iOS and Android.",
-          "screenshot": "https://build-desk.com/screenshots/dashboard.png",
+          "screenshot": "https://brikly.net/screenshots/dashboard.png",
           "softwareHelp": {
             "@type": "CreativeWork",
-            "url": "https://build-desk.com/knowledge-base"
+            "url": "https://brikly.net/knowledge-base"
           },
-          "downloadUrl": "https://build-desk.com/download",
-          "installUrl": "https://build-desk.com/auth"
+          "downloadUrl": "https://brikly.net/download",
+          "installUrl": "https://brikly.net/auth"
         };
 
       case 'article':
@@ -150,18 +150,18 @@ export const EnhancedSchemaMarkup: React.FC<SchemaMarkupProps> = ({ type, data }
           "@type": "Article",
           "headline": data.title,
           "description": data.description,
-          "image": data.image || "https://build-desk.com/BuildDeskLogo.png",
+          "image": data.image || "https://brikly.net/BriklyLogo.png",
           "author": {
             "@type": "Organization",
-            "name": "BuildDesk",
-            "url": "https://build-desk.com"
+            "name": "Brikly",
+            "url": "https://brikly.net"
           },
           "publisher": {
             "@type": "Organization",
-            "name": "BuildDesk",
+            "name": "Brikly",
             "logo": {
               "@type": "ImageObject",
-              "url": "https://build-desk.com/BuildDeskLogo.png"
+              "url": "https://brikly.net/BriklyLogo.png"
             }
           },
           "datePublished": data.publishedDate,
@@ -196,7 +196,7 @@ export const EnhancedSchemaMarkup: React.FC<SchemaMarkupProps> = ({ type, data }
           "@type": "Review",
           "itemReviewed": {
             "@type": "SoftwareApplication",
-            "name": "BuildDesk Construction Management Software"
+            "name": "Brikly Construction Management Software"
           },
           "reviewRating": {
             "@type": "Rating",

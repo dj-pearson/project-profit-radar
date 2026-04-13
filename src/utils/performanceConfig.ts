@@ -1,5 +1,5 @@
 /**
- * Performance Configuration for BuildDesk
+ * Performance Configuration for Brikly
  * Centralized configuration for all performance optimizations
  */
 

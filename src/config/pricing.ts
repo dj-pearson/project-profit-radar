@@ -1,4 +1,4 @@
-// Centralized pricing configuration for BuildDesk
+// Centralized pricing configuration for Brikly
 // This is the single source of truth for all pricing-related data
 
 export type SubscriptionTier = 'starter' | 'professional' | 'enterprise';

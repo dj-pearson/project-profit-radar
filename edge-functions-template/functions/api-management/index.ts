@@ -253,7 +253,7 @@ async function triggerWebhook(req: Request, supabase: any): Promise<Response> {
       headers: {
         'Content-Type': 'application/json',
         'X-Webhook-Signature': signature,
-        'User-Agent': 'BuildDesk-Webhooks/1.0'
+        'User-Agent': 'Brikly-Webhooks/1.0'
       },
       body: JSON.stringify(webhookPayload),
       signal: AbortSignal.timeout(webhook.timeout_seconds * 1000)

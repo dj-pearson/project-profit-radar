@@ -59,7 +59,7 @@
 
 #### Changes:
 - ✅ Created single-tenant `getSiteEmailConfig()` function
-- ✅ Always returns default BuildDesk configuration
+- ✅ Always returns default Brikly configuration
 - ✅ Kept multi-tenant version as deprecated reference
 
 ### 4. Critical Auth Functions (3 functions)
@@ -210,7 +210,7 @@ All queries no longer filter by `site_id`:
 ## 📝 Notes
 
 - **Auth Helper**: All functions now use `auth-helpers-single-tenant.ts`
-- **Email Config**: Always uses default BuildDesk branding
+- **Email Config**: Always uses default Brikly branding
 - **Database**: All queries rely on RLS for `company_id` isolation only
 - **No Breaking Frontend**: Frontend was already updated in previous steps
 

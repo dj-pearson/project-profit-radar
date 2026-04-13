@@ -69,7 +69,7 @@ BEGIN
   RAISE NOTICE '========================================';
   RAISE NOTICE '';
   
-  SELECT id INTO v_site_id FROM sites WHERE key = 'builddesk';
+  SELECT id INTO v_site_id FROM sites WHERE key = 'brikly';
   RAISE NOTICE 'Testing as user: %', auth.uid();
   RAISE NOTICE 'Site ID: %', v_site_id;
   RAISE NOTICE '';
@@ -96,7 +96,7 @@ BEGIN
   
   -- Test cost_codes INSERT
   BEGIN
-    SELECT id INTO v_site_id FROM sites WHERE key = 'builddesk';
+    SELECT id INTO v_site_id FROM sites WHERE key = 'brikly';
     -- We need a company_id, so skip this test
     RAISE NOTICE '⊘ Skipping cost_codes test (needs company_id)';
   EXCEPTION WHEN OTHERS THEN

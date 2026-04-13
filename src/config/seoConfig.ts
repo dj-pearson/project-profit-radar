@@ -46,35 +46,35 @@ export type SEOCategory =
   | 'support';
 
 // Base URL for all canonical URLs
-export const SITE_URL = 'https://builddesk.com';
+export const SITE_URL = 'https://brikly.com';
 
 // Default OG Image
-export const DEFAULT_OG_IMAGE = 'https://builddesk.com/og-image.png';
+export const DEFAULT_OG_IMAGE = 'https://brikly.com/og-image.png';
 
 // Company info for schema
 export const COMPANY_INFO = {
-  name: 'BuildDesk',
+  name: 'Brikly',
   description: 'Construction management software for small and mid-size contractors in the United States.',
   url: SITE_URL,
   logo: `${SITE_URL}/logo.png`,
   foundingDate: '2024',
   priceRange: '$199 - $799',
   telephone: '+1-555-BUILD-01',
-  email: 'support@builddesk.com',
+  email: 'support@brikly.com',
   address: {
     '@type': 'PostalAddress' as const,
     addressCountry: 'US',
   },
   sameAs: [
-    'https://linkedin.com/company/builddesk',
-    'https://twitter.com/builddesk',
-    'https://facebook.com/builddesk',
+    'https://linkedin.com/company/brikly',
+    'https://twitter.com/brikly',
+    'https://facebook.com/brikly',
   ],
 };
 
 // Software product info for schema
 export const SOFTWARE_INFO = {
-  name: 'BuildDesk',
+  name: 'Brikly',
   applicationCategory: 'BusinessApplication',
   operatingSystem: 'Web, iOS, Android',
   price: '350',
@@ -102,8 +102,8 @@ export const SOFTWARE_INFO = {
 export const corePages: SEOPageConfig[] = [
   {
     path: '/',
-    title: 'Construction Management Software for Small Contractors | BuildDesk',
-    description: 'BuildDesk is the #1 construction management software for small contractors. Real-time job costing, mobile crew tracking, and OSHA compliance. Start your free trial today.',
+    title: 'Construction Management Software for Small Contractors | Brikly',
+    description: 'Brikly is the #1 construction management software for small contractors. Real-time job costing, mobile crew tracking, and OSHA compliance. Start your free trial today.',
     keywords: [
       'construction management software',
       'contractor software',
@@ -120,8 +120,8 @@ export const corePages: SEOPageConfig[] = [
   },
   {
     path: '/features',
-    title: 'Construction Software Features - Project Management, Job Costing & More | BuildDesk',
-    description: 'Explore BuildDesk features: real-time job costing, project scheduling, mobile apps, OSHA compliance, QuickBooks integration, and more. Built for small contractors.',
+    title: 'Construction Software Features - Project Management, Job Costing & More | Brikly',
+    description: 'Explore Brikly features: real-time job costing, project scheduling, mobile apps, OSHA compliance, QuickBooks integration, and more. Built for small contractors.',
     keywords: [
       'construction software features',
       'job costing features',
@@ -137,8 +137,8 @@ export const corePages: SEOPageConfig[] = [
   },
   {
     path: '/pricing',
-    title: 'Construction Software Pricing - Transparent, No Hidden Fees | BuildDesk',
-    description: 'BuildDesk pricing: $350/month with unlimited users. No setup fees, no per-user charges. Start your 14-day free trial. Compare to Procore and Buildertrend pricing.',
+    title: 'Construction Software Pricing - Transparent, No Hidden Fees | Brikly',
+    description: 'Brikly pricing: $350/month with unlimited users. No setup fees, no per-user charges. Start your 14-day free trial. Compare to Procore and Buildertrend pricing.',
     keywords: [
       'construction software pricing',
       'contractor software cost',
@@ -154,12 +154,12 @@ export const corePages: SEOPageConfig[] = [
   },
   {
     path: '/faq',
-    title: 'Frequently Asked Questions | BuildDesk Construction Management',
-    description: 'Get answers to common questions about BuildDesk construction management software. Setup, features, pricing, support, and more for small contractors.',
+    title: 'Frequently Asked Questions | Brikly Construction Management',
+    description: 'Get answers to common questions about Brikly construction management software. Setup, features, pricing, support, and more for small contractors.',
     keywords: [
-      'builddesk faq',
+      'brikly faq',
       'construction software questions',
-      'builddesk help',
+      'brikly help',
       'construction management software support',
     ],
     priority: 0.7,
@@ -170,8 +170,8 @@ export const corePages: SEOPageConfig[] = [
   },
   {
     path: '/blog',
-    title: 'Construction Industry Blog - Tips, Guides & Best Practices | BuildDesk',
-    description: 'Expert construction industry insights, project management tips, job costing guides, and best practices for small contractors. Stay ahead with BuildDesk.',
+    title: 'Construction Industry Blog - Tips, Guides & Best Practices | Brikly',
+    description: 'Expert construction industry insights, project management tips, job costing guides, and best practices for small contractors. Stay ahead with Brikly.',
     keywords: [
       'construction blog',
       'contractor tips',
@@ -186,7 +186,7 @@ export const corePages: SEOPageConfig[] = [
   },
   {
     path: '/solutions',
-    title: 'Construction Management Solutions for Every Trade | BuildDesk',
+    title: 'Construction Management Solutions for Every Trade | Brikly',
     description: 'Industry-specific construction management solutions for general contractors, specialty trades, residential builders, and commercial contractors.',
     keywords: [
       'construction solutions',
@@ -208,8 +208,8 @@ export const corePages: SEOPageConfig[] = [
 export const industryPages: SEOPageConfig[] = [
   {
     path: '/plumbing-contractor-software',
-    title: 'Plumbing Contractor Software - Service & Project Management | BuildDesk',
-    description: 'The best plumbing contractor software for managing jobs, tracking time, invoicing, and growing your plumbing business. Try BuildDesk free for 14 days.',
+    title: 'Plumbing Contractor Software - Service & Project Management | Brikly',
+    description: 'The best plumbing contractor software for managing jobs, tracking time, invoicing, and growing your plumbing business. Try Brikly free for 14 days.',
     keywords: [
       'plumbing contractor software',
       'plumbing business software',
@@ -225,7 +225,7 @@ export const industryPages: SEOPageConfig[] = [
   },
   {
     path: '/hvac-contractor-software',
-    title: 'HVAC Contractor Software - Service Management & Scheduling | BuildDesk',
+    title: 'HVAC Contractor Software - Service Management & Scheduling | Brikly',
     description: 'Complete HVAC contractor software for managing technicians, scheduling service calls, tracking equipment, and growing your HVAC business.',
     keywords: [
       'hvac contractor software',
@@ -242,7 +242,7 @@ export const industryPages: SEOPageConfig[] = [
   },
   {
     path: '/electrical-contractor-software',
-    title: 'Electrical Contractor Software - Project & Job Management | BuildDesk',
+    title: 'Electrical Contractor Software - Project & Job Management | Brikly',
     description: 'Best electrical contractor software for job costing, project management, crew tracking, and compliance. Designed for electrical contractors of all sizes.',
     keywords: [
       'electrical contractor software',
@@ -259,7 +259,7 @@ export const industryPages: SEOPageConfig[] = [
   },
   {
     path: '/commercial-contractors',
-    title: 'Commercial Construction Software - Enterprise Project Management | BuildDesk',
+    title: 'Commercial Construction Software - Enterprise Project Management | Brikly',
     description: 'Commercial construction management software for large projects. Multi-project tracking, subcontractor management, and enterprise-grade features.',
     keywords: [
       'commercial construction software',
@@ -275,7 +275,7 @@ export const industryPages: SEOPageConfig[] = [
   },
   {
     path: '/residential-contractors',
-    title: 'Residential Construction Software - Home Builder Management | BuildDesk',
+    title: 'Residential Construction Software - Home Builder Management | Brikly',
     description: 'Residential construction software for home builders and remodelers. Manage projects, track costs, and deliver quality homes on time and on budget.',
     keywords: [
       'residential construction software',
@@ -297,7 +297,7 @@ export const industryPages: SEOPageConfig[] = [
 export const featurePages: SEOPageConfig[] = [
   {
     path: '/job-costing-software',
-    title: 'Construction Job Costing Software - Real-Time Cost Tracking | BuildDesk',
+    title: 'Construction Job Costing Software - Real-Time Cost Tracking | Brikly',
     description: 'Best job costing software for construction. Track labor, materials, and overhead in real-time. Compare budget vs actual instantly. Free 14-day trial.',
     keywords: [
       'job costing software',
@@ -314,7 +314,7 @@ export const featurePages: SEOPageConfig[] = [
   },
   {
     path: '/construction-management-software',
-    title: 'Construction Management Software for Small Business | BuildDesk',
+    title: 'Construction Management Software for Small Business | Brikly',
     description: 'All-in-one construction management software for small businesses. Project tracking, job costing, scheduling, and more. No enterprise complexity.',
     keywords: [
       'construction management software',
@@ -330,7 +330,7 @@ export const featurePages: SEOPageConfig[] = [
   },
   {
     path: '/construction-scheduling-software',
-    title: 'Construction Scheduling Software - Gantt Charts & Resource Planning | BuildDesk',
+    title: 'Construction Scheduling Software - Gantt Charts & Resource Planning | Brikly',
     description: 'Construction scheduling software with Gantt charts, resource planning, and milestone tracking. Keep projects on schedule and on budget.',
     keywords: [
       'construction scheduling software',
@@ -347,7 +347,7 @@ export const featurePages: SEOPageConfig[] = [
   },
   {
     path: '/osha-compliance-software',
-    title: 'OSHA Compliance Software for Construction - Safety Management | BuildDesk',
+    title: 'OSHA Compliance Software for Construction - Safety Management | Brikly',
     description: 'OSHA compliance software for construction safety. Digital safety logs, incident reporting, inspections, and automated compliance tracking.',
     keywords: [
       'osha compliance software',
@@ -364,7 +364,7 @@ export const featurePages: SEOPageConfig[] = [
   },
   {
     path: '/construction-field-management',
-    title: 'Construction Field Management Software - Mobile Crew Tracking | BuildDesk',
+    title: 'Construction Field Management Software - Mobile Crew Tracking | Brikly',
     description: 'Field management software for construction crews. GPS time tracking, daily reports, photo documentation, and offline capability.',
     keywords: [
       'construction field management',
@@ -381,7 +381,7 @@ export const featurePages: SEOPageConfig[] = [
   },
   {
     path: '/construction-project-management-software',
-    title: 'Construction Project Management Software - All-in-One Platform | BuildDesk',
+    title: 'Construction Project Management Software - All-in-One Platform | Brikly',
     description: 'Complete construction project management software. Manage schedules, budgets, documents, and teams from one platform designed for contractors.',
     keywords: [
       'construction project management software',
@@ -403,12 +403,12 @@ export const featurePages: SEOPageConfig[] = [
 export const comparisonPages: SEOPageConfig[] = [
   {
     path: '/procore-alternative',
-    title: 'Best Procore Alternative for Small Contractors 2026 | BuildDesk',
-    description: 'Looking for a Procore alternative? BuildDesk offers the same features at 60% less cost. Perfect for small contractors who need powerful software without complexity.',
+    title: 'Best Procore Alternative for Small Contractors 2026 | Brikly',
+    description: 'Looking for a Procore alternative? Brikly offers the same features at 60% less cost. Perfect for small contractors who need powerful software without complexity.',
     keywords: [
       'procore alternative',
       'procore competitor',
-      'procore vs builddesk',
+      'procore vs brikly',
       'cheaper than procore',
       'procore for small contractors',
     ],
@@ -420,26 +420,26 @@ export const comparisonPages: SEOPageConfig[] = [
   },
   {
     path: '/buildertrend-alternative',
-    title: 'Best Buildertrend Alternative for Contractors 2026 | BuildDesk',
-    description: 'Looking for a Buildertrend alternative? BuildDesk offers better job costing, unlimited users, and no per-user fees. Compare features and pricing.',
+    title: 'Best Buildertrend Alternative for Contractors 2026 | Brikly',
+    description: 'Looking for a Buildertrend alternative? Brikly offers better job costing, unlimited users, and no per-user fees. Compare features and pricing.',
     keywords: [
       'buildertrend alternative',
       'buildertrend competitor',
-      'buildertrend vs builddesk',
+      'buildertrend vs brikly',
       'cheaper than buildertrend',
     ],
     priority: 0.9,
     changeFreq: 'weekly',
     schemaType: 'WebPage',
     category: 'comparison',
-    relatedPages: ['/procore-alternative', '/builddesk-vs-buildertrend-comparison', '/pricing'],
+    relatedPages: ['/procore-alternative', '/brikly-vs-buildertrend-comparison', '/pricing'],
   },
   {
-    path: '/builddesk-vs-buildertrend-comparison',
-    title: 'BuildDesk vs Buildertrend - Complete Feature Comparison 2026',
-    description: 'In-depth comparison of BuildDesk vs Buildertrend. Compare features, pricing, ease of use, and customer reviews. Find the best fit for your construction business.',
+    path: '/brikly-vs-buildertrend-comparison',
+    title: 'Brikly vs Buildertrend - Complete Feature Comparison 2026',
+    description: 'In-depth comparison of Brikly vs Buildertrend. Compare features, pricing, ease of use, and customer reviews. Find the best fit for your construction business.',
     keywords: [
-      'builddesk vs buildertrend',
+      'brikly vs buildertrend',
       'buildertrend comparison',
       'construction software comparison',
       'contractor software comparison',
@@ -451,11 +451,11 @@ export const comparisonPages: SEOPageConfig[] = [
     relatedPages: ['/buildertrend-alternative', '/procore-alternative', '/pricing'],
   },
   {
-    path: '/builddesk-vs-coconstruct',
-    title: 'BuildDesk vs CoConstruct - Which is Better for Your Business?',
-    description: 'Compare BuildDesk vs CoConstruct for construction management. Side-by-side feature comparison, pricing analysis, and recommendations.',
+    path: '/brikly-vs-coconstruct',
+    title: 'Brikly vs CoConstruct - Which is Better for Your Business?',
+    description: 'Compare Brikly vs CoConstruct for construction management. Side-by-side feature comparison, pricing analysis, and recommendations.',
     keywords: [
-      'builddesk vs coconstruct',
+      'brikly vs coconstruct',
       'coconstruct alternative',
       'coconstruct comparison',
       'home builder software comparison',
@@ -474,7 +474,7 @@ export const comparisonPages: SEOPageConfig[] = [
 export const resourcePages: SEOPageConfig[] = [
   {
     path: '/resources/complete-guide-construction-job-costing',
-    title: 'Complete Guide to Construction Job Costing (2026) | BuildDesk',
+    title: 'Complete Guide to Construction Job Costing (2026) | Brikly',
     description: 'Master construction job costing with our comprehensive guide. Learn cost codes, tracking methods, software selection, and best practices for contractors.',
     keywords: [
       'construction job costing guide',
@@ -616,13 +616,13 @@ export const resourcePages: SEOPageConfig[] = [
 export const toolPages: SEOPageConfig[] = [
   {
     path: '/roi-calculator',
-    title: 'Construction Software ROI Calculator - Calculate Your Savings | BuildDesk',
-    description: 'Free ROI calculator for construction software. See how much you could save with BuildDesk based on your team size and current processes.',
+    title: 'Construction Software ROI Calculator - Calculate Your Savings | Brikly',
+    description: 'Free ROI calculator for construction software. See how much you could save with Brikly based on your team size and current processes.',
     keywords: [
       'construction roi calculator',
       'software roi calculator',
       'construction savings calculator',
-      'builddesk roi',
+      'brikly roi',
     ],
     priority: 0.8,
     changeFreq: 'monthly',
@@ -632,7 +632,7 @@ export const toolPages: SEOPageConfig[] = [
   },
   {
     path: '/calculator',
-    title: 'Construction Profitability Calculator - Free Tool | BuildDesk',
+    title: 'Construction Profitability Calculator - Free Tool | Brikly',
     description: 'Free construction profitability calculator. Calculate job margins, overhead allocation, and true project profit for your construction business.',
     keywords: [
       'construction profitability calculator',
@@ -670,7 +670,7 @@ export const toolPages: SEOPageConfig[] = [
 export const topicPages: SEOPageConfig[] = [
   {
     path: '/topics/construction-management-basics',
-    title: 'Construction Management Basics - Complete Learning Hub | BuildDesk',
+    title: 'Construction Management Basics - Complete Learning Hub | Brikly',
     description: 'Learn construction management fundamentals. Comprehensive guides on project planning, cost control, scheduling, and team management for contractors.',
     keywords: [
       'construction management basics',
@@ -686,7 +686,7 @@ export const topicPages: SEOPageConfig[] = [
   },
   {
     path: '/topics/safety-and-osha-compliance',
-    title: 'Construction Safety & OSHA Compliance Guide | BuildDesk',
+    title: 'Construction Safety & OSHA Compliance Guide | Brikly',
     description: 'Complete guide to construction safety and OSHA compliance. Safety protocols, documentation requirements, and compliance best practices.',
     keywords: [
       'construction safety',
@@ -708,12 +708,12 @@ export const topicPages: SEOPageConfig[] = [
 export const supportPages: SEOPageConfig[] = [
   {
     path: '/support',
-    title: 'Customer Support - Help Center & Contact | BuildDesk',
-    description: 'Get help with BuildDesk construction management software. Contact support, browse help articles, and access video tutorials.',
+    title: 'Customer Support - Help Center & Contact | Brikly',
+    description: 'Get help with Brikly construction management software. Contact support, browse help articles, and access video tutorials.',
     keywords: [
-      'builddesk support',
+      'brikly support',
       'construction software help',
-      'builddesk help center',
+      'brikly help center',
       'customer support',
     ],
     priority: 0.7,
@@ -724,7 +724,7 @@ export const supportPages: SEOPageConfig[] = [
   },
   {
     path: '/resources',
-    title: 'Construction Resources & Guides | BuildDesk',
+    title: 'Construction Resources & Guides | Brikly',
     description: 'Free construction resources, guides, and best practices for contractors. Job costing, scheduling, compliance, and more.',
     keywords: [
       'construction resources',
@@ -746,9 +746,9 @@ export const supportPages: SEOPageConfig[] = [
 export const legalPages: SEOPageConfig[] = [
   {
     path: '/privacy-policy',
-    title: 'Privacy Policy | BuildDesk',
-    description: 'BuildDesk privacy policy. Learn how we collect, use, and protect your data.',
-    keywords: ['privacy policy', 'data protection', 'builddesk privacy'],
+    title: 'Privacy Policy | Brikly',
+    description: 'Brikly privacy policy. Learn how we collect, use, and protect your data.',
+    keywords: ['privacy policy', 'data protection', 'brikly privacy'],
     priority: 0.4,
     changeFreq: 'yearly',
     schemaType: 'WebPage',
@@ -757,9 +757,9 @@ export const legalPages: SEOPageConfig[] = [
   },
   {
     path: '/terms-of-service',
-    title: 'Terms of Service | BuildDesk',
-    description: 'BuildDesk terms of service. Read our terms and conditions for using the platform.',
-    keywords: ['terms of service', 'terms and conditions', 'builddesk terms'],
+    title: 'Terms of Service | Brikly',
+    description: 'Brikly terms of service. Read our terms and conditions for using the platform.',
+    keywords: ['terms of service', 'terms and conditions', 'brikly terms'],
     priority: 0.4,
     changeFreq: 'yearly',
     schemaType: 'WebPage',

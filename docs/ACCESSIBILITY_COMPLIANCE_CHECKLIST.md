@@ -8,7 +8,7 @@
 
 ## Executive Summary
 
-BuildDesk has accessibility infrastructure (components, hooks, testing utilities) but **implementation is inconsistent**. Only 2 of 100+ pages currently use the accessible component library.
+Brikly has accessibility infrastructure (components, hooks, testing utilities) but **implementation is inconsistent**. Only 2 of 100+ pages currently use the accessible component library.
 
 | Metric | Current | Target |
 |--------|---------|--------|
@@ -239,9 +239,9 @@ These are mostly static content pages.
 |------|------|--------|
 | Procore Alternative | `ProcoreAlternative.tsx` | Needs PageWrapper, ARIA |
 | Buildertrend Alternative | `BuildertrendAlternative.tsx` | Needs PageWrapper, ARIA |
-| BuildDesk vs Procore | `BuildDeskVsProcore.tsx` | Needs PageWrapper, ARIA |
-| BuildDesk vs CoConstruct | `BuildDeskVsCoConstruct.tsx` | Needs PageWrapper, ARIA |
-| BuildDesk vs Buildertrend | `BuildDeskVsBuildertrend.tsx` | Needs PageWrapper, ARIA |
+| Brikly vs Procore | `BriklyVsProcore.tsx` | Needs PageWrapper, ARIA |
+| Brikly vs CoConstruct | `BriklyVsCoConstruct.tsx` | Needs PageWrapper, ARIA |
+| Brikly vs Buildertrend | `BriklyVsBuildertrend.tsx` | Needs PageWrapper, ARIA |
 | Resources | `Resources.tsx` | Needs PageWrapper, ARIA |
 | All `resources/*.tsx` pages | 10+ pages | Needs PageWrapper, ARIA |
 | All `topics/*.tsx` pages | 2+ pages | Needs PageWrapper, ARIA |

@@ -1,7 +1,7 @@
 import SwiftUI
 
 @main
-struct BuildDeskApp: App {
+struct BriklyApp: App {
     @State private var authViewModel = AuthViewModel()
 
     var body: some Scene {

@@ -28,7 +28,7 @@ npm run ios:verify
 ### Summary from Verification
 
 - ✅ Node.js and npm installed
-- ✅ Capacitor configuration exists (Bundle ID: `com.builddesk.app`)
+- ✅ Capacitor configuration exists (Bundle ID: `com.brikly.app`)
 - ✅ GitHub Actions workflow configured
 - ✅ ExportOptions.plist created
 - ⚠️ iOS platform not initialized yet (will do this next)
@@ -45,7 +45,7 @@ You mentioned you've done Phase 1 (Apple Developer enrollment and API key), but 
 #### A. Register Bundle ID
 
 - Go to: https://developer.apple.com/account/resources/identifiers/list
-- Create App ID with Bundle ID: `com.builddesk.app`
+- Create App ID with Bundle ID: `com.brikly.app`
 
 #### B. Create Distribution Certificate
 
@@ -56,14 +56,14 @@ You mentioned you've done Phase 1 (Apple Developer enrollment and API key), but 
 #### C. Create Provisioning Profile
 
 - Go to: https://developer.apple.com/account/resources/profiles/list
-- Create "App Store" profile for `com.builddesk.app`
+- Create "App Store" profile for `com.brikly.app`
 - Download and base64 encode
 
 #### D. Create App in App Store Connect
 
 - Go to: https://appstoreconnect.apple.com/apps
 - Create new iOS app
-- Link to Bundle ID: `com.builddesk.app`
+- Link to Bundle ID: `com.brikly.app`
 
 **Detailed instructions**: See `IOS_DEPLOYMENT_CHECKLIST.md` Phase 2
 
@@ -85,7 +85,7 @@ You already have these 4 (from Phase 1):
 - ⏳ `IOS_DISTRIBUTION_CERT_P12` - Base64 of .p12 certificate
 - ⏳ `IOS_DISTRIBUTION_CERT_PASSWORD` - Password for .p12
 - ⏳ `IOS_PROVISIONING_PROFILE` - Base64 of .mobileprovision
-- ⏳ `IOS_PROVISIONING_PROFILE_NAME` - Profile name (e.g., "BuildDesk App Store Profile")
+- ⏳ `IOS_PROVISIONING_PROFILE_NAME` - Profile name (e.g., "Brikly App Store Profile")
 
 **How to base64 encode** (PowerShell):
 
@@ -143,7 +143,7 @@ Once all secrets are set:
 After successful upload:
 
 1. Go to: https://appstoreconnect.apple.com
-2. Select: **BuildDesk** → **TestFlight**
+2. Select: **Brikly** → **TestFlight**
 3. Wait: Build processing (5-30 min)
 4. Answer: Export compliance question
 5. Test: Add internal testers
@@ -254,7 +254,7 @@ On Windows: You must use GitHub Actions (no way to run Xcode locally).
 
 **Fix**:
 
-- Check Bundle ID matches exactly: `com.builddesk.app`
+- Check Bundle ID matches exactly: `com.brikly.app`
 - Ensure provisioning profile is "App Store" type (not Development)
 
 ### "Code signing identity not found"

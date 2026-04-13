@@ -1,5 +1,5 @@
 // Webhook Signature Verification Utility
-// Helps webhook consumers verify that payloads are from BuildDesk
+// Helps webhook consumers verify that payloads are from Brikly
 
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 

@@ -172,7 +172,7 @@ const ScheduleImport = () => {
             <div>
               <CardTitle>Field Mapping</CardTitle>
               <CardDescription>
-                Map source fields to BuildDesk schedule fields
+                Map source fields to Brikly schedule fields
               </CardDescription>
             </div>
             <Button variant="outline" size="sm">
@@ -195,7 +195,7 @@ const ScheduleImport = () => {
                   <span className="text-muted-foreground">&#x2192;</span>
                   <div className="flex-1">
                     <p className="text-sm font-medium">{mapping.target}</p>
-                    <p className="text-xs text-muted-foreground">BuildDesk</p>
+                    <p className="text-xs text-muted-foreground">Brikly</p>
                   </div>
                 </div>
                 <Badge variant={mapping.mapped ? "default" : "outline"}>

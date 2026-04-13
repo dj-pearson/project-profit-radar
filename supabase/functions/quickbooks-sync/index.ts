@@ -460,7 +460,7 @@ async function syncInvoiceToQuickBooks(supabaseClient: any, baseUrl: string, rea
     CustomerRef: customerRef,
     TxnDate: invoice.issue_date,
     DueDate: invoice.due_date,
-    PrivateNote: invoice.notes || `BuildDesk Invoice ${invoice.invoice_number}`,
+    PrivateNote: invoice.notes || `Brikly Invoice ${invoice.invoice_number}`,
     Line: [{
       Amount: invoice.subtotal || invoice.total,
       DetailType: "SalesItemLineDetail",

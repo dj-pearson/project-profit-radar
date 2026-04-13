@@ -1,6 +1,6 @@
 # Modern 3D hero sections drive engagement but demand ruthless optimization
 
-React Three Fiber emerges as the clear winner for production 3D hero sections in 2025, achieving 60fps performance with under 500KB bundles when properly optimized. The framework combines Three.js power with React's declarative patterns, enables glassmorphism and particle effects that convert visitors, and scales from simple animations to complex interactive experiences. For BuildDesk specifically, a construction-themed hero using instanced building blocks can establish technical credibility while maintaining B2B professionalism, but only if you implement progressive enhancement with static fallbacks, respect prefers-reduced-motion preferences, and test extensively on field tablets.
+React Three Fiber emerges as the clear winner for production 3D hero sections in 2025, achieving 60fps performance with under 500KB bundles when properly optimized. The framework combines Three.js power with React's declarative patterns, enables glassmorphism and particle effects that convert visitors, and scales from simple animations to complex interactive experiences. For Brikly specifically, a construction-themed hero using instanced building blocks can establish technical credibility while maintaining B2B professionalism, but only if you implement progressive enhancement with static fallbacks, respect prefers-reduced-motion preferences, and test extensively on field tablets.
 
 The research reveals three critical insights: first, bundle optimization matters more than visual complexity—Draco compression achieves 90% file size reduction with zero visible quality loss; second, mobile-first performance requires capping device pixel ratio at 1.5 and disabling post-processing entirely; third, accessibility isn't optional—semantic HTML overlays with proper ARIA labels are mandatory for WCAG AA compliance. The most successful implementations combine React Three Fiber for 3D rendering, GSAP ScrollTrigger for scroll-driven animations, and strategic use of the Drei helper library for common patterns like glassmorphism (MeshTransmissionMaterial) and environment lighting.
 
@@ -26,7 +26,7 @@ Babylon.js serves specialized use cases but proves too heavy for typical hero se
 
 Glassmorphism effects using Three.js MeshPhysicalMaterial with transmission=1 create the premium "liquid glass" aesthetic that distinguishes modern hero sections from dated designs. The effect requires HDR environment maps for realistic reflections, transmission property for transparency, chromaticAberration for color fringing, and careful roughness tuning between 0-0.15 for sharp glass or 0.65+ for frosted effects. Performance costs run medium-high due to per-pixel complexity and extra rendering passes, but limiting glass materials to hero objects rather than entire scenes keeps framerates stable.
 
-React Three Fiber's MeshTransmissionMaterial from Drei simplifies implementation significantly compared to raw Three.js, automatically handling the two-pass rendering system that creates refraction effects. The material works by rendering back faces first with internal reflection, then front faces with distorted content at edges, all while maintaining real-time interactivity. Production implementations from companies like Apple demonstrate that glass effects communicate sophistication and modernity, though BuildDesk should prefer subtle blue tints (#E3F2FD) over pure transparency to maintain professional aesthetics appropriate for construction B2B contexts.
+React Three Fiber's MeshTransmissionMaterial from Drei simplifies implementation significantly compared to raw Three.js, automatically handling the two-pass rendering system that creates refraction effects. The material works by rendering back faces first with internal reflection, then front faces with distorted content at edges, all while maintaining real-time interactivity. Production implementations from companies like Apple demonstrate that glass effects communicate sophistication and modernity, though Brikly should prefer subtle blue tints (#E3F2FD) over pure transparency to maintain professional aesthetics appropriate for construction B2B contexts.
 
 ```javascript
 // Production glassmorphism implementation
@@ -104,7 +104,7 @@ function Particles({ count = 5000 }) {
 
 Holographic and iridescent materials create futuristic aesthetics perfect for showcasing technical innovation, achieved through custom GLSL shaders calculating Fresnel effects and thin-film interference. Fresnel shaders compute edge glow by measuring viewing angle relative to surface normals (stronger glow at grazing angles), while iridescence simulates soap bubble effects by modeling light interference through thin films of varying thickness. These effects run efficiently since calculations happen per-fragment on GPU, making them cheaper than complex geometry or multiple lights.
 
-Implementation requires basic GLSL knowledge or using pre-built shader materials from libraries like drei's shaderMaterial helper. Three.js MeshPhysicalMaterial in r148+ includes built-in iridescence support with configurable IOR values and thickness ranges, eliminating custom shader requirements for basic effects. For BuildDesk applications, subtle iridescent accents on construction equipment models or blueprint elements could signal innovation without appearing unprofessional, though testing with target audience focus groups would validate aesthetic appropriateness.
+Implementation requires basic GLSL knowledge or using pre-built shader materials from libraries like drei's shaderMaterial helper. Three.js MeshPhysicalMaterial in r148+ includes built-in iridescence support with configurable IOR values and thickness ranges, eliminating custom shader requirements for basic effects. For Brikly applications, subtle iridescent accents on construction equipment models or blueprint elements could signal innovation without appearing unprofessional, though testing with target audience focus groups would validate aesthetic appropriateness.
 
 ## Performance optimization: instancing delivers 40x gains, Draco saves 90% file size
 
@@ -155,7 +155,7 @@ Next.js dynamic imports with `ssr: false` prevent server-side rendering of Three
 
 Mobile devices demand 50-75% complexity reduction compared to desktop implementations, achieved through lower device pixel ratios, disabled post-processing, reduced polygon counts, and simplified materials. Capping DPR at 1.5 on mobile (versus native 3-4x on retina displays) reduces pixels rendered by 4x with imperceptible quality loss on small screens, providing the single greatest mobile performance win. Disable shadows, anti-aliasing, and post-processing effects entirely on mobile since battery constraints and thermal throttling make sustained 60fps impossible with heavy effects enabled.
 
-Adaptive quality systems using R3F's PerformanceMonitor component automatically adjust rendering quality based on actual FPS, reducing DPR and disabling effects when framerates drop below thresholds. Vercel's implementation measures real performance rather than GPU specs, proving more reliable across diverse hardware. For BuildDesk's field tablet users (Panasonic Toughbook, Dell Latitude Rugged), testing on actual hardware reveals that conservative settings (no post-processing, 1024px max textures, 25K polygon limit) maintain usability in challenging field conditions.
+Adaptive quality systems using R3F's PerformanceMonitor component automatically adjust rendering quality based on actual FPS, reducing DPR and disabling effects when framerates drop below thresholds. Vercel's implementation measures real performance rather than GPU specs, proving more reliable across diverse hardware. For Brikly's field tablet users (Panasonic Toughbook, Dell Latitude Rugged), testing on actual hardware reveals that conservative settings (no post-processing, 1024px max textures, 25K polygon limit) maintain usability in challenging field conditions.
 
 ```javascript
 // Adaptive quality based on real performance
@@ -185,7 +185,7 @@ function AdaptiveScene() {
 
 glTF models with Draco compression reduce file sizes by 90% while maintaining visual fidelity, essential for 3D hero sections targeting 3-second load times on 3G connections. The Google-developed algorithm compresses mesh geometry (vertices, normals, UVs) into compact binary format decoded client-side, trading slight decompression overhead for massive bandwidth savings. Implementation requires configuring DRACOLoader in Three.js and exporting models with compression enabled via gltf-transform or Blender exporters.
 
-Production workflow involves designing in Blender or Spline, exporting to GLB format, running gltf-transform optimize with Draco compression and WebP texture conversion, and testing output in glTF viewers before deployment. The command `gltf-transform optimize input.glb output.glb --compress draco --texture-compress webp` automates the entire pipeline, typically reducing 10MB models to under 1MB. For BuildDesk's construction equipment models, this optimization enables high-quality 3D visualizations that load faster than traditional image carousels while providing interactive exploration.
+Production workflow involves designing in Blender or Spline, exporting to GLB format, running gltf-transform optimize with Draco compression and WebP texture conversion, and testing output in glTF viewers before deployment. The command `gltf-transform optimize input.glb output.glb --compress draco --texture-compress webp` automates the entire pipeline, typically reducing 10MB models to under 1MB. For Brikly's construction equipment models, this optimization enables high-quality 3D visualizations that load faster than traditional image carousels while providing interactive exploration.
 
 ## Three complete hero section implementations
 
@@ -220,7 +220,7 @@ function GlassModel() {
         anchorX="center"
         anchorY="middle"
       >
-        BuildDesk
+        Brikly
       </Text>
       
       <mesh ref={mesh} position={[0, 0, 0]}>
@@ -253,7 +253,7 @@ export default function GlassmorphismHero() {
     return (
       <section className="relative h-screen bg-gradient-to-br from-slate-900 to-slate-800">
         <div className="absolute inset-0 flex flex-col items-center justify-center text-white">
-          <h1 className="text-6xl font-bold mb-4">BuildDesk</h1>
+          <h1 className="text-6xl font-bold mb-4">Brikly</h1>
           <p className="text-xl">Professional Construction Management</p>
         </div>
       </section>
@@ -538,9 +538,9 @@ export default function ParticleHero() {
 }
 ```
 
-## BuildDesk recommendations: construction-appropriate aesthetics with progressive enhancement
+## Brikly recommendations: construction-appropriate aesthetics with progressive enhancement
 
-The construction industry demands visual credibility that signals innovation without alienating traditional stakeholders who value proven reliability over flashy technology. BuildDesk's hero section should use realistic material textures (steel, concrete, glass) rendered with PBR materials, subtle animations under 500ms that never block user interaction, construction-themed color palette with navy (#1A2332), steel gray (#516170), and safety orange (#FF6B35) accents, and building blocks metaphor showing components assembling to represent platform integration capabilities.
+The construction industry demands visual credibility that signals innovation without alienating traditional stakeholders who value proven reliability over flashy technology. Brikly's hero section should use realistic material textures (steel, concrete, glass) rendered with PBR materials, subtle animations under 500ms that never block user interaction, construction-themed color palette with navy (#1A2332), steel gray (#516170), and safety orange (#FF6B35) accents, and building blocks metaphor showing components assembling to represent platform integration capabilities.
 
 **Avoid cartoonish graphics, excessive particle effects, dramatic camera movements, neon/sci-fi aesthetics, or gaming-style effects** that undermine B2B credibility. Test extensively on field tablets (Panasonic Toughbook, Dell Latitude Rugged) since project managers and superintendents frequently review software during site visits. Implement larger tap targets (44x44px minimum) for touch interfaces worn with gloves, ensure readability in bright outdoor lighting conditions with high-contrast text, and provide offline-capable fallbacks since construction sites often have limited connectivity.
 
@@ -552,7 +552,7 @@ The construction industry demands visual credibility that signals innovation wit
 
 **Tier 3 visual approach**: Full immersive 3D environments with complex lighting, character animations or architectural walkthroughs, game-like interactivity with physics simulation, and cutting-edge shader effects for maximum visual impact. Reserve this level for portfolio pieces or internal demos where audience appreciates technical achievement over conservative presentation.
 
-For BuildDesk's initial implementation, **start with Tier 1 approach using building blocks assembly animation**: instanced cubes in construction-appropriate colors assembling from scattered positions into organized structure, representing BuildDesk bringing order to complex projects. Implement with 5,000 instanced meshes in single draw call, simple rotation and position animations, GSAP for smooth assembly sequence, and static image fallback for non-WebGL browsers. Total implementation time: 2-3 weeks including design refinement and accessibility testing.
+For Brikly's initial implementation, **start with Tier 1 approach using building blocks assembly animation**: instanced cubes in construction-appropriate colors assembling from scattered positions into organized structure, representing Brikly bringing order to complex projects. Implement with 5,000 instanced meshes in single draw call, simple rotation and position animations, GSAP for smooth assembly sequence, and static image fallback for non-WebGL browsers. Total implementation time: 2-3 weeks including design refinement and accessibility testing.
 
 ## Complete development workflow from design to deployment
 
@@ -584,7 +584,7 @@ gltf-transform uastc hero-model.glb hero-model-uastc.glb \
 
 Development setup includes Three.js DevTools Chrome extension for scene inspection, r3f-perf component showing FPS and draw call metrics in development builds, lil-gui for runtime parameter tweaking, Spector.js for WebGL debugging and draw call visualization, and stats.js integrated into all development environments. Configure Hot Module Replacement to preserve scene state during development, preventing full page reloads that reset 3D context unnecessarily.
 
-Testing strategy encompasses unit tests for logic (not rendering) using Jest with mocked Three.js contexts, visual regression tests with Puppeteer capturing screenshots across devices, performance tests measuring FPS and load times with automated Lighthouse CI, accessibility tests with axe-core and manual screen reader verification, and real device testing on actual tablets and mobile phones (simulators lie about performance). For BuildDesk specifically, test on field tablets in various lighting conditions to ensure usability in actual construction environments.
+Testing strategy encompasses unit tests for logic (not rendering) using Jest with mocked Three.js contexts, visual regression tests with Puppeteer capturing screenshots across devices, performance tests measuring FPS and load times with automated Lighthouse CI, accessibility tests with axe-core and manual screen reader verification, and real device testing on actual tablets and mobile phones (simulators lie about performance). For Brikly specifically, test on field tablets in various lighting conditions to ensure usability in actual construction environments.
 
 Production deployment optimizes CDN configuration with cache headers (`max-age=31536000, immutable` for versioned assets), compression (Brotli preferred over gzip for 20% additional savings), edge caching for global distribution reducing latency, and monitoring through Sentry error tracking capturing WebGL context loss events and device-specific rendering issues. Set performance budgets of 500KB JavaScript, 2MB total 3D assets, LCP under 2.5s, and consistent 60fps on target hardware, failing builds that exceed thresholds.
 
@@ -606,7 +606,7 @@ Semantic HTML overlays provide the foundation for accessible 3D hero sections si
   <div className="hero-content" role="main">
     <h1 id="hero-heading">Professional Construction Management</h1>
     <p>Built for contractors, by engineers who understand field operations</p>
-    <button aria-label="Request personalized demo of BuildDesk platform">
+    <button aria-label="Request personalized demo of Brikly platform">
       Request Demo
     </button>
   </div>
@@ -617,7 +617,7 @@ Semantic HTML overlays provide the foundation for accessible 3D hero sections si
 
 Color contrast requirements demand 4.5:1 ratio for normal text and 3:1 for large text (18pt+) against backgrounds including 3D content. Implement semi-transparent scrims with `backdrop-filter: blur(8px)` behind text, ensure text colors meet WCAG AA standards against scrim background, add text shadows (`0 2px 4px rgba(0,0,0,0.8)`) for additional legibility, avoid placing text directly over complex 3D animations, and test contrast ratios using browser DevTools or dedicated contrast checkers like Stark.
 
-Fallback strategies implement progressive enhancement ensuring functionality without 3D, using WebGL detection to show static images when GPU unavailable, lazy loading 3D components to prioritize HTML content in initial bundle, context loss recovery to handle GPU crashes gracefully, and error boundaries catching Three.js errors without breaking entire page. For BuildDesk, the static fallback should be high-quality render of final 3D scene composition, maintaining visual consistency between 3D and fallback versions.
+Fallback strategies implement progressive enhancement ensuring functionality without 3D, using WebGL detection to show static images when GPU unavailable, lazy loading 3D components to prioritize HTML content in initial bundle, context loss recovery to handle GPU crashes gracefully, and error boundaries catching Three.js errors without breaking entire page. For Brikly, the static fallback should be high-quality render of final 3D scene composition, maintaining visual consistency between 3D and fallback versions.
 
 ## The decision framework: when to use each approach
 
@@ -641,4 +641,4 @@ Choose **Spline** when team lacks 3D programming skills, needing fast iteration 
 
 **Production deployment ready**: CDN configured with proper cache headers and compression enabled, error monitoring captures WebGL failures with device/browser context, performance monitoring tracks FPS and load times in production, graceful degradation provides static fallback for WebGL failures, documentation covers troubleshooting common rendering issues, and rollback plan exists if deployment causes performance regressions.
 
-BuildDesk's construction management platform will benefit most from an approach balancing innovation with industry-appropriate conservatism—a building blocks assembly animation implemented with React Three Fiber, instanced meshes for performance, construction-appropriate color palette, and comprehensive fallback strategies ensures the hero section signals technical capability while maintaining B2B credibility essential for converting decision-makers in traditional industries where trust outweighs flashiness.
+Brikly's construction management platform will benefit most from an approach balancing innovation with industry-appropriate conservatism—a building blocks assembly animation implemented with React Three Fiber, instanced meshes for performance, construction-appropriate color palette, and comprehensive fallback strategies ensures the hero section signals technical capability while maintaining B2B credibility essential for converting decision-makers in traditional industries where trust outweighs flashiness.

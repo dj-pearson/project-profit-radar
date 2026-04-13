@@ -14,14 +14,14 @@ import { createClient, SupabaseClient } from 'npm:@supabase/supabase-js@2';
 import { getCorsHeaders } from './secure-cors.ts';
 
 // Default secure CORS headers (fallback when request not available)
-// Uses environment variable ALLOWED_CORS_ORIGINS or falls back to build-desk.com
+// Uses environment variable ALLOWED_CORS_ORIGINS or falls back to brikly.net
 const getDefaultCorsOrigin = () => {
   const customOrigins = Deno.env.get('ALLOWED_CORS_ORIGINS');
   if (customOrigins) {
     const firstOrigin = customOrigins.split(',')[0]?.trim();
     if (firstOrigin) return firstOrigin;
   }
-  return 'https://build-desk.com';
+  return 'https://brikly.net';
 };
 
 const DEFAULT_SECURE_CORS = {

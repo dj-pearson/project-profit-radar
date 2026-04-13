@@ -73,7 +73,7 @@ export const useCriticalResources = () => {
         as: 'image' as const
       },
       {
-        href: '/BuildDeskLogo.png',
+        href: '/BriklyLogo.png',
         as: 'image' as const
       }
     ];
@@ -103,7 +103,7 @@ export const useCriticalResources = () => {
       'https://fonts.gstatic.com',
       'https://www.google-analytics.com',
       'https://www.googletagmanager.com',
-      'https://api.build-desk.com'
+      'https://api.brikly.net'
     ];
 
     externalDomains.forEach(domain => {

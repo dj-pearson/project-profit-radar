@@ -13,7 +13,7 @@ const FinancialHub: React.FC = () => {
   return (
     <DashboardLayout title="Financial Hub">
       <Helmet>
-        <title>Financial Hub | BuildDesk</title>
+        <title>Financial Hub | Brikly</title>
         <meta name="description" content="Financial hub – job costing, reports, and purchasing." />
         <link rel="canonical" href="/financial-hub" />
       </Helmet>

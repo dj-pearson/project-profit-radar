@@ -91,7 +91,7 @@ export class FeatureErrorBoundary extends Component<Props, State> {
                 size="sm"
                 asChild
               >
-                <a href="mailto:support@build-desk.com">Contact Support</a>
+                <a href="mailto:support@brikly.net">Contact Support</a>
               </Button>
             </div>
           </CardContent>

@@ -24,7 +24,7 @@ serve(async (req) => {
       .limit(1)
       .single()
 
-    const canonicalDomain = config?.canonical_domain || 'https://build-desk.com'
+    const canonicalDomain = config?.canonical_domain || 'https://brikly.net'
 
     // Generate comprehensive sitemap
     const sitemap = generateComprehensiveSitemap(canonicalDomain)

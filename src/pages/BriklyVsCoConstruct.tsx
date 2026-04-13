@@ -6,71 +6,71 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../co
 import { Badge } from '../components/ui/badge';
 import { Check, X, Star, DollarSign, Users, Smartphone } from 'lucide-react';
 
-const BuildDeskVsCoConstruct = () => {
+const BriklyVsCoConstruct = () => {
   const comparison = [
     {
       feature: "Pricing (Monthly)",
-      builddesk: "$149-$599",
+      brikly: "$149-$599",
       coconstruct: "$399-$899",
-      winner: "builddesk"
+      winner: "brikly"
     },
     {
       feature: "Unlimited Users",
-      builddesk: true,
+      brikly: true,
       coconstruct: false,
-      winner: "builddesk"
+      winner: "brikly"
     },
     {
       feature: "Mobile App Quality",
-      builddesk: "Excellent",
+      brikly: "Excellent",
       coconstruct: "Good", 
-      winner: "builddesk"
+      winner: "brikly"
     },
     {
       feature: "QuickBooks Integration",
-      builddesk: "Two-way sync",
+      brikly: "Two-way sync",
       coconstruct: "One-way sync",
-      winner: "builddesk"
+      winner: "brikly"
     },
     {
       feature: "Learning Curve",
-      builddesk: "Easy",
+      brikly: "Easy",
       coconstruct: "Moderate",
-      winner: "builddesk"
+      winner: "brikly"
     },
     {
       feature: "Customer Support",
-      builddesk: "24/7 Live Chat",
+      brikly: "24/7 Live Chat",
       coconstruct: "Business Hours",
-      winner: "builddesk"
+      winner: "brikly"
     },
     {
       feature: "Client Portal",
-      builddesk: true,
+      brikly: true,
       coconstruct: true,
       winner: "tie"
     },
     {
       feature: "Change Orders",
-      builddesk: "Digital Approvals",
+      brikly: "Digital Approvals",
       coconstruct: "Digital Approvals",
       winner: "tie"
     },
     {
       feature: "Time Tracking",
-      builddesk: "GPS Verification",
+      brikly: "GPS Verification",
       coconstruct: "Basic Tracking",
-      winner: "builddesk"
+      winner: "brikly"
     },
     {
       feature: "Safety Management",
-      builddesk: "OSHA Compliance",
+      brikly: "OSHA Compliance",
       coconstruct: "Basic Safety",
-      winner: "builddesk"
+      winner: "brikly"
     }
   ];
 
-  const buildDeskPros = [
+  const briklyPros = [
     "50% lower cost than CoConstruct",
     "Unlimited users at no extra cost",
     "Superior mobile app with offline capability",
@@ -88,7 +88,7 @@ const BuildDeskVsCoConstruct = () => {
     "Robust client communication tools"
   ];
 
-  const buildDeskCons = [
+  const briklyCons = [
     "Newer company (less market history)",
     "Smaller customer base"
   ];
@@ -105,19 +105,19 @@ const BuildDeskVsCoConstruct = () => {
   return (
     <div className="min-h-screen bg-background">
       <SEOMetaTags
-        title="BuildDesk vs CoConstruct 2025: Which is Better for Your Construction Business?"
-        description="Compare BuildDesk and CoConstruct construction management software. See pricing, features, pros and cons to choose the best solution for your construction company."
+        title="Brikly vs CoConstruct 2025: Which is Better for Your Construction Business?"
+        description="Compare Brikly and CoConstruct construction management software. See pricing, features, pros and cons to choose the best solution for your construction company."
         keywords={[
-          'builddesk vs coconstruct',
+          'brikly vs coconstruct',
           'coconstruct alternative',
           'construction management software comparison',
-          'builddesk coconstruct',
+          'brikly coconstruct',
           'residential construction software',
           'construction project management',
           'contractor software comparison',
           'construction management platform'
         ]}
-        canonicalUrl="https://builddesk.com/builddesk-vs-coconstruct"
+        canonicalUrl="https://brikly.com/brikly-vs-coconstruct"
       />
 
       <div className="container mx-auto px-4 py-8">
@@ -127,7 +127,7 @@ const BuildDeskVsCoConstruct = () => {
           <div className="mb-8 text-center">
             <Badge variant="secondary" className="mb-4">Software Comparison</Badge>
             <h1 className="text-4xl font-bold text-foreground mb-4">
-              BuildDesk vs CoConstruct: 2025 Comparison
+              Brikly vs CoConstruct: 2025 Comparison
             </h1>
             <LastUpdated date="September 2025" />
             <p className="text-xl text-muted-foreground max-w-3xl mx-auto mb-6">
@@ -137,8 +137,8 @@ const BuildDeskVsCoConstruct = () => {
           </div>
           
           <QuickAnswerSnippet
-            question="Which is better for construction businesses - BuildDesk or CoConstruct?"
-            answer="BuildDesk offers 50% lower costs ($149-$599 vs $399-$899), unlimited users at no extra charge, superior mobile apps, and faster 30-day implementation compared to CoConstruct's 60+ day setup. Best choice for growing construction teams."
+            question="Which is better for construction businesses - Brikly or CoConstruct?"
+            answer="Brikly offers 50% lower costs ($149-$599 vs $399-$899), unlimited users at no extra charge, superior mobile apps, and faster 30-day implementation compared to CoConstruct's 60+ day setup. Best choice for growing construction teams."
           />
 
           {/* Quick Comparison Cards */}
@@ -146,7 +146,7 @@ const BuildDeskVsCoConstruct = () => {
             <Card className="border-primary/20">
               <CardHeader>
                 <div className="flex items-center justify-between">
-                  <CardTitle className="text-2xl">BuildDesk</CardTitle>
+                  <CardTitle className="text-2xl">Brikly</CardTitle>
                   <Badge className="bg-green-100 text-green-800">Best Value</Badge>
                 </div>
                 <CardDescription>Construction management built for growing teams</CardDescription>
@@ -215,7 +215,7 @@ const BuildDeskVsCoConstruct = () => {
                   <thead>
                     <tr className="border-b">
                       <th className="text-left py-4 font-semibold">Feature</th>
-                      <th className="text-center py-4 font-semibold text-primary">BuildDesk</th>
+                      <th className="text-center py-4 font-semibold text-primary">Brikly</th>
                       <th className="text-center py-4 font-semibold">CoConstruct</th>
                     </tr>
                   </thead>
@@ -224,11 +224,11 @@ const BuildDeskVsCoConstruct = () => {
                       <tr key={index} className="border-b">
                         <td className="py-4 font-medium">{item.feature}</td>
                         <td className="py-4 text-center">
-                          <div className={`${item.winner === 'builddesk' ? 'text-green-600 font-semibold' : ''}`}>
-                            {typeof item.builddesk === 'boolean' ? (
-                              item.builddesk ? <Check className="h-5 w-5 mx-auto text-green-600" /> : <X className="h-5 w-5 mx-auto text-red-500" />
+                          <div className={`${item.winner === 'brikly' ? 'text-green-600 font-semibold' : ''}`}>
+                            {typeof item.brikly === 'boolean' ? (
+                              item.brikly ? <Check className="h-5 w-5 mx-auto text-green-600" /> : <X className="h-5 w-5 mx-auto text-red-500" />
                             ) : (
-                              item.builddesk
+                              item.brikly
                             )}
                           </div>
                         </td>
@@ -253,11 +253,11 @@ const BuildDeskVsCoConstruct = () => {
           <div className="grid md:grid-cols-2 gap-8 mb-8">
             <Card>
               <CardHeader>
-                <CardTitle className="text-primary">BuildDesk Advantages</CardTitle>
+                <CardTitle className="text-primary">Brikly Advantages</CardTitle>
               </CardHeader>
               <CardContent>
                 <ul className="space-y-2">
-                  {buildDeskPros.map((pro, index) => (
+                  {briklyPros.map((pro, index) => (
                     <li key={index} className="flex items-start space-x-2">
                       <Check className="h-5 w-5 text-green-600 mt-0.5 flex-shrink-0" />
                       <span className="text-sm">{pro}</span>
@@ -292,7 +292,7 @@ const BuildDeskVsCoConstruct = () => {
             <CardContent>
               <div className="prose max-w-none">
                 <p className="text-muted-foreground mb-4">
-                  <strong>BuildDesk wins this comparison</strong> for most construction companies, especially those looking for:
+                  <strong>Brikly wins this comparison</strong> for most construction companies, especially those looking for:
                 </p>
                 <ul className="list-disc pl-6 space-y-1 text-muted-foreground mb-6">
                   <li>Better value for money (50% less expensive)</li>
@@ -307,7 +307,7 @@ const BuildDeskVsCoConstruct = () => {
                 </p>
                 <div className="flex flex-col sm:flex-row gap-4">
                   <button className="flex-1 bg-primary text-primary-foreground hover:bg-primary/90 px-6 py-3 rounded-lg font-semibold">
-                    Try BuildDesk Free
+                    Try Brikly Free
                   </button>
                   <button className="flex-1 border border-border hover:bg-accent text-foreground px-6 py-3 rounded-lg font-semibold">
                     Schedule Comparison Demo
@@ -322,4 +322,4 @@ const BuildDeskVsCoConstruct = () => {
   );
 };
 
-export default BuildDeskVsCoConstruct;
+export default BriklyVsCoConstruct;

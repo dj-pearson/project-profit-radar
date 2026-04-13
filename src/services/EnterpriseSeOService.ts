@@ -326,7 +326,7 @@ class EnterpriseSeOService {
     return pages.map(page => ({
       id: crypto.randomUUID(),
       route: page.route,
-      title: `${page.title} - BuildDesk`,
+      title: `${page.title} - Brikly`,
       description: this.generateMetaDescriptionForPage(page.route, page.primaryKeyword),
       keywords: this.generateKeywordsForPage(page.primaryKeyword),
       primaryKeyword: page.primaryKeyword,
@@ -337,7 +337,7 @@ class EnterpriseSeOService {
       metaTags: this.generateMetaTagsForPage(page.route),
       openGraph: this.generateOpenGraphForPage(page.route, page.title),
       twitterCard: this.generateTwitterCardForPage(page.route, page.title),
-      canonicalUrl: `https://build-desk.com${page.route}`,
+      canonicalUrl: `https://brikly.net${page.route}`,
       lastOptimized: new Date().toISOString(),
       performanceScore: 0,
       conversionRate: 0
@@ -349,11 +349,11 @@ class EnterpriseSeOService {
       '/': `Best ${keyword} for small to medium construction businesses. Save 40% on projects with job costing, scheduling, and mobile field management.`,
       '/pricing': `Transparent ${keyword} pricing starting at $149/month. No hidden fees, free trial, and migration assistance included.`,
       '/features': `Comprehensive ${keyword} features including job costing, scheduling, document management, and OSHA compliance tools.`,
-      '/procore-alternative': `Looking for a Procore alternative? BuildDesk offers 60% cost savings with better mobile experience and faster setup.`,
-      '/buildertrend-alternative': `Switch from Buildertrend to BuildDesk for advanced job costing, better integrations, and commercial construction features.`
+      '/procore-alternative': `Looking for a Procore alternative? Brikly offers 60% cost savings with better mobile experience and faster setup.`,
+      '/buildertrend-alternative': `Switch from Buildertrend to Brikly for advanced job costing, better integrations, and commercial construction features.`
     };
 
-    return descriptions[route] || `Professional ${keyword} solution for construction businesses. Try BuildDesk free for 14 days.`;
+    return descriptions[route] || `Professional ${keyword} solution for construction businesses. Try Brikly free for 14 days.`;
   }
 
   private generateKeywordsForPage(primaryKeyword: string): string[] {
@@ -392,11 +392,11 @@ class EnterpriseSeOService {
       '@context': 'https://schema.org',
       '@type': 'WebPage',
       name: title,
-      url: `https://build-desk.com${route}`,
+      url: `https://brikly.net${route}`,
       isPartOf: {
         '@type': 'WebSite',
-        name: 'BuildDesk',
-        url: 'https://build-desk.com'
+        name: 'Brikly',
+        url: 'https://brikly.net'
       }
     };
 
@@ -404,7 +404,7 @@ class EnterpriseSeOService {
       return {
         ...baseSchema,
         '@type': 'SoftwareApplication',
-        name: 'BuildDesk Construction Management',
+        name: 'Brikly Construction Management',
         applicationCategory: 'Construction Management Software',
         operatingSystem: 'Web, iOS, Android',
         offers: {
@@ -427,7 +427,7 @@ class EnterpriseSeOService {
   private generateMetaTagsForPage(route: string): Record<string, string> {
     return {
       'robots': 'index, follow',
-      'author': 'BuildDesk',
+      'author': 'Brikly',
       'viewport': 'width=device-width, initial-scale=1.0',
       'theme-color': '#3b82f6'
     };
@@ -437,10 +437,10 @@ class EnterpriseSeOService {
     return {
       title,
       description: this.generateMetaDescriptionForPage(route, 'construction management software'),
-      image: `https://build-desk.com/og-image${route === '/' ? '' : route}.jpg`,
+      image: `https://brikly.net/og-image${route === '/' ? '' : route}.jpg`,
       type: 'website',
-      url: `https://build-desk.com${route}`,
-      siteName: 'BuildDesk'
+      url: `https://brikly.net${route}`,
+      siteName: 'Brikly'
     };
   }
 
@@ -449,8 +449,8 @@ class EnterpriseSeOService {
       card: 'summary_large_image',
       title,
       description: this.generateMetaDescriptionForPage(route, 'construction management software'),
-      image: `https://build-desk.com/twitter-card${route === '/' ? '' : route}.jpg`,
-      creator: '@builddesk'
+      image: `https://brikly.net/twitter-card${route === '/' ? '' : route}.jpg`,
+      creator: '@brikly'
     };
   }
 
@@ -499,14 +499,14 @@ class EnterpriseSeOService {
       description,
       author: {
         '@type': 'Organization',
-        name: 'BuildDesk'
+        name: 'Brikly'
       },
       publisher: {
         '@type': 'Organization',
-        name: 'BuildDesk',
+        name: 'Brikly',
         logo: {
           '@type': 'ImageObject',
-          url: 'https://build-desk.com/logo.png'
+          url: 'https://brikly.net/logo.png'
         }
       },
       datePublished: new Date().toISOString(),

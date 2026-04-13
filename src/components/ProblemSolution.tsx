@@ -87,7 +87,7 @@ const ProblemSolution = () => {
       {/* CTA Bridge */}
       <div className="bg-construction-orange/5 rounded-2xl p-8 border-t border-b border-border/30 text-center">
         <h3 className="text-xl font-semibold text-construction-dark dark:text-white mb-4">
-          See How BuildDesk Catches Overruns in Real-Time
+          See How Brikly Catches Overruns in Real-Time
         </h3>
         <Button variant="hero" size="lg" asChild>
           <Link to="/auth">

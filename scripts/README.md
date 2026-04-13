@@ -1,6 +1,6 @@
-# BuildDesk Scripts
+# Brikly Scripts
 
-This directory contains all automation, maintenance, and tooling scripts for the BuildDesk platform.
+This directory contains all automation, maintenance, and tooling scripts for the Brikly platform.
 
 ---
 
@@ -139,7 +139,7 @@ Downloads the Google Fonts used in the app and self-hosts them in `public/fonts/
 ```bash
 npm run cache:purge
 ```
-Calls the Cloudflare API to purge all cached assets for the `build-desk.com` zone. Run this after a deployment when users are reporting stale content. Requires `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ZONE_ID` environment variables.
+Calls the Cloudflare API to purge all cached assets for the `brikly.net` zone. Run this after a deployment when users are reporting stale content. Requires `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ZONE_ID` environment variables.
 
 ---
 
@@ -214,7 +214,7 @@ Uses Playwright to capture screenshots of the running app at all required sizes 
 bash scripts/setup-stripe-products.sh        # macOS / Linux
 powershell -File scripts/setup-stripe-products.ps1  # Windows
 ```
-Creates all Stripe products and prices for the BuildDesk subscription tiers ($199/mo Starter, $350/mo Pro, $799/mo Enterprise) using the Stripe CLI. Run once when setting up a new Stripe account or environment. Requires `STRIPE_SECRET_KEY` environment variable.
+Creates all Stripe products and prices for the Brikly subscription tiers ($199/mo Starter, $350/mo Pro, $799/mo Enterprise) using the Stripe CLI. Run once when setting up a new Stripe account or environment. Requires `STRIPE_SECRET_KEY` environment variable.
 
 ---
 

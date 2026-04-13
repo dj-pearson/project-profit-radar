@@ -226,7 +226,7 @@ export const devTools = {
 /**
  * Query cache persistence for offline support
  */
-const CACHE_KEY = 'builddesk-query-cache';
+const CACHE_KEY = 'brikly-query-cache';
 const CACHE_VERSION = 1;
 const MAX_CACHE_AGE = 24 * 60 * 60 * 1000; // 24 hours
 

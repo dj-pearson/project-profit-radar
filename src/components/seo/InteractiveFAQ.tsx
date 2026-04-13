@@ -23,8 +23,8 @@
  *   title="Frequently Asked Questions"
  *   faqs={[
  *     {
- *       question: "What is BuildDesk?",
- *       answer: "BuildDesk is construction management software..."
+ *       question: "What is Brikly?",
+ *       answer: "Brikly is construction management software..."
  *     }
  *   ]}
  *   theme="default"
@@ -346,49 +346,49 @@ export const constructionSoftwareFAQs: FAQItem[] = [
   {
     question: 'What is construction management software?',
     answer:
-      'Construction management software is a digital platform that helps contractors manage all aspects of their construction projects, including job costing, scheduling, document management, crew tracking, and compliance. BuildDesk provides an all-in-one solution specifically designed for small to medium-sized contractors.',
+      'Construction management software is a digital platform that helps contractors manage all aspects of their construction projects, including job costing, scheduling, document management, crew tracking, and compliance. Brikly provides an all-in-one solution specifically designed for small to medium-sized contractors.',
     keywords: ['construction software', 'project management', 'contractors'],
   },
   {
-    question: 'How much does BuildDesk cost?',
+    question: 'How much does Brikly cost?',
     answer:
-      'BuildDesk costs $350 per month with unlimited users included. Unlike competitors that charge per user, you can add your entire team at no additional cost. We offer a 14-day free trial with no credit card required, and there are no setup fees or long-term contracts.',
+      'Brikly costs $350 per month with unlimited users included. Unlike competitors that charge per user, you can add your entire team at no additional cost. We offer a 14-day free trial with no credit card required, and there are no setup fees or long-term contracts.',
     keywords: ['pricing', 'cost', 'subscription'],
   },
   {
-    question: 'Does BuildDesk work on mobile devices?',
+    question: 'Does Brikly work on mobile devices?',
     answer:
-      'Yes! BuildDesk has native mobile apps for both iOS and Android. Our mobile apps include offline capability, GPS time tracking, photo documentation, daily reports, and real-time project updates. Field workers can access everything they need right from their smartphones or tablets.',
+      'Yes! Brikly has native mobile apps for both iOS and Android. Our mobile apps include offline capability, GPS time tracking, photo documentation, daily reports, and real-time project updates. Field workers can access everything they need right from their smartphones or tablets.',
     keywords: ['mobile app', 'iOS', 'Android', 'offline'],
   },
   {
-    question: 'Can BuildDesk integrate with QuickBooks?',
+    question: 'Can Brikly integrate with QuickBooks?',
     answer:
-      'Absolutely. BuildDesk offers seamless 2-way integration with QuickBooks Online. Financial data syncs automatically, including invoices, expenses, payments, and job costing information. This eliminates double-entry and ensures your accounting is always up to date.',
+      'Absolutely. Brikly offers seamless 2-way integration with QuickBooks Online. Financial data syncs automatically, including invoices, expenses, payments, and job costing information. This eliminates double-entry and ensures your accounting is always up to date.',
     keywords: ['QuickBooks', 'accounting', 'integration', 'sync'],
   },
   {
-    question: 'Is BuildDesk suitable for small contractors?',
+    question: 'Is Brikly suitable for small contractors?',
     answer:
-      'Yes, BuildDesk is specifically designed for small to medium-sized contractors with 1-50 employees. Unlike enterprise solutions that are complex and expensive, BuildDesk provides powerful features without the complexity. You can be up and running in days, not months, with pricing that makes sense for smaller businesses.',
+      'Yes, Brikly is specifically designed for small to medium-sized contractors with 1-50 employees. Unlike enterprise solutions that are complex and expensive, Brikly provides powerful features without the complexity. You can be up and running in days, not months, with pricing that makes sense for smaller businesses.',
     keywords: ['small contractors', 'SMB', 'affordable'],
   },
   {
-    question: 'What kind of support does BuildDesk provide?',
+    question: 'What kind of support does Brikly provide?',
     answer:
-      'BuildDesk provides comprehensive support including in-app chat, email support, phone support, and an extensive help center with video tutorials. Our support team has construction industry experience and can help you get the most out of the platform. Support is included with all subscriptions at no extra cost.',
+      'Brikly provides comprehensive support including in-app chat, email support, phone support, and an extensive help center with video tutorials. Our support team has construction industry experience and can help you get the most out of the platform. Support is included with all subscriptions at no extra cost.',
     keywords: ['customer support', 'help', 'training'],
   },
   {
-    question: 'How does BuildDesk help with OSHA compliance?',
+    question: 'How does Brikly help with OSHA compliance?',
     answer:
-      'BuildDesk includes built-in OSHA compliance tools such as digital safety logs, incident reporting, safety meeting documentation, equipment inspection checklists, and automated compliance reports. You can track safety metrics, manage certifications, and ensure your team stays compliant with current OSHA regulations.',
+      'Brikly includes built-in OSHA compliance tools such as digital safety logs, incident reporting, safety meeting documentation, equipment inspection checklists, and automated compliance reports. You can track safety metrics, manage certifications, and ensure your team stays compliant with current OSHA regulations.',
     keywords: ['OSHA', 'safety', 'compliance', 'regulations'],
   },
   {
-    question: 'Can I try BuildDesk before committing?',
+    question: 'Can I try Brikly before committing?',
     answer:
-      'Yes! We offer a 14-day free trial with full access to all features. No credit card is required to start your trial. Our team will help you get set up with your first project, and you can cancel anytime if BuildDesk isn\'t the right fit for your business.',
+      'Yes! We offer a 14-day free trial with full access to all features. No credit card is required to start your trial. Our team will help you get set up with your first project, and you can cancel anytime if Brikly isn\'t the right fit for your business.',
     keywords: ['free trial', 'demo', 'no commitment'],
   },
 ];
@@ -397,7 +397,7 @@ export const pricingFAQs: FAQItem[] = [
   {
     question: 'Is there a per-user fee?',
     answer:
-      'No! BuildDesk includes unlimited users for a flat monthly rate of $350. Whether you have 5 employees or 50, the price remains the same. This is a huge advantage over competitors who charge $50-100 per user per month.',
+      'No! Brikly includes unlimited users for a flat monthly rate of $350. Whether you have 5 employees or 50, the price remains the same. This is a huge advantage over competitors who charge $50-100 per user per month.',
     keywords: ['unlimited users', 'per user', 'flat rate'],
   },
   {
@@ -415,7 +415,7 @@ export const pricingFAQs: FAQItem[] = [
   {
     question: 'What happens after the free trial?',
     answer:
-      'After your 14-day free trial, you can choose to subscribe to continue using BuildDesk. If you don\'t subscribe, your account will be downgraded to read-only mode where you can view but not edit data. Your data is never deleted, so you can reactivate anytime.',
+      'After your 14-day free trial, you can choose to subscribe to continue using Brikly. If you don\'t subscribe, your account will be downgraded to read-only mode where you can view but not edit data. Your data is never deleted, so you can reactivate anytime.',
     keywords: ['trial expiration', 'subscription', 'data retention'],
   },
 ];

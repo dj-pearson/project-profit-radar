@@ -1,9 +1,9 @@
 Incident Identifier: 9265FDC5-BDFF-4AEA-ADBC-2C101E8D2563
 Distributor ID:      com.apple.TestFlight
 Hardware Model:      iPhone16,1
-Process:             BuildDesk [7421]
-Path:                /private/var/containers/Bundle/Application/034A5F80-3346-4BBE-AB47-B0DBF64AEF69/BuildDesk.app/BuildDesk
-Identifier:          com.builddesk.app
+Process:             Brikly [7421]
+Path:                /private/var/containers/Bundle/Application/034A5F80-3346-4BBE-AB47-B0DBF64AEF69/Brikly.app/Brikly
+Identifier:          com.brikly.app
 Version:             1.0.0 (6)
 AppStoreTools:       17A323
 AppVariant:          1:iPhone16,1:26
@@ -11,7 +11,7 @@ Beta:                YES
 Code Type:           ARM-64 (Native)
 Role:                Foreground
 Parent Process:      launchd [1]
-Coalition:           com.builddesk.app [2375]
+Coalition:           com.brikly.app [2375]
 
 Date/Time:           2025-10-20 22:15:16.3658 -0500
 Launch Time:         2025-10-20 22:15:16.0212 -0500
@@ -46,7 +46,7 @@ Thread 0:
 7   GraphicsServices              	0x0000000225aa3498 GSEventRunModal + 120 (GSEvent.c:2049)
 8   UIKitCore                     	0x000000018b1ea268 -[UIApplication _run] + 792 (UIApplication.m:3902)
 9   UIKitCore                     	0x000000018b18fde4 UIApplicationMain + 336 (UIApplication.m:5577)
-10  BuildDesk                     	0x0000000104375620 0x104370000 + 22048
+10  Brikly                     	0x0000000104375620 0x104370000 + 22048
 11  dyld                          	0x000000018286ee28 start + 7116 (dyldMain.cpp:1477)
 
 Thread 1:
@@ -171,12 +171,12 @@ Thread 9 crashed with ARM Thread State (64-bit):
 
 
 Binary Images:
-        0x104370000 -         0x104763fff BuildDesk arm64  <f4c1c821bc5a37ba873a0400f6140b81> /var/containers/Bundle/Application/034A5F80-3346-4BBE-AB47-B0DBF64AEF69/BuildDesk.app/BuildDesk
+        0x104370000 -         0x104763fff Brikly arm64  <f4c1c821bc5a37ba873a0400f6140b81> /var/containers/Bundle/Application/034A5F80-3346-4BBE-AB47-B0DBF64AEF69/Brikly.app/Brikly
         0x1048fc000 -         0x104907fff libobjc-trampolines.dylib arm64e  <a068c18d51c33c9aa2875c9c122ada7d> /private/preboot/Cryptexes/OS/usr/lib/libobjc-trampolines.dylib
         0x104964000 -         0x104977fff GAXClient arm64e  <88735142844b33b3a7002beea48c67d7> /System/Library/AccessibilityBundles/GAXClient.bundle/GAXClient
-        0x104c68000 -         0x104ceffff ReactNativeDependencies arm64  <b35f1182b82e33728a74a4fe502c0906> /private/var/containers/Bundle/Application/034A5F80-3346-4BBE-AB47-B0DBF64AEF69/BuildDesk.app/Frameworks/ReactNativeDependencies.framework/ReactNativeDependencies
-        0x105260000 -         0x105463fff hermes arm64  <ba3c949a77073472b346d3e0690c88d0> /private/var/containers/Bundle/Application/034A5F80-3346-4BBE-AB47-B0DBF64AEF69/BuildDesk.app/Frameworks/hermes.framework/hermes
-        0x105774000 -         0x105baffff React arm64  <d636736195903fe5bbab2a3ad49a83e8> /private/var/containers/Bundle/Application/034A5F80-3346-4BBE-AB47-B0DBF64AEF69/BuildDesk.app/Frameworks/React.framework/React
+        0x104c68000 -         0x104ceffff ReactNativeDependencies arm64  <b35f1182b82e33728a74a4fe502c0906> /private/var/containers/Bundle/Application/034A5F80-3346-4BBE-AB47-B0DBF64AEF69/Brikly.app/Frameworks/ReactNativeDependencies.framework/ReactNativeDependencies
+        0x105260000 -         0x105463fff hermes arm64  <ba3c949a77073472b346d3e0690c88d0> /private/var/containers/Bundle/Application/034A5F80-3346-4BBE-AB47-B0DBF64AEF69/Brikly.app/Frameworks/hermes.framework/hermes
+        0x105774000 -         0x105baffff React arm64  <d636736195903fe5bbab2a3ad49a83e8> /private/var/containers/Bundle/Application/034A5F80-3346-4BBE-AB47-B0DBF64AEF69/Brikly.app/Frameworks/React.framework/React
         0x18286a000 -         0x182908ad7 dyld arm64e  <9b97a59cfc5d3e37849b2c832c4665e5> /usr/lib/dyld
         0x182ead000 -         0x183cde95f Foundation arm64e  <7a11a08cda543bed9a6c1fbe76050bd3> /System/Library/Frameworks/Foundation.framework/Foundation
         0x185821000 -         0x185da551f CoreFoundation arm64e  <6028de8fba3c31eb9da2345326263b16> /System/Library/Frameworks/CoreFoundation.framework/CoreFoundation

@@ -1,8 +1,8 @@
-# BuildDesk - Construction Management Platform
+# Brikly - Construction Management Platform
 
 ## Overview
 
-BuildDesk is a comprehensive construction management platform designed for small to medium-sized construction businesses. It's a B2B SaaS platform that provides real-time project management, financial tracking, and collaborative tools specifically tailored for the construction industry.
+Brikly is a comprehensive construction management platform designed for small to medium-sized construction businesses. It's a B2B SaaS platform that provides real-time project management, financial tracking, and collaborative tools specifically tailored for the construction industry.
 
 ### Key Features
 - **Real-time job costing** - Live cost tracking per project

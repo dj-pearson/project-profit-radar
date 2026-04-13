@@ -393,13 +393,13 @@ export const SEOAnalyticsDashboard: React.FC<SEOAnalyticsDashboardProps> = ({
                     { name: 'Procore', rank: 1, keywords: 2400, traffic: '2.1M' },
                     { name: 'Buildertrend', rank: 2, keywords: 1800, traffic: '890K' },
                     { name: 'PlanGrid', rank: 3, keywords: 1200, traffic: '650K' },
-                    { name: 'BuildDesk', rank: 4, keywords: 180, traffic: '25K' },
+                    { name: 'Brikly', rank: 4, keywords: 180, traffic: '25K' },
                     { name: 'CoConstruct', rank: 5, keywords: 950, traffic: '420K' }
                   ].map((competitor, index) => (
                     <div key={index} className="flex items-center justify-between">
                       <div className="flex items-center space-x-3">
                         <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-bold ${
-                          competitor.name === 'BuildDesk' ? 'bg-blue-600' : 'bg-gray-400'
+                          competitor.name === 'Brikly' ? 'bg-blue-600' : 'bg-gray-400'
                         }`}>
                           {competitor.rank}
                         </div>
@@ -410,7 +410,7 @@ export const SEOAnalyticsDashboard: React.FC<SEOAnalyticsDashboardProps> = ({
                           </p>
                         </div>
                       </div>
-                      {competitor.name === 'BuildDesk' && (
+                      {competitor.name === 'Brikly' && (
                         <Badge variant="default">
                           <Award className="h-3 w-3 mr-1" />
                           You

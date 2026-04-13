@@ -16,7 +16,7 @@ async function sendToWebhook(url: string, payload: any) {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      "User-Agent": "BuildDesk-Social-Post-Redeploy/1.0",
+      "User-Agent": "Brikly-Social-Post-Redeploy/1.0",
     },
     body: JSON.stringify({
       timestamp: new Date().toISOString(),

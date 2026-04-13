@@ -17,7 +17,7 @@ npm run dev
 
 **What to check:**
 1. Open browser console
-2. Look for: `Site initialized: builddesk (UUID)`
+2. Look for: `Site initialized: brikly (UUID)`
 3. Try logging in
 4. Check for any errors
 
@@ -132,7 +132,7 @@ SELECT id, name, site_id FROM companies;
 SELECT id, name, site_id FROM projects;
 
 -- Verify site exists
-SELECT * FROM sites WHERE key = 'builddesk';
+SELECT * FROM sites WHERE key = 'brikly';
 ```
 
 ## 📊 What's Left
@@ -156,7 +156,7 @@ SELECT * FROM sites WHERE key = 'builddesk';
 
 **Can't log in:**
 - Check console for errors
-- Verify `sites` table has builddesk row
+- Verify `sites` table has brikly row
 - Check `site-resolver.ts` domain mapping
 
 **Data not showing:**

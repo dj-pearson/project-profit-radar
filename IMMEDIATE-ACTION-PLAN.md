@@ -1,4 +1,4 @@
-# 🎯 BuildDesk SEO: Immediate Action Plan (Next 30 Days)
+# 🎯 Brikly SEO: Immediate Action Plan (Next 30 Days)
 
 ## Week 1: Deploy Foundation & Setup Tools
 
@@ -12,7 +12,7 @@ git commit -m "Deploy comprehensive SEO strategy: AI optimization, performance, 
 git push origin main
 
 # Verify deployment
-- Test llms.txt accessibility: https://build-desk.com/llms.txt
+- Test llms.txt accessibility: https://brikly.net/llms.txt
 - Verify schema markup with Google Rich Results Test
 - Check service worker registration in browser dev tools
 - Confirm AI optimization components render correctly
@@ -24,7 +24,7 @@ git push origin main
 **Budget: $398/month**
 
 1. **SEMrush Business Account** ($199/month)
-   - Set up project for build-desk.com
+   - Set up project for brikly.net
    - Add target keywords from our research
    - Configure competitor tracking (Procore, Buildertrend, CoConstruct)
    - Set up position tracking for primary keywords
@@ -67,10 +67,10 @@ Based on search volume × conversion potential × competition analysis:
 
 **Content Outline:**
 ```markdown
-# Procore Alternative: Why 500+ Contractors Choose BuildDesk in 2025
+# Procore Alternative: Why 500+ Contractors Choose Brikly in 2025
 
 ## Executive Summary (Above-the-fold)
-- Direct comparison: BuildDesk vs Procore
+- Direct comparison: Brikly vs Procore
 - Key advantages: 60% cost savings, 10x faster setup, better mobile UX
 - Social proof: Customer count, satisfaction rating, case studies
 
@@ -80,7 +80,7 @@ Based on search volume × conversion potential × competition analysis:
 - Poor mobile experience for field teams
 - Over-engineered for small-medium contractors
 
-## Section 2: BuildDesk Advantages
+## Section 2: Brikly Advantages
 - Transparent, affordable pricing ($149/month vs $375+/month)
 - Quick setup with construction-specific templates
 - Mobile-first design for field workers
@@ -90,7 +90,7 @@ Based on search volume × conversion potential × competition analysis:
 [Interactive comparison table with 20+ features]
 
 ## Section 4: Customer Success Stories
-- 3 detailed case studies of Procore → BuildDesk migrations
+- 3 detailed case studies of Procore → Brikly migrations
 - ROI calculations and time-to-value metrics
 - Video testimonials from actual customers
 
@@ -177,7 +177,7 @@ Based on search volume × conversion potential × competition analysis:
 #### **Primary Listing Setup:**
 ```json
 {
-  "businessName": "BuildDesk Construction Management Software",
+  "businessName": "Brikly Construction Management Software",
   "categories": ["Software Company", "Business Management Consultant"],
   "serviceAreas": ["United States"],
   "description": "Construction management software designed for small to medium contractors. Real-time job costing, mobile field management, and OSHA compliance.",
@@ -187,8 +187,8 @@ Based on search volume × conversion potential × competition analysis:
     "Small Business Solutions",
     "Mobile Apps Available"
   ],
-  "website": "https://build-desk.com",
-  "phone": "+1-800-BUILD-DESK"
+  "website": "https://brikly.net",
+  "phone": "+1-800-BRIKLY"
 }
 ```
 
@@ -202,7 +202,7 @@ Based on search volume × conversion potential × competition analysis:
 
 #### **Landing Page Template:**
 ```markdown
-# Construction Management Software [City Name] | BuildDesk
+# Construction Management Software [City Name] | Brikly
 
 ## Hero Section
 - "Trusted by [X] contractors in [City Name]"

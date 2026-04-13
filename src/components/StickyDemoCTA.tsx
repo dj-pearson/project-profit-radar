@@ -35,7 +35,7 @@ export const StickyDemoCTA: React.FC<StickyDemoCTAProps> = ({ className }) => {
           className
         )}
       >
-        <span className="text-sm font-medium">Try BuildDesk Free</span>
+        <span className="text-sm font-medium">Try Brikly Free</span>
         <div className="flex items-center gap-2">
           <Button size="sm" variant="hero" className="text-xs h-8" asChild>
             <Link to="/auth">Start Trial</Link>
@@ -72,7 +72,7 @@ export const StickyDemoCTA: React.FC<StickyDemoCTAProps> = ({ className }) => {
         <div className="space-y-3 pr-6">
           <div>
             <h3 className="font-semibold text-construction-dark text-sm">
-              See BuildDesk in Action
+              See Brikly in Action
             </h3>
             <p className="text-xs text-muted-foreground mt-1">
               Watch how contractors save 23% on project costs

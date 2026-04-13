@@ -63,7 +63,7 @@ export const MFASetupDialog: React.FC<MFASetupDialogProps> = ({
     setSecret(newSecret);
 
     // Generate QR code URL for authenticator apps
-    const appName = 'Build Desk';
+    const appName = 'Brikly';
     const userEmail = user?.email || 'user@example.com';
     const qrUrl = `otpauth://totp/${encodeURIComponent(appName)}:${encodeURIComponent(userEmail)}?secret=${newSecret}&issuer=${encodeURIComponent(appName)}`;
     setQrCodeUrl(qrUrl);

@@ -20,10 +20,10 @@ All Pearson Media products now share a **single unified Supabase database** with
 
 ## 🏢 Current Tenants
 
-### 1. Build-Desk (`builddesk`)
+### 1. Brikly (`brikly`)
 **Status:** ✅ Fully Migrated
 **Site ID:** `edd72acf-dcac-47cf-820b-8960fd47e60b`
-**Domain:** build-desk.com
+**Domain:** brikly.net
 **Industry:** Construction Management
 
 **Tables:** 25+ core tables including:
@@ -92,7 +92,7 @@ ORDER BY created_at;
 
 | key | name | domain | is_active | is_production |
 |-----|------|--------|-----------|---------------|
-| builddesk | Build-Desk | build-desk.com | true | false |
+| brikly | Brikly | brikly.net | true | false |
 | stylist | Stylist Bio | stylbio.com | true | false |
 
 ### Authentication
@@ -101,7 +101,7 @@ ORDER BY created_at;
 - JWT contains `site_id` for filtering
 
 ### Edge Functions
-- Located in Build-Desk repository
+- Located in Brikly repository
 - Shared auth helpers in `_shared/auth-helpers.ts`
 - All functions must extract and filter by `site_id`
 
@@ -120,7 +120,7 @@ Layer 1: Site Isolation
   └─ site_id = current_site_id()
       Users can only see their site's data
       
-      Layer 2: Company Isolation (Build-Desk)
+      Layer 2: Company Isolation (Brikly)
         └─ company_id IN (user's companies)
             Users can only see their company's data
 ```
@@ -263,7 +263,7 @@ For each tenant:
 
 ## 📚 Documentation
 
-**Build-Desk Repository:**
+**Brikly Repository:**
 - `MULTI_TENANT_AGENT_INSTRUCTIONS.md` - AI agent guidelines
 - `TENANT_MIGRATION_GUIDE.md` - Full migration process
 - `Database_Migration.md` - Original migration plan
@@ -279,7 +279,7 @@ For each tenant:
 
 ## 📊 Statistics
 
-- **Total Tenants:** 2 (builddesk, stylist)
+- **Total Tenants:** 2 (brikly, stylist)
 - **Total Tables with site_id:** 60+
 - **RLS Policies:** 100+
 - **Shared Auth Users:** All users across tenants
@@ -289,7 +289,7 @@ For each tenant:
 
 ## 🎯 Next Steps
 
-### Build-Desk:
+### Brikly:
 - [ ] Continue updating hooks as features are used
 - [ ] Update Edge Functions when needed
 - [ ] Monitor for any missing site_id filters

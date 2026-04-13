@@ -57,49 +57,49 @@ BEGIN
 END $$;
 
 -- =====================================================
--- STEP 2: BACKFILL site_id FROM BUILDDESK SITE
+-- STEP 2: BACKFILL site_id FROM BRIKLY SITE
 -- =====================================================
 
 DO $$
 DECLARE
-  v_builddesk_site_id UUID;
+  v_brikly_site_id UUID;
 BEGIN
-  -- Get or create BuildDesk site
-  SELECT id INTO v_builddesk_site_id FROM sites WHERE key = 'builddesk' LIMIT 1;
+  -- Get or create Brikly site
+  SELECT id INTO v_brikly_site_id FROM sites WHERE key = 'brikly' LIMIT 1;
 
-  -- If no BuildDesk site exists, create it
-  IF v_builddesk_site_id IS NULL THEN
+  -- If no Brikly site exists, create it
+  IF v_brikly_site_id IS NULL THEN
     INSERT INTO sites (key, name, domain, is_active, is_production)
-    VALUES ('builddesk', 'BuildDesk', 'build-desk.com', true, true)
-    RETURNING id INTO v_builddesk_site_id;
-    RAISE NOTICE 'Created BuildDesk site with id: %', v_builddesk_site_id;
+    VALUES ('brikly', 'Brikly', 'brikly.net', true, true)
+    RETURNING id INTO v_brikly_site_id;
+    RAISE NOTICE 'Created Brikly site with id: %', v_brikly_site_id;
   END IF;
 
   -- Backfill site_id for trusted_devices
   IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'trusted_devices') THEN
-    UPDATE trusted_devices SET site_id = v_builddesk_site_id WHERE site_id IS NULL;
+    UPDATE trusted_devices SET site_id = v_brikly_site_id WHERE site_id IS NULL;
     RAISE NOTICE 'Backfilled site_id for trusted_devices';
   END IF;
 
   -- Backfill site_id for user_sessions
   IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'user_sessions') THEN
-    UPDATE user_sessions SET site_id = v_builddesk_site_id WHERE site_id IS NULL;
+    UPDATE user_sessions SET site_id = v_brikly_site_id WHERE site_id IS NULL;
     RAISE NOTICE 'Backfilled site_id for user_sessions';
   END IF;
 
   -- Backfill site_id for mfa_devices
   IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'mfa_devices') THEN
-    UPDATE mfa_devices SET site_id = v_builddesk_site_id WHERE site_id IS NULL;
+    UPDATE mfa_devices SET site_id = v_brikly_site_id WHERE site_id IS NULL;
     RAISE NOTICE 'Backfilled site_id for mfa_devices';
   END IF;
 
   -- Backfill site_id for sso_connections
   IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'sso_connections') THEN
-    UPDATE sso_connections SET site_id = v_builddesk_site_id WHERE site_id IS NULL;
+    UPDATE sso_connections SET site_id = v_brikly_site_id WHERE site_id IS NULL;
     RAISE NOTICE 'Backfilled site_id for sso_connections';
   END IF;
 
-  RAISE NOTICE 'Completed backfilling site_id = % for all device trust tables', v_builddesk_site_id;
+  RAISE NOTICE 'Completed backfilling site_id = % for all device trust tables', v_brikly_site_id;
 END $$;
 
 -- =====================================================

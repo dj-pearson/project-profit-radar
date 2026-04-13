@@ -468,13 +468,13 @@ INSERT INTO tenants (
   owner_email,
   billing_email
 ) VALUES (
-  'BuildDesk Demo',
-  'builddesk-demo',
-  'BuildDesk Demo Company',
+  'Brikly Demo',
+  'brikly-demo',
+  'Brikly Demo Company',
   'professional',
   'active',
-  'demo@build-desk.com',
-  'billing@build-desk.com'
+  'demo@brikly.net',
+  'billing@brikly.net'
 ) ON CONFLICT (slug) DO NOTHING;
 
 -- =====================================================

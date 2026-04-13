@@ -1,4 +1,4 @@
-# BuildDesk SEO & GEO Strategy
+# Brikly SEO & GEO Strategy
 ## Comprehensive Audit & Implementation Roadmap
 
 **Date:** November 14, 2025  
@@ -9,7 +9,7 @@
 
 ## Executive Summary
 
-BuildDesk needs a complete SEO transformation focused on:
+Brikly needs a complete SEO transformation focused on:
 1. **GEO (Generative Engine Optimization)** - Optimizing for AI search engines (Perplexity, ChatGPT Search, Google AI Overviews)
 2. **Long-tail keyword dominance** - Avoiding direct competition with Procore/Buildertrend on high-volume terms
 3. **Dynamic sitemap generation** - Auto-updating with blog content
@@ -62,10 +62,10 @@ AI models parse content better when it's:
 AI engines understand entities better than keywords:
 ```
 Instead of: "software for contractors"
-Use: "BuildDesk is construction management software for small contractors"
+Use: "Brikly is construction management software for small contractors"
 
 Include entities:
-- Company: BuildDesk
+- Company: Brikly
 - Category: Construction Management Software
 - Audience: Small to Medium Construction Contractors
 - Location: United States (expandable)
@@ -78,7 +78,7 @@ Structure content to directly answer questions:
 ## What is Real-Time Job Costing?
 
 Real-time job costing is a construction financial management approach 
-that tracks project costs as they occur, not weeks later. BuildDesk 
+that tracks project costs as they occur, not weeks later. Brikly 
 provides real-time job costing by automatically capturing labor, 
 materials, and equipment costs as they happen in the field.
 
@@ -101,7 +101,7 @@ Use schema.org markup and semantic HTML to help AI understand context:
 {
   "@context": "https://schema.org",
   "@type": "SoftwareApplication",
-  "name": "BuildDesk",
+  "name": "Brikly",
   "applicationCategory": "BusinessApplication",
   "applicationSubCategory": "Construction Management Software",
   "operatingSystem": "Web, iOS, Android",
@@ -130,9 +130,9 @@ Use schema.org markup and semantic HTML to help AI understand context:
 ### Keyword Tier Strategy
 
 #### Tier 1: Primary Money Keywords (High Intent, Medium Competition)
-Focus on financial intelligence terms where BuildDesk has clear differentiation:
+Focus on financial intelligence terms where Brikly has clear differentiation:
 
-| Keyword | Monthly Searches | Competition | BuildDesk Angle |
+| Keyword | Monthly Searches | Competition | Brikly Angle |
 |---------|-----------------|-------------|-----------------|
 | construction job costing software | 2,400 | Medium | Real-time vs. monthly |
 | real-time construction budgeting | 880 | Low | Core differentiator |
@@ -174,7 +174,7 @@ Target these for quick wins and AI search dominance:
 
 **Title Tag:** (58 chars)
 ```
-BuildDesk | Real-Time Job Costing for Contractors
+Brikly | Real-Time Job Costing for Contractors
 ```
 
 **Meta Description:** (155 chars)
@@ -238,7 +238,7 @@ Hub page: `/resources/construction-technology-guide`
 
 **Supporting Content:**
 1. "Procore Alternatives for Small Contractors (Honest Comparison)"
-2. "Buildertrend vs BuildDesk: Feature & Pricing Comparison"
+2. "Buildertrend vs Brikly: Feature & Pricing Comparison"
 3. "Construction Management Software Buyer's Guide (2025)"
 4. "Mobile Apps for Construction: What Field Crews Actually Need"
 5. "Construction Software Integrations: QuickBooks, Stripe & More"
@@ -291,15 +291,15 @@ Based on the technical spec, you have:
 <?xml version="1.0" encoding="UTF-8"?>
 <sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <sitemap>
-    <loc>https://build-desk.com/sitemap-pages.xml</loc>
+    <loc>https://brikly.net/sitemap-pages.xml</loc>
     <lastmod>2025-11-14</lastmod>
   </sitemap>
   <sitemap>
-    <loc>https://build-desk.com/sitemap-blog.xml</loc>
+    <loc>https://brikly.net/sitemap-blog.xml</loc>
     <lastmod>2025-11-14</lastmod>
   </sitemap>
   <sitemap>
-    <loc>https://build-desk.com/sitemap-features.xml</loc>
+    <loc>https://brikly.net/sitemap-features.xml</loc>
     <lastmod>2025-11-14</lastmod>
   </sitemap>
 </sitemapindex>
@@ -320,7 +320,7 @@ const { data: blogPosts } = await supabase
 // Generate sitemap-blog.xml
 const blogUrls = blogPosts.map(post => `
   <url>
-    <loc>https://build-desk.com/blog/${post.slug}</loc>
+    <loc>https://brikly.net/blog/${post.slug}</loc>
     <lastmod>${post.updated_at}</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
@@ -356,18 +356,18 @@ const blogSitemap = `<?xml version="1.0" encoding="UTF-8"?>
 {
   "@context": "https://schema.org",
   "@type": "Organization",
-  "name": "BuildDesk",
-  "url": "https://build-desk.com",
-  "logo": "https://build-desk.com/logo.png",
+  "name": "Brikly",
+  "url": "https://brikly.net",
+  "logo": "https://brikly.net/logo.png",
   "description": "Real-time job costing and financial management software for small construction contractors. Unlimited users, integrated time tracking, and QuickBooks sync.",
   "contactPoint": {
     "@type": "ContactPoint",
     "contactType": "Sales",
-    "email": "sales@build-desk.com"
+    "email": "sales@brikly.net"
   },
   "sameAs": [
-    "https://twitter.com/builddesk",
-    "https://linkedin.com/company/builddesk"
+    "https://twitter.com/brikly",
+    "https://linkedin.com/company/brikly"
   ]
 }
 ```
@@ -377,7 +377,7 @@ const blogSitemap = `<?xml version="1.0" encoding="UTF-8"?>
 {
   "@context": "https://schema.org",
   "@type": "SoftwareApplication",
-  "name": "BuildDesk",
+  "name": "Brikly",
   "applicationCategory": "BusinessApplication",
   "applicationSubCategory": "Construction Management Software",
   "operatingSystem": "Web, iOS, Android",
@@ -411,17 +411,17 @@ const blogSitemap = `<?xml version="1.0" encoding="UTF-8"?>
   "@context": "https://schema.org",
   "@type": "Article",
   "headline": "The Real Cost of Delayed Job Costing",
-  "image": "https://build-desk.com/blog/images/job-costing.jpg",
+  "image": "https://brikly.net/blog/images/job-costing.jpg",
   "author": {
     "@type": "Person",
     "name": "Dan Pearson"
   },
   "publisher": {
     "@type": "Organization",
-    "name": "BuildDesk",
+    "name": "Brikly",
     "logo": {
       "@type": "ImageObject",
-      "url": "https://build-desk.com/logo.png"
+      "url": "https://brikly.net/logo.png"
     }
   },
   "datePublished": "2025-11-14",
@@ -484,8 +484,8 @@ interface SEOHeadProps {
 }
 
 export function SEOHead({ title, description, canonical, ogImage, schema }: SEOHeadProps) {
-  const fullTitle = `${title} | BuildDesk`;
-  const defaultImage = "https://build-desk.com/og-image.png";
+  const fullTitle = `${title} | Brikly`;
+  const defaultImage = "https://brikly.net/og-image.png";
   const image = ogImage || defaultImage;
   const url = canonical || window.location.href;
 
@@ -561,7 +561,7 @@ export function SEOHead({ title, description, canonical, ogImage, schema }: SEOH
 **Messaging Framework:**
 ```
 Problem: Most construction software focuses on scheduling and tasks
-BuildDesk Solution: Financial intelligence and real-time profitability
+Brikly Solution: Financial intelligence and real-time profitability
 
 Tagline: "Know if your project is profitable today, not 30 days later"
 
@@ -705,8 +705,8 @@ Key Differentiators:
 **Priority: Medium-High**
 
 1. **Comparison Pages** (create 5 pages)
-   - "Procore vs BuildDesk: Features, Pricing & Honest Review"
-   - "Buildertrend vs BuildDesk: Which is Better for Small Contractors?"
+   - "Procore vs Brikly: Features, Pricing & Honest Review"
+   - "Buildertrend vs Brikly: Which is Better for Small Contractors?"
    - "Best Construction Management Software for Small Contractors (2025)"
    - "QuickBooks vs Construction Management Software: What You Need"
    - "Construction Job Costing Software Comparison (7 Tools Reviewed)"
@@ -762,7 +762,7 @@ Key Differentiators:
 - [ ] Identify content gaps
 
 **GEO Monitoring:**
-- [ ] Test queries in Perplexity (is BuildDesk cited?)
+- [ ] Test queries in Perplexity (is Brikly cited?)
 - [ ] Test queries in ChatGPT Search
 - [ ] Monitor Google AI Overviews for target keywords
 - [ ] Track featured snippet appearances
@@ -793,16 +793,16 @@ Key Differentiators:
 ### GEO Performance Metrics
 
 **AI Search Visibility:**
-- BuildDesk mentions in Perplexity results
+- Brikly mentions in Perplexity results
 - ChatGPT Search citations
 - Google AI Overview appearances
 - Featured in "People Also Ask" boxes
 
 **Measurement Method:**
 1. Weekly manual queries for target keywords
-2. Document which AI engine shows BuildDesk
+2. Document which AI engine shows Brikly
 3. Track citation frequency
-4. Monitor competitor mentions vs. BuildDesk mentions
+4. Monitor competitor mentions vs. Brikly mentions
 
 ### Content Performance Metrics
 
@@ -911,7 +911,7 @@ costing, you'd catch it at day 3-5, limiting losses to $500-1,000.
 
 ## How Real-Time Job Costing Solves This
 
-[Answer with BuildDesk-focused solution...]
+[Answer with Brikly-focused solution...]
 
 ## FAQ: Job Costing for Contractors
 
@@ -936,7 +936,7 @@ profit margins compared to those using monthly accounting cycles.
 #### 2. Comparison Content
 **Purpose:** Capture high-intent search traffic  
 **Format:** Feature tables, honest pros/cons, CTA to trial  
-**Example:** "Procore vs BuildDesk: Honest Comparison"
+**Example:** "Procore vs Brikly: Honest Comparison"
 
 #### 3. Ultimate Guides
 **Purpose:** Link magnets, authority building  
@@ -982,8 +982,8 @@ export function SEOHead({
   schema,
   noindex = false 
 }: SEOHeadProps) {
-  const fullTitle = title.includes('BuildDesk') ? title : `${title} | BuildDesk`;
-  const defaultImage = "https://build-desk.com/images/og-default.png";
+  const fullTitle = title.includes('Brikly') ? title : `${title} | Brikly`;
+  const defaultImage = "https://brikly.net/images/og-default.png";
   const image = ogImage || defaultImage;
   const url = canonical || window.location.href;
 
@@ -1001,7 +1001,7 @@ export function SEOHead({
       <meta property="og:url" content={url} />
       <meta property="og:image" content={image} />
       <meta property="og:type" content="website" />
-      <meta property="og:site_name" content="BuildDesk" />
+      <meta property="og:site_name" content="Brikly" />
 
       {/* Twitter Card */}
       <meta name="twitter:card" content="summary_large_image" />
@@ -1041,25 +1041,25 @@ export function SchemaOrg({ schema }: SchemaOrgProps) {
 export const organizationSchema = {
   "@context": "https://schema.org",
   "@type": "Organization",
-  "name": "BuildDesk",
-  "url": "https://build-desk.com",
-  "logo": "https://build-desk.com/images/logo.png",
+  "name": "Brikly",
+  "url": "https://brikly.net",
+  "logo": "https://brikly.net/images/logo.png",
   "description": "Real-time job costing and financial management software for small construction contractors.",
   "contactPoint": {
     "@type": "ContactPoint",
     "contactType": "Sales",
-    "email": "sales@build-desk.com"
+    "email": "sales@brikly.net"
   },
   "sameAs": [
-    "https://twitter.com/builddesk",
-    "https://linkedin.com/company/builddesk"
+    "https://twitter.com/brikly",
+    "https://linkedin.com/company/brikly"
   ]
 };
 
 export const softwareApplicationSchema = {
   "@context": "https://schema.org",
   "@type": "SoftwareApplication",
-  "name": "BuildDesk",
+  "name": "Brikly",
   "applicationCategory": "BusinessApplication",
   "applicationSubCategory": "Construction Management Software",
   "operatingSystem": "Web, iOS, Android",
@@ -1084,19 +1084,19 @@ export function createArticleSchema(article: {
     "@type": "Article",
     "headline": article.headline,
     "description": article.description,
-    "image": article.image || "https://build-desk.com/images/og-default.png",
+    "image": article.image || "https://brikly.net/images/og-default.png",
     "datePublished": article.datePublished,
     "dateModified": article.dateModified,
     "author": {
       "@type": "Person",
-      "name": article.author || "BuildDesk Team"
+      "name": article.author || "Brikly Team"
     },
     "publisher": {
       "@type": "Organization",
-      "name": "BuildDesk",
+      "name": "Brikly",
       "logo": {
         "@type": "ImageObject",
-        "url": "https://build-desk.com/images/logo.png"
+        "url": "https://brikly.net/images/logo.png"
       }
     }
   };
@@ -1167,15 +1167,15 @@ serve(async (req) => {
       const sitemap = `<?xml version="1.0" encoding="UTF-8"?>
 <sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <sitemap>
-    <loc>https://build-desk.com/sitemap-pages.xml</loc>
+    <loc>https://brikly.net/sitemap-pages.xml</loc>
     <lastmod>${new Date().toISOString().split('T')[0]}</lastmod>
   </sitemap>
   <sitemap>
-    <loc>https://build-desk.com/sitemap-blog.xml</loc>
+    <loc>https://brikly.net/sitemap-blog.xml</loc>
     <lastmod>${new Date().toISOString().split('T')[0]}</lastmod>
   </sitemap>
   <sitemap>
-    <loc>https://build-desk.com/sitemap-features.xml</loc>
+    <loc>https://brikly.net/sitemap-features.xml</loc>
     <lastmod>${new Date().toISOString().split('T')[0]}</lastmod>
   </sitemap>
 </sitemapindex>`;
@@ -1201,7 +1201,7 @@ serve(async (req) => {
         const priority = daysSincePublished < 30 ? '0.7' : '0.5';
 
         return `  <url>
-    <loc>https://build-desk.com/blog/${post.slug}</loc>
+    <loc>https://brikly.net/blog/${post.slug}</loc>
     <lastmod>${lastmod}</lastmod>
     <changefreq>monthly</changefreq>
     <priority>${priority}</priority>
@@ -1230,7 +1230,7 @@ ${blogUrls}
       ];
 
       const featureUrls = featurePages.map(page => `  <url>
-    <loc>https://build-desk.com/features/${page.slug}</loc>
+    <loc>https://brikly.net/features/${page.slug}</loc>
     <lastmod>${new Date().toISOString().split('T')[0]}</lastmod>
     <changefreq>weekly</changefreq>
     <priority>${page.priority}</priority>
@@ -1258,7 +1258,7 @@ ${featureUrls}
       ];
 
       const pageUrls = staticPages.map(page => `  <url>
-    <loc>https://build-desk.com/${page.path}</loc>
+    <loc>https://brikly.net/${page.path}</loc>
     <lastmod>${new Date().toISOString().split('T')[0]}</lastmod>
     <changefreq>${page.changefreq}</changefreq>
     <priority>${page.priority}</priority>
@@ -1298,7 +1298,7 @@ export function HomePage() {
       <SEOHead
         title="Real-Time Job Costing for Contractors"
         description="Construction job costing software with real-time budget tracking. Know your project profitability today, not 30 days later. Unlimited users, $350/month."
-        canonical="https://build-desk.com"
+        canonical="https://brikly.net"
         schema={[organizationSchema, softwareApplicationSchema]}
       />
 
@@ -1359,7 +1359,7 @@ export function BlogPostLayout({ post, faqs }: BlogPostLayoutProps) {
       <SEOHead
         title={post.title}
         description={post.excerpt}
-        canonical={`https://build-desk.com/blog/${post.slug}`}
+        canonical={`https://brikly.net/blog/${post.slug}`}
         ogImage={post.featuredImage}
         schema={schemas}
       />
@@ -1404,7 +1404,7 @@ export function BlogPostLayout({ post, faqs }: BlogPostLayoutProps) {
 **Action:**
 - Find homepage component
 - Update H1 tag
-- Update title tag: "BuildDesk | Real-Time Job Costing for Contractors"
+- Update title tag: "Brikly | Real-Time Job Costing for Contractors"
 - Update meta description (see example in Part 6)
 
 #### 2. Verify Sitemap is Dynamic (1 hour)
@@ -1414,7 +1414,7 @@ export function BlogPostLayout({ post, faqs }: BlogPostLayoutProps) {
 - If not, update `sitemap-generator` edge function
 
 **Action:**
-- Access `https://build-desk.com/sitemap.xml`
+- Access `https://brikly.net/sitemap.xml`
 - Verify blog posts are included
 - Submit to Google Search Console
 
@@ -1458,7 +1458,7 @@ export function BlogPostLayout({ post, faqs }: BlogPostLayoutProps) {
 
 ## Conclusion
 
-This SEO strategy transforms BuildDesk from "another construction management tool" into the dominant voice for **construction financial intelligence**. 
+This SEO strategy transforms Brikly from "another construction management tool" into the dominant voice for **construction financial intelligence**. 
 
 ### Key Takeaways:
 
@@ -1487,7 +1487,7 @@ This SEO strategy transforms BuildDesk from "another construction management too
 4. Assign content creation responsibilities
 5. Begin tracking metrics (rankings, traffic, citations)
 
-**This strategy will take BuildDesk from invisibility to SEO dominance in construction financial software within 12 months.**
+**This strategy will take Brikly from invisibility to SEO dominance in construction financial software within 12 months.**
 
 ---
 

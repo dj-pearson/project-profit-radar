@@ -121,7 +121,7 @@ serve(async (req) => {
         {
           source_domain: 'example.com',
           source_url: 'https://example.com/article',
-          anchor_text: 'BuildDesk',
+          anchor_text: 'Brikly',
           domain_rating: 75,
         },
         {

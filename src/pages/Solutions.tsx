@@ -73,8 +73,8 @@ const Solutions = () => {
   return (
     <div className="min-h-screen bg-background">
       <SEOMetaTags
-        title="Construction Management Solutions by Contractor Type | BuildDesk"
-        description="Specialized construction management solutions for residential contractors, commercial builders, specialty trades, and small GCs. See how BuildDesk fits your business."
+        title="Construction Management Solutions by Contractor Type | Brikly"
+        description="Specialized construction management solutions for residential contractors, commercial builders, specialty trades, and small GCs. See how Brikly fits your business."
         keywords={[
           'construction management solutions',
           'residential contractor software',
@@ -105,7 +105,7 @@ const Solutions = () => {
         
         <QuickAnswerSnippet
           question="What construction management solution is best for my contractor type?"
-          answer="BuildDesk offers specialized workflows for residential contractors (homeowner portals, change orders), commercial contractors (multi-phase tracking, compliance), specialty trades (service calls, material tracking), and small GCs (subcontractor management, financial reporting)."
+          answer="Brikly offers specialized workflows for residential contractors (homeowner portals, change orders), commercial contractors (multi-phase tracking, compliance), specialty trades (service calls, material tracking), and small GCs (subcontractor management, financial reporting)."
         />
 
         {/* Solutions Grid */}
@@ -191,10 +191,10 @@ const Solutions = () => {
         {/* CTA Section */}
         <div className="bg-primary/5 rounded-lg p-8 text-center">
           <h2 className="text-2xl font-semibold mb-4">
-            Ready to See BuildDesk in Action?
+            Ready to See Brikly in Action?
           </h2>
           <p className="text-muted-foreground mb-6 max-w-2xl mx-auto">
-            Schedule a personalized demo to see how BuildDesk works for your specific 
+            Schedule a personalized demo to see how Brikly works for your specific 
             type of construction business. No generic presentations – just your workflows.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">

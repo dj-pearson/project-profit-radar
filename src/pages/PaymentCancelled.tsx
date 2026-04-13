@@ -93,7 +93,7 @@ export const PaymentCancelled = () => {
         {/* Support Link */}
         <p className="text-center text-sm text-muted-foreground mt-6 animate-in fade-in duration-700 delay-1000">
           Having trouble with payments?{' '}
-          <a href="mailto:support@builddesk.com" className="text-construction-blue hover:text-construction-orange">
+          <a href="mailto:support@brikly.com" className="text-construction-blue hover:text-construction-orange">
             Contact our support team
           </a>
         </p>

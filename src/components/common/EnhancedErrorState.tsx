@@ -128,7 +128,7 @@ const ERROR_METADATA: Record<
       },
       {
         text: "Check our status page for ongoing incidents",
-        action: () => window.open("https://status.builddesk.com", "_blank"),
+        action: () => window.open("https://status.brikly.com", "_blank"),
         actionLabel: "Status Page",
         icon: ExternalLink,
       },

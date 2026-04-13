@@ -4,14 +4,14 @@
 
 ### Migration Files Created
 
-I've successfully created a complete multi-site database migration for Build-Desk with the following files:
+I've successfully created a complete multi-site database migration for Brikly with the following files:
 
 #### 1. Database Migrations (4 files)
 
 **`supabase/migrations/20251128000001_create_sites_table.sql`**
 - Creates `sites` table to track all Pearson Media products
 - Adds helper functions: `get_site_by_domain()`, `get_site_by_key()`
-- Seeds Build-Desk as the initial site
+- Seeds Brikly as the initial site
 - Implements RLS policies for site access
 
 **`supabase/migrations/20251128000002_add_site_id_to_core_tables.sql`**
@@ -22,7 +22,7 @@ I've successfully created a complete multi-site database migration for Build-Des
   - tasks, crm_contacts, crm_leads
   - notifications, audit_logs, crew_gps_checkins
   - daily_reports, change_orders
-- Backfills all rows with Build-Desk site_id
+- Backfills all rows with Brikly site_id
 - Creates indexes for performance
 
 **`supabase/migrations/20251128000003_add_site_id_to_extended_tables.sql`**
@@ -136,7 +136,7 @@ I've successfully created a complete multi-site database migration for Build-Des
 │           Single Supabase Project               │
 ├─────────────────────────────────────────────────┤
 │  Sites Table                                    │
-│  ├─ builddesk (Build-Desk)                     │
+│  ├─ brikly (Brikly)                     │
 │  ├─ realestate (RealEstate Bio)                │
 │  ├─ salonpros (SalonPros Bio)                  │
 │  └─ ...more sites                               │

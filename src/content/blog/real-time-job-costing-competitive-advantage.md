@@ -3,7 +3,7 @@
 **Target Keyword:** real-time job costing construction
 **Published:** November 11, 2025
 **Reading Time:** 10 minutes
-**Author:** BuildDesk Team
+**Author:** Brikly Team
 
 ---
 
@@ -752,7 +752,7 @@ No credit card required. See the difference in 10 minutes.
 ---
 
 **About the Author:**
-The BuildDesk Team has helped 500+ construction companies implement real-time job costing. We've analyzed millions in project data and identified the patterns that separate profitable contractors from struggling ones.
+The Brikly Team has helped 500+ construction companies implement real-time job costing. We've analyzed millions in project data and identified the patterns that separate profitable contractors from struggling ones.
 
 **Related Reading:**
 - [Why Contractors Fail: Financial Blindness →](/blog/why-contractors-fail-financial-blindness)

@@ -103,12 +103,12 @@ After OAuth setup, you'll also need to verify website ownership:
 
 ### Google Search Console
 1. Go to [Google Search Console](https://search.google.com/search-console)
-2. Add property: `https://build-desk.com`
+2. Add property: `https://brikly.net`
 3. Verify ownership using HTML file upload or DNS record
 
 ### Bing Webmaster Tools
 1. Go to [Bing Webmaster Tools](https://www.bing.com/webmasters)
-2. Add site: `https://build-desk.com` 
+2. Add site: `https://brikly.net` 
 3. Verify ownership using XML file or meta tag
 
 ## Troubleshooting

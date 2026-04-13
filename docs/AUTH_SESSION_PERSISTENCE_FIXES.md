@@ -2,7 +2,7 @@
 
 ## Summary
 
-This document outlines the comprehensive fixes implemented to resolve authentication session persistence issues in BuildDesk. The fixes ensure users remain on their current page after reload and are properly redirected back to their intended destination after authentication.
+This document outlines the comprehensive fixes implemented to resolve authentication session persistence issues in Brikly. The fixes ensure users remain on their current page after reload and are properly redirected back to their intended destination after authentication.
 
 ## Problem Statement
 

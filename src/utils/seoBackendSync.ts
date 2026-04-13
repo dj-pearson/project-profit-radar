@@ -27,7 +27,7 @@ export const syncSEOPagesToBackend = async (): Promise<{ success: boolean; messa
       // Homepage
       {
         page_path: '/',
-        title: 'Construction Management Software for Small & Mid GC Teams | BuildDesk',
+        title: 'Construction Management Software for Small & Mid GC Teams | Brikly',
         description: 'Job costing, scheduling, daily logs, OSHA reporting, and time tracking in one simple tool for U.S. contractors. Simple setup, fast onboarding, clear dashboards for jobs, crews, and costs.',
         keywords: ['construction management software', 'construction software for small business', 'job costing software construction', 'procore alternative small contractors'],
         priority: 1.0,
@@ -39,7 +39,7 @@ export const syncSEOPagesToBackend = async (): Promise<{ success: boolean; messa
       // Resource Guides
       {
         page_path: '/resources/best-construction-management-software-small-business-2025',
-        title: 'Best Construction Management Software for Small Business (2025) | BuildDesk',
+        title: 'Best Construction Management Software for Small Business (2025) | Brikly',
         description: 'Complete guide to choosing construction management software for small contractors. Compare features, pricing, and ROI of top 10 platforms.',
         keywords: ['best construction management software', 'construction software small business', 'contractor software comparison'],
         priority: 0.8,
@@ -48,7 +48,7 @@ export const syncSEOPagesToBackend = async (): Promise<{ success: boolean; messa
 
       {
         page_path: '/resources/job-costing-construction-setup-guide',
-        title: 'Job Costing in Construction: Setup Guide & Common Mistakes | BuildDesk',
+        title: 'Job Costing in Construction: Setup Guide & Common Mistakes | Brikly',
         description: 'Master job costing with our step-by-step guide. Learn to track costs, improve margins, and avoid costly mistakes.',
         keywords: ['job costing construction', 'construction cost tracking', 'construction profit margins'],
         priority: 0.7,
@@ -57,7 +57,7 @@ export const syncSEOPagesToBackend = async (): Promise<{ success: boolean; messa
 
       {
         page_path: '/resources/osha-safety-logs-digital-playbook',
-        title: 'OSHA Safety Logs: Digital Playbook for Construction Teams | BuildDesk',
+        title: 'OSHA Safety Logs: Digital Playbook for Construction Teams | Brikly',
         description: 'Complete guide to OSHA compliance. Templates, workflows, and digital tools to keep your team safe and compliant.',
         keywords: ['OSHA safety logs', 'construction safety compliance', 'OSHA digital forms'],
         priority: 0.7,
@@ -66,7 +66,7 @@ export const syncSEOPagesToBackend = async (): Promise<{ success: boolean; messa
 
       {
         page_path: '/resources/construction-scheduling-software-prevent-delays',
-        title: 'Construction Scheduling Software: Stop Project Delays | BuildDesk',
+        title: 'Construction Scheduling Software: Stop Project Delays | Brikly',
         description: 'Simple scheduling rules that prevent delays. Learn how small contractors can improve project timelines.',
         keywords: ['construction scheduling software', 'project scheduling construction', 'prevent construction delays'],
         priority: 0.7,
@@ -75,7 +75,7 @@ export const syncSEOPagesToBackend = async (): Promise<{ success: boolean; messa
 
       {
         page_path: '/resources/construction-daily-logs-best-practices',
-        title: 'Construction Daily Logs: What to Track and Why It Pays | BuildDesk',
+        title: 'Construction Daily Logs: What to Track and Why It Pays | Brikly',
         description: 'Essential guide to daily logs that reduce rework and improve project outcomes. Templates and best practices included.',
         keywords: ['construction daily logs', 'construction field reports', 'daily log templates'],
         priority: 0.7,
@@ -84,7 +84,7 @@ export const syncSEOPagesToBackend = async (): Promise<{ success: boolean; messa
 
       {
         page_path: '/resources/quickbooks-integration-guide',
-        title: 'QuickBooks Integration Guide for Construction Companies | BuildDesk',
+        title: 'QuickBooks Integration Guide for Construction Companies | Brikly',
         description: 'Step-by-step guide to integrate QuickBooks with construction management software. Eliminate double entry, sync job costs automatically.',
         keywords: ['quickbooks construction integration', 'construction accounting software', 'job cost accounting'],
         priority: 0.7,
@@ -102,28 +102,28 @@ export const syncSEOPagesToBackend = async (): Promise<{ success: boolean; messa
 
       // Comparison Pages
       {
-        page_path: '/resources/procore-vs-builddesk-small-contractors',
-        title: 'Procore vs BuildDesk: Which is Better for Small GC Teams? | 2025 Comparison',
-        description: 'Honest comparison of Procore and BuildDesk for small contractors. Features, pricing, and ease of use compared.',
-        keywords: ['procore vs builddesk', 'procore alternative', 'construction software comparison'],
+        page_path: '/resources/procore-vs-brikly-small-contractors',
+        title: 'Procore vs Brikly: Which is Better for Small GC Teams? | 2025 Comparison',
+        description: 'Honest comparison of Procore and Brikly for small contractors. Features, pricing, and ease of use compared.',
+        keywords: ['procore vs brikly', 'procore alternative', 'construction software comparison'],
         priority: 0.8,
         change_frequency: 'monthly'
       },
 
       {
-        page_path: '/builddesk-vs-buildertrend-comparison',
-        title: 'BuildDesk vs Buildertrend: Feature & Pricing Comparison 2025',
-        description: 'Side-by-side comparison of BuildDesk and Buildertrend for residential and commercial contractors.',
-        keywords: ['builddesk vs buildertrend', 'buildertrend alternative', 'residential construction software'],
+        page_path: '/brikly-vs-buildertrend-comparison',
+        title: 'Brikly vs Buildertrend: Feature & Pricing Comparison 2025',
+        description: 'Side-by-side comparison of Brikly and Buildertrend for residential and commercial contractors.',
+        keywords: ['brikly vs buildertrend', 'buildertrend alternative', 'residential construction software'],
         priority: 0.8,
         change_frequency: 'monthly'
       },
 
       {
-        page_path: '/builddesk-vs-coconstruct',
-        title: 'BuildDesk vs CoConstruct 2025: Which is Better for Your Construction Business?',
-        description: 'Compare BuildDesk and CoConstruct construction management software. See pricing, features, pros and cons.',
-        keywords: ['builddesk vs coconstruct', 'coconstruct alternative', 'construction management software comparison'],
+        page_path: '/brikly-vs-coconstruct',
+        title: 'Brikly vs CoConstruct 2025: Which is Better for Your Construction Business?',
+        description: 'Compare Brikly and CoConstruct construction management software. See pricing, features, pros and cons.',
+        keywords: ['brikly vs coconstruct', 'coconstruct alternative', 'construction management software comparison'],
         priority: 0.8,
         change_frequency: 'monthly'
       },
@@ -150,9 +150,9 @@ export const syncSEOPagesToBackend = async (): Promise<{ success: boolean; messa
       // Core Pages
       {
         page_path: '/faq',
-        title: 'Frequently Asked Questions | BuildDesk Construction Management',
-        description: 'Get answers to common questions about BuildDesk construction management software. Pricing, features, implementation, and more.',
-        keywords: ['builddesk faq', 'construction software questions', 'construction management help'],
+        title: 'Frequently Asked Questions | Brikly Construction Management',
+        description: 'Get answers to common questions about Brikly construction management software. Pricing, features, implementation, and more.',
+        keywords: ['brikly faq', 'construction software questions', 'construction management help'],
         priority: 0.5,
         change_frequency: 'monthly'
       }
@@ -199,14 +199,14 @@ export const syncSEOPagesToBackend = async (): Promise<{ success: boolean; messa
 export const updateSEOConfiguration = async () => {
   try {
     const seoConfig = {
-      canonical_domain: 'https://builddesk.com',
-      site_name: 'BuildDesk',
+      canonical_domain: 'https://brikly.com',
+      site_name: 'Brikly',
       site_description: 'Construction Management Platform for SMB Contractors',
       meta_defaults: {
-        title_suffix: ' | BuildDesk',
+        title_suffix: ' | Brikly',
         og_type: 'website',
         twitter_card: 'summary_large_image',
-        twitter_site: '@builddesk'
+        twitter_site: '@brikly'
       },
       performance_thresholds: {
         lcp: 2500,
@@ -224,8 +224,8 @@ export const updateSEOConfiguration = async () => {
     const { error } = await supabase
       .from('seo_configurations')
       .upsert({
-        canonical_domain: 'https://builddesk.com',
-        site_name: 'BuildDesk',
+        canonical_domain: 'https://brikly.com',
+        site_name: 'Brikly',
         site_description: 'Construction Management Platform for SMB Contractors',
         updated_at: new Date().toISOString()
       });
@@ -286,7 +286,7 @@ export const checkSEOSyncStatus = async () => {
       '/resources/best-construction-management-software-small-business-2025',
       '/resources/job-costing-construction-setup-guide',
       '/resources/osha-safety-logs-digital-playbook',
-      '/builddesk-vs-coconstruct',
+      '/brikly-vs-coconstruct',
       '/topics/construction-management-basics',
       '/faq'
     ];

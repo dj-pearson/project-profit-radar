@@ -301,7 +301,7 @@ describe('RateLimiter', () => {
     });
 
     it('handles corrupted localStorage gracefully', () => {
-      localStorage.setItem('builddesk_ratelimit_corrupt', 'not json');
+      localStorage.setItem('brikly_ratelimit_corrupt', 'not json');
 
       const limiter = createTestLimiter('corrupt', 5);
       const result = limiter.peek();
@@ -312,7 +312,7 @@ describe('RateLimiter', () => {
 
     it('handles invalid state values gracefully', () => {
       localStorage.setItem(
-        'builddesk_ratelimit_invalid',
+        'brikly_ratelimit_invalid',
         JSON.stringify({ tokens: -5, lastRefill: 0 }),
       );
 

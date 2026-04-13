@@ -115,7 +115,7 @@ const handleSubscriptionSetup = async () => {
 ```typescript
 export async function getSiteConfig(): Promise<SiteConfig | null> {
   const hostname = window.location.hostname;
-  const siteKey = siteKeyMap[hostname] || 'builddesk';
+  const siteKey = siteKeyMap[hostname] || 'brikly';
   
   // Queries sites table WITHOUT authentication
   const { data, error } = await supabase
@@ -238,7 +238,7 @@ console.log('❌ Company error:', companyError);
 2. Navigate to app
 3. Check localStorage for `site_id`
 4. Verify `getSiteConfig()` returns valid data
-5. ✅ Should see BuildDesk site config
+5. ✅ Should see Brikly site config
 
 ### Test Case 3: RLS Verification
 ```sql
@@ -247,11 +247,11 @@ SET ROLE authenticated;
 SET request.jwt.claim.sub = '<user_uuid>';
 
 -- Test site read
-SELECT * FROM sites WHERE key = 'builddesk';  -- Should return row
+SELECT * FROM sites WHERE key = 'brikly';  -- Should return row
 
 -- Test company insert
 INSERT INTO companies (name, site_id, industry_type, company_size, annual_revenue_range)
-VALUES ('Test Co', '<builddesk_site_id>', 'residential', '1-10', 'startup');  -- Should succeed
+VALUES ('Test Co', '<brikly_site_id>', 'residential', '1-10', 'startup');  -- Should succeed
 ```
 
 ## Next Steps

@@ -9,7 +9,7 @@
  * - reset_password: Password reset verification
  * - reauthentication: Verify identity for sensitive actions
  *
- * Uses Amazon SES SMTP for reliable email delivery with BuildDesk branding.
+ * Uses Amazon SES SMTP for reliable email delivery with Brikly branding.
  */
 
 import { serve } from 'https://deno.land/std@0.190.0/http/server.ts';

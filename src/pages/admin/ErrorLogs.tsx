@@ -265,7 +265,7 @@ export const ErrorLogs: React.FC = () => {
   };
 
   const formatErrorReport = (e: ErrorLog): string => {
-    return `=== BuildDesk Error Report ===
+    return `=== Brikly Error Report ===
 Date: ${e.created_at || e.timestamp || 'Unknown'}
 Error Type: ${e.error_type} | Severity: ${e.severity || 'unknown'}
 Page: ${e.url || 'Unknown'}

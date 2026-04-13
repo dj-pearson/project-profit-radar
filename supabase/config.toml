@@ -1,4 +1,4 @@
-project_id = "builddesk"
+project_id = "brikly"
 
 [api]
 enabled = true

@@ -1,4 +1,4 @@
-# BuildDesk Usability Improvements
+# Brikly Usability Improvements
 
 **Date:** 2025-11-05
 **Status:** ✅ Complete
@@ -6,7 +6,7 @@
 
 ## Overview
 
-This document outlines comprehensive usability improvements added to the BuildDesk platform to enhance the user experience for contractors, field workers, and office staff. These improvements focus on discoverability, accessibility, mobile-friendliness, and reducing friction in common workflows.
+This document outlines comprehensive usability improvements added to the Brikly platform to enhance the user experience for contractors, field workers, and office staff. These improvements focus on discoverability, accessibility, mobile-friendliness, and reducing friction in common workflows.
 
 ---
 
@@ -194,7 +194,7 @@ Visually highlights search matches to help users understand why results appeared
 **Usage Example:**
 ```tsx
 <SearchHighlight
-  text="BuildDesk Construction Management Software"
+  text="Brikly Construction Management Software"
   query="desk"
   highlightClassName="bg-yellow-200 font-bold"
 />
@@ -618,7 +618,7 @@ import {
 ## 🙏 Credits
 
 **Implemented by:** Claude (AI Assistant)
-**Requested by:** BuildDesk Team
+**Requested by:** Brikly Team
 **Date:** 2025-11-05
 **Session:** `claude/improve-platform-usability-011CUqaNewLY2v24m4bE99qz`
 

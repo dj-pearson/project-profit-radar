@@ -30,7 +30,7 @@ export const notFoundRoute = (
     element={
       <div className="min-h-screen bg-background text-foreground flex items-center justify-center">
         <div className="text-center">
-          <h1 className="text-4xl font-bold mb-4">BuildDesk</h1>
+          <h1 className="text-4xl font-bold mb-4">Brikly</h1>
           <p className="text-muted-foreground">Page not found</p>
         </div>
       </div>

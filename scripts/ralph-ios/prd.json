@@ -1,5 +1,5 @@
 {
-  "project": "BuildDesk iOS Production Readiness",
+  "project": "Brikly iOS Production Readiness",
   "branchName": "claude/ios-production-readiness",
   "description": "Comprehensive iOS app production readiness initiative based on a deep security, UX, and infrastructure audit. Covers wildcard CORS migration across all edge functions, Apple Sign-In implementation, pagination, offline support, input validation, accessibility, dark mode, realtime subscriptions, and crash reporting. Priority 1 items are App Store blockers or critical security. Priority 2 are high-impact UX/security. Priority 3 are polish and completeness.",
   "userStories": [
@@ -66,9 +66,9 @@
     {
       "id": "IOS-005",
       "title": "Implement Apple Sign-In in iOS SwiftUI app",
-      "description": "As an iOS user, I want to sign in with Apple so I can quickly access BuildDesk without creating a separate account. The LoginView.swift has a TODO comment for Apple Sign-In integration. Implement: (1) Add AuthenticationServices framework import, (2) Create an AppleSignInCoordinator class that handles ASAuthorizationAppleIDProvider flow, (3) On successful Apple auth, exchange the Apple credential (identityToken) with Supabase auth via signInWithIdToken(provider: .apple), (4) Update LoginView.swift to wire the existing Apple button to the coordinator, (5) Update AuthService.swift with a signInWithApple(idToken:nonce:) method, (6) Handle errors gracefully with user-facing error messages.",
+      "description": "As an iOS user, I want to sign in with Apple so I can quickly access Brikly without creating a separate account. The LoginView.swift has a TODO comment for Apple Sign-In integration. Implement: (1) Add AuthenticationServices framework import, (2) Create an AppleSignInCoordinator class that handles ASAuthorizationAppleIDProvider flow, (3) On successful Apple auth, exchange the Apple credential (identityToken) with Supabase auth via signInWithIdToken(provider: .apple), (4) Update LoginView.swift to wire the existing Apple button to the coordinator, (5) Update AuthService.swift with a signInWithApple(idToken:nonce:) method, (6) Handle errors gracefully with user-facing error messages.",
       "acceptanceCriteria": [
-        "BuildDesk-iOS/BuildDesk/Services/AuthService.swift has a signInWithApple method",
+        "Brikly-iOS/Brikly/Services/AuthService.swift has a signInWithApple method",
         "LoginView.swift Apple Sign-In button triggers ASAuthorizationAppleIDProvider flow",
         "Successful Apple auth exchanges token with Supabase via signInWithIdToken",
         "Error states shown to user (not just console logged)",
@@ -119,13 +119,13 @@
     {
       "id": "IOS-008",
       "title": "Add password recovery flow to iOS app",
-      "description": "As an iOS user, I want to reset my password from the login screen so I can regain access to my account. Currently there is no forgot password flow. Add: (1) A 'Forgot Password?' button below the sign-in button in LoginView.swift, (2) A ForgotPasswordView.swift sheet that accepts email, calls Supabase auth.resetPasswordForEmail(), and shows success/error state, (3) Handle the deep link callback for password reset (builddesk://reset-password), (4) A ResetPasswordView.swift for entering the new password after clicking the email link, (5) Add these views to the Xcode project file.",
+      "description": "As an iOS user, I want to reset my password from the login screen so I can regain access to my account. Currently there is no forgot password flow. Add: (1) A 'Forgot Password?' button below the sign-in button in LoginView.swift, (2) A ForgotPasswordView.swift sheet that accepts email, calls Supabase auth.resetPasswordForEmail(), and shows success/error state, (3) Handle the deep link callback for password reset (brikly://reset-password), (4) A ResetPasswordView.swift for entering the new password after clicking the email link, (5) Add these views to the Xcode project file.",
       "acceptanceCriteria": [
         "LoginView.swift has a Forgot Password button",
         "ForgotPasswordView.swift exists and calls supabase auth.resetPasswordForEmail",
         "Success state shows 'Check your email' message",
         "Error state shows user-friendly error message",
-        "New view files added to BuildDesk.xcodeproj/project.pbxproj"
+        "New view files added to Brikly.xcodeproj/project.pbxproj"
       ],
       "priority": 2,
       "passes": false,
@@ -243,7 +243,7 @@
     {
       "id": "IOS-016",
       "title": "Add CSP and HSTS security headers to edge function responses",
-      "description": "As a security engineer, I want Content-Security-Policy and Strict-Transport-Security headers on all edge function responses to prevent XSS and downgrade attacks. Update supabase/functions/_shared/secure-cors.ts: (1) Add a getSecurityHeaders() export that returns CSP, HSTS, X-Content-Type-Options, X-Frame-Options headers, (2) CSP: default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; connect-src 'self' https://*.supabase.co https://*.build-desk.com, (3) HSTS: max-age=31536000; includeSubDomains, (4) Update getCorsHeaders to merge security headers automatically.",
+      "description": "As a security engineer, I want Content-Security-Policy and Strict-Transport-Security headers on all edge function responses to prevent XSS and downgrade attacks. Update supabase/functions/_shared/secure-cors.ts: (1) Add a getSecurityHeaders() export that returns CSP, HSTS, X-Content-Type-Options, X-Frame-Options headers, (2) CSP: default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; connect-src 'self' https://*.supabase.co https://*.brikly.net, (3) HSTS: max-age=31536000; includeSubDomains, (4) Update getCorsHeaders to merge security headers automatically.",
       "acceptanceCriteria": [
         "secure-cors.ts exports getSecurityHeaders() function",
         "getSecurityHeaders returns Content-Security-Policy header",

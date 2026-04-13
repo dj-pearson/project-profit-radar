@@ -1,5 +1,5 @@
 /**
- * Shared animation utilities for BuildDesk
+ * Shared animation utilities for Brikly
  *
  * Animation strategy:
  * - Framer Motion: All scroll-triggered and viewport-aware animations

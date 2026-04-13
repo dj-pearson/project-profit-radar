@@ -3,7 +3,7 @@
 ## ✅ Completed Today (Phase 1 & 2 Started)
 
 ### Phase 1: Database Migration (COMPLETE ✓)
-1. **✅ Sites table created** - Build-Desk registered as primary site
+1. **✅ Sites table created** - Brikly registered as primary site
 2. **✅ site_id added to 25+ tables** - All verified with no NULL values
    - companies: 2/2 rows with site_id
    - projects: 6/6 rows with site_id  
@@ -15,7 +15,7 @@
 1. **✅ Created `src/lib/site-resolver.ts`**
    - Domain → site_id resolution
    - Caching for performance
-   - Defaults to 'builddesk' for development
+   - Defaults to 'brikly' for development
 
 2. **✅ Updated `src/contexts/AuthContext.tsx`**
    - Added `siteId` and `siteConfig` to context
@@ -163,7 +163,7 @@ Deno.serve(withAuth(async (req, authContext) => {
 ## ⚠️ Important Notes
 
 ### For Development:
-- All Build-Desk data now has `site_id` set to Build-Desk's site UUID
+- All Brikly data now has `site_id` set to Brikly's site UUID
 - RLS policies enforce site isolation at database level
 - Users must have `site_id` in their JWT (now handled by AuthContext)
 
@@ -178,7 +178,7 @@ Deno.serve(withAuth(async (req, authContext) => {
 
 ### If login fails:
 Check console for "Unable to determine site_id" error. If present:
-- Verify `sites` table has Build-Desk row
+- Verify `sites` table has Brikly row
 - Check domain mapping in `site-resolver.ts`
 
 ### If queries return empty:

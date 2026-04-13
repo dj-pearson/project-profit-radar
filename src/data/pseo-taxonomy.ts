@@ -1,6 +1,6 @@
 /**
  * pSEO Taxonomy Seed Data
- * Source: BuildDesk pSEO Full System Specification v1.0
+ * Source: Brikly pSEO Full System Specification v1.0
  */
 
 import type {
@@ -177,7 +177,7 @@ export const PAIN_POINTS: Record<string, { display_name: string; url_slug: strin
       user_persona: 'Owner, project manager, or estimator who does post-mortems',
       search_intent_stage: 'solution-aware',
       competing_solutions: ['Spreadsheets', 'QuickBooks job tracking', 'Procore financials'],
-      builddesk_advantage: 'Real-time job costing visible to field and office without manual data entry',
+      brikly_advantage: 'Real-time job costing visible to field and office without manual data entry',
     },
   },
   'cash-flow': {
@@ -192,7 +192,7 @@ export const PAIN_POINTS: Record<string, { display_name: string; url_slug: strin
       user_persona: 'Business owner or CFO watching the bank account',
       search_intent_stage: 'problem-aware',
       competing_solutions: ['QuickBooks cash flow report', 'Excel spreadsheets', 'gut feel'],
-      builddesk_advantage: 'Automated cash flow forecast tied to actual job billing schedules and AP',
+      brikly_advantage: 'Automated cash flow forecast tied to actual job billing schedules and AP',
     },
   },
   'project-budgeting': {
@@ -207,7 +207,7 @@ export const PAIN_POINTS: Record<string, { display_name: string; url_slug: strin
       user_persona: 'Estimator and project manager working together',
       search_intent_stage: 'solution-aware',
       competing_solutions: ['Excel', 'Buildertrend budget module', 'QuickBooks'],
-      builddesk_advantage: 'Estimate-to-budget workflow with live actual cost overlay',
+      brikly_advantage: 'Estimate-to-budget workflow with live actual cost overlay',
     },
   },
   'time-tracking': {
@@ -222,7 +222,7 @@ export const PAIN_POINTS: Record<string, { display_name: string; url_slug: strin
       user_persona: 'Field supervisor, foreman, office admin processing payroll',
       search_intent_stage: 'solution-aware',
       competing_solutions: ['TSheets/QuickBooks Time', 'ClockShark', 'paper timesheets'],
-      builddesk_advantage: 'Time entries tied directly to job costing — no re-entry or manual allocation',
+      brikly_advantage: 'Time entries tied directly to job costing — no re-entry or manual allocation',
     },
   },
   invoicing: {
@@ -237,7 +237,7 @@ export const PAIN_POINTS: Record<string, { display_name: string; url_slug: strin
       user_persona: 'Office manager or owner managing receivables',
       search_intent_stage: 'solution-aware',
       competing_solutions: ['QuickBooks invoicing', 'Excel templates', 'FreshBooks'],
-      builddesk_advantage: 'Progress-based invoicing tied to job milestones and approved change orders',
+      brikly_advantage: 'Progress-based invoicing tied to job milestones and approved change orders',
     },
   },
   'change-orders': {
@@ -252,7 +252,7 @@ export const PAIN_POINTS: Record<string, { display_name: string; url_slug: strin
       user_persona: 'Project manager and owner tracking scope creep',
       search_intent_stage: 'solution-aware',
       competing_solutions: ['Email threads', 'Procore change orders', 'paper forms'],
-      builddesk_advantage: 'Change order workflow that auto-updates budget and triggers invoice creation',
+      brikly_advantage: 'Change order workflow that auto-updates budget and triggers invoice creation',
     },
   },
   'financial-reporting': {
@@ -267,7 +267,7 @@ export const PAIN_POINTS: Record<string, { display_name: string; url_slug: strin
       user_persona: 'Owner and accountant/bookkeeper',
       search_intent_stage: 'solution-aware',
       competing_solutions: ['QuickBooks reports', 'Excel WIP spreadsheets', 'Sage'],
-      builddesk_advantage: 'Construction-specific reports (WIP, over/under billing, job margin) built in',
+      brikly_advantage: 'Construction-specific reports (WIP, over/under billing, job margin) built in',
     },
   },
   quickbooks: {
@@ -282,7 +282,7 @@ export const PAIN_POINTS: Record<string, { display_name: string; url_slug: strin
       user_persona: 'Owner, office manager, or bookkeeper handling accounting',
       search_intent_stage: 'product-aware (already using QuickBooks)',
       competing_solutions: ['Manual CSV export/import', 'Buildertrend QB sync', 'Procore QB connector'],
-      builddesk_advantage: 'Native 2-way QuickBooks Online sync with automatic transaction routing',
+      brikly_advantage: 'Native 2-way QuickBooks Online sync with automatic transaction routing',
     },
   },
   'crew-management': {
@@ -297,7 +297,7 @@ export const PAIN_POINTS: Record<string, { display_name: string; url_slug: strin
       user_persona: 'Field supervisor, dispatcher, project manager',
       search_intent_stage: 'solution-aware',
       competing_solutions: ['Crew Boss', 'Rhumbix', 'Google Sheets schedules'],
-      builddesk_advantage: 'Crew scheduling tied to project timelines and automatic labor cost posting',
+      brikly_advantage: 'Crew scheduling tied to project timelines and automatic labor cost posting',
     },
   },
   'client-portal': {
@@ -312,7 +312,7 @@ export const PAIN_POINTS: Record<string, { display_name: string; url_slug: strin
       user_persona: 'Project manager tired of status calls; owner wanting to look professional',
       search_intent_stage: 'solution-aware',
       competing_solutions: ['Buildertrend client portal', 'email updates', 'CoConstruct'],
-      builddesk_advantage: 'Real-time client portal with change order approval and invoice payment',
+      brikly_advantage: 'Real-time client portal with change order approval and invoice payment',
     },
   },
 };
@@ -329,7 +329,7 @@ export const BUSINESS_SIZES: Record<string, { display_name: string; url_slug: st
       price_sensitivity: 'Very high — every dollar counts',
       decision_maker: 'Owner (wears every hat)',
       primary_concern: 'Can\'t afford enterprise software; need something simple that actually helps',
-      builddesk_fit: 'Starter tier; unlimited users means the owner and 1–2 office staff at no extra cost',
+      brikly_fit: 'Starter tier; unlimited users means the owner and 1–2 office staff at no extra cost',
     },
   },
   growing: {
@@ -343,7 +343,7 @@ export const BUSINESS_SIZES: Record<string, { display_name: string; url_slug: st
       price_sensitivity: 'Moderate — will pay if ROI is clear',
       decision_maker: 'Owner with input from office manager or PM',
       primary_concern: 'Losing control of job costs as project count grows; need real-time visibility',
-      builddesk_fit: 'Professional tier; the per-seat problem bites hard here — unlimited users is a major win',
+      brikly_fit: 'Professional tier; the per-seat problem bites hard here — unlimited users is a major win',
     },
   },
   'mid-size': {
@@ -357,7 +357,7 @@ export const BUSINESS_SIZES: Record<string, { display_name: string; url_slug: st
       price_sensitivity: 'Low — paying $800+/month elsewhere; $350–799 looks great',
       decision_maker: 'Owner or CFO with ops manager input',
       primary_concern: 'Enterprise tools are too complex; spreadsheet-era tools can\'t handle volume',
-      builddesk_fit: 'Professional/Enterprise tier; real-time financial intelligence replaces expensive platforms',
+      brikly_fit: 'Professional/Enterprise tier; real-time financial intelligence replaces expensive platforms',
     },
   },
 };
@@ -607,7 +607,7 @@ export const GEOGRAPHIES: Record<string, { display_name: string; url_slug: strin
 
 export const COMPETITORS: Record<string, { display_name: string; url_slug: string; profile: CompetitorProfile }> = {
   'vs-procore': {
-    display_name: 'BuildDesk vs Procore',
+    display_name: 'Brikly vs Procore',
     url_slug: 'vs-procore',
     profile: {
       id: 'vs-procore',
@@ -620,7 +620,7 @@ export const COMPETITORS: Record<string, { display_name: string; url_slug: strin
     },
   },
   'vs-buildertrend': {
-    display_name: 'BuildDesk vs Buildertrend',
+    display_name: 'Brikly vs Buildertrend',
     url_slug: 'vs-buildertrend',
     profile: {
       id: 'vs-buildertrend',
@@ -633,7 +633,7 @@ export const COMPETITORS: Record<string, { display_name: string; url_slug: strin
     },
   },
   'vs-coconstruct': {
-    display_name: 'BuildDesk vs CoConstruct',
+    display_name: 'Brikly vs CoConstruct',
     url_slug: 'vs-coconstruct',
     profile: {
       id: 'vs-coconstruct',
@@ -646,7 +646,7 @@ export const COMPETITORS: Record<string, { display_name: string; url_slug: strin
     },
   },
   'vs-jobber': {
-    display_name: 'BuildDesk vs Jobber',
+    display_name: 'Brikly vs Jobber',
     url_slug: 'vs-jobber',
     profile: {
       id: 'vs-jobber',
@@ -659,7 +659,7 @@ export const COMPETITORS: Record<string, { display_name: string; url_slug: strin
     },
   },
   'vs-quickbooks': {
-    display_name: 'BuildDesk vs QuickBooks',
+    display_name: 'Brikly vs QuickBooks',
     url_slug: 'vs-quickbooks',
     profile: {
       id: 'vs-quickbooks',
@@ -668,11 +668,11 @@ export const COMPETITORS: Record<string, { display_name: string; url_slug: strin
       target_market: 'Small businesses across all industries',
       strengths: ['Ubiquitous', 'Accountants know it', 'Good general accounting', 'Large app ecosystem'],
       weaknesses: ['Not construction-specific', 'No field integration', 'Manual job costing', 'No project management'],
-      best_for: 'Accounting only — should be used alongside BuildDesk, not instead of it',
+      best_for: 'Accounting only — should be used alongside Brikly, not instead of it',
     },
   },
   'vs-sage': {
-    display_name: 'BuildDesk vs Sage 100 Contractor',
+    display_name: 'Brikly vs Sage 100 Contractor',
     url_slug: 'vs-sage',
     profile: {
       id: 'vs-sage',

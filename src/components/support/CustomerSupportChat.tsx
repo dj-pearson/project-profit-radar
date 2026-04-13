@@ -330,7 +330,7 @@ const CustomerSupportChat = () => {
     return (
       <div className="fixed bottom-4 right-4 z-50 flex flex-col gap-2">
         <Button
-          onClick={() => window.open('mailto:support@build-desk.com', '_blank')}
+          onClick={() => window.open('mailto:support@brikly.net', '_blank')}
           className="rounded-full h-12 w-12 shadow-lg bg-secondary hover:bg-secondary/80"
           size="sm"
         >

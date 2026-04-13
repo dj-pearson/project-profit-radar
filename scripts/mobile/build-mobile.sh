@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# BuildDesk Mobile Build Script (App Store / Play Store Ready)
+# Brikly Mobile Build Script (App Store / Play Store Ready)
 # Usage: ./scripts/mobile/build-mobile.sh [ios|android|both]
 #
 # This script builds the web assets using the ISOLATED mobile Vite config
@@ -16,7 +16,7 @@ BLUE='\033[0;34m'
 BOLD='\033[1m'
 NC='\033[0m'
 
-echo -e "${BLUE}${BOLD}BuildDesk Mobile Build Script${NC}"
+echo -e "${BLUE}${BOLD}Brikly Mobile Build Script${NC}"
 echo -e "${BLUE}App Store & Play Store Production Build${NC}"
 echo ""
 

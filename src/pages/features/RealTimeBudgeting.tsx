@@ -14,27 +14,27 @@ const RealTimeBudgetingPage = () => {
       answer: "Real-time budgeting tracks your construction project costs as they happen, not weeks or months later. Instead of waiting for monthly reports, you see live budget vs actual updates throughout the day as labor hours are logged and materials are purchased."
     },
     {
-      question: "How do budget alerts work in BuildDesk?",
-      answer: "BuildDesk monitors your project spending continuously and sends automatic alerts when costs trend over budget. You can set custom thresholds (like 80% of budget consumed) and get notified via email or push notification before problems become expensive."
+      question: "How do budget alerts work in Brikly?",
+      answer: "Brikly monitors your project spending continuously and sends automatic alerts when costs trend over budget. You can set custom thresholds (like 80% of budget consumed) and get notified via email or push notification before problems become expensive."
     },
     {
       question: "Can I see budget performance across all projects?",
-      answer: "Yes! BuildDesk's financial dashboard shows budget vs actual for all active projects in one view. You can quickly identify which projects are on track, trending over, or coming in under budget, helping you prioritize attention where it's needed most."
+      answer: "Yes! Brikly's financial dashboard shows budget vs actual for all active projects in one view. You can quickly identify which projects are on track, trending over, or coming in under budget, helping you prioritize attention where it's needed most."
     },
     {
       question: "How is this different from QuickBooks?",
-      answer: "QuickBooks is designed for accounting, not construction project management. It shows you what you spent last month, but can't track costs by project in real-time or alert you to budget overruns as they're happening. BuildDesk integrates with QuickBooks to give you both real-time project visibility and proper accounting."
+      answer: "QuickBooks is designed for accounting, not construction project management. It shows you what you spent last month, but can't track costs by project in real-time or alert you to budget overruns as they're happening. Brikly integrates with QuickBooks to give you both real-time project visibility and proper accounting."
     },
     {
       question: "Do I need expensive enterprise software for real-time budgeting?",
-      answer: "No. BuildDesk brings enterprise-level real-time budgeting to small contractors for $350/month with unlimited users. Tools like Procore charge $500+ per user per month, making them unaffordable for most small contractors."
+      answer: "No. Brikly brings enterprise-level real-time budgeting to small contractors for $350/month with unlimited users. Tools like Procore charge $500+ per user per month, making them unaffordable for most small contractors."
     }
   ];
 
   const howToSteps = [
     {
       name: "Create your project budget",
-      text: "Set up your budget by cost code (labor, materials, equipment, subs) using BuildDesk's templates or import from your estimating software. Define budget thresholds for alerts."
+      text: "Set up your budget by cost code (labor, materials, equipment, subs) using Brikly's templates or import from your estimating software. Define budget thresholds for alerts."
     },
     {
       name: "Track costs as they occur",
@@ -64,7 +64,7 @@ const RealTimeBudgetingPage = () => {
           'construction cost overrun alerts',
           'construction budget software'
         ]}
-        canonicalUrl="https://builddesk.com/features/real-time-budgeting"
+        canonicalUrl="https://brikly.com/features/real-time-budgeting"
         schema={[
           createHowToSchema("How to Implement Real-Time Construction Budgeting", howToSteps),
           createFAQSchema(faqs)
@@ -152,7 +152,7 @@ const RealTimeBudgetingPage = () => {
           <div className="container mx-auto px-4">
             <div className="max-w-4xl mx-auto">
               <h2 className="text-3xl md:text-4xl font-bold text-center mb-12">
-                BuildDesk Real-Time Budgeting Features
+                Brikly Real-Time Budgeting Features
               </h2>
               <div className="grid md:grid-cols-3 gap-8">
                 <div className="bg-muted/30 p-6 rounded-lg">
@@ -260,7 +260,7 @@ const RealTimeBudgetingPage = () => {
                     </ul>
                   </div>
                   <div>
-                    <h3 className="text-xl font-semibold mb-4">With BuildDesk</h3>
+                    <h3 className="text-xl font-semibold mb-4">With Brikly</h3>
                     <ul className="space-y-3">
                       <li className="flex items-start">
                         <span className="text-construction-orange mr-2 font-bold">✓</span>

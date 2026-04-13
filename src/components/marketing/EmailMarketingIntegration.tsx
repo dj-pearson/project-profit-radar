@@ -94,7 +94,7 @@ const EmailMarketingIntegration = () => {
         {
           id: '1',
           name: 'Monthly Construction Newsletter',
-          subject: 'Latest Updates from BuildDesk',
+          subject: 'Latest Updates from Brikly',
           content: 'Welcome to our monthly newsletter...',
           status: 'sent',
           type: 'newsletter',
@@ -124,7 +124,7 @@ const EmailMarketingIntegration = () => {
         {
           id: '1',
           name: 'All Subscribers',
-          description: 'All BuildDesk newsletter subscribers',
+          description: 'All Brikly newsletter subscribers',
           subscribers_count: 1250,
           created_at: new Date().toISOString(),
           is_active: true
@@ -143,7 +143,7 @@ const EmailMarketingIntegration = () => {
         {
           id: '1',
           name: 'Newsletter Template',
-          subject: 'BuildDesk Newsletter - {{month}} {{year}}',
+          subject: 'Brikly Newsletter - {{month}} {{year}}',
           content: 'Professional newsletter template with header and footer',
           type: 'newsletter'
         },

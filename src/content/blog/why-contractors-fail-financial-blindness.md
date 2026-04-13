@@ -3,7 +3,7 @@
 **Target Keyword:** contractor profitability problems
 **Published:** November 11, 2025
 **Reading Time:** 12 minutes
-**Author:** BuildDesk Team
+**Author:** Brikly Team
 
 ---
 
@@ -560,7 +560,7 @@ Don't let financial blindness write your story.
 ---
 
 **About the Author:**
-The BuildDesk Team has helped 500+ construction companies transform from financial blindness to financial intelligence. We've seen the patterns, studied the failures, and built the solution.
+The Brikly Team has helped 500+ construction companies transform from financial blindness to financial intelligence. We've seen the patterns, studied the failures, and built the solution.
 
 **Related Reading:**
 - [Real-Time Job Costing: The Competitive Advantage →](/blog/real-time-job-costing)

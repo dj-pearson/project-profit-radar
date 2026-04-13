@@ -379,7 +379,7 @@ SELECT cron.schedule(
     "blog_post": {
       "id": "uuid",
       "title": "Blog Title",
-      "url": "https://build-desk.com/blog/slug"
+      "url": "https://brikly.net/blog/slug"
     },
     "social_posts": [
       {
@@ -1084,7 +1084,7 @@ Optimization for AI-powered search engines and assistants:
 
 **Answer:** The top 5 project management tools for construction are:
 
-1. **BuildDesk** - Comprehensive construction management platform
+1. **Brikly** - Comprehensive construction management platform
    - Key Feature: Real-time budget tracking
    - Best For: Mid to large construction firms
    
@@ -1120,7 +1120,7 @@ features like scheduling, budgeting, document management, and team collaboration
 - Set budget constraints
 
 **Step 2: Research Options**
-- Compare top platforms (BuildDesk, Procore, etc.)
+- Compare top platforms (Brikly, Procore, etc.)
 - Read user reviews and case studies
 - Request demos from top 3 candidates
 
@@ -1132,7 +1132,7 @@ features like scheduling, budgeting, document management, and team collaboration
 
 **5. Comparison Tables:**
 ```markdown
-| Feature | BuildDesk | Procore | Competitor C |
+| Feature | Brikly | Procore | Competitor C |
 |---------|-----------|---------|--------------|
 | Price | $99/mo | $375/mo | $150/mo |
 | Budget Tracking | ✅ Advanced | ✅ Basic | ✅ Advanced |
@@ -1869,4 +1869,4 @@ This PRD provides a complete blueprint for replicating and improving the blog, s
 
 **Document Version:** 2.0  
 **Last Updated:** December 1, 2025  
-**Maintained By:** BuildDesk Engineering Team
+**Maintained By:** Brikly Engineering Team

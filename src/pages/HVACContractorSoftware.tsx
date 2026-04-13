@@ -18,30 +18,30 @@ const HVACContractorSoftware = () => {
   );
 
   const breadcrumbSchema = createBreadcrumbSchema([
-    { name: "Home", url: "https://builddesk.com" },
-    { name: "HVAC Contractor Software", url: "https://builddesk.com/hvac-contractor-software" }
+    { name: "Home", url: "https://brikly.com" },
+    { name: "HVAC Contractor Software", url: "https://brikly.com/hvac-contractor-software" }
   ]);
 
   // HVAC-specific FAQs
   const hvacFAQs = [
     {
       question: "What features should HVAC contractor software have?",
-      answer: "HVAC contractor software should include preventive maintenance scheduling, equipment tracking, technician certification management, job costing by system type, warranty tracking, and customer service history. BuildDesk includes all these features plus QuickBooks integration.",
+      answer: "HVAC contractor software should include preventive maintenance scheduling, equipment tracking, technician certification management, job costing by system type, warranty tracking, and customer service history. Brikly includes all these features plus QuickBooks integration.",
       category: "Features"
     },
     {
-      question: "Can BuildDesk track HVAC maintenance schedules?",
-      answer: "Yes, BuildDesk tracks preventive maintenance schedules with automated customer reminders, service history, equipment specifications, and warranty information. Schedule seasonal tune-ups and manage recurring maintenance contracts efficiently.",
+      question: "Can Brikly track HVAC maintenance schedules?",
+      answer: "Yes, Brikly tracks preventive maintenance schedules with automated customer reminders, service history, equipment specifications, and warranty information. Schedule seasonal tune-ups and manage recurring maintenance contracts efficiently.",
       category: "Maintenance"
     },
     {
-      question: "Does BuildDesk manage HVAC technician certifications?",
-      answer: "Yes, BuildDesk tracks technician certifications, EPA licenses, training records, and specialized skills (residential, commercial, heat pumps, etc.). Assign jobs based on technician qualifications and receive certification renewal alerts.",
+      question: "Does Brikly manage HVAC technician certifications?",
+      answer: "Yes, Brikly tracks technician certifications, EPA licenses, training records, and specialized skills (residential, commercial, heat pumps, etc.). Assign jobs based on technician qualifications and receive certification renewal alerts.",
       category: "Technicians"
     },
     {
       question: "How does job costing work for HVAC projects?",
-      answer: "BuildDesk's job costing tracks equipment costs, refrigerant usage, labor hours, and material expenses by project type (installation, repair, maintenance). Compare estimates to actuals and calculate profit margins for each job type.",
+      answer: "Brikly's job costing tracks equipment costs, refrigerant usage, labor hours, and material expenses by project type (installation, repair, maintenance). Compare estimates to actuals and calculate profit margins for each job type.",
       category: "Job Costing"
     }
   ];
@@ -72,7 +72,7 @@ const HVACContractorSoftware = () => {
   return (
     <>
       <PageSEO
-        title="HVAC Contractor Software - Installation, Maintenance & Service Management | BuildDesk"
+        title="HVAC Contractor Software - Installation, Maintenance & Service Management | Brikly"
         description="Complete HVAC contractor management software. Track installations, preventive maintenance, technician certifications, job costing. $350/month. Equipment tracking, warranty management, QuickBooks sync. Free trial."
         keywords={[
           'HVAC contractor software',
@@ -144,7 +144,7 @@ const HVACContractorSoftware = () => {
             {/* Benefits Section */}
             <div className="bg-white rounded-lg border p-8 mb-16">
               <h2 className="text-3xl font-bold text-construction-dark mb-8 text-center">
-                Why HVAC Contractors Choose BuildDesk
+                Why HVAC Contractors Choose Brikly
               </h2>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div className="text-center">

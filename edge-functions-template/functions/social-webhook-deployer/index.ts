@@ -107,7 +107,7 @@ serve(async (req) => {
           media_urls: post.media_urls || [],
           optimal_length: post.content.length,
           post_type: post.content.length > 1000 ? "long" : post.content.length > 300 ? "medium" : "short",
-          includes_url: post.content.includes("build-desk.com")
+          includes_url: post.content.includes("brikly.net")
         })),
         company_id: queueItem.company_id,
         trigger_type: "automated",
@@ -142,7 +142,7 @@ serve(async (req) => {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "User-Agent": "BuildDesk-Social-Webhook/1.0"
+        "User-Agent": "Brikly-Social-Webhook/1.0"
       },
       body: JSON.stringify(webhookPayload)
     });

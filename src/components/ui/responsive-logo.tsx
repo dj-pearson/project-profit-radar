@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { HardHat, Building } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { BUILDDESK_LOGO_URL } from "@/lib/utils";
+import { BRIKLY_LOGO_URL } from "@/lib/utils";
 
 interface ResponsiveLogoProps {
   className?: string;
@@ -76,8 +76,8 @@ const ResponsiveLogo = ({
     remote:
       isMobile && mobileRemoteUrl
         ? mobileRemoteUrl
-        : BUILDDESK_LOGO_URL,
-    local: isMobile && mobileLocalUrl ? mobileLocalUrl : "/BuildDeskLogo.png",
+        : BRIKLY_LOGO_URL,
+    local: isMobile && mobileLocalUrl ? mobileLocalUrl : "/BriklyLogo.png",
   };
 
   // Force text mode if requested
@@ -180,7 +180,7 @@ const ResponsiveLogo = ({
     return (
       <img
         src={currentSrc}
-        alt="BuildDesk"
+        alt="Brikly"
         className={`${sizeClasses[currentSize]} ${className}`}
         style={{ 
           objectFit: "contain",
@@ -238,16 +238,16 @@ export const useResponsiveLogoStatus = () => {
     state: "checking",
     device: isMobile ? "mobile" : "desktop",
     sources: {
-      remote: BUILDDESK_LOGO_URL,
-      local: "/BuildDeskLogo.png",
+      remote: BRIKLY_LOGO_URL,
+      local: "/BriklyLogo.png",
     },
   });
 
   useEffect(() => {
     const checkImages = async () => {
       const sources = {
-        remote: BUILDDESK_LOGO_URL,
-        local: "/BuildDeskLogo.png",
+        remote: BRIKLY_LOGO_URL,
+        local: "/BriklyLogo.png",
       };
 
       try {

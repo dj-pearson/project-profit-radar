@@ -211,7 +211,7 @@ export const PushNotificationManager = () => {
         body: {
           user_id: user?.id,
           title: 'Test Notification',
-          body: 'This is a test notification from BuildDesk',
+          body: 'This is a test notification from Brikly',
           icon: '/favicon.ico',
           badge: '/favicon.ico'
         }

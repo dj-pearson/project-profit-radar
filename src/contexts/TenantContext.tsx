@@ -36,12 +36,12 @@ interface TenantContextType {
 
 const TenantContext = createContext<TenantContextType | undefined>(undefined);
 
-// Default BuildDesk tenant configuration
+// Default Brikly tenant configuration
 const DEFAULT_TENANT: Partial<Tenant> = {
   id: 'default',
-  name: 'BuildDesk',
-  display_name: 'BuildDesk',
-  slug: 'builddesk',
+  name: 'Brikly',
+  display_name: 'Brikly',
+  slug: 'brikly',
   custom_domain: null,
   domain_verified: false,
   branding: {
@@ -100,13 +100,13 @@ export function TenantProvider({ children }: { children: React.ReactNode }) {
       const isDefaultDomain =
         hostname === 'localhost' ||
         hostname.includes('127.0.0.1') ||
-        hostname.includes('builddesk.com') ||
-        hostname.includes('build-desk.com') ||
-        hostname.includes('builddesk.pearsonperformance.workers.dev') ||
+        hostname.includes('brikly.com') ||
+        hostname.includes('brikly.net') ||
+        hostname.includes('brikly.pearsonperformance.workers.dev') ||
         hostname.includes('.pages.dev');
 
       if (isDefaultDomain) {
-        // Use default BuildDesk tenant
+        // Use default Brikly tenant
         setTenant(DEFAULT_TENANT as Tenant);
         applyBranding(DEFAULT_TENANT.branding!);
         setLoading(false);

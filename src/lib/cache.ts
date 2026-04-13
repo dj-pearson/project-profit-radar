@@ -146,7 +146,7 @@ class InMemoryCache implements ICacheLayer {
 class CacheManager {
   private cache: ICacheLayer;
   private defaultTTL: number = 300; // 5 minutes
-  private namespace: string = 'builddesk';
+  private namespace: string = 'brikly';
 
   constructor() {
     // Initialize in-memory cache

@@ -78,14 +78,14 @@ async function sendReminder(supabase: any, tenant_id: string, invoice_id: string
   // Send email using Resend
   try {
     const { data, error } = await resend.emails.send({
-      from: 'BuildDesk <noreply@builddesk.com>',
+      from: 'Brikly <noreply@brikly.com>',
       to: [reminder.projects?.client_email],
       subject: emailSubject,
       html: `
         <h2>${emailSubject}</h2>
         <p>${emailBody.replace(/\n/g, '<br>')}</p>
         <hr>
-        <p><small>This is an automated message from BuildDesk</small></p>
+        <p><small>This is an automated message from Brikly</small></p>
       `
     })
 
@@ -146,7 +146,7 @@ async function sendReportEmail(report: any, csvContent: string, recipients: stri
     const base64Content = btoa(csvContent)
 
     const { data, error } = await resend.emails.send({
-      from: 'BuildDesk Reports <reports@builddesk.com>',
+      from: 'Brikly Reports <reports@brikly.com>',
       to: recipients,
       subject: `Scheduled Report: ${report.report_name}`,
       html: `
@@ -155,7 +155,7 @@ async function sendReportEmail(report: any, csvContent: string, recipients: stri
         <p>Generated: ${new Date().toLocaleString()}</p>
         <p>The report is attached as a CSV file.</p>
         <hr>
-        <p><small>This is an automated report from BuildDesk</small></p>
+        <p><small>This is an automated report from Brikly</small></p>
       `,
       attachments: [
         {
@@ -222,13 +222,13 @@ export function getPaymentReminderHTML(type: string, data: ReminderEmailData): s
             <p><strong>Invoice:</strong> ${data.invoiceNumber}<br>
             <strong>Amount Due:</strong> ${data.amountDue}</p>
             <p style="text-align: center; margin-top: 30px;">
-              <a href="https://build-desk.com/portal/invoice/${data.invoiceNumber}" class="button">View Invoice</a>
+              <a href="https://brikly.net/portal/invoice/${data.invoiceNumber}" class="button">View Invoice</a>
             </p>
             <p>Thank you for your business!</p>
           </div>
           <div class="footer">
-            <p>BuildDesk Construction Management<br>
-            <a href="https://build-desk.com">build-desk.com</a></p>
+            <p>Brikly Construction Management<br>
+            <a href="https://brikly.net">brikly.net</a></p>
           </div>
         </div>
       `
@@ -248,13 +248,13 @@ export function getPaymentReminderHTML(type: string, data: ReminderEmailData): s
             <strong>Original Due Date:</strong> ${data.dueDate}</p>
             <p style="color: #dc2626;"><strong>Please submit payment as soon as possible to avoid late fees.</strong></p>
             <p style="text-align: center; margin-top: 30px;">
-              <a href="https://build-desk.com/portal/invoice/${data.invoiceNumber}" class="button">Pay Now</a>
+              <a href="https://brikly.net/portal/invoice/${data.invoiceNumber}" class="button">Pay Now</a>
             </p>
             <p>If you have any questions, please contact us immediately.</p>
           </div>
           <div class="footer">
-            <p>BuildDesk Construction Management<br>
-            <a href="https://build-desk.com">build-desk.com</a></p>
+            <p>Brikly Construction Management<br>
+            <a href="https://brikly.net">brikly.net</a></p>
           </div>
         </div>
       `
@@ -272,12 +272,12 @@ export function getPaymentReminderHTML(type: string, data: ReminderEmailData): s
             <p><strong>Invoice:</strong> ${data.invoiceNumber}<br>
             <strong>Amount Due:</strong> ${data.amountDue}</p>
             <p style="text-align: center; margin-top: 30px;">
-              <a href="https://build-desk.com/portal/invoice/${data.invoiceNumber}" class="button">View Invoice</a>
+              <a href="https://brikly.net/portal/invoice/${data.invoiceNumber}" class="button">View Invoice</a>
             </p>
           </div>
           <div class="footer">
-            <p>BuildDesk Construction Management<br>
-            <a href="https://build-desk.com">build-desk.com</a></p>
+            <p>Brikly Construction Management<br>
+            <a href="https://brikly.net">brikly.net</a></p>
           </div>
         </div>
       `

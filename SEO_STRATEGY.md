@@ -1,8 +1,8 @@
-# BuildDesk Comprehensive SEO & GEO Strategy 2025
+# Brikly Comprehensive SEO & GEO Strategy 2025
 
 ## Executive Summary
 
-This document outlines BuildDesk's comprehensive Search Engine Optimization (SEO) and Generative Engine Optimization (GEO) strategy to dominate both traditional search engines (Google) and AI-powered search platforms (Perplexity, ChatGPT, Google AI Overviews, Claude).
+This document outlines Brikly's comprehensive Search Engine Optimization (SEO) and Generative Engine Optimization (GEO) strategy to dominate both traditional search engines (Google) and AI-powered search platforms (Perplexity, ChatGPT, Google AI Overviews, Claude).
 
 ### Key Objectives
 1. **Rank #1-3** for high-intent keywords: "construction management software for small business", "procore alternative", "buildertrend alternative"
@@ -93,8 +93,8 @@ This document outlines BuildDesk's comprehensive Search Engine Optimization (SEO
 #### 1. Direct-Answer Content Format
 **Implementation:**
 ```markdown
-## What is BuildDesk?
-BuildDesk is construction management software designed specifically for small-to-medium contractors. It costs $350/month with unlimited users, 50% less than Procore, and implements in 1-2 days instead of 3-6 months.
+## What is Brikly?
+Brikly is construction management software designed specifically for small-to-medium contractors. It costs $350/month with unlimited users, 50% less than Procore, and implements in 1-2 days instead of 3-6 months.
 
 ## Key Features:
 - Real-time job costing with automated cost tracking
@@ -112,7 +112,7 @@ BuildDesk is construction management software designed specifically for small-to
 
 #### 2. Citation-Worthy Statistics
 **Create Branded Stats:**
-- "BuildDesk customers save 23% on project costs on average"
+- "Brikly customers save 23% on project costs on average"
 - "Implementation takes 1-2 days vs 3-6 months for enterprise solutions"
 - "50% cost savings compared to Procore"
 - "4.8/5 customer satisfaction rating from 500+ contractors"
@@ -120,7 +120,7 @@ BuildDesk is construction management software designed specifically for small-to
 **Format for AI Extraction:**
 ```html
 <div itemscope itemtype="https://schema.org/SoftwareApplication">
-  <span itemprop="name">BuildDesk</span>
+  <span itemprop="name">Brikly</span>
   <span itemprop="aggregateRating" itemscope itemtype="https://schema.org/AggregateRating">
     <span itemprop="ratingValue">4.8</span> out of
     <span itemprop="bestRating">5</span> from
@@ -164,7 +164,7 @@ BuildDesk is construction management software designed specifically for small-to
 
 **Title Tag (60 chars):**
 ```
-BuildDesk - Construction Management Software for Small Contractors
+Brikly - Construction Management Software for Small Contractors
 ```
 
 **Meta Description (155 chars):**
@@ -216,16 +216,16 @@ Job costing, scheduling, and OSHA compliance for small contractors. 50% less tha
 
 **Content Template:**
 ```markdown
-# [Competitor] Alternative for Small Contractors | BuildDesk
+# [Competitor] Alternative for Small Contractors | Brikly
 
 ## Quick Comparison
-| Feature | BuildDesk | [Competitor] |
+| Feature | Brikly | [Competitor] |
 |---------|-----------|--------------|
 | Price | $350/mo | $500/mo |
 | Setup Time | 1-2 days | 3-6 months |
 | Users | Unlimited | Per-seat pricing |
 
-## Why Contractors Choose BuildDesk Over [Competitor]
+## Why Contractors Choose Brikly Over [Competitor]
 
 ### 1. Cost Savings
 [Specific data and customer quotes]
@@ -273,7 +273,7 @@ Job costing, scheduling, and OSHA compliance for small contractors. 50% less tha
 
 **Content Template:**
 ```markdown
-# [Solution] for Small Contractors | BuildDesk
+# [Solution] for Small Contractors | Brikly
 
 ## What is [Solution]?
 [Direct answer in 2-3 sentences for AI extraction]
@@ -313,7 +313,7 @@ Job costing, scheduling, and OSHA compliance for small contractors. 50% less tha
 **Content Formats for GEO:**
 - List articles: "7 Ways to Reduce Project Costs"
 - How-to guides: "How to Set Up Job Costing in 10 Minutes"
-- Comparison: "BuildDesk vs [Competitor]: 2025 Comparison"
+- Comparison: "Brikly vs [Competitor]: 2025 Comparison"
 - Statistics: "Construction Software ROI Study"
 - Templates: "Free Construction Schedule Template"
 
@@ -328,9 +328,9 @@ Job costing, scheduling, and OSHA compliance for small contractors. 50% less tha
 {
   "@context": "https://schema.org",
   "@type": "Organization",
-  "name": "BuildDesk",
-  "url": "https://builddesk.com",
-  "logo": "https://builddesk.com/logo.png",
+  "name": "Brikly",
+  "url": "https://brikly.com",
+  "logo": "https://brikly.com/logo.png",
   "description": "Construction management software for small contractors",
   "foundingDate": "2024",
   "address": {
@@ -338,8 +338,8 @@ Job costing, scheduling, and OSHA compliance for small contractors. 50% less tha
     "addressCountry": "US"
   },
   "sameAs": [
-    "https://linkedin.com/company/builddesk",
-    "https://twitter.com/builddesk"
+    "https://linkedin.com/company/brikly",
+    "https://twitter.com/brikly"
   ]
 }
 ```
@@ -349,7 +349,7 @@ Job costing, scheduling, and OSHA compliance for small contractors. 50% less tha
 {
   "@context": "https://schema.org",
   "@type": "SoftwareApplication",
-  "name": "BuildDesk",
+  "name": "Brikly",
   "applicationCategory": "BusinessApplication",
   "operatingSystem": "Web, iOS, Android",
   "offers": {
@@ -409,13 +409,13 @@ Job costing, scheduling, and OSHA compliance for small contractors. 50% less tha
       "@type": "ListItem",
       "position": 1,
       "name": "Home",
-      "item": "https://builddesk.com"
+      "item": "https://brikly.com"
     },
     {
       "@type": "ListItem",
       "position": 2,
       "name": "Features",
-      "item": "https://builddesk.com/features"
+      "item": "https://brikly.com/features"
     }
   ]
 }
@@ -426,7 +426,7 @@ Job costing, scheduling, and OSHA compliance for small contractors. 50% less tha
 {
   "@context": "https://schema.org",
   "@type": "Product",
-  "name": "BuildDesk Professional Plan",
+  "name": "Brikly Professional Plan",
   "offers": {
     "@type": "Offer",
     "price": "350",
@@ -470,7 +470,7 @@ Disallow: /setup/
 Disallow: /*?*refreshed=
 Disallow: /*?*v=
 
-Sitemap: https://builddesk.com/sitemap.xml
+Sitemap: https://brikly.com/sitemap.xml
 ```
 
 ### 3. Meta Tags Template
@@ -524,13 +524,13 @@ Sitemap: https://builddesk.com/sitemap.xml
 #### Direct Answer Format
 **Bad:**
 ```
-BuildDesk offers a comprehensive suite of tools designed to help
+Brikly offers a comprehensive suite of tools designed to help
 construction professionals manage their projects more effectively...
 ```
 
 **Good:**
 ```
-BuildDesk costs $350/month with unlimited users. Small contractors
+Brikly costs $350/month with unlimited users. Small contractors
 save an average of $8,000/year compared to Procore ($500/month) while
 getting real-time job costing, mobile crew tracking, and OSHA compliance
 tools.
@@ -580,7 +580,7 @@ tools.
 - Format: 8-10 items
 
 **3. Table Snippets**
-- Comparison tables (BuildDesk vs competitors)
+- Comparison tables (Brikly vs competitors)
 - Pricing tables
 - Feature matrices
 
@@ -821,7 +821,7 @@ tools.
 
 ## Conclusion
 
-This comprehensive strategy combines traditional SEO best practices with cutting-edge GEO tactics to ensure BuildDesk dominates both current search engines and emerging AI-powered platforms. The key differentiators are:
+This comprehensive strategy combines traditional SEO best practices with cutting-edge GEO tactics to ensure Brikly dominates both current search engines and emerging AI-powered platforms. The key differentiators are:
 
 1. **Direct-Answer Content** optimized for AI extraction
 2. **Quotable Statistics** that AI can cite with confidence
@@ -829,7 +829,7 @@ This comprehensive strategy combines traditional SEO best practices with cutting
 4. **Strategic Targeting** of alternative-seekers (high intent)
 5. **Multi-Platform Distribution** for maximum visibility
 
-By implementing this strategy systematically over 6 months, BuildDesk will establish itself as the go-to solution for small contractors seeking affordable, effective construction management software.
+By implementing this strategy systematically over 6 months, Brikly will establish itself as the go-to solution for small contractors seeking affordable, effective construction management software.
 
 **Next Steps:**
 1. Review and approve this strategy

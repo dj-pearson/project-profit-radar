@@ -1,22 +1,22 @@
 {
-  "project": "BuildDesk Android App Audit & Hardening",
+  "project": "Brikly Android App Audit & Hardening",
   "branchName": "claude/android-app-audit-RWLB7",
   "description": "Comprehensive Android app audit covering UI elements, UX features, performance optimization, and security hardening. The Android project was freshly initialized via Capacitor 7.4.4 and needs production-ready configuration including network security, permissions, ProGuard rules, deep linking, biometric auth, offline support, and Play Store compliance. Priority 1 items are critical security and platform requirements, Priority 2 are UX/performance improvements, Priority 3 are polish items.",
   "userStories": [
     {
       "id": "AA-001",
       "title": "Add Android network security configuration for HTTPS enforcement and certificate pinning",
-      "description": "As a security engineer, I want the Android app to enforce HTTPS-only connections with certificate pinning for critical domains so that man-in-the-middle attacks are prevented. Currently the Android project has NO network_security_config.xml file, meaning it uses default Android behavior which allows cleartext on older APIs. Create android/app/src/main/res/xml/network_security_config.xml with: (1) cleartextTrafficPermitted=false globally, (2) certificate pinning for build-desk.com and supabase.co domains, (3) debug overrides for local development. Update AndroidManifest.xml to reference the network security config via android:networkSecurityConfig attribute on the <application> tag.",
+      "description": "As a security engineer, I want the Android app to enforce HTTPS-only connections with certificate pinning for critical domains so that man-in-the-middle attacks are prevented. Currently the Android project has NO network_security_config.xml file, meaning it uses default Android behavior which allows cleartext on older APIs. Create android/app/src/main/res/xml/network_security_config.xml with: (1) cleartextTrafficPermitted=false globally, (2) certificate pinning for brikly.net and supabase.co domains, (3) debug overrides for local development. Update AndroidManifest.xml to reference the network security config via android:networkSecurityConfig attribute on the <application> tag.",
       "acceptanceCriteria": [
         "android/app/src/main/res/xml/network_security_config.xml exists with cleartextTrafficPermitted=false",
-        "Certificate pinning configured for *.build-desk.com and *.supabase.co domains",
+        "Certificate pinning configured for *.brikly.net and *.supabase.co domains",
         "Debug overrides allow localhost/10.0.2.2 for emulator development",
         "AndroidManifest.xml references @xml/network_security_config on <application> tag",
         "npm run build passes"
       ],
       "priority": 1,
       "passes": true,
-      "notes": "COMPLETED. Created android/app/src/main/res/xml/network_security_config.xml with cleartextTrafficPermitted=false, certificate pinning for build-desk.com and supabase.co, and debug overrides. Updated AndroidManifest.xml with android:networkSecurityConfig reference."
+      "notes": "COMPLETED. Created android/app/src/main/res/xml/network_security_config.xml with cleartextTrafficPermitted=false, certificate pinning for brikly.net and supabase.co, and debug overrides. Updated AndroidManifest.xml with android:networkSecurityConfig reference."
     },
     {
       "id": "AA-002",
@@ -68,36 +68,36 @@
       ],
       "priority": 1,
       "passes": true,
-      "notes": "COMPLETED. Set allowBackup=false, fullBackupContent=false, usesCleartextTraffic=false, hardwareAccelerated=true, dataExtractionRules=@xml/data_extraction_rules. Created data_extraction_rules.xml with deny-all for cloud-backup and device-transfer. Also added WebView SafeBrowsing meta-data, deep linking intent filters for app.build-desk.com and com.builddesk.app:// OAuth scheme, and foreground location service declaration with LocationTrackingService.java."
+      "notes": "COMPLETED. Set allowBackup=false, fullBackupContent=false, usesCleartextTraffic=false, hardwareAccelerated=true, dataExtractionRules=@xml/data_extraction_rules. Created data_extraction_rules.xml with deny-all for cloud-backup and device-transfer. Also added WebView SafeBrowsing meta-data, deep linking intent filters for app.brikly.net and com.brikly.app:// OAuth scheme, and foreground location service declaration with LocationTrackingService.java."
     },
     {
       "id": "AA-005",
       "title": "Add deep linking and OAuth callback intent filters for authentication flows",
-      "description": "As a mobile developer, I want deep linking configured for OAuth callbacks (Google, Apple Sign-In) and app navigation so that authentication redirects return to the app correctly. Currently the MainActivity only has the MAIN/LAUNCHER intent filter. Add intent filters for: (1) HTTPS deep links for app.build-desk.com/*, (2) Custom scheme com.builddesk.app:// for OAuth callbacks, (3) Supabase auth callback handling. Also add android:autoVerify=true for App Links verification.",
+      "description": "As a mobile developer, I want deep linking configured for OAuth callbacks (Google, Apple Sign-In) and app navigation so that authentication redirects return to the app correctly. Currently the MainActivity only has the MAIN/LAUNCHER intent filter. Add intent filters for: (1) HTTPS deep links for app.brikly.net/*, (2) Custom scheme com.brikly.app:// for OAuth callbacks, (3) Supabase auth callback handling. Also add android:autoVerify=true for App Links verification.",
       "acceptanceCriteria": [
-        "AndroidManifest.xml has intent-filter for https://app.build-desk.com with autoVerify=true",
-        "AndroidManifest.xml has intent-filter for com.builddesk.app:// custom scheme",
+        "AndroidManifest.xml has intent-filter for https://app.brikly.net with autoVerify=true",
+        "AndroidManifest.xml has intent-filter for com.brikly.app:// custom scheme",
         "Deep link intent filters include VIEW action and BROWSABLE category",
         "OAuth callback URLs properly handled for Google and Apple Sign-In",
         "npm run build passes"
       ],
       "priority": 2,
       "passes": true,
-      "notes": "COMPLETED. Deep linking was implemented as part of AA-004. AndroidManifest.xml has intent-filter for https://app.build-desk.com with autoVerify=true, and com.builddesk.app:// custom scheme for OAuth callbacks."
+      "notes": "COMPLETED. Deep linking was implemented as part of AA-004. AndroidManifest.xml has intent-filter for https://app.brikly.net with autoVerify=true, and com.brikly.app:// custom scheme for OAuth callbacks."
     },
     {
       "id": "AA-006",
       "title": "Create mobile-optimized splash screen and app icon resources for all Android densities",
-      "description": "As a UX designer, I want proper branded splash screen and app icon assets for BuildDesk so that the app looks professional on all Android devices. Currently using default Capacitor placeholder icons (green robot). Need: (1) Update styles.xml splash theme to use BuildDesk brand colors (#4A90E2 primary, #ffffff background), (2) Configure splash screen with proper dimensions and theme colors matching the web app, (3) Add night mode theme variant for dark mode splash screen. Update values/colors.xml with BuildDesk brand colors.",
+      "description": "As a UX designer, I want proper branded splash screen and app icon assets for Brikly so that the app looks professional on all Android devices. Currently using default Capacitor placeholder icons (green robot). Need: (1) Update styles.xml splash theme to use Brikly brand colors (#4A90E2 primary, #ffffff background), (2) Configure splash screen with proper dimensions and theme colors matching the web app, (3) Add night mode theme variant for dark mode splash screen. Update values/colors.xml with Brikly brand colors.",
       "acceptanceCriteria": [
-        "android/app/src/main/res/values/colors.xml has BuildDesk brand colors (#4A90E2 primary, #2E6BC6 dark, #7BB3F0 accent)",
-        "styles.xml splash theme uses BuildDesk brand colors",
+        "android/app/src/main/res/values/colors.xml has Brikly brand colors (#4A90E2 primary, #2E6BC6 dark, #7BB3F0 accent)",
+        "styles.xml splash theme uses Brikly brand colors",
         "Night mode values exist at values-night/styles.xml with dark theme splash",
         "npm run build passes"
       ],
       "priority": 2,
       "passes": true,
-      "notes": "COMPLETED. Created values/colors.xml with BuildDesk brand colors. Updated styles.xml with branded splash theme, status bar colors, and navigation bar theming. Created values-night/colors.xml and values-night/styles.xml for dark mode splash."
+      "notes": "COMPLETED. Created values/colors.xml with Brikly brand colors. Updated styles.xml with branded splash theme, status bar colors, and navigation bar theming. Created values-night/colors.xml and values-night/styles.xml for dark mode splash."
     },
     {
       "id": "AA-007",
@@ -135,7 +135,7 @@
       "acceptanceCriteria": [
         "android/fastlane/metadata/android/en-US/short_description.txt exists (max 80 chars)",
         "android/fastlane/metadata/android/en-US/full_description.txt exists with app description",
-        "android/fastlane/metadata/android/en-US/title.txt contains 'BuildDesk'",
+        "android/fastlane/metadata/android/en-US/title.txt contains 'Brikly'",
         "npm run build passes"
       ],
       "priority": 3,
@@ -188,10 +188,10 @@
     {
       "id": "AA-013",
       "title": "Add Android-specific status bar and navigation bar theming for immersive UX",
-      "description": "As a UX designer, I want the Android status bar and navigation bar to match the BuildDesk theme so that the app looks native and professional. Create src/hooks/useAndroidStatusBar.ts that: (1) Sets status bar color to match the current theme (light/dark), (2) Configures navigation bar color, (3) Handles edge-to-edge display for Android 15+, (4) Uses Capacitor StatusBar plugin for native control.",
+      "description": "As a UX designer, I want the Android status bar and navigation bar to match the Brikly theme so that the app looks native and professional. Create src/hooks/useAndroidStatusBar.ts that: (1) Sets status bar color to match the current theme (light/dark), (2) Configures navigation bar color, (3) Handles edge-to-edge display for Android 15+, (4) Uses Capacitor StatusBar plugin for native control.",
       "acceptanceCriteria": [
         "src/hooks/useAndroidStatusBar.ts exists with status bar theming logic",
-        "Hook sets status bar background color matching BuildDesk brand",
+        "Hook sets status bar background color matching Brikly brand",
         "Hook handles both light and dark theme variants",
         "Hook is platform-aware (only runs on Android via Capacitor.isNativePlatform)",
         "npm run build passes",

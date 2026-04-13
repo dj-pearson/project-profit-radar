@@ -44,7 +44,7 @@ interface SearchHighlightProps {
  * @example
  * ```tsx
  * <SearchHighlight
- *   text="BuildDesk Construction Management"
+ *   text="Brikly Construction Management"
  *   query="desk"
  *   highlightClassName="bg-yellow-200 font-bold"
  * />

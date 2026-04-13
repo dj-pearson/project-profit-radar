@@ -19,7 +19,7 @@ struct ProjectListView: View {
                     EmptyStateView(
                         icon: "folder",
                         title: "No Projects",
-                        message: "Projects created in BuildDesk will appear here."
+                        message: "Projects created in Brikly will appear here."
                     )
                 } else {
                     List {

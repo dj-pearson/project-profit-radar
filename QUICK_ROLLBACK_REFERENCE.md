@@ -2,7 +2,7 @@
 
 ## 30-Second Overview
 
-**Goal:** Revert BuildDesk from multi-tenant (shared database with site_id) back to single-tenant (isolated database, company-only isolation).
+**Goal:** Revert Brikly from multi-tenant (shared database with site_id) back to single-tenant (isolated database, company-only isolation).
 
 **Why:** Self-hosted Supabase means no cost penalty for separate databases.
 
@@ -254,7 +254,7 @@ Rollback complete when:
 
 - Full Guide: `MULTI_TENANT_ROLLBACK_GUIDE.md`
 - Frontend Checklist: `FRONTEND_ROLLBACK_CHECKLIST.md`
-- BuildDesk Docs: `CLAUDE.md`
+- Brikly Docs: `CLAUDE.md`
 - Supabase Docs: https://supabase.com/docs
 
 ---

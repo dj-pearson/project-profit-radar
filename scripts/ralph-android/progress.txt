@@ -2,19 +2,19 @@
 
 ### Android Project Structure
 - Android project initialized via Capacitor 7.4.4 at `android/`
-- Main activity: `android/app/src/main/java/com/builddesk/app/MainActivity.java`
+- Main activity: `android/app/src/main/java/com/brikly/app/MainActivity.java`
 - Manifest: `android/app/src/main/AndroidManifest.xml`
 - Build config: `android/app/build.gradle` (app-level), `android/variables.gradle` (SDK versions)
 - ProGuard: `android/app/proguard-rules.pro`
 - Resources: `android/app/src/main/res/` (values, xml, drawable, mipmap)
-- App ID: `com.builddesk.app`
+- App ID: `com.brikly.app`
 - Target SDK: 35, Min SDK: 23
 
 ### Capacitor Configuration
 - Config file: `capacitor.config.ts`
 - Web output dir: `dist-mobile` (built by `vite.config.mobile.ts`)
 - Build command: `npm run build:mobile` then `npx cap sync android`
-- Android scheme: https, hostname: app.build-desk.com
+- Android scheme: https, hostname: app.brikly.net
 - Plugins: Camera, Geolocation, PushNotifications, LocalNotifications, Preferences, Network
 - BiometricAuth configured in capacitor.config.ts
 
@@ -50,7 +50,7 @@
 ### AA-001: Network Security Configuration [DONE]
 - Created `android/app/src/main/res/xml/network_security_config.xml`
 - HTTPS-only enforcement (cleartextTrafficPermitted=false)
-- Certificate pinning for *.build-desk.com and *.supabase.co
+- Certificate pinning for *.brikly.net and *.supabase.co
 - Debug overrides for localhost/emulator development
 - Referenced in AndroidManifest.xml via android:networkSecurityConfig
 
@@ -84,17 +84,17 @@
 - Set android:hardwareAccelerated=true (WebView performance)
 - Created `android/app/src/main/res/xml/data_extraction_rules.xml` (deny-all for cloud + device transfer)
 - Added WebView Safe Browsing meta-data (EnableSafeBrowsing=true, MetricsOptOut=true)
-- Added deep linking intent filters for https://app.build-desk.com and com.builddesk.app:// OAuth
+- Added deep linking intent filters for https://app.brikly.net and com.brikly.app:// OAuth
 - Added LocationTrackingService foreground service for background GPS tracking
-- Created `android/app/src/main/java/com/builddesk/app/LocationTrackingService.java`
+- Created `android/app/src/main/java/com/brikly/app/LocationTrackingService.java`
 
 ### AA-005: Deep Linking [DONE]
 - Completed as part of AA-004
-- HTTPS deep links for app.build-desk.com with autoVerify=true
-- Custom scheme com.builddesk.app:// for OAuth callbacks
+- HTTPS deep links for app.brikly.net with autoVerify=true
+- Custom scheme com.brikly.app:// for OAuth callbacks
 
 ### AA-006: Branded Splash Screen & Colors [DONE]
-- Created `android/app/src/main/res/values/colors.xml` with BuildDesk brand palette
+- Created `android/app/src/main/res/values/colors.xml` with Brikly brand palette
 - Updated `styles.xml` with branded splash theme, status bar, and navigation bar colors
 - Created `values-night/colors.xml` and `values-night/styles.xml` for dark mode
 
@@ -143,7 +143,7 @@
 
 ### AA-009: Play Store Metadata [DONE]
 - Created `android/fastlane/metadata/android/en-US/` directory structure
-- title.txt: "BuildDesk"
+- title.txt: "Brikly"
 - short_description.txt: 76 chars covering core value prop
 - full_description.txt: Comprehensive listing with features, security, CTA
 

@@ -1,8 +1,8 @@
-# BuildDesk LinkedIn Post Series
+# Brikly LinkedIn Post Series
 
 ## Ready-to-Copy Social Media Content for Construction Management Platform
 
-_Each post is designed to drive engagement and 14-day trial signups at https://build-desk.com_
+_Each post is designed to drive engagement and 14-day trial signups at https://brikly.net_
 
 ---
 
@@ -28,13 +28,13 @@ But here's what changed everything for 500+ contractors:
 ✅ QuickBooks integration (no more double entry)
 ✅ Unlimited team members (grow without per-user fees)
 
-BuildDesk delivers enterprise features without enterprise complexity.
+Brikly delivers enterprise features without enterprise complexity.
 
 **30-day implementation. $350/month. Unlimited users.**
 
 Ready to stop losing money on every project?
 
-👉 Start your 14-day FREE trial: https://build-desk.com
+👉 Start your 14-day FREE trial: https://brikly.net
 
 #Construction #ProjectManagement #Contractors #BuildingBusiness
 
@@ -52,7 +52,7 @@ Most small contractors need enterprise features but can't justify:
 → Complex workflows that slow you down
 → Features you'll never use
 
-That's why BuildDesk exists.
+That's why Brikly exists.
 
 **Same core functionality. Fraction of the cost.**
 
@@ -74,7 +74,7 @@ Join 500+ contractors who made the switch and saved 40-60% on software costs.
 
 **Ready to level the playing field?**
 
-👉 Free 14-day trial: https://build-desk.com
+👉 Free 14-day trial: https://brikly.net
 
 #Procore #ConstructionSoftware #SmallBusiness #Contractors
 
@@ -88,14 +88,14 @@ Wrong.
 
 Here's the math that changed my mind:
 
-**BEFORE BuildDesk:**
+**BEFORE Brikly:**
 → 6 hours daily on administrative tasks
 → 15% average project overruns
 → 3-day delay in change order approvals
 → Manual time tracking (20% wage theft)
 → No real-time cost visibility
 
-**AFTER BuildDesk:**
+**AFTER Brikly:**
 → 2 hours daily admin (67% reduction)
 → 5% average overruns (10% improvement)
 → Same-day change order processing
@@ -117,7 +117,7 @@ The question isn't whether you can afford construction management software.
 
 It's whether you can afford NOT to have it.
 
-👉 See your ROI in 14 days FREE: https://build-desk.com
+👉 See your ROI in 14 days FREE: https://brikly.net
 
 #ROI #ConstructionBusiness #ProfitMargins #BusinessGrowth
 
@@ -138,7 +138,7 @@ It's the gap between your office and field.
 
 **Sound familiar?**
 
-BuildDesk bridges that gap with mobile-first field management:
+Brikly bridges that gap with mobile-first field management:
 
 📱 **Offline-capable mobile apps**
 → Work without wifi/cell service
@@ -163,7 +163,7 @@ BuildDesk bridges that gap with mobile-first field management:
 
 **92% of construction workers use smartphones daily. Isn't it time your software did too?**
 
-👉 Try mobile-first construction management: https://build-desk.com
+👉 Try mobile-first construction management: https://brikly.net
 
 #MobileFirst #FieldManagement #ConstructionTech #Productivity
 
@@ -184,7 +184,7 @@ Yet 67% of contractors still manage safety with:
 → No systematic hazard tracking
 → Reactive instead of proactive approach
 
-**BuildDesk automates your entire safety program:**
+**Brikly automates your entire safety program:**
 
 ✅ **Digital safety checklists**
 → Customizable for your trades
@@ -214,7 +214,7 @@ Yet 67% of contractors still manage safety with:
 
 **Your crew's safety isn't negotiable. Neither should your safety management be.**
 
-👉 Start building safer: https://build-desk.com
+👉 Start building safer: https://brikly.net
 
 #OSHACompliance #ConstructionSafety #RiskManagement #SafetyFirst
 
@@ -224,14 +224,14 @@ Yet 67% of contractors still manage safety with:
 
 **"Enterprise software is for enterprise companies."**
 
-Tell that to these small contractors crushing it with BuildDesk:
+Tell that to these small contractors crushing it with Brikly:
 
 **Martinez Roofing (8 employees):**
 → Increased project capacity by 30%
 → Reduced admin time from 8 to 2 hours daily
 → Improved client satisfaction scores by 40%
 
-**"We compete with 50+ employee companies now. BuildDesk leveled the playing field." - Carlos Martinez**
+**"We compete with 50+ employee companies now. Brikly leveled the playing field." - Carlos Martinez**
 
 **Thompson Remodeling (12 employees):**
 → Eliminated project overruns completely
@@ -255,7 +255,7 @@ Tell that to these small contractors crushing it with BuildDesk:
 
 **You don't need 100 employees to run like you do.**
 
-👉 Join the small contractor revolution: https://build-desk.com
+👉 Join the small contractor revolution: https://brikly.net
 
 #SmallBusiness #ConstructionSuccess #Scaling #Growth
 
@@ -275,7 +275,7 @@ Tell that to these small contractors crushing it with BuildDesk:
 
 **There's a better way.**
 
-BuildDesk's native QuickBooks integration eliminates the month-end nightmare:
+Brikly's native QuickBooks integration eliminates the month-end nightmare:
 
 🔄 **2-way real-time sync**
 → Job costs flow automatically
@@ -297,11 +297,11 @@ BuildDesk's native QuickBooks integration eliminates the month-end nightmare:
 
 **Result:** Your books stay current automatically.
 
-**"We went from 2 days of monthly reconciliation to 2 hours. BuildDesk paid for itself in time savings alone." - Jennifer Hayes, Hayes Construction**
+**"We went from 2 days of monthly reconciliation to 2 hours. Brikly paid for itself in time savings alone." - Jennifer Hayes, Hayes Construction**
 
 **Ready to eliminate the month-end scramble?**
 
-👉 Experience seamless integration: https://build-desk.com
+👉 Experience seamless integration: https://brikly.net
 
 #QuickBooks #ConstructionAccounting #Automation #TimeIsMoney
 
@@ -309,7 +309,7 @@ BuildDesk's native QuickBooks integration eliminates the month-end nightmare:
 
 ## 💡 POST 8: The "Why Didn't I Do This Sooner?" Moment
 
-**Every BuildDesk customer has THE moment.**
+**Every Brikly customer has THE moment.**
 
 The exact instant they realize construction management software isn't just "nice to have" – it's business-critical.
 
@@ -346,7 +346,7 @@ And you can't measure what you're not tracking in real-time.
 
 **Ready for YOUR moment?**
 
-👉 Start your journey: https://build-desk.com
+👉 Start your journey: https://brikly.net
 
 #AhaMoment #ConstructionManagement #BusinessTransformation #RealTalk
 
@@ -383,7 +383,7 @@ While you showed up with:
 
 **Same contractor. Different presentation.**
 
-**BuildDesk levels the playing field:**
+**Brikly levels the playing field:**
 
 📋 **Professional proposals**
 → Branded, detailed estimates
@@ -405,7 +405,7 @@ While you showed up with:
 
 **Even if it's just you and your truck.**
 
-👉 Win more bids with professional presentation: https://build-desk.com
+👉 Win more bids with professional presentation: https://brikly.net
 
 #BidWinning #ProfessionalPresentation #ConstructionBids #CompetitiveEdge
 
@@ -449,7 +449,7 @@ While you're still managing projects with:
 → More time selling
 → Faster growth capacity
 
-**The uncomfortable truth:** They're using BuildDesk or similar software.
+**The uncomfortable truth:** They're using Brikly or similar software.
 
 **The good news:** You can level the playing field in 30 days.
 
@@ -457,7 +457,7 @@ While you're still managing projects with:
 
 **Don't let competitors define your market position.**
 
-👉 Reclaim your competitive edge: https://build-desk.com
+👉 Reclaim your competitive edge: https://brikly.net
 
 #CompetitiveIntelligence #MarketPosition #ConstructionBusiness #StayAhead
 
@@ -465,7 +465,7 @@ While you're still managing projects with:
 
 ## 🎬 POST 11: A Day in the Life (Before vs. After)
 
-**BEFORE BuildDesk - 6:00 AM Monday**
+**BEFORE Brikly - 6:00 AM Monday**
 
 6:00 AM - Coffee, check weather, wonder if Johnson project is on schedule
 6:30 AM - Drive to office, stress about material delivery timing
@@ -477,9 +477,9 @@ While you're still managing projects with:
 9:00 AM - Finally reach crew - they need more materials
 9:30 AM - Realize I'm behind schedule and haven't started real work
 
-**AFTER BuildDesk - 6:00 AM Monday**
+**AFTER Brikly - 6:00 AM Monday**
 
-6:00 AM - Coffee, open BuildDesk dashboard on phone
+6:00 AM - Coffee, open Brikly dashboard on phone
 6:05 AM - All projects green, crews checked in automatically via GPS
 6:10 AM - Material deliveries confirmed with real-time tracking
 6:15 AM - Review yesterday's progress photos from field crews
@@ -494,7 +494,7 @@ While you're still managing projects with:
 
 **"I went from fire-fighting to business-building. Game changer." - Lisa Chen, Chen Construction**
 
-👉 Transform your daily routine: https://build-desk.com
+👉 Transform your daily routine: https://brikly.net
 
 #DayInTheLife #Productivity #ConstructionLife #WorkflowAutomation
 
@@ -512,7 +512,7 @@ You're competing against crews of 10, 25, even 50+ employees.
 
 **The smart way:** Work like you have a full team... even when you don't.
 
-**BuildDesk makes one person look like ten:**
+**Brikly makes one person look like ten:**
 
 🏢 **Professional business presentation**
 → Branded estimates and proposals
@@ -534,7 +534,7 @@ You're competing against crews of 10, 25, even 50+ employees.
 
 **Solo contractor Sarah Mills wins against 20+ employee companies:**
 
-"Clients choose me because I'm 'organized' and 'professional.' Really, it's just BuildDesk making me look like I have an entire back-office team."
+"Clients choose me because I'm 'organized' and 'professional.' Really, it's just Brikly making me look like I have an entire back-office team."
 
 **Her competitive advantages:**
 → Instant communication
@@ -544,7 +544,7 @@ You're competing against crews of 10, 25, even 50+ employees.
 
 **Being small doesn't mean looking small.**
 
-👉 Compete like a big company: https://build-desk.com
+👉 Compete like a big company: https://brikly.net
 
 #SoloContractor #OnePersonBusiness #CompetitiveAdvantage #ProfessionalPresentation
 
@@ -568,7 +568,7 @@ You're competing against crews of 10, 25, even 50+ employees.
 
 **85% of construction projects have change orders. Most contractors handle them terribly.**
 
-**BuildDesk transforms change order chaos into profit opportunity:**
+**Brikly transforms change order chaos into profit opportunity:**
 
 📝 **Digital change order requests**
 → Captured instantly on mobile
@@ -594,7 +594,7 @@ You're competing against crews of 10, 25, even 50+ employees.
 
 **Stop losing money on changes. Start making money on them.**
 
-👉 Master change order management: https://build-desk.com
+👉 Master change order management: https://brikly.net
 
 #ChangeOrders #ProfitProtection #ConstructionManagement #ClientRelations
 
@@ -608,7 +608,7 @@ You're competing against crews of 10, 25, even 50+ employees.
 
 **They're wrong.**
 
-**Here's the 30-day BuildDesk implementation roadmap:**
+**Here's the 30-day Brikly implementation roadmap:**
 
 **Week 1: Foundation**
 ✅ Account setup and team onboarding (Day 1-2)
@@ -630,7 +630,7 @@ You're competing against crews of 10, 25, even 50+ employees.
 ✅ Real-time reporting dashboard (Day 25-26)
 ✅ Performance optimization and fine-tuning (Day 27-30)
 
-**The secret?** BuildDesk is designed for fast implementation.
+**The secret?** Brikly is designed for fast implementation.
 
 **No complex IT requirements.**
 **No lengthy customization.**
@@ -640,7 +640,7 @@ You're competing against crews of 10, 25, even 50+ employees.
 
 **Ready to transform your business in 30 days?**
 
-👉 Start your transformation: https://build-desk.com
+👉 Start your transformation: https://brikly.net
 
 #30DayChallenge #FastImplementation #BusinessTransformation #QuickWins
 
@@ -648,7 +648,7 @@ You're competing against crews of 10, 25, even 50+ employees.
 
 ## 🔢 POST 15: The Numbers Don't Lie
 
-**Real BuildDesk customer data from 2024:**
+**Real Brikly customer data from 2024:**
 
 📈 **Project Efficiency Gains**
 → 23% reduction in project completion time
@@ -684,7 +684,7 @@ You're competing against crews of 10, 25, even 50+ employees.
 
 **Your business. Your results. Your growth.**
 
-👉 See your numbers improve: https://build-desk.com
+👉 See your numbers improve: https://brikly.net
 
 #ConstructionData #ROIProven #BusinessMetrics #RealResults
 
@@ -731,11 +731,11 @@ You're competing against crews of 10, 25, even 50+ employees.
 
 **Choose wisely.**
 
-👉 **Start your FREE 14-day trial: https://build-desk.com**
+👉 **Start your FREE 14-day trial: https://brikly.net**
 
 **No risk. Maximum reward. Your business transformation awaits.**
 
-#ConstructionTransformation #BuildDesk #FreeTrialNoRisk #TakeAction
+#ConstructionTransformation #Brikly #FreeTrialNoRisk #TakeAction
 
 ---
 
@@ -770,4 +770,4 @@ You're competing against crews of 10, 25, even 50+ employees.
 
 ---
 
-_This content series is designed to establish thought leadership, build trust, and drive qualified trial signups for BuildDesk. Each post can be customized with current data, testimonials, and specific regional information as needed._
+_This content series is designed to establish thought leadership, build trust, and drive qualified trial signups for Brikly. Each post can be customized with current data, testimonials, and specific regional information as needed._

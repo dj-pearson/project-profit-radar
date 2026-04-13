@@ -23,7 +23,7 @@ else
 fi
 
 echo -e "${BOLD}══════════════════════════════════════════════════════${RESET}"
-echo -e "${BOLD}  BuildDesk Secret Scanner${RESET}"
+echo -e "${BOLD}  Brikly Secret Scanner${RESET}"
 echo -e "${BOLD}══════════════════════════════════════════════════════${RESET}"
 echo ""
 

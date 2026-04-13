@@ -1,4 +1,4 @@
-package com.builddesk.app;
+package com.brikly.app;
 
 import android.app.Notification;
 import android.app.NotificationChannel;
@@ -18,7 +18,7 @@ import androidx.core.app.NotificationCompat;
  */
 public class LocationTrackingService extends Service {
 
-    private static final String CHANNEL_ID = "builddesk_location_tracking";
+    private static final String CHANNEL_ID = "brikly_location_tracking";
     private static final int NOTIFICATION_ID = 1001;
 
     @Override
@@ -30,7 +30,7 @@ public class LocationTrackingService extends Service {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         Notification notification = new NotificationCompat.Builder(this, CHANNEL_ID)
-                .setContentTitle("BuildDesk")
+                .setContentTitle("Brikly")
                 .setContentText("GPS time tracking is active")
                 .setSmallIcon(android.R.drawable.ic_menu_mylocation)
                 .setPriority(NotificationCompat.PRIORITY_LOW)

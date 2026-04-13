@@ -36,10 +36,10 @@ const AccessibilityStatement = () => {
   return (
     <>
       <Helmet>
-        <title>Accessibility Statement | BuildDesk Construction Management</title>
+        <title>Accessibility Statement | Brikly Construction Management</title>
         <meta
           name="description"
-          content="BuildDesk's commitment to digital accessibility. Learn about our WCAG 2.1 AA conformance, accessibility features, and how to provide feedback."
+          content="Brikly's commitment to digital accessibility. Learn about our WCAG 2.1 AA conformance, accessibility features, and how to provide feedback."
         />
       </Helmet>
 
@@ -101,7 +101,7 @@ const AccessibilityStatement = () => {
                     Our Commitment to Accessibility
                   </h2>
                   <p className="mb-3">
-                    BuildDesk is committed to ensuring digital accessibility for people with disabilities.
+                    Brikly is committed to ensuring digital accessibility for people with disabilities.
                     We are continually improving the user experience for everyone and applying the relevant
                     accessibility standards to ensure we provide equal access to all users.
                   </p>
@@ -122,7 +122,7 @@ const AccessibilityStatement = () => {
                   </p>
                   <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4 mb-4">
                     <p className="font-medium text-green-800 dark:text-green-200">
-                      BuildDesk is <strong>fully conformant</strong> with WCAG 2.1 Level AA.
+                      Brikly is <strong>fully conformant</strong> with WCAG 2.1 Level AA.
                     </p>
                     <p className="text-sm text-green-700 dark:text-green-300 mt-2">
                       Fully conformant means that the content fully conforms to the accessibility standard
@@ -130,7 +130,7 @@ const AccessibilityStatement = () => {
                     </p>
                   </div>
                   <p>
-                    Additionally, BuildDesk complies with:
+                    Additionally, Brikly complies with:
                   </p>
                   <ul className="list-disc pl-6 space-y-1 mt-3">
                     <li><strong>Section 508</strong> of the Rehabilitation Act</li>
@@ -140,7 +140,7 @@ const AccessibilityStatement = () => {
                   <p className="mt-4">
                     For detailed conformance information, see our{' '}
                     <a
-                      href="/docs/VPAT_WCAG_2.1_BuildDesk.md"
+                      href="/docs/VPAT_WCAG_2.1_Brikly.md"
                       target="_blank"
                       rel="noopener noreferrer"
                       className="text-primary hover:underline inline-flex items-center gap-1"
@@ -156,7 +156,7 @@ const AccessibilityStatement = () => {
                 <section aria-labelledby="features-heading">
                   <h2 id="features-heading" className="text-xl font-semibold mb-3">Accessibility Features</h2>
                   <p className="mb-4">
-                    BuildDesk includes the following accessibility features:
+                    Brikly includes the following accessibility features:
                   </p>
 
                   <div className="grid gap-4 md:grid-cols-2">
@@ -241,7 +241,7 @@ const AccessibilityStatement = () => {
                     Accessibility Customization
                   </h2>
                   <p className="mb-3">
-                    BuildDesk provides a comprehensive accessibility settings panel that allows you to
+                    Brikly provides a comprehensive accessibility settings panel that allows you to
                     customize your experience:
                   </p>
                   <ul className="list-disc pl-6 space-y-2">
@@ -277,7 +277,7 @@ const AccessibilityStatement = () => {
                 <section aria-labelledby="technical-heading">
                   <h2 id="technical-heading" className="text-xl font-semibold mb-3">Technical Specifications</h2>
                   <p className="mb-3">
-                    BuildDesk's accessibility relies on the following technologies:
+                    Brikly's accessibility relies on the following technologies:
                   </p>
                   <ul className="list-disc pl-6 space-y-1">
                     <li>HTML5</li>
@@ -294,7 +294,7 @@ const AccessibilityStatement = () => {
                 <section aria-labelledby="compatibility-heading">
                   <h2 id="compatibility-heading" className="text-xl font-semibold mb-3">Compatibility</h2>
                   <p className="mb-3">
-                    BuildDesk is designed to be compatible with the following assistive technologies:
+                    Brikly is designed to be compatible with the following assistive technologies:
                   </p>
                   <ul className="list-disc pl-6 space-y-1">
                     <li><strong>Screen Readers:</strong> JAWS, NVDA, VoiceOver, TalkBack, Narrator</li>
@@ -317,7 +317,7 @@ const AccessibilityStatement = () => {
                 <section aria-labelledby="assessment-heading">
                   <h2 id="assessment-heading" className="text-xl font-semibold mb-3">Assessment Methods</h2>
                   <p className="mb-3">
-                    BuildDesk assessed the accessibility of this website and application through the following methods:
+                    Brikly assessed the accessibility of this website and application through the following methods:
                   </p>
                   <ul className="list-disc pl-6 space-y-2">
                     <li>
@@ -375,7 +375,7 @@ const AccessibilityStatement = () => {
                 <section aria-labelledby="feedback-heading">
                   <h2 id="feedback-heading" className="text-xl font-semibold mb-3">Feedback & Contact</h2>
                   <p className="mb-3">
-                    We welcome your feedback on the accessibility of BuildDesk. Please let us know if you
+                    We welcome your feedback on the accessibility of Brikly. Please let us know if you
                     encounter accessibility barriers:
                   </p>
                   <div className="bg-muted rounded-lg p-4 space-y-3">
@@ -384,10 +384,10 @@ const AccessibilityStatement = () => {
                       <div>
                         <strong>Email:</strong>{' '}
                         <a
-                          href="mailto:accessibility@builddesk.com"
+                          href="mailto:accessibility@brikly.com"
                           className="text-primary hover:underline"
                         >
-                          accessibility@builddesk.com
+                          accessibility@brikly.com
                         </a>
                       </div>
                     </div>
@@ -507,7 +507,7 @@ const AccessibilityStatement = () => {
                   asChild
                 >
                   <a
-                    href="mailto:accessibility@builddesk.com"
+                    href="mailto:accessibility@brikly.com"
                     className="flex items-center gap-2"
                   >
                     <Mail className="h-4 w-4" aria-hidden="true" />
@@ -523,7 +523,7 @@ const AccessibilityStatement = () => {
         <footer className="border-t mt-8 py-6 bg-card" role="contentinfo">
           <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
             <p className="text-sm text-muted-foreground text-center">
-              © {new Date().getFullYear()} BuildDesk Construction Management. All rights reserved.
+              © {new Date().getFullYear()} Brikly Construction Management. All rights reserved.
               <br />
               <span className="text-xs">
                 Committed to providing an accessible experience for all users.

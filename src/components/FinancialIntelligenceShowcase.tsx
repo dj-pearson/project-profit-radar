@@ -42,7 +42,7 @@ const FinancialIntelligenceShowcase = () => {
           <span className="text-gradient">A Financial Command Center.</span>
         </h2>
         <p className="text-xl text-muted-foreground">
-          While competitors focus on schedules and photos, BuildDesk owns the financial intelligence layer—where profit is actually made.
+          While competitors focus on schedules and photos, Brikly owns the financial intelligence layer—where profit is actually made.
         </p>
       </div>
 
@@ -65,7 +65,7 @@ const FinancialIntelligenceShowcase = () => {
       {/* Comparison Table */}
       <div className="glass-card rounded-3xl overflow-hidden border-0 shadow-2xl">
         <div className="bg-construction-dark/5 dark:bg-white/5 p-8 text-center border-b border-border/10">
-          <h3 className="text-2xl font-bold text-construction-dark dark:text-white">Why BuildDesk Wins</h3>
+          <h3 className="text-2xl font-bold text-construction-dark dark:text-white">Why Brikly Wins</h3>
           <p className="text-muted-foreground">The only platform built for financial clarity.</p>
         </div>
 
@@ -74,7 +74,7 @@ const FinancialIntelligenceShowcase = () => {
             <thead>
               <tr className="border-b border-border/10">
                 <th className="p-6 font-medium text-muted-foreground w-1/2">Capability</th>
-                <th className="p-6 font-bold text-construction-orange text-center bg-construction-orange/5 w-1/4">BuildDesk</th>
+                <th className="p-6 font-bold text-construction-orange text-center bg-construction-orange/5 w-1/4">Brikly</th>
                 <th className="p-6 font-medium text-muted-foreground text-center w-1/4">Traditional PM Tools</th>
               </tr>
             </thead>

@@ -82,7 +82,7 @@ export const TestimonialCard: React.FC<TestimonialProps> = ({
 export const TestimonialsSection: React.FC = () => {
   const testimonials: TestimonialProps[] = [
     {
-      quote: "We caught a $47K cost overrun on a kitchen remodel three weeks before it would have destroyed our margin. The predictive alerts showed labor costs trending 22% over budget. We course-corrected immediately and saved the project. That one alert paid for BuildDesk for the next 5 years.",
+      quote: "We caught a $47K cost overrun on a kitchen remodel three weeks before it would have destroyed our margin. The predictive alerts showed labor costs trending 22% over budget. We course-corrected immediately and saved the project. That one alert paid for Brikly for the next 5 years.",
       author: "Mike Rodriguez",
       title: "Owner",
       company: "Rodriguez Custom Homes",
@@ -95,7 +95,7 @@ export const TestimonialsSection: React.FC = () => {
       }
     },
     {
-      quote: "I used to spend 3 full days every month doing financial close - reconciling spreadsheets, categorizing expenses, generating reports. Now it takes 5 minutes with one click. BuildDesk freed up 36 days a year that I now spend growing my business instead of buried in paperwork.",
+      quote: "I used to spend 3 full days every month doing financial close - reconciling spreadsheets, categorizing expenses, generating reports. Now it takes 5 minutes with one click. Brikly freed up 36 days a year that I now spend growing my business instead of buried in paperwork.",
       author: "Sarah Chen",
       title: "Owner/CFO",
       company: "Metro Build Group",
@@ -108,7 +108,7 @@ export const TestimonialsSection: React.FC = () => {
       }
     },
     {
-      quote: "Before BuildDesk, I only knew if a project was profitable at tax time. Now I see profit margins update in real-time. Last week I saw a project drop from 18% to 12% margin instantly when unexpected costs hit. We adjusted scope immediately and recovered to 16%. That's the difference between guessing and knowing.",
+      quote: "Before Brikly, I only knew if a project was profitable at tax time. Now I see profit margins update in real-time. Last week I saw a project drop from 18% to 12% margin instantly when unexpected costs hit. We adjusted scope immediately and recovered to 16%. That's the difference between guessing and knowing.",
       author: "David Thompson",
       title: "General Contractor",
       company: "Thompson Construction LLC",
@@ -134,7 +134,7 @@ export const TestimonialsSection: React.FC = () => {
       }
     },
     {
-      quote: "The QuickBooks integration with automated categorization is a game-changer. Month-end reconciliation used to take my bookkeeper 18 hours. Now it's automatic and accurate. We recouped our entire BuildDesk investment in the first month just from reduced accounting fees.",
+      quote: "The QuickBooks integration with automated categorization is a game-changer. Month-end reconciliation used to take my bookkeeper 18 hours. Now it's automatic and accurate. We recouped our entire Brikly investment in the first month just from reduced accounting fees.",
       author: "Tom Martinez",
       title: "Owner",
       company: "Martinez Remodeling",
@@ -147,7 +147,7 @@ export const TestimonialsSection: React.FC = () => {
       }
     },
     {
-      quote: "Financial surprises used to kill us. We'd finish a project thinking we made money, then the final accounting showed we lost thousands. BuildDesk's real-time job costing means no more surprises. We know our profit position daily, not quarterly. Improved our margins from 8% to 13%.",
+      quote: "Financial surprises used to kill us. We'd finish a project thinking we made money, then the final accounting showed we lost thousands. Brikly's real-time job costing means no more surprises. We know our profit position daily, not quarterly. Improved our margins from 8% to 13%.",
       author: "Lisa Chang",
       title: "Operations Manager",
       company: "Chang & Associates Construction",
@@ -201,7 +201,7 @@ export const TestimonialsSection: React.FC = () => {
           __html: JSON.stringify({
             "@context": "https://schema.org",
             "@type": "Product",
-            "name": "BuildDesk Construction Management Software",
+            "name": "Brikly Construction Management Software",
             "aggregateRating": {
               "@type": "AggregateRating",
               "ratingValue": "4.9",

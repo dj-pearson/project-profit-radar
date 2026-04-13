@@ -37,11 +37,11 @@ BEGIN
     ) VALUES 
     -- Getting Started Articles
     (
-        'Getting Started with Build Desk: Complete Setup Guide',
+        'Getting Started with Brikly: Complete Setup Guide',
         'getting-started-complete-setup-guide',
-        '# Getting Started with Build Desk: Complete Setup Guide
+        '# Getting Started with Brikly: Complete Setup Guide
 
-Welcome to Build Desk! This comprehensive guide will walk you through setting up your construction management platform for success.
+Welcome to Brikly! This comprehensive guide will walk you through setting up your construction management platform for success.
 
 ## Step 1: Company Setup
 
@@ -122,9 +122,9 @@ Once your basic setup is complete:
 ## Need Help?
 
 - Check our video tutorials
-- Contact support at support@build-desk.com
+- Contact support at support@brikly.net
 - Schedule a training session with our team',
-        'Complete step-by-step guide to setting up your Build Desk account, configuring your company settings, and getting your team ready to manage construction projects effectively.',
+        'Complete step-by-step guide to setting up your Brikly account, configuring your company settings, and getting your team ready to manage construction projects effectively.',
         'how_to',
         getting_started_cat_id,
         admin_user_id,
@@ -141,7 +141,7 @@ Once your basic setup is complete:
         'essential-features-construction-companies',
         '# Essential Features Every Construction Company Should Use
 
-Build Desk offers comprehensive construction management tools. Here are the must-use features that will transform your business operations.
+Brikly offers comprehensive construction management tools. Here are the must-use features that will transform your business operations.
 
 ## 1. Real-Time Job Costing
 
@@ -280,7 +280,7 @@ Our implementation team is here to help:
 - Weekly check-ins during setup
 - Best practice consultations
 - Ongoing support as you grow',
-        'Discover the core Build Desk features that successful construction companies use daily to improve profitability, efficiency, and client satisfaction.',
+        'Discover the core Brikly features that successful construction companies use daily to improve profitability, efficiency, and client satisfaction.',
         'article',
         getting_started_cat_id,
         admin_user_id,

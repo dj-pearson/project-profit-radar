@@ -74,7 +74,7 @@ BEGIN
     -- In production, use Supabase Vault or external KMS
     v_key := encode(
       digest(
-        'builddesk_' || key_purpose || '_v1_secure_key_2025',
+        'brikly_' || key_purpose || '_v1_secure_key_2025',
         'sha256'
       ),
       'hex'

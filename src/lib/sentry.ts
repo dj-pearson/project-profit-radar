@@ -94,8 +94,8 @@ export const initSentry = () => {
 
     // Only track errors from our domain
     allowUrls: [
-      /https?:\/\/(www\.)?builddesk\.com/,
-      /https?:\/\/(www\.)?build-desk\.com/,
+      /https?:\/\/(www\.)?brikly\.com/,
+      /https?:\/\/(www\.)?brikly\.com/,
       /localhost/,
     ],
   });

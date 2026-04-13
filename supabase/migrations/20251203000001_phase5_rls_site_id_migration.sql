@@ -103,71 +103,71 @@ END $$;
 -- STEP 2: BACKFILL site_id FROM tenant_id OR DEFAULT SITE
 -- =====================================================
 
--- Get the BuildDesk site_id for backfilling existing data
+-- Get the Brikly site_id for backfilling existing data
 DO $$
 DECLARE
-  v_builddesk_site_id UUID;
+  v_brikly_site_id UUID;
 BEGIN
-  -- Get or create BuildDesk site
-  SELECT id INTO v_builddesk_site_id FROM sites WHERE key = 'builddesk' LIMIT 1;
+  -- Get or create Brikly site
+  SELECT id INTO v_brikly_site_id FROM sites WHERE key = 'brikly' LIMIT 1;
 
-  -- If no BuildDesk site exists, create it
-  IF v_builddesk_site_id IS NULL THEN
+  -- If no Brikly site exists, create it
+  IF v_brikly_site_id IS NULL THEN
     INSERT INTO sites (key, name, domain, is_active, is_production)
-    VALUES ('builddesk', 'BuildDesk', 'build-desk.com', true, true)
-    RETURNING id INTO v_builddesk_site_id;
+    VALUES ('brikly', 'Brikly', 'brikly.net', true, true)
+    RETURNING id INTO v_brikly_site_id;
   END IF;
 
   -- Backfill site_id for all Phase 5 tables
   IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'material_forecasts') THEN
-    UPDATE material_forecasts SET site_id = v_builddesk_site_id WHERE site_id IS NULL;
+    UPDATE material_forecasts SET site_id = v_brikly_site_id WHERE site_id IS NULL;
   END IF;
 
   IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'supplier_catalog') THEN
-    UPDATE supplier_catalog SET site_id = v_builddesk_site_id WHERE site_id IS NULL;
+    UPDATE supplier_catalog SET site_id = v_brikly_site_id WHERE site_id IS NULL;
   END IF;
 
   IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'purchase_recommendations') THEN
-    UPDATE purchase_recommendations SET site_id = v_builddesk_site_id WHERE site_id IS NULL;
+    UPDATE purchase_recommendations SET site_id = v_brikly_site_id WHERE site_id IS NULL;
   END IF;
 
   IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'financial_snapshots') THEN
-    UPDATE financial_snapshots SET site_id = v_builddesk_site_id WHERE site_id IS NULL;
+    UPDATE financial_snapshots SET site_id = v_brikly_site_id WHERE site_id IS NULL;
   END IF;
 
   IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'kpi_metrics') THEN
-    UPDATE kpi_metrics SET site_id = v_builddesk_site_id WHERE site_id IS NULL;
+    UPDATE kpi_metrics SET site_id = v_brikly_site_id WHERE site_id IS NULL;
   END IF;
 
   IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'client_portal_access') THEN
-    UPDATE client_portal_access SET site_id = v_builddesk_site_id WHERE site_id IS NULL;
+    UPDATE client_portal_access SET site_id = v_brikly_site_id WHERE site_id IS NULL;
   END IF;
 
   IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'client_messages') THEN
-    UPDATE client_messages SET site_id = v_builddesk_site_id WHERE site_id IS NULL;
+    UPDATE client_messages SET site_id = v_brikly_site_id WHERE site_id IS NULL;
   END IF;
 
   IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'billing_automation_rules') THEN
-    UPDATE billing_automation_rules SET site_id = v_builddesk_site_id WHERE site_id IS NULL;
+    UPDATE billing_automation_rules SET site_id = v_brikly_site_id WHERE site_id IS NULL;
   END IF;
 
   IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'payment_reminders') THEN
-    UPDATE payment_reminders SET site_id = v_builddesk_site_id WHERE site_id IS NULL;
+    UPDATE payment_reminders SET site_id = v_brikly_site_id WHERE site_id IS NULL;
   END IF;
 
   IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'custom_reports') THEN
-    UPDATE custom_reports SET site_id = v_builddesk_site_id WHERE site_id IS NULL;
+    UPDATE custom_reports SET site_id = v_brikly_site_id WHERE site_id IS NULL;
   END IF;
 
   IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'report_schedules') THEN
-    UPDATE report_schedules SET site_id = v_builddesk_site_id WHERE site_id IS NULL;
+    UPDATE report_schedules SET site_id = v_brikly_site_id WHERE site_id IS NULL;
   END IF;
 
   IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'report_history') THEN
-    UPDATE report_history SET site_id = v_builddesk_site_id WHERE site_id IS NULL;
+    UPDATE report_history SET site_id = v_brikly_site_id WHERE site_id IS NULL;
   END IF;
 
-  RAISE NOTICE 'Backfilled site_id = % for all Phase 5 tables', v_builddesk_site_id;
+  RAISE NOTICE 'Backfilled site_id = % for all Phase 5 tables', v_brikly_site_id;
 END $$;
 
 -- =====================================================

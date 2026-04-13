@@ -93,12 +93,12 @@ serve(async (req) => {
       siteId = siteData?.id;
     }
 
-    // Fall back to default BuildDesk site if no site specified
+    // Fall back to default Brikly site if no site specified
     if (!siteId) {
       const { data: defaultSite } = await supabaseClient
         .from('sites')
         .select('id')
-        .eq('key', 'builddesk')
+        .eq('key', 'brikly')
         .single();
       siteId = defaultSite?.id;
     }

@@ -110,21 +110,21 @@ Permissions-Policy: geolocation=(), microphone=(), camera=(), payment=(), usb=()
 ### 1. Always Use HTTPS
 
 ```
-URL: http://*build-desk.com/*
+URL: http://*brikly.net/*
 Setting: Always Use HTTPS
 ```
 
 ### 2. Security Level
 
 ```
-URL: *build-desk.com/*
+URL: *brikly.net/*
 Setting: Security Level = High
 ```
 
 ### 3. Browser Integrity Check
 
 ```
-URL: *build-desk.com/*
+URL: *brikly.net/*
 Setting: Browser Integrity Check = On
 ```
 
@@ -228,7 +228,7 @@ CSP_REPORT_URI=https://your-csp-reporting-endpoint.com/report
 
 **1. Cache Static Assets:**
 ```
-URL: *build-desk.com/*.{css,js,jpg,png,gif,ico,woff,woff2}
+URL: *brikly.net/*.{css,js,jpg,png,gif,ico,woff,woff2}
 Cache Level: Cache Everything
 Edge Cache TTL: 1 month
 Browser Cache TTL: 1 week
@@ -236,13 +236,13 @@ Browser Cache TTL: 1 week
 
 **2. Don't Cache API Routes:**
 ```
-URL: *build-desk.com/api/*
+URL: *brikly.net/api/*
 Cache Level: Bypass
 ```
 
 **3. Don't Cache Auth Routes:**
 ```
-URL: *build-desk.com/auth*
+URL: *brikly.net/auth*
 Cache Level: Bypass
 ```
 
@@ -268,8 +268,8 @@ Cache Level: Bypass
 For admin routes, consider Cloudflare Access:
 
 ```
-Application: BuildDesk Admin
-Domain: build-desk.com/admin
+Application: Brikly Admin
+Domain: brikly.net/admin
 Policies:
   - Email domain: @yourdomain.com
   - MFA: Required
@@ -288,7 +288,7 @@ DS Records: Published
 ```
 A     @              <Cloudflare IP>  Proxied
 AAAA  @              <Cloudflare IP>  Proxied
-CNAME www            build-desk.com   Proxied
+CNAME www            brikly.net   Proxied
 TXT   @              v=spf1 -all
 TXT   _dmarc         v=DMARC1; p=reject; rua=mailto:dmarc@yourdomain.com
 ```
@@ -314,15 +314,15 @@ TXT   _dmarc         v=DMARC1; p=reject; rua=mailto:dmarc@yourdomain.com
 
 ### Security Headers Check
 ```bash
-curl -I https://build-desk.com | grep -i "strict-transport\|content-security\|x-frame\|x-content-type"
+curl -I https://brikly.net | grep -i "strict-transport\|content-security\|x-frame\|x-content-type"
 ```
 
 ### SSL Labs Test
-- URL: https://www.ssllabs.com/ssltest/analyze.html?d=build-desk.com
+- URL: https://www.ssllabs.com/ssltest/analyze.html?d=brikly.net
 - Target Grade: A+
 
 ### Security Headers Test
-- URL: https://securityheaders.com/?q=build-desk.com
+- URL: https://securityheaders.com/?q=brikly.net
 - Target Grade: A+
 
 ### CSP Test

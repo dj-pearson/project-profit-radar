@@ -45,11 +45,11 @@ BEGIN
     RETURN;
   END IF;
 
-  -- Get BuildDesk site_id for backfill
-  SELECT id INTO v_site_id FROM sites WHERE key = 'builddesk' LIMIT 1;
+  -- Get Brikly site_id for backfill
+  SELECT id INTO v_site_id FROM sites WHERE key = 'brikly' LIMIT 1;
 
   IF v_site_id IS NULL THEN
-    RAISE EXCEPTION 'BuildDesk site not found. Please run sites table migration first.';
+    RAISE EXCEPTION 'Brikly site not found. Please run sites table migration first.';
   END IF;
 
   -- Add site_id column (nullable first for backfill)
@@ -67,9 +67,9 @@ BEGIN
     RAISE NOTICE 'Backfilled % from %.site_id via %', p_table_name, p_backfill_source, p_backfill_join_column;
   END IF;
 
-  -- Backfill remaining nulls with BuildDesk site_id
+  -- Backfill remaining nulls with Brikly site_id
   EXECUTE format('UPDATE %I SET site_id = %L WHERE site_id IS NULL', p_table_name, v_site_id);
-  RAISE NOTICE 'Backfilled remaining nulls in % with BuildDesk site_id', p_table_name;
+  RAISE NOTICE 'Backfilled remaining nulls in % with Brikly site_id', p_table_name;
 
   -- Make column NOT NULL
   EXECUTE format('ALTER TABLE %I ALTER COLUMN site_id SET NOT NULL', p_table_name);
