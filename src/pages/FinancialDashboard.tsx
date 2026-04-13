@@ -22,6 +22,7 @@ import { StripePaymentProcessor } from '@/components/financial/StripePaymentProc
 import { PaymentSettings } from '@/components/financial/PaymentSettings';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { AccessiblePageWrapper } from "@/components/accessibility/AccessiblePageWrapper";
+import ComplianceDisclaimer from '@/components/legal/ComplianceDisclaimer';
 
 const FinancialDashboardSkeleton = () => (
   <div className="space-y-6">
@@ -59,6 +60,9 @@ const FinancialDashboard = () => {
     <RoleGuard allowedRoles={ROLE_GROUPS.FINANCIAL_VIEWERS}>
       <DashboardLayout title="Financial Dashboard" hasAccessibleWrapper>
         <div className="space-y-6">
+        {/* Disclaimer that financial reports are decision-support tools, not
+            audited statements or professional advice. */}
+        <ComplianceDisclaimer variant="financial" />
         <Tabs defaultValue="overview" className="space-y-6" onValueChange={(value) => gtag.trackFeature('financial_dashboard', 'tab_change', 1)} aria-label="Financial dashboard sections">
           <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 lg:grid-cols-9 gap-1" aria-label="Financial categories">
             <TabsTrigger value="overview" className="text-xs sm:text-sm">Overview</TabsTrigger>

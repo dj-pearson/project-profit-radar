@@ -21,6 +21,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
+import ComplianceDisclaimer from '@/components/legal/ComplianceDisclaimer';
 
 interface Insight {
   id: string;
@@ -335,6 +336,9 @@ export const AIInsights = () => {
             Personalized recommendations and predictive insights powered by AI
           </p>
         </div>
+
+        {/* AI output disclaimer — required disclosure for AI-assisted features. */}
+        <ComplianceDisclaimer variant="ai" />
 
         {/* Summary Cards */}
         <div className="grid gap-4 md:grid-cols-4">

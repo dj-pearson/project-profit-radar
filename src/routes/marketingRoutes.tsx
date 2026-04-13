@@ -89,6 +89,20 @@ const ProfitabilityCalculator = createLazyRoute(() => import('@/pages/Profitabil
 const FinancialHealthCheckPage = createLazyRoute(() => import('@/pages/FinancialHealthCheck'));
 const ROICalculatorLanding = createLazyRoute(() => import('@/pages/ROICalculatorLanding'));
 
+// Legal & Compliance pages - Lazy loaded with ErrorBoundary + Suspense
+// All legal pages are public (no auth) and SEO-indexable.
+const PrivacyPolicy = createLazyRoute(() => import('@/pages/PrivacyPolicy'));
+const TermsOfService = createLazyRoute(() => import('@/pages/TermsOfService'));
+const AcceptableUsePolicy = createLazyRoute(() => import('@/pages/legal/AcceptableUsePolicy'));
+const RefundPolicy = createLazyRoute(() => import('@/pages/legal/RefundPolicy'));
+const DMCAPolicy = createLazyRoute(() => import('@/pages/legal/DMCAPolicy'));
+const ServiceLevelAgreement = createLazyRoute(() => import('@/pages/legal/ServiceLevelAgreement'));
+const DataProcessingAgreement = createLazyRoute(() => import('@/pages/legal/DataProcessingAgreement'));
+const Subprocessors = createLazyRoute(() => import('@/pages/legal/Subprocessors'));
+const AIDisclosure = createLazyRoute(() => import('@/pages/legal/AIDisclosure'));
+const CookiePolicy = createLazyRoute(() => import('@/pages/legal/CookiePolicy'));
+const DoNotSell = createLazyRoute(() => import('@/pages/legal/DoNotSell'));
+
 export const marketingRoutes = (
   <>
     {/* Core Marketing Pages */}
@@ -177,5 +191,24 @@ export const marketingRoutes = (
     <Route path="/software/:dim1/:dim2" element={<LazyPSEOPageRenderer />} />
     <Route path="/compare/:competitorSlug" element={<LazyPSEOPageRenderer />} />
     <Route path="/features/:feature/:contractorType" element={<LazyPSEOPageRenderer />} />
+
+    {/* Legal & Compliance — public, indexable */}
+    <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+    <Route path="/privacy" element={<PrivacyPolicy />} />
+    <Route path="/terms-of-service" element={<TermsOfService />} />
+    <Route path="/terms" element={<TermsOfService />} />
+    <Route path="/acceptable-use-policy" element={<AcceptableUsePolicy />} />
+    <Route path="/aup" element={<AcceptableUsePolicy />} />
+    <Route path="/refund-policy" element={<RefundPolicy />} />
+    <Route path="/cancellation-policy" element={<RefundPolicy />} />
+    <Route path="/dmca" element={<DMCAPolicy />} />
+    <Route path="/sla" element={<ServiceLevelAgreement />} />
+    <Route path="/dpa" element={<DataProcessingAgreement />} />
+    <Route path="/subprocessors" element={<Subprocessors />} />
+    <Route path="/ai-disclosure" element={<AIDisclosure />} />
+    <Route path="/cookie-policy" element={<CookiePolicy />} />
+    <Route path="/cookies" element={<CookiePolicy />} />
+    <Route path="/do-not-sell" element={<DoNotSell />} />
+    <Route path="/your-privacy-choices" element={<DoNotSell />} />
   </>
 );
