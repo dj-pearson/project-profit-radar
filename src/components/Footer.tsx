@@ -42,6 +42,7 @@ const Footer = () => {
     { name: "Refund & Cancellation", href: "/refund-policy" },
     { name: "Cookie Policy", href: "/cookie-policy" },
     { name: "Your Privacy Choices", href: "/do-not-sell" },
+    { name: "Email Preferences", href: "/email-preferences" },
     { name: "DMCA", href: "/dmca" },
     { name: "AI Disclosure", href: "/ai-disclosure" },
     { name: "DPA", href: "/dpa" },

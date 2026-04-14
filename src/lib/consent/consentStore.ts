@@ -145,6 +145,10 @@ export const setConsent = (
   // Also forward to Google Consent Mode v2 if gtag is available, so
   // Google Analytics / Ads adjust collection in real time.
   syncToGoogleConsentMode(state);
+  // Fire-and-forget audit write to the server-side consent_ledger table
+  // so regulators can demonstrate the controller received the consent. We
+  // never await this — the UX must not hinge on a network call.
+  writeConsentAudit(record);
   return record;
 };
 
@@ -217,3 +221,68 @@ export const syncToGoogleConsentMode = (state: ConsentState): void => {
 /** Convenience selectors for callers that just want to know "may I track?" */
 export const mayLoadAnalytics = (): boolean => getEffectiveConsent().analytics;
 export const mayLoadMarketing = (): boolean => getEffectiveConsent().marketing;
+
+// ---------------------------------------------------------------------------
+// Server-side audit trail (consent_ledger)
+// ---------------------------------------------------------------------------
+
+const SESSION_ID_KEY = 'brikly_consent_session_id';
+
+/**
+ * Stable per-device session id used to correlate anonymous consent events to
+ * a later sign-in. Regenerated only when localStorage is cleared.
+ */
+const getOrCreateSessionId = (): string => {
+  try {
+    const existing = window.localStorage.getItem(SESSION_ID_KEY);
+    if (existing) return existing;
+    const fresh =
+      typeof crypto !== 'undefined' && 'randomUUID' in crypto
+        ? crypto.randomUUID()
+        : `sess_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 10)}`;
+    window.localStorage.setItem(SESSION_ID_KEY, fresh);
+    return fresh;
+  } catch {
+    return `sess_anon_${Date.now().toString(36)}`;
+  }
+};
+
+/**
+ * Best-effort server-side audit write. Uses the authenticated Supabase
+ * client when available so RLS attributes the row to `auth.uid()`; falls
+ * back to the anon role which the RLS policy allows when `session_id` is
+ * present and `user_id` is null.
+ *
+ * The Supabase client is imported dynamically so this module remains usable
+ * in contexts where the client is not yet bundled (e.g., SSR of auth pages).
+ */
+const writeConsentAudit = (record: PersistedConsent): void => {
+  if (typeof window === 'undefined') return;
+  // Don't block the UI on the audit write. Errors are logged but swallowed.
+  void (async () => {
+    try {
+      const mod = await import('@/integrations/supabase/client');
+      const client = mod.supabase;
+      if (!client) return;
+      const {
+        data: { user },
+      } = await client.auth.getUser().catch(() => ({ data: { user: null } }));
+      await client.from('consent_ledger').insert({
+        user_id: user?.id ?? null,
+        session_id: getOrCreateSessionId(),
+        consent_state: record.state,
+        consent_method: record.method,
+        gpc_active: record.gpc,
+        user_agent:
+          typeof navigator !== 'undefined' ? navigator.userAgent.slice(0, 512) : null,
+      });
+    } catch (err) {
+      // Swallow. Client-side record in localStorage is still authoritative
+      // for the user's session; privacy team can rebuild the audit from
+      // server logs if the ledger insert fails systemically.
+      if (typeof console !== 'undefined') {
+        console.debug('[consent] audit write skipped', err);
+      }
+    }
+  })();
+};

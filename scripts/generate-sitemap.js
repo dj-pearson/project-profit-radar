@@ -143,6 +143,7 @@ const seoPages = [
   { path: '/subprocessors', priority: 0.4, changeFreq: 'monthly' },
   { path: '/ai-disclosure', priority: 0.4, changeFreq: 'monthly' },
   { path: '/do-not-sell', priority: 0.4, changeFreq: 'yearly' },
+  { path: '/email-preferences', priority: 0.3, changeFreq: 'yearly' },
   { path: '/accessibility-statement', priority: 0.5, changeFreq: 'yearly' },
   { path: '/accessibility', priority: 0.4, changeFreq: 'monthly' },
 

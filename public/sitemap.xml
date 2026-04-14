@@ -563,6 +563,12 @@
     <priority>0.4</priority>
   </url>
   <url>
+    <loc>https://brikly.net/email-preferences</loc>
+    <lastmod>2026-04-14</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.3</priority>
+  </url>
+  <url>
     <loc>https://brikly.net/accessibility-statement</loc>
     <lastmod>2026-04-13</lastmod>
     <changefreq>yearly</changefreq>

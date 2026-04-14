@@ -102,6 +102,7 @@ const Subprocessors = createLazyRoute(() => import('@/pages/legal/Subprocessors'
 const AIDisclosure = createLazyRoute(() => import('@/pages/legal/AIDisclosure'));
 const CookiePolicy = createLazyRoute(() => import('@/pages/legal/CookiePolicy'));
 const DoNotSell = createLazyRoute(() => import('@/pages/legal/DoNotSell'));
+const EmailPreferences = createLazyRoute(() => import('@/pages/legal/EmailPreferences'));
 
 export const marketingRoutes = (
   <>
@@ -210,5 +211,7 @@ export const marketingRoutes = (
     <Route path="/cookies" element={<CookiePolicy />} />
     <Route path="/do-not-sell" element={<DoNotSell />} />
     <Route path="/your-privacy-choices" element={<DoNotSell />} />
+    <Route path="/email-preferences" element={<EmailPreferences />} />
+    <Route path="/unsubscribe" element={<EmailPreferences />} />
   </>
 );

@@ -172,3 +172,37 @@ CREATE POLICY "anon_insert_session_consent"
   FOR INSERT
   TO anon
   WITH CHECK (user_id IS NULL AND session_id IS NOT NULL);
+
+-- ---------------------------------------------------------------------------
+-- 4. email_preferences (CAN-SPAM / CASL / ePrivacy)
+-- ---------------------------------------------------------------------------
+--
+-- Granular email-category opt-in/out state per user. Backs
+-- /email-preferences and is consumed by every transactional and marketing
+-- edge function before sending commercial email.
+
+CREATE TABLE IF NOT EXISTS public.email_preferences (
+  user_id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+  product_updates BOOLEAN NOT NULL DEFAULT TRUE,
+  marketing BOOLEAN NOT NULL DEFAULT TRUE,
+  newsletter BOOLEAN NOT NULL DEFAULT TRUE,
+  -- Transactional and security_alerts are intentionally NOT columns here:
+  -- those are always-on and cannot be disabled by users (CAN-SPAM permits
+  -- transactional messages without opt-out; account-security notices are
+  -- legitimate-interest under GDPR Art. 6(1)(f)).
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+COMMENT ON TABLE public.email_preferences IS
+  'Per-user marketing / product / newsletter opt-in state. Read by every edge function before sending commercial email to honor CAN-SPAM, CASL, and ePrivacy within the 10-business-day (CAN-SPAM) / immediate (CASL, ePrivacy) SLA.';
+
+ALTER TABLE public.email_preferences ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "users_manage_own_email_prefs" ON public.email_preferences;
+CREATE POLICY "users_manage_own_email_prefs"
+  ON public.email_preferences
+  FOR ALL
+  TO authenticated
+  USING (user_id = auth.uid())
+  WITH CHECK (user_id = auth.uid());
