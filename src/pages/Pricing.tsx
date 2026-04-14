@@ -9,6 +9,7 @@ import Pricing from "@/components/Pricing";
 import BreadcrumbsNavigation from "@/components/BreadcrumbsNavigation";
 import StickyDemoCTA from "@/components/StickyDemoCTA";
 import { SaaSProductSchema } from "@/components/seo/SaaSProductSchema";
+import { CLAIMS, ifVerifiedSchema } from "@/config/claims";
 
 const PricingPage = () => {
   // Structured data for pricing page
@@ -17,17 +18,27 @@ const PricingPage = () => {
     { name: "Pricing", url: "https://brikly.net/pricing" }
   ]);
 
+  // FTC / Google structured-data compliance: the aggregateRating block is
+  // ONLY emitted when the underlying review count is verified. Hard-coded
+  // ratings are misleading "express claims" and create FTC §5 / state-AG
+  // exposure. Toggle CLAIMS.aggregateRating.verified once real review data
+  // is plugged in (see src/config/claims.ts).
+  const verifiedRating = ifVerifiedSchema(CLAIMS.aggregateRating);
   const productSchema = createProductSchema(
     "Brikly Construction Management Software",
     "Complete construction management platform for small contractors with job costing, scheduling, mobile apps, and OSHA compliance.",
     "350",
-    {
-      "aggregateRating": {
-        "@type": "AggregateRating",
-        "ratingValue": "4.8",
-        "reviewCount": "247"
-      }
-    }
+    verifiedRating
+      ? {
+          aggregateRating: {
+            "@type": "AggregateRating",
+            ratingValue: verifiedRating.ratingValue.toString(),
+            reviewCount: verifiedRating.reviewCount.toString(),
+            bestRating: verifiedRating.bestRating.toString(),
+            worstRating: verifiedRating.worstRating.toString(),
+          },
+        }
+      : undefined,
   );
 
   return (
@@ -50,9 +61,14 @@ const PricingPage = () => {
         lastModified="2025-11-07"
       />
 
-      {/* Enhanced SEO: Comprehensive SaaS Product Schema for Rich Results */}
+      {/*
+        Enhanced SEO: Comprehensive SaaS Product Schema for Rich Results.
+        includeReviews defaults to the verified-claim flag — when no real
+        aggregate rating data is available, the reviews block is suppressed
+        to avoid emitting unsubstantiated structured data.
+      */}
       <SaaSProductSchema
-        includeReviews={true}
+        includeReviews={CLAIMS.aggregateRating.verified}
         includeOffers={true}
         includeFeatures={true}
       />

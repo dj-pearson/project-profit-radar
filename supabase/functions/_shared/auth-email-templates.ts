@@ -98,17 +98,39 @@ function baseEmailTemplate(
             </td>
           </tr>
 
-          <!-- Footer -->
+          <!-- Footer
+               CAN-SPAM Act (15 U.S.C. § 7704) requires:
+                 - clear sender identification,
+                 - a valid physical postal address,
+                 - a working unsubscribe mechanism for commercial email
+                   (not required for purely transactional mail like OTPs,
+                   but including the preferences link is safe and makes
+                   the layout reusable for mixed messages).
+               These templates are primarily transactional (OTPs, password
+               resets) so no "Unsubscribe" is shown, but the address and
+               sender block below are mandatory disclosures and should not be
+               removed.
+          -->
           <tr>
             <td style="padding: 30px 40px; background-color: #F9FAFB; border-top: 1px solid #E5E7EB; text-align: center;">
               <p style="margin: 0 0 12px; color: #6B7280; font-size: 14px;">
                 Questions? Contact us at <a href="mailto:${config.supportEmail}" style="color: ${config.primaryColor};">${config.supportEmail}</a>
               </p>
-              <p style="margin: 0; color: #9CA3AF; font-size: 12px;">
+              <p style="margin: 0 0 12px; color: #6B7280; font-size: 12px; line-height: 1.5;">
+                <strong>${config.siteName}, Inc.</strong><br />
+                123 Construction Way, Suite 100<br />
+                Builder City, BC 12345, USA
+              </p>
+              <p style="margin: 0 0 8px; color: #9CA3AF; font-size: 12px;">
                 &copy; ${year} ${config.siteName}. All rights reserved.
               </p>
+              <p style="margin: 0 0 8px; color: #9CA3AF; font-size: 11px;">
+                <a href="https://brikly.net/privacy-policy" style="color: #9CA3AF; text-decoration: underline;">Privacy Policy</a> |
+                <a href="https://brikly.net/terms-of-service" style="color: #9CA3AF; text-decoration: underline;">Terms</a> |
+                <a href="https://brikly.net/email-preferences" style="color: #9CA3AF; text-decoration: underline;">Email Preferences</a>
+              </p>
               <p style="margin: 8px 0 0; color: #9CA3AF; font-size: 11px;">
-                This is an automated message. Please do not reply directly to this email.
+                This is an automated transactional message. Please do not reply directly to this email.
               </p>
             </td>
           </tr>

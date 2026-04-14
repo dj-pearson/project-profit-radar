@@ -1,4 +1,20 @@
 import React from 'react';
+import { CLAIMS } from '@/config/claims';
+
+/**
+ * Helper that returns a JSON-LD aggregateRating block only when the rating
+ * claim is verified in src/config/claims.ts. Returns undefined otherwise so
+ * the field is omitted from the schema entirely (Google's structured-data
+ * policy and FTC §5 prohibit hard-coded star ratings without backing data).
+ */
+const verifiedAggregateRating = () =>
+  CLAIMS.aggregateRating.verified
+    ? {
+        '@type': 'AggregateRating',
+        ratingValue: CLAIMS.aggregateRating.value.ratingValue.toString(),
+        reviewCount: CLAIMS.aggregateRating.value.reviewCount.toString(),
+      }
+    : undefined;
 
 export const OrganizationSchema = () => (
   <script
@@ -46,11 +62,7 @@ export const SoftwareSchema = () => (
           "priceCurrency": "USD",
           "priceValidUntil": "2026-12-31"
         },
-        "aggregateRating": {
-          "@type": "AggregateRating",
-          "ratingValue": "4.8",
-          "reviewCount": "247"
-        }
+        ...(verifiedAggregateRating() ? { aggregateRating: verifiedAggregateRating() } : {})
       })
     }}
   />
@@ -167,11 +179,7 @@ export const ProductSchema = ({
           "availability": availability,
           "priceValidUntil": "2026-12-31"
         },
-        "aggregateRating": {
-          "@type": "AggregateRating",
-          "ratingValue": "4.8",
-          "reviewCount": "247"
-        }
+        ...(verifiedAggregateRating() ? { aggregateRating: verifiedAggregateRating() } : {})
       })
     }}
   />

@@ -11,7 +11,8 @@ import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { Building2, Bell, Mail, Calendar, Shield, Palette, Users, DollarSign } from 'lucide-react';
+import { Building2, Bell, Mail, Calendar, Shield, Palette, Users, DollarSign, Sparkles } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 interface CompanySettings {
   // Company Profile
@@ -27,7 +28,11 @@ interface CompanySettings {
   enableSafetyManagement: boolean;
   enableMobileAccess: boolean;
   enableReporting: boolean;
-  
+
+  // AI / Automated Features (workspace-level opt-in/out)
+  enableAIFeatures: boolean;
+  enableAIDataSharing: boolean;
+
   // Notification Settings
   emailNotifications: boolean;
   projectUpdateNotifications: boolean;
@@ -62,6 +67,11 @@ const CompanySettings = () => {
     enableSafetyManagement: true,
     enableMobileAccess: true,
     enableReporting: true,
+    // AI features default ON (opt-out model). Set both to false at the
+    // workspace level to disable all AI-assisted features and to forbid
+    // sending Customer Content to AI subprocessors.
+    enableAIFeatures: true,
+    enableAIDataSharing: true,
     emailNotifications: true,
     projectUpdateNotifications: true,
     dueDateReminders: true,
@@ -117,6 +127,10 @@ const CompanySettings = () => {
         enableSafetyManagement: companySettings?.enable_safety_management ?? true,
         enableMobileAccess: companySettings?.enable_mobile_access ?? true,
         enableReporting: companySettings?.enable_reporting ?? true,
+        // AI toggles — default to enabled so existing workspaces are
+        // unaffected. Admins can flip off at any time.
+        enableAIFeatures: companySettings?.enable_ai_features ?? true,
+        enableAIDataSharing: companySettings?.enable_ai_data_sharing ?? true,
         // Notification settings
         emailNotifications: companySettings?.email_notifications ?? true,
         projectUpdateNotifications: companySettings?.project_update_notifications ?? true,
@@ -181,6 +195,8 @@ const CompanySettings = () => {
           enable_safety_management: settings.enableSafetyManagement,
           enable_mobile_access: settings.enableMobileAccess,
           enable_reporting: settings.enableReporting,
+          enable_ai_features: settings.enableAIFeatures,
+          enable_ai_data_sharing: settings.enableAIDataSharing,
           email_notifications: settings.emailNotifications,
           project_update_notifications: settings.projectUpdateNotifications,
           due_date_reminders: settings.dueDateReminders,
@@ -383,6 +399,76 @@ const CompanySettings = () => {
                 </div>
               </div>
             </div>
+          </CardContent>
+        </Card>
+
+        {/*
+          AI Controls — workspace-level opt-out for every AI-assisted feature
+          (estimating, insights, image analysis, etc.). Turning "AI features"
+          off also hides the entry points from users; turning "share data
+          with AI providers" off while keeping AI features on is a harder
+          posture that limits AI to on-device / no-provider flows.
+          See /ai-disclosure for details.
+        */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Sparkles className="h-5 w-5" aria-hidden="true" />
+              AI Controls
+            </CardTitle>
+            <CardDescription>
+              Control how AI-assisted features are used in your workspace. See
+              our{' '}
+              <Link to="/ai-disclosure" className="underline">
+                AI Disclosure
+              </Link>{' '}
+              for what data is sent to AI providers, model-training policy,
+              and limitations.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <Label>Enable AI features</Label>
+                <p className="text-sm text-muted-foreground">
+                  Show and allow use of AI estimating, insights, document
+                  analysis, and support triage across your workspace.
+                </p>
+              </div>
+              <Switch
+                checked={settings.enableAIFeatures}
+                onCheckedChange={(checked) =>
+                  handleInputChange('enableAIFeatures', checked)
+                }
+                aria-label="Enable AI features"
+              />
+            </div>
+            <Separator />
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <Label>Allow sending inputs to AI providers</Label>
+                <p className="text-sm text-muted-foreground">
+                  When off, AI features that require an external provider
+                  (e.g., Anthropic) are disabled even if "Enable AI features"
+                  is on. No Customer Content will leave Brikly for AI
+                  processing.
+                </p>
+              </div>
+              <Switch
+                checked={settings.enableAIDataSharing}
+                disabled={!settings.enableAIFeatures}
+                onCheckedChange={(checked) =>
+                  handleInputChange('enableAIDataSharing', checked)
+                }
+                aria-label="Allow sending inputs to AI providers"
+              />
+            </div>
+            <p className="text-xs text-muted-foreground pt-2">
+              Brikly does not use your Customer Content to train foundation
+              models. Contracts with AI providers prohibit them from using
+              your inputs to train general models. Changes take effect within
+              a few minutes after save.
+            </p>
           </CardContent>
         </Card>
 

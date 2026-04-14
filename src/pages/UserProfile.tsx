@@ -15,7 +15,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useToast } from '@/hooks/use-toast';
-import { User, Bell, Shield, Palette, Camera, Save, Lock, Smartphone } from 'lucide-react';
+import { User, Bell, Shield, Palette, Camera, Save, Lock, Smartphone, ShieldCheck } from 'lucide-react';
+import PrivacyControls from '@/components/legal/PrivacyControls';
 
 interface ProfileData {
   first_name: string;
@@ -216,7 +217,7 @@ const UserProfile = () => {
           </div>
 
           <Tabs defaultValue="personal" className="space-y-6">
-            <TabsList className="grid w-full grid-cols-4">
+            <TabsList className="grid w-full grid-cols-5">
               <TabsTrigger value="personal" className="text-xs sm:text-sm">
                 <User className="h-4 w-4 mr-1 hidden sm:inline" aria-hidden="true" />
                 Personal
@@ -232,6 +233,10 @@ const UserProfile = () => {
               <TabsTrigger value="security" className="text-xs sm:text-sm">
                 <Shield className="h-4 w-4 mr-1 hidden sm:inline" aria-hidden="true" />
                 Security
+              </TabsTrigger>
+              <TabsTrigger value="privacy" className="text-xs sm:text-sm">
+                <ShieldCheck className="h-4 w-4 mr-1 hidden sm:inline" aria-hidden="true" />
+                Privacy
               </TabsTrigger>
             </TabsList>
 
@@ -445,6 +450,13 @@ const UserProfile = () => {
                   </div>
                 </CardContent>
               </Card>
+            </TabsContent>
+
+            {/* Privacy / DSAR self-service tab — exposes the rights described
+                in the Privacy Policy: data export, account deletion, and
+                granular tracking preferences. */}
+            <TabsContent value="privacy">
+              <PrivacyControls />
             </TabsContent>
           </Tabs>
         </div>

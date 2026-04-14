@@ -4,6 +4,7 @@ import { ArrowRight, Mail, MapPin, Linkedin, Twitter, Facebook } from "lucide-re
 import { Link } from "react-router-dom";
 import SmartLogo from "@/components/ui/smart-logo";
 import { toast } from "sonner";
+import { OPEN_PREFERENCES_EVENT } from "@/lib/consent/consentStore";
 
 const Footer = () => {
   const [email, setEmail] = useState("");
@@ -50,21 +51,16 @@ const Footer = () => {
   ];
 
   /**
-   * Re-open the cookie consent center. Reads/writes the same localStorage key
-   * used by CookieConsentManager so the banner reappears for granular
-   * opt-in/out — required by GDPR/ePrivacy and useful for state-law GPC users.
+   * Re-open the cookie consent banner so the user can change their choice at
+   * any time. We dispatch an event that CookieConsentBanner subscribes to —
+   * no page reload needed. We do NOT call resetConsent() here because that
+   * would force the user back through Accept/Reject; instead the banner
+   * opens with the current choice pre-filled in the customize dialog.
    */
   const reopenCookiePreferences = () => {
-    try {
-      localStorage.removeItem("brikly_cookie_consent_v1");
-      localStorage.removeItem("cookieConsent");
-    } catch {
-      // Storage may be unavailable (private mode); the dispatched event still
-      // gives any mounted CookieConsentManager a chance to re-render.
-    }
-    window.dispatchEvent(new CustomEvent("brikly:open-cookie-preferences"));
-    window.location.reload();
+    window.dispatchEvent(new CustomEvent(OPEN_PREFERENCES_EVENT));
   };
+
 
   return (
     <footer className="bg-construction-blue">
@@ -76,9 +72,12 @@ const Footer = () => {
             <h2 className="text-3xl lg:text-4xl font-bold mb-4 text-white">
               Ready to Transform Your Construction Business?
             </h2>
+            {/* Hero tag — performance/popularity claims removed pending
+                substantiation (FTC §5). Re-introduce specific numbers via
+                CLAIMS.* in src/config/claims.ts once verified. */}
             <p className="text-xl text-white/90 mb-8 max-w-2xl mx-auto">
-              Join 500+ contractors who've increased their profit margins by 23%
-              in the first year
+              Real-time job costing, scheduling, and field operations — built
+              for residential and commercial contractors.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Button variant="hero" asChild>
