@@ -112,7 +112,7 @@ export const homepageFAQs: FAQItem[] = [
   },
   {
     question: "How much does Brikly cost?",
-    answer: "Brikly costs $350/month with unlimited users and all features included. This is 50% less than Procore ($500+/month) and includes no hidden fees, no per-seat charges, and no long-term contracts. A 14-day free trial is available.",
+    answer: "Brikly costs $350/month with unlimited users and all features included. There are no hidden fees, no per-seat charges, and no long-term contracts. A 14-day free trial is available. Pricing for competing products varies by tier and seat count — check each vendor's published pricing page for current figures.",
     category: "Pricing"
   },
   {
@@ -213,7 +213,7 @@ export const pricingFAQs: FAQItem[] = [
   },
   {
     question: "Can I cancel Brikly anytime?",
-    answer: "Yes, Brikly is month-to-month with no contracts. Cancel anytime with 30 days notice. Export your data at any time—your data always remains yours.",
+    answer: "Yes. Brikly is month-to-month with no long-term contracts. Cancel any time in one click from Subscription Settings — no phone calls, no retention pitches. Cancellation takes effect at the end of your current billing period and you keep access through that date. You can export your data at any time. See our Refund & Cancellation Policy for full terms.",
     category: "Cancellation"
   },
   {

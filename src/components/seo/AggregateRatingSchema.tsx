@@ -111,14 +111,11 @@ export const AggregateRatingSchema: React.FC<AggregateRatingSchemaProps> = ({
         .eq('status', 'approved');
 
       if (error) {
-        console.warn('Unable to fetch reviews, using fallback data:', error);
-        // Fallback to default values
-        setRatingData({
-          ratingValue: 4.8,
-          reviewCount: 247,
-          bestRating: 5,
-          worstRating: 1
-        });
+        console.warn('Unable to fetch reviews:', error);
+        // No fallback to hard-coded numbers — emitting unsubstantiated star
+        // ratings is deceptive under FTC §5 / Google rich-result policy. The
+        // schema simply will not render until real review data exists.
+        setRatingData(null);
         setLoading(false);
         return;
       }
@@ -136,23 +133,13 @@ export const AggregateRatingSchema: React.FC<AggregateRatingSchemaProps> = ({
           worstRating: minRating
         });
       } else {
-        // Fallback to default values if no reviews found
-        setRatingData({
-          ratingValue: 4.8,
-          reviewCount: 247,
-          bestRating: 5,
-          worstRating: 1
-        });
+        // No reviews yet — render nothing rather than fabricate a rating.
+        setRatingData(null);
       }
     } catch (err) {
       console.error('Error fetching ratings:', err);
-      // Fallback to default values
-      setRatingData({
-        ratingValue: 4.8,
-        reviewCount: 247,
-        bestRating: 5,
-        worstRating: 1
-      });
+      // Suppress the schema entirely on error rather than emit fake data.
+      setRatingData(null);
     } finally {
       setLoading(false);
     }

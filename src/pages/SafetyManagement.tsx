@@ -9,12 +9,12 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { 
-  Plus, 
-  Search, 
-  Shield, 
-  AlertTriangle, 
-  FileText, 
+import {
+  Plus,
+  Search,
+  Shield,
+  AlertTriangle,
+  FileText,
   Calendar,
   Clock,
   CheckCircle,
@@ -23,6 +23,7 @@ import {
   HardHat,
   Edit
 } from 'lucide-react';
+import ComplianceDisclaimer from '@/components/legal/ComplianceDisclaimer';
 
 export default function SafetyManagement() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -194,6 +195,9 @@ export default function SafetyManagement() {
   return (
     <DashboardLayout title="Safety Management">
       <div className="space-y-6">
+         {/* Disclaimer that this module supports — but does not replace —
+             the customer's written safety program and OSHA filings. */}
+         <ComplianceDisclaimer variant="safety" />
          {/* Header */}
          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
            <div className="text-center sm:text-left">

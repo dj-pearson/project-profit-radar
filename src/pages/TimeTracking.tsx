@@ -8,6 +8,7 @@ import { Navigate, useLocation } from 'react-router-dom';
 import { Clock, Plus, BarChart3 } from 'lucide-react';
 import { rememberCurrentRoute } from '@/lib/routeMemory';
 import { AccessiblePageWrapper } from "@/components/accessibility/AccessiblePageWrapper";
+import ComplianceDisclaimer from '@/components/legal/ComplianceDisclaimer';
 
 const TimeTracking = () => {
   const { user } = useAuth();
@@ -39,6 +40,12 @@ const TimeTracking = () => {
           <p className="text-sm text-muted-foreground hidden sm:block">
             Track hours and manage productivity
           </p>
+        </div>
+
+        {/* FLSA / wage-and-hour disclaimer for time-tracking inputs that
+            feed payroll, certified payroll, and prevailing-wage workflows. */}
+        <div className="px-4 sm:px-6 pt-3">
+          <ComplianceDisclaimer variant="payroll" compact />
         </div>
 
         {/* Mobile Tab Navigation */}

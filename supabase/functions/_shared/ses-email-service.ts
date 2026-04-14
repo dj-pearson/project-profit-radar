@@ -20,6 +20,12 @@ export interface EmailOptions {
   from?: string;
   fromName?: string;
   replyTo?: string;
+  /**
+   * Arbitrary RFC-5322 headers. Primarily used for List-Unsubscribe
+   * (RFC 8058) so Gmail / Yahoo bulk-sender rules and CAN-SPAM §5(a)(5)
+   * "functional unsubscribe" are honored.
+   */
+  headers?: Record<string, string>;
 }
 
 export interface SiteEmailConfig {
@@ -91,6 +97,16 @@ export async function sendEmail(
 
     const recipients = Array.isArray(options.to) ? options.to : [options.to];
 
+    // denomailer accepts a `headers` Record in its SendConfig type. We pass
+    // through anything the caller provides — List-Unsubscribe is the common
+    // case. Keys are canonicalized so SES accepts them consistently.
+    const extraHeaders: Record<string, string> = {};
+    if (options.headers) {
+      for (const [k, v] of Object.entries(options.headers)) {
+        if (typeof v === 'string' && v.length > 0) extraHeaders[k] = v;
+      }
+    }
+
     await client.send({
       from: `${fromName} <${fromEmail}>`,
       to: recipients,
@@ -98,6 +114,10 @@ export async function sendEmail(
       content: options.text || '',
       html: options.html,
       replyTo: options.replyTo,
+      // denomailer supports custom headers via the `headers` field.
+      // When empty, the field is still harmless.
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      headers: extraHeaders as any,
     });
 
     await client.close();

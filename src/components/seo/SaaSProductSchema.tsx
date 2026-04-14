@@ -26,6 +26,7 @@
 
 import React from 'react';
 import { Helmet } from 'react-helmet-async';
+import { CLAIMS, ifVerifiedSchema } from '@/config/claims';
 
 interface SaaSProductSchemaProps {
   /**
@@ -161,15 +162,24 @@ export const SaaSProductSchema: React.FC<SaaSProductSchemaProps> = ({
       },
     } : undefined,
 
-    // Customer Reviews and Ratings
-    aggregateRating: includeReviews ? {
-      '@type': 'AggregateRating',
-      ratingValue: '4.8',
-      bestRating: '5',
-      worstRating: '1',
-      ratingCount: '247',
-      reviewCount: '247',
-    } : undefined,
+    // Customer Reviews and Ratings.
+    // Only emitted when the underlying review data is verified — see
+    // src/config/claims.ts. Hard-coded ratings constitute deceptive
+    // structured data under FTC guidance and Google's rich-result policy.
+    aggregateRating:
+      includeReviews && CLAIMS.aggregateRating.verified
+        ? (() => {
+            const r = ifVerifiedSchema(CLAIMS.aggregateRating)!;
+            return {
+              '@type': 'AggregateRating',
+              ratingValue: r.ratingValue.toString(),
+              bestRating: r.bestRating.toString(),
+              worstRating: r.worstRating.toString(),
+              ratingCount: r.reviewCount.toString(),
+              reviewCount: r.reviewCount.toString(),
+            };
+          })()
+        : undefined,
 
     // Feature List - Key selling points
     featureList: includeFeatures ? [
@@ -316,11 +326,16 @@ export const BriklyServiceSchema: React.FC = () => {
       url: 'https://brikly.net/pricing',
     },
 
-    aggregateRating: {
-      '@type': 'AggregateRating',
-      ratingValue: '4.8',
-      reviewCount: '247',
-    },
+    // Suppressed unless the rating claim is verified — see src/config/claims.ts.
+    ...(CLAIMS.aggregateRating.verified
+      ? {
+          aggregateRating: {
+            '@type': 'AggregateRating',
+            ratingValue: CLAIMS.aggregateRating.value.ratingValue.toString(),
+            reviewCount: CLAIMS.aggregateRating.value.reviewCount.toString(),
+          },
+        }
+      : {}),
   };
 
   return (

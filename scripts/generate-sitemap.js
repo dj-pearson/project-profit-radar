@@ -130,9 +130,20 @@ const seoPages = [
   { path: '/knowledge-base/article/getting-started-complete-setup-guide', priority: 0.7, changeFreq: 'monthly' },
   { path: '/knowledge-base/article/mobile-app-field-guide', priority: 0.7, changeFreq: 'monthly' },
 
-  // Legal Pages (Lower Priority)
-  { path: '/privacy-policy', priority: 0.4, changeFreq: 'yearly' },
-  { path: '/terms-of-service', priority: 0.4, changeFreq: 'yearly' },
+  // Legal & Compliance Pages (lower priority but indexable so search
+  // engines, regulators, and procurement teams can locate them).
+  { path: '/privacy-policy', priority: 0.5, changeFreq: 'monthly' },
+  { path: '/terms-of-service', priority: 0.5, changeFreq: 'monthly' },
+  { path: '/acceptable-use-policy', priority: 0.4, changeFreq: 'yearly' },
+  { path: '/refund-policy', priority: 0.4, changeFreq: 'yearly' },
+  { path: '/cookie-policy', priority: 0.4, changeFreq: 'yearly' },
+  { path: '/dmca', priority: 0.3, changeFreq: 'yearly' },
+  { path: '/sla', priority: 0.4, changeFreq: 'yearly' },
+  { path: '/dpa', priority: 0.4, changeFreq: 'yearly' },
+  { path: '/subprocessors', priority: 0.4, changeFreq: 'monthly' },
+  { path: '/ai-disclosure', priority: 0.4, changeFreq: 'monthly' },
+  { path: '/do-not-sell', priority: 0.4, changeFreq: 'yearly' },
+  { path: '/email-preferences', priority: 0.3, changeFreq: 'yearly' },
   { path: '/accessibility-statement', priority: 0.5, changeFreq: 'yearly' },
   { path: '/accessibility', priority: 0.4, changeFreq: 'monthly' },
 

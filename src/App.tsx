@@ -20,6 +20,7 @@ import { useGlobalShortcuts } from "@/hooks/useKeyboardShortcuts";
 import { allRoutes } from "@/routes";
 
 // Lazy load non-critical components that aren't needed for initial render
+const CookieConsentBanner = lazy(() => import("@/components/legal/CookieConsentBanner"));
 const PWAInstallPrompt = lazy(() => import("@/components/PWAInstallPrompt").then(m => ({ default: m.PWAInstallPrompt })));
 const OfflineIndicator = lazy(() => import("@/components/OfflineIndicator").then(m => ({ default: m.OfflineIndicator })));
 const SyncQueueIndicator = lazy(() => import("@/components/OfflineIndicator").then(m => ({ default: m.SyncQueueIndicator })));
@@ -51,6 +52,13 @@ const AppContent = () => {
 
       {/* Essential UI */}
       <Toaster />
+
+      {/* Cookie consent banner — appears on every public page until the user
+          makes a choice. Honors GPC, persists choices in localStorage, and
+          drives Google Consent Mode v2 / PostHog opt-in. */}
+      <Suspense fallback={null}>
+        <CookieConsentBanner />
+      </Suspense>
 
       {/* PWA Components - deferred, not critical for initial render */}
       <Suspense fallback={null}>

@@ -306,15 +306,52 @@
     }
   </script>
 
-  <!-- Google Analytics - Deferred loading for better FCP (web only) -->
-  <!-- US-009 SRI Note: GTM is loaded dynamically below. Its content changes on every
-         request so a static integrity hash is not feasible. For any future version-pinned
-         external scripts, use loadScriptWithSri() from src/lib/security/sriVerification.ts
-         or add integrity="sha384-..." crossorigin="anonymous" attributes directly. -->
+  <!-- Google Analytics - Deferred loading for better FCP (web only)
+       Consent gating: we set Google Consent Mode v2 defaults to "denied"
+       BEFORE the GTM script is appended. CookieConsentBanner (in the React
+       app) calls gtag('consent', 'update', ...) once the user opts in.
+       Reference: https://developers.google.com/tag-platform/security/guides/consent
+       This satisfies GDPR/ePrivacy "consent before collection" — no
+       analytics_storage / ad_storage cookies are written until consent is
+       granted, even though the script tag itself is downloaded. -->
   <script>
     // Defer GA loading until after first paint (skip in Capacitor native)
     window.dataLayer = window.dataLayer || [];
     function gtag() { dataLayer.push(arguments); }
+
+    // Default everything to denied. GPC users and EU/UK users will stay
+    // denied unless they explicitly opt in via the cookie banner.
+    gtag('consent', 'default', {
+      ad_storage: 'denied',
+      ad_user_data: 'denied',
+      ad_personalization: 'denied',
+      analytics_storage: 'denied',
+      functionality_storage: 'granted',
+      personalization_storage: 'denied',
+      security_storage: 'granted',
+      wait_for_update: 500
+    });
+
+    // If a returning visitor has already opted in, replay that update now so
+    // GTM picks it up before the first config call.
+    try {
+      var stored = window.localStorage.getItem('brikly_cookie_consent_v1');
+      if (stored) {
+        var parsed = JSON.parse(stored);
+        var s = parsed && parsed.state ? parsed.state : null;
+        if (s) {
+          gtag('consent', 'update', {
+            ad_storage: s.marketing ? 'granted' : 'denied',
+            ad_user_data: s.marketing ? 'granted' : 'denied',
+            ad_personalization: s.marketing ? 'granted' : 'denied',
+            analytics_storage: s.analytics ? 'granted' : 'denied',
+            functionality_storage: 'granted',
+            personalization_storage: s.preferences ? 'granted' : 'denied',
+            security_storage: 'granted'
+          });
+        }
+      }
+    } catch (e) { /* localStorage may be unavailable; consent stays denied */ }
 
     // Skip GA in Capacitor native apps
     var isCapacitorNative = window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform();

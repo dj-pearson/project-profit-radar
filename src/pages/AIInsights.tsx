@@ -21,6 +21,9 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
+import ComplianceDisclaimer from '@/components/legal/ComplianceDisclaimer';
+import { useAIFeatures } from '@/hooks/useAIFeatures';
+import { Link } from 'react-router-dom';
 
 interface Insight {
   id: string;
@@ -49,6 +52,7 @@ interface Benchmark {
 export const AIInsights = () => {
   const { user } = useAuth();
   const { toast } = useToast();
+  const { loading: aiLoading, enabled: aiEnabled } = useAIFeatures();
 
   const [loading, setLoading] = useState(true);
   const [insights, setInsights] = useState<Insight[]>([]);
@@ -306,6 +310,35 @@ export const AIInsights = () => {
     return value.toLocaleString();
   };
 
+  // Respect the workspace-level AI opt-out (CompanySettings → AI Controls).
+  // We render an empty-state explaining why the page is off rather than
+  // redirecting, so admins can see the kill switch is active and workspace
+  // members know where to ask for it to be re-enabled.
+  if (!aiLoading && !aiEnabled) {
+    return (
+      <DashboardLayout title="AI Insights">
+        <div className="flex items-center justify-center h-96 p-4">
+          <div className="text-center max-w-md">
+            <Sparkles className="w-12 h-12 text-muted-foreground mx-auto mb-4" aria-hidden="true" />
+            <h2 className="text-lg font-semibold mb-2">AI features are turned off for this workspace</h2>
+            <p className="text-sm text-muted-foreground">
+              An administrator has disabled AI-assisted features. An admin can
+              turn them back on from{' '}
+              <Link to="/company-settings" className="underline">
+                Company Settings
+              </Link>
+              . See our{' '}
+              <Link to="/ai-disclosure" className="underline">
+                AI Disclosure
+              </Link>{' '}
+              for what the AI features do and what data they use.
+            </p>
+          </div>
+        </div>
+      </DashboardLayout>
+    );
+  }
+
   if (loading) {
     return (
       <DashboardLayout title="AI Insights">
@@ -335,6 +368,9 @@ export const AIInsights = () => {
             Personalized recommendations and predictive insights powered by AI
           </p>
         </div>
+
+        {/* AI output disclaimer — required disclosure for AI-assisted features. */}
+        <ComplianceDisclaimer variant="ai" />
 
         {/* Summary Cards */}
         <div className="grid gap-4 md:grid-cols-4">

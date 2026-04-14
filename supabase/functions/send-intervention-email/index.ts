@@ -1,13 +1,27 @@
+// send-intervention-email
+//
+// Churn-intervention outreach. This is COMMERCIAL email (marketing
+// re-engagement) under CAN-SPAM / CASL and MUST honor opt-out preferences
+// and carry a functional unsubscribe mechanism.
+//
+// Retrofit: routes through the shared sendCommercialEmail() helper which
+//   1. checks email_preferences before sending,
+//   2. attaches RFC-8058 List-Unsubscribe / List-Unsubscribe-Post headers,
+//   3. injects a CAN-SPAM-compliant footer (physical address, unsubscribe
+//      link, privacy link).
+//
+// If the user has opted out of product_updates / marketing, the send is
+// skipped and the intervention is logged with status='skipped_opt_out' so
+// analytics reflect the suppression rather than a false "no response."
+
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { initializeAuthContext, errorResponse } from "../_shared/auth-helpers.ts";
+import { sendCommercialEmail } from "../_shared/commercial-email.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
-
-const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -28,7 +42,7 @@ serve(async (req) => {
     // Get user and prediction data
     const { data: user, error: userError } = await supabaseClient
       .from("user_profiles")
-      .select("email, first_name, last_name")
+      .select("user_id, email, first_name, last_name")
       .eq("id", userId)
       .single();
 
@@ -109,32 +123,57 @@ serve(async (req) => {
       `;
     }
 
-    // Send email using Resend
-    const emailResponse = await fetch("https://api.resend.com/emails", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${RESEND_API_KEY}`,
-      },
-      body: JSON.stringify({
-        from: "Brikly <support@brikly.net>",
-        to: [user.email],
-        subject: subject,
-        html: message,
-      }),
+    // Prefer the auth user id over the profile row id so the unsubscribe
+    // token resolves to the correct auth.users record.
+    const targetUserId: string = user.user_id ?? userId;
+
+    const sendResult = await sendCommercialEmail(supabaseClient, {
+      to: user.email,
+      userId: targetUserId,
+      // Re-engagement campaigns are best classified as product_updates so
+      // users who opted out of pure marketing still get them unless they
+      // also opted out of product updates. Change to 'marketing' if policy
+      // requires a stricter opt-out.
+      kind: 'product_updates',
+      subject,
+      html: message,
+      from: 'support@brikly.net',
+      fromName: 'Brikly',
     });
 
-    if (!emailResponse.ok) {
-      const error = await emailResponse.text();
-      throw new Error(`Failed to send email: ${error}`);
+    if (!sendResult.success && sendResult.skipped === 'opted_out') {
+      await supabaseClient.from("intervention_logs").insert({
+        user_id: userId,
+        prediction_id: predictionId,
+        intervention_type: "email",
+        subject,
+        status: "skipped_opt_out",
+        sent_at: new Date().toISOString(),
+      });
+      return new Response(
+        JSON.stringify({
+          success: true,
+          skipped: "opted_out",
+          message: "Recipient has opted out of product-update / marketing email; send suppressed.",
+        }),
+        {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 200,
+        },
+      );
     }
 
-    // Log intervention in database
+    if (!sendResult.success) {
+      throw new Error(sendResult.error ?? "Failed to send intervention email");
+    }
+
+    // Log successful intervention in database
     await supabaseClient.from("intervention_logs").insert({
       user_id: userId,
       prediction_id: predictionId,
       intervention_type: "email",
-      subject: subject,
+      subject,
+      status: "sent",
       sent_at: new Date().toISOString(),
     });
 

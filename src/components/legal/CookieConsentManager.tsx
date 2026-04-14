@@ -1,3 +1,12 @@
+/**
+ * @deprecated Use CookieConsentBanner (src/components/legal/CookieConsentBanner.tsx)
+ * as the user-facing consent surface. This component is an admin-style
+ * management UI that is not mounted in routing and does NOT gate analytics
+ * script loading — it predates consentStore.ts and Google Consent Mode v2.
+ *
+ * Kept only as a reference for the admin/audit dashboard that eventually
+ * replaces it. Do not wire this into the public app.
+ */
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';

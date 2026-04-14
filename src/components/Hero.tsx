@@ -69,11 +69,15 @@ const useIsMobile = () => {
   return isMobile;
 };
 
+// Hero badge rotator. Performance / customer-count claims removed pending
+// substantiation (see src/config/claims.ts and FTC §5). Re-enable specific
+// numbers only after marketing verifies them and updates CLAIMS.* with
+// supporting evidence.
 const badgeMessages = [
   "New: AI-Powered Estimation",
-  "Residential: Save 23% on Margins",
-  "Commercial: 5-Min Monthly Close",
-  "Trusted by 500+ Contractors",
+  "Built for Residential & Commercial Contractors",
+  "Real-Time Job Costing",
+  "Mobile-First Field Operations",
 ];
 
 const Hero = () => {

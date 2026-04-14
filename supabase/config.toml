@@ -36,6 +36,19 @@ verify_jwt = false
 [functions.process-blog-generation-queue]
 verify_jwt = false
 
+# DSAR fulfillment job — runs on a daily cron to purge accounts whose
+# 30-day grace period has elapsed. verify_jwt is false because the cron
+# invoker uses the service-role key directly in an Authorization header
+# (see the function body, which rejects anything that isn't service role).
+[functions.process-dsar-fulfillment]
+verify_jwt = false
+
+# Public unsubscribe endpoint — receives unauthenticated clicks from email
+# footers and from Gmail/Yahoo one-click List-Unsubscribe headers. Must be
+# open for anonymous access; token validation happens inside the function.
+[functions.email-unsubscribe]
+verify_jwt = false
+
 [functions.cron-social-scheduler]
 verify_jwt = false
 
