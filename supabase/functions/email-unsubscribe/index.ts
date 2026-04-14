@@ -31,6 +31,7 @@
 
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "npm:@supabase/supabase-js@2";
+import { checkRateLimit, getClientIP } from "../_shared/rate-limiter.ts";
 
 const TOKEN_MAX_AGE_MS = 30 * 24 * 60 * 60 * 1000; // 30 days
 
@@ -126,6 +127,31 @@ serve(async (req) => {
   const category = url.searchParams.get("category"); // optional
 
   if (!token) return confirmationPage(false, "Missing or invalid unsubscribe link.");
+
+  // Rate-limit by IP before doing any crypto. Unsubscribe endpoints must be
+  // available to email clients (Gmail prefetch, etc.), so the window is
+  // generous — this just prevents brute-force token guessing.
+  // We use the service-role client for the rate-limiter query since this
+  // endpoint has no authenticated session.
+  const serviceKeyForRL = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+  const urlForRL = Deno.env.get("SUPABASE_URL");
+  if (serviceKeyForRL && urlForRL) {
+    const rlClient = createClient(urlForRL, serviceKeyForRL, {
+      auth: { autoRefreshToken: false, persistSession: false },
+    });
+    const rl = await checkRateLimit(rlClient, {
+      identifier: getClientIP(req),
+      endpoint: "email-unsubscribe",
+      maxRequests: 60,
+      windowMinutes: 60,
+    });
+    if (!rl.allowed) {
+      return confirmationPage(
+        false,
+        "Too many requests. Please wait and try again, or email unsubscribe@brikly.net.",
+      );
+    }
+  }
 
   const secret = Deno.env.get("EMAIL_UNSUBSCRIBE_SECRET");
   if (!secret) {

@@ -206,3 +206,50 @@ CREATE POLICY "users_manage_own_email_prefs"
   TO authenticated
   USING (user_id = auth.uid())
   WITH CHECK (user_id = auth.uid());
+
+-- ---------------------------------------------------------------------------
+-- 5. Schedule DSAR fulfillment job (pg_cron + net.http_post)
+-- ---------------------------------------------------------------------------
+--
+-- Runs once per day at 03:17 UTC. The window is intentionally off-hour so
+-- the batch does not collide with backup jobs. The cron entry uses the
+-- `pg_cron` and `pg_net` extensions and passes the service-role key in the
+-- Authorization header — matching what the edge function validates.
+--
+-- Idempotency: if pg_cron is not available in the target environment (e.g.,
+-- local dev), the DO block swallows the error so migrations still run.
+
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1 FROM pg_extension WHERE extname = 'pg_cron'
+  ) AND EXISTS (
+    SELECT 1 FROM pg_extension WHERE extname = 'pg_net'
+  ) THEN
+    -- Unschedule any prior version to avoid duplicate jobs.
+    PERFORM cron.unschedule('dsar-fulfillment-daily')
+      WHERE EXISTS (SELECT 1 FROM cron.job WHERE jobname = 'dsar-fulfillment-daily');
+
+    PERFORM cron.schedule(
+      'dsar-fulfillment-daily',
+      '17 3 * * *',
+      $job$
+      SELECT net.http_post(
+        url := current_setting('app.settings.functions_base_url', true) || '/process-dsar-fulfillment',
+        headers := jsonb_build_object(
+          'Content-Type', 'application/json',
+          'Authorization', 'Bearer ' || current_setting('app.settings.service_role_key', true)
+        ),
+        body := '{}'::jsonb
+      ) AS request_id;
+      $job$
+    );
+  ELSE
+    RAISE NOTICE 'pg_cron or pg_net not installed; DSAR fulfillment must be scheduled manually.';
+  END IF;
+EXCEPTION WHEN OTHERS THEN
+  RAISE NOTICE 'DSAR fulfillment schedule skipped: %', SQLERRM;
+END $$;
+
+COMMENT ON TABLE public.data_subject_requests IS
+  'Audit trail for data subject requests under CCPA/CPRA, GDPR, and U.S. state privacy laws. One row per request. Populated by the self-service Privacy tab and by the privacy@ inbox workflow. Processed nightly by the process-dsar-fulfillment edge function (see pg_cron schedule dsar-fulfillment-daily).';

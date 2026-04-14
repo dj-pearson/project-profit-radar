@@ -30,6 +30,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { initializeAuthContext, errorResponse, successResponse } from "../_shared/auth-helpers.ts";
 import { getCorsHeaders } from "../_shared/secure-cors.ts";
+import { checkRateLimit, getClientIP, rateLimitResponse } from "../_shared/rate-limiter.ts";
 
 interface ExportPayload {
   /** Meta about the request itself for the audit trail. */
@@ -68,6 +69,25 @@ serve(async (req) => {
   const authContext = await initializeAuthContext(req);
   if (!authContext) return errorResponse("Unauthorized", 401, req);
   const { user, supabase } = authContext;
+
+  // Rate limit: exports are expensive (multi-table scan). Cap at 5 per
+  // user per hour keyed by auth user id — enough for debugging, low
+  // enough to deter enumeration abuse.
+  const rl = await checkRateLimit(supabase, {
+    identifier: user.id,
+    endpoint: "data-subject-export",
+    maxRequests: 5,
+    windowMinutes: 60,
+  });
+  if (!rl.allowed) return rateLimitResponse(rl, corsHeaders);
+  // Also cap by IP to limit abuse from a rotating pool of hijacked sessions.
+  const ipRl = await checkRateLimit(supabase, {
+    identifier: getClientIP(req),
+    endpoint: "data-subject-export:ip",
+    maxRequests: 20,
+    windowMinutes: 60,
+  });
+  if (!ipRl.allowed) return rateLimitResponse(ipRl, corsHeaders);
 
   // Read the request body only to allow the client to specify non-default
   // behaviours in the future (e.g., format). We ignore unknown fields.

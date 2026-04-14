@@ -33,6 +33,7 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { initializeAuthContext, errorResponse, successResponse } from "../_shared/auth-helpers.ts";
 import { getCorsHeaders } from "../_shared/secure-cors.ts";
+import { checkRateLimit, getClientIP, rateLimitResponse } from "../_shared/rate-limiter.ts";
 
 serve(async (req) => {
   const corsHeaders = getCorsHeaders(req);
@@ -46,6 +47,24 @@ serve(async (req) => {
   const authContext = await initializeAuthContext(req);
   if (!authContext) return errorResponse("Unauthorized", 401, req);
   const { user, supabase } = authContext;
+
+  // Deletion is high-consequence. Hard cap: 3 requests per user per day and
+  // 10 per IP per day. Existing pending requests short-circuit below this
+  // check anyway; this protects against request-spam/DoS.
+  const rl = await checkRateLimit(supabase, {
+    identifier: user.id,
+    endpoint: "data-subject-delete",
+    maxRequests: 3,
+    windowMinutes: 60 * 24,
+  });
+  if (!rl.allowed) return rateLimitResponse(rl, corsHeaders);
+  const ipRl = await checkRateLimit(supabase, {
+    identifier: getClientIP(req),
+    endpoint: "data-subject-delete:ip",
+    maxRequests: 10,
+    windowMinutes: 60 * 24,
+  });
+  if (!ipRl.allowed) return rateLimitResponse(ipRl, corsHeaders);
 
   // We accept a body, but also honor an empty body — the authenticated
   // user context is enough to identify the subject.
