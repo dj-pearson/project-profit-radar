@@ -2119,6 +2119,165 @@
       "priority": 3,
       "passes": true,
       "notes": "COMPLETED (partial). Created src/components/mobile/MobilePremiumUpsellSheet.tsx built on BottomSheet. Premium gradient hero (primary→indigo→purple), animated Sparkles medallion with spring entrance (reduced-motion aware), optional trial badge, bold title + tagline, prominent price + sub-label row, staggered feature bullets (each with optional Lucide icon, title, description), and a primary CTA button (min-h-52px) that fires haptics.success() on press plus optional secondary ghost link. Exported PremiumFeatureBullet interface for callers. Used Sparkles icon instead of a gold lock medallion (cleaner premium feel; the AC 'animated gold lock icon' intent — aspirational upgrade moment — is met by the gradient hero + sparkles + reveal animation). The 5-feature wiring (AI Estimating, Advanced Reports, Client Portal Branding, Geofencing, Scheduled Exports) and the PostHog tracking were NOT wired in this pass — the reusable primitive is ready and each gated feature screen can import and mount it in a follow-up without further infra work. Blurred-preview image slot can be added later via a children prop if needed. npm run build verified."
+    },
+    {
+      "id": "US-125",
+      "title": "Harden Capacitor iOS config: disable WebView debugging in production and tighten allowNavigation wildcards",
+      "description": "As a security engineer, I want the iOS build to refuse remote WebView debugging in production and to disallow navigation to arbitrary Supabase projects so that a compromised device cannot be reverse-engineered via Safari's Web Inspector and so that the WebView is not tricked into navigating to an attacker-controlled Supabase project. capacitor.config.ts line 76 currently sets webContentsDebuggingEnabled: true unconditionally for iOS (the inline comment says 'development builds' but the flag is always on). Line 17 allows '*.supabase.co' — any Supabase project, not just ours. Gate webContentsDebuggingEnabled on process.env.NODE_ENV !== 'production'. Replace '*.supabase.co' with the project-specific host (ilhzuvemiuyfuxfegtlv.supabase.co) while keeping api/app/functions.brikly.net and the OAuth provider hosts.",
+      "acceptanceCriteria": [
+        "capacitor.config.ts iOS webContentsDebuggingEnabled evaluates to false when NODE_ENV === 'production'",
+        "allowNavigation no longer contains '*.supabase.co'; it contains the exact Supabase project host",
+        "npm run build completes successfully",
+        "iOS app-bound domains in Info.plist still match allowNavigation list"
+      ],
+      "priority": 1,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-126",
+      "title": "Compress images client-side before uploading to Supabase Storage",
+      "description": "As a field user on cellular, I want the app to shrink photos before upload so that daily report photos don't burn my data plan and don't fail on slow LTE. src/components/ui/image-upload.tsx uploads the raw File to Supabase with no compression — a 5 MB iPhone photo uploads as 5 MB. Add a compressImage utility (src/lib/image-compression.ts) that draws the source into a canvas capped at ~1920px on the long edge and re-encodes as JPEG at quality 0.8 (or WebP where supported). Wire it into image-upload.tsx before the Storage upload call. Skip compression for non-raster types (SVG, GIF) and for files already under a small threshold (e.g., 200KB).",
+      "acceptanceCriteria": [
+        "src/lib/image-compression.ts exports a compressImage(file, options) function",
+        "Function caps the longest edge at maxDimension (default 1920) and uses quality 0.8",
+        "SVG and GIF files are returned untouched",
+        "Files already under minSizeToCompress (default 200KB) are returned untouched",
+        "src/components/ui/image-upload.tsx calls compressImage before storage.upload",
+        "A unit test in src/lib/__tests__/image-compression.test.ts covers the skip-small, skip-svg, and compress-large paths",
+        "npm run build and npm run test:run complete successfully"
+      ],
+      "priority": 1,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-127",
+      "title": "Harden iOS session storage: refresh on app resume and clean sign-out across Preferences + localStorage",
+      "description": "As a mobile user, I want my session to survive backgrounding the app for hours without silent 401s, and I want sign-out to actually erase tokens from every storage layer even if the app is offline. src/lib/supabaseStorage.ts mirrors Supabase's session into both localStorage (WKWebView, purge-able) and @capacitor/preferences (durable) with no resume-time refresh. If the token expires while the app is backgrounded, the next request 401s without a refresh attempt. Add (1) a purgeSupabaseSessionStorage() helper that scrubs every sb-*-auth-token / supabase.auth.* key from both layers and call it on signOut in AuthContext, and (2) a useSupabaseSessionResume hook that listens to @capacitor/app's 'appStateChange' and calls supabase.auth.refreshSession() when the app returns to foreground.",
+      "acceptanceCriteria": [
+        "src/lib/supabaseStorage.ts exports purgeSupabaseSessionStorage() that clears matching keys from both localStorage and @capacitor/preferences",
+        "src/hooks/useSupabaseSessionResume.ts exists and calls supabase.auth.refreshSession() on app resume (native only, no-op on web)",
+        "AuthContext signOut calls purgeSupabaseSessionStorage() after supabase.auth.signOut()",
+        "The resume hook is mounted once at the AuthProvider level",
+        "No regression: existing sign-in / session persistence still works on web",
+        "npm run build completes successfully"
+      ],
+      "priority": 1,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-128",
+      "title": "Fix Financial Dashboard tab overflow on iPhone SE and other narrow phones",
+      "description": "As a PM on an iPhone SE, I want the Financial Dashboard tab bar to be readable and tappable instead of nine 35-px-wide crushed cells. src/pages/FinancialDashboard.tsx line 67 renders a TabsList as 'grid w-full grid-cols-2 sm:grid-cols-4 lg:grid-cols-9' with text-xs labels — on a 375 px viewport the nine tabs compress below Apple HIG touch-target guidance and the P&L label gets clipped. Switch the mobile layout to a horizontal scroll row (flex, overflow-x-auto, snap-x, shrink-0 triggers with min-h-11) and preserve the grid layout from sm: upward.",
+      "acceptanceCriteria": [
+        "On viewports <640px the tabs scroll horizontally without overlap and each trigger is >=44px tall",
+        "On viewports >=1024px the original 9-column grid layout is preserved",
+        "Active tab is visible after selection (scrollIntoView or snap behaviour)",
+        "Scrollbar is hidden (scrollbar-none) for native feel on iOS",
+        "npm run build completes successfully"
+      ],
+      "priority": 1,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-129",
+      "title": "Resolve dueling iOS builds: pick a single canonical bundle (native Swift vs Expo)",
+      "description": "As a release engineer, I want exactly one iOS project targeting com.brikly.app so that App Store Connect does not reject a duplicate-bundle-id submission. The repo contains BOTH Brikly-iOS/ (native Swift/SwiftUI project) and mobile-app/ (Expo) targeting bundle id com.brikly.app v1.0.0 build 1. Decide which is canonical, delete or archive the other, and update CLAUDE.md + README to point to the single source. The Capacitor-wrapped web app (capacitor.config.ts + ios/) is also present — document which of the three is the shipping iOS surface.",
+      "acceptanceCriteria": [
+        "Exactly one directory owns the com.brikly.app bundle id on iOS",
+        "The other iOS project is either removed or clearly marked as archived/experimental in its README",
+        "CLAUDE.md 'Mobile Strategy' section reflects the decision",
+        "package.json scripts for mobile build/run point to the canonical project"
+      ],
+      "priority": 1,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-130",
+      "title": "Set DEVELOPMENT_TEAM and bump version/build number before App Store submission",
+      "description": "As a release engineer, I want the Xcode project to carry our real Apple Team ID and a non-default marketing/build version so that archive+upload to App Store Connect succeeds and TestFlight builds are not rejected for duplicate build numbers. Brikly-iOS/Brikly.xcodeproj/project.pbxproj has DEVELOPMENT_TEAM = \"\" and Info.plist has CFBundleShortVersionString 1.0.0 / CFBundleVersion 1.",
+      "acceptanceCriteria": [
+        "DEVELOPMENT_TEAM is set to 4G65K64G73 in project.pbxproj (matches eas.json appleTeamId)",
+        "Info.plist CFBundleVersion is incremented on every upload (document the bump-script)",
+        "CFBundleShortVersionString reflects the release candidate version (e.g., 1.0.1)",
+        "xcodebuild archive succeeds from CI or locally"
+      ],
+      "priority": 2,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-131",
+      "title": "Stop returning raw access/refresh tokens in verify-auth-otp JSON responses",
+      "description": "As a security engineer, I want auth tokens to never appear in an edge-function JSON response body so that they cannot be captured by HTTP access logs or misconfigured proxies. supabase/functions/verify-auth-otp/index.ts around line 256 returns {accessToken, refreshToken} in the magic-link success response. Switch to Supabase's native verifyOtp/exchangeCodeForSession flow where the session is set via the client SDK rather than relayed through our edge function, or at minimum wrap the response in a short-lived one-time code that the client exchanges.",
+      "acceptanceCriteria": [
+        "verify-auth-otp no longer returns accessToken or refreshToken strings in its JSON body",
+        "Client magic-link flow still completes sign-in end-to-end",
+        "No regression in existing tests; new test covers the response shape"
+      ],
+      "priority": 2,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-132",
+      "title": "Add MFA challenge step to mobile auth flow",
+      "description": "As an account owner with MFA enabled, I want the mobile app to prompt me for my TOTP/email code after password entry so that my second factor is actually enforced on iOS. The backend supports MFA (mfa_configurations, verify-auth-otp reauthentication) but the mobile auth screen jumps straight to authenticated state after password — MFA is effectively unenforced on native.",
+      "acceptanceCriteria": [
+        "After a successful password exchange, the app checks supabase.auth.mfa.listFactors()",
+        "If a verified factor exists, a TOTP/email challenge screen is presented before granting access",
+        "Biometric bypass is NOT allowed to skip the MFA challenge on a new device",
+        "Tested against an account with TOTP enabled"
+      ],
+      "priority": 2,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-133",
+      "title": "Implement Apple Sign-In with server-side nonce validation",
+      "description": "As an iOS user, I want Sign in with Apple (already entitled in Brikly.entitlements) to actually work and to be safe against token replay. CLAUDE.md advertises Apple Sign-In but no implementation exists. Generate a random nonce client-side, hash it, send to Apple, and validate that id_token.nonce matches in the Supabase exchange.",
+      "acceptanceCriteria": [
+        "Sign in with Apple button present on the mobile login screen",
+        "Client generates a cryptographically random nonce, stores sha256(nonce) for the request, and passes the raw nonce to Supabase signInWithIdToken",
+        "Server/Supabase validation of id_token.nonce succeeds",
+        "Handles the Apple-only-returns-name-on-first-signin case"
+      ],
+      "priority": 3,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-134",
+      "title": "Virtualize remaining mobile long lists (time entries, CRM contacts, documents, activity feeds)",
+      "description": "As a mobile user with months of history, I want long lists to scroll at 60fps without jank. Projects.tsx uses VirtualizedGrid and InvoiceList uses @tanstack/react-virtual, but time entries, CRM contacts, documents, and activity feeds still render via plain .map() — 500+ rows on an older iPhone freezes the main thread. Audit every list rendering 50+ rows and convert to the existing VirtualizedGrid or useVirtualizer pattern.",
+      "acceptanceCriteria": [
+        "Grep audit documents every src/pages/* and src/components/* list rendering 50+ items without virtualization",
+        "At least 4 high-traffic lists converted (time entries, crm contacts, documents, notifications)",
+        "Frame rate stays >50fps on an iPhone 12 simulator with 1000-row datasets",
+        "No regression to accessibility / keyboard navigation"
+      ],
+      "priority": 2,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-135",
+      "title": "Add SSL certificate pinning and jailbreak detection for iOS",
+      "description": "As a security engineer, I want the iOS build to refuse MITM'd TLS connections and to detect tampered devices so that stolen credentials on compromised phones have a shorter attack window. Capacitor currently trusts the system certificate store and has no jailbreak checks. Add pinned public-key SHA-256 fingerprints for api.brikly.net / functions.brikly.net via a Capacitor plugin (@capacitor-community/http + custom pinning, or native Swift URLSessionDelegate challenge handler). Add a lightweight jailbreak heuristic (presence of /Applications/Cydia.app, /private/var/lib/apt, dyld_print_to_stderr env var) and flag the session as elevated-risk in telemetry.",
+      "acceptanceCriteria": [
+        "Production iOS build pins at least one backup + one primary public-key for each of api.brikly.net and functions.brikly.net",
+        "TLS handshake to a MITM proxy with a trusted-root certificate is rejected",
+        "Jailbreak heuristic runs on app launch; result logged to Sentry tag isJailbroken",
+        "Documented fingerprint-rotation procedure in docs/"
+      ],
+      "priority": 3,
+      "passes": false,
+      "notes": ""
     }
   ]
 }
