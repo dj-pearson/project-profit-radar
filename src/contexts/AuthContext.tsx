@@ -16,6 +16,8 @@ import { clearRememberedRoute } from "@/lib/routeMemory";
 import { setSentryUser, clearSentryUser } from "@/lib/sentry";
 import { setErrorLoggingUser } from "@/services/errorLoggingService";
 import { logger } from "@/lib/logger";
+import { purgeSupabaseSessionStorage } from "@/lib/supabaseStorage";
+import { useSupabaseSessionResume } from "@/hooks/useSupabaseSessionResume";
 import {
   checkLoginAttempt,
   recordFailedLogin,
@@ -169,6 +171,11 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
   const [profileFetching, setProfileFetching] = useState(false);
   const [isProfileFetchInProgress, setIsProfileFetchInProgress] = useState(false);
   const { toast } = useToast();
+
+  // On Capacitor-native, refresh the Supabase session whenever the app
+  // returns to the foreground — otherwise a backgrounded app silently 401s
+  // on the first request after the access token's 1 h TTL elapses.
+  useSupabaseSessionResume();
 
   const successfulProfiles = useRef<Map<string, UserProfile>>(new Map());
   const sessionTimeoutRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -957,6 +964,12 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
         logger.error("AuthContext: Supabase signOut error:", error);
       }
 
+      // Scrub any stray auth tokens from BOTH localStorage and
+      // @capacitor/preferences. supabase.auth.signOut() resolves optimistically
+      // while offline, so without this an attacker with the device could
+      // reinstate the session from leftover Preferences data.
+      await purgeSupabaseSessionStorage();
+
       // Clear all state
       setUser(null);
       setSession(null);
@@ -975,7 +988,8 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
 
     } catch (error) {
       logger.error("AuthContext: Sign out error:", error);
-      // Still clear state on error
+      // Still clear state on error — including the stored tokens
+      await purgeSupabaseSessionStorage().catch(() => {});
       setUser(null);
       setSession(null);
       setUserProfile(null);

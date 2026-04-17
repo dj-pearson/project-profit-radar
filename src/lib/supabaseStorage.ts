@@ -114,3 +114,58 @@ export const createSupabaseStorage = (): SupportedStorage => {
 
 export const supabaseStorage = createSupabaseStorage();
 
+/**
+ * Keys Supabase uses to persist auth state. Supabase's own naming has changed
+ * over major versions (legacy `supabase.auth.token`, modern `sb-<project>-auth-token`,
+ * plus derived `*-verifier` keys used during the PKCE flow). We scrub all of them
+ * across both storage layers on sign-out so a stolen device cannot be re-hydrated
+ * from leftover plaintext tokens in localStorage.
+ */
+const isSupabaseAuthKey = (key: string): boolean =>
+  key === 'supabase.auth.token' ||
+  /^sb-[^-]+-auth-token(?:-code-verifier|\.0|\.1)?$/.test(key) ||
+  key.startsWith('sb-') && key.includes('-auth-token');
+
+/**
+ * Synchronously clear every Supabase auth-related key from localStorage and
+ * fire-and-forget the same clear against @capacitor/preferences. Call this
+ * AFTER supabase.auth.signOut() in your sign-out handler so that even if the
+ * network round-trip failed (device offline, server unreachable) the local
+ * device no longer holds a valid-looking session blob.
+ */
+export const purgeSupabaseSessionStorage = async (): Promise<void> => {
+  // 1. localStorage (sync) — scan for any sb-* / supabase.auth.* keys
+  if (typeof window !== 'undefined' && window.localStorage) {
+    try {
+      const toRemove: string[] = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && isSupabaseAuthKey(key)) toRemove.push(key);
+      }
+      for (const key of toRemove) {
+        try {
+          localStorage.removeItem(key);
+        } catch {
+          // ignore individual removal errors
+        }
+      }
+    } catch {
+      // ignore — storage may be disabled or quota-exceeded
+    }
+  }
+
+  // 2. Capacitor Preferences (async) — remove the seed keys and any sb-* tokens.
+  // Preferences has no keys() in @capacitor/preferences <5, so we explicitly
+  // remove the well-known keys we ever write.
+  const prefs = await getPreferences();
+  if (prefs) {
+    const knownKeys = [
+      'sb-api-auth-token',
+      'sb-api-auth-token-code-verifier',
+      'supabase.auth.token',
+    ];
+    await Promise.all(
+      knownKeys.map((key) => prefs.remove({ key }).catch(() => {}))
+    );
+  }
+};

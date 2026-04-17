@@ -64,16 +64,24 @@ const FinancialDashboard = () => {
             audited statements or professional advice. */}
         <ComplianceDisclaimer variant="financial" />
         <Tabs defaultValue="overview" className="space-y-6" onValueChange={(value) => gtag.trackFeature('financial_dashboard', 'tab_change', 1)} aria-label="Financial dashboard sections">
-          <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 lg:grid-cols-9 gap-1" aria-label="Financial categories">
-            <TabsTrigger value="overview" className="text-xs sm:text-sm">Overview</TabsTrigger>
-            <TabsTrigger value="budgets" className="text-xs sm:text-sm">Budget</TabsTrigger>
-            <TabsTrigger value="cash-flow" className="text-xs sm:text-sm">Cash</TabsTrigger>
-            <TabsTrigger value="expenses" className="text-xs sm:text-sm">Expenses</TabsTrigger>
-            <TabsTrigger value="invoices" className="text-xs sm:text-sm">Invoices</TabsTrigger>
-            <TabsTrigger value="payments" className="text-xs sm:text-sm">Payments</TabsTrigger>
-            <TabsTrigger value="settings" className="text-xs sm:text-sm">Settings</TabsTrigger>
-            <TabsTrigger value="1099s" className="text-xs sm:text-sm">1099s</TabsTrigger>
-            <TabsTrigger value="reports" className="text-xs sm:text-sm">P&L</TabsTrigger>
+          {/*
+            On narrow phones (iPhone SE) nine tabs in a grid crush below Apple
+            HIG's 44 px touch target and clip labels. Scroll horizontally on
+            <640 px; restore the 4-col/9-col grid at sm/lg respectively.
+          */}
+          <TabsList
+            className="flex w-full overflow-x-auto snap-x gap-1 scrollbar-hide justify-start sm:grid sm:grid-cols-4 sm:overflow-visible lg:grid-cols-9"
+            aria-label="Financial categories"
+          >
+            <TabsTrigger value="overview" className="shrink-0 snap-start min-h-11 px-4 text-xs sm:shrink sm:px-3 sm:text-sm">Overview</TabsTrigger>
+            <TabsTrigger value="budgets" className="shrink-0 snap-start min-h-11 px-4 text-xs sm:shrink sm:px-3 sm:text-sm">Budget</TabsTrigger>
+            <TabsTrigger value="cash-flow" className="shrink-0 snap-start min-h-11 px-4 text-xs sm:shrink sm:px-3 sm:text-sm">Cash</TabsTrigger>
+            <TabsTrigger value="expenses" className="shrink-0 snap-start min-h-11 px-4 text-xs sm:shrink sm:px-3 sm:text-sm">Expenses</TabsTrigger>
+            <TabsTrigger value="invoices" className="shrink-0 snap-start min-h-11 px-4 text-xs sm:shrink sm:px-3 sm:text-sm">Invoices</TabsTrigger>
+            <TabsTrigger value="payments" className="shrink-0 snap-start min-h-11 px-4 text-xs sm:shrink sm:px-3 sm:text-sm">Payments</TabsTrigger>
+            <TabsTrigger value="settings" className="shrink-0 snap-start min-h-11 px-4 text-xs sm:shrink sm:px-3 sm:text-sm">Settings</TabsTrigger>
+            <TabsTrigger value="1099s" className="shrink-0 snap-start min-h-11 px-4 text-xs sm:shrink sm:px-3 sm:text-sm">1099s</TabsTrigger>
+            <TabsTrigger value="reports" className="shrink-0 snap-start min-h-11 px-4 text-xs sm:shrink sm:px-3 sm:text-sm">P&L</TabsTrigger>
           </TabsList>
 
           <TabsContent value="overview" className="space-y-4 sm:space-y-6">
