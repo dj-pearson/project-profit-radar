@@ -10,16 +10,20 @@ interface MobileLayoutProps {
   className?: string;
   withPadding?: boolean;
   withBottomNav?: boolean;
+  /** Enable the ambient brand gradient background (default: true). */
+  ambientBackground?: boolean;
 }
 
 /**
- * Mobile-first layout wrapper with safe areas and proper spacing
+ * Mobile-first layout wrapper with safe areas, ambient iOS-style brand
+ * background and consistent vertical rhythm for glass surfaces.
  */
 export function MobileLayout({
   children,
   className,
   withPadding = true,
   withBottomNav = false,
+  ambientBackground = true,
 }: MobileLayoutProps) {
   const isMobile = useIsMobile();
   useNativeStatusBar();
@@ -29,6 +33,7 @@ export function MobileLayout({
     <div
       className={cn(
         'w-full min-h-screen',
+        ambientBackground && 'ios-page-bg',
         'safe-area-top safe-area-x',
         withPadding && 'px-4 py-4 md:px-6 md:py-6',
         withBottomNav && 'md:pb-6',

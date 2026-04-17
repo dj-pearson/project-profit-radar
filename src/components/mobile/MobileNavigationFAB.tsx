@@ -29,17 +29,24 @@ export const MobileNavigationFAB: React.FC<MobileNavigationFABProps> = ({
   return (
     <>
       {/* Fixed FAB positioned at bottom right */}
-      <div className={cn(
-        "fixed bottom-6 right-6 z-50 flex flex-col gap-2",
-        "sm:hidden", // Only show on mobile
-        className
-      )}>
-        {/* Back button FAB - if needed */}
+      <div
+        className={cn(
+          'fixed right-4 z-50 flex flex-col gap-3',
+          'sm:hidden',
+          className
+        )}
+        style={{ bottom: 'calc(1.5rem + env(safe-area-inset-bottom, 0px))' }}
+      >
+        {/* Back button FAB — glass variant */}
         {showBackButton && onBack && (
           <Button
             size="icon"
             onClick={onBack}
-            className="h-12 w-12 rounded-full shadow-lg bg-primary hover:bg-primary/90"
+            className={cn(
+              'h-12 w-12 rounded-full glass-interactive',
+              'text-foreground hover:bg-transparent',
+              'tap-highlight-transparent'
+            )}
             aria-label="Go back"
           >
             <ArrowLeft className="h-5 w-5" />
@@ -51,7 +58,13 @@ export const MobileNavigationFAB: React.FC<MobileNavigationFABProps> = ({
           <SheetTrigger asChild>
             <Button
               size="icon"
-              className="h-14 w-14 rounded-full shadow-lg bg-primary hover:bg-primary/90"
+              className={cn(
+                'h-14 w-14 rounded-full',
+                'bg-gradient-to-br from-primary to-[hsl(24_100%_34%)]',
+                'text-primary-foreground ring-1 ring-inset ring-white/25',
+                'shadow-ios-glow transition-all duration-[200ms] ease-ios',
+                'active:scale-[0.94] tap-highlight-transparent'
+              )}
               aria-label="Menu — long press for quick actions"
               onClick={() => {
                 setIsOpen(true);
@@ -62,7 +75,7 @@ export const MobileNavigationFAB: React.FC<MobileNavigationFABProps> = ({
               <Menu className="h-6 w-6" />
             </Button>
           </SheetTrigger>
-          <SheetContent side="left" className="w-80 p-0">
+          <SheetContent side="left" className="w-80 p-0 glass-thick border-r border-white/10 dark:border-white/5">
             {children}
           </SheetContent>
         </Sheet>

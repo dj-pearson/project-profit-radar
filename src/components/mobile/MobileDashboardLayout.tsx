@@ -117,11 +117,19 @@ export function MobileDashboardLayout({ widgets, header }: MobileDashboardLayout
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 ios-rise">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <LayoutGrid className="h-5 w-5 text-primary" aria-hidden="true" />
-          <h2 className="text-lg font-semibold">Dashboard</h2>
+          <div
+            className={cn(
+              'w-9 h-9 rounded-xl flex items-center justify-center',
+              'bg-gradient-to-br from-primary/20 to-primary/5 text-primary',
+              'ring-1 ring-inset ring-primary/15 shadow-ios-1'
+            )}
+          >
+            <LayoutGrid className="h-4 w-4" aria-hidden="true" />
+          </div>
+          <h2 className="text-lg font-semibold tracking-tight">Dashboard</h2>
         </div>
         <Button
           type="button"
@@ -129,6 +137,10 @@ export function MobileDashboardLayout({ widgets, header }: MobileDashboardLayout
           size="sm"
           onClick={toggleEdit}
           aria-pressed={editMode}
+          className={cn(
+            'rounded-xl transition-all duration-[180ms] ease-ios',
+            editMode ? 'shadow-ios-2' : 'glass-interactive border-white/20'
+          )}
         >
           {editMode ? (
             <>
@@ -200,9 +212,9 @@ function EditRow({
       dragListener={false}
       dragControls={controls}
       className={cn(
-        'flex items-center gap-3 p-3 rounded-lg border bg-card',
+        'flex items-center gap-3 p-3 rounded-2xl glass shadow-ios-1',
         'min-h-[64px]',
-        hidden && 'opacity-60',
+        hidden && 'opacity-55',
       )}
       transition={reduceMotion ? { duration: 0 } : undefined}
     >
@@ -238,13 +250,21 @@ function EditRow({
 
 function EmptyState({ onEdit }: { onEdit: () => void }) {
   return (
-    <div className="flex flex-col items-center justify-center text-center p-8 rounded-xl border-2 border-dashed bg-muted/30">
-      <LayoutGrid className="h-10 w-10 text-muted-foreground mb-3" aria-hidden="true" />
-      <h3 className="font-semibold">Your dashboard is empty</h3>
-      <p className="text-sm text-muted-foreground mt-1 mb-4">
+    <div className="flex flex-col items-center justify-center text-center p-8 rounded-2xl glass-thin border-dashed border-2 border-white/30 dark:border-white/10">
+      <div
+        className={cn(
+          'w-16 h-16 rounded-2xl flex items-center justify-center mb-3',
+          'bg-gradient-to-br from-primary/20 to-primary/5 text-primary',
+          'ring-1 ring-inset ring-primary/15 shadow-ios-1'
+        )}
+      >
+        <LayoutGrid className="h-7 w-7" aria-hidden="true" />
+      </div>
+      <h3 className="font-semibold tracking-tight">Your dashboard is empty</h3>
+      <p className="text-sm text-muted-foreground mt-1 mb-4 max-w-xs">
         Enable widgets to see your projects, schedule, and stats at a glance.
       </p>
-      <Button type="button" onClick={onEdit}>
+      <Button type="button" onClick={onEdit} className="rounded-xl shadow-ios-2">
         <Pencil className="h-4 w-4 mr-1" />
         Choose widgets
       </Button>

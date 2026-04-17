@@ -2278,6 +2278,171 @@
       "priority": 3,
       "passes": false,
       "notes": ""
+    },
+    {
+      "id": "US-136",
+      "title": "Apply iOS glass design system to all mobile feature screens",
+      "description": "As a mobile user, I want every screen in the iOS app to share the new glassmorphic visual language introduced in the core primitives so that the product feels unified and premium. The shared primitives — MobileCard, MobileButton, MobileFAB, MobileDrawer, BottomSheet, MobileActionSheet, EnhancedMobileBottomNav, PullToRefresh, MobileEmptyState, MobileSkeletons, MobileDashboard, MobileDashboardLayout — already use the new `glass`, `glass-thick`, `glass-chrome`, `glass-interactive` utilities, the `ios-page-bg` ambient background, the `ios-*` motion keyframes and the `shadow-ios-*` tokens defined in src/index.css + tailwind.config.ts. Audit every remaining mobile screen/component under src/pages/ (mobile views) and src/components/mobile/* (MobileTimeTracker, MobileDailyReport, MobileSafetyIncidentManager, MobileEquipmentManager, MobileMaterialTracker, MobileTimeClock, MobileFieldInterface, MobileQuickActionsSheet, MobilePremiumUpsellSheet, MobileTable, MobileForm, MobileAction Bar, EnhancedMobileCamera, VoiceNotes, GeofenceManager, MobileTestingEnvironment, AdvancedMobileShowcase, MobileShowcase, etc.) and replace flat `bg-card` / `border` / raw shadows with the glass system. Wrap each feature screen with MobileLayout (ambientBackground=true) and ensure headers/sticky bars use glass-chrome. Keep all existing props and data flows.",
+      "acceptanceCriteria": [
+        "Every component in src/components/mobile/* that renders a surface uses `glass`, `glass-thin`, `glass-thick` or an existing shadcn Card with updated MobileCard instead of bare `bg-card`",
+        "All sticky headers / toolbars on mobile use `glass-chrome` with a 1px specular highlight line",
+        "All primary CTAs on mobile screens use `shadow-ios-2` or `shadow-ios-glow` (FAB)",
+        "All secondary / ghost buttons use the new rounded-xl radius (min-h-[44px])",
+        "`MobileLayout` ambientBackground prop is used as the default wrapper on mobile feature pages",
+        "Dark mode parity verified on every mobile screen (spot-check 10 screens)",
+        "No regressions to keyboard accessibility, ARIA labels, focus rings or haptics",
+        "Lighthouse mobile a11y score stays >= 95 on MobileShowcase and AdvancedMobileShowcase"
+      ],
+      "priority": 1,
+      "passes": false,
+      "notes": "Foundation (design tokens + 13 core mobile primitives) shipped in the iOS UI modernization session. This story propagates the system to every remaining mobile screen."
+    },
+    {
+      "id": "US-137",
+      "title": "Modernize mobile forms with glass inputs, floating labels and validation states",
+      "description": "As a mobile user, I want form inputs that feel native-iOS — soft, blurred backgrounds, animated labels and clear validation — so that data entry on phones feels polished. Today src/components/mobile/MobileForm.tsx uses plain shadcn Input/Select/Textarea with rectangular borders. Build MobileTextField, MobileSelectField, MobileTextArea, MobileSegmentedControl, and MobileToggleRow primitives that: (1) use a `glass-thin` surface with `rounded-xl`, (2) animate a floating label on focus (framer-motion, spring), (3) show error state with a shake + red ring + aria-invalid, (4) include left/right icon slots, (5) have minimum 44px tap target and 16px font to avoid iOS zoom. Keep React Hook Form + Zod integration intact. Migrate MobileSafetyIncidentManager, MobileDailyReport, and MobileTimeTracker forms as references.",
+      "acceptanceCriteria": [
+        "src/components/mobile/forms/ contains MobileTextField, MobileSelectField, MobileTextArea, MobileSegmentedControl, MobileToggleRow",
+        "All new fields use glass-thin + rounded-xl + 16px base font size",
+        "Floating label animates from placeholder to caption on focus with spring motion",
+        "Error states: shake animation (duration 300ms), red ring, aria-invalid='true', aria-describedby linking to inline error message",
+        "MobileSafetyIncidentManager, MobileDailyReport, MobileTimeTracker forms migrated to new primitives",
+        "Keyboard avoidance: form auto-scrolls focused input into view above the virtual keyboard on iOS Safari",
+        "Unit tests cover required/invalid/submit state transitions",
+        "Honors prefers-reduced-motion"
+      ],
+      "priority": 1,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-138",
+      "title": "Shared-element page transitions for mobile navigation",
+      "description": "As a mobile user, I want tapping a card to feel like it expands into the next screen rather than slamming in with a flat slide. Build a SharedElementTransition wrapper over framer-motion's layoutId + AnimatePresence so that a MobileCard (e.g., project card on Projects list) smoothly morphs into the header of the detail screen. Ship for 3 high-traffic flows first: Projects → Project detail, Time entries → Time entry detail, Daily reports → Report detail. Fall back to the existing MobilePageTransition slide+fade for non-matching routes.",
+      "acceptanceCriteria": [
+        "src/components/mobile/SharedElementTransition.tsx exposes a <SharedElement id={...}> component usable on both the source card and destination hero",
+        "3 flows migrated (projects, time-entries, daily-reports)",
+        "Transitions run at 60fps on an iPhone 12 simulator",
+        "Back navigation reverses the transition (hero -> card) smoothly",
+        "Non-instrumented routes still use MobilePageTransition (no regression)",
+        "Honors prefers-reduced-motion (crossfade only)"
+      ],
+      "priority": 2,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-139",
+      "title": "Native-feel haptic + sound palette for iOS",
+      "description": "As a mobile user, I want subtle, consistent haptic feedback for every important interaction and optional audio cues (off by default). useHaptics exists but is applied inconsistently. Inventory every interactive mobile surface and codify a haptic palette: selection for nav/menu taps, light-impact for buttons/toggles, medium-impact for destructive actions and sheet dismiss, success for async success, warning for validation errors, error for failed network actions. Add a Settings › Accessibility › Haptics toggle wired to user preferences.",
+      "acceptanceCriteria": [
+        "src/hooks/useHaptics.ts exposes semantic methods: selection, impactLight, impactMedium, impactHeavy, success, warning, error",
+        "Haptic palette documented in docs/MOBILE_HAPTICS_PALETTE.md with 1:1 mapping to UX events",
+        "Settings › Accessibility page adds a Haptics on/off toggle (default on, persisted to user_profiles)",
+        "Every mobile primitive (MobileCard, MobileButton, sheets, nav) calls the correct semantic method",
+        "Audit utility script scripts/audit-haptics.ts greps for raw haptics.impact() calls and reports locations",
+        "Honors system reduce-haptics if detected"
+      ],
+      "priority": 2,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-140",
+      "title": "iOS native look for alerts, toasts and confirmations",
+      "description": "As a mobile user, I want alerts/toasts that match iOS conventions — centered modal alerts with glass background, stacked action buttons on narrow screens, swipe-to-dismiss toasts, and a dedicated confirmation dialog for destructive actions. Today the app uses sonner for toasts and shadcn Dialog/AlertDialog which look desktop-y on mobile. Wrap sonner with mobile-optimized styling (glass-thick surface, 16px radius, bottom positioning above the nav bar) and build MobileAlert / MobileConfirm components that replace AlertDialog on small screens.",
+      "acceptanceCriteria": [
+        "src/components/mobile/MobileAlert.tsx and src/components/mobile/MobileConfirm.tsx shipped",
+        "Destructive confirms use red primary button, haptic medium on open, haptic heavy on confirm",
+        "Sonner toasts on mobile use glass-thick, rounded-2xl, positioned above MobileBottomNav",
+        "Toasts respect safe-area-inset-bottom and ios-scrim for destructive variants",
+        "Migration: replace every AlertDialog usage under src/components/mobile/* with MobileConfirm",
+        "Axe-core tests pass for the new dialogs (focus trap, aria-modal, esc-to-close)"
+      ],
+      "priority": 2,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-141",
+      "title": "Glass iOS app icon set and splash screen refresh",
+      "description": "As a user launching Brikly from their iOS home screen, I want the app icon and splash to match the new glass design language. Replace the current flat orange icon with a layered glass treatment — soft gradient core, subtle specular highlight, rounded-squircle mask — generated at all required iOS sizes (20pt, 29pt, 40pt, 58pt, 60pt, 76pt, 80pt, 87pt, 120pt, 152pt, 167pt, 180pt, 1024pt App Store). Update the splash screen (capacitor.config.ts splash) from solid #ffffff to an animated gradient fade that dissolves into the welcome dashboard.",
+      "acceptanceCriteria": [
+        "ios/App/App/Assets.xcassets/AppIcon.appiconset/ contains all required iOS sizes (verified with `xcrun actool`)",
+        "New icon uses glass + gradient + squircle treatment; source SVG + Figma file committed to media/brand/",
+        "capacitor.config.ts splash uses new gradient asset",
+        "Splash transition into dashboard is a 300ms cross-fade (no hard cut)",
+        "Dark-mode alternate icon shipped (iOS 18 tinted / dark)",
+        "App Store screenshots updated to match new UI in docs/app-store-assets/"
+      ],
+      "priority": 3,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-142",
+      "title": "Live Activities, Dynamic Island and Home Screen widgets for iOS",
+      "description": "As a field worker, I want to see my active clock-in timer in the Dynamic Island and a Home Screen widget with today's job site — so I don't have to open the app to check my status. Build an iOS Live Activity via ActivityKit for the clock-in timer (showing elapsed time + job name + site GPS distance), and a WidgetKit Home Screen widget showing today's schedule + active project + crew count. Requires a small SwiftUI target in the ios/ folder and a bridge from the Capacitor web layer to post ActivityKit updates.",
+      "acceptanceCriteria": [
+        "ios/BriklyWidgets/ SwiftUI target added and builds with the main app",
+        "Live Activity starts on clock-in, updates elapsed time every 60s, ends on clock-out",
+        "Dynamic Island compact + expanded layouts render Brikly brand correctly",
+        "Home Screen widget has small / medium / large sizes showing schedule and active project",
+        "Web layer calls a Capacitor plugin (custom) to trigger ActivityKit.startActivity / update / end",
+        "Widget data refreshes via WidgetCenter.reloadAllTimelines when clock-in state changes",
+        "Fallback: widgets gracefully show 'No active work' when user is clocked out"
+      ],
+      "priority": 3,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-143",
+      "title": "Per-surface light/dark token audit for glass contrast",
+      "description": "As a mobile user in bright sunlight or night mode, I want every glass surface to stay legible — glass can collapse to low contrast against busy ambient backgrounds. Audit every glass surface on all 262+ pages under three ambient backgrounds (warm sunlight, neutral indoor, night) and verify text contrast >= 4.5:1 (WCAG AA). Add a fallback `solid` surface for dense data tables (e.g., FinancialRecords, JobCosting tables) where glass would hurt scannability. Document a decision matrix in docs/MOBILE_GLASS_GUIDELINES.md.",
+      "acceptanceCriteria": [
+        "docs/MOBILE_GLASS_GUIDELINES.md describes when to use glass vs solid surface",
+        "All MobileCard usage sites reviewed; data tables / dense lists switched to surface='solid'",
+        "Automated contrast test (src/test/glass-contrast.test.ts) validates text over glass surfaces in both themes",
+        "Lighthouse mobile accessibility score >= 95 on 10 spot-checked screens",
+        "Axe-core report attached to the PR",
+        "Color-blind simulator check (Deuteranopia, Protanopia) shows primary CTAs remain distinguishable"
+      ],
+      "priority": 1,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-144",
+      "title": "Performance budget for backdrop-filter usage on older iPhones",
+      "description": "As an iPhone XR / SE user, I want the app to stay smooth even with heavy glass usage — backdrop-filter is GPU-expensive and can tank scrolling below 50fps on 2018-era devices. Add a runtime performance guard: detect device class via Capacitor Device API; on low-end devices (A12 and older), set a CSS class `low-gpu` on <html> that downgrades `.glass` and `.glass-thick` to solid surfaces (retaining colors/borders but dropping backdrop-filter). Add a manual override in Accessibility settings (`Reduce transparency`, mirroring iOS).",
+      "acceptanceCriteria": [
+        "src/hooks/useDevicePerformance.ts returns tier: 'high' | 'medium' | 'low'",
+        "<html class='low-gpu'> toggled automatically on low-tier devices",
+        ".low-gpu .glass / .low-gpu .glass-thick override backdrop-filter: none and use solid card background",
+        "Settings › Accessibility adds 'Reduce transparency' toggle (persisted, overrides auto-detection)",
+        "Scroll FPS measured with Chrome Devtools on an iPhone XR simulator stays >= 55fps on MobileDashboard with reduce-transparency off",
+        "No visual regression on high-tier devices"
+      ],
+      "priority": 2,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-145",
+      "title": "iOS gesture polish: swipe actions, edge-swipe-back, and pinch-to-zoom on photos",
+      "description": "As a mobile user, I want native-iOS gestures everywhere — swipe-to-archive/complete on list rows, interactive edge-swipe-back (already stubbed via useEdgeSwipeBack), and pinch-to-zoom on photo viewers. SwipeableListItem exists but is unused. Migrate time entries, daily reports, and notifications lists to SwipeableListItem with 2 revealed actions (archive + complete). Wire useEdgeSwipeBack to actually trigger router.back() with an interactive drag preview. Add pinch-to-zoom + pan to the photo gallery (react-zoom-pan-pinch or custom useGesture).",
+      "acceptanceCriteria": [
+        "Time entries, daily reports, notifications lists use SwipeableListItem with haptic medium on reveal",
+        "Left-edge swipe on any mobile screen previews and completes a back navigation (cancellable if dropped below 40% threshold)",
+        "Photo gallery (MobileCamera preview + document photos) supports pinch-zoom up to 4x and two-finger pan",
+        "Gesture hints: subtle left/right peek animation on first-ever visit (stored in localStorage)",
+        "Honors prefers-reduced-motion (gestures still work, animations reduced)",
+        "No regression to vertical scrolling"
+      ],
+      "priority": 2,
+      "passes": false,
+      "notes": ""
     }
   ]
 }
