@@ -2,12 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Checkbox } from '@/components/ui/checkbox';
 import { Separator } from '@/components/ui/separator';
+import {
+  MobileTextField,
+  MobileTextArea,
+  MobileSelectField,
+  MobileToggleRow,
+} from '@/components/mobile/forms';
 import { 
   AlertTriangle, 
   Camera, 
@@ -361,68 +362,55 @@ const MobileSafetyIncidentManager: React.FC<MobileSafetyIncidentManagerProps> = 
 
       {/* Step 1: Incident Type & Severity */}
       {currentStep === 1 && (
-        <Card>
+        <Card className="glass rounded-2xl shadow-ios-2 border-transparent">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
+            <CardTitle className="flex items-center gap-2 tracking-tight">
               <AlertCircle className="h-5 w-5" />
               Incident Classification
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             {!projectId && (
-              <div>
-                <Label>Project *</Label>
-                <Select value={selectedProject} onValueChange={setSelectedProject}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select project..." />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {projects.map((project) => (
-                      <SelectItem key={project.id} value={project.id}>
-                        {project.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+              <MobileSelectField
+                label="Project"
+                required
+                placeholder="Select project…"
+                value={selectedProject}
+                onChange={(e) => setSelectedProject(e.target.value)}
+                options={projects.map((p) => ({ value: p.id, label: p.name }))}
+              />
             )}
 
-            <div>
-              <Label>Incident Type *</Label>
-              <Select value={incidentData.incident_type} onValueChange={(value) => 
-                setIncidentData(prev => ({ ...prev, incident_type: value }))
-              }>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select incident type..." />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="injury">Personal Injury</SelectItem>
-                  <SelectItem value="near_miss">Near Miss</SelectItem>
-                  <SelectItem value="property_damage">Property Damage</SelectItem>
-                  <SelectItem value="equipment_failure">Equipment Failure</SelectItem>
-                  <SelectItem value="environmental">Environmental</SelectItem>
-                  <SelectItem value="security">Security Issue</SelectItem>
-                  <SelectItem value="other">Other</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+            <MobileSelectField
+              label="Incident Type"
+              required
+              placeholder="Select incident type…"
+              value={incidentData.incident_type}
+              onChange={(e) => setIncidentData(prev => ({ ...prev, incident_type: e.target.value }))}
+              options={[
+                { value: 'injury', label: 'Personal Injury' },
+                { value: 'near_miss', label: 'Near Miss' },
+                { value: 'property_damage', label: 'Property Damage' },
+                { value: 'equipment_failure', label: 'Equipment Failure' },
+                { value: 'environmental', label: 'Environmental' },
+                { value: 'security', label: 'Security Issue' },
+                { value: 'other', label: 'Other' },
+              ]}
+            />
 
-            <div>
-              <Label>Severity Level *</Label>
-              <Select value={incidentData.severity} onValueChange={(value) => 
-                setIncidentData(prev => ({ ...prev, severity: value }))
-              }>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select severity..." />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="critical">Critical - Life Threatening</SelectItem>
-                  <SelectItem value="severe">Severe - Serious Injury</SelectItem>
-                  <SelectItem value="moderate">Moderate - Minor Injury</SelectItem>
-                  <SelectItem value="minor">Minor - No Injury</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+            <MobileSelectField
+              label="Severity Level"
+              required
+              placeholder="Select severity…"
+              value={incidentData.severity}
+              onChange={(e) => setIncidentData(prev => ({ ...prev, severity: e.target.value }))}
+              options={[
+                { value: 'critical', label: 'Critical - Life Threatening' },
+                { value: 'severe', label: 'Severe - Serious Injury' },
+                { value: 'moderate', label: 'Moderate - Minor Injury' },
+                { value: 'minor', label: 'Minor - No Injury' },
+              ]}
+            />
 
             {incidentData.severity && (
               <Badge className={getSeverityColor(incidentData.severity)}>
@@ -432,30 +420,20 @@ const MobileSafetyIncidentManager: React.FC<MobileSafetyIncidentManagerProps> = 
 
             {(incidentData.severity === 'critical' || incidentData.severity === 'severe') && (
               <div className="space-y-2">
-                <div className="flex items-center space-x-2">
-                  <Checkbox
-                    id="emergency_services"
-                    checked={incidentData.emergency_services_called}
-                    onCheckedChange={(checked) => 
-                      setIncidentData(prev => ({ ...prev, emergency_services_called: !!checked }))
-                    }
-                  />
-                  <Label htmlFor="emergency_services" className="text-sm font-medium">
-                    Emergency services called (911)
-                  </Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Checkbox
-                    id="supervisor_notified"
-                    checked={incidentData.supervisor_notified}
-                    onCheckedChange={(checked) => 
-                      setIncidentData(prev => ({ ...prev, supervisor_notified: !!checked }))
-                    }
-                  />
-                  <Label htmlFor="supervisor_notified" className="text-sm font-medium">
-                    Supervisor notified immediately
-                  </Label>
-                </div>
+                <MobileToggleRow
+                  label="Emergency services called (911)"
+                  checked={incidentData.emergency_services_called}
+                  onCheckedChange={(checked) =>
+                    setIncidentData(prev => ({ ...prev, emergency_services_called: checked }))
+                  }
+                />
+                <MobileToggleRow
+                  label="Supervisor notified immediately"
+                  checked={incidentData.supervisor_notified}
+                  onCheckedChange={(checked) =>
+                    setIncidentData(prev => ({ ...prev, supervisor_notified: checked }))
+                  }
+                />
               </div>
             )}
           </CardContent>
@@ -464,91 +442,86 @@ const MobileSafetyIncidentManager: React.FC<MobileSafetyIncidentManagerProps> = 
 
       {/* Step 2: Description & Actions */}
       {currentStep === 2 && (
-        <Card>
+        <Card className="glass rounded-2xl shadow-ios-2 border-transparent">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
+            <CardTitle className="flex items-center gap-2 tracking-tight">
               <FileText className="h-5 w-5" />
               Incident Details
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div>
-              <Label>What Happened? *</Label>
-              <div className="flex gap-2">
-                <Textarea
+            <div className="flex gap-2 items-start">
+              <div className="flex-1">
+                <MobileTextArea
+                  label="What Happened?"
+                  required
                   value={incidentData.description}
                   onChange={(e) => setIncidentData(prev => ({ ...prev, description: e.target.value }))}
-                  placeholder="Describe the incident in detail..."
-                  className="flex-1"
+                  placeholder="Describe the incident in detail…"
                   rows={4}
                 />
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handleVoiceRecording('description')}
-                  className="shrink-0"
-                >
-                  {isRecording ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
-                </Button>
               </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handleVoiceRecording('description')}
+                aria-label={isRecording ? 'Stop recording' : 'Record description'}
+                className="shrink-0 h-14 w-14 rounded-xl glass-interactive border-white/20 dark:border-white/10 mt-[2px]"
+              >
+                {isRecording ? <MicOff className="h-5 w-5" /> : <Mic className="h-5 w-5" />}
+              </Button>
             </div>
 
-            <div>
-              <Label>Location Description</Label>
-              <div className="flex gap-2">
-                <Input
-                  value={incidentData.location_description}
-                  onChange={(e) => setIncidentData(prev => ({ ...prev, location_description: e.target.value }))}
-                  placeholder="Where did this happen?"
-                  className="flex-1"
-                />
-                {position && (
-                  <Badge variant="outline" className="flex items-center gap-1 shrink-0">
+            <MobileTextField
+              label="Location Description"
+              value={incidentData.location_description}
+              onChange={(e) => setIncidentData(prev => ({ ...prev, location_description: e.target.value }))}
+              placeholder="Where did this happen?"
+              rightSlot={
+                position ? (
+                  <Badge variant="outline" className="flex items-center gap-1 text-[10px] py-0 h-5">
                     <MapPin className="h-3 w-3" />
                     GPS
                   </Badge>
-                )}
-              </div>
-            </div>
+                ) : undefined
+              }
+            />
 
-            <div>
-              <Label>Immediate Actions Taken *</Label>
-              <div className="flex gap-2">
-                <Textarea
+            <div className="flex gap-2 items-start">
+              <div className="flex-1">
+                <MobileTextArea
+                  label="Immediate Actions Taken"
+                  required
                   value={incidentData.immediate_actions_taken}
                   onChange={(e) => setIncidentData(prev => ({ ...prev, immediate_actions_taken: e.target.value }))}
                   placeholder="What was done immediately after the incident?"
-                  className="flex-1"
                   rows={3}
                 />
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handleVoiceRecording('immediate_actions_taken')}
-                  className="shrink-0"
-                >
-                  {isRecording ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
-                </Button>
               </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handleVoiceRecording('immediate_actions_taken')}
+                aria-label={isRecording ? 'Stop recording' : 'Record immediate actions'}
+                className="shrink-0 h-14 w-14 rounded-xl glass-interactive border-white/20 dark:border-white/10 mt-[2px]"
+              >
+                {isRecording ? <MicOff className="h-5 w-5" /> : <Mic className="h-5 w-5" />}
+              </Button>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <Label>Equipment Involved</Label>
-                <Input
-                  value={incidentData.equipment_involved || ''}
-                  onChange={(e) => setIncidentData(prev => ({ ...prev, equipment_involved: e.target.value }))}
-                  placeholder="Equipment or tools involved"
-                />
-              </div>
-              <div>
-                <Label>Weather Conditions</Label>
-                <Input
-                  value={incidentData.weather_conditions || ''}
-                  onChange={(e) => setIncidentData(prev => ({ ...prev, weather_conditions: e.target.value }))}
-                  placeholder="Weather at time of incident"
-                />
-              </div>
+              <MobileTextField
+                label="Equipment Involved"
+                value={incidentData.equipment_involved || ''}
+                onChange={(e) => setIncidentData(prev => ({ ...prev, equipment_involved: e.target.value }))}
+                placeholder="Equipment or tools involved"
+              />
+              <MobileTextField
+                label="Weather Conditions"
+                value={incidentData.weather_conditions || ''}
+                onChange={(e) => setIncidentData(prev => ({ ...prev, weather_conditions: e.target.value }))}
+                placeholder="Weather at time of incident"
+              />
             </div>
           </CardContent>
         </Card>
@@ -556,126 +529,114 @@ const MobileSafetyIncidentManager: React.FC<MobileSafetyIncidentManagerProps> = 
 
       {/* Step 3: People Involved */}
       {currentStep === 3 && (
-        <Card>
+        <Card className="glass rounded-2xl shadow-ios-2 border-transparent">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
+            <CardTitle className="flex items-center gap-2 tracking-tight">
               <Users className="h-5 w-5" />
               People Involved
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             {incidentData.incident_type === 'injury' && (
-              <div className="space-y-4 p-4 border rounded-lg bg-muted/50">
-                <h3 className="font-medium text-sm">Injury Details</h3>
-                <div className="grid grid-cols-1 gap-4">
-                  <div>
-                    <Label>Injured Person Name</Label>
-                    <Input
-                      value={incidentData.injured_person_name || ''}
-                      onChange={(e) => setIncidentData(prev => ({ ...prev, injured_person_name: e.target.value }))}
-                      placeholder="Full name"
-                    />
-                  </div>
-                  <div>
-                    <Label>Job Title</Label>
-                    <Input
-                      value={incidentData.injured_person_job_title || ''}
-                      onChange={(e) => setIncidentData(prev => ({ ...prev, injured_person_job_title: e.target.value }))}
-                      placeholder="Position/role"
-                    />
-                  </div>
-                  <div>
-                    <Label>Body Part Affected</Label>
-                    <Input
-                      value={incidentData.body_part_affected || ''}
-                      onChange={(e) => setIncidentData(prev => ({ ...prev, body_part_affected: e.target.value }))}
-                      placeholder="e.g., left hand, back, head"
-                    />
-                  </div>
-                  <div>
-                    <Label>Contact Information</Label>
-                    <Input
-                      value={incidentData.injured_person_contact || ''}
-                      onChange={(e) => setIncidentData(prev => ({ ...prev, injured_person_contact: e.target.value }))}
-                      placeholder="Phone number or emergency contact"
-                    />
-                  </div>
+              <div className="space-y-4 p-4 rounded-2xl glass-thin">
+                <h3 className="font-semibold text-sm tracking-tight">Injury Details</h3>
+                <div className="space-y-3">
+                  <MobileTextField
+                    label="Injured Person Name"
+                    value={incidentData.injured_person_name || ''}
+                    onChange={(e) => setIncidentData(prev => ({ ...prev, injured_person_name: e.target.value }))}
+                    placeholder="Full name"
+                    autoComplete="name"
+                  />
+                  <MobileTextField
+                    label="Job Title"
+                    value={incidentData.injured_person_job_title || ''}
+                    onChange={(e) => setIncidentData(prev => ({ ...prev, injured_person_job_title: e.target.value }))}
+                    placeholder="Position/role"
+                    autoComplete="organization-title"
+                  />
+                  <MobileTextField
+                    label="Body Part Affected"
+                    value={incidentData.body_part_affected || ''}
+                    onChange={(e) => setIncidentData(prev => ({ ...prev, body_part_affected: e.target.value }))}
+                    placeholder="e.g., left hand, back, head"
+                  />
+                  <MobileTextField
+                    label="Contact Information"
+                    type="tel"
+                    inputMode="tel"
+                    value={incidentData.injured_person_contact || ''}
+                    onChange={(e) => setIncidentData(prev => ({ ...prev, injured_person_contact: e.target.value }))}
+                    placeholder="Phone number or emergency contact"
+                    autoComplete="tel"
+                  />
                 </div>
 
-                <div className="space-y-3">
-                  <div className="flex items-center space-x-2">
-                    <Checkbox
-                      id="medical_attention"
-                      checked={incidentData.medical_attention_required}
-                      onCheckedChange={(checked) => 
-                        setIncidentData(prev => ({ ...prev, medical_attention_required: !!checked }))
-                      }
-                    />
-                    <Label htmlFor="medical_attention" className="text-sm">
-                      Medical attention required
-                    </Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <Checkbox
-                      id="lost_time"
-                      checked={incidentData.lost_time}
-                      onCheckedChange={(checked) => 
-                        setIncidentData(prev => ({ ...prev, lost_time: !!checked }))
-                      }
-                    />
-                    <Label htmlFor="lost_time" className="text-sm">
-                      Lost time incident
-                    </Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <Checkbox
-                      id="osha_recordable"
-                      checked={incidentData.osha_recordable}
-                      onCheckedChange={(checked) => 
-                        setIncidentData(prev => ({ ...prev, osha_recordable: !!checked }))
-                      }
-                    />
-                    <Label htmlFor="osha_recordable" className="text-sm">
-                      OSHA recordable incident
-                    </Label>
-                  </div>
+                <div className="space-y-2">
+                  <MobileToggleRow
+                    label="Medical attention required"
+                    checked={incidentData.medical_attention_required}
+                    onCheckedChange={(checked) =>
+                      setIncidentData(prev => ({ ...prev, medical_attention_required: checked }))
+                    }
+                  />
+                  <MobileToggleRow
+                    label="Lost time incident"
+                    checked={incidentData.lost_time}
+                    onCheckedChange={(checked) =>
+                      setIncidentData(prev => ({ ...prev, lost_time: checked }))
+                    }
+                  />
+                  <MobileToggleRow
+                    label="OSHA recordable incident"
+                    checked={incidentData.osha_recordable}
+                    onCheckedChange={(checked) =>
+                      setIncidentData(prev => ({ ...prev, osha_recordable: checked }))
+                    }
+                  />
                 </div>
 
                 {incidentData.lost_time && (
-                  <div>
-                    <Label>Days Away from Work</Label>
-                    <Input
-                      type="number"
-                      min="0"
-                      value={incidentData.days_away_from_work}
-                      onChange={(e) => setIncidentData(prev => ({ 
-                        ...prev, 
-                        days_away_from_work: parseInt(e.target.value) || 0 
-                      }))}
-                      placeholder="Number of days"
-                    />
-                  </div>
+                  <MobileTextField
+                    label="Days Away from Work"
+                    type="number"
+                    inputMode="numeric"
+                    min={0}
+                    value={incidentData.days_away_from_work}
+                    onChange={(e) => setIncidentData(prev => ({
+                      ...prev,
+                      days_away_from_work: parseInt(e.target.value) || 0
+                    }))}
+                    placeholder="Number of days"
+                  />
                 )}
               </div>
             )}
 
             <div>
-              <Label>Witnesses</Label>
+              <span className="block text-[11px] font-medium uppercase tracking-wide text-muted-foreground mb-2 px-1">
+                Witnesses
+              </span>
               <div className="space-y-2">
-                <div className="flex gap-2">
-                  <Input
-                    value={newWitness}
-                    onChange={(e) => setNewWitness(e.target.value)}
-                    placeholder="Witness name"
-                    className="flex-1"
-                  />
+                <div className="flex gap-2 items-start">
+                  <div className="flex-1">
+                    <MobileTextField
+                      label="Witness name"
+                      value={newWitness}
+                      onChange={(e) => setNewWitness(e.target.value)}
+                      placeholder="Add a witness…"
+                      autoComplete="name"
+                    />
+                  </div>
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={addWitness}
                     disabled={!newWitness.trim()}
+                    aria-label="Add witness"
+                    className="shrink-0 h-14 w-14 rounded-xl glass-interactive border-white/20 dark:border-white/10 mt-[2px]"
                   >
-                    <Plus className="h-4 w-4" />
+                    <Plus className="h-5 w-5" />
                   </Button>
                 </div>
                 {incidentData.witness_names.map((witness, index) => (
@@ -698,16 +659,18 @@ const MobileSafetyIncidentManager: React.FC<MobileSafetyIncidentManagerProps> = 
 
       {/* Step 4: Evidence & Review */}
       {currentStep === 4 && (
-        <Card>
+        <Card className="glass rounded-2xl shadow-ios-2 border-transparent">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
+            <CardTitle className="flex items-center gap-2 tracking-tight">
               <Camera className="h-5 w-5" />
               Evidence & Review
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
-              <Label>Photos</Label>
+              <span className="block text-[11px] font-medium uppercase tracking-wide text-muted-foreground mb-2 px-1">
+                Photos
+              </span>
               <div className="grid grid-cols-2 gap-2 mt-2">
                 <Button
                   variant="outline"
