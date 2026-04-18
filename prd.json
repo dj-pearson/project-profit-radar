@@ -2313,7 +2313,7 @@
       ],
       "priority": 1,
       "passes": false,
-      "notes": ""
+      "notes": "PRIMITIVES SHIPPED. src/components/mobile/forms/ now contains MobileTextField, MobileTextArea, MobileSelectField, MobileSegmentedControl, MobileToggleRow, plus useKeyboardAwareScroll hook. All use glass-thin + rounded-xl + 16px base font (no iOS zoom). Floating label animates between caption + label position with 200ms ios-ease. Error state shakes (6-keyframe x-translate, 320ms), adds destructive ring, fires haptics.error(). Success state shows emerald ring + check glyph. MobileSegmentedControl uses framer-motion layoutId for spring-animated active pill. Barrel exported from src/components/mobile/index.ts. Honors prefers-reduced-motion. Remaining: migrate MobileSafetyIncidentManager, MobileDailyReport, MobileTimeTracker forms to use these primitives (currently still use shadcn Input)."
     },
     {
       "id": "US-138",
@@ -2345,7 +2345,7 @@
       ],
       "priority": 2,
       "passes": false,
-      "notes": ""
+      "notes": "SEMANTIC API SHIPPED. src/hooks/useHaptics.ts now exposes semantic methods (impactLight, impactMedium, impactHeavy, tap, toggle, destructive, reveal) alongside the original primitives. All native + web fallbacks gate on a global `brikly.a11y.haptics` localStorage key (on/off) — exposed via isHapticsEnabled() and setHapticsEnabled(). Mirrored on the imperative `haptics` helper for non-hook call sites. Remaining: docs/MOBILE_HAPTICS_PALETTE.md, Settings > Accessibility toggle UI, scripts/audit-haptics.ts, and migrating raw haptics.impact() calls to the semantic methods."
     },
     {
       "id": "US-140",
@@ -2361,7 +2361,7 @@
       ],
       "priority": 2,
       "passes": false,
-      "notes": ""
+      "notes": "PRIMITIVES SHIPPED. src/components/mobile/MobileConfirm.tsx provides centered glass-thick modal with focus trap, esc-to-close, ios-scale-in entrance, stacked buttons on narrow screens; destructive intent fires haptics.warning() on open, haptics.impact('heavy') on confirm. MobileAlert is a single-action wrapper. src/components/ui/sonner.tsx upgraded — toasts use glass-thick + rounded-2xl + shadow-ios-3, with safe-area-aware bottom offset (env(safe-area-inset-bottom) + 88px) so they float above MobileBottomNav. Color-tinted ring per variant (success/error/warning/info). Remaining: AlertDialog migration sweep across src/components/mobile/* and axe-core test coverage."
     },
     {
       "id": "US-141",

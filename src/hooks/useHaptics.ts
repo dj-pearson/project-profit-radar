@@ -21,11 +21,37 @@ import { useCallback, useMemo } from 'react';
 type ImpactStrength = 'light' | 'medium' | 'heavy';
 
 interface HapticsApi {
+  // Raw primitives
   impact: (strength?: ImpactStrength) => void;
   selection: () => void;
   success: () => void;
   warning: () => void;
   error: () => void;
+
+  // Semantic palette — prefer these in call sites so intent is obvious
+  // and the palette can be tuned globally without hunting for strength args.
+  // See docs/MOBILE_HAPTICS_PALETTE.md for the canonical mapping.
+  impactLight: () => void;
+  impactMedium: () => void;
+  impactHeavy: () => void;
+  /** Tab / menu / item tap (lightest cue). */
+  tap: () => void;
+  /** Toggle / switch / segmented-control change. */
+  toggle: () => void;
+  /** Irreversible / destructive confirm (medium impact). */
+  destructive: () => void;
+  /** Haptic for reveal gestures (swipe actions, sheet open at threshold). */
+  reveal: () => void;
+}
+
+const USER_PREF_KEY = 'brikly.a11y.haptics'; // 'on' | 'off'
+function hapticsEnabled(): boolean {
+  if (typeof window === 'undefined') return true;
+  try {
+    return window.localStorage.getItem(USER_PREF_KEY) !== 'off';
+  } catch {
+    return true;
+  }
 }
 
 const WEB_PATTERNS = {
@@ -40,6 +66,7 @@ const WEB_PATTERNS = {
 
 function webVibrate(pattern: number | number[]) {
   if (typeof navigator === 'undefined') return;
+  if (!hapticsEnabled()) return;
   const nav = navigator as Navigator & { vibrate?: (p: number | number[]) => boolean };
   if (typeof nav.vibrate === 'function') {
     try {
@@ -65,6 +92,7 @@ function loadNativeHaptics() {
 }
 
 async function nativeImpact(strength: ImpactStrength) {
+  if (!hapticsEnabled()) return true;
   const mod = (await loadNativeHaptics()) as
     | { Haptics?: { impact?: (opts: { style: unknown }) => Promise<void> }; ImpactStyle?: Record<string, unknown> }
     | null;
@@ -84,6 +112,7 @@ async function nativeImpact(strength: ImpactStrength) {
 }
 
 async function nativeSelection() {
+  if (!hapticsEnabled()) return true;
   const mod = (await loadNativeHaptics()) as
     | { Haptics?: { selectionStart?: () => Promise<void>; selectionEnd?: () => Promise<void> } }
     | null;
@@ -98,6 +127,7 @@ async function nativeSelection() {
 }
 
 async function nativeNotification(type: 'SUCCESS' | 'WARNING' | 'ERROR') {
+  if (!hapticsEnabled()) return true;
   const mod = (await loadNativeHaptics()) as
     | {
         Haptics?: { notification?: (opts: { type: unknown }) => Promise<void> };
@@ -144,10 +174,61 @@ export function useHaptics(): HapticsApi {
     });
   }, []);
 
+  const impactLight = useCallback(() => impact('light'), [impact]);
+  const impactMedium = useCallback(() => impact('medium'), [impact]);
+  const impactHeavy = useCallback(() => impact('heavy'), [impact]);
+  const tap = selection;
+  const toggle = selection;
+  const destructive = impactMedium;
+  const reveal = impactMedium;
+
   return useMemo(
-    () => ({ impact, selection, success, warning, error }),
-    [impact, selection, success, warning, error],
+    () => ({
+      impact,
+      selection,
+      success,
+      warning,
+      error,
+      impactLight,
+      impactMedium,
+      impactHeavy,
+      tap,
+      toggle,
+      destructive,
+      reveal,
+    }),
+    [
+      impact,
+      selection,
+      success,
+      warning,
+      error,
+      impactLight,
+      impactMedium,
+      impactHeavy,
+      tap,
+      toggle,
+      destructive,
+      reveal,
+    ],
   );
+}
+
+/**
+ * Imperative getter/setter for the global haptics enable preference.
+ * Used by the Settings › Accessibility toggle and any non-hook call site.
+ */
+export function isHapticsEnabled(): boolean {
+  return hapticsEnabled();
+}
+
+export function setHapticsEnabled(enabled: boolean): void {
+  if (typeof window === 'undefined') return;
+  try {
+    window.localStorage.setItem(USER_PREF_KEY, enabled ? 'on' : 'off');
+  } catch {
+    // storage unavailable
+  }
 }
 
 // Imperative helpers for non-React call sites (e.g. utilities, event handlers
@@ -178,4 +259,12 @@ export const haptics = {
       if (!ok) webVibrate(WEB_PATTERNS.error as unknown as number[]);
     });
   },
+  // Semantic palette mirrors
+  impactLight: () => haptics.impact('light'),
+  impactMedium: () => haptics.impact('medium'),
+  impactHeavy: () => haptics.impact('heavy'),
+  tap: () => haptics.selection(),
+  toggle: () => haptics.selection(),
+  destructive: () => haptics.impact('medium'),
+  reveal: () => haptics.impact('medium'),
 };
