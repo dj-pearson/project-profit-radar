@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Textarea } from '@/components/ui/textarea';
+import { MobileTextField, MobileTextArea } from '@/components/mobile/forms';
 import {
   Mic,
   MicOff,
@@ -402,141 +402,140 @@ const MobileDailyReport: React.FC<MobileDailyReportProps> = ({
       )}
 
       {/* Weather & Crew Info */}
-      <Card>
+      <Card className="glass rounded-2xl shadow-ios-2 border-transparent">
         <CardHeader>
-          <CardTitle className="text-lg">Site Conditions</CardTitle>
+          <CardTitle className="text-lg tracking-tight">Site Conditions</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div>
-            <label className="text-sm font-medium mb-2 block">Weather Conditions</label>
-            <div className="flex gap-2">
-              <Textarea
+          <div className="flex gap-2 items-start">
+            <div className="flex-1">
+              <MobileTextArea
+                label="Weather Conditions"
                 value={reportData.weather_conditions}
                 onChange={(e) => setReportData(prev => ({ ...prev, weather_conditions: e.target.value }))}
-                placeholder="Describe weather conditions..."
-                className="flex-1"
+                placeholder="Describe weather conditions…"
                 rows={2}
               />
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => startVoiceRecording('weather_conditions')}
-                disabled={isRecording}
-                className="shrink-0"
-              >
-                {isRecording && recordingField === 'weather_conditions' ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
-              </Button>
             </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => startVoiceRecording('weather_conditions')}
+              disabled={isRecording}
+              aria-label={isRecording && recordingField === 'weather_conditions' ? 'Stop recording' : 'Record weather conditions'}
+              className="shrink-0 h-14 w-14 rounded-xl glass-interactive border-white/20 dark:border-white/10 mt-[2px]"
+            >
+              {isRecording && recordingField === 'weather_conditions' ? <MicOff className="h-5 w-5" /> : <Mic className="h-5 w-5" />}
+            </Button>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="text-sm font-medium mb-2 block">Crew Count</label>
-              <input
-                type="number"
-                value={reportData.crew_count}
-                onChange={(e) => setReportData(prev => ({ ...prev, crew_count: parseInt(e.target.value) || 0 }))}
-                className="w-full p-2 border rounded"
-                min="0"
-              />
-            </div>
-            <div>
-              <label className="text-sm font-medium mb-2 block">Visitors</label>
-              <input
-                type="number"
-                value={reportData.visitor_count}
-                onChange={(e) => setReportData(prev => ({ ...prev, visitor_count: parseInt(e.target.value) || 0 }))}
-                className="w-full p-2 border rounded"
-                min="0"
-              />
-            </div>
+            <MobileTextField
+              label="Crew Count"
+              type="number"
+              inputMode="numeric"
+              min={0}
+              value={reportData.crew_count}
+              onChange={(e) => setReportData(prev => ({ ...prev, crew_count: parseInt(e.target.value) || 0 }))}
+            />
+            <MobileTextField
+              label="Visitors"
+              type="number"
+              inputMode="numeric"
+              min={0}
+              value={reportData.visitor_count}
+              onChange={(e) => setReportData(prev => ({ ...prev, visitor_count: parseInt(e.target.value) || 0 }))}
+            />
           </div>
         </CardContent>
       </Card>
 
       {/* Work Performed */}
-      <Card>
+      <Card className="glass rounded-2xl shadow-ios-2 border-transparent">
         <CardHeader>
-          <CardTitle className="text-lg">Work Performed</CardTitle>
+          <CardTitle className="text-lg tracking-tight">Work Performed</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="flex gap-2">
-            <Textarea
-              value={reportData.work_performed}
-              onChange={(e) => setReportData(prev => ({ ...prev, work_performed: e.target.value }))}
-              placeholder="Describe work completed today..."
-              className="flex-1"
-              rows={3}
-            />
+          <div className="flex gap-2 items-start">
+            <div className="flex-1">
+              <MobileTextArea
+                label="Work Performed"
+                value={reportData.work_performed}
+                onChange={(e) => setReportData(prev => ({ ...prev, work_performed: e.target.value }))}
+                placeholder="Describe work completed today…"
+                rows={3}
+              />
+            </div>
             <Button
               variant="outline"
               size="sm"
               onClick={() => startVoiceRecording('work_performed')}
               disabled={isRecording}
-              className="shrink-0"
+              aria-label={isRecording && recordingField === 'work_performed' ? 'Stop recording' : 'Record work performed'}
+              className="shrink-0 h-14 w-14 rounded-xl glass-interactive border-white/20 dark:border-white/10 mt-[2px]"
             >
-              {isRecording && recordingField === 'work_performed' ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
+              {isRecording && recordingField === 'work_performed' ? <MicOff className="h-5 w-5" /> : <Mic className="h-5 w-5" />}
             </Button>
           </div>
         </CardContent>
       </Card>
 
       {/* Issues & Safety */}
-      <Card>
+      <Card className="glass rounded-2xl shadow-ios-2 border-transparent">
         <CardHeader>
-          <CardTitle className="text-lg">Issues & Safety</CardTitle>
+          <CardTitle className="text-lg tracking-tight">Issues & Safety</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div>
-            <label className="text-sm font-medium mb-2 block">Issues Encountered</label>
-            <div className="flex gap-2">
-              <Textarea
+          <div className="flex gap-2 items-start">
+            <div className="flex-1">
+              <MobileTextArea
+                label="Issues Encountered"
                 value={reportData.issues_encountered}
                 onChange={(e) => setReportData(prev => ({ ...prev, issues_encountered: e.target.value }))}
-                placeholder="Any issues or delays..."
-                className="flex-1"
+                placeholder="Any issues or delays…"
                 rows={2}
               />
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => startVoiceRecording('issues_encountered')}
-                disabled={isRecording}
-                className="shrink-0"
-              >
-                {isRecording && recordingField === 'issues_encountered' ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
-              </Button>
             </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => startVoiceRecording('issues_encountered')}
+              disabled={isRecording}
+              aria-label={isRecording && recordingField === 'issues_encountered' ? 'Stop recording' : 'Record issues encountered'}
+              className="shrink-0 h-14 w-14 rounded-xl glass-interactive border-white/20 dark:border-white/10 mt-[2px]"
+            >
+              {isRecording && recordingField === 'issues_encountered' ? <MicOff className="h-5 w-5" /> : <Mic className="h-5 w-5" />}
+            </Button>
           </div>
 
-          <div>
-            <label className="text-sm font-medium mb-2 block">Safety Notes</label>
-            <div className="flex gap-2">
-              <Textarea
+          <div className="flex gap-2 items-start">
+            <div className="flex-1">
+              <MobileTextArea
+                label="Safety Notes"
                 value={reportData.safety_notes}
                 onChange={(e) => setReportData(prev => ({ ...prev, safety_notes: e.target.value }))}
-                placeholder="Safety observations and incidents..."
-                className="flex-1"
+                placeholder="Safety observations and incidents…"
                 rows={2}
               />
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => startVoiceRecording('safety_notes')}
-                disabled={isRecording}
-                className="shrink-0"
-              >
-                {isRecording && recordingField === 'safety_notes' ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
-              </Button>
             </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => startVoiceRecording('safety_notes')}
+              disabled={isRecording}
+              aria-label={isRecording && recordingField === 'safety_notes' ? 'Stop recording' : 'Record safety notes'}
+              className="shrink-0 h-14 w-14 rounded-xl glass-interactive border-white/20 dark:border-white/10 mt-[2px]"
+            >
+              {isRecording && recordingField === 'safety_notes' ? <MicOff className="h-5 w-5" /> : <Mic className="h-5 w-5" />}
+            </Button>
           </div>
         </CardContent>
       </Card>
 
       {/* Photos */}
-      <Card>
+      <Card className="glass rounded-2xl shadow-ios-2 border-transparent">
         <CardHeader>
-          <CardTitle className="text-lg flex items-center justify-between">
+          <CardTitle className="text-lg tracking-tight flex items-center justify-between">
             Photos ({reportData.photos.length})
             <Button
               variant="outline"

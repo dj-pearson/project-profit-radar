@@ -2313,7 +2313,7 @@
       ],
       "priority": 1,
       "passes": false,
-      "notes": "PRIMITIVES SHIPPED + 1 OF 3 SCREENS MIGRATED. src/components/mobile/forms/ has MobileTextField, MobileTextArea, MobileSelectField, MobileSegmentedControl, MobileToggleRow, useKeyboardAwareScroll. All use glass-thin + rounded-xl + 16px base font, animated floating labels (200ms ios-ease), shake + haptics.error() on error, success ring + check glyph, framer-motion layoutId pill on segmented. MobileTimeTracker form section migrated: 3 selects + 1 number input + 1 textarea now use the new primitives in a glass card. Remaining migrations: MobileDailyReport (4 textareas + 2 number inputs), MobileSafetyIncidentManager (15+ fields, multi-step)."
+      "notes": "PRIMITIVES SHIPPED + 2 OF 3 SCREENS MIGRATED. src/components/mobile/forms/ has MobileTextField, MobileTextArea, MobileSelectField, MobileSegmentedControl, MobileToggleRow, useKeyboardAwareScroll. All use glass-thin + rounded-xl + 16px base font, animated floating labels (200ms ios-ease), shake + haptics.error() on error, success ring + check glyph, framer-motion layoutId pill on segmented. MobileTimeTracker migrated (3 selects + 1 number + 1 textarea). MobileDailyReport migrated (4 textareas + 2 number inputs) — Site Conditions, Work Performed, Issues & Safety, Photos cards all now use glass rounded-2xl + shadow-ios-2; voice-record mic buttons upgraded to glass-interactive rounded-xl 14x14 with proper aria-labels; raw <input type=number> replaced with MobileTextField type=number inputMode=numeric. Remaining: MobileSafetyIncidentManager (15+ fields, multi-step wizard)."
     },
     {
       "id": "US-138",
