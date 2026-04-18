@@ -755,3 +755,30 @@ All colors MUST be HSL.
 .tap-highlight-transparent {
   -webkit-tap-highlight-color: transparent;
 }
+
+/* Low-GPU degrade path — set by useDevicePerformance.
+   Flattens all glass surfaces to a solid card so older iPhones and
+   low-end Androids don't pay the backdrop-filter cost. Also triggered
+   by the user's "Reduce transparency" preference. */
+.low-gpu .glass,
+.low-gpu .glass-thin,
+.low-gpu .glass-thick,
+.low-gpu .glass-chrome,
+.low-gpu .glass-interactive {
+  background: hsl(var(--card) / 0.97) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  border-color: hsl(var(--border)) !important;
+}
+.low-gpu .ios-scrim {
+  background: rgba(15, 23, 42, 0.55) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+.dark.low-gpu .ios-scrim,
+.dark .low-gpu .ios-scrim {
+  background: rgba(0, 0, 0, 0.65) !important;
+}
+.low-gpu .ios-page-bg {
+  background-image: none !important;
+}

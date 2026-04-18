@@ -2295,7 +2295,7 @@
       ],
       "priority": 1,
       "passes": false,
-      "notes": "Foundation (design tokens + 13 core mobile primitives) shipped in the iOS UI modernization session. This story propagates the system to every remaining mobile screen."
+      "notes": "IN PROGRESS. Two passes shipped: (1) Foundation (design tokens + 13 core primitives). (2) Next-tier propagation — mobileCardClasses.container upgraded to glass so every feature screen using it inherits glass automatically; MobileTable, MobileList, MobileActionBar upgraded; MobileQuickActionsSheet action grid + search input glassified; MobilePremiumUpsellSheet hero polished; MobileFieldInterface drop zones now glass-thin; semantic-color status cards (red/orange/yellow/blue/green) in MobileTimeTracker, MobileTimeClock, MobileEquipmentManager, MobileSafetyIncidentManager, MobileDailyReport, MobileDailyReportManager, MobileMaterialTracker, BiometricSettings, BiometricLoginButton, GeofenceManager all layered with glass + dark-mode-safe tints; MobileMaterialTracker's sticky header and 2 modal dialogs converted to glass-chrome + ios-scrim. Remaining: MobileForm inputs (tracked in US-137), remaining screens under src/pages/ mobile views."
     },
     {
       "id": "US-137",
@@ -2426,7 +2426,7 @@
       ],
       "priority": 2,
       "passes": false,
-      "notes": ""
+      "notes": "CORE SHIPPED. src/hooks/useDevicePerformance.ts detects tier via userAgent (iOS<=14 flagged as low), navigator.deviceMemory and hardwareConcurrency. initDevicePerformance() runs pre-paint from main.tsx, setting .low-gpu class on <html>. CSS overrides in index.css flatten .glass/.glass-thin/.glass-thick/.glass-chrome/.glass-interactive/.ios-scrim/.ios-page-bg to solid surfaces on low-GPU / reduce-transparency. localStorage key brikly.a11y.reduceTransparency persists user override (auto|on|off). Remaining: wire Settings > Accessibility toggle UI and the iPhone XR simulator FPS benchmark."
     },
     {
       "id": "US-145",

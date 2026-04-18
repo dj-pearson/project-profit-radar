@@ -76,17 +76,29 @@ export function MobilePremiumUpsellSheet({
         {/* Gradient hero */}
         <div
           className={cn(
-            'relative overflow-hidden rounded-2xl mb-5',
+            'relative overflow-hidden rounded-2xl mb-5 shadow-ios-3',
             'bg-gradient-to-br from-primary via-indigo-500 to-purple-600',
             'text-primary-foreground',
             'px-5 py-6',
+            'ring-1 ring-inset ring-white/20'
           )}
         >
+          {/* Specular highlight */}
+          <div
+            className="pointer-events-none absolute inset-x-0 top-0 h-16 bg-gradient-to-b from-white/20 to-transparent"
+            aria-hidden="true"
+          />
+          {/* Soft orb */}
+          <div
+            className="pointer-events-none absolute -bottom-12 -right-12 h-44 w-44 rounded-full bg-white/15 blur-3xl"
+            aria-hidden="true"
+          />
+
           <button
             type="button"
             onClick={onClose}
             aria-label="Close"
-            className="absolute top-3 right-3 h-9 w-9 rounded-full bg-white/15 backdrop-blur flex items-center justify-center active:scale-95"
+            className="absolute top-3 right-3 h-9 w-9 rounded-full bg-white/20 backdrop-blur flex items-center justify-center active:scale-95 transition-transform ring-1 ring-inset ring-white/25 tap-highlight-transparent"
           >
             <X className="h-4 w-4" />
           </button>
@@ -95,7 +107,7 @@ export function MobilePremiumUpsellSheet({
             initial={reduceMotion ? false : { scale: 0.6, rotate: -15, opacity: 0 }}
             animate={reduceMotion ? undefined : { scale: 1, rotate: 0, opacity: 1 }}
             transition={{ type: 'spring', stiffness: 220, damping: 18 }}
-            className="inline-flex items-center justify-center h-12 w-12 rounded-xl bg-white/20 backdrop-blur mb-3"
+            className="relative inline-flex items-center justify-center h-12 w-12 rounded-2xl bg-white/25 backdrop-blur mb-3 ring-1 ring-inset ring-white/30 shadow-ios-1"
             aria-hidden="true"
           >
             <Sparkles className="h-6 w-6" />
@@ -132,7 +144,7 @@ export function MobilePremiumUpsellSheet({
                 transition={{ delay: 0.05 + idx * 0.04, duration: 0.25 }}
                 className="flex items-start gap-3"
               >
-                <span className="flex-shrink-0 mt-0.5 h-8 w-8 rounded-full bg-primary/10 text-primary flex items-center justify-center">
+                <span className="flex-shrink-0 mt-0.5 h-9 w-9 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 text-primary flex items-center justify-center ring-1 ring-inset ring-primary/15 shadow-ios-1">
                   <Icon className="h-4 w-4" />
                 </span>
                 <div className="min-w-0">
@@ -150,7 +162,7 @@ export function MobilePremiumUpsellSheet({
         <div className="space-y-2 pb-2">
           <Button
             type="button"
-            className="w-full min-h-[52px] text-base font-semibold"
+            className="w-full min-h-[52px] text-base font-semibold rounded-xl shadow-ios-glow tracking-tight tap-highlight-transparent"
             onClick={handleUpgrade}
           >
             {primaryLabel ?? (trialLabel ? 'Start free trial' : 'Upgrade now')}
@@ -159,7 +171,7 @@ export function MobilePremiumUpsellSheet({
             <Button
               type="button"
               variant="ghost"
-              className="w-full min-h-[44px]"
+              className="w-full min-h-[44px] rounded-xl tap-highlight-transparent"
               onClick={handleSecondary}
             >
               {secondaryLabel}

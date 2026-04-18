@@ -557,7 +557,7 @@ const MobileTimeClock: React.FC<MobileTimeClockProps> = ({
 
       {/* GPS Warning */}
       {isTracking && isInGeofence === false && (
-        <Card className="border-yellow-200 bg-yellow-50">
+        <Card className="rounded-2xl glass shadow-ios-1 border-yellow-200/60 dark:border-yellow-500/30 bg-yellow-50/80 dark:bg-yellow-950/20">
           <CardContent className="pt-6">
             <div className="flex items-center gap-2 text-yellow-800">
               <AlertTriangle className="h-4 w-4" />

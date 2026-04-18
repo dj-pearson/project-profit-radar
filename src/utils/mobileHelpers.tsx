@@ -53,21 +53,31 @@ export const mobileButtonClasses = {
 };
 
 /**
- * Standard responsive card classes
+ * Standard responsive card classes — glassmorphic on mobile with a
+ * low-gpu fallback to solid. `.low-gpu .glass` flattens automatically.
  */
 export const mobileCardClasses = {
   // Main card container
-  container: "bg-card text-card-foreground rounded-lg border shadow-sm p-4 sm:p-6",
-  
+  container:
+    "glass text-card-foreground rounded-2xl shadow-ios-2 p-4 sm:p-6",
+
+  // Solid variant for dense data tables where glass hurts scannability
+  containerSolid:
+    "bg-card text-card-foreground rounded-2xl border shadow-ios-1 p-4 sm:p-6",
+
+  // Thin variant for inline notes / secondary panels
+  containerThin:
+    "glass-thin rounded-2xl shadow-ios-1 p-4 sm:p-6",
+
   // Card header with proper spacing
   header: "flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4",
-  
+
   // Card content that should flow properly
   content: "space-y-4",
-  
+
   // Badge container that wraps properly
   badges: "flex flex-wrap gap-2",
-  
+
   // Individual badge that's smaller on mobile
   badge: "text-xs sm:text-sm"
 };

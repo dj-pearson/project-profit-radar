@@ -576,7 +576,7 @@ const MobileDailyReport: React.FC<MobileDailyReportProps> = ({
 
       {/* Recording Status */}
       {isRecording && (
-        <Card className="border-orange-200 bg-orange-50">
+        <Card className="rounded-2xl glass shadow-ios-1 border-orange-200/60 dark:border-orange-500/30 bg-orange-50/80 dark:bg-orange-950/20">
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">

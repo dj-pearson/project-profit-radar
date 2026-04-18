@@ -314,7 +314,7 @@ const MobileSafetyIncidentManager: React.FC<MobileSafetyIncidentManagerProps> = 
   return (
     <div className="min-h-screen bg-background p-4 space-y-4">
       {/* Header */}
-      <Card className="border-red-200 bg-red-50">
+      <Card className="rounded-2xl glass shadow-ios-1 border-red-200/60 dark:border-red-500/30 bg-red-50/80 dark:bg-red-950/20">
         <CardHeader className="pb-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">

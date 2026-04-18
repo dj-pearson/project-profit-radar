@@ -7,11 +7,17 @@ import { logger } from "./lib/logger";
 import { validateEnvironment } from "./lib/envValidation";
 import { initSentry } from "./lib/sentry";
 import { logError } from "./services/errorLoggingService";
+import { initDevicePerformance } from "./hooks/useDevicePerformance";
 
 // Validate environment variables immediately (lightweight)
 if (typeof window !== 'undefined') {
   validateEnvironment();
 }
+
+// Set the `low-gpu` class on <html> before the first paint so glass
+// surfaces degrade gracefully on older iPhones / low-end Androids and
+// on devices where the user has opted into Reduce Transparency.
+initDevicePerformance();
 
 // Initialize Sentry immediately for error tracking
 initSentry();

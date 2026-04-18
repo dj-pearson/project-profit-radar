@@ -468,7 +468,7 @@ const MobileDailyReportManager: React.FC<MobileDailyReportProps> = ({
   return (
     <div className="min-h-screen bg-background p-4 space-y-4">
       {/* Header */}
-      <Card className="border-blue-200 bg-blue-50">
+      <Card className="rounded-2xl glass shadow-ios-1 border-blue-200/60 dark:border-blue-500/30 bg-blue-50/80 dark:bg-blue-950/20">
         <CardHeader className="pb-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
