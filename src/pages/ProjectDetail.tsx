@@ -15,6 +15,7 @@ import { ProjectContent } from '@/components/project/ProjectContent';
 import { ProjectHealthBadge } from '@/components/projects/ProjectHealthBadge';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { MobileBottomNav } from '@/components/mobile/MobileBottomNav';
+import { SharedElement, sharedId } from '@/components/mobile/SharedElementTransition';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { Card, CardContent } from '@/components/ui/card';
@@ -176,7 +177,12 @@ const ProjectDetail = () => {
       <AccessiblePageWrapper pageTitle="Project Details">
       <div className="min-h-screen bg-background flex flex-col">
         {/* Mobile Header with Menu - Fixed at top */}
-        <header className="sticky top-0 z-50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b">
+        <SharedElement
+          id={sharedId('project', projectId ?? project.id)}
+          as="section"
+          className="sticky top-0 z-50"
+        >
+        <header className="bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b">
           <div className="flex items-center justify-between px-4 py-3">
             <Button
               variant="ghost"
@@ -240,6 +246,7 @@ const ProjectDetail = () => {
             </Sheet>
           </div>
         </header>
+        </SharedElement>
 
         <main className="flex-1 px-4 py-4 space-y-4 pb-20" role="main" aria-label={`${project.name} details`}>
           {/* Contextual Actions - Mobile */}

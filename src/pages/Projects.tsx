@@ -26,6 +26,7 @@ import {
   ResponsiveGrid,
 } from "@/components/layout/ResponsiveContainer";
 import { VirtualizedGrid } from "@/components/ui/virtualized-grid";
+import { SharedElement, sharedId } from "@/components/mobile/SharedElementTransition";
 import { TaskManager } from "@/components/tasks/TaskManager";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -442,6 +443,7 @@ const Projects = () => {
     const projectCardId = `project-${project.id}`;
 
     return (
+      <SharedElement id={sharedId('project', project.id)} className="block">
       <Card
         className={`hover:shadow-md transition-all ${isSelected ? 'border-primary bg-primary/5' : ''}`}
         role="article"
@@ -588,6 +590,7 @@ const Projects = () => {
         </div>
       </CardContent>
     </Card>
+    </SharedElement>
     );
   };
 

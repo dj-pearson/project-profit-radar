@@ -2313,7 +2313,7 @@
       ],
       "priority": 1,
       "passes": false,
-      "notes": "PRIMITIVES SHIPPED. src/components/mobile/forms/ now contains MobileTextField, MobileTextArea, MobileSelectField, MobileSegmentedControl, MobileToggleRow, plus useKeyboardAwareScroll hook. All use glass-thin + rounded-xl + 16px base font (no iOS zoom). Floating label animates between caption + label position with 200ms ios-ease. Error state shakes (6-keyframe x-translate, 320ms), adds destructive ring, fires haptics.error(). Success state shows emerald ring + check glyph. MobileSegmentedControl uses framer-motion layoutId for spring-animated active pill. Barrel exported from src/components/mobile/index.ts. Honors prefers-reduced-motion. Remaining: migrate MobileSafetyIncidentManager, MobileDailyReport, MobileTimeTracker forms to use these primitives (currently still use shadcn Input)."
+      "notes": "PRIMITIVES SHIPPED + 1 OF 3 SCREENS MIGRATED. src/components/mobile/forms/ has MobileTextField, MobileTextArea, MobileSelectField, MobileSegmentedControl, MobileToggleRow, useKeyboardAwareScroll. All use glass-thin + rounded-xl + 16px base font, animated floating labels (200ms ios-ease), shake + haptics.error() on error, success ring + check glyph, framer-motion layoutId pill on segmented. MobileTimeTracker form section migrated: 3 selects + 1 number input + 1 textarea now use the new primitives in a glass card. Remaining migrations: MobileDailyReport (4 textareas + 2 number inputs), MobileSafetyIncidentManager (15+ fields, multi-step)."
     },
     {
       "id": "US-138",
@@ -2329,7 +2329,7 @@
       ],
       "priority": 2,
       "passes": false,
-      "notes": "PRIMITIVE SHIPPED. src/components/mobile/SharedElementTransition.tsx exposes <SharedElement id={...}> (morphs size/position/border-radius on route change using framer-motion layoutId) + <SharedElementRoot> (scope provider so layoutIds don't collide across pages) + sharedId(prefix, entityId) helper. Uses an iOS-style spring (stiffness: 380, damping: 34, mass: 0.9). Honors prefers-reduced-motion with a crossfade-only fallback. Exported from src/components/mobile/index.ts. Remaining: wire 3 flows — Projects -> Project detail, Time entries -> Time entry detail, Daily reports -> Report detail — by wrapping the source card and destination hero in <SharedElement id={sharedId('project', p.id)}>."
+      "notes": "PRIMITIVE SHIPPED + 1 OF 3 FLOWS WIRED. src/components/mobile/SharedElementTransition.tsx exposes <SharedElement id={...}> + <SharedElementRoot> + sharedId(). Mounted at App root (src/App.tsx) with scope='brikly'. Projects -> ProjectDetail flow wired: ProjectCard wrapped at src/pages/Projects.tsx and the mobile sticky header wrapped at src/pages/ProjectDetail.tsx, both using sharedId('project', id). Reduce-motion fallback verified. Remaining: Time entries -> Time entry detail and Daily reports -> Report detail flows."
     },
     {
       "id": "US-139",

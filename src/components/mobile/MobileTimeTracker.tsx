@@ -3,10 +3,11 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
+import {
+  MobileTextField,
+  MobileTextArea,
+  MobileSelectField,
+} from '@/components/mobile/forms';
 import { 
   Clock, 
   Play,
@@ -626,83 +627,63 @@ const MobileTimeTracker: React.FC<MobileTimeTrackerProps> = ({
 
           {/* Project Selection */}
           {!isTracking && (
-            <Card>
+            <Card className="glass rounded-2xl shadow-ios-2 border-transparent">
               <CardHeader>
-                <CardTitle className="text-lg">Time Entry Setup</CardTitle>
+                <CardTitle className="text-lg tracking-tight">Time Entry Setup</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="project">Project</Label>
-                  <Select value={selectedProject} onValueChange={setSelectedProject}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select project..." />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {projects.map((project) => (
-                        <SelectItem key={project.id} value={project.id}>
-                          {project.name} - {project.client_name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+                <MobileSelectField
+                  label="Project"
+                  required
+                  placeholder="Select project…"
+                  value={selectedProject}
+                  onChange={(e) => setSelectedProject(e.target.value)}
+                  options={projects.map((p) => ({
+                    value: p.id,
+                    label: `${p.name} - ${p.client_name}`,
+                  }))}
+                />
 
                 {selectedProject && (
                   <>
-                    <div className="space-y-2">
-                      <Label htmlFor="task">Task (Optional)</Label>
-                      <Select value={selectedTask} onValueChange={setSelectedTask}>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select task..." />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {tasks.map((task) => (
-                            <SelectItem key={task.id} value={task.id}>
-                              {task.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
+                    <MobileSelectField
+                      label="Task (Optional)"
+                      placeholder="Select task…"
+                      value={selectedTask}
+                      onChange={(e) => setSelectedTask(e.target.value)}
+                      options={tasks.map((t) => ({ value: t.id, label: t.name }))}
+                    />
 
-                    <div className="space-y-2">
-                      <Label htmlFor="costCode">Cost Code (Optional)</Label>
-                      <Select value={selectedCostCode} onValueChange={setSelectedCostCode}>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select cost code..." />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {costCodes.map((code) => (
-                            <SelectItem key={code.id} value={code.id}>
-                              {code.code} - {code.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
+                    <MobileSelectField
+                      label="Cost Code (Optional)"
+                      placeholder="Select cost code…"
+                      value={selectedCostCode}
+                      onChange={(e) => setSelectedCostCode(e.target.value)}
+                      options={costCodes.map((c) => ({
+                        value: c.id,
+                        label: `${c.code} - ${c.name}`,
+                      }))}
+                    />
 
-                    <div className="space-y-2">
-                      <Label htmlFor="hourlyRate">Hourly Rate</Label>
-                      <Input
-                        id="hourlyRate"
-                        type="number"
-                        step="0.01"
-                        value={hourlyRate}
-                        onChange={(e) => setHourlyRate(Number(e.target.value))}
-                        placeholder="0.00"
-                      />
-                    </div>
+                    <MobileTextField
+                      label="Hourly Rate"
+                      type="number"
+                      inputMode="decimal"
+                      step="0.01"
+                      value={hourlyRate}
+                      onChange={(e) =>
+                        setHourlyRate(Number(e.target.value))
+                      }
+                      placeholder="0.00"
+                    />
 
-                    <div className="space-y-2">
-                      <Label htmlFor="notes">Notes (Optional)</Label>
-                      <Textarea
-                        id="notes"
-                        value={notes}
-                        onChange={(e) => setNotes(e.target.value)}
-                        placeholder="Add notes about your work..."
-                        rows={3}
-                      />
-                    </div>
+                    <MobileTextArea
+                      label="Notes (Optional)"
+                      value={notes}
+                      onChange={(e) => setNotes(e.target.value)}
+                      placeholder="Add notes about your work…"
+                      rows={3}
+                    />
                   </>
                 )}
               </CardContent>

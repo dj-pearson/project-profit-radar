@@ -15,6 +15,7 @@ import { DashboardSkeleton } from "@/components/ui/loading-skeleton";
 import { preloadHighPriorityRoutes } from "@/utils/lazyRoutes";
 import { AccessibilityProvider } from "@/components/accessibility/AccessibilityProvider";
 import { useGlobalShortcuts } from "@/hooks/useKeyboardShortcuts";
+import { SharedElementRoot } from "@/components/mobile/SharedElementTransition";
 
 // Import centralized route configuration
 import { allRoutes } from "@/routes";
@@ -117,7 +118,9 @@ const App = () => {
   return (
     <AppProviders>
       <BrowserRouter>
-        <AppContent />
+        <SharedElementRoot scope="brikly">
+          <AppContent />
+        </SharedElementRoot>
       </BrowserRouter>
     </AppProviders>
   );
