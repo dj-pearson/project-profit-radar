@@ -35,7 +35,7 @@ export function EnhancedMobileBottomNav({
   const haptics = useHaptics();
 
   const handleNavClick = () => {
-    haptics.impact('light');
+    haptics.tap();
   };
 
   const isActive = (href: string) => {
@@ -51,18 +51,29 @@ export function EnhancedMobileBottomNav({
     <nav
       className={cn(
         'fixed bottom-0 left-0 right-0',
-        'bg-background/95 backdrop-blur-md border-t',
+        'glass-chrome border-t border-white/10 dark:border-white/5',
         'md:hidden',
         'z-50',
-        'safe-area-inset-bottom',
         className
       )}
+      style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
+      aria-label="Primary"
     >
+      {/* Thin brand gradient accent for contextual surfaces */}
       {isCustomContext && (
-        <div className="absolute top-0 left-0 right-0 h-0.5 bg-primary" />
+        <div
+          className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-primary to-transparent"
+          aria-hidden="true"
+        />
       )}
 
-      <div className={cn('flex items-center justify-around', navHeight)}>
+      {/* Specular top highlight */}
+      <div
+        className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/40 dark:via-white/10 to-transparent"
+        aria-hidden="true"
+      />
+
+      <div className={cn('flex items-center justify-around px-1', navHeight)}>
         {items.map((item) => (
           <NavButton
             key={item.href}
@@ -134,7 +145,12 @@ function NavButton({
       {active && (
         <motion.div
           layoutId="mobile-nav-active-pill"
-          className="absolute inset-x-2 inset-y-1 rounded-xl bg-primary/10"
+          className={cn(
+            'absolute inset-x-2 inset-y-1 rounded-2xl',
+            'bg-gradient-to-b from-primary/18 to-primary/8',
+            'ring-1 ring-inset ring-primary/20',
+            'shadow-ios-1'
+          )}
           transition={
             reduceMotion
               ? { duration: 0 }

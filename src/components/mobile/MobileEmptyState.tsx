@@ -65,12 +65,14 @@ export function MobileEmptyState({
         animate={reduceMotion ? undefined : { scale: 1, opacity: 1 }}
         transition={{ type: 'spring', stiffness: 260, damping: 20, delay: 0.05 }}
         className={cn(
-          'w-20 h-20 rounded-full flex items-center justify-center mb-4',
+          'relative w-24 h-24 rounded-full flex items-center justify-center mb-5',
+          'glass-thick shadow-ios-3 ring-1 ring-inset ring-white/40 dark:ring-white/10',
+          'before:absolute before:inset-0 before:rounded-full before:bg-gradient-to-br before:from-white/40 before:via-transparent before:to-transparent dark:before:from-white/10',
           accentClass,
         )}
         aria-hidden="true"
       >
-        <Icon className="h-9 w-9" />
+        <Icon className="relative h-10 w-10" />
       </motion.div>
 
       <h3 className="text-lg font-semibold">{title}</h3>
@@ -83,7 +85,7 @@ export function MobileEmptyState({
               type="button"
               className="min-h-[44px]"
               onClick={() => {
-                haptics.impact('light');
+                haptics.impactLight();
                 onPrimary();
               }}
             >

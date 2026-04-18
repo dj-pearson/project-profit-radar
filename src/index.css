@@ -527,3 +527,258 @@ All colors MUST be HSL.
   0%, 100% { opacity: 1; box-shadow: 0 0 20px hsl(var(--construction-orange) / 0.5); }
   50% { opacity: .5; box-shadow: 0 0 10px hsl(var(--construction-orange) / 0.2); }
 }
+
+/* ===========================================================
+   iOS Glassmorphism Design System (mobile-first)
+   ----------------------------------------------------------- */
+:root {
+  --ios-ease: cubic-bezier(0.32, 0.72, 0, 1);        /* iOS spring feel */
+  --ios-ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+  --ios-dur-fast: 150ms;
+  --ios-dur: 260ms;
+  --ios-dur-slow: 420ms;
+
+  /* Glass tint tokens (light) */
+  --glass-bg-thin: rgba(255, 255, 255, 0.55);
+  --glass-bg: rgba(255, 255, 255, 0.68);
+  --glass-bg-thick: rgba(255, 255, 255, 0.82);
+  --glass-border: rgba(255, 255, 255, 0.45);
+  --glass-border-strong: rgba(255, 255, 255, 0.7);
+  --glass-highlight: rgba(255, 255, 255, 0.9);
+  --glass-shadow: 0 10px 30px -12px rgba(15, 23, 42, 0.18), 0 4px 12px -4px rgba(15, 23, 42, 0.08);
+  --glass-shadow-lg: 0 20px 50px -20px rgba(15, 23, 42, 0.28), 0 8px 20px -8px rgba(15, 23, 42, 0.12);
+}
+
+.dark {
+  --glass-bg-thin: rgba(15, 23, 42, 0.45);
+  --glass-bg: rgba(15, 23, 42, 0.62);
+  --glass-bg-thick: rgba(15, 23, 42, 0.78);
+  --glass-border: rgba(148, 163, 184, 0.18);
+  --glass-border-strong: rgba(148, 163, 184, 0.3);
+  --glass-highlight: rgba(255, 255, 255, 0.08);
+  --glass-shadow: 0 10px 30px -12px rgba(0, 0, 0, 0.55), 0 4px 12px -4px rgba(0, 0, 0, 0.35);
+  --glass-shadow-lg: 0 24px 60px -20px rgba(0, 0, 0, 0.7), 0 10px 24px -10px rgba(0, 0, 0, 0.45);
+}
+
+/* Base glass surfaces — three intensities */
+.glass-thin {
+  background: var(--glass-bg-thin);
+  backdrop-filter: blur(16px) saturate(160%);
+  -webkit-backdrop-filter: blur(16px) saturate(160%);
+  border: 1px solid var(--glass-border);
+}
+
+.glass {
+  background: var(--glass-bg);
+  backdrop-filter: blur(22px) saturate(180%);
+  -webkit-backdrop-filter: blur(22px) saturate(180%);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow);
+}
+
+.glass-thick {
+  background: var(--glass-bg-thick);
+  backdrop-filter: blur(32px) saturate(200%);
+  -webkit-backdrop-filter: blur(32px) saturate(200%);
+  border: 1px solid var(--glass-border-strong);
+  box-shadow: var(--glass-shadow-lg);
+}
+
+/* Interactive glass surface (cards, buttons) */
+.glass-interactive {
+  background: var(--glass-bg);
+  backdrop-filter: blur(22px) saturate(180%);
+  -webkit-backdrop-filter: blur(22px) saturate(180%);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow);
+  transition: transform var(--ios-dur) var(--ios-ease),
+              box-shadow var(--ios-dur) var(--ios-ease),
+              border-color var(--ios-dur) var(--ios-ease);
+}
+.glass-interactive:hover {
+  border-color: var(--glass-border-strong);
+  box-shadow: var(--glass-shadow-lg);
+}
+.glass-interactive:active {
+  transform: scale(0.985);
+}
+
+/* Chrome (nav bars, tab bars, sticky headers) — frosted with bottom border highlight */
+.glass-chrome {
+  background: var(--glass-bg-thick);
+  backdrop-filter: blur(28px) saturate(200%);
+  -webkit-backdrop-filter: blur(28px) saturate(200%);
+  border-color: var(--glass-border);
+}
+
+/* Specular top highlight (optional decorative gradient overlay) */
+.glass-highlight::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(180deg, var(--glass-highlight), transparent 40%);
+  -webkit-mask: linear-gradient(#000, #000) content-box, linear-gradient(#000, #000);
+  -webkit-mask-composite: xor;
+          mask-composite: exclude;
+  pointer-events: none;
+  opacity: 0.9;
+}
+
+/* Fallback for older iOS / Android WebView where backdrop-filter is unsupported */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .glass-thin,
+  .glass,
+  .glass-thick,
+  .glass-interactive,
+  .glass-chrome {
+    background: hsl(var(--card) / 0.96);
+  }
+}
+
+/* Ambient page background for glass surfaces to sit on */
+.ios-page-bg {
+  background-color: hsl(var(--background));
+  background-image:
+    radial-gradient(at 12% 8%, hsl(var(--construction-orange) / 0.14) 0px, transparent 40%),
+    radial-gradient(at 92% 6%, hsl(var(--construction-blue) / 0.12) 0px, transparent 45%),
+    radial-gradient(at 50% 110%, hsl(var(--construction-orange) / 0.08) 0px, transparent 55%);
+  background-attachment: fixed;
+}
+
+.dark .ios-page-bg {
+  background-image:
+    radial-gradient(at 12% 8%, hsl(var(--construction-orange) / 0.08) 0px, transparent 40%),
+    radial-gradient(at 92% 6%, hsl(210 100% 40% / 0.10) 0px, transparent 45%),
+    radial-gradient(at 50% 110%, hsl(var(--construction-orange) / 0.05) 0px, transparent 55%);
+}
+
+/* Scrim helpers (modal + sheet backdrops) */
+.ios-scrim {
+  background: rgba(15, 23, 42, 0.38);
+  backdrop-filter: blur(4px) saturate(140%);
+  -webkit-backdrop-filter: blur(4px) saturate(140%);
+}
+.dark .ios-scrim {
+  background: rgba(0, 0, 0, 0.56);
+}
+
+/* Drag handle (sheets) */
+.sheet-grabber {
+  width: 38px;
+  height: 5px;
+  border-radius: 999px;
+  background: hsl(var(--foreground) / 0.22);
+}
+.dark .sheet-grabber {
+  background: hsl(var(--foreground) / 0.28);
+}
+
+/* Motion utilities — iOS-feel transitions */
+.ios-press {
+  transition: transform var(--ios-dur-fast) var(--ios-ease);
+}
+.ios-press:active {
+  transform: scale(0.96);
+}
+
+.ios-rise {
+  animation: ios-rise var(--ios-dur-slow) var(--ios-ease) both;
+}
+@keyframes ios-rise {
+  from { opacity: 0; transform: translateY(10px) scale(0.985); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.ios-fade-in {
+  animation: ios-fade-in var(--ios-dur) var(--ios-ease) both;
+}
+@keyframes ios-fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.ios-sheet-in {
+  animation: ios-sheet-in var(--ios-dur-slow) var(--ios-ease) both;
+}
+@keyframes ios-sheet-in {
+  from { opacity: 0; transform: translateY(24px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.ios-scale-in {
+  animation: ios-scale-in var(--ios-dur) var(--ios-ease) both;
+}
+@keyframes ios-scale-in {
+  from { opacity: 0; transform: scale(0.9); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+/* Shimmer for skeletons — subtle, no layout shift */
+.ios-shimmer {
+  position: relative;
+  overflow: hidden;
+}
+.ios-shimmer::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    110deg,
+    transparent 20%,
+    hsl(var(--foreground) / 0.06) 45%,
+    hsl(var(--foreground) / 0.10) 50%,
+    hsl(var(--foreground) / 0.06) 55%,
+    transparent 80%
+  );
+  transform: translateX(-100%);
+  animation: ios-shimmer 1.6s linear infinite;
+}
+@keyframes ios-shimmer {
+  to { transform: translateX(100%); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ios-rise,
+  .ios-fade-in,
+  .ios-sheet-in,
+  .ios-scale-in,
+  .ios-shimmer::after,
+  .glass-interactive {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+/* Tappable surfaces — kill the blue iOS tap-flash, keep our own feedback */
+.tap-highlight-transparent {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Low-GPU degrade path — set by useDevicePerformance.
+   Flattens all glass surfaces to a solid card so older iPhones and
+   low-end Androids don't pay the backdrop-filter cost. Also triggered
+   by the user's "Reduce transparency" preference. */
+.low-gpu .glass,
+.low-gpu .glass-thin,
+.low-gpu .glass-thick,
+.low-gpu .glass-chrome,
+.low-gpu .glass-interactive {
+  background: hsl(var(--card) / 0.97) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  border-color: hsl(var(--border)) !important;
+}
+.low-gpu .ios-scrim {
+  background: rgba(15, 23, 42, 0.55) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+.dark.low-gpu .ios-scrim,
+.dark .low-gpu .ios-scrim {
+  background: rgba(0, 0, 0, 0.65) !important;
+}
+.low-gpu .ios-page-bg {
+  background-image: none !important;
+}

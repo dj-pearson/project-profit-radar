@@ -77,17 +77,20 @@ export function MobileTable<T extends Record<string, any>>({
   }
 
   if (isMobile) {
-    // Mobile: Card-based layout
+    // Mobile: Card-based glass layout
     return (
       <div className={cn('space-y-3', className)}>
         {data.map((item, index) => (
           <Card
             key={keyExtractor(item, index)}
             className={cn(
-              'p-4',
-              onRowClick && 'cursor-pointer active:scale-[0.98] transition-transform'
+              'glass rounded-2xl shadow-ios-1 p-4 border-transparent',
+              onRowClick &&
+                'cursor-pointer ios-press transition-all duration-[200ms] ease-ios tap-highlight-transparent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary'
             )}
             onClick={() => onRowClick?.(item)}
+            role={onRowClick ? 'button' : undefined}
+            tabIndex={onRowClick ? 0 : undefined}
           >
             <div className="space-y-2">
               {columns
@@ -102,7 +105,8 @@ export function MobileTable<T extends Record<string, any>>({
                       key={`${keyExtractor(item, index)}-${colIndex}`}
                       className={cn(
                         'flex justify-between items-start gap-2',
-                        column.mobilePrimary && 'border-b pb-2 mb-2'
+                        column.mobilePrimary &&
+                          'border-b border-white/10 dark:border-white/5 pb-2 mb-2'
                       )}
                     >
                       <span className="text-sm text-muted-foreground font-medium">
@@ -221,15 +225,23 @@ export function MobileList<T extends Record<string, any>>({
   }
 
   return (
-    <div className={cn('divide-y', className)}>
+    <div
+      className={cn(
+        'divide-y divide-white/10 dark:divide-white/5 rounded-2xl glass-thin overflow-hidden',
+        className
+      )}
+    >
       {data.map((item, index) => (
         <div
           key={keyExtractor(item, index)}
           className={cn(
-            'py-3',
-            onItemClick && 'cursor-pointer active:bg-muted/50 transition-colors'
+            'py-3 px-4',
+            onItemClick &&
+              'cursor-pointer active:bg-foreground/5 transition-colors duration-[150ms] ease-ios tap-highlight-transparent'
           )}
           onClick={() => onItemClick?.(item)}
+          role={onItemClick ? 'button' : undefined}
+          tabIndex={onItemClick ? 0 : undefined}
         >
           {renderItem(item, index)}
         </div>

@@ -156,7 +156,7 @@ export function MobileQuickActionsSheet({
 
   useEffect(() => {
     if (isOpen) {
-      haptics.impact('light');
+      haptics.impactLight();
       setQuery('');
     }
   }, [isOpen, haptics]);
@@ -209,9 +209,10 @@ export function MobileQuickActionsSheet({
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search actions, projects, pages…"
             className={cn(
-              'w-full h-12 pl-10 pr-4 rounded-lg',
-              'border border-input bg-background',
+              'w-full h-12 pl-10 pr-4 rounded-xl',
+              'glass-thin text-foreground placeholder:text-muted-foreground',
               'text-base focus:outline-none focus:ring-2 focus:ring-primary',
+              'transition-shadow duration-[180ms] ease-ios'
             )}
             autoFocus={false}
           />
@@ -265,14 +266,17 @@ function ActionGrid({
             onClick={() => onSelect(action)}
             className={cn(
               'flex flex-col items-center justify-start gap-2 p-3 min-h-[96px]',
-              'rounded-xl border bg-card text-card-foreground',
-              'active:bg-muted focus:outline-none focus:ring-2 focus:ring-primary',
+              'rounded-2xl glass shadow-ios-1 text-card-foreground',
+              'transition-all duration-[180ms] ease-ios',
+              'active:shadow-ios-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary',
+              'tap-highlight-transparent'
             )}
             aria-label={action.label}
           >
             <span
               className={cn(
-                'w-10 h-10 rounded-lg flex items-center justify-center text-white',
+                'w-11 h-11 rounded-xl flex items-center justify-center text-white',
+                'shadow-ios-1 ring-1 ring-inset ring-white/25',
                 action.color,
               )}
               aria-hidden="true"

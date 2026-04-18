@@ -15,13 +15,17 @@ export function MobileActionBar({ children, className }: MobileActionBarProps) {
     <div
       className={cn(
         'fixed bottom-0 left-0 right-0',
-        'p-4 bg-background/95 backdrop-blur-sm border-t',
-        'md:hidden', // Only show on mobile
-        'z-50',
-        'safe-area-inset-bottom', // Account for iPhone notch
+        'p-4 glass-chrome border-t border-white/10 dark:border-white/5',
+        'md:hidden',
+        'z-50 safe-area-x',
         className
       )}
+      style={{ paddingBottom: 'calc(1rem + env(safe-area-inset-bottom, 0px))' }}
     >
+      <div
+        className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/40 dark:via-white/10 to-transparent"
+        aria-hidden="true"
+      />
       {children}
     </div>
   );
@@ -46,7 +50,11 @@ export function MobileActionButton({
       variant={variant}
       disabled={disabled}
       size="lg"
-      className="w-full h-12 text-base"
+      className={cn(
+        'w-full h-12 text-base rounded-xl font-semibold tracking-tight',
+        'transition-all duration-[180ms] ease-ios active:scale-[0.98] tap-highlight-transparent',
+        variant === 'default' && 'shadow-ios-2 hover:shadow-ios-3'
+      )}
     >
       {children}
     </Button>

@@ -6,16 +6,7 @@ import { PushNotifications } from '@capacitor/push-notifications';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
+import { MobileConfirm } from './MobileConfirm';
 import { Camera as CameraIcon, MapPin, Bell, Shield, Settings, CheckCircle2, XCircle, AlertTriangle } from 'lucide-react';
 
 type PermissionState = 'prompt' | 'granted' | 'denied' | 'unknown' | 'checking';
@@ -232,63 +223,41 @@ export function AndroidPermissionManager() {
       </Card>
 
       {/* Rationale Dialog */}
-      <AlertDialog
-        open={rationaleDialog.open}
-        onOpenChange={(open) => {
-          if (!open) setRationaleDialog({ open: false, permission: null });
+      <MobileConfirm
+        isOpen={rationaleDialog.open}
+        onClose={() => setRationaleDialog({ open: false, permission: null })}
+        title={
+          rationaleDialog.permission
+            ? `Allow ${rationaleDialog.permission.name} Access`
+            : 'Allow Access'
+        }
+        description={rationaleDialog.permission?.rationale}
+        confirmLabel="Continue"
+        cancelLabel="Not Now"
+        onConfirm={() => {
+          if (rationaleDialog.permission) {
+            requestPermission(rationaleDialog.permission.key);
+          }
         }}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle className="flex items-center gap-2">
-              {rationaleDialog.permission?.icon}
-              Allow {rationaleDialog.permission?.name} Access
-            </AlertDialogTitle>
-            <AlertDialogDescription>
-              {rationaleDialog.permission?.rationale}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Not Now</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={() => {
-                if (rationaleDialog.permission) {
-                  requestPermission(rationaleDialog.permission.key);
-                }
-              }}
-            >
-              Continue
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      />
 
       {/* Settings Redirect Dialog */}
-      <AlertDialog open={settingsDialog} onOpenChange={setSettingsDialog}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Permission Required</AlertDialogTitle>
-            <AlertDialogDescription>
-              This permission was previously denied. To enable it, please open your device Settings and grant the permission for Brikly manually.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={() => {
-                // On Android, this opens app settings via Capacitor
-                if (isNative) {
-                  const { App } = Capacitor.Plugins as { App?: { openUrl: (opts: { url: string }) => Promise<void> } };
-                  App?.openUrl({ url: 'app-settings:' });
-                }
-                setSettingsDialog(false);
-              }}
-            >
-              Open Settings
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <MobileConfirm
+        isOpen={settingsDialog}
+        onClose={() => setSettingsDialog(false)}
+        title="Permission Required"
+        description="This permission was previously denied. To enable it, please open your device Settings and grant the permission for Brikly manually."
+        icon={Settings}
+        confirmLabel="Open Settings"
+        cancelLabel="Cancel"
+        onConfirm={() => {
+          if (isNative) {
+            const { App } = Capacitor.Plugins as { App?: { openUrl: (opts: { url: string }) => Promise<void> } };
+            App?.openUrl({ url: 'app-settings:' });
+          }
+          setSettingsDialog(false);
+        }}
+      />
     </div>
   );
 }

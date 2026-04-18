@@ -60,7 +60,7 @@ export const BiometricLoginButton = ({
   const handleBiometricLogin = async () => {
     setLoading(true);
     setStatus('scanning');
-    haptics.impact('light');
+    haptics.impactLight();
 
     try {
       // First authenticate with biometrics
@@ -232,7 +232,7 @@ export const BiometricLoginButton = ({
         </Button>
       </motion.div>
 
-      <Alert className="border-blue-200 bg-blue-50">
+      <Alert className="rounded-xl glass-thin border-blue-200/60 dark:border-blue-500/30 bg-blue-50/80 dark:bg-blue-950/20">
         <Shield className="h-4 w-4 text-blue-600" />
         <AlertDescription className="text-sm text-blue-900">
           Your biometric data is stored securely on your device and never leaves it.

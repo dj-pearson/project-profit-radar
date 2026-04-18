@@ -33,7 +33,7 @@ export const MobileFieldInterface: React.FC<MobileFieldInterfaceProps> = ({ clas
   };
 
   return (
-    <Card className={className}>
+    <Card className={`glass rounded-2xl shadow-ios-2 border-transparent ${className ?? ''}`}>
       <CardHeader>
         <div className="flex items-center justify-between">
           <div className="flex items-center">
@@ -74,12 +74,12 @@ export const MobileFieldInterface: React.FC<MobileFieldInterfaceProps> = ({ clas
       <CardContent>
         <div className="space-y-4">
           {/* Voice Recording Controls */}
-          <div className="flex items-center justify-center space-x-4 p-6 border-2 border-dashed rounded-lg">
+          <div className="flex items-center justify-center space-x-4 p-6 glass-thin rounded-2xl border-2 border-dashed border-white/20 dark:border-white/10">
             <Button
               size="lg"
               variant={isRecording ? 'destructive' : 'default'}
               onClick={toggleRecording}
-              className="h-16 w-16 rounded-full"
+              className="h-16 w-16 rounded-full shadow-ios-2 tap-highlight-transparent transition-all active:scale-95"
             >
               {isRecording ? (
                 <MicOff className="h-6 w-6" />
@@ -88,7 +88,7 @@ export const MobileFieldInterface: React.FC<MobileFieldInterfaceProps> = ({ clas
               )}
             </Button>
             <div className="text-center">
-              <p className="font-medium">
+              <p className="font-medium tracking-tight">
                 {isRecording ? 'Recording...' : 'Tap to Record'}
               </p>
               <p className="text-sm text-muted-foreground">
@@ -98,10 +98,12 @@ export const MobileFieldInterface: React.FC<MobileFieldInterfaceProps> = ({ clas
           </div>
 
           {/* Photo Upload */}
-          <div className="flex items-center justify-center p-6 border-2 border-dashed rounded-lg">
+          <div className="flex items-center justify-center p-6 glass-thin rounded-2xl border-2 border-dashed border-white/20 dark:border-white/10">
             <div className="text-center">
-              <Camera className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-              <Button>
+              <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 ring-1 ring-inset ring-primary/15 shadow-ios-1 flex items-center justify-center mx-auto mb-4">
+                <Camera className="h-7 w-7 text-primary" />
+              </div>
+              <Button className="rounded-xl shadow-ios-2">
                 <Camera className="h-4 w-4 mr-2" />
                 Take Photo
               </Button>
