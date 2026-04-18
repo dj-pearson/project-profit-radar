@@ -31,7 +31,7 @@ export function MobileActionSheet({
   }, [isOpen]);
 
   const handleClose = () => {
-    haptics.impact('light');
+    haptics.impactLight();
     onClose();
   };
 

@@ -2329,7 +2329,7 @@
       ],
       "priority": 2,
       "passes": false,
-      "notes": ""
+      "notes": "PRIMITIVE SHIPPED. src/components/mobile/SharedElementTransition.tsx exposes <SharedElement id={...}> (morphs size/position/border-radius on route change using framer-motion layoutId) + <SharedElementRoot> (scope provider so layoutIds don't collide across pages) + sharedId(prefix, entityId) helper. Uses an iOS-style spring (stiffness: 380, damping: 34, mass: 0.9). Honors prefers-reduced-motion with a crossfade-only fallback. Exported from src/components/mobile/index.ts. Remaining: wire 3 flows — Projects -> Project detail, Time entries -> Time entry detail, Daily reports -> Report detail — by wrapping the source card and destination hero in <SharedElement id={sharedId('project', p.id)}>."
     },
     {
       "id": "US-139",
@@ -2410,7 +2410,7 @@
       ],
       "priority": 1,
       "passes": false,
-      "notes": ""
+      "notes": "GUIDELINES DOC SHIPPED. docs/MOBILE_GLASS_GUIDELINES.md ships the decision matrix (surface type -> glass variant), the 5 WCAG contrast rules for glass, the when-to-use-solid rules for dense data tables, the automatic low-gpu degrade behavior, dark-mode formula for semantic-colored callouts, motion curves, the new-screen PR checklist, and reference implementations. mobileCardClasses.containerSolid variant already available from the US-136 pass. Remaining: the automated src/test/glass-contrast.test.ts runner and the color-blind simulator CI check."
     },
     {
       "id": "US-144",

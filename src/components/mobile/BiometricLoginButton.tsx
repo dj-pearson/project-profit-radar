@@ -60,7 +60,7 @@ export const BiometricLoginButton = ({
   const handleBiometricLogin = async () => {
     setLoading(true);
     setStatus('scanning');
-    haptics.impact('light');
+    haptics.impactLight();
 
     try {
       // First authenticate with biometrics

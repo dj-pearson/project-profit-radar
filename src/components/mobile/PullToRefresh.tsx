@@ -50,7 +50,7 @@ export function PullToRefresh({
       setPullDistance(next);
       if (!hasCrossedThreshold.current && next >= threshold) {
         hasCrossedThreshold.current = true;
-        haptics.impact('medium');
+        haptics.reveal();
       } else if (hasCrossedThreshold.current && next < threshold) {
         hasCrossedThreshold.current = false;
       }

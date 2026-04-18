@@ -23,6 +23,13 @@ export { MobileDrawer, MobileFilterDrawer } from './MobileDrawer';
 export { MobileConfirm, type MobileConfirmProps } from './MobileConfirm';
 export { MobileAlert } from './MobileAlert';
 
+// Shared-element page transitions (US-138)
+export {
+  SharedElement,
+  SharedElementRoot,
+  sharedId,
+} from './SharedElementTransition';
+
 // Glass form primitives with floating labels (US-137)
 export {
   MobileTextField,

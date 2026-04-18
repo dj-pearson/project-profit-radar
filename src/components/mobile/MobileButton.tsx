@@ -42,7 +42,8 @@ export function MobileButton({
 
   const handleClick = (e: ReactMouseEvent<HTMLButtonElement>) => {
     if (disabled || loading) return;
-    haptics.impact(variant === 'destructive' ? 'medium' : 'light');
+    if (variant === 'destructive') haptics.destructive();
+    else haptics.impactLight();
     onClick?.(e);
   };
 
@@ -108,7 +109,7 @@ export function MobileFAB({
   return (
     <button
       onClick={() => {
-        haptics.impact('medium');
+        haptics.impactMedium();
         onClick();
       }}
       style={{ bottom: 'calc(1.25rem + env(safe-area-inset-bottom, 0px))' }}

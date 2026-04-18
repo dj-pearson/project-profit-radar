@@ -112,7 +112,7 @@ export function MobileDashboardLayout({ widgets, header }: MobileDashboardLayout
   };
 
   const toggleEdit = () => {
-    haptics.impact('light');
+    haptics.impactLight();
     setEditMode((e) => !e);
   };
 

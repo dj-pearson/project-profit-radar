@@ -156,7 +156,7 @@ export function MobileQuickActionsSheet({
 
   useEffect(() => {
     if (isOpen) {
-      haptics.impact('light');
+      haptics.impactLight();
       setQuery('');
     }
   }, [isOpen, haptics]);

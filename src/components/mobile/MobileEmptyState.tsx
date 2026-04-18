@@ -85,7 +85,7 @@ export function MobileEmptyState({
               type="button"
               className="min-h-[44px]"
               onClick={() => {
-                haptics.impact('light');
+                haptics.impactLight();
                 onPrimary();
               }}
             >

@@ -28,7 +28,7 @@ export function BottomSheet({
   const haptics = useHaptics();
 
   const handleClose = () => {
-    haptics.impact('medium');
+    haptics.impactMedium();
     onClose();
   };
 
@@ -59,7 +59,7 @@ export function BottomSheet({
     const distance = currentY - startY;
 
     if (distance > 100) {
-      haptics.impact('medium');
+      haptics.impactMedium();
       onClose();
     }
 

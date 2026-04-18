@@ -35,7 +35,7 @@ export function EnhancedMobileBottomNav({
   const haptics = useHaptics();
 
   const handleNavClick = () => {
-    haptics.impact('light');
+    haptics.tap();
   };
 
   const isActive = (href: string) => {
