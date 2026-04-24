@@ -612,7 +612,7 @@ const PremiumBlueprint3D: React.FC<BlueprintProps> = ({ isBuildMode, onToggleMod
                     <div className="flex items-center gap-2">
                         <div className="h-[1px] w-6 sm:w-8 bg-white/30" />
                         <span className="text-[8px] sm:text-[10px] font-mono tracking-[0.2em] text-white/50 uppercase">
-                            Project: Profit Radar
+                            Brikly
                         </span>
                     </div>
                     <h3 className="text-lg sm:text-2xl font-bold text-white tracking-tight">

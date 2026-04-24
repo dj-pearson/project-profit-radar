@@ -57,7 +57,7 @@ serve(async (req) => {
 
     // Generate a secret for TOTP
     const secret = new TOTP({
-      issuer: "Project Profit Radar",
+      issuer: "Brikly",
       label: user.email,
       algorithm: "SHA1",
       digits: 6,

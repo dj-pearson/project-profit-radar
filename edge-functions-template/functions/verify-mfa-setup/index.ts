@@ -86,7 +86,7 @@ serve(async (req) => {
 
     // Verify the TOTP code
     const totp = new TOTP({
-      issuer: "Project Profit Radar",
+      issuer: "Brikly",
       label: userData.user.email,
       algorithm: "SHA1",
       digits: 6,

@@ -1,1034 +1,109 @@
-# Brikly - Construction Management Platform
+# Brikly — Construction Management Platform
 
-## Overview
-
-Brikly is a comprehensive construction management platform designed for small to medium-sized construction businesses. It's a B2B SaaS platform that provides real-time project management, financial tracking, and collaborative tools specifically tailored for the construction industry.
-
-### Key Business Context
-- **Target Market**: SMB construction companies ($199-799/month segment)
-- **Platform Status**: ~95% complete for target SMB market (Phase 4 complete, Phase 5 in progress)
-- **Business Model**: SaaS subscription platform with Stripe integration
-- **Current Pricing**: $350/month unlimited users
-- **Differentiator**: Real-time job costing and financial control without enterprise complexity
+B2B SaaS for SMB construction companies. React + Supabase + Cloudflare Pages. ~95% complete, Phase 5 in progress.
 
 ---
 
-## Technology Stack
+## Tech Stack
 
-### Frontend
-- **Framework**: React 19.1 with TypeScript 5.9.2
-- **Build Tool**: Vite 5.4.1 with advanced optimization
-- **Styling**: Tailwind CSS 3.4.11 with shadcn/ui components
-- **State Management**: React Context + TanStack Query 5.56.2
-- **Routing**: React Router DOM 6.26.2
-- **UI Components**: Radix UI primitives with custom component system
-- **Error Tracking**: Sentry 10.25.0
-- **Analytics**: PostHog 1.284.0 + Web Vitals 5.1.0
-
-### Mobile & Native
-- **Mobile Strategy**: Multi-platform approach
-  - **Capacitor 7.4.4**: iOS & Android native apps
-  - **Expo 54.0.15**: React Native integration (in development)
-  - **React Native 0.81.4**: Native UI components
-- **Mobile Features**:
-  - Camera integration (@capacitor/camera)
-  - Geolocation & GPS tracking (@capacitor/geolocation)
-  - Local notifications (@capacitor/local-notifications)
-  - Offline storage (@capacitor/preferences)
-  - Push notifications (@capacitor/push-notifications)
-
-### Backend
-- **Database**: Supabase (PostgreSQL)
-- **Authentication**: Supabase Auth with SSO support
-- **Edge Functions**: Supabase Edge Functions (Deno runtime)
-- **File Storage**: Supabase Storage
-- **Real-time**: Supabase Realtime with WebSocket
-
-### Third-Party Integrations
-- **Payments**: Stripe (subscriptions, invoicing, webhooks)
-- **Accounting**: QuickBooks Online (2-way sync)
-- **Calendar**: Google Calendar & Outlook integration
-- **PDF Generation**: jsPDF 3.0.1 with autotable
-- **Excel Export**: xlsx 0.18.5
-- **OCR**: Tesseract.js 6.0.1
-- **Charts**: Recharts 2.12.7
-- **3D Rendering**: Three.js 0.158.0 with @react-three/fiber
-- **MCP Integration**: Puppeteer, Upstash Context7, Supabase MCP
-
-### Testing & Quality
-- **Unit Testing**: Vitest 4.0.8 with Happy DOM
-- **E2E Testing**: Playwright 1.56.1 (Chromium, Firefox, WebKit, Mobile)
-- **Test Coverage**: V8 coverage provider with 60% thresholds
-- **UI Testing**: Testing Library (React, DOM, User Event)
-- **Linting**: ESLint 9.9.0 with React hooks & TypeScript plugins
-- **Performance**: Lighthouse CI 0.15.1 with automated audits
-
-### Deployment
-- **Primary**: Cloudflare Pages
-- **Package Manager**: npm 10.9.2 (explicitly configured)
-- **Node Version**: 18+
-- **Build Output**: dist/ folder
-- **CDN**: Cloudflare global edge network
+| Layer | Technology |
+|-------|-----------|
+| Frontend | React 19, TypeScript 5.9, Vite 5.4 |
+| Styling | Tailwind CSS 3.4, shadcn/ui, Radix UI |
+| State | React Context + TanStack Query 5 |
+| Routing | React Router DOM 6 |
+| Backend | Supabase (PostgreSQL, Auth, Realtime, Edge Functions) |
+| Mobile | Capacitor 7 (iOS/Android) + Expo 54 (React Native) |
+| Payments | Stripe |
+| Accounting | QuickBooks Online (2-way sync) |
+| Deploy | Cloudflare Pages |
+| Testing | Vitest 4 (unit), Playwright 1.56 (E2E) |
+| Monitoring | Sentry, PostHog, Web Vitals |
 
 ---
 
 ## Project Structure
 
 ```
-/home/user/project-profit-radar/
-├── src/
-│   ├── components/              # 117+ domain-specific component directories
-│   │   ├── ui/                  # shadcn/ui components
-│   │   ├── financial/           # Financial management
-│   │   ├── dashboard/           # Dashboard components
-│   │   ├── mobile/              # Mobile-specific components
-│   │   ├── native/              # React Native components
-│   │   ├── admin/               # Admin interface
-│   │   ├── crm/                 # CRM features
-│   │   ├── analytics/           # Analytics & BI
-│   │   ├── ai/                  # AI-powered features
-│   │   ├── gps/                 # GPS & geofencing
-│   │   ├── time-tracking/       # Time & attendance
-│   │   ├── estimates/           # Estimating tools
-│   │   ├── scheduling/          # Project scheduling
-│   │   ├── documents/           # Document management
-│   │   ├── safety/              # Safety compliance
-│   │   ├── client-portal/       # Client collaboration
-│   │   ├── compliance/          # Regulatory compliance
-│   │   ├── seo/                 # SEO components
-│   │   ├── testing/             # Test utilities
-│   │   └── [90+ more domains]   # See full list below
-│   ├── pages/                   # Route pages (262+ pages)
-│   │   ├── admin/               # Admin pages
-│   │   ├── features/            # Feature showcase pages
-│   │   ├── settings/            # Settings pages
-│   │   ├── tools/               # Tool pages
-│   │   └── resources/           # Resource pages
-│   ├── contexts/                # React contexts
-│   │   ├── AuthContext.tsx      # Authentication
-│   │   └── ThemeContext.tsx     # Theme management
-│   ├── hooks/                   # Custom React hooks
-│   ├── integrations/            # Third-party integrations
-│   │   └── supabase/            # Supabase client, types, hooks
-│   ├── lib/                     # Core utilities
-│   │   ├── security/            # Security utilities (sanitization, validation)
-│   │   ├── validation/          # Form validation schemas
-│   │   ├── __tests__/           # Unit tests
-│   │   └── [fallback files]    # Web fallbacks for native modules
-│   ├── mobile/                  # Mobile-specific code
-│   │   ├── contexts/            # Mobile contexts
-│   │   ├── services/            # Mobile services
-│   │   └── utils/               # Mobile utilities
-│   ├── services/                # Business logic services
-│   │   ├── ai/                  # AI services
-│   │   └── analytics/           # Analytics services
-│   ├── routes/                  # Route definitions
-│   ├── types/                   # TypeScript type definitions
-│   ├── utils/                   # Additional utilities
-│   ├── config/                  # Configuration files
-│   ├── content/                 # Static content (blog, etc.)
-│   ├── data/                    # Static data
-│   ├── assets/                  # Images, icons, etc.
-│   ├── styles/                  # Global styles
-│   ├── templates/               # Email templates
-│   └── test/                    # Test setup files
-├── supabase/
-│   ├── functions/               # 166+ Edge functions
-│   │   ├── stripe-webhooks/     # Payment processing
-│   │   ├── ai-*/                # AI-powered features
-│   │   ├── analytics-*/         # Analytics APIs
-│   │   ├── blog-*/              # Blog automation
-│   │   └── [140+ more]          # API endpoints
-│   ├── migrations/              # Database migrations (369+)
-│   └── config.toml              # Supabase configuration
-├── tests/
-│   └── e2e/                     # Playwright E2E tests
-├── scripts/                     # Build & automation scripts
-│   ├── generate-sitemap.js      # SEO sitemap generation
-│   ├── copy-404.js              # SPA routing setup
-│   ├── update-sw-version.js     # Service worker versioning
-│   ├── performance-audit.js     # Performance monitoring
-│   ├── check-performance-budget.js
-│   ├── purge-cloudflare-cache.js # CDN cache management
-│   ├── convert-images-to-webp.js # Image optimization
-│   ├── mobile/                  # Mobile build scripts
-│   └── [more utilities]
-├── public/                      # Static assets
-├── android/                     # Android app (Capacitor)
-├── ios/                         # iOS app (Capacitor)
-├── mobile-native/               # React Native app (Expo)
-├── app/                         # Expo app entry
-├── docs/                        # Documentation
-├── media/                       # Media assets
-└── [config files]               # Various configuration files
+src/
+  components/     # 117+ domain-specific directories + ui/ (shadcn)
+  pages/          # 262+ route pages
+  contexts/       # AuthContext.tsx, ThemeContext.tsx
+  hooks/          # Custom React hooks
+  integrations/supabase/  # client.ts, types.ts, hooks
+  lib/            # Core utilities, security, validation
+  services/       # Business logic (ai/, analytics/)
+  types/          # TypeScript type definitions
+supabase/
+  functions/      # 166+ Edge Functions (Deno)
+  migrations/     # 369+ DB migrations
+tests/e2e/        # Playwright tests
+scripts/          # Build & automation scripts
+android/          # Capacitor Android
+ios/              # Capacitor iOS
+mobile-native/    # Expo / React Native
 ```
 
-### Component Domains (115+ directories)
-The codebase is organized into domain-specific component directories for better maintainability:
-
-**Core UI**: ui, layout, layouts, navigation, common, shared
-**Admin & Management**: admin, settings, operations, monitoring, hub
-**Financial**: financial, job-costing, billing, payments, invoices, expenses, procurement, purchasing
-**Project Management**: projects, project, estimates, scheduling, schedule, tasks, daily-reports
-**Time & Attendance**: time, time-tracking, timesheets, gps
-**Team & HR**: crew, contacts, subcontractors, service
-**Client Relations**: client, client-portal, portal, crm, leads, lead
-**Documents**: documents, gallery, ocr, storage
-**Compliance & Safety**: safety, compliance, legal, quality, audit, bonds, permits, warranty
-**Communication**: communication, collaboration, email, notifications, realtime
-**Analytics & BI**: analytics, dashboard, reports, performance
-**AI & Automation**: ai, workflow, workflows, automated
-**Mobile & Native**: mobile, native, pwa, offline
-**Marketing & Growth**: marketing, growth, funnel, conversion, seo, social-media, affiliate
-**Tools**: calculator, calendar, equipment, inventory, materials, weather, tools
-**Infrastructure**: infrastructure, deployment, security, errors, loading, debug
-**Testing**: testing, accessibility, usability
-**Enterprise**: enterprise, integrations
+**Key file paths:**
+- Supabase client: `src/integrations/supabase/client.ts`
+- Supabase types: `src/integrations/supabase/types.ts`
+- Auth context: `src/contexts/AuthContext.tsx`
+- Auth helpers (edge fns): `supabase/functions/_shared/auth-helpers.ts`
+- UI components: `src/components/ui/`
+- Utils: `src/lib/`, `src/utils/`
+- Types: `src/types/`
 
 ---
 
-## Development Environment Setup
+## Common Commands
 
-### Prerequisites
-- Node.js 18+ (check with `node --version`)
-- npm 9+ (check with `npm --version`)
-- Git
-
-### Quick Start
 ```bash
-# Clone the repository
-git clone <repository-url>
-cd project-profit-radar
+# Dev
+npm run dev                    # port 8080
+npm run build                  # production build
+npm run build:analyze          # bundle analyzer
 
-# Install dependencies
-npm install
+# Tests
+npm run test:run               # Vitest once
+npm run test:coverage          # coverage report
+npm run test:e2e               # Playwright
+npm run test:e2e:headed        # visible browser
 
-# Start development server
-npm run dev
-```
+# Quality
+npm run lint
+npm run lighthouse
 
-### Environment Configuration
-The application uses Supabase for backend services. The configuration is already set up in:
-- `/src/integrations/supabase/client.ts`
-- Database URL and keys are configured for the development environment
+# Mobile (Capacitor)
+npm run mobile:sync            # sync web → native
+npm run mobile:run:ios
+npm run mobile:run:android
 
----
-
-## Available Commands
-
-### Development
-```bash
-npm run dev                    # Start development server on port 8080
-npm run preview                # Preview production build locally
-```
-
-### Building
-```bash
-npm run build                  # Production build with sitemap generation
-npm run build:dev              # Development build
-npm run build:prod             # Production build (optimized)
-npm run build:cloudflare       # Build for Cloudflare Pages
-npm run build:analyze          # Build with bundle analyzer
-```
-
-### Testing
-```bash
-# Unit Tests (Vitest)
-npm run test                   # Run tests in watch mode
-npm run test:run               # Run tests once
-npm run test:ui                # Open Vitest UI
-npm run test:coverage          # Generate coverage report
-npm run test:watch             # Watch mode
-
-# E2E Tests (Playwright)
-npm run test:e2e               # Run E2E tests
-npm run test:e2e:ui            # Run with Playwright UI
-npm run test:e2e:headed        # Run in headed mode (visible browser)
-npm run test:e2e:debug         # Debug mode
-npm run test:e2e:report        # Show test report
-
-# Performance & Quality
-npm run lighthouse             # Run Lighthouse audit
-npm run lighthouse:full        # Build + full Lighthouse audit
-npm run performance:audit      # Custom performance audit
-npm run performance:budget     # Check performance budget
-npm run performance:ci         # Full CI performance check
-```
-
-### Code Quality
-```bash
-npm run lint                   # Run ESLint
-npm run security-check         # Security audit (Windows)
-npm run analyze                # Analyze bundle
-```
-
-### Mobile Development
-```bash
-# Expo (React Native)
-npm run expo:start             # Start Expo dev server
-npm run expo:android           # Run on Android
-npm run expo:ios               # Run on iOS
-npm run expo:web               # Run web version
-npm run expo:build:android     # Build Android app (EAS)
-npm run expo:build:ios         # Build iOS app (EAS)
-
-# Capacitor (Native)
-npm run mobile:sync            # Sync web assets to native
-npm run mobile:open:ios        # Open iOS project in Xcode
-npm run mobile:open:android    # Open Android project in Android Studio
-npm run mobile:run:ios         # Build and run iOS app
-npm run mobile:run:android     # Build and run Android app
-npm run mobile:build           # Build mobile apps
-npm run mobile:version         # Bump version numbers
-```
-
-### Utilities
-```bash
-npm run generate-sitemap       # Generate SEO sitemap
-npm run images:optimize        # Convert images to WebP
-npm run optimize:fonts         # Optimize font files
-```
-
-### MCP Servers
-```bash
-npm run mcp:puppeteer          # Run Puppeteer MCP server
-npm run mcp:context7           # Run Upstash Context7 MCP
-npm run mcp:supabase           # Run Supabase MCP server
+# Mobile (Expo)
+npm run expo:start
+npm run expo:build:android
+npm run expo:build:ios
 ```
 
 ---
 
-## Database Architecture
+## User Roles
 
-### Core Tables (369+ migrations)
-**Company & Users**:
-- `companies`: Company profiles and subscription info
-- `user_profiles`: User accounts with role-based access
+`admin` → `project_manager` → `field_supervisor` → `office_staff` → `accounting` → `client_portal`
 
-**Projects & Operations**:
-- `projects`: Construction projects and metadata
-- `project_templates`: Reusable project templates
-- `time_entries`: Time tracking for workers
-- `timesheet_approvals`: Approval workflow
-- `change_orders`: Change order management
-- `daily_reports`: Daily progress reports
-- `daily_report_templates`: Template system
-
-**Financial**:
-- `financial_records`: Job costing and financial data
-- `invoices`: Invoice management
-- `payments`: Payment tracking
-- `expenses`: Expense tracking
-- `estimates`: Project estimates
-- `estimate_templates`: Reusable estimate templates
-- `estimate_line_items`: Line item library
-
-**Documents & Media**:
-- `documents`: Document management system
-- `equipment_qr_codes`: QR code tracking
-
-**CRM & Sales**:
-- `crm_contacts`: Contact management
-- `crm_leads`: Lead tracking
-- `crm_campaigns`: Marketing campaigns
-
-**Compliance & Security**:
-- `audit_logs`: Blockchain-style tamper-proof audit logs
-- `sso_configurations`: SSO/SAML settings
-- `mfa_configurations`: Multi-factor auth
-- `permission_grants`: RBAC permissions
-- `compliance_reports`: GDPR, SOC2, HIPAA reports
-
-**Filters & Preferences**:
-- `saved_filter_presets`: User-saved filter configurations
-
-**GPS & Location**:
-- `crew_gps_checkins`: GPS-based time tracking
-
-**API & Integrations**:
-- `api_keys`: API key management
-- `webhooks`: Webhook subscriptions
-
-### Key Database Features
-- **Single-tenant architecture**: Dedicated database instance for Brikly
-- **Company-level isolation**: Data separated by `company_id` for multi-company support
-- **Role-based access control**: 6 user roles with granular permissions
-- **Real-time collaboration**: Supabase Realtime for live updates
-- **Audit logging**: Tamper-proof blockchain-style audit trails
-- **Subscription management**: Integrated with Stripe
-- **GPS tracking**: Geofencing and location-based time tracking
-- **Template systems**: Projects, estimates, reports
-- **SSO/MFA support**: Enterprise authentication
-- **Compliance automation**: GDPR, SOC2, HIPAA workflows
+Auth: Supabase Auth + SSO (SAML 2.0, OAuth 2.0) + MFA (TOTP, SMS, Email)
 
 ---
 
-## Authentication & Authorization
+## Code Patterns
 
-### User Roles
-1. **admin**: Company administrator (full company access)
-2. **project_manager**: Project management access
-3. **field_supervisor**: Field operations
-4. **office_staff**: Office operations
-5. **accounting**: Financial access
-6. **client_portal**: Client view access
-
-### Authentication Features
-- **Supabase Auth**: Core authentication
-- **SSO Support**: SAML 2.0, OAuth 2.0, LDAP
-- **Apple Sign-In**: Native Apple authentication support
-- **Multi-Factor Auth**: TOTP, SMS, Email
-- **JWT tokens**: Secure API access
-- **Session management**: Device tracking, trusted devices
-- **Role-based routing**: Protected routes based on permissions
-- **Session persistence**: Auto-login on refresh
-
----
-
-## Key Features Implementation
-
-### Financial Management
-- **Real-time job costing**: Live cost tracking per project
-- **Budget vs actual**: Variance analysis and alerts
-- **Cash flow forecasting**: Financial projections
-- **Stripe integration**: Automated billing and payments
-- **QuickBooks sync**: Enhanced 2-way accounting integration with automatic reconciliation
-- **Estimate templates**: Reusable estimate templates
-- **Line item library**: Standard line items across estimates
-- **Financial health checks**: Automated project profitability analysis
-
-### Project Management
-- **Project scheduling**: Gantt charts and timelines
-- **Change order management**: Workflow and approvals
-- **Document management**: Version control and categorization
-- **Daily reports**: Progress tracking and reporting with templates
-- **Project templates**: Quick project setup from templates
-- **Bulk operations**: Multi-project actions
-- **Saved filters**: Custom filter presets
-
-### Time Tracking & GPS
-- **GPS time tracking**: Geofencing for clock in/out
-- **Advanced geofencing**: Configurable job site boundaries with automatic alerts
-- **Crew check-ins**: Location-based attendance
-- **Timesheet approvals**: Multi-level approval workflow
-- **Mobile time tracking**: Native mobile app support
-- **Offline capability**: Work without connectivity
-
-### CRM & Sales
-- **Contact management**: Centralized contact database
-- **Lead tracking**: Pipeline management
-- **Campaign management**: Marketing automation
-- **Lead intelligence**: AI-powered insights
-
-### Collaboration
-- **Team messaging**: Real-time communication
-- **Client portal**: External stakeholder access
-- **File sharing**: Document collaboration
-- **Progress updates**: Automated notifications
-- **Real-time updates**: Live data synchronization
-
-### AI-Powered Features
-- **AI estimating**: Automated estimate generation
-- **Content generation**: Blog and marketing content
-- **Image analysis**: Photo classification and insights
-- **Quality control**: AI-powered inspection
-- **Support tickets**: Automated ticket analysis
-- **AI search optimization**: Enhanced discoverability for AI-powered search engines
-
-### Compliance & Security
-- **Audit logging**: Complete activity tracking
-- **GDPR compliance**: Data subject requests, retention policies
-- **SOC2 ready**: Enterprise security controls
-- **HIPAA support**: Healthcare data protection
-- **SSO/SAML**: Enterprise authentication
-- **MFA**: Multi-factor authentication
-- **RBAC**: Role-based access control
-
-### Enterprise Features (Phase 4)
-- **Public API**: RESTful API for integrations
-- **Webhook system**: Real-time event notifications
-- **Developer portal**: Third-party integration ecosystem
-- **Advanced permissions**: Resource-specific grants
-- **Compliance automation**: Report generation
-
----
-
-## Mobile Strategy
-
-### Multi-Platform Approach
-Brikly uses a hybrid mobile strategy:
-
-1. **Capacitor (Production)**: Native iOS/Android apps
-   - Built on web codebase
-   - Native device APIs (camera, GPS, notifications)
-   - App Store & Google Play distribution
-   - Offline-first architecture
-
-2. **Expo (Development)**: React Native integration
-   - Native UI components
-   - EAS Build for cloud builds
-   - Over-the-air updates
-   - Future migration path
-
-### Mobile Features
-- **Camera integration**: Photo capture for documentation
-- **Geolocation**: GPS tracking for time entries and geofencing
-- **Offline sync**: Work without internet connectivity
-- **Push notifications**: Real-time alerts
-- **Local storage**: Offline data persistence
-- **Native performance**: Hardware-accelerated UI
-- **Biometric auth**: Fingerprint/Face ID support (planned)
-- **Service worker versioning**: Automatic cache management and updates
-
-### Mobile Development Workflow
-```bash
-# Web development (primary)
-npm run dev
-
-# Capacitor native
-npm run mobile:sync              # Sync web build to native
-npm run mobile:open:ios          # Open Xcode
-npm run mobile:run:android       # Run on Android device
-
-# Expo (alternative)
-npm run expo:start               # Start Expo
-npm run expo:build:android       # Cloud build
-```
-
----
-
-## API Architecture
-
-### Supabase Edge Functions (166+)
-Located in `/supabase/functions/`, categorized by domain:
-
-**Payments & Billing**:
-- `stripe-webhooks`: Payment processing
-
-**AI Services**:
-- `ai-content-generator`: Content generation
-- `ai-estimating`: Automated estimating
-- `analyze-images`: Image classification
-- `analyze-support-ticket`: Ticket routing
-
-**Analytics**:
-- `analytics-oauth-google`: Google Analytics integration
-- `bing-search-api`, `bing-webmaster-api`: SEO analytics
-
-**Blog & Content**:
-- `blog-ai`: AI blog generation
-- `blog-ai-automation`: Scheduled content
-- `blog-social-integration`: Social media posting
-
-**SEO**:
-- `analyze-semantic-keywords`: Keyword analysis
-- `apply-seo-fixes`: Automated SEO improvements
-- `analyze-internal-links`: Link analysis
-
-**Automation**:
-- `auto-scheduling`: Intelligent scheduling
-- `auto-intervention-scheduler`: Proactive alerts
-
-**API Management**:
-- `api-auth`: API key authentication
-- `api-management`: API endpoint management
-
-### Authentication Pattern
-All edge functions follow this pattern:
+### Data Fetching (TanStack Query + Supabase)
 ```typescript
-// Verify JWT token
-const authHeader = req.headers.get('Authorization');
-const token = authHeader?.replace('Bearer ', '');
-const { data: { user } } = await supabaseClient.auth.getUser(token);
-
-// Check RBAC permissions
-// Apply company-level data isolation (RLS)
-// Return JSON response
-```
-
-### API Response Format
-```typescript
-{
-  success: boolean;
-  data?: any;
-  error?: string;
-  timestamp: string;
-}
-```
-
----
-
-## Configuration Files
-
-### Key Configuration Files
-
-**Build & Bundling**:
-- `vite.config.ts`: Build configuration with advanced optimizations
-  - Manual chunking for optimal caching
-  - Image optimization (WebP, AVIF)
-  - Bundle visualization
-  - Tree shaking and code splitting
-  - Mobile fallbacks for native modules
-  - Console stripping in production
-- `tsconfig.json`: TypeScript configuration
-- `tailwind.config.ts`: Styling configuration
-- `postcss.config.js`: CSS processing
-
-**Testing**:
-- `vitest.config.ts`: Unit test configuration (Happy DOM, V8 coverage)
-- `playwright.config.ts`: E2E test configuration (multi-browser)
-- `lighthouserc.js`: Lighthouse performance audits
-
-**Mobile**:
-- `capacitor.config.ts`: Native app configuration
-- `app.config.js`: Expo configuration
-- `eas.json`: Expo Application Services build config
-- `metro.config.cjs`: React Native bundler
-
-**Deployment**:
-- `wrangler.toml`: Cloudflare Pages deployment
-- `package.json`: Dependencies and scripts
-- `.npmrc`: npm configuration (packageManager: npm@10.9.2)
-- `.nvmrc`: Node version specification
-
-**Code Quality**:
-- `eslint.config.js`: ESLint rules (TypeScript, React, Hooks)
-- `components.json`: shadcn/ui configuration
-
-**Supabase**:
-- `supabase/config.toml`: Supabase project configuration
-
-### Build Optimizations
-
-**Vite Build Strategy**:
-1. **Manual Chunking**: Separate chunks for framework, UI, utilities, features
-2. **Asset Optimization**: Images, fonts organized by type with hashing
-3. **Tree Shaking**: Aggressive unused code elimination
-4. **Code Splitting**: Route-based and feature-based splitting
-5. **CSS Optimization**: CSS code splitting and minification
-6. **Console Stripping**: Remove console.log in production
-7. **Compression**: Gzip and Brotli size reporting
-
-**Performance Targets**:
-- Bundle size: ~1MB optimized
-- Chunk size warning: 400KB
-- Lighthouse score: 90+
-- Time to Interactive: <3s
-
----
-
-## Testing Strategy
-
-### Unit Testing (Vitest)
-- **Framework**: Vitest 4.0.8 with Happy DOM
-- **Coverage**: V8 provider with 60% thresholds
-- **Location**: `src/**/*.test.ts`, `src/**/__tests__/**`
-- **Setup**: `src/test/setup.ts`
-- **UI**: Vitest UI for interactive testing
-
-**Example Test**:
-```typescript
-// src/lib/__tests__/utils.test.ts
-import { describe, it, expect } from 'vitest';
-import { formatCurrency } from '../utils';
-
-describe('formatCurrency', () => {
-  it('formats USD correctly', () => {
-    expect(formatCurrency(1234.56)).toBe('$1,234.56');
-  });
-});
-```
-
-### E2E Testing (Playwright)
-- **Framework**: Playwright 1.56.1
-- **Browsers**: Chromium, Firefox, WebKit
-- **Mobile**: Pixel 5, iPhone 12 viewports
-- **Location**: `tests/e2e/`
-- **Features**: Screenshots, videos, traces on failure
-- **CI Integration**: GitHub Actions support
-
-**Example Test**:
-```typescript
-// tests/e2e/login.spec.ts
-import { test, expect } from '@playwright/test';
-
-test('user can log in', async ({ page }) => {
-  await page.goto('/');
-  await page.click('text=Sign In');
-  await page.fill('[name="email"]', 'user@example.com');
-  await page.fill('[name="password"]', 'password');
-  await page.click('button[type="submit"]');
-  await expect(page).toHaveURL('/dashboard');
-});
-```
-
-### Performance Testing
-- **Lighthouse CI**: Automated performance audits
-- **Web Vitals**: Core Web Vitals monitoring
-- **Performance Budget**: Custom budget checks
-- **Bundle Analysis**: Rollup visualizer
-
-### Security Testing
-- **Input Sanitization**: DOMPurify for user input
-- **Schema Validation**: Zod for form validation
-- **Security Audits**: `npm run security-check`
-
-### Testing Best Practices
-1. **Write tests for**:
-   - Utility functions
-   - Security-critical code
-   - Business logic
-   - API integrations
-   - User workflows
-
-2. **Test coverage goals**:
-   - Functions: 60%+
-   - Branches: 60%+
-   - Lines: 60%+
-
-3. **E2E test patterns**:
-   - Critical user journeys
-   - Cross-browser compatibility
-   - Mobile responsiveness
-   - Error handling
-
----
-
-## Performance Considerations
-
-### Build Performance
-- **Bundle size**: ~1MB optimized (gzipped)
-- **Chunk splitting**: Framework, UI, features separated
-- **Lazy loading**: Route-based code splitting
-- **CDN optimization**: Cloudflare Pages global edge
-- **Asset optimization**: WebP/AVIF images, font subsetting
-- **Tree shaking**: Aggressive unused code removal
-
-### Runtime Performance
-- **React Query**: Efficient data fetching and caching
-- **Memoization**: useMemo, useCallback for expensive operations
-- **Real-time updates**: Efficient WebSocket usage with Supabase
-- **Progressive loading**: Skeleton states and loading indicators
-- **Virtual scrolling**: For long lists (planned)
-- **Service Workers**: PWA support with automatic versioning
-
-### Mobile Performance
-- **Native APIs**: Capacitor for hardware acceleration
-- **Offline-first**: IndexedDB for local data
-- **Optimistic updates**: Immediate UI feedback
-- **Background sync**: Queue actions for offline
-- **Image compression**: Automatic optimization before upload
-
-### Monitoring
-- **Sentry**: Error tracking and performance monitoring
-- **PostHog**: Product analytics
-- **Web Vitals**: Core Web Vitals tracking
-- **Lighthouse CI**: Automated performance audits
-
----
-
-## Security Features
-
-### Authentication Security
-- **JWT tokens**: Secure API access with short expiration
-- **SSO/SAML**: Enterprise single sign-on
-- **MFA**: Multi-factor authentication (TOTP, SMS, Email)
-- **Session management**: Device tracking, trusted devices
-- **Password security**: Supabase Auth best practices
-- **Biometric auth**: Planned for mobile
-
-### Data Security
-- **Row Level Security**: Database-level access control
-- **Company-level isolation**: Data separated by company_id
-- **HTTPS enforcement**: All communications encrypted
-- **Input validation**: Zod schema validation
-- **Input sanitization**: DOMPurify for XSS prevention
-- **CSRF protection**: Built-in protections
-- **API key rotation**: Automated key management
-
-### Compliance
-- **GDPR**: Data subject requests, right to erasure, retention policies
-- **SOC2**: Security controls and audit logs
-- **HIPAA**: Healthcare data protection (optional)
-- **Audit logging**: Blockchain-style tamper-proof logs
-- **Data retention**: Configurable retention policies
-- **Compliance reports**: Automated report generation
-
-### Security Best Practices
-1. **Never commit secrets**: Use environment variables
-2. **Validate all inputs**: Use Zod schemas
-3. **Sanitize outputs**: Use DOMPurify
-4. **Use RLS**: All tables have Row Level Security
-5. **Audit everything**: All critical actions logged
-6. **Principle of least privilege**: Minimal permissions
-
----
-
-## Accessibility (ADA/WCAG 2.1 Compliance)
-
-Brikly is committed to WCAG 2.1 Level AA compliance and ADA accessibility requirements.
-
-### Current Implementation Status
-
-**IMPORTANT**: Accessibility infrastructure exists but implementation is **incomplete**.
-
-| Status | Description |
-|--------|-------------|
-| **Infrastructure** | Complete - accessible components, hooks, testing utilities available |
-| **Implementation** | Partial - only ~2% of pages use accessible components |
-| **Target** | WCAG 2.1 Level AA |
-
-**Current State (as of February 2026)**:
-- 2 of 125+ pages use AccessibleModal (MyTasks.tsx, ComponentShowcase.tsx)
-- 1 of 17 form pages use AccessibleForm (MyTasks.tsx)
-- 0 of 14 table pages use AccessibleTable
-- 0 pages use AccessiblePageWrapper
-
-**See**: `docs/ACCESSIBILITY_COMPLIANCE_CHECKLIST.md` for full remediation plan.
-
-### Accessibility Components (Available Infrastructure)
-
-Located in `src/components/accessibility/`:
-- **AccessiblePageWrapper.tsx**: Semantic HTML landmarks wrapper
-- **AccessibleTable.tsx**: Data tables with ARIA, sorting, keyboard nav
-- **AccessibleForm.tsx**: Form components with proper labels and validation
-- **AccessibleFormField.tsx**: Input with labels, aria-invalid, aria-describedby
-- **AccessibleSelect.tsx**: Native select with accessibility features
-- **AccessibleTextarea.tsx**: Textarea with accessibility features
-- **AccessibleModal.tsx**: Modal with focus trap and escape handling
-- **SkipLinks.tsx**: Skip navigation for keyboard users
-- **AccessibilityPanel.tsx**: User accessibility preferences
-- **AccessibilityProvider.tsx**: Context for accessibility settings
-
-### Accessibility Hooks
-
-Located in `src/hooks/`:
-- **useAccessibility.ts**: Main accessibility settings hook
-- **useAccessibilityHelpers.tsx**: Focus trap, ARIA ID generation, announcements
-
-### Example: Applying Accessibility to a Page
-
-See `src/pages/MyTasks.tsx` for a reference implementation:
-
-```tsx
-import {
-  AccessibleModal,
-} from '@/components/accessibility/AccessibleModal';
-import {
-  AccessibleForm,
-  AccessibleFormField,
-  AccessibleSelect,
-  AccessibleTextarea,
-} from '@/components/accessibility/AccessibleForm';
-
-// Replace Dialog with AccessibleModal
-<AccessibleModal
-  isOpen={open}
-  onClose={() => setOpen(false)}
-  title="Create New Task"
-  description="Create a new task and assign it to a team member."
-  footer={<Button type="submit">Create</Button>}
->
-  <AccessibleForm onSubmit={handleSubmit} ariaLabel="Create task form">
-    <AccessibleFormField name="name" label="Task Title" required />
-    <AccessibleSelect name="priority" label="Priority" options={priorityOptions} />
-    <AccessibleTextarea name="description" label="Description" />
-  </AccessibleForm>
-</AccessibleModal>
-
-// Add ARIA to interactive cards
-<Card role="article" aria-labelledby={`task-title-${task.id}`}>
-  <h3 id={`task-title-${task.id}`}>{task.name}</h3>
-  <Badge aria-label={`Priority: ${task.priority}`}>{task.priority}</Badge>
-  <Icon aria-hidden="true" /> {/* Decorative icons */}
-</Card>
-
-// Label search areas
-<div role="search" aria-label="Filter tasks">
-  <Label htmlFor="search" className="sr-only">Search</Label>
-  <Input id="search" aria-label="Search tasks" />
-</div>
-```
-
-### Accessibility Testing
-
-```bash
-# Run accessibility linting
-npm run lint                 # Includes jsx-a11y rules
-
-# Run accessibility tests
-npm run test                 # Includes axe-core tests
-
-# Check Lighthouse accessibility score
-npm run lighthouse           # Must score 95%+
-```
-
-**Testing Utilities** (`src/test/accessibility-utils.ts`):
-- `expectNoA11yViolations()`: Assert no axe-core violations
-- `testAccessibility()`: Run axe-core and get results
-- `a11yTestHelpers`: Form, table, modal-specific tests
-
-### Accessibility Requirements for New Components
-
-All new components MUST include:
-
-1. **Semantic HTML**
-```tsx
-// Use proper semantic elements
-<nav role="navigation" aria-label="Main navigation">
-<main id="main-content" role="main">
-<section aria-labelledby="section-heading">
-<article role="article">
-```
-
-2. **ARIA Attributes**
-```tsx
-// Interactive elements
-<button aria-label="Close dialog" aria-expanded={isOpen}>
-<input aria-invalid={hasError} aria-describedby="error-message">
-
-// Live regions for dynamic content
-<div role="status" aria-live="polite" aria-atomic="true">
-```
-
-3. **Keyboard Navigation**
-```tsx
-// All interactive elements focusable
-<div tabIndex={0} onKeyDown={handleKeyDown} role="button">
-
-// Logical tab order
-tabIndex={-1}  // Programmatically focusable
-tabIndex={0}   // In natural tab order
-// Never use tabIndex > 0
-```
-
-4. **Focus Management**
-```tsx
-// Focus trap in modals
-const { trapRef } = useFocusTrap();
-
-// Return focus after closing
-const previousFocus = useRef(document.activeElement);
-onClose={() => previousFocus.current?.focus()}
-```
-
-5. **Color Contrast**
-```tsx
-// Minimum contrast ratios
-// Normal text: 4.5:1
-// Large text (18px+ or 14px+ bold): 3:1
-// UI components: 3:1
-```
-
-### Accessibility Checklist for Components
-
-- [ ] All images have `alt` text (or `alt=""` for decorative)
-- [ ] Form inputs have associated `<label>` elements
-- [ ] Buttons/links have accessible names
-- [ ] Color is not the only means of conveying information
-- [ ] Focus is visible for all interactive elements
-- [ ] Component is keyboard accessible
-- [ ] ARIA attributes are valid and appropriate
-- [ ] Headings are in logical order (no skipped levels)
-- [ ] Error messages are linked to inputs via `aria-describedby`
-- [ ] Dynamic content updates announce to screen readers
-
-### Accessibility Testing in Tests
-
-```typescript
-import { render } from '@testing-library/react';
-import { expectNoA11yViolations } from '@/test/accessibility-utils';
-
-describe('MyComponent', () => {
-  it('should have no accessibility violations', async () => {
-    const { container } = render(<MyComponent />);
-    await expectNoA11yViolations(container);
-  });
-});
-```
-
-### Accessibility Settings Storage
-
-User preferences stored in localStorage and database:
-- `highContrast`: Boolean - High contrast mode
-- `reduceMotion`: Boolean - Reduce animations
-- `fontSize`: 'small' | 'medium' | 'large'
-- `screenReader`: Boolean - Screen reader optimizations
-- `keyboardNavigation`: Boolean - Enhanced keyboard mode
-
-### Keyboard Shortcuts
-
-| Shortcut | Action |
-|----------|--------|
-| Alt+Shift+1 | Skip to main content |
-| Alt+Shift+2 | Skip to navigation |
-| Alt+Shift+3 | Skip to search |
-| Alt+Shift+C | Toggle high contrast |
-| Alt+Shift+M | Toggle reduce motion |
-| Alt+Shift+S | Toggle screen reader mode |
-| Escape | Close modal/dialog |
-
-### Resources
-
-- **Compliance Checklist**: `docs/ACCESSIBILITY_COMPLIANCE_CHECKLIST.md` - Page-by-page remediation plan
-- **VPAT Document**: `docs/VPAT_WCAG_2.1_Brikly.md` - Voluntary Product Accessibility Template
-- **Reference Implementation**: `src/pages/MyTasks.tsx` - Example of fully accessible page
-- [WCAG 2.1 Guidelines](https://www.w3.org/WAI/WCAG21/quickref/)
-- [WAI-ARIA Authoring Practices](https://www.w3.org/WAI/ARIA/apg/)
-- [Accessibility Statement](/accessibility-statement)
-- [Accessibility Settings](/accessibility)
-
----
-
-## Development Guidelines for AI Assistants
-
-### Code Standards
-- **TypeScript**: Strict type checking enabled
-- **ESLint**: Configured for React/TypeScript
-- **Component patterns**: Functional components with hooks
-- **State management**: Context for global state, TanStack Query for server state
-- **Naming conventions**:
-  - Components: PascalCase
-  - Hooks: camelCase with "use" prefix
-  - Utils: camelCase
-  - Constants: UPPER_SNAKE_CASE
-
-### Component Architecture
-- **shadcn/ui**: Use for all UI components
-- **Atomic design**: Build reusable component patterns
-- **Accessibility**: ARIA compliance and keyboard navigation required
-- **Theme support**: All components support dark/light theme
-- **Mobile-first**: Design for mobile, enhance for desktop
-
-### File Organization
-```typescript
-// Component structure
-ComponentName/
-  ├── ComponentName.tsx          // Main component
-  ├── ComponentNameForm.tsx      // Sub-components
-  ├── ComponentNameList.tsx
-  └── index.ts                   // Re-exports
-
-// Hook structure
-hooks/
-  ├── useComponentName.ts        // Feature hook
-  └── useComponentNameQuery.ts   // Data fetching hook
-
-// Type structure
-types/
-  └── componentName.ts           // Type definitions
-```
-
-### API Integration Pattern
-```typescript
-// Use TanStack Query for all API calls
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 
 export const useProjects = () => {
   const { user } = useAuth();
-
   return useQuery({
     queryKey: ['projects'],
     queryFn: async () => {
@@ -1036,434 +111,97 @@ export const useProjects = () => {
         .from('projects')
         .select('*')
         .order('created_at', { ascending: false });
-
       if (error) throw error;
       return data;
     },
     enabled: !!user,
   });
 };
-
-// For mutations
-export const useCreateProject = () => {
-  return useMutation({
-    mutationFn: async (project: NewProject) => {
-      const { data, error } = await supabase
-        .from('projects')
-        .insert(project)
-        .select()
-        .single();
-
-      if (error) throw error;
-      return data;
-    },
-  });
-};
 ```
 
-### Security Guidelines
-```typescript
-// Always sanitize user input
-import DOMPurify from 'dompurify';
-
-const sanitizedContent = DOMPurify.sanitize(userInput);
-
-// Always validate with Zod
-import { z } from 'zod';
-
-const projectSchema = z.object({
-  name: z.string().min(1).max(100),
-  budget: z.number().positive(),
-  start_date: z.string().datetime(),
-});
-
-// Use type-safe validation
-const validatedData = projectSchema.parse(formData);
-```
-
-### Testing Guidelines
-```typescript
-// Unit test example
-import { describe, it, expect } from 'vitest';
-import { render, screen } from '@testing-library/react';
-import { ProjectCard } from './ProjectCard';
-
-describe('ProjectCard', () => {
-  it('renders project name', () => {
-    render(<ProjectCard project={mockProject} />);
-    expect(screen.getByText('Test Project')).toBeInTheDocument();
-  });
-});
-
-// E2E test example
-import { test, expect } from '@playwright/test';
-
-test('create new project', async ({ page }) => {
-  await page.goto('/projects');
-  await page.click('text=New Project');
-  await page.fill('[name="name"]', 'Test Project');
-  await page.click('button[type="submit"]');
-  await expect(page.locator('text=Test Project')).toBeVisible();
-});
-```
-
-### Git Workflow
-- **Branch naming**: `feature/description`, `fix/description`, `claude/description-sessionId`
-- **Commit messages**: Conventional commit format
-  ```
-  feat: add project template system
-  fix: resolve GPS tracking issue
-  docs: update CLAUDE.md with latest features
-  test: add E2E tests for authentication
-  ```
-- **Pull requests**: Required for all changes
-- **Automated deployment**: Cloudflare Pages on merge to main
-
-### Common Patterns
-
-**Form Handling**:
+### Forms (react-hook-form + Zod)
 ```typescript
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
 
-const form = useForm({
-  resolver: zodResolver(projectSchema),
-  defaultValues: { name: '', budget: 0 },
-});
+const schema = z.object({ name: z.string().min(1).max(100) });
+const form = useForm({ resolver: zodResolver(schema) });
 ```
 
-**Error Handling**:
+### Error / Toast
 ```typescript
 import { toast } from 'sonner';
-
 try {
-  await createProject(data);
-  toast.success('Project created successfully');
+  await action();
+  toast.success('Done');
 } catch (error) {
-  console.error('Error creating project:', error);
-  toast.error('Failed to create project');
+  toast.error('Failed');
 }
 ```
 
-**Loading States**:
+### Loading States
 ```typescript
 import { Skeleton } from '@/components/ui/skeleton';
-
 if (isLoading) return <Skeleton className="h-20" />;
 if (error) return <div>Error: {error.message}</div>;
-return <ProjectList projects={data} />;
 ```
 
-### Performance Best Practices
-1. **Lazy load routes**: Use React.lazy for route components
-2. **Memoize expensive calculations**: Use useMemo
-3. **Debounce search inputs**: Use debounce utility
-4. **Optimize images**: Use WebP/AVIF format
-5. **Virtualize long lists**: Use react-virtual (when needed)
-6. **Minimize re-renders**: Use React.memo for expensive components
+### Edge Function Auth Pattern
+```typescript
+const token = req.headers.get('Authorization')?.replace('Bearer ', '');
+const { data: { user } } = await supabaseClient.auth.getUser(token);
+// Apply RBAC + company_id RLS from here
+```
+
+### API Response Format
+```typescript
+{ success: boolean; data?: unknown; error?: string; timestamp: string; }
+```
 
 ---
 
-## Supabase Integration
+## Security Rules
 
-### Client Setup
-```typescript
-// src/integrations/supabase/client.ts
-import { createClient } from '@supabase/supabase-js';
+1. **Never hardcode secrets** — always use environment variables (`.env` locally, Cloudflare/Supabase secrets in production)
+2. **Validate all inputs** with Zod schemas
+3. **Sanitize all outputs** with DOMPurify
+4. **All tables use RLS** — rely on `company_id` isolation
+5. **Audit everything** — critical actions must be logged
 
-export const supabase = createClient(
-  process.env.SUPABASE_URL!,
-  process.env.SUPABASE_ANON_KEY!
-);
-```
+---
 
-### Type Generation
-```bash
-# Generate TypeScript types from database schema
-npx supabase gen types typescript --project-id ilhzuvemiuyfuxfegtlv > src/integrations/supabase/types.ts
-```
+## Naming Conventions
 
-### RLS (Row Level Security)
-All tables use RLS policies for security:
-```sql
--- Example RLS policy
-CREATE POLICY "Users can view own company projects"
-ON projects FOR SELECT
-USING (
-  company_id IN (
-    SELECT company_id FROM user_profiles
-    WHERE user_id = auth.uid()
-  )
-);
-```
+| Type | Convention |
+|------|-----------|
+| Components | PascalCase |
+| Hooks | `camelCase` with `use` prefix |
+| Utils / functions | camelCase |
+| Constants | UPPER_SNAKE_CASE |
+| Branch names | `feature/`, `fix/`, `claude/<desc>-<sessionId>` |
 
-### Real-time Subscriptions
-```typescript
-import { useEffect } from 'react';
-
-useEffect(() => {
-  const channel = supabase
-    .channel('projects')
-    .on('postgres_changes', {
-      event: '*',
-      schema: 'public',
-      table: 'projects',
-    }, (payload) => {
-      console.log('Project updated:', payload);
-      queryClient.invalidateQueries(['projects']);
-    })
-    .subscribe();
-
-  return () => {
-    supabase.removeChannel(channel);
-  };
-}, []);
-```
+Commits: [Conventional Commits](https://www.conventionalcommits.org/) (`feat:`, `fix:`, `docs:`, `test:`)
 
 ---
 
 ## Deployment
 
-### Cloudflare Pages
-```bash
-# Build settings
-Build command: npm ci && npm run build
-Build output directory: dist
-Node.js version: 18+
-Environment variables: (set in Cloudflare dashboard)
-```
-
-### Environment Variables
-Key environment variables (set in Cloudflare):
-- `SUPABASE_URL`: Supabase project URL
-- `SUPABASE_ANON_KEY`: Supabase anonymous key
-- `STRIPE_PUBLISHABLE_KEY`: Stripe public key
-- (Edge function secrets managed in Supabase)
-
-### Domain Configuration
-- **Primary**: brikly.pearsonperformance.workers.dev
-- **Custom domain**: brikly.net
-- **SSL/TLS**: Managed by Cloudflare
-- **DNS**: Cloudflare DNS with DNSSEC
-
-### Deployment Pipeline
-1. Push to branch
-2. Create pull request
-3. Automated preview deployment (Cloudflare)
-4. Code review
-5. Merge to main
-6. Automated production deployment
-7. Lighthouse audit (CI)
-
-### Mobile Deployment
-
-**iOS (App Store)**:
-```bash
-npm run mobile:sync
-npm run mobile:open:ios
-# Build in Xcode → Archive → Upload to App Store Connect
-```
-
-**Android (Google Play)**:
-```bash
-npm run mobile:sync
-npm run mobile:open:android
-# Build → Generate Signed Bundle → Upload to Play Console
-```
-
-**Expo (Alternative)**:
-```bash
-npm run expo:build:ios
-npm run expo:build:android
-npm run expo:submit:ios
-npm run expo:submit:android
-```
+- **Production**: Cloudflare Pages (`npm ci && npm run build` → `dist/`)
+- **Domain**: `brikly.net` + `brikly.pearsonperformance.workers.dev`
+- **Node**: 18+, Package manager: npm 10.9.2
+- **Env vars** (Cloudflare): `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `STRIPE_PUBLISHABLE_KEY`
+- **Edge function secrets**: Managed in Supabase dashboard
 
 ---
 
-## Monitoring & Support
+## Known Priorities
 
-### Error Tracking
-- **Sentry**: Real-time error tracking and performance monitoring
-- **Console logging**: Structured logging (development only)
-- **Error boundaries**: React error boundaries for graceful failures
-
-### Analytics
-- **PostHog**: Product analytics and feature flags
-- **Web Vitals**: Core Web Vitals monitoring
-- **Custom events**: User interaction tracking
-
-### Performance Monitoring
-- **Lighthouse CI**: Automated performance audits
-- **Performance budgets**: Enforced via CI
-- **Custom metrics**: Time to Interactive, First Contentful Paint
-
-### Backup & Recovery
-- **Database backups**: Supabase managed (automated daily)
-- **Point-in-time recovery**: Available via Supabase
-- **File storage**: Supabase Storage with redundancy
-- **Configuration**: Version controlled in Git
-- **Disaster recovery**: Multi-region Cloudflare deployment
+1. Accessibility: ~2% of pages implemented — see `docs/ACCESSIBILITY_COMPLIANCE_CHECKLIST.md`
+2. Test coverage: currently ~10%, target 60%+
+3. Offline sync: more robust mobile queue needed
+4. Bundle size: target <800KB gzipped
 
 ---
 
-## Known Issues & Technical Debt
-
-### High Priority
-1. **Accessibility Implementation**: Only ~2% of pages use accessible components (see `docs/ACCESSIBILITY_COMPLIANCE_CHECKLIST.md`)
-2. **Test coverage**: Increase from current ~10% to 60%+
-3. **Offline sync**: More robust offline queue for mobile
-4. **Performance**: Virtual scrolling for large lists
-
-### Medium Priority
-1. **Bundle size**: Further optimization needed (target: <800KB)
-2. **i18n**: Internationalization support
-3. **Dark mode**: Full dark mode parity
-
-### Low Priority
-1. **Desktop app**: Electron wrapper
-2. **Browser extensions**: Chrome/Firefox extensions
-3. **Component storybook**: Interactive documentation
-
----
-
-## Future Roadmap
-
-### Immediate Priorities
-1. **Testing**: Increase test coverage to 60%+
-2. **Performance**: Maintain Lighthouse 90+ score
-3. **Mobile polish**: iOS/Android app store submission
-4. **Documentation**: Complete API documentation
-
-### Medium-term Goals
-1. **Advanced analytics**: AI/ML-powered insights
-2. **Integration marketplace**: Third-party connector ecosystem
-3. **Public API**: Developer platform launch
-
-### Long-term Vision
-1. **Industry specialization**: Vertical-specific features (residential, commercial, industrial)
-2. **Global expansion**: Multi-region deployment, i18n
-3. **Enterprise features**: Advanced compliance, custom integrations
-4. **Marketplace ecosystem**: Plugin architecture, app store
-
----
-
-## Quick Reference
-
-### Common File Paths
-- **Supabase client**: `src/integrations/supabase/client.ts`
-- **Supabase types**: `src/integrations/supabase/types.ts`
-- **Auth context**: `src/contexts/AuthContext.tsx`
-- **Theme context**: `src/contexts/ThemeContext.tsx`
-- **Auth helpers**: `supabase/functions/_shared/auth-helpers.ts`
-- **UI components**: `src/components/ui/`
-- **Utils**: `src/lib/`, `src/utils/`
-- **Types**: `src/types/`
-
-### Common Operations
-```bash
-# Start development
-npm install && npm run dev
-
-# Run tests
-npm run test:run
-npm run test:e2e
-
-# Build for production
-npm run build
-
-# Analyze bundle
-npm run build:analyze
-
-# Run mobile
-npm run mobile:sync && npm run mobile:run:android
-```
-
-### Component Import Pattern
-```typescript
-// UI components
-import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
-
-// Hooks
-import { useAuth } from '@/contexts/AuthContext';
-import { useProjects } from '@/hooks/useProjects';
-
-// Utils
-import { cn } from '@/lib/utils';
-import { formatCurrency } from '@/utils/formatters';
-
-// Types
-import type { Project } from '@/types/project';
-```
-
-### Database Query Pattern
-```typescript
-// Select with RLS (Row Level Security handles access control)
-const { data, error } = await supabase
-  .from('projects')
-  .select('*, company:companies(*)')
-  .eq('status', 'active')
-  .order('created_at', { ascending: false });
-
-// Insert with RLS
-const { data, error } = await supabase
-  .from('projects')
-  .insert({
-    name,
-    budget,
-    company_id,
-  })
-  .select()
-  .single();
-
-// Update with RLS
-const { data, error } = await supabase
-  .from('projects')
-  .update({ status: 'completed' })
-  .eq('id', projectId)
-  .select();
-```
-
----
-
-## Support & Resources
-
-### Documentation
-- **This file**: `CLAUDE.md` - Main reference for AI assistants
-- **README.md**: Quick start guide
-- **Phase documentation**: `PHASE4_COMPLETE_SUMMARY.md` and similar
-- **API docs**: `/docs` directory
-- **Expo docs**: Multiple `EXPO_*.md` files
-- **Mobile docs**: `MOBILE_*.md` files
-
-### External Resources
-- [Supabase Documentation](https://supabase.com/docs)
-- [React 19 Documentation](https://react.dev)
-- [Vite Documentation](https://vitejs.dev)
-- [Tailwind CSS](https://tailwindcss.com)
-- [shadcn/ui](https://ui.shadcn.com)
-- [TanStack Query](https://tanstack.com/query)
-- [Vitest](https://vitest.dev)
-- [Playwright](https://playwright.dev)
-- [Capacitor](https://capacitorjs.com)
-- [Expo](https://docs.expo.dev)
-
-### Contact & Support
-- **Repository**: GitHub (check git remote)
-- **CI/CD**: Cloudflare Pages
-- **Database**: Supabase Dashboard
-- **Error tracking**: Sentry Dashboard
-- **Analytics**: PostHog Dashboard
-
----
-
-**Last Updated**: 2026-01-01
-**Version**: 2.4
-**Platform Status**: ~95% Complete (Phase 5 in progress)
-**Architecture**: Single-tenant with company-level isolation
-**Next Milestone**: Production Launch & App Store Submissions
-
----
-
-*This documentation is maintained for AI assistants (Claude, GPT, etc.) to understand the Brikly platform architecture, conventions, and best practices. Keep this file updated as the platform evolves.*
+*Keep this file concise. For deep reference: `docs/`, `PHASE4_COMPLETE_SUMMARY.md`, AGENTS.md files per directory.*
