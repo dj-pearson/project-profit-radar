@@ -12,6 +12,20 @@ actor AuthService {
         return try await fetchProfile(userId: session.user.id.uuidString)
     }
 
+    /// Sign in with an Apple identity token. `nonce` is the raw (unhashed) nonce
+    /// — Apple receives the SHA-256 hash, the unhashed value is sent to Supabase
+    /// so the backend can verify the signed JWT contains the matching hash.
+    func signInWithApple(idToken: String, nonce: String) async throws -> UserProfile {
+        let session = try await client.auth.signInWithIdToken(
+            credentials: OpenIDConnectCredentials(
+                provider: .apple,
+                idToken: idToken,
+                nonce: nonce
+            )
+        )
+        return try await fetchProfile(userId: session.user.id.uuidString)
+    }
+
     /// Restore session and fetch the user profile.
     func restoreSession() async throws -> UserProfile {
         let session = try await client.auth.session

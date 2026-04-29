@@ -71,6 +71,22 @@ final class AuthViewModel {
         isLoading = false
     }
 
+    /// Exchange an Apple identity token for a Supabase session.
+    func signInWithApple(idToken: String, nonce: String) async {
+        isLoading = true
+        errorMessage = nil
+
+        do {
+            let profile = try await authService.signInWithApple(idToken: idToken, nonce: nonce)
+            userProfile = profile
+            isAuthenticated = true
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+
+        isLoading = false
+    }
+
     /// Sign out.
     func signOut() async {
         do {
