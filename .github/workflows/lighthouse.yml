@@ -27,6 +27,13 @@ jobs:
 
       - name: Build
         run: npx vite build
+        env:
+          # Placeholder values so the bundle has non-empty config and
+          # React can boot during the audit. The audit only measures
+          # render performance — no real Supabase calls are made.
+          VITE_SUPABASE_URL: https://api.brikly.net
+          VITE_SUPABASE_PUBLISHABLE_KEY: lighthouse-audit-placeholder
+          VITE_EDGE_FUNCTIONS_URL: https://functions.brikly.net
 
       - name: Install Lighthouse CI
         run: npm install -g @lhci/cli@0.15.x
