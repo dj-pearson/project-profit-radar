@@ -40,6 +40,8 @@ struct TaskListView: View {
                                 TaskRowView(task: task)
                                     .contentShape(Rectangle())
                                     .onTapGesture { editingTask = task }
+                                    .accessibilityAddTraits(.isButton)
+                                    .accessibilityHint("Edit this task")
                             }
                         }
                         .listStyle(.plain)
@@ -55,6 +57,7 @@ struct TaskListView: View {
                 } label: {
                     Image(systemName: "plus")
                 }
+                .accessibilityLabel("Add task")
             }
         }
         .sheet(isPresented: $showingForm) {

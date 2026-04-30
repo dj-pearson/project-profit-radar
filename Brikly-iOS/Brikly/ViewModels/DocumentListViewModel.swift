@@ -29,4 +29,33 @@ final class DocumentListViewModel {
             return nil
         }
     }
+
+    @discardableResult
+    func uploadDocument(
+        bytes: Data,
+        fileName: String,
+        contentType: String,
+        projectId: String,
+        companyId: String,
+        siteId: String?,
+        uploadedBy: String?
+    ) async -> Bool {
+        errorMessage = nil
+        do {
+            let inserted = try await service.uploadDocument(
+                bytes: bytes,
+                fileName: fileName,
+                contentType: contentType,
+                projectId: projectId,
+                companyId: companyId,
+                siteId: siteId,
+                uploadedBy: uploadedBy
+            )
+            documents.insert(inserted, at: 0)
+            return true
+        } catch {
+            errorMessage = error.localizedDescription
+            return false
+        }
+    }
 }

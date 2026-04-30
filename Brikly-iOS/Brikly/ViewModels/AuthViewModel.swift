@@ -1,5 +1,6 @@
 import Foundation
 import Observation
+import os
 
 @Observable
 @MainActor
@@ -36,6 +37,7 @@ final class AuthViewModel {
             let profile = try await authService.restoreSession()
             userProfile = profile
             isAuthenticated = true
+            CrashReporter.setUser(id: profile.id, email: profile.email)
         } catch {
             // No session – user needs to log in.
             isAuthenticated = false
@@ -61,6 +63,7 @@ final class AuthViewModel {
             )
             userProfile = profile
             isAuthenticated = true
+            CrashReporter.setUser(id: profile.id, email: profile.email)
             // Clear form
             email = ""
             password = ""
@@ -72,14 +75,29 @@ final class AuthViewModel {
     }
 
     /// Exchange an Apple identity token for a Supabase session.
-    func signInWithApple(idToken: String, nonce: String) async {
+    /// `email` / `firstName` / `lastName` are only populated on first sign-in;
+    /// they're forwarded so the user_profiles row can be backfilled.
+    func signInWithApple(
+        idToken: String,
+        nonce: String,
+        email: String? = nil,
+        firstName: String? = nil,
+        lastName: String? = nil
+    ) async {
         isLoading = true
         errorMessage = nil
 
         do {
-            let profile = try await authService.signInWithApple(idToken: idToken, nonce: nonce)
+            let profile = try await authService.signInWithApple(
+                idToken: idToken,
+                nonce: nonce,
+                email: email,
+                firstName: firstName,
+                lastName: lastName
+            )
             userProfile = profile
             isAuthenticated = true
+            CrashReporter.setUser(id: profile.id, email: profile.email)
         } catch {
             errorMessage = error.localizedDescription
         }
@@ -87,14 +105,35 @@ final class AuthViewModel {
         isLoading = false
     }
 
+    /// Send a password-reset email. Returns true on success so the view can
+    /// show a confirmation alert.
+    @discardableResult
+    func sendPasswordReset(email: String) async -> Bool {
+        let trimmed = email.trimmingCharacters(in: .whitespaces).lowercased()
+        guard !trimmed.isEmpty, trimmed.contains("@") else {
+            errorMessage = "Enter a valid email address first."
+            return false
+        }
+
+        do {
+            try await authService.sendPasswordReset(email: trimmed)
+            return true
+        } catch {
+            Loggers.auth.error("Password reset failed: \(error.localizedDescription, privacy: .public)")
+            errorMessage = "Could not send reset email. Please try again."
+            return false
+        }
+    }
+
     /// Sign out.
     func signOut() async {
         do {
             try await authService.signOut()
         } catch {
-            print("Sign-out error: \(error)")
+            Loggers.auth.error("Sign-out error: \(error.localizedDescription, privacy: .public)")
         }
         userProfile = nil
         isAuthenticated = false
+        CrashReporter.setUser(id: nil, email: nil)
     }
 }

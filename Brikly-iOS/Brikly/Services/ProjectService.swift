@@ -1,4 +1,5 @@
 import Foundation
+import os
 import Supabase
 
 actor ProjectService {
@@ -16,7 +17,7 @@ actor ProjectService {
                 .value
             return response
         } catch let decodingError as DecodingError {
-            print("[ProjectService] fetchProjects decoding error: \(DecodingErrorHelper.describe(decodingError))")
+            Loggers.services.error("fetchProjects decoding error: \(DecodingErrorHelper.describe(decodingError), privacy: .public)")
             throw decodingError
         }
     }
@@ -37,7 +38,7 @@ actor ProjectService {
             }
             return project
         } catch let decodingError as DecodingError {
-            print("[ProjectService] fetchProject decoding error: \(DecodingErrorHelper.describe(decodingError))")
+            Loggers.services.error("fetchProject decoding error: \(DecodingErrorHelper.describe(decodingError), privacy: .public)")
             throw decodingError
         }
     }

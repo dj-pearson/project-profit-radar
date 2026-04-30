@@ -1,5 +1,6 @@
 import Foundation
 import Observation
+import os
 import Supabase
 import Realtime
 
@@ -87,7 +88,7 @@ final class JobCostListViewModel {
         do {
             jobCosts = try await service.fetchJobCosts(projectId: pid)
         } catch {
-            print("[JobCostListVM] Realtime reload error: \(error)")
+            Loggers.viewModels.error("[JobCostListVM] Realtime reload error: \(error.localizedDescription, privacy: .public)")
         }
     }
 }

@@ -1,4 +1,5 @@
 import Foundation
+import os
 import Supabase
 
 /// Singleton that owns the Supabase client and shared JSON decoder.
@@ -24,7 +25,7 @@ final class SupabaseService {
         let key = AppConfiguration.supabaseAnonKey
 
         if key.isEmpty {
-            print("[SupabaseService] WARNING: Supabase anon key is empty. API calls will fail.")
+            Loggers.services.fault("Supabase anon key is empty. API calls will fail.")
         }
 
         // Build decoder first so it can be registered with the Supabase client.

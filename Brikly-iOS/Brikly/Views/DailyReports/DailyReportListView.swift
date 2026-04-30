@@ -29,6 +29,8 @@ struct DailyReportListView: View {
                         DailyReportRowView(report: report)
                             .contentShape(Rectangle())
                             .onTapGesture { editingReport = report }
+                            .accessibilityAddTraits(.isButton)
+                            .accessibilityHint("Edit this report")
                     }
                 }
                 .listStyle(.plain)
@@ -42,6 +44,7 @@ struct DailyReportListView: View {
                 } label: {
                     Image(systemName: "plus")
                 }
+                .accessibilityLabel("Add daily report")
             }
         }
         .sheet(isPresented: $showingForm) {

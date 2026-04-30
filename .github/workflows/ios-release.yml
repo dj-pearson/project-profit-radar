@@ -80,6 +80,26 @@ jobs:
 
           echo "Supabase config injected into Info.plist"
 
+      - name: Inject Sentry DSN into Info.plist
+        env:
+          SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
+        run: |
+          INFO_PLIST="${{ env.PROJECT_DIR }}/Brikly/Info.plist"
+
+          if [ -z "$SENTRY_DSN" ]; then
+            # Strip the placeholder so AppConfiguration sees an empty value
+            # and CrashReporter logs "Sentry DSN not configured" instead of trying
+            # to start with the literal "$(SENTRY_DSN)" string.
+            /usr/libexec/PlistBuddy -c "Set :SENTRY_DSN ''" "$INFO_PLIST" 2>/dev/null || true
+            echo "SENTRY_DSN secret not set; crash reporting disabled in this build."
+            exit 0
+          fi
+
+          /usr/libexec/PlistBuddy -c "Add :SENTRY_DSN string '${SENTRY_DSN}'" "$INFO_PLIST" 2>/dev/null || \
+          /usr/libexec/PlistBuddy -c "Set :SENTRY_DSN '${SENTRY_DSN}'" "$INFO_PLIST"
+
+          echo "Sentry DSN injected into Info.plist"
+
       - name: Set App Version
         run: |
           INFO_PLIST="${{ env.PROJECT_DIR }}/Brikly/Info.plist"
@@ -175,16 +195,31 @@ jobs:
         run: |
           cd ${{ env.PROJECT_DIR }}
 
+          # `set -o pipefail` so xcodebuild's exit code propagates through xcpretty.
+          # `xcpretty` is allowed to fail (no xcpretty == raw output, still useful)
+          # but xcodebuild itself MUST succeed.
+          set -o pipefail
           xcodebuild test \
             -project Brikly.xcodeproj \
             -scheme ${{ env.SCHEME }} \
             -destination 'platform=iOS Simulator,name=iPhone 16,OS=latest' \
             -clonedSourcePackagesDirPath ../SPMCache \
             -resultBundlePath build/TestResults.xcresult \
-            | xcpretty || true
+            | xcpretty || {
+              EXIT=${PIPESTATUS[0]}
+              if [ $EXIT -ne 0 ]; then exit $EXIT; fi
+            }
 
-          echo "Tests completed"
-        continue-on-error: true
+          echo "Tests passed"
+
+      - name: Upload test results on failure
+        if: failure() && !inputs.skip_tests
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results-${{ github.sha }}
+          path: ${{ env.PROJECT_DIR }}/build/TestResults.xcresult
+          retention-days: 7
+          if-no-files-found: ignore
 
       # ====================================
       # 6. CODE SIGNING SETUP

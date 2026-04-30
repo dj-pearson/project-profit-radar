@@ -79,10 +79,12 @@ serve(async (req) => {
   }
 
   if (!companyId) {
+    // user_profiles.id is the auth user id (PK references auth.users(id));
+    // there is no separate `user_id` column on this table.
     const { data: profile } = await supabase
       .from("user_profiles")
       .select("company_id")
-      .eq("user_id", user.id)
+      .eq("id", user.id)
       .maybeSingle();
     companyId = (profile?.company_id as string) ?? null;
   }

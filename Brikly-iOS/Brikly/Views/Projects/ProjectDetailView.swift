@@ -38,7 +38,11 @@ struct ProjectDetailView: View {
             .tabItem { Label("Costs", systemImage: "dollarsign.circle.fill") }
             .tag(3)
 
-            DocumentListView(projectId: viewModel.project.id)
+            DocumentListView(
+                projectId: viewModel.project.id,
+                companyId: auth.companyId ?? "",
+                siteId: auth.siteId ?? viewModel.project.siteId
+            )
                 .tabItem { Label("Docs", systemImage: "folder.fill") }
                 .tag(4)
         }

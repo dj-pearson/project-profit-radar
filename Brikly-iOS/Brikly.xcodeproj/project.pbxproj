@@ -60,6 +60,9 @@
 		AA000051 /* Color+Brand.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000051; };
 		AA000052 /* View+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000052; };
 		AA000053 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = AB000053; };
+		AA000054 /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = AB000057; };
+		AA000055 /* OfflineStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000058; };
+		AA000056 /* SyncEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000059; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -119,6 +122,9 @@
 		AB000054 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		AB000055 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		AB000056 /* Brikly.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Brikly.entitlements; sourceTree = "<group>"; };
+		AB000057 /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Localizable.xcstrings; sourceTree = "<group>"; };
+		AB000058 /* OfflineStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OfflineStore.swift; sourceTree = "<group>"; };
+		AB000059 /* SyncEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyncEngine.swift; sourceTree = "<group>"; };
 		AB000099 /* Brikly.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Brikly.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -157,6 +163,7 @@
 				AB000055 /* PrivacyInfo.xcprivacy */,
 				AB000056 /* Brikly.entitlements */,
 				AB000053 /* Assets.xcassets */,
+				AB000057 /* Localizable.xcstrings */,
 				AD000003 /* Configuration */,
 				AD000004 /* Models */,
 				AD000005 /* Services */,
@@ -200,6 +207,8 @@
 				AB000016 /* DailyReportService.swift */,
 				AB000017 /* JobCostService.swift */,
 				AB000018 /* DocumentService.swift */,
+				AB000058 /* OfflineStore.swift */,
+				AB000059 /* SyncEngine.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -358,6 +367,7 @@
 			name = Brikly;
 			packageProductDependencies = (
 				BA000001 /* Supabase */,
+				BA000002 /* Sentry */,
 			);
 			productName = Brikly;
 			productReference = AB000099 /* Brikly.app */;
@@ -389,6 +399,7 @@
 			mainGroup = AD000001;
 			packageReferences = (
 				BB000001 /* XCRemoteSwiftPackageReference "supabase-swift" */,
+				BB000002 /* XCRemoteSwiftPackageReference "sentry-cocoa" */,
 			);
 			productRefGroup = AD000098 /* Products */;
 			projectDirPath = "";
@@ -405,6 +416,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				AA000053 /* Assets.xcassets in Resources */,
+				AA000054 /* Localizable.xcstrings in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -467,6 +479,8 @@
 				AA000050 /* DateFormatting.swift in Sources */,
 				AA000051 /* Color+Brand.swift in Sources */,
 				AA000052 /* View+Extensions.swift in Sources */,
+				AA000055 /* OfflineStore.swift in Sources */,
+				AA000056 /* SyncEngine.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -690,6 +704,14 @@
 				minimumVersion = 2.0.0;
 			};
 		};
+		BB000002 /* XCRemoteSwiftPackageReference "sentry-cocoa" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/getsentry/sentry-cocoa.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 8.36.0;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -697,6 +719,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = BB000001 /* XCRemoteSwiftPackageReference "supabase-swift" */;
 			productName = Supabase;
+		};
+		BA000002 /* Sentry */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = BB000002 /* XCRemoteSwiftPackageReference "sentry-cocoa" */;
+			productName = Sentry;
 		};
 /* End XCSwiftPackageProductDependency section */
 

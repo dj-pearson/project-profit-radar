@@ -10,6 +10,7 @@ final class ProjectListViewModel {
     var searchText = ""
 
     private let service = ProjectService()
+    private let store = OfflineStore.shared
 
     /// Projects filtered by search and grouped by status.
     var groupedProjects: [(status: ProjectStatus, projects: [Project])] {
@@ -31,12 +32,25 @@ final class ProjectListViewModel {
     }
 
     func loadProjects(companyId: String) async {
-        isLoading = true
+        // Cache hydrate first so the list renders even on a cold offline launch.
+        let cached = store.cachedProjects(companyId: companyId)
+        if !cached.isEmpty {
+            projects = cached
+        }
+
+        isLoading = projects.isEmpty
         errorMessage = nil
+
         do {
-            projects = try await service.fetchProjects(companyId: companyId)
+            let fresh = try await service.fetchProjects(companyId: companyId)
+            projects = fresh
+            store.cacheProjects(fresh, companyId: companyId)
         } catch {
-            errorMessage = DecodingErrorHelper.handle(error, context: "ProjectList")
+            // Keep showing cached data on network failure; surface error only
+            // when there's nothing to display.
+            if projects.isEmpty {
+                errorMessage = DecodingErrorHelper.handle(error, context: "ProjectList")
+            }
         }
         isLoading = false
     }

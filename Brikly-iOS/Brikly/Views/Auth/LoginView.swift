@@ -1,6 +1,7 @@
 import SwiftUI
 import AuthenticationServices
 import CryptoKit
+import os
 
 struct LoginView: View {
     @Environment(AuthViewModel.self) private var auth
@@ -8,6 +9,9 @@ struct LoginView: View {
     /// Raw (unhashed) nonce captured at request-creation time and replayed to
     /// Supabase after Apple returns the signed identity token.
     @State private var currentNonce: String?
+
+    @State private var showResetSent = false
+    @State private var isSendingReset = false
 
     var body: some View {
         @Bindable var auth = auth
@@ -20,6 +24,7 @@ struct LoginView: View {
                         Image(systemName: "building.2.fill")
                             .font(.system(size: 56))
                             .foregroundStyle(.accent)
+                            .accessibilityHidden(true)
                         Text("Brikly")
                             .font(.largeTitle.bold())
                         Text("Construction Management")
@@ -27,6 +32,7 @@ struct LoginView: View {
                             .foregroundStyle(.secondary)
                     }
                     .padding(.top, 60)
+                    .accessibilityElement(children: .combine)
 
                     // Email / Password form
                     VStack(spacing: 16) {
@@ -71,6 +77,18 @@ struct LoginView: View {
                             .clipShape(RoundedRectangle(cornerRadius: 10))
                         }
                         .disabled(auth.isLoading)
+
+                        Button {
+                            Task { await sendPasswordReset() }
+                        } label: {
+                            if isSendingReset {
+                                ProgressView()
+                            } else {
+                                Text("Forgot Password?")
+                                    .font(.footnote)
+                            }
+                        }
+                        .disabled(auth.isLoading || isSendingReset)
                     }
                     .padding(.horizontal, 24)
 
@@ -101,6 +119,20 @@ struct LoginView: View {
                 }
             }
             .navigationBarTitleDisplayMode(.inline)
+            .alert("Password reset email sent", isPresented: $showResetSent) {
+                Button("OK", role: .cancel) {}
+            } message: {
+                Text("If an account exists for that email, you'll receive instructions to reset your password shortly.")
+            }
+        }
+    }
+
+    private func sendPasswordReset() async {
+        isSendingReset = true
+        defer { isSendingReset = false }
+        let success = await auth.sendPasswordReset(email: auth.email)
+        if success {
+            showResetSent = true
         }
     }
 
@@ -118,8 +150,28 @@ struct LoginView: View {
                 return
             }
             currentNonce = nil
+
+            // Apple only returns email + fullName on FIRST sign-in for an Apple ID;
+            // capture them so we can backfill the user_profiles row.
+            let email = credential.email
+            let firstName = credential.fullName?.givenName
+            let lastName = credential.fullName?.familyName
+
+            // Apple's anti-fraud signal — `.likelyReal` means Apple believes this
+            // is a real human; `.unknown` is the default for first-time sign-ins
+            // or when the account is too new to score; `.unsupported` is older
+            // devices. Log for now so we can correlate with abuse signals; a
+            // future backend hook can persist this on the user_profiles row.
+            Loggers.auth.info("Apple sign-in realUserStatus: \(realUserStatusLabel(credential.realUserStatus), privacy: .public)")
+
             Task {
-                await auth.signInWithApple(idToken: identityToken, nonce: nonce)
+                await auth.signInWithApple(
+                    idToken: identityToken,
+                    nonce: nonce,
+                    email: email,
+                    firstName: firstName,
+                    lastName: lastName
+                )
             }
         case .failure(let error):
             // The user canceling produces ASAuthorizationError.canceled — silently ignore that.
@@ -128,6 +180,15 @@ struct LoginView: View {
             }
             auth.errorMessage = error.localizedDescription
         }
+    }
+}
+
+private func realUserStatusLabel(_ status: ASUserDetectionStatus) -> String {
+    switch status {
+    case .likelyReal: return "likelyReal"
+    case .unknown: return "unknown"
+    case .unsupported: return "unsupported"
+    @unknown default: return "unrecognized(\(status.rawValue))"
     }
 }
 

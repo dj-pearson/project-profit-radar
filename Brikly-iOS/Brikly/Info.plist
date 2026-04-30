@@ -35,37 +35,13 @@
 	<string>$(SUPABASE_URL)</string>
 	<key>SUPABASE_ANON_KEY</key>
 	<string>$(SUPABASE_ANON_KEY)</string>
-	<!-- Privacy: Permission Usage Descriptions (Required for App Store) -->
-	<key>NSCameraUsageDescription</key>
-	<string>Brikly needs camera access to capture photos for daily reports, document scanning, and project documentation.</string>
-	<key>NSPhotoLibraryUsageDescription</key>
-	<string>Brikly needs photo library access to attach existing photos to daily reports and project documentation.</string>
-	<key>NSPhotoLibraryAddUsageDescription</key>
-	<string>Brikly needs to save photos to your library for project documentation and reports.</string>
-	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>Brikly uses your location for GPS time tracking, job site check-ins, and geofencing to verify on-site attendance.</string>
-	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
-	<string>Brikly uses background location for automatic job site geofencing check-in/check-out and accurate time tracking.</string>
-	<key>NSLocationAlwaysUsageDescription</key>
-	<string>Brikly uses background location for automatic geofencing-based time tracking when you arrive at or leave a job site.</string>
-	<key>NSMicrophoneUsageDescription</key>
-	<string>Brikly needs microphone access for voice notes in daily reports and dictation features.</string>
-	<key>NSContactsUsageDescription</key>
-	<string>Brikly needs contacts access to quickly add crew members, subcontractors, and client contacts.</string>
-	<key>NSCalendarsUsageDescription</key>
-	<string>Brikly needs calendar access to sync project schedules, deadlines, and meeting reminders.</string>
-	<key>NSFaceIDUsageDescription</key>
-	<string>Brikly uses Face ID for secure, quick access to your account without entering your password.</string>
-	<key>NSSpeechRecognitionUsageDescription</key>
-	<string>Brikly uses speech recognition for voice-to-text in daily reports and notes.</string>
-
-	<!-- Background Modes -->
-	<key>UIBackgroundModes</key>
-	<array>
-		<string>location</string>
-		<string>fetch</string>
-		<string>remote-notification</string>
-	</array>
+	<key>SENTRY_DSN</key>
+	<string>$(SENTRY_DSN)</string>
+	<!--
+	Privacy usage descriptions and UIBackgroundModes are intentionally not declared.
+	Add a usage description ONLY when the corresponding feature actually ships;
+	requesting permissions the app does not use causes App Store review rejection.
+	-->
 
 	<!-- App-Bound Domains (required when limitsNavigationsToAppBoundDomains is true) -->
 	<key>WKAppBoundDomains</key>

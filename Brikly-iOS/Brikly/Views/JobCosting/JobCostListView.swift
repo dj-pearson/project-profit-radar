@@ -50,6 +50,7 @@ struct JobCostListView: View {
                 } label: {
                     Image(systemName: "plus")
                 }
+                .accessibilityLabel("Add cost entry")
             }
         }
         .sheet(isPresented: $showingForm) {
@@ -65,6 +66,12 @@ struct JobCostListView: View {
         }
         .task {
             await viewModel.subscribeToRealtime(projectId: projectId)
+        }
+        .onDisappear {
+            // SwiftUI cancels the .task above, but the underlying
+            // RealtimeChannelV2 stays subscribed unless we explicitly tear
+            // it down — leaking server-side resources across navigations.
+            Task { await viewModel.unsubscribeFromRealtime() }
         }
     }
 }
