@@ -2443,6 +2443,793 @@
       "priority": 2,
       "passes": false,
       "notes": ""
+    },
+    {
+      "id": "US-146",
+      "title": "Audit Brikly-iOS native app branding for Brikly consistency",
+      "description": "As a brand owner, I want the SwiftUI native iOS app (Brikly-iOS/) to consistently use the Brikly name throughout — bundle ID, display name, splash screen, login UI, privacy strings, and entitlements — with no legacy BuildDesk/ProfitRadar references. The native app exists alongside the Expo (mobile-app/) and Capacitor (ios/) targets but is the production iOS native app.",
+      "acceptanceCriteria": [
+        "Bundle ID is com.brikly.app",
+        "CFBundleDisplayName is Brikly in Info.plist",
+        "Login splash, project list empty state, and all user-facing strings reference Brikly",
+        "WKAppBoundDomains lists brikly.net domains only",
+        "Entitlements applinks: list brikly.net domains",
+        "grep across Brikly-iOS/ returns zero matches for BuildDesk/ProfitRadar/Build-Desk/profit-radar/builddesk"
+      ],
+      "priority": 1,
+      "passes": true,
+      "notes": "COMPLETED. Confirmed via grep. Configuration verified in Brikly-iOS/Brikly/Info.plist, Brikly.entitlements, AppConfiguration.swift. project.pbxproj has PRODUCT_BUNDLE_IDENTIFIER = com.brikly.app."
+    },
+    {
+      "id": "US-147",
+      "title": "Wire dedicated EdgeFunctions client targeting functions.brikly.net",
+      "description": "As an iOS developer, I want edge function calls from the native app to hit the dedicated edge function container at functions.brikly.net, not the default Supabase routing through api.brikly.net/functions/v1. The Supabase Swift SDK's client.functions hardcodes the supabase URL path, so a parallel client is needed.",
+      "acceptanceCriteria": [
+        "EdgeFunctionsService class exists in Brikly-iOS/Brikly/Services/SupabaseService.swift",
+        "Targets AppConfiguration.edgeFunctionsURL (https://functions.brikly.net)",
+        "Auth bearer token attached per-invoke from the active Supabase session, falling back to anon key when not signed in",
+        "Exposed as SupabaseService.shared.functions",
+        "invoke<T>(_:body:method:as:) decodes JSON responses with snake_case → camelCase conversion and PostgresDateDecoding"
+      ],
+      "priority": 1,
+      "passes": true,
+      "notes": "COMPLETED. EdgeFunctionsService implemented in SupabaseService.swift. Used by SettingsView for account deletion (data-subject-delete)."
+    },
+    {
+      "id": "US-148",
+      "title": "Implement Apple Sign In credential exchange with Supabase",
+      "description": "As an iOS user, I want to sign in with Apple ID and have my session created on the Brikly backend. The LoginView's SignInWithAppleButton was a stub (TODO comment) that printed success but never exchanged the credential with Supabase. Implement nonce generation (raw + SHA-256 hash), pass the identity token to client.auth.signInWithIdToken with provider .apple, and handle the response.",
+      "acceptanceCriteria": [
+        "AppleSignInNonce helper generates URL-safe random nonce and hex SHA-256",
+        "request.nonce is set to the SHA-256 hash; Supabase receives the raw nonce",
+        "ASAuthorizationAppleIDCredential.identityToken decoded as UTF-8 string and passed to OpenIDConnectCredentials(provider: .apple, idToken:, nonce:)",
+        "AuthService.signInWithApple captures email/firstName/lastName from credential (Apple only sends on first sign-in) and backfills user_profiles row when fields are missing",
+        "Cancellation (ASAuthorizationError.canceled) is silently ignored, not shown as an error",
+        "AuthViewModel.signInWithApple drives loading state and surfaces errors"
+      ],
+      "priority": 1,
+      "passes": true,
+      "notes": "COMPLETED. Implemented in LoginView.swift, AuthService.swift, AuthViewModel.swift. Backfill uses snake_case PostgREST patch on user_profiles. Capture realUserStatus and log via Loggers.auth."
+    },
+    {
+      "id": "US-149",
+      "title": "Wire universal link and OAuth callback handler in BriklyApp",
+      "description": "As an iOS user, I want links to brikly.net to open the app safely without crashing, and OAuth callback URLs (if added later) to absorb into the Supabase auth session. Entitlements declare applinks:brikly.net but BriklyApp had no .onOpenURL handler.",
+      "acceptanceCriteria": [
+        ".onOpenURL and .onContinueUserActivity(NSUserActivityTypeBrowsingWeb) attached to root Scene",
+        "URLs containing access_token=, error=, or code= are handed to client.auth.session(from:) for session creation",
+        "Other URLs are logged via Loggers.app.info and ignored without crashing",
+        "Universal link handling does not require active authentication"
+      ],
+      "priority": 1,
+      "passes": true,
+      "notes": "COMPLETED. Implemented in BriklyApp.swift via handleIncoming(url:) static MainActor method."
+    },
+    {
+      "id": "US-150",
+      "title": "Add Forgot Password flow in LoginView",
+      "description": "As an iOS user with an email/password account, I want to reset my password from the app, not have to remember to use the web app. Wire a Forgot Password? link below the Sign In button that calls Supabase auth.resetPasswordForEmail and shows a confirmation alert.",
+      "acceptanceCriteria": [
+        "Forgot Password? button visible below Sign In button",
+        "Validates email field is non-empty and contains @ before calling backend",
+        "Calls AuthService.sendPasswordReset → client.auth.resetPasswordForEmail(email)",
+        "Shows alert on success: 'If an account exists for that email, you'll receive instructions to reset your password shortly.'",
+        "Disabled while loading; shows ProgressView during the call",
+        "Errors logged via Loggers.auth.error and surfaced in errorMessage"
+      ],
+      "priority": 2,
+      "passes": true,
+      "notes": "COMPLETED. Wired in LoginView.swift, AuthViewModel.swift, AuthService.swift."
+    },
+    {
+      "id": "US-151",
+      "title": "Add account deletion flow (Apple guideline 5.1.1(v))",
+      "description": "As an App Store-compliant app, I must provide an in-app account deletion path. Apple guideline 5.1.1(v) requires apps with account creation to support deletion. Add a Settings sheet reachable from the Account menu with a Delete Account button that confirms via alert, calls the existing data-subject-delete edge function (GDPR/CCPA-compliant 30-day grace period), and signs out on success.",
+      "acceptanceCriteria": [
+        "Settings menu item in ProjectListView toolbar opens a SettingsView sheet",
+        "SettingsView shows account info (name, email, role) and Sign Out + Delete Account buttons",
+        "Delete Account button shows destructive confirmation alert",
+        "On confirm, calls SupabaseService.shared.functions.invoke('data-subject-delete')",
+        "Footer text explains: 'Account locked immediately, permanently deleted after 30 days, can cancel via email'",
+        "On success, signs out locally so auth state flip routes back to LoginView",
+        "Errors surfaced inline; deletion isDisabled while in progress"
+      ],
+      "priority": 1,
+      "passes": true,
+      "notes": "COMPLETED. SettingsView lives at the bottom of ProjectListView.swift (only reachable from there). Calls the existing data-subject-delete edge function. Backend column lookup bug also fixed in this round (see US-165)."
+    },
+    {
+      "id": "US-152",
+      "title": "Strip unused privacy strings and entitlements from Brikly-iOS",
+      "description": "As an iOS app submitter, I want Info.plist privacy descriptions and entitlements to reflect only what the app actually uses — Apple rejects apps that request permissions for unimplemented features. Remove camera, photo library, location (always/background), microphone, contacts, calendars, Face ID, speech recognition usage descriptions and UIBackgroundModes since none had real implementations. Remove aps-environment and com.apple.developer.location.push entitlements.",
+      "acceptanceCriteria": [
+        "Info.plist contains zero NSCameraUsageDescription / NSPhotoLibraryUsageDescription / NSLocation*UsageDescription / NSMicrophoneUsageDescription / NSContactsUsageDescription / NSCalendarsUsageDescription / NSFaceIDUsageDescription / NSSpeechRecognitionUsageDescription keys",
+        "UIBackgroundModes key is removed from Info.plist",
+        "aps-environment removed from Brikly.entitlements",
+        "com.apple.developer.location.push removed from Brikly.entitlements",
+        "keychain-access-groups, applinks:, applesignin entitlements remain (in actual use)",
+        "Comment in Info.plist documents that strings should be re-added only when the corresponding feature ships"
+      ],
+      "priority": 1,
+      "passes": true,
+      "notes": "COMPLETED. Info.plist and Brikly.entitlements pruned. PhotosPicker (used for document upload) does NOT require photo library description because it runs in a separate process."
+    },
+    {
+      "id": "US-153",
+      "title": "iPad NavigationSplitView layout for projects",
+      "description": "As an iPad user, I want a proper sidebar + detail layout instead of a stacked iPhone view. Convert ProjectListView from NavigationStack to NavigationSplitView; on iPad regular size class show projects sidebar with detail on the right, on iPhone compact size class collapse automatically to a stack.",
+      "acceptanceCriteria": [
+        "ProjectListView uses NavigationSplitView with sidebar + detail columns",
+        "List(selection: $selectedProject) drives the detail column",
+        "ContentUnavailableView shown in detail when no project selected ('Select a Project' / 'Choose a project from the list')",
+        "Auto-collapses to NavigationStack on iPhone via SwiftUI's compact size class behavior",
+        "Toolbar (Account menu, search) remains attached to the sidebar",
+        "Project tap on iPhone pushes to detail; on iPad fills the detail column"
+      ],
+      "priority": 2,
+      "passes": true,
+      "notes": "COMPLETED. ProjectListView refactored. Search bar uses computed Binding to viewModel.searchText since @Bindable doesn't work cleanly through NavigationSplitView's child."
+    },
+    {
+      "id": "US-154",
+      "title": "Accessibility pass on key Brikly-iOS views",
+      "description": "As a VoiceOver user, I want labels on every interactive element, decorative images hidden, and tap-only rows announced as buttons. Audit Brikly-iOS/ for icon-only buttons (cost / task / report / upload + buttons), tap-gesture rows (TaskListView, DailyReportListView), and decorative logo icons (LoginView, ContentView splash).",
+      "acceptanceCriteria": [
+        "All ToolbarItem buttons that contain only an Image have an .accessibilityLabel",
+        "Rows that use .onTapGesture have .accessibilityAddTraits(.isButton) and .accessibilityHint",
+        "Decorative logo icons (Image(systemName: 'building.2.fill')) marked .accessibilityHidden(true)",
+        "Splash screen elements grouped with .accessibilityElement(children: .combine) and a single label",
+        "Account menu in ProjectListView has accessibilityLabel 'Account menu'"
+      ],
+      "priority": 2,
+      "passes": true,
+      "notes": "COMPLETED. Labels added across LoginView, ContentView, JobCostListView, TaskListView, DailyReportListView, DocumentListView, ProjectListView. Further pass on form fields and detail screens still possible (deferred to US-189)."
+    },
+    {
+      "id": "US-155",
+      "title": "Document upload via PhotosPicker in DocumentListView",
+      "description": "As a field user, I want to upload site photos directly from my iPhone library. Use PhotosUI's PhotosPicker (privacy-preserving — runs in separate process, no permission required) to pick images. DocumentService uploads bytes to Supabase Storage 'documents' bucket and inserts a documents row.",
+      "acceptanceCriteria": [
+        "PhotosPicker plus button in DocumentListView toolbar with .accessibilityLabel('Upload photo')",
+        "DocumentService.uploadDocument writes to Storage path '{companyId}/{projectId}/{timestamp}-{filename}' to keep RLS isolatable",
+        "After upload, inserts a documents row with companyId, projectId, siteId, name, filePath, fileType, fileSize, uploadedBy, isCurrentVersion=true, version=1",
+        "DocumentListViewModel.uploadDocument inserts the new row at index 0 in the local list",
+        "DocumentListView passes companyId/siteId from auth via ProjectDetailView",
+        "ProgressView shown while uploading; isDisabled prevents concurrent uploads",
+        "PhotosPickerItem.loadTransferable(type: Data.self) used to get bytes; UTType.preferredFilenameExtension/preferredMIMEType used to derive filename and content-type"
+      ],
+      "priority": 2,
+      "passes": true,
+      "notes": "COMPLETED. PhotosPicker integration in DocumentListView.swift; DocumentService.uploadDocument and NewDocument DTO in DocumentService.swift; DocumentListViewModel.uploadDocument added."
+    },
+    {
+      "id": "US-156",
+      "title": "Replace print() with category-tagged os.Logger structured logging",
+      "description": "As an operator, I want app logs in the unified system log (Console.app, log stream) so I can filter by subsystem and category and integrate with future remote-log shipping. Replace all print() calls in Brikly-iOS/ with Loggers.x.error/info/debug/fault calls using a shared Loggers enum.",
+      "acceptanceCriteria": [
+        "Loggers enum in DecodingErrorHelper.swift with subsystem 'net.brikly.app' and categories: Auth, Services, ViewModels, EdgeFunctions, App",
+        "Zero bare print() calls remain in Brikly-iOS/Brikly/ Swift sources",
+        "All log call sites import os and use Loggers.<category>.<level>(...)",
+        "Privacy markers used appropriately (.public for non-PII; default for potential PII)"
+      ],
+      "priority": 2,
+      "passes": true,
+      "notes": "COMPLETED. All 9 print() callsites replaced. Files updated: DecodingErrorHelper, SupabaseService, AuthService, ProjectService, AuthViewModel, JobCostListViewModel, BriklyApp."
+    },
+    {
+      "id": "US-157",
+      "title": "CrashReporter facade with Sentry SPM dependency",
+      "description": "As an operator, I want production crash and error reporting via Sentry, with the SDK loaded via Swift Package Manager and configured through a Brikly-side facade so the app builds even without the SDK linked. Add sentry-cocoa as an SPM dependency in project.pbxproj, define a CrashReporter enum that conditionally activates Sentry when available, and inject SENTRY_DSN at build time via the GitHub Actions workflow.",
+      "acceptanceCriteria": [
+        "project.pbxproj has XCRemoteSwiftPackageReference for sentry-cocoa with kind=upToNextMajorVersion, minimumVersion=8.36.0",
+        "XCSwiftPackageProductDependency for the Sentry product wired to the Brikly target's packageProductDependencies",
+        "CrashReporter enum in DecodingErrorHelper.swift with start()/setUser()/capture()/breadcrumb() methods all guarded by #if canImport(Sentry)",
+        "BriklyApp.init() calls CrashReporter.start(); AuthViewModel calls CrashReporter.setUser on signIn/signInWithApple/restoreSession and (nil, nil) on signOut",
+        "SENTRY_DSN read from Info.plist (injected via PlistBuddy in CI); falls back to no-op when DSN is missing or still the literal $(SENTRY_DSN) placeholder",
+        "ios-release.yml has 'Inject Sentry DSN into Info.plist' step that reads secrets.SENTRY_DSN; gracefully no-ops with informative log when secret not configured"
+      ],
+      "priority": 2,
+      "passes": true,
+      "notes": "CODE COMPLETE. Awaiting SENTRY_DSN secret in GitHub repo settings (US-174) and a smoke test crash (US-192) to verify the loop end-to-end."
+    },
+    {
+      "id": "US-158",
+      "title": "Add Localizable.xcstrings String Catalog scaffold",
+      "description": "As a future i18n engineer, I want a String Catalog file in place so xcodebuild auto-extracts every Text() literal into a translatable catalog — the foundation for shipping non-English locales. Create the empty xcstrings file and wire it through project.pbxproj as a Resources build phase entry.",
+      "acceptanceCriteria": [
+        "Brikly-iOS/Brikly/Localizable.xcstrings exists with valid empty stub ({sourceLanguage:'en', strings:{}, version:'1.0'})",
+        "PBXFileReference and PBXBuildFile entries in project.pbxproj for the catalog",
+        "Catalog included in the Brikly group and PBXResourcesBuildPhase files list",
+        "project.pbxproj already had LOCALIZATION_PREFERS_STRING_CATALOGS=YES and SWIFT_EMIT_LOC_STRINGS=YES (verified)",
+        "Next xcodebuild run extracts strings into the catalog automatically"
+      ],
+      "priority": 3,
+      "passes": true,
+      "notes": "SCAFFOLD COMPLETE. Translation work tracked separately (US-185)."
+    },
+    {
+      "id": "US-159",
+      "title": "Build offline-first infrastructure (SwiftData + SyncEngine)",
+      "description": "As a field user with spotty cellular signal, I want the app to keep working offline — read cached data, capture daily reports/tasks, and have writes replay automatically when connectivity returns. Build a SwiftData-backed cache (OfflineStore) and a SyncEngine actor that drains a PendingMutation queue when NetworkMonitor reports reachable.",
+      "acceptanceCriteria": [
+        "Brikly-iOS/Brikly/Services/OfflineStore.swift defines @Model classes LocalProject, LocalDailyReport, PendingMutation; uses JSON blob payload + index fields pattern so server schema can evolve without forcing SwiftData migrations",
+        "OfflineStore is @MainActor singleton owning the ModelContainer; exposes cache/upsert/cached/enqueue/pendingMutations/remove/recordFailure/pendingCount helpers per entity",
+        "Brikly-iOS/Brikly/Services/SyncEngine.swift defines NetworkMonitor (NWPathMonitor wrapper, @Observable) and SyncEngine (drains queue oldest-first, stops on first failure to preserve per-entity ordering, max 5 attempts before give-up)",
+        "BriklyApp.init starts NetworkMonitor and triggers initial drain; .modelContainer(OfflineStore.shared.container) attached to root Scene",
+        "Both new Swift files added to project.pbxproj across PBXBuildFile, PBXFileReference, PBXGroup (Services), and PBXSourcesBuildPhase sections"
+      ],
+      "priority": 1,
+      "passes": true,
+      "notes": "COMPLETED. Pattern documented in memory at memory/ios_offline_pattern.md. Per-entity replay logic only knows daily_report so far; tasks/job_costs/documents to follow (US-170, US-171, US-172)."
+    },
+    {
+      "id": "US-160",
+      "title": "Migrate DailyReportListViewModel to offline-first",
+      "description": "As a field user without signal, I want to view existing daily reports and create new ones without the network. Daily reports are the most write-heavy mobile flow during workdays. Migrate DailyReportListViewModel to read cache-first, refresh from network in the background, and on writes try the network first then fall back to optimistic local + PendingMutation enqueue.",
+      "acceptanceCriteria": [
+        "loadReports hydrates from OfflineStore.cachedDailyReports synchronously, then fires service.fetchReports for refresh",
+        "isLoading true only when cached list is empty (otherwise no spinner)",
+        "Network failure with non-empty cache silently keeps cached data; errorMessage set only when cache also empty",
+        "createReport tries service.createReport when online; on failure or while offline, enqueues a PendingMutation and inserts an optimistic 'local-{UUID}' DailyReport into the list and cache",
+        "updateReport same pattern: live PATCH first; on failure enqueue + apply optimistic merge via applyUpdates(_:to:)",
+        "SyncEngine.replayDailyReport handles both 'create' and 'update' operations and replaces the optimistic row with the server-authoritative one on success"
+      ],
+      "priority": 1,
+      "passes": true,
+      "notes": "COMPLETED. Implemented in DailyReportListViewModel.swift. Real-world test pending US-175 (TestFlight smoke). Pattern is the template for US-170/171/172."
+    },
+    {
+      "id": "US-161",
+      "title": "Migrate ProjectListViewModel to cache-hydrate offline reads",
+      "description": "As a field user, I want my project list to display on a cold launch with no signal. Add SwiftData cache hydration to ProjectListViewModel so the user lands on a populated list even when offline. Project creation isn't a mobile flow yet, so writes don't need offline queueing.",
+      "acceptanceCriteria": [
+        "loadProjects hydrates from OfflineStore.cachedProjects synchronously",
+        "isLoading true only when cached list is empty",
+        "On successful network fetch, replaces in-memory list and calls OfflineStore.cacheProjects to refresh cache",
+        "On network failure with non-empty cache, no error shown; user sees stale-but-usable list",
+        "Search bar continues to work against in-memory list whether the source was cache or network"
+      ],
+      "priority": 2,
+      "passes": true,
+      "notes": "COMPLETED. ProjectListViewModel.swift updated to read-side offline-first."
+    },
+    {
+      "id": "US-162",
+      "title": "Realtime channel cleanup on JobCostListView dismiss",
+      "description": "As a backend operator, I want SwiftUI views to unsubscribe their realtime channels when dismissed so server-side resources don't leak across navigations. The JobCostListView .task subscribed but the underlying RealtimeChannelV2 stayed subscribed when the view disappeared.",
+      "acceptanceCriteria": [
+        "JobCostListView has .onDisappear { Task { await viewModel.unsubscribeFromRealtime() } }",
+        "JobCostListViewModel.unsubscribeFromRealtime calls channel.unsubscribe() and clears the local reference",
+        "No orphaned realtime channels accumulate across multiple project navigations"
+      ],
+      "priority": 2,
+      "passes": true,
+      "notes": "COMPLETED. Fixed in JobCostListView.swift."
+    },
+    {
+      "id": "US-163",
+      "title": "Capture Apple Sign In realUserStatus for fraud signal",
+      "description": "As a backend admin, I want Apple's anti-fraud signal (realUserStatus: likelyReal/unknown/unsupported) logged on every Apple sign-in so we can correlate with abuse. A future US can persist it on user_profiles for analytics.",
+      "acceptanceCriteria": [
+        "credential.realUserStatus read in handleAppleResult",
+        "Logged via Loggers.auth.info('Apple sign-in realUserStatus: <label>') with .public privacy",
+        "realUserStatusLabel(_:) helper handles likelyReal, unknown, unsupported, and @unknown future cases"
+      ],
+      "priority": 3,
+      "passes": true,
+      "notes": "COMPLETED. Logging-only for now; backend persistence is a future task."
+    },
+    {
+      "id": "US-164",
+      "title": "Tighten iOS CI test gating in workflow",
+      "description": "As a release engineer, I want red tests to actually fail the iOS build pipeline. The Run unit tests step in ios-release.yml had continue-on-error: true, masking failures. Remove that, set pipefail so xcodebuild's exit code propagates through xcpretty, and upload the .xcresult bundle as a CI artifact on failure for debugging.",
+      "acceptanceCriteria": [
+        "ios-release.yml test step does NOT have continue-on-error: true",
+        "set -o pipefail in the test script so xcodebuild exit code propagates",
+        "xcpretty is allowed to be missing (raw output is acceptable)",
+        "Failed test runs upload build/TestResults.xcresult as a CI artifact named test-results-${{ github.sha }} (retention 7 days)",
+        "Workflow rerun on a known-failing branch surfaces test failure as a red build"
+      ],
+      "priority": 2,
+      "passes": true,
+      "notes": "COMPLETED. ios-release.yml test step + new artifact upload step."
+    },
+    {
+      "id": "US-165",
+      "title": "Fix data-subject-delete user_profiles column lookup",
+      "description": "As a backend bug fix, the data-subject-delete edge function was looking up the user's company via user_profiles.user_id, but user_profiles' primary key is id (REFERENCES auth.users(id)). The query returned no rows; companyId was always null in the resulting deletion request.",
+      "acceptanceCriteria": [
+        "supabase/functions/data-subject-delete/index.ts uses .eq('id', user.id) when reading from user_profiles",
+        "Comment in the function documents that user_profiles.id IS the auth user id (no separate user_id column)",
+        "Manual test: trigger deletion request from iOS Settings, verify data_subject_requests row has correct company_id"
+      ],
+      "priority": 1,
+      "passes": true,
+      "notes": "COMPLETED. Code fix shipped. Manual end-to-end test deferred to US-175 (TestFlight smoke)."
+    },
+    {
+      "id": "US-166",
+      "title": "Expand Brikly-iOS unit test coverage",
+      "description": "As a developer, I want test coverage beyond the original 5 trivial cases. Add tests for model decoding (UserProfile, Project), PostgresDateDecoding format support, status enum mappings, and budget precedence logic.",
+      "acceptanceCriteria": [
+        "BriklyTests.swift has 12+ test cases (up from 5)",
+        "Tests for UserProfile decoding from minimal/null-heavy JSON fixture",
+        "Tests for Project decoding with null optionals and total_budget vs budget precedence",
+        "Tests for PostgresDateDecoding handling plain ISO, milliseconds, and microseconds formats",
+        "Tests for ProjectStatus.unknown fallback when raw value is unrecognized",
+        "Tests for UserProfile.displayName fallback to email when names are nil"
+      ],
+      "priority": 2,
+      "passes": true,
+      "notes": "COMPLETED. BriklyTests.swift expanded from 5 to 13 cases covering schema decoding edge cases."
+    },
+    {
+      "id": "US-167",
+      "title": "Inject SENTRY_DSN into Info.plist via GitHub Actions workflow",
+      "description": "As a release engineer, I want SENTRY_DSN configured at build time so the production build links to the live Sentry project. Mirror the existing SUPABASE_ANON_KEY injection pattern using PlistBuddy. Gracefully no-op when the secret isn't set so PRs without secrets still build.",
+      "acceptanceCriteria": [
+        "ios-release.yml has 'Inject Sentry DSN into Info.plist' step running after the Supabase injection",
+        "Reads ${{ secrets.SENTRY_DSN }} into env variable",
+        "When secret is empty: clears the placeholder via PlistBuddy Set so AppConfiguration sees an empty value (CrashReporter.start logs disabled), and emits informative echo",
+        "When secret is set: uses PlistBuddy Add (or Set if exists) to write the DSN string"
+      ],
+      "priority": 2,
+      "passes": true,
+      "notes": "COMPLETED. Workflow step added. Activation requires US-174."
+    },
+    {
+      "id": "US-168",
+      "title": "Migrate TaskListViewModel to offline-first",
+      "description": "As a field user updating task status without signal, I want my changes to persist locally and sync when connectivity returns. Migrate TaskListViewModel using the daily-report template: cache-first reads, optimistic-with-enqueue writes, SyncEngine replay for create/update.",
+      "acceptanceCriteria": [
+        "OfflineStore adds LocalTask @Model + cache/upsert/cached helpers",
+        "Schema array in OfflineStore.init includes LocalTask",
+        "SyncEngine.replay(_:) gains a 'task' branch calling private replayTask(_:) that handles create/update against the tasks table",
+        "TaskListViewModel.loadTasks hydrates from cache, then refreshes from network",
+        "TaskListViewModel.createTask and updateTask try network first, fall back to enqueue + optimistic local update",
+        "Filter chips and tap-to-edit continue to work against the in-memory list whether sourced from cache or network",
+        "Local placeholder uses 'local-{UUID}' id; SyncEngine replaces with server id on success"
+      ],
+      "priority": 1,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-169",
+      "title": "Migrate JobCostListViewModel to offline-first",
+      "description": "As a field user logging time and material costs without signal, I want entries to queue locally and replay when connectivity returns. Job costs are append-only by domain so conflicts are minimal. Migrate JobCostListViewModel; preserve realtime subscription behavior when online.",
+      "acceptanceCriteria": [
+        "OfflineStore adds LocalJobCost + LocalCostCode @Models with cache/upsert/cached helpers",
+        "SyncEngine.replay(_:) gains a 'job_cost' branch handling create only (job costs are append-only)",
+        "JobCostListViewModel.loadData hydrates job costs and cost codes from cache, then refreshes",
+        "JobCostListViewModel.createJobCost tries network first, enqueues on failure with optimistic local insert",
+        "Cost code list (read-only reference data) caches on first online fetch; never enqueues",
+        "Realtime subscription only attempts when NetworkMonitor.shared.isOnline is true; gracefully no-ops otherwise"
+      ],
+      "priority": 1,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-170",
+      "title": "Migrate DocumentListViewModel to queued offline uploads",
+      "description": "As a field user taking site photos in low-signal areas, I want photos to queue locally and upload when connectivity returns — including survival across app kills. Use URLSession background configuration so uploads continue even when the app is backgrounded.",
+      "acceptanceCriteria": [
+        "OfflineStore adds LocalDocument @Model and PendingUpload @Model (for binary uploads, separate from PendingMutation since payload is on disk not in DB)",
+        "Photos copied to Library/Caches/PendingUploads/{UUID}.{ext} on pick",
+        "PendingUpload row stores localFileURL, contentType, projectId, companyId, attempts, lastError, queuedAt",
+        "URLSession with .background(withIdentifier: 'net.brikly.app.uploads') configured so OS resumes uploads after app kill",
+        "On upload success: storage upload completes → insert documents row → delete local file → remove PendingUpload row",
+        "DocumentListViewModel hydrates documents list from cache; new uploads inserted optimistically with 'local-' id",
+        "Failed uploads (max 5 attempts) stay queued for manual recovery"
+      ],
+      "priority": 2,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-171",
+      "title": "Configure Apple OIDC provider on self-hosted Supabase",
+      "description": "As a backend admin, I want Apple Sign In tokens validated by Supabase auth on the self-hosted instance. The iOS code (US-148) is complete but signInWithIdToken(provider: .apple, idToken:, nonce:) will fail token validation until Supabase is configured with the Apple Services ID, Team ID, key ID, and private key.",
+      "acceptanceCriteria": [
+        "Apple Developer portal: Services ID created and configured for native Sign in with Apple (Bundle ID com.brikly.app)",
+        "Apple Developer portal: signing key created with Sign in with Apple capability",
+        "Supabase auth config (GOTRUE_EXTERNAL_APPLE_*) populated with the Services ID, Team ID, key ID, and private key",
+        "Manual test: Apple Sign In from a TestFlight build successfully exchanges credential for a Supabase session",
+        "Real-user-status logging (US-163) captured in production logs",
+        "Errors logged with sufficient detail to debug token rejection"
+      ],
+      "priority": 1,
+      "passes": false,
+      "notes": "Backend config only — no iOS code changes. Required before Apple Sign In works in any TestFlight or App Store build."
+    },
+    {
+      "id": "US-172",
+      "title": "Add SENTRY_DSN secret to GitHub Actions",
+      "description": "As a release engineer, I want crash reporting active in production builds. The CrashReporter facade and SDK are wired (US-157, US-167); just need the DSN secret to flip it on.",
+      "acceptanceCriteria": [
+        "Sentry project created (or existing project's DSN obtained)",
+        "GitHub repo settings → Secrets and variables → Actions → SENTRY_DSN added",
+        "Next ios-release.yml run logs 'Sentry DSN injected into Info.plist' (not the disabled message)",
+        "TestFlight build: app launch logs 'Sentry crash reporting enabled.' via Loggers.app.info"
+      ],
+      "priority": 2,
+      "passes": false,
+      "notes": "Operations task — no code change. Verifying smoke test deferred to US-192."
+    },
+    {
+      "id": "US-173",
+      "title": "Verify first TestFlight upload end-to-end",
+      "description": "As a release engineer, I want to confirm the full pipeline works: green CI build → IPA → altool upload → App Store Connect processing → TestFlight install → app launches → daily report flow exercised → account deletion submission. This is the smoke test that validates everything from US-146 through US-170.",
+      "acceptanceCriteria": [
+        "ios-release.yml run completes green on a tagged commit (no continue-on-error masking)",
+        "altool upload returns success; build appears in App Store Connect TestFlight tab within 30 minutes",
+        "Internal tester installs the build, signs in with email/password (or Apple ID once US-171 is done)",
+        "Tester creates a daily report online; row appears server-side",
+        "Tester puts device in airplane mode, creates another daily report; sees optimistic row + offline banner",
+        "Tester re-enables network; OfflineBanner disappears within seconds; queued report posts successfully",
+        "Tester triggers Settings → Delete Account; data_subject_requests row created server-side; user is signed out and locked out"
+      ],
+      "priority": 1,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-174",
+      "title": "Push notifications: APNs registration and token persistence",
+      "description": "As a user, I want to receive push notifications for assignments, mentions, and approvals. Re-add the aps-environment entitlement (stripped in US-152) when push is being implemented. Register for remote notifications, capture the device token, and persist via the push_subscriptions table.",
+      "acceptanceCriteria": [
+        "aps-environment=production added back to Brikly.entitlements",
+        "AppDelegate (or @UIApplicationDelegateAdaptor) registers for remote notifications via UIApplication.shared.registerForRemoteNotifications()",
+        "didRegisterForRemoteNotificationsWithDeviceToken captures the token, hex-encodes it, and POSTs to push_subscriptions edge function with user_id + token + device metadata",
+        "didFailToRegisterForRemoteNotificationsWithError logs via Loggers.app.error",
+        "Permission requested via UNUserNotificationCenter.requestAuthorization on first user-initiated action (NOT app launch)",
+        "Token re-registration on every cold launch (idempotent backend insert)"
+      ],
+      "priority": 2,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-175",
+      "title": "Push notifications: receive and route remote notifications",
+      "description": "As a user, I want tapping a notification to open me to the relevant project / report / task. Implement UNUserNotificationCenterDelegate handlers for foreground presentation and tap routing; deep-link via the existing onOpenURL handler.",
+      "acceptanceCriteria": [
+        "UNUserNotificationCenterDelegate registered in BriklyApp init",
+        "willPresent: foreground notifications show as banners with sound (returns [.banner, .sound])",
+        "didReceive: parses userInfo for a 'route' key (e.g. 'brikly://project/{id}/reports/{reportId}'), routes to onOpenURL",
+        "Categories defined for 'assignment', 'mention', 'approval' with appropriate actions (View, Approve, etc.)",
+        "Notification badging cleared on app foreground",
+        "Test: simulator + push payload via Apple Configurator successfully routes"
+      ],
+      "priority": 2,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-176",
+      "title": "Time tracking screen: clock in/out with project picker",
+      "description": "As a crew member, I want to clock in/out for the day from my iPhone. Build a TimeTrackingView that lists the user's assigned projects, allows clock-in (recording start time + GPS-optional), and clock-out (recording end time, computing duration, attaching notes). Wire to the time_entries table.",
+      "acceptanceCriteria": [
+        "TimeTrackingView reachable from a new tab in ProjectDetailView (Time)",
+        "Service: TimeEntryService with createTimeEntry / updateTimeEntry / fetchTimeEntries / fetchActiveTimeEntry",
+        "ViewModel: TimeEntryViewModel with offline-first read/write following US-159 pattern",
+        "Active timer banner if user has an open clock-in (clock_out_time = null)",
+        "Clock-out button presents a notes field and confirms",
+        "Lists today's entries with hours computed",
+        "When location is granted (separate feature US-177): captures clock_in_latitude/longitude + accuracy"
+      ],
+      "priority": 2,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-177",
+      "title": "GPS clock-in / geofencing time tracking (location feature reintroduction)",
+      "description": "As a crew lead, I want auto clock-in / clock-out when a worker enters or leaves a project's geofence. Reintroduce location entitlements + privacy strings ONLY when this feature ships (per US-152's deferral pattern). Implement CLLocationManager geofencing for monitored project sites.",
+      "acceptanceCriteria": [
+        "NSLocationWhenInUseUsageDescription and NSLocationAlwaysAndWhenInUseUsageDescription re-added to Info.plist with clear explanations of GPS time tracking and geofencing",
+        "UIBackgroundModes includes 'location' (for region monitoring)",
+        "GeofenceService: starts CLLocationManager region monitoring for active projects with siteLatitude/siteLongitude/geofenceRadiusMeters",
+        "On region entry: prompt user via local notification 'Clock in at {project.name}?'",
+        "On region exit: prompt or auto clock-out based on user preference",
+        "Privacy: location data used only for time entry GPS fields; never sent to analytics",
+        "PrivacyInfo.xcprivacy updated to declare precise location collection"
+      ],
+      "priority": 3,
+      "passes": false,
+      "notes": "Sequenced after US-176 (need basic time entry first)."
+    },
+    {
+      "id": "US-178",
+      "title": "Camera capture for daily reports (NSCameraUsageDescription reintroduction)",
+      "description": "As a field user filling out a daily report, I want to capture photos directly with the camera, not just pick from the library. Reintroduce NSCameraUsageDescription + UIImagePickerController/PHPickerViewController camera source ONLY when this feature ships.",
+      "acceptanceCriteria": [
+        "NSCameraUsageDescription re-added to Info.plist explaining capture for site documentation",
+        "Camera button in DailyReportFormView opens system camera",
+        "Captured photos uploaded via DocumentService.uploadDocument with daily_report_id linkage",
+        "Photos shown inline in DailyReportRowView and DailyReportFormView's existing report view",
+        "Offline-aware: queue via PendingUpload (US-170) when offline"
+      ],
+      "priority": 2,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-179",
+      "title": "Voice notes for daily reports (NSMicrophoneUsageDescription reintroduction)",
+      "description": "As a field user, I want to dictate a daily report's narrative fields. Reintroduce NSMicrophoneUsageDescription and NSSpeechRecognitionUsageDescription. Use SFSpeechRecognizer for on-device transcription.",
+      "acceptanceCriteria": [
+        "NSMicrophoneUsageDescription and NSSpeechRecognitionUsageDescription re-added with clear explanations",
+        "Mic button next to multi-line TextField in DailyReportFormView starts/stops dictation",
+        "On-device recognition only (privacy: requiresOnDeviceRecognition = true)",
+        "Transcribed text appended to the field's binding",
+        "Visual feedback: pulsing mic icon while listening; transcription preview"
+      ],
+      "priority": 3,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-180",
+      "title": "User profile editing screen",
+      "description": "As an authenticated user, I want to view and edit my profile (name, phone, avatar) from Settings. Currently SettingsView only displays read-only profile info.",
+      "acceptanceCriteria": [
+        "Edit Profile row in SettingsView opens a ProfileEditView sheet",
+        "Editable fields: first_name, last_name, phone, avatar_url",
+        "Avatar upload via PhotosPicker → Storage 'avatars' bucket; updates user_profiles.avatar_url",
+        "Save button PATCHes user_profiles via service",
+        "AuthViewModel.userProfile updated on save",
+        "Validation: name fields trimmed, phone validated against E.164 format (or simple length check)"
+      ],
+      "priority": 2,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-181",
+      "title": "Sign-up flow in iOS app",
+      "description": "As a new user, I want to create a Brikly account from the iOS app, not be forced to use the web. Currently the iOS app assumes the user already has a web-created account. Add a SignUpView reachable from LoginView.",
+      "acceptanceCriteria": [
+        "Sign Up button below the Sign In button in LoginView",
+        "SignUpView form: email, password (with strength meter), first_name, last_name",
+        "Calls client.auth.signUp(email:password:options:); on success creates a user_profiles row via signup-user edge function",
+        "Email confirmation handling: if Supabase requires confirmation, show 'Check your email' screen; deep-link via universal link (US-149) handles the confirmation token",
+        "Apple Sign In also creates account on first use (already works via US-148)",
+        "Invitation flow: if user has an invite token, accept-team-invite edge function joins the existing company"
+      ],
+      "priority": 2,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-182",
+      "title": "Localize core UI strings to Spanish",
+      "description": "As a Spanish-speaking field worker (a significant portion of construction labor), I want the app in Spanish. Build on US-158's String Catalog scaffold by translating core flows: login, sign-up, project list, daily report form, time tracking, settings.",
+      "acceptanceCriteria": [
+        "Localizable.xcstrings populated with es-MX or es localization for all extracted strings (~80-120 strings expected)",
+        "knownRegions in project.pbxproj includes 'es'",
+        "Test: change device language to Spanish, all visible UI is Spanish",
+        "Plurals handled correctly for counts (e.g. '5 reports' / '5 reportes')",
+        "Date / number / currency formatters honor Locale.current",
+        "Supabase: user_profiles.locale column added (separate backend story); iOS reads/writes it on profile edit"
+      ],
+      "priority": 3,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-183",
+      "title": "First-run onboarding flow / sample project tour",
+      "description": "As a new user, I want a guided tour on first launch so I understand what Brikly does and how to use it. Currently the app drops new users straight into an empty project list.",
+      "acceptanceCriteria": [
+        "OnboardingView shown on first launch (gated by UserDefaults key)",
+        "3-4 paged carousel: 'Track your projects', 'Capture daily reports', 'Log job costs', 'Works offline'",
+        "Each page shows an SF Symbol + headline + body + accent color",
+        "Skip and Continue buttons; final page has 'Get Started' CTA",
+        "Shown only once per fresh install; reset on sign-out optional",
+        "Accessibility: VoiceOver reads the page content; haptics on next/skip"
+      ],
+      "priority": 3,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-184",
+      "title": "Settings: pending mutations queue visibility",
+      "description": "As a field user, I want to see how many of my changes are still queued offline so I have confidence they'll sync. Surface OfflineStore.pendingCount and the oldest queuedAt timestamp in SettingsView.",
+      "acceptanceCriteria": [
+        "Settings shows a 'Sync Status' section with: 'X changes pending sync' and 'Oldest pending: <relative time>' if pendingCount > 0",
+        "When pendingCount == 0, shows green checkmark + 'All changes synced'",
+        "Tapping the row shows a sheet listing pending mutations with entityType, operation, attempts, lastError",
+        "Manual 'Try Now' button calls SyncEngine.shared.drain()",
+        "Mutations that have hit max attempts are visually distinguished (red) with a 'Retry' or 'Discard' option"
+      ],
+      "priority": 3,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-185",
+      "title": "Conflict resolution UI for failed mutations after max attempts",
+      "description": "As a field user, when a queued mutation has failed 5 times (e.g. backend rejected the payload), I need a path to either retry it, edit it, or discard it. Currently those mutations stay queued silently.",
+      "acceptanceCriteria": [
+        "From the pending mutations sheet (US-184), tapping a failed mutation opens a detail view",
+        "Shows queued payload (decoded back to a human form for daily reports / tasks / job costs)",
+        "Three actions: Retry (resets attempt count and triggers drain), Discard (removes from queue), Edit (loads payload into the relevant form view to fix and re-enqueue)",
+        "Edit path: replace the existing PendingMutation rather than creating a duplicate",
+        "Audit log entry for discarded mutations so we can investigate user-reported lost data"
+      ],
+      "priority": 3,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-186",
+      "title": "Mock-injectable services for ViewModel unit tests",
+      "description": "As a test author, I want to write unit tests for AuthViewModel, ProjectListViewModel, etc. without hitting the network. Currently the ViewModels create their own service instances. Refactor to inject services via initializer (default to real impl) so tests can substitute mocks.",
+      "acceptanceCriteria": [
+        "Each ViewModel accepts services in its initializer with default values for production",
+        "Define protocols for AuthService, ProjectService, etc. (existing concrete classes adopt them)",
+        "Mock implementations in BriklyTests/Mocks/ for each protocol",
+        "BriklyTests adds tests for AuthViewModel covering: successful sign-in transitions, error surfacing, sign-out clears profile, restoreSession restores state",
+        "Tests for DailyReportListViewModel covering: cache hydration, network refresh, optimistic offline create/update",
+        "Mock services do not require network or SwiftData persistence (pure in-memory)"
+      ],
+      "priority": 2,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-187",
+      "title": "Snapshot tests for key SwiftUI views",
+      "description": "As a UI engineer, I want regression snapshots for the most-changed views so visual breakage shows up in CI. Use swift-snapshot-testing (point-free) added as an SPM dep.",
+      "acceptanceCriteria": [
+        "swift-snapshot-testing added as SPM dep in project.pbxproj",
+        "Snapshots stored in BriklyTests/__Snapshots__/",
+        "Coverage: LoginView, ProjectListView (empty / loaded / error), ProjectRowView, DailyReportRowView, OfflineBanner",
+        "Snapshots cover light + dark mode, default + accessibility XL Dynamic Type",
+        "CI fails when snapshot diffs without a recorded update",
+        "Doc note in BriklyTests README on how to record new snapshots"
+      ],
+      "priority": 3,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-188",
+      "title": "App Store Connect: screenshots, descriptions, support URL, privacy policy URL",
+      "description": "As a release manager, I want App Store Connect listing complete before App Store submission. This is configuration work, not code, but blocks any public release. Capture iPhone 16 Pro Max + iPhone SE + iPad Pro 13'' screenshots; write App Store description; add support and privacy URLs.",
+      "acceptanceCriteria": [
+        "App Store Connect listing has screenshots for: iPhone 6.7'' (iPhone 16 Pro Max), iPhone 5.5'' (legacy fallback), iPad Pro 12.9'' (legacy) or 13''",
+        "App description, keywords, promotional text, what's new in this version filled in",
+        "Support URL points to brikly.net/support (or equivalent)",
+        "Privacy Policy URL points to brikly.net/privacy",
+        "App category: Business",
+        "Age rating questionnaire completed (likely 4+ for B2B SaaS with no UGC display)"
+      ],
+      "priority": 2,
+      "passes": false,
+      "notes": "Operations task — no code change. Sequenced before US-190 (App Store submission)."
+    },
+    {
+      "id": "US-189",
+      "title": "App Store Connect: privacy nutrition labels finalized",
+      "description": "As a release manager, I want the privacy questionnaire answered accurately. After US-152 stripped unused permissions, Brikly-iOS now collects only: account info (email, name), photos (when uploaded as documents), and analytics-grade product interaction (if Sentry is on). Reflect that in App Store Connect.",
+      "acceptanceCriteria": [
+        "Privacy Practices: Linked to identity = email, name (used for App Functionality only)",
+        "User Content = photos (Linked to identity, for App Functionality)",
+        "Diagnostics = Crash Data (when Sentry is on, US-172) — not Linked to identity, not used for tracking",
+        "PrivacyInfo.xcprivacy in the bundle reflects the same: NSPrivacyAccessedAPITypes for UserDefaults, FileTimestamp, SystemBootTime as needed; no NSPrivacyCollectedDataTypePreciseLocation until US-177 ships",
+        "NSPrivacyTracking = false"
+      ],
+      "priority": 2,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-190",
+      "title": "TestFlight beta tester onboarding (external testing groups)",
+      "description": "As a release manager, I want a controlled beta program before public release. Set up External Testing groups in TestFlight, recruit 5-10 testers (mix of office staff and field crews), and run a 2-week beta with structured feedback.",
+      "acceptanceCriteria": [
+        "External Testing group 'Field Beta' created in App Store Connect",
+        "Build submitted for Beta App Review (first external build requires it)",
+        "Tester invitation email sent with TestFlight link",
+        "Feedback collected via TestFlight built-in feedback OR Sentry breadcrumbs",
+        "Beta exit criteria: zero critical crashes, daily report flow exercised by ≥3 testers offline, ≥5 testers complete a sign-up + profile edit + daily report cycle"
+      ],
+      "priority": 2,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-191",
+      "title": "Backend: idempotency key support for offline-replayed mutations",
+      "description": "As a backend engineer, I want PostgREST inserts/updates from the iOS sync engine to deduplicate on retry. The SyncEngine generates an idempotencyKey per PendingMutation; backend should honor an X-Idempotency-Key header (or the body field) and reject duplicate inserts within a 24h window.",
+      "acceptanceCriteria": [
+        "supabase/migrations/ adds an idempotency_keys table with (key TEXT PRIMARY KEY, table_name TEXT, inserted_id UUID, created_at TIMESTAMPTZ)",
+        "Triggers on daily_reports, tasks, job_costs, time_entries that read X-Idempotency-Key from request.headers and return the existing inserted_id when the key already exists",
+        "iOS SyncEngine and EdgeFunctionsService set X-Idempotency-Key from PendingMutation.idempotencyKey on every retry",
+        "Documents bucket uploads use the same key in the storage path so re-uploads of the same content don't create duplicate file paths"
+      ],
+      "priority": 3,
+      "passes": false,
+      "notes": "Backend story — no iOS code change beyond setting the header (small follow-up)."
+    },
+    {
+      "id": "US-192",
+      "title": "Production crash reporting smoke test",
+      "description": "As an operator, I want to verify Sentry is actually receiving events from production builds before relying on it. Force a test crash in a TestFlight build, confirm it appears in Sentry within 5 minutes with a useful symbolicated stack trace.",
+      "acceptanceCriteria": [
+        "Hidden Settings option (only visible in TestFlight builds via Bundle.main.bundleIdentifier check) labeled 'Force Test Crash'",
+        "Tapping it triggers a fatalError or array out-of-bounds with a clear identifying message",
+        "After app relaunch, Sentry receives the event with: device model, iOS version, app version + build number, full stack trace symbolicated to .swift file:line",
+        "User attribution working: event tagged with the signed-in user id and email",
+        "Breadcrumbs showing the last few sync events / log lines",
+        "Cleanup: hidden setting NOT shipped in App Store builds (bundle id check + DEBUG flag)"
+      ],
+      "priority": 2,
+      "passes": false,
+      "notes": "Sequenced after US-172 (need DSN configured) and US-173 (need TestFlight upload working)."
+    },
+    {
+      "id": "US-193",
+      "title": "Set DEVELOPMENT_TEAM correctly via APPLE_TEAM_ID secret",
+      "description": "As a release engineer, I want CI to set the Xcode signing team automatically from the secret. The current pbxproj has DEVELOPMENT_TEAM = '' for both Debug and Release; ios-release.yml's 'Configure Manual Code Signing' step does sed to inject the team id, but Debug builds (e.g. for tests) might fail without it.",
+      "acceptanceCriteria": [
+        "ios-release.yml's manual signing patch updates BOTH Debug and Release sections in pbxproj (currently uses sed without count)",
+        "Verification step greps the patched pbxproj and confirms two non-empty DEVELOPMENT_TEAM lines",
+        "Test build phase (xcodebuild test ... -destination 'platform=iOS Simulator') does NOT require signing — verify destination uses simulator and no provisioning-profile-required flags",
+        "Works on both feature branches (no team) and main (with team) — feature branches use ENABLE_USER_SCRIPT_SANDBOXING auto signing fallback"
+      ],
+      "priority": 2,
+      "passes": false,
+      "notes": "ios-release.yml already does most of this; this story is verification + edge cases."
+    },
+    {
+      "id": "US-194",
+      "title": "Add Brikly-iOS subcontractor and equipment screens",
+      "description": "As a project manager in the field, I want to view (read-only is fine for v1) the project's subcontractors and equipment list. Currently ProjectDetailView only has Overview / Tasks / Reports / Costs / Docs tabs. Add subcontractors and equipment as additional tabs or a 'More' menu.",
+      "acceptanceCriteria": [
+        "SubcontractorService and EquipmentService for fetch (read-only initially)",
+        "SubcontractorListView and EquipmentListView added to ProjectDetailView",
+        "Both follow the offline-first read pattern (US-159)",
+        "If More than 5 tabs, switch ProjectDetailView's TabView to .sheet-driven menu OR collapse to '+' overflow",
+        "Tapping a subcontractor or equipment item opens a read-only detail sheet"
+      ],
+      "priority": 3,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-195",
+      "title": "Background photo upload via URLSession background config",
+      "description": "As a field user, I want photo uploads I started to complete even if I background or kill the app. Currently PhotosPicker uploads use the default URLSession (suspended on app suspension). Switch to URLSession.background(withIdentifier:) so the OS resumes uploads.",
+      "acceptanceCriteria": [
+        "URLSession with .background(withIdentifier: 'net.brikly.app.uploads') configured at app launch in BriklyApp",
+        "URLSessionDelegate handles didCompleteWithError, didFinishDownloadingTo, urlSessionDidFinishEvents",
+        "DocumentService.uploadDocument switches to use the background URLSession (Supabase storage upload built on URLRequest, not the SDK's default fetch)",
+        "Upload progress visible in DocumentListView (loading row at the top with progress)",
+        "OS-resumed uploads write to OfflineStore on completion via the URLSession delegate even when the app is not foregrounded",
+        "Test: start upload, kill app, observe upload completes and appears in DocumentListView on next launch"
+      ],
+      "priority": 3,
+      "passes": false,
+      "notes": "Depends on US-170 (PendingUpload model). Significant rework of DocumentService since it currently uses the Supabase SDK's storage upload."
+    },
+    {
+      "id": "US-196",
+      "title": "Document the iOS production-readiness phase summary in README",
+      "description": "As a future maintainer, I want a single document in Brikly-iOS/ that explains the architecture (offline pattern, edge function routing, crash reporter facade, accessibility patterns), the file layout, and the open work. The CLAUDE.md is short; AGENTS.md doesn't exist yet for iOS. Write a Brikly-iOS/AGENTS.md that summarizes this PRD's iOS phase.",
+      "acceptanceCriteria": [
+        "Brikly-iOS/AGENTS.md exists with sections: Overview, File Layout, Architecture (offline / auth / edge fns / crash reporting / logging), Conventions, Open Work (links to PRD US- ids), Build & CI",
+        "Code examples referenced via path:line syntax matching the project convention",
+        "Cross-references memory files (memory/ios_native_app.md, memory/ios_offline_pattern.md)",
+        "Updated whenever a major iOS architectural change ships"
+      ],
+      "priority": 3,
+      "passes": false,
+      "notes": ""
     }
   ]
 }

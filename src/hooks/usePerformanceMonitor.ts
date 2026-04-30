@@ -36,10 +36,11 @@ export const usePerformanceMonitor = () => {
             setMetrics(prev => ({ ...prev, lcp: entry.startTime }));
             break;
             
-          case 'first-input':
+          case 'first-input': {
             const fidEntry = entry as PerformanceEventTiming;
             setMetrics(prev => ({ ...prev, fid: fidEntry.processingStart - fidEntry.startTime }));
             break;
+          }
             
           case 'layout-shift': {
             const lsEntry = entry as PerformanceEntry & { hadRecentInput: boolean; value: number };
@@ -50,14 +51,16 @@ export const usePerformanceMonitor = () => {
               }));
             }
             break;
-            
-          case 'navigation':
+          }
+
+          case 'navigation': {
             const navEntry = entry as PerformanceNavigationTiming;
-            setMetrics(prev => ({ 
-              ...prev, 
-              ttfb: navEntry.responseStart - navEntry.requestStart 
+            setMetrics(prev => ({
+              ...prev,
+              ttfb: navEntry.responseStart - navEntry.requestStart
             }));
             break;
+          }
             
           case 'event':
             // INP (Interaction to Next Paint) - experimental

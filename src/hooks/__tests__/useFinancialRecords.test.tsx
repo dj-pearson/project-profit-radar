@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { renderHook, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider, useQuery } from '@tanstack/react-query';
 import React from 'react';
+import { supabase } from '@/integrations/supabase/client';
 
 const { mockFinancialRecords } = vi.hoisted(() => ({
   mockFinancialRecords: [
@@ -85,7 +86,8 @@ const { mockFinancialRecords } = vi.hoisted(() => ({
     created_at: '2026-01-28T11:00:00Z',
     updated_at: '2026-01-30T09:00:00Z',
   },
-];
+  ],
+}));
 
 // Mock supabase
 vi.mock('@/integrations/supabase/client', () => ({

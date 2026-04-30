@@ -26,8 +26,24 @@ const RATE_LIMITS = {
   WEBHOOK: { maxRequests: 200, windowMinutes: 1 },
 } as const;
 
+type MockSupabaseClient = {
+  from: (table: string) => {
+    select: (...args: unknown[]) => {
+      eq: (...args: unknown[]) => {
+        eq: (...args: unknown[]) => {
+          gte: (...args: unknown[]) => Promise<{
+            data: unknown[] | null;
+            error: { code?: string; message?: string } | null;
+          }>;
+        };
+      };
+    };
+    insert: (data: unknown) => Promise<{ error: unknown }>;
+  };
+};
+
 async function checkRateLimit(
-  supabaseClient: { from: (table: string) => { select: (...args: unknown[]) => { eq: (...args: unknown[]) => { eq: (...args: unknown[]) => { gte: (...args: unknown[]) => Promise<{ data: unknown[] | null; error: { code?: string; message?: string } | null }> } } } }; insert: (data: unknown) => Promise<{ error: unknown }> } },
+  supabaseClient: MockSupabaseClient,
   config: RateLimitConfig
 ): Promise<RateLimitResult> {
   const { identifier, endpoint, maxRequests, windowMinutes } = config;

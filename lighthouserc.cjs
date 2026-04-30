@@ -40,7 +40,7 @@ module.exports = {
         'resource-summary:script:size': ['error', { maxNumericValue: 500000 }],
         'resource-summary:stylesheet:size': ['error', { maxNumericValue: 100000 }],
         'resource-summary:image:size': ['error', { maxNumericValue: 300000 }],
-        'resource-summary:font:size': ['error', { maxNumericValue': 150000 }],
+        'resource-summary:font:size': ['error', { maxNumericValue: 150000 }],
 
         // Additional metrics
         'interactive': ['error', { maxNumericValue: 3500 }],
