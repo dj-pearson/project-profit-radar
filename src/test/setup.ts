@@ -1,4 +1,5 @@
 import { expect, afterEach, beforeEach, vi } from 'vitest';
+import { webcrypto as nodeWebcrypto } from 'node:crypto';
 import { cleanup } from '@testing-library/react';
 import * as matchers from '@testing-library/jest-dom/matchers';
 import { toHaveNoA11yViolations } from './accessibility-utils';
@@ -57,48 +58,16 @@ global.ResizeObserver = class ResizeObserver {
 // Mock scrollTo
 window.scrollTo = vi.fn();
 
-// Mock localStorage
-const localStorageMock = (() => {
-  let store: Record<string, string> = {};
-
-  return {
-    getItem: (key: string) => store[key] || null,
-    setItem: (key: string, value: string) => {
-      store[key] = value.toString();
-    },
-    removeItem: (key: string) => {
-      delete store[key];
-    },
-    clear: () => {
-      store = {};
-    },
-  };
-})();
-
-Object.defineProperty(window, 'localStorage', {
-  value: localStorageMock,
-});
-
-// Mock sessionStorage
-const sessionStorageMock = (() => {
-  let store: Record<string, string> = {};
-
-  return {
-    getItem: (key: string) => store[key] || null,
-    setItem: (key: string, value: string) => {
-      store[key] = value.toString();
-    },
-    removeItem: (key: string) => {
-      delete store[key];
-    },
-    clear: () => {
-      store = {};
-    },
-  };
-})();
-
-Object.defineProperty(window, 'sessionStorage', {
-  value: sessionStorageMock,
+// Use happy-dom's native localStorage / sessionStorage — they correctly
+// expose stored keys via `Object.keys(storage)` (which a closure-based
+// stub does not). Just clear between tests so files don't leak state.
+beforeEach(() => {
+  try {
+    window.localStorage.clear();
+    window.sessionStorage.clear();
+  } catch {
+    // Ignore environments without DOM storage.
+  }
 });
 
 // Mock environment variables for tests
@@ -148,9 +117,12 @@ global.fetch = vi.fn().mockImplementation(() =>
   })
 );
 
-// Mock crypto.randomUUID
+// Provide a crypto global that keeps real Web Crypto (subtle) so security
+// code under test (HMAC, SHA-256, etc.) works, while still allowing the
+// test-friendly randomUUID override.
 Object.defineProperty(globalThis, 'crypto', {
   value: {
+    subtle: nodeWebcrypto.subtle,
     randomUUID: () => 'test-uuid-' + Math.random().toString(36).substring(7),
     getRandomValues: (arr: Uint8Array) => {
       for (let i = 0; i < arr.length; i++) {
@@ -159,6 +131,7 @@ Object.defineProperty(globalThis, 'crypto', {
       return arr;
     },
   },
+  configurable: true,
 });
 
 // Mock URL.createObjectURL

@@ -217,8 +217,10 @@ function extractErrorMessage(error: unknown): string {
   if (typeof error === 'object') {
     const obj = error as Record<string, unknown>;
     if (typeof obj.message === 'string') return obj.message;
-    if (typeof obj.error === 'string') return obj.error;
+    // OAuth-style: prefer the human-readable error_description over the
+    // machine-readable error code, since classification scans the text.
     if (typeof obj.error_description === 'string') return obj.error_description;
+    if (typeof obj.error === 'string') return obj.error;
     try {
       return JSON.stringify(error);
     } catch {
@@ -232,21 +234,49 @@ function extractErrorMessage(error: unknown): string {
  * Extracts a PostgreSQL error code from an error object, if present.
  */
 function extractPgCode(error: unknown): string | null {
+  // SQLSTATE codes are 5 chars total: 2-char class + 3-char subclass.
+  // Both segments may include letters (e.g. 28P01, 22P02, 42P01), so we
+  // accept any alphanumeric.
+  const SQLSTATE = /^[A-Z0-9]{5}$/i;
   if (error && typeof error === 'object') {
     const obj = error as Record<string, unknown>;
-    if (typeof obj.code === 'string' && /^\d{5}$/.test(obj.code)) {
-      return obj.code;
+    if (typeof obj.code === 'string' && SQLSTATE.test(obj.code)) {
+      return obj.code.toUpperCase();
     }
     // Supabase wraps PG errors
     if (obj.details && typeof obj.details === 'object') {
       const details = obj.details as Record<string, unknown>;
-      if (typeof details.code === 'string' && /^\d{5}$/.test(details.code)) {
-        return details.code;
+      if (typeof details.code === 'string' && SQLSTATE.test(details.code)) {
+        return details.code.toUpperCase();
       }
     }
   }
   return null;
 }
+
+/**
+ * Extracts a PostgREST error code from an error object, if present.
+ * PostgREST codes are formatted as "PGRST" + 3 digits (e.g. PGRST116).
+ */
+function extractPostgRESTCode(error: unknown): string | null {
+  if (error && typeof error === 'object') {
+    const obj = error as Record<string, unknown>;
+    if (typeof obj.code === 'string' && /^PGRST\d{3,}$/i.test(obj.code)) {
+      return obj.code.toUpperCase();
+    }
+  }
+  return null;
+}
+
+/**
+ * Maps PostgREST error codes to safe categories.
+ * Reference: https://postgrest.org/en/stable/references/errors.html
+ */
+const POSTGREST_CODE_MAP: Record<string, SafeErrorCategory> = {
+  PGRST116: 'not_found',   // 0 or >1 rows when single row requested
+  PGRST301: 'auth_error',  // JWT expired
+  PGRST302: 'auth_error',  // anonymous access disallowed
+};
 
 /**
  * Extracts an HTTP status code from an error object, if present.
@@ -274,6 +304,13 @@ function extractHttpStatus(error: unknown): number | null {
  * 5. Default: 'server_error'
  */
 export function classifyError(error: unknown): SafeErrorCategory {
+  // 1a. PostgREST error codes (e.g. PGRST116) — checked before SQLSTATE
+  // because PostgREST codes wouldn't otherwise be recognized.
+  const postgRESTCode = extractPostgRESTCode(error);
+  if (postgRESTCode && POSTGREST_CODE_MAP[postgRESTCode]) {
+    return POSTGREST_CODE_MAP[postgRESTCode];
+  }
+
   // 1. PostgreSQL error codes
   const pgCode = extractPgCode(error);
   if (pgCode) {

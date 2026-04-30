@@ -9,6 +9,9 @@ export const contactFormSchema = z.object({
   email: z.string()
     .trim()
     .email('Invalid email address')
+    // Reject SQL-meta and other unusual chars that pass Zod's permissive
+    // email check but commonly appear in injection payloads (`'`, `--`).
+    .regex(/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/, 'Invalid email address')
     .max(255, 'Email must be less than 255 characters'),
   phone: z.string()
     .trim()
@@ -65,6 +68,9 @@ export const userProfileSchema = z.object({
   email: z.string()
     .trim()
     .email('Invalid email address')
+    // Reject SQL-meta and other unusual chars that pass Zod's permissive
+    // email check but commonly appear in injection payloads (`'`, `--`).
+    .regex(/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/, 'Invalid email address')
     .max(255, 'Email must be less than 255 characters'),
   phone: z.string()
     .trim()

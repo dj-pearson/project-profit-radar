@@ -1,6 +1,40 @@
 import DOMPurify from 'dompurify';
 
 /**
+ * Defense-in-depth post-pass for DOMPurify output.
+ *
+ * Strips event-handler attributes, form-submission attributes, and
+ * `javascript:`/`vbscript:` URI values that may have slipped past
+ * DOMPurify. This is redundant in a fully-functional browser
+ * environment, but covers cases where the underlying DOM (e.g. some
+ * test runtimes) doesn't expose every API DOMPurify needs to strip
+ * disallowed nodes correctly.
+ */
+function stripDangerousAttributes(html: string): string {
+  // The leading separator class allows whitespace OR `/` so we catch
+  // both `<button onerror=…>` and `<svg/onload=…>` styles.
+  return html
+    // Strip on* event handlers (quoted, single-quoted, or unquoted)
+    .replace(/[\s/]on\w+\s*=\s*(?:"[^"]*"|'[^']*'|[^\s>]+)/gi, '')
+    // Strip formaction / action attributes (used in button-based XSS)
+    .replace(/[\s/](?:formaction|action|background)\s*=\s*(?:"[^"]*"|'[^']*'|[^\s>]+)/gi, '')
+    // Neutralize javascript:/vbscript: URIs in any remaining src/href
+    .replace(
+      /[\s/](?:href|src|xlink:href)\s*=\s*"\s*(?:javascript|vbscript)\s*:[^"]*"/gi,
+      ' href=""',
+    )
+    .replace(
+      /[\s/](?:href|src|xlink:href)\s*=\s*'\s*(?:javascript|vbscript)\s*:[^']*'/gi,
+      " href=''",
+    )
+    // Neutralize bare `javascript:` / `vbscript:` URI text that survived
+    // (e.g. in entity-decoded text content of polyglot payloads). Only
+    // strips when followed by non-whitespace, so prose mentions of
+    // "JavaScript" with a trailing space aren't corrupted.
+    .replace(/(?:javascript|vbscript)\s*:\s*\S+/gi, '');
+}
+
+/**
  * Sanitize HTML content to prevent XSS attacks
  */
 export function sanitizeHtml(
@@ -16,17 +50,20 @@ export function sanitizeHtml(
     ALLOW_DATA_ATTR: false,
   };
 
-  return DOMPurify.sanitize(html, defaultConfig);
+  return stripDangerousAttributes(DOMPurify.sanitize(html, defaultConfig));
 }
 
 /**
  * Strip all HTML tags from a string
  */
 export function stripHtml(html: string): string {
-  return DOMPurify.sanitize(html, {
+  const purified = DOMPurify.sanitize(html, {
     ALLOWED_TAGS: [],
     ALLOWED_ATTR: [],
   });
+  // Safety net: in some environments DOMPurify with an empty allowlist
+  // still leaves inline tags in the output. Strip any that remain.
+  return stripDangerousAttributes(purified).replace(/<[^>]*>/g, '');
 }
 
 /**
@@ -95,6 +132,12 @@ function decodeUrlEncodedXss(input: string): string {
  *
  * Handles raw angle brackets, HTML-entity-encoded payloads,
  * URL-encoded payloads, and double-encoded attack vectors.
+ *
+ * The output is plain text and cannot execute on its own. We additionally
+ * scrub known-dangerous keywords (event handlers, `javascript:` URIs,
+ * `expression(`) as defense-in-depth, since downstream consumers may
+ * concatenate the result back into an HTML context where a surviving
+ * `onerror=` or `javascript:` could re-introduce execution.
  */
 export function sanitizeInput(input: string): string {
   let sanitized = input.trim();
@@ -107,6 +150,22 @@ export function sanitizeInput(input: string): string {
 
   // Remove angle brackets and other dangerous characters
   sanitized = sanitized.replace(/[<>]/g, '');
+
+  // Defense-in-depth: strip known-executable patterns even though the
+  // output is now plain text. Runs in a fixed-point loop in case earlier
+  // stripping reveals further patterns (e.g. `oneronerror=` after one pass).
+  let previous = '';
+  let iterations = 0;
+  while (previous !== sanitized && iterations < 5) {
+    previous = sanitized;
+    sanitized = sanitized
+      .replace(/javascript\s*:/gi, '')
+      .replace(/vbscript\s*:/gi, '')
+      .replace(/data\s*:\s*text\/(?:html|javascript)/gi, '')
+      .replace(/\bon\w+\s*=/gi, '')
+      .replace(/expression\s*\(/gi, '');
+    iterations++;
+  }
 
   // Limit length
   return sanitized.slice(0, 5000);

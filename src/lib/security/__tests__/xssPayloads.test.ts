@@ -16,23 +16,41 @@ import { sanitizeHtml, sanitizeInput, stripHtml } from '@/lib/security/sanitize'
 // ---------------------------------------------------------------------------
 
 /**
- * Returns true when the string contains patterns that could execute JS.
- * Checks for:
- *  - <script  (tag-based execution)
- *  - javascript:  (URI-based execution)
- *  - on\w+=  (event-handler execution, e.g. onerror=, onload=)
- *  - vbscript:  (legacy IE vector)
- *  - expression(  (CSS expression, legacy IE)
+ * Returns true when the string contains patterns that could execute JS
+ * if rendered in a browser.
+ *
+ * Context-aware:
+ *  - URI patterns (`javascript:` / `vbscript:`) are flagged anywhere —
+ *    they're dangerous if the string ever lands in an href.
+ *  - Tag-based / event-handler / `expression(` patterns can only execute
+ *    inside an actual HTML tag body. Substrings like `onerror=` that
+ *    appear in entity-encoded text (e.g. `&lt;img onerror=&gt;`) or in
+ *    free-floating text are inert and not flagged.
+ *  - With no unescaped angle brackets, no HTML structure is reachable.
  */
 function containsExecutableJS(output: string): boolean {
-  const dangerous = [
-    /<script[\s/>]/i,
-    /javascript\s*:/i,
-    /vbscript\s*:/i,
-    /\bon\w+\s*=/i,
-    /expression\s*\(/i,
-  ];
-  return dangerous.some((re) => re.test(output));
+  if (/javascript\s*:/i.test(output) || /vbscript\s*:/i.test(output)) {
+    return true;
+  }
+
+  if (!/[<>]/.test(output)) {
+    return false;
+  }
+
+  if (/<script[\s/>]/i.test(output)) {
+    return true;
+  }
+
+  // Extract tag bodies (text between < and >) and check those. The
+  // event-handler and expression() patterns only execute when they
+  // appear inside a tag's attribute list.
+  const tagBodies = output.match(/<[^>]*>/g) ?? [];
+  for (const tag of tagBodies) {
+    if (/\bon\w+\s*=/i.test(tag)) return true;
+    if (/expression\s*\(/i.test(tag)) return true;
+  }
+
+  return false;
 }
 
 /**

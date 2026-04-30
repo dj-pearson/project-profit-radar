@@ -22,13 +22,13 @@
  * Allowlisted external domains for outbound requests.
  * Only these domains (and their subdomains) are permitted in strict mode.
  */
-export const ALLOWED_EXTERNAL_DOMAINS: readonly string[] = [
+export const ALLOWED_EXTERNAL_DOMAINS: readonly string[] = Object.freeze([
   'stripe.com',
   'supabase.co',
   'quickbooks.api.intuit.com',
   'googleapis.com',
   'graph.microsoft.com',
-] as const;
+]);
 
 /**
  * Known redirect parameter names that could be used for SSRF via open redirect.
@@ -232,6 +232,25 @@ function isPrivateIpv6(ip: string): boolean {
     return isPrivateIpv4(ipv4CompatMatch[1]);
   }
 
+  // IPv4-mapped IPv6 in hex form, both fully-expanded and compact:
+  //   `0:0:0:0:0:ffff:7f00:0001` (full) and `::ffff:7f00:1` (compact)
+  // both map to 127.0.0.1. WHATWG URL canonicalization often produces
+  // the compact form, which the dotted-IPv4 regex above misses.
+  const hexMappedMatch = lower.match(
+    /^(?:0:0:0:0:0:ffff|::ffff):([0-9a-f]{1,4}):([0-9a-f]{1,4})$/,
+  );
+  if (hexMappedMatch) {
+    const high = parseInt(hexMappedMatch[1], 16);
+    const low = parseInt(hexMappedMatch[2], 16);
+    const ipv4 = [
+      (high >> 8) & 0xff,
+      high & 0xff,
+      (low >> 8) & 0xff,
+      low & 0xff,
+    ].join('.');
+    return isPrivateIpv4(ipv4);
+  }
+
   // AWS EC2 IPv6 metadata
   if (lower === 'fd00:ec2::254') return true;
 
@@ -422,6 +441,31 @@ export function validateUrl(
     checkRedirects = true,
   } = options;
 
+  // Step 0: Detect non-standard IP notation BEFORE WHATWG URL parsing
+  // normalizes it. Some runtimes parse `https://2130706433/` and rewrite
+  // the hostname to `127.0.0.1`, which would otherwise hide the bypass
+  // attempt under a generic "private IP" reason.
+  if (typeof url === 'string') {
+    // Block the "fragment trick": `https://allowed.com#@evil.com/` — some
+    // legacy parsers treat the part after `#@` as the actual host. WHATWG
+    // does not, so the validator wouldn't otherwise see anything wrong.
+    if (/^\s*https?:\/\/[^\/]*#@/i.test(url)) {
+      return {
+        valid: false,
+        reason: 'URL contains a suspicious "#@" sequence between host and fragment',
+      };
+    }
+
+    const rawHostMatch = url.match(/^\s*https?:\/\/([^\/\?#]+)/i);
+    if (rawHostMatch) {
+      const rawHost = rawHostMatch[1].split('@').pop() || '';
+      const rawHostname = rawHost.replace(/^\[/, '').replace(/\][^]*$/, '').split(':')[0];
+      if (rawHostname && hasNonStandardIpNotation(rawHostname)) {
+        return { valid: false, reason: 'Non-standard IP notation is not allowed' };
+      }
+    }
+  }
+
   // Step 1: Sanitize and normalize
   let sanitized: string;
   try {
@@ -521,8 +565,10 @@ function isIpAddress(hostname: string): boolean {
     return true;
   }
 
-  // IPv6 without brackets (rare in URLs but possible)
-  if (hostname.includes(':') && /^[0-9a-fA-F:]+$/.test(hostname)) {
+  // IPv6 without brackets (rare in URLs but possible).
+  // The character class includes `.` so IPv4-mapped/compatible forms
+  // (e.g. ::ffff:127.0.0.1) are recognized as IPs.
+  if (hostname.includes(':') && /^[0-9a-fA-F:.]+$/.test(hostname)) {
     return true;
   }
 

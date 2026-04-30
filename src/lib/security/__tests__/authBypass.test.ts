@@ -18,17 +18,30 @@ import type { LoginAttemptResult } from '@/lib/security/loginProtection';
 // ---------------------------------------------------------------------------
 // Supabase mock
 // ---------------------------------------------------------------------------
+//
+// `vi.mock` is hoisted to the top of the file by vitest, so any references
+// inside its factory must come from `vi.hoisted` (also hoisted) rather than
+// regular top-level `const`s — otherwise the factory hits the temporal dead
+// zone and fails with "Cannot access 'X' before initialization".
 
-const mockSelect = vi.fn();
-const mockEq = vi.fn();
-const mockMaybeSingle = vi.fn();
-const mockSingle = vi.fn();
-const mockUpdate = vi.fn();
-const mockUpsert = vi.fn();
-const mockRpc = vi.fn();
+const {
+  mockSelect,
+  mockEq,
+  mockMaybeSingle,
+  mockSingle,
+  mockUpdate,
+  mockUpsert,
+  mockRpc,
+  queryChain,
+} = vi.hoisted(() => {
+  const mockSelect = vi.fn();
+  const mockEq = vi.fn();
+  const mockMaybeSingle = vi.fn();
+  const mockSingle = vi.fn();
+  const mockUpdate = vi.fn();
+  const mockUpsert = vi.fn();
+  const mockRpc = vi.fn();
 
-// Build chainable query builder
-const createChain = () => {
   const chain: Record<string, ReturnType<typeof vi.fn>> = {
     select: mockSelect,
     eq: mockEq,
@@ -37,14 +50,21 @@ const createChain = () => {
     update: mockUpdate,
     upsert: mockUpsert,
   };
-  // Each method returns the chain so calls can be chained
   for (const fn of Object.values(chain)) {
     fn.mockReturnValue(chain);
   }
-  return chain;
-};
 
-const queryChain = createChain();
+  return {
+    mockSelect,
+    mockEq,
+    mockMaybeSingle,
+    mockSingle,
+    mockUpdate,
+    mockUpsert,
+    mockRpc,
+    queryChain: chain,
+  };
+});
 
 vi.mock('@/integrations/supabase/client', () => ({
   supabase: {
