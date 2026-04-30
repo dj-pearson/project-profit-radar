@@ -49,7 +49,12 @@ vi.mock('@/hooks/useDashboardData', () => ({
     data: {
       projects: [],
       recentActivity: [],
-      stats: { totalProjects: 0, totalRevenue: 0, totalExpenses: 0 },
+      kpis: {
+        activeProjects: 0,
+        totalRevenue: 0,
+        totalExpenses: 0,
+        outstandingInvoices: 0,
+      },
     },
     loading: false,
     error: null,

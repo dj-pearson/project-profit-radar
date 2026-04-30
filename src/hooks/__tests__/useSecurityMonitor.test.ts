@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { renderHook, act } from '@testing-library/react';
+import { renderHook, act, waitFor } from '@testing-library/react';
 import {
   useSecurityMonitor,
   logSecurityEvent,
@@ -224,10 +224,13 @@ describe('useSecurityMonitor', () => {
 
   describe('DOM injection detection', () => {
     it('detects injected script elements', async () => {
+      // happy-dom doesn't reliably fire MutationObserver for `<script>`
+      // insertions when fake timers are running, so use real timers and
+      // a real `waitFor` for this specific test.
+      vi.useRealTimers();
       const onEvent = vi.fn();
       renderHook(() => useSecurityMonitor({ onEvent }));
 
-      // MutationObserver callbacks are async — flush microtasks
       const script = document.createElement('script');
       script.textContent = 'alert("xss")';
 
@@ -235,21 +238,22 @@ describe('useSecurityMonitor', () => {
         document.body.appendChild(script);
       });
 
-      // MutationObserver fires asynchronously; flush pending callbacks
-      await vi.advanceTimersByTimeAsync(0);
+      await waitFor(() => {
+        expect(onEvent).toHaveBeenCalledWith(
+          expect.objectContaining({
+            type: 'dom_injection_attempt',
+            details: expect.objectContaining({ isScript: true }),
+          }),
+        );
+      });
 
-      expect(onEvent).toHaveBeenCalledWith(
-        expect.objectContaining({
-          type: 'dom_injection_attempt',
-          details: expect.objectContaining({ isScript: true }),
-        }),
-      );
-
-      // Clean up
       document.body.removeChild(script);
     });
 
     it('detects elements with inline event handlers', async () => {
+      // Same MutationObserver-flush issue as the previous test —
+      // happy-dom's observer doesn't reliably fire under fake timers.
+      vi.useRealTimers();
       const onEvent = vi.fn();
       renderHook(() => useSecurityMonitor({ onEvent }));
 
@@ -260,14 +264,14 @@ describe('useSecurityMonitor', () => {
         document.body.appendChild(div);
       });
 
-      await vi.advanceTimersByTimeAsync(0);
-
-      expect(onEvent).toHaveBeenCalledWith(
-        expect.objectContaining({
-          type: 'dom_injection_attempt',
-          details: expect.objectContaining({ hasInlineHandler: true }),
-        }),
-      );
+      await waitFor(() => {
+        expect(onEvent).toHaveBeenCalledWith(
+          expect.objectContaining({
+            type: 'dom_injection_attempt',
+            details: expect.objectContaining({ hasInlineHandler: true }),
+          }),
+        );
+      });
 
       document.body.removeChild(div);
     });

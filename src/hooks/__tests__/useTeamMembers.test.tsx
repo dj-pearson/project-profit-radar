@@ -4,7 +4,8 @@ import { QueryClient, QueryClientProvider, useQuery } from '@tanstack/react-quer
 import React from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
-const mockTeamMembers = [
+const { mockTeamMembers } = vi.hoisted(() => ({
+  mockTeamMembers: [
   {
     id: 'user-001',
     email: 'mike.johnson@brikly.net',
@@ -65,7 +66,8 @@ const mockTeamMembers = [
     created_at: '2025-07-20T08:00:00Z',
     updated_at: '2026-01-15T16:00:00Z',
   },
-];
+  ],
+}));
 
 // Mock supabase
 vi.mock('@/integrations/supabase/client', () => ({

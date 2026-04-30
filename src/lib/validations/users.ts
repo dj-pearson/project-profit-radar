@@ -11,6 +11,11 @@ export const profileUpdateSchema = z.object({
     .min(1, 'Last name must be at least 1 character')
     .max(50, 'Last name must be less than 50 characters')
     .optional(),
+  full_name: z.string()
+    .trim()
+    .min(2, 'Full name must be at least 2 characters')
+    .max(100, 'Full name must be less than 100 characters')
+    .optional(),
   phone: z.string()
     .regex(/^[\d\s\-\(\)\+]+$/, 'Invalid phone number format')
     .min(10, 'Phone number must be at least 10 digits')

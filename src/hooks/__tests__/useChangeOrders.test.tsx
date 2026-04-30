@@ -4,7 +4,8 @@ import { QueryClient, QueryClientProvider, useQuery } from '@tanstack/react-quer
 import React from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
-const mockChangeOrders = [
+const { mockChangeOrders } = vi.hoisted(() => ({
+  mockChangeOrders: [
   {
     id: 'co-001',
     change_order_number: 'CO-2026-001',
@@ -93,7 +94,8 @@ const mockChangeOrders = [
     created_at: '2026-02-12T10:00:00Z',
     updated_at: '2026-02-12T17:00:00Z',
   },
-];
+  ],
+}));
 
 // Mock supabase
 vi.mock('@/integrations/supabase/client', () => ({

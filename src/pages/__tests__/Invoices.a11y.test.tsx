@@ -101,32 +101,37 @@ describe('Invoices page a11y', () => {
       </QueryClientProvider>
     );
 
+  // The Invoices page renders a loading skeleton until its initial
+  // supabase fetch resolves, so we use `findByRole` (which retries) to
+  // wait for the post-load DOM rather than asserting against the
+  // skeleton state.
+
   it('renders without crashing', () => {
     const { container } = renderPage();
     expect(container).toBeTruthy();
   });
 
-  it('has a main landmark with accessible label', () => {
+  it('has a main landmark with accessible label', async () => {
     renderPage();
-    const main = screen.getByRole('main');
+    const main = await screen.findByRole('main');
     expect(main).toBeInTheDocument();
     expect(main).toHaveAttribute('aria-label');
   });
 
-  it('has a page heading', () => {
+  it('has a page heading', async () => {
     renderPage();
+    await screen.findByRole('main');
     const headings = screen.getAllByRole('heading');
     expect(headings.length).toBeGreaterThan(0);
-    // The page should have at least one heading with invoice-related text
     const hasInvoiceHeading = headings.some(
       (h) => h.textContent && /invoice/i.test(h.textContent)
     );
     expect(hasInvoiceHeading).toBe(true);
   });
 
-  it('renders tab navigation for invoice sections', () => {
+  it('renders tab navigation for invoice sections', async () => {
     renderPage();
-    const tablist = screen.getByRole('tablist');
+    const tablist = await screen.findByRole('tablist');
     expect(tablist).toBeInTheDocument();
     const tabs = screen.getAllByRole('tab');
     expect(tabs.length).toBeGreaterThan(0);
