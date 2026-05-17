@@ -1612,8 +1612,8 @@
         "npm run build completes successfully"
       ],
       "priority": 3,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "COMPLETED. Created src/components/navigation/AutoBreadcrumb.tsx that auto-generates breadcrumbs from route via useLocation, with humanized labels + LABEL_MAP product-name overrides, id-segment detection using page title (entity name) for detail pages, clickable Link segments, responsive truncation + mobile ellipsis collapse, nav aria-label=Breadcrumb. Wired into DashboardLayout (both content branches) passing the page title as currentLabel. Unit tests in src/components/navigation/__tests__/AutoBreadcrumb.test.tsx (5 passing). Build passes."
     },
     {
       "id": "US-095",
@@ -2148,8 +2148,8 @@
         "npm run build and npm run test:run complete successfully"
       ],
       "priority": 1,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "COMPLETED. src/lib/image-compression.ts implements compressImage(file, options) with maxDimension 1920 / quality 0.8 defaults, SVG+GIF and sub-200KB passthrough, canvas re-encode to JPEG, decode timeout fallback. Wired into src/components/ui/image-upload.tsx before storage.upload. Unit tests in src/lib/__tests__/image-compression.test.ts (6 passing). Build + test:run pass."
     },
     {
       "id": "US-127",
@@ -2179,8 +2179,8 @@
         "npm run build completes successfully"
       ],
       "priority": 1,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "COMPLETED. src/pages/FinancialDashboard.tsx TabsList uses flex w-full overflow-x-auto snap-x scrollbar-hide on mobile with min-h-11 (>=44px) shrink-0 snap-start triggers, sm:grid-cols-4 and lg:grid-cols-9 preserved. scrollbar-hide utility defined in src/index.css. Build passes."
     },
     {
       "id": "US-129",

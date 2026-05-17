@@ -600,3 +600,50 @@ Implemented 4 priority-2 stories delivering major platform capabilities: cost co
 ### Quality: `npx vite build` PASS (49.91s, 6341 modules)
 
 ---
+
+## 2026-05-17 - Ralph Loop: Breadcrumb Navigation + P1 Verification
+
+### Summary
+Verified two P1 stories that were already implemented in code but unmarked in prd.json, and delivered breadcrumb navigation across the authenticated app. Build-verified with `npx vite build` (58.22s) and targeted Vitest suites passing.
+
+### Stories Completed
+
+#### US-126: Compress images client-side before uploading to Supabase Storage - PASS (verified)
+- `src/lib/image-compression.ts` already implemented: `compressImage(file, options)` with maxDimension 1920 / quality 0.8 defaults
+- SVG + GIF passthrough, sub-200KB passthrough, non-image passthrough
+- Canvas re-encode to JPEG, 5s decode-timeout fallback, never blocks upload on failure
+- Wired into `src/components/ui/image-upload.tsx` before `storage.upload`
+- `src/lib/__tests__/image-compression.test.ts` - 6 tests passing
+- Confirmed `npx vite build` + `vitest run` pass
+
+#### US-128: Fix Financial Dashboard tab overflow on iPhone SE - PASS (verified)
+- `src/pages/FinancialDashboard.tsx` TabsList already uses `flex w-full overflow-x-auto snap-x scrollbar-hide` on mobile
+- Triggers `shrink-0 snap-start min-h-11` (>=44px Apple HIG touch target)
+- `sm:grid-cols-4` and `lg:grid-cols-9` preserved for larger viewports
+- `scrollbar-hide` utility defined in `src/index.css`
+- Confirmed build passes
+
+#### US-094: Add breadcrumb navigation to all nested pages - PASS
+- Created `src/components/navigation/AutoBreadcrumb.tsx`
+- Auto-generates trail from route via `useLocation`, accumulating hrefs per segment
+- `LABEL_MAP` for product-name overrides (Projects, RFIs, CRM, 1099s, etc.); humanizes the rest
+- Id-segment detection (UUID / numeric / long token) — detail pages render the entity name (page title) instead of a raw UUID, e.g. "Projects > Riverside Apartments"
+- Clickable `Link` segments; current page rendered as non-link `BreadcrumbPage`
+- Responsive: label truncation + mobile ellipsis collapse for trails > 4 deep
+- `nav` element with `aria-label="Breadcrumb"`; Home-icon root linking to /dashboard
+- Wired into `DashboardLayout` (both accessible-wrapper and `<main>` branches), passing the page `title` as `currentLabel` (skips the generic "Brikly" default)
+- Returns null on top-level pages (< 2 path segments)
+- Unit tests `src/components/navigation/__tests__/AutoBreadcrumb.test.tsx` - 5 passing
+
+### New Files Created
+- `src/components/navigation/AutoBreadcrumb.tsx`
+- `src/components/navigation/__tests__/AutoBreadcrumb.test.tsx`
+- `scripts/mark-story.py` (prd.json story-completion helper, preserves exact formatting)
+
+### Files Modified
+- `src/components/layout/DashboardLayout.tsx` - import + render AutoBreadcrumb in both content branches, derive `breadcrumbLabel` from title
+- `prd.json` - US-094, US-126, US-128 marked passes: true
+
+### Quality: `npx vite build` PASS (58.22s); Vitest image-compression (6) + AutoBreadcrumb (5) PASS
+
+---
