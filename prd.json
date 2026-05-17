@@ -1135,8 +1135,8 @@
         "npm run build completes successfully"
       ],
       "priority": 3,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "COMPLETED. src/components/projects/BulkActionsToolbar.tsx renders a sticky floating action bar when 1+ projects selected: Select All/All Selected toggle, '{n} selected of {total} projects' badge, Change Status (dialog), Archive (confirm AlertDialog via showArchiveDialog), Export CSV, and Clear. Per-card Checkbox wired to toggleProjectSelection; selectAllProjects/clearSelection in src/pages/Projects.tsx. onActionComplete reloads list. Build passes."
     },
     {
       "id": "US-067",

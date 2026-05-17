@@ -635,6 +635,15 @@ Verified two P1 stories that were already implemented in code but unmarked in pr
 - Returns null on top-level pages (< 2 path segments)
 - Unit tests `src/components/navigation/__tests__/AutoBreadcrumb.test.tsx` - 5 passing
 
+#### US-066: Add bulk actions toolbar to projects list page - PASS (verified)
+- `src/components/projects/BulkActionsToolbar.tsx` already implemented
+- Sticky floating bar shown only when 1+ projects selected (`if (selectedCount === 0) return null`)
+- Select All / All Selected toggle, `{n} selected` / `of {total} projects` badge
+- Change Status (Dialog), Archive (confirmation AlertDialog via `showArchiveDialog`), Export CSV, Clear
+- Per-card `Checkbox` wired to `toggleProjectSelection`; `selectAllProjects` / `clearSelection` in `src/pages/Projects.tsx`
+- `onActionComplete` reloads the project list after bulk mutations
+- Confirmed build passes
+
 ### New Files Created
 - `src/components/navigation/AutoBreadcrumb.tsx`
 - `src/components/navigation/__tests__/AutoBreadcrumb.test.tsx`
