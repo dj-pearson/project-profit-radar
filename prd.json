@@ -1714,8 +1714,8 @@
         "npm run build completes successfully"
       ],
       "priority": 3,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "COMPLETED. Recent: src/hooks/useRecentItems.ts (localStorage, last 10, dedupe-by-url, same-tab sync) + sidebar Recent group with type icon, name, relative timestamp, navigates on click. Favorites: migration supabase/migrations/20260517000000_create_user_favorites.sql (user_favorites table + RLS, additive/safe), src/hooks/useFavorites.ts (TanStack Query, fails-closed pre-migration), reusable src/components/navigation/FavoriteStar.tsx wired into ProjectDetail header; src/components/navigation/RecentAndFavorites.tsx renders Favorites group ABOVE Recent in SimplifiedSidebar (hidden when collapsed/empty). FavoriteStar is generic for invoices/documents; only projects currently has a standalone detail page (invoices/documents are list/dialog surfaces). Unit tests src/hooks/__tests__/useRecentItems.test.ts (6 passing). Build passes."
     },
     {
       "id": "US-101",

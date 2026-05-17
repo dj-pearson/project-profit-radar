@@ -644,15 +644,33 @@ Verified two P1 stories that were already implemented in code but unmarked in pr
 - `onActionComplete` reloads the project list after bulk mutations
 - Confirmed build passes
 
+#### US-100: Add recently viewed items and quick navigation sidebar - PASS
+- Recent (client-side): `src/hooks/useRecentItems.ts` — localStorage key `brikly-recent-items`, last 10, dedupe-by-url + move-to-front, same-tab sync via custom event, cap enforced
+- Favorites (server-side): migration `supabase/migrations/20260517000000_create_user_favorites.sql` creates `user_favorites` (user-scoped RLS, `UNIQUE(user_id, entity_type, entity_id)`, index) — CREATE TABLE + RLS in one migration is the additive/safe path per CLAUDE.md
+- `src/hooks/useFavorites.ts` — TanStack Query; query fails closed (empty list) pre-migration / on RLS denial so navigation never breaks; toggle mutation with toasts; table cast since types.ts is hand-maintained
+- `src/components/navigation/FavoriteStar.tsx` — reusable star toggle (aria-pressed, fill state); wired into `ProjectDetail` header
+- `src/components/navigation/RecentAndFavorites.tsx` — Favorites group rendered ABOVE Recent in `SimplifiedSidebar`; hidden when sidebar collapsed or both lists empty; Recent items show type icon + name + relative timestamp and navigate on click
+- `ProjectDetail` records itself to Recent on load via effect
+- Note: FavoriteStar is generic for invoices/documents, but only projects has a standalone detail page in the current app (invoices/documents are list/dialog surfaces); star will drop into those when detail pages exist
+- Unit tests `src/hooks/__tests__/useRecentItems.test.ts` - 6 passing
+
 ### New Files Created
 - `src/components/navigation/AutoBreadcrumb.tsx`
 - `src/components/navigation/__tests__/AutoBreadcrumb.test.tsx`
+- `src/components/navigation/FavoriteStar.tsx`
+- `src/components/navigation/RecentAndFavorites.tsx`
+- `src/hooks/useRecentItems.ts`
+- `src/hooks/useFavorites.ts`
+- `src/hooks/__tests__/useRecentItems.test.ts`
+- `supabase/migrations/20260517000000_create_user_favorites.sql`
 - `scripts/mark-story.py` (prd.json story-completion helper, preserves exact formatting)
 
 ### Files Modified
 - `src/components/layout/DashboardLayout.tsx` - import + render AutoBreadcrumb in both content branches, derive `breadcrumbLabel` from title
-- `prd.json` - US-094, US-126, US-128 marked passes: true
+- `src/components/navigation/SimplifiedSidebar.tsx` - render RecentAndFavorites below the main nav group
+- `src/pages/ProjectDetail.tsx` - record-to-Recent effect + FavoriteStar in header
+- `prd.json` - US-066, US-094, US-100, US-126, US-128 marked passes: true
 
-### Quality: `npx vite build` PASS (58.22s); Vitest image-compression (6) + AutoBreadcrumb (5) PASS
+### Quality: `npx vite build` PASS (58.34s); Vitest image-compression (6) + AutoBreadcrumb (5) + useRecentItems (6) PASS
 
 ---

@@ -13,6 +13,8 @@ import { AIProjectInsights } from '@/components/ai/AIProjectInsights';
 import { ProjectSubSidebar } from '@/components/project/ProjectSubSidebar';
 import { ProjectContent } from '@/components/project/ProjectContent';
 import { ProjectHealthBadge } from '@/components/projects/ProjectHealthBadge';
+import { FavoriteStar } from '@/components/navigation/FavoriteStar';
+import { useRecentItems } from '@/hooks/useRecentItems';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { MobileBottomNav } from '@/components/mobile/MobileBottomNav';
 import { SharedElement, sharedId } from '@/components/mobile/SharedElementTransition';
@@ -58,6 +60,7 @@ const projectTabs = [
 const ProjectDetail = () => {
   const { projectId } = useParams<{ projectId: string }>();
   const { userProfile } = useAuth();
+  const { recordItem } = useRecentItems();
   const navigate = useNavigate();
   const location = useLocation();
   const { setNavigationContext } = usePlatform();
@@ -90,6 +93,18 @@ const ProjectDetail = () => {
       loadProject(projectId);
     }
   }, [projectId, userProfile]);
+
+  // Track this project in the sidebar "Recent" list once it has loaded.
+  useEffect(() => {
+    if (project?.id && project?.name) {
+      recordItem({
+        type: 'project',
+        id: project.id,
+        name: project.name,
+        url: `/projects/${project.id}`,
+      });
+    }
+  }, [project?.id, project?.name, recordItem]);
 
   const loadProject = async (projectId: string) => {
     try {
@@ -334,6 +349,12 @@ const ProjectDetail = () => {
               </div>
             </div>
             <div className="flex gap-4">
+              <FavoriteStar
+                entityType="project"
+                entityId={project.id}
+                label={project.name}
+                url={`/projects/${project.id}`}
+              />
               <div className="w-64">
                 <ContextualActions
                   context={{
