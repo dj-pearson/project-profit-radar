@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { RecentAndFavorites } from '@/components/navigation/RecentAndFavorites';
 import {
   Sidebar,
   SidebarContent,
@@ -253,6 +254,8 @@ export const SimplifiedSidebar = () => {
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
+
+        <RecentAndFavorites collapsed={collapsed} />
       </SidebarContent>
       
       <SidebarFooter className="p-4">

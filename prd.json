@@ -1135,8 +1135,8 @@
         "npm run build completes successfully"
       ],
       "priority": 3,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "COMPLETED. src/components/projects/BulkActionsToolbar.tsx renders a sticky floating action bar when 1+ projects selected: Select All/All Selected toggle, '{n} selected of {total} projects' badge, Change Status (dialog), Archive (confirm AlertDialog via showArchiveDialog), Export CSV, and Clear. Per-card Checkbox wired to toggleProjectSelection; selectAllProjects/clearSelection in src/pages/Projects.tsx. onActionComplete reloads list. Build passes."
     },
     {
       "id": "US-067",
@@ -1612,8 +1612,8 @@
         "npm run build completes successfully"
       ],
       "priority": 3,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "COMPLETED. Created src/components/navigation/AutoBreadcrumb.tsx that auto-generates breadcrumbs from route via useLocation, with humanized labels + LABEL_MAP product-name overrides, id-segment detection using page title (entity name) for detail pages, clickable Link segments, responsive truncation + mobile ellipsis collapse, nav aria-label=Breadcrumb. Wired into DashboardLayout (both content branches) passing the page title as currentLabel. Unit tests in src/components/navigation/__tests__/AutoBreadcrumb.test.tsx (5 passing). Build passes."
     },
     {
       "id": "US-095",
@@ -1714,8 +1714,8 @@
         "npm run build completes successfully"
       ],
       "priority": 3,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "COMPLETED. Recent: src/hooks/useRecentItems.ts (localStorage, last 10, dedupe-by-url, same-tab sync) + sidebar Recent group with type icon, name, relative timestamp, navigates on click. Favorites: migration supabase/migrations/20260517000000_create_user_favorites.sql (user_favorites table + RLS, additive/safe), src/hooks/useFavorites.ts (TanStack Query, fails-closed pre-migration), reusable src/components/navigation/FavoriteStar.tsx wired into ProjectDetail header; src/components/navigation/RecentAndFavorites.tsx renders Favorites group ABOVE Recent in SimplifiedSidebar (hidden when collapsed/empty). FavoriteStar is generic for invoices/documents; only projects currently has a standalone detail page (invoices/documents are list/dialog surfaces). Unit tests src/hooks/__tests__/useRecentItems.test.ts (6 passing). Build passes."
     },
     {
       "id": "US-101",
@@ -2148,8 +2148,8 @@
         "npm run build and npm run test:run complete successfully"
       ],
       "priority": 1,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "COMPLETED. src/lib/image-compression.ts implements compressImage(file, options) with maxDimension 1920 / quality 0.8 defaults, SVG+GIF and sub-200KB passthrough, canvas re-encode to JPEG, decode timeout fallback. Wired into src/components/ui/image-upload.tsx before storage.upload. Unit tests in src/lib/__tests__/image-compression.test.ts (6 passing). Build + test:run pass."
     },
     {
       "id": "US-127",
@@ -2179,8 +2179,8 @@
         "npm run build completes successfully"
       ],
       "priority": 1,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "COMPLETED. src/pages/FinancialDashboard.tsx TabsList uses flex w-full overflow-x-auto snap-x scrollbar-hide on mobile with min-h-11 (>=44px) shrink-0 snap-start triggers, sm:grid-cols-4 and lg:grid-cols-9 preserved. scrollbar-hide utility defined in src/index.css. Build passes."
     },
     {
       "id": "US-129",

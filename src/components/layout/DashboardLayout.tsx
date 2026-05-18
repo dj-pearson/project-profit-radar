@@ -13,6 +13,7 @@ import { useImpersonation } from '@/hooks/useImpersonation';
 import TrialStatusBanner from '@/components/TrialStatusBanner';
 import { ImpersonationBanner } from '@/components/admin/ImpersonationBanner';
 import { SkipLinks } from '@/components/accessibility/SkipLinks';
+import { AutoBreadcrumb } from '@/components/navigation/AutoBreadcrumb';
 import { Home, Building2, DollarSign, Users, Settings, Search } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { RealtimeNotificationCenter } from '@/components/realtime/RealtimeNotificationCenter';
@@ -45,6 +46,11 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
     await signOut();
     navigate('/auth');
   };
+
+  // Detail pages pass the entity name as `title`; the generic default
+  // ("Brikly") and empty titles shouldn't override the route-derived label.
+  const breadcrumbLabel =
+    title && title !== 'Brikly' ? title : undefined;
 
   // Mobile bottom navigation items
   const bottomNavItems = [
@@ -147,6 +153,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
               )}
             >
               <ResponsiveContainer className="py-4 md:py-6" padding="sm">
+                <AutoBreadcrumb currentLabel={breadcrumbLabel} />
                 {showTrialBanner && <TrialStatusBanner />}
                 {children}
               </ResponsiveContainer>
@@ -163,6 +170,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
               tabIndex={-1}
             >
               <ResponsiveContainer className="py-4 md:py-6" padding="sm">
+                <AutoBreadcrumb currentLabel={breadcrumbLabel} />
                 {showTrialBanner && <TrialStatusBanner />}
                 {children}
               </ResponsiveContainer>
