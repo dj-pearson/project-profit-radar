@@ -725,3 +725,20 @@ Verified two P1 stories that were already implemented in code but unmarked in pr
 ### Quality: `npx vite build` PASS (exit 0). Native Swift not compiled (no Xcode toolchain on the Linux CI host) — offline-first changes mirror the verified DailyReport template exactly (same cache/enqueue/replay/optimistic shapes); `CrashReporter.breadcrumb(_:category:)` signature confirmed.
 
 ---
+
+## Session (cont.): List-view sorting + bulk actions
+
+#### US-088: Sortable columns and bulk actions on invoices list - PASS
+- `src/components/invoices/InvoiceList.tsx`:
+  - Sortable headers (Invoice #, Client, Status, Due Date, Amount) wired through `AccessibleTable`'s `onSort`/`sortColumn`/`sortDirection`; sort applied to `displayInvoices` (useMemo) so both the standard and the virtualized (>50) render paths sort identically. Active-column `ChevronUp/Down` indicator + `aria-sort`; cycle asc → desc → none.
+  - Row checkboxes + select-all (indeterminate) implemented as a leading `select` column (renders in both paths) rather than `AccessibleTable`'s native `selectable`, so the virtualized path gets selection too.
+  - Bulk actions toolbar (visible when ≥1 selected): **Mark as Sent**, **Mark as Paid** (`supabase.from('invoices').update({status}).in('id', ids)`), **Export Selected** (CSV blob download), **Delete Selected** (AlertDialog confirm → `.delete().in('id', ids)`). Toasts + `onInvoiceUpdate()` reload; selection cleared after each action.
+- `src/pages/Invoices.tsx`: kept the existing status filter; added **invoice-date** and **due-date** range filters (persisted via `usePersistedState`, inclusive lexical `yyyy-MM-dd` compare, open-ended bounds) + a "Clear date filters" button.
+- Quality: `npx vite build` PASS (exit 0). (node_modules was wiped mid-session by the ephemeral env; `npm ci` restored it before the verifying build.)
+
+### Files Modified
+- `src/components/invoices/InvoiceList.tsx` — sorting, selection, bulk toolbar
+- `src/pages/Invoices.tsx` — date-range filters
+- `prd.json` — US-088 marked passes: true
+
+---

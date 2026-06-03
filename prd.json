@@ -1511,8 +1511,8 @@
         "npm run build completes successfully"
       ],
       "priority": 3,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "COMPLETED. InvoiceList.tsx: sortable headers (invoice #, client, status, due date, amount) via AccessibleTable onSort + a sort-cycle (asc->desc->none) mirrored into the virtualized >50 path; active-column ChevronUp/Down indicator + aria-sort. Row checkboxes + select-all header checkbox (indeterminate) implemented as a leading 'select' column so selection works in BOTH the standard and virtualized render paths. Bulk toolbar (shown when >=1 selected): Mark as Sent / Mark as Paid (supabase update status .in('id',ids)), Export Selected (CSV download), Delete Selected (AlertDialog confirm -> supabase delete). Invoices.tsx: existing status filter retained; added invoice-date and due-date range filters (persisted, inclusive, open-ended bounds) + Clear. npx vite build PASS."
     },
     {
       "id": "US-089",

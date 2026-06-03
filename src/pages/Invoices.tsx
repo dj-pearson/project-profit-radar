@@ -25,6 +25,10 @@ const Invoices: React.FC = () => {
   const [showInvoiceGenerator, setShowInvoiceGenerator] = useState(false);
   const [searchTerm, setSearchTerm] = usePersistedState<string>('invoices-search', '');
   const [statusFilter, setStatusFilter] = usePersistedState<string>('invoices-status-filter', 'all');
+  const [invoiceDateFrom, setInvoiceDateFrom] = usePersistedState<string>('invoices-date-from', '');
+  const [invoiceDateTo, setInvoiceDateTo] = usePersistedState<string>('invoices-date-to', '');
+  const [dueDateFrom, setDueDateFrom] = usePersistedState<string>('invoices-due-from', '');
+  const [dueDateTo, setDueDateTo] = usePersistedState<string>('invoices-due-to', '');
   const [invoices, setInvoices] = useState([]);
   const [loading, setLoading] = useState(true);
   const { user, userProfile } = useAuth();
@@ -74,12 +78,34 @@ const Invoices: React.FC = () => {
     });
   };
 
+  // Inclusive range check; empty bounds are treated as open-ended.
+  const inDateRange = (value: string | undefined, from: string, to: string) => {
+    if (!from && !to) return true;
+    if (!value) return false;
+    const day = value.slice(0, 10); // normalize to yyyy-MM-dd for lexical compare
+    if (from && day < from) return false;
+    if (to && day > to) return false;
+    return true;
+  };
+
   const filteredInvoices = invoices.filter(invoice => {
     const matchesSearch = invoice.client_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          invoice.invoice_number.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = statusFilter === 'all' || invoice.status === statusFilter;
-    return matchesSearch && matchesStatus;
+    const invoiceDate = invoice.issue_date || invoice.invoice_date || invoice.created_at;
+    const matchesInvoiceDate = inDateRange(invoiceDate, invoiceDateFrom, invoiceDateTo);
+    const matchesDueDate = inDateRange(invoice.due_date, dueDateFrom, dueDateTo);
+    return matchesSearch && matchesStatus && matchesInvoiceDate && matchesDueDate;
   });
+
+  const clearDateFilters = () => {
+    setInvoiceDateFrom('');
+    setInvoiceDateTo('');
+    setDueDateFrom('');
+    setDueDateTo('');
+  };
+
+  const hasDateFilters = invoiceDateFrom || invoiceDateTo || dueDateFrom || dueDateTo;
 
   if (showInvoiceGenerator) {
     return (
@@ -198,6 +224,53 @@ const Invoices: React.FC = () => {
                   </SelectContent>
                 </Select>
               </div>
+
+              {/* Date range filters: invoice date and due date */}
+              <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <fieldset className="space-y-2">
+                  <legend className="text-sm font-medium text-muted-foreground">Invoice date</legend>
+                  <div className="flex items-center gap-2">
+                    <Input
+                      type="date"
+                      value={invoiceDateFrom}
+                      onChange={(e) => setInvoiceDateFrom(e.target.value)}
+                      aria-label="Invoice date from"
+                    />
+                    <span className="text-muted-foreground" aria-hidden="true">–</span>
+                    <Input
+                      type="date"
+                      value={invoiceDateTo}
+                      onChange={(e) => setInvoiceDateTo(e.target.value)}
+                      aria-label="Invoice date to"
+                    />
+                  </div>
+                </fieldset>
+                <fieldset className="space-y-2">
+                  <legend className="text-sm font-medium text-muted-foreground">Due date</legend>
+                  <div className="flex items-center gap-2">
+                    <Input
+                      type="date"
+                      value={dueDateFrom}
+                      onChange={(e) => setDueDateFrom(e.target.value)}
+                      aria-label="Due date from"
+                    />
+                    <span className="text-muted-foreground" aria-hidden="true">–</span>
+                    <Input
+                      type="date"
+                      value={dueDateTo}
+                      onChange={(e) => setDueDateTo(e.target.value)}
+                      aria-label="Due date to"
+                    />
+                  </div>
+                </fieldset>
+              </div>
+              {hasDateFilters && (
+                <div className="mt-2">
+                  <Button variant="ghost" size="sm" onClick={clearDateFilters}>
+                    Clear date filters
+                  </Button>
+                </div>
+              )}
             </CardContent>
           </Card>
 
