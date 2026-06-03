@@ -99,7 +99,7 @@ export function ExpenseTracker({ projectId }: { projectId?: string }) {
       const { data, error } = await supabase
         .from('expense_categories')
         .select('id, name')
-        .eq('company_id', userProfile!.company_id)
+        .eq('company_id', userProfile!.company_id!)
         .eq('is_active', true)
         .order('name');
       if (error) throw error;
@@ -114,7 +114,7 @@ export function ExpenseTracker({ projectId }: { projectId?: string }) {
       const { data, error } = await supabase
         .from('projects')
         .select('id, name')
-        .eq('company_id', userProfile!.company_id)
+        .eq('company_id', userProfile!.company_id!)
         .order('name');
       if (error) throw error;
       return (data ?? []) as { id: string; name: string }[];

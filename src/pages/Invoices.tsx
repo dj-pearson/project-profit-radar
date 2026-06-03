@@ -29,7 +29,7 @@ const Invoices: React.FC = () => {
   const [invoiceDateTo, setInvoiceDateTo] = usePersistedState<string>('invoices-date-to', '');
   const [dueDateFrom, setDueDateFrom] = usePersistedState<string>('invoices-due-from', '');
   const [dueDateTo, setDueDateTo] = usePersistedState<string>('invoices-due-to', '');
-  const [invoices, setInvoices] = useState([]);
+  const [invoices, setInvoices] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const { user, userProfile } = useAuth();
   const { toast } = useToast();

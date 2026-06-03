@@ -784,3 +784,12 @@ Verified two P1 stories that were already implemented in code but unmarked in pr
 - `prd.json` — US-090, US-091 marked passes: true
 
 ---
+
+#### Follow-up: type-cleanup for the list-view stories (US-088/089)
+- Confirmed `npm run build` = `generate-sitemap && vite build && …` — it does **NOT** run `tsc`, so type errors are not a build gate. The codebase carries many pre-existing strict-mode TS errors (e.g. `src/components/financial/ExpenseTracker.tsx`, unused-import TS6133s, `useState([])`→`never[]`). The real gate is `vite build` (esbuild), which passes for all stories this session.
+- Still cleaned up the few errors my edits touched:
+  - `src/pages/Invoices.tsx`: typed `const [invoices, setInvoices] = useState<any[]>([])` — clears the whole `never[]` cascade (pre-existing `client_name/invoice_number/status` accesses + the new `issue_date/invoice_date/due_date` date-filter accesses).
+  - `src/components/expenses/ExpenseTracker.tsx`: asserted `userProfile!.company_id!` in the new `expense_categories` / `projects` lookup queries (the `enabled` guard already ensures it's present), removing 2 TS2345s I introduced.
+- `npx vite build` PASS (exit 0).
+
+---
