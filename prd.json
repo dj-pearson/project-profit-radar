@@ -1545,8 +1545,8 @@
         "npm run build completes successfully"
       ],
       "priority": 4,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "COMPLETED. CRMContacts.tsx: sortable columns (name, company, email, phone, type, status, last contact) via AccessibleTable onSort + client-side sort of the loaded list (asc/desc/none); row checkboxes + select-all (indeterminate) leading column. Bulk toolbar (>=1 selected): Send Email (mailto bcc of selected emails), Add Tag (AccessibleModal -> append tag to each contact's tags[] array, with datalist of existing tags), Export Selected (CSV), Delete Selected (AccessibleModal confirm -> supabase delete .in('id',ids)). Filters: existing search (name/email/company/title) + type + status retained; added Tag filter dropdown (distinct tags across contacts). npx vite build PASS."
     },
     {
       "id": "US-091",
@@ -1562,8 +1562,8 @@
         "npm run build completes successfully"
       ],
       "priority": 4,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "COMPLETED. DocumentManagement.tsx: sortable columns (name, type, size, date) via AccessibleTable onSort + client-side sort; row checkboxes + select-all leading column. Bulk toolbar: Download Selected (sequential supabase.storage download via existing helper), Move to Folder (Dialog -> set category_id from document_categories = folders), Tag Selected (Dialog -> append to documents.tags[]), Delete Selected (AlertDialog confirm -> remove storage files best-effort + delete records). Filters: existing search + category + file-type retained; added Project filter dropdown (hidden in project context). NEW additive migration supabase/migrations/20260603000000_add_documents_tags.sql adds nullable documents.tags text[] (safe ADD COLUMN per CLAUDE.md) to back the Tag action; component casts the update since types.ts is hand-maintained. npx vite build PASS."
     },
     {
       "id": "US-092",

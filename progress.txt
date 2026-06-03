@@ -759,3 +759,28 @@ Verified two P1 stories that were already implemented in code but unmarked in pr
 - `prd.json` — US-089 marked passes: true
 
 ---
+
+#### US-090: Sortable columns and bulk actions on contacts/CRM list - PASS
+- `src/pages/CRMContacts.tsx`:
+  - Sortable columns (Name, Company, Email, Phone, Type, Status, Last Contact) via `AccessibleTable.onSort` + client-side sort of the fully-loaded list (asc/desc/none). Added a **Last Contact** column.
+  - Row checkboxes + select-all (indeterminate) leading `select` column.
+  - Bulk toolbar (≥1 selected): **Send Email** (`mailto:?bcc=` of selected emails), **Add Tag** (AccessibleModal → append a tag to each contact's `tags[]`, with a `datalist` of existing tags), **Export Selected** (CSV), **Delete Selected** (AccessibleModal confirm → `supabase.from('contacts').delete().in('id', ids)`).
+  - Filters: kept existing search + type + status; added a **Tag** filter dropdown (distinct tags across all contacts).
+- Quality: `npx vite build` PASS (exit 0).
+
+#### US-091: Sortable columns and bulk actions on documents list - PASS
+- `supabase/migrations/20260603000000_add_documents_tags.sql`: **additive** nullable `documents.tags text[]` (safe single-migration ADD COLUMN per CLAUDE.md) to back the bulk "Tag Selected" action.
+- `src/pages/DocumentManagement.tsx`:
+  - Sortable columns (Name, Type, Size, Date) via `AccessibleTable.onSort` + client-side sort.
+  - Row checkboxes + select-all leading `select` column.
+  - Bulk toolbar: **Download Selected** (sequential `supabase.storage….download()` via the existing helper), **Move to Folder** (Dialog → set `category_id` from `document_categories`, i.e. folders), **Tag Selected** (Dialog → append to `documents.tags[]`), **Delete Selected** (AlertDialog confirm → best-effort storage `remove()` + `delete().in('id', ids)`).
+  - Filters: kept existing search + category + file-type; added a **Project** filter dropdown (hidden when scoped by a `projectId` route param). Added `project_id` + `tags` to the local `Document` interface; the tags update is cast since `types.ts` is hand-maintained.
+- Quality: `npx vite build` PASS (exit 0).
+
+### Files Modified / Created
+- `src/pages/CRMContacts.tsx` — sorting, selection, bulk actions, tag filter (US-090)
+- `src/pages/DocumentManagement.tsx` — sorting, selection, bulk actions, project filter (US-091)
+- `supabase/migrations/20260603000000_add_documents_tags.sql` — new (US-091)
+- `prd.json` — US-090, US-091 marked passes: true
+
+---

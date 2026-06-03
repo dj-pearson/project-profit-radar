@@ -8,8 +8,10 @@ import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { LoadingState } from '@/components/ui/loading-spinner';
 import { ErrorBoundary, ErrorState, EmptyState } from '@/components/ui/error-boundary';
 import { ResponsiveContainer, ResponsiveGrid } from '@/components/layout/ResponsiveContainer';
-import { AccessibleTable, type TableColumn } from '@/components/accessibility/AccessibleTable';
+import { AccessibleTable, type TableColumn, type SortDirection } from '@/components/accessibility/AccessibleTable';
 import { AccessibleModal } from '@/components/accessibility/AccessibleModal';
+import { Checkbox } from '@/components/ui/checkbox';
+import { logger } from '@/lib/logger';
 import { useLoadingState } from '@/hooks/useLoadingState';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -32,7 +34,10 @@ import {
   Trash2,
   Globe,
   Calendar,
-  Tag
+  Tag,
+  Download,
+  X,
+  Loader2
 } from 'lucide-react';
 
 interface Contact {
@@ -77,7 +82,17 @@ const CRMContacts = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [typeFilter, setTypeFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [tagFilter, setTagFilter] = useState('all');
   const [showNewContactDialog, setShowNewContactDialog] = useState(false);
+
+  // US-090: sort, selection, and bulk-action state.
+  const [sortColumn, setSortColumn] = useState<string | undefined>(undefined);
+  const [sortDirection, setSortDirection] = useState<SortDirection>('none');
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [showAddTagDialog, setShowAddTagDialog] = useState(false);
+  const [newTagValue, setNewTagValue] = useState('');
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [bulkBusy, setBulkBusy] = useState(false);
   const [newContact, setNewContact] = useState<Partial<Contact>>({
     contact_type: 'prospect',
     relationship_status: 'active',
@@ -240,9 +255,142 @@ const CRMContacts = () => {
 
     const matchesType = typeFilter === 'all' || contact.contact_type === typeFilter;
     const matchesStatus = statusFilter === 'all' || contact.relationship_status === statusFilter;
+    const matchesTag = tagFilter === 'all' || (contact.tags || []).includes(tagFilter);
 
-    return matchesSearch && matchesType && matchesStatus;
+    return matchesSearch && matchesType && matchesStatus && matchesTag;
   }) || [];
+
+  // Distinct tags across all contacts, for the tag filter dropdown.
+  const allTags = Array.from(
+    new Set((contacts || []).flatMap((c) => c.tags || []))
+  ).sort();
+
+  // Sorting (client-side; the list is fully loaded, not paginated).
+  const sortAccessors: Record<string, (c: Contact) => string | number> = {
+    first_name: (c) => `${c.first_name} ${c.last_name}`.toLowerCase(),
+    company_name: (c) => (c.company_name || '').toLowerCase(),
+    email: (c) => (c.email || '').toLowerCase(),
+    phone: (c) => (c.phone || '').toLowerCase(),
+    contact_type: (c) => (c.contact_type || '').toLowerCase(),
+    relationship_status: (c) => (c.relationship_status || '').toLowerCase(),
+    last_contact_date: (c) => (c.last_contact_date ? new Date(c.last_contact_date).getTime() : 0),
+  };
+
+  const displayContacts = (() => {
+    if (!sortColumn || sortDirection === 'none') return filteredContacts;
+    const accessor = sortAccessors[sortColumn];
+    if (!accessor) return filteredContacts;
+    const sorted = [...filteredContacts].sort((a, b) => {
+      const av = accessor(a);
+      const bv = accessor(b);
+      if (av < bv) return -1;
+      if (av > bv) return 1;
+      return 0;
+    });
+    return sortDirection === 'descending' ? sorted.reverse() : sorted;
+  })();
+
+  const handleSort = (column: string, direction: SortDirection) => {
+    setSortColumn(direction === 'none' ? undefined : column);
+    setSortDirection(direction);
+  };
+
+  // Selection helpers
+  const allSelected = displayContacts.length > 0 && displayContacts.every((c) => selectedIds.has(c.id));
+  const someSelected = displayContacts.some((c) => selectedIds.has(c.id)) && !allSelected;
+  const toggleOne = (id: string) =>
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+  const toggleAll = () =>
+    setSelectedIds((prev) => (displayContacts.every((c) => prev.has(c.id)) ? new Set() : new Set(displayContacts.map((c) => c.id))));
+  const clearSelection = () => setSelectedIds(new Set());
+
+  const selectedContacts = displayContacts.filter((c) => selectedIds.has(c.id));
+
+  // Bulk actions
+  const bulkSendEmail = () => {
+    const emails = selectedContacts.map((c) => c.email).filter(Boolean) as string[];
+    if (emails.length === 0) {
+      toast({ title: 'No emails', description: 'None of the selected contacts have an email address.', variant: 'destructive' });
+      return;
+    }
+    window.location.href = `mailto:?bcc=${encodeURIComponent(emails.join(','))}`;
+  };
+
+  const bulkAddTag = async () => {
+    const tag = newTagValue.trim();
+    const ids = Array.from(selectedIds);
+    if (!tag || ids.length === 0) return;
+    setBulkBusy(true);
+    try {
+      // Tags are per-row arrays, so append the tag to each selected contact's set.
+      await Promise.all(
+        selectedContacts.map((c) => {
+          const nextTags = Array.from(new Set([...(c.tags || []), tag]));
+          return supabase.from('contacts').update({ tags: nextTags }).eq('id', c.id);
+        })
+      );
+      toast({ title: 'Tag added', description: `"${tag}" added to ${ids.length} contact(s).` });
+      clearSelection();
+      setShowAddTagDialog(false);
+      setNewTagValue('');
+      loadContacts(loadContactsData);
+    } catch (error) {
+      logger.error('Bulk add tag failed', error instanceof Error ? error : undefined);
+      toast({ title: 'Error', description: 'Failed to add tag.', variant: 'destructive' });
+    } finally {
+      setBulkBusy(false);
+    }
+  };
+
+  const bulkDelete = async () => {
+    const ids = Array.from(selectedIds);
+    if (ids.length === 0) return;
+    setBulkBusy(true);
+    try {
+      const { error } = await supabase.from('contacts').delete().in('id', ids);
+      if (error) throw error;
+      toast({ title: 'Contacts deleted', description: `${ids.length} contact(s) deleted.` });
+      clearSelection();
+      setShowDeleteDialog(false);
+      loadContacts(loadContactsData);
+    } catch (error) {
+      logger.error('Bulk contact delete failed', error instanceof Error ? error : undefined);
+      toast({ title: 'Error', description: 'Failed to delete contacts.', variant: 'destructive' });
+    } finally {
+      setBulkBusy(false);
+    }
+  };
+
+  const exportSelectedCsv = () => {
+    if (selectedContacts.length === 0) return;
+    const headers = ['First Name', 'Last Name', 'Email', 'Phone', 'Company', 'Type', 'Status', 'Tags', 'Last Contact'];
+    const rows = selectedContacts.map((c) => [
+      c.first_name ?? '',
+      c.last_name ?? '',
+      c.email ?? '',
+      c.phone ?? '',
+      c.company_name ?? '',
+      c.contact_type ?? '',
+      c.relationship_status ?? '',
+      (c.tags || []).join('; '),
+      c.last_contact_date ?? '',
+    ]);
+    const csv = [headers, ...rows]
+      .map((r) => r.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(','))
+      .join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `contacts-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast({ title: 'Exported', description: `${selectedContacts.length} contact(s) exported to CSV.` });
+  };
 
   if (loading) {
     return <LoadingState message="Loading contacts..." />;
@@ -296,6 +444,18 @@ const CRMContacts = () => {
                         <SelectItem value="active">Active</SelectItem>
                         <SelectItem value="inactive">Inactive</SelectItem>
                         <SelectItem value="do_not_contact">Do Not Contact</SelectItem>
+                      </SelectContent>
+                    </Select>
+
+                    <Select value={tagFilter} onValueChange={setTagFilter}>
+                      <SelectTrigger className="w-full sm:w-40" aria-label="Filter by tag">
+                        <SelectValue placeholder="Tag" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Tags</SelectItem>
+                        {allTags.map((t) => (
+                          <SelectItem key={t} value={t}>{t}</SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
 
@@ -436,6 +596,25 @@ const CRMContacts = () => {
               ) : (() => {
                 const contactColumns: TableColumn<Contact>[] = [
                   {
+                    key: 'select',
+                    header: 'Select',
+                    width: '2.5rem',
+                    headerRender: () => (
+                      <Checkbox
+                        checked={allSelected ? true : someSelected ? 'indeterminate' : false}
+                        onCheckedChange={toggleAll}
+                        aria-label={allSelected ? 'Deselect all contacts' : 'Select all contacts'}
+                      />
+                    ),
+                    render: (_value, row) => (
+                      <Checkbox
+                        checked={selectedIds.has(row.id)}
+                        onCheckedChange={() => toggleOne(row.id)}
+                        aria-label={`Select ${row.first_name} ${row.last_name}`}
+                      />
+                    ),
+                  },
+                  {
                     key: 'first_name',
                     header: 'Name',
                     sortable: true,
@@ -452,6 +631,7 @@ const CRMContacts = () => {
                     key: 'email',
                     header: 'Email',
                     hideOnMobile: true,
+                    sortable: true,
                     render: (value) => (
                       <span className="flex items-center gap-1 text-sm">
                         <Mail className="h-3 w-3 text-muted-foreground" aria-hidden="true" />
@@ -463,6 +643,7 @@ const CRMContacts = () => {
                     key: 'phone',
                     header: 'Phone',
                     hideOnMobile: true,
+                    sortable: true,
                     render: (value) => (
                       <span className="flex items-center gap-1 text-sm">
                         <Phone className="h-3 w-3 text-muted-foreground" aria-hidden="true" />
@@ -503,6 +684,18 @@ const CRMContacts = () => {
                     ),
                   },
                   {
+                    key: 'last_contact_date',
+                    header: 'Last Contact',
+                    hideOnMobile: true,
+                    sortable: true,
+                    render: (value) => (
+                      <span className="flex items-center gap-1 text-sm text-muted-foreground">
+                        <Calendar className="h-3 w-3" aria-hidden="true" />
+                        {value ? formatDate(value) : '--'}
+                      </span>
+                    ),
+                  },
+                  {
                     key: 'actions',
                     header: 'Actions',
                     headerRender: () => <span className="sr-only">Actions</span>,
@@ -520,12 +713,37 @@ const CRMContacts = () => {
                 ];
 
                 return (
+                  <div className="space-y-3">
+                    {selectedIds.size > 0 && (
+                      <div className="flex flex-wrap items-center gap-2 rounded-md border bg-muted/40 px-3 py-2">
+                        <span className="text-sm font-medium">{selectedIds.size} selected</span>
+                        <div className="flex-1" />
+                        <Button size="sm" variant="outline" disabled={bulkBusy} onClick={bulkSendEmail}>
+                          <Mail className="mr-2 h-4 w-4" aria-hidden="true" />Send Email
+                        </Button>
+                        <Button size="sm" variant="outline" disabled={bulkBusy} onClick={() => setShowAddTagDialog(true)}>
+                          <Tag className="mr-2 h-4 w-4" aria-hidden="true" />Add Tag
+                        </Button>
+                        <Button size="sm" variant="outline" disabled={bulkBusy} onClick={exportSelectedCsv}>
+                          <Download className="mr-2 h-4 w-4" aria-hidden="true" />Export Selected
+                        </Button>
+                        <Button size="sm" variant="destructive" disabled={bulkBusy} onClick={() => setShowDeleteDialog(true)}>
+                          <Trash2 className="mr-2 h-4 w-4" aria-hidden="true" />Delete Selected
+                        </Button>
+                        <Button size="sm" variant="ghost" onClick={clearSelection} aria-label="Clear selection">
+                          <X className="h-4 w-4" aria-hidden="true" />
+                        </Button>
+                      </div>
+                    )}
                   <AccessibleTable<Contact>
                     caption="CRM Contacts"
                     hideCaption
                     columns={contactColumns}
-                    data={filteredContacts}
+                    data={displayContacts}
                     loading={contactsLoading}
+                    sortColumn={sortColumn}
+                    sortDirection={sortDirection}
+                    onSort={handleSort}
                     emptyContent={
                       <div className="text-center py-8">
                         <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" aria-hidden="true" />
@@ -542,9 +760,61 @@ const CRMContacts = () => {
                       </div>
                     }
                   />
+                  </div>
                 );
               })()}
             </ErrorBoundary>
+
+            {/* Bulk Add Tag Modal */}
+            <AccessibleModal
+              isOpen={showAddTagDialog}
+              onClose={() => { setShowAddTagDialog(false); setNewTagValue(''); }}
+              title={`Add tag to ${selectedIds.size} contact${selectedIds.size > 1 ? 's' : ''}`}
+              description="The tag is appended to each selected contact's existing tags."
+              size="sm"
+              footer={
+                <>
+                  <Button variant="outline" onClick={() => { setShowAddTagDialog(false); setNewTagValue(''); }}>Cancel</Button>
+                  <Button disabled={!newTagValue.trim() || bulkBusy} onClick={bulkAddTag} className="gap-2">
+                    {bulkBusy && <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />}
+                    Add Tag
+                  </Button>
+                </>
+              }
+            >
+              <div className="space-y-2">
+                <Label htmlFor="bulk-tag">Tag</Label>
+                <Input
+                  id="bulk-tag"
+                  value={newTagValue}
+                  onChange={(e) => setNewTagValue(e.target.value)}
+                  placeholder="e.g. VIP, follow-up"
+                  list="contact-tags"
+                />
+                <datalist id="contact-tags">
+                  {allTags.map((t) => <option key={t} value={t} />)}
+                </datalist>
+              </div>
+            </AccessibleModal>
+
+            {/* Bulk Delete Confirmation Modal */}
+            <AccessibleModal
+              isOpen={showDeleteDialog}
+              onClose={() => setShowDeleteDialog(false)}
+              title={`Delete ${selectedIds.size} contact${selectedIds.size > 1 ? 's' : ''}?`}
+              description="This permanently removes the selected contacts. This action cannot be undone."
+              size="sm"
+              disableClickOutside
+              footer={
+                <>
+                  <Button variant="outline" disabled={bulkBusy} onClick={() => setShowDeleteDialog(false)}>Cancel</Button>
+                  <Button variant="destructive" disabled={bulkBusy} onClick={bulkDelete} className="gap-2">
+                    {bulkBusy && <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />}
+                    Delete
+                  </Button>
+                </>
+              }
+            />
     </DashboardLayout>
   );
 };

@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { AccessiblePageWrapper } from "@/components/accessibility/AccessiblePageWrapper";
-import { AccessibleTable, type TableColumn } from '@/components/accessibility/AccessibleTable';
+import { AccessibleTable, type TableColumn, type SortDirection } from '@/components/accessibility/AccessibleTable';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -9,7 +10,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -42,7 +43,11 @@ import {
   Zap,
   Database,
   Download,
-  Trash2
+  Trash2,
+  FolderInput,
+  Tag,
+  X,
+  Loader2
 } from 'lucide-react';
 
 interface Document {
@@ -55,6 +60,7 @@ interface Document {
   version: number;
   is_current_version: boolean;
   category_id?: string;
+  project_id?: string;
   uploaded_by: string;
   created_at: string;
   updated_at?: string;
@@ -62,6 +68,7 @@ interface Document {
   checksum?: string;
   approved_by?: string;
   approved_at?: string;
+  tags?: string[] | null;
   document_categories?: { name: string } | null;
   user_profiles?: { first_name: string; last_name: string; email: string } | null;
 }
@@ -126,6 +133,18 @@ const DocumentManagement = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterCategory, setFilterCategory] = useState('');
   const [filterType, setFilterType] = useState('');
+  const [filterProject, setFilterProject] = useState('');
+
+  // US-091: sort, selection, and bulk-action state.
+  const [sortColumn, setSortColumn] = useState<string | undefined>(undefined);
+  const [sortDirection, setSortDirection] = useState<SortDirection>('none');
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [showMoveDialog, setShowMoveDialog] = useState(false);
+  const [moveTargetCategory, setMoveTargetCategory] = useState('');
+  const [showTagDialog, setShowTagDialog] = useState(false);
+  const [newTagValue, setNewTagValue] = useState('');
+  const [showBulkDeleteDialog, setShowBulkDeleteDialog] = useState(false);
+  const [bulkBusy, setBulkBusy] = useState(false);
 
   const isProjectContext = !!projectId;
   const pageTitle = isProjectContext ? 'Project Documents' : 'Company Documents';
@@ -407,9 +426,138 @@ const DocumentManagement = () => {
                          doc.description?.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesCategory = !filterCategory || filterCategory === 'all' || doc.category_id === filterCategory;
     const matchesType = !filterType || filterType === 'all' || doc.file_type.includes(filterType);
-    
-    return matchesSearch && matchesCategory && matchesType;
+    const matchesProject = !filterProject || filterProject === 'all' || doc.project_id === filterProject;
+
+    return matchesSearch && matchesCategory && matchesType && matchesProject;
   });
+
+  // Sorting (client-side; the documents list is loaded in full).
+  const docSortAccessors: Record<string, (d: Document) => string | number> = {
+    name: (d) => (d.name || '').toLowerCase(),
+    file_type: (d) => (d.file_type || '').toLowerCase(),
+    file_size: (d) => d.file_size || 0,
+    created_at: (d) => (d.created_at ? new Date(d.created_at).getTime() : 0),
+  };
+
+  const displayDocuments = (() => {
+    if (!sortColumn || sortDirection === 'none') return filteredDocuments;
+    const accessor = docSortAccessors[sortColumn];
+    if (!accessor) return filteredDocuments;
+    const sorted = [...filteredDocuments].sort((a, b) => {
+      const av = accessor(a);
+      const bv = accessor(b);
+      if (av < bv) return -1;
+      if (av > bv) return 1;
+      return 0;
+    });
+    return sortDirection === 'descending' ? sorted.reverse() : sorted;
+  })();
+
+  const handleSort = (column: string, direction: SortDirection) => {
+    setSortColumn(direction === 'none' ? undefined : column);
+    setSortDirection(direction);
+  };
+
+  // Selection helpers
+  const allSelected = displayDocuments.length > 0 && displayDocuments.every((d) => selectedIds.has(d.id));
+  const someSelected = displayDocuments.some((d) => selectedIds.has(d.id)) && !allSelected;
+  const toggleOne = (id: string) =>
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+  const toggleAll = () =>
+    setSelectedIds((prev) => (displayDocuments.every((d) => prev.has(d.id)) ? new Set() : new Set(displayDocuments.map((d) => d.id))));
+  const clearSelection = () => setSelectedIds(new Set());
+  const selectedDocuments = displayDocuments.filter((d) => selectedIds.has(d.id));
+
+  // Bulk actions
+  const bulkDownload = async () => {
+    if (selectedDocuments.length === 0) return;
+    setBulkBusy(true);
+    try {
+      // Download sequentially so the browser doesn't drop concurrent triggers.
+      for (const doc of selectedDocuments) {
+        // eslint-disable-next-line no-await-in-loop
+        await downloadDocument(doc);
+      }
+    } finally {
+      setBulkBusy(false);
+    }
+  };
+
+  const bulkMoveToFolder = async () => {
+    const ids = Array.from(selectedIds);
+    if (ids.length === 0 || !moveTargetCategory) return;
+    setBulkBusy(true);
+    try {
+      const { error } = await supabase.from('documents').update({ category_id: moveTargetCategory }).in('id', ids);
+      if (error) throw error;
+      const name = categories.find((c) => c.id === moveTargetCategory)?.name ?? 'folder';
+      toast({ title: 'Documents moved', description: `${ids.length} document(s) moved to ${name}.` });
+      clearSelection();
+      setShowMoveDialog(false);
+      setMoveTargetCategory('');
+      loadDocuments();
+    } catch (error: unknown) {
+      console.error('Bulk move failed:', error);
+      toast({ variant: 'destructive', title: 'Move failed', description: 'Failed to move documents.' });
+    } finally {
+      setBulkBusy(false);
+    }
+  };
+
+  const bulkTag = async () => {
+    const tag = newTagValue.trim();
+    const ids = Array.from(selectedIds);
+    if (!tag || ids.length === 0) return;
+    setBulkBusy(true);
+    try {
+      // Tags are per-row arrays; append to each selected document's set.
+      await Promise.all(
+        selectedDocuments.map((d) => {
+          const nextTags = Array.from(new Set([...(d.tags || []), tag]));
+          return supabase.from('documents').update({ tags: nextTags } as never).eq('id', d.id);
+        })
+      );
+      toast({ title: 'Tag added', description: `"${tag}" added to ${ids.length} document(s).` });
+      clearSelection();
+      setShowTagDialog(false);
+      setNewTagValue('');
+      loadDocuments();
+    } catch (error: unknown) {
+      console.error('Bulk tag failed:', error);
+      toast({ variant: 'destructive', title: 'Tagging failed', description: 'Failed to tag documents.' });
+    } finally {
+      setBulkBusy(false);
+    }
+  };
+
+  const bulkDelete = async () => {
+    const ids = Array.from(selectedIds);
+    if (ids.length === 0) return;
+    setBulkBusy(true);
+    try {
+      const bucketName = isProjectContext ? 'project-documents' : 'company-documents';
+      const paths = selectedDocuments.map((d) => d.file_path).filter(Boolean);
+      if (paths.length > 0) {
+        // Best-effort storage cleanup; don't block the record delete on it.
+        await supabase.storage.from(bucketName).remove(paths).catch(() => {});
+      }
+      const { error } = await supabase.from('documents').delete().in('id', ids);
+      if (error) throw error;
+      toast({ title: 'Documents deleted', description: `${ids.length} document(s) deleted.` });
+      clearSelection();
+      setShowBulkDeleteDialog(false);
+      loadDocuments();
+    } catch (error: unknown) {
+      console.error('Bulk delete failed:', error);
+      toast({ variant: 'destructive', title: 'Delete failed', description: 'Failed to delete documents.' });
+    } finally {
+      setBulkBusy(false);
+    }
+  };
 
   if (!userProfile) {
     return (
@@ -577,6 +725,19 @@ const DocumentManagement = () => {
                   <SelectItem value="application">Documents</SelectItem>
                 </SelectContent>
               </Select>
+              {!isProjectContext && (
+                <Select value={filterProject} onValueChange={setFilterProject}>
+                  <SelectTrigger aria-label="Filter by project">
+                    <SelectValue placeholder="All projects" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All projects</SelectItem>
+                    {projects.map((p) => (
+                      <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
               <div className="flex items-center space-x-2">
                 <span className="text-sm text-muted-foreground">
                   {filteredDocuments.length} documents
@@ -595,6 +756,26 @@ const DocumentManagement = () => {
           };
 
           const documentColumns: TableColumn<Document>[] = [
+            {
+              key: 'select',
+              header: 'Select',
+              width: '2.5rem',
+              headerRender: () => (
+                <Checkbox
+                  checked={allSelected ? true : someSelected ? 'indeterminate' : false}
+                  onCheckedChange={toggleAll}
+                  aria-label={allSelected ? 'Deselect all documents' : 'Select all documents'}
+                />
+              ),
+              render: (_value, row) => (
+                <Checkbox
+                  checked={selectedIds.has(row.id)}
+                  onCheckedChange={() => toggleOne(row.id)}
+                  onClick={(e) => e.stopPropagation()}
+                  aria-label={`Select ${row.name}`}
+                />
+              ),
+            },
             {
               key: 'name',
               header: 'Name',
@@ -675,12 +856,37 @@ const DocumentManagement = () => {
           ];
 
           return (
+            <div className="space-y-3">
+              {selectedIds.size > 0 && (
+                <div className="flex flex-wrap items-center gap-2 rounded-md border bg-muted/40 px-3 py-2">
+                  <span className="text-sm font-medium">{selectedIds.size} selected</span>
+                  <div className="flex-1" />
+                  <Button size="sm" variant="outline" disabled={bulkBusy} onClick={bulkDownload}>
+                    <Download className="mr-2 h-4 w-4" aria-hidden="true" />Download Selected
+                  </Button>
+                  <Button size="sm" variant="outline" disabled={bulkBusy} onClick={() => setShowMoveDialog(true)}>
+                    <FolderInput className="mr-2 h-4 w-4" aria-hidden="true" />Move to Folder
+                  </Button>
+                  <Button size="sm" variant="outline" disabled={bulkBusy} onClick={() => setShowTagDialog(true)}>
+                    <Tag className="mr-2 h-4 w-4" aria-hidden="true" />Tag Selected
+                  </Button>
+                  <Button size="sm" variant="destructive" disabled={bulkBusy} onClick={() => setShowBulkDeleteDialog(true)}>
+                    <Trash2 className="mr-2 h-4 w-4" aria-hidden="true" />Delete Selected
+                  </Button>
+                  <Button size="sm" variant="ghost" onClick={clearSelection} aria-label="Clear selection">
+                    <X className="h-4 w-4" aria-hidden="true" />
+                  </Button>
+                </div>
+              )}
             <AccessibleTable<Document>
               caption="Documents"
               hideCaption
               columns={documentColumns}
-              data={filteredDocuments}
+              data={displayDocuments}
               loading={loadingDocs}
+              sortColumn={sortColumn}
+              sortDirection={sortDirection}
+              onSort={handleSort}
               emptyContent={
                 <div className="text-center py-8">
                   <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" aria-hidden="true" />
@@ -699,9 +905,84 @@ const DocumentManagement = () => {
                 </div>
               }
             />
+            </div>
           );
         })()}
       </ResponsiveContainer>
+
+      {/* Bulk: Move to Folder (category) */}
+      <Dialog open={showMoveDialog} onOpenChange={(o) => { setShowMoveDialog(o); if (!o) setMoveTargetCategory(''); }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Move {selectedIds.size} document{selectedIds.size > 1 ? 's' : ''} to a folder</DialogTitle>
+            <DialogDescription>Choose a folder (category) to move the selected documents into.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-2">
+            <Label htmlFor="move-folder">Folder</Label>
+            <Select value={moveTargetCategory} onValueChange={setMoveTargetCategory}>
+              <SelectTrigger id="move-folder"><SelectValue placeholder="Select a folder" /></SelectTrigger>
+              <SelectContent>
+                {categories.map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => { setShowMoveDialog(false); setMoveTargetCategory(''); }}>Cancel</Button>
+            <Button disabled={!moveTargetCategory || bulkBusy} onClick={bulkMoveToFolder} className="gap-2">
+              {bulkBusy && <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />}
+              Move
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Bulk: Tag Selected */}
+      <Dialog open={showTagDialog} onOpenChange={(o) => { setShowTagDialog(o); if (!o) setNewTagValue(''); }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Tag {selectedIds.size} document{selectedIds.size > 1 ? 's' : ''}</DialogTitle>
+            <DialogDescription>The tag is appended to each selected document's existing tags.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-2">
+            <Label htmlFor="bulk-doc-tag">Tag</Label>
+            <Input
+              id="bulk-doc-tag"
+              value={newTagValue}
+              onChange={(e) => setNewTagValue(e.target.value)}
+              placeholder="e.g. contract, permit, signed"
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => { setShowTagDialog(false); setNewTagValue(''); }}>Cancel</Button>
+            <Button disabled={!newTagValue.trim() || bulkBusy} onClick={bulkTag} className="gap-2">
+              {bulkBusy && <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />}
+              Add Tag
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Bulk: Delete confirmation */}
+      <AlertDialog open={showBulkDeleteDialog} onOpenChange={setShowBulkDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete {selectedIds.size} document{selectedIds.size > 1 ? 's' : ''}?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This permanently removes the selected documents and their stored files. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={bulkBusy}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              disabled={bulkBusy}
+              onClick={(e) => { e.preventDefault(); bulkDelete(); }}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* OCR Processing Dialog */}
       <Dialog open={showOCRProcessor} onOpenChange={setShowOCRProcessor}>
