@@ -742,3 +742,20 @@ Verified two P1 stories that were already implemented in code but unmarked in pr
 - `prd.json` — US-088 marked passes: true
 
 ---
+
+#### US-089: Sortable columns and bulk actions on expenses list - PASS
+- `src/hooks/useSupabaseQuery.ts`: added an **additive, optional** `rangeFilters?: Array<{column, gte?, lte?}>` to `usePaginatedQuery` (applies `.gte()/.lte()`; empty bounds skipped; included in the query key). Backward-compatible per CLAUDE.md.
+- `src/components/expenses/ExpenseTracker.tsx`:
+  - Sortable columns (Date, Vendor, Description, Amount, Status) wired through `AccessibleTable.onSort` → drives server-side `orderBy` state (page resets to 1; `'none'` falls back to date-desc). Active-column indicator + `aria-sort` come from `AccessibleTable`.
+  - Row checkboxes + select-all (indeterminate) via a leading `select` column.
+  - Bulk toolbar (≥1 selected): **Approve Selected** (`payment_status='approved'` + `approved_at`/`approved_by`), **Reject Selected** (`payment_status='rejected'`, clears approval fields), **Export Selected** (CSV with resolved category name), **Categorize Selected** (AccessibleModal → set `category_id` from the `expense_categories` list).
+  - Filters: **Category** dropdown (from `expense_categories`), **Project** dropdown (from `projects`, hidden when the component is already scoped by a `projectId` prop), **Amount** min/max range — all applied server-side via `filters` / `rangeFilters`.
+  - Selection is per loaded page (server-paginated); cleared after each bulk action and a refetch is triggered.
+- Quality: `npx vite build` PASS (exit 0). Full-project `tsc --noEmit` times out (>9 min) in this ephemeral env, so verification is build + targeted type review (consistent with prior sessions).
+
+### Files Modified
+- `src/hooks/useSupabaseQuery.ts` — optional rangeFilters on usePaginatedQuery
+- `src/components/expenses/ExpenseTracker.tsx` — sorting, selection, bulk actions, filters
+- `prd.json` — US-089 marked passes: true
+
+---

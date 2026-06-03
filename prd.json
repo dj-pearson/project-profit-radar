@@ -1528,8 +1528,8 @@
         "npm run build completes successfully"
       ],
       "priority": 3,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "COMPLETED. ExpenseTracker.tsx: sortable columns (date, vendor, description, amount, status) via AccessibleTable onSort -> server-side orderBy state (resets to page 1; 'none' falls back to date desc). Row checkboxes + select-all (indeterminate) as a leading 'select' column. Bulk toolbar (>=1 selected): Approve Selected (payment_status=approved + approved_at/approved_by), Reject Selected (payment_status=rejected, clears approval fields), Export Selected (CSV with resolved category name), Categorize Selected (AccessibleModal -> set category_id from expense_categories list). Filters: Category dropdown (expense_categories), Project dropdown (hidden when scoped by projectId prop), Amount min/max range -> all server-side. Amount range uses a NEW additive optional rangeFilters param on usePaginatedQuery (gte/lte, backward-compatible). npx vite build PASS. (Full-project tsc --noEmit times out >9min in this env; verified via build + targeted type review.)"
     },
     {
       "id": "US-090",
