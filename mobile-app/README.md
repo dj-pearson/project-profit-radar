@@ -1,3 +1,17 @@
+> # ⚠️ ARCHIVED — NOT THE SHIPPING iOS BUILD
+>
+> This Expo/React Native project is **archived/experimental** and is **not**
+> the canonical iOS surface. The shipping iOS app is the native Swift/SwiftUI
+> project in [`../Brikly-iOS`](../Brikly-iOS), which is what
+> `.github/workflows/ios-release.yml` archives and uploads to TestFlight / the
+> App Store under bundle id `com.brikly.app`.
+>
+> To avoid a duplicate-bundle-id collision in App Store Connect, this project's
+> bundle id / Android package were moved off `com.brikly.app` to
+> `com.brikly.expo.archived`. Do not run `eas submit` from here against the
+> production app record. See the **Mobile Strategy** section of the root
+> `CLAUDE.md` for the full decision (US-129).
+
 # Brikly Mobile App
 
 Native iOS and Android mobile application built with Expo and React Native.

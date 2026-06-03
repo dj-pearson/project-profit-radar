@@ -42,6 +42,8 @@
     "mobile:screenshots": "playwright test --config=playwright.screenshots.config.ts",
     "ios:verify": "node scripts/verify-ios-setup.js",
     "ios:init": "npm run build:mobile && npx cap add ios && npx cap sync ios",
+    "ios:build": "xcodebuild build -project Brikly-iOS/Brikly.xcodeproj -scheme Brikly -configuration Debug -destination 'generic/platform=iOS Simulator'",
+    "ios:test:native": "xcodebuild test -project Brikly-iOS/Brikly.xcodeproj -scheme Brikly -destination 'platform=iOS Simulator,name=iPhone 15'",
     "ralph": "node scripts/ralph/ralph.mjs --tool claude",
     "ralph:run": "node scripts/ralph/ralph.mjs --tool claude",
     "ralph:amp": "node scripts/ralph/ralph.mjs --tool amp",

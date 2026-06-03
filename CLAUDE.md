@@ -48,6 +48,18 @@ npm run expo:{start,build:ios,build:android}
 
 Cloudflare Pages, build cmd `npm ci && npm run build` → `dist/`. Node 18+, npm 10.9.2. Domains: `brikly.net`, `brikly.pearsonperformance.workers.dev`. Cloudflare env: `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `STRIPE_PUBLISHABLE_KEY`. Edge-fn secrets in Supabase dashboard.
 
+## Mobile Strategy
+
+The repo has historically carried **three** iOS surfaces. As of US-129 there is exactly one canonical shipping build:
+
+| Surface | Path | Bundle id | Status |
+|---------|------|-----------|--------|
+| **Native Swift / SwiftUI** | `Brikly-iOS/` | `com.brikly.app` | **CANONICAL — the shipping iOS app.** Built, archived and uploaded by `.github/workflows/ios-release.yml` (`xcodebuild` on `Brikly.xcodeproj`). All iOS feature work (offline-first ViewModels, SyncEngine, push, TestFlight) targets this project. |
+| Expo / React Native | `mobile-app/` | `com.brikly.expo.archived` | Archived/experimental. Moved off `com.brikly.app` so it can't collide in App Store Connect. Not submitted to the production app record. |
+| Capacitor web-wrapper | `capacitor.config.ts` (+ generated `ios/`, not committed) | `com.brikly.app` | Web-shell wrapper of the Vite build (`build:mobile` → `dist-mobile`). Used for quick web-in-a-WebView smoke tests only — **not** the App Store submission. If ever shipped it must reuse the native record's id; today native owns submission. |
+
+**Rule of thumb:** "iOS app" = `Brikly-iOS/` native. The npm `mobile:*` scripts (`mobile:ios`, `mobile:submit:ios`, …) drive the **archived** Expo project and should not be used for production. The native build is driven by CI (`ios-release.yml`) and locally by `npm run ios:build` / `ios:test:native` (`xcodebuild` on `Brikly-iOS/Brikly.xcodeproj`).
+
 ## Critical Rules
 
 ### Branch first, code second

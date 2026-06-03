@@ -674,3 +674,54 @@ Verified two P1 stories that were already implemented in code but unmarked in pr
 ### Quality: `npx vite build` PASS (58.34s); Vitest image-compression (6) + AutoBreadcrumb (5) + useRecentItems (6) PASS
 
 ---
+
+## Session: Priority-1 security/iOS hardening + native offline-first (US-125, US-127, US-129, US-168, US-169)
+
+#### US-125: Harden Capacitor iOS config (WebView debugging + allowNavigation) - PASS (verified)
+- `capacitor.config.ts` already hardened: `ios.webContentsDebuggingEnabled: !isProduction` (false when `NODE_ENV === 'production'`); `android.webContentsDebuggingEnabled: false`
+- `server.allowNavigation` no longer contains `*.supabase.co` — Supabase is self-hosted on `api.brikly.net`, so the allowlist is `api/app/functions.brikly.net` + `accounts.google.com` + `appleid.apple.com`
+- `Brikly-iOS/Brikly/Info.plist` `WKAppBoundDomains` matches the allowlist (`brikly.net`, `app/api/functions.brikly.net`); `limitsNavigationsToAppBoundDomains: true`
+- `npx vite build` PASS (exit 0)
+
+#### US-127: Harden iOS session storage (resume refresh + clean sign-out) - PASS (verified)
+- `src/lib/supabaseStorage.ts` exports `purgeSupabaseSessionStorage()` — sync scan of `localStorage` removing every `sb-*-auth-token` / `supabase.auth.*` key (incl. PKCE `-code-verifier`), plus fire-and-forget removal of known keys from `@capacitor/preferences`
+- `src/hooks/useSupabaseSessionResume.ts` listens to `@capacitor/app` `appStateChange` and calls `supabase.auth.refreshSession()` on foreground; native-only (no-op on web), lazy-imports `@capacitor/app`
+- `AuthContext` imports both; `signOut()` calls `purgeSupabaseSessionStorage()` after `supabase.auth.signOut()`; `useSupabaseSessionResume()` mounted once at AuthProvider level
+- Web sign-in / persistence unaffected; build PASS
+
+#### US-129: Resolve dueling iOS builds — single canonical bundle - PASS
+- Evidence: `.github/workflows/ios-release.yml` archives/uploads `Brikly-iOS/Brikly.xcodeproj` (native Swift) → **native Brikly-iOS is canonical** for `com.brikly.app`
+- Expo `mobile-app/` moved off the id (`bundleIdentifier` + Android `package` → `com.brikly.expo.archived`) and got a prominent ARCHIVED banner in `mobile-app/README.md`
+- Capacitor wrapper documented as the same-record web shell (not a competing App Store submission)
+- `CLAUDE.md` gained a **Mobile Strategy** section (3-surface decision table)
+- `package.json` gained `ios:build` / `ios:test:native` (`xcodebuild` on Brikly-iOS) as the canonical native scripts; Expo `mobile:*` flagged archived in docs
+
+#### US-168: Migrate TaskListViewModel to offline-first - PASS
+- `OfflineStore`: added `LocalTask` `@Model` (`id`/`projectId`/`createdAt` indexed, full `ProjectTask` JSON blob) + `cacheTasks` / `upsertTask` / `cachedTasks` (newest-first by `createdAt`); registered `LocalTask` in the `Schema`
+- `SyncEngine.replay(_:)` gained a `"task"` branch → `replayTask(_:)` handling create + update against `tasks` (plain `JSONDecoder`; `NewTask`/`TaskUpdate` carry snake_case `CodingKeys`)
+- `TaskListViewModel` rewritten on the daily-report template: `loadTasks` hydrates from cache then refreshes; `createTask`/`updateTask` network-first with enqueue + optimistic local row/merge fallback; `filteredTasks` + `selectedStatus` chips operate on the in-memory list
+- Optimistic placeholder id `local-{UUID}`; SyncEngine upserts the authoritative server row on success (placeholder reconciled on next full refresh, matching DailyReport)
+
+#### US-169: Migrate JobCostListViewModel to offline-first - PASS
+- `OfflineStore`: added `LocalJobCost` + `LocalCostCode` `@Model`s with cache/upsert/cached helpers (job costs newest-first by `date`; cost codes by `code`); both registered in the `Schema`
+- `SyncEngine.replay(_:)` gained a `"job_cost"` branch → `replayJobCost(_:)` handling **create only** (append-only domain)
+- `JobCostListViewModel.loadData` hydrates job costs AND cost codes from cache then refreshes; `createJobCost` network-first with enqueue (create) + optimistic local insert; cost codes cache on first online fetch and are never enqueued
+- Realtime `subscribe()`/`reload()` guarded by `NetworkMonitor.shared.isOnline` (no-ops offline); `reload()` now also writes through to the cache
+
+### New Files Created
+- (none — additive edits to existing Swift/TS/config files)
+
+### Files Modified
+- `Brikly-iOS/Brikly/Services/OfflineStore.swift` — LocalTask/LocalJobCost/LocalCostCode models + helpers + Schema
+- `Brikly-iOS/Brikly/Services/SyncEngine.swift` — task + job_cost replay branches
+- `Brikly-iOS/Brikly/ViewModels/TaskListViewModel.swift` — offline-first rewrite
+- `Brikly-iOS/Brikly/ViewModels/JobCostListViewModel.swift` — offline-first rewrite
+- `mobile-app/app.json` — bundle id / Android package → com.brikly.expo.archived
+- `mobile-app/README.md` — ARCHIVED banner
+- `CLAUDE.md` — Mobile Strategy section
+- `package.json` — ios:build / ios:test:native scripts
+- `prd.json` — US-125, US-127, US-129, US-168, US-169 marked passes: true
+
+### Quality: `npx vite build` PASS (exit 0). Native Swift not compiled (no Xcode toolchain on the Linux CI host) — offline-first changes mirror the verified DailyReport template exactly (same cache/enqueue/replay/optimistic shapes); `CrashReporter.breadcrumb(_:category:)` signature confirmed.
+
+---

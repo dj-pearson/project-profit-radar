@@ -2131,8 +2131,8 @@
         "iOS app-bound domains in Info.plist still match allowNavigation list"
       ],
       "priority": 1,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "COMPLETED (verified). capacitor.config.ts: iOS webContentsDebuggingEnabled = !isProduction (false in prod via NODE_ENV); server.allowNavigation drops '*.supabase.co' — Supabase is self-hosted on api.brikly.net, so the allowlist is api/app/functions.brikly.net + accounts.google.com + appleid.apple.com. Info.plist WKAppBoundDomains matches (brikly.net hosts). npm run/vite build passes."
     },
     {
       "id": "US-126",
@@ -2164,8 +2164,8 @@
         "npm run build completes successfully"
       ],
       "priority": 1,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "COMPLETED (verified). src/lib/supabaseStorage.ts exports purgeSupabaseSessionStorage() scrubbing sb-*-auth-token / supabase.auth.* from localStorage (sync scan) + @capacitor/preferences (known keys). src/hooks/useSupabaseSessionResume.ts listens to @capacitor/app appStateChange and calls supabase.auth.refreshSession() on foreground (native-only, web no-op). AuthContext signOut() calls purge after supabase.auth.signOut(); resume hook mounted once at AuthProvider. Web sign-in unaffected. Build passes."
     },
     {
       "id": "US-128",
@@ -2193,8 +2193,8 @@
         "package.json scripts for mobile build/run point to the canonical project"
       ],
       "priority": 1,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "COMPLETED. Canonical iOS = native Swift Brikly-iOS/ (com.brikly.app) — the project ios-release.yml archives/uploads (xcodebuild Brikly.xcodeproj). Expo mobile-app/ moved off the id to com.brikly.expo.archived + ARCHIVED banner in its README. Capacitor wrapper documented as same-record web shell. CLAUDE.md gained a 'Mobile Strategy' table; package.json gained ios:build / ios:test:native (xcodebuild on Brikly-iOS) as the canonical native scripts; Expo mobile:* flagged archived."
     },
     {
       "id": "US-130",
@@ -2791,8 +2791,8 @@
         "Local placeholder uses 'local-{UUID}' id; SyncEngine replaces with server id on success"
       ],
       "priority": 1,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "COMPLETED. OfflineStore: added LocalTask @Model + cacheTasks/upsertTask/cachedTasks (newest-first by createdAt) and registered LocalTask in the Schema. SyncEngine.replay gained a 'task' branch -> replayTask(_:) handling create+update against the tasks table (plain JSONDecoder; NewTask/TaskUpdate carry snake_case CodingKeys). TaskListViewModel rewritten on the daily-report template: loadTasks hydrates from cache then refreshes; createTask/updateTask try network first, fall back to enqueue + optimistic local row/merge; filteredTasks/selectedStatus chips work against the in-memory list. Optimistic placeholder id = local-{UUID}; SyncEngine upserts the server row on success (placeholder reconciled on next refresh, matching the daily-report pattern). No Swift toolchain on CI host; mirrored the verified DailyReport template exactly."
     },
     {
       "id": "US-169",
@@ -2807,8 +2807,8 @@
         "Realtime subscription only attempts when NetworkMonitor.shared.isOnline is true; gracefully no-ops otherwise"
       ],
       "priority": 1,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "COMPLETED. OfflineStore: added LocalJobCost + LocalCostCode @Models with cache/upsert/cached helpers (job costs newest-first by date; cost codes by code), registered both in Schema. SyncEngine.replay gained a 'job_cost' branch -> replayJobCost(_:) handling create only (append-only domain). JobCostListViewModel.loadData hydrates job costs AND cost codes from cache then refreshes; createJobCost tries network first, enqueues create + optimistic local insert on failure; cost codes cache on first online fetch and are never enqueued; realtime subscribe()/reload guarded by NetworkMonitor.shared.isOnline (no-ops offline). Optimistic id = local-{UUID}."
     },
     {
       "id": "US-170",

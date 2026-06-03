@@ -18,7 +18,7 @@
     ],
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.brikly.app",
+      "bundleIdentifier": "com.brikly.expo.archived",
       "buildNumber": "1",
       "requireFullScreen": false,
       "infoPlist": {
@@ -84,7 +84,7 @@
       }
     },
     "android": {
-      "package": "com.brikly.app",
+      "package": "com.brikly.expo.archived",
       "versionCode": 1,
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
