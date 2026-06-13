@@ -774,3 +774,21 @@ The first two prune passes (19b7a50, d43d47d) were driven off the committed tsc-
 
 ### Lesson recorded
 Do NOT trust the committed tsc-output.txt for line-precise edits — it is stale. Use the lexical pruner (or a fresh tsc) for any further automated import work.
+
+---
+
+## 2026-06-13 (cont.) - US-212: jest-dom matcher types — systemic win (verified)
+
+### Found via the fresh, accurate error list
+With a fresh tsc list in hand (the corrected prune's run), grouped TS2339 by property and found ~278 were jest-dom matchers (toBeInTheDocument 111, toHaveClass 83, toHaveAttribute 57, ...) — ONE systemic cause: jest-dom v6's TS augmentation lives under the '/vitest' entrypoint, which was never imported (matchers were extended at runtime in setup.ts but tsc didn't know their types).
+
+### Fix + verification
+- Added src/test/jest-dom.d.ts: type-only `import '@testing-library/jest-dom/vitest'`. No runtime change.
+- Verified in isolation first (tiny tsconfig + synthetic test): matchers type-check WITH the file, error WITHOUT it.
+- Full tsc confirms: backlog 2494 -> **2216** (exactly -278). jest-dom matcher errors now **0**. TS2304 still **2** (the two pre-existing used-without-import errors; zero regressions). TS2339 674 -> 396.
+
+### Refreshed the stale baseline
+- Replaced the committed tsc-output.txt with this fresh, ACCURATE list (2216 errors). The old one was stale and caused the earlier prune corruption; future automated work must use a current list.
+
+### US-212 status: still passes=FALSE (AC = tsc passes). Backlog 2216.
+Remaining (fresh breakdown): TS2345=522, TS6133=512 (mostly unused locals now), TS2339=396, TS2322=237, TS2769=196 (Supabase insert/update overloads), TS18047/18048 null-safety, TS2589=37 deep Supabase types. These are diverse per-site fixes needing an iterative tsc loop; a single tsc run here is 44-69 min, so this is CI-loop work. Session reductions on US-212: ~1432 unused imports + 278 jest-dom = the verified, safe progress; the rest is genuine type-correctness work.
