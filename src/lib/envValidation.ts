@@ -18,6 +18,10 @@ interface EnvConfig {
   VITE_POSTHOG_API_KEY?: string;
   /** PostHog host URL (optional) */
   VITE_POSTHOG_HOST?: string;
+  /** Sentry DSN for error tracking (optional, but strongly recommended in production) */
+  VITE_SENTRY_DSN?: string;
+  /** App release/version for Sentry release tagging (optional) */
+  VITE_APP_VERSION?: string;
 }
 
 /**
@@ -46,6 +50,8 @@ const OPTIONAL_ENV_VARS: (keyof EnvConfig)[] = [
   'VITE_SUPABASE_PROJECT_ID',
   'VITE_POSTHOG_API_KEY',
   'VITE_POSTHOG_HOST',
+  'VITE_SENTRY_DSN',
+  'VITE_APP_VERSION',
 ];
 
 /**
@@ -133,6 +139,16 @@ export const validateEnvironment = (): boolean => {
     validateEnvVar(key, false);
   }
 
+  // Sentry is technically optional, but shipping production without error
+  // tracking is a real operational gap — warn loudly so a missing DSN is
+  // caught in deploy logs instead of silently disabling all error reporting.
+  if (import.meta.env.PROD && !getEnvVar('VITE_SENTRY_DSN')) {
+    logger.warn(
+      'VITE_SENTRY_DSN is not set in production — Sentry error tracking is DISABLED. ' +
+      'Set it in the Cloudflare Pages environment to capture production errors.'
+    );
+  }
+
   if (isValid) {
     logger.info('Environment validation successful');
   } else {
@@ -153,6 +169,8 @@ export const getEnvConfig = (): EnvConfig => {
     VITE_SUPABASE_PROJECT_ID: getEnvVar('VITE_SUPABASE_PROJECT_ID'),
     VITE_POSTHOG_API_KEY: getEnvVar('VITE_POSTHOG_API_KEY'),
     VITE_POSTHOG_HOST: getEnvVar('VITE_POSTHOG_HOST'),
+    VITE_SENTRY_DSN: getEnvVar('VITE_SENTRY_DSN'),
+    VITE_APP_VERSION: getEnvVar('VITE_APP_VERSION'),
   };
 };
 

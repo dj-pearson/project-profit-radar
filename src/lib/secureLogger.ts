@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 /**
  * Secure Logger Utility
  * SECURITY: Masks sensitive data in logs to prevent PII exposure
@@ -165,7 +166,7 @@ class SecureLogger {
    * Log warnings (always)
    */
   warn(...args: any[]): void {
-    console.warn(...this.formatArgs(...args));
+    logger.warn(...this.formatArgs(...args));
   }
 
   /**

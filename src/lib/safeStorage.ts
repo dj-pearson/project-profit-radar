@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 /**
  * Safe localStorage wrapper that handles errors gracefully
  * Prevents crashes in private browsing mode or when storage is full
@@ -17,7 +18,7 @@ export const setItem = (key: string, value: string): boolean => {
     return true;
   } catch (error) {
     if (import.meta.env.DEV) {
-      console.warn(`Failed to set localStorage item "${key}":`, error);
+      logger.warn(`Failed to set localStorage item "${key}":`, error);
     }
     return false;
   }
@@ -33,7 +34,7 @@ export const getItem = (key: string): StorageValue => {
     return localStorage.getItem(key);
   } catch (error) {
     if (import.meta.env.DEV) {
-      console.warn(`Failed to get localStorage item "${key}":`, error);
+      logger.warn(`Failed to get localStorage item "${key}":`, error);
     }
     return null;
   }
@@ -50,7 +51,7 @@ export const removeItem = (key: string): boolean => {
     return true;
   } catch (error) {
     if (import.meta.env.DEV) {
-      console.warn(`Failed to remove localStorage item "${key}":`, error);
+      logger.warn(`Failed to remove localStorage item "${key}":`, error);
     }
     return false;
   }
@@ -66,7 +67,7 @@ export const clear = (): boolean => {
     return true;
   } catch (error) {
     if (import.meta.env.DEV) {
-      console.warn('Failed to clear localStorage:', error);
+      logger.warn('Failed to clear localStorage:', error);
     }
     return false;
   }
@@ -84,7 +85,7 @@ export const getJSON = <T>(key: string, defaultValue: T): T => {
     return item ? JSON.parse(item) : defaultValue;
   } catch (error) {
     if (import.meta.env.DEV) {
-      console.warn(`Failed to get/parse JSON from localStorage "${key}":`, error);
+      logger.warn(`Failed to get/parse JSON from localStorage "${key}":`, error);
     }
     return defaultValue;
   }
@@ -102,7 +103,7 @@ export const setJSON = <T>(key: string, value: T): boolean => {
     return true;
   } catch (error) {
     if (import.meta.env.DEV) {
-      console.warn(`Failed to set JSON in localStorage "${key}":`, error);
+      logger.warn(`Failed to set JSON in localStorage "${key}":`, error);
     }
     return false;
   }

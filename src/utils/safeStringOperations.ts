@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 /**
  * Safe String Operations Utility
  * Provides defensive wrappers around string operations to prevent crashes
@@ -18,7 +19,7 @@ export function safeReplace(
   try {
     // Check if input is null, undefined, or not a string
     if (input === null || input === undefined) {
-      console.warn('safeReplace: Input is null or undefined', { input, searchValue });
+      logger.warn('safeReplace: Input is null or undefined', { input, searchValue });
       return '';
     }
 
@@ -59,7 +60,7 @@ export function safeReplaceAll(
 ): string {
   try {
     if (input === null || input === undefined) {
-      console.warn('safeReplaceAll: Input is null or undefined');
+      logger.warn('safeReplaceAll: Input is null or undefined');
       return '';
     }
 

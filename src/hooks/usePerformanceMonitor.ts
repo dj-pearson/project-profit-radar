@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { logger } from '@/lib/logger';
 
 interface PerformanceMetrics {
   fcp: number | null; // First Contentful Paint
@@ -82,7 +83,7 @@ export const usePerformanceMonitor = () => {
       observer.observe({ entryTypes: ['paint', 'largest-contentful-paint', 'first-input', 'layout-shift', 'navigation', 'event'] });
     } catch (e) {
       // Fallback for browsers that don't support all entry types
-      console.warn('Some performance metrics not available');
+      logger.warn('Some performance metrics not available');
     }
 
     return () => observer.disconnect();

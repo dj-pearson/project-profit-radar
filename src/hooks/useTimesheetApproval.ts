@@ -44,6 +44,11 @@ export const useTimesheetApproval = () => {
     const queryClient = useQueryClient();
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
+  // Tenant scoping for these views is enforced in the database: migration
+  // 20260613120000 (US-197) sets security_invoker=true on
+  // pending_timesheet_approvals / approved_timesheets so the caller's
+  // time_entries RLS applies (managers see their company; other tenants are
+  // filtered out). Do not assume these are global.
   // Fetch pending timesheets
   const { data: pendingTimesheets, isLoading: isPendingLoading } = useQuery({
     queryKey: ['pending-timesheets'],

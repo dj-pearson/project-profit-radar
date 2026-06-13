@@ -83,6 +83,12 @@ serve(async (req) => {
   const overallStatus = allHealthy ? "healthy" : anyUnhealthy ? "unhealthy" : "degraded";
   const totalResponseTime = Date.now() - startTime;
 
+  // Only a fully healthy service returns 200. Both "degraded" (a dependency
+  // returned an error) and "unhealthy" (a dependency threw) return 503 so that
+  // uptime monitors and load balancers actually alert on partial outages
+  // instead of treating a degraded service as fully up.
+  const httpStatus = overallStatus === "healthy" ? 200 : 503;
+
   return new Response(
     JSON.stringify({
       status: overallStatus,
@@ -92,7 +98,7 @@ serve(async (req) => {
       version: "1.0.0",
     }),
     {
-      status: overallStatus === "healthy" ? 200 : overallStatus === "degraded" ? 200 : 503,
+      status: httpStatus,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     }
   );

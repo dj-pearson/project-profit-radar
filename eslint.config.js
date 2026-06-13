@@ -31,6 +31,9 @@ export default tseslint.config(
         { allowConstantExport: true },
       ],
       "@typescript-eslint/no-unused-vars": "off",
+      // Base rule for non-app code (tools/, scripts/, mobile-app/, etc.):
+      // console is discouraged but only a warning. The app source (src/**) is
+      // held to "error" in the dedicated block below.
       "no-console": [
         "warn",
         {
@@ -69,6 +72,29 @@ export default tseslint.config(
       "jsx-a11y/role-supports-aria-props": "error",
       "jsx-a11y/scope": "error",
       "jsx-a11y/tabindex-no-positive": "warn",
+    },
+  },
+  {
+    // App source must route logging through the logger (src/lib/logger.ts).
+    // console.error is retained as a low-level escape hatch: blanket-forwarding
+    // the ~1.3k existing console.error calls to logger.error would flood Sentry,
+    // so intentional error logging stays on console.error for now (US-209).
+    files: ["src/**/*.{ts,tsx}"],
+    rules: {
+      "no-console": [
+        "error",
+        {
+          "allow": ["error"]
+        }
+      ],
+    },
+  },
+  {
+    // Sanctioned logging boundaries — all other code routes through these.
+    // logger.ts is the base logger; secureLogger.ts masks PII before logging.
+    files: ["src/lib/logger.ts", "src/lib/secureLogger.ts"],
+    rules: {
+      "no-console": "off",
     },
   }
 );

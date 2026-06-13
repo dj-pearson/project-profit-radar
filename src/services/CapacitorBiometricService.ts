@@ -13,6 +13,7 @@
 
 import { Capacitor } from '@capacitor/core';
 import { Preferences } from '@capacitor/preferences';
+import { logger } from '@/lib/logger';
 
 // Types for biometric authentication
 export interface BiometricCapabilities {
@@ -98,7 +99,7 @@ class CapacitorBiometricService {
       const BiometricAuth = await this.loadBiometricPlugin();
 
       if (!BiometricAuth) {
-        console.warn('Biometric plugin not available');
+        logger.warn('Biometric plugin not available');
         return this.createFallbackCapabilities();
       }
 
@@ -144,7 +145,7 @@ class CapacitorBiometricService {
       this.biometricPlugin = BiometricAuth;
       return BiometricAuth;
     } catch (error) {
-      console.warn('Capacitor biometric plugin not installed:', error);
+      logger.warn('Capacitor biometric plugin not installed:', error);
       return null;
     }
   }

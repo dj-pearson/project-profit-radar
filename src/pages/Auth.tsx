@@ -16,6 +16,7 @@ import { useCsrfToken } from "@/lib/security/csrfProtection.tsx";
 import { validateCsrfToken, getCsrfToken } from "@/lib/security/csrfProtection";
 import { createEndpointLimiter } from "@/lib/security/rateLimiter";
 import { supabase } from "@/integrations/supabase/client";
+import { logger } from '@/lib/logger';
 
 type OTPFlowState = 'idle' | 'sending' | 'verifying' | 'submitted' | 'verified' | 'setting_password';
 type AuthView = 'signin' | 'signup' | 'forgot';
@@ -209,7 +210,7 @@ const Auth = () => {
       }
     } catch (err) {
       // Non-fatal: fall through and let the server enforce the check
-      console.warn('[Auth] Disposable email pre-check failed:', err);
+      logger.warn('[Auth] Disposable email pre-check failed:', err);
     }
     setLoading(true); setOtpFlowState('sending');
     const result = await signUp(email, password, { first_name: firstName, last_name: lastName, role: "admin" });

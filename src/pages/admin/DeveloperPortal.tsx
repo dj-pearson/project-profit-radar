@@ -24,6 +24,7 @@ import {
   Clock
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { logger } from '@/lib/logger';
 
 interface APIDoc {
   id: string;
@@ -422,7 +423,7 @@ export function DeveloperPortal() {
                             variant="ghost"
                             size="sm"
                             onClick={() => handleCopyCode(
-                              `fetch('https://api.brikly.net${selectedDoc.endpoint}', {\n  method: '${selectedDoc.method}',\n  headers: {\n    'Authorization': 'Bearer YOUR_API_KEY',\n    'Content-Type': 'application/json'\n  }${selectedDoc.method !== 'GET' ? ',\n  body: JSON.stringify({\n    // Your request data\n  })' : ''}\n})\n.then(response => response.json())\n.then(data => console.log(data))\n.catch(error => console.error(error));`,
+                              `fetch('https://api.brikly.net${selectedDoc.endpoint}', {\n  method: '${selectedDoc.method}',\n  headers: {\n    'Authorization': 'Bearer YOUR_API_KEY',\n    'Content-Type': 'application/json'\n  }${selectedDoc.method !== 'GET' ? ',\n  body: JSON.stringify({\n    // Your request data\n  })' : ''}\n})\n.then(response => response.json())\n.then(data => logger.debug(data))\n.catch(error => console.error(error));`,
                               'js'
                             )}
                           >
@@ -446,7 +447,7 @@ export function DeveloperPortal() {
   })` : ''}
 })
 .then(response => response.json())
-.then(data => console.log(data))
+.then(data => logger.debug(data))
 .catch(error => console.error(error));`}
                           </code>
                         </pre>

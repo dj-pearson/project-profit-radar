@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import type { Database } from '@/integrations/supabase/types';
+import { logger } from '@/lib/logger';
 
 type TenantRow = Database['public']['Tables']['tenants']['Row'];
 
@@ -123,7 +124,7 @@ export function TenantProvider({ children }: { children: React.ReactNode }) {
         .single();
 
       if (queryError || !data) {
-        console.warn('No verified tenant found for domain (or query failed):', hostname, queryError?.message);
+        logger.warn('No verified tenant found for domain (or query failed):', hostname, queryError?.message);
         // Fall back to default tenant - don't block auth if tenant query fails
         setTenant(DEFAULT_TENANT as Tenant);
         applyBranding(DEFAULT_TENANT.branding!);

@@ -3,12 +3,8 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type",
-};
+import { getCorsHeaders } from "../_shared/secure-cors.ts";
+import { requireSystemOrAdmin } from "../_shared/system-auth.ts";
 
 interface Company {
   id: string;
@@ -32,10 +28,16 @@ interface HealthScoreComponents {
 }
 
 serve(async (req) => {
+  const corsHeaders = getCorsHeaders(req);
   // Handle CORS preflight
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
   }
+
+  // Runs verify_jwt=false (daily cron). Require the CRON_SECRET or an admin
+  // user so it can't be triggered anonymously to hammer the DB (DoS).
+  const denied = await requireSystemOrAdmin(req);
+  if (denied) return denied;
 
   try {
     // Create Supabase client

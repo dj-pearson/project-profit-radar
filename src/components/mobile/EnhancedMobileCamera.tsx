@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Camera, RotateCcw, Check, X, SwitchCamera } from 'lucide-react';
 import { useDeviceInfo } from '@/hooks/useDeviceInfo';
+import { logger } from '@/lib/logger';
 
 interface MobileCameraProps {
   onCapture: (file: File, metadata?: CameraMetadata) => void;
@@ -151,7 +152,7 @@ export const EnhancedMobileCamera = ({
           accuracy: position.coords.accuracy
         };
       } catch (error) {
-        console.warn('Could not get location for photo:', error);
+        logger.warn('Could not get location for photo:', error);
       }
     }
 

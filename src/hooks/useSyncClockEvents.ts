@@ -13,6 +13,7 @@ import {
   mobileBackgroundService,
   type PendingClockEvent,
 } from '@/mobile/services/MobileBackgroundService';
+import { logger } from '@/lib/logger';
 
 export interface UseSyncClockEventsReturn {
   isSyncing: boolean;
@@ -93,7 +94,7 @@ export const useSyncClockEvents = (): UseSyncClockEventsReturn => {
         .single();
 
       if (findError || !activeEntry) {
-        console.warn('No active time entry found for clock-out:', event.geofenceId);
+        logger.warn('No active time entry found for clock-out:', event.geofenceId);
         return false;
       }
 

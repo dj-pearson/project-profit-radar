@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 /**
  * Resource Prioritization Utilities
  * Manages resource loading priorities for optimal performance
@@ -174,7 +175,7 @@ export const monitorResourcePerformance = (): void => {
     
     
     if (slowResources.length > 0) {
-      console.warn('⚠️ Slow Resources (>1s):', slowResources.map(r => ({
+      logger.warn('⚠️ Slow Resources (>1s):', slowResources.map(r => ({
         name: r.name,
         duration: `${r.duration.toFixed(2)}ms`
       })));

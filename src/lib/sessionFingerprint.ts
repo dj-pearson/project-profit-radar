@@ -4,6 +4,7 @@
  */
 
 import { SESSION_CONFIG } from '@/config/sessionConfig';
+import { logger } from '@/lib/logger';
 
 interface DeviceFingerprint {
   userAgent: string;
@@ -190,7 +191,7 @@ export const monitorDeviceChanges = async (
   const verification = await verifyDeviceFingerprint();
 
   if (!verification.isValid && verification.reason) {
-    console.warn('Session fingerprint mismatch:', verification.reason);
+    logger.warn('Session fingerprint mismatch:', verification.reason);
     onInvalidSession(verification.reason);
   }
 };

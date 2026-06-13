@@ -1,6 +1,7 @@
 import { useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { logger } from '@/lib/logger';
 
 interface TriggerEventOptions {
   eventName: string;
@@ -27,7 +28,7 @@ export const useBehavioralTriggers = () => {
    */
   const triggerEvent = useCallback(async (options: TriggerEventOptions) => {
     if (!user) {
-      console.warn('Cannot trigger event: user not authenticated');
+      logger.warn('Cannot trigger event: user not authenticated');
       return { success: false, error: 'User not authenticated' };
     }
 

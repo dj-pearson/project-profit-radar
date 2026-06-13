@@ -3,6 +3,7 @@ import { Helmet } from 'react-helmet-async';
 import { supabase } from '@/integrations/supabase/client';
 import { Star } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { logger } from '@/lib/logger';
 
 interface Review {
   id: string;
@@ -111,7 +112,7 @@ export const AggregateRatingSchema: React.FC<AggregateRatingSchemaProps> = ({
         .eq('status', 'approved');
 
       if (error) {
-        console.warn('Unable to fetch reviews:', error);
+        logger.warn('Unable to fetch reviews:', error);
         // No fallback to hard-coded numbers — emitting unsubstantiated star
         // ratings is deceptive under FTC §5 / Google rich-result policy. The
         // schema simply will not render until real review data exists.

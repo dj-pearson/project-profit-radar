@@ -5,6 +5,7 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { cache, QueryCache, CacheInvalidation } from '@/lib/cache';
+import { logger } from '@/lib/logger';
 
 // ============================================================================
 // Types & Interfaces
@@ -800,6 +801,6 @@ export const analyticsEngine = new AnalyticsEngineService();
  *
  * // Check cache performance
  * const stats = analyticsEngine.getCacheStats();
- * console.log(`Cache hit rate: ${(stats.hitRate * 100).toFixed(2)}%`);
+ * logger.debug(`Cache hit rate: ${(stats.hitRate * 100).toFixed(2)}%`);
  * ```
  */

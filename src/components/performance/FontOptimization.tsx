@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { logger } from '@/lib/logger';
 
 interface FontConfig {
   family: string;
@@ -83,7 +84,7 @@ export const useFontOptimization = () => {
           await font.load();
           document.fonts.add(font);
         } catch (error) {
-          console.warn('Font load failed:', font.family, error);
+          logger.warn('Font load failed:', font.family, error);
         }
       });
     }

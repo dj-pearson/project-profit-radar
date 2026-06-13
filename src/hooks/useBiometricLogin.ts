@@ -19,6 +19,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useDeviceTrust } from '@/hooks/useDeviceTrust';
 import { toast } from '@/hooks/use-toast';
 import { Capacitor } from '@capacitor/core';
+import { logger } from '@/lib/logger';
 
 interface UseBiometricLoginState {
   capabilities: BiometricCapabilities | null;
@@ -136,7 +137,7 @@ export const useBiometricLogin = (): UseBiometricLoginReturn => {
           deviceTrustId = trustResult.data.id;
         }
       } catch (error) {
-        console.warn('Could not create device trust:', error);
+        logger.warn('Could not create device trust:', error);
       }
 
       const result = await biometricAuthService.enableBiometricLogin({

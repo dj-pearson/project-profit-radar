@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from '@/hooks/use-toast';
+import { logger } from '@/lib/logger';
 
 export interface TrustedDevice {
   id: string;
@@ -195,7 +196,7 @@ export const useDeviceTrust = () => {
         const ipData = await ipResponse.json();
         ipAddress = ipData.ip;
       } catch (e) {
-        console.warn('Could not fetch IP address');
+        logger.warn('Could not fetch IP address');
       }
 
       const trustExpiresAt = new Date();

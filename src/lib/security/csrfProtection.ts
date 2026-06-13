@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 /**
  * CSRF Token Protection Utilities (US-003)
  *
@@ -72,7 +73,7 @@ export function getCsrfToken(): string | null {
     return sessionStorage.getItem(CSRF_STORAGE_KEY);
   } catch {
     // sessionStorage may be unavailable (e.g., SSR, privacy mode in some browsers)
-    console.warn('[SECURITY] Unable to access sessionStorage for CSRF token');
+    logger.warn('[SECURITY] Unable to access sessionStorage for CSRF token');
     return null;
   }
 }
@@ -85,7 +86,7 @@ export function storeCsrfToken(token: string): void {
   try {
     sessionStorage.setItem(CSRF_STORAGE_KEY, token);
   } catch {
-    console.warn('[SECURITY] Unable to store CSRF token in sessionStorage');
+    logger.warn('[SECURITY] Unable to store CSRF token in sessionStorage');
   }
 }
 

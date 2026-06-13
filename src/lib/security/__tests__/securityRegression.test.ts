@@ -107,6 +107,7 @@ describe('Security Regression Gate (US-014)', () => {
       (vuln: KnownVulnerability) => {
         const exists = fileExistsSync(vuln.regressionTestFile);
         if (!exists) {
+          // eslint-disable-next-line no-console
           console.warn(
             `[SKIP] Regression test file not yet created for ${vuln.id}: ${vuln.regressionTestFile}`,
           );

@@ -4,6 +4,7 @@ import path from "path";
 import { componentTagger } from "lovable-tagger";
 import { visualizer } from 'rollup-plugin-visualizer';
 import { ViteImageOptimizer } from 'vite-plugin-image-optimizer';
+import { sentryVitePlugin } from '@sentry/vite-plugin';
 import { copyFileSync, existsSync, mkdirSync } from 'fs';
 
 // https://vitejs.dev/config/
@@ -44,7 +45,19 @@ export default defineConfig(({ mode }) => ({
           // Non-fatal: service worker copy failed
         }
       }
-    }
+    },
+    // Upload sourcemaps to Sentry so production stack traces de-minify.
+    // Only active when SENTRY_AUTH_TOKEN is present (CI release build), so
+    // normal/local builds are unaffected. Must be the LAST plugin.
+    mode === "production" && process.env.SENTRY_AUTH_TOKEN && sentryVitePlugin({
+      org: process.env.SENTRY_ORG,
+      project: process.env.SENTRY_PROJECT,
+      authToken: process.env.SENTRY_AUTH_TOKEN,
+      release: { name: process.env.VITE_APP_VERSION || undefined },
+      // We emit hidden sourcemaps via build.sourcemap below; delete them from
+      // the deployed assets after upload so they aren't served publicly.
+      sourcemaps: { filesToDeleteAfterUpload: ['./dist/**/*.map'] },
+    }),
   ].filter(Boolean),
   resolve: {
     alias: {
@@ -106,7 +119,14 @@ export default defineConfig(({ mode }) => ({
   build: {
     target: "esnext",
     minify: "esbuild",
-    sourcemap: false,
+    // Emit hidden sourcemaps (no //# sourceMappingURL comment in the bundle)
+    // when explicitly requested OR when a Sentry upload is configured, so the
+    // release build can de-minify stack traces. The Sentry plugin deletes the
+    // .map files after upload so they aren't served publicly from Cloudflare.
+    sourcemap:
+      process.env.VITE_SOURCEMAP === "true" || !!process.env.SENTRY_AUTH_TOKEN
+        ? "hidden"
+        : false,
     chunkSizeWarningLimit: 400, // More aggressive warning
     reportCompressedSize: true,
     emptyOutDir: true,

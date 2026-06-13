@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 /**
  * Route Preloading Utilities
  * Intelligently preloads routes based on user behavior
@@ -15,7 +16,7 @@ export const preloadRoute = async (routeImportFn: () => Promise<any>) => {
   try {
     await routeImportFn();
   } catch (error) {
-    console.warn('Route preload failed:', error);
+    logger.warn('Route preload failed:', error);
   }
 };
 

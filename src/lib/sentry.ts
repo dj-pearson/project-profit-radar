@@ -9,15 +9,27 @@ import * as Sentry from '@sentry/react';
 export const initSentry = () => {
   const dsn = import.meta.env.VITE_SENTRY_DSN;
   const environment = import.meta.env.MODE;
+  // Release tag so errors are attributable to a specific deploy and uploaded
+  // sourcemaps can de-minify stack traces. Falls back to 'unknown' if unset.
+  const release = import.meta.env.VITE_APP_VERSION || undefined;
 
   // Only initialize if DSN is provided
   if (!dsn) {
+    if (import.meta.env.PROD) {
+      // Use console.warn directly (not the logger, which suppresses warn in
+      // production) so a missing DSN is visible in deploy/runtime logs.
+      // eslint-disable-next-line no-console
+      console.warn(
+        '[Sentry] VITE_SENTRY_DSN not set — error tracking is disabled in production.'
+      );
+    }
     return;
   }
 
   Sentry.init({
     dsn,
     environment,
+    release,
 
     // Set tracesSampleRate to 1.0 to capture 100% of transactions for performance monitoring.
     // We recommend adjusting this value in production
@@ -92,10 +104,12 @@ export const initSentry = () => {
       'ResizeObserver loop completed with undelivered notifications',
     ],
 
-    // Only track errors from our domain
+    // Only track errors from our domain. NOTE: the production domain is
+    // brikly.net (not .com); the previous .com entries meant Sentry silently
+    // dropped every real production event.
     allowUrls: [
-      /https?:\/\/(www\.)?brikly\.com/,
-      /https?:\/\/(www\.)?brikly\.com/,
+      /https?:\/\/(www\.)?brikly\.net/,
+      /https?:\/\/[a-z0-9-]+\.pages\.dev/,
       /localhost/,
     ],
   });

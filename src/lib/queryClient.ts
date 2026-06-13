@@ -4,6 +4,30 @@ import { safeStorage } from './safeStorage';
 import { logger } from './logger';
 
 /**
+ * Capped exponential backoff with jitter for query/mutation retries.
+ * attemptIndex is 0-based: ~1s, ~2s, ~4s ... up to 30s, plus up to 1s jitter.
+ */
+const backoffWithJitter = (attemptIndex: number): number => {
+  const base = Math.min(1000 * 2 ** attemptIndex, 30_000);
+  return base + Math.round(Math.random() * 1000);
+};
+
+/**
+ * Auth/client errors (401/403/404/422) won't succeed on retry, so fail fast
+ * instead of retrying. Supabase/PostgREST surface the HTTP status on the error
+ * object; we sniff common shapes defensively since errors are typed `unknown`.
+ */
+const isNonRetryableError = (error: unknown): boolean => {
+  const status =
+    (error as { status?: number; statusCode?: number; code?: unknown })?.status ??
+    (error as { statusCode?: number })?.statusCode;
+  if (typeof status === 'number') {
+    return status === 401 || status === 403 || status === 404 || status === 422;
+  }
+  return false;
+};
+
+/**
  * Enhanced React Query configuration for optimal performance
  */
 export const queryClient = new QueryClient({
@@ -13,16 +37,28 @@ export const queryClient = new QueryClient({
       staleTime: 5 * 60 * 1000,
       // Keep data in cache for 10 minutes
       gcTime: 10 * 60 * 1000,
-      // Retry failed requests 2 times
-      retry: 2,
+      // Retry failed requests up to 2 times, but never retry client/auth
+      // errors (they won't succeed on retry and just hammer the backend).
+      retry: (failureCount, error) => {
+        if (isNonRetryableError(error)) return false;
+        return failureCount < 2;
+      },
+      // Exponential backoff with jitter, capped at 30s. Prevents a thundering
+      // herd against Supabase (and 429 amplification) when a request fails on a
+      // shared/flaky network, e.g. multiple field users on one job site.
+      retryDelay: backoffWithJitter,
       // Don't refetch on window focus for better mobile experience
       refetchOnWindowFocus: false,
       // Refetch on reconnect
       refetchOnReconnect: true,
     },
     mutations: {
-      // Retry mutations once
-      retry: 1,
+      // Retry mutations once, but never retry non-idempotent client/auth errors
+      retry: (failureCount, error) => {
+        if (isNonRetryableError(error)) return false;
+        return failureCount < 1;
+      },
+      retryDelay: backoffWithJitter,
     },
   },
 });
@@ -201,7 +237,7 @@ export const devTools = {
   logQueries: () => {
     if (process.env.NODE_ENV === 'development') {
       const queries = queryClient.getQueryCache().getAll();
-      console.table(
+      logger.table(
         queries.map(query => ({
           queryKey: JSON.stringify(query.queryKey),
           state: query.state.status,

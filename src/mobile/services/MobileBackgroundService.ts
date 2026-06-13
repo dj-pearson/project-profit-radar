@@ -3,6 +3,7 @@ import * as BackgroundFetch from 'expo-background-fetch';
 import * as TaskManager from 'expo-task-manager';
 import * as Location from 'expo-location';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { logger } from '@/lib/logger';
 
 // Storage keys for geofencing state
 const STORAGE_KEYS = {
@@ -150,7 +151,7 @@ class MobileBackgroundService {
     try {
       const { granted } = await Location.requestBackgroundPermissionsAsync();
       if (!granted) {
-        console.warn('Background location permission not granted');
+        logger.warn('Background location permission not granted');
         return;
       }
 
@@ -515,7 +516,7 @@ async function handleGeofenceEntry(
   const companyId = await AsyncStorage.getItem(STORAGE_KEYS.COMPANY_ID);
 
   if (!userId || !companyId) {
-    console.warn('User not authenticated for geofence entry');
+    logger.warn('User not authenticated for geofence entry');
     return;
   }
 
@@ -573,7 +574,7 @@ async function handleGeofenceExit(
   const companyId = await AsyncStorage.getItem(STORAGE_KEYS.COMPANY_ID);
 
   if (!userId || !companyId) {
-    console.warn('User not authenticated for geofence exit');
+    logger.warn('User not authenticated for geofence exit');
     return;
   }
 

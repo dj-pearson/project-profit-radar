@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 /**
  * Route Memory Utility
  * Stores and retrieves the user's intended destination for seamless auth redirects
@@ -66,7 +67,7 @@ export function rememberCurrentRoute(location: { pathname: string; search: strin
     sessionStorage.setItem(ROUTE_MEMORY_KEY, JSON.stringify(routeData));
     sessionStorage.setItem(ROUTE_MEMORY_TIMESTAMP_KEY, Date.now().toString());
   } catch (error) {
-    console.warn('Failed to remember route:', error);
+    logger.warn('Failed to remember route:', error);
   }
 }
 
@@ -92,7 +93,7 @@ export function getRememberedRoute(): string | null {
     const routeData: StoredRoute = JSON.parse(stored);
     return routeData.fullUrl;
   } catch (error) {
-    console.warn('Failed to retrieve remembered route:', error);
+    logger.warn('Failed to retrieve remembered route:', error);
     return null;
   }
 }
@@ -105,7 +106,7 @@ export function clearRememberedRoute(): void {
     sessionStorage.removeItem(ROUTE_MEMORY_KEY);
     sessionStorage.removeItem(ROUTE_MEMORY_TIMESTAMP_KEY);
   } catch (error) {
-    console.warn('Failed to clear remembered route:', error);
+    logger.warn('Failed to clear remembered route:', error);
   }
 }
 

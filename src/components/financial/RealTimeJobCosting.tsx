@@ -28,6 +28,7 @@ import {
   Save,
   X
 } from 'lucide-react';
+import { logger } from '@/lib/logger';
 
 interface JobCost {
   id: string;
@@ -209,18 +210,18 @@ const RealTimeJobCosting: React.FC<RealTimeJobCostingProps> = ({ projectId }) =>
   }, [memoizedCostSummary]);
 
   const loadData = async () => {
-    console.time('loadData');
+    logger.time('loadData');
     try {
       setLoading(true);
       
       // Load projects
-      console.time('loadProjects');
+      logger.time('loadProjects');
       const { data: projectsData, error: projectsError } = await supabase
         .from('projects')
         .select('id, name, budget, status')
         .eq('company_id', userProfile?.company_id)
         .order('created_at', { ascending: false });
-      console.timeEnd('loadProjects');
+      logger.timeEnd('loadProjects');
 
       if (projectsError) throw projectsError;
       setProjects(projectsData || []);
@@ -231,14 +232,14 @@ const RealTimeJobCosting: React.FC<RealTimeJobCostingProps> = ({ projectId }) =>
       }
 
       // Load cost codes
-      console.time('loadCostCodes');
+      logger.time('loadCostCodes');
       const { data: costCodesData, error: costCodesError } = await supabase
         .from('cost_codes')
         .select('id, code, name, category')
         .eq('company_id', userProfile?.company_id)
         .eq('is_active', true)
         .order('code');
-      console.timeEnd('loadCostCodes');
+      logger.timeEnd('loadCostCodes');
 
       if (costCodesError) throw costCodesError;
       setCostCodes(costCodesData || []);
@@ -252,12 +253,12 @@ const RealTimeJobCosting: React.FC<RealTimeJobCostingProps> = ({ projectId }) =>
       });
     } finally {
       setLoading(false);
-      console.timeEnd('loadData');
+      logger.timeEnd('loadData');
     }
   };
 
   const loadJobCosts = async (projectId: string) => {
-    console.time('loadJobCosts');
+    logger.time('loadJobCosts');
     try {
       const { data: costsData, error: costsError } = await supabase
         .from('job_costs')
@@ -276,18 +277,18 @@ const RealTimeJobCosting: React.FC<RealTimeJobCostingProps> = ({ projectId }) =>
         description: "Failed to load job costs"
       });
     } finally {
-      console.timeEnd('loadJobCosts');
+      logger.timeEnd('loadJobCosts');
     }
   };
 
   const handleRealTimeUpdate = useCallback((payload: { eventType: string; new: Record<string, unknown>; old: Record<string, unknown> }) => {
-    console.time('handleRealTimeUpdate');
+    logger.time('handleRealTimeUpdate');
     const { eventType, new: newRecord, old: oldRecord } = payload;
     
     switch (eventType) {
       case 'INSERT':
         // Fetch the complete record
-        console.time('handleRealTimeUpdate-INSERT');
+        logger.time('handleRealTimeUpdate-INSERT');
         supabase
           .from('job_costs')
           .select('*')
@@ -301,12 +302,12 @@ const RealTimeJobCosting: React.FC<RealTimeJobCostingProps> = ({ projectId }) =>
                 description: `Cost entry: $${data.total_cost?.toLocaleString()}`
               });
             }
-            console.timeEnd('handleRealTimeUpdate-INSERT');
+            logger.timeEnd('handleRealTimeUpdate-INSERT');
           });
         break;
         
       case 'UPDATE':
-        console.time('handleRealTimeUpdate-UPDATE');
+        logger.time('handleRealTimeUpdate-UPDATE');
         setJobCosts(prev => 
           prev.map(cost => 
             cost.id === newRecord.id 
@@ -318,20 +319,20 @@ const RealTimeJobCosting: React.FC<RealTimeJobCostingProps> = ({ projectId }) =>
           title: "Cost Updated",
           description: "Job cost has been updated"
         });
-        console.timeEnd('handleRealTimeUpdate-UPDATE');
+        logger.timeEnd('handleRealTimeUpdate-UPDATE');
         break;
         
       case 'DELETE':
-        console.time('handleRealTimeUpdate-DELETE');
+        logger.time('handleRealTimeUpdate-DELETE');
         setJobCosts(prev => prev.filter(cost => cost.id !== oldRecord.id));
         toast({
           title: "Cost Deleted",
           description: "Job cost has been removed"
         });
-        console.timeEnd('handleRealTimeUpdate-DELETE');
+        logger.timeEnd('handleRealTimeUpdate-DELETE');
         break;
     }
-    console.timeEnd('handleRealTimeUpdate');
+    logger.timeEnd('handleRealTimeUpdate');
   }, []);
 
 

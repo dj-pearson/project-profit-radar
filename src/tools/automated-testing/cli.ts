@@ -29,6 +29,7 @@
 
 import { TestOrchestrator, createTester, getPreset, DEFAULT_CONFIG } from './index';
 import type { TestConfig } from './types';
+import { logger } from '@/lib/logger';
 
 // ============================================================================
 // Argument Parsing
@@ -118,7 +119,7 @@ function parseArgs(args: string[]): CliArgs {
 }
 
 function showHelp(): void {
-  console.log(`
+  logger.debug(`
 ╔═══════════════════════════════════════════════════════════════════╗
 ║          AUTOMATED TESTING TOOL - Command Line Interface          ║
 ╚═══════════════════════════════════════════════════════════════════╝
@@ -241,7 +242,7 @@ async function main(): Promise<void> {
     config.edgeFunctionTesting = false;
   }
 
-  console.log(`
+  logger.debug(`
 ╔═══════════════════════════════════════════════════════════════════╗
 ║                    AUTOMATED TESTING TOOL                         ║
 ╚═══════════════════════════════════════════════════════════════════╝
@@ -257,10 +258,10 @@ async function main(): Promise<void> {
       console.error(`\n❌ Test run failed with ${failureRate.toFixed(1)}% failure rate`);
       process.exit(1);
     } else if (failureRate > 0) {
-      console.warn(`\n⚠️ Test run completed with ${failureRate.toFixed(1)}% failure rate`);
+      logger.warn(`\n⚠️ Test run completed with ${failureRate.toFixed(1)}% failure rate`);
       process.exit(0);
     } else {
-      console.log(`\n✅ Test run completed successfully!`);
+      logger.debug(`\n✅ Test run completed successfully!`);
       process.exit(0);
     }
   } catch (error) {
