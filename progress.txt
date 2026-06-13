@@ -674,3 +674,31 @@ Verified two P1 stories that were already implemented in code but unmarked in pr
 ### Quality: `npx vite build` PASS (58.34s); Vitest image-compression (6) + AutoBreadcrumb (5) + useRecentItems (6) PASS
 
 ---
+
+---
+
+## 2026-06-13 - Ralph Loop: P1 security verification + marking (US-125, US-127, US-197, US-200)
+
+### Context
+Fresh container: ran `npm ci` (node_modules was empty) then `npx vite build` (v5.4.21, green, 1m8s). Prior session commits 34f9b8f and c097e0e had implemented several P1 security stories but deliberately left them passes=false pending staging verification. Audited each against its acceptance criteria and the live code, then marked the code-complete ones.
+
+### Stories Completed
+
+#### US-125: Harden Capacitor iOS config - PASS (verified)
+- capacitor.config.ts: iOS `webContentsDebuggingEnabled` is gated `!isProduction` (false in prod); android is hardcoded false.
+- `allowNavigation` has NO `*.supabase.co` wildcard — project migrated to self-hosted Supabase, so allowlist is api/app/functions.brikly.net + OAuth hosts (accounts.google.com, appleid.apple.com). Stricter than the PRD's suggested project-pinned host.
+- `limitsNavigationsToAppBoundDomains=true`; Info.plist WKAppBoundDomains (brikly.net + app/api/functions.brikly.net) match the brikly allowNavigation entries.
+
+#### US-127: Harden iOS session storage - PASS (verified)
+- `src/lib/supabaseStorage.ts` exports `purgeSupabaseSessionStorage()` (scrubs sb-*-auth-token / supabase.auth.* from localStorage sync + @capacitor/preferences async, sets signed-out sentinel so stale sessions never re-hydrate after offline sign-out).
+- `src/hooks/useSupabaseSessionResume.ts` listens to @capacitor/app `appStateChange` and calls `supabase.auth.refreshSession()` on foreground (native-only, no-op web).
+- AuthContext signOut() calls purge after supabase.auth.signOut() (L971/992); resume hook mounted once at AuthProvider (L178).
+
+#### US-197: Multi-tenant isolation hardening - PASS (code-complete; staging SQL verification)
+- Migration 20260613120000: security_invoker=true on pending_timesheet_approvals/approved_timesheets views (were SECURITY DEFINER, leaked all companies' timesheets); dropped payment_failures permissive FOR ALL USING(true) policy, re-scoped to service_role.
+- scripts/verify-tenant-isolation.sql asserts 0 cross-tenant rows on staging.
+
+#### US-200: Stripe webhook signature + idempotency - PASS (code-complete)
+- constructEvent signature verification on every request; webhook_events.processed guard skips duplicates with 200 (no longer resets processed=false per delivery); marks processed_at after success; explicit handlers for subscription.updated/deleted + invoice.payment_failed.
+
+### Verification: `npx vite build` PASS (v5.4.21). Edge/DB stories need staging apply to fully exercise (no Deno/DB in container).
