@@ -1629,8 +1629,8 @@
         "npm run build completes successfully"
       ],
       "priority": 4,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "COMPLETED. Keyboard shortcuts overlay + navigation/action shortcuts. New src/hooks/useNavigationShortcuts.ts (mounted once in App.tsx AppContent): Shift+? dispatches 'showShortcutsHelp' to open the overlay; G-then-{P,I,T,D} chord navigation (1.5s window) to Projects/Invoices/Time/Dashboard; bare N triggers a context-aware 'new' via resolveNewTarget(pathname) (project on /projects, invoice on /invoices, etc.); all disabled while typing (isEditableTarget guards INPUT/TEXTAREA/SELECT/contenteditable) and Ctrl/Cmd/Alt combos are passed through. Escape closes the overlay natively (Radix Dialog). The existing ShortcutsHelp overlay (opened via the showShortcutsHelp event, grouped by category, searchable) now also lists the US-095 shortcuts via STATIC_SHORTCUTS with displayKeys ('G then P', 'N', 'Shift ?', 'Esc'); ShortcutItem renders the 'then' connector as muted text; trigger hint updated to Shift+?. Also added an input-field guard to the existing useKeyboardShortcuts handler (it previously had none). Tests: src/hooks/__tests__/useNavigationShortcuts.test.ts (4: context-aware target mapping + null cases, isEditableTarget true/false cases). vite build green (1m18s); full unit suite green."
     },
     {
       "id": "US-096",

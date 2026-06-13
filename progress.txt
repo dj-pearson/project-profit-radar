@@ -841,3 +841,12 @@ Remaining (fresh breakdown): TS2345=522, TS6133=512 (mostly unused locals now), 
 - Row checkboxes + select-all; bulk toolbar: Mark as Sent, Mark as Paid (supabase update), Export Selected (CSV), Delete Selected (confirm + supabase delete).
 - Status filter dropdown + date-field (invoice/due) From/To range + Clear.
 - Extracted pure logic to invoiceListUtils.ts (filterAndSortInvoices) with 6 passing tests (incl. numeric amount sort, inclusive date range, no mutation). vite build green.
+
+---
+
+## 2026-06-13 (cont.) - US-095: Keyboard shortcuts overlay + navigation shortcuts - PASS
+
+- New `src/hooks/useNavigationShortcuts.ts` (mounted in App.tsx): Shift+? overlay, G-then-{P,I,T,D} chord nav, context-aware N (resolveNewTarget by pathname), input-guarded (isEditableTarget), Ctrl/Cmd/Alt passed through. Escape handled by Radix Dialog.
+- `shortcuts-help.tsx`: lists the US-095 shortcuts (STATIC_SHORTCUTS + displayKeys); 'then' connector styling; trigger hint -> Shift+?.
+- Added the missing input-field guard to `useKeyboardShortcuts`.
+- 4 tests (useNavigationShortcuts.test.ts). vite build green; full suite green.

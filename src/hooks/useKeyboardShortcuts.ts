@@ -18,6 +18,15 @@ export const useKeyboardShortcuts = (shortcuts: KeyboardShortcut[]) => {
       // Guard against undefined event.key (can happen with browser extensions)
       if (!event.key) return;
 
+      // Don't fire shortcuts while the user is typing (US-095).
+      const target = event.target as HTMLElement | null;
+      if (target?.tagName) {
+        const tag = target.tagName.toUpperCase();
+        if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || target.isContentEditable) {
+          return;
+        }
+      }
+
       const shortcut = shortcuts.find(s =>
         s.key.toLowerCase() === event.key.toLowerCase() &&
         !!s.ctrlKey === event.ctrlKey &&

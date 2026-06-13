@@ -15,6 +15,7 @@ import { DashboardSkeleton } from "@/components/ui/loading-skeleton";
 import { preloadHighPriorityRoutes } from "@/utils/lazyRoutes";
 import { AccessibilityProvider } from "@/components/accessibility/AccessibilityProvider";
 import { useGlobalShortcuts } from "@/hooks/useKeyboardShortcuts";
+import { useNavigationShortcuts } from "@/hooks/useNavigationShortcuts";
 import { SharedElementRoot } from "@/components/mobile/SharedElementTransition";
 
 // Import centralized route configuration
@@ -35,6 +36,8 @@ const KeyboardShortcutsPanel = lazy(() => import("@/components/help/KeyboardShor
 // Component that needs Router context
 const AppContent = () => {
   const globalShortcuts = useGlobalShortcuts();
+  // Power-user navigation shortcuts: Shift+? overlay, G-chords, context-aware N (US-095).
+  useNavigationShortcuts();
 
   return (
     <>
