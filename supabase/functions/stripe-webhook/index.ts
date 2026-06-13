@@ -66,16 +66,42 @@ serve(async (req) => {
 
     logStep("Processing event", { type: event.type, id: event.id });
 
-    // Log webhook event
-    await supabaseClient
+    // Idempotency guard: Stripe retries webhook deliveries, so the same event
+    // can arrive multiple times. If we already fully processed this event,
+    // skip it to avoid double-applying billing effects (duplicate payment
+    // failures, repeated subscription/company updates, etc.). A row that
+    // exists but is NOT yet processed means a prior attempt failed mid-way —
+    // that one is safe to reprocess.
+    const { data: existingEvent } = await supabaseClient
       .from("webhook_events")
-      .upsert({
-        stripe_event_id: event.id,
-        event_type: event.type,
-        event_data: event.data,
-        processed: false,
-        processing_attempts: 0
-      }, { onConflict: "stripe_event_id" });
+      .select("processed, processing_attempts")
+      .eq("stripe_event_id", event.id)
+      .maybeSingle();
+
+    if (existingEvent?.processed) {
+      logStep("Duplicate event already processed — skipping", { id: event.id });
+      return new Response(JSON.stringify({ received: true, duplicate: true }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 200,
+      });
+    }
+
+    const priorAttempts: number = existingEvent?.processing_attempts ?? 0;
+
+    // Record the event the first time we see it. Crucially we do NOT upsert an
+    // existing row here — the previous code reset processed=false on every
+    // delivery, defeating idempotency. Insert only when new.
+    if (!existingEvent) {
+      await supabaseClient
+        .from("webhook_events")
+        .insert({
+          stripe_event_id: event.id,
+          event_type: event.type,
+          event_data: event.data,
+          processed: false,
+          processing_attempts: 0,
+        });
+    }
 
     try {
       await processWebhookEvent(event, supabaseClient, stripe);
@@ -99,11 +125,12 @@ serve(async (req) => {
       const errorObj = error as Error;
       logStep("Error processing event", { type: event.type, error: errorObj.message });
 
-      // Update processing attempt
+      // Increment the real attempt counter (was hardcoded to 1) so repeated
+      // failures are visible and retry behaviour can be reasoned about.
       await supabaseClient
         .from("webhook_events")
         .update({
-          processing_attempts: 1,
+          processing_attempts: priorAttempts + 1,
           last_processing_error: errorObj.message
         })
         .eq("stripe_event_id", event.id);

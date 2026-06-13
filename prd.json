@@ -3244,7 +3244,7 @@
       ],
       "priority": 1,
       "passes": false,
-      "notes": "Source: web prod-readiness deep dive (multi-tenancy audit). Evidence verified in live src/. RLS may already cover base tables, but views are the real risk. Backward-compat: new migration is additive (set security_invoker / add predicate); do not narrow legitimate access."
+      "notes": "CODE COMPLETE — pending staging apply + verification (cannot run a DB here). Root causes found & fixed: (1) timesheet views pending_timesheet_approvals / approved_timesheets were plain CREATE VIEW = SECURITY DEFINER, bypassing time_entries RLS so any user could read every company's timesheets; (2) payment_failures had a permissive 'System can manage ... FOR ALL USING(true)' policy that OR'd with the per-user SELECT policy and exposed all tenants' rows. Migration supabase/migrations/20260613120000_harden_tenant_isolation_rls.sql sets security_invoker=true on both views (verified time_entries_select + user_profiles_select are company-scoped so managers keep visibility and worker names resolve) and drops the USING(true) policy, re-scoping management to service_role (which bypasses RLS anyway). Verified NO client writes to payment_failures and that the correct subscribers-based SELECT policy remains; left webhook_events untouched because an admin page reads it (separate, tenant_id-scoped follow-up). Added scripts/verify-tenant-isolation.sql (cross-tenant assertion to run on staging) and documented scoping at the two query sites. REMAINING: apply migration to staging and run the verification script (expect 0 offending rows). NOTE: client-side company_id filters were intentionally NOT added — payment_failures.subscriber_id references subscribers(id) not auth.uid(), so a naive filter would break the UI; RLS is the correct layer. Source: web security audit."
     },
     {
       "id": "US-198",
@@ -3289,7 +3289,7 @@
       ],
       "priority": 1,
       "passes": false,
-      "notes": "Source: observability + billing audits (both flagged idempotency). Payment-integrity critical. stripe-webhook is intentionally public (config.toml) so signature verification is the auth boundary."
+      "notes": "CODE COMPLETE — pending staging replay test (no Deno/Stripe here). AUDIT CORRECTION: signature verification was ALREADY present (stripe.webhooks.constructEvent with 400 on failure) and CORS is already scoped to brikly.net (not wildcard). The real gap was idempotency: the handler unconditionally upserted webhook_events with processed=false on every delivery, resetting the flag and REPROCESSING duplicates. Fixed in supabase/functions/stripe-webhook/index.ts: look up the event first; if already processed, skip and return 200 (duplicate:true); only INSERT when new (no clobbering); a row that exists but is unprocessed (prior failure) is reprocessed; processing_attempts now increments from the real prior count instead of hardcoding 1. invoice.payment_failed and customer.subscription.updated/deleted are already handled. REMAINING: replay a duplicate event on staging and assert no double-application (e.g. single payment_failures row). Residual: a rare concurrent double-delivery of a brand-new event could still double-process before the first marks processed; handler-level check-before-insert mitigates this. Source: observability + billing audits."
     },
     {
       "id": "US-201",
