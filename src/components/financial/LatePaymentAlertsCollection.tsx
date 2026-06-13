@@ -6,7 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
-import { AlertTriangle, Clock, DollarSign, Users, Calendar, Send } from 'lucide-react';
+import { AlertTriangle, Mail, Phone, Clock, DollarSign, Users, Calendar, Send } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { format, addDays } from 'date-fns';
 import { useAuth } from '@/contexts/AuthContext';

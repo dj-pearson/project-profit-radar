@@ -1,6 +1,7 @@
 import { useCallback, useState, useEffect } from "react";
 import { ReactFlow, MiniMap, Controls, Background, Node, addEdge, Connection, useNodesState, useEdgesState, BackgroundVariant } from "@xyflow/react";
-import { CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import "@xyflow/react/dist/style.css";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";

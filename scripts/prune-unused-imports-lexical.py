@@ -22,8 +22,13 @@ import os
 import re
 import sys
 
+# Match `import <clause> from '<src>'` — single or multi-line. The clause may
+# span newlines but NEVER contains a ';' (a statement terminator), so using
+# [^;]*? instead of [\s\S]*? stops the match from swallowing a preceding
+# side-effect import (`import 'x.css';`, which has no `from`) and running on to
+# the next import's `from`.
 IMPORT_RE = re.compile(
-    r"^[ \t]*import\b[\s\S]*?from\s*['\"][^'\"]+['\"];?[ \t]*$",
+    r"^[ \t]*import\b[^;]*?from\s*['\"][^'\"]+['\"];?[ \t]*$",
     re.MULTILINE,
 )
 

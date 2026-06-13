@@ -13,6 +13,7 @@ import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { validateFileUpload, generateSecureFilename } from '@/lib/security/fileUploadValidation';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import MobileDailyReport from '@/components/mobile/MobileDailyReport';
 import { useIsMobile } from '@/hooks/use-mobile';

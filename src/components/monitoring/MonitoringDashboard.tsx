@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from '@/hooks/use-toast';
-import { Activity, Bell } from 'lucide-react';
+import { Activity, Bell, Settings } from 'lucide-react';
 
 interface SystemMetric {
   id: string;

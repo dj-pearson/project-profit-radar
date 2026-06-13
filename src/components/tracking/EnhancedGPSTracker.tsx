@@ -8,7 +8,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-import { MapPin, Navigation, AlertTriangle, Wifi, WifiOff, Battery } from 'lucide-react';
+import { MapPin, Navigation, Clock, AlertTriangle, Wifi, WifiOff, Battery } from 'lucide-react';
 
 interface LocationData {
   latitude: number;

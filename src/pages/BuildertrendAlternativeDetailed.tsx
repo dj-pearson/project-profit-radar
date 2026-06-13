@@ -1,4 +1,4 @@
-import { CheckCircle, DollarSign, ArrowRight, Download, Calculator, Building2, Wrench } from 'lucide-react';
+import { CheckCircle, DollarSign, Users, ArrowRight, Download, Calculator, Building2, Wrench } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
