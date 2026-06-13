@@ -22,7 +22,10 @@ import {
 import { Progress } from '@/components/ui/progress';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import DocumentOCRProcessor from '@/components/ocr/DocumentOCRProcessor';
+// Lazy-loaded so the OCR component (and tesseract.js, pulled in dynamically by
+// its worker pool) stay out of the Document Management route chunk until a user
+// actually scans a document (US-217).
+const DocumentOCRProcessor = React.lazy(() => import('@/components/ocr/DocumentOCRProcessor'));
 import { SmartImportWizard } from '@/components/smart-import/SmartImportWizard';
 import { useAuth } from '@/contexts/AuthContext';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
@@ -701,12 +704,21 @@ const DocumentManagement = () => {
             </DialogDescription>
           </DialogHeader>
           {currentProcessingFile && (
-            <DocumentOCRProcessor
-              file={currentProcessingFile}
-              projects={projects}
-              onProcessingComplete={handleOCRProcessingComplete}
-              onCancel={handleOCRCancel}
-            />
+            <React.Suspense
+              fallback={
+                <div className="flex items-center justify-center py-12 text-muted-foreground">
+                  <Brain className="h-5 w-5 mr-2 animate-pulse" aria-hidden="true" />
+                  Loading document scanner…
+                </div>
+              }
+            >
+              <DocumentOCRProcessor
+                file={currentProcessingFile}
+                projects={projects}
+                onProcessingComplete={handleOCRProcessingComplete}
+                onCancel={handleOCRCancel}
+              />
+            </React.Suspense>
           )}
         </DialogContent>
       </Dialog>

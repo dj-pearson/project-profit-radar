@@ -3543,8 +3543,8 @@
         "OCR accuracy/behavior on the expense-capture and document flows is unchanged"
       ],
       "priority": 2,
-      "passes": false,
-      "notes": "Source: build/perf audit. Memory leak + bundle bloat both addressed."
+      "passes": true,
+      "notes": "COMPLETED. Tesseract OCR code-split + worker leak fixed. New src/lib/ocr/ocrWorkerPool.ts: a SHARED, ref-counted Tesseract worker behind acquireOcr()/release(); dynamically imports tesseract.js on first use (absent from non-OCR chunks), serializes recognize() calls on the single worker, routes per-call progress, and terminates the worker on a 30s idle timeout once refcount hits 0 (no per-upload worker leak). isOcrSupported() gates a manual-entry fallback for browsers without Worker/WebAssembly. Refactored MobileExpenseCapture.tsx (removed top-level 'tesseract.js' import -> pool) and DocumentOCRProcessor.tsx (replaced one-shot Tesseract.recognize -> pool with progress + fallback). DocumentManagement.tsx now React.lazy()+Suspense-loads DocumentOCRProcessor. Build verified: tesseract is its own async chunk (chunk-DDyvOmjU.js); DocumentManagement (15.8kB) and other route chunks reference it 0 times; DocumentOCRProcessor split into its own 7.7kB chunk. 4 unit tests in src/lib/ocr/__tests__/ocrWorkerPool.test.ts prove: one shared worker across holders, terminate-after-idle (no leak), flat across 10 sequential uploads (1 worker/1 terminate), and re-acquire cancels pending terminate. vite build green (1m16s)."
     },
     {
       "id": "US-218",

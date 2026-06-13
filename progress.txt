@@ -792,3 +792,14 @@ With a fresh tsc list in hand (the corrected prune's run), grouped TS2339 by pro
 
 ### US-212 status: still passes=FALSE (AC = tsc passes). Backlog 2216.
 Remaining (fresh breakdown): TS2345=522, TS6133=512 (mostly unused locals now), TS2339=396, TS2322=237, TS2769=196 (Supabase insert/update overloads), TS18047/18048 null-safety, TS2589=37 deep Supabase types. These are diverse per-site fixes needing an iterative tsc loop; a single tsc run here is 44-69 min, so this is CI-loop work. Session reductions on US-212: ~1432 unused imports + 278 jest-dom = the verified, safe progress; the rest is genuine type-correctness work.
+
+---
+
+## 2026-06-13 (cont.) - US-217: Code-split Tesseract OCR + fix worker leak - PASS
+
+- New `src/lib/ocr/ocrWorkerPool.ts`: shared ref-counted Tesseract worker. Dynamically imports tesseract.js on first use, serializes recognize() on one worker with per-call progress routing, terminates on 30s idle once refcount hits 0. `isOcrSupported()` for the unsupported-browser fallback.
+- `MobileExpenseCapture.tsx`: removed top-level `tesseract.js` import -> uses the pool; manual-entry fallback when unsupported.
+- `DocumentOCRProcessor.tsx`: replaced one-shot `Tesseract.recognize` -> pool (with progress + fallback to manual review).
+- `DocumentManagement.tsx`: `React.lazy` + `Suspense` for DocumentOCRProcessor.
+- Build proof: tesseract isolated in its own async chunk (chunk-DDyvOmjU.js); route chunks reference it 0x; DocumentOCRProcessor split to a 7.7kB chunk.
+- `src/lib/ocr/__tests__/ocrWorkerPool.test.ts` (4 tests) proves the no-leak behavior (1 worker / 1 terminate across 10 uploads). vite build green.

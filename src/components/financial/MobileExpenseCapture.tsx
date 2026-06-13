@@ -24,7 +24,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useGeofencing } from '@/hooks/useGeofencing';
 import { supabase } from '@/integrations/supabase/client';
 import { Camera as CapacitorCamera, CameraResultType, CameraSource } from '@capacitor/camera';
-import { createWorker } from 'tesseract.js';
+import { acquireOcr, isOcrSupported } from '@/lib/ocr/ocrWorkerPool';
 
 interface MobileExpenseCaptureProps {
   projectId?: string;
@@ -127,15 +127,26 @@ export const MobileExpenseCapture: React.FC<MobileExpenseCaptureProps> = ({
   };
 
   const processReceiptOCR = async (base64Image: string) => {
+    // Fallback for browsers without Web Worker / WebAssembly support: skip OCR
+    // and let the user fill the form manually (the fields are already editable).
+    if (!isOcrSupported()) {
+      toast({
+        title: 'Auto-scan unavailable',
+        description: 'Your browser does not support receipt scanning. Please enter the details manually.',
+      });
+      return;
+    }
+
     setIsProcessing(true);
     setOcrConfidence(null);
 
+    // Acquire a hold on the shared OCR worker; release it in finally so the
+    // pool can terminate the worker when idle (no per-scan worker leak).
+    const ocr = await acquireOcr();
     try {
-      const worker = await createWorker('eng');
       const imageData = `data:image/jpeg;base64,${base64Image}`;
 
-      const { data: { text, confidence } } = await worker.recognize(imageData);
-      await worker.terminate();
+      const { text, confidence } = await ocr.recognize(imageData);
 
       // Extract potential information from OCR text
       const extractedData = extractReceiptData(text);
@@ -165,6 +176,7 @@ export const MobileExpenseCapture: React.FC<MobileExpenseCaptureProps> = ({
         variant: 'destructive'
       });
     } finally {
+      ocr.release();
       setIsProcessing(false);
     }
   };
