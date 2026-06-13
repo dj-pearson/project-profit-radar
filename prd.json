@@ -1511,8 +1511,8 @@
         "npm run build completes successfully"
       ],
       "priority": 3,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "COMPLETED. Sortable columns + bulk actions + filters on the invoices list (src/components/invoices/InvoiceList.tsx). SORT: clickable sortable headers for Invoice #, Client, Date (invoice_date, added column), Status, Due Date, Amount — with direction indicators (Chevron up/down; AccessibleTable's built-in aria-sort for the <=50 path, custom renderSortableHeader for the virtualized >50 path). Sorting is data-level (filterAndSortInvoices) so it applies to BOTH render paths; amount sorts numerically not lexically. SELECTION: row checkboxes + header select-all (AccessibleTable selectable/selectedRows/onSelectionChange for small lists; a leading checkbox column for the virtualized path). BULK TOOLBAR (shown when rows selected): Mark as Sent + Mark as Paid (supabase update .in('id', ids)), Export Selected (client-side CSV download), Delete Selected (confirm + supabase delete). FILTERS: Status dropdown (All/Draft/Sent/Paid/Overdue) + a date-field selector (invoice date | due date) with From/To range inputs + Clear filters. Extracted the pure filter+sort logic to src/components/invoices/invoiceListUtils.ts with 6 passing unit tests (string asc/desc, numeric amount sort, status filter, invoice-date range inclusive, due-date field filter, no input mutation). vite build green (1m13s)."
     },
     {
       "id": "US-089",

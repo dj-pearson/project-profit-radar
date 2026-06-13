@@ -832,3 +832,12 @@ Remaining (fresh breakdown): TS2345=522, TS6133=512 (mostly unused locals now), 
 - Wired into BOTH `useRealtimeSubscription.ts` and `useRealTimeSync.ts` (centralized).
 - `OfflineIndicator.tsx` OfflineBanner shows a distinct 'Reconnecting to live updates…' banner when online but channels dropped.
 - 9 tests pass (reconnectingChannel 5 incl. dropped-channel recovery harness; connectionStore 4). vite build green.
+
+---
+
+## 2026-06-13 (cont.) - US-088: Sortable columns + bulk actions on invoices list - PASS
+
+- InvoiceList.tsx: sortable headers (Invoice #, Client, Date [new col], Status, Due Date, Amount) with direction indicators, across BOTH render paths (AccessibleTable + virtualized >50).
+- Row checkboxes + select-all; bulk toolbar: Mark as Sent, Mark as Paid (supabase update), Export Selected (CSV), Delete Selected (confirm + supabase delete).
+- Status filter dropdown + date-field (invoice/due) From/To range + Clear.
+- Extracted pure logic to invoiceListUtils.ts (filterAndSortInvoices) with 6 passing tests (incl. numeric amount sort, inclusive date range, no mutation). vite build green.
