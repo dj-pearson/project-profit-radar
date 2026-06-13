@@ -6,19 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { 
-  Settings, 
-  Webhook, 
-  Database, 
-  Zap, 
-  Mail, 
-  MessageSquare, 
-  ExternalLink,
-  Check,
-  X,
-  AlertTriangle,
-  Trash2
-} from 'lucide-react';
+import { Settings, Webhook, Check, X, AlertTriangle, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { APIKeyManager } from './APIKeyManager';
 

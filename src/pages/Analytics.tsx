@@ -18,19 +18,8 @@ const TimelineOptimization = React.lazy(() => import('@/components/analytics/Tim
 const PerformanceBenchmarking = React.lazy(() => import('@/components/analytics/PerformanceBenchmarking'));
 const ResourceOptimization = React.lazy(() => import('@/components/analytics/ResourceOptimization'));
 const WorkflowAutomation = React.lazy(() => import('@/components/analytics/WorkflowAutomation'));
-import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, PieChart, Pie, Cell, Area, AreaChart } from 'recharts';
-import { 
-  TrendingUp, 
-  DollarSign, 
-  Users, 
-  Building2, 
-  Calendar,
-  Target,
-  Activity,
-  BarChart3,
-  Download,
-  Filter
-} from 'lucide-react';
+import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, PieChart, Pie, Area, AreaChart } from 'recharts';
+import { TrendingUp, DollarSign, Building2, Target, Activity, BarChart3, Download, Filter } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 

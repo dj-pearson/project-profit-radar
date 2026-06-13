@@ -19,36 +19,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { formatCurrency } from "@/utils/formatters";
-import {
-  TrendingUp,
-  TrendingDown,
-  Target,
-  DollarSign,
-  Clock,
-  BarChart3,
-  PieChart,
-  Activity,
-  Zap,
-  AlertTriangle,
-  CheckCircle,
-  Calendar,
-  Users,
-} from "lucide-react";
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  PieChart as RechartsPieChart,
-  Cell,
-  LineChart,
-  Line,
-  Area,
-  AreaChart,
-} from "recharts";
+import { TrendingUp, Target, DollarSign, Clock, BarChart3, PieChart, Activity, Zap, CheckCircle } from "lucide-react";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart as RechartsPieChart, Cell, Area, AreaChart } from "recharts";
 
 interface PipelineMetrics {
   totalPipelineValue: number;

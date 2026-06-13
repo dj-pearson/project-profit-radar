@@ -9,20 +9,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import {
-  Plus,
-  Search,
-  Shield,
-  AlertTriangle,
-  FileText,
-  Calendar,
-  Clock,
-  CheckCircle,
-  XCircle,
-  Users,
-  HardHat,
-  Edit
-} from 'lucide-react';
+import { Plus, Search, Shield, AlertTriangle, FileText, Clock, CheckCircle, XCircle, Users, HardHat, Edit } from 'lucide-react';
 import ComplianceDisclaimer from '@/components/legal/ComplianceDisclaimer';
 
 export default function SafetyManagement() {

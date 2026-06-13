@@ -14,20 +14,7 @@ import {
 } from '@/components/ui/select';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import {
-  Send,
-  Upload,
-  Image as ImageIcon,
-  File,
-  Download,
-  Clock,
-  Check,
-  CheckCheck,
-  HelpCircle,
-  AlertCircle,
-  CheckCircle2,
-  MessageSquare
-} from 'lucide-react';
+import { Send, Upload, File, Download, Clock, Check, CheckCheck, HelpCircle, AlertCircle, CheckCircle2, MessageSquare } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface Message {

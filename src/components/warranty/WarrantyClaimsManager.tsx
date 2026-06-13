@@ -7,16 +7,7 @@ import { Input } from '@/components/ui/input';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { WarrantyClaimForm } from './WarrantyClaimForm';
-import { 
-  AlertTriangle, 
-  Plus, 
-  Search, 
-  Filter,
-  CheckCircle,
-  Clock,
-  XCircle,
-  FileText
-} from 'lucide-react';
+import { AlertTriangle, Plus, Search, Filter, CheckCircle, Clock, FileText } from 'lucide-react';
 
 interface WarrantyClaim {
   id: string;

@@ -14,18 +14,7 @@ import {
 import { Label } from '@/components/ui/label';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import {
-  CheckCircle2,
-  Clock,
-  XCircle,
-  FileText,
-  Calendar,
-  DollarSign,
-  AlertTriangle,
-  MessageSquare,
-  ChevronDown,
-  ChevronUp
-} from 'lucide-react';
+import { CheckCircle2, Clock, XCircle, Calendar, DollarSign, AlertTriangle, MessageSquare, ChevronDown, ChevronUp } from 'lucide-react';
 
 export interface ChangeOrder {
   id: string;

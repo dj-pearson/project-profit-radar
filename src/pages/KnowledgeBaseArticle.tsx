@@ -1,18 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { 
-  ArrowLeft, 
-  Clock, 
-  Eye, 
-  Star, 
-  ThumbsUp, 
-  ThumbsDown,
-  Share2,
-  BookOpen,
-  User,
-  Calendar,
-  Tag
-} from 'lucide-react';
+import { ArrowLeft, Clock, Eye, Star, ThumbsUp, ThumbsDown, Share2, BookOpen, Calendar, Tag } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";

@@ -4,7 +4,7 @@
  * Monitors network requests for errors, slow responses, and API issues.
  */
 
-import type { Page, Request, Response, Route } from 'playwright';
+import type { Page, Request, Response } from 'playwright';
 import type { NetworkRequest, TestResult } from '../types';
 import { Logger } from '../utils/logger';
 import { generateId } from '../utils/helpers';

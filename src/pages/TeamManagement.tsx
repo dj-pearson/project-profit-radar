@@ -9,27 +9,14 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { AccessibleTable, type TableColumn } from '@/components/accessibility/AccessibleTable';
 import { useSubscriptionLimits } from '@/hooks/useSubscriptionLimits';
 import UpgradePrompt from '@/components/subscription/UpgradePrompt';
-import { 
-  Users, 
-  Plus,
-  Edit,
-  Trash2,
-  Mail,
-  Phone,
-  Calendar,
-  Shield,
-  UserCheck,
-  UserX,
-  Crown
-} from 'lucide-react';
+import { Users, Plus, Edit, Mail, Phone, Shield, UserCheck, UserX, Crown } from 'lucide-react';
 
 interface TeamMember {
   id: string;

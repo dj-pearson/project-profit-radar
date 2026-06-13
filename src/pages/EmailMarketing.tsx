@@ -13,19 +13,7 @@ import { EmailIntegrationSettings } from '@/components/email/EmailIntegrationSet
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-import { 
-  Plus, 
-  Search, 
-  Mail, 
-  Send, 
-  Users, 
-  Eye,
-  MousePointer,
-  TrendingUp,
-  Calendar,
-  Edit,
-  Settings
-} from 'lucide-react';
+import { Plus, Search, Mail, Send, Users, Eye, MousePointer, Calendar, Edit } from 'lucide-react';
 
 export default function EmailMarketing() {
   const { userProfile } = useAuth();

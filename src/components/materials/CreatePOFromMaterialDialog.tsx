@@ -28,18 +28,7 @@ import {
   MaterialData,
   PurchaseOrderData
 } from '@/services/materialToPurchaseOrderService';
-import {
-  FileText,
-  Package,
-  DollarSign,
-  Calendar,
-  MapPin,
-  AlertTriangle,
-  CheckCircle,
-  ArrowRight,
-  Loader2,
-  Building2
-} from 'lucide-react';
+import { FileText, Calendar, MapPin, AlertTriangle, CheckCircle, ArrowRight, Loader2, Building2 } from 'lucide-react';
 
 interface CreatePOFromMaterialDialogProps {
   materialIds: string[];

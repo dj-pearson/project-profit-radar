@@ -11,20 +11,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
-import {
-  AlertTriangle,
-  TrendingDown,
-  Calendar,
-  DollarSign,
-  Users,
-  Cloud,
-  Wrench,
-  Bell,
-  Eye,
-  X,
-  CheckCircle,
-  Clock
-} from 'lucide-react';
+import { AlertTriangle, TrendingDown, Calendar, DollarSign, Users, Cloud, Wrench, Bell, X, CheckCircle, Clock } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toast } from '@/hooks/use-toast';
 

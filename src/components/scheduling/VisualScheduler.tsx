@@ -4,15 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { 
-  Calendar, 
-  Users, 
-  Clock, 
-  AlertTriangle, 
-  Plus,
-  Edit,
-  Trash2
-} from 'lucide-react';
+import { Calendar, Users, AlertTriangle } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 
 interface VisualSchedulerProps {

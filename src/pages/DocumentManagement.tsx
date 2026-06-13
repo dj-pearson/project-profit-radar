@@ -3,12 +3,11 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { AccessiblePageWrapper } from "@/components/accessibility/AccessiblePageWrapper";
 import { AccessibleTable, type TableColumn } from '@/components/accessibility/AccessibleTable';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import {
   AlertDialog,
@@ -23,27 +22,13 @@ import {
 import { Progress } from '@/components/ui/progress';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { DocumentCard } from '@/components/documents/DocumentCard';
 import DocumentOCRProcessor from '@/components/ocr/DocumentOCRProcessor';
 import { SmartImportWizard } from '@/components/smart-import/SmartImportWizard';
 import { useAuth } from '@/contexts/AuthContext';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { ResponsiveContainer } from '@/components/layout/ResponsiveContainer';
-import { mobileGridClasses, mobileFilterClasses, mobileButtonClasses, mobileTextClasses, mobileCardClasses } from '@/utils/mobileHelpers';
-import {
-  Upload,
-  FileText,
-  Plus,
-  Search,
-  Filter,
-  User,
-  Calendar,
-  Brain,
-  Zap,
-  Database,
-  Download,
-  Trash2
-} from 'lucide-react';
+import { mobileFilterClasses } from '@/utils/mobileHelpers';
+import { Upload, FileText, Search, Filter, Brain, Database, Download, Trash2 } from 'lucide-react';
 
 interface Document {
   id: string;

@@ -13,20 +13,7 @@ import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { 
-  ArrowLeft, 
-  CheckSquare,
-  AlertTriangle,
-  PlusCircle,
-  CheckCircle,
-  XCircle,
-  Clock,
-  User,
-  Calendar,
-  MapPin,
-  Camera,
-  MessageSquare
-} from 'lucide-react';
+import { CheckSquare, AlertTriangle, PlusCircle, CheckCircle, XCircle, Clock, User, Calendar, MapPin, MessageSquare } from 'lucide-react';
 
 interface Project {
   id: string;

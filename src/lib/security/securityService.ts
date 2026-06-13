@@ -9,17 +9,7 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { logger } from '@/lib/logger';
-import {
-  Permission,
-  UserRole,
-  ResourceType,
-  ROLE_LEVELS,
-  DEFAULT_ROLE_PERMISSIONS,
-  SecurityCheckResult,
-  OwnershipCheckResult,
-  SecurityAuditEvent,
-  SecurityEventType,
-} from './types';
+import { Permission, UserRole, ResourceType, ROLE_LEVELS, DEFAULT_ROLE_PERMISSIONS, SecurityCheckResult, OwnershipCheckResult, SecurityAuditEvent } from './types';
 
 // =============================================================================
 // PERMISSION CHECKING (Layer 2)

@@ -15,16 +15,7 @@ import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import MobileMaterialScanner from '@/components/mobile/MobileMaterialScanner';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { 
-  ArrowLeft, 
-  Package,
-  PlusCircle,
-  Search,
-  AlertTriangle,
-  TrendingDown,
-  Calendar,
-  Smartphone
-} from 'lucide-react';
+import { ArrowLeft, Package, PlusCircle, Search, AlertTriangle, TrendingDown, Smartphone } from 'lucide-react';
 
 interface Material {
   id: string;

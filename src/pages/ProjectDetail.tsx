@@ -4,7 +4,6 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
-import { LoadingState } from '@/components/ui/loading-spinner';
 import { toast } from '@/hooks/use-toast';
 import { projectService, ProjectWithRelations } from '@/services/projectService';
 import { ContextualActions } from '@/components/navigation/ContextualActions';
@@ -22,26 +21,7 @@ import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import {
-  ArrowLeft,
-  User,
-  Edit,
-  Menu,
-  Home,
-  Building2,
-  DollarSign,
-  Users,
-  Settings,
-  BarChart3,
-  FileText,
-  Calendar,
-  FolderOpen,
-  Clock,
-  ListTodo,
-  Receipt,
-  MapPin,
-  Hash
-} from 'lucide-react';
+import { ArrowLeft, User, Edit, Menu, Home, Building2, DollarSign, Users, Settings, FileText, Calendar, FolderOpen, Receipt, MapPin, Hash } from 'lucide-react';
 import { AccessiblePageWrapper } from "@/components/accessibility/AccessiblePageWrapper";
 import { cn } from '@/lib/utils';
 

@@ -12,21 +12,7 @@ import { Badge } from '@/components/ui/badge';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
-import { 
-  Search,
-  Globe,
-  BarChart3,
-  Settings,
-  FileText,
-  ExternalLink,
-  RefreshCw,
-  CheckCircle,
-  AlertCircle,
-  TrendingUp,
-  Eye,
-  MousePointer,
-  Share2
-} from 'lucide-react';
+import { Search, Globe, BarChart3, Settings, FileText, ExternalLink, RefreshCw, CheckCircle, TrendingUp, Eye, MousePointer, Share2 } from 'lucide-react';
 import { logger } from '@/lib/logger';
 
 interface SEOConfig {

@@ -12,21 +12,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { 
-  Plus,
-  DollarSign,
-  TrendingUp,
-  TrendingDown,
-  AlertTriangle,
-  Clock,
-  Users,
-  Wrench,
-  Package,
-  BarChart3,
-  Edit,
-  Save,
-  X
-} from 'lucide-react';
+import { DollarSign, TrendingUp, TrendingDown, AlertTriangle, Users, Wrench, Package, BarChart3, Edit, Save, X } from 'lucide-react';
 import { logger } from '@/lib/logger';
 
 interface JobCost {

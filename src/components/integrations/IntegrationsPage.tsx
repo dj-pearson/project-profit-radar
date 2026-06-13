@@ -5,16 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { useAuth } from '@/contexts/AuthContext';
 import { QuickBooksIntegration } from '../integrations/QuickBooksIntegration';
-import { 
-  Settings,
-  Database,
-  RefreshCw,
-  Shield,
-  FileText,
-  DollarSign,
-  Upload,
-  Plus
-} from 'lucide-react';
+import { Database, RefreshCw, FileText, DollarSign } from 'lucide-react';
 
 interface IntegrationsPageProps {
   companyId: string;

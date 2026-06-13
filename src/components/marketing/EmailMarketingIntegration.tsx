@@ -11,19 +11,7 @@ import { Progress } from '@/components/ui/progress';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from '@/hooks/use-toast';
-import { 
-  Mail, 
-  Users, 
-  Send, 
-  Calendar, 
-  BarChart3, 
-  Settings, 
-  Plus,
-  Eye,
-  MousePointer,
-  TrendingUp,
-  Target
-} from 'lucide-react';
+import { Mail, Users, Send, Settings, Plus, Eye, MousePointer, TrendingUp, Target } from 'lucide-react';
 
 interface EmailCampaign {
   id: string;

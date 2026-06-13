@@ -5,10 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { 
-  MessageCircle, Camera, Calendar, FileText, Star, 
-  Clock, CheckCircle, AlertCircle, Send, Phone, Mail 
-} from 'lucide-react';
+import { MessageCircle, Camera, Calendar, FileText, Star, CheckCircle, AlertCircle, Send, Phone, Mail } from 'lucide-react';
 
 interface ClientUpdate {
   id: string;

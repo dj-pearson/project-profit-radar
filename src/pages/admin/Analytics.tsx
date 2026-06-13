@@ -6,18 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
-import { 
-  TrendingUp,
-  TrendingDown,
-  BarChart3,
-  Users,
-  Building2,
-  DollarSign,
-  Clock,
-  CheckCircle,
-  AlertTriangle,
-  Activity
-} from 'lucide-react';
+import { TrendingUp, TrendingDown, BarChart3, Users, Building2, DollarSign, Activity } from 'lucide-react';
 
 interface AnalyticsData {
   totalCompanies: number;

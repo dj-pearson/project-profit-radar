@@ -7,17 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase, getEdgeFunctionUrl, supabaseAnonKey } from '@/integrations/supabase/client';
-import {
-  Shield,
-  Smartphone,
-  Key,
-  CheckCircle,
-  Copy,
-  Loader2,
-  AlertCircle,
-  Download,
-  RefreshCw,
-} from 'lucide-react';
+import { Shield, Smartphone, Key, CheckCircle, Copy, Loader2, AlertCircle, Download } from 'lucide-react';
 
 type SetupStep = 'intro' | 'qrcode' | 'verify' | 'backup' | 'complete';
 

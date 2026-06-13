@@ -5,19 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { 
-  Zap, 
-  Activity, 
-  Clock, 
-  Users, 
-  Server, 
-  Database,
-  Globe,
-  AlertTriangle,
-  CheckCircle2,
-  TrendingUp,
-  TrendingDown
-} from 'lucide-react';
+import { Zap, Activity, Clock, Users, Server, Database, TrendingUp, TrendingDown } from 'lucide-react';
 
 interface PerformanceMetric {
   id: string;

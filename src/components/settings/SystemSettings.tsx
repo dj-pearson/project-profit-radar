@@ -5,11 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Switch } from '@/components/ui/switch';
-import { 
-  Settings, Users, Shield, Bell, Database, Zap, 
-  Mail, Phone, Globe, Key, Download, Upload,
-  Save, RefreshCw, AlertTriangle, CheckCircle
-} from 'lucide-react';
+import { Settings, Shield, Bell, Database, Zap, Mail, Phone, Key, Download, Upload, Save, RefreshCw, AlertTriangle, CheckCircle } from 'lucide-react';
 
 interface CompanySettings {
   id: string;

@@ -1,6 +1,6 @@
-import { useState, useRef, useEffect, useCallback, ComponentType } from "react";
+import { useState, useRef, useEffect, ComponentType } from "react";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Play, Ruler, CheckCircle, DollarSign, TrendingUp } from "lucide-react";
+import { ArrowRight, Play, Ruler, CheckCircle } from "lucide-react";
 import { Link } from "react-router-dom";
 import { ResponsiveContainer, ResponsiveGrid } from "@/components/layout/ResponsiveContainer";
 

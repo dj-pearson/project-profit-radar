@@ -15,21 +15,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { Helmet } from 'react-helmet-async';
-import { 
-  ArrowLeft, 
-  FileText,
-  Upload,
-  PlusCircle,
-  CheckCircle,
-  XCircle,
-  Clock,
-  AlertCircle,
-  User,
-  Calendar,
-  Download,
-  Eye,
-  Edit
-} from 'lucide-react';
+import { ArrowLeft, FileText, Upload, PlusCircle, CheckCircle, XCircle, AlertCircle, User, Calendar, Eye, Edit } from 'lucide-react';
 
 interface Project {
   id: string;

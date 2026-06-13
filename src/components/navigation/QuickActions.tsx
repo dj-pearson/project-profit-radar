@@ -4,16 +4,7 @@ import { useSubscription } from '@/contexts/SubscriptionContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import UpgradePrompt from '@/components/subscription/UpgradePrompt';
-import { 
-  Plus, 
-  Building2, 
-  Users, 
-  FileText, 
-  Target,
-  DollarSign,
-  TrendingUp,
-  Clock
-} from 'lucide-react';
+import { Plus, Building2, Users, FileText, Target, TrendingUp, Clock } from 'lucide-react';
 
 interface QuickAction {
   title: string;

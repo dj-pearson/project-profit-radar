@@ -13,17 +13,7 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Label } from '@/components/ui/label';
-import {
-  Clock,
-  MapPin,
-  User,
-  Building2,
-  Calendar,
-  CheckCircle2,
-  XCircle,
-  AlertCircle,
-  History,
-} from 'lucide-react';
+import { Clock, MapPin, User, Building2, CheckCircle2, XCircle, AlertCircle, History } from 'lucide-react';
 import { format } from 'date-fns';
 
 interface TimesheetDetailModalProps {

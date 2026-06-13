@@ -2,17 +2,7 @@ import { useState, useRef } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { 
-  ArrowLeft, 
-  ArrowRight, 
-  ArrowUp, 
-  ArrowDown,
-  ZoomIn,
-  ZoomOut,
-  Hand,
-  Timer,
-  TouchpadIcon
-} from 'lucide-react';
+import { ArrowLeft, ArrowRight, ZoomIn, Timer, TouchpadIcon } from 'lucide-react';
 import { useTouchGestures } from '@/hooks/useTouchGestures';
 
 export const TouchGestureDemo = () => {

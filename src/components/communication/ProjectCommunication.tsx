@@ -6,16 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { 
-  Send, 
-  Upload, 
-  Image as ImageIcon, 
-  File, 
-  Download,
-  Clock,
-  Check,
-  CheckCheck
-} from 'lucide-react';
+import { Send, Upload, File, Download, Clock, Check, CheckCheck } from 'lucide-react';
 
 interface Message {
   id: string;

@@ -6,19 +6,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { integrationService } from '@/services/IntegrationService';
 import { toast } from '@/hooks/use-toast';
-import {
-  ArrowRight,
-  Building2,
-  DollarSign,
-  FileText,
-  Users,
-  Calendar,
-  Zap,
-  ExternalLink,
-  Plus,
-  Link,
-  Calculator
-} from 'lucide-react';
+import { Building2, DollarSign, FileText, Calendar, Zap, ExternalLink, Plus, Link, Calculator } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,

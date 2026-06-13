@@ -5,18 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import {
-  MapPin,
-  Navigation,
-  Clock,
-  AlertCircle,
-  CheckCircle,
-  Users,
-  Map,
-  TrendingUp,
-  Route,
-  DollarSign,
-} from 'lucide-react';
+import { MapPin, Navigation, Clock, AlertCircle, CheckCircle, Map, Route, DollarSign } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';

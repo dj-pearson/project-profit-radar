@@ -12,18 +12,7 @@ import { Label } from '@/components/ui/label';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
-import { 
-  Building2,
-  Users,
-  Calendar,
-  DollarSign,
-  Search,
-  Filter,
-  MoreHorizontal,
-  Edit,
-  Trash2,
-  Eye
-} from 'lucide-react';
+import { Building2, Users, Calendar, Search, Filter, Eye } from 'lucide-react';
 
 interface Company {
   id: string;

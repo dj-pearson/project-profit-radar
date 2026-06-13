@@ -5,10 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Progress } from '@/components/ui/progress';
-import { 
-  Package, Truck, AlertTriangle, CheckCircle, Clock, 
-  BarChart3, TrendingDown, MapPin, Search, Plus, Edit
-} from 'lucide-react';
+import { Package, Truck, AlertTriangle, BarChart3, TrendingDown, MapPin, Search, Plus, Edit } from 'lucide-react';
 
 interface InventoryItem {
   id: string;

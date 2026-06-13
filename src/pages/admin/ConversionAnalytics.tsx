@@ -9,20 +9,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import {
-  TrendingUp,
-  TrendingDown,
-  Users,
-  Mail,
-  Target,
-  CheckCircle,
-  DollarSign,
-  Activity,
-  Zap,
-  BarChart3,
-  PieChart,
-  Trophy,
-} from 'lucide-react';
+import { TrendingUp, TrendingDown, Users, Mail, Target, CheckCircle, DollarSign, Activity, Zap, BarChart3, Trophy } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';

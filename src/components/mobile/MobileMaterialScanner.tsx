@@ -5,15 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
-import { 
-  Package, 
-  Minus, 
-  Plus, 
-  Search, 
-  AlertTriangle,
-  CheckCircle,
-  QrCode
-} from 'lucide-react';
+import { Package, Minus, Plus, Search, AlertTriangle, CheckCircle } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 

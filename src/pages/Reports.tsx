@@ -14,7 +14,7 @@ const CustomReportBuilder = React.lazy(() => import('@/components/reports/Custom
 const ExecutiveDashboard = React.lazy(() => import('@/components/analytics/ExecutiveDashboard'));
 import { FileSpreadsheet, FileText, Download, BarChart3, Settings } from 'lucide-react';
 import { AccessiblePageWrapper } from "@/components/accessibility/AccessiblePageWrapper";
-import { MobilePageWrapper, MobileStatsGrid, MobileFilters, mobileGridClasses, mobileFilterClasses, mobileButtonClasses, mobileTextClasses, mobileCardClasses } from '@/utils/mobileHelpers';
+import { MobilePageWrapper, mobileGridClasses, mobileFilterClasses, mobileButtonClasses, mobileTextClasses, mobileCardClasses } from '@/utils/mobileHelpers';
 
 interface ReportProject {
   id: string;

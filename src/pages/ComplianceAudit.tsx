@@ -10,23 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
 
-import { 
-  Shield, 
-  AlertTriangle, 
-  Eye, 
-  Settings, 
-  FileText,
-  Users,
-  Database,
-  Clock,
-  TrendingUp,
-  RefreshCw,
-  Download,
-  Search,
-  Filter,
-  ArrowLeft,
-  Edit
-} from 'lucide-react';
+import { Shield, AlertTriangle, Eye, Settings, FileText, Database, Clock, TrendingUp, RefreshCw, Download, Search, Edit } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';

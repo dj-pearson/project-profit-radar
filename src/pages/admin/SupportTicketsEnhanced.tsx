@@ -17,19 +17,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { UserContextPanel } from "@/components/admin/UserContextPanel";
-import {
-  MessageSquare,
-  Clock,
-  CheckCircle,
-  AlertCircle,
-  User,
-  Sparkles,
-  BookOpen,
-  Send,
-  Copy,
-  ThumbsUp,
-  ThumbsDown,
-} from "lucide-react";
+import { MessageSquare, Clock, CheckCircle, AlertCircle, User, Sparkles, Send, Copy } from "lucide-react";
 
 interface SupportTicket {
   id: string;

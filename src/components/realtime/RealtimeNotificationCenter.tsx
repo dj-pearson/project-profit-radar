@@ -23,22 +23,7 @@ import {
   TabsList,
   TabsTrigger,
 } from '@/components/ui/tabs';
-import {
-  Bell,
-  BellRing,
-  Check,
-  CheckCheck,
-  X,
-  Clock,
-  AlertTriangle,
-  MessageSquare,
-  DollarSign,
-  Calendar,
-  Users,
-  Settings,
-  Trash2,
-  MoreHorizontal
-} from 'lucide-react';
+import { Bell, Check, CheckCheck, Clock, AlertTriangle, MessageSquare, DollarSign, Calendar, Users, Settings, Trash2, MoreHorizontal } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useSimpleNotifications, SimpleNotification } from '@/hooks/useSimpleNotifications';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';

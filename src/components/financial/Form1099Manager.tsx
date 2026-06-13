@@ -6,17 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Separator } from '@/components/ui/separator';
-import { 
-  FileText, 
-  Download, 
-  Send, 
-  AlertTriangle,
-  CheckCircle,
-  Clock,
-  Calendar,
-  DollarSign,
-  Users
-} from 'lucide-react';
+import { FileText, Download, Send, AlertTriangle, CheckCircle, Clock, DollarSign } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';

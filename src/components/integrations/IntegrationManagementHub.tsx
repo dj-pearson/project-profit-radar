@@ -5,10 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Progress } from '@/components/ui/progress';
-import { 
-  Zap, Link, Settings, CheckCircle, AlertTriangle, X, 
-  ExternalLink, RefreshCw, Key, Clock, Shield, Activity, Plus
-} from 'lucide-react';
+import { Zap, Settings, CheckCircle, AlertTriangle, X, ExternalLink, RefreshCw, Key, Clock, Activity, Plus } from 'lucide-react';
 
 interface Integration {
   id: string;

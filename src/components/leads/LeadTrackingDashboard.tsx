@@ -6,11 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { 
-  Search, Plus, Phone, Mail, Calendar, TrendingUp, Users, 
-  DollarSign, Target, Clock, Star, AlertCircle, CheckCircle2,
-  Building2, Home, Wrench, Eye, Edit, Archive
-} from "lucide-react";
+import { Search, Plus, Phone, Mail, TrendingUp, Users, DollarSign, Target, Clock, Star, AlertCircle, CheckCircle2, Building2, Home, Wrench, Eye, Edit } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 

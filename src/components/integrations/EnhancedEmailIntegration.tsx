@@ -8,20 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
-import { 
-  Mail, 
-  Send, 
-  Users, 
-  Settings, 
-  Plus,
-  BarChart3,
-  Calendar,
-  Zap,
-  Target,
-  TrendingUp,
-  Eye,
-  Edit
-} from 'lucide-react';
+import { Mail, Settings, Plus, Calendar, Zap, Target, TrendingUp, Eye, Edit } from 'lucide-react';
 
 interface EmailProvider {
   id: string;

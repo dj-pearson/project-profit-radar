@@ -5,7 +5,7 @@
  */
 
 import type { Page } from 'playwright';
-import type { TestConfig, TestResult, DiscoveredForm, FormField, TestError } from '../types';
+import type { TestConfig, TestResult, DiscoveredForm, FormField } from '../types';
 import { Logger } from '../utils/logger';
 import { generateId, classifyError } from '../utils/helpers';
 

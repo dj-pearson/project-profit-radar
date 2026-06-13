@@ -3,15 +3,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import {
-  TrendingUp,
-  TrendingDown,
-  DollarSign,
-  Briefcase,
-  BarChart3,
-  PieChart,
-  Activity
-} from 'lucide-react';
+import { TrendingUp, TrendingDown, DollarSign, BarChart3, Activity } from 'lucide-react';
 
 interface FinancialSnapshot {
   total_revenue: number;

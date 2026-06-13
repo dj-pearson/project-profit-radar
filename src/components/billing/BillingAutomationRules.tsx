@@ -30,21 +30,7 @@ import {
 } from '@/components/ui/accordion';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import {
-  RefreshCw,
-  Plus,
-  Play,
-  Pause,
-  Trash2,
-  Edit,
-  Clock,
-  Zap,
-  FileText,
-  Mail,
-  DollarSign,
-  Percent,
-  Settings
-} from 'lucide-react';
+import { RefreshCw, Plus, Play, Trash2, Edit, Clock, Zap, FileText, Mail, DollarSign, Percent, Settings } from 'lucide-react';
 
 interface AutomationRule {
   id: string;

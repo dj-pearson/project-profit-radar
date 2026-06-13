@@ -4,19 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { AccessibleModal } from '@/components/accessibility/AccessibleModal';
-import {
-  Shield,
-  Key,
-  CheckCircle,
-  XCircle,
-  Plus,
-  Edit,
-  Trash2,
-  Settings,
-  Smartphone,
-  RefreshCw,
-  Loader2,
-} from 'lucide-react';
+import { Shield, Key, CheckCircle, XCircle, Plus, Edit, Trash2, Smartphone, RefreshCw, Loader2 } from 'lucide-react';
 import { supabase, getEdgeFunctionUrl, supabaseAnonKey } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';

@@ -5,15 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import {
-  Users,
-  MessageSquare,
-  Key,
-  Mail,
-  CheckCircle2,
-  Clock,
-  Shield
-} from 'lucide-react';
+import { Users, MessageSquare, CheckCircle2 } from 'lucide-react';
 
 interface ClientAccess {
   id: string;

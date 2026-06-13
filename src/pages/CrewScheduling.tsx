@@ -15,18 +15,7 @@ import { AccessibleForm, AccessibleFormField } from '@/components/accessibility/
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import VisualScheduler from '@/components/scheduling/VisualScheduler';
-import { 
-  ArrowLeft, 
-  Calendar,
-  Users,
-  Plus,
-  MapPin,
-  Clock,
-  Phone,
-  Edit,
-  Trash2,
-  AlertTriangle
-} from 'lucide-react';
+import { Calendar, Users, Plus, MapPin, Clock, Phone, Trash2 } from 'lucide-react';
 
 interface CrewProject {
   id: string;

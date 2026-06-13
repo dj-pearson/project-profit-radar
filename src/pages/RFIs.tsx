@@ -19,20 +19,7 @@ import { DashboardLayout } from '@/components/layout/DashboardLayout';
 // Helper to query tables not yet in the generated Database types.
 const untypedFrom = (table: string) =>
   (supabase as unknown as SupabaseClient).from(table);
-import { 
-  ArrowLeft, 
-  FileText,
-  HelpCircle,
-  PlusCircle,
-  MessageSquare,
-  Clock,
-  CheckCircle,
-  XCircle,
-  AlertCircle,
-  User,
-  Calendar,
-  Edit
-} from 'lucide-react';
+import { HelpCircle, PlusCircle, MessageSquare, Clock, CheckCircle, XCircle, AlertCircle, User, Calendar, Edit } from 'lucide-react';
 
 interface Project {
   id: string;

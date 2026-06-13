@@ -6,18 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { 
-  AlertTriangle, 
-  Shield, 
-  FileText, 
-  Calendar, 
-  Users, 
-  Plus,
-  TrendingUp,
-  Clock,
-  CheckCircle,
-  ArrowLeft
-} from 'lucide-react';
+import { AlertTriangle, Shield, FileText, Calendar, Plus, Clock, CheckCircle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';

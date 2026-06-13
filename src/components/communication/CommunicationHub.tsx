@@ -9,21 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { 
-  MessageSquare, 
-  Send, 
-  Calendar as CalendarIcon, 
-  FileText, 
-  Users, 
-  Clock, 
-  CheckCircle, 
-  AlertCircle, 
-  Plus,
-  Paperclip,
-  Phone,
-  Video,
-  Settings
-} from 'lucide-react';
+import { MessageSquare, Send, Calendar as CalendarIcon, FileText, Users, CheckCircle, Plus, Paperclip, Video, Settings } from 'lucide-react';
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";

@@ -19,26 +19,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { mobileGridClasses, mobileFilterClasses, mobileButtonClasses, mobileTextClasses, mobileCardClasses } from '@/utils/mobileHelpers';
 import { QuickBooksIntegration } from '@/components/integrations/QuickBooksIntegration';
-import { 
-  Settings,
-  Search,
-  Filter,
-  Plus,
-  ArrowRight,
-  Building2,
-  DollarSign,
-  FileText,
-  Users,
-  AlertCircle,
-  CheckCircle2,
-  RefreshCw,
-  Target,
-  Zap,
-  Link,
-  Eye,
-  Edit,
-  Trash2
-} from 'lucide-react';
+import { Search, Filter, Plus, DollarSign, FileText, AlertCircle, CheckCircle2, Target, Zap, Eye, Edit, Trash2 } from 'lucide-react';
 import { logger } from '@/lib/logger';
 
 interface RoutingRule {

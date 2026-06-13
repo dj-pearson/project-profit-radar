@@ -6,14 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { supabase } from '@/integrations/supabase/client';
-import { 
-  BarChart3, 
-  TrendingUp, 
-  TrendingDown, 
-  AlertTriangle,
-  CheckCircle,
-  DollarSign
-} from 'lucide-react';
+import { BarChart3, TrendingDown, AlertTriangle, CheckCircle } from 'lucide-react';
 
 interface BudgetItem {
   id: string;

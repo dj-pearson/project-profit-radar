@@ -6,18 +6,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-import { 
-  Shield, 
-  AlertTriangle, 
-  CheckCircle, 
-  FileText, 
-  Users, 
-  Calendar as CalendarIcon,
-  Download,
-  Upload,
-  Camera,
-  Clock
-} from 'lucide-react';
+import { Shield, AlertTriangle, CheckCircle, FileText, Users, Download, Upload, Clock } from 'lucide-react';
 
 interface SafetyInspection {
   id: string;

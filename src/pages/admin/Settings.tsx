@@ -11,21 +11,10 @@ import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import { Separator } from '@/components/ui/separator';
 import { toast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
 import RenewalNotificationPanel from '@/components/RenewalNotificationPanel';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import AnalyticsSettings from '@/components/admin/AnalyticsSettings';
-import { 
-  Settings,
-  Shield,
-  Mail,
-  Database,
-  Globe,
-  Bell,
-  Lock,
-  Save,
-  RefreshCw
-} from 'lucide-react';
+import { Settings, Shield, Database, Globe, Bell, Lock, Save, RefreshCw } from 'lucide-react';
 
 interface SystemSettings {
   platformName: string;

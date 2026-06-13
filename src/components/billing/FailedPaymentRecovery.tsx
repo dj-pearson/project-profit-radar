@@ -15,28 +15,9 @@ import {
   TableHeader,
   TableRow
 } from '@/components/ui/table';
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger
-} from '@/components/ui/accordion';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import {
-  RefreshCw,
-  AlertTriangle,
-  CreditCard,
-  Mail,
-  Pause,
-  Play,
-  Settings,
-  TrendingUp,
-  Clock,
-  CheckCircle,
-  XCircle,
-  DollarSign
-} from 'lucide-react';
+import { RefreshCw, AlertTriangle, CreditCard, Mail, Pause, Play, Settings, TrendingUp, Clock, CheckCircle, XCircle } from 'lucide-react';
 
 interface PaymentFailure {
   id: string;

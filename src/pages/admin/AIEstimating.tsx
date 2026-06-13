@@ -9,17 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { supabase, getEdgeFunctionUrl } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-import {
-  Brain,
-  TrendingUp,
-  DollarSign,
-  FileText,
-  Target,
-  AlertCircle,
-  CheckCircle,
-  Clock,
-  Sparkles
-} from 'lucide-react';
+import { Brain, FileText, Target, CheckCircle, Clock, Sparkles } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 interface AIEstimate {

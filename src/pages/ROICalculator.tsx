@@ -8,17 +8,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Separator } from '@/components/ui/separator';
 import { Link } from 'react-router-dom';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
-import { 
-  Calculator,
-  DollarSign, 
-  TrendingUp, 
-  Users, 
-  Clock,
-  CheckCircle,
-  ArrowRight,
-  PieChart,
-  BarChart3
-} from 'lucide-react';
+import { Calculator, TrendingUp, CheckCircle, ArrowRight, PieChart, BarChart3 } from 'lucide-react';
 
 const ROICalculator = () => {
   const [formData, setFormData] = useState({

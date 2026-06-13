@@ -10,17 +10,7 @@ import { Progress } from '@/components/ui/progress';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-import { 
-  Upload,
-  Download,
-  Eye,
-  Clock,
-  FileText,
-  User,
-  AlertCircle,
-  CheckCircle,
-  History
-} from 'lucide-react';
+import { Upload, Download, Clock, FileText, User, History } from 'lucide-react';
 
 interface DocumentVersion {
   id: string;

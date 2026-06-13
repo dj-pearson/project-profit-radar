@@ -8,20 +8,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Progress } from '@/components/ui/progress';
-import {
-  AlertCircle,
-  TrendingUp,
-  TrendingDown,
-  Shield,
-  DollarSign,
-  Clock,
-  CheckCircle2,
-  XCircle,
-  Brain,
-  Target,
-  ArrowRight,
-  AlertTriangle
-} from 'lucide-react';
+import { AlertCircle, TrendingUp, Shield, DollarSign, Clock, CheckCircle2, XCircle, Brain, Target, ArrowRight, AlertTriangle } from 'lucide-react';
 
 interface RiskPrediction {
   id: string;

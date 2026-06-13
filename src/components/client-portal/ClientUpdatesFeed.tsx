@@ -2,19 +2,7 @@ import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import {
-  Bell,
-  CheckCircle2,
-  AlertCircle,
-  Info,
-  Calendar,
-  User,
-  Image as ImageIcon,
-  FileText,
-  DollarSign,
-  Clock,
-  Wrench
-} from 'lucide-react';
+import { Bell, CheckCircle2, AlertCircle, Info, Calendar, User, Image as ImageIcon, FileText, DollarSign, Clock } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export interface ProjectUpdate {

@@ -1,29 +1,7 @@
 import React from 'react';
 import { cn } from '@/lib/utils';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { 
-  BarChart3, 
-  Package, 
-  TrendingUp, 
-  FileText, 
-  DollarSign, 
-  HelpCircle, 
-  Send, 
-  FileX, 
-  CheckSquare, 
-  Hammer, 
-  Shield, 
-  Clock,
-  Users,
-  Receipt,
-  ListTodo,
-  FolderOpen,
-  Home,
-  Calculator,
-  MessageSquare,
-  Hash,
-  Activity
-} from 'lucide-react';
+import { Package, TrendingUp, FileText, DollarSign, HelpCircle, Send, FileX, CheckSquare, Hammer, Shield, Clock, Users, Receipt, ListTodo, FolderOpen, Home, Calculator, MessageSquare, Hash, Activity } from 'lucide-react';
 
 interface ProjectSubSidebarProps {
   activeTab: string;

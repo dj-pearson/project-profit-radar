@@ -4,17 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { 
-  Phone, 
-  Mail, 
-  Calendar, 
-  TrendingUp, 
-  Users, 
-  DollarSign,
-  Clock,
-  CheckCircle2,
-  AlertCircle
-} from "lucide-react";
+import { Phone, Calendar, Users, DollarSign } from "lucide-react";
 import { format } from "date-fns";
 import { Link } from "react-router-dom";
 

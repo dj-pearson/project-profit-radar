@@ -10,19 +10,7 @@ import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { WarrantyForm } from '@/components/warranty/WarrantyForm';
 import { WarrantyClaimsManager } from '@/components/warranty/WarrantyClaimsManager';
-import { 
-  Shield, 
-  Plus, 
-  Calendar, 
-  AlertTriangle, 
-  CheckCircle, 
-  Clock,
-  Search,
-  Filter,
-  FileText,
-  Users,
-  ArrowLeft
-} from 'lucide-react';
+import { Shield, Plus, AlertTriangle, CheckCircle, Search, Filter, FileText, Users } from 'lucide-react';
 
 interface Warranty {
   id: string;

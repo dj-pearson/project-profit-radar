@@ -7,35 +7,7 @@ import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
-import {
-  Building2,
-  Calendar,
-  CheckCircle2,
-  Clock,
-  DollarSign,
-  TrendingUp,
-  Users,
-  AlertTriangle,
-  ChevronRight,
-  BarChart3,
-  Target,
-  FileText,
-  Plus,
-  HelpCircle,
-  Upload,
-  Shield,
-  Wrench,
-  ClipboardList,
-  MessageSquare,
-  ArrowRight,
-} from "lucide-react";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Building2, Calendar, Clock, DollarSign, TrendingUp, Users, AlertTriangle, ChevronRight, BarChart3, Target, FileText, Plus, HelpCircle, Upload, Shield, Wrench, ClipboardList } from "lucide-react";
 
 interface Project {
   id: string;

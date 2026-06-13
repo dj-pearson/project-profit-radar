@@ -13,16 +13,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { 
-  ArrowLeft, 
-  Wrench,
-  PlusCircle,
-  Search,
-  AlertTriangle,
-  Calendar,
-  Clock,
-  DollarSign
-} from 'lucide-react';
+import { ArrowLeft, Wrench, PlusCircle, Search, AlertTriangle, Clock } from 'lucide-react';
 
 interface Equipment {
   id: string;

@@ -11,17 +11,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import {
-  TrendingUp,
-  TrendingDown,
-  Users,
-  AlertTriangle,
-  Heart,
-  Activity,
-  DollarSign,
-  Calendar,
-  Minus,
-} from 'lucide-react';
+import { TrendingUp, Users, AlertTriangle, Heart, Activity, Calendar } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';

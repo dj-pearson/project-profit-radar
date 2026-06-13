@@ -1,11 +1,4 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger
-} from '@/components/ui/dropdown-menu';
 import { cn } from '@/lib/utils';
 
 interface ContextMenuItem {

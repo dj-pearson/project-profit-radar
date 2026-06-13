@@ -13,20 +13,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
-import { 
-  Plus, 
-  Edit, 
-  Send, 
-  MessageSquare, 
-  Camera, 
-  FileText, 
-  Calendar,
-  Settings,
-  Zap,
-  CheckCircle,
-  AlertTriangle,
-  DollarSign
-} from 'lucide-react';
+import { Plus, Edit, MessageSquare, FileText, Calendar, Settings, Zap, CheckCircle, AlertTriangle, DollarSign } from 'lucide-react';
 
 interface AutomatedClientUpdate {
   trigger: 'phase_completion' | 'delay_detected' | 'budget_variance' | 'milestone_reached';

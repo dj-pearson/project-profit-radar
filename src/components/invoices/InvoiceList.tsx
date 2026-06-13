@@ -3,17 +3,7 @@ import { useVirtualizer } from '@tanstack/react-virtual';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import {
-  Eye,
-  Edit,
-  Send,
-  DollarSign,
-  Download,
-  MoreHorizontal,
-  Calendar,
-  User,
-  Building
-} from 'lucide-react';
+import { Eye, Edit, Send, DollarSign, Download, MoreHorizontal } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,

@@ -1,19 +1,6 @@
 import { Helmet } from 'react-helmet-async';
 import { Link } from 'react-router-dom';
-import {
-  FileText,
-  TrendingUp,
-  AlertTriangle,
-  CheckCircle2,
-  DollarSign,
-  PieChart,
-  Calculator,
-  Target,
-  XCircle,
-  ArrowRight,
-  Eye,
-  BarChart3
-} from 'lucide-react';
+import { FileText, TrendingUp, AlertTriangle, CheckCircle2, DollarSign, Calculator, Target, XCircle, ArrowRight, Eye, BarChart3 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 

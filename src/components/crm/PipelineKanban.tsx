@@ -6,14 +6,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import { formatCurrency } from '@/utils/formatters';
-import { 
-  DollarSign, 
-  Calendar, 
-  User, 
-  Building2,
-  Plus,
-  MoreHorizontal
-} from 'lucide-react';
+import { DollarSign, Calendar, Building2, Plus, MoreHorizontal } from 'lucide-react';
 
 interface PipelineStage {
   id: string;

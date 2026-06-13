@@ -5,17 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
-import { 
-  Shield, 
-  ShieldAlert, 
-  ShieldCheck, 
-  Eye, 
-  Clock, 
-  MapPin, 
-  Smartphone,
-  AlertTriangle,
-  Activity
-} from 'lucide-react';
+import { Shield, ShieldAlert, ShieldCheck, MapPin, Smartphone, AlertTriangle, Activity } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { MFASetup } from './MFASetup';

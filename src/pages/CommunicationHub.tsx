@@ -10,15 +10,7 @@ import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { ProjectCommunication } from '@/components/communication/ProjectCommunication';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { 
-  MessageSquare,
-  Search,
-  Building2,
-  Clock,
-  Users,
-  Filter,
-  ArrowRight
-} from 'lucide-react';
+import { MessageSquare, Search, Building2, Clock, Users, ArrowRight } from 'lucide-react';
 
 interface Project {
   id: string;

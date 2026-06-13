@@ -17,7 +17,7 @@ import { TableSkeleton } from '@/components/common/LoadingState';
 import { ErrorState, EmptyState } from '@/components/common/ErrorState';
 import { Pagination } from '@/components/common/Pagination';
 import { AccessibleModal } from '@/components/accessibility/AccessibleModal';
-import { Plus, Edit, Trash2, Receipt, DollarSign, Calendar, Tag, FileText, AlertCircle, Loader2 } from 'lucide-react';
+import { Plus, Edit, Trash2, Receipt, DollarSign, Calendar, AlertCircle, Loader2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { expenseSchema, type ExpenseInput } from '@/lib/validations';
 import { AccessibleTable, type TableColumn } from '@/components/accessibility/AccessibleTable';

@@ -12,21 +12,7 @@ import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { projectService } from '@/services/projectService';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
-import {
-  ArrowLeft,
-  Calendar,
-  DollarSign,
-  MapPin,
-  User,
-  Building2,
-  Clock,
-  Plus,
-  X,
-  CheckCircle2,
-  Zap,
-  ChevronDown,
-  History
-} from 'lucide-react';
+import { Calendar, DollarSign, MapPin, User, Building2, Clock, Plus, X, Zap, History } from 'lucide-react';
 import { mobileFilterClasses } from '@/utils/mobileHelpers';
 import { ProjectTemplatesLibrary } from '@/components/projects/ProjectTemplatesLibrary';
 import {

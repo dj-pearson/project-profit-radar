@@ -6,7 +6,6 @@ import { Progress } from '@/components/ui/progress';
 import { ProjectWithRelations } from '@/services/projectService';
 import ProjectEquipmentView from '@/components/equipment/ProjectEquipmentView';
 import { ProjectFinancialDashboard } from '@/components/financial/ProjectFinancialDashboard';
-import { ConstructionTimelineManager } from '@/components/construction/ConstructionTimelineManager';
 import { ProjectDailyReports } from '@/components/project/tabs/ProjectDailyReports';
 import { ProjectEstimates } from '@/components/project/tabs/ProjectEstimates';
 import { ProjectRFIs } from '@/components/project/tabs/ProjectRFIs';
@@ -19,29 +18,7 @@ import { ProjectPermits } from '@/components/project/tabs/ProjectPermits';
 import { ProjectPunchList } from '@/components/project/tabs/ProjectPunchList';
 import { ProjectCostCodes } from '@/components/project/tabs/ProjectCostCodes';
 import { DashboardActivityFeed } from '@/components/activity/DashboardActivityFeed';
-import {
-  Building2,
-  Calendar,
-  DollarSign,
-  MapPin,
-  User,
-  TrendingUp,
-  CheckCircle2,
-  Clock,
-  FileText,
-  Package,
-  Hammer,
-  Calculator,
-  Receipt,
-  FileX,
-  MessageSquare,
-  HelpCircle,
-  Send,
-  Users,
-  Shield,
-  CheckSquare,
-  FolderOpen
-} from 'lucide-react';
+import { Building2, Calendar, DollarSign, MapPin, TrendingUp, CheckCircle2, Clock, FileText, Receipt, MessageSquare, FolderOpen } from 'lucide-react';
 
 interface ProjectContentProps {
   project: ProjectWithRelations;

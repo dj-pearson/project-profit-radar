@@ -7,7 +7,7 @@
 
 import * as fs from 'fs';
 import * as path from 'path';
-import type { TestResult, PerformanceMetrics, PageTestReport } from '../types';
+import type { PerformanceMetrics, PageTestReport } from '../types';
 import { Logger } from '../utils/logger';
 import { generateId } from '../utils/helpers';
 

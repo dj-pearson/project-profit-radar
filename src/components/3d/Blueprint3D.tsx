@@ -2,7 +2,7 @@
 import React, { useRef, useState, useEffect, Suspense } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { OrbitControls, PerspectiveCamera } from '@react-three/drei';
-import { Group, Vector3, BufferGeometry, BoxGeometry, MeshStandardMaterial } from 'three';
+import { Group, Vector3, BufferGeometry } from 'three';
 import { useTouchGestures } from '@/hooks/useTouchGestures';
 
 interface ConstructionPhase {

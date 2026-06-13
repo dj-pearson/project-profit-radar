@@ -7,55 +7,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import {
-  TrendingUp,
-  TrendingDown,
-  Activity,
-  BarChart3,
-  Search,
-  Globe,
-  MousePointer,
-  Eye,
-  Users,
-  FileText,
-  Settings,
-  RefreshCw,
-  AlertTriangle,
-  CheckCircle,
-  ExternalLink,
-  ArrowUp,
-  ArrowDown,
-  Minus,
-  Target,
-  Lightbulb,
-  Zap
-} from 'lucide-react';
+import { TrendingUp, Activity, Search, Globe, MousePointer, Eye, Users, FileText, Settings, RefreshCw, AlertTriangle, CheckCircle, ExternalLink, ArrowUp, ArrowDown, Minus, Target, Lightbulb } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import {
-  AnalyticsPlatform,
-  AnalyticsPlatformConnection,
-  UnifiedTrafficMetrics,
-  MetricComparison,
-  DashboardFilters
-} from '@/types/analytics';
-import {
-  LineChart,
-  Line,
-  AreaChart,
-  Area,
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  Legend,
-  ResponsiveContainer,
-  PieChart,
-  Pie,
-  Cell
-} from 'recharts';
+import { AnalyticsPlatform, AnalyticsPlatformConnection, UnifiedTrafficMetrics, MetricComparison } from '@/types/analytics';
+import { LineChart, Line, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
 const COLORS = {
   primary: '#2563eb',

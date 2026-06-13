@@ -3,24 +3,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
-import {
-  BookOpen,
-  FileText,
-  Receipt,
-  CreditCard,
-  TrendingUp,
-  PieChart,
-  DollarSign,
-  Building2,
-  Calculator,
-  ClipboardList,
-  Landmark,
-  ArrowRightLeft,
-  BarChart3,
-  FileBarChart,
-  Wallet,
-  ArrowUpDown,
-} from 'lucide-react';
+import { BookOpen, FileText, Receipt, CreditCard, TrendingUp, PieChart, DollarSign, Building2, Calculator, ClipboardList, Landmark, ArrowRightLeft, BarChart3, FileBarChart, Wallet } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 

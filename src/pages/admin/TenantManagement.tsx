@@ -12,23 +12,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
-import {
-  Building2,
-  Users,
-  Settings,
-  TrendingUp,
-  AlertCircle,
-  CheckCircle,
-  Plus,
-  Edit,
-  Trash2,
-  Search,
-  Crown,
-  Shield,
-  Globe,
-  Copy,
-  RefreshCw,
-} from 'lucide-react';
+import { Building2, Users, Settings, TrendingUp, AlertCircle, CheckCircle, Plus, Edit, Search, Crown, Globe, Copy, RefreshCw } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';

@@ -1,13 +1,6 @@
 import React, { useState } from 'react';
 import { MobileDashboardLayout } from '@/components/layout/MobileDashboardLayout';
-import {
-  MobileLayout,
-  MobileSection,
-  MobileGrid,
-  MobileStack,
-  MobileCard,
-  MobileButton,
-} from '@/components/mobile';
+import { MobileLayout, MobileSection, MobileStack, MobileCard, MobileButton } from '@/components/mobile';
 import {
   LongPressDemo,
   DoubleTapDemo,

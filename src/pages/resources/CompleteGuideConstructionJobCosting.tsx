@@ -11,21 +11,7 @@
 
 import { Helmet } from 'react-helmet-async';
 import { Link } from 'react-router-dom';
-import {
-  Calculator,
-  CheckCircle,
-  XCircle,
-  ArrowRight,
-  AlertTriangle,
-  TrendingUp,
-  Clock,
-  DollarSign,
-  Target,
-  FileText,
-  Users,
-  BarChart3,
-  Lightbulb
-} from 'lucide-react';
+import { CheckCircle, ArrowRight, AlertTriangle, TrendingUp, DollarSign, Target, FileText, Users, BarChart3, Lightbulb } from 'lucide-react';
 import Navigation from '@/components/Navigation';
 import Footer from '@/components/Footer';
 

@@ -5,10 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Progress } from '@/components/ui/progress';
-import { 
-  Shield, Calendar, AlertTriangle, CheckCircle, Clock, 
-  Phone, Mail, FileText, Wrench, User
-} from 'lucide-react';
+import { Shield, Calendar, AlertTriangle, Clock, FileText, Wrench, User } from 'lucide-react';
 
 interface Warranty {
   id: string;

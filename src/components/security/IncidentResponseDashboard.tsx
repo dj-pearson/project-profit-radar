@@ -3,21 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { 
-  AlertTriangle, 
-  Shield, 
-  Clock, 
-  Users, 
-  FileText, 
-  CheckCircle, 
-  AlertCircle,
-  Phone,
-  Mail,
-  MessageSquare,
-  Activity,
-  TrendingUp,
-  Database
-} from 'lucide-react';
+import { AlertTriangle, Clock, Users, FileText, CheckCircle, Phone, Mail, MessageSquare, Activity, TrendingUp } from 'lucide-react';
 
 interface SecurityIncident {
   id: string;

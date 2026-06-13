@@ -18,18 +18,7 @@ import {
   SelectTrigger,
   SelectValue
 } from '@/components/ui/select';
-import {
-  Camera,
-  Upload,
-  Check,
-  AlertTriangle,
-  DollarSign,
-  FileText,
-  MapPin,
-  Loader2,
-  X,
-  ImageIcon
-} from 'lucide-react';
+import { Camera, Upload, Check, DollarSign, MapPin, Loader2, X } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { useGeofencing } from '@/hooks/useGeofencing';

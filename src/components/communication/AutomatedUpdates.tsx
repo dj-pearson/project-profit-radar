@@ -8,20 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { 
-  Zap, 
-  Clock, 
-  Users, 
-  FileText, 
-  Settings, 
-  Play, 
-  Pause, 
-  Plus,
-  Edit,
-  Trash2,
-  Send,
-  Calendar
-} from 'lucide-react';
+import { Zap, Clock, Play, Pause, Plus, Edit, Trash2, Send, Calendar } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 

@@ -3,21 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import {
-  Workflow,
-  Play,
-  Pause,
-  Plus,
-  Trash2,
-  Edit,
-  Copy,
-  CheckCircle,
-  XCircle,
-  Clock,
-  Zap,
-  Target,
-  TrendingUp,
-} from 'lucide-react';
+import { Workflow, Play, Pause, Plus, Trash2, Edit, Copy, CheckCircle, Clock, Zap, Target, TrendingUp } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';

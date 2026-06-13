@@ -5,14 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { TimesheetApprovalQueue } from '@/components/timesheets/TimesheetApprovalQueue';
 import { TimesheetDetailModal } from '@/components/timesheets/TimesheetDetailModal';
 import { useTimesheetApproval } from '@/hooks/useTimesheetApproval';
-import {
-  Clock,
-  CheckCircle2,
-  XCircle,
-  AlertCircle,
-  TrendingUp,
-  TrendingDown,
-} from 'lucide-react';
+import { Clock, CheckCircle2, AlertCircle } from 'lucide-react';
 import {
   Table,
   TableBody,

@@ -3,10 +3,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { 
-  Clock, Play, Pause, Square, MapPin, Calendar, 
-  Users, DollarSign, BarChart3, CheckCircle, AlertTriangle
-} from 'lucide-react';
+import { Clock, Play, Pause, Square, MapPin, Users, DollarSign, BarChart3, CheckCircle, AlertTriangle } from 'lucide-react';
 
 interface TimeEntry {
   id: string;

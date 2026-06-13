@@ -11,22 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { 
-  Megaphone, 
-  Plus, 
-  Eye, 
-  Send, 
-  Calendar, 
-  Users, 
-  Star,
-  Zap,
-  Info,
-  AlertTriangle,
-  Gift,
-  Sparkles,
-  Bell,
-  X
-} from 'lucide-react';
+import { Megaphone, Plus, Eye, Send, Users, Star, Zap, Info, AlertTriangle, Gift, Sparkles, X } from 'lucide-react';
 import { logger } from '@/lib/logger';
 
 interface Announcement {

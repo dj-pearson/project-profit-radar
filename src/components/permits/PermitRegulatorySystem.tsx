@@ -4,10 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { 
-  FileText, Calendar, AlertTriangle, CheckCircle, Clock, 
-  Building, Users, Phone, Mail, MapPin, ExternalLink
-} from 'lucide-react';
+import { FileText, Calendar, AlertTriangle, CheckCircle, Clock, Building, Users, MapPin, ExternalLink } from 'lucide-react';
 
 interface Permit {
   id: string;

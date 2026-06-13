@@ -26,7 +26,7 @@
  * });
  */
 
-import type { AxeResults, RunOptions, Spec } from 'axe-core';
+import type { AxeResults, RunOptions } from 'axe-core';
 
 // WCAG 2.1 AA rule configuration
 export const wcag21AAConfig: RunOptions = {

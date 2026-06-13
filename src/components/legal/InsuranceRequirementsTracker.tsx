@@ -4,20 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { 
-  Shield, 
-  Calendar, 
-  AlertTriangle, 
-  CheckCircle2, 
-  XCircle,
-  DollarSign,
-  Building,
-  Car,
-  Hammer,
-  Users,
-  FileText,
-  Bell
-} from 'lucide-react';
+import { Shield, AlertTriangle, CheckCircle2, XCircle, Building, Car, Hammer, Users, FileText, Bell } from 'lucide-react';
 
 interface InsurancePolicy {
   id: string;

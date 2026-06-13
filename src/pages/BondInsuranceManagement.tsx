@@ -11,20 +11,7 @@ import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { BondForm } from '@/components/bonds/BondForm';
 import { InsuranceForm } from '@/components/bonds/InsuranceForm';
-import { 
-  Plus, 
-  Search, 
-  Filter,
-  Shield,
-  FileCheck,
-  AlertTriangle,
-  Calendar,
-  DollarSign,
-  Clock,
-  CheckCircle,
-  XCircle,
-  ArrowLeft
-} from 'lucide-react';
+import { Plus, Search, Filter, Shield, FileCheck, DollarSign, Clock, CheckCircle } from 'lucide-react';
 
 interface Bond {
   id: string;

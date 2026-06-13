@@ -6,18 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { 
-  AlertTriangle, 
-  Camera, 
-  MapPin, 
-  Clock,
-  Send,
-  User,
-  Phone,
-  FileText,
-  Mic,
-  MicOff
-} from 'lucide-react';
+import { AlertTriangle, Camera, MapPin, Send, User, Phone, Mic, MicOff } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { useOfflineSync } from '@/hooks/useOfflineSync';

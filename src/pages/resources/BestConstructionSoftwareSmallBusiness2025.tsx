@@ -1,18 +1,6 @@
 import { Helmet } from 'react-helmet-async';
 import { Link } from 'react-router-dom';
-import {
-  CheckCircle2,
-  XCircle,
-  Star,
-  DollarSign,
-  Users,
-  TrendingUp,
-  Shield,
-  Zap,
-  ArrowRight,
-  Award,
-  AlertCircle
-} from 'lucide-react';
+import { CheckCircle2, XCircle, Star, Users, Shield, Zap, ArrowRight, Award, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 

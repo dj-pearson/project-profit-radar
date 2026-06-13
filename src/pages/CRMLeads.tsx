@@ -16,27 +16,9 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { AccessibleForm, AccessibleFormField, AccessibleTextarea, AccessibleFieldset } from '@/components/accessibility/AccessibleForm';
-import { 
-  Users, 
-  Search,
-  Filter,
-  Plus,
-  Phone,
-  Mail,
-  MapPin,
-  Building2,
-  DollarSign,
-  Calendar,
-  User,
-  Edit,
-  Trash2,
-  FileText,
-  AlertCircle,
-  CheckCircle2
-} from 'lucide-react';
+import { Users, Search, Plus, Phone, Mail, Building2, DollarSign, Edit } from 'lucide-react';
 import { LeadDetailView } from '@/components/crm/LeadDetailView';
 import { CSVImportButton } from '@/components/smart-import';
 

@@ -2,19 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import {
-  Clock,
-  Play,
-  Pause,
-  Square,
-  MapPin,
-  Wifi,
-  WifiOff,
-  Timer,
-  CheckCircle,
-  AlertTriangle,
-  Navigation
-} from 'lucide-react';
+import { Play, Pause, Square, MapPin, Wifi, WifiOff, CheckCircle, AlertTriangle, Navigation } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { useOfflineSync } from '@/hooks/useOfflineSync';

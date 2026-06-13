@@ -7,24 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { enterpriseSeoService, SEORecommendation } from '@/services/EnterpriseSeOService';
 import { toast } from '@/hooks/use-toast';
-import {
-  TrendingUp,
-  TrendingDown,
-  Search,
-  Eye,
-  MousePointer,
-  AlertTriangle,
-  CheckCircle,
-  Target,
-  BarChart3,
-  Globe,
-  Users,
-  DollarSign,
-  Zap,
-  RefreshCw,
-  ExternalLink,
-  Award
-} from 'lucide-react';
+import { TrendingUp, TrendingDown, Search, MousePointer, AlertTriangle, CheckCircle, Target, BarChart3, Globe, Users, DollarSign, Zap, RefreshCw, ExternalLink, Award } from 'lucide-react';
 
 export interface SEOAnalyticsDashboardProps {
   className?: string;

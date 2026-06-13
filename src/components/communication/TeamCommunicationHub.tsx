@@ -4,10 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { 
-  MessageSquare, Users, Phone, Video, Mail, Bell, 
-  Search, Plus, Settings, Pin, Star, Clock, Paperclip
-} from 'lucide-react';
+import { MessageSquare, Users, Phone, Video, Bell, Search, Plus, Settings, Pin, Paperclip } from 'lucide-react';
 
 interface Message {
   id: string;

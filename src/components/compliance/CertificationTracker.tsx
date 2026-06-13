@@ -6,15 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Progress } from '@/components/ui/progress';
-import { 
-  Shield, 
-  AlertTriangle, 
-  CheckCircle, 
-  Calendar, 
-  Bell,
-  Upload,
-  Eye
-} from 'lucide-react';
+import { Shield, AlertTriangle, CheckCircle, Bell, Upload, Eye } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 
 interface Certification {

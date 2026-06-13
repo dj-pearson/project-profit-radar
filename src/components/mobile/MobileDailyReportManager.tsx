@@ -6,25 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { 
-  FileText, 
-  Camera, 
-  Users, 
-  Clock,
-  CloudRain,
-  AlertTriangle,
-  CheckCircle2,
-  X,
-  Plus,
-  Send,
-  Calendar,
-  MapPin,
-  Thermometer,
-  Wind,
-  Eye,
-  Wrench,
-  Truck
-} from 'lucide-react';
+import { FileText, Camera, Users, CheckCircle2, X, Plus, Send, Calendar, Eye, Wrench, Truck } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { useOfflineSync } from '@/hooks/useOfflineSync';

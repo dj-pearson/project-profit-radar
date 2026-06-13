@@ -8,16 +8,7 @@ import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { 
-  Plus, 
-  Users, 
-  AlertTriangle, 
-  CheckCircle, 
-  Calendar as CalendarIcon,
-  Upload,
-  Download,
-  Clock
-} from 'lucide-react';
+import { Plus, Users, AlertTriangle, CheckCircle, Calendar as CalendarIcon, Download, Clock } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';

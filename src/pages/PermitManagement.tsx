@@ -10,18 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { PermitForm } from '@/components/permits/PermitForm';
-import { 
-  Plus, 
-  Search, 
-  Filter,
-  FileText,
-  Clock,
-  CheckCircle,
-  AlertTriangle,
-  Calendar,
-  Building,
-  ArrowLeft
-} from 'lucide-react';
+import { Plus, Search, Filter, FileText, Clock, CheckCircle, AlertTriangle, Building } from 'lucide-react';
 
 interface Permit {
   id: string;
