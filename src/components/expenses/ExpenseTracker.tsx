@@ -8,8 +8,10 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { usePaginatedQuery } from '@/hooks/useSupabaseQuery';
 import { useInsertMutation, useUpdateMutation, useDeleteMutation } from '@/hooks/useSupabaseMutation';
@@ -17,7 +19,7 @@ import { TableSkeleton } from '@/components/common/LoadingState';
 import { ErrorState, EmptyState } from '@/components/common/ErrorState';
 import { Pagination } from '@/components/common/Pagination';
 import { AccessibleModal } from '@/components/accessibility/AccessibleModal';
-import { Plus, Edit, Trash2, Receipt, DollarSign, Calendar, AlertCircle, Loader2 } from 'lucide-react';
+import { Plus, Edit, Trash2, Receipt, DollarSign, Calendar, AlertCircle, Loader2, CheckCircle2, XCircle, Download, FolderInput, X } from 'lucide-react';
 import { format } from 'date-fns';
 import { expenseSchema, type ExpenseInput } from '@/lib/validations';
 import { AccessibleTable, type TableColumn } from '@/components/accessibility/AccessibleTable';
@@ -99,7 +101,45 @@ export function ExpenseTracker({ projectId }: { projectId?: string }) {
 
   const formValues = watch();
 
-  // Fetch expenses
+  // Sorting / filtering / bulk-selection state (US-089).
+  const [sortColumn, setSortColumn] = useState('expense_date');
+  const [sortAsc, setSortAsc] = useState(false);
+  const [categoryFilter, setCategoryFilter] = useState('all');
+  const [projectFilter, setProjectFilter] = useState('all');
+  const [amountMin, setAmountMin] = useState('');
+  const [amountMax, setAmountMax] = useState('');
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [bulkLoading, setBulkLoading] = useState(false);
+  const [categorizeValue, setCategorizeValue] = useState('');
+
+  const resetPage = () => setPage(1);
+
+  // Projects for the project filter dropdown.
+  const { data: projectsList } = usePaginatedQuery<{ id: string; name: string }>({
+    queryKey: ['expense-filter-projects'],
+    tableName: 'projects',
+    select: 'id,name',
+    filters: { company_id: userProfile?.company_id },
+    orderBy: { column: 'name', ascending: true },
+    page: 1,
+    pageSize: 200,
+    showErrorToast: false,
+  });
+
+  // Expense categories (category_id is a UUID FK to expense_categories).
+  const { data: categoriesList } = usePaginatedQuery<{ id: string; name: string }>({
+    queryKey: ['expense-filter-categories'],
+    tableName: 'expense_categories',
+    select: 'id,name',
+    filters: { company_id: userProfile?.company_id },
+    orderBy: { column: 'name', ascending: true },
+    page: 1,
+    pageSize: 200,
+    showErrorToast: false,
+  });
+  const expenseCategories = categoriesList?.data || [];
+
+  // Fetch expenses (server-side sort + equality + amount-range filters).
   const {
     data: expensesData,
     isLoading,
@@ -108,11 +148,76 @@ export function ExpenseTracker({ projectId }: { projectId?: string }) {
   } = usePaginatedQuery<Expense>({
     queryKey: ['expenses'],
     tableName: 'expenses',
-    filters: projectId ? { project_id: projectId, company_id: userProfile?.company_id } : { company_id: userProfile?.company_id },
-    orderBy: { column: 'expense_date', ascending: false },
+    filters: {
+      company_id: userProfile?.company_id,
+      ...(projectId ? { project_id: projectId } : projectFilter !== 'all' ? { project_id: projectFilter } : {}),
+      ...(categoryFilter !== 'all' ? { category_id: categoryFilter } : {}),
+    },
+    rangeFilters: [{ column: 'amount', gte: amountMin || undefined, lte: amountMax || undefined }],
+    orderBy: { column: sortColumn, ascending: sortAsc },
     page,
     pageSize,
   });
+
+  const pageExpenses = expensesData?.data || [];
+  const allPageSelected = pageExpenses.length > 0 && pageExpenses.every((e) => selectedIds.has(e.id));
+
+  const runBulkPaymentStatus = async (status: 'approved' | 'rejected') => {
+    const ids = [...selectedIds];
+    if (ids.length === 0) return;
+    setBulkLoading(true);
+    try {
+      const { error: err } = await supabase.from('expenses').update({ payment_status: status }).in('id', ids);
+      if (err) throw err;
+      toast({ title: 'Expenses updated', description: `${ids.length} ${status}.` });
+      setSelectedIds(new Set());
+      refetch();
+    } catch (err: any) {
+      toast({ variant: 'destructive', title: 'Bulk update failed', description: err.message });
+    } finally {
+      setBulkLoading(false);
+    }
+  };
+
+  const runBulkCategorize = async () => {
+    const ids = [...selectedIds];
+    if (ids.length === 0 || !categorizeValue) return;
+    setBulkLoading(true);
+    try {
+      const { error: err } = await supabase.from('expenses').update({ category_id: categorizeValue }).in('id', ids);
+      if (err) throw err;
+      const catName = (categoriesList?.data || []).find((c) => c.id === categorizeValue)?.name || 'the selected category';
+      toast({ title: 'Expenses categorized', description: `${ids.length} set to ${catName}.` });
+      setSelectedIds(new Set());
+      setCategorizeValue('');
+      refetch();
+    } catch (err: any) {
+      toast({ variant: 'destructive', title: 'Categorize failed', description: err.message });
+    } finally {
+      setBulkLoading(false);
+    }
+  };
+
+  const bulkExportExpenses = () => {
+    const rows = pageExpenses.filter((e) => selectedIds.has(e.id));
+    if (rows.length === 0) return;
+    const headers = ['Date', 'Vendor', 'Description', 'Amount', 'Payment Method', 'Status'];
+    const csv = [
+      headers.join(','),
+      ...rows.map((r) =>
+        [r.expense_date, r.vendor_name, r.description, r.amount, r.payment_method, r.payment_status]
+          .map((v) => `"${String(v ?? '').replace(/"/g, '""')}"`)
+          .join(',')
+      ),
+    ].join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `expenses-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
 
   // Mutations
   const createExpense = useInsertMutation<Expense>({
@@ -261,6 +366,7 @@ export function ExpenseTracker({ projectId }: { projectId?: string }) {
     {
       key: 'payment_status',
       header: 'Status',
+      sortable: true,
       render: (value) => (
         <Badge
           variant={value === 'paid' ? 'default' : value === 'approved' ? 'secondary' : 'outline'}
@@ -290,6 +396,73 @@ export function ExpenseTracker({ projectId }: { projectId?: string }) {
   if (error) {
     return <ErrorState error={error} onRetry={refetch} />;
   }
+
+  const filterBar = (
+    <div className="flex flex-wrap items-end gap-3 mb-4">
+      <div className="space-y-1">
+        <label className="text-xs font-medium text-muted-foreground">Category</label>
+        <Select value={categoryFilter} onValueChange={(v) => { setCategoryFilter(v); resetPage(); }}>
+          <SelectTrigger className="w-[160px]" aria-label="Filter by category"><SelectValue /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All categories</SelectItem>
+            {expenseCategories.map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+          </SelectContent>
+        </Select>
+      </div>
+      {!projectId && (
+        <div className="space-y-1">
+          <label className="text-xs font-medium text-muted-foreground">Project</label>
+          <Select value={projectFilter} onValueChange={(v) => { setProjectFilter(v); resetPage(); }}>
+            <SelectTrigger className="w-[170px]" aria-label="Filter by project"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All projects</SelectItem>
+              {(projectsList?.data || []).map((p) => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}
+            </SelectContent>
+          </Select>
+        </div>
+      )}
+      <div className="space-y-1">
+        <label className="text-xs font-medium text-muted-foreground">Min $</label>
+        <Input type="number" inputMode="decimal" value={amountMin} onChange={(e) => { setAmountMin(e.target.value); resetPage(); }} className="w-[110px]" aria-label="Minimum amount" />
+      </div>
+      <div className="space-y-1">
+        <label className="text-xs font-medium text-muted-foreground">Max $</label>
+        <Input type="number" inputMode="decimal" value={amountMax} onChange={(e) => { setAmountMax(e.target.value); resetPage(); }} className="w-[110px]" aria-label="Maximum amount" />
+      </div>
+      {(categoryFilter !== 'all' || projectFilter !== 'all' || amountMin || amountMax) && (
+        <Button variant="ghost" size="sm" onClick={() => { setCategoryFilter('all'); setProjectFilter('all'); setAmountMin(''); setAmountMax(''); resetPage(); }}>
+          <X className="h-4 w-4 mr-1" /> Clear
+        </Button>
+      )}
+    </div>
+  );
+
+  const bulkToolbar = selectedIds.size > 0 && (
+    <div role="region" aria-label="Bulk actions" className="flex flex-wrap items-center gap-2 mb-4 p-3 rounded-lg border bg-muted/40">
+      <span className="text-sm font-medium">{selectedIds.size} selected</span>
+      <Button size="sm" variant="outline" disabled={bulkLoading} onClick={() => runBulkPaymentStatus('approved')}>
+        <CheckCircle2 className="h-4 w-4 mr-1" /> Approve
+      </Button>
+      <Button size="sm" variant="outline" disabled={bulkLoading} onClick={() => runBulkPaymentStatus('rejected')}>
+        <XCircle className="h-4 w-4 mr-1" /> Reject
+      </Button>
+      <Button size="sm" variant="outline" disabled={bulkLoading} onClick={bulkExportExpenses}>
+        <Download className="h-4 w-4 mr-1" /> Export
+      </Button>
+      <div className="flex items-center gap-1">
+        <Select value={categorizeValue} onValueChange={setCategorizeValue}>
+          <SelectTrigger className="w-[150px] h-8" aria-label="Category to apply"><SelectValue placeholder="Categorize as…" /></SelectTrigger>
+          <SelectContent>
+            {expenseCategories.map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+          </SelectContent>
+        </Select>
+        <Button size="sm" variant="outline" disabled={bulkLoading || !categorizeValue} onClick={runBulkCategorize}>
+          <FolderInput className="h-4 w-4 mr-1" /> Apply
+        </Button>
+      </div>
+      <Button size="sm" variant="ghost" className="ml-auto" onClick={() => setSelectedIds(new Set())}>Clear</Button>
+    </div>
+  );
 
   return (
     <div className="space-y-6">
@@ -356,12 +529,14 @@ export function ExpenseTracker({ projectId }: { projectId?: string }) {
           </div>
         </CardHeader>
         <CardContent>
+          {filterBar}
+          {bulkToolbar}
           {isLoading ? (
             <TableSkeleton rows={5} columns={7} />
-          ) : expensesData?.data.length === 0 ? (
+          ) : pageExpenses.length === 0 ? (
             <EmptyState
-              title="No expenses recorded"
-              description="Start tracking expenses by clicking the button above"
+              title="No expenses found"
+              description="Adjust your filters or start tracking expenses with the button above"
               icon={Receipt}
             />
           ) : (
@@ -370,7 +545,13 @@ export function ExpenseTracker({ projectId }: { projectId?: string }) {
                 caption="Expenses"
                 hideCaption
                 columns={expenseColumns}
-                data={expensesData?.data || []}
+                data={pageExpenses}
+                onSort={(column, direction) => { setSortColumn(column); setSortAsc(direction === 'ascending'); resetPage(); }}
+                sortColumn={sortColumn}
+                sortDirection={sortAsc ? 'ascending' : 'descending'}
+                selectable
+                selectedRows={[...selectedIds]}
+                onSelectionChange={(ids) => setSelectedIds(new Set(ids as string[]))}
               />
 
               <Pagination

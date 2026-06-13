@@ -1528,8 +1528,8 @@
         "npm run build completes successfully"
       ],
       "priority": 3,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "COMPLETED. Sortable columns + bulk actions + filters on the expenses list (src/components/expenses/ExpenseTracker.tsx). Because the list is SERVER-paginated (usePaginatedQuery), sort and filters are server-side: extended src/hooks/useSupabaseQuery.ts usePaginatedQuery with optional rangeFilters (gte/lte) — backward compatible — for the amount range. SORT: AccessibleTable onSort wired to orderBy (date/vendor/amount/status columns sortable, with sortColumn/sortDirection indicators); resets to page 1 on sort. SELECTION: AccessibleTable selectable/selectedRows/onSelectionChange (current-page checkboxes + select-all). BULK TOOLBAR: Approve Selected / Reject Selected (supabase update payment_status in('id',ids)), Export Selected (client CSV), Categorize Selected (Select of real expense_categories -> update category_id; category_id is a UUID FK to expense_categories, confirmed via types.ts, so categories are fetched not hardcoded). FILTERS: Category dropdown (from expense_categories table, company-scoped), Project dropdown (fetched projects; hidden when a projectId prop already scopes the list), Amount Min/$ Max range (server-side gte/lte) + Clear; all reset to page 1. vite build green (1m13s). Note: payment_status used for approve/reject since the schema has no separate approval column."
     },
     {
       "id": "US-090",

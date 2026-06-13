@@ -850,3 +850,11 @@ Remaining (fresh breakdown): TS2345=522, TS6133=512 (mostly unused locals now), 
 - `shortcuts-help.tsx`: lists the US-095 shortcuts (STATIC_SHORTCUTS + displayKeys); 'then' connector styling; trigger hint -> Shift+?.
 - Added the missing input-field guard to `useKeyboardShortcuts`.
 - 4 tests (useNavigationShortcuts.test.ts). vite build green; full suite green.
+
+---
+
+## 2026-06-13 (cont.) - US-089: Sortable columns + bulk actions on expenses list - PASS
+
+- Extended `usePaginatedQuery` (useSupabaseQuery.ts) with optional `rangeFilters` (gte/lte), backward compatible — used for the amount range.
+- ExpenseTracker.tsx: server-side sort (AccessibleTable onSort -> orderBy), selection (selectable), bulk toolbar (Approve/Reject via payment_status, Export CSV, Categorize via real expense_categories UUID FK), filters (Category from expense_categories, Project from fetched projects, Amount min/max range). All reset to page 1.
+- Confirmed category_id is a UUID FK (types.ts) -> categories fetched, not hardcoded. vite build green.
