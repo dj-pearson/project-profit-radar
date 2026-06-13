@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -6,12 +6,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { LoadingState } from '@/components/ui/loading-spinner';
-import { ErrorBoundary, ErrorState, EmptyState } from '@/components/ui/error-boundary';
-import { ResponsiveContainer, ResponsiveGrid } from '@/components/layout/ResponsiveContainer';
+import { EmptyState } from '@/components/ui/error-boundary';
 import { useLoadingState } from '@/hooks/useLoadingState';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { ThemeToggle } from '@/components/ui/theme-toggle';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
@@ -21,26 +19,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { mobileGridClasses, mobileFilterClasses, mobileButtonClasses, mobileTextClasses, mobileCardClasses } from '@/utils/mobileHelpers';
 import { QuickBooksIntegration } from '@/components/integrations/QuickBooksIntegration';
-import { 
-  Settings,
-  Search,
-  Filter,
-  Plus,
-  ArrowRight,
-  Building2,
-  DollarSign,
-  FileText,
-  Users,
-  AlertCircle,
-  CheckCircle2,
-  RefreshCw,
-  Target,
-  Zap,
-  Link,
-  Eye,
-  Edit,
-  Trash2
-} from 'lucide-react';
+import { Search, Filter, Plus, DollarSign, FileText, AlertCircle, CheckCircle2, Target, Zap, Eye, Edit, Trash2 } from 'lucide-react';
 import { logger } from '@/lib/logger';
 
 interface RoutingRule {

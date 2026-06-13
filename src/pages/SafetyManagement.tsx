@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -9,20 +9,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import {
-  Plus,
-  Search,
-  Shield,
-  AlertTriangle,
-  FileText,
-  Calendar,
-  Clock,
-  CheckCircle,
-  XCircle,
-  Users,
-  HardHat,
-  Edit
-} from 'lucide-react';
+import { Plus, Search, Shield, AlertTriangle, FileText, Clock, CheckCircle, XCircle, Users, HardHat, Edit } from 'lucide-react';
 import ComplianceDisclaimer from '@/components/legal/ComplianceDisclaimer';
 
 export default function SafetyManagement() {

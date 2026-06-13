@@ -1,4 +1,3 @@
-import React from 'react';
 import { Copyright } from 'lucide-react';
 import LegalPageLayout from '@/components/legal/LegalPageLayout';
 

@@ -31,7 +31,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Trash2, Calculator, FileText, CheckCircle } from 'lucide-react';
+import { Plus, Trash2, Calculator, CheckCircle } from 'lucide-react';
 import { formatCurrency, validateJournalEntry } from '@/utils/accountingUtils';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 

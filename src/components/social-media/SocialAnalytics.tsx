@@ -1,19 +1,7 @@
 import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { 
-  BarChart3, 
-  TrendingUp, 
-  Users, 
-  Heart,
-  MessageCircle,
-  Share,
-  Eye,
-  Facebook,
-  Linkedin,
-  Twitter,
-  Instagram
-} from 'lucide-react';
+import { BarChart3, TrendingUp, Heart, MessageCircle, Share, Eye, Facebook, Linkedin, Twitter, Instagram } from 'lucide-react';
 
 interface SocialAnalyticsProps {
   accounts: any[];

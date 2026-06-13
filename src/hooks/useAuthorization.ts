@@ -20,16 +20,7 @@ import {
   ROLE_LEVELS,
   DEFAULT_ROLE_PERMISSIONS,
 } from '@/lib/security/types';
-import {
-  hasPermission,
-  hasAnyPermission,
-  hasAllPermissions,
-  checkResourceOwnership,
-  performSecurityCheck,
-  getUserPermissions,
-  getRoleLevel,
-  logSecurityEvent,
-} from '@/lib/security/securityService';
+import { hasPermission, checkResourceOwnership, performSecurityCheck, getUserPermissions, getRoleLevel, logSecurityEvent } from '@/lib/security/securityService';
 import { logger } from '@/lib/logger';
 
 // =============================================================================

@@ -4,19 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { 
-  Calendar, 
-  FileText, 
-  DollarSign, 
-  Camera, 
-  CheckCircle, 
-  Clock, 
-  AlertTriangle,
-  Download,
-  Eye,
-  MessageSquare
-} from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
+import { Calendar, FileText, DollarSign, Camera, AlertTriangle, Download, Eye, MessageSquare } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
 import { formatDistanceToNow } from 'date-fns';
 

@@ -9,12 +9,7 @@
  */
 
 import { useState, useEffect, useCallback } from 'react';
-import {
-  biometricAuthService,
-  BiometricCapabilities,
-  BiometricAuthResult,
-  BiometricType,
-} from '@/services/BiometricAuthService';
+import { biometricAuthService, BiometricCapabilities, BiometricAuthResult } from '@/services/BiometricAuthService';
 import { useAuth } from '@/contexts/AuthContext';
 import { useDeviceTrust } from '@/hooks/useDeviceTrust';
 import { toast } from '@/hooks/use-toast';

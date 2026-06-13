@@ -6,28 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Separator } from '@/components/ui/separator';
-import { 
-  Truck,
-  MapPin,
-  Clock,
-  User,
-  QrCode,
-  Camera,
-  AlertTriangle,
-  CheckCircle2,
-  X,
-  LogIn,
-  LogOut,
-  Search,
-  Filter,
-  RefreshCw,
-  Settings,
-  Wrench,
-  Fuel,
-  Calendar,
-  Phone
-} from 'lucide-react';
+import { Truck, MapPin, Clock, QrCode, Camera, X, LogIn, LogOut, Search, Filter, RefreshCw, Wrench, Fuel } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { useOfflineSync } from '@/hooks/useOfflineSync';

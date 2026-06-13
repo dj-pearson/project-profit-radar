@@ -11,20 +11,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Progress } from "@/components/ui/progress";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { 
-  TrendingUp, 
-  TrendingDown, 
-  Target, 
-  DollarSign, 
-  Calendar, 
-  Users, 
-  BarChart3,
-  Edit,
-  Eye,
-  Plus,
-  Filter,
-  Download
-} from "lucide-react";
+import { TrendingUp, TrendingDown, Target, DollarSign, BarChart3, Edit, Eye, Download } from "lucide-react";
 import { format } from "date-fns";
 
 interface BidSubmission {

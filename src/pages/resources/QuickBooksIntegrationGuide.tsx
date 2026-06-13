@@ -1,4 +1,3 @@
-import React from 'react';
 import { SEOMetaTags } from '../../components/SEOMetaTags';
 import { HowToSchema } from '../../components/seo/HowToSchema';
 import { BreadcrumbsNavigation } from '../../components/BreadcrumbsNavigation';

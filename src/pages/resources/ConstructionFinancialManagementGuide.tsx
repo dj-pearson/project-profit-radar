@@ -9,23 +9,9 @@
  * - financial management for contractors
  */
 
-import React from 'react';
 import { Helmet } from 'react-helmet-async';
 import { Link } from 'react-router-dom';
-import {
-  TrendingUp,
-  CheckCircle,
-  ArrowRight,
-  AlertTriangle,
-  DollarSign,
-  Target,
-  FileText,
-  BarChart3,
-  Lightbulb,
-  Clock,
-  Shield,
-  Calculator
-} from 'lucide-react';
+import { CheckCircle, ArrowRight, AlertTriangle, DollarSign, Target, FileText, BarChart3, Lightbulb, Clock, Shield } from 'lucide-react';
 import Navigation from '@/components/Navigation';
 import Footer from '@/components/Footer';
 

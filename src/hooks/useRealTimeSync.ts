@@ -3,6 +3,15 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from '@/hooks/use-toast';
 import { RealtimeChannel } from '@supabase/supabase-js';
+import {
+  createReconnectingChannel,
+  type ReconnectingChannelHandle,
+} from '@/lib/realtime/reconnectingChannel';
+import {
+  registerRealtimeChannel,
+  reportRealtimeChannelState,
+  unregisterRealtimeChannel,
+} from '@/lib/realtime/connectionStore';
 
 export interface SyncEvent {
   table: string;
@@ -28,7 +37,7 @@ export interface UseRealTimeSyncOptions {
 
 export const useRealTimeSync = (options: UseRealTimeSyncOptions) => {
   const { userProfile } = useAuth();
-  const channelsRef = useRef<Map<string, RealtimeChannel>>(new Map());
+  const channelsRef = useRef<Map<string, { handle: ReconnectingChannelHandle; channelId: number }>>(new Map());
   const { subscriptions, enableCrossModuleSync = true, enableNotifications = true, onError } = options;
 
   const handleSyncEvent = useCallback((event: SyncEvent, onSync: (event: SyncEvent) => void) => {
@@ -98,46 +107,59 @@ export const useRealTimeSync = (options: UseRealTimeSyncOptions) => {
   const subscribe = useCallback(() => {
     if (!userProfile?.company_id) return;
 
-    channelsRef.current.forEach((channel) => {
-      supabase.removeChannel(channel);
+    channelsRef.current.forEach(({ handle, channelId }) => {
+      handle.teardown();
+      unregisterRealtimeChannel(channelId);
     });
     channelsRef.current.clear();
 
     subscriptions.forEach((subscription) => {
       subscription.tables.forEach((table) => {
         const channelName = `${subscription.id}-${table}`;
-        const channel = supabase
-          .channel(channelName)
-          .on(
-            'postgres_changes',
-            {
-              event: '*',
-              schema: 'public',
-              table: table,
-              filter: `company_id=eq.${userProfile.company_id}`
-            },
-            (payload) => {
-              const syncEvent: SyncEvent = {
-                table,
-                eventType: payload.eventType as 'INSERT' | 'UPDATE' | 'DELETE',
-                new: payload.new,
-                old: payload.old,
-                timestamp: new Date().toISOString()
-              };
+        const companyId = userProfile.company_id;
 
-              handleSyncEvent(syncEvent, subscription.onSync);
-            }
-          )
-          .subscribe();
+        const buildChannel = (): RealtimeChannel =>
+          supabase
+            .channel(`${channelName}-${Date.now()}-${Math.random().toString(36).slice(2)}`)
+            .on(
+              'postgres_changes',
+              { event: '*', schema: 'public', table, filter: `company_id=eq.${companyId}` },
+              (payload) => {
+                const syncEvent: SyncEvent = {
+                  table,
+                  eventType: payload.eventType as 'INSERT' | 'UPDATE' | 'DELETE',
+                  new: payload.new,
+                  old: payload.old,
+                  timestamp: new Date().toISOString(),
+                };
+                handleSyncEvent(syncEvent, subscription.onSync);
+              }
+            );
 
-        channelsRef.current.set(channelName, channel);
+        // Centralized auto-reconnect with backoff + jitter (US-210).
+        const channelId = registerRealtimeChannel();
+        const handle = createReconnectingChannel<RealtimeChannel>({
+          createChannel: buildChannel,
+          removeChannel: (ch) => supabase.removeChannel(ch),
+          onStateChange: (state) => reportRealtimeChannelState(channelId, state),
+          onReconnect: () => {
+            // Signal a refetch of missed rows after the channel recovers.
+            handleSyncEvent(
+              { table, eventType: 'UPDATE', new: {}, old: {}, timestamp: new Date().toISOString() },
+              subscription.onSync
+            );
+          },
+        });
+
+        channelsRef.current.set(channelName, { handle, channelId });
       });
     });
   }, [userProfile?.company_id, subscriptions, handleSyncEvent]);
 
   const unsubscribe = useCallback(() => {
-    channelsRef.current.forEach((channel) => {
-      supabase.removeChannel(channel);
+    channelsRef.current.forEach(({ handle, channelId }) => {
+      handle.teardown();
+      unregisterRealtimeChannel(channelId);
     });
     channelsRef.current.clear();
   }, []);

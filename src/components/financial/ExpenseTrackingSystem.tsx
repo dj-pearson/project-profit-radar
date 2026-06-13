@@ -9,18 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { 
-  Receipt, 
-  Plus, 
-  DollarSign, 
-  Calendar, 
-  User, 
-  FileText,
-  AlertCircle,
-  CheckCircle,
-  Clock,
-  TrendingUp
-} from 'lucide-react';
+import { Receipt, Plus, DollarSign, FileText, AlertCircle, CheckCircle, Clock, TrendingUp } from 'lucide-react';
 
 interface Expense {
   id: string;

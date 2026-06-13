@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { MobileDashboardLayout } from '@/components/layout/MobileDashboardLayout';
 import {
   MobileLayout,
@@ -18,21 +18,7 @@ import {
   MobileButtonGroup
 } from '@/components/mobile';
 import { useIsMobile } from '@/hooks/useMediaQuery';
-import {
-  Home,
-  Building2,
-  DollarSign,
-  TrendingUp,
-  Users,
-  Plus,
-  Edit,
-  Trash,
-  Share,
-  Download,
-  Filter,
-  Search,
-  Settings
-} from 'lucide-react';
+import { Building2, DollarSign, TrendingUp, Users, Plus, Edit, Trash, Share, Download, Filter, Search } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 
 /**

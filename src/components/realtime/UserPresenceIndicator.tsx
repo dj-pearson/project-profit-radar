@@ -13,17 +13,9 @@ import {
   HoverCardTrigger,
 } from '@/components/ui/hover-card';
 import { Button } from '@/components/ui/button';
-import { 
-  Circle, 
-  Clock, 
-  Minus, 
-  MapPin,
-  Smartphone,
-  Monitor,
-  MessageCircle
-} from 'lucide-react';
+import { Circle, Clock, Minus, MapPin, MessageCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { UserPresence, useSimplePresence } from '@/hooks/useSimplePresence';
+import { UserPresence } from '@/hooks/useSimplePresence';
 import { formatDistanceToNow } from 'date-fns';
 
 interface UserPresenceIndicatorProps {

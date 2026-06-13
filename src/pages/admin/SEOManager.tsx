@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -9,25 +9,10 @@ import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
-import { 
-  Search,
-  Globe,
-  BarChart3,
-  Settings,
-  FileText,
-  ExternalLink,
-  RefreshCw,
-  CheckCircle,
-  AlertCircle,
-  TrendingUp,
-  Eye,
-  MousePointer,
-  Share2
-} from 'lucide-react';
+import { Search, Globe, BarChart3, Settings, FileText, ExternalLink, RefreshCw, CheckCircle, TrendingUp, Eye, MousePointer, Share2 } from 'lucide-react';
 import { logger } from '@/lib/logger';
 
 interface SEOConfig {

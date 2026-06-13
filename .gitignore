@@ -147,3 +147,7 @@ tsc-output.txt
 tsc-output.txt
 .env_backup
 tests/fullGithuboutput.txt
+
+# Python bytecode (from scripts/)
+__pycache__/
+*.pyc

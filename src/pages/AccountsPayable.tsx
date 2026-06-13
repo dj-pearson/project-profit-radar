@@ -31,7 +31,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Trash2, Receipt, DollarSign } from 'lucide-react';
+import { Plus, Trash2, Receipt } from 'lucide-react';
 import { formatCurrency } from '@/utils/accountingUtils';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';

@@ -32,21 +32,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
-import {
-  Settings,
-  Plus,
-  Edit,
-  Trash2,
-  Save,
-  GripVertical,
-  Target,
-  Clock,
-  Percent,
-  Users,
-  ArrowRight,
-  RefreshCw,
-  Zap,
-} from "lucide-react";
+import { Settings, Plus, Edit, Trash2, Save, GripVertical, Target, Clock, Percent, RefreshCw, Zap } from "lucide-react";
 import { Json } from "@/integrations/supabase/types";
 
 interface PipelineStage {

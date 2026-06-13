@@ -1,7 +1,6 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { DollarSign, FileText, Clock, TrendingUp, AlertTriangle } from 'lucide-react';
+import { DollarSign, FileText, Clock, AlertTriangle } from 'lucide-react';
 
 interface InvoiceStatsProps {
   invoices: any[];

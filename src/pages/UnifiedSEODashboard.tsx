@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -16,38 +16,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { enterpriseSeoService } from '@/services/EnterpriseSeOService';
 import { contentSeoGenerator, ContentSEOConfig } from '@/services/ContentSEOGenerator';
-import {
-  Search,
-  Globe,
-  BarChart3,
-  Settings,
-  FileText,
-  Zap,
-  Target,
-  Lightbulb,
-  Rocket,
-  CheckCircle,
-  AlertTriangle,
-  Plus,
-  Eye,
-  MousePointer,
-  TrendingUp,
-  Brain,
-  RefreshCw,
-  ExternalLink,
-  Share2
-} from 'lucide-react';
-import {
-  AreaChart,
-  Area,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  LineChart,
-  Line
-} from 'recharts';
+import { Search, Globe, BarChart3, Settings, FileText, Zap, Target, Rocket, CheckCircle, AlertTriangle, Plus, Eye, MousePointer, TrendingUp, Brain, RefreshCw } from 'lucide-react';
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { logger } from '@/lib/logger';
 
 // Interfaces

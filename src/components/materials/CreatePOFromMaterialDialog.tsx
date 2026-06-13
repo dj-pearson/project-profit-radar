@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Dialog,
@@ -13,7 +13,6 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import {
   Select,
@@ -29,18 +28,7 @@ import {
   MaterialData,
   PurchaseOrderData
 } from '@/services/materialToPurchaseOrderService';
-import {
-  FileText,
-  Package,
-  DollarSign,
-  Calendar,
-  MapPin,
-  AlertTriangle,
-  CheckCircle,
-  ArrowRight,
-  Loader2,
-  Building2
-} from 'lucide-react';
+import { FileText, Calendar, MapPin, AlertTriangle, CheckCircle, ArrowRight, Loader2, Building2 } from 'lucide-react';
 
 interface CreatePOFromMaterialDialogProps {
   materialIds: string[];

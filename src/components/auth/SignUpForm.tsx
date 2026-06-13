@@ -8,16 +8,7 @@ import {
   InputOTPSlot,
   InputOTPSeparator,
 } from "@/components/ui/input-otp";
-import {
-  AlertCircle,
-  CheckCircle,
-  XCircle,
-  RefreshCw,
-  KeyRound,
-  ArrowLeft,
-  Eye,
-  EyeOff,
-} from "lucide-react";
+import { AlertCircle, CheckCircle, RefreshCw, KeyRound, ArrowLeft, Eye, EyeOff } from "lucide-react";
 import { CsrfTokenField } from "@/lib/security/csrfProtection.tsx";
 
 type OTPFlowState = 'idle' | 'sending' | 'verifying' | 'submitted' | 'verified' | 'setting_password';

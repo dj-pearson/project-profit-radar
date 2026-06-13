@@ -1,31 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-import { 
-  Calendar, 
-  Clock, 
-  User, 
-  Building, 
-  Filter, 
-  CheckSquare,
-  AlertTriangle,
-  FileText,
-  Users,
-  Calendar as CalendarIcon,
-  LayoutGrid,
-  List,
-  Kanban,
-  Shield,
-  FileCheck,
-  HelpCircle,
-  ClipboardList,
-  MapPin
-} from 'lucide-react';
+import { Calendar, Clock, Building, Filter, CheckSquare, AlertTriangle, FileText, Users, Calendar as CalendarIcon, LayoutGrid, List, Kanban, Shield, FileCheck, HelpCircle, ClipboardList } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { format, isToday, isTomorrow, isThisWeek, isPast } from 'date-fns';

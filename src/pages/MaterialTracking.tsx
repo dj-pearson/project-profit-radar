@@ -1,7 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -16,16 +15,7 @@ import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import MobileMaterialScanner from '@/components/mobile/MobileMaterialScanner';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { 
-  ArrowLeft, 
-  Package,
-  PlusCircle,
-  Search,
-  AlertTriangle,
-  TrendingDown,
-  Calendar,
-  Smartphone
-} from 'lucide-react';
+import { ArrowLeft, Package, PlusCircle, Search, AlertTriangle, TrendingDown, Smartphone } from 'lucide-react';
 
 interface Material {
   id: string;

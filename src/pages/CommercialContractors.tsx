@@ -1,4 +1,3 @@
-import React from "react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { PageSEO, createArticleSchema, createBreadcrumbSchema } from "@/components/seo/PageSEO";
@@ -6,7 +5,7 @@ import { GEOOptimizedFAQ } from "@/components/seo/GEOOptimizedFAQ";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Link } from "react-router-dom";
-import { CheckCircle, Building, DollarSign, Users, Calendar, ArrowRight, BarChart3, Shield } from "lucide-react";
+import { CheckCircle, Building, DollarSign, Users, ArrowRight, Shield } from "lucide-react";
 
 const CommercialContractors = () => {
   const features = [

@@ -4,7 +4,7 @@
  */
 
 import { supabase } from '@/integrations/supabase/client';
-import { CSV_TEMPLATES, CSVTemplate, CSVField } from './templates';
+import { CSV_TEMPLATES, CSVField } from './templates';
 import { z } from 'zod';
 import DOMPurify from 'dompurify';
 

@@ -2,14 +2,10 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { 
-  MessageCircle, Camera, Calendar, FileText, Star, 
-  Clock, CheckCircle, AlertCircle, Send, Phone, Mail 
-} from 'lucide-react';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { MessageCircle, Camera, Calendar, FileText, Star, CheckCircle, AlertCircle, Send, Phone, Mail } from 'lucide-react';
 
 interface ClientUpdate {
   id: string;

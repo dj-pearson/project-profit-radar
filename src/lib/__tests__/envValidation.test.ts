@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 
 // We test the exported logic by importing the module.
 // Note: envValidation.ts uses import.meta.env which Vitest handles natively.

@@ -7,8 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Separator } from "@/components/ui/separator";
-import { Badge } from "@/components/ui/badge";
-import { Upload, Plus, Trash2, Clock, MapPin, User, DollarSign, Camera, FileText } from "lucide-react";
+import { Plus, Trash2, Clock, MapPin, User, DollarSign } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 interface ServiceCallFormProps {

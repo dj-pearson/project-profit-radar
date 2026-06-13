@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -11,20 +11,7 @@ import { Switch } from '@/components/ui/switch';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { 
-  Key,
-  Mail,
-  Calendar,
-  Globe,
-  Users,
-  Lock,
-  Unlock,
-  Plus,
-  Eye,
-  EyeOff,
-  Copy,
-  Trash2
-} from 'lucide-react';
+import { Key, Mail, Calendar, Users, Lock, Unlock, Plus, Eye, Copy, Trash2 } from 'lucide-react';
 
 interface ClientPortalAccess {
   id: string;

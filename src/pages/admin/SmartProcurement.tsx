@@ -5,17 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import {
-  ShoppingCart,
-  TrendingUp,
-  DollarSign,
-  Package,
-  Calendar,
-  CheckCircle2,
-  Clock,
-  AlertTriangle
-} from 'lucide-react';
+import { ShoppingCart, TrendingUp, DollarSign, Package, CheckCircle2, AlertTriangle } from 'lucide-react';
 
 interface MaterialForecast {
   id: string;

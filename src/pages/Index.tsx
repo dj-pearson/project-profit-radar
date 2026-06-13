@@ -1,4 +1,4 @@
-import React, { lazy, Suspense, useState, useEffect, useCallback } from "react";
+import { lazy, Suspense, useState, useEffect, useCallback } from "react";
 import { ChevronUp } from "lucide-react";
 import Header from "@/components/Header";
 import Hero from "@/components/Hero";

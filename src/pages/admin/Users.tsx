@@ -1,11 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { RoleGuard, ROLE_GROUPS } from '@/components/auth/RoleGuard';
 import { AccessibleTable, type TableColumn } from '@/components/accessibility/AccessibleTable';
 import { AccessibleModal } from '@/components/accessibility/AccessibleModal';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -16,19 +15,7 @@ import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { useImpersonation } from '@/hooks/useImpersonation';
-import {
-  Users,
-  Search,
-  Filter,
-  UserCheck,
-  UserX,
-  Calendar,
-  Building2,
-  Mail,
-  Phone,
-  Eye,
-  UserCog
-} from 'lucide-react';
+import { Users, Search, Filter, UserCheck, UserX, Building2, Mail, Phone, Eye, UserCog } from 'lucide-react';
 
 interface UserProfile {
   id: string;

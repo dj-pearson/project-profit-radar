@@ -1,24 +1,11 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { AccessibleModal } from '@/components/accessibility/AccessibleModal';
 import { DocumentVersions } from './DocumentVersions';
-import { 
-  FileText,
-  File,
-  Image,
-  Video,
-  Archive,
-  Download,
-  Trash2,
-  Eye,
-  History,
-  User,
-  Calendar,
-  HardDrive
-} from 'lucide-react';
+import { FileText, File, Image, Video, Archive, Download, Trash2, History, User, Calendar, HardDrive } from 'lucide-react';
 
 interface DocumentCardProps {
   document: {

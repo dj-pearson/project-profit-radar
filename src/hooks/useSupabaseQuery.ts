@@ -63,11 +63,19 @@ interface PaginatedData<T> {
   hasMore: boolean;
 }
 
+interface RangeFilter {
+  column: string;
+  gte?: number | string;
+  lte?: number | string;
+}
+
 interface UsePaginatedQueryOptions<T> {
   queryKey: string[];
   tableName: string;
   select?: string;
   filters?: Record<string, string | number | boolean>;
+  /** Inclusive range filters (e.g. amount between min and max) applied via gte/lte. */
+  rangeFilters?: RangeFilter[];
   orderBy?: { column: string; ascending?: boolean };
   pageSize?: number;
   page: number;
@@ -82,6 +90,7 @@ export function usePaginatedQuery<T>({
   tableName,
   select = '*',
   filters = {},
+  rangeFilters = [],
   orderBy,
   pageSize = 20,
   page,
@@ -90,7 +99,7 @@ export function usePaginatedQuery<T>({
   const { toast } = useToast();
 
   return useQuery({
-    queryKey: [...queryKey, page, pageSize, JSON.stringify(filters), JSON.stringify(orderBy)],
+    queryKey: [...queryKey, page, pageSize, JSON.stringify(filters), JSON.stringify(rangeFilters), JSON.stringify(orderBy)],
     queryFn: async (): Promise<PaginatedData<T>> => {
       const from = (page - 1) * pageSize;
       const to = from + pageSize - 1;
@@ -99,11 +108,17 @@ export function usePaginatedQuery<T>({
         .select(select, { count: 'exact' })
         .range(from, to);
 
-      // Apply filters
+      // Apply equality filters
       Object.entries(filters).forEach(([key, value]) => {
         if (value !== undefined && value !== null && value !== '') {
           query = query.eq(key, value);
         }
+      });
+
+      // Apply inclusive range filters (gte/lte)
+      rangeFilters.forEach(({ column, gte, lte }) => {
+        if (gte !== undefined && gte !== null && gte !== '') query = query.gte(column, gte);
+        if (lte !== undefined && lte !== null && lte !== '') query = query.lte(column, lte);
       });
 
       // Apply ordering

@@ -4,16 +4,9 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Separator } from "@/components/ui/separator";
-import { Progress } from "@/components/ui/progress";
-import { 
-  Search, Plus, Phone, Mail, Calendar, TrendingUp, Users, 
-  DollarSign, Target, Clock, Star, AlertCircle, CheckCircle2,
-  Building2, Home, Wrench, Eye, Edit, Archive
-} from "lucide-react";
+import { Search, Plus, Phone, Mail, TrendingUp, Users, DollarSign, Target, Clock, Star, AlertCircle, CheckCircle2, Building2, Home, Wrench, Eye, Edit } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
@@ -15,21 +15,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { Helmet } from 'react-helmet-async';
-import { 
-  ArrowLeft, 
-  FileText,
-  Upload,
-  PlusCircle,
-  CheckCircle,
-  XCircle,
-  Clock,
-  AlertCircle,
-  User,
-  Calendar,
-  Download,
-  Eye,
-  Edit
-} from 'lucide-react';
+import { ArrowLeft, FileText, Upload, PlusCircle, CheckCircle, XCircle, AlertCircle, User, Calendar, Eye, Edit } from 'lucide-react';
 
 interface Project {
   id: string;

@@ -1,4 +1,3 @@
-import React from "react";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { PipelineAnalytics } from "@/components/crm/PipelineAnalytics";
 import { ActivityStream } from "@/components/crm/ActivityStream";

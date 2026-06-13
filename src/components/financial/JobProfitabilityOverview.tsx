@@ -1,16 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
-import { 
-  BarChart3, 
-  TrendingUp, 
-  TrendingDown,
-  DollarSign
-} from 'lucide-react';
+import { BarChart3, TrendingUp, TrendingDown } from 'lucide-react';
 
 interface JobData {
   id: string;

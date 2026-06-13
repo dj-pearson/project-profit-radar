@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -8,17 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { validateRedirectUrl } from '@/lib/security/urlValidation';
-import {
-  RefreshCw,
-  CheckCircle,
-  AlertCircle,
-  DollarSign,
-  FileText,
-  Users, 
-  Calendar,
-  ArrowUpDown,
-  TrendingUp
-} from 'lucide-react';
+import { RefreshCw, CheckCircle, AlertCircle, DollarSign, ArrowUpDown } from 'lucide-react';
 import { QuickBooksSync } from './QuickBooksSync';
 
 interface QBIntegrationStatus {

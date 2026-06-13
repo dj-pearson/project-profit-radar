@@ -7,15 +7,7 @@ import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { formatDistanceToNow } from 'date-fns';
-import { 
-  Circle,
-  Clock,
-  AlertCircle,
-  Power,
-  MessageSquare,
-  Video,
-  Phone
-} from 'lucide-react';
+import { Circle, Clock, AlertCircle, Power, MessageSquare, Video } from 'lucide-react';
 
 interface UserPresenceData {
   id: string;

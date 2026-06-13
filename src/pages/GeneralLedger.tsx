@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useChartOfAccounts } from '@/hooks/useAccounting';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';

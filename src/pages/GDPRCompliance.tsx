@@ -8,37 +8,12 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { 
-  Shield, 
-  AlertTriangle, 
-  Eye, 
-  FileText, 
-  Clock,
-  Users,
-  Database,
-  Settings,
-  Download,
-  Search,
-  Plus,
-  CheckCircle,
-  XCircle,
-  Calendar,
-  ArrowLeft,
-  Edit
-} from 'lucide-react';
+import { AlertTriangle, Eye, FileText, Database, Settings, Download, Plus, CheckCircle, XCircle, Calendar, Edit } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { format, addDays } from 'date-fns';
-import { 
-  MobilePageWrapper, 
-  MobileStatsGrid, 
-  MobileFilters,
-  mobileCardClasses,
-  mobileButtonClasses,
-  mobileTextClasses,
-  mobileFilterClasses
-} from "@/utils/mobileHelpers";
+import { MobilePageWrapper, MobileStatsGrid, mobileCardClasses, mobileButtonClasses, mobileTextClasses, mobileFilterClasses } from "@/utils/mobileHelpers";
 
 interface GDPRStats {
   activeRequests: number;

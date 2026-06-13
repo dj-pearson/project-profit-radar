@@ -2,16 +2,7 @@ import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import {
-  DollarSign,
-  TrendingUp,
-  TrendingDown,
-  Users,
-  Calendar,
-  ArrowUp,
-  ArrowDown,
-  Minus,
-} from 'lucide-react';
+import { DollarSign, TrendingUp, Users, Calendar, ArrowUp, ArrowDown, Minus } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';

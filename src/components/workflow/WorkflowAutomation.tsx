@@ -6,10 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { 
-  Workflow, Play, Pause, Settings, Plus, Trash2, 
-  Clock, Bell, Mail, Calendar, CheckCircle, AlertCircle 
-} from 'lucide-react';
+import { Workflow, Play, Settings, Plus, Trash2, Clock, Bell, Mail, Calendar, CheckCircle } from 'lucide-react';
 
 interface WorkflowTrigger {
   id: string;

@@ -9,7 +9,7 @@ import { Clock, Building, Calendar, DollarSign, AlertCircle } from 'lucide-react
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
-import { format, addDays, differenceInDays } from 'date-fns';
+import { format, differenceInDays } from 'date-fns';
 
 const RetentionManager: React.FC = () => {
   const [projects, setProjects] = useState([]);

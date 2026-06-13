@@ -3,15 +3,7 @@ import { useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { 
-  X, 
-  CheckCircle, 
-  ArrowRight, 
-  AlertCircle,
-  Target,
-  Building2,
-  FileText
-} from 'lucide-react';
+import { X, CheckCircle, ArrowRight, Target, Building2 } from 'lucide-react';
 
 interface ProcessStep {
   id: string;

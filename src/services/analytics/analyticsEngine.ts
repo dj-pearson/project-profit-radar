@@ -4,7 +4,7 @@
  */
 
 import { supabase } from '@/integrations/supabase/client';
-import { cache, QueryCache, CacheInvalidation } from '@/lib/cache';
+import { cache, QueryCache } from '@/lib/cache';
 import { logger } from '@/lib/logger';
 
 // ============================================================================

@@ -1,10 +1,8 @@
 /**
  * Tasks Hook
  */
-import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { taskService, Task, TaskWithDetails, CreateTaskData, UpdateTaskData } from '@/services/taskService';
-import { useAuth } from '@/contexts/AuthContext';
+import { taskService, Task, CreateTaskData, UpdateTaskData } from '@/services/taskService';
 import { toast } from '@/hooks/use-toast';
 
 export const useTasks = (filters?: {

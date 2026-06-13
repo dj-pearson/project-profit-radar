@@ -6,34 +6,9 @@
 
 import * as fs from 'fs';
 import * as path from 'path';
-import type {
-  TestConfig,
-  TestReport,
-  ReportMeta,
-  ReportSummary,
-  PageTestReport,
-  TestResult,
-  CategorizedError,
-  Recommendation,
-  ErrorClassification,
-  ConsoleEntry,
-  NetworkRequest,
-  AccessibilityResult,
-  PerformanceResult,
-  EdgeFunctionTestResult,
-} from '../types';
+import type { TestConfig, TestReport, ReportMeta, ReportSummary, PageTestReport, CategorizedError, Recommendation, ErrorClassification, ConsoleEntry, NetworkRequest, EdgeFunctionTestResult } from '../types';
 import { Logger } from '../utils/logger';
-import {
-  ensureDir,
-  writeJsonFile,
-  formatDuration,
-  formatBytes,
-  escapeHtml,
-  classifyError,
-  getSeverityFromClassification,
-  groupBy,
-  countBy,
-} from '../utils/helpers';
+import { ensureDir, writeJsonFile, formatDuration, escapeHtml, classifyError, getSeverityFromClassification, countBy } from '../utils/helpers';
 
 // ============================================================================
 // Report Generator

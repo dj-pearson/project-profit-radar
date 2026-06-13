@@ -1,4 +1,3 @@
-import React from 'react';
 import { SEOMetaTags } from '../../components/SEOMetaTags';
 import { BreadcrumbsNavigation } from '../../components/BreadcrumbsNavigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/card';

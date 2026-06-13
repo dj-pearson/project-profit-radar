@@ -6,30 +6,8 @@ import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useAuth } from '@/contexts/AuthContext';
-import { workflowAutomationService } from '@/services/WorkflowAutomationService';
-import { complianceAutomationService } from '@/services/ComplianceAutomationService';
-import { integrationEcosystemService } from '@/services/IntegrationEcosystemService';
 import { toast } from '@/hooks/use-toast';
-import {
-  Zap,
-  Shield,
-  Link,
-  BarChart3,
-  CheckCircle,
-  AlertTriangle,
-  Clock,
-  Users,
-  Building2,
-  Settings,
-  RefreshCw,
-  TrendingUp,
-  Target,
-  Award,
-  Globe,
-  Cpu,
-  FileText,
-  Plus
-} from 'lucide-react';
+import { Zap, Shield, Link, BarChart3, CheckCircle, AlertTriangle, Settings, RefreshCw, Target, Award, Globe, Cpu, FileText, Plus } from 'lucide-react';
 
 export interface EnterpriseDashboardProps {
   className?: string;

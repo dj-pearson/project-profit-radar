@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { SEOAnalyticsDashboard } from '@/components/seo/SEOAnalyticsDashboard';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -12,26 +12,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { enterpriseSeoService } from '@/services/EnterpriseSeOService';
 import { contentSeoGenerator, ContentSEOConfig, GeneratedContent } from '@/services/ContentSEOGenerator';
 import { toast } from '@/hooks/use-toast';
-import {
-  Search,
-  TrendingUp,
-  FileText,
-  Settings,
-  Zap,
-  Target,
-  BarChart3,
-  Lightbulb,
-  Rocket,
-  CheckCircle,
-  AlertTriangle,
-  Plus,
-  Download,
-  Eye,
-  Edit,
-  Globe,
-  Users,
-  Award
-} from 'lucide-react';
+import { Search, TrendingUp, FileText, Settings, Zap, Target, BarChart3, Lightbulb, Rocket, CheckCircle, AlertTriangle, Download, Eye, Edit, Globe, Users, Award } from 'lucide-react';
 
 const SEOManagement = () => {
   const [contentConfig, setContentConfig] = useState<Partial<ContentSEOConfig>>({

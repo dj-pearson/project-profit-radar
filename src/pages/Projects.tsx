@@ -19,16 +19,10 @@ import { AccessibleModal } from "@/components/accessibility/AccessibleModal";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
-import { LoadingState } from "@/components/ui/loading-spinner";
 import { ProjectCardSkeleton } from "@/components/ui/loading-skeleton";
-import {
-  ResponsiveContainer,
-  ResponsiveGrid,
-} from "@/components/layout/ResponsiveContainer";
+import { ResponsiveGrid } from "@/components/layout/ResponsiveContainer";
 import { VirtualizedGrid } from "@/components/ui/virtualized-grid";
 import { SharedElement, sharedId } from "@/components/mobile/SharedElementTransition";
-import { TaskManager } from "@/components/tasks/TaskManager";
-import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { gtag } from "@/hooks/useGoogleAnalytics";
 import { usePersistedState } from "@/hooks/usePersistedState";

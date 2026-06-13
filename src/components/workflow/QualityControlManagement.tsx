@@ -12,7 +12,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
-import { Plus, Edit, Eye, CheckCircle, XCircle, ClipboardCheck, AlertTriangle, Camera, Calendar } from 'lucide-react';
+import { Plus, Edit, CheckCircle, XCircle, ClipboardCheck, AlertTriangle, Camera, Calendar } from 'lucide-react';
 import { format } from 'date-fns';
 
 interface QualityInspection {

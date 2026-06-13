@@ -8,8 +8,7 @@ import { ClientCommunicationPortal } from '@/components/workflow/ClientCommunica
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Wrench, ClipboardCheck, MessageSquare, Users, AlertTriangle, CheckCircle, TrendingUp, Clock } from 'lucide-react';
+import { Wrench, ClipboardCheck, MessageSquare, Users, AlertTriangle, CheckCircle } from 'lucide-react';
 
 const WorkflowTestPage = () => {
   const [activeTab, setActiveTab] = React.useState('testing-guide');

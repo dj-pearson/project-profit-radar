@@ -7,19 +7,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from '@/hooks/use-toast';
-import {
-  DollarSign,
-  Calendar,
-  Users,
-  AlertTriangle,
-  TrendingUp,
-  TrendingDown,
-  Clock,
-  CheckCircle,
-  Wrench,
-  FileText,
-  BarChart3
-} from 'lucide-react';
+import { DollarSign, Calendar, Users, AlertTriangle, Clock, CheckCircle, Wrench, FileText, BarChart3 } from 'lucide-react';
 
 interface ProjectData {
   id: string;

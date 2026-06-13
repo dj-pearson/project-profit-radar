@@ -1,4 +1,3 @@
-import React from 'react';
 import { TaskManager } from '@/components/tasks/TaskManager';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 

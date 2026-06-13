@@ -1,9 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import { DashboardLayout } from '@/components/layout/DashboardLayout';
-import { ResponsiveContainer } from '@/components/layout/ResponsiveContainer';
-import { mobileGridClasses, mobileFilterClasses, mobileButtonClasses, mobileTextClasses, mobileCardClasses } from '@/utils/mobileHelpers';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -16,16 +13,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { 
-  ArrowLeft, 
-  Wrench,
-  PlusCircle,
-  Search,
-  AlertTriangle,
-  Calendar,
-  Clock,
-  DollarSign
-} from 'lucide-react';
+import { ArrowLeft, Wrench, PlusCircle, Search, AlertTriangle, Clock } from 'lucide-react';
 
 interface Equipment {
   id: string;

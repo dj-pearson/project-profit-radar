@@ -1,11 +1,8 @@
 // Version: 2.0.2 - Export handler for self-hosted Supabase
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { aiService } from "../_shared/ai-service.ts";
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
+import { getCorsHeaders } from "../_shared/secure-cors.ts";
+import { requireSystemOrAdmin } from "../_shared/system-auth.ts";
 
 const logStep = (step: string, details?: any) => {
   const timestamp = new Date().toISOString();
@@ -13,9 +10,13 @@ const logStep = (step: string, details?: any) => {
 };
 
 export default async (req: Request) => {
+  const corsHeaders = getCorsHeaders(req);
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
+
+  const denied = await requireSystemOrAdmin(req);
+  if (denied) return denied;
 
   try {
     const body = await req.json();

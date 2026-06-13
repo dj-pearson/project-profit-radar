@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { EnhancedPipelineKanban } from "@/components/crm/EnhancedPipelineKanban";
 import { PipelineSettings } from "@/components/crm/PipelineSettings";

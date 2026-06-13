@@ -3,7 +3,7 @@
  * Central hub for account health, revenue ops, trials, and support intelligence
  */
 
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { RoleGuard, ROLE_GROUPS } from '@/components/auth/RoleGuard';
@@ -14,22 +14,7 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import {
-  TrendingUp,
-  TrendingDown,
-  AlertTriangle,
-  CheckCircle,
-  Users,
-  DollarSign,
-  Target,
-  Activity,
-  Mail,
-  Phone,
-  Calendar,
-  ArrowUpRight,
-  ArrowDownRight,
-  Minus,
-} from 'lucide-react';
+import { AlertTriangle, Users, DollarSign, Target, Mail, ArrowUpRight, ArrowDownRight, Minus } from 'lucide-react';
 
 interface AccountHealth {
   company_id: string;

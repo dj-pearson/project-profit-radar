@@ -13,29 +13,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from '@/components/ui/collapsible';
-import {
-  AlertTriangle,
-  Bug,
-  ChevronDown,
-  ChevronRight,
-  Copy,
-  Check,
-  Download,
-  RefreshCw,
-  Search,
-  Monitor,
-  Smartphone,
-  Tablet,
-  Globe,
-  CheckCircle,
-  XCircle,
-  AlertCircle,
-} from 'lucide-react';
+import { AlertTriangle, Bug, Copy, Check, Download, RefreshCw, Search, Monitor, Smartphone, Tablet, Globe, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';

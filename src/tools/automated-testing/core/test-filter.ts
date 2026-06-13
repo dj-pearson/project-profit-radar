@@ -4,7 +4,7 @@
  * Provides test tagging, filtering, and selective execution capabilities.
  */
 
-import type { TestConfig, TestType, TestResult } from '../types';
+import type { TestType, TestResult } from '../types';
 import { Logger } from '../utils/logger';
 
 // ============================================================================

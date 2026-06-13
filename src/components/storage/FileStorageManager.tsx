@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { File, Upload, Search, Settings } from 'lucide-react';
+import { File, Upload, Search } from 'lucide-react';
 import { validateFileUpload, generateSecureFilename } from '@/lib/security/fileUploadValidation';
 
 interface StorageFile {

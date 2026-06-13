@@ -2,12 +2,12 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 // Using HTML5 Canvas instead of Fabric.js for better Vite compatibility
-import { MapPin, AlertTriangle, CheckCircle, Clock, Plus, Download, Upload, Eye, Layers } from 'lucide-react';
+import { MapPin, AlertTriangle, Clock, Plus, Download, Upload, Eye, Layers } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface FloorPlanIssue {

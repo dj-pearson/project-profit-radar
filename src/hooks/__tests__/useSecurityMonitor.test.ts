@@ -1,11 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { renderHook, act, waitFor } from '@testing-library/react';
-import {
-  useSecurityMonitor,
-  logSecurityEvent,
-  type SecurityEvent,
-  type SecurityEventType,
-} from '../useSecurityMonitor';
+import { useSecurityMonitor, logSecurityEvent, type SecurityEvent } from '../useSecurityMonitor';
 
 // --- Mocks ---
 

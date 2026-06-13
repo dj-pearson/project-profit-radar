@@ -6,14 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import {
-  Search,
-  Plus,
-  DollarSign,
-  Package,
-  CheckCircle2,
-  Filter
-} from 'lucide-react';
+import { Search, Plus, DollarSign, Package, CheckCircle2 } from 'lucide-react';
 
 interface LineItemLibraryItem {
   id: string;

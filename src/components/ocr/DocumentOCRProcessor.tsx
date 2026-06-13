@@ -9,6 +9,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { acquireOcr, isOcrSupported } from '@/lib/ocr/ocrWorkerPool';
 import { 
   FileText, 
   Brain, 
@@ -75,26 +76,33 @@ const DocumentOCRProcessor: React.FC<DocumentOCRProcessorProps> = ({
     setProcessing(true);
     setCurrentStep('ocr');
 
-    try {
-      // Step 1: OCR Processing - Lazy load Tesseract.js only when needed
-      const Tesseract = await import('tesseract.js');
-
-      const { data: { text } } = await Tesseract.default.recognize(file, 'eng', {
-        logger: m => {
-          if (m.status === 'recognizing text') {
-            setOcrProgress(Math.round(m.progress * 100));
-          }
-        }
+    // Browsers without Web Worker / WebAssembly can't run Tesseract — skip OCR
+    // and drop the user straight into manual review (the text area is editable).
+    if (!isOcrSupported()) {
+      setOcrText('');
+      toast({
+        title: 'Manual entry',
+        description: 'Automatic text extraction is not supported in this browser. Please enter the document text manually.',
       });
+      setCurrentStep('review');
+      setProcessing(false);
+      return;
+    }
+
+    // Step 1: OCR via the shared, ref-counted worker pool (no per-document
+    // worker leak — the worker is reused and terminated when idle).
+    const ocr = await acquireOcr();
+    try {
+      const { text } = await ocr.recognize(file, (pct) => setOcrProgress(pct));
 
       setOcrText(text);
-      
+
       // Step 2: AI Classification
       setCurrentStep('ai');
-      
+
       const aiResult = await classifyDocument(text);
       setAiClassification(aiResult);
-      
+
       setCurrentStep('review');
     } catch (error) {
       console.error('Document processing error:', error);
@@ -104,6 +112,7 @@ const DocumentOCRProcessor: React.FC<DocumentOCRProcessorProps> = ({
         description: "Failed to process document. Please try again."
       });
     } finally {
+      ocr.release();
       setProcessing(false);
     }
   };

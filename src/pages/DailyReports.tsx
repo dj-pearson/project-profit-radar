@@ -1,40 +1,23 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { AccessiblePageWrapper } from '@/components/accessibility/AccessiblePageWrapper';
 import { AccessibleTable, type TableColumn } from '@/components/accessibility/AccessibleTable';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { validateFileUpload, generateSecureFilename } from '@/lib/security/fileUploadValidation';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
-import { ResponsiveContainer } from '@/components/layout/ResponsiveContainer';
-import { mobileGridClasses, mobileFilterClasses, mobileButtonClasses, mobileTextClasses, mobileCardClasses } from '@/utils/mobileHelpers';
 import MobileDailyReport from '@/components/mobile/MobileDailyReport';
 import { useIsMobile } from '@/hooks/use-mobile';
-import {
-  ArrowLeft,
-  Calendar,
-  Users,
-  AlertTriangle,
-  PlusCircle,
-  FileText,
-  Truck,
-  Cloud,
-  Camera,
-  X,
-  Upload,
-  Smartphone,
-  RefreshCw
-} from 'lucide-react';
+import { Calendar, Users, AlertTriangle, PlusCircle, FileText, Cloud, Camera, X, Upload, Smartphone } from 'lucide-react';
 import { fetchWeather, formatWeatherForReport } from '@/services/weather';
 
 interface Project {

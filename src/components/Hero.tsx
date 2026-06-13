@@ -1,6 +1,6 @@
-import { useState, useRef, useEffect, useCallback, ComponentType } from "react";
+import { useState, useRef, useEffect, ComponentType } from "react";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Play, Ruler, CheckCircle, DollarSign, TrendingUp } from "lucide-react";
+import { ArrowRight, Play, Ruler, CheckCircle } from "lucide-react";
 import { Link } from "react-router-dom";
 import { ResponsiveContainer, ResponsiveGrid } from "@/components/layout/ResponsiveContainer";
 
@@ -102,11 +102,16 @@ const Hero = () => {
     return () => clearInterval(interval);
   }, [badgeHovered]);
 
-  // Conditionally load 3D component only on desktop to save ~1.3MB on mobile
+  // Conditionally load the Three.js 3D hero only on desktop (saves ~1.3MB on
+  // mobile), only when reduced-motion is NOT requested, and only once the hero
+  // is actually in view — so the heavy bundle never loads for users who skip
+  // straight to /dashboard or who prefer reduced motion (US-216).
   useEffect(() => {
     if (isMobile) return; // Don't load 3D on mobile devices
+    if (typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) {
+      return; // Decorative animated 3D — honour reduced-motion, keep the static fallback
+    }
 
-    // Defer 3D loading until after initial render
     const load3D = () => {
       import("@/components/3d/PremiumBlueprint3D")
         .then((module) => {
@@ -117,19 +122,43 @@ const Hero = () => {
         });
     };
 
-    // Use requestIdleCallback to avoid blocking the main thread
-    if ('requestIdleCallback' in window) {
-      (window as any).requestIdleCallback(load3D, { timeout: 3000 });
-    } else {
-      setTimeout(load3D, 500);
+    // Defer to idle time so it never blocks the interactive period.
+    const scheduleLoad = () => {
+      if ('requestIdleCallback' in window) {
+        (window as any).requestIdleCallback(load3D, { timeout: 3000 });
+      } else {
+        setTimeout(load3D, 500);
+      }
+    };
+
+    // Gate the fetch on the hero being visible (true async boundary).
+    const el = containerRef.current;
+    if (el && typeof IntersectionObserver !== 'undefined') {
+      const observer = new IntersectionObserver(
+        (entries) => {
+          if (entries.some((e) => e.isIntersecting)) {
+            observer.disconnect();
+            scheduleLoad();
+          }
+        },
+        { rootMargin: '200px' }
+      );
+      observer.observe(el);
+      return () => observer.disconnect();
     }
+    scheduleLoad();
   }, [isMobile]);
 
   // Defer GSAP loading - only load on desktop after first paint
   useEffect(() => {
-    // Skip animations entirely on mobile for better performance
-    if (isMobile) {
-      // Make elements visible immediately on mobile
+    const reduceMotion =
+      typeof window !== 'undefined' &&
+      window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+
+    // Skip animations entirely on mobile or when the user prefers reduced
+    // motion. In both cases we don't even import GSAP (so it never competes for
+    // the interactive period) and we reveal the content immediately.
+    if (isMobile || reduceMotion) {
       [badgeRef, headlineRef, textRef, ctaRef].forEach(ref => {
         if (ref.current) {
           ref.current.style.opacity = '1';

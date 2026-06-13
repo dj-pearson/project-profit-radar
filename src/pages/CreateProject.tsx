@@ -7,28 +7,13 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { projectService } from '@/services/projectService';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
-import {
-  ArrowLeft,
-  Calendar,
-  DollarSign,
-  MapPin,
-  User,
-  Building2,
-  Clock,
-  Plus,
-  X,
-  CheckCircle2,
-  Zap,
-  ChevronDown,
-  History
-} from 'lucide-react';
-import { MobilePageWrapper, MobileStatsGrid, MobileFilters, mobileGridClasses, mobileFilterClasses, mobileButtonClasses } from '@/utils/mobileHelpers';
+import { Calendar, DollarSign, MapPin, User, Building2, Clock, Plus, X, Zap, History } from 'lucide-react';
+import { mobileFilterClasses } from '@/utils/mobileHelpers';
 import { ProjectTemplatesLibrary } from '@/components/projects/ProjectTemplatesLibrary';
 import {
   Command,

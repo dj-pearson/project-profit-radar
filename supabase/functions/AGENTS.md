@@ -31,12 +31,30 @@ check, so each MUST either:
   (cron/system functions), or a `withAuth` wrapper.
 
 `scripts/check-edge-function-auth.mjs` (run in CI) classifies every
-`verify_jwt=false` function as public / guarded / needs-guard and fails on a
-regression of the `ENFORCED` set. When you harden a backlog function, add it to
-`ENFORCED` in that script.
+`verify_jwt=false` function as public / guarded / needs-guard, fails on a
+regression of the `ENFORCED` set, and fails if any `ENFORCED` function ships
+wildcard CORS. When you harden a backlog function, add it to `ENFORCED` in that
+script. Current state: **0 backlog** — all 33 `verify_jwt=false` functions are
+either allowlisted-public or guarded; all 20 non-public ones are `ENFORCED`.
 
-**CORS**: never ship `Access-Control-Allow-Origin: '*'` on an authenticated
-function — use `getCorsHeaders(req)` from `secure-cors.ts`.
+**Canonical intentionally-public functions** (verify their own caller — webhook
+signature, OAuth state, a dedicated secret, or a public marketing/tracking
+endpoint): `stripe-webhook`, `gsc-oauth-callback`, `google-calendar-callback`,
+`outlook-calendar-callback`, `webhook-verify`, `api-auth`, `create-root-admin`,
+`email-unsubscribe`, `capture-lead`, `handle-demo-request`,
+`handle-sales-contact`, `track-referral`, `process-referral-signup`. Everything
+else that is `verify_jwt=false` MUST apply a guard.
+
+**System/cron functions** use `requireSystemOrAdmin(req)` (CRON_SECRET header or
+admin user; fails open only until `CRON_SECRET` is configured — set it and have
+schedulers send `x-cron-secret` to enforce). NOTE: `process-dsar-fulfillment`
+(GDPR deletion) never fails open — it additionally accepts the existing
+service-role bearer and explicitly rejects when neither a service bearer nor
+`CRON_SECRET`/admin is present.
+
+**CORS**: never ship `Access-Control-Allow-Origin: '*'` on a non-public
+function — use `getCorsHeaders(req)` from `secure-cors.ts` (declare
+`const corsHeaders = getCorsHeaders(req)` as the first line of the handler).
 
 ## Function Categories
 - **stripe-webhooks** - Payment processing via Stripe.

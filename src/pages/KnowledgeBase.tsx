@@ -1,16 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { 
-  Search, 
-  BookOpen, 
-  Clock, 
-  Star, 
-  Eye,
-  ChevronRight,
-  Filter,
-  Grid,
-  List
-} from 'lucide-react';
+import { Search, BookOpen, Clock, Star, Eye, ChevronRight, Grid, List } from 'lucide-react';
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";

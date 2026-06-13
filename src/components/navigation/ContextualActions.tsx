@@ -6,19 +6,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { integrationService } from '@/services/IntegrationService';
 import { toast } from '@/hooks/use-toast';
-import {
-  ArrowRight,
-  Building2,
-  DollarSign,
-  FileText,
-  Users,
-  Calendar,
-  Zap,
-  ExternalLink,
-  Plus,
-  Link,
-  Calculator
-} from 'lucide-react';
+import { Building2, DollarSign, FileText, Calendar, Zap, ExternalLink, Plus, Link, Calculator } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -27,10 +15,9 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
 
 export interface ContextualAction {
   id: string;

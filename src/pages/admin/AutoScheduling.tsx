@@ -12,18 +12,7 @@ import { Progress } from '@/components/ui/progress';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Checkbox } from '@/components/ui/checkbox';
-import {
-  CalendarIcon,
-  Users,
-  Briefcase,
-  Zap,
-  CheckCircle2,
-  Clock,
-  TrendingUp,
-  MapPin,
-  Target,
-  Settings
-} from 'lucide-react';
+import { CalendarIcon, Users, Briefcase, Zap, CheckCircle2, TrendingUp, MapPin, Target, Settings } from 'lucide-react';
 import { format } from 'date-fns';
 
 interface AutoSchedule {

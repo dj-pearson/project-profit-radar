@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Alert } from '@/components/ui/alert';
 import {
   Dialog,
   DialogContent,
@@ -12,20 +12,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
-import {
-  AlertTriangle,
-  TrendingDown,
-  Calendar,
-  DollarSign,
-  Users,
-  Cloud,
-  Wrench,
-  Bell,
-  Eye,
-  X,
-  CheckCircle,
-  Clock
-} from 'lucide-react';
+import { AlertTriangle, TrendingDown, Calendar, DollarSign, Users, Cloud, Wrench, Bell, X, CheckCircle, Clock } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toast } from '@/hooks/use-toast';
 

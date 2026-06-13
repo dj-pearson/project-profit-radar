@@ -3,18 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { AccessibleModal } from '@/components/accessibility/AccessibleModal';
-import {
-  Building2,
-  DollarSign,
-  Users,
-  Shield,
-  Calendar,
-  Cloud,
-  Activity,
-  BarChart3,
-  Settings2,
-  RotateCcw
-} from 'lucide-react';
+import { Building2, Shield, Calendar, Cloud, Activity, BarChart3, RotateCcw } from 'lucide-react';
 
 export interface DashboardWidgetConfig {
   id: string;

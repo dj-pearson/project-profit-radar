@@ -5,19 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
-import { 
-  Bell, 
-  MessageSquare, 
-  AtSign, 
-  AlertTriangle, 
-  CheckCircle, 
-  Clock,
-  Settings,
-  Archive,
-  Trash2,
-  Filter
-} from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
+import { Bell, MessageSquare, AtSign, AlertTriangle, CheckCircle, Clock, Settings, Trash2, Filter } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { toast } from 'sonner';
 

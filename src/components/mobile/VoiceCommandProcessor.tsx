@@ -11,19 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
-import {
-  Mic,
-  MicOff,
-  Play,
-  Square,
-  CheckCircle,
-  AlertTriangle,
-  Clock,
-  Package,
-  Calendar,
-  MessageSquare,
-  Zap,
-} from "lucide-react";
+import { Mic, MicOff, CheckCircle, AlertTriangle, Clock, Package, Calendar, MessageSquare, Zap } from "lucide-react";
 
 export interface VoiceCommand {
   intent:

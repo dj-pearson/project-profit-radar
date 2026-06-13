@@ -1,21 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { MobileTextField, MobileTextArea } from '@/components/mobile/forms';
-import {
-  Mic,
-  MicOff,
-  Camera,
-  MapPin,
-  Clock,
-  Save,
-  Upload,
-  Wifi,
-  WifiOff,
-  CheckCircle,
-  AlertCircle
-} from 'lucide-react';
+import { Mic, MicOff, Camera, Save, Upload, Wifi, WifiOff } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { useOfflineSync } from '@/hooks/useOfflineSync';

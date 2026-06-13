@@ -5,9 +5,9 @@
  * and contract verification.
  */
 
-import type { TestConfig, TestResult, NetworkRequest } from '../types';
+import type { TestConfig, TestResult } from '../types';
 import { Logger } from '../utils/logger';
-import { generateId, formatDuration } from '../utils/helpers';
+import { generateId } from '../utils/helpers';
 
 // ============================================================================
 // Types

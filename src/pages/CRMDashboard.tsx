@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { AccessiblePageWrapper } from "@/components/accessibility/AccessiblePageWrapper";
@@ -17,7 +17,6 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { mobileGridClasses } from '@/utils/mobileHelpers';
 import { ContextualActions } from '@/components/navigation/ContextualActions';
-import { usePlatform } from '@/contexts/PlatformContext';
 import { Users, DollarSign, TrendingUp, Target, UserPlus, CheckCircle, AlertCircle, Clock, BarChart3, Plus } from 'lucide-react';
 import { LeadDetailView } from '@/components/crm/LeadDetailView';
 import { OpportunityEditDialog } from '@/components/crm/OpportunityEditDialog';

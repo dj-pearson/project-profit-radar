@@ -37,13 +37,7 @@ import {
   XCircle,
   AlertTriangle,
 } from 'lucide-react';
-import {
-  type PSEOPage,
-  type GenerationStatus,
-  type PageType,
-  GENERATION_STATUS_LABELS,
-  PAGE_TYPE_LABELS,
-} from '@/types/pseo';
+import { type PSEOPage, type GenerationStatus, GENERATION_STATUS_LABELS, PAGE_TYPE_LABELS } from '@/types/pseo';
 
 interface PageManagerProps {
   pages: PSEOPage[];

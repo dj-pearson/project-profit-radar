@@ -4,23 +4,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
-import { 
-  Users, 
-  Star, 
-  MessageSquare, 
-  ThumbsUp, 
-  ThumbsDown, 
-  Clock,
-  CheckCircle2,
-  AlertTriangle,
-  User,
-  Building,
-  Hammer,
-  Zap
-} from 'lucide-react';
+import { Users, Star, MessageSquare, User, Building, Hammer, Zap } from 'lucide-react';
 
 interface UserTestScenario {
   id: string;

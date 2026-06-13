@@ -7,7 +7,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
-import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
+import { ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
+import { DeferredChartContainer } from '@/components/ui/DeferredChartContainer';
 import { KPICard } from '@/components/dashboard/KPICard';
 import { LoadingState } from '@/components/ui/loading-spinner';
 import { ResponsiveContainer, ResponsiveGrid } from '@/components/layout/ResponsiveContainer';
@@ -18,19 +19,8 @@ const TimelineOptimization = React.lazy(() => import('@/components/analytics/Tim
 const PerformanceBenchmarking = React.lazy(() => import('@/components/analytics/PerformanceBenchmarking'));
 const ResourceOptimization = React.lazy(() => import('@/components/analytics/ResourceOptimization'));
 const WorkflowAutomation = React.lazy(() => import('@/components/analytics/WorkflowAutomation'));
-import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, PieChart, Pie, Cell, Area, AreaChart } from 'recharts';
-import { 
-  TrendingUp, 
-  DollarSign, 
-  Users, 
-  Building2, 
-  Calendar,
-  Target,
-  Activity,
-  BarChart3,
-  Download,
-  Filter
-} from 'lucide-react';
+import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, PieChart, Pie, Area, AreaChart } from 'recharts';
+import { TrendingUp, DollarSign, Building2, Target, Activity, BarChart3, Download, Filter } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
@@ -366,7 +356,7 @@ const Analytics = () => {
                   <CardDescription>Monthly financial performance</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <ChartContainer config={chartConfig} className="h-[300px]">
+                  <DeferredChartContainer config={chartConfig} className="h-[300px]">
                     <AreaChart data={analyticsData.revenueByPeriod}>
                       <CartesianGrid strokeDasharray="3 3" />
                       <XAxis dataKey="period" />
@@ -392,7 +382,7 @@ const Analytics = () => {
                         fillOpacity={0.6}
                       />
                     </AreaChart>
-                  </ChartContainer>
+                  </DeferredChartContainer>
                 </CardContent>
               </Card>
 
@@ -402,7 +392,7 @@ const Analytics = () => {
                   <CardDescription>Current project distribution</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <ChartContainer config={chartConfig} className="h-[300px]">
+                  <DeferredChartContainer config={chartConfig} className="h-[300px]">
                     <PieChart>
                       <Pie
                         data={[
@@ -419,7 +409,7 @@ const Analytics = () => {
                       />
                       <ChartTooltip content={<ChartTooltipContent />} />
                     </PieChart>
-                  </ChartContainer>
+                  </DeferredChartContainer>
                 </CardContent>
               </Card>
             </ResponsiveGrid>
@@ -468,7 +458,7 @@ const Analytics = () => {
                   <CardDescription>Monthly labor hours and efficiency</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <ChartContainer config={chartConfig} className="h-[300px]">
+                  <DeferredChartContainer config={chartConfig} className="h-[300px]">
                     <LineChart data={analyticsData.resourceUtilization}>
                       <CartesianGrid strokeDasharray="3 3" />
                       <XAxis dataKey="period" />
@@ -481,7 +471,7 @@ const Analytics = () => {
                         strokeWidth={2}
                       />
                     </LineChart>
-                  </ChartContainer>
+                  </DeferredChartContainer>
                 </CardContent>
               </Card>
 
@@ -491,7 +481,7 @@ const Analytics = () => {
                   <CardDescription>Resource efficiency over time</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <ChartContainer config={chartConfig} className="h-[300px]">
+                  <DeferredChartContainer config={chartConfig} className="h-[300px]">
                     <LineChart data={analyticsData.resourceUtilization}>
                       <CartesianGrid strokeDasharray="3 3" />
                       <XAxis dataKey="period" />
@@ -504,7 +494,7 @@ const Analytics = () => {
                         strokeWidth={2}
                       />
                     </LineChart>
-                  </ChartContainer>
+                  </DeferredChartContainer>
                 </CardContent>
               </Card>
             </ResponsiveGrid>
@@ -515,7 +505,7 @@ const Analytics = () => {
                 <CardDescription>Current resource distribution across projects</CardDescription>
               </CardHeader>
               <CardContent>
-                <ChartContainer config={chartConfig} className="h-[300px]">
+                <DeferredChartContainer config={chartConfig} className="h-[300px]">
                   <BarChart data={analyticsData.resourceUtilization.slice(-6)}>
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis dataKey="period" />
@@ -524,7 +514,7 @@ const Analytics = () => {
                     <Bar dataKey="materialCost" fill="var(--color-revenue)" />
                     <Bar dataKey="laborHours" fill="var(--color-costs)" />
                   </BarChart>
-                </ChartContainer>
+                </DeferredChartContainer>
               </CardContent>
             </Card>
           </TabsContent>
@@ -537,7 +527,7 @@ const Analytics = () => {
                   <CardDescription>Projects started vs completed by month</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <ChartContainer config={chartConfig} className="h-[300px]">
+                  <DeferredChartContainer config={chartConfig} className="h-[300px]">
                     <BarChart data={analyticsData.trendData}>
                       <CartesianGrid strokeDasharray="3 3" />
                       <XAxis dataKey="month" />
@@ -546,7 +536,7 @@ const Analytics = () => {
                       <Bar dataKey="projectsStarted" fill="var(--color-revenue)" />
                       <Bar dataKey="projectsCompleted" fill="var(--color-profit)" />
                     </BarChart>
-                  </ChartContainer>
+                  </DeferredChartContainer>
                 </CardContent>
               </Card>
 
@@ -556,7 +546,7 @@ const Analytics = () => {
                   <CardDescription>Project value trends over time</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <ChartContainer config={chartConfig} className="h-[300px]">
+                  <DeferredChartContainer config={chartConfig} className="h-[300px]">
                     <LineChart data={analyticsData.trendData}>
                       <CartesianGrid strokeDasharray="3 3" />
                       <XAxis dataKey="month" />
@@ -572,7 +562,7 @@ const Analytics = () => {
                         strokeWidth={3}
                       />
                     </LineChart>
-                  </ChartContainer>
+                  </DeferredChartContainer>
                 </CardContent>
               </Card>
             </ResponsiveGrid>

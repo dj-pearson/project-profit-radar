@@ -1,4 +1,3 @@
-import React from 'react';
 import { SEOMetaTags } from '../components/SEOMetaTags';
 import { QuickAnswerSnippet, LastUpdated } from '../components/seo/QuickAnswerSnippet';
 import { BreadcrumbsNavigation } from '../components/BreadcrumbsNavigation';

@@ -8,23 +8,7 @@ import {
   MobileTextArea,
   MobileSelectField,
 } from '@/components/mobile/forms';
-import { 
-  Clock, 
-  Play,
-  Pause,
-  Square,
-  MapPin,
-  Wifi,
-  WifiOff,
-  Users,
-  UserCheck,
-  Timer,
-  CheckCircle,
-  AlertTriangle,
-  CalendarDays,
-  DollarSign,
-  Target
-} from 'lucide-react';
+import { Clock, Play, Pause, Square, MapPin, Wifi, WifiOff, Users, AlertTriangle, CalendarDays, DollarSign } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { useOfflineSync } from '@/hooks/useOfflineSync';

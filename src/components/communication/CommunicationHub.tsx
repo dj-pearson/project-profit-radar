@@ -6,29 +6,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { 
-  MessageSquare, 
-  Send, 
-  Calendar as CalendarIcon, 
-  FileText, 
-  Users, 
-  Clock, 
-  CheckCircle, 
-  AlertCircle, 
-  Plus,
-  Paperclip,
-  Phone,
-  Video,
-  Settings
-} from 'lucide-react';
-import { supabase } from "@/integrations/supabase/client";
+import { MessageSquare, Send, Calendar as CalendarIcon, FileText, Users, CheckCircle, Plus, Paperclip, Video, Settings } from 'lucide-react';
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
-import { format, addDays } from "date-fns";
+import { format } from "date-fns";
 import { ThreadManager } from "./ThreadManager";
 import { AdvancedChatInterface } from "./AdvancedChatInterface";
 import { useAdvancedChat } from "@/hooks/useAdvancedChat";

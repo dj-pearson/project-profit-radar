@@ -9,18 +9,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import {
-  AlertTriangle,
-  Shield,
-  CheckCircle2,
-  XCircle,
-  FileText,
-  Users,
-  Calendar,
-  TrendingDown,
-  Award,
-  HardHat
-} from 'lucide-react';
+import { AlertTriangle, Shield, CheckCircle2, FileText, Users, TrendingDown, Award, HardHat } from 'lucide-react';
 
 interface OSHA300Log {
   id: string;

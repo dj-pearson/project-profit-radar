@@ -1,8 +1,8 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useWebVitals } from '@/hooks/useWebVitals';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Activity, Zap, Eye, MousePointer, Clock, Gauge } from 'lucide-react';
+import { Activity, Zap, Eye, Clock, Gauge } from 'lucide-react';
 
 interface Metrics {
   lcp?: number;

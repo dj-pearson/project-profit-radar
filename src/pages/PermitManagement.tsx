@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { ResponsiveContainer } from '@/components/layout/ResponsiveContainer';
@@ -10,19 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { PermitForm } from '@/components/permits/PermitForm';
-import { 
-  Plus, 
-  Search, 
-  Filter,
-  FileText,
-  Clock,
-  CheckCircle,
-  AlertTriangle,
-  Calendar,
-  Building,
-  ArrowLeft
-} from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { Plus, Search, Filter, FileText, Clock, CheckCircle, AlertTriangle, Building } from 'lucide-react';
 
 interface Permit {
   id: string;

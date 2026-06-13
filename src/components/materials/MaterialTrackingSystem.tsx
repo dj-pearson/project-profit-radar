@@ -5,10 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Progress } from '@/components/ui/progress';
-import { 
-  Package, TrendingDown, TrendingUp, AlertTriangle, 
-  CheckCircle, Truck, MapPin, Clock, DollarSign, Barcode
-} from 'lucide-react';
+import { Package, TrendingUp, AlertTriangle, CheckCircle, Truck, MapPin, Clock, DollarSign, Barcode } from 'lucide-react';
 
 interface Material {
   id: string;

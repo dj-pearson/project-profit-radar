@@ -1,4 +1,3 @@
-import React from 'react';
 import { Link } from 'react-router-dom';
 import Header from "@/components/Header";
 import ToolsFooter from "@/components/ToolsFooter";
@@ -8,19 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { ResponsiveContainer } from "@/components/layout/ResponsiveContainer";
 import { SEOMetaTags } from "@/components/SEOMetaTags";
 import { SkipLink } from "@/components/accessibility/AccessibilityUtils";
-import { 
-  Calendar,
-  Calculator,
-  Clock,
-  DollarSign,
-  FileText,
-  BarChart3,
-  Users,
-  ArrowRight,
-  Wrench,
-  Target,
-  CheckCircle
-} from 'lucide-react';
+import { Calendar, Calculator, DollarSign, FileText, Users, ArrowRight, Wrench, Target, CheckCircle } from 'lucide-react';
 
 const Tools = () => {
   const tools = [

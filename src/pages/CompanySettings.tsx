@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { RoleGuard, ROLE_GROUPS } from '@/components/auth/RoleGuard';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
@@ -11,7 +11,7 @@ import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { Building2, Bell, Mail, Calendar, Shield, Palette, Users, DollarSign, Sparkles } from 'lucide-react';
+import { Building2, Bell, Shield, DollarSign, Sparkles } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 interface CompanySettings {

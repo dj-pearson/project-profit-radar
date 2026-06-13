@@ -1,6 +1,5 @@
 import React from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
-import { mobileGridClasses, mobileFilterClasses, mobileButtonClasses, mobileTextClasses } from '@/utils/mobileHelpers';
 import { gtag } from '@/hooks/useGoogleAnalytics';
 import { RoleGuard, ROLE_GROUPS } from '@/components/auth/RoleGuard';
 import { useAuth } from '@/contexts/AuthContext';

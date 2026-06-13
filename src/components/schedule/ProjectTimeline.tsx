@@ -1,10 +1,9 @@
 import React, { useState } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isToday } from 'date-fns';
-import { Calendar, DollarSign, User } from 'lucide-react';
+import { Calendar } from 'lucide-react';
 
 interface Project {
   id: string;

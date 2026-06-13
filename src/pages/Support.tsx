@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
@@ -11,19 +11,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { 
-  Plus, 
-  Search, 
-  HelpCircle, 
-  MessageSquare, 
-  Phone, 
-  Mail,
-  Clock,
-  CheckCircle,
-  AlertTriangle,
-  User,
-  Calendar
-} from 'lucide-react';
+import { Plus, Search, HelpCircle, MessageSquare, Mail, Clock, CheckCircle, AlertTriangle, User, Calendar } from 'lucide-react';
 
 export default function Support() {
   const [searchTerm, setSearchTerm] = useState("");

@@ -1,14 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Progress } from '@/components/ui/progress';
-import { 
-  Users, Phone, Mail, Calendar, DollarSign, TrendingUp, 
-  MapPin, Building, Clock, Star, MessageSquare, FileText
-} from 'lucide-react';
+import { Users, Phone, Mail, Calendar, DollarSign, TrendingUp, MapPin, Clock, MessageSquare, FileText } from 'lucide-react';
 
 interface Lead {
   id: string;

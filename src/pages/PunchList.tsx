@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
@@ -10,24 +10,10 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { 
-  ArrowLeft, 
-  CheckSquare,
-  AlertTriangle,
-  PlusCircle,
-  CheckCircle,
-  XCircle,
-  Clock,
-  User,
-  Calendar,
-  MapPin,
-  Camera,
-  MessageSquare
-} from 'lucide-react';
+import { CheckSquare, AlertTriangle, PlusCircle, CheckCircle, XCircle, Clock, User, Calendar, MapPin, MessageSquare } from 'lucide-react';
 
 interface Project {
   id: string;

@@ -3,20 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import {
-  Copy,
-  Check,
-  Gift,
-  Users,
-  DollarSign,
-  Share2,
-  Mail,
-  MessageCircle,
-  Twitter,
-  Facebook,
-  Linkedin,
-  TrendingUp,
-} from 'lucide-react';
+import { Copy, Check, Gift, Users, DollarSign, Mail, Twitter, Linkedin, TrendingUp } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';

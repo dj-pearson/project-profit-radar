@@ -7,7 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { CheckCircle, Circle, ExternalLink, Copy, Download, Settings, Database, Zap } from 'lucide-react';
+import { CheckCircle, ExternalLink, Copy, Download, Settings, Database, Zap } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 
 interface SetupStep {

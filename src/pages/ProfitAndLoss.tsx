@@ -13,7 +13,6 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Separator } from '@/components/ui/separator';
 import { TrendingUp, Download, Printer } from 'lucide-react';
 import { formatCurrency, formatPercentage } from '@/utils/accountingUtils';
 

@@ -1,11 +1,10 @@
-import React from "react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { PageSEO, createArticleSchema, createFAQSchema } from "@/components/seo/PageSEO";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { AlertTriangle, CheckCircle, XCircle, ArrowRight, BarChart3, Clock, DollarSign } from "lucide-react";
+import { CheckCircle, XCircle, ArrowRight, BarChart3, Clock, DollarSign } from "lucide-react";
 import { Link } from "react-router-dom";
 import BreadcrumbsNavigation from "@/components/BreadcrumbsNavigation";
 import { GEOOptimizedFAQ } from "@/components/seo/GEOOptimizedFAQ";

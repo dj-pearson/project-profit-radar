@@ -3,7 +3,6 @@
  * Allows users to share the calculator on social media
  */
 
-import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Share2, Twitter, Linkedin, Facebook, Link2 } from 'lucide-react';
 import { toast } from 'sonner';

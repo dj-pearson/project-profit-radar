@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { AccessiblePageWrapper } from "@/components/accessibility/AccessiblePageWrapper";
 import { AccessibleTable, type TableColumn } from '@/components/accessibility/AccessibleTable';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
@@ -10,20 +10,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import {
-  Plus,
-  Search,
-  Truck,
-  Wrench,
-  AlertTriangle,
-  CheckCircle,
-  Clock,
-  Calendar,
-  MapPin,
-  DollarSign,
-  Loader2
-} from 'lucide-react';
-import { MobilePageWrapper, MobileStatsGrid, MobileFilters, mobileGridClasses, mobileFilterClasses, mobileButtonClasses } from '@/utils/mobileHelpers';
+import { Plus, Search, Truck, Wrench, AlertTriangle, CheckCircle, Clock, MapPin, Loader2 } from 'lucide-react';
+import { mobileFilterClasses } from '@/utils/mobileHelpers';
 import { useEquipmentWithMaintenance, useMaintenanceRecords, useEquipmentStats, useCreateEquipment } from '@/hooks/useEquipment';
 import { Skeleton } from '@/components/ui/skeleton';
 import { formatCurrency } from '@/lib/utils';

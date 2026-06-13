@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -13,18 +13,7 @@ import { CreatePOFromMaterialDialog } from '@/components/materials/CreatePOFromM
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
-import {
-  Plus,
-  Search,
-  Package,
-  Truck,
-  AlertTriangle,
-  CheckCircle,
-  Clock,
-  TrendingUp,
-  TrendingDown,
-  FileText
-} from 'lucide-react';
+import { Plus, Search, Package, Truck, AlertTriangle, CheckCircle, Clock, TrendingUp, FileText } from 'lucide-react';
 
 export default function Materials() {
   const [searchTerm, setSearchTerm] = useState("");

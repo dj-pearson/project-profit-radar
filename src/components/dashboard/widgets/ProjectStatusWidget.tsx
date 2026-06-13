@@ -1,5 +1,4 @@
-import React, { useState, useEffect } from 'react';
-import { Badge } from '@/components/ui/badge';
+import { useState, useEffect } from 'react';
 import { Progress } from '@/components/ui/progress';
 import { Building2, DollarSign } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';

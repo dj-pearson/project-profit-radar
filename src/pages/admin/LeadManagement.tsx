@@ -27,22 +27,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import {
-  Search,
-  Download,
-  Calendar,
-  Mail,
-  Phone,
-  Building,
-  TrendingUp,
-  Clock,
-  CheckCircle,
-  XCircle,
-  AlertCircle,
-  User,
-  Filter,
-  type LucideIcon,
-} from 'lucide-react';
+import { Search, Download, Calendar, Mail, Phone, Building, TrendingUp, Clock, CheckCircle, XCircle, AlertCircle, Filter, type LucideIcon } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';

@@ -39,7 +39,7 @@ import {
 } from 'lucide-react';
 import { useDeviceTrust, TrustedDevice } from '@/hooks/useDeviceTrust';
 import { mobileCardClasses, mobileTextClasses } from '@/utils/mobileHelpers';
-import { formatDistanceToNow, format } from 'date-fns';
+import { formatDistanceToNow } from 'date-fns';
 
 export const DeviceTrustManagement: React.FC = () => {
   const {
