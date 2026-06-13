@@ -1,6 +1,67 @@
 import DOMPurify from 'dompurify';
 
 /**
+ * URL-scheme allowlisting for sanitized HTML.
+ *
+ * Regex-based stripping (see stripDangerousAttributes) can be bypassed with
+ * encoded/polyglot payloads, so we validate every URL-bearing attribute with
+ * the URL API instead. Only an explicit allowlist of schemes is permitted;
+ * `javascript:`, `vbscript:`, and `data:text/html` are rejected. `data:image/*`
+ * and `blob:` are permitted ONLY on media attributes (img/svg src) since those
+ * are legitimate and cannot execute, but never on `href`/`action`.
+ */
+const SAFE_URL_PROTOCOLS = new Set(['http:', 'https:', 'mailto:', 'tel:']);
+const URL_ATTRIBUTES = ['href', 'src', 'xlink:href', 'action', 'formaction'];
+const MEDIA_URL_ATTRIBUTES = new Set(['src', 'xlink:href']);
+
+function isSafeUrlValue(attr: string, value: string): boolean {
+  const v = value.trim();
+  if (v === '') return true;
+  let url: URL;
+  try {
+    // Resolve relative URLs/anchors against a dummy https base so `/path`,
+    // `#anchor`, and `?q=1` are treated as safe (they become https:).
+    url = new URL(v, 'https://brikly.net/');
+  } catch {
+    return false;
+  }
+  if (SAFE_URL_PROTOCOLS.has(url.protocol)) return true;
+  // data:/blob: only on media attributes, and data: only for images.
+  if (url.protocol === 'data:' || url.protocol === 'blob:') {
+    if (!MEDIA_URL_ATTRIBUTES.has(attr)) return false;
+    return url.protocol === 'blob:' || /^data:image\//i.test(v);
+  }
+  return false; // javascript:, vbscript:, file:, etc.
+}
+
+/**
+ * Register a global DOMPurify hook (once) that enforces the URL-scheme
+ * allowlist and hardens `target="_blank"` links against reverse-tabnabbing.
+ * This applies to every DOMPurify.sanitize call in the app.
+ */
+let urlHookRegistered = false;
+function registerUrlSafetyHook(): void {
+  if (urlHookRegistered || typeof DOMPurify.addHook !== 'function') return;
+  urlHookRegistered = true;
+  DOMPurify.addHook('afterSanitizeAttributes', (node) => {
+    const el = node as Element;
+    if (typeof el.getAttribute !== 'function') return;
+    for (const attr of URL_ATTRIBUTES) {
+      const val = el.getAttribute(attr);
+      if (val !== null && !isSafeUrlValue(attr, val)) {
+        el.removeAttribute(attr);
+      }
+    }
+    // Reverse-tabnabbing: any link that opens a new context must not leak
+    // window.opener or the referrer.
+    if (el.getAttribute('target') === '_blank') {
+      el.setAttribute('rel', 'noopener noreferrer');
+    }
+  });
+}
+registerUrlSafetyHook();
+
+/**
  * Defense-in-depth post-pass for DOMPurify output.
  *
  * Strips event-handler attributes, form-submission attributes, and

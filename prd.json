@@ -3319,7 +3319,7 @@
       ],
       "priority": 2,
       "passes": false,
-      "notes": "Source: web security audit. Coordinate with existing AUTH_OAUTH_CSP_FIX work so OAuth doesn't break."
+      "notes": "NOT STARTED — plan refined. public/_headers script-src includes 'unsafe-inline'. index.html has 4 EXECUTABLE inline scripts (lines ~282 Trusted Types policy bootstrap, ~317, ~382, ~387) plus non-executable application/ld+json blocks (not script-src-governed). Removing 'unsafe-inline' requires sha256-hash-pinning the 4 inline scripts in the CSP (the Trusted Types bootstrap MUST remain inline to run before app scripts, so it can't be externalized). RISK: a wrong/stale hash silently blocks the script and breaks the live site (Trusted Types/analytics/OAuth), so this needs real browser verification before shipping — do NOT rush blind. CI already blocks unsafe-eval. Recommended as a focused, browser-verified task. Source: web security audit."
     },
     {
       "id": "US-203",
@@ -3333,8 +3333,8 @@
         "Existing legitimate links and formatting in blog/newsletter content still render"
       ],
       "priority": 2,
-      "passes": false,
-      "notes": "Source: web security audit. DOMPurify already used per CLAUDE.md; this closes the URL-scheme bypass gap."
+      "passes": true,
+      "notes": "COMPLETED. src/lib/security/sanitize.ts: added a global DOMPurify afterSanitizeAttributes hook that validates every URL-bearing attribute (href/src/xlink:href/action/formaction) with the URL API against a scheme allowlist (http/https/mailto/tel; relative URLs safe). javascript:/vbscript:/file: and data:text/html in href are removed; data:image/* and blob: are permitted ONLY on media (img/svg src). target=_blank links are forced to rel='noopener noreferrer' (reverse-tabnabbing). This replaces sole reliance on regex stripping which missed data: and encoded payloads. Tests: 7 new cases in sanitize.test.ts (incl. data:text/html href, entity-encoded javascript:, data:image allow). Source: web security audit."
     },
     {
       "id": "US-204",
@@ -3348,8 +3348,8 @@
         "Normal online sign-out and legitimate session persistence across restarts still work"
       ],
       "priority": 2,
-      "passes": false,
-      "notes": "Source: web security audit. Touches shared web/Capacitor storage; keep additive to avoid stranding valid sessions for honest users."
+      "passes": true,
+      "notes": "COMPLETED. src/lib/supabaseStorage.ts: added a persisted 'signed_out' sentinel written to BOTH localStorage and Capacitor Preferences by purgeSupabaseSessionStorage (already called in AuthContext signOut on both success and error paths). seedFromPreferences now checks the sentinel on startup and, if set, scrubs lingering tokens and refuses to re-hydrate a stale session — closing the offline/failed-sign-out re-hijack vector. The sentinel is lifted only when a fresh auth-token session is written (real re-login) via both web and Capacitor setItem. Tests: src/lib/__tests__/supabaseStorage.test.ts (3 cases). NOTE: the audit's 'retry server-side invalidation on reconnect' suggestion is a smaller residual; the local re-hydration vector (the actual risk) is closed. Source: web security audit."
     },
     {
       "id": "US-205",
