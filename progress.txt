@@ -812,3 +812,13 @@ Remaining (fresh breakdown): TS2345=522, TS6133=512 (mostly unused locals now), 
 - New `src/components/ui/DeferUntilVisible.tsx` (IntersectionObserver; renders skeleton until visible, mounts once, IO-unavailable fallback) + `DeferredChartContainer.tsx` (drop-in for ChartContainer). 2 passing tests.
 - Analytics.tsx: all 7 ChartContainers -> DeferredChartContainer (offscreen charts deferred). Inactive tabs already unmount (Radix).
 - Note: current Analytics already does a single shared 2-query load (not per-tab), so AC's per-tab fetch is N/A.
+
+---
+
+## 2026-06-13 (cont.) - US-216: Lazy-load Three.js + GSAP off landing critical path - PASS
+
+- Build proof: three-BRYjSUHX.js (869KB) standalone; Index landing chunk (21KB) has 0 THREE + 0 gsap refs.
+- Hero.tsx 3D load now gated: !mobile && !prefers-reduced-motion && hero-visible (IntersectionObserver on containerRef) + requestIdleCallback.
+- Hero.tsx GSAP effect early-returns on mobile OR reduced-motion: reveals content immediately, does NOT import gsap in those cases.
+- BriklyHero3D buffers already memoized via useMemo (colors/dummy/colorArray/initialPositions, stable deps) — verified, no change needed.
+- Completes the code-splitting trio (US-216/217/218).

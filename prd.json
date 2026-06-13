@@ -3528,8 +3528,8 @@
         "Visual/behavioral parity for the hero on capable desktops; graceful fallback on mobile and reduced-motion"
       ],
       "priority": 2,
-      "passes": false,
-      "notes": "Source: build/perf audit. Distinct from US-058 (general dynamic imports) — specifically the landing-path Three.js/GSAP cost."
+      "passes": true,
+      "notes": "COMPLETED. Three.js + GSAP off the landing critical path. Build proof: three is its own chunk (three-BRYjSUHX.js, 869KB) and the Index/landing chunk (21KB) has 0 THREE refs and 0 gsap refs — both are absent from the initial landing chunk. (1) 3D hero (PremiumBlueprint3D, own dynamic chunk) now loads ONLY when: not mobile AND prefers-reduced-motion is not set AND the hero is in view (new IntersectionObserver on the existing containerRef, rootMargin 200px), deferred via requestIdleCallback so it never blocks interactivity; users who go straight to /dashboard never render Hero so never fetch three. (2) GSAP: the animation effect now early-returns on isMobile OR reduced-motion, revealing content immediately and NOT importing gsap at all in those cases (so it never competes for the interactive period); gsap remains a dynamic import on desktop. (3) BriklyHero3D already memoizes its color/instance buffers via useMemo (colors, dummy, and the colorArray/initialPositions Float32Arrays with stable [count, gridSize, colors] deps) — buffers are computed once, not per render. Graceful static fallback on mobile/reduced-motion; full visual parity on capable desktops. vite build green (1m14s)."
     },
     {
       "id": "US-217",
