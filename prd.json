@@ -3230,6 +3230,561 @@
       "priority": 3,
       "passes": false,
       "notes": ""
+    },
+    {
+      "id": "US-197",
+      "title": "Audit and harden multi-tenant isolation on client queries that rely solely on RLS",
+      "description": "Several client-side queries fetch tenant-scoped rows with no explicit company_id filter, relying entirely on RLS. Two confirmed cases: src/components/billing/PaymentFailureAlert.tsx:31-44 selects from payment_failures with only a dunning_status filter, and src/hooks/useTimesheetApproval.ts:48-74 selects from the views pending_timesheet_approvals and approved_timesheets with no company filter. Postgres views run with the view owner's privileges and BYPASS the underlying tables' RLS unless created with security_invoker=true (PG15+), so a view without company scoping can leak cross-tenant rows even when the base tables are protected. Audit every Supabase view and SECURITY DEFINER function used by the web app for company_id scoping, set security_invoker=true (or add explicit company predicates) on tenant-scoped views, and add defense-in-depth company_id filters to the client queries. Produce a checklist of all views/functions audited.",
+      "acceptanceCriteria": [
+        "All Supabase views consumed by the web app are inventoried with their security_invoker setting and whether they enforce company_id scoping",
+        "Tenant-scoped views (incl. pending_timesheet_approvals, approved_timesheets) either set security_invoker=true or contain an explicit company_id predicate, added via a new append-only migration",
+        "PaymentFailureAlert.tsx and useTimesheetApproval.ts add explicit company_id filters as defense-in-depth",
+        "An automated test (or SQL assertion script) verifies a user from company A cannot read company B's payment_failures or timesheets",
+        "No existing tenant-scoped behavior regresses for legitimate same-company users"
+      ],
+      "priority": 1,
+      "passes": false,
+      "notes": "Source: web prod-readiness deep dive (multi-tenancy audit). Evidence verified in live src/. RLS may already cover base tables, but views are the real risk. Backward-compat: new migration is additive (set security_invoker / add predicate); do not narrow legitimate access."
+    },
+    {
+      "id": "US-198",
+      "title": "Enforce auth, company scoping, Zod validation, and scoped CORS on non-public edge functions",
+      "description": "The supabase/functions tree has ~190 functions; a security sweep found many use Access-Control-Allow-Origin: * and accept req.json() without verifying the bearer token, the caller's company_id, or validating input with Zod. supabase/config.toml explicitly lists the functions that are INTENDED to be public/no-JWT (stripe-webhook, *-oauth-callback, webhook-verify, api-auth, etc.). Every function NOT on that allowlist must: extract the Authorization bearer, call supabaseClient.auth.getUser(token), enforce RBAC and company_id scoping (per CLAUDE.md), validate the request body with Zod, and use the shared secure-cors helper with a restricted origin allowlist instead of '*'. Examples flagged: calculate-health-scores, dos-protection, image-processor, track-usage, blog-social-webhook (trusts company_id from body). Build the public allowlist from config.toml, then add a CI check that fails if a non-allowlisted function ships wildcard CORS or skips initializeAuthContext().",
+      "acceptanceCriteria": [
+        "A canonical list of intentionally-public functions is derived from supabase/config.toml and documented in supabase/functions/AGENTS.md",
+        "Every non-public function verifies the bearer token via auth-helpers, enforces company_id scoping, and Zod-validates its request body",
+        "Non-public functions use the shared secure-cors helper with an origin allowlist; no wildcard '*' on authenticated functions",
+        "A CI/lint script fails the build if a non-allowlisted function uses wildcard CORS or lacks an auth check",
+        "blog-social-webhook and similar handlers validate that the caller owns the company_id rather than trusting the request body"
+      ],
+      "priority": 1,
+      "passes": false,
+      "notes": "Source: web security audit. Frame as audit+enforcement, not blanket rewrite. Respect config.toml public list. Backward-compat: tightening auth on a function an older iOS client calls unauthenticated would break it — verify each function is web/admin-only before enforcing, or stage per the API deprecation flow."
+    },
+    {
+      "id": "US-199",
+      "title": "Enforce subscription entitlement limits server-side, not just client-side",
+      "description": "Feature/usage gating currently happens primarily in the client via useSubscription().checkLimit() and PermissionGate/SubscriptionContext, which a user can bypass by calling the API directly. Plan limits (project count, user seats, gated features) must be enforced server-side in the edge functions / RLS that create the gated resources, so a 'starter' tenant cannot exceed its quota via direct Supabase calls. Add a reusable server-side entitlement check (read the company's plan + current usage, reject over-limit writes with a clear {success:false,error} envelope) and wire it into the create paths for projects, user invites, and any premium-gated mutations. Keep the client check for UX, but treat the server as the source of truth.",
+      "acceptanceCriteria": [
+        "A shared server-side entitlement helper resolves a company's plan limits and current usage and returns allow/deny",
+        "Project creation, user-invite, and premium-feature mutation paths reject over-limit requests server-side with the standard error envelope",
+        "Direct API calls that exceed plan limits are blocked even when the client UI is bypassed (covered by a test)",
+        "Client-side checkLimit() remains for UX but no longer the only gate",
+        "Error responses include an actionable upgrade message and do not leak other tenants' usage"
+      ],
+      "priority": 1,
+      "passes": false,
+      "notes": "Source: billing/multi-tenancy audit. Revenue-protection critical. Note: the agent cited edge-functions-template/ (a template tree); enforce in the live supabase/functions tree. Backward-compat: ensure existing over-limit tenants are grandfathered, not hard-locked, to avoid breaking active customers."
+    },
+    {
+      "id": "US-200",
+      "title": "Harden Stripe webhook: signature verification and idempotent processing",
+      "description": "The Stripe webhook handler (supabase/functions/stripe-webhook) records events in webhook_events keyed by stripe_event_id but does not guarantee idempotency on retries: a duplicate event that arrives while the first is mid-processing, or after a partial failure, can double-apply subscription/payment effects (double-charge, duplicate subscription rows, lost refunds). Verify the Stripe signature on every request, and make processing idempotent by guarding on a processed_at/processed flag inside a transaction so an event is applied at most once. If the system is multi-site sharing one Stripe account, make the dedupe key a composite of (stripe_event_id, site_id) so cross-site events don't silently collide. Handle invoice.payment_failed, customer.subscription.updated, and customer.subscription.deleted explicitly.",
+      "acceptanceCriteria": [
+        "Stripe signature is verified on every webhook request; invalid signatures are rejected with 400 and logged",
+        "Event processing is idempotent: a replayed stripe_event_id is detected and skipped after successful processing (processed_at guard within a transaction)",
+        "invoice.payment_failed, customer.subscription.updated, and customer.subscription.deleted each have explicit, tested handling",
+        "Dedupe key is correct for the multi-site model (composite with site_id if applicable)",
+        "A test replays a duplicate event and asserts no double-application of billing effects"
+      ],
+      "priority": 1,
+      "passes": false,
+      "notes": "Source: observability + billing audits (both flagged idempotency). Payment-integrity critical. stripe-webhook is intentionally public (config.toml) so signature verification is the auth boundary."
+    },
+    {
+      "id": "US-201",
+      "title": "Move hardcoded runtime config out of committed wrangler.toml into env injection",
+      "description": "wrangler.toml commits the Supabase anon JWT, Stripe publishable key, and Stripe price IDs (wrangler.toml:9,13-23). These are public-by-design values (not secret keys), so this is NOT a secret leak — but committing them hardcodes environment-specific config into source, makes rotation a code change, and risks a prod build accidentally shipping staging/test IDs. Move these to environment variables / Cloudflare Pages build-time injection (consistent with CLAUDE.md 'secrets only via env'), reference them via import.meta.env / Cloudflare vars, and keep wrangler.toml free of literal keys and price IDs. As routine hygiene (not incident response) rotate the anon key after the change. The service_role key must never appear client-side — confirm it does not.",
+      "acceptanceCriteria": [
+        "Supabase anon key, Stripe publishable key, and Stripe price IDs are injected via env/Cloudflare vars, not literal values in wrangler.toml",
+        "Build fails fast (clear error) if a required public config var is missing in the target environment",
+        "A grep confirms no service_role key is referenced in any client-side bundle path",
+        "Documentation lists which vars must be set per environment (prod/preview)",
+        "Anon key rotated as hygiene after migration; app still authenticates correctly"
+      ],
+      "priority": 2,
+      "passes": false,
+      "notes": "Source: web security audit — DOWNGRADED from the agent's 'Critical leaked JWT'. Anon/publishable keys are meant to be public; real issue is config hygiene + rotation friction. US-002 removed hardcoded fallback tokens from src/; this extends that to wrangler.toml."
+    },
+    {
+      "id": "US-202",
+      "title": "Tighten Content-Security-Policy: remove script-src 'unsafe-inline'",
+      "description": "public/_headers ships a CSP whose script-src includes 'unsafe-inline' (public/_headers:24). A Trusted Types policy in index.html provides defense-in-depth, but 'unsafe-inline' negates much of CSP's XSS protection and is ignored-around in older browsers. Move inline scripts (analytics/GTM bootstrap, etc.) to external files or nonce/hash-based allowances, then drop 'unsafe-inline' (and 'unsafe-eval' if present) from script-src. Verify the app, OAuth flows, and analytics still function under the stricter policy, and add a check that the deployed headers match the intended CSP.",
+      "acceptanceCriteria": [
+        "script-src no longer contains 'unsafe-inline' (and 'unsafe-eval' removed unless a documented dependency requires it)",
+        "Inline scripts are migrated to external files or nonce/hash-allowed; CSP violations are not thrown in normal app, auth, and analytics flows",
+        "A test or CI step asserts the served _headers CSP matches the intended policy",
+        "Trusted Types policy remains and is verified as still active",
+        "OAuth/SSO and Stripe redirect flows verified working under the stricter CSP"
+      ],
+      "priority": 2,
+      "passes": false,
+      "notes": "Source: web security audit. Coordinate with existing AUTH_OAUTH_CSP_FIX work so OAuth doesn't break."
+    },
+    {
+      "id": "US-203",
+      "title": "Harden DOMPurify URL/href sanitization for user-authored HTML",
+      "description": "src/lib/security/sanitize.ts allows href/target in ALLOWED_ATTR and relies on regex-based stripDangerousAttributes() to remove javascript: URLs (sanitize.ts:13-35,48). Regex stripping can be bypassed via polyglot/encoded payloads (e.g. data:text/html, encoded javascript:). Replace regex URL checks with URL-API-based validation that only permits http(s)/mailto/tel schemes, reject data:/blob:/javascript: in href, and add target=_blank rel=noopener noreferrer hardening. This matters wherever user-authored HTML is rendered (blog, newsletters, change-order/RFI descriptions). Expand the sanitize test suite with encoded-scheme and polyglot cases.",
+      "acceptanceCriteria": [
+        "href/src URLs are validated with the URL API; only an allowlist of safe schemes is permitted",
+        "data:, blob:, and javascript: URIs in user-authored HTML are stripped/blocked, including encoded variants",
+        "Outbound links rendered from sanitized HTML get rel=noopener noreferrer",
+        "Sanitize unit tests cover encoded-scheme and polyglot bypass attempts and pass",
+        "Existing legitimate links and formatting in blog/newsletter content still render"
+      ],
+      "priority": 2,
+      "passes": false,
+      "notes": "Source: web security audit. DOMPurify already used per CLAUDE.md; this closes the URL-scheme bypass gap."
+    },
+    {
+      "id": "US-204",
+      "title": "Make web session re-hydration safe after failed or offline sign-out",
+      "description": "src/lib/supabaseStorage.ts clears localStorage on sign-out but state is dual-layered (localStorage + Capacitor Preferences). If the sign-out network call fails (offline), Preferences can still hold a valid session and seedFromPreferences() silently re-hydrates localStorage on next start without re-authentication (supabaseStorage.ts:50-65,136-150). On a shared/stolen device this allows session re-hijack after reconnect. On sign-out, atomically clear BOTH stores and record a 'signed_out' intent that prevents re-seeding until a fresh authenticated session exists; if server invalidation failed offline, queue it and require re-auth before restoring session.",
+      "acceptanceCriteria": [
+        "Sign-out clears localStorage AND Capacitor Preferences atomically, even when offline",
+        "A persisted sign-out intent prevents seedFromPreferences() from silently restoring a session after sign-out",
+        "If server-side session invalidation failed offline, it is retried on reconnect before any session is restored",
+        "A test simulates offline sign-out then app restart and asserts the user is not auto-signed-in",
+        "Normal online sign-out and legitimate session persistence across restarts still work"
+      ],
+      "priority": 2,
+      "passes": false,
+      "notes": "Source: web security audit. Touches shared web/Capacitor storage; keep additive to avoid stranding valid sessions for honest users."
+    },
+    {
+      "id": "US-205",
+      "title": "Wire DoS-protection edge function into the request pipeline",
+      "description": "An admin UI (src/components/admin/DosProtection.tsx) and a dos-protection edge function exist, but the function is never invoked by client requests or middleware — there is no reference to it in src/integrations or a request interceptor, so the feature is currently inert. Either integrate rate-limit enforcement at the edge (Cloudflare Workers rate-limit rules / worker.js) and have abusive patterns logged to the rate-limit-violations table, or remove the dead admin UI. Also add strict input validation to dos-protection itself (its settings field is z.record(z.unknown()), accepting arbitrary keys) and gate it to admins only.",
+      "acceptanceCriteria": [
+        "Rate limiting is actually enforced for the web app (Cloudflare rules and/or worker.js), with violations recorded",
+        "dos-protection settings input is strictly validated (whitelisted fields) and the function is admin-only",
+        "The admin DoS UI reflects real enforcement state, or is removed if not wired",
+        "A test or manual runbook demonstrates a throttled request path",
+        "Legitimate traffic is unaffected by the configured thresholds"
+      ],
+      "priority": 3,
+      "passes": false,
+      "notes": "Source: web security audit. US-017 added rate-limit CONFIG; this makes it actually enforced. Lower priority than the core auth/CORS sweep."
+    },
+    {
+      "id": "US-206",
+      "title": "Properly wire Sentry: env validation, prod gating, release tagging, and sourcemaps",
+      "description": "@sentry/react is installed and src/lib/sentry.ts initializes it, but the wiring is incomplete: VITE_SENTRY_DSN is read (sentry.ts:10) but is NOT in src/lib/envValidation.ts, so a missing DSN fails silently with no warning; no release field is set and vite.config.ts:109 disables sourcemaps, so production stack traces are minified and unattributable to a version; and .env_backup/env templates omit the DSN so CI can deploy with error tracking silently off. Add VITE_SENTRY_DSN to env validation (warn loudly if missing in prod), set Sentry release from package.json/git SHA, enable hidden sourcemaps for production with upload to Sentry, gate init to production, and ensure ErrorBoundary/CriticalErrorBoundary/RouteErrorBoundary report caught errors to Sentry.",
+      "acceptanceCriteria": [
+        "VITE_SENTRY_DSN is validated in envValidation.ts and a missing prod DSN logs a visible warning",
+        "Sentry.init sets a release (version or git SHA) and is gated to production",
+        "Production build emits sourcemaps that are uploaded to Sentry (and not served publicly); stack traces de-minify in Sentry",
+        "ErrorBoundary, CriticalErrorBoundary, and RouteErrorBoundary forward caught errors to Sentry with component context",
+        "Env templates document VITE_SENTRY_DSN and CI surfaces when it is unset"
+      ],
+      "priority": 1,
+      "passes": false,
+      "notes": "Source: observability audit. US-016/US-019 added boundaries + a monitoring dashboard, but Sentry itself is not effectively wired — this closes that gap."
+    },
+    {
+      "id": "US-207",
+      "title": "Route Core Web Vitals real-user metrics to PostHog/Sentry and fix early-event timing",
+      "description": "web-vitals is wired in src/main.tsx (reportWebVitals) but the callback only logs to logger.debug in dev — production CWV (CLS/FCP/INP/LCP/TTFB) are never sent to PostHog or Sentry, so there is no real-user performance monitoring by device/region. Additionally, posthog-js is lazy-loaded on first track() call, so early pageview/web-vitals events may fire before PostHog is ready and be dropped (analytics.ts:42-72, main.tsx:69-75). Send Web Vitals as PostHog events (and/or Sentry performance), and either initialize PostHog early or buffer events until it loads so the first pageview and initial vitals are captured.",
+      "acceptanceCriteria": [
+        "Core Web Vitals are emitted as PostHog events (and/or Sentry performance) in production with useful dimensions",
+        "PostHog is initialized early or events are buffered so the first pageview and initial vitals are not lost",
+        "A dashboard/query can show field LCP/INP/CLS distributions for the web app",
+        "No measurable regression to main-thread time or bundle size from the change",
+        "Dev still logs vitals locally without spamming production analytics"
+      ],
+      "priority": 2,
+      "passes": false,
+      "notes": "Source: observability audit. PostHog + web-vitals are installed but not delivering RUM."
+    },
+    {
+      "id": "US-208",
+      "title": "Health check returns 503 when degraded and is wired to uptime alerting",
+      "description": "supabase/functions/health-check returns HTTP 200 for both 'healthy' and 'degraded' states (index.ts:~95), so a load balancer / uptime monitor treats a degraded service (e.g. DB latency spike) as fully up and never alerts. Return 503 for degraded/unhealthy (or have the monitor parse the JSON body), and add an external uptime/synthetic check plus a cron health ping that alerts on failure. Confirm the monitoring dashboard (US-019) reflects degraded state.",
+      "acceptanceCriteria": [
+        "health-check returns 503 for degraded and unhealthy states, 200 only when fully healthy",
+        "An external uptime/synthetic monitor (or scheduled function) pings health and alerts on failure/degradation",
+        "Alert routing (email/Slack/etc.) is documented and tested with a simulated failure",
+        "The monitoring dashboard surfaces degraded status distinctly from healthy",
+        "No flapping under normal transient latency (thresholds tuned)"
+      ],
+      "priority": 2,
+      "passes": false,
+      "notes": "Source: observability audit. Builds on US-019's health endpoint."
+    },
+    {
+      "id": "US-209",
+      "title": "Fix logger no-op levels, add error-log retry/backoff, and ban console.* in src",
+      "description": "Three logging reliability gaps: (1) src/lib/logger.ts debug()/info() check shouldLog() then do nothing — no console call — so info/debug context is silently lost (logger.ts:108-119). (2) src/services/errorLoggingService.ts flushQueue() posts to Supabase with no retry; during a Supabase blip the whole batch is dropped (errorLoggingService.ts:152-169). (3) ~1,499 raw console.log/warn/error calls remain across src, and 30+ in critical paths (ErrorBoundary.tsx:30, smart-import, admin) bypass Sentry/error_logs. Fix the logger levels, add exponential-backoff retry (or sendBeacon for critical) to the flush, and add an eslint rule banning console.* in src/ with a codemod to route them through the logger.",
+      "acceptanceCriteria": [
+        "logger.debug/info actually emit in their intended environments; no silent no-op",
+        "errorLoggingService flush retries with backoff (or uses sendBeacon for critical) and does not drop batches on transient failures",
+        "An eslint rule forbids console.* in src/ (allowing the logger), enforced in CI",
+        "Critical-path console.error calls (ErrorBoundary, smart-import, admin) are migrated to logger.error/logError and reach Sentry/error_logs",
+        "Pre-existing legitimate logging behavior is preserved in development"
+      ],
+      "priority": 2,
+      "passes": false,
+      "notes": "Source: observability audit. US-003 removed debug console statements once; this institutionalizes it via lint + fixes the logger itself."
+    },
+    {
+      "id": "US-210",
+      "title": "Add realtime subscription auto-reconnect with backoff",
+      "description": "Supabase realtime channels in src/hooks/useRealTimeSync.ts and useRealtimeSubscription.ts are created once with error logging but no reconnection logic; if the realtime server restarts or the connection drops, live features (notifications, activity feed) silently freeze and users see stale data with no indication. Centralize subscription management (US-057 added a manager — extend it) to detect channel CLOSED/ERROR/system events and reconnect with exponential backoff + jitter, and surface a 'reconnecting' state to the existing offline/sync indicator.",
+      "acceptanceCriteria": [
+        "Realtime channels detect disconnect (CLOSED/ERROR/system) and automatically reconnect with backoff + jitter",
+        "Reconnection is centralized (extends the existing realtime subscription manager) rather than per-hook ad hoc",
+        "A 'reconnecting/stale' state is surfaced to the user via the existing offline/sync indicator",
+        "After reconnect, subscriptions resume and missed state is refetched",
+        "A test or harness simulates a dropped channel and asserts recovery"
+      ],
+      "priority": 2,
+      "passes": false,
+      "notes": "Source: observability audit. Extends US-057 centralized realtime manager."
+    },
+    {
+      "id": "US-211",
+      "title": "Add exponential backoff to TanStack Query retries",
+      "description": "src/lib/queryClient.ts uses retry: 2 with no retryDelay, so failed queries retry almost immediately; on a flaky network or brief Supabase 429, multiple field users on the same site hammer the backend and can amplify rate limiting. Add retryDelay with exponential backoff and a cap (e.g. min(1000*2**attempt, 30000)) plus jitter, and consider not retrying on 4xx auth errors.",
+      "acceptanceCriteria": [
+        "QueryClient sets retryDelay with capped exponential backoff and jitter",
+        "Non-retryable errors (401/403/422) are not retried",
+        "Mutation retry behavior is reviewed and made consistent with queries",
+        "Behavior verified under a simulated flaky-network scenario",
+        "No change to successful-path latency"
+      ],
+      "priority": 3,
+      "passes": false,
+      "notes": "Source: build/perf + observability audits."
+    },
+    {
+      "id": "US-212",
+      "title": "Burn down the TypeScript strict-mode error backlog so tsc passes",
+      "description": "Strict mode is enabled (tsconfig.app.json) but a snapshot in tsc-output.txt shows ~3,433 TypeScript errors — top categories TS2345 (177), TS6133 unused (244), TS2769 overloads (150), plus ~54 'string | null' vs 'string | undefined' Supabase-type mismatches, jest-dom matcher type errors (toBeInTheDocument missing on Assertion), and 8 lazy-route 'default export missing' errors in lazyRoutes.tsx that will crash those routes at runtime. US-001 enabled strict via ts-expect-error suppressions, but a clean `tsc --noEmit` is required before CI typecheck can gate merges. Burn the backlog down in batches: fix the runtime-affecting ones first (lazy-route default exports, real null bugs), add proper vitest/jest-dom type augmentation, normalize Supabase null vs undefined, remove dead imports, and track remaining suppressions to zero.",
+      "acceptanceCriteria": [
+        "The 8 lazy-route default-export errors are fixed so those routes load at runtime",
+        "vitest/jest-dom matcher types are augmented so test files type-check without suppressions",
+        "Supabase null/undefined mismatches are resolved via a consistent strategy (type normalization), not blanket suppression",
+        "`tsc --noEmit` (tsconfig.app.json) passes with zero errors; remaining @ts-expect-error count is tracked and trending to zero",
+        "No runtime behavior changes beyond the genuine null-safety bug fixes"
+      ],
+      "priority": 1,
+      "passes": false,
+      "notes": "Source: testing/CI audit. RELEASE BLOCKER — CI typecheck job cannot gate merges until this passes. Large; split into batches per directory. tsc-output.txt is a committed snapshot, re-measure before starting."
+    },
+    {
+      "id": "US-213",
+      "title": "Make CI a real merge gate and apply branch-protection rulesets",
+      "description": "CI exists (.github/workflows) with lint/typecheck/unit/build/e2e/security jobs, but there are no required status checks or branch protection, so broken TypeScript, failing tests, or security issues can merge to develop/main — defeating the CI investment. Make typecheck + lint + unit + build (and a smoke e2e) required checks on develop and main, and apply the rulesets already drafted in .github/rulesets/ (CLAUDE.md documents them) so PRs cannot merge red. Coordinate with US-212 since typecheck can only be required once tsc is green.",
+      "acceptanceCriteria": [
+        "lint, typecheck, unit, and build are required status checks on develop and main",
+        "Branch-protection rulesets from .github/rulesets/ are applied (no force-push/deletion on protected branches; PR required)",
+        "A red CI run demonstrably blocks merge",
+        "The required-check set is documented and matches the CLAUDE.md branching policy",
+        "Solo-developer constraints (required approvals = 0 while solo) are respected so the author isn't deadlocked"
+      ],
+      "priority": 1,
+      "passes": false,
+      "notes": "Source: testing/CI audit. Depends on US-212 for the typecheck gate. Rulesets JSON already exists per CLAUDE.md."
+    },
+    {
+      "id": "US-214",
+      "title": "Un-skip core-flow E2E tests and run mobile viewport in CI",
+      "description": "tests/e2e contains 14 test.skip() calls covering the highest-value flows — sign-in, session persistence, sign-out, dashboard display/metrics/navigation, profile, responsiveness, keyboard nav, alt text — so the most critical paths are not actually validated (false confidence). playwright.config.ts defines Mobile Chrome (Pixel 5) and Mobile Safari (iPhone 12) projects but CI only runs --project=chromium, so responsive/mobile-web is never tested. Implement the skipped specs with proper test auth/data setup, remove the .skip()s, and add at least one mobile project to the CI e2e run.",
+      "acceptanceCriteria": [
+        "The 14 skipped auth/dashboard/core specs are implemented and passing (no remaining test.skip in those files)",
+        "A reliable test-auth/data-seed path exists for E2E (no flakiness from real prod auth)",
+        "CI runs at least one mobile Playwright project in addition to chromium",
+        "E2E suite is green and wired into the CI gate (smoke subset blocking on PRs)",
+        "No .only/.skip left committed in the e2e suite"
+      ],
+      "priority": 2,
+      "passes": false,
+      "notes": "Source: testing/CI audit. Builds on US-008/US-020 e2e foundation."
+    },
+    {
+      "id": "US-215",
+      "title": "Enforce coverage thresholds and add automated accessibility scanning in CI",
+      "description": "vitest.config.ts declares 60% coverage thresholds but CI runs test:run without enforcing them, and with ~64 test files against ~1,389 source files real coverage is far below target — the threshold is aspirational and never blocks a PR. Separately, vitest-axe/axe-core and a custom toHaveNoA11yViolations matcher are installed (src/test/accessibility-utils.ts) but no test invokes axe.run(), so there is no automated a11y regression detection. Enforce coverage in CI (ratcheting up over time rather than failing day one), and add an axe-core scan over the top ~20 pages/components as a CI check.",
+      "acceptanceCriteria": [
+        "CI enforces vitest coverage thresholds (with a realistic ratchet baseline) and fails when coverage drops below it",
+        "An axe-core/vitest-axe scan runs in CI against the top ~20 pages/components",
+        "The previously-unused toHaveNoA11yViolations matcher (or equivalent) is actually exercised by tests",
+        "A11y violations introduced in a PR fail CI",
+        "Coverage and a11y checks complete within a reasonable CI time budget"
+      ],
+      "priority": 3,
+      "passes": false,
+      "notes": "Source: testing/CI + a11y audits. Wires up already-installed but unused test infra."
+    },
+    {
+      "id": "US-216",
+      "title": "Lazy-load Three.js and GSAP off the landing critical path",
+      "description": "The marketing homepage (src/components/Hero.tsx, BriklyHero3D.tsx) defers 3D rendering until after first paint, but PremiumBlueprint3D/Three.js+drei (~1.1MB uncompressed) and GSAP are still imported into the Index page chunk, so they are downloaded/parsed even on mobile (which skips the 3D render) and for the ~80% of users who go straight to /dashboard. Move Three.js and the 3D hero behind a true async boundary (dynamic import only when not mobile and the hero is in view), gate GSAP animations behind prefers-reduced-motion with a sane timeout fallback, and reduce the instanced-mesh count / memoize color buffers in BriklyHero3D (count=3000 regenerates buffers each render, janking mid-range devices). Target a measurable drop in homepage JS and improved LCP/INP.",
+      "acceptanceCriteria": [
+        "Three.js + 3D hero are dynamically imported only when needed (desktop + hero visible); they are absent from the initial Index/landing chunk",
+        "GSAP animations respect prefers-reduced-motion and load without blocking the interactive period",
+        "BriklyHero3D memoizes its color/instance buffers and/or reduces instance count to cut main-thread time",
+        "Lighthouse/CWV shows reduced homepage JS transfer and improved/stable LCP and INP versus baseline",
+        "Visual/behavioral parity for the hero on capable desktops; graceful fallback on mobile and reduced-motion"
+      ],
+      "priority": 2,
+      "passes": false,
+      "notes": "Source: build/perf audit. Distinct from US-058 (general dynamic imports) — specifically the landing-path Three.js/GSAP cost."
+    },
+    {
+      "id": "US-217",
+      "title": "Code-split Tesseract.js OCR and manage worker lifecycle",
+      "description": "tesseract.js (~3.5MB uncompressed) is top-level imported in src/components/financial/MobileExpenseCapture.tsx:38 and used in src/components/ocr/DocumentOCRProcessor.tsx (imported eagerly by DocumentManagement.tsx:27), pulling ~250-350KB into chunks for routes that never OCR. Worse, DocumentOCRProcessor calls recognize() and never terminate()s the worker, leaking ~50MB per worker and slowing the tab after several uploads. Wrap OCR components in React.lazy with a Suspense fallback (and a text-input fallback for unsupported browsers), and introduce a shared OCR worker pool hook with ref-counting plus terminate-on-unmount/timeout cleanup.",
+      "acceptanceCriteria": [
+        "OCR components and tesseract.js are dynamically imported; they are absent from non-OCR route chunks",
+        "A shared worker pool manages Tesseract workers with ref counting and terminates them on unmount/timeout (no leak after repeated uploads)",
+        "A non-OCR text-input fallback exists for unsupported browsers",
+        "Memory profiling shows stable usage across 10+ sequential document uploads",
+        "OCR accuracy/behavior on the expense-capture and document flows is unchanged"
+      ],
+      "priority": 2,
+      "passes": false,
+      "notes": "Source: build/perf audit. Memory leak + bundle bloat both addressed."
+    },
+    {
+      "id": "US-218",
+      "title": "Code-split Recharts and defer offscreen/inactive chart rendering",
+      "description": "Recharts (~320KB gzip) is imported directly in 16+ component files (Analytics, CRM, financial, quality dashboards) and is not isolated into its own manual chunk, so chart code ships to routes that may never render a chart, and pages like src/pages/Analytics.tsx render all tab charts up front and fetch all chart data in one burst (8 parallel queries). Add recharts to manualChunks in vite.config.ts, lazy-load chart components, defer each tab's data query until the tab is activated, and wrap charts in an IntersectionObserver so offscreen charts don't render until visible.",
+      "acceptanceCriteria": [
+        "recharts is isolated into its own manual chunk and chart components are lazy-loaded",
+        "Analytics (and similar multi-tab dashboards) fetch a tab's data only when that tab is activated",
+        "Offscreen/inactive charts defer rendering via IntersectionObserver",
+        "Initial load of chart-heavy pages shows reduced JS parse + fewer upfront queries versus baseline",
+        "All charts still render correctly when their tab/section becomes visible"
+      ],
+      "priority": 2,
+      "passes": false,
+      "notes": "Source: build/perf audit."
+    },
+    {
+      "id": "US-219",
+      "title": "Reduce context-driven re-renders in AuthContext and SubscriptionContext",
+      "description": "AuthContext (~1240 lines) exposes user/session/profile/loading in one value, so every consumer of useAuth() re-renders whenever any field changes — e.g. a component needing only user.id re-renders on each 5-minute session TTL refresh (AuthContext.tsx:~187). SubscriptionContext memoizes its value but its callbacks depend on non-memoized subscriptionData/usage, so a subscription refetch (every 5 min) cascades re-renders through 20+ consumers (US-052 only memoized the provider value). Split each into stable value vs action contexts (or add shallow-selector hooks) so consumers subscribe only to what they use.",
+      "acceptanceCriteria": [
+        "Auth state is split (e.g. user/session/profile) or a selector hook exists so consumers re-render only on the slice they read",
+        "SubscriptionContext separates stable actions from changing data so a refetch doesn't cascade to all consumers",
+        "React Profiler shows a measurable reduction in re-renders on a session/subscription refresh versus baseline",
+        "No regression to auth or entitlement behavior",
+        "Public hook APIs (useAuth/useSubscription) remain backward compatible for existing call sites"
+      ],
+      "priority": 3,
+      "passes": false,
+      "notes": "Source: build/perf audit. Extends US-052; AuthContext is a new target."
+    },
+    {
+      "id": "US-220",
+      "title": "Add service-worker update prompt and route preload/prefetch for hub navigation",
+      "description": "Two responsiveness gaps: (1) the SW update check runs hourly (main.tsx:~84) with no user-facing prompt, so a critical fix can take up to an hour to reach active sessions and stale assets can serve after a partial deploy; (2) lazyRoutes preloadHighPriorityRoutes() preloads only ~5 chunks and the other ~200 routes have no preload or data-prefetch hints, so secondary hub routes (Invoices, CRM, Financial) hit ~1.2-1.5s TTI on first navigation. Add a 'new version available' prompt with skipWaiting, shorten the update interval, extend preload to the active hub's child routes, and map routes to their TanStack queries so chunk preload and data prefetch happen together.",
+      "acceptanceCriteria": [
+        "An 'update available' prompt appears on SW update and applies the new version via skipWaiting on user action",
+        "Preload covers the active hub's likely-next routes (not just the initial 5)",
+        "Route-to-query prefetch warms data alongside chunk preload for hub navigation",
+        "Measured TTI on secondary hub routes improves versus baseline",
+        "No stale-asset serving after a deploy; cache versioning is robust to partial deploys"
+      ],
+      "priority": 3,
+      "passes": false,
+      "notes": "Source: build/perf audit. Complements US-060 (SW cache limits)."
+    },
+    {
+      "id": "US-221",
+      "title": "Roll out the accessible component library beyond the top pages",
+      "description": "Accessible primitives exist (AccessiblePageWrapper, AccessibleForm, AccessibleTable, AccessibleModal) and US-010..014 adopted them on the top ~20 pages, but docs/ACCESSIBILITY_COMPLIANCE_CHECKLIST.md notes adoption stalled — only a small fraction of 200+ pages use them, leaving most of the product short of WCAG 2.1 AA (a legal/compliance risk for a public B2B app). Systematically migrate the remaining high-traffic and forms/tables/modals pages to the accessible components, fix focus management, skip links, color contrast, and prefers-reduced-motion, and track adoption percentage to a target (e.g. 90%+ of user-facing pages).",
+      "acceptanceCriteria": [
+        "Accessible component adoption across user-facing pages reaches the agreed target (tracked with a count script)",
+        "Forms/tables/modals on migrated pages use the accessible variants with correct ARIA and focus management",
+        "Skip-to-content, visible focus, and prefers-reduced-motion are honored app-wide",
+        "axe-core scan (see US-215) passes on the newly migrated pages",
+        "No visual or functional regressions on migrated pages"
+      ],
+      "priority": 2,
+      "passes": false,
+      "notes": "Source: testing/a11y audit. Continuation of US-010..014 beyond 'top 20'. Large; batch by section."
+    },
+    {
+      "id": "US-222",
+      "title": "Prerender marketing routes so crawlers see meta and structured data",
+      "description": "The app is a Vite CSR SPA; marketing pages (Index, Pricing, Features, blog) set meta/OpenGraph/canonical and JSON-LD at runtime via Helmet, but crawlers and link-unfurlers that don't execute JS (or don't wait) see only the static index.html shell, undercutting SEO for the very pages meant to acquire customers. Add build-time prerendering/SSG for the public marketing + blog routes (e.g. a vite prerender step or per-route static HTML) so the initial HTML contains the correct title, meta, canonical, OpenGraph, and structured data. Ensure the generated sitemap points at these prerendered URLs.",
+      "acceptanceCriteria": [
+        "Public marketing and blog routes ship prerendered HTML containing correct title/meta/canonical/OpenGraph and JSON-LD in the initial response",
+        "View-source (JS disabled) shows the right metadata for /, /pricing, /features, and blog posts",
+        "Social unfurl (OpenGraph) previews render correctly for these routes",
+        "Sitemap/robots reference the prerendered URLs and Lighthouse SEO score improves versus baseline",
+        "The authenticated SPA app continues to work unchanged (prerender limited to public routes)"
+      ],
+      "priority": 2,
+      "passes": false,
+      "notes": "Source: SEO audit. Heavy SEO investment already exists (SEOMetaTags, EnhancedSchemaMarkup) but is invisible to non-JS crawlers without prerender."
+    },
+    {
+      "id": "US-223",
+      "title": "Add a true Gantt schedule with task dependencies and critical path",
+      "description": "Scheduling today (src/components/scheduling/VisualScheduler.tsx, calendar components) is calendar/conflict-based with no dependency-driven Gantt or critical-path analysis — a core expectation that Procore/Buildertrend/MS Project meet. Add a Gantt view with finish-to-start (and other) task dependencies, automatic critical-path highlighting and float calculation, drag-to-reschedule with dependency cascade, and baseline-vs-actual comparison. This is a parity-plus feature; differentiate with resource leveling and slip alerts feeding the project health score.",
+      "acceptanceCriteria": [
+        "Project schedules render as a Gantt with linkable task dependencies (at least finish-to-start)",
+        "Critical path is computed and visually highlighted; per-task float/slack is shown",
+        "Dragging a task reschedules dependents per dependency rules; a baseline can be saved and compared to actuals",
+        "Schedule data is company_id-scoped with RLS and persisted via migrations (additive)",
+        "Schedule slips surface to the existing project health indicator"
+      ],
+      "priority": 2,
+      "passes": false,
+      "notes": "Source: competitive analysis. Differentiator vs current calendar-only scheduling. Large feature — may warrant decomposition into sub-stories during planning."
+    },
+    {
+      "id": "US-224",
+      "title": "Add WIP / cost-to-complete / earned-value financial reporting",
+      "description": "Job costing has budget-vs-actual (US-099) but lacks Work-in-Progress reporting, cost-to-complete forecasting, and earned-value/percentage-of-completion (ASC 606 / PCM) views that construction finance teams and lenders expect — a major value driver in Procore/Buildertrend. Add WIP schedule reporting (earned revenue, over/under billing), cost-to-complete projection per cost code, and earned-value metrics (CPI/SPI), exportable for accountants and tied into the financial dashboards (US-109/US-110).",
+      "acceptanceCriteria": [
+        "A WIP report computes earned revenue, billings, and over/under-billing per project from cost and contract data",
+        "Cost-to-complete forecasting is available per cost code with projected final cost and margin",
+        "Earned-value metrics (CPI/SPI, percent complete) are calculated and displayed",
+        "Reports are exportable (PDF/Excel via existing jspdf/xlsx) and company_id-scoped with RLS",
+        "Figures reconcile with existing job-costing budget-vs-actual data"
+      ],
+      "priority": 2,
+      "passes": false,
+      "notes": "Source: competitive analysis. High-value for construction accounting; integrates with existing job-costing/cost-code work."
+    },
+    {
+      "id": "US-225",
+      "title": "Add a drawing/plan viewer with markup, annotations, and issue tracking",
+      "description": "Document management handles uploads/versioning and OCR but has no in-browser drawing viewer with markup — field teams and PMs must download files to annotate, while Procore/Autodesk/Buildertrend offer in-app plan markup. Add a PDF/image plan viewer with annotation tools (callouts, measurements, clouds), persistent markups per drawing version, and the ability to pin issues/RFIs to a location on the drawing with a resolution workflow. Reuse the existing visual-takeoff (US-038) and drawing-viewer (US-039) groundwork.",
+      "acceptanceCriteria": [
+        "Users can open construction drawings (PDF/image) in-browser and add persistent markups/annotations",
+        "Markups are versioned per drawing revision and attributed to a user with timestamps",
+        "Issues/RFIs can be pinned to a drawing location and tracked to resolution",
+        "Markup and issue data are company_id-scoped with RLS and stored via additive migrations",
+        "Large drawings load performantly (lazy/tiled rendering) without blocking the main thread"
+      ],
+      "priority": 2,
+      "passes": false,
+      "notes": "Source: competitive analysis. Builds on US-038/US-039 takeoff/viewer work; extends to markup persistence + issue tracking."
+    },
+    {
+      "id": "US-226",
+      "title": "Add client selections with automatic budget and change-order updates",
+      "description": "Residential builders (Buildertrend's core market) let clients choose finishes/fixtures online with selections that auto-update the contract budget and generate change orders — Brikly's client portal shows progress but has no selections workflow. Add selection categories/options with allowances, a client-facing selection UI in the portal, approval flow, and automatic budget adjustment + change-order generation when a client picks an over-allowance option. US-040 added client selections management groundwork; extend it to the portal + financial automation.",
+      "acceptanceCriteria": [
+        "Builders can define selection categories/options with allowances per project",
+        "Clients choose selections in the portal; over-allowance choices compute the delta automatically",
+        "Approved selections update the project budget and generate a change order for the difference",
+        "Selection and change-order data are company_id-scoped with RLS and audit-logged",
+        "Client portal selection flow is accessible and works on mobile web"
+      ],
+      "priority": 2,
+      "passes": false,
+      "notes": "Source: competitive analysis. Extends US-040; ties selections to budget/change-order automation — strong residential differentiator."
+    },
+    {
+      "id": "US-227",
+      "title": "Add lien waiver management with conditional/unconditional tracking and payment holds",
+      "description": "Lien waivers are table-stakes for construction payments but Brikly only has waiver text in legal templates (src/components/legal/LegalDocumentTemplates.tsx) — no request workflow, conditional/unconditional tracking, or payment-hold-until-waiver logic. Add lien waiver request/receipt workflows tied to subcontractor payments, with conditional vs unconditional state, e-signature capture (reuse US-041), and a rule that holds/releases subcontractor payment based on waiver receipt.",
+      "acceptanceCriteria": [
+        "Lien waiver requests can be issued to subs/suppliers and tracked through signed/received states",
+        "Conditional vs unconditional (progress vs final) waiver types are modeled and reported",
+        "Subcontractor payment release can be gated on waiver receipt",
+        "Waivers support e-signature (reusing existing e-sign integration) and are stored with audit trail",
+        "All waiver data is company_id-scoped with RLS via additive migrations"
+      ],
+      "priority": 3,
+      "passes": false,
+      "notes": "Source: competitive analysis. Reuses US-041 e-signature and subcontractor management (US-082)."
+    },
+    {
+      "id": "US-228",
+      "title": "Add certified payroll and prevailing-wage compliance automation",
+      "description": "Government/public projects require certified payroll (e.g. WH-347) and prevailing-wage compliance, which many SMB contractors must produce manually today; Brikly has timesheets but no certified-payroll generation or wage-schedule enforcement (prevailing wage appears only in type defs). Add per-jurisdiction wage schedules, prevailing-wage validation against logged time, and certified payroll report generation with the audit trail required for federal/state reporting. This unlocks the public-works contractor segment competitors charge premiums for.",
+      "acceptanceCriteria": [
+        "Wage schedules per jurisdiction/classification can be configured and applied to projects",
+        "Logged time is validated against prevailing-wage rates with violation flagging",
+        "Certified payroll reports (e.g. WH-347-style) are generated and exportable for a pay period",
+        "An audit trail suitable for federal/state reporting is maintained",
+        "Payroll/wage data is company_id-scoped with RLS via additive migrations"
+      ],
+      "priority": 3,
+      "passes": false,
+      "notes": "Source: competitive analysis. Higher effort/compliance surface; scope an MVP (report generation) first."
+    },
+    {
+      "id": "US-229",
+      "title": "Add owner/lender draw management and funding milestone tracking",
+      "description": "Residential and larger projects run on lender draw schedules tied to inspections and disbursements; Brikly has invoices but no draw request workflow, funding-milestone tracking, holdback/retention, or lender inspection coordination. Add draw schedules, draw request generation tied to project progress/milestones, retention/holdback tracking, and a lender/owner-facing view for approvals and disbursement status.",
+      "acceptanceCriteria": [
+        "Projects can define a draw schedule with funding milestones and retention/holdback rules",
+        "Draw requests are generated from progress/milestones and tracked through approval and disbursement",
+        "Retention/holdback is tracked and released per rules",
+        "An owner/lender-facing view shows draw status and supports approvals",
+        "Draw and funding data are company_id-scoped with RLS via additive migrations"
+      ],
+      "priority": 3,
+      "passes": false,
+      "notes": "Source: competitive analysis. Integrates with invoicing and the client portal."
+    },
+    {
+      "id": "US-230",
+      "title": "Expand the integration marketplace beyond QuickBooks",
+      "description": "QuickBooks is the only real integration; IntegrationMarketplace (src/pages/IntegrationMarketplace.tsx) is UI-only with integration_apps/user_integrations tables but no other connected providers, while SMB contractors use Xero/FreshBooks/Wave for accounting plus e-sign and payment providers. Build out the integration framework (OAuth connect, sync edge functions, per-integration config) and add at least one additional accounting provider (e.g. Xero) end-to-end, with a real connected-state UI and sync status (relates to US-070 QB sync dashboard).",
+      "acceptanceCriteria": [
+        "The integration framework supports OAuth connect, token storage, and per-provider sync functions generically",
+        "At least one new accounting integration (e.g. Xero) works end-to-end: connect, sync, status",
+        "The marketplace UI reflects real connection state and last-sync status per integration",
+        "Integration credentials are stored securely (Supabase secrets/encrypted) and company_id-scoped",
+        "Sync errors are surfaced and retryable; no cross-tenant credential exposure"
+      ],
+      "priority": 3,
+      "passes": false,
+      "notes": "Source: competitive analysis. Make the marketplace real, not a skeleton. Coordinate with US-070."
+    },
+    {
+      "id": "US-231",
+      "title": "Make AI project-risk analytics predictive and wired to real data",
+      "description": "AI surfaces exist (AIInsights, AIProgressAnalyzer, several ai-* edge functions) but largely render static/cosmetic data — there is no schedule-slip forecasting, cost-variance prediction, or risk scoring feeding the dashboards. Wire real project data (schedule, cost, productivity) into a risk model that forecasts likely overruns/slips and produces a project_risk_score, then surface early-warning alerts on the dashboard and project health indicator. This is a credible differentiator vs Procore Copilot / Autodesk Assistant if grounded in real signals. Use the latest Claude models for any LLM-backed analysis.",
+      "acceptanceCriteria": [
+        "A risk model consumes real schedule/cost/productivity data and outputs a per-project risk score with contributing factors",
+        "Schedule-slip and cost-variance forecasts are computed and shown, not static placeholders",
+        "Early-warning alerts surface on the dashboard and feed the project health indicator",
+        "Risk outputs are persisted (company_id-scoped, RLS) and explainable to the user",
+        "Any LLM calls use current Claude models and handle failures gracefully without blocking the UI"
+      ],
+      "priority": 3,
+      "passes": false,
+      "notes": "Source: competitive analysis. Replace cosmetic AI with data-grounded predictions. Verify Claude model IDs via the claude-api skill before implementing LLM calls."
+    },
+    {
+      "id": "US-232",
+      "title": "Add bid leveling and estimate variance analysis",
+      "description": "Estimating supports single-document editing (EstimatesHub) but has no side-by-side comparison, line-item variance, or bid-leveling workflow for comparing subcontractor/supplier bids on the same scope — a routine preconstruction task. Add bid leveling: import/enter multiple bids against a common scope/line-item template, normalize and compare line items, flag scope gaps and outliers, and select awardees. Complements US-096 (estimate comparison/version history).",
+      "acceptanceCriteria": [
+        "Multiple bids can be captured against a shared scope/line-item template for a project",
+        "A leveling view compares bids line-by-line, normalizing for scope and flagging gaps/outliers",
+        "Variance from estimate/budget is shown per line and in total",
+        "Awardee selection is recorded and can flow into a subcontract/PO",
+        "Bid data is company_id-scoped with RLS via additive migrations"
+      ],
+      "priority": 3,
+      "passes": false,
+      "notes": "Source: competitive analysis. Complements US-096; preconstruction differentiator."
+    },
+    {
+      "id": "US-233",
+      "title": "Add an executive KPI dashboard with forecasting",
+      "description": "Reports/Analytics exist but there is no role-based executive dashboard with the KPIs ownership cares about — profit-margin trend, cash runway/flow forecast, win rate, average project size, backlog — nor a custom-metric builder. ExecutiveDashboard is lazy-loaded but minimal. Build a configurable executive dashboard aggregating company-wide financials and pipeline into trend + forecast charts, gated to admin/owner roles, reusing the financial overview (US-110) and activity/health data.",
+      "acceptanceCriteria": [
+        "An executive dashboard shows profit-margin trend, cash flow/runway forecast, win rate, avg project size, and backlog",
+        "KPIs aggregate company-wide data and are role-gated to admin/owner",
+        "Forecast curves (revenue/cash) are computed from historical data, not hardcoded",
+        "Users can choose/arrange which KPIs appear (reusing dashboard personalization from US-063)",
+        "All metrics are company_id-scoped and reconcile with the financial overview dashboards"
+      ],
+      "priority": 3,
+      "passes": false,
+      "notes": "Source: competitive analysis. Builds on US-110 financial overview and US-063 widget personalization."
     }
   ]
 }
