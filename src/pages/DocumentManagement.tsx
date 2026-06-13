@@ -31,7 +31,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { ResponsiveContainer } from '@/components/layout/ResponsiveContainer';
 import { mobileFilterClasses } from '@/utils/mobileHelpers';
-import { Upload, FileText, Search, Filter, Brain, Database, Download, Trash2 } from 'lucide-react';
+import { Upload, FileText, Search, Filter, Brain, Database, Download, Trash2, Tag, FolderInput } from 'lucide-react';
 
 interface Document {
   id: string;
@@ -43,6 +43,8 @@ interface Document {
   version: number;
   is_current_version: boolean;
   category_id?: string;
+  project_id?: string;
+  tags?: string[];
   uploaded_by: string;
   created_at: string;
   updated_at?: string;
@@ -113,6 +115,15 @@ const DocumentManagement = () => {
   // Filters
   const [searchTerm, setSearchTerm] = useState('');
   const [filterCategory, setFilterCategory] = useState('');
+  // Sort / project filter / bulk-selection (US-091)
+  const [filterProject, setFilterProject] = useState('all');
+  const [sortField, setSortField] = useState('created_at');
+  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
+  const [selectedDocIds, setSelectedDocIds] = useState<Set<string>>(new Set());
+  const [bulkLoading, setBulkLoading] = useState(false);
+  const [docTagToAdd, setDocTagToAdd] = useState('');
+  const [moveToCategory, setMoveToCategory] = useState('');
+  const [showBulkDeleteConfirm, setShowBulkDeleteConfirm] = useState(false);
   const [filterType, setFilterType] = useState('');
 
   const isProjectContext = !!projectId;
@@ -390,14 +401,100 @@ const DocumentManagement = () => {
     }
   };
 
-  const filteredDocuments = documents.filter(doc => {
-    const matchesSearch = doc.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         doc.description?.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesCategory = !filterCategory || filterCategory === 'all' || doc.category_id === filterCategory;
-    const matchesType = !filterType || filterType === 'all' || doc.file_type.includes(filterType);
-    
-    return matchesSearch && matchesCategory && matchesType;
-  });
+  const filteredDocuments = documents
+    .filter(doc => {
+      const matchesSearch = doc.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                           doc.description?.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesCategory = !filterCategory || filterCategory === 'all' || doc.category_id === filterCategory;
+      const matchesType = !filterType || filterType === 'all' || doc.file_type.includes(filterType);
+      const matchesProject = filterProject === 'all' || doc.project_id === filterProject;
+      return matchesSearch && matchesCategory && matchesType && matchesProject;
+    })
+    .sort((a, b) => {
+      const numeric = sortField === 'file_size' || sortField === 'version';
+      let av: any = (a as any)[sortField];
+      let bv: any = (b as any)[sortField];
+      if (numeric) { av = Number(av || 0); bv = Number(bv || 0); }
+      else { av = (av ?? '').toString().toLowerCase(); bv = (bv ?? '').toString().toLowerCase(); }
+      if (av < bv) return sortDir === 'asc' ? -1 : 1;
+      if (av > bv) return sortDir === 'asc' ? 1 : -1;
+      return 0;
+    });
+
+  const allDocsSelected =
+    filteredDocuments.length > 0 && filteredDocuments.every((d) => selectedDocIds.has(d.id));
+
+  const bulkDownloadDocs = async () => {
+    const docs = filteredDocuments.filter((d) => selectedDocIds.has(d.id));
+    for (const doc of docs) {
+      // eslint-disable-next-line no-await-in-loop
+      await downloadDocument(doc);
+    }
+  };
+
+  const bulkMoveToFolder = async () => {
+    const ids = [...selectedDocIds];
+    if (ids.length === 0 || !moveToCategory) return;
+    setBulkLoading(true);
+    try {
+      const { error } = await supabase.from('documents').update({ category_id: moveToCategory }).in('id', ids);
+      if (error) throw error;
+      toast({ title: 'Documents moved', description: `${ids.length} moved to the selected folder.` });
+      setSelectedDocIds(new Set());
+      setMoveToCategory('');
+      loadDocuments();
+    } catch (err: any) {
+      toast({ variant: 'destructive', title: 'Move failed', description: err.message });
+    } finally {
+      setBulkLoading(false);
+    }
+  };
+
+  const bulkTagDocs = async () => {
+    const tag = docTagToAdd.trim();
+    const ids = [...selectedDocIds];
+    if (!tag || ids.length === 0) return;
+    setBulkLoading(true);
+    try {
+      await Promise.all(
+        filteredDocuments
+          .filter((d) => selectedDocIds.has(d.id))
+          .map((d) => {
+            const next = Array.from(new Set([...(d.tags || []), tag]));
+            return supabase.from('documents').update({ tags: next }).eq('id', d.id);
+          }),
+      );
+      toast({ title: 'Documents tagged', description: `"${tag}" added to ${ids.length} document(s).` });
+      setDocTagToAdd('');
+      setSelectedDocIds(new Set());
+      loadDocuments();
+    } catch (err: any) {
+      toast({ variant: 'destructive', title: 'Tag failed', description: err.message });
+    } finally {
+      setBulkLoading(false);
+    }
+  };
+
+  const confirmBulkDeleteDocs = async () => {
+    const ids = [...selectedDocIds];
+    if (ids.length === 0) return;
+    setBulkLoading(true);
+    try {
+      const bucketName = isProjectContext ? 'project-documents' : 'company-documents';
+      const paths = filteredDocuments.filter((d) => selectedDocIds.has(d.id)).map((d) => d.file_path);
+      if (paths.length) await supabase.storage.from(bucketName).remove(paths);
+      const { error } = await supabase.from('documents').delete().in('id', ids);
+      if (error) throw error;
+      toast({ title: 'Documents deleted', description: `${ids.length} removed.` });
+      setSelectedDocIds(new Set());
+      setShowBulkDeleteConfirm(false);
+      loadDocuments();
+    } catch (err: any) {
+      toast({ variant: 'destructive', title: 'Bulk delete failed', description: err.message });
+    } finally {
+      setBulkLoading(false);
+    }
+  };
 
   if (!userProfile) {
     return (
@@ -565,6 +662,19 @@ const DocumentManagement = () => {
                   <SelectItem value="application">Documents</SelectItem>
                 </SelectContent>
               </Select>
+              {!isProjectContext && (
+                <Select value={filterProject} onValueChange={setFilterProject}>
+                  <SelectTrigger aria-label="Filter by project">
+                    <SelectValue placeholder="All projects" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All projects</SelectItem>
+                    {projects.map((p) => (
+                      <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
               <div className="flex items-center space-x-2">
                 <span className="text-sm text-muted-foreground">
                   {filteredDocuments.length} documents
@@ -663,11 +773,47 @@ const DocumentManagement = () => {
           ];
 
           return (
+            <>
+            {selectedDocIds.size > 0 && (
+              <div role="region" aria-label="Bulk actions" className="flex flex-wrap items-center gap-2 mb-4 p-3 rounded-lg border bg-muted/40">
+                <span className="text-sm font-medium">{selectedDocIds.size} selected</span>
+                <Button size="sm" variant="outline" disabled={bulkLoading} onClick={bulkDownloadDocs}>
+                  <Download className="h-4 w-4 mr-1" /> Download
+                </Button>
+                <div className="flex items-center gap-1">
+                  <Select value={moveToCategory} onValueChange={setMoveToCategory}>
+                    <SelectTrigger className="h-8 w-36" aria-label="Folder to move to"><SelectValue placeholder="Move to…" /></SelectTrigger>
+                    <SelectContent>
+                      {categories.map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                  <Button size="sm" variant="outline" disabled={bulkLoading || !moveToCategory} onClick={bulkMoveToFolder}>
+                    <FolderInput className="h-4 w-4 mr-1" /> Move
+                  </Button>
+                </div>
+                <div className="flex items-center gap-1">
+                  <Input value={docTagToAdd} onChange={(e) => setDocTagToAdd(e.target.value)} placeholder="tag…" className="h-8 w-24" aria-label="Tag to add" />
+                  <Button size="sm" variant="outline" disabled={bulkLoading || !docTagToAdd.trim()} onClick={bulkTagDocs}>
+                    <Tag className="h-4 w-4 mr-1" /> Tag
+                  </Button>
+                </div>
+                <Button size="sm" variant="destructive" disabled={bulkLoading} onClick={() => setShowBulkDeleteConfirm(true)}>
+                  <Trash2 className="h-4 w-4 mr-1" /> Delete
+                </Button>
+                <Button size="sm" variant="ghost" className="ml-auto" onClick={() => setSelectedDocIds(new Set())}>Clear</Button>
+              </div>
+            )}
             <AccessibleTable<Document>
               caption="Documents"
               hideCaption
               columns={documentColumns}
               data={filteredDocuments}
+              onSort={(column, direction) => { setSortField(column); setSortDir(direction === 'ascending' ? 'asc' : 'desc'); }}
+              sortColumn={sortField}
+              sortDirection={sortDir === 'asc' ? 'ascending' : 'descending'}
+              selectable
+              selectedRows={[...selectedDocIds]}
+              onSelectionChange={(ids) => setSelectedDocIds(new Set(ids as string[]))}
               loading={loadingDocs}
               emptyContent={
                 <div className="text-center py-8">
@@ -687,6 +833,23 @@ const DocumentManagement = () => {
                 </div>
               }
             />
+            <AlertDialog open={showBulkDeleteConfirm} onOpenChange={setShowBulkDeleteConfirm}>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Delete {selectedDocIds.size} document(s)?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    This permanently removes the selected documents and their files from storage. This cannot be undone.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel disabled={bulkLoading}>Cancel</AlertDialogCancel>
+                  <AlertDialogAction onClick={confirmBulkDeleteDocs} disabled={bulkLoading} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                    Delete
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+            </>
           );
         })()}
       </ResponsiveContainer>

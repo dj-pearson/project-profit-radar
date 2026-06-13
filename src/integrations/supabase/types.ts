@@ -9754,6 +9754,7 @@ export type Database = {
           project_id: string | null
           routing_confidence: string | null
           site_id: string
+          tags: string[] | null
           updated_at: string
           uploaded_by: string | null
           version: number | null
@@ -9780,6 +9781,7 @@ export type Database = {
           project_id?: string | null
           routing_confidence?: string | null
           site_id: string
+          tags?: string[] | null
           updated_at?: string
           uploaded_by?: string | null
           version?: number | null
@@ -9806,6 +9808,7 @@ export type Database = {
           project_id?: string | null
           routing_confidence?: string | null
           site_id?: string
+          tags?: string[] | null
           updated_at?: string
           uploaded_by?: string | null
           version?: number | null

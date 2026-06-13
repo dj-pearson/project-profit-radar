@@ -865,3 +865,11 @@ Remaining (fresh breakdown): TS2345=522, TS6133=512 (mostly unused locals now), 
 
 - CRMContacts.tsx (client-side): AccessibleTable onSort + selectable; bulk toolbar Send Email (mailto bcc), Add Tag (append to tags[] via supabase), Export CSV, Delete (supabase). Added Tag filter dropdown (collectContactTags); type filter + cross-field search already existed.
 - Extracted pure logic to contactListUtils.ts (filterAndSortContacts + collectContactTags) with 5 passing tests. vite build green.
+
+---
+
+## 2026-06-13 (cont.) - US-091: Sortable columns + bulk actions on documents list - PASS
+
+- DocumentManagement.tsx (client-side): AccessibleTable onSort + selectable; bulk toolbar Download (storage loop), Move to Folder (category_id), Tag (tags[] append), Delete (AlertDialog confirm -> storage remove + delete). Added Project filter; file-type/category/search existed.
+- Schema: additive migration 20260613130000_add_documents_tags.sql (tags text[] + GIN index); added tags to documents Row/Insert/Update in types.ts.
+- vite build green. Completes the sort/bulk list set (US-088/089/090/091).

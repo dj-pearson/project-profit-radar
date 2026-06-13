@@ -1562,8 +1562,8 @@
         "npm run build completes successfully"
       ],
       "priority": 4,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "COMPLETED. Sortable columns + bulk actions + filters on the documents list (src/pages/DocumentManagement.tsx; client-side data). SORT: AccessibleTable onSort wired to sortField/sortDir (name/file_type/file_size/etc. sortable; file_size & version numeric). SELECTION: AccessibleTable selectable/selectedRows/onSelectionChange (checkboxes + select-all). BULK TOOLBAR: Download Selected (loops downloadDocument via storage), Move to Folder (Select of document_categories -> update category_id), Tag Selected (inline input -> append to tags[] via supabase update), Delete Selected (opens an AlertDialog confirm -> removes storage files + deletes rows). FILTERS: file-type filter (PDF/image/video/application) + category + search already existed; ADDED a Project filter dropdown (from loaded projects; hidden in project context). Confirmation dialog for bulk delete = AlertDialog. SCHEMA: documents had no tags column, so added an additive migration supabase/migrations/20260613130000_add_documents_tags.sql (ADD COLUMN IF NOT EXISTS tags text[] — nullable/backward-compatible per CLAUDE.md, + GIN index) and added tags to documents Row/Insert/Update in the hand-maintained types.ts. vite build green (1m13s). Remaining: apply the additive migration to staging/prod (no DB in this env)."
     },
     {
       "id": "US-092",
