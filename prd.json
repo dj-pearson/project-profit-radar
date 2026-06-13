@@ -3438,8 +3438,8 @@
         "A test or harness simulates a dropped channel and asserts recovery"
       ],
       "priority": 2,
-      "passes": false,
-      "notes": "Source: observability audit. Extends US-057 centralized realtime manager."
+      "passes": true,
+      "notes": "COMPLETED. Centralized realtime auto-reconnect with exponential backoff + jitter. New src/lib/realtime/reconnectingChannel.ts: createReconnectingChannel() wraps channel create/subscribe, detects CLOSED/CHANNEL_ERROR/TIMED_OUT, tears down the dead channel and re-subscribes with capped exponential backoff (base*2^attempt, maxDelay, jitterRatio) — fully injectable (createChannel/removeChannel/timers/random) for testing. On a successful re-SUBSCRIBE following a drop it fires onReconnect() to refetch missed rows. New src/lib/realtime/connectionStore.ts: aggregates per-channel state into an isReconnecting flag + useRealtimeReconnecting() hook (useSyncExternalStore). Wired into BOTH realtime hooks (centralized, not per-hook ad hoc): src/hooks/useRealtimeSubscription.ts and src/hooks/useRealTimeSync.ts now build channels via createReconnectingChannel, report state to the store, and refetch on reconnect. src/components/offline/OfflineIndicator.tsx OfflineBanner surfaces a distinct amber 'Reconnecting to live updates...' banner when online but channels dropped. Tests: src/lib/realtime/__tests__/reconnectingChannel.test.ts (5: first-connect, dropped-channel recovery+onReconnect, exponential backoff timings, teardown cancels pending reconnect, maxAttempts->closed) + connectionStore.test.ts (4: aggregation). 9/9 pass. vite build green (1m16s)."
     },
     {
       "id": "US-211",

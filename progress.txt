@@ -822,3 +822,13 @@ Remaining (fresh breakdown): TS2345=522, TS6133=512 (mostly unused locals now), 
 - Hero.tsx GSAP effect early-returns on mobile OR reduced-motion: reveals content immediately, does NOT import gsap in those cases.
 - BriklyHero3D buffers already memoized via useMemo (colors/dummy/colorArray/initialPositions, stable deps) — verified, no change needed.
 - Completes the code-splitting trio (US-216/217/218).
+
+---
+
+## 2026-06-13 (cont.) - US-210: Realtime auto-reconnect with backoff - PASS
+
+- New `src/lib/realtime/reconnectingChannel.ts`: createReconnectingChannel() — detects CLOSED/CHANNEL_ERROR/TIMED_OUT, re-subscribes with capped exponential backoff + jitter, fires onReconnect() (refetch) after recovery. Fully injectable for tests.
+- New `src/lib/realtime/connectionStore.ts`: aggregates channel states -> isReconnecting + useRealtimeReconnecting() hook.
+- Wired into BOTH `useRealtimeSubscription.ts` and `useRealTimeSync.ts` (centralized).
+- `OfflineIndicator.tsx` OfflineBanner shows a distinct 'Reconnecting to live updates…' banner when online but channels dropped.
+- 9 tests pass (reconnectingChannel 5 incl. dropped-channel recovery harness; connectionStore 4). vite build green.

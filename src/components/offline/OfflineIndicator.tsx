@@ -22,6 +22,7 @@ import {
 } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
 import { toast } from "@/hooks/use-toast";
+import { useRealtimeReconnecting } from "@/lib/realtime/connectionStore";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -108,6 +109,7 @@ function useOnlineStatus() {
 
 export function OfflineBanner() {
   const isOnline = useOnlineStatus();
+  const realtimeReconnecting = useRealtimeReconnecting();
   const location = useLocation();
   const [dismissed, setDismissed] = useState(false);
   const [showReconnected, setShowReconnected] = useState(false);
@@ -179,6 +181,25 @@ export function OfflineBanner() {
         >
           <X className="h-4 w-4" />
         </Button>
+      </div>
+    );
+  }
+
+  // Realtime reconnecting banner — browser is online but live channels dropped
+  // and are retrying (US-210). Distinct from the offline state above.
+  if (isOnline && realtimeReconnecting && !dismissed) {
+    return (
+      <div
+        role="status"
+        aria-live="polite"
+        className={cn(
+          "flex items-center justify-center gap-2 px-4 py-2",
+          "bg-amber-400/90 text-amber-950 text-sm font-medium",
+          "animate-in slide-in-from-top duration-300"
+        )}
+      >
+        <RefreshCw className="h-4 w-4 animate-spin" aria-hidden="true" />
+        <span>Reconnecting to live updates… showing the latest cached data.</span>
       </div>
     );
   }

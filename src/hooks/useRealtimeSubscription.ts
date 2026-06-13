@@ -1,6 +1,12 @@
 import { useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { RealtimeChannel, RealtimePostgresChangesPayload } from '@supabase/supabase-js';
+import { createReconnectingChannel } from '@/lib/realtime/reconnectingChannel';
+import {
+  registerRealtimeChannel,
+  reportRealtimeChannelState,
+  unregisterRealtimeChannel,
+} from '@/lib/realtime/connectionStore';
 
 export type RealtimeEvent = 'INSERT' | 'UPDATE' | 'DELETE' | '*';
 
@@ -43,23 +49,15 @@ export const useRealtimeSubscription = ({
   useEffect(() => {
     if (!enabled) return;
 
-    const channelName = `realtime-${table}-${filter || 'all'}-${Date.now()}`;
-    let channel: RealtimeChannel;
-
-    const setupChannel = () => {
-      channel = supabase
-        .channel(channelName)
+    // Each effect run gets a fresh channel name so a reconnect doesn't collide
+    // with the dying channel.
+    const buildChannel = (): RealtimeChannel =>
+      supabase
+        .channel(`realtime-${table}-${filter || 'all'}-${Date.now()}-${Math.random().toString(36).slice(2)}`)
         .on(
           'postgres_changes',
-          {
-            event,
-            schema,
-            table,
-            filter,
-          },
+          { event, schema, table, filter },
           (payload: RealtimePayload) => {
-
-            // Call specific event handlers
             switch (payload.eventType) {
               case 'INSERT':
                 onInsert?.(payload);
@@ -71,22 +69,26 @@ export const useRealtimeSubscription = ({
                 onDelete?.(payload);
                 break;
             }
-
-            // Call general change handler
             onChange?.(payload);
-          }
-        )
-        .subscribe((status) => {
-        });
-    };
+          },
+        );
 
-    setupChannel();
+    // Centralized auto-reconnect with backoff + jitter (US-210). On recovery
+    // after a drop, refetch missed rows via onChange (a no-payload signal).
+    const channelId = registerRealtimeChannel();
+    const handle = createReconnectingChannel<RealtimeChannel>({
+      createChannel: buildChannel,
+      removeChannel: (ch) => supabase.removeChannel(ch),
+      onStateChange: (state) => reportRealtimeChannelState(channelId, state),
+      onReconnect: () => {
+        // We can't replay individual missed events, so signal a full refetch.
+        onChange?.({ eventType: 'UPDATE' } as unknown as RealtimePayload);
+      },
+    });
 
-    // Cleanup
     return () => {
-      if (channel) {
-        supabase.removeChannel(channel);
-      }
+      handle.teardown();
+      unregisterRealtimeChannel(channelId);
     };
   }, [table, schema, event, filter, enabled, onInsert, onUpdate, onDelete, onChange]);
 };
