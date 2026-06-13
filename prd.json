@@ -3259,7 +3259,7 @@
       ],
       "priority": 1,
       "passes": false,
-      "notes": "Source: web security audit. Frame as audit+enforcement, not blanket rewrite. Respect config.toml public list. Backward-compat: tightening auth on a function an older iOS client calls unauthenticated would break it — verify each function is web/admin-only before enforcing, or stage per the API deprecation flow."
+      "notes": "FRAMEWORK + CI GUARD + 2 offenders done — per-function sweep ongoing (tracked mechanically). KEY NUANCE: Supabase enforces JWT presence for verify_jwt=true (the default), so the real exploitable surface is the 33 verify_jwt=false functions, not all ~190. Added supabase/functions/_shared/system-auth.ts requireSystemOrAdmin(req) (accepts CRON_SECRET header or admin user; STAGED — fails open until CRON_SECRET is set so crons don't break on deploy). Hardened the two named offenders dos-protection and calculate-health-scores: added the guard + replaced wildcard CORS with getCorsHeaders(req). Added scripts/check-edge-function-auth.mjs (wired into CI security job) which classifies all verify_jwt=false functions: 10 public, 5 guarded, 18 backlog (mostly cron/process-* functions) — fails CI if an ENFORCED function regresses. Documented the pattern + allowlist in supabase/functions/AGENTS.md. REMAINING: apply requireSystemOrAdmin to the 18 backlog crons (then add each to ENFORCED), set CRON_SECRET + scheduler headers, and Zod-tighten dos-protection's settings field. Source: web security audit."
     },
     {
       "id": "US-199",
@@ -3274,7 +3274,7 @@
       ],
       "priority": 1,
       "passes": false,
-      "notes": "Source: billing/multi-tenancy audit. Revenue-protection critical. Note: the agent cited edge-functions-template/ (a template tree); enforce in the live supabase/functions tree. Backward-compat: ensure existing over-limit tenants are grandfathered, not hard-locked, to avoid breaking active customers."
+      "notes": "CODE COMPLETE for project creation — pending staging test + team-invite wiring. Added supabase/functions/_shared/entitlements.ts: checkEntitlement(supabase, companyId, resource, {userId}) reads the company's plan tier (companies.subscription_tier), bypasses complimentary subscribers and enterprise/unknown tiers (FAILS OPEN to avoid hard-locking paying/grandfathered accounts), else counts company-scoped rows and compares to TIER_LIMITS (mirrors SubscriptionContext: starter 10 projects/5 members, professional 50/20). Wired into supabase/functions/projects POST create: over-limit returns 403 with an upgrade message BEFORE insert, so direct API calls can't bypass the client checkLimit. No direct client projects insert exists (verified), so the edge fn is the authoritative gate. REMAINING: no team-invite edge function exists yet — wire checkEntitlement 'teamMembers' wherever invites are added; add a staging test that a starter company is blocked at the 11th project via direct API call. Source: billing/multi-tenancy audit."
     },
     {
       "id": "US-200",

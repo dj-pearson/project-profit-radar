@@ -129,3 +129,6 @@ jobs:
           else
             echo "CSP check passed: no unsafe-eval found."
           fi
+
+      - name: Edge function auth guard (US-198)
+        run: node scripts/check-edge-function-auth.mjs

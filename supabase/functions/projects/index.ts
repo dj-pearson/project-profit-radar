@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { initializeAuthContext, errorResponse, successResponse } from '../_shared/auth-helpers.ts';
+import { checkEntitlement } from '../_shared/entitlements.ts';
 
 const logStep = (step: string, details?: any) => {
   console.log(`[PROJECTS] ${step}${details ? ` - ${JSON.stringify(details)}` : ''}`);
@@ -99,6 +100,24 @@ serve(async (req) => {
           // Verify user can create projects
           if (!['admin', 'project_manager', 'root_admin'].includes(userProfile.role)) {
             throw new Error("Insufficient permissions to create projects");
+          }
+
+          // Enforce plan limits server-side. The client checkLimit() only gates
+          // the UI and is bypassable by calling this endpoint directly, so the
+          // server is the authoritative gate (US-199).
+          const entitlement = await checkEntitlement(
+            supabase,
+            userProfile.company_id,
+            'projects',
+            { userId: user.id }
+          );
+          if (!entitlement.allowed) {
+            logStep("Project limit reached", entitlement);
+            return errorResponse(
+              entitlement.reason || 'Project limit reached for your plan',
+              403,
+              req
+            );
           }
 
           const projectData = {
