@@ -3379,7 +3379,7 @@
       ],
       "priority": 1,
       "passes": false,
-      "notes": "Source: observability audit. US-016/US-019 added boundaries + a monitoring dashboard, but Sentry itself is not effectively wired — this closes that gap."
+      "notes": "PARTIAL (core wiring + a real bug fixed). Added VITE_SENTRY_DSN/VITE_APP_VERSION to src/lib/envValidation.ts with a loud production warning when the DSN is missing; FIXED src/lib/sentry.ts allowUrls which pointed at brikly.com (twice) and therefore dropped ALL real brikly.net production events -> now brikly.net + *.pages.dev + localhost; added Sentry release tag from VITE_APP_VERSION; gated hidden sourcemaps behind VITE_SOURCEMAP=true in vite.config.ts; documented web vars in env.example. ErrorBoundary already forwards caught errors to Sentry. REMAINING: wire @sentry/vite-plugin + SENTRY_AUTH_TOKEN to actually UPLOAD sourcemaps during the CI release build; consider gating init to production-only. Source: observability audit."
     },
     {
       "id": "US-207",
@@ -3409,7 +3409,7 @@
       ],
       "priority": 2,
       "passes": false,
-      "notes": "Source: observability audit. Builds on US-019's health endpoint."
+      "notes": "PARTIAL (code done, ops wiring remaining). supabase/functions/health-check/index.ts now returns 503 for BOTH degraded and unhealthy (only fully-healthy = 200), so uptime monitors/LBs alert on partial outages. REMAINING: external uptime/synthetic monitor + alert routing (email/Slack), scheduled health ping, and surfacing degraded state distinctly on the monitoring dashboard. Source: observability audit (builds on US-019)."
     },
     {
       "id": "US-209",
@@ -3424,7 +3424,7 @@
       ],
       "priority": 2,
       "passes": false,
-      "notes": "Source: observability audit. US-003 removed debug console statements once; this institutionalizes it via lint + fixes the logger itself."
+      "notes": "PARTIAL (reliability fixes done; repo-wide ban remaining). Fixed src/lib/logger.ts debug()/info() which were silent no-ops -> now emit via console.debug/info (unit tests: src/lib/__tests__/logger.test.ts); added retry-with-capped-backoff + a queue size cap to src/services/errorLoggingService.ts flushQueue so a transient Supabase failure re-queues instead of dropping the batch; added an eslint override sanctioning console in logger.ts as the logging boundary. REMAINING: flip no-console to error repo-wide + codemod the ~1499 console.* call sites (incl. ErrorBoundary.tsx:30) to route through the logger. Source: observability audit."
     },
     {
       "id": "US-210",
@@ -3453,8 +3453,8 @@
         "No change to successful-path latency"
       ],
       "priority": 3,
-      "passes": false,
-      "notes": "Source: build/perf + observability audits."
+      "passes": true,
+      "notes": "COMPLETED. src/lib/queryClient.ts: capped exponential backoff with jitter (~1s->30s) via retryDelay on queries and mutations; retry predicate fails fast on non-retryable 401/403/404/422. Unit tests: src/lib/__tests__/queryClient.test.ts (5 cases). Source: build/perf + observability audits."
     },
     {
       "id": "US-212",

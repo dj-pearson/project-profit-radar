@@ -106,7 +106,11 @@ export default defineConfig(({ mode }) => ({
   build: {
     target: "esnext",
     minify: "esbuild",
-    sourcemap: false,
+    // Emit hidden sourcemaps (no //# sourceMappingURL comment in the bundle)
+    // only when explicitly requested, so the Sentry-upload build can de-minify
+    // stack traces without publishing .map files to Cloudflare by default.
+    // Enable in CI with VITE_SOURCEMAP=true alongside the Sentry release upload.
+    sourcemap: process.env.VITE_SOURCEMAP === "true" ? "hidden" : false,
     chunkSizeWarningLimit: 400, // More aggressive warning
     reportCompressedSize: true,
     emptyOutDir: true,

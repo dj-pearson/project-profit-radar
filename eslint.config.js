@@ -70,5 +70,13 @@ export default tseslint.config(
       "jsx-a11y/scope": "error",
       "jsx-a11y/tabindex-no-positive": "warn",
     },
+  },
+  {
+    // The logger is the sanctioned console boundary — all other code should
+    // route through it. (Repo-wide enforcement + codemod tracked in US-209.)
+    files: ["src/lib/logger.ts"],
+    rules: {
+      "no-console": "off",
+    },
   }
 );

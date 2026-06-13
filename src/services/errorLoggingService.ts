@@ -63,6 +63,14 @@ const sessionId = typeof crypto !== 'undefined' && crypto.randomUUID
 const errorQueue: ErrorLogEntry[] = [];
 let flushTimer: ReturnType<typeof setTimeout> | null = null;
 
+// Retry bookkeeping so a transient Supabase failure doesn't silently drop a
+// batch of errors. We re-queue once with capped backoff before giving up.
+const MAX_FLUSH_RETRIES = 3;
+let flushRetries = 0;
+let isFlushing = false;
+// Hard cap so a long outage can't grow the queue unbounded.
+const MAX_QUEUE_SIZE = 200;
+
 // Rate limiting: sliding window
 const rateLimitWindow: number[] = [];
 const RATE_LIMIT_MAX = 50;
@@ -150,9 +158,19 @@ function scheduleFlush(): void {
 }
 
 async function flushQueue(): Promise<void> {
-  if (errorQueue.length === 0) return;
+  if (errorQueue.length === 0 || isFlushing) return;
+  isFlushing = true;
 
   const batch = errorQueue.splice(0, errorQueue.length);
+
+  const requeue = () => {
+    // Put the failed batch back at the front, capped so a sustained outage
+    // can't grow the queue unbounded (drop oldest beyond the cap).
+    errorQueue.unshift(...batch);
+    if (errorQueue.length > MAX_QUEUE_SIZE) {
+      errorQueue.splice(MAX_QUEUE_SIZE);
+    }
+  };
 
   try {
     const { error } = await supabase
@@ -160,11 +178,42 @@ async function flushQueue(): Promise<void> {
       .insert(batch);
 
     if (error) {
-      // Don't re-queue to avoid infinite loops - just log to console
-      console.error('[ErrorLogging] Failed to flush error batch:', error.message);
+      // Transient failure (network blip, brief outage): re-queue and retry
+      // with capped exponential backoff instead of dropping the batch.
+      if (flushRetries < MAX_FLUSH_RETRIES) {
+        flushRetries++;
+        requeue();
+        const delay = Math.min(1000 * 2 ** flushRetries, 30_000);
+        if (flushTimer) clearTimeout(flushTimer);
+        flushTimer = setTimeout(() => {
+          flushTimer = null;
+          flushQueue();
+        }, delay);
+      } else {
+        // Give up after max retries to avoid an infinite loop.
+        console.error('[ErrorLogging] Dropping error batch after retries:', error.message);
+        flushRetries = 0;
+      }
+    } else {
+      // Success — reset retry counter.
+      flushRetries = 0;
     }
   } catch (e) {
-    console.error('[ErrorLogging] Exception flushing error batch:', e);
+    if (flushRetries < MAX_FLUSH_RETRIES) {
+      flushRetries++;
+      requeue();
+      const delay = Math.min(1000 * 2 ** flushRetries, 30_000);
+      if (flushTimer) clearTimeout(flushTimer);
+      flushTimer = setTimeout(() => {
+        flushTimer = null;
+        flushQueue();
+      }, delay);
+    } else {
+      console.error('[ErrorLogging] Exception flushing error batch:', e);
+      flushRetries = 0;
+    }
+  } finally {
+    isFlushing = false;
   }
 }
 
