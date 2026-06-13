@@ -803,3 +803,12 @@ Remaining (fresh breakdown): TS2345=522, TS6133=512 (mostly unused locals now), 
 - `DocumentManagement.tsx`: `React.lazy` + `Suspense` for DocumentOCRProcessor.
 - Build proof: tesseract isolated in its own async chunk (chunk-DDyvOmjU.js); route chunks reference it 0x; DocumentOCRProcessor split to a 7.7kB chunk.
 - `src/lib/ocr/__tests__/ocrWorkerPool.test.ts` (4 tests) proves the no-leak behavior (1 worker / 1 terminate across 10 uploads). vite build green.
+
+---
+
+## 2026-06-13 (cont.) - US-218: Code-split Recharts + defer offscreen charts - PASS
+
+- vite.config.ts: recharts (+recharts-scale/victory-vendor/d3-*) -> own 'recharts' manual chunk. Build proof: recharts-*.js = 486KB/129.6KB gzip standalone; Analytics chunk now 17.9KB (recharts no longer inlined).
+- New `src/components/ui/DeferUntilVisible.tsx` (IntersectionObserver; renders skeleton until visible, mounts once, IO-unavailable fallback) + `DeferredChartContainer.tsx` (drop-in for ChartContainer). 2 passing tests.
+- Analytics.tsx: all 7 ChartContainers -> DeferredChartContainer (offscreen charts deferred). Inactive tabs already unmount (Radix).
+- Note: current Analytics already does a single shared 2-query load (not per-tab), so AC's per-tab fetch is N/A.

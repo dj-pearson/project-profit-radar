@@ -3558,8 +3558,8 @@
         "All charts still render correctly when their tab/section becomes visible"
       ],
       "priority": 2,
-      "passes": false,
-      "notes": "Source: build/perf audit."
+      "passes": true,
+      "notes": "COMPLETED. (1) recharts isolated into its own manual chunk: vite.config.ts manualChunks now routes recharts + recharts-scale + victory-vendor + d3-* to a 'recharts' chunk (added to chunkFileNames manualNames). Build proof: dist/assets/recharts-*.js = 486KB (129.6KB gzip) standalone; the Analytics route chunk dropped to 17.9KB (recharts no longer inlined) and non-chart routes don't reference the recharts chunk. (2) Offscreen charts defer via IntersectionObserver: new src/components/ui/DeferUntilVisible.tsx (renders a sized skeleton until scrolled into view, then mounts children once and disconnects; falls back to immediate render where IO is unavailable) + src/components/ui/DeferredChartContainer.tsx (drop-in for ChartContainer). All 7 ChartContainers in Analytics.tsx now use DeferredChartContainer. (3) Inactive-tab charts already don't render — Radix TabsContent unmounts when inactive. (4) Chart routes are lazy-loaded by the app's route splitting, so recharts loads only for routes that render a chart. NOTE on AC 'fetch a tab's data only when activated': the current Analytics already does a single combined 2-query load shared across tabs (not the per-tab 8-query burst the PRD described), so there are no per-tab queries to defer. Tests: DeferUntilVisible.test.tsx (2) + ocrWorkerPool reuse pattern. vite build green (1m16s)."
     },
     {
       "id": "US-219",

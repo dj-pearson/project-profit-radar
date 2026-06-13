@@ -181,12 +181,23 @@ export default defineConfig(({ mode }) => ({
           if (id.includes('node_modules/three/') || id.includes('node_modules/@react-three/')) {
             return 'three';
           }
+          // Recharts chunk: charting lib (~320KB gzip) + its d3/victory deps.
+          // Isolating it keeps charts out of route chunks that never render a
+          // chart and lets the chart chunk be cached independently (US-218).
+          if (
+            id.includes('node_modules/recharts/') ||
+            id.includes('node_modules/recharts-scale/') ||
+            id.includes('node_modules/victory-vendor/') ||
+            id.includes('node_modules/d3-')
+          ) {
+            return 'recharts';
+          }
         },
-        
+
         // Optimized file naming for better caching
         chunkFileNames: (chunkInfo) => {
           // Use manual chunk name when available (framework, ui-library, etc.)
-          const manualNames = ['framework', 'ui-library', 'query', 'xlsx', 'three'];
+          const manualNames = ['framework', 'ui-library', 'query', 'xlsx', 'three', 'recharts'];
           if (manualNames.includes(chunkInfo.name)) {
             return `assets/${chunkInfo.name}-[hash].js`;
           }
