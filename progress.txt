@@ -749,3 +749,28 @@ User chose to start the US-212 TypeScript strict-mode burn-down. Committed `tsc-
 - ~1,500 real type errors (TS2339/2345/2322/2769/7006/18047) — require understanding each type; the slow, valuable part.
 - ~24 TS2589 deep-Supabase-query errors — likely need explicit query typing / `returns<T>()`.
 - Recommendation: continue category-by-category; the deep-type (TS2589) ones also explain tsc's slowness, so fixing them first would speed every subsequent run.
+
+---
+
+## 2026-06-13 (cont.) - US-212: corrected unused-import prune + tsc verification
+
+### Critical correction
+The first two prune passes (19b7a50, d43d47d) were driven off the committed tsc-output.txt, which is STALE — its line numbers no longer match the source. That caused both passes to delete USED imports (Card, validateFileUpload, generateSecureFilename) + a CSS side-effect import. vite/esbuild stayed green (it strips types), but a fresh tsc surfaced the regressions (TS2304 rose 2 -> 6). Fully reverted and redone correctly (commit da21aa8).
+
+### Corrected approach — lexical, tsc-independent
+- scripts/prune-unused-imports-lexical.py: removes a binding ONLY when its identifier appears NOWHERE in the file body (incl. type positions). No dependency on tsc output -> immune to staleness. Skips namespace/side-effect imports + comment blocks. Fixed IMPORT_RE ([\s\S]*? -> [^;]*?) so it can't swallow a preceding side-effect import. Unit + regression tests pass.
+- Deleted scripts/prune-unused-imports.py (tsc-line-number based -> unsafe vs a stale dump).
+- Re-applied: ~1432 genuinely-unused imports removed across 560 files.
+
+### Verification (fresh tsc on the corrected state, 66 min)
+- total errors: 2494
+- TS2304 (cannot find name) = 2 -> EXACTLY the two pre-existing used-without-import errors (BarChart3 in CashFlowManagementGuide, Calculator in FinancialIntelligenceGuide). My 4 buggy-pass regressions are GONE. This is the definitive safety check: removing only unused imports cannot raise TS2304, and it didn't.
+- TS6133 (unused) = 512 (was 1814 in the stale dump; the import bulk is cleared, the remainder is mostly unused *locals* which the import pruner correctly leaves alone).
+- TS2339 = 674, TS2345 = 522 — IDENTICAL to the buggy run, confirming the dump's 469/460 were stale and 674/522 is the true current baseline (an import-only prune provably can't change non-import errors).
+
+### State of US-212 (still passes=FALSE; AC is "tsc passes")
+- Backlog now 2494. Composition: ~512 unused locals/leftover (TS6133), ~674 TS2339, ~522 TS2345, ~237 TS2322, ~196 TS2769, plus TS18047/18048 null-safety, ~37 TS2589 deep-Supabase-query.
+- The remaining work is REAL type errors needing per-site understanding + iterative tsc verification. Blocker: a full tsc run is 44-66 min in this container (the TS2589 deep types), so a tight fix/verify loop isn't feasible here. Recommend running that loop where tsc is fast (CI) and fixing the ~37 TS2589 first (they're a prime cause of the slowness).
+
+### Lesson recorded
+Do NOT trust the committed tsc-output.txt for line-precise edits — it is stale. Use the lexical pruner (or a fresh tsc) for any further automated import work.
