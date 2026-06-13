@@ -726,3 +726,26 @@ Fresh container: ran `npm ci` (node_modules was empty) then `npx vite build` (v5
 - US-212 (TS strict backlog): tsc -p tsconfig.app.json ran >15 min without completing — the strict-mode error backlog is large; deferred as a dedicated effort (blocks US-213's typecheck-required gate).
 
 ### Verification: `npx vite build` PASS (58.99s); edge-function guard script exit 0. Deno not available in container, so edge fns validated structurally + via the guard script (each hardened fn: imports present once, single local `const corsHeaders = getCorsHeaders(req)`, guard after OPTIONS, 0 wildcard).
+
+---
+
+## 2026-06-13 - Ralph Loop (cont.): US-212 strict burn-down STARTED (in progress)
+
+### Context
+User chose to start the US-212 TypeScript strict-mode burn-down. Committed `tsc-output.txt` (container-clone time) shows the backlog: **3,433 errors**. Breakdown: TS6133 unused-local/import (1,814), TS2339 prop-not-exist (469), TS2345 arg-type (460), TS2322 type-assign (195), TS2769 overload (150), TS7006 implicit-any (64), TS18047 possibly-null (51), TS6192 all-imports-unused (48), TS6196 unused-type (34), TS2589 excessively-deep (24)...
+
+### Work done this session — safe unused-IMPORT pruning
+- New `scripts/prune-unused-imports.py`: conservatively removes ONLY tsc-confirmed-unused import bindings (TS6133/TS6192) on single-line imports. Handles `X as Y`, `type X`, default+named, mixed quotes, whole-import deletion. Skips unused *locals* and multi-line/namespace/side-effect imports. 11 edge-case unit checks pass. Dry-run by default; `--apply` to write.
+- Applied across **437 files**: 808 named/default bindings stripped + 350 whole unused-import lines deleted = **≥1,158 unused-import errors eliminated** (~34% of the backlog; the safest category — removing unused imports cannot introduce type errors or change runtime behaviour).
+- Excluded `src/pages/TeamManagement.tsx` from pruning (only src file edited after the dump, so its line numbers had shifted).
+- New `scripts/count-strict-violations.sh`: burn-down tracker (runs tsc, reports total + breakdown by code + worst files).
+
+### Verification
+- `npx vite build` GREEN (6,396 modules, 57.28s) — esbuild resolved every import after pruning, the authoritative check that nothing broke.
+- NOTE: a full `tsc -p tsconfig.app.json --noEmit` exceeded ~30 min in this container (103% CPU, 5.6 GB RAM — pathological on the TS2589 deep Supabase query types) and was not allowed to finish, so the EXACT post-prune total is pending. Reduction is well-defined at ≥1,158 (3,433 → ~2,275). A future session should budget a single long tsc run (or split tsconfig to exclude tests) to measure precisely.
+
+### Remaining US-212 backlog (passes still FALSE — AC is "tsc passes")
+- ~946 unused *locals* (TS6133 non-import) — need manual care (RHS side effects, destructuring).
+- ~1,500 real type errors (TS2339/2345/2322/2769/7006/18047) — require understanding each type; the slow, valuable part.
+- ~24 TS2589 deep-Supabase-query errors — likely need explicit query typing / `returns<T>()`.
+- Recommendation: continue category-by-category; the deep-type (TS2589) ones also explain tsc's slowness, so fixing them first would speed every subsequent run.
