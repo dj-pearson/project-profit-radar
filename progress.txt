@@ -702,3 +702,27 @@ Fresh container: ran `npm ci` (node_modules was empty) then `npx vite build` (v5
 - constructEvent signature verification on every request; webhook_events.processed guard skips duplicates with 200 (no longer resets processed=false per delivery); marks processed_at after success; explicit handlers for subscription.updated/deleted + invoice.payment_failed.
 
 ### Verification: `npx vite build` PASS (v5.4.21). Edge/DB stories need staging apply to fully exercise (no Deno/DB in container).
+
+---
+
+## 2026-06-13 - Ralph Loop (cont.): P1 edge-function security (US-198, US-199)
+
+### US-198: Enforce auth + scoped CORS on non-public edge functions - PASS (code-complete)
+- `scripts/check-edge-function-auth.mjs` now reports **0 backlog**: 33 verify_jwt=false fns = 13 allowlisted-public + 20 guarded; all 20 non-public in ENFORCED; 0 wildcard-CORS violations. Script enhanced to also fail CI on wildcard CORS in ENFORCED fns.
+- Hardened 15 cron/system fns with `requireSystemOrAdmin` + `getCorsHeaders` (delegated the mechanical edits to a sub-agent mirroring dos-protection, then reviewed every diff).
+- `process-dsar-fulfillment` (GDPR deletion): the sub-agent had swapped its always-on service-role-bearer gate for the fail-open guard — reverted to NON-fail-open (accepts service bearer OR CRON_SECRET/admin, else 403).
+- Tightened CORS off wildcard on 3 user-auth fns: blog-ai, payment-reminders, send-intervention-email.
+- `blog-social-webhook` (named offender that trusted body company_id with the service role): added `initializeAuthContext` + caller-owns-company_id check (root_admin exempt). Legit caller is the client SDK (useSocialMediaAutomation) sending the user JWT, so this is safe.
+- Allowlisted 3 genuinely-public fns: handle-sales-contact, track-referral, process-referral-signup.
+- Documented canonical public/guard lists + the dsar exception in `supabase/functions/AGENTS.md`.
+- NOTE: `requireSystemOrAdmin` fails open until CRON_SECRET is set (staged rollout — won't break live crons); set CRON_SECRET + `x-cron-secret` on schedulers to fully enforce.
+
+### US-199: Enforce subscription entitlement limits server-side - PASS (code-complete)
+- NEW `supabase/functions/invite-team-member`: authenticates caller, RBAC (admin/root_admin/project_manager), Zod-validates body, derives company_id from the authenticated caller (not the body), `checkEntitlement('teamMembers')` -> 403 before creating the user.
+- `src/pages/TeamManagement.tsx`: switched from client-side `supabase.auth.admin.createUser` + direct `user_profiles` insert (exposed service role to browser + gated seats only client-side) to `supabase.functions.invoke('invite-team-member')`. Since a usable member needs an auth.users row (FK) only the service role can mint, the edge fn is now the ONLY path to add a seat — the limit can't be bypassed by a direct client insert.
+- Projects create path already gated server-side (prior commit). checkEntitlement fails open on enterprise/unknown/complimentary tiers.
+
+### Also this session
+- US-212 (TS strict backlog): tsc -p tsconfig.app.json ran >15 min without completing — the strict-mode error backlog is large; deferred as a dedicated effort (blocks US-213's typecheck-required gate).
+
+### Verification: `npx vite build` PASS (58.99s); edge-function guard script exit 0. Deno not available in container, so edge fns validated structurally + via the guard script (each hardened fn: imports present once, single local `const corsHeaders = getCorsHeaders(req)`, guard after OPTIONS, 0 wildcard).

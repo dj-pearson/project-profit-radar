@@ -128,46 +128,32 @@ const TeamManagement = () => {
     setInviteLoading(true);
 
     try {
-      // Generate a secure temporary password
-      const generatePassword = () => {
-        const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*';
-        let password = '';
-        for (let i = 0; i < 16; i++) {
-          password += chars.charAt(Math.floor(Math.random() * chars.length));
+      // Invites go through the invite-team-member edge function (US-199): it
+      // authenticates the caller, enforces the seat plan-limit SERVER-SIDE
+      // (the client checkLimit below is UX-only and bypassable), derives
+      // company_id from the authenticated session — never the client — and
+      // performs the privileged auth.admin.createUser + profile insert with the
+      // service role instead of exposing it to the browser.
+      const { data: invite, error: inviteError } = await supabase.functions.invoke(
+        'invite-team-member',
+        {
+          body: {
+            email: inviteEmail,
+            first_name: inviteFirstName,
+            last_name: inviteLastName,
+            role: inviteRole,
+            phone: invitePhone || null,
+          },
         }
-        return password;
-      };
+      );
 
-      // For now, we'll create the user profile directly
-      // In a real implementation, you'd want to send an invitation email
-      const { data: authUser, error: authError } = await supabase.auth.admin.createUser({
-        email: inviteEmail,
-        password: generatePassword(), // Generate random secure password
-        email_confirm: true,
-        user_metadata: {
-          first_name: inviteFirstName,
-          last_name: inviteLastName,
-          role: inviteRole
-        }
-      });
-
-      if (authError) throw authError;
-
-      // Create user profile
-      const { error: profileError } = await supabase
-        .from('user_profiles')
-        .insert([{
-          id: authUser.user.id,
-          email: inviteEmail,
-          first_name: inviteFirstName,
-          last_name: inviteLastName,
-          role: inviteRole as any,
-          phone: invitePhone || null,
-          company_id: userProfile?.company_id,
-          is_active: true
-        }]);
-
-      if (profileError) throw profileError;
+      // supabase.functions.invoke surfaces non-2xx as `error`; the function also
+      // returns the standard { success, error } envelope for limit/permission
+      // denials, so check both.
+      if (inviteError) throw inviteError;
+      if (invite && invite.success === false) {
+        throw new Error(invite.error || 'Failed to invite the user');
+      }
 
       toast({
         title: "User Invited Successfully",

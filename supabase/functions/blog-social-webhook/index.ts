@@ -1,11 +1,6 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type",
-  "Access-Control-Allow-Methods": "POST, OPTIONS",
-};
+import { initializeAuthContext } from "../_shared/auth-helpers.ts";
+import { getCorsHeaders } from "../_shared/secure-cors.ts";
 
 const logStep = (step: string, data?: any) => {
   console.log(`[BLOG Social Webhook] ${step}:`, data || "");
@@ -29,6 +24,7 @@ function rewriteStorageUrls(text: string | null | undefined): string | null {
 }
 
 export default async (req: Request) => {
+  const corsHeaders = getCorsHeaders(req);
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
@@ -36,12 +32,44 @@ export default async (req: Request) => {
   try {
     logStep("Blog social webhook triggered");
 
+    // Authenticate the caller. This function is invoked by the client SDK
+    // (useSocialMediaAutomation) with the user's JWT, so we can verify the
+    // caller actually belongs to the company_id they pass — previously it was
+    // trusted blindly from the body and used with the service role, letting any
+    // authenticated user trigger automation against ANY company (US-198).
+    const authContext = await initializeAuthContext(req);
+    if (!authContext) {
+      return new Response(
+        JSON.stringify({ success: false, error: "Unauthorized", timestamp: new Date().toISOString() }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 401 }
+      );
+    }
+
     const supabaseClient = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
     );
 
     const { blog_post_id, company_id, status } = await req.json();
+
+    // Enforce that the caller owns the company_id from the body.
+    const { data: callerProfile } = await supabaseClient
+      .from("user_profiles")
+      .select("company_id, role")
+      .eq("id", authContext.user.id)
+      .maybeSingle();
+
+    const isRootAdmin = callerProfile?.role === "root_admin";
+    if (!isRootAdmin && (!callerProfile?.company_id || callerProfile.company_id !== company_id)) {
+      logStep("Cross-tenant company_id rejected", {
+        callerCompany: callerProfile?.company_id,
+        requestedCompany: company_id,
+      });
+      return new Response(
+        JSON.stringify({ success: false, error: "Forbidden", timestamp: new Date().toISOString() }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 403 }
+      );
+    }
 
     logStep("Processing blog post", { blog_post_id, company_id, status });
 

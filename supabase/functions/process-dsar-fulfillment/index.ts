@@ -32,6 +32,8 @@
 
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "npm:@supabase/supabase-js@2";
+import { getCorsHeaders } from "../_shared/secure-cors.ts";
+import { requireSystemOrAdmin } from "../_shared/system-auth.ts";
 
 const SERVICE_ROLE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
@@ -51,15 +53,31 @@ const MAX_RETRIES = 5;
 const BATCH_SIZE = 50;
 
 serve(async (req) => {
-  // Cron invocations use the service role. Reject anything else.
-  const auth = req.headers.get("authorization") ?? "";
+  const corsHeaders = getCorsHeaders(req);
+  if (req.method === "OPTIONS") {
+    return new Response(null, { headers: corsHeaders });
+  }
+
   if (!SERVICE_ROLE || !SUPABASE_URL) {
     return new Response("Service not configured", { status: 500 });
   }
-  const expected = `Bearer ${SERVICE_ROLE}`;
-  if (auth !== expected) {
-    console.error("[dsar-fulfill] unauthorized invocation rejected");
-    return new Response("Forbidden", { status: 403 });
+
+  // Auth: this is a GDPR data-deletion job, so unlike the other cron functions
+  // it must NEVER fail open. Accept either the existing service-role bearer the
+  // current scheduler already sends, or the standardized requireSystemOrAdmin
+  // path (CRON_SECRET header or an admin user). If neither is present we reject
+  // explicitly rather than relying on requireSystemOrAdmin's staged fail-open.
+  const legacyAuth = req.headers.get("authorization") ?? "";
+  const hasServiceBearer = legacyAuth === `Bearer ${SERVICE_ROLE}`;
+  if (!hasServiceBearer) {
+    const denied = await requireSystemOrAdmin(req);
+    if (denied) return denied;
+    // requireSystemOrAdmin fails open when CRON_SECRET is unset; that is too
+    // permissive for irreversible deletions, so require an explicit secret.
+    if (!Deno.env.get("CRON_SECRET")) {
+      console.error("[dsar-fulfill] unauthorized invocation rejected (no service bearer / CRON_SECRET)");
+      return new Response("Forbidden", { status: 403 });
+    }
   }
 
   const admin = createClient(SUPABASE_URL, SERVICE_ROLE, {
