@@ -1545,8 +1545,8 @@
         "npm run build completes successfully"
       ],
       "priority": 4,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "COMPLETED. Sortable columns + bulk actions + tag filter on the CRM contacts list (src/pages/CRMContacts.tsx; client-side data). SORT: AccessibleTable onSort wired to sortField/sortDir (Name [by full name], Company, Type, Status sortable, with indicators). SELECTION: AccessibleTable selectable/selectedRows/onSelectionChange (checkboxes + select-all). BULK TOOLBAR: Send Email (mailto bcc to selected contacts' emails), Add Tag (inline input -> append to each selected contact's tags array via supabase update, deduped), Export Selected (client CSV incl. tags), Delete Selected (confirm + supabase delete in('id',ids)). FILTERS: contact-type filter + cross-field search (name/company/email/job_title) already existed; ADDED a Tag filter dropdown populated from collectContactTags(). Extracted pure logic to src/components/crm/contactListUtils.ts (filterAndSortContacts + collectContactTags) with 5 passing unit tests (full-name sort asc/desc, cross-field search, type/status filter, tag filter, distinct-tag collection). vite build green (1m15s)."
     },
     {
       "id": "US-091",

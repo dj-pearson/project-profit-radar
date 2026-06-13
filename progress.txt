@@ -858,3 +858,10 @@ Remaining (fresh breakdown): TS2345=522, TS6133=512 (mostly unused locals now), 
 - Extended `usePaginatedQuery` (useSupabaseQuery.ts) with optional `rangeFilters` (gte/lte), backward compatible — used for the amount range.
 - ExpenseTracker.tsx: server-side sort (AccessibleTable onSort -> orderBy), selection (selectable), bulk toolbar (Approve/Reject via payment_status, Export CSV, Categorize via real expense_categories UUID FK), filters (Category from expense_categories, Project from fetched projects, Amount min/max range). All reset to page 1.
 - Confirmed category_id is a UUID FK (types.ts) -> categories fetched, not hardcoded. vite build green.
+
+---
+
+## 2026-06-13 (cont.) - US-090: Sortable columns + bulk actions on CRM contacts - PASS
+
+- CRMContacts.tsx (client-side): AccessibleTable onSort + selectable; bulk toolbar Send Email (mailto bcc), Add Tag (append to tags[] via supabase), Export CSV, Delete (supabase). Added Tag filter dropdown (collectContactTags); type filter + cross-field search already existed.
+- Extracted pure logic to contactListUtils.ts (filterAndSortContacts + collectContactTags) with 5 passing tests. vite build green.

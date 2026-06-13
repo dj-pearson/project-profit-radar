@@ -16,7 +16,9 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import { AccessibleForm, AccessibleFormField, AccessibleTextarea, AccessibleFieldset } from '@/components/accessibility/AccessibleForm';
-import { Users, Search, Plus, Phone, Mail, Building2, Edit, Trash2 } from 'lucide-react';
+import { Users, Search, Plus, Phone, Mail, Building2, Edit, Trash2, Download, Tag, Send, X } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
+import { filterAndSortContacts, collectContactTags, type ContactRow } from '@/components/crm/contactListUtils';
 
 interface Contact {
   id: string;
@@ -59,6 +61,13 @@ const CRMContacts = () => {
 
   const [searchTerm, setSearchTerm] = useState('');
   const [typeFilter, setTypeFilter] = useState('all');
+  // Sort, tag filter, and bulk-selection state (US-090).
+  const [sortField, setSortField] = useState('first_name');
+  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
+  const [tagFilter, setTagFilter] = useState('all');
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [bulkLoading, setBulkLoading] = useState(false);
+  const [tagToAdd, setTagToAdd] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [showNewContactDialog, setShowNewContactDialog] = useState(false);
   const [newContact, setNewContact] = useState<Partial<Contact>>({
@@ -214,18 +223,97 @@ const CRMContacts = () => {
     });
   };
 
-  const filteredContacts = contacts?.filter(contact => {
-    const matchesSearch = searchTerm === '' ||
-      `${contact.first_name} ${contact.last_name}`.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      contact.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      contact.company_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      contact.job_title?.toLowerCase().includes(searchTerm.toLowerCase());
+  const filteredContacts = filterAndSortContacts((contacts || []) as ContactRow[], {
+    searchTerm,
+    typeFilter,
+    statusFilter,
+    tagFilter,
+    sortField,
+    sortDir,
+  });
 
-    const matchesType = typeFilter === 'all' || contact.contact_type === typeFilter;
-    const matchesStatus = statusFilter === 'all' || contact.relationship_status === statusFilter;
+  const availableTags = collectContactTags((contacts || []) as ContactRow[]);
+  const allVisibleSelected =
+    filteredContacts.length > 0 && filteredContacts.every((c) => selectedIds.has(c.id));
 
-    return matchesSearch && matchesType && matchesStatus;
-  }) || [];
+  const handleSelectionChange = (ids: (string | number)[]) =>
+    setSelectedIds(new Set(ids as string[]));
+
+  const bulkSendEmail = () => {
+    const emails = filteredContacts
+      .filter((c) => selectedIds.has(c.id) && c.email)
+      .map((c) => c.email as string);
+    if (emails.length === 0) {
+      toast({ title: 'No emails', description: 'None of the selected contacts have an email.' });
+      return;
+    }
+    window.location.href = `mailto:?bcc=${encodeURIComponent(emails.join(','))}`;
+  };
+
+  const bulkAddTag = async () => {
+    const tag = tagToAdd.trim();
+    const ids = [...selectedIds];
+    if (!tag || ids.length === 0) return;
+    setBulkLoading(true);
+    try {
+      // Append the tag to each selected contact's tags array (dedup).
+      await Promise.all(
+        filteredContacts
+          .filter((c) => selectedIds.has(c.id))
+          .map((c) => {
+            const next = Array.from(new Set([...(c.tags || []), tag]));
+            return supabase.from('contacts').update({ tags: next }).eq('id', c.id);
+          }),
+      );
+      toast({ title: 'Tag added', description: `"${tag}" added to ${ids.length} contact(s).` });
+      setTagToAdd('');
+      setSelectedIds(new Set());
+      loadContacts(loadContactsData);
+    } catch (err: any) {
+      toast({ variant: 'destructive', title: 'Add tag failed', description: err.message });
+    } finally {
+      setBulkLoading(false);
+    }
+  };
+
+  const bulkExportContacts = () => {
+    const rows = filteredContacts.filter((c) => selectedIds.has(c.id));
+    if (rows.length === 0) return;
+    const headers = ['First Name', 'Last Name', 'Email', 'Phone', 'Company', 'Type', 'Status', 'Tags'];
+    const csv = [
+      headers.join(','),
+      ...rows.map((r) =>
+        [r.first_name, r.last_name, r.email, r.phone, r.company_name, r.contact_type, r.relationship_status, (r.tags || []).join('; ')]
+          .map((v) => `"${String(v ?? '').replace(/"/g, '""')}"`)
+          .join(','),
+      ),
+    ].join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `contacts-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const bulkDeleteContacts = async () => {
+    const ids = [...selectedIds];
+    if (ids.length === 0) return;
+    if (!window.confirm(`Delete ${ids.length} contact(s)? This cannot be undone.`)) return;
+    setBulkLoading(true);
+    try {
+      const { error: err } = await supabase.from('contacts').delete().in('id', ids);
+      if (err) throw err;
+      toast({ title: 'Contacts deleted', description: `${ids.length} removed.` });
+      setSelectedIds(new Set());
+      loadContacts(loadContactsData);
+    } catch (err: any) {
+      toast({ variant: 'destructive', title: 'Bulk delete failed', description: err.message });
+    } finally {
+      setBulkLoading(false);
+    }
+  };
 
   if (loading) {
     return <LoadingState message="Loading contacts..." />;
@@ -279,6 +367,18 @@ const CRMContacts = () => {
                         <SelectItem value="active">Active</SelectItem>
                         <SelectItem value="inactive">Inactive</SelectItem>
                         <SelectItem value="do_not_contact">Do Not Contact</SelectItem>
+                      </SelectContent>
+                    </Select>
+
+                    <Select value={tagFilter} onValueChange={setTagFilter}>
+                      <SelectTrigger className="w-full sm:w-40" aria-label="Filter by tag">
+                        <SelectValue placeholder="Tag" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Tags</SelectItem>
+                        {availableTags.map((t) => (
+                          <SelectItem key={t} value={t}>{t}</SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
 
@@ -503,11 +603,41 @@ const CRMContacts = () => {
                 ];
 
                 return (
+                  <>
+                  {selectedIds.size > 0 && (
+                    <div role="region" aria-label="Bulk actions" className="flex flex-wrap items-center gap-2 mb-4 p-3 rounded-lg border bg-muted/40">
+                      <span className="text-sm font-medium">{selectedIds.size} selected</span>
+                      <Button size="sm" variant="outline" disabled={bulkLoading} onClick={bulkSendEmail}>
+                        <Send className="h-4 w-4 mr-1" /> Send Email
+                      </Button>
+                      <div className="flex items-center gap-1">
+                        <Input value={tagToAdd} onChange={(e) => setTagToAdd(e.target.value)} placeholder="tag…" className="h-8 w-28" aria-label="Tag to add" />
+                        <Button size="sm" variant="outline" disabled={bulkLoading || !tagToAdd.trim()} onClick={bulkAddTag}>
+                          <Tag className="h-4 w-4 mr-1" /> Add Tag
+                        </Button>
+                      </div>
+                      <Button size="sm" variant="outline" disabled={bulkLoading} onClick={bulkExportContacts}>
+                        <Download className="h-4 w-4 mr-1" /> Export
+                      </Button>
+                      <Button size="sm" variant="destructive" disabled={bulkLoading} onClick={bulkDeleteContacts}>
+                        <Trash2 className="h-4 w-4 mr-1" /> Delete
+                      </Button>
+                      <Button size="sm" variant="ghost" className="ml-auto" onClick={() => setSelectedIds(new Set())}>
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  )}
                   <AccessibleTable<Contact>
                     caption="CRM Contacts"
                     hideCaption
                     columns={contactColumns}
                     data={filteredContacts}
+                    onSort={(column, direction) => { setSortField(column); setSortDir(direction === 'ascending' ? 'asc' : 'desc'); }}
+                    sortColumn={sortField}
+                    sortDirection={sortDir === 'asc' ? 'ascending' : 'descending'}
+                    selectable
+                    selectedRows={[...selectedIds]}
+                    onSelectionChange={handleSelectionChange}
                     loading={contactsLoading}
                     emptyContent={
                       <div className="text-center py-8">
@@ -525,6 +655,7 @@ const CRMContacts = () => {
                       </div>
                     }
                   />
+                  </>
                 );
               })()}
             </ErrorBoundary>
