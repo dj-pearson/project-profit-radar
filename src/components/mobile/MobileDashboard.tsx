@@ -18,7 +18,6 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useGeolocation } from '@/hooks/useGeolocation';
 import { useDeviceInfo } from '@/hooks/useDeviceInfo';
 import MobileSafetyIncidentManager from './MobileSafetyIncidentManager';
@@ -27,7 +26,7 @@ import MobileEquipmentManager from './MobileEquipmentManager';
 import { MobileMaterialTracker } from './MobileMaterialTracker';
 import { EnhancedMobileCamera } from './EnhancedMobileCamera';
 import MobileTimeTracker from './MobileTimeTracker';
-import { mobileCardClasses, mobileButtonClasses, mobileTextClasses } from '@/utils/mobileHelpers';
+import { mobileCardClasses, mobileTextClasses } from '@/utils/mobileHelpers';
 import { cn } from '@/lib/utils';
 import { MobileSkeletonDashboard } from './MobileSkeletons';
 import { MobileDashboardLayout, type MobileDashboardWidget } from './MobileDashboardLayout';

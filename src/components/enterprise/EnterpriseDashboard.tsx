@@ -6,9 +6,6 @@ import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useAuth } from '@/contexts/AuthContext';
-import { workflowAutomationService } from '@/services/WorkflowAutomationService';
-import { complianceAutomationService } from '@/services/ComplianceAutomationService';
-import { integrationEcosystemService } from '@/services/IntegrationEcosystemService';
 import { toast } from '@/hooks/use-toast';
 import {
   Zap,

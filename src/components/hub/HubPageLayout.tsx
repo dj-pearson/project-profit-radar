@@ -2,12 +2,11 @@ import React from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Lock, LucideIcon } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { usePermissions } from "@/hooks/usePermissions";
 import { cn } from "@/lib/utils";
-import { NavigationItem, NavigationSection } from "@/components/navigation/HierarchicalNavigationConfig";
+import { NavigationSection } from "@/components/navigation/HierarchicalNavigationConfig";
 
 interface HubPageLayoutProps {
   title: string;

@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { ArrowRight, Target, AlertCircle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
-import { CSV_TEMPLATES, getTemplateFields } from '@/lib/csv-import/templates';
+import { getTemplateFields } from '@/lib/csv-import/templates';
 
 interface FieldMapping {
   id: string;

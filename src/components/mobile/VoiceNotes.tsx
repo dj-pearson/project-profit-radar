@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Device } from '@capacitor/device';
 import { Filesystem, Directory, Encoding } from '@capacitor/filesystem';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';

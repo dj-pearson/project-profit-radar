@@ -1,5 +1,5 @@
 import { useCallback, useState, useEffect } from "react";
-import { ReactFlow, MiniMap, Controls, Background, Node, Edge, addEdge, Connection, useNodesState, useEdgesState, BackgroundVariant } from "@xyflow/react";
+import { ReactFlow, MiniMap, Controls, Background, Node, addEdge, Connection, useNodesState, useEdgesState, BackgroundVariant } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -10,7 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { Mail, Phone, MessageSquare, Clock, Webhook, Plus, Save, GitBranch, CheckCircle2, Edit, LayoutTemplate, Activity, TestTube, CalendarClock, History, ShieldAlert } from "lucide-react";
+import { Mail, Phone, MessageSquare, Clock, Webhook, Plus, Save, GitBranch, LayoutTemplate, Activity, TestTube, CalendarClock, History, ShieldAlert } from "lucide-react";
 import { WorkflowTemplateLibrary } from "./WorkflowTemplateLibrary";
 import { WorkflowAnalytics } from "./WorkflowAnalytics";
 import { WorkflowTester } from "./WorkflowTester";

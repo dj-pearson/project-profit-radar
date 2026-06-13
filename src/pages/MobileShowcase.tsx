@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { MobileDashboardLayout } from '@/components/layout/MobileDashboardLayout';
 import {
   MobileLayout,

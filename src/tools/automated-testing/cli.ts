@@ -27,7 +27,7 @@
  *   npx tsx cli.ts --url http://localhost:8080 --depth deep --max-pages 100
  */
 
-import { TestOrchestrator, createTester, getPreset, DEFAULT_CONFIG } from './index';
+import { TestOrchestrator, getPreset } from './index';
 import type { TestConfig } from './types';
 import { logger } from '@/lib/logger';
 

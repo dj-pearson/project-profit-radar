@@ -1,19 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { Textarea } from '@/components/ui/textarea';
-import { Calendar } from '@/components/ui/calendar';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Progress } from '@/components/ui/progress';
-import { Truck, Wrench, Calendar as CalendarIcon, AlertTriangle, CheckCircle, Clock, DollarSign, TrendingUp, Settings } from 'lucide-react';
+import { Truck, Wrench, AlertTriangle, CheckCircle, Clock, DollarSign, TrendingUp, Settings } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { format, addDays, differenceInDays, isBefore, isAfter } from 'date-fns';
+import { format, addDays, differenceInDays } from 'date-fns';
 
 interface MaintenanceRecord {
   id: string;

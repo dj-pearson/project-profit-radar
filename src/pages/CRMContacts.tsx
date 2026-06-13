@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { LoadingState } from '@/components/ui/loading-spinner';
 import { ErrorBoundary, ErrorState, EmptyState } from '@/components/ui/error-boundary';
-import { ResponsiveContainer, ResponsiveGrid } from '@/components/layout/ResponsiveContainer';
+import { ResponsiveGrid } from '@/components/layout/ResponsiveContainer';
 import { AccessibleTable, type TableColumn } from '@/components/accessibility/AccessibleTable';
 import { AccessibleModal } from '@/components/accessibility/AccessibleModal';
 import { useLoadingState } from '@/hooks/useLoadingState';

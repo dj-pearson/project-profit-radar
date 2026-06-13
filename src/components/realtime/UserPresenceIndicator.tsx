@@ -23,7 +23,7 @@ import {
   MessageCircle
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { UserPresence, useSimplePresence } from '@/hooks/useSimplePresence';
+import { UserPresence } from '@/hooks/useSimplePresence';
 import { formatDistanceToNow } from 'date-fns';
 
 interface UserPresenceIndicatorProps {

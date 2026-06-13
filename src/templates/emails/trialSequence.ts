@@ -1,4 +1,4 @@
-import { baseEmailTemplate, EmailTemplateProps } from './baseEmailTemplate';
+import { baseEmailTemplate } from './baseEmailTemplate';
 
 interface TrialEmailData {
   firstName: string;

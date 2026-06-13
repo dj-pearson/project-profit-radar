@@ -1,4 +1,3 @@
-import React from 'react';
 import { CLAIMS } from '@/config/claims';
 
 /**

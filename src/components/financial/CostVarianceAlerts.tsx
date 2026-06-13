@@ -6,7 +6,6 @@ import { Button } from '@/components/ui/button';
 import { AlertTriangle, TrendingUp, DollarSign, X } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
-import { formatCurrency } from '@/utils/formatters';
 
 interface BudgetAlert {
   id: string;

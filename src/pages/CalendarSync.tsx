@@ -1,4 +1,3 @@
-import React from 'react';
 import { AccessiblePageWrapper } from "@/components/accessibility/AccessiblePageWrapper";
 import { SidebarProvider } from '@/components/ui/sidebar';
 import { SimplifiedSidebar } from '@/components/navigation/SimplifiedSidebar';

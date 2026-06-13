@@ -1,13 +1,12 @@
-import React from "react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { SEOMetaTags } from "@/components/SEOMetaTags";
 import { QuickAnswerSnippet, LastUpdated, QuickFacts } from "@/components/seo/QuickAnswerSnippet";
 import { HowToSchema } from "@/components/seo/EnhancedSchemaMarkup";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Calculator, TrendingUp, AlertTriangle, Clock, CheckCircle, ArrowRight } from "lucide-react";
+import { Calculator, AlertTriangle, ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
 import BreadcrumbsNavigation from "@/components/BreadcrumbsNavigation";
 

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -13,7 +13,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { usePaginatedQuery } from '@/hooks/useSupabaseQuery';
 import { useInsertMutation, useUpdateMutation, useDeleteMutation } from '@/hooks/useSupabaseMutation';
-import { LoadingState, TableSkeleton } from '@/components/common/LoadingState';
+import { TableSkeleton } from '@/components/common/LoadingState';
 import { ErrorState, EmptyState } from '@/components/common/ErrorState';
 import { Pagination } from '@/components/common/Pagination';
 import { AccessibleModal } from '@/components/accessibility/AccessibleModal';

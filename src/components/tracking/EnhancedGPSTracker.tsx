@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -8,7 +8,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-import { MapPin, Navigation, Clock, AlertTriangle, Wifi, WifiOff, Battery } from 'lucide-react';
+import { MapPin, Navigation, AlertTriangle, Wifi, WifiOff, Battery } from 'lucide-react';
 
 interface LocationData {
   latitude: number;

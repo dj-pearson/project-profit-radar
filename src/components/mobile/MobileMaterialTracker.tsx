@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Camera, Package, MapPin, CheckCircle, AlertCircle, Plus, Search, Filter, Calendar, User, FileText, Truck } from 'lucide-react';
+import { Camera, Package, AlertCircle, Plus, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -11,7 +11,6 @@ import { EnhancedMobileCamera } from './EnhancedMobileCamera';
 import { useGeolocation } from '@/hooks/useGeolocation';
 import { useDeviceInfo } from '@/hooks/useDeviceInfo';
 import { toast } from 'sonner';
-import { supabase } from '@/integrations/supabase/client';
 import { mobileCardClasses, mobileButtonClasses, mobileTextClasses } from '@/utils/mobileHelpers';
 import { MobileEmptyState } from './MobileEmptyState';
 

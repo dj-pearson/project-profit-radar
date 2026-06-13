@@ -1,10 +1,9 @@
 import { useState, useEffect, useCallback } from 'react';
 import { LocalNotifications, ScheduleOptions } from '@capacitor/local-notifications';
-import { PushNotifications, PermissionStatus } from '@capacitor/push-notifications';
+import { PushNotifications } from '@capacitor/push-notifications';
 import { Device } from '@capacitor/device';
 import { Preferences } from '@capacitor/preferences';
 import { useToast } from './use-toast';
-import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 
 export interface NotificationPayload {

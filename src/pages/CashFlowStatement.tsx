@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useChartOfAccounts } from '@/hooks/useAccounting';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -15,7 +15,6 @@ import {
 } from '@/components/ui/table';
 import { ArrowRightLeft, Download, Printer, TrendingUp, TrendingDown } from 'lucide-react';
 import { formatCurrency } from '@/utils/accountingUtils';
-import { Separator } from '@/components/ui/separator';
 
 export default function CashFlowStatement() {
   const { user } = useAuth();

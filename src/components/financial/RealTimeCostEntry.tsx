@@ -6,7 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
-import { Camera, Upload, DollarSign, MapPin, Clock, Save } from 'lucide-react';
+import { Camera, DollarSign, MapPin, Save } from 'lucide-react';
 import { SmartFormInput } from '@/components/forms/SmartFormInput';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';

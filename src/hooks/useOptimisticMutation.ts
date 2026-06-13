@@ -1,4 +1,4 @@
-import { useMutation, useQueryClient, UseMutationOptions } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 interface UseOptimisticMutationOptions<TData, TVariables, TContext = unknown> {
   mutationFn: (variables: TVariables) => Promise<TData>;

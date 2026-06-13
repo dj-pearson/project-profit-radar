@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import { useEffect } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { PaymentDashboard } from '@/components/payments/PaymentDashboard';
 import { PaymentMethodManager } from '@/components/payments/PaymentMethodManager';

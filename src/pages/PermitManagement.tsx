@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { ResponsiveContainer } from '@/components/layout/ResponsiveContainer';
@@ -22,7 +22,6 @@ import {
   Building,
   ArrowLeft
 } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
 
 interface Permit {
   id: string;

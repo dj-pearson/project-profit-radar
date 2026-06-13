@@ -1,4 +1,3 @@
-import React from 'react';
 import { RoleGuard, ROLE_GROUPS } from '@/components/auth/RoleGuard';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { SecurityDashboard } from '@/components/security/SecurityDashboard';

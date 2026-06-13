@@ -4,7 +4,6 @@ import { Filesystem, Directory, Encoding } from '@capacitor/filesystem';
 import { Device } from '@capacitor/device';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from './use-toast';
-import { useAuth } from '@/contexts/AuthContext';
 import { logger } from '@/lib/logger';
 
 export interface OfflineData {

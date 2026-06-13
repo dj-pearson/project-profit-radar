@@ -6,7 +6,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { format, addDays, differenceInDays, startOfWeek, endOfWeek, eachDayOfInterval } from 'date-fns';
-import { Plus, Edit, Trash2, Calendar } from 'lucide-react';
+import { Plus, Trash2, Calendar } from 'lucide-react';
 import EquipmentAssignmentForm from './EquipmentAssignmentForm';
 import { useToast } from '@/hooks/use-toast';
 

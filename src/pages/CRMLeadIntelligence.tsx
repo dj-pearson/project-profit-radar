@@ -1,4 +1,3 @@
-import React from "react";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { EnhancedLeadIntelligence } from "@/components/crm/EnhancedLeadIntelligence";
 import { LeadScoring } from "@/components/crm/LeadScoring";

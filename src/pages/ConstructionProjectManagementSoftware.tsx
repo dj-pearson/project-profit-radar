@@ -1,10 +1,8 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
-import { CheckCircle, Clock, Calendar, AlertTriangle, TrendingUp, ArrowRight, Download, Users, Zap, Target, BarChart3, Layers, Shield, DollarSign, FileText, Smartphone } from 'lucide-react';
+import { CheckCircle, Clock, AlertTriangle, TrendingUp, ArrowRight, Users, Zap, Target, Layers, Shield, DollarSign, FileText, Smartphone } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
 import { PageSEO, createArticleSchema, createBreadcrumbSchema, createHowToSchema } from '@/components/seo/PageSEO';
 import { GEOOptimizedFAQ } from '@/components/seo/GEOOptimizedFAQ';
 import AISearchOptimization from '@/components/AISearchOptimization';

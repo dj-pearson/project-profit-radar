@@ -1,11 +1,8 @@
-import React from "react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import { SEOMetaTags } from "@/components/SEOMetaTags";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Link } from "react-router-dom";
-import { CheckCircle, DollarSign, Users, Clock, ArrowRight, X, Check } from "lucide-react";
+import { DollarSign, Users, Clock, ArrowRight, X, Check } from "lucide-react";
 import { PageSEO, createOrganizationSchema, createBreadcrumbSchema, createComparisonSchema } from "@/components/seo/PageSEO";
 import { GEOOptimizedFAQ, procoreAlternativeFAQs } from "@/components/seo/GEOOptimizedFAQ";
 

@@ -1,5 +1,5 @@
 import { useCallback, useRef, useEffect } from 'react';
-import { useInfiniteQuery, UseInfiniteQueryOptions, InfiniteData } from '@tanstack/react-query';
+import { useInfiniteQuery } from '@tanstack/react-query';
 
 interface UseInfiniteScrollOptions<T> {
   queryKey: string[];

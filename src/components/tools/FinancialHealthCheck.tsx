@@ -5,7 +5,7 @@ import { Progress } from "@/components/ui/progress";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { AlertTriangle, CheckCircle, TrendingDown, DollarSign, Clock, Brain, Download, Mail } from "lucide-react";
+import { AlertTriangle, CheckCircle, DollarSign, Clock, Brain, Download, Mail } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
 interface Question {

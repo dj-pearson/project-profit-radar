@@ -1,10 +1,9 @@
-import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { CreditCard, DollarSign, TrendingUp, AlertCircle, Receipt, Calendar, FileX } from 'lucide-react';
+import { CreditCard, DollarSign, TrendingUp, AlertCircle, Receipt, Calendar } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { usePaymentStats, useRecentPayments } from '@/hooks/usePayments';

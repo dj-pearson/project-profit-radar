@@ -13,11 +13,10 @@
  * Layer 4: Database RLS - Final enforcement (in PostgreSQL)
  */
 
-import React, { ReactNode, Suspense } from 'react';
+import React, { ReactNode } from 'react';
 import { Route } from 'react-router-dom';
 import { SecureRoute } from '@/components/security/SecureRoute';
-import { Permission, UserRole, ResourceType, RouteSecurityConfig } from '@/lib/security/types';
-import { PageLoading } from '@/components/loading/LoadingSpinner';
+import { Permission, UserRole, RouteSecurityConfig } from '@/lib/security/types';
 
 // =============================================================================
 // ROUTE SECURITY CONFIGURATION

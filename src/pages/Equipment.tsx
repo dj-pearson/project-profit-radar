@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { AccessiblePageWrapper } from "@/components/accessibility/AccessiblePageWrapper";
 import { AccessibleTable, type TableColumn } from '@/components/accessibility/AccessibleTable';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';

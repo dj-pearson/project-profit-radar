@@ -27,7 +27,6 @@ import {
   AlertTriangle,
   DollarSign
 } from 'lucide-react';
-import { format } from 'date-fns';
 
 interface AutomatedClientUpdate {
   trigger: 'phase_completion' | 'delay_detected' | 'budget_variance' | 'milestone_reached';

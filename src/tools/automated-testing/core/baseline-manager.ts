@@ -8,7 +8,6 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import { Logger } from '../utils/logger';
-import { generateId, formatDuration } from '../utils/helpers';
 import { logger } from '@/lib/logger';
 
 // ============================================================================

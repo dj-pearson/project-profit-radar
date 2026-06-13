@@ -1,10 +1,7 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
 import { CheckCircle, X, DollarSign, Clock, Users, Star, ArrowRight, Download, Calculator } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
 import { PageSEO, createArticleSchema, createBreadcrumbSchema } from '@/components/seo/PageSEO';
 import { GEOOptimizedFAQ, procoreAlternativeFAQs } from '@/components/seo/GEOOptimizedFAQ';
 import AISearchOptimization from '@/components/AISearchOptimization';

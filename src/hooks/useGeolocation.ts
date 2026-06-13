@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Geolocation, Position, GeolocationOptions } from '@capacitor/geolocation';
-import { Device } from '@capacitor/device';
 import { Preferences } from '@capacitor/preferences';
 import { useToast } from './use-toast';
 

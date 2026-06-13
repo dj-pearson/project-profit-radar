@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { TimeTrackingDashboard } from '@/components/time-tracking/TimeTrackingDashboard';
 import { QuickTimeEntry } from '@/components/time-tracking/QuickTimeEntry';

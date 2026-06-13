@@ -1,6 +1,4 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
-import { CheckCircle, DollarSign, Clock, TrendingUp, Calculator, AlertTriangle, ArrowRight, Download, BarChart3, PieChart, Target } from 'lucide-react';
+import { CheckCircle, DollarSign, Clock, TrendingUp, Calculator, AlertTriangle, ArrowRight, BarChart3, PieChart, Target } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';

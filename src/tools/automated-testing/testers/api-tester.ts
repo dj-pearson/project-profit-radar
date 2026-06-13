@@ -7,7 +7,7 @@
 
 import type { TestConfig, TestResult, NetworkRequest } from '../types';
 import { Logger } from '../utils/logger';
-import { generateId, formatDuration } from '../utils/helpers';
+import { generateId } from '../utils/helpers';
 
 // ============================================================================
 // Types

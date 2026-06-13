@@ -7,7 +7,7 @@ import { useState } from 'react';
 import { ProgressiveImage } from '@/components/performance/ProgressiveImage';
 import { AccessibleModal } from '@/components/accessibility/AccessibleModal';
 import { Button } from '@/components/ui/button';
-import { ChevronLeft, ChevronRight, X, Download, ZoomIn } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Download, ZoomIn } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export interface GalleryImage {

@@ -4,12 +4,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Calendar, Clock, DollarSign, FileText, Camera, CheckCircle, AlertCircle, User, CreditCard, Download } from 'lucide-react';
-import { supabase } from "@/integrations/supabase/client";
+import { Calendar, Clock, DollarSign, FileText, Camera, CheckCircle, AlertCircle, CreditCard, Download } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 
 interface ProjectUpdate {

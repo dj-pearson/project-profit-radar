@@ -1,5 +1,5 @@
 import React, { ReactNode, KeyboardEvent } from 'react';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 import { ChevronRight } from 'lucide-react';
 import { useHaptics } from '@/hooks/useHaptics';
