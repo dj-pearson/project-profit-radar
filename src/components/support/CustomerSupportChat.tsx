@@ -9,6 +9,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { MessageCircle, Send, Headphones, Clock, CheckCircle2, AlertCircle, Mail } from 'lucide-react';
+import { logger } from '@/lib/logger';
 
 interface Message {
   id: string;
@@ -216,7 +217,7 @@ const CustomerSupportChat = () => {
           }
         });
       } catch (emailError) {
-        console.warn('Email notification failed:', emailError);
+        logger.warn('Email notification failed:', emailError);
       }
 
       setTickets([ticket, ...tickets]);

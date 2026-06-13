@@ -2,6 +2,7 @@
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from './types';
 import { supabaseStorage } from '@/lib/supabaseStorage';
+import { logger } from '@/lib/logger';
 
 // Load configuration from environment variables
 // SUPABASE_URL points to Kong (handles /auth, /rest, /storage, etc.)
@@ -24,11 +25,9 @@ if (!RESOLVED_SUPABASE_KEY) {
     '[Brikly] VITE_SUPABASE_PUBLISHABLE_KEY is not set. ' +
     'API calls will fail. Set this env var in your .env file or build environment.';
   if (import.meta.env.PROD) {
-    // eslint-disable-next-line no-console
     console.error(message);
   } else {
-    // eslint-disable-next-line no-console
-    console.warn(message);
+    logger.warn(message);
   }
 }
 
@@ -38,7 +37,7 @@ const EDGE_FUNCTIONS_URL = import.meta.env.VITE_EDGE_FUNCTIONS_URL || `${RESOLVE
 
 // Log fallback usage in development
 if (import.meta.env.DEV && !SUPABASE_URL) {
-  console.warn(
+  logger.warn(
     '[Brikly] Using default Supabase URL (api.brikly.net). ' +
     'Set VITE_SUPABASE_URL to override.'
   );
@@ -139,7 +138,7 @@ export const getSupabaseConfig = () => ({
 // Log configuration in development
 if (import.meta.env.DEV) {
   const config = getSupabaseConfig();
-  console.log('Supabase Configuration:', {
+  logger.debug('Supabase Configuration:', {
     mainApiUrl: config.mainApiUrl,
     edgeFunctionsUrl: config.edgeFunctionsUrl,
     isSelfHosted: config.isSelfHosted,

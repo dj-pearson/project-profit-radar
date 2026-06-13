@@ -164,7 +164,7 @@ const AIModelManager = () => {
       }
       setEnvConfigs(data || []);
     } catch (error) {
-      console.log('Error loading env configs:', error);
+      logger.debug('Error loading env configs:', error);
     }
   };
 

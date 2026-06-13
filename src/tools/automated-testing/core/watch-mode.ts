@@ -10,6 +10,7 @@ import * as path from 'path';
 import type { TestConfig, TestResult, PageTestReport } from '../types';
 import { Logger } from '../utils/logger';
 import { debounce } from '../utils/helpers';
+import { logger } from '@/lib/logger';
 
 // ============================================================================
 // Types
@@ -230,6 +231,7 @@ export class WatchMode {
     this.pendingChanges = [];
 
     if (this.config.clearConsole) {
+      // eslint-disable-next-line no-console -- dev test-watcher clears the terminal
       console.clear();
     }
 
@@ -240,12 +242,12 @@ export class WatchMode {
     if (changes.length > 0 && this.config.showChanges) {
       this.logger.info('Changed files:');
       for (const change of changes.slice(0, 5)) {
-        console.log(`  ${change.type === 'add' ? '+' : '○'} ${path.basename(change.path)}`);
+        logger.debug(`  ${change.type === 'add' ? '+' : '○'} ${path.basename(change.path)}`);
       }
       if (changes.length > 5) {
-        console.log(`  ... and ${changes.length - 5} more`);
+        logger.debug(`  ... and ${changes.length - 5} more`);
       }
-      console.log('');
+      logger.debug('');
     }
 
     try {
@@ -274,7 +276,7 @@ export class WatchMode {
 
       const duration = Date.now() - startTime;
 
-      console.log('');
+      logger.debug('');
       if (failed === 0) {
         this.logger.success(`All ${passed} tests passed (${Math.round(duration / 1000)}s)`);
       } else {
@@ -283,21 +285,21 @@ export class WatchMode {
 
       // Show failed tests
       if (failed > 0) {
-        console.log('');
+        logger.debug('');
         this.logger.warn('Failed tests:');
         for (const report of reports) {
           for (const test of report.tests) {
             if (test.status === 'failed' || test.status === 'error') {
-              console.log(`  ✗ ${test.name}`);
+              logger.debug(`  ✗ ${test.name}`);
               if (test.error?.message) {
-                console.log(`    ${test.error.message}`);
+                logger.debug(`    ${test.error.message}`);
               }
             }
           }
         }
       }
 
-      console.log('');
+      logger.debug('');
       this.printWaiting();
     } catch (error) {
       this.logger.error(`Test run failed: ${(error as Error).message}`);
@@ -341,20 +343,20 @@ export class WatchMode {
    * Print waiting message
    */
   private printWaiting(): void {
-    console.log('Watching for file changes...');
-    console.log('Press Ctrl+C to stop');
+    logger.debug('Watching for file changes...');
+    logger.debug('Press Ctrl+C to stop');
   }
 
   /**
    * Print help
    */
   private printHelp(): void {
-    console.log('');
-    console.log('Watch Mode Commands:');
-    console.log('  Ctrl+C  - Stop watching and exit');
-    console.log('  r       - Re-run all tests');
-    console.log('  q       - Quit');
-    console.log('');
+    logger.debug('');
+    logger.debug('Watch Mode Commands:');
+    logger.debug('  Ctrl+C  - Stop watching and exit');
+    logger.debug('  r       - Re-run all tests');
+    logger.debug('  q       - Quit');
+    logger.debug('');
     this.printWaiting();
 
     // Set up keyboard input
@@ -392,16 +394,16 @@ export class WatchMode {
     const duration = Date.now() - this.session.startTime.getTime();
     const minutes = Math.floor(duration / 60000);
 
-    console.log('');
-    console.log('Watch Mode Summary');
-    console.log('==================');
-    console.log(`Duration: ${minutes} minutes`);
-    console.log(`Changes detected: ${this.session.changesDetected}`);
-    console.log(`Test runs: ${this.session.testRuns}`);
-    console.log(`Total tests: ${this.session.totalTests}`);
-    console.log(`Passed: ${this.session.passed}`);
-    console.log(`Failed: ${this.session.failed}`);
-    console.log('');
+    logger.debug('');
+    logger.debug('Watch Mode Summary');
+    logger.debug('==================');
+    logger.debug(`Duration: ${minutes} minutes`);
+    logger.debug(`Changes detected: ${this.session.changesDetected}`);
+    logger.debug(`Test runs: ${this.session.testRuns}`);
+    logger.debug(`Total tests: ${this.session.totalTests}`);
+    logger.debug(`Passed: ${this.session.passed}`);
+    logger.debug(`Failed: ${this.session.failed}`);
+    logger.debug('');
   }
 
   /**

@@ -33,6 +33,7 @@ import {
   Wrench,
   Calendar,
 } from 'lucide-react';
+import { logger } from '@/lib/logger';
 
 /**
  * Advanced mobile showcase with gesture demos and enhanced navigation
@@ -242,7 +243,7 @@ export default function AdvancedMobileShowcase() {
                 <h4 className="font-semibold mb-2">Long Press Hook</h4>
                 <pre className="text-xs bg-muted p-3 rounded overflow-x-auto">
 {`const { handlers } = useLongPress(
-  () => console.log('Long pressed!'),
+  () => logger.debug('Long pressed!'),
   { threshold: 500 }
 );
 
@@ -266,7 +267,7 @@ export default function AdvancedMobileShowcase() {
                 <h4 className="font-semibold mb-2">Pinch to Zoom</h4>
                 <pre className="text-xs bg-muted p-3 rounded overflow-x-auto">
 {`const { scale, handlers } = usePinchZoom(
-  (s) => console.log(s)
+  (s) => logger.debug(s)
 );
 
 <div {...handlers}

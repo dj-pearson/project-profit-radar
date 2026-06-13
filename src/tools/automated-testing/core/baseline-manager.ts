@@ -9,6 +9,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { Logger } from '../utils/logger';
 import { generateId, formatDuration } from '../utils/helpers';
+import { logger } from '@/lib/logger';
 
 // ============================================================================
 // Types
@@ -554,11 +555,11 @@ export class BaselineManager {
 
   <script>
     function acceptDiff(entryId) {
-      console.log('Accept:', entryId);
+      logger.debug('Accept:', entryId);
       alert('Run: npx ts-node src/tools/automated-testing/cli.ts baseline accept ' + entryId);
     }
     function rejectDiff(entryId) {
-      console.log('Reject:', entryId);
+      logger.debug('Reject:', entryId);
       alert('Run: npx ts-node src/tools/automated-testing/cli.ts baseline reject ' + entryId);
     }
   </script>
@@ -596,10 +597,10 @@ export const baselineCommands = {
     for (const entry of baselines) {
       const status = entry.approved ? '✓' : '○';
       const age = Math.round((Date.now() - entry.createdAt.getTime()) / (1000 * 60 * 60 * 24));
-      console.log(`  ${status} ${entry.url}`);
-      console.log(`    Viewport: ${entry.viewport.width}x${entry.viewport.height}`);
-      console.log(`    Age: ${age} days`);
-      console.log('');
+      logger.debug(`  ${status} ${entry.url}`);
+      logger.debug(`    Viewport: ${entry.viewport.width}x${entry.viewport.height}`);
+      logger.debug(`    Age: ${age} days`);
+      logger.debug('');
     }
   },
 
@@ -619,16 +620,16 @@ export const baselineCommands = {
     logger.warn(`${pending.length} pending diffs:\n`);
 
     for (const diff of pending) {
-      console.log(`  ◌ ${diff.url}`);
-      console.log(`    Difference: ${diff.diffPercentage.toFixed(2)}%`);
-      console.log(`    ID: ${diff.entryId}`);
-      console.log('');
+      logger.debug(`  ◌ ${diff.url}`);
+      logger.debug(`    Difference: ${diff.diffPercentage.toFixed(2)}%`);
+      logger.debug(`    ID: ${diff.entryId}`);
+      logger.debug('');
     }
 
-    console.log('Commands:');
-    console.log('  Accept: baseline accept <id>');
-    console.log('  Reject: baseline reject <id>');
-    console.log('  Accept All: baseline accept-all');
+    logger.debug('Commands:');
+    logger.debug('  Accept: baseline accept <id>');
+    logger.debug('  Reject: baseline reject <id>');
+    logger.debug('  Accept All: baseline accept-all');
   },
 
   /**
@@ -669,7 +670,7 @@ export const baselineCommands = {
   review: (manager: BaselineManager): void => {
     manager.loadPendingDiffs();
     const reviewPath = manager.generateReviewPage();
-    console.log(`\nOpen in browser: file://${path.resolve(reviewPath)}`);
+    logger.debug(`\nOpen in browser: file://${path.resolve(reviewPath)}`);
   },
 
   /**

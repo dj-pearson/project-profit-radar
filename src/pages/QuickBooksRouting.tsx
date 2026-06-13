@@ -41,6 +41,7 @@ import {
   Edit,
   Trash2
 } from 'lucide-react';
+import { logger } from '@/lib/logger';
 
 interface RoutingRule {
   id: string;
@@ -147,7 +148,7 @@ const QuickBooksRouting = () => {
         .order('priority', { ascending: true });
 
       if (error) {
-        console.warn('quickbooks_routing_rules not available yet');
+        logger.warn('quickbooks_routing_rules not available yet');
         return [];
       }
       return ((data as unknown) as RoutingRule[]) || [];
@@ -170,7 +171,7 @@ const QuickBooksRouting = () => {
         .order('transaction_date', { ascending: false });
 
       if (error) {
-        console.warn('quickbooks_unrouted_transactions not available yet');
+        logger.warn('quickbooks_unrouted_transactions not available yet');
         return [];
       }
 

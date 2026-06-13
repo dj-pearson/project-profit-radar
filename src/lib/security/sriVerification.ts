@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 /**
  * Subresource Integrity (SRI) Verification Utilities
  *
@@ -58,7 +59,7 @@ function parseSriHash(sriHash: string): { algorithm: SriAlgorithm; digest: strin
  *
  * @example
  * ```ts
- * const hash = await computeSriHash('console.log("hello");');
+ * const hash = await computeSriHash('logger.debug("hello");');
  * // "sha384-..."
  * ```
  */

@@ -9,6 +9,7 @@ import {
   type GeofenceLocation,
   type GeofenceBoundary
 } from '@/services/geofencingService';
+import { logger } from '@/lib/logger';
 
 export interface UseGeofencingOptions {
   autoStart?: boolean;
@@ -89,7 +90,7 @@ export const useGeofencing = (options: UseGeofencingOptions = {}): UseGeofencing
         });
       } catch (err) {
         // Permissions API not fully supported
-        console.warn('Permissions API not available');
+        logger.warn('Permissions API not available');
       }
     }
   };

@@ -20,6 +20,7 @@ import capacitorBiometricService, {
   BiometricAuthResult,
   StoredCredentials,
 } from '@/services/CapacitorBiometricService';
+import { logger } from '@/lib/logger';
 
 // Re-export types for consumers
 export type { BiometricCapabilities, BiometricType, BiometricAuthResult, StoredCredentials };
@@ -162,7 +163,7 @@ export function useUnifiedBiometric(): UseUnifiedBiometricReturn {
             environment: 'expo',
           }));
         } catch (error) {
-          console.warn('Expo biometric service not available:', error);
+          logger.warn('Expo biometric service not available:', error);
           setState(prev => ({
             ...prev,
             isLoading: false,

@@ -28,6 +28,7 @@ import {
   Plus,
   Minus
 } from 'lucide-react';
+import { logger } from '@/lib/logger';
 
 interface KeywordData {
   keyword: string;
@@ -180,7 +181,7 @@ const KeywordManager = () => {
           .delete()
           .eq('company_id', userProfile.company_id);
 
-        if (deleteError) console.warn('Delete warning:', deleteError);
+        if (deleteError) logger.warn('Delete warning:', deleteError);
       }
 
       // Insert new keyword data in batches

@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 /**
  * Consent state management.
  *
@@ -281,7 +282,7 @@ const writeConsentAudit = (record: PersistedConsent): void => {
       // for the user's session; privacy team can rebuild the audit from
       // server logs if the ledger insert fails systemically.
       if (typeof console !== 'undefined') {
-        console.debug('[consent] audit write skipped', err);
+        logger.debug('[consent] audit write skipped', err);
       }
     }
   })();

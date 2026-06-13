@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 /**
  * Image Optimization Utilities
  * Provides tools for responsive images, lazy loading, and format optimization
@@ -193,7 +194,7 @@ export const monitorImagePerformance = (): void => {
           const size = resourceEntry.transferSize;
 
           if (duration > 1000 || size > 100 * 1024) {
-            console.warn('[Image Performance]', {
+            logger.warn('[Image Performance]', {
               url: resourceEntry.name,
               duration: `${duration.toFixed(2)}ms`,
               size: `${(size / 1024).toFixed(2)}KB`,

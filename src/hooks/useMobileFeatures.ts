@@ -8,6 +8,7 @@ import { LocalNotifications } from '@capacitor/local-notifications';
 import { Network } from '@capacitor/network';
 import { Capacitor } from '@capacitor/core';
 import { offlineSync } from '@/lib/offline-sync';
+import { logger } from '@/lib/logger';
 
 export interface MobileFeatures {
   // Platform detection
@@ -81,7 +82,7 @@ export function useMobileFeatures(): MobileFeatures {
   const takePhoto = async (): Promise<string | null> => {
     try {
       if (!isNativePlatform) {
-        console.warn('Camera not available on web platform');
+        logger.warn('Camera not available on web platform');
         return null;
       }
 
@@ -103,7 +104,7 @@ export function useMobileFeatures(): MobileFeatures {
   const selectPhoto = async (): Promise<string | null> => {
     try {
       if (!isNativePlatform) {
-        console.warn('Photo picker not available on web platform');
+        logger.warn('Photo picker not available on web platform');
         return null;
       }
 
@@ -176,7 +177,7 @@ export function useMobileFeatures(): MobileFeatures {
   }): Promise<void> => {
     try {
       if (!isNativePlatform) {
-        console.warn('Local notifications not available on web platform');
+        logger.warn('Local notifications not available on web platform');
         return;
       }
 

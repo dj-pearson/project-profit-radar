@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 /**
  * Geofencing Service
  * Handles GPS location tracking, geofence verification, and distance calculations
@@ -59,7 +60,7 @@ class GeofencingService {
         return result.state === 'granted' || result.state === 'prompt';
       } catch (error) {
         // Permissions API might not be fully supported
-        console.warn('Permissions API not fully supported:', error);
+        logger.warn('Permissions API not fully supported:', error);
         return true; // Assume available and let the actual request handle it
       }
     }

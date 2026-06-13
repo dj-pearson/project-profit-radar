@@ -48,6 +48,7 @@ import {
   LineChart,
   Line
 } from 'recharts';
+import { logger } from '@/lib/logger';
 
 // Interfaces
 interface SEOConfig {
@@ -286,7 +287,7 @@ const UnifiedSEODashboard = () => {
       });
 
       if (fileError) {
-        console.warn('File-based sitemap generation failed:', fileError);
+        logger.warn('File-based sitemap generation failed:', fileError);
       }
 
       // Update robots.txt to include sitemap reference if needed

@@ -16,6 +16,8 @@ export const initSentry = () => {
   // Only initialize if DSN is provided
   if (!dsn) {
     if (import.meta.env.PROD) {
+      // Use console.warn directly (not the logger, which suppresses warn in
+      // production) so a missing DSN is visible in deploy/runtime logs.
       // eslint-disable-next-line no-console
       console.warn(
         '[Sentry] VITE_SENTRY_DSN not set — error tracking is disabled in production.'

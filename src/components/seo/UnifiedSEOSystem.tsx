@@ -3,6 +3,7 @@ import { Helmet } from 'react-helmet-async';
 import { useLocation } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { BRIKLY_LOGO_URL } from '@/lib/utils';
+import { logger } from '@/lib/logger';
 
 export interface UnifiedSEOProps {
   // Allow manual override (existing pattern)
@@ -78,7 +79,7 @@ export const UnifiedSEOSystem: React.FC<UnifiedSEOProps> = ({
           .maybeSingle();
 
         if (metaError && metaError.code !== 'PGRST116') {
-          console.warn('SEO meta fetch warning:', metaError.message);
+          logger.warn('SEO meta fetch warning:', metaError.message);
         }
 
         if (existingConfig) {

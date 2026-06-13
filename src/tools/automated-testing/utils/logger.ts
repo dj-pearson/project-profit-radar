@@ -6,6 +6,7 @@
 
 import * as fs from 'fs';
 import * as path from 'path';
+import { logger } from '@/lib/logger';
 
 // ============================================================================
 // Types
@@ -170,7 +171,7 @@ export class Logger {
     this.entries.push(entry);
 
     const formatted = this.formatMessage(entry);
-    console.log(formatted);
+    logger.debug(formatted);
 
     if (this.fileStream) {
       // Write to file without colors
@@ -207,17 +208,17 @@ export class Logger {
    */
   section(title: string): void {
     const line = '═'.repeat(60);
-    console.log('');
+    logger.debug('');
     if (this.config.colors) {
-      console.log(`${COLORS.bold}${COLORS.info}${line}${COLORS.reset}`);
-      console.log(`${COLORS.bold}${COLORS.info}  ${title}${COLORS.reset}`);
-      console.log(`${COLORS.bold}${COLORS.info}${line}${COLORS.reset}`);
+      logger.debug(`${COLORS.bold}${COLORS.info}${line}${COLORS.reset}`);
+      logger.debug(`${COLORS.bold}${COLORS.info}  ${title}${COLORS.reset}`);
+      logger.debug(`${COLORS.bold}${COLORS.info}${line}${COLORS.reset}`);
     } else {
-      console.log(line);
-      console.log(`  ${title}`);
-      console.log(line);
+      logger.debug(line);
+      logger.debug(`  ${title}`);
+      logger.debug(line);
     }
-    console.log('');
+    logger.debug('');
   }
 
   /**
@@ -225,15 +226,15 @@ export class Logger {
    */
   subsection(title: string): void {
     const line = '─'.repeat(40);
-    console.log('');
+    logger.debug('');
     if (this.config.colors) {
-      console.log(`${COLORS.dim}${line}${COLORS.reset}`);
-      console.log(`${COLORS.bold}  ${title}${COLORS.reset}`);
-      console.log(`${COLORS.dim}${line}${COLORS.reset}`);
+      logger.debug(`${COLORS.dim}${line}${COLORS.reset}`);
+      logger.debug(`${COLORS.bold}  ${title}${COLORS.reset}`);
+      logger.debug(`${COLORS.dim}${line}${COLORS.reset}`);
     } else {
-      console.log(line);
-      console.log(`  ${title}`);
-      console.log(line);
+      logger.debug(line);
+      logger.debug(`  ${title}`);
+      logger.debug(line);
     }
   }
 
@@ -255,7 +256,7 @@ export class Logger {
     }
 
     if (current === total) {
-      console.log('');
+      logger.debug('');
     }
   }
 
@@ -274,15 +275,15 @@ export class Logger {
 
     const separator = widths.map((w) => '─'.repeat(w)).join('─┼─');
 
-    console.log('');
+    logger.debug('');
     if (this.config.colors) {
-      console.log(`${COLORS.bold}${formatRow(headers)}${COLORS.reset}`);
+      logger.debug(`${COLORS.bold}${formatRow(headers)}${COLORS.reset}`);
     } else {
-      console.log(formatRow(headers));
+      logger.debug(formatRow(headers));
     }
-    console.log(separator);
-    rows.forEach((row) => console.log(formatRow(row)));
-    console.log('');
+    logger.debug(separator);
+    rows.forEach((row) => logger.debug(formatRow(row)));
+    logger.debug('');
   }
 
   /**
@@ -291,11 +292,11 @@ export class Logger {
   summary(title: string, stats: Record<string, number | string>): void {
     const maxKeyLen = Math.max(...Object.keys(stats).map((k) => k.length));
 
-    console.log('');
+    logger.debug('');
     if (this.config.colors) {
-      console.log(`${COLORS.bold}╔${'═'.repeat(maxKeyLen + 20)}╗${COLORS.reset}`);
-      console.log(`${COLORS.bold}║  ${title.padEnd(maxKeyLen + 17)}║${COLORS.reset}`);
-      console.log(`${COLORS.bold}╠${'═'.repeat(maxKeyLen + 20)}╣${COLORS.reset}`);
+      logger.debug(`${COLORS.bold}╔${'═'.repeat(maxKeyLen + 20)}╗${COLORS.reset}`);
+      logger.debug(`${COLORS.bold}║  ${title.padEnd(maxKeyLen + 17)}║${COLORS.reset}`);
+      logger.debug(`${COLORS.bold}╠${'═'.repeat(maxKeyLen + 20)}╣${COLORS.reset}`);
 
       Object.entries(stats).forEach(([key, value]) => {
         const valueStr = String(value);
@@ -305,24 +306,24 @@ export class Logger {
               ? COLORS.success
               : COLORS.dim
             : COLORS.reset;
-        console.log(
+        logger.debug(
           `${COLORS.bold}║  ${COLORS.reset}${key.padEnd(maxKeyLen)}: ${color}${valueStr.padStart(15)}${COLORS.reset}${COLORS.bold} ║${COLORS.reset}`
         );
       });
 
-      console.log(`${COLORS.bold}╚${'═'.repeat(maxKeyLen + 20)}╝${COLORS.reset}`);
+      logger.debug(`${COLORS.bold}╚${'═'.repeat(maxKeyLen + 20)}╝${COLORS.reset}`);
     } else {
-      console.log(`╔${'═'.repeat(maxKeyLen + 20)}╗`);
-      console.log(`║  ${title.padEnd(maxKeyLen + 17)}║`);
-      console.log(`╠${'═'.repeat(maxKeyLen + 20)}╣`);
+      logger.debug(`╔${'═'.repeat(maxKeyLen + 20)}╗`);
+      logger.debug(`║  ${title.padEnd(maxKeyLen + 17)}║`);
+      logger.debug(`╠${'═'.repeat(maxKeyLen + 20)}╣`);
 
       Object.entries(stats).forEach(([key, value]) => {
-        console.log(`║  ${key.padEnd(maxKeyLen)}: ${String(value).padStart(15)} ║`);
+        logger.debug(`║  ${key.padEnd(maxKeyLen)}: ${String(value).padStart(15)} ║`);
       });
 
-      console.log(`╚${'═'.repeat(maxKeyLen + 20)}╝`);
+      logger.debug(`╚${'═'.repeat(maxKeyLen + 20)}╝`);
     }
-    console.log('');
+    logger.debug('');
   }
 
   /**

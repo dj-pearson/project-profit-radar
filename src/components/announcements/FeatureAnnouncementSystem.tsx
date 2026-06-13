@@ -28,6 +28,7 @@ import {
   Bell,
   X
 } from 'lucide-react';
+import { logger } from '@/lib/logger';
 
 interface Announcement {
   id: string;
@@ -141,7 +142,7 @@ const FeatureAnnouncementSystem = () => {
         .eq('user_id', userProfile.id);
 
       if (error) {
-        console.warn('user_announcements table not available, proceeding without per-user dismissals');
+        logger.warn('user_announcements table not available, proceeding without per-user dismissals');
         setUserAnnouncements([]);
       } else {
         setUserAnnouncements((data as unknown as UserAnnouncement[]) || []);

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { logger } from '@/lib/logger';
 
 interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<void>;
@@ -47,7 +48,7 @@ export function useInstallPrompt() {
 
   const promptInstall = async () => {
     if (!deferredPrompt) {
-      console.warn('Install prompt not available');
+      logger.warn('Install prompt not available');
       return false;
     }
 

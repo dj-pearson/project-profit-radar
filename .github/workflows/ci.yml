@@ -66,6 +66,14 @@ jobs:
         env:
           PUPPETEER_SKIP_DOWNLOAD: true
       - run: npm run build
+        env:
+          # When these secrets are configured, the build emits hidden
+          # sourcemaps and uploads them to Sentry, then deletes the .map files
+          # from dist so they are not served publicly. Unset => plugin no-ops.
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+          SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
+          SENTRY_PROJECT: ${{ secrets.SENTRY_PROJECT }}
+          VITE_APP_VERSION: ${{ github.sha }}
       - uses: actions/upload-artifact@v4
         with:
           name: build-output

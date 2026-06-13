@@ -38,7 +38,7 @@ interface UseGPSLocationReturn {
  * const handleGetLocation = async () => {
  *   const result = await getCurrentLocation();
  *   if (result.coordinates) {
- *     console.log(`Lat: ${result.coordinates.latitude}, Lng: ${result.coordinates.longitude}`);
+ *     logger.debug(`Lat: ${result.coordinates.latitude}, Lng: ${result.coordinates.longitude}`);
  *   }
  * };
  */

@@ -1,4 +1,5 @@
 import React, { useEffect } from 'react';
+import { logger } from '@/lib/logger';
 
 interface AdvancedCoreWebVitalsProps {
   enableReporting?: boolean;
@@ -101,7 +102,7 @@ export const AdvancedCoreWebVitals: React.FC<AdvancedCoreWebVitalsProps> = ({
           clsObserver.observe({ entryTypes: ['layout-shift'] });
 
         } catch (error) {
-          console.warn('Core Web Vitals measurement failed:', error);
+          logger.warn('Core Web Vitals measurement failed:', error);
         }
       }
     };

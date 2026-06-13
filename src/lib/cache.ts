@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 /**
  * Intelligent Caching Layer
  * Supports Redis (production) and in-memory (development) caching
@@ -421,5 +422,5 @@ export const cache = new CacheManager();
  *
  * // Stats
  * const stats = cache.getStats();
- * console.log(`Hit rate: ${(stats.hitRate * 100).toFixed(2)}%`);
+ * logger.debug(`Hit rate: ${(stats.hitRate * 100).toFixed(2)}%`);
  */

@@ -4,6 +4,7 @@ import path from "path";
 import { componentTagger } from "lovable-tagger";
 import { visualizer } from 'rollup-plugin-visualizer';
 import { ViteImageOptimizer } from 'vite-plugin-image-optimizer';
+import { sentryVitePlugin } from '@sentry/vite-plugin';
 import { copyFileSync, existsSync, mkdirSync } from 'fs';
 
 // https://vitejs.dev/config/
@@ -44,7 +45,19 @@ export default defineConfig(({ mode }) => ({
           // Non-fatal: service worker copy failed
         }
       }
-    }
+    },
+    // Upload sourcemaps to Sentry so production stack traces de-minify.
+    // Only active when SENTRY_AUTH_TOKEN is present (CI release build), so
+    // normal/local builds are unaffected. Must be the LAST plugin.
+    mode === "production" && process.env.SENTRY_AUTH_TOKEN && sentryVitePlugin({
+      org: process.env.SENTRY_ORG,
+      project: process.env.SENTRY_PROJECT,
+      authToken: process.env.SENTRY_AUTH_TOKEN,
+      release: { name: process.env.VITE_APP_VERSION || undefined },
+      // We emit hidden sourcemaps via build.sourcemap below; delete them from
+      // the deployed assets after upload so they aren't served publicly.
+      sourcemaps: { filesToDeleteAfterUpload: ['./dist/**/*.map'] },
+    }),
   ].filter(Boolean),
   resolve: {
     alias: {
@@ -107,10 +120,13 @@ export default defineConfig(({ mode }) => ({
     target: "esnext",
     minify: "esbuild",
     // Emit hidden sourcemaps (no //# sourceMappingURL comment in the bundle)
-    // only when explicitly requested, so the Sentry-upload build can de-minify
-    // stack traces without publishing .map files to Cloudflare by default.
-    // Enable in CI with VITE_SOURCEMAP=true alongside the Sentry release upload.
-    sourcemap: process.env.VITE_SOURCEMAP === "true" ? "hidden" : false,
+    // when explicitly requested OR when a Sentry upload is configured, so the
+    // release build can de-minify stack traces. The Sentry plugin deletes the
+    // .map files after upload so they aren't served publicly from Cloudflare.
+    sourcemap:
+      process.env.VITE_SOURCEMAP === "true" || !!process.env.SENTRY_AUTH_TOKEN
+        ? "hidden"
+        : false,
     chunkSizeWarningLimit: 400, // More aggressive warning
     reportCompressedSize: true,
     emptyOutDir: true,

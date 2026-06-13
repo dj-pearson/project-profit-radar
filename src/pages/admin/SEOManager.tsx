@@ -28,6 +28,7 @@ import {
   MousePointer,
   Share2
 } from 'lucide-react';
+import { logger } from '@/lib/logger';
 
 interface SEOConfig {
   id?: string;
@@ -328,7 +329,7 @@ const SEOManager = () => {
       });
 
       if (fileError) {
-        console.warn('File-based sitemap generation failed:', fileError);
+        logger.warn('File-based sitemap generation failed:', fileError);
       }
 
       // Log the generated sitemap for manual copying if needed

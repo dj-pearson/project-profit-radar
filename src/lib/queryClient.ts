@@ -237,7 +237,7 @@ export const devTools = {
   logQueries: () => {
     if (process.env.NODE_ENV === 'development') {
       const queries = queryClient.getQueryCache().getAll();
-      console.table(
+      logger.table(
         queries.map(query => ({
           queryKey: JSON.stringify(query.queryKey),
           state: query.state.status,

@@ -42,6 +42,7 @@ import {
   Wrench,
   CheckCircle2,
 } from "lucide-react";
+import { logger } from '@/lib/logger';
 
 interface ProjectTemplate {
   id: string;
@@ -332,7 +333,7 @@ const ProjectWizard: React.FC<ProjectWizardProps> = ({
           .from("project_phases")
           .insert(phasesData);
 
-        if (phasesError) console.warn("Failed to create phases:", phasesError);
+        if (phasesError) logger.warn("Failed to create phases:", phasesError);
       }
 
       // Create cost codes if template has them
@@ -360,7 +361,7 @@ const ProjectWizard: React.FC<ProjectWizardProps> = ({
             .insert(newCostCodes);
 
           if (costCodesError)
-            console.warn("Failed to create cost codes:", costCodesError);
+            logger.warn("Failed to create cost codes:", costCodesError);
         }
       }
 
