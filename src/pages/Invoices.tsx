@@ -5,7 +5,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Plus, Search, Filter, FileText, DollarSign, Clock, AlertTriangle } from 'lucide-react';
+import { Plus, Search, Filter, FileText, DollarSign, Clock, AlertTriangle, Repeat, TrendingUp } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
@@ -18,6 +19,7 @@ import InvoiceList from '@/components/invoices/InvoiceList';
 import InvoiceStats from '@/components/invoices/InvoiceStats';
 import ProgressBillingManager from '@/components/invoices/ProgressBillingManager';
 import RetentionManager from '@/components/invoices/RetentionManager';
+import RecurringInvoicesTab from '@/components/invoices/RecurringInvoicesTab';
 
 const Invoices: React.FC = () => {
   const [activeTab, setActiveTab] = usePersistedState<string>('invoices-active-tab', 'overview');
@@ -124,16 +126,24 @@ const Invoices: React.FC = () => {
           <h1 className="text-3xl font-bold text-foreground">Invoice Management</h1>
           <p className="text-muted-foreground">Manage invoices, progress billing, and retention</p>
         </div>
-        <Button
-          onClick={() => setShowInvoiceGenerator(true)}
-          className="bg-construction-orange hover:bg-construction-orange/90"
-        >
-          <Plus className="mr-2 h-4 w-4" aria-hidden="true" />
-          Create Invoice
-          <kbd className="ml-2 hidden lg:inline-block px-2 py-0.5 text-xs bg-background/20 rounded border border-background/40" aria-hidden="true">
-            Ctrl+I
-          </kbd>
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" asChild>
+            <Link to="/invoices/aging">
+              <TrendingUp className="mr-2 h-4 w-4" aria-hidden="true" />
+              A/R Aging Report
+            </Link>
+          </Button>
+          <Button
+            onClick={() => setShowInvoiceGenerator(true)}
+            className="bg-construction-orange hover:bg-construction-orange/90"
+          >
+            <Plus className="mr-2 h-4 w-4" aria-hidden="true" />
+            Create Invoice
+            <kbd className="ml-2 hidden lg:inline-block px-2 py-0.5 text-xs bg-background/20 rounded border border-background/40" aria-hidden="true">
+              Ctrl+I
+            </kbd>
+          </Button>
+        </div>
       </div>
 
       {/* Stats Overview */}
@@ -141,10 +151,14 @@ const Invoices: React.FC = () => {
 
       {/* Main Content Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6" aria-label="Invoice management sections">
-        <TabsList className="grid w-full grid-cols-4" aria-label="Invoice categories">
+        <TabsList className="grid w-full grid-cols-5" aria-label="Invoice categories">
           <TabsTrigger value="overview" className="flex items-center gap-2">
             <FileText className="h-4 w-4" aria-hidden="true" />
             Overview
+          </TabsTrigger>
+          <TabsTrigger value="recurring" className="flex items-center gap-2">
+            <Repeat className="h-4 w-4" aria-hidden="true" />
+            Recurring
           </TabsTrigger>
           <TabsTrigger value="progress" className="flex items-center gap-2">
             <DollarSign className="h-4 w-4" aria-hidden="true" />
@@ -206,6 +220,10 @@ const Invoices: React.FC = () => {
             loading={loading}
             onInvoiceUpdate={loadInvoices}
           />
+        </TabsContent>
+
+        <TabsContent value="recurring" className="space-y-4">
+          <RecurringInvoicesTab />
         </TabsContent>
 
         <TabsContent value="progress" className="space-y-4">

@@ -873,3 +873,90 @@ Remaining (fresh breakdown): TS2345=522, TS6133=512 (mostly unused locals now), 
 - DocumentManagement.tsx (client-side): AccessibleTable onSort + selectable; bulk toolbar Download (storage loop), Move to Folder (category_id), Tag (tags[] append), Delete (AlertDialog confirm -> storage remove + delete). Added Project filter; file-type/category/search existed.
 - Schema: additive migration 20260613130000_add_documents_tags.sql (tags text[] + GIN index); added tags to documents Row/Insert/Update in types.ts.
 - vite build green. Completes the sort/bulk list set (US-088/089/090/091).
+
+---
+
+## 2026-06-23 - US-069: A/R aging report - PASS
+
+- New route `/invoices/aging` (LazyARAgingReport in lazyRoutes + financialRoutes; routeSecurity entry, `invoices.read`). Discoverable via a new "A/R Aging Report" button in the Invoices page header.
+- Pure logic `src/lib/reports/agingReport.ts`: `buildAgingRows` (filters to outstanding invoices, excludes paid/void/draft/cancelled, computes days past due + bucket), `bucketForDays` (Current 0-30 / 31-60 / 61-90 / 90+), `outstandingBalance` (amount_due, else total - paid, floored at 0), `summarizeBuckets`, `totalOutstanding`. 17 passing tests.
+- `ARAgingReport.tsx`: 4 clickable bucket summary cards + a Total card (drill-down filter), Recharts bar chart of the aging distribution, drill-down table (invoice #, client, due date, days outstanding, bucket badge, outstanding). CSV export via new `src/lib/exportCsv.ts`; PDF via dynamic-imported jspdf + jspdf-autotable.
+- Shared `src/lib/exportCsv.ts` (RFC-4180 quoting, `toCsv`/`downloadCsv`/`exportRowsToCsv`) with 5 tests — reused by US-071.
+- vite build green; Invoices a11y tests still green.
+
+---
+
+## 2026-06-23 - US-071: Time tracking summary reports - PASS
+
+- New route `/time-tracking/reports` (TimeReports in peopleRoutes; routeSecurity `time_entries.read`). Wired into the existing Time Tracking "Reports" tab, which was a "coming soon" placeholder — now an "Open Time Reports" CTA.
+- Pure logic `src/lib/reports/timeReports.ts`: `entryHours` (prefers total_hours, else derives from start/end minus break), `hoursByProject` (with budgeted-vs-actual variance against projects.estimated_hours), `hoursByEmployee` (ISO-week aware, overtime = hours beyond 40 in a single week summed across weeks), `hoursByDayOfWeek`, `isoWeekKey`, `totalHours`. 13 passing tests.
+- `TimeReports.tsx`: date-range + project filters, total-hours/overtime summary, hours-by-project bar (actual vs budgeted), day-of-week bar, budgeted-vs-actual table (variance colored), employee table with overtime badges. CSV + PDF export.
+- Company scoping: fetch company projects, then time_entries for those project ids; employee names resolved from user_profiles. vite build green.
+
+---
+
+## 2026-06-23 - US-068: Recurring invoice generation - PASS
+
+- Migration `supabase/migrations/20260623000000_create_recurring_invoices.sql`: CREATE TABLE `recurring_invoices` (frequency weekly/biweekly/monthly, start/end date, occurrence cap, jsonb line_items, status active/paused/completed, next_run_date) + company-scoped RLS for accounting/PM/admin/office_staff, reusing `get_user_company`/`get_user_role` and the `update_updated_at_column` trigger. Single additive CREATE TABLE + RLS — the "always safe" path per CLAUDE.md. types.ts updated with Row/Insert/Update.
+- Pure logic `src/lib/reports/recurringInvoices.ts`: `computeNextRunDate` (walks forward by frequency, honors end_date / occurrence cap / paused), `remainingOccurrences`, `remainingLabel`, `templateTotal`. 12 passing tests.
+- New "Recurring" tab on the Invoices page (`RecurringInvoicesTab.tsx`): list with status, next-invoice date, generated count, remaining occurrences, template amount; create + edit dialog (frequency, start/end, occurrence cap, template line item, notes) with a live "next invoice" preview; pause/resume toggle; delete confirm. Generation runner itself is out of scope (server cron/edge fn) — this is the config + UI state surface.
+- Note: time_entries has no company_id, so the time report scopes by project ownership; recurring_invoices stores company_id directly. vite build green.
+
+---
+
+---
+
+## 2026-06-23 (cont.) - US-073: CRM pipeline kanban board view - PASS
+
+- New Kanban tab on the CRM/Leads page: `CRMLeads.tsx` now wraps the existing leads list in `Tabs` (List | Kanban), both driven by the same `filteredLeads` so search/status/source/priority filters apply to both views.
+- `src/components/crm/LeadsKanbanBoard.tsx` (@hello-pangea/dnd): one column per pipeline stage — New Lead, Contacted, Qualified, Proposal Sent, Negotiation, Won, Lost — keyed to the existing `leads.status` taxonomy so a drag writes back a compatible status value. Cards show name, company, estimated value, and days in stage; column headers show count + total estimated value; cards are color-coded by value tier (left border). Optimistic move with rollback if the update fails; persists via the page's `updateLead({ status })`.
+- Pure logic `src/lib/crm/leadsKanban.ts`: `groupLeadsByStage`, `normalizeStage` (unknown/empty -> new, so no lead is hidden), `daysInStage`, `leadDisplayName`, `valueTier`. 10 passing tests.
+- Note: an existing `PipelineKanban` exists but loads its own data and depends on a `pipeline_stages` config; the new board is purpose-built off the page's filtered leads to match the AC exactly. vite build green.
+
+---
+
+## 2026-06-23 (cont.) - US-074: Daily report templates + quick-fill - PASS
+
+- `DailyReports.tsx` create dialog gains a quick-fill row above Work Performed: a template picker and a "Copy from Yesterday" button.
+- Template picker lists `daily_report_templates` (company-scoped, active) and applies `default_crew_count` / `default_weather_conditions` / `default_safety_notes` via `applyTemplateDefaults` (only sets fields the template specifies, preserving other entries). When no templates exist, the control links to `/daily-report-templates`.
+- "Copy from Yesterday" fetches the most recent *earlier* daily report for the selected project (`date < today`, newest first) and pre-fills via `buildReportFromPrevious` — carries crew/weather/materials/equipment + prior work description, intentionally clears day-specific delays/safety so they don't silently repeat.
+- Template management (save/edit/rename/delete; weather/crew/equipment/work sections) already exists via `DailyReportTemplateManager` at `/daily-report-templates`.
+- Pure logic `src/lib/dailyReports/templateFill.ts` + 5 passing tests. vite build green.
+
+---
+
+## 2026-06-23 (cont.) - US-097: Change order impact on project financials - PASS
+
+- `src/components/financial/ChangeOrderImpactSummary.tsx` rendered in the project financials section (`ProjectContent.tsx`, `originalContract = project.budget`). Shows original contract, approved changes (net, with additions vs deductions split), current contract, and pending changes (with count). Recharts `stepAfter` line chart plots the contract amount over time (original + one point per approved CO in approval-date order). Header link drills down to `/change-orders`.
+- Pure logic `src/lib/projects/changeOrderImpact.ts`: `summarizeChangeOrders`, `buildContractTimeline`, `isApproved` (client_approved OR status approved/completed), `isPending` (excludes rejected/cancelled/void/declined), `approvalDate`. 5 passing tests.
+- vite build green. (Pre-existing unrelated failure noted: src/lib/security xssPayloads anchor-href test — DOMPurify behavior, untouched.)
+
+---
+
+---
+
+## 2026-06-23 (cont.) - US-101: Estimate-to-invoice conversion - PASS
+
+- Migration `20260623010000_add_invoices_estimate_id.sql`: additive nullable `estimate_id` FK on invoices (+ partial index). types.ts Row/Insert/Update updated. The "always safe" additive path.
+- `ConvertToInvoiceDialog.tsx` wired into `EstimatesTable` actions ("Convert to Invoice" on accepted/sent/viewed estimates): loads estimate + estimate_line_items, renders each line with an include checkbox and an editable bill amount, a progress-billing % input, and a live subtotal. Shows an "already billed" panel listing invoices linked to the estimate with running % billed (drives progress billing). Creates the invoice via the existing `generate-invoice` edge function, then links it back (`estimate_id` + `reference_number`).
+- Pure logic `src/lib/estimates/estimateToInvoice.ts`: `buildInvoiceLineItems` (selection + percentage + per-line overrides, preserves quantity), `conversionSubtotal`, `summarizeBilled`, `lineBaseTotal`. 8 passing tests.
+- vite build green.
+
+---
+
+## 2026-06-23 (cont.) - US-102: Drag-and-drop task board - PASS
+
+- `TaskBoard.tsx` (@hello-pangea/dnd) replaces the static Kanban grid in `TaskManager`'s "Kanban Board" tab (sits alongside List + Due Date views). Four columns — To Do / In Progress / Review / Done — with counts; cards show title, assignee avatar (initials), priority badge, and due date. Dragging persists `tasks.status` (Done writes the existing `completed` value), optimistic with rollback on failure. Quick-add input at the bottom of each column (mirrors CreateTaskDialog's insert; requires a project, otherwise toasts).
+- Pure logic `src/lib/tasks/taskBoard.ts`: `TASK_STAGES`, `normalizeTaskStage` (unknown/on_hold -> todo), `statusValueForStage`, `groupTasksByStage`, `assigneeInitials`. 8 passing tests. Stage keys map onto the existing status taxonomy so writes stay compatible.
+- vite build green.
+
+---
+
+## 2026-06-23 (cont.) - US-105: Material cost tracking + purchase orders - PASS
+
+- New "Materials" (procurement) tab on the project detail page — registered in `projectTabs` (ProjectDetail.tsx) and `contentMap` (ProjectContent.tsx) as `procurement`, kept separate from the pre-existing inventory `materials` tab/component.
+- `ProjectProcurement.tsx`: PO list filterable by status + vendor and sortable by date/status/total; committed-vs-spent summary cards; a "Material Cost by Cost Code" table — budgeted (project_budgets.material_budget, falls back to budgeted_amount) vs committed (approved/sent/ordered POs) vs spent (received POs) vs remaining. Committed/spent are computed from `purchase_order_line_items.total_price` attributed to each line's cost code and classified by the parent PO status (purchase_orders has no PO-level cost_code_id). "New Purchase Order" -> `/purchase-orders/new?project=<id>`.
+- Wired up the previously-broken PO creation: `PurchaseOrderForm` was imported nowhere and `/purchase-orders/new` was navigated to but never routed. Registered `/purchase-orders/new` and `/purchase-orders/:id/edit` (financialRoutes) and taught the form to honor a `?project=` query param. (No routeSecurity entry needed — `/purchase-orders` itself relies on RouteGuard.)
+- Pure logic `src/lib/projects/materialCostSummary.ts` (`summarizeMaterialCosts`, `isCommittedStatus`, `isReceivedStatus`) + 5 tests. vite build green.
+
+---

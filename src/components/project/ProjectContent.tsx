@@ -6,12 +6,14 @@ import { Progress } from '@/components/ui/progress';
 import { ProjectWithRelations } from '@/services/projectService';
 import ProjectEquipmentView from '@/components/equipment/ProjectEquipmentView';
 import { ProjectFinancialDashboard } from '@/components/financial/ProjectFinancialDashboard';
+import { ChangeOrderImpactSummary } from '@/components/financial/ChangeOrderImpactSummary';
 import { ProjectDailyReports } from '@/components/project/tabs/ProjectDailyReports';
 import { ProjectEstimates } from '@/components/project/tabs/ProjectEstimates';
 import { ProjectRFIs } from '@/components/project/tabs/ProjectRFIs';
 import { ProjectSubmittals } from '@/components/project/tabs/ProjectSubmittals';
 import { ProjectChangeOrders } from '@/components/project/tabs/ProjectChangeOrders';
 import { ProjectMaterials } from '@/components/project/tabs/ProjectMaterials';
+import { ProjectProcurement } from '@/components/project/tabs/ProjectProcurement';
 import { ProjectJobCosting } from '@/components/project/tabs/ProjectJobCosting';
 import { ProjectContacts } from '@/components/project/tabs/ProjectContacts';
 import { ProjectPermits } from '@/components/project/tabs/ProjectPermits';
@@ -167,6 +169,9 @@ export const ProjectContent: React.FC<ProjectContentProps> = ({
           <ProjectFinancialDashboard projectId={project.id} />
         </CardContent>
       </Card>
+
+      {/* Change Order Impact on contract (US-097) */}
+      <ChangeOrderImpactSummary projectId={project.id} originalContract={project.budget ?? 0} />
     </div>
   );
 
@@ -258,6 +263,10 @@ export const ProjectContent: React.FC<ProjectContentProps> = ({
 
   const renderMaterials = () => (
     <ProjectMaterials projectId={project.id} onNavigate={onNavigate} />
+  );
+
+  const renderProcurement = () => (
+    <ProjectProcurement projectId={project.id} onNavigate={onNavigate} />
   );
 
   const renderEquipment = () => (
@@ -428,6 +437,7 @@ export const ProjectContent: React.FC<ProjectContentProps> = ({
     tasks: renderTasks,
     dailyreports: renderDailyReports,
     materials: renderMaterials,
+    procurement: renderProcurement,
     equipment: renderEquipment,
     estimates: renderEstimates,
     jobcosting: renderJobCosting,

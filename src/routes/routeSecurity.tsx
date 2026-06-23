@@ -129,6 +129,10 @@ export const routeSecurityConfig: Record<string, RouteSecurityConfig> = {
     permissions: ['invoices.write'],
     allowedRoles: ['root_admin', 'admin', 'project_manager', 'accounting', 'office_staff'],
   },
+  '/invoices/aging': {
+    requireAuth: true,
+    permissions: ['invoices.read'],
+  },
   '/invoices/:id': {
     requireAuth: true,
     permissions: ['invoices.read'],
@@ -179,6 +183,10 @@ export const routeSecurityConfig: Record<string, RouteSecurityConfig> = {
   '/time-tracking/new': {
     requireAuth: true,
     permissions: ['time_entries.write'],
+  },
+  '/time-tracking/reports': {
+    requireAuth: true,
+    permissions: ['time_entries.read'],
   },
   '/timesheets': {
     requireAuth: true,

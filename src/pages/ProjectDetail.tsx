@@ -21,7 +21,7 @@ import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { ArrowLeft, User, Edit, Menu, Home, Building2, DollarSign, Users, Settings, FileText, Calendar, FolderOpen, Receipt, MapPin, Hash } from 'lucide-react';
+import { ArrowLeft, User, Edit, Menu, Home, Building2, DollarSign, Users, Settings, FileText, Calendar, FolderOpen, Receipt, MapPin, Hash, Package } from 'lucide-react';
 import { AccessiblePageWrapper } from "@/components/accessibility/AccessiblePageWrapper";
 import { cn } from '@/lib/utils';
 
@@ -34,6 +34,7 @@ const projectTabs = [
   { id: 'tasks', label: 'Team', icon: Users },
   { id: 'dailyreports', label: 'Daily Reports', icon: FileText },
   { id: 'changeorders', label: 'Change Orders', icon: Receipt },
+  { id: 'procurement', label: 'Materials', icon: Package },
   { id: 'costcodes', label: 'Cost Codes', icon: Hash },
 ];
 

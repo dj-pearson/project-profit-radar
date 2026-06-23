@@ -16043,6 +16043,7 @@ export type Database = {
           current_amount_due: number | null
           discount_amount: number | null
           due_date: string
+          estimate_id: string | null
           id: string
           invoice_date: string | null
           invoice_number: string
@@ -16087,6 +16088,7 @@ export type Database = {
           current_amount_due?: number | null
           discount_amount?: number | null
           due_date: string
+          estimate_id?: string | null
           id?: string
           invoice_date?: string | null
           invoice_number: string
@@ -16131,6 +16133,7 @@ export type Database = {
           current_amount_due?: number | null
           discount_amount?: number | null
           due_date?: string
+          estimate_id?: string | null
           id?: string
           invoice_date?: string | null
           invoice_number?: string
@@ -24284,6 +24287,66 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      recurring_invoices: {
+        Row: {
+          client_name: string | null
+          company_id: string
+          created_at: string
+          created_by: string | null
+          end_date: string | null
+          frequency: string
+          id: string
+          line_items: Json
+          name: string
+          next_run_date: string | null
+          notes: string | null
+          occurrence_limit: number | null
+          occurrences_generated: number
+          project_id: string | null
+          start_date: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          client_name?: string | null
+          company_id: string
+          created_at?: string
+          created_by?: string | null
+          end_date?: string | null
+          frequency?: string
+          id?: string
+          line_items?: Json
+          name: string
+          next_run_date?: string | null
+          notes?: string | null
+          occurrence_limit?: number | null
+          occurrences_generated?: number
+          project_id?: string | null
+          start_date: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          client_name?: string | null
+          company_id?: string
+          created_at?: string
+          created_by?: string | null
+          end_date?: string | null
+          frequency?: string
+          id?: string
+          line_items?: Json
+          name?: string
+          next_run_date?: string | null
+          notes?: string | null
+          occurrence_limit?: number | null
+          occurrences_generated?: number
+          project_id?: string | null
+          start_date?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       referral_codes: {
         Row: {

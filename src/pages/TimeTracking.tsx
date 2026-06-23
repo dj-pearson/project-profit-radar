@@ -4,7 +4,7 @@ import { TimeTrackingDashboard } from '@/components/time-tracking/TimeTrackingDa
 import { QuickTimeEntry } from '@/components/time-tracking/QuickTimeEntry';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
-import { Navigate, useLocation } from 'react-router-dom';
+import { Navigate, useLocation, Link } from 'react-router-dom';
 import { Clock, Plus, BarChart3 } from 'lucide-react';
 import { rememberCurrentRoute } from '@/lib/routeMemory';
 import { AccessiblePageWrapper } from "@/components/accessibility/AccessiblePageWrapper";
@@ -155,9 +155,15 @@ const TimeTracking = () => {
             <div className="text-center py-12">
               <BarChart3 className="h-12 w-12 mx-auto mb-4 text-muted-foreground" aria-hidden="true" />
               <h3 className="text-lg font-medium mb-2">Time Reports</h3>
-              <p className="text-muted-foreground max-w-md mx-auto">
-                Detailed time tracking reports and analytics coming soon
+              <p className="text-muted-foreground max-w-md mx-auto mb-4">
+                Analyze labor hours by project and crew, track overtime, and compare budgeted vs actual hours.
               </p>
+              <Button asChild>
+                <Link to="/time-tracking/reports">
+                  <BarChart3 className="mr-2 h-4 w-4" aria-hidden="true" />
+                  Open Time Reports
+                </Link>
+              </Button>
             </div>
           )}
         </div>
