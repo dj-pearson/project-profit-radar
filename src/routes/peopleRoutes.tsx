@@ -15,6 +15,7 @@ const CrewScheduling = createLazyRoute(() => import('@/pages/CrewScheduling'));
 const CrewCheckin = createLazyRoute(() => import('@/pages/CrewCheckin'));
 const CrewPresence = createLazyRoute(() => import('@/pages/CrewPresence'));
 const Timesheets = createLazyRoute(() => import('@/pages/Timesheets'));
+const TimeReports = createLazyRoute(() => import('@/pages/TimeReports'));
 const Support = createLazyRoute(() => import('@/pages/Support'));
 
 // CRM - Lazy loaded with ErrorBoundary + Suspense
@@ -38,6 +39,7 @@ export const peopleRoutes = (
     <Route path="/crew-checkin" element={<RouteGuard><CrewCheckin /></RouteGuard>} />
     <Route path="/crew-presence" element={<RouteGuard><CrewPresence /></RouteGuard>} />
     <Route path="/time-tracking" element={<RouteGuard><LazyTimeTracking /></RouteGuard>} />
+    <Route path="/time-tracking/reports" element={<RouteGuard><TimeReports /></RouteGuard>} />
     <Route path="/timesheets" element={<RouteGuard><Timesheets /></RouteGuard>} />
     <Route path="/support" element={<RouteGuard><Support /></RouteGuard>} />
     <Route path="/subcontractors" element={<RouteGuard><LazySubcontractors /></RouteGuard>} />

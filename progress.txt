@@ -873,3 +873,33 @@ Remaining (fresh breakdown): TS2345=522, TS6133=512 (mostly unused locals now), 
 - DocumentManagement.tsx (client-side): AccessibleTable onSort + selectable; bulk toolbar Download (storage loop), Move to Folder (category_id), Tag (tags[] append), Delete (AlertDialog confirm -> storage remove + delete). Added Project filter; file-type/category/search existed.
 - Schema: additive migration 20260613130000_add_documents_tags.sql (tags text[] + GIN index); added tags to documents Row/Insert/Update in types.ts.
 - vite build green. Completes the sort/bulk list set (US-088/089/090/091).
+
+---
+
+## 2026-06-23 - US-069: A/R aging report - PASS
+
+- New route `/invoices/aging` (LazyARAgingReport in lazyRoutes + financialRoutes; routeSecurity entry, `invoices.read`). Discoverable via a new "A/R Aging Report" button in the Invoices page header.
+- Pure logic `src/lib/reports/agingReport.ts`: `buildAgingRows` (filters to outstanding invoices, excludes paid/void/draft/cancelled, computes days past due + bucket), `bucketForDays` (Current 0-30 / 31-60 / 61-90 / 90+), `outstandingBalance` (amount_due, else total - paid, floored at 0), `summarizeBuckets`, `totalOutstanding`. 17 passing tests.
+- `ARAgingReport.tsx`: 4 clickable bucket summary cards + a Total card (drill-down filter), Recharts bar chart of the aging distribution, drill-down table (invoice #, client, due date, days outstanding, bucket badge, outstanding). CSV export via new `src/lib/exportCsv.ts`; PDF via dynamic-imported jspdf + jspdf-autotable.
+- Shared `src/lib/exportCsv.ts` (RFC-4180 quoting, `toCsv`/`downloadCsv`/`exportRowsToCsv`) with 5 tests — reused by US-071.
+- vite build green; Invoices a11y tests still green.
+
+---
+
+## 2026-06-23 - US-071: Time tracking summary reports - PASS
+
+- New route `/time-tracking/reports` (TimeReports in peopleRoutes; routeSecurity `time_entries.read`). Wired into the existing Time Tracking "Reports" tab, which was a "coming soon" placeholder — now an "Open Time Reports" CTA.
+- Pure logic `src/lib/reports/timeReports.ts`: `entryHours` (prefers total_hours, else derives from start/end minus break), `hoursByProject` (with budgeted-vs-actual variance against projects.estimated_hours), `hoursByEmployee` (ISO-week aware, overtime = hours beyond 40 in a single week summed across weeks), `hoursByDayOfWeek`, `isoWeekKey`, `totalHours`. 13 passing tests.
+- `TimeReports.tsx`: date-range + project filters, total-hours/overtime summary, hours-by-project bar (actual vs budgeted), day-of-week bar, budgeted-vs-actual table (variance colored), employee table with overtime badges. CSV + PDF export.
+- Company scoping: fetch company projects, then time_entries for those project ids; employee names resolved from user_profiles. vite build green.
+
+---
+
+## 2026-06-23 - US-068: Recurring invoice generation - PASS
+
+- Migration `supabase/migrations/20260623000000_create_recurring_invoices.sql`: CREATE TABLE `recurring_invoices` (frequency weekly/biweekly/monthly, start/end date, occurrence cap, jsonb line_items, status active/paused/completed, next_run_date) + company-scoped RLS for accounting/PM/admin/office_staff, reusing `get_user_company`/`get_user_role` and the `update_updated_at_column` trigger. Single additive CREATE TABLE + RLS — the "always safe" path per CLAUDE.md. types.ts updated with Row/Insert/Update.
+- Pure logic `src/lib/reports/recurringInvoices.ts`: `computeNextRunDate` (walks forward by frequency, honors end_date / occurrence cap / paused), `remainingOccurrences`, `remainingLabel`, `templateTotal`. 12 passing tests.
+- New "Recurring" tab on the Invoices page (`RecurringInvoicesTab.tsx`): list with status, next-invoice date, generated count, remaining occurrences, template amount; create + edit dialog (frequency, start/end, occurrence cap, template line item, notes) with a live "next invoice" preview; pause/resume toggle; delete confirm. Generation runner itself is out of scope (server cron/edge fn) — this is the config + UI state surface.
+- Note: time_entries has no company_id, so the time report scopes by project ownership; recurring_invoices stores company_id directly. vite build green.
+
+---

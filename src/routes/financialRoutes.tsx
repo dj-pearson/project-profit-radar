@@ -11,6 +11,7 @@ import {
   LazyFinancialDashboard,
   LazyEstimatesHub,
   LazyInvoices,
+  LazyARAgingReport,
   LazyExpenses,
   LazyReports,
   LazyPurchaseOrders,
@@ -72,6 +73,7 @@ export const financialRoutes = (
     {/* Estimates & Invoices */}
     <Route path="/estimates" element={<RouteGuard><LazyEstimatesHub /></RouteGuard>} />
     <Route path="/invoices" element={<RouteGuard><LazyInvoices /></RouteGuard>} />
+    <Route path="/invoices/aging" element={<RouteGuard><LazyARAgingReport /></RouteGuard>} />
     <Route path="/expenses" element={<RouteGuard><LazyExpenses /></RouteGuard>} />
 
     {/* Reports */}

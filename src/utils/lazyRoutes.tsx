@@ -75,6 +75,7 @@ export const LazyVendors = createLazyRoute(() => import('@/pages/Vendors'));
 export const LazyQuickBooksRouting = createLazyRoute(() => import('@/pages/QuickBooksRouting'));
 export const LazyQuickBooksCallback = createLazyRoute(() => import('@/pages/QuickBooksCallback'));
 export const LazyInvoices = createLazyRoute(() => import('@/pages/Invoices'));
+export const LazyARAgingReport = createLazyRoute(() => import('@/pages/ARAgingReport'));
 export const LazyExpenses = createLazyRoute(() => import('@/pages/Expenses'));
 export const LazyBudgetManagement = createLazyRoute(() => import('@/pages/BudgetManagement'));
 export const LazyFinancialReports = createLazyRoute(() => import('@/pages/FinancialReports'));
