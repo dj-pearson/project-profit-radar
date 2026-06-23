@@ -492,8 +492,18 @@ describe('US-010: XSS Payload Test Suite', () => {
       expect(sanitizeHtml(safe)).toBe(safe);
     });
 
-    it('preserves safe anchor with href', () => {
-      const safe = '<a href="https://example.com" target="_blank" rel="noopener">link</a>';
+    it('preserves a safe anchor and hardens target="_blank" against reverse-tabnabbing', () => {
+      // sanitizeHtml forces rel="noopener noreferrer" on any target="_blank"
+      // link (see registerUrlSafetyHook in sanitize.ts), so window.opener and
+      // the referrer cannot leak to the newly opened context.
+      const input = '<a href="https://example.com" target="_blank" rel="noopener">link</a>';
+      expect(sanitizeHtml(input)).toBe(
+        '<a href="https://example.com" target="_blank" rel="noopener noreferrer">link</a>'
+      );
+    });
+
+    it('preserves a plain safe anchor without a target', () => {
+      const safe = '<a href="https://example.com">link</a>';
       expect(sanitizeHtml(safe)).toBe(safe);
     });
 
