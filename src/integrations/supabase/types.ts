@@ -16043,6 +16043,7 @@ export type Database = {
           current_amount_due: number | null
           discount_amount: number | null
           due_date: string
+          estimate_id: string | null
           id: string
           invoice_date: string | null
           invoice_number: string
@@ -16087,6 +16088,7 @@ export type Database = {
           current_amount_due?: number | null
           discount_amount?: number | null
           due_date: string
+          estimate_id?: string | null
           id?: string
           invoice_date?: string | null
           invoice_number: string
@@ -16131,6 +16133,7 @@ export type Database = {
           current_amount_due?: number | null
           discount_amount?: number | null
           due_date?: string
+          estimate_id?: string | null
           id?: string
           invoice_date?: string | null
           invoice_number?: string

@@ -13,6 +13,7 @@ import { ProjectRFIs } from '@/components/project/tabs/ProjectRFIs';
 import { ProjectSubmittals } from '@/components/project/tabs/ProjectSubmittals';
 import { ProjectChangeOrders } from '@/components/project/tabs/ProjectChangeOrders';
 import { ProjectMaterials } from '@/components/project/tabs/ProjectMaterials';
+import { ProjectProcurement } from '@/components/project/tabs/ProjectProcurement';
 import { ProjectJobCosting } from '@/components/project/tabs/ProjectJobCosting';
 import { ProjectContacts } from '@/components/project/tabs/ProjectContacts';
 import { ProjectPermits } from '@/components/project/tabs/ProjectPermits';
@@ -264,6 +265,10 @@ export const ProjectContent: React.FC<ProjectContentProps> = ({
     <ProjectMaterials projectId={project.id} onNavigate={onNavigate} />
   );
 
+  const renderProcurement = () => (
+    <ProjectProcurement projectId={project.id} onNavigate={onNavigate} />
+  );
+
   const renderEquipment = () => (
     <ProjectEquipmentView projectId={project.id} />
   );
@@ -432,6 +437,7 @@ export const ProjectContent: React.FC<ProjectContentProps> = ({
     tasks: renderTasks,
     dailyreports: renderDailyReports,
     materials: renderMaterials,
+    procurement: renderProcurement,
     equipment: renderEquipment,
     estimates: renderEstimates,
     jobcosting: renderJobCosting,

@@ -10,7 +10,8 @@ import {
   ExternalLink,
   Archive,
   Trash2,
-  Building2
+  Building2,
+  Receipt
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -25,6 +26,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { EstimateForm } from "./EstimateForm";
 import { ConvertToProjectDialog } from "./ConvertToProjectDialog";
+import { ConvertToInvoiceDialog } from "./ConvertToInvoiceDialog";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
@@ -56,6 +58,7 @@ export function EstimatesTable({ searchTerm, statusFilter, onEstimateChange }: E
   const [loading, setLoading] = useState(true);
   const [editingEstimate, setEditingEstimate] = useState<string | null>(null);
   const [convertingEstimate, setConvertingEstimate] = useState<string | null>(null);
+  const [invoicingEstimate, setInvoicingEstimate] = useState<string | null>(null);
   const [deletingEstimate, setDeletingEstimate] = useState<string | null>(null);
   const { toast } = useToast();
 
@@ -348,6 +351,15 @@ export function EstimatesTable({ searchTerm, statusFilter, onEstimateChange }: E
                 Convert to Project
               </DropdownMenuItem>
             )}
+            {(estimate.status === "accepted" || estimate.status === "sent" || estimate.status === "viewed") && (
+              <DropdownMenuItem
+                onClick={() => setInvoicingEstimate(estimate.id)}
+                className="text-construction-orange font-medium"
+              >
+                <Receipt className="mr-2 h-4 w-4" aria-hidden="true" />
+                Convert to Invoice
+              </DropdownMenuItem>
+            )}
             <DropdownMenuItem>
               <Download className="mr-2 h-4 w-4" aria-hidden="true" />
               Download PDF
@@ -410,6 +422,18 @@ export function EstimatesTable({ searchTerm, statusFilter, onEstimateChange }: E
         onClose={() => setConvertingEstimate(null)}
         onSuccess={() => {
           setConvertingEstimate(null);
+          fetchEstimates();
+          onEstimateChange?.();
+        }}
+      />
+
+      {/* Convert to Invoice Dialog (US-101) */}
+      <ConvertToInvoiceDialog
+        estimateId={invoicingEstimate}
+        isOpen={!!invoicingEstimate}
+        onClose={() => setInvoicingEstimate(null)}
+        onSuccess={() => {
+          setInvoicingEstimate(null);
           fetchEstimates();
           onEstimateChange?.();
         }}

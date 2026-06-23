@@ -932,3 +932,31 @@ Remaining (fresh breakdown): TS2345=522, TS6133=512 (mostly unused locals now), 
 - vite build green. (Pre-existing unrelated failure noted: src/lib/security xssPayloads anchor-href test — DOMPurify behavior, untouched.)
 
 ---
+
+---
+
+## 2026-06-23 (cont.) - US-101: Estimate-to-invoice conversion - PASS
+
+- Migration `20260623010000_add_invoices_estimate_id.sql`: additive nullable `estimate_id` FK on invoices (+ partial index). types.ts Row/Insert/Update updated. The "always safe" additive path.
+- `ConvertToInvoiceDialog.tsx` wired into `EstimatesTable` actions ("Convert to Invoice" on accepted/sent/viewed estimates): loads estimate + estimate_line_items, renders each line with an include checkbox and an editable bill amount, a progress-billing % input, and a live subtotal. Shows an "already billed" panel listing invoices linked to the estimate with running % billed (drives progress billing). Creates the invoice via the existing `generate-invoice` edge function, then links it back (`estimate_id` + `reference_number`).
+- Pure logic `src/lib/estimates/estimateToInvoice.ts`: `buildInvoiceLineItems` (selection + percentage + per-line overrides, preserves quantity), `conversionSubtotal`, `summarizeBilled`, `lineBaseTotal`. 8 passing tests.
+- vite build green.
+
+---
+
+## 2026-06-23 (cont.) - US-102: Drag-and-drop task board - PASS
+
+- `TaskBoard.tsx` (@hello-pangea/dnd) replaces the static Kanban grid in `TaskManager`'s "Kanban Board" tab (sits alongside List + Due Date views). Four columns — To Do / In Progress / Review / Done — with counts; cards show title, assignee avatar (initials), priority badge, and due date. Dragging persists `tasks.status` (Done writes the existing `completed` value), optimistic with rollback on failure. Quick-add input at the bottom of each column (mirrors CreateTaskDialog's insert; requires a project, otherwise toasts).
+- Pure logic `src/lib/tasks/taskBoard.ts`: `TASK_STAGES`, `normalizeTaskStage` (unknown/on_hold -> todo), `statusValueForStage`, `groupTasksByStage`, `assigneeInitials`. 8 passing tests. Stage keys map onto the existing status taxonomy so writes stay compatible.
+- vite build green.
+
+---
+
+## 2026-06-23 (cont.) - US-105: Material cost tracking + purchase orders - PASS
+
+- New "Materials" (procurement) tab on the project detail page — registered in `projectTabs` (ProjectDetail.tsx) and `contentMap` (ProjectContent.tsx) as `procurement`, kept separate from the pre-existing inventory `materials` tab/component.
+- `ProjectProcurement.tsx`: PO list filterable by status + vendor and sortable by date/status/total; committed-vs-spent summary cards; a "Material Cost by Cost Code" table — budgeted (project_budgets.material_budget, falls back to budgeted_amount) vs committed (approved/sent/ordered POs) vs spent (received POs) vs remaining. Committed/spent are computed from `purchase_order_line_items.total_price` attributed to each line's cost code and classified by the parent PO status (purchase_orders has no PO-level cost_code_id). "New Purchase Order" -> `/purchase-orders/new?project=<id>`.
+- Wired up the previously-broken PO creation: `PurchaseOrderForm` was imported nowhere and `/purchase-orders/new` was navigated to but never routed. Registered `/purchase-orders/new` and `/purchase-orders/:id/edit` (financialRoutes) and taught the form to honor a `?project=` query param. (No routeSecurity entry needed — `/purchase-orders` itself relies on RouteGuard.)
+- Pure logic `src/lib/projects/materialCostSummary.ts` (`summarizeMaterialCosts`, `isCommittedStatus`, `isReceivedStatus`) + 5 tests. vite build green.
+
+---

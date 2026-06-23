@@ -1731,8 +1731,8 @@
         "npm run build completes successfully"
       ],
       "priority": 3,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "PASS. Migration 20260623010000_add_invoices_estimate_id.sql (additive nullable estimate_id FK) + types.ts. ConvertToInvoiceDialog.tsx wired into EstimatesTable actions ('Convert to Invoice' on accepted/sent/viewed): line items with include checkboxes, progress-billing % input, per-line adjustable amounts, live subtotal, and an 'already billed' panel listing linked invoices (estimate_id query) with % billed. Creates the invoice via the generate-invoice edge function then links it back (estimate_id + reference_number). Pure logic src/lib/estimates/estimateToInvoice.ts (buildInvoiceLineItems/conversionSubtotal/summarizeBilled/lineBaseTotal) + 8 tests. vite build green."
     },
     {
       "id": "US-102",
@@ -1748,8 +1748,8 @@
         "npm run build completes successfully"
       ],
       "priority": 3,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "PASS. TaskBoard.tsx (@hello-pangea/dnd) replaces TaskManager's static Kanban tab: four columns To Do/In Progress/Review/Done with counts, cards show title, assignee avatar (initials), priority badge, due date; drag between columns persists tasks.status (Done->'completed', optimistic with rollback); quick-add input at the bottom of each column (mirrors CreateTaskDialog insert, requires a project). Pure logic src/lib/tasks/taskBoard.ts (TASK_STAGES/normalizeTaskStage/statusValueForStage/groupTasksByStage/assigneeInitials) + 8 tests. Stage keys map to the existing status taxonomy so writes stay compatible. vite build green."
     },
     {
       "id": "US-103",
@@ -1799,8 +1799,8 @@
         "npm run build completes successfully"
       ],
       "priority": 3,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "PASS. New 'Materials' (procurement) tab on ProjectDetail (registered in projectTabs + ProjectContent contentMap, separate from the existing inventory tab). ProjectProcurement.tsx: PO list filterable by status/vendor and sortable by date/status/total; committed-vs-spent summary cards; material-cost-by-cost-code table (budgeted from project_budgets.material_budget vs committed [approved/sent POs] vs spent [received POs] vs remaining), computed from purchase_order_line_items joined to parent PO status. 'New Purchase Order' navigates to /purchase-orders/new?project=<id>. Also registered the previously-missing PO form routes (/purchase-orders/new, /:id/edit -> PurchaseOrderForm, which was imported nowhere) and taught the form to honor ?project=. Pure logic src/lib/projects/materialCostSummary.ts + 5 tests. vite build green."
     },
     {
       "id": "US-106",
