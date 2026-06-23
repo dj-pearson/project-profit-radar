@@ -17,13 +17,22 @@ import { validateFileUpload, generateSecureFilename } from '@/lib/security/fileU
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import MobileDailyReport from '@/components/mobile/MobileDailyReport';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { Calendar, Users, AlertTriangle, PlusCircle, FileText, Cloud, Camera, X, Upload, Smartphone } from 'lucide-react';
+import { Calendar, Users, AlertTriangle, PlusCircle, FileText, Cloud, Camera, X, Upload, Smartphone, Copy, LayoutTemplate, Settings2 } from 'lucide-react';
 import { fetchWeather, formatWeatherForReport } from '@/services/weather';
+import { buildReportFromPrevious, applyTemplateDefaults } from '@/lib/dailyReports/templateFill';
 
 interface Project {
   id: string;
   name: string;
   status: string;
+}
+
+interface DailyReportTemplateOption {
+  id: string;
+  name: string;
+  default_crew_count: number | null;
+  default_weather_conditions: string | null;
+  default_safety_notes: string | null;
 }
 
 interface DailyReport {
@@ -66,6 +75,8 @@ const DailyReports = () => {
   
   const [selectedPhotos, setSelectedPhotos] = useState<File[]>([]);
   const [showMobileReport, setShowMobileReport] = useState(false);
+  const [templates, setTemplates] = useState<DailyReportTemplateOption[]>([]);
+  const [copyingPrevious, setCopyingPrevious] = useState(false);
 
   useEffect(() => {
     if (!loading && !user) {
@@ -130,6 +141,15 @@ const DailyReports = () => {
       if (reportsError) throw reportsError;
       setDailyReports(reportsData || []);
 
+      // Load daily report templates for quick-fill (US-074)
+      const { data: templatesData } = await supabase
+        .from('daily_report_templates')
+        .select('id, name, default_crew_count, default_weather_conditions, default_safety_notes')
+        .eq('company_id', userProfile?.company_id)
+        .eq('is_active', true)
+        .order('name');
+      setTemplates(templatesData || []);
+
     } catch (error: any) {
       console.error('Error loading data:', error);
       toast({
@@ -139,6 +159,44 @@ const DailyReports = () => {
       });
     } finally {
       setLoadingReports(false);
+    }
+  };
+
+  const handleApplyTemplate = (templateId: string) => {
+    const template = templates.find((t) => t.id === templateId);
+    if (!template) return;
+    setNewReport((prev) => ({ ...prev, ...applyTemplateDefaults(template) }));
+    toast({ title: 'Template applied', description: `Pre-filled from "${template.name}".` });
+  };
+
+  const handleCopyFromYesterday = async () => {
+    if (!newReport.project_id) {
+      toast({ variant: 'destructive', title: 'Select a project', description: 'Choose a project before copying from a previous report.' });
+      return;
+    }
+    try {
+      setCopyingPrevious(true);
+      const today = new Date().toISOString().split('T')[0];
+      const { data, error } = await supabase
+        .from('daily_reports')
+        .select('work_performed, crew_count, weather_conditions, materials_delivered, equipment_used, delays_issues, safety_incidents, date')
+        .eq('project_id', newReport.project_id)
+        .lt('date', today)
+        .order('date', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (error) throw error;
+      if (!data) {
+        toast({ title: 'No previous report', description: 'There is no earlier report for this project to copy.' });
+        return;
+      }
+      setNewReport((prev) => ({ ...prev, ...buildReportFromPrevious(data) }));
+      toast({ title: 'Copied from previous report', description: `Pre-filled from ${data.date}. Review before saving.` });
+    } catch (error) {
+      console.error('Copy from yesterday error:', error);
+      toast({ variant: 'destructive', title: 'Error', description: 'Failed to load the previous report.' });
+    } finally {
+      setCopyingPrevious(false);
     }
   };
 
@@ -299,6 +357,52 @@ const DailyReports = () => {
                         ))}
                       </SelectContent>
                     </Select>
+                  </div>
+
+                  {/* Quick-fill: template picker + copy from previous (US-074) */}
+                  <div className="flex flex-col sm:flex-row gap-2 rounded-md border border-dashed p-3">
+                    <div className="flex-1">
+                      <Label htmlFor="template-quickfill" className="text-xs flex items-center gap-1">
+                        <LayoutTemplate className="h-3 w-3" aria-hidden="true" />
+                        Start from template
+                      </Label>
+                      {templates.length > 0 ? (
+                        <Select onValueChange={handleApplyTemplate}>
+                          <SelectTrigger id="template-quickfill" aria-label="Apply a daily report template">
+                            <SelectValue placeholder="Choose a template..." />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {templates.map((t) => (
+                              <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      ) : (
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          className="w-full justify-start"
+                          onClick={() => navigate('/daily-report-templates')}
+                        >
+                          <Settings2 className="mr-2 h-4 w-4" aria-hidden="true" />
+                          Create templates
+                        </Button>
+                      )}
+                    </div>
+                    <div className="flex items-end">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={handleCopyFromYesterday}
+                        disabled={copyingPrevious || !newReport.project_id}
+                        className="whitespace-nowrap"
+                      >
+                        <Copy className="mr-2 h-4 w-4" aria-hidden="true" />
+                        {copyingPrevious ? 'Copying…' : 'Copy from Yesterday'}
+                      </Button>
+                    </div>
                   </div>
 
                   <div>

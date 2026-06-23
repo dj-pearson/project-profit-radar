@@ -903,3 +903,32 @@ Remaining (fresh breakdown): TS2345=522, TS6133=512 (mostly unused locals now), 
 - Note: time_entries has no company_id, so the time report scopes by project ownership; recurring_invoices stores company_id directly. vite build green.
 
 ---
+
+---
+
+## 2026-06-23 (cont.) - US-073: CRM pipeline kanban board view - PASS
+
+- New Kanban tab on the CRM/Leads page: `CRMLeads.tsx` now wraps the existing leads list in `Tabs` (List | Kanban), both driven by the same `filteredLeads` so search/status/source/priority filters apply to both views.
+- `src/components/crm/LeadsKanbanBoard.tsx` (@hello-pangea/dnd): one column per pipeline stage — New Lead, Contacted, Qualified, Proposal Sent, Negotiation, Won, Lost — keyed to the existing `leads.status` taxonomy so a drag writes back a compatible status value. Cards show name, company, estimated value, and days in stage; column headers show count + total estimated value; cards are color-coded by value tier (left border). Optimistic move with rollback if the update fails; persists via the page's `updateLead({ status })`.
+- Pure logic `src/lib/crm/leadsKanban.ts`: `groupLeadsByStage`, `normalizeStage` (unknown/empty -> new, so no lead is hidden), `daysInStage`, `leadDisplayName`, `valueTier`. 10 passing tests.
+- Note: an existing `PipelineKanban` exists but loads its own data and depends on a `pipeline_stages` config; the new board is purpose-built off the page's filtered leads to match the AC exactly. vite build green.
+
+---
+
+## 2026-06-23 (cont.) - US-074: Daily report templates + quick-fill - PASS
+
+- `DailyReports.tsx` create dialog gains a quick-fill row above Work Performed: a template picker and a "Copy from Yesterday" button.
+- Template picker lists `daily_report_templates` (company-scoped, active) and applies `default_crew_count` / `default_weather_conditions` / `default_safety_notes` via `applyTemplateDefaults` (only sets fields the template specifies, preserving other entries). When no templates exist, the control links to `/daily-report-templates`.
+- "Copy from Yesterday" fetches the most recent *earlier* daily report for the selected project (`date < today`, newest first) and pre-fills via `buildReportFromPrevious` — carries crew/weather/materials/equipment + prior work description, intentionally clears day-specific delays/safety so they don't silently repeat.
+- Template management (save/edit/rename/delete; weather/crew/equipment/work sections) already exists via `DailyReportTemplateManager` at `/daily-report-templates`.
+- Pure logic `src/lib/dailyReports/templateFill.ts` + 5 passing tests. vite build green.
+
+---
+
+## 2026-06-23 (cont.) - US-097: Change order impact on project financials - PASS
+
+- `src/components/financial/ChangeOrderImpactSummary.tsx` rendered in the project financials section (`ProjectContent.tsx`, `originalContract = project.budget`). Shows original contract, approved changes (net, with additions vs deductions split), current contract, and pending changes (with count). Recharts `stepAfter` line chart plots the contract amount over time (original + one point per approved CO in approval-date order). Header link drills down to `/change-orders`.
+- Pure logic `src/lib/projects/changeOrderImpact.ts`: `summarizeChangeOrders`, `buildContractTimeline`, `isApproved` (client_approved OR status approved/completed), `isPending` (excludes rejected/cancelled/void/declined), `approvalDate`. 5 passing tests.
+- vite build green. (Pre-existing unrelated failure noted: src/lib/security xssPayloads anchor-href test — DOMPurify behavior, untouched.)
+
+---

@@ -1254,8 +1254,8 @@
         "npm run build completes successfully"
       ],
       "priority": 3,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "PASS. New Kanban tab on the CRM/Leads page (CRMLeads.tsx wraps the existing list in Tabs: List | Kanban). LeadsKanbanBoard.tsx (@hello-pangea/dnd) renders columns per pipeline stage (New/Contacted/Qualified/Proposal Sent/Negotiation/Won/Lost \u2014 aligned to the existing leads.status taxonomy so DnD writes back compatible values), cards show name, company, estimated value, days in stage; column headers show count + total value; cards color-coded by value tier (border). Optimistic move + rollback on failure; persists via updateLead({status}). Pure logic src/lib/crm/leadsKanban.ts (groupLeadsByStage/daysInStage/leadDisplayName/valueTier/normalizeStage) + 10 tests. Driven by the page's filtered leads so filters apply. vite build green."
     },
     {
       "id": "US-074",
@@ -1270,8 +1270,8 @@
         "npm run build completes successfully"
       ],
       "priority": 3,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "PASS. DailyReports create dialog gains a quick-fill row: a template picker (daily_report_templates, applies default_crew_count/weather/safety via applyTemplateDefaults) and a 'Copy from Yesterday' button (fetches the most recent earlier daily_report for the selected project, pre-fills via buildReportFromPrevious \u2014 carries crew/weather/materials/equipment/work, clears day-specific delays+safety). Empty-template state links to /daily-report-templates (existing DailyReportTemplateManager handles save/edit/rename/delete + weather/crew/equipment/work sections). Pure logic src/lib/dailyReports/templateFill.ts + 5 tests. vite build green."
     },
     {
       "id": "US-075",
@@ -1663,8 +1663,8 @@
         "npm run build completes successfully"
       ],
       "priority": 3,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "PASS. ChangeOrderImpactSummary.tsx added to the project financials section (ProjectContent.tsx, originalContract = project.budget). Cards: original contract, approved changes net (with additions/deductions split), current contract, pending changes (count). Recharts stepAfter line chart of contract amount over time (one point per approved CO in approval-date order). Drill-down header link to /change-orders. Pure logic src/lib/projects/changeOrderImpact.ts (summarizeChangeOrders/buildContractTimeline/isApproved/isPending \u2014 approved = client_approved or status approved/completed; pending excludes rejected/cancelled) + 5 tests. vite build green."
     },
     {
       "id": "US-098",

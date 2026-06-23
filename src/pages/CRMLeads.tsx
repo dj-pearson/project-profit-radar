@@ -14,7 +14,10 @@ import { usePersistedState } from '@/hooks/usePersistedState';
 import { TableSkeleton } from '@/components/ui/loading-skeleton';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { LeadsKanbanBoard } from '@/components/crm/LeadsKanbanBoard';
+import { LayoutGrid, List } from 'lucide-react';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { AccessibleForm, AccessibleFormField, AccessibleTextarea, AccessibleFieldset } from '@/components/accessibility/AccessibleForm';
@@ -687,6 +690,42 @@ const CRMLeads = () => {
               </CardContent>
             </Card>
 
+            {/* Leads: List + Kanban views */}
+            <Tabs defaultValue="list" className="w-full">
+              <TabsList className="mb-4">
+                <TabsTrigger value="list" className="flex items-center gap-2">
+                  <List className="h-4 w-4" aria-hidden="true" />
+                  List
+                </TabsTrigger>
+                <TabsTrigger value="kanban" className="flex items-center gap-2">
+                  <LayoutGrid className="h-4 w-4" aria-hidden="true" />
+                  Kanban
+                </TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="kanban">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Pipeline ({filteredLeads.length})</CardTitle>
+                    <CardDescription>
+                      Drag leads between stages to update their status. Cards are color-coded by estimated value.
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    {leadsLoading ? (
+                      <TableSkeleton rows={4} columns={4} />
+                    ) : (
+                      <LeadsKanbanBoard
+                        leads={filteredLeads}
+                        onStatusChange={(leadId, status) => updateLead(leadId, { status })}
+                        onLeadClick={(leadId) => setSelectedLead(leadId)}
+                      />
+                    )}
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              <TabsContent value="list">
             {/* Leads List */}
             <Card>
               <CardHeader>
@@ -834,6 +873,8 @@ const CRMLeads = () => {
                 </ErrorBoundary>
               </CardContent>
             </Card>
+              </TabsContent>
+            </Tabs>
     </DashboardLayout>
   );
 };
