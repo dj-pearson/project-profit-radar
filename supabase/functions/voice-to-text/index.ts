@@ -2,6 +2,7 @@ import "https://deno.land/x/xhr@0.1.0/mod.ts"
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2"
 import { checkRateLimit, rateLimitResponse, RATE_LIMITS } from "../_shared/rate-limiter.ts"
+import { enforceAiQuota, recordAiUsage, aiQuotaResponse } from "../_shared/ai-quota.ts"
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -75,6 +76,10 @@ serve(async (req) => {
     })
     if (!rl.allowed) return rateLimitResponse(rl, corsHeaders)
 
+    // Monthly per-tier AI quota (cost ceiling). Company resolved from the JWT user.
+    const quota = await enforceAiQuota(serviceClient, { userId: user.id })
+    if (!quota.allowed) return aiQuotaResponse(quota, corsHeaders)
+
     const { audio } = await req.json()
 
     if (!audio) {
@@ -120,6 +125,9 @@ serve(async (req) => {
 
     const result = await response.json()
     console.log('Transcription successful');
+
+    // Count this Whisper transcription against the monthly AI quota.
+    await recordAiUsage(serviceClient, { companyId: quota.companyId, calls: 1 })
 
     return new Response(
       JSON.stringify({ 

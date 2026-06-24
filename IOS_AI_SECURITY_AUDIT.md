@@ -29,6 +29,12 @@ There is additionally **no AI/token quota anywhere**: `_shared/entitlements.ts:1
 
 **Impact:** a single authenticated user can call paid AI endpoints (OpenAI Whisper/GPT-4.1, Claude) without any ceiling → unbounded provider spend, no tier enforcement.
 
+**Status (update):** The per-minute limiter is fixed (Phase 0, `rate-limiter.ts` rewrite). A real **per-tier monthly AI quota** now also exists for the Phase-0-hardened paid-AI endpoints:
+- New **additive** infra (no change to existing tables/RLS): `ai_usage_counters` table + atomic `increment_ai_usage` RPC — migration `20260624000000_create_ai_usage_counters.sql`. The table has **no client write policy**; only the service role / SECURITY DEFINER RPC can write, so the count is unspoofable (contrast `usage_metrics`, H-1).
+- New shared helper `_shared/ai-quota.ts` (`enforceAiQuota` pre-flight + `recordAiUsage` atomic increment), wired into `process-voice-command`, `voice-to-text`, and `document-classifier` (the latter degrades to free rule-based classification when the quota is exhausted instead of erroring).
+- Limits in `AI_TIER_MONTHLY_LIMITS`: starter 250, professional 2500, enterprise/complimentary unlimited. Fails open on ambiguity (cost backstop, not sole control).
+- **Still open:** the heavier LLM endpoints from H-6 (`ai-content-generator`, `generate-risk-assessment`, `generate-predictive-analytics`, `smart-data-analyzer`) are **not** yet quota-wired — they first need the CR-6-style JWT-derived identity (they currently trust body `company_id`/`user_id`, H-2/H-6), otherwise a quota keyed on a spoofable company would itself be spoofable. That is Phase 1 work.
+
 ### CR-2 — Any user can self-upgrade their plan (subscriber/company tier is client-writable)
 **`supabase/migrations/20250703133020_...sql:23-30`** and **`supabase/migrations/20260209100000_bootstrap_foundational_schema.sql:653-660`**.
 
@@ -137,7 +143,8 @@ Confirmed: searches for `force.?update`/`MIN_SUPPORTED`/`minVersion` return only
 ## Remediation status
 
 - ✅ **Phase 0 — IMPLEMENTED on `claude/ios-security-audit-37q45j`** (edge-function fixes only, no DB/RLS changes). See the per-item checklist below and the commit history.
-- ⛔ **Phases 1–3 — NOT yet done.** Phase 1 touches live production RLS/tables and must be staged per the backward-compatibility rules in `CLAUDE.md`; Phase 2 native pieces must ride a `release/*` train.
+- ✅ **Monthly AI quota (additive slice of Phase 1 item 6) — IMPLEMENTED on the same branch.** New `ai_usage_counters` table + `increment_ai_usage` RPC are **additive only** (CREATE TABLE/FUNCTION — "always safe" per `CLAUDE.md`); no existing table or RLS policy is touched or tightened. Wired into the three Phase-0-hardened paid-AI endpoints. The migration file does not reach production until merged through the normal release flow into `main` — the human merge gate is unchanged.
+- ⛔ **Phases 1–3 (remainder) — NOT yet done.** The risky part of Phase 1 (tightening `subscribers`/`usage_metrics`/`companies` RLS, CR-2/H-1) touches live production RLS/tables and must be staged per the backward-compatibility rules in `CLAUDE.md`; Phase 2 native pieces must ride a `release/*` train.
 
 ## Recommended remediation order
 
@@ -149,7 +156,7 @@ Confirmed: searches for `force.?update`/`MIN_SUPPORTED`/`minVersion` return only
 
 **Phase 1 — close the spoofing/limit gaps (touches production DB — needs care + backward-compat per CLAUDE.md):**
 5. CR-2 / H-1: rewrite `subscribers` and `usage_metrics` RLS to `user_id = auth.uid()` / `company_id`-scoped, remove `USING(true)` ALL policies; block client writes to `companies.subscription_tier`/`subscription_status` via a `BEFORE UPDATE` trigger (RLS can't do column scoping).
-6. CR-1 / H-6: fix the rate limiter to record every request (or move to an atomic counter), add a real server-side **pre-flight** AI quota tied to tier, cap input size + `max_tokens`, stop trusting client `model_alias`.
+6. CR-1 / H-6: fix the rate limiter to record every request (or move to an atomic counter) ✅ done (Phase 0); add a real server-side **pre-flight** AI quota tied to tier ✅ done for the 3 Phase-0 paid-AI endpoints via the additive `ai_usage_counters` counter (see CR-1 status); **remaining:** wire the quota into the heavier endpoints (`ai-content-generator`, `generate-risk-assessment`, `generate-predictive-analytics`, `smart-data-analyzer`) after giving them CR-6-style JWT-derived identity, cap input size + `max_tokens`, and stop trusting client `model_alias`.
 7. H-2: wire JWT-derived company scoping into all service-role functions that accept body `company_id`.
 
 **Phase 2 — device hardening (rides a `release/*` train; native changes):**

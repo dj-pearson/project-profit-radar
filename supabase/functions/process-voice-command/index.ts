@@ -2,6 +2,7 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { checkRateLimit, rateLimitResponse, RATE_LIMITS } from "../_shared/rate-limiter.ts";
+import { enforceAiQuota, recordAiUsage, aiQuotaResponse } from "../_shared/ai-quota.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -66,6 +67,11 @@ serve(async (req) => {
     });
     if (!rl.allowed) return rateLimitResponse(rl, corsHeaders);
 
+    // Monthly per-tier AI quota (cost ceiling). Resolves the company from the JWT
+    // user, never the body. Fails open on ambiguity.
+    const quota = await enforceAiQuota(serviceClient, { userId: user.id });
+    if (!quota.allowed) return aiQuotaResponse(quota, corsHeaders);
+
     const { audio_data, project_id }: VoiceCommandRequest = await req.json();
 
     if (!audio_data || !project_id) {
@@ -89,6 +95,9 @@ serve(async (req) => {
     // Step 2: Extract intent and entities using Claude
     const analysis = await analyzeCommand(transcript);
     console.log("Analysis:", analysis);
+
+    // Count this request against the monthly AI quota (Whisper + Claude = 2 calls).
+    await recordAiUsage(serviceClient, { companyId: quota.companyId, calls: 2 });
 
     const response: VoiceCommandResponse = {
       transcript: transcript,

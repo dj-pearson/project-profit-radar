@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { checkRateLimit, rateLimitResponse, RATE_LIMITS } from "../_shared/rate-limiter.ts";
+import { enforceAiQuota, recordAiUsage, aiQuotaResponse } from "../_shared/ai-quota.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -88,9 +89,22 @@ serve(async (req) => {
       });
     }
 
+    // Monthly per-tier AI quota — only gates the paid AI path. If the quota is
+    // exhausted, fall back to free rule-based classification rather than 429-ing,
+    // so the feature degrades gracefully instead of breaking.
+    const quota = await enforceAiQuota(serviceClient, { userId: user.id });
+    if (!quota.allowed) {
+      console.log('AI monthly quota reached, using rule-based classification');
+      const ruleBasedResult = performRuleBasedClassification(text, projects);
+      return new Response(JSON.stringify({ classification: ruleBasedResult, quota_exceeded: true }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
     // Use AI classification
     const aiResult = await performAIClassification(text, projects, openAIApiKey);
-    
+    await recordAiUsage(serviceClient, { companyId: quota.companyId, calls: 1 });
+
     return new Response(JSON.stringify({ classification: aiResult }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
