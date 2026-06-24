@@ -1,10 +1,15 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts"
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2"
+import { checkRateLimit, rateLimitResponse, RATE_LIMITS } from "../_shared/rate-limiter.ts"
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
+
+// Cap inbound audio to prevent cost-amplification abuse of the Whisper API.
+const MAX_AUDIO_BASE64_CHARS = 10 * 1024 * 1024 // ~10MB base64 ≈ 7.5MB audio
 
 // Process base64 in chunks to prevent memory issues
 function processBase64Chunks(base64String: string, chunkSize = 32768) {
@@ -44,11 +49,41 @@ serve(async (req) => {
 
   try {
     console.log('Voice-to-text request received');
-    
+
+    // SECURITY: require an authenticated caller; rate-limit per user to prevent
+    // unbounded paid Whisper transcription.
+    const authHeader = req.headers.get('Authorization')
+    if (!authHeader) {
+      return new Response(JSON.stringify({ error: 'Unauthorized', success: false }), {
+        status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      })
+    }
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!
+    const authClient = createClient(supabaseUrl, Deno.env.get('SUPABASE_ANON_KEY')!, {
+      global: { headers: { Authorization: authHeader } },
+      auth: { persistSession: false },
+    })
+    const { data: { user }, error: authError } = await authClient.auth.getUser()
+    if (authError || !user) {
+      return new Response(JSON.stringify({ error: 'Unauthorized', success: false }), {
+        status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      })
+    }
+    const serviceClient = createClient(supabaseUrl, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!)
+    const rl = await checkRateLimit(serviceClient, {
+      identifier: user.id, endpoint: 'voice-to-text', ...RATE_LIMITS.AI,
+    })
+    if (!rl.allowed) return rateLimitResponse(rl, corsHeaders)
+
     const { audio } = await req.json()
-    
+
     if (!audio) {
       throw new Error('No audio data provided')
+    }
+    if (typeof audio !== 'string' || audio.length > MAX_AUDIO_BASE64_CHARS) {
+      return new Response(JSON.stringify({ error: 'Audio payload too large', success: false }), {
+        status: 413, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      })
     }
 
     console.log('Processing audio data...');

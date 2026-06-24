@@ -25,8 +25,15 @@ const signupSchema = z.object({
   password: z.string().min(8, 'Password must be at least 8 characters'),
   firstName: z.string().min(1).max(100),
   lastName: z.string().min(1).max(100),
-  role: z.string().optional().default('admin'),
+  // SECURITY: role is NOT accepted from the client. Self-serve signup always
+  // creates the account owner as 'admin' of their own (new) company. Allowing a
+  // client-supplied role let an attacker sign up as 'root_admin' (platform
+  // super-admin) or any other role. The field is intentionally omitted here.
 });
+
+// The only role a self-serve signup may be granted. Privileged roles
+// (root_admin, etc.) are assigned server-side through admin tooling, never here.
+const SELF_SERVE_ROLE = 'admin';
 
 const OTP_EXPIRY_MINUTES = 15;
 
@@ -67,7 +74,7 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    const { email, password, firstName, lastName, role } = validation.data;
+    const { email, password, firstName, lastName } = validation.data;
 
     console.log(`[SignupWithOTP] Processing signup for ${email}`);
 
@@ -132,7 +139,7 @@ const handler = async (req: Request): Promise<Response> => {
         first_name: firstName,
         last_name: lastName,
         email: email.toLowerCase(),
-        role: role,
+        role: SELF_SERVE_ROLE, // SECURITY: server-forced; never client-controlled
         is_active: false, // Will be activated after email verification
       });
 

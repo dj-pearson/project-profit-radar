@@ -1,11 +1,17 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { checkRateLimit, rateLimitResponse, RATE_LIMITS } from "../_shared/rate-limiter.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
     "authorization, x-client-info, apikey, content-type",
 };
+
+// Cap inbound audio to prevent cost-amplification abuse of the Whisper API.
+// ~10MB of base64 ≈ 7.5MB of audio — generous for short voice commands.
+const MAX_AUDIO_BASE64_CHARS = 10 * 1024 * 1024;
 
 interface VoiceCommandRequest {
   audio_data: string; // base64 encoded audio
@@ -28,11 +34,48 @@ serve(async (req) => {
   }
 
   try {
-    const { audio_data, project_id, user_id, company_id }: VoiceCommandRequest =
-      await req.json();
+    // SECURITY: require an authenticated caller and derive identity from the
+    // JWT — never from the request body. Without this, any caller could spoof
+    // user_id/company_id and drive unbounded Whisper + Claude spend.
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const authClient = createClient(supabaseUrl, Deno.env.get("SUPABASE_ANON_KEY")!, {
+      global: { headers: { Authorization: authHeader } },
+      auth: { persistSession: false },
+    });
+    const { data: { user }, error: authError } = await authClient.auth.getUser();
+    if (authError || !user) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
-    if (!audio_data || !project_id || !user_id) {
+    // Rate limit: 20 req/min per user (service-role client writes the counter).
+    const serviceClient = createClient(supabaseUrl, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+    const rl = await checkRateLimit(serviceClient, {
+      identifier: user.id,
+      endpoint: "process-voice-command",
+      ...RATE_LIMITS.AI,
+    });
+    if (!rl.allowed) return rateLimitResponse(rl, corsHeaders);
+
+    const { audio_data, project_id }: VoiceCommandRequest = await req.json();
+
+    if (!audio_data || !project_id) {
       throw new Error("Missing required parameters");
+    }
+    if (typeof audio_data !== "string" || audio_data.length > MAX_AUDIO_BASE64_CHARS) {
+      return new Response(JSON.stringify({ error: "Audio payload too large" }), {
+        status: 413,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
     // Step 1: Convert speech to text using OpenAI Whisper

@@ -3,7 +3,7 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { checkRateLimit, getClientIP, rateLimitResponse, RATE_LIMITS } from "../_shared/rate-limiter.ts";
+import { checkRateLimit, rateLimitResponse, RATE_LIMITS } from "../_shared/rate-limiter.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -56,12 +56,36 @@ serve(async (req) => {
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // Rate limit: 20 req/min per IP for AI endpoints
-    const clientIP = getClientIP(req);
+    const json401 = (msg: string) =>
+      new Response(JSON.stringify({ error: msg, success: false }), {
+        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+
+    // SECURITY: require an authenticated caller. This function runs with the
+    // service role (RLS bypassed), so without an explicit check any caller could
+    // fetch ANY tenant's ticket by guessing ticketId (IDOR + cross-tenant
+    // exfiltration). Identity is taken from the JWT, never the body.
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader) return json401("Unauthorized");
+    const authClient = createClient(supabaseUrl, Deno.env.get("SUPABASE_ANON_KEY")!, {
+      global: { headers: { Authorization: authHeader } },
+      auth: { persistSession: false },
+    });
+    const { data: { user }, error: authError } = await authClient.auth.getUser();
+    if (authError || !user) return json401("Unauthorized");
+
+    // Rate limit: 20 req/min per authenticated user (not per IP — IPs rotate).
     const rlResult = await checkRateLimit(supabase, {
-      identifier: clientIP, endpoint: 'analyze-support-ticket', ...RATE_LIMITS.AI
+      identifier: user.id, endpoint: 'analyze-support-ticket', ...RATE_LIMITS.AI
     });
     if (!rlResult.allowed) return rateLimitResponse(rlResult, corsHeaders);
+
+    // Resolve caller role + company for the authorization check below.
+    const { data: caller } = await supabase
+      .from("user_profiles")
+      .select("role, company_id")
+      .eq("id", user.id)
+      .maybeSingle();
 
     console.log(`[ANALYZE-TICKET] Analyzing ticket ${ticketId}...`);
 
@@ -72,6 +96,15 @@ serve(async (req) => {
       .single();
 
     if (ticketError) throw ticketError;
+
+    // Authorize: platform root_admins may analyze any ticket; everyone else is
+    // restricted to tickets belonging to their own company.
+    const isRootAdmin = caller?.role === "root_admin";
+    if (!isRootAdmin && (!caller?.company_id || ticket.company_id !== caller.company_id)) {
+      return new Response(JSON.stringify({ error: "Forbidden", success: false }), {
+        status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
     // Analyze ticket content
     const analysis = await analyzeTicket(ticket);

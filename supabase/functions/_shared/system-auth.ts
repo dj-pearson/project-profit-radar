@@ -6,10 +6,11 @@
 //   1. a trusted scheduler that presents the shared CRON_SECRET, or
 //   2. an authenticated admin / root_admin user.
 //
-// Staged rollout: if CRON_SECRET is not configured in the environment yet, the
-// guard logs a warning and allows the request (so deploying this code does NOT
-// break existing cron jobs before the secret + scheduler headers are wired).
-// Once CRON_SECRET is set, anonymous callers are rejected.
+// Fail closed: if CRON_SECRET is not configured the guard does NOT allow
+// anonymous access. It falls through to the authenticated-admin check, so the
+// only ways in are (1) a scheduler presenting a matching CRON_SECRET or (2) an
+// authenticated admin/root_admin JWT. Set CRON_SECRET (and have schedulers send
+// the x-cron-secret header) to keep cron jobs working.
 
 import { initializeAuthContext } from "./auth-helpers.ts";
 
@@ -32,16 +33,17 @@ export async function requireSystemOrAdmin(req: Request): Promise<Response | nul
     return null;
   }
 
-  // Staged rollout: secret not configured yet -> don't break existing crons.
+  // Fail closed: a missing CRON_SECRET must NOT grant anonymous access. Log
+  // loudly so operators wire the secret, then fall through to admin auth — an
+  // unauthenticated cron caller (no JWT) will be rejected below.
   if (!cronSecret) {
-    console.warn(
-      "[system-auth] CRON_SECRET is not set — system function is currently UNGUARDED. " +
-        "Set CRON_SECRET and have schedulers send the x-cron-secret header to enforce.",
+    console.error(
+      "[system-auth] CRON_SECRET is not set — rejecting unauthenticated system invocation. " +
+        "Set CRON_SECRET and have schedulers send the x-cron-secret header.",
     );
-    return null;
   }
 
-  // Secret is configured but not presented -> require an authenticated admin.
+  // Secret not presented / not configured -> require an authenticated admin.
   const ctx = await initializeAuthContext(req);
   if (!ctx) {
     return jsonError("Unauthorized", 401);

@@ -134,9 +134,14 @@ Confirmed: searches for `force.?update`/`MIN_SUPPORTED`/`minVersion` return only
 
 ---
 
+## Remediation status
+
+- ✅ **Phase 0 — IMPLEMENTED on `claude/ios-security-audit-37q45j`** (edge-function fixes only, no DB/RLS changes). See the per-item checklist below and the commit history.
+- ⛔ **Phases 1–3 — NOT yet done.** Phase 1 touches live production RLS/tables and must be staged per the backward-compatibility rules in `CLAUDE.md`; Phase 2 native pieces must ride a `release/*` train.
+
 ## Recommended remediation order
 
-**Phase 0 — stop the bleeding (small, high-impact, low-risk):**
+**Phase 0 — stop the bleeding (small, high-impact, low-risk):** ✅ done
 1. CR-3: bind `verify-mfa-login` (and every `userId`-from-body function) to the JWT subject — reject if `jwt.sub !== userId`.
 2. CR-4: replace `signup-with-otp` `role` default with a server-forced safe role; allowlist permitted self-service roles.
 3. CR-5: make `requireSystemOrAdmin` fail **closed** (require `CRON_SECRET` in prod).

@@ -79,6 +79,31 @@ serve(async (req) => {
       return createErrorResponse(400, "Invalid request body", corsHeaders);
     }
 
+    // SECURITY: identity comes from the verified JWT, never the request body.
+    // The login flow already has an authenticated (AAL1) session at this point.
+    // Without this binding, anyone who knows a victim's user UUID could
+    // verify/enumerate that victim's MFA — a complete second-factor bypass once
+    // the attacker has the victim's password.
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader) {
+      return createErrorResponse(401, "Unauthorized", corsHeaders);
+    }
+    const authClient = createClient(
+      Deno.env.get("SUPABASE_URL") ?? "",
+      Deno.env.get("SUPABASE_ANON_KEY") ?? "",
+      { global: { headers: { Authorization: authHeader } }, auth: { persistSession: false } }
+    );
+    const { data: { user: authUser }, error: authErr } = await authClient.auth.getUser();
+    if (authErr || !authUser) {
+      return createErrorResponse(401, "Unauthorized", corsHeaders);
+    }
+    // Reject an explicit mismatch, then pin every downstream lookup to the
+    // authenticated user regardless of what the body claimed.
+    if (requestBody.userId && requestBody.userId !== authUser.id) {
+      return createErrorResponse(403, "Forbidden", corsHeaders);
+    }
+    requestBody.userId = authUser.id;
+
     const action = requestBody.action || "verify";
 
     switch (action) {

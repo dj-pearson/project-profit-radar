@@ -32,6 +32,10 @@ export interface RateLimitConfig {
   maxRequests: number;
   /** Time window in minutes */
   windowMinutes: number;
+  /** Identifier kind for logging/columns. Inferred from the identifier shape when omitted. */
+  identifierType?: 'ip' | 'user' | 'api_key';
+  /** HTTP method recorded for the security dashboard (default 'POST'). */
+  method?: string;
 }
 
 export interface RateLimitResult {
@@ -45,88 +49,125 @@ export interface RateLimitResult {
   limit: number;
 }
 
+const IPV4 = /^\d{1,3}(\.\d{1,3}){3}$/;
+const looksLikeIp = (v: string) => IPV4.test(v) || (v.includes(':') && !v.includes(' '));
+const inferIdentifierType = (identifier: string): 'ip' | 'user' | 'api_key' =>
+  looksLikeIp(identifier) ? 'ip' : 'user';
+
 /**
- * Check if a request should be rate limited
- * Security: Prevents abuse by limiting requests per time window
+ * Sliding-window rate limit backed by the `rate_limit_state` counter table.
+ *
+ * IMPORTANT: pass a SERVICE-ROLE Supabase client. RLS on `rate_limit_state`
+ * only lets the system (service role) read/write the counters; a user-scoped
+ * client cannot SELECT the table and the limiter would silently fail open.
+ *
+ * Every request increments the window counter. (The previous implementation
+ * only wrote a row to `rate_limit_violations` AFTER a request was already over
+ * the limit, and then counted that same table — so the counter never grew on
+ * normal traffic and the limiter could never actually block. This rewrite fixes
+ * that.) On infrastructure error it fails open so a transient DB issue never
+ * hard-locks the product; security-sensitive callers should treat a working
+ * limit as defense-in-depth, not the sole control.
  */
 export async function checkRateLimit(
   supabaseClient: any,
   config: RateLimitConfig
 ): Promise<RateLimitResult> {
-  const {
-    identifier,
-    endpoint,
-    maxRequests,
-    windowMinutes,
-  } = config;
+  const { identifier, endpoint, maxRequests, windowMinutes } = config;
+  const identifierType = config.identifierType ?? inferIdentifierType(identifier);
+  const method = config.method ?? 'POST';
 
   const now = new Date();
-  const windowStart = new Date(now.getTime() - windowMinutes * 60 * 1000);
+  const windowMs = windowMinutes * 60 * 1000;
+  const windowStartThreshold = new Date(now.getTime() - windowMs);
+
+  const failOpen: RateLimitResult = {
+    allowed: true,
+    requestCount: 0,
+    retryAfter: 0,
+    limit: maxRequests,
+  };
 
   try {
-    // Count requests in current time window
-    const { data: violations, error } = await supabaseClient
-      .from('rate_limit_violations')
-      .select('*')
-      .eq('ip_address', identifier)
+    // Find the active (non-expired) window for this identifier + endpoint.
+    const { data: rows, error } = await supabaseClient
+      .from('rate_limit_state')
+      .select('id, request_count, window_start')
+      .eq('identifier', identifier)
       .eq('endpoint', endpoint)
-      .gte('created_at', windowStart.toISOString());
+      .gte('window_start', windowStartThreshold.toISOString())
+      .order('window_start', { ascending: false })
+      .limit(1);
 
-    if (error && error.code !== 'PGRST116') {
-      console.error('[RateLimit] Database error:', error);
-      // Fail open (allow request) if database is unavailable
-      return {
-        allowed: true,
-        requestCount: 0,
-        retryAfter: 0,
-        limit: maxRequests,
-      };
+    if (error) {
+      console.error('[RateLimit] Database error (failing open):', error);
+      return failOpen;
     }
 
-    const requestCount = violations?.length || 0;
-    const allowed = requestCount < maxRequests;
+    const current = rows && rows.length > 0 ? rows[0] : null;
 
-    // Calculate retry time
-    let retryAfter = 0;
-    if (!allowed && violations && violations.length > 0) {
-      const oldestViolation = violations.reduce((oldest: any, current: any) => {
-        return new Date(current.created_at) < new Date(oldest.created_at) ? current : oldest;
-      });
-      const resetTime = new Date(oldestViolation.created_at).getTime() + windowMinutes * 60 * 1000;
-      retryAfter = Math.ceil((resetTime - now.getTime()) / 1000);
-    }
-
-    // Log violation if rate limit exceeded
-    if (!allowed) {
-      await supabaseClient.from('rate_limit_violations').insert({
-        ip_address: identifier,
+    // No active window — this request opens a fresh window as request #1.
+    if (!current) {
+      await supabaseClient.from('rate_limit_state').insert({
+        identifier,
+        identifier_type: identifierType,
         endpoint,
-        requests_made: requestCount + 1,
-        limit_value: maxRequests,
-        window_minutes: windowMinutes,
-        created_at: now.toISOString(),
+        method,
+        request_count: 1,
+        window_start: now.toISOString(),
+        last_request: now.toISOString(),
       });
+      return { allowed: maxRequests >= 1, requestCount: 1, retryAfter: 0, limit: maxRequests };
+    }
+
+    const newCount = (current.request_count ?? 0) + 1;
+    const allowed = newCount <= maxRequests;
+    const resetTime = new Date(current.window_start).getTime() + windowMs;
+    const retryAfter = Math.max(0, Math.ceil((resetTime - now.getTime()) / 1000));
+
+    // Record this request against the current window (every request, allowed or not).
+    await supabaseClient
+      .from('rate_limit_state')
+      .update({
+        request_count: newCount,
+        last_request: now.toISOString(),
+        is_blocked: !allowed,
+        blocked_until: allowed ? null : new Date(resetTime).toISOString(),
+        updated_at: now.toISOString(),
+      })
+      .eq('id', current.id);
+
+    if (!allowed) {
+      // Best-effort log to the violations table for the security dashboard.
+      supabaseClient
+        .from('rate_limit_violations')
+        .insert({
+          identifier,
+          identifier_type: identifierType,
+          ip_address: identifierType === 'ip' && looksLikeIp(identifier) ? identifier : null,
+          endpoint,
+          method,
+          requests_made: newCount,
+          limit_exceeded_by: newCount - maxRequests,
+          time_window_seconds: windowMinutes * 60,
+          action_taken: 'blocked',
+        })
+        .then(undefined, (e: unknown) => console.error('[RateLimit] violation log failed:', e));
 
       console.warn(
-        `[RateLimit] Limit exceeded for ${identifier} on ${endpoint}: ${requestCount}/${maxRequests} requests`
+        `[RateLimit] ${identifierType}:${identifier} blocked on ${endpoint}: ${newCount}/${maxRequests}`
       );
     }
 
     return {
       allowed,
-      requestCount,
-      retryAfter: retryAfter > 0 ? retryAfter : 0,
+      requestCount: newCount,
+      retryAfter: allowed ? 0 : retryAfter,
       limit: maxRequests,
     };
   } catch (error) {
-    console.error('[RateLimit] Unexpected error:', error);
-    // Fail open on unexpected errors
-    return {
-      allowed: true,
-      requestCount: 0,
-      retryAfter: 0,
-      limit: maxRequests,
-    };
+    console.error('[RateLimit] Unexpected error (failing open):', error);
+    return failOpen;
   }
 }
 
