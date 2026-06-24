@@ -44,7 +44,7 @@ export const PWAInstallPrompt = () => {
   }
 
   return (
-    <div className="fixed bottom-4 left-4 right-4 z-50 md:left-auto md:right-4 md:w-80">
+    <aside aria-label="Install application" className="fixed bottom-4 left-4 right-4 z-50 md:left-auto md:right-4 md:w-80">
       <Card className="p-4 bg-card border shadow-lg">
         <div className="flex items-start gap-3">
           <div className="flex-shrink-0">
@@ -55,7 +55,7 @@ export const PWAInstallPrompt = () => {
           
           <div className="flex-1 min-w-0">
             <h3 className="font-semibold text-sm text-foreground">
-              Install BuildDesk
+              Install Brikly
             </h3>
             <p className="text-xs text-muted-foreground mt-1">
               Add to home screen for quick access and offline use
@@ -91,6 +91,6 @@ export const PWAInstallPrompt = () => {
           </Button>
         </div>
       </Card>
-    </div>
+    </aside>
   );
 };

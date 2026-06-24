@@ -144,7 +144,7 @@ git status --ignored
 - Exposure of Supabase access tokens in public repositories
 - Team members accidentally sharing personal tokens
 - Credential leakage in documentation or config files
-- Unauthorized access to your BuildDesk Supabase project
+- Unauthorized access to your Brikly Supabase project
 
 ### 🔐 **Security Benefits:**
 

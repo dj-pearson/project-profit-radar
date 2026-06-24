@@ -17,7 +17,7 @@ interface LocalBusinessSchemaProps {
 }
 
 export const LocalBusinessSchema: React.FC<LocalBusinessSchemaProps> = ({
-  businessName = "BuildDesk Construction Management",
+  businessName = "Brikly Construction Management",
   address = {
     streetAddress: "123 Construction Ave",
     addressLocality: "Denver",
@@ -25,9 +25,9 @@ export const LocalBusinessSchema: React.FC<LocalBusinessSchemaProps> = ({
     postalCode: "80202",
     addressCountry: "US"
   },
-  phone = "+1-800-BUILD-DESK",
-  email = "hello@builddesk.com",
-  website = "https://builddesk.com",
+  phone = "+1-800-BRIKLY",
+  email = "hello@brikly.net",
+  website = "https://brikly.net",
   serviceArea = ["Colorado", "Wyoming", "Utah", "New Mexico"],
   businessType = "SoftwareCompany"
 }) => {
@@ -112,7 +112,7 @@ export const ServiceAreaSchema: React.FC<ServiceAreaSchemaProps> = ({
   serviceName,
   serviceDescription, 
   serviceAreas,
-  provider = "BuildDesk"
+  provider = "Brikly"
 }) => {
   const schemaData = {
     "@context": "https://schema.org",
@@ -122,7 +122,7 @@ export const ServiceAreaSchema: React.FC<ServiceAreaSchemaProps> = ({
     "provider": {
       "@type": "Organization",
       "name": provider,
-      "url": "https://builddesk.com"
+      "url": "https://brikly.net"
     },
     "areaServed": serviceAreas.map(area => ({
       "@type": "Place",

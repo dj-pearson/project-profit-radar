@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { MobileDashboardLayout } from '@/components/layout/MobileDashboardLayout';
 import {
   MobileLayout,
@@ -18,21 +18,7 @@ import {
   MobileButtonGroup
 } from '@/components/mobile';
 import { useIsMobile } from '@/hooks/useMediaQuery';
-import {
-  Home,
-  Building2,
-  DollarSign,
-  TrendingUp,
-  Users,
-  Plus,
-  Edit,
-  Trash,
-  Share,
-  Download,
-  Filter,
-  Search,
-  Settings
-} from 'lucide-react';
+import { Building2, DollarSign, TrendingUp, Users, Plus, Edit, Trash, Share, Download, Filter, Search } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 
 /**
@@ -87,7 +73,7 @@ export default function MobileShowcase() {
         {/* Introduction */}
         <MobileSection
           title="Mobile-First Design"
-          description={`This page showcases BuildDesk's mobile-optimized components. ${isMobile ? 'You\'re viewing on mobile!' : 'Try resizing your browser or viewing on a mobile device.'}`}
+          description={`This page showcases Brikly's mobile-optimized components. ${isMobile ? 'You\'re viewing on mobile!' : 'Try resizing your browser or viewing on a mobile device.'}`}
         >
           <div className="bg-primary/10 p-4 rounded-lg">
             <p className="text-sm">

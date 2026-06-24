@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
@@ -10,24 +10,10 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { 
-  ArrowLeft, 
-  CheckSquare,
-  AlertTriangle,
-  PlusCircle,
-  CheckCircle,
-  XCircle,
-  Clock,
-  User,
-  Calendar,
-  MapPin,
-  Camera,
-  MessageSquare
-} from 'lucide-react';
+import { CheckSquare, AlertTriangle, PlusCircle, CheckCircle, XCircle, Clock, User, Calendar, MapPin, MessageSquare } from 'lucide-react';
 
 interface Project {
   id: string;
@@ -87,7 +73,7 @@ const PunchList = () => {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<PunchListItem | null>(null);
-  const [editingItem, setEditingItem] = useState<any>(null);
+  const [editingItem, setEditingItem] = useState<PunchListItem | null>(null);
   const [isCommentDialogOpen, setIsCommentDialogOpen] = useState(false);
   const [commentText, setCommentText] = useState('');
   
@@ -127,7 +113,7 @@ const PunchList = () => {
     }
   }, [user, userProfile, loading, navigate]);
 
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     try {
       setLoadingItems(true);
       
@@ -152,9 +138,9 @@ const PunchList = () => {
         .order('created_at', { ascending: false });
 
       if (itemsError) throw itemsError;
-      setPunchItems((itemsData || []) as any);
+      setPunchItems((itemsData || []) as PunchListItem[]);
 
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error loading data:', error);
       toast({
         variant: "destructive",
@@ -164,9 +150,9 @@ const PunchList = () => {
     } finally {
       setLoadingItems(false);
     }
-  };
+  }, [userProfile?.company_id]);
 
-  const handleCreateItem = async () => {
+  const handleCreateItem = useCallback(async () => {
     if (!newItem.project_id || !newItem.description) {
       toast({
         variant: "destructive",
@@ -177,17 +163,6 @@ const PunchList = () => {
     }
 
     try {
-        item_number: `PLI-${Date.now().toString().slice(-8)}`,
-        project_id: newItem.project_id,
-        description: newItem.description,
-        location: newItem.location || null,
-        trade: newItem.trade || null,
-        priority: newItem.priority,
-        assigned_to: newItem.assigned_to || null,
-        company_id: userProfile?.company_id,
-        created_by: user?.id
-      });
-
       const { data, error } = await supabase
         .from('punch_list_items')
         .insert({
@@ -224,7 +199,7 @@ const PunchList = () => {
       });
       
       loadData();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error creating punch list item:', error);
       toast({
         variant: "destructive",
@@ -232,18 +207,18 @@ const PunchList = () => {
         description: "Failed to create punch list item"
       });
     }
-  };
+  }, [newItem, userProfile?.company_id, user?.id, loadData]);
 
-  const handleStatusUpdate = async (itemId: string, newStatus: string) => {
+  const handleStatusUpdate = useCallback(async (itemId: string, newStatus: string) => {
     try {
       // In a real implementation, this would update the item status
       toast({
         title: "Success",
         description: "Status updated successfully"
       });
-      
+
       loadData();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error updating status:', error);
       toast({
         variant: "destructive",
@@ -251,9 +226,9 @@ const PunchList = () => {
         description: "Failed to update status"
       });
     }
-  };
+  }, [loadData]);
 
-  const handleEditItem = async () => {
+  const handleEditItem = useCallback(async () => {
     if (!editingItem || !editingItem.id) return;
 
     try {
@@ -288,9 +263,9 @@ const PunchList = () => {
         description: "There was a problem updating the punch list item."
       });
     }
-  };
+  }, [editingItem, loadData]);
 
-  const handleAddComment = async () => {
+  const handleAddComment = useCallback(async () => {
     if (!commentText.trim()) {
       toast({
         variant: "destructive",
@@ -312,7 +287,7 @@ const PunchList = () => {
       setSelectedItem(null);
       
       loadData();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error adding comment:', error);
       toast({
         variant: "destructive",
@@ -320,26 +295,26 @@ const PunchList = () => {
         description: "Failed to add comment"
       });
     }
-  };
+  }, [commentText, loadData]);
 
-  const getStatusBadge = (status: string) => {
+  const getStatusBadge = useCallback((status: string) => {
     switch (status) {
       case 'open':
-        return <Badge variant="outline"><Clock className="h-3 w-3 mr-1" />Open</Badge>;
+        return <Badge variant="outline"><Clock className="h-3 w-3 mr-1" aria-hidden="true" />Open</Badge>;
       case 'in_progress':
-        return <Badge variant="secondary"><AlertTriangle className="h-3 w-3 mr-1" />In Progress</Badge>;
+        return <Badge variant="secondary"><AlertTriangle className="h-3 w-3 mr-1" aria-hidden="true" />In Progress</Badge>;
       case 'completed':
-        return <Badge className="bg-green-500"><CheckCircle className="h-3 w-3 mr-1" />Completed</Badge>;
+        return <Badge className="bg-green-500"><CheckCircle className="h-3 w-3 mr-1" aria-hidden="true" />Completed</Badge>;
       case 'verified':
-        return <Badge className="bg-blue-500"><CheckSquare className="h-3 w-3 mr-1" />Verified</Badge>;
+        return <Badge className="bg-blue-500"><CheckSquare className="h-3 w-3 mr-1" aria-hidden="true" />Verified</Badge>;
       case 'rejected':
-        return <Badge variant="destructive"><XCircle className="h-3 w-3 mr-1" />Rejected</Badge>;
+        return <Badge variant="destructive"><XCircle className="h-3 w-3 mr-1" aria-hidden="true" />Rejected</Badge>;
       default:
         return <Badge variant="outline">{status}</Badge>;
     }
-  };
+  }, []);
 
-  const getPriorityBadge = (priority: string) => {
+  const getPriorityBadge = useCallback((priority: string) => {
     switch (priority) {
       case 'urgent':
         return <Badge variant="destructive">Urgent</Badge>;
@@ -352,9 +327,9 @@ const PunchList = () => {
       default:
         return <Badge variant="outline">{priority}</Badge>;
     }
-  };
+  }, []);
 
-  const getCategoryBadge = (category: string) => {
+  const getCategoryBadge = useCallback((category: string) => {
     switch (category) {
       case 'quality':
         return <Badge variant="outline">Quality</Badge>;
@@ -369,7 +344,7 @@ const PunchList = () => {
       default:
         return <Badge variant="outline">{category}</Badge>;
     }
-  };
+  }, []);
 
   const filteredItems = punchItems.filter(item => {
     const projectMatch = !selectedProject || selectedProject === 'all' || item.project_id === selectedProject;
@@ -380,12 +355,12 @@ const PunchList = () => {
   if (loading || loadingItems) {
     return (
       <DashboardLayout title="Punch List">
-        <div className="flex items-center justify-center h-96">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-construction-blue mx-auto mb-4"></div>
-            <p className="text-muted-foreground">Loading punch list...</p>
+        <div className="space-y-6" role="status" aria-live="polite" aria-label="Loading content">
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+              {[1,2,3,4].map(i => <div key={i} className="h-24 bg-muted animate-pulse rounded-lg" />)}
+            </div>
+            <div className="h-[300px] bg-muted animate-pulse rounded-lg" />
           </div>
-        </div>
       </DashboardLayout>
     );
   }
@@ -402,14 +377,14 @@ const PunchList = () => {
           <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
             <DialogTrigger asChild>
               <Button>
-                <PlusCircle className="h-4 w-4 mr-2" />
+                <PlusCircle className="h-4 w-4 mr-2" aria-hidden="true" />
                 Add Item
               </Button>
             </DialogTrigger>
-              <DialogContent className="max-w-2xl">
+              <DialogContent className="max-w-2xl" aria-describedby="add-punch-item-description">
                 <DialogHeader>
                   <DialogTitle>Add Punch List Item</DialogTitle>
-                  <DialogDescription>
+                  <DialogDescription id="add-punch-item-description">
                     Log a quality issue or incomplete work item for tracking and resolution.
                   </DialogDescription>
                 </DialogHeader>
@@ -565,13 +540,13 @@ const PunchList = () => {
           {filteredItems.length === 0 ? (
             <Card>
               <CardContent className="text-center py-12">
-                <CheckSquare className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                <CheckSquare className="h-12 w-12 text-muted-foreground mx-auto mb-4" aria-hidden="true" />
                 <h3 className="text-lg font-medium mb-2">No Punch List Items</h3>
                 <p className="text-muted-foreground mb-4">
                   {selectedProject || selectedStatus ? 'No items match the selected filters' : 'No punch list items have been created yet'}
                 </p>
                 <Button onClick={() => setIsCreateDialogOpen(true)}>
-                  <PlusCircle className="h-4 w-4 mr-2" />
+                  <PlusCircle className="h-4 w-4 mr-2" aria-hidden="true" />
                   Add First Item
                 </Button>
               </CardContent>
@@ -584,7 +559,7 @@ const PunchList = () => {
                     <div className="flex items-center justify-between">
                       <div>
                         <CardTitle className="flex items-center space-x-2">
-                          <CheckSquare className="h-5 w-5 text-construction-blue" />
+                          <CheckSquare className="h-5 w-5 text-construction-blue" aria-hidden="true" />
                           <span>Punch List Item</span>
                           <Badge variant="outline">#{item.item_number}</Badge>
                         </CardTitle>
@@ -607,7 +582,7 @@ const PunchList = () => {
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                       <div>
                         <h4 className="font-medium mb-2 flex items-center">
-                          <MapPin className="h-4 w-4 mr-2" />
+                          <MapPin className="h-4 w-4 mr-2" aria-hidden="true" />
                           Location
                         </h4>
                         <p className="text-sm text-muted-foreground">{item.location || 'Not specified'}</p>
@@ -620,7 +595,7 @@ const PunchList = () => {
                       
                       <div>
                         <h4 className="font-medium mb-2 flex items-center">
-                          <User className="h-4 w-4 mr-2" />
+                          <User className="h-4 w-4 mr-2" aria-hidden="true" />
                           Assigned To
                         </h4>
                         <p className="text-sm text-muted-foreground">
@@ -630,7 +605,7 @@ const PunchList = () => {
                       
                       <div>
                          <h4 className="font-medium mb-2 flex items-center">
-                           <Calendar className="h-4 w-4 mr-2" />
+                           <Calendar className="h-4 w-4 mr-2" aria-hidden="true" />
                            Date Identified
                          </h4>
                          <p className="text-sm text-muted-foreground">
@@ -649,7 +624,7 @@ const PunchList = () => {
                           setIsEditDialogOpen(true);
                         }}
                       >
-                        <User className="h-3 w-3 mr-1" />
+                        <User className="h-3 w-3 mr-1" aria-hidden="true" />
                         Edit
                       </Button>
                       
@@ -661,7 +636,7 @@ const PunchList = () => {
                           setIsCommentDialogOpen(true);
                         }}
                       >
-                        <MessageSquare className="h-3 w-3 mr-1" />
+                        <MessageSquare className="h-3 w-3 mr-1" aria-hidden="true" />
                         Add Comment
                       </Button>
                       
@@ -671,7 +646,7 @@ const PunchList = () => {
                           size="sm"
                           onClick={() => handleStatusUpdate(item.id, 'in_progress')}
                         >
-                          <Clock className="h-3 w-3 mr-1" />
+                          <Clock className="h-3 w-3 mr-1" aria-hidden="true" />
                           Start Work
                         </Button>
                       )}
@@ -682,7 +657,7 @@ const PunchList = () => {
                           size="sm"
                           onClick={() => handleStatusUpdate(item.id, 'completed')}
                         >
-                          <CheckCircle className="h-3 w-3 mr-1" />
+                          <CheckCircle className="h-3 w-3 mr-1" aria-hidden="true" />
                           Mark Complete
                         </Button>
                       )}
@@ -693,7 +668,7 @@ const PunchList = () => {
                           size="sm"
                           onClick={() => handleStatusUpdate(item.id, 'verified')}
                         >
-                          <CheckSquare className="h-3 w-3 mr-1" />
+                          <CheckSquare className="h-3 w-3 mr-1" aria-hidden="true" />
                           Verify
                         </Button>
                       )}
@@ -708,10 +683,10 @@ const PunchList = () => {
 
       {/* Edit Dialog */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-2xl" aria-describedby="edit-punch-item-description">
           <DialogHeader>
             <DialogTitle>Edit Punch List Item</DialogTitle>
-            <DialogDescription>
+            <DialogDescription id="edit-punch-item-description">
               Update the details of this punch list item.
             </DialogDescription>
           </DialogHeader>

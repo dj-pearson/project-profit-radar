@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
 import { LineChart, Line, AreaChart, Area, XAxis, YAxis, CartesianGrid, ComposedChart, Bar } from 'recharts';
-import { TrendingUp, TrendingDown, Activity, BarChart3 } from 'lucide-react';
+import { TrendingUp, TrendingDown, Activity } from 'lucide-react';
 
 interface TrendMetric {
   period: string;

@@ -1,27 +1,22 @@
 // Payment Reminders Edge Function
-// Updated with multi-tenant site_id isolation
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { initializeAuthContext, errorResponse } from '../_shared/auth-helpers.ts'
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-}
+import { getCorsHeaders } from '../_shared/secure-cors.ts'
 
 serve(async (req) => {
+  const corsHeaders = getCorsHeaders(req)
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
   }
 
   try {
-    // Initialize auth context - extracts user AND site_id from JWT
-    const authContext = await initializeAuthContext(req)
+        const authContext = await initializeAuthContext(req)
     if (!authContext) {
       return errorResponse('Unauthorized', 401)
     }
 
-    const { user, siteId, supabase: supabaseClient } = authContext
-    console.log('[PAYMENT-REMINDERS] User authenticated', { userId: user.id, siteId })
+    const { user, supabase: supabaseClient } = authContext
+    console.log('[PAYMENT-REMINDERS] User authenticated', { userId: user.id })
 
     const { tenant_id, action, invoice_id } = await req.json()
 
@@ -34,11 +29,11 @@ serve(async (req) => {
 
     switch (action) {
       case 'check_pending_reminders':
-        return await checkPendingReminders(supabaseClient, siteId, tenant_id)
+        return await checkPendingReminders(supabaseClient, tenant_id)
       case 'send_reminder':
-        return await sendReminder(supabaseClient, siteId, tenant_id, invoice_id)
+        return await sendReminder(supabaseClient, tenant_id, invoice_id)
       case 'generate_reminders':
-        return await generateReminders(supabaseClient, siteId, tenant_id)
+        return await generateReminders(supabaseClient, tenant_id)
       default:
         return new Response(
           JSON.stringify({ error: 'Invalid action. Use: check_pending_reminders, send_reminder, generate_reminders' }),
@@ -55,10 +50,10 @@ serve(async (req) => {
   }
 })
 
-async function checkPendingReminders(supabase: any, siteId: string, tenant_id: string) {
-  console.log('[PAYMENT-REMINDERS] Checking pending reminders', { siteId, tenant_id })
+async function checkPendingReminders(supabase: any, tenant_id: string) {
+  console.log('[PAYMENT-REMINDERS] Checking pending reminders', { tenant_id })
 
-  // Get all pending reminders with site isolation
+  // Get all pending reminders
   const { data: reminders, error: reminderError } = await supabase
     .from('payment_reminders')
     .select(`
@@ -68,7 +63,6 @@ async function checkPendingReminders(supabase: any, siteId: string, tenant_id: s
         client_name
       )
     `)
-    .eq('site_id', siteId)  // CRITICAL: Site isolation
     .eq('tenant_id', tenant_id)
     .eq('status', 'pending')
     .is('sent_at', null)
@@ -105,14 +99,14 @@ async function checkPendingReminders(supabase: any, siteId: string, tenant_id: s
   )
 }
 
-async function sendReminder(supabase: any, siteId: string, tenant_id: string, invoice_id: string) {
+async function sendReminder(supabase: any, tenant_id: string, invoice_id: string) {
   console.log('[PAYMENT-REMINDERS] Sending reminder for invoice:', invoice_id)
 
   if (!invoice_id) {
     throw new Error('invoice_id is required for send_reminder action')
   }
 
-  // Get reminder details with site isolation
+  // Get reminder details
   const { data: reminder, error: reminderError } = await supabase
     .from('payment_reminders')
     .select(`
@@ -123,7 +117,6 @@ async function sendReminder(supabase: any, siteId: string, tenant_id: string, in
         client_email
       )
     `)
-    .eq('site_id', siteId)  // CRITICAL: Site isolation
     .eq('tenant_id', tenant_id)
     .eq('invoice_id', invoice_id)
     .eq('status', 'pending')
@@ -143,14 +136,13 @@ async function sendReminder(supabase: any, siteId: string, tenant_id: string, in
   console.log('Subject:', emailSubject)
   console.log('Body:', emailBody)
 
-  // Update reminder status with site isolation
+  // Update reminder status
   const { error: updateError } = await supabase
     .from('payment_reminders')
     .update({
       status: 'sent',
       sent_at: new Date().toISOString()
     })
-    .eq('site_id', siteId)  // CRITICAL: Site isolation
     .eq('id', reminder.id)
 
   if (updateError) {
@@ -169,14 +161,13 @@ async function sendReminder(supabase: any, siteId: string, tenant_id: string, in
   )
 }
 
-async function generateReminders(supabase: any, siteId: string, tenant_id: string) {
-  console.log('[PAYMENT-REMINDERS] Generating reminders', { siteId, tenant_id })
+async function generateReminders(supabase: any, tenant_id: string) {
+  console.log('[PAYMENT-REMINDERS] Generating reminders', { tenant_id })
 
-  // Get active billing automation rules with site isolation
+  // Get active billing automation rules
   const { data: rules, error: rulesError } = await supabase
     .from('billing_automation_rules')
     .select('*')
-    .eq('site_id', siteId)  // CRITICAL: Site isolation
     .eq('tenant_id', tenant_id)
     .eq('is_active', true)
 
@@ -184,11 +175,10 @@ async function generateReminders(supabase: any, siteId: string, tenant_id: strin
     throw new Error(`Failed to fetch automation rules: ${rulesError.message}`)
   }
 
-  // Get projects with unpaid invoices with site isolation
+  // Get projects with unpaid invoices
   const { data: projects, error: projectsError } = await supabase
     .from('projects')
     .select('id, name, client_name, budget, actual_cost')
-    .eq('site_id', siteId)  // CRITICAL: Site isolation
     .eq('tenant_id', tenant_id)
     .eq('status', 'active')
     .limit(20)
@@ -216,11 +206,10 @@ async function generateReminders(supabase: any, siteId: string, tenant_id: strin
       ]
 
       for (const reminderConfig of reminderTypes) {
-        // Check if reminder already exists with site isolation
+        // Check if reminder already exists
         const { data: existingReminder } = await supabase
           .from('payment_reminders')
           .select('id')
-          .eq('site_id', siteId)  // CRITICAL: Site isolation
           .eq('tenant_id', tenant_id)
           .eq('project_id', project.id)
           .eq('reminder_type', reminderConfig.type)
@@ -233,7 +222,6 @@ async function generateReminders(supabase: any, siteId: string, tenant_id: strin
         const daysBeforeAfter = reminderConfig.daysBefore || -reminderConfig.daysAfter
 
         const reminder = {
-          site_id: siteId,  // CRITICAL: Site isolation
           tenant_id,
           invoice_id: `inv_${project.id}_${Date.now()}`, // Simulated invoice ID
           project_id: project.id,
@@ -267,15 +255,15 @@ async function generateReminders(supabase: any, siteId: string, tenant_id: strin
 function getReminderSubject(reminderType: string): string {
   switch (reminderType) {
     case 'upcoming':
-      return 'Payment Due Soon - BuildDesk Invoice'
+      return 'Payment Due Soon - Brikly Invoice'
     case 'due_today':
-      return 'Payment Due Today - BuildDesk Invoice'
+      return 'Payment Due Today - Brikly Invoice'
     case 'overdue':
-      return 'Overdue Payment Notice - BuildDesk Invoice'
+      return 'Overdue Payment Notice - Brikly Invoice'
     case 'final_notice':
-      return 'Final Notice - Overdue Payment - BuildDesk Invoice'
+      return 'Final Notice - Overdue Payment - Brikly Invoice'
     default:
-      return 'Payment Reminder - BuildDesk Invoice'
+      return 'Payment Reminder - Brikly Invoice'
   }
 }
 

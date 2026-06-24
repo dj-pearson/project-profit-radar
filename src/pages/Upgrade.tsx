@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Check, Calculator, ArrowLeft, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -176,7 +176,7 @@ const Upgrade = () => {
               {isOnTrial && (
                 <p className="text-sm text-muted-foreground">
                   {isTrialExpired 
-                    ? "Your trial has expired. Choose a plan to continue using BuildDesk."
+                    ? "Your trial has expired. Choose a plan to continue using Brikly."
                     : `${trialDaysRemaining} days remaining in your trial`
                   }
                 </p>
@@ -200,7 +200,7 @@ const Upgrade = () => {
                   </h3>
                   <p className="text-sm text-muted-foreground">
                     {isTrialExpired 
-                      ? "Your free trial has ended. Upgrade now to continue accessing BuildDesk."
+                      ? "Your free trial has ended. Upgrade now to continue accessing Brikly."
                       : `You have ${trialDaysRemaining} days left in your free trial. Upgrade now to unlock all features.`
                     }
                   </p>

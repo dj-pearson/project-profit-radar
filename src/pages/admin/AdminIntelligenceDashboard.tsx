@@ -3,7 +3,7 @@
  * Central hub for account health, revenue ops, trials, and support intelligence
  */
 
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { RoleGuard, ROLE_GROUPS } from '@/components/auth/RoleGuard';
@@ -14,22 +14,7 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import {
-  TrendingUp,
-  TrendingDown,
-  AlertTriangle,
-  CheckCircle,
-  Users,
-  DollarSign,
-  Target,
-  Activity,
-  Mail,
-  Phone,
-  Calendar,
-  ArrowUpRight,
-  ArrowDownRight,
-  Minus,
-} from 'lucide-react';
+import { AlertTriangle, Users, DollarSign, Target, Mail, ArrowUpRight, ArrowDownRight, Minus } from 'lucide-react';
 
 interface AccountHealth {
   company_id: string;
@@ -209,11 +194,10 @@ const AdminIntelligenceDashboard = () => {
   };
 
   const calculateCurrentRevenue = async (): Promise<RevenueMetrics> => {
-    // Root admin can see all companies, others see their own site
+    // Root admin can see all companies
     const { data: companies } = await supabase
       .from('companies')
-      .select('*')
-      .eq('site_id', userProfile?.site_id || '');
+      .select('*');
 
     const pricingMap: Record<string, number> = {
       starter: 149,
@@ -350,12 +334,12 @@ const AdminIntelligenceDashboard = () => {
   if (loading || loadingData) {
     return (
       <DashboardLayout title="Admin Intelligence" showTrialBanner={false}>
-        <div className="flex items-center justify-center py-12">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-construction-blue mx-auto mb-4"></div>
-            <p className="text-muted-foreground">Loading intelligence dashboard...</p>
+        <div className="space-y-6" role="status" aria-live="polite" aria-label="Loading content">
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+              {[1,2,3,4].map(i => <div key={i} className="h-24 bg-muted animate-pulse rounded-lg" />)}
+            </div>
+            <div className="h-[300px] bg-muted animate-pulse rounded-lg" />
           </div>
-        </div>
       </DashboardLayout>
     );
   }

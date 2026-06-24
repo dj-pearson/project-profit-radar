@@ -98,7 +98,7 @@ const SEOAnalyticsSetup: React.FC<SEOAnalyticsSetupProps> = ({ onClose }) => {
                 <Badge variant="outline" className="text-xs">4</Badge>
                 <div>
                   <p className="font-medium">Verify Website Ownership</p>
-                  <p className="text-sm text-muted-foreground">Verify build-desk.com in Google Search Console and Bing Webmaster Tools</p>
+                  <p className="text-sm text-muted-foreground">Verify brikly.net in Google Search Console and Bing Webmaster Tools</p>
                 </div>
               </div>
             </div>

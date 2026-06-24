@@ -183,7 +183,7 @@ export const BiometricSettings = () => {
       <CardContent className="space-y-4">
         {/* Status Alert */}
         {!isEnrolled && (
-          <Alert className="border-orange-200 bg-orange-50">
+          <Alert className="rounded-xl glass-thin border-orange-200/60 dark:border-orange-500/30 bg-orange-50/80 dark:bg-orange-950/20">
             <AlertCircle className="h-4 w-4 text-orange-600" />
             <AlertDescription className="text-sm text-orange-900">
               {biometricType || 'Biometric authentication'} is not set up on this device.
@@ -193,7 +193,7 @@ export const BiometricSettings = () => {
         )}
 
         {isEnrolled && !isAvailable && (
-          <Alert className="border-orange-200 bg-orange-50">
+          <Alert className="rounded-xl glass-thin border-orange-200/60 dark:border-orange-500/30 bg-orange-50/80 dark:bg-orange-950/20">
             <AlertCircle className="h-4 w-4 text-orange-600" />
             <AlertDescription className="text-sm text-orange-900">
               Biometric hardware is available but there may be an issue. Try restarting your
@@ -232,7 +232,7 @@ export const BiometricSettings = () => {
         )}
 
         {/* Security Notice */}
-        <Alert className="border-blue-200 bg-blue-50">
+        <Alert className="rounded-xl glass-thin border-blue-200/60 dark:border-blue-500/30 bg-blue-50/80 dark:bg-blue-950/20">
           <Shield className="h-4 w-4 text-blue-600" />
           <AlertDescription className="text-sm text-blue-900">
             <strong>Security:</strong> Your biometric data is stored securely on your device

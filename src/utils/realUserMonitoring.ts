@@ -98,14 +98,8 @@ export const createRUMMetric = (metric: Metric): RUMMetric => {
  * Send RUM data to analytics endpoint
  */
 export const sendRUMData = async (metric: RUMMetric): Promise<void> => {
-  // In development, just log
+  // In development, skip sending to analytics
   if (import.meta.env.DEV) {
-      metric: metric.name,
-      value: metric.value,
-      rating: metric.rating,
-      device: metric.context.deviceType,
-      connection: metric.context.effectiveType,
-    });
     return;
   }
 
@@ -139,7 +133,9 @@ export const sendRUMData = async (metric: RUMMetric): Promise<void> => {
  * Track custom performance metric
  */
 export const trackCustomMetric = (name: string, value: number, additionalData?: Record<string, any>): void => {
+  // Skip in development
   if (import.meta.env.DEV) {
+    return;
   }
 
   // Send to analytics

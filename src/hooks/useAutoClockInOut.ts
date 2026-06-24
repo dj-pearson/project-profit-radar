@@ -98,7 +98,7 @@ export const useAutoClockInOut = (options: UseAutoClockInOutOptions = {}): UseAu
 
       if (fetchError) throw fetchError;
 
-      const loadedGeofences: GeofenceBoundary[] = (data || []).map((g: any) => ({
+      const loadedGeofences: GeofenceBoundary[] = (data || []).map((g: Record<string, unknown>) => ({
         id: g.id,
         name: g.name,
         latitude: g.latitude,
@@ -118,9 +118,9 @@ export const useAutoClockInOut = (options: UseAutoClockInOutOptions = {}): UseAu
         addGeofence(geofence);
       });
 
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Error loading geofences:', err);
-      setError(err.message || 'Failed to load geofences');
+      setError(err instanceof Error ? err.message : 'Failed to load geofences');
     } finally {
       setIsLoading(false);
     }
@@ -273,12 +273,12 @@ export const useAutoClockInOut = (options: UseAutoClockInOutOptions = {}): UseAu
 
       onClockIn?.(geofence);
 
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Error clocking in:', err);
       toast({
         variant: 'destructive',
         title: 'Clock In Failed',
-        description: err.message || 'Failed to record clock in'
+        description: err instanceof Error ? err.message : 'Failed to record clock in'
       });
     }
   };
@@ -318,12 +318,12 @@ export const useAutoClockInOut = (options: UseAutoClockInOutOptions = {}): UseAu
 
       setActiveTimeEntry(null);
 
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Error clocking out:', err);
       toast({
         variant: 'destructive',
         title: 'Clock Out Failed',
-        description: err.message || 'Failed to record clock out'
+        description: err instanceof Error ? err.message : 'Failed to record clock out'
       });
     }
   };

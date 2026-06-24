@@ -1,6 +1,5 @@
-import { DollarSign, TrendingUp, Zap, Brain, Check, X } from "lucide-react";
+import { DollarSign, TrendingUp, Zap, Brain, Check, X, Minus } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { cn } from "@/lib/utils";
 
 const FinancialIntelligenceShowcase = () => {
   const features = [
@@ -42,7 +41,7 @@ const FinancialIntelligenceShowcase = () => {
           <span className="text-gradient">A Financial Command Center.</span>
         </h2>
         <p className="text-xl text-muted-foreground">
-          While competitors focus on schedules and photos, BuildDesk owns the financial intelligence layer—where profit is actually made.
+          While competitors focus on schedules and photos, Brikly owns the financial intelligence layer—where profit is actually made.
         </p>
       </div>
 
@@ -65,7 +64,7 @@ const FinancialIntelligenceShowcase = () => {
       {/* Comparison Table */}
       <div className="glass-card rounded-3xl overflow-hidden border-0 shadow-2xl">
         <div className="bg-construction-dark/5 dark:bg-white/5 p-8 text-center border-b border-border/10">
-          <h3 className="text-2xl font-bold text-construction-dark dark:text-white">Why BuildDesk Wins</h3>
+          <h3 className="text-2xl font-bold text-construction-dark dark:text-white">Why Brikly Wins</h3>
           <p className="text-muted-foreground">The only platform built for financial clarity.</p>
         </div>
 
@@ -74,17 +73,21 @@ const FinancialIntelligenceShowcase = () => {
             <thead>
               <tr className="border-b border-border/10">
                 <th className="p-6 font-medium text-muted-foreground w-1/2">Capability</th>
-                <th className="p-6 font-bold text-construction-orange text-center bg-construction-orange/5 w-1/4">BuildDesk</th>
-                <th className="p-6 font-medium text-muted-foreground text-center w-1/4">Others</th>
+                <th className="p-6 font-bold text-construction-orange text-center bg-construction-orange/5 w-1/4">Brikly</th>
+                <th className="p-6 font-medium text-muted-foreground text-center w-1/4">Traditional PM Tools</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border/10">
-              {[
-                { name: "Real-time Profit Visibility", us: true, them: false },
-                { name: "Predictive Cost Alerts", us: true, them: false },
-                { name: "Automated Month-End Close", us: true, them: false },
-                { name: "Decision Impact Calculator", us: true, them: false },
-              ].map((row, i) => (
+              {([
+                { name: "Real-time Profit Visibility", us: true, them: false as boolean | "partial" },
+                { name: "Predictive Cost Alerts", us: true, them: false as boolean | "partial" },
+                { name: "Automated Month-End Close", us: true, them: false as boolean | "partial" },
+                { name: "Decision Impact Calculator", us: true, them: false as boolean | "partial" },
+                { name: "Gantt Chart Scheduling", us: true, them: true as boolean | "partial" },
+                { name: "Photo Documentation", us: true, them: true as boolean | "partial" },
+                { name: "GPS Time Tracking", us: true, them: "partial" as boolean | "partial" },
+                { name: "QuickBooks 2-Way Sync", us: true, them: "partial" as boolean | "partial" },
+              ]).map((row, i) => (
                 <tr key={i} className="hover:bg-secondary/20 transition-colors">
                   <td className="p-6 font-medium text-construction-dark dark:text-gray-200">{row.name}</td>
                   <td className="p-6 text-center bg-construction-orange/5">
@@ -93,15 +96,28 @@ const FinancialIntelligenceShowcase = () => {
                     </div>
                   </td>
                   <td className="p-6 text-center">
-                    <div className="inline-flex items-center justify-center h-8 w-8 rounded-full bg-secondary text-muted-foreground">
-                      <X className="h-5 w-5" />
-                    </div>
+                    {row.them === true ? (
+                      <div className="inline-flex items-center justify-center h-8 w-8 rounded-full bg-green-500 text-white shadow-lg shadow-green-500/30">
+                        <Check className="h-5 w-5" />
+                      </div>
+                    ) : row.them === "partial" ? (
+                      <div className="inline-flex items-center justify-center h-8 w-8 rounded-full bg-amber-500 text-white">
+                        <Minus className="h-5 w-5" />
+                      </div>
+                    ) : (
+                      <div className="inline-flex items-center justify-center h-8 w-8 rounded-full bg-secondary text-muted-foreground">
+                        <X className="h-5 w-5" />
+                      </div>
+                    )}
                   </td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
+        <p className="text-xs text-muted-foreground italic text-center mt-4">
+          Compared to Procore, Buildertrend, and CoConstruct based on publicly available feature sets.
+        </p>
       </div>
     </div>
   );

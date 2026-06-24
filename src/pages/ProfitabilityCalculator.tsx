@@ -1,9 +1,9 @@
 /**
  * Profitability Calculator Page
- * Free lead magnet tool for BuildDesk.com
+ * Free lead magnet tool for Brikly.com
  */
 
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -196,7 +196,7 @@ export default function ProfitabilityCalculator() {
   return (
     <>
       <Helmet>
-        <title>Free Construction Profitability Calculator - BuildDesk</title>
+        <title>Free Construction Profitability Calculator - Brikly</title>
         <meta name="description" content="Calculate project profit margins instantly. Free tool for contractors to validate bids and protect profits. No signup required." />
         <meta name="keywords" content="construction profit calculator, contractor profitability tool, construction bid calculator, estimate profit margin calculator" />
       </Helmet>
@@ -212,7 +212,7 @@ export default function ProfitabilityCalculator() {
                 </div>
                 <div>
                   <h1 className="text-2xl font-bold text-gray-900">
-                    BuildDesk
+                    Brikly
                   </h1>
                   <p className="text-sm text-gray-600">Profitability Calculator</p>
                 </div>

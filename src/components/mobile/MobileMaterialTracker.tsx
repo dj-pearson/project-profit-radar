@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Camera, Package, MapPin, CheckCircle, AlertCircle, Plus, Search, Filter, Calendar, User, FileText, Truck } from 'lucide-react';
+import { Camera, Package, AlertCircle, Plus, Search, Filter, User, Truck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -11,8 +11,8 @@ import { EnhancedMobileCamera } from './EnhancedMobileCamera';
 import { useGeolocation } from '@/hooks/useGeolocation';
 import { useDeviceInfo } from '@/hooks/useDeviceInfo';
 import { toast } from 'sonner';
-import { supabase } from '@/integrations/supabase/client';
 import { mobileCardClasses, mobileButtonClasses, mobileTextClasses } from '@/utils/mobileHelpers';
+import { MobileEmptyState } from './MobileEmptyState';
 
 interface MaterialDelivery {
   id: string;
@@ -295,9 +295,12 @@ export const MobileMaterialTracker: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen ios-page-bg">
       {/* Header */}
-      <div className="sticky top-0 z-10 bg-background/80 backdrop-blur-md border-b border-border/50 p-4">
+      <div
+        className="sticky top-0 z-10 glass-chrome border-b border-white/10 dark:border-white/5 p-4 safe-area-x"
+        style={{ paddingTop: 'calc(0.75rem + env(safe-area-inset-top, 0px))' }}
+      >
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
             <Package className="h-6 w-6 text-primary" />
@@ -350,12 +353,14 @@ export const MobileMaterialTracker: React.FC = () => {
           <TabsContent value="deliveries" className="mt-4">
             <div className="space-y-4">
               {filteredDeliveries.length === 0 ? (
-                <Card className={mobileCardClasses.container}>
-                  <CardContent className="pt-6 text-center">
-                    <Package className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                    <p className={mobileTextClasses.body}>No deliveries found</p>
-                  </CardContent>
-                </Card>
+                <MobileEmptyState
+                  icon={Package}
+                  title="No deliveries yet"
+                  description="Log incoming material shipments to track quantities, photos, and issues on-site."
+                  primaryLabel="Log delivery"
+                  onPrimary={() => setShowNewDelivery(true)}
+                  accentClass="bg-blue-500/10 text-blue-600"
+                />
               ) : (
                 filteredDeliveries.map((delivery) => (
                   <Card key={delivery.id} className={mobileCardClasses.container}>
@@ -471,9 +476,9 @@ export const MobileMaterialTracker: React.FC = () => {
 
       {/* New Delivery Modal */}
       {showNewDelivery && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-end">
-          <div className="bg-background w-full max-h-[90vh] overflow-y-auto rounded-t-lg">
-            <div className="sticky top-0 bg-background border-b p-4">
+        <div className="fixed inset-0 ios-scrim z-50 flex items-end">
+          <div className="glass-thick w-full max-h-[90vh] overflow-y-auto rounded-t-[28px] shadow-ios-4 ios-sheet-in">
+            <div className="sticky top-0 glass-chrome border-b border-white/10 dark:border-white/5 p-4">
               <div className="flex items-center justify-between">
                 <h2 className={mobileTextClasses.header}>Log Delivery</h2>
                 <Button
@@ -646,9 +651,9 @@ export const MobileMaterialTracker: React.FC = () => {
 
       {/* Issue Report Modal */}
       {showIssueForm && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-end">
-          <div className="bg-background w-full max-h-[90vh] overflow-y-auto rounded-t-lg">
-            <div className="sticky top-0 bg-background border-b p-4">
+        <div className="fixed inset-0 ios-scrim z-50 flex items-end">
+          <div className="glass-thick w-full max-h-[90vh] overflow-y-auto rounded-t-[28px] shadow-ios-4 ios-sheet-in">
+            <div className="sticky top-0 glass-chrome border-b border-white/10 dark:border-white/5 p-4">
               <div className="flex items-center justify-between">
                 <h2 className={mobileTextClasses.header}>Report Issue</h2>
                 <Button

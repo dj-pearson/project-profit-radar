@@ -172,11 +172,7 @@ class IntegrationService {
   async createTaskFromData(data: any): Promise<void> {
     try {
       // Mock task creation
-        name: data.name,
-        priority: data.priority,
-        status: data.status,
-        project_id: data.project_id
-      });
+      // Task would be created with: name, priority, status, project_id
       
       toast.success('Task created successfully');
     } catch (error: any) {
@@ -189,11 +185,7 @@ class IntegrationService {
   async processCrossModuleOperations(operations: CrossModuleOperation[]): Promise<void> {
     try {
       for (const operation of operations) {
-          id: operation.id,
-          type: operation.operation_type,
-          source: operation.source_module,
-          target: operation.target_module
-        });
+        // Process each cross-module operation
       }
       
       toast.success(`Processed ${operations.length} cross-module operations`);

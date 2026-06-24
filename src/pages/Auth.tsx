@@ -1,23 +1,25 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import type { FormEvent } from "react";
-import { useNavigate, Link, useLocation } from "react-router-dom";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Alert, AlertDescription } from "@/components/ui/alert";
+import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/hooks/use-toast";
-import { Shield, AlertCircle, CheckCircle, XCircle, Mail, Clock } from "lucide-react";
+import { AlertCircle, Shield, Building2 } from "lucide-react";
 import { getReturnUrl, clearRememberedRoute } from "@/lib/routeMemory";
+import { useRedirectLoopDetection } from "@/hooks/useRedirectLoopDetection";
+import AuthBrandingPanel from "@/components/auth/AuthBrandingPanel";
+import SignInForm from "@/components/auth/SignInForm";
+import SignUpForm from "@/components/auth/SignUpForm";
+import PasswordResetFlow from "@/components/auth/PasswordResetFlow";
+import { OAuthButtons } from "@/components/auth/OAuthButtons";
+import { PasswordRequirements } from "@/components/auth/PasswordRequirements";
+import { useCsrfToken } from "@/lib/security/csrfProtection.tsx";
+import { validateCsrfToken, getCsrfToken } from "@/lib/security/csrfProtection";
+import { createEndpointLimiter } from "@/lib/security/rateLimiter";
+import { supabase } from "@/integrations/supabase/client";
+import { logger } from '@/lib/logger';
 
+type OTPFlowState = 'idle' | 'sending' | 'verifying' | 'submitted' | 'verified' | 'setting_password';
+type AuthView = 'signin' | 'signup' | 'forgot';
 
 const Auth = () => {
   const [email, setEmail] = useState("");
@@ -26,39 +28,68 @@ const Auth = () => {
   const [lastName, setLastName] = useState("");
   const [resetEmail, setResetEmail] = useState("");
   const [loading, setLoading] = useState(false);
-  const [activeTab, setActiveTab] = useState("signin");
-  const [passwordValidation, setPasswordValidation] = useState({
-    isValid: true,
-    errors: [] as string[],
-  });
+  const [activeView, setActiveView] = useState<AuthView>("signin");
+  const [showPassword, setShowPassword] = useState(false);
+  const [passwordValidation, setPasswordValidation] = useState({ isValid: true, errors: [] as string[] });
   const [showPasswordRequirements, setShowPasswordRequirements] = useState(false);
   const [emailSent, setEmailSent] = useState(false);
   const [emailSentType, setEmailSentType] = useState<'signup' | 'reset' | null>(null);
   const [pendingPlan, setPendingPlan] = useState<{tier: string, period: string} | null>(null);
-  const { signIn, signInWithGoogle, signInWithApple, signUp, resetPassword, user, userProfile, loading: authLoading } = useAuth();
-  const navigate = useNavigate();
-  const location = useLocation();
+  const [otpFlowState, setOtpFlowState] = useState<OTPFlowState>('idle');
+  const [otpCode, setOtpCode] = useState("");
+  const [otpExpiresIn, setOtpExpiresIn] = useState<number>(15);
+  const [otpResendCooldown, setOtpResendCooldown] = useState(0);
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [newPasswordValidation, setNewPasswordValidation] = useState({ isValid: true, errors: [] as string[] });
+  const otpResendTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const hasAttemptedRedirect = useRef(false);
+  const redirectStabilityTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Check for plan context from URL on mount
+  // SECURITY: Initialize CSRF token for auth forms
+  const csrfToken = useCsrfToken();
+  // SECURITY: Client-side rate limiter for sign-in attempts
+  const signInLimiter = useRef(createEndpointLimiter('/auth/signin', 'auth'));
+
+  const {
+    signIn, signInWithGoogle, signInWithApple, signUp,
+    resetPassword: authResetPassword, resetPasswordWithOTP,
+    verifyOTP, resendOTP,
+    user, userProfile, session, loading: authLoading
+  } = useAuth();
+  const navigate = useNavigate();
+  const { redirectLoopDetected, checkRedirectLoop, recordRedirectAttempt, clearRedirectLoopTracking, isBlocked } = useRedirectLoopDetection();
+
+  useEffect(() => {
+    return () => {
+      if (otpResendTimerRef.current) clearInterval(otpResendTimerRef.current);
+      if (redirectStabilityTimer.current) clearTimeout(redirectStabilityTimer.current);
+    };
+  }, []);
+
+  const startResendCooldown = (seconds: number = 60) => {
+    setOtpResendCooldown(seconds);
+    if (otpResendTimerRef.current) clearInterval(otpResendTimerRef.current);
+    otpResendTimerRef.current = setInterval(() => {
+      setOtpResendCooldown((prev) => {
+        if (prev <= 1) { if (otpResendTimerRef.current) clearInterval(otpResendTimerRef.current); return 0; }
+        return prev - 1;
+      });
+    }, 1000);
+  };
+
+  // --- URL params on mount ---
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const plan = urlParams.get('plan');
     const period = urlParams.get('period');
     const tab = urlParams.get('tab');
-
-    if (plan && period) {
-      setPendingPlan({ tier: plan, period });
-    }
-
-    if (tab) {
-      setActiveTab(tab);
-    }
+    if (plan && period) setPendingPlan({ tier: plan, period });
+    if (tab) setActiveView(tab as AuthView);
   }, []);
 
-  // Navigate to dashboard after successful authentication
-  // Handle special auth parameters for SEO
+  // --- Auth redirect effect ---
   useEffect(() => {
-    // Check for special auth parameters that should show the auth page
     const urlParams = new URLSearchParams(window.location.search);
     const hashParams = new URLSearchParams(window.location.hash.substring(1));
     const type = urlParams.get('type') || hashParams.get('type');
@@ -66,663 +97,323 @@ const Auth = () => {
     const errorRecovery = urlParams.has('error_recovery');
     const refresh = urlParams.has('refresh');
 
-    // If we have error_recovery or refresh parameters, clean the URL for SEO
-    if (errorRecovery || refresh) {
-      // Replace URL without parameters to avoid redirect issues
-      window.history.replaceState({}, '', '/auth');
-      return;
-    }
+    if (isBlocked()) return;
+    if (errorRecovery || refresh) { window.history.replaceState({}, '', '/auth'); clearRedirectLoopTracking(); return; }
+    if (!user || authLoading) { hasAttemptedRedirect.current = false; return; }
+    if (type === 'recovery') return;
+    if (checkRedirectLoop()) { hasAttemptedRedirect.current = true; return; }
+    if (hasAttemptedRedirect.current) return;
+    if (!session) return;
 
-    // Wait until auth profile has finished loading
-    if (!user || authLoading) return;
+    if (redirectStabilityTimer.current) clearTimeout(redirectStabilityTimer.current);
+    redirectStabilityTimer.current = setTimeout(() => {
+      if (!user || !session || authLoading) return;
+      hasAttemptedRedirect.current = true;
+      recordRedirectAttempt();
 
-    // Don't redirect to dashboard if this is a password recovery session
-    if (type === 'recovery') {
-      return;
-    }
-
-
-    // Check if there's a pending checkout
-    const pendingCheckout = localStorage.getItem('pendingCheckout');
-    if (pendingCheckout && redirect === 'checkout') {
-      try {
-        const checkout = JSON.parse(pendingCheckout);
-        // Check if checkout is not expired (1 hour)
-        if (Date.now() - checkout.timestamp < 3600000) {
-          // Clear the stored checkout
-          localStorage.removeItem('pendingCheckout');
-          clearRememberedRoute();
-          // Navigate to pricing which will auto-trigger checkout since user is now authenticated
-          navigate('/pricing');
-          return;
-        } else {
-          // Expired, clear it
-          localStorage.removeItem('pendingCheckout');
-        }
-      } catch (e) {
-        console.error('Error parsing pending checkout:', e);
-        localStorage.removeItem('pendingCheckout');
+      const pendingCheckout = localStorage.getItem('pendingCheckout');
+      if (pendingCheckout && redirect === 'checkout') {
+        try {
+          const checkout = JSON.parse(pendingCheckout);
+          if (Date.now() - checkout.timestamp < 3600000) {
+            localStorage.removeItem('pendingCheckout');
+            clearRememberedRoute(); clearRedirectLoopTracking();
+            navigate('/pricing'); return;
+          } else { localStorage.removeItem('pendingCheckout'); }
+        } catch { localStorage.removeItem('pendingCheckout'); }
       }
-    }
 
-    // If user doesn't have a company in their profile (and isn't root_admin), redirect to setup
-    if (!userProfile || (!userProfile.company_id && userProfile.role !== 'root_admin')) {
-      clearRememberedRoute();
-      navigate('/setup');
-      return;
-    }
+      if (!userProfile || (!userProfile.company_id && userProfile.role !== 'root_admin')) {
+        clearRememberedRoute(); clearRedirectLoopTracking(); navigate('/setup'); return;
+      }
+      const returnUrl = getReturnUrl(urlParams, '/dashboard');
+      clearRememberedRoute(); clearRedirectLoopTracking(); navigate(returnUrl);
+    }, 100);
 
-    // Get return URL from query params or remembered route
-    const returnUrl = getReturnUrl(urlParams, '/dashboard');
+    return () => { if (redirectStabilityTimer.current) clearTimeout(redirectStabilityTimer.current); };
+  }, [user, userProfile, session, authLoading, navigate, checkRedirectLoop, recordRedirectAttempt, clearRedirectLoopTracking]);
 
-    // Clear route memory after successful redirect
-    clearRememberedRoute();
-
-    // Navigate to the return URL
-    navigate(returnUrl);
-  }, [user, userProfile, authLoading, navigate]);
-
-  const validatePasswordInput = (pwd: string) => {
+  // --- Password validation ---
+  const validatePasswordInput = useCallback((pwd: string) => {
     const errors: string[] = [];
-    
     if (pwd.length < 8) errors.push('Password must be at least 8 characters long');
-    if (!/[A-Z]/.test(pwd)) errors.push('Password must contain at least one uppercase letter');
-    if (!/[a-z]/.test(pwd)) errors.push('Password must contain at least one lowercase letter');
-    if (!/\d/.test(pwd)) errors.push('Password must contain at least one number');
-    if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(pwd)) errors.push('Password must contain at least one special character');
-    
+    if (!/[A-Z]/.test(pwd)) errors.push('Must contain uppercase letter');
+    if (!/[a-z]/.test(pwd)) errors.push('Must contain lowercase letter');
+    if (!/\d/.test(pwd)) errors.push('Must contain a number');
+    if (!/[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/.test(pwd)) errors.push('Must contain special character');
     setPasswordValidation({ isValid: errors.length === 0, errors });
     setShowPasswordRequirements(pwd.length > 0);
-  };
+  }, []);
 
-  const getPasswordRequirementStatus = (requirement: string) => {
-    const hasLower = /[a-z]/.test(password);
-    const hasUpper = /[A-Z]/.test(password);
-    const hasNumber = /\d/.test(password);
-    const hasSpecial = /[!@#$%^&*(),.?":{}|<>]/.test(password);
-    const isLongEnough = password.length >= 8;
+  const validateNewPassword = useCallback((pwd: string) => {
+    const errors: string[] = [];
+    if (pwd.length < 8) errors.push('Password must be at least 8 characters long');
+    if (!/[A-Z]/.test(pwd)) errors.push('Must contain uppercase letter');
+    if (!/[a-z]/.test(pwd)) errors.push('Must contain lowercase letter');
+    if (!/\d/.test(pwd)) errors.push('Must contain a number');
+    if (!/[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/.test(pwd)) errors.push('Must contain special character');
+    setNewPasswordValidation({ isValid: errors.length === 0, errors });
+  }, []);
 
-    switch (requirement) {
-      case 'length': return isLongEnough;
-      case 'lowercase': return hasLower;
-      case 'uppercase': return hasUpper;
-      case 'number': return hasNumber;
-      case 'special': return hasSpecial;
-      default: return false;
+  // --- Form handlers ---
+  // SECURITY: Validate CSRF token from form submission
+  const verifyCsrf = useCallback((e: FormEvent): boolean => {
+    const form = e.target as HTMLFormElement;
+    const formCsrfInput = form.querySelector<HTMLInputElement>('input[name="csrf_token"]');
+    const formToken = formCsrfInput?.value || '';
+    const storedToken = getCsrfToken();
+    if (!storedToken || !validateCsrfToken(storedToken, formToken)) {
+      toast({ variant: "destructive", title: "Security Error", description: "Form validation failed. Please refresh the page and try again." });
+      return false;
     }
-  };
+    return true;
+  }, []);
 
-  const handleSignIn = async (e: FormEvent) => {
+  const handleSignIn = useCallback(async (e: FormEvent) => {
     e.preventDefault();
-
-    // Basic email validation
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      toast({
-        variant: "destructive",
-        title: "Invalid Email",
-        description: "Please enter a valid email address.",
-      });
+    if (!verifyCsrf(e)) return;
+    // SECURITY: Client-side rate limiting
+    const rlResult = signInLimiter.current.checkRateLimit();
+    if (!rlResult.allowed) {
+      toast({ variant: "destructive", title: "Too Many Attempts", description: `Please wait ${rlResult.retryAfter} seconds before trying again.` });
       return;
     }
-
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      toast({ variant: "destructive", title: "Invalid Email", description: "Please enter a valid email address." }); return;
+    }
     setLoading(true);
-
     const { error } = await signIn(email, password);
-
-    if (!error) {
-      toast({
-        title: "Welcome back!",
-        description: "You've been successfully signed in.",
-      });
-    }
-
+    if (!error) toast({ title: "Welcome back!", description: "You've been successfully signed in." });
     setLoading(false);
-  };
+  }, [email, password, signIn, verifyCsrf]);
 
-  const handleSignUp = async (e: FormEvent) => {
+  const handleSignUp = useCallback(async (e: FormEvent) => {
     e.preventDefault();
-
-    // Basic email validation
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      toast({
-        variant: "destructive",
-        title: "Invalid Email",
-        description: "Please enter a valid email address.",
-      });
-      return;
+    if (!verifyCsrf(e)) return;
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      toast({ variant: "destructive", title: "Invalid Email", description: "Please enter a valid email address." }); return;
     }
-
     if (!passwordValidation.isValid) {
-      toast({
-        variant: "destructive",
-        title: "Password Requirements Not Met",
-        description: passwordValidation.errors[0],
-      });
-      return;
+      toast({ variant: "destructive", title: "Password Requirements Not Met", description: passwordValidation.errors[0] }); return;
     }
-
-    setLoading(true);
-
-    const userData = {
-      first_name: firstName,
-      last_name: lastName,
-      role: "admin",
-    };
-
-    const { error } = await signUp(email, password, userData);
-
-    if (!error) {
-      setEmailSent(true);
-      setEmailSentType('signup');
-      toast({
-        title: "Account Created!",
-        description: "Please check your email and click the verification link to activate your account.",
-      });
+    // Pre-check against disposable email blocklist for fast UX feedback.
+    // The edge function re-validates server-side regardless of this result.
+    try {
+      const { data: isDisposable } = await supabase.rpc('is_disposable_email_domain', { p_email: email });
+      if (isDisposable === true) {
+        toast({
+          variant: "destructive",
+          title: "Disposable Email Not Allowed",
+          description: "Please use a permanent work or personal email address to sign up.",
+        });
+        return;
+      }
+    } catch (err) {
+      // Non-fatal: fall through and let the server enforce the check
+      logger.warn('[Auth] Disposable email pre-check failed:', err);
     }
-
+    setLoading(true); setOtpFlowState('sending');
+    const result = await signUp(email, password, { first_name: firstName, last_name: lastName, role: "admin" });
+    if (result.error) { toast({ variant: "destructive", title: "Sign Up Failed", description: result.error }); setOtpFlowState('idle'); }
+    else { setOtpExpiresIn(result.expiresInMinutes || 15); setOtpFlowState('verifying'); setEmailSent(true); setEmailSentType('signup'); startResendCooldown(60); toast({ title: "Verification Code Sent!", description: "Check your email for the 6-digit code." }); }
     setLoading(false);
-  };
+  }, [email, password, firstName, lastName, passwordValidation, signUp, verifyCsrf]);
 
-  const handleForgotPassword = async (e: FormEvent) => {
+  const handleVerifySignupOTP = useCallback(async () => {
+    if (otpCode.length !== 6) { toast({ variant: "destructive", title: "Invalid Code", description: "Enter the complete 6-digit code." }); return; }
+    setLoading(true); setOtpFlowState('submitted');
+    const result = await verifyOTP({ email, otpCode, type: 'confirm_signup' });
+    if (result.success && result.emailConfirmed) {
+      setOtpFlowState('verified'); toast({ title: "Email Verified!", description: "You can now sign in." });
+      setTimeout(() => { setOtpFlowState('idle'); setEmailSent(false); setEmailSentType(null); setOtpCode(""); setPassword(""); setActiveView("signin"); }, 2000);
+    } else { setOtpFlowState('verifying'); toast({ variant: "destructive", title: "Verification Failed", description: result.error || "Invalid code." }); }
+    setLoading(false);
+  }, [otpCode, email, verifyOTP]);
+
+  const handleResendSignupOTP = useCallback(async () => {
+    if (otpResendCooldown > 0) return;
+    setLoading(true);
+    const result = await resendOTP({ email, type: 'confirm_signup', recipientName: firstName });
+    if (result.error) toast({ variant: "destructive", title: "Error", description: result.error });
+    else { setOtpExpiresIn(result.expiresInMinutes || 15); setOtpCode(""); startResendCooldown(60); toast({ title: "Code Resent!" }); }
+    setLoading(false);
+  }, [otpResendCooldown, email, firstName, resendOTP]);
+
+  const handleForgotPassword = useCallback(async (e: FormEvent) => {
     e.preventDefault();
-
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(resetEmail)) {
-      toast({
-        variant: "destructive",
-        title: "Invalid Email",
-        description: "Please enter a valid email address.",
-      });
-      return;
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(resetEmail)) {
+      toast({ variant: "destructive", title: "Invalid Email", description: "Please enter a valid email address." }); return;
     }
-
-    setLoading(true);
-
-    const { error } = await resetPassword(resetEmail);
-    
-    if (error) {
-      toast({
-        variant: "destructive",
-        title: "Reset Failed",
-        description: error,
-      });
-    } else {
-      setEmailSent(true);
-      setEmailSentType('reset');
-      toast({
-        title: "Reset Link Sent!",
-        description: "Please check your email for the password reset link. The link will expire in 10 minutes.",
-      });
-      setResetEmail("");
-    }
-
+    setLoading(true); setOtpFlowState('sending');
+    const result = await authResetPassword(resetEmail);
+    if (result.error) { toast({ variant: "destructive", title: "Reset Failed", description: result.error }); setOtpFlowState('idle'); }
+    else { setOtpExpiresIn(result.expiresInMinutes || 10); setOtpFlowState('verifying'); setEmailSent(true); setEmailSentType('reset'); startResendCooldown(60); toast({ title: "Reset Code Sent!" }); }
     setLoading(false);
-  };
+  }, [resetEmail, authResetPassword]);
 
-  const handleGoogleSignIn = async () => {
+  const handleVerifyResetOTP = useCallback(() => {
+    if (otpCode.length !== 6) { toast({ variant: "destructive", title: "Invalid Code", description: "Enter the complete 6-digit code." }); return; }
+    setOtpFlowState('setting_password');
+  }, [otpCode]);
+
+  const handleSetNewPassword = useCallback(async (e: FormEvent) => {
+    e.preventDefault();
+    if (!newPasswordValidation.isValid) { toast({ variant: "destructive", title: "Password Requirements Not Met", description: newPasswordValidation.errors[0] }); return; }
+    if (newPassword !== confirmPassword) { toast({ variant: "destructive", title: "Passwords Don't Match" }); return; }
+    setLoading(true);
+    const result = await resetPasswordWithOTP(resetEmail, otpCode, newPassword);
+    if (result.success) {
+      setOtpFlowState('verified'); toast({ title: "Password Reset!", description: "You can now sign in." });
+      setTimeout(() => { setOtpFlowState('idle'); setEmailSent(false); setEmailSentType(null); setOtpCode(""); setResetEmail(""); setNewPassword(""); setConfirmPassword(""); setActiveView("signin"); }, 2000);
+    } else {
+      if (result.error?.toLowerCase().includes('code') || result.error?.toLowerCase().includes('otp')) setOtpFlowState('verifying');
+      toast({ variant: "destructive", title: "Reset Failed", description: result.error || "Failed to reset password." });
+    }
+    setLoading(false);
+  }, [newPasswordValidation, newPassword, confirmPassword, resetEmail, otpCode, resetPasswordWithOTP]);
+
+  const handleResendResetOTP = useCallback(async () => {
+    if (otpResendCooldown > 0) return;
+    setLoading(true);
+    const result = await authResetPassword(resetEmail);
+    if (result.error) toast({ variant: "destructive", title: "Error", description: result.error });
+    else { setOtpExpiresIn(result.expiresInMinutes || 10); setOtpCode(""); startResendCooldown(60); toast({ title: "Code Resent!" }); }
+    setLoading(false);
+  }, [otpResendCooldown, resetEmail, authResetPassword]);
+
+  const handleGoogleSignIn = useCallback(async () => {
     setLoading(true);
     const { error } = await signInWithGoogle();
-    
-    if (error) {
-      toast({
-        variant: "destructive",
-        title: "Google Sign In Failed",
-        description: error,
-      });
-      setLoading(false);
-    }
-    // If successful, user will be redirected by OAuth flow
-  };
+    if (error) { toast({ variant: "destructive", title: "Google Sign In Failed", description: error }); setLoading(false); }
+  }, [signInWithGoogle]);
 
-  const handleAppleSignIn = async () => {
+  const handleAppleSignIn = useCallback(async () => {
     setLoading(true);
     const { error } = await signInWithApple();
-    
-    if (error) {
-      toast({
-        variant: "destructive",
-        title: "Apple Sign In Failed",
-        description: error,
-      });
-      setLoading(false);
-    }
-    // If successful, user will be redirected by OAuth flow
-  };
+    if (error) { toast({ variant: "destructive", title: "Apple Sign In Failed", description: error }); setLoading(false); }
+  }, [signInWithApple]);
+
+  const inputClassName = "bg-white/5 border-white/10 text-white placeholder:text-slate-500 focus:border-blue-500/50 focus:ring-blue-500/20 transition-colors";
+
+  const renderOAuthButtons = () => (
+    <OAuthButtons onGoogleSignIn={handleGoogleSignIn} onAppleSignIn={handleAppleSignIn} loading={loading} />
+  );
+
+  const renderPasswordRequirements = (pwd: string, idPrefix: string) => (
+    <PasswordRequirements password={pwd} idPrefix={idPrefix} />
+  );
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-4">
-      <div className="w-full max-w-md">
-        <div className="text-center mb-6">
-          <Link to="/" className="inline-block">
-            <h1 className="text-3xl font-bold text-construction-blue hover:text-construction-orange transition-colors">
-              Build Desk
-            </h1>
-          </Link>
-          <p className="text-muted-foreground mt-2">
-            Construction Management Platform
-          </p>
-        </div>
+    <main className="min-h-screen flex" role="main" aria-label="Authentication">
+      <AuthBrandingPanel />
 
-        {/* Plan Context Banner */}
-        {pendingPlan && (
-          <Alert className="mb-4 border-construction-blue bg-construction-blue/5">
-            <Shield className="h-4 w-4 text-construction-blue" />
-            <AlertDescription className="text-construction-dark">
-              <strong>Signing up for {pendingPlan.tier.charAt(0).toUpperCase() + pendingPlan.tier.slice(1)} Plan</strong>
-              <p className="text-sm mt-1">
-                {pendingPlan.period === 'annual' ? 'Annual billing' : 'Monthly billing'} • 14-day free trial
-              </p>
-            </AlertDescription>
-          </Alert>
-        )}
+      <div className="w-full lg:w-1/2 xl:w-[45%] bg-slate-900 flex items-center justify-center p-6 sm:p-8 lg:p-12">
+        <div className="w-full max-w-md">
+          {/* Mobile logo */}
+          <div className="lg:hidden text-center mb-8">
+            <Link to="/" className="inline-flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center shadow-lg shadow-blue-500/20">
+                <Building2 className="w-5 h-5 text-white" />
+              </div>
+              <span className="text-2xl font-bold text-white">Build<span className="text-blue-400">Desk</span></span>
+            </Link>
+          </div>
 
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="signin">Sign In</TabsTrigger>
-            <TabsTrigger value="signup">Sign Up</TabsTrigger>
-            <TabsTrigger value="forgot">Reset Password</TabsTrigger>
-          </TabsList>
+          {redirectLoopDetected && (
+            <div className="mb-6 p-4 rounded-lg bg-amber-500/10 border border-amber-500/20" role="alert">
+              <div className="flex items-start gap-3">
+                <AlertCircle className="h-5 w-5 text-amber-400 shrink-0 mt-0.5" aria-hidden="true" />
+                <div className="space-y-1">
+                  <p className="text-sm font-medium text-amber-400">Authentication Loop Detected</p>
+                  <p className="text-xs text-slate-400">Automatic navigation has been paused. This will reset in 60 seconds.</p>
+                </div>
+              </div>
+            </div>
+          )}
 
-          <TabsContent value="signin">
-            <Card>
-              <CardHeader>
-                <CardTitle>Welcome Back</CardTitle>
-                <CardDescription>
-                  Sign in to your Build Desk account
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <form onSubmit={handleSignIn} className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="email">Email</Label>
-                    <Input
-                      id="email"
-                      type="email"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      required
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="password">Password</Label>
-                    <Input
-                      id="password"
-                      type="password"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      required
-                    />
-                  </div>
-                  <Button type="submit" className="w-full" disabled={loading}>
-                    {loading ? "Signing In..." : "Sign In"}
-                  </Button>
-                  
-                  <div className="relative">
-                    <div className="absolute inset-0 flex items-center">
-                      <span className="w-full border-t" />
-                    </div>
-                    <div className="relative flex justify-center text-xs uppercase">
-                      <span className="bg-background px-2 text-muted-foreground">
-                        Or continue with
-                      </span>
-                    </div>
-                  </div>
+          {pendingPlan && (
+            <div className="mb-6 p-3 rounded-lg bg-blue-500/10 border border-blue-500/20" role="status">
+              <div className="flex items-center gap-2 text-blue-400">
+                <Shield className="h-4 w-4" aria-hidden="true" />
+                <span className="text-sm font-medium">{pendingPlan.tier.charAt(0).toUpperCase() + pendingPlan.tier.slice(1)} Plan</span>
+                <span className="text-blue-400/50 text-xs">{pendingPlan.period === 'annual' ? 'Annual' : 'Monthly'} - 14-day free trial</span>
+              </div>
+            </div>
+          )}
 
-                  <Button 
-                    type="button" 
-                    variant="outline" 
-                    className="w-full" 
-                    disabled={loading}
-                    onClick={handleGoogleSignIn}
-                  >
-                    <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24">
-                      <path
-                        fill="currentColor"
-                        d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-                      />
-                      <path
-                        fill="currentColor"
-                        d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-                      />
-                      <path
-                        fill="currentColor"
-                        d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
-                      />
-                      <path
-                        fill="currentColor"
-                        d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
-                      />
-                    </svg>
-                    {loading ? "Signing In..." : "Continue with Google"}
-                  </Button>
+          {activeView === 'signin' && (
+            <SignInForm
+              email={email} setEmail={setEmail}
+              password={password} setPassword={setPassword}
+              showPassword={showPassword} setShowPassword={setShowPassword}
+              loading={loading} inputClassName={inputClassName}
+              onSubmit={handleSignIn}
+              onSwitchToSignUp={() => setActiveView("signup")}
+              onSwitchToForgot={() => setActiveView("forgot")}
+              renderOAuthButtons={renderOAuthButtons}
+            />
+          )}
 
-                  <Button 
-                    type="button" 
-                    variant="outline" 
-                    className="w-full" 
-                    disabled={loading}
-                    onClick={handleAppleSignIn}
-                  >
-                    <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
-                      <path d="M17.05 20.28c-.98.95-2.05.88-3.08.4-1.09-.5-2.08-.48-3.24 0-1.44.62-2.2.44-3.06-.4C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09l.01-.01zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z"/>
-                    </svg>
-                    {loading ? "Signing In..." : "Continue with Apple"}
-                  </Button>
+          {activeView === 'signup' && (
+            <SignUpForm
+              email={email} setEmail={setEmail}
+              password={password} setPassword={setPassword}
+              firstName={firstName} setFirstName={setFirstName}
+              lastName={lastName} setLastName={setLastName}
+              showPassword={showPassword} setShowPassword={setShowPassword}
+              loading={loading} inputClassName={inputClassName}
+              passwordValidation={passwordValidation}
+              showPasswordRequirements={showPasswordRequirements}
+              emailSent={emailSent} emailSentType={emailSentType}
+              otpFlowState={otpFlowState}
+              otpCode={otpCode} setOtpCode={setOtpCode}
+              otpExpiresIn={otpExpiresIn} otpResendCooldown={otpResendCooldown}
+              onSubmit={handleSignUp}
+              onVerifyOTP={handleVerifySignupOTP}
+              onResendOTP={handleResendSignupOTP}
+              onResetOTPFlow={() => { setEmailSent(false); setEmailSentType(null); setOtpFlowState('idle'); setOtpCode(""); }}
+              onPasswordChange={validatePasswordInput}
+              onSwitchToSignIn={() => setActiveView("signin")}
+              renderOAuthButtons={renderOAuthButtons}
+              renderPasswordRequirements={renderPasswordRequirements}
+            />
+          )}
 
-                  <div className="text-center">
-                    <button
-                      type="button"
-                      onClick={() => setActiveTab("forgot")}
-                      className="text-sm text-construction-blue hover:text-construction-orange transition-colors"
-                    >
-                      Forgot your password?
-                    </button>
-                  </div>
-                </form>
-              </CardContent>
-            </Card>
-          </TabsContent>
+          {activeView === 'forgot' && (
+            <PasswordResetFlow
+              resetEmail={resetEmail} setResetEmail={setResetEmail}
+              loading={loading} inputClassName={inputClassName}
+              emailSent={emailSent} emailSentType={emailSentType}
+              otpFlowState={otpFlowState} setOtpFlowState={setOtpFlowState}
+              otpCode={otpCode} setOtpCode={setOtpCode}
+              otpExpiresIn={otpExpiresIn} otpResendCooldown={otpResendCooldown}
+              newPassword={newPassword} setNewPassword={setNewPassword}
+              confirmPassword={confirmPassword} setConfirmPassword={setConfirmPassword}
+              newPasswordValidation={newPasswordValidation}
+              onSubmitReset={handleForgotPassword}
+              onVerifyResetOTP={handleVerifyResetOTP}
+              onSetNewPassword={handleSetNewPassword}
+              onResendResetOTP={handleResendResetOTP}
+              onResetFlow={() => { setEmailSent(false); setEmailSentType(null); setOtpFlowState('idle'); setOtpCode(""); setResetEmail(""); }}
+              onSwitchToSignIn={() => setActiveView("signin")}
+              onNewPasswordChange={validateNewPassword}
+              renderPasswordRequirements={renderPasswordRequirements}
+            />
+          )}
 
-          <TabsContent value="signup">
-            <Card>
-              <CardHeader>
-                <CardTitle>Create Account</CardTitle>
-                <CardDescription>
-                  Get started with Build Desk today
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                {emailSent && emailSentType === 'signup' ? (
-                  <div className="text-center space-y-4">
-                    <div className="flex justify-center">
-                      <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center">
-                        <Mail className="w-8 h-8 text-green-600" />
-                      </div>
-                    </div>
-                    <div className="space-y-2">
-                      <h3 className="text-lg font-semibold">Check Your Email</h3>
-                      <p className="text-muted-foreground">
-                        We've sent a verification link to <strong>{email}</strong>
-                      </p>
-                      <p className="text-sm text-muted-foreground">
-                        Click the link in your email to activate your account and complete the signup process.
-                      </p>
-                    </div>
-                    <Alert>
-                      <AlertCircle className="h-4 w-4" />
-                      <AlertDescription>
-                        Didn't receive the email? Check your spam folder or contact support.
-                      </AlertDescription>
-                    </Alert>
-                    <Button 
-                      variant="outline" 
-                      onClick={() => {
-                        setEmailSent(false);
-                        setEmailSentType(null);
-                        setActiveTab("signin");
-                      }}
-                    >
-                      Back to Sign In
-                    </Button>
-                  </div>
-                ) : (
-                  <form onSubmit={handleSignUp} className="space-y-4">
-                    {/* Email Verification Notice */}
-                    <Alert className="border-blue-500 bg-blue-50">
-                      <Mail className="h-4 w-4 text-blue-600" />
-                      <AlertDescription className="text-blue-900">
-                        <strong>Email Verification Required</strong>
-                        <p className="text-sm mt-1">
-                          After signing up, check your email and click the verification link to activate your account. You won't be able to sign in until verified.
-                        </p>
-                      </AlertDescription>
-                    </Alert>
-
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="firstName">First Name</Label>
-                        <Input
-                          id="firstName"
-                          value={firstName}
-                          onChange={(e) => setFirstName(e.target.value)}
-                          required
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="lastName">Last Name</Label>
-                        <Input
-                          id="lastName"
-                          value={lastName}
-                          onChange={(e) => setLastName(e.target.value)}
-                          required
-                        />
-                      </div>
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="signupEmail">Email</Label>
-                      <Input
-                        id="signupEmail"
-                        type="email"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        required
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="signupPassword">Password</Label>
-                      <Input
-                        id="signupPassword"
-                        type="password"
-                        value={password}
-                        onChange={(e) => {
-                          setPassword(e.target.value);
-                          validatePasswordInput(e.target.value);
-                        }}
-                        required
-                        minLength={8}
-                      />
-                      {showPasswordRequirements && (
-                        <div className="space-y-2 p-3 bg-muted rounded-md">
-                          <p className="text-sm font-medium">Password Requirements:</p>
-                          <div className="space-y-1">
-                            {[
-                              { key: 'length', text: 'At least 8 characters' },
-                              { key: 'lowercase', text: 'One lowercase letter' },
-                              { key: 'uppercase', text: 'One uppercase letter' },
-                              { key: 'number', text: 'One number' },
-                              { key: 'special', text: 'One special character' }
-                            ].map(req => (
-                              <div key={req.key} className="flex items-center gap-2 text-sm">
-                                {getPasswordRequirementStatus(req.key) ? (
-                                  <CheckCircle className="w-4 h-4 text-green-600" />
-                                ) : (
-                                  <XCircle className="w-4 h-4 text-red-500" />
-                                )}
-                                <span className={getPasswordRequirementStatus(req.key) ? 'text-green-600' : 'text-red-500'}>
-                                  {req.text}
-                                </span>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                    <Alert className="mb-4">
-                      <Shield className="h-4 w-4" />
-                      <AlertDescription>
-                        After creating your account, you'll receive an email verification link. 
-                        You must verify your email before you can sign in.
-                      </AlertDescription>
-                    </Alert>
-                    
-                    <Button 
-                      type="submit" 
-                      className="w-full" 
-                      disabled={loading || !passwordValidation.isValid}
-                    >
-                      {loading ? "Creating Account..." : "Create Account"}
-                    </Button>
-                    
-                    <div className="relative">
-                      <div className="absolute inset-0 flex items-center">
-                        <span className="w-full border-t" />
-                      </div>
-                      <div className="relative flex justify-center text-xs uppercase">
-                        <span className="bg-background px-2 text-muted-foreground">
-                          Or continue with
-                        </span>
-                      </div>
-                    </div>
-
-                    <Button 
-                      type="button" 
-                      variant="outline" 
-                      className="w-full" 
-                      disabled={loading}
-                      onClick={handleGoogleSignIn}
-                    >
-                      <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24">
-                        <path
-                          fill="currentColor"
-                          d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-                        />
-                        <path
-                          fill="currentColor"
-                          d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-                        />
-                        <path
-                          fill="currentColor"
-                          d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
-                        />
-                        <path
-                          fill="currentColor"
-                          d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
-                        />
-                      </svg>
-                      {loading ? "Signing In..." : "Continue with Google"}
-                    </Button>
-
-                    <Button 
-                      type="button" 
-                      variant="outline" 
-                      className="w-full" 
-                      disabled={loading}
-                      onClick={handleAppleSignIn}
-                    >
-                      <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M17.05 20.28c-.98.95-2.05.88-3.08.4-1.09-.5-2.08-.48-3.24 0-1.44.62-2.2.44-3.06-.4C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09l.01-.01zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z"/>
-                      </svg>
-                      {loading ? "Signing In..." : "Continue with Apple"}
-                    </Button>
-                  </form>
-                )}
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="forgot">
-            <Card>
-              <CardHeader>
-                <CardTitle>Reset Password</CardTitle>
-                <CardDescription>
-                  Enter your email to receive a password reset link
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                {emailSent && emailSentType === 'reset' ? (
-                  <div className="text-center space-y-4">
-                    <div className="flex justify-center">
-                      <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center">
-                        <Clock className="w-8 h-8 text-blue-600" />
-                      </div>
-                    </div>
-                    <div className="space-y-2">
-                      <h3 className="text-lg font-semibold">Reset Link Sent</h3>
-                      <p className="text-muted-foreground">
-                        We've sent a password reset link to <strong>{resetEmail}</strong>
-                      </p>
-                      <p className="text-sm text-muted-foreground">
-                        The reset link will expire in 10 minutes for security.
-                      </p>
-                    </div>
-                    <Alert>
-                      <AlertCircle className="h-4 w-4" />
-                      <AlertDescription>
-                        Didn't receive the email? Check your spam folder or try again.
-                      </AlertDescription>
-                    </Alert>
-                    <div className="space-y-2">
-                      <Button 
-                        variant="outline" 
-                        onClick={() => {
-                          setEmailSent(false);
-                          setEmailSentType(null);
-                        }}
-                      >
-                        Try Again
-                      </Button>
-                      <Button 
-                        variant="ghost"
-                        className="w-full"
-                        onClick={() => {
-                          setEmailSent(false);
-                          setEmailSentType(null);
-                          setActiveTab("signin");
-                        }}
-                      >
-                        Back to Sign In
-                      </Button>
-                    </div>
-                  </div>
-                ) : (
-                  <form onSubmit={handleForgotPassword} className="space-y-4">
-                    <Alert className="mb-4">
-                      <Clock className="h-4 w-4" />
-                      <AlertDescription>
-                        Reset links expire after 10 minutes for security. You'll need to create a new password that meets our requirements.
-                      </AlertDescription>
-                    </Alert>
-                    <div className="space-y-2">
-                      <Label htmlFor="resetEmail">Email</Label>
-                      <Input
-                        id="resetEmail"
-                        type="email"
-                        value={resetEmail}
-                        onChange={(e) => setResetEmail(e.target.value)}
-                        required
-                      />
-                    </div>
-                    <Button type="submit" className="w-full" disabled={loading}>
-                      {loading ? "Sending Reset Link..." : "Send Reset Link"}
-                    </Button>
-                    <div className="text-center">
-                      <button
-                        type="button"
-                        onClick={() => setActiveTab("signin")}
-                        className="text-sm text-construction-blue hover:text-construction-orange transition-colors"
-                      >
-                        Back to Sign In
-                      </button>
-                    </div>
-                  </form>
-                )}
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
-
-        <div className="text-center mt-6">
-          <Link
-            to="/"
-            className="text-sm text-muted-foreground hover:text-construction-blue transition-colors"
-          >
-            ← Back to Homepage
-          </Link>
+          {/* Footer */}
+          <div className="mt-8 pt-6 border-t border-white/5">
+            <nav className="flex items-center justify-center gap-4 text-xs text-slate-500" aria-label="Footer navigation">
+              <Link to="/" className="hover:text-slate-300 transition-colors">Home</Link>
+              <span className="w-1 h-1 rounded-full bg-slate-700" />
+              <Link to="/pricing" className="hover:text-slate-300 transition-colors">Pricing</Link>
+              <span className="w-1 h-1 rounded-full bg-slate-700" />
+              <Link to="/features" className="hover:text-slate-300 transition-colors">Features</Link>
+            </nav>
+          </div>
         </div>
       </div>
-    </div>
+    </main>
   );
 };
 

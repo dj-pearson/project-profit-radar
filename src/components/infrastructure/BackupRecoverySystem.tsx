@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -9,7 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Switch } from '@/components/ui/switch';
 import { Progress } from '@/components/ui/progress';
 import { toast } from '@/hooks/use-toast';
-import { Settings, Activity, Calendar, File } from 'lucide-react';
+import { Settings, File } from 'lucide-react';
 
 interface BackupSchedule {
   id: string;
@@ -102,7 +102,7 @@ const BackupRecoverySystem = () => {
       size: '127 MB',
       duration: 45,
       status: 'completed',
-      location: 's3://builddesk-backups/2024/12/03/backup-001.sql.gz',
+      location: 's3://brikly-backups/2024/12/03/backup-001.sql.gz',
       compressed: true
     },
     {
@@ -112,7 +112,7 @@ const BackupRecoverySystem = () => {
       size: '2.8 GB',
       duration: 1847,
       status: 'completed',
-      location: 's3://builddesk-backups/2024/12/02/backup-full.sql.gz',
+      location: 's3://brikly-backups/2024/12/02/backup-full.sql.gz',
       compressed: true
     },
     {
@@ -122,7 +122,7 @@ const BackupRecoverySystem = () => {
       size: '2.7 GB',
       duration: 1732,
       status: 'completed',
-      location: 's3://builddesk-backups/2024/12/01/backup-full.sql.gz',
+      location: 's3://brikly-backups/2024/12/01/backup-full.sql.gz',
       compressed: true
     }
   ];
@@ -192,7 +192,7 @@ const BackupRecoverySystem = () => {
         size: type === 'full' ? '2.9 GB' : '134 MB',
         duration: type === 'full' ? 1823 : 52,
         status: 'completed',
-        location: `s3://builddesk-backups/${new Date().toISOString().split('T')[0]}/manual-backup.sql.gz`,
+        location: `s3://brikly-backups/${new Date().toISOString().split('T')[0]}/manual-backup.sql.gz`,
         compressed: true
       };
 
@@ -631,7 +631,7 @@ const BackupRecoverySystem = () => {
                   <Input 
                     id="notification-email" 
                     type="email" 
-                    placeholder="admin@builddesk.com" 
+                    placeholder="admin@brikly.net" 
                   />
                 </div>
               </CardContent>

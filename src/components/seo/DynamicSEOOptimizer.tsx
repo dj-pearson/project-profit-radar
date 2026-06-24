@@ -78,14 +78,14 @@ export const DynamicSEOOptimizer: React.FC<DynamicSEOOptimizerProps> = ({
     structuredData.description = finalDescription;
     structuredData.author = {
       '@type': 'Person',
-      name: article.author || 'BuildDesk Team'
+      name: article.author || 'Brikly Team'
     };
     structuredData.publisher = {
       '@type': 'Organization',
-      name: 'BuildDesk',
+      name: 'Brikly',
       logo: {
         '@type': 'ImageObject',
-        url: 'https://build-desk.com/logo.png'
+        url: 'https://brikly.net/logo.png'
       }
     };
     if (article.publishedTime) {
@@ -224,7 +224,7 @@ function generateBreadcrumbs(pathname: string) {
       '@type': 'ListItem',
       position: 1,
       name: 'Home',
-      item: 'https://build-desk.com'
+      item: 'https://brikly.net'
     }
   ];
 
@@ -239,7 +239,7 @@ function generateBreadcrumbs(pathname: string) {
       '@type': 'ListItem',
       position: index + 2,
       name,
-      item: `https://build-desk.com${currentPath}`
+      item: `https://brikly.net${currentPath}`
     });
   });
 
@@ -255,32 +255,32 @@ function generateFAQSchema(pathname: string) {
         answer: 'Construction management software is a digital platform that helps construction companies manage projects, track costs, schedule tasks, and collaborate with team members from a centralized system.'
       },
       {
-        question: 'How much does BuildDesk cost?',
-        answer: 'BuildDesk pricing starts at $149/month for small teams, with scalable plans for growing construction businesses. All plans include a 14-day free trial with no credit card required.'
+        question: 'How much does Brikly cost?',
+        answer: 'Brikly pricing starts at $149/month for small teams, with scalable plans for growing construction businesses. All plans include a 14-day free trial with no credit card required.'
       },
       {
-        question: 'Does BuildDesk integrate with QuickBooks?',
-        answer: 'Yes, BuildDesk offers seamless QuickBooks integration to sync your financial data, invoices, and job costing information automatically.'
+        question: 'Does Brikly integrate with QuickBooks?',
+        answer: 'Yes, Brikly offers seamless QuickBooks integration to sync your financial data, invoices, and job costing information automatically.'
       }
     ],
     '/procore-alternative': [
       {
-        question: 'How does BuildDesk compare to Procore?',
-        answer: 'BuildDesk offers similar functionality to Procore but at 60% lower cost, with faster setup, better mobile experience, and more intuitive interface designed for small to medium construction businesses.'
+        question: 'How does Brikly compare to Procore?',
+        answer: 'Brikly offers similar functionality to Procore but at 60% lower cost, with faster setup, better mobile experience, and more intuitive interface designed for small to medium construction businesses.'
       },
       {
-        question: 'Can I migrate from Procore to BuildDesk?',
-        answer: 'Yes, BuildDesk provides free migration assistance to help you transfer your project data, contacts, and documents from Procore with minimal downtime.'
+        question: 'Can I migrate from Procore to Brikly?',
+        answer: 'Yes, Brikly provides free migration assistance to help you transfer your project data, contacts, and documents from Procore with minimal downtime.'
       }
     ],
     '/pricing': [
       {
         question: 'Is there a free trial?',
-        answer: 'Yes, BuildDesk offers a 14-day free trial with full access to all features. No credit card required to start.'
+        answer: 'Yes, Brikly offers a 14-day free trial with full access to all features. No credit card required to start.'
       },
       {
         question: 'Are there setup fees?',
-        answer: 'No, BuildDesk has no setup fees, hidden costs, or long-term contracts. You only pay the monthly subscription fee.'
+        answer: 'No, Brikly has no setup fees, hidden costs, or long-term contracts. You only pay the monthly subscription fee.'
       }
     ]
   };

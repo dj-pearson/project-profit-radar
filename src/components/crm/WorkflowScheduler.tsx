@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { Calendar, Clock, Repeat, Globe, Plus, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
-import { format, addMinutes, addHours, addDays, addWeeks } from 'date-fns';
+import { format, addHours, addDays, addWeeks } from 'date-fns';
 
 interface WorkflowSchedulerProps {
   workflowId?: string;

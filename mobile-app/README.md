@@ -1,4 +1,4 @@
-# BuildDesk Mobile App
+# Brikly Mobile App
 
 Native iOS and Android mobile application built with Expo and React Native.
 
@@ -39,7 +39,7 @@ mobile-app/
 │       ├── LocationModule.swift
 │       └── BiometricModule.swift
 ├── android/
-│   └── app/src/main/java/com/builddesk/modules/
+│   └── app/src/main/java/com/brikly/modules/
 │       ├── CameraModule.kt
 │       ├── LocationModule.kt
 │       └── BiometricModule.kt
@@ -159,7 +159,7 @@ npm run mobile:build:prod:android
 ```bash
 cd mobile-app/ios
 pod install
-open BuildDesk.xcworkspace
+open Brikly.xcworkspace
 # Build in Xcode
 ```
 
@@ -208,7 +208,7 @@ const cameraPermission = await Camera.checkCameraPermission();
 const position = await Location.getCurrentPosition();
 
 // Example: Authenticate with biometrics
-const result = await Biometric.authenticate('Sign in to BuildDesk');
+const result = await Biometric.authenticate('Sign in to Brikly');
 ```
 
 ## 🎨 Navigation Structure
@@ -226,7 +226,7 @@ The app uses **Expo Router** (file-based routing) with a tab-based navigation:
 - **Bottom Tab Bar** - Always visible, 5 main sections
 - **Collapsible Categories** - "More" tab groups features by domain
 - **Swipe Gestures** - Natural mobile navigation
-- **Deep Linking** - Support for `builddesk://` URLs
+- **Deep Linking** - Support for `brikly://` URLs
 - **Push Notifications** - Navigate to specific screens
 
 ## 🔐 Authentication
@@ -250,10 +250,10 @@ Supports **light** and **dark** modes:
 ### app.json
 
 Key configuration:
-- **Bundle ID**: `com.builddesk.app`
-- **App Name**: BuildDesk
+- **Bundle ID**: `com.brikly.app`
+- **App Name**: Brikly
 - **Version**: 1.0.0
-- **Scheme**: `builddesk://`
+- **Scheme**: `brikly://`
 - **Permissions**: Camera, Location (always), Biometric, Photos, etc.
 
 ### Environment Variables

@@ -1,4 +1,3 @@
-import React from 'react';
 import { Helmet } from 'react-helmet-async';
 import { Link } from 'react-router-dom';
 import {
@@ -24,21 +23,21 @@ const CalculateTrueProjectProfitability = () => {
     "description": "Learn how to calculate actual construction project profit margins beyond simple revenue tracking. Includes hidden costs, overhead allocation, and step-by-step profitability formulas for contractors.",
     "author": {
       "@type": "Organization",
-      "name": "BuildDesk"
+      "name": "Brikly"
     },
     "publisher": {
       "@type": "Organization",
-      "name": "BuildDesk",
+      "name": "Brikly",
       "logo": {
         "@type": "ImageObject",
-        "url": "https://builddesk.com/logo.png"
+        "url": "https://brikly.net/logo.png"
       }
     },
     "datePublished": "2025-01-14",
     "dateModified": "2025-01-14",
     "mainEntityOfPage": {
       "@type": "WebPage",
-      "@id": "https://builddesk.com/resources/calculate-true-project-profitability"
+      "@id": "https://brikly.net/resources/calculate-true-project-profitability"
     },
     "keywords": "construction project profitability, calculate construction profit margin, job profit calculation, construction profitability metrics, true project profit"
   };
@@ -132,7 +131,7 @@ const CalculateTrueProjectProfitability = () => {
   return (
     <>
       <Helmet>
-        <title>How to Calculate True Construction Project Profitability | BuildDesk</title>
+        <title>How to Calculate True Construction Project Profitability | Brikly</title>
         <meta
           name="description"
           content="Learn how to calculate actual construction project profit margins beyond simple revenue tracking. Includes hidden costs, overhead allocation, and step-by-step profitability formulas for contractors."
@@ -141,7 +140,7 @@ const CalculateTrueProjectProfitability = () => {
           name="keywords"
           content="construction project profitability, calculate construction profit margin, job profit calculation, construction profitability metrics, true project profit, construction overhead allocation"
         />
-        <link rel="canonical" href="https://builddesk.com/resources/calculate-true-project-profitability" />
+        <link rel="canonical" href="https://brikly.net/resources/calculate-true-project-profitability" />
         <script type="application/ld+json">
           {JSON.stringify(articleSchema)}
         </script>
@@ -744,11 +743,11 @@ const CalculateTrueProjectProfitability = () => {
               Stop Guessing. Start Knowing Your True Profitability.
             </h2>
             <p className="text-xl text-gray-300 mb-8 max-w-2xl mx-auto">
-              BuildDesk gives you real-time job costing, automated overhead allocation, and profitability tracking on every project. Know if you're making money today—not 30 days later.
+              Brikly gives you real-time job costing, automated overhead allocation, and profitability tracking on every project. Know if you're making money today—not 30 days later.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Button size="lg" className="bg-construction-orange hover:bg-construction-orange/90 text-white">
-                Try BuildDesk Free for 14 Days
+                Try Brikly Free for 14 Days
               </Button>
               <Button size="lg" variant="outline" className="border-white text-white hover:bg-white/10">
                 See Live Profitability Demo

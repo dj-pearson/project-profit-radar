@@ -9,24 +9,9 @@
  * - job costing for contractors
  */
 
-import React from 'react';
 import { Helmet } from 'react-helmet-async';
 import { Link } from 'react-router-dom';
-import {
-  Calculator,
-  CheckCircle,
-  XCircle,
-  ArrowRight,
-  AlertTriangle,
-  TrendingUp,
-  Clock,
-  DollarSign,
-  Target,
-  FileText,
-  Users,
-  BarChart3,
-  Lightbulb
-} from 'lucide-react';
+import { CheckCircle, ArrowRight, AlertTriangle, TrendingUp, DollarSign, Target, FileText, Users, BarChart3, Lightbulb } from 'lucide-react';
 import Navigation from '@/components/Navigation';
 import Footer from '@/components/Footer';
 
@@ -38,22 +23,22 @@ export default function CompleteGuideConstructionJobCosting() {
     "description": "Comprehensive guide to construction job costing for contractors. Learn how to set up job costing, track costs in real-time, avoid common mistakes, and maximize profitability on every project.",
     "author": {
       "@type": "Organization",
-      "name": "BuildDesk",
-      "url": "https://builddesk.ai"
+      "name": "Brikly",
+      "url": "https://brikly.ai"
     },
     "publisher": {
       "@type": "Organization",
-      "name": "BuildDesk",
+      "name": "Brikly",
       "logo": {
         "@type": "ImageObject",
-        "url": "https://builddesk.ai/logo.png"
+        "url": "https://brikly.ai/logo.png"
       }
     },
     "datePublished": "2025-01-14",
     "dateModified": "2025-01-14",
     "mainEntityOfPage": {
       "@type": "WebPage",
-      "@id": "https://builddesk.ai/resources/complete-guide-construction-job-costing"
+      "@id": "https://brikly.ai/resources/complete-guide-construction-job-costing"
     },
     "keywords": "construction job costing, how to set up job costing, job costing best practices, construction cost tracking, contractor job costing",
     "articleSection": "Construction Financial Management",
@@ -77,7 +62,7 @@ export default function CompleteGuideConstructionJobCosting() {
         "name": "How do I set up job costing for my construction company?",
         "acceptedAnswer": {
           "@type": "Answer",
-          "text": "To set up construction job costing: 1) Create a cost code structure (labor, materials, equipment, subcontractors by phase), 2) Set up each project in your system with budget estimates, 3) Train crews to track time and costs against specific cost codes, 4) Implement daily/weekly cost entry processes, 5) Review budget vs actual reports weekly. Modern software like BuildDesk automates most of this process."
+          "text": "To set up construction job costing: 1) Create a cost code structure (labor, materials, equipment, subcontractors by phase), 2) Set up each project in your system with budget estimates, 3) Train crews to track time and costs against specific cost codes, 4) Implement daily/weekly cost entry processes, 5) Review budget vs actual reports weekly. Modern software like Brikly automates most of this process."
         }
       },
       {
@@ -93,7 +78,7 @@ export default function CompleteGuideConstructionJobCosting() {
         "name": "Do I need special software for job costing?",
         "acceptedAnswer": {
           "@type": "Answer",
-          "text": "While you can track job costs manually or in spreadsheets, dedicated construction job costing software (like BuildDesk, Procore, or CoConstruct) provides real-time cost tracking, automatic overhead allocation, budget alerts, and mobile time tracking that saves hours per week and catches budget overruns before they become disasters."
+          "text": "While you can track job costs manually or in spreadsheets, dedicated construction job costing software (like Brikly, Procore, or CoConstruct) provides real-time cost tracking, automatic overhead allocation, budget alerts, and mobile time tracking that saves hours per week and catches budget overruns before they become disasters."
         }
       },
       {
@@ -121,7 +106,7 @@ export default function CompleteGuideConstructionJobCosting() {
         <meta property="og:title" content="Complete Guide to Construction Job Costing (2025)" />
         <meta property="og:description" content="Comprehensive guide covering job costing setup, best practices, and common mistakes for contractors." />
         <meta property="og:type" content="article" />
-        <meta property="og:url" content="https://builddesk.ai/resources/complete-guide-construction-job-costing" />
+        <meta property="og:url" content="https://brikly.ai/resources/complete-guide-construction-job-costing" />
 
         {/* Twitter Card */}
         <meta name="twitter:card" content="summary_large_image" />
@@ -136,7 +121,7 @@ export default function CompleteGuideConstructionJobCosting() {
           {JSON.stringify(faqSchema)}
         </script>
 
-        <link rel="canonical" href="https://builddesk.ai/resources/complete-guide-construction-job-costing" />
+        <link rel="canonical" href="https://brikly.ai/resources/complete-guide-construction-job-costing" />
       </Helmet>
 
       <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white">
@@ -379,7 +364,7 @@ export default function CompleteGuideConstructionJobCosting() {
                 Ready for Real-Time Job Costing?
               </h2>
               <p className="text-xl text-white/90 mb-6 max-w-2xl mx-auto">
-                BuildDesk tracks job costs in real-time, alerts you when budgets are exceeded, and shows current profitability on every project. No more waiting until month-end to discover problems.
+                Brikly tracks job costs in real-time, alerts you when budgets are exceeded, and shows current profitability on every project. No more waiting until month-end to discover problems.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
                 <Link
@@ -426,7 +411,7 @@ export default function CompleteGuideConstructionJobCosting() {
                     <li><strong>Review budget vs actual reports weekly</strong></li>
                   </ol>
                   <p className="text-slate-700 mt-3">
-                    Modern software like BuildDesk automates most of this process, making setup take days instead of weeks.
+                    Modern software like Brikly automates most of this process, making setup take days instead of weeks.
                   </p>
                 </div>
 
@@ -444,7 +429,7 @@ export default function CompleteGuideConstructionJobCosting() {
                     Do I need special software for job costing?
                   </h3>
                   <p className="text-slate-700">
-                    While you can track job costs manually or in spreadsheets, dedicated construction job costing software (like <strong>BuildDesk</strong>, Procore, or CoConstruct) provides real-time cost tracking, automatic overhead allocation, budget alerts, and mobile time tracking that saves hours per week and catches budget overruns before they become disasters. Manual job costing works for 1-2 projects but becomes overwhelming at 3+ active jobs.
+                    While you can track job costs manually or in spreadsheets, dedicated construction job costing software (like <strong>Brikly</strong>, Procore, or CoConstruct) provides real-time cost tracking, automatic overhead allocation, budget alerts, and mobile time tracking that saves hours per week and catches budget overruns before they become disasters. Manual job costing works for 1-2 projects but becomes overwhelming at 3+ active jobs.
                   </p>
                 </div>
 

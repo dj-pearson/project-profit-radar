@@ -1,4 +1,3 @@
-import React from "react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { PageSEO, createArticleSchema, createBreadcrumbSchema } from "@/components/seo/PageSEO";
@@ -35,22 +34,22 @@ const PlumbingContractorSoftware = () => {
   const plumbingFAQs = [
     {
       question: "What is plumbing contractor software?",
-      answer: "Plumbing contractor software is specialized business management software for plumbing companies. It handles service call dispatch, emergency plumbing requests, preventive maintenance scheduling, plumbing installation projects, technician scheduling and GPS tracking, plumbing material inventory, job costing for plumbing work, and customer communication. BuildDesk includes all plumbing features at $350/month.",
+      answer: "Plumbing contractor software is specialized business management software for plumbing companies. It handles service call dispatch, emergency plumbing requests, preventive maintenance scheduling, plumbing installation projects, technician scheduling and GPS tracking, plumbing material inventory, job costing for plumbing work, and customer communication. Brikly includes all plumbing features at $350/month.",
       category: "Definition"
     },
     {
       question: "How does plumbing software help with emergency calls?",
-      answer: "Plumbing software improves emergency response with GPS-enabled technician dispatch showing nearest available plumber, priority routing for urgent calls (burst pipes, sewer backups), automated customer notifications with ETA updates, mobile access for technicians to receive emergency details, and real-time job status tracking. BuildDesk reduces emergency response time by 40% with intelligent dispatch.",
+      answer: "Plumbing software improves emergency response with GPS-enabled technician dispatch showing nearest available plumber, priority routing for urgent calls (burst pipes, sewer backups), automated customer notifications with ETA updates, mobile access for technicians to receive emergency details, and real-time job status tracking. Brikly reduces emergency response time by 40% with intelligent dispatch.",
       category: "Features"
     },
     {
       question: "Can plumbing contractor software track service history?",
-      answer: "Yes, plumbing contractor software tracks complete customer service history including past plumbing repairs and installations, equipment service records (water heaters, sump pumps, etc.), warranty information and expiration dates, recurring maintenance schedules, customer preferences and notes, and invoice and payment history. BuildDesk provides instant access to customer history for better service.",
+      answer: "Yes, plumbing contractor software tracks complete customer service history including past plumbing repairs and installations, equipment service records (water heaters, sump pumps, etc.), warranty information and expiration dates, recurring maintenance schedules, customer preferences and notes, and invoice and payment history. Brikly provides instant access to customer history for better service.",
       category: "Service History"
     },
     {
       question: "Does plumbing software help manage plumber licenses?",
-      answer: "Yes, plumbing contractor software tracks master plumber licenses and certifications, journeyman plumber licenses, apprentice plumber training hours, backflow prevention certifications, medical gas certifications, license renewal dates with automated reminders, and continuing education requirements. BuildDesk ensures your plumbing crew maintains proper licensing and compliance.",
+      answer: "Yes, plumbing contractor software tracks master plumber licenses and certifications, journeyman plumber licenses, apprentice plumber training hours, backflow prevention certifications, medical gas certifications, license renewal dates with automated reminders, and continuing education requirements. Brikly ensures your plumbing crew maintains proper licensing and compliance.",
       category: "Licensing"
     }
   ];
@@ -58,20 +57,20 @@ const PlumbingContractorSoftware = () => {
   const articleSchema = createArticleSchema(
     "Plumbing Contractor Software - Complete Service Call & Job Management",
     "Specialized plumbing contractor management software for service calls, emergency dispatch, installations, and maintenance. GPS dispatch, job costing, and technician management for plumbing businesses.",
-    "https://build-desk.com/plumbing-contractor-software",
+    "https://brikly.net/plumbing-contractor-software",
     ["plumbing contractor software", "plumbing business management", "plumbing service software"]
   );
 
   const breadcrumbSchema = createBreadcrumbSchema([
-    { name: "Home", url: "https://build-desk.com" },
-    { name: "Solutions", url: "https://build-desk.com/solutions" },
-    { name: "Plumbing Contractor Software", url: "https://build-desk.com/plumbing-contractor-software" }
+    { name: "Home", url: "https://brikly.net" },
+    { name: "Solutions", url: "https://brikly.net/solutions" },
+    { name: "Plumbing Contractor Software", url: "https://brikly.net/plumbing-contractor-software" }
   ]);
 
   return (
     <>
       <PageSEO
-        title="Plumbing Contractor Software - Service Call Dispatch & Job Costing | BuildDesk"
+        title="Plumbing Contractor Software - Service Call Dispatch & Job Costing | Brikly"
         description="Plumbing contractor management software for service calls, emergency dispatch, and installations. GPS technician tracking, job costing, plumber license management, customer service history. $350/month vs $500+ competitors. 40% faster emergency response. Free trial."
         keywords={[
           'plumbing contractor software',
@@ -83,7 +82,7 @@ const PlumbingContractorSoftware = () => {
           'plumbing service call software',
           'plumbing job costing'
         ]}
-        canonicalUrl="https://build-desk.com/plumbing-contractor-software"
+        canonicalUrl="https://brikly.net/plumbing-contractor-software"
         schema={[articleSchema, breadcrumbSchema]}
         ogType="article"
         lastModified="2025-11-07"
@@ -140,7 +139,7 @@ const PlumbingContractorSoftware = () => {
             {/* Benefits Section */}
             <div className="bg-white rounded-lg border p-8 mb-16">
               <h2 className="text-3xl font-bold text-construction-dark mb-8 text-center">
-                Why Plumbing Contractors Choose BuildDesk
+                Why Plumbing Contractors Choose Brikly
               </h2>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div className="text-center">
@@ -179,7 +178,7 @@ const PlumbingContractorSoftware = () => {
                 Ready to Streamline Your Plumbing Business?
               </h2>
               <p className="text-lg mb-6 opacity-90">
-                Join hundreds of plumbing contractors who have improved their efficiency and profitability with BuildDesk.
+                Join hundreds of plumbing contractors who have improved their efficiency and profitability with Brikly.
               </p>
               <Link to="/auth">
                 <Button size="lg" variant="secondary">

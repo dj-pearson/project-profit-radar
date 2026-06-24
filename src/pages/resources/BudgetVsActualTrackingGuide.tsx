@@ -1,4 +1,3 @@
-import React from "react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { PageSEO, createArticleSchema, createFAQSchema, createHowToSchema } from "@/components/seo/PageSEO";
@@ -26,7 +25,7 @@ const BudgetVsActualTrackingGuide = () => {
     },
     {
       question: "Can I track budget vs actual in QuickBooks?",
-      answer: "QuickBooks shows budget vs actual for your overall company but struggles with project-level construction tracking. It requires manual data entry, doesn't capture field costs in real-time, and can't break down variance by cost code automatically. BuildDesk integrates with QuickBooks while adding construction-specific budget tracking."
+      answer: "QuickBooks shows budget vs actual for your overall company but struggles with project-level construction tracking. It requires manual data entry, doesn't capture field costs in real-time, and can't break down variance by cost code automatically. Brikly integrates with QuickBooks while adding construction-specific budget tracking."
     },
     {
       question: "What should I do when I discover a budget variance?",
@@ -71,14 +70,14 @@ const BudgetVsActualTrackingGuide = () => {
           'construction budget vs actual reporting',
           'real-time budget tracking'
         ]}
-        canonicalUrl="https://builddesk.com/resources/budget-vs-actual-tracking-guide"
+        canonicalUrl="https://brikly.net/resources/budget-vs-actual-tracking-guide"
         schema={[
           createArticleSchema(
             "Construction Budget vs Actual: Complete Tracking Guide",
             "Complete guide to budget vs actual tracking for construction projects with real-time monitoring",
             "2025-11-14",
             "2025-11-14",
-            "BuildDesk Team"
+            "Brikly Team"
           ),
           createHowToSchema("Track Construction Budget vs Actual", howToSteps),
           createFAQSchema(faqs)
@@ -118,7 +117,7 @@ const BudgetVsActualTrackingGuide = () => {
             </Card>
 
             <div className="flex items-center gap-4 text-sm text-muted-foreground mb-8">
-              <span>By BuildDesk Team</span>
+              <span>By Brikly Team</span>
               <span>•</span>
               <span>November 14, 2025</span>
               <span>•</span>
@@ -256,7 +255,7 @@ const BudgetVsActualTrackingGuide = () => {
                         </ul>
                       </div>
                       <div>
-                        <strong className="text-construction-orange">With BuildDesk:</strong>
+                        <strong className="text-construction-orange">With Brikly:</strong>
                         <ul className="mt-2 space-y-1">
                           <li>✓ Labor: $2K over (crew size)</li>
                           <li>✓ Materials: $6K over (waste)</li>
@@ -410,11 +409,11 @@ const BudgetVsActualTrackingGuide = () => {
             </div>
           </div>
 
-          {/* The BuildDesk Approach */}
+          {/* The Brikly Approach */}
           <div className="max-w-4xl mx-auto mb-12">
             <Card className="bg-gradient-to-br from-construction-orange/10 to-construction-orange/5">
               <CardHeader>
-                <CardTitle className="text-3xl text-center">How BuildDesk Makes Budget Tracking Easy</CardTitle>
+                <CardTitle className="text-3xl text-center">How Brikly Makes Budget Tracking Easy</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="grid md:grid-cols-3 gap-6 mb-8">

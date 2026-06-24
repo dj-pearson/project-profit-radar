@@ -1,0 +1,505 @@
+## Consolidated Patterns
+
+### Security Utilities
+- File upload validation: `src/lib/security/fileUploadValidation.ts` - validateFileUpload, generateSecureFilename, sanitizeFilename
+- URL redirect validation: `src/lib/security/urlValidation.ts` - validateRedirectUrl, isTrustedDomain, TRUSTED_REDIRECT_DOMAINS
+- Input sanitization: `src/lib/security/sanitize.ts` - sanitizeInput now handles HTML-entity and URL-encoded XSS payloads
+- All security exports consolidated in `src/lib/security/index.ts`
+- Always use crypto.randomUUID() instead of Math.random() for filenames and tokens
+- Always validate redirect URLs from API responses against TRUSTED_REDIRECT_DOMAINS before window.location.href assignment
+
+### Supabase Query Patterns
+- Client: `src/integrations/supabase/client.ts` - createClient with env vars
+- Types: `src/integrations/supabase/types.ts` (manually maintained, not auto-generated)
+- All queries use RLS (Row Level Security) with company_id isolation
+- Pattern: `const { data, error } = await supabase.from('table').select('*').eq('company_id', companyId)`
+- Mutations wrapped in TanStack Query: `useMutation({ mutationFn: async () => { ... } })`
+- Data fetching hooks use `useQuery` with `enabled: !!user` guard
+
+### Component Architecture
+- shadcn/ui components in `src/components/ui/` (Radix UI primitives + Tailwind)
+- Domain components organized by feature directory (117+ directories)
+- Functional components with hooks only (no class components)
+- State: React Context for global (auth, theme), TanStack Query for server state
+- Styling: Tailwind CSS with `cn()` utility from `src/lib/utils.ts`
+- Import alias: `@/` maps to `src/`
+
+### Authentication & Authorization
+- AuthContext at `src/contexts/AuthContext.tsx` - provides `useAuth()` hook
+- 6 roles: admin, project_manager, field_supervisor, office_staff, accounting, client_portal
+- Route guards: `SecureRoute` component with `allowedRoles` prop
+- JWT tokens via Supabase Auth
+- ProtectedRoute has circuit-breaker logic for redirect loops
+
+### Routing
+- React Router DOM 6.26.2 with lazy loading
+- `createLazyRoute()` in `src/utils/lazyRoutes.tsx` wraps routes with Suspense + RouteErrorBoundary
+- Route files: appRoutes, financialRoutes, projectRoutes, peopleRoutes, operationsRoutes, marketingRoutes
+- Admin pages use `DashboardLayout` wrapper
+- Nav config: `src/components/navigation/HierarchicalNavigationConfig.ts`
+
+### Testing Patterns
+- Unit: Vitest 4.0.8 + Happy DOM + Testing Library
+- E2E: Playwright 1.56.1 (Chromium, Firefox, WebKit)
+- Test setup: `src/test/setup.ts`
+- A11y testing: `src/test/accessibility-utils.ts` with axe-core
+- Coverage: V8 provider, 60% thresholds configured but actual coverage <2%
+- Mock Supabase client for unit tests (no real API calls)
+
+### Build & Deploy
+- Vite 5.4.1 with manual chunking, tree shaking, code splitting
+- Build: `npm run build` (includes sitemap gen, 404 copy, SW version update, image optimization)
+- Deploy: Cloudflare Pages from `dist/` folder
+- TypeScript: `tsconfig.app.json` covers `src/`, `tsconfig.node.json` covers config files
+- `package.json` has `"type": "module"` - CommonJS scripts need `.cjs` extension
+- Edge functions are Deno (TypeScript) - NOT checked by `tsc --noEmit`
+
+### Known Pitfalls
+- Self-hosted Supabase: foundational tables (user_profiles, companies) may not exist
+- Migrations must be idempotent: `CREATE TABLE IF NOT EXISTS`, `ADD COLUMN IF NOT EXISTS`
+- RLS policies referencing `get_user_role()` fail if function doesn't exist - use `auth.uid() IS NOT NULL`
+- Env vars must be ALL_CAPS_SNAKE_CASE (previously had mixed-case bugs)
+- ~65 unique env vars needed across edge functions
+- tsconfig.json extends `expo/tsconfig.base` - root config has Expo integration
+- TOAST_LIMIT was 1 (caused dropped notifications) - now set to 5
+
+---
+
+## 2026-02-21 - Session: PRD Stories Batch
+
+### US-001: TypeScript strict mode
+- Already enabled: `strict: true`, `noImplicitAny: true`, `strictNullChecks: true` in tsconfig.app.json
+- Count script at `scripts/count-strict-violations.sh` existed
+
+### US-002: Remove hardcoded tokens
+- Removed hardcoded JWT from `src/lib/envValidation.ts` FALLBACK_VALUES
+- Removed PRODUCTION_ANON_KEY from `src/integrations/supabase/client.ts`
+- Added fail-fast: console.error in prod, console.warn in dev when key missing
+
+### US-003: Remove debug console statements
+- Replaced 41 bare console.* calls across 10 files with `logger` utility
+- Files: Setup.tsx, Dashboard.tsx, SecurityService.ts, WorkflowAutomationService.ts, googleAnalyticsSync.ts, AIModelManager.tsx, useGPSLocation.ts, useOfflineSync.ts, useDashboardData.tsx, Invoices.tsx
+- Left `supabase/client.ts` console calls alone (circular dep with logger)
+
+### US-004: GitHub Actions CI
+- Created `.github/workflows/ci.yml` with 5 jobs: lint, typecheck, unit-test, build, e2e-test
+- Node 18, npm caching, Chromium-only E2E
+
+### US-005: Security tests
+- Created `src/lib/__tests__/sanitize.test.ts` (30+ tests)
+- Created `src/lib/__tests__/envValidation.test.ts` (7 tests)
+- Covers sanitizeHtml, stripHtml, encodeUrl, sanitizeInput, sanitizeEmail, sanitizePhone, maskSensitiveData, sanitizeSqlInput
+
+### US-007: Financial calculation unit tests
+- Created `src/utils/__tests__/financialCalculations.test.ts` (49 tests)
+- Covers all exported functions: calculateProjectCosts, calculateVariance, calculateProfitMargin, calculateMarkup, calculateSellingPrice*, calculateBreakEven, projectCashFlow, calculateCostPerSquareFoot, calculateEarnedValue
+
+### US-008: E2E smoke tests
+- Created `tests/e2e/landing.spec.ts` (6 tests: title, elements, SEO, CSS, console errors, TTI)
+- Created `tests/e2e/navigation.spec.ts` (8 tests: nav, features, pricing, redirects, 404, auth fields, keyboard)
+
+### US-018: Fix placeholder calculations and mock data
+- EnhancedProjectOverview.tsx: Added real Supabase queries for invoices, payments, time_entries
+- useDashboardData.tsx: Replaced Math.random() with deterministic calculations
+- CRMDashboard.tsx: Wired placeholder handlers to navigation/toast
+- bulk-actions.tsx: Added logger.warn for default actions
+
+### US-029: AGENTS.md files
+- Created 7 files: src/, src/components/, src/hooks/, src/lib/, src/pages/, supabase/functions/, tests/
+- Each documents purpose, conventions, key files, and pitfalls
+
+### US-030: Progress tracking
+- Updated this file with all learnings from session
+
+### US-033: Loading states in financial pages
+- FinancialDashboard.tsx: Added FinancialDashboardSkeleton component
+- Invoices.tsx: Added full-page TableSkeleton before data loads
+
+### US-034: Surface data fetch errors in Dashboard
+- Dashboard.tsx: Added Alert + Retry button when useDashboardData returns error
+- useDashboardData.tsx: Replaced console.error with logger.error
+
+### US-035: Setup page improvement
+- Added supabase.auth.refreshSession() before company creation
+- Removed all DEBUG console.log statements
+
+### US-036: Simplify ProtectedRoute
+- Rewrote from 213 to ~130 lines
+- Replaced dual counter mechanism with single time-windowed trackRedirect()
+- Added RecoveryUI with "Re-authenticate" link
+- Removed all console.error, replaced with logger
+
+### Learnings
+- **DOMPurify in Happy DOM**: `stripHtml` with empty ALLOWED_TAGS may not strip all tags. Test script removal specifically.
+- **Puppeteer install**: Use `PUPPETEER_SKIP_DOWNLOAD=true npm install` to avoid CI slowdowns.
+- **Build artifacts**: `public/robots.txt` and `public/sitemap.xml` are generated by build scripts — commit them or gitignore them.
+- **Supabase client logging**: Can't use `logger` in `supabase/client.ts` due to potential circular imports. Guard with `import.meta.env.DEV`.
+- **Mock data cleanup**: Replace `Math.random()` with deterministic calculations based on project fields (e.g., `budget * completion_percentage / 100`).
+
+---
+
+## 2026-02-19 - US-031 (Previously Completed)
+- RouteErrorBoundary created at `src/components/RouteErrorBoundary.tsx`
+- `createLazyRoute` in `src/utils/lazyRoutes.tsx` wraps lazy components with Suspense + RouteErrorBoundary
+- All 7 route files converted from raw `lazy()` to `createLazyRoute`
+- Chunk load failures show user-friendly UI with Reload/Dashboard buttons
+
+---
+
+## 2026-02-19 - US-032 (Previously Completed)
+- TOAST_LIMIT increased from 1 to 5 in `src/hooks/use-toast.ts`
+- Added gap-2 to ToastViewport in `src/components/ui/toast.tsx`
+- Multiple toasts now stack correctly without overlapping
+
+---
+
+## 2026-02-23 - US-012: Migrate data tables to AccessibleTable on key pages
+
+### What was done
+Migrated 14 pages/components from various table implementations (shadcn Table, raw HTML tables, card grids, div lists) to use the AccessibleTable component for WCAG 2.1 AA compliance.
+
+### Files modified (14 pages)
+1. `src/components/estimates/EstimatesTable.tsx` - Replaced shadcn Table with AccessibleTable<Estimate>
+2. `src/components/expenses/ExpenseTracker.tsx` - Replaced HTML <table> with AccessibleTable<Expense>
+3. `src/components/invoices/InvoiceList.tsx` - Replaced card layout with AccessibleTable
+4. `src/pages/TeamManagement.tsx` - Replaced card list with AccessibleTable<TeamMember>
+5. `src/pages/ChangeOrders.tsx` - Replaced card layout with AccessibleTable<ChangeOrder>
+6. `src/pages/DailyReports.tsx` - Replaced card grid with AccessibleTable
+7. `src/pages/Equipment.tsx` - Replaced card grid with AccessibleTable
+8. `src/pages/CRMContacts.tsx` - Replaced ResponsiveGrid with AccessibleTable
+9. `src/pages/admin/ErrorLogs.tsx` - Replaced collapsible list with AccessibleTable
+10. `src/pages/admin/Users.tsx` - Replaced list items with AccessibleTable
+11. `src/pages/admin/PermissionManagement.tsx` - Replaced card lists with AccessibleTable (two tables: Permissions + Roles)
+12. `src/pages/AuditLogs.tsx` - Added AccessibleTable with AuditLogEntry interface
+13. `src/pages/DocumentManagement.tsx` - Replaced DocumentCard grid with AccessibleTable
+14. `src/components/time-tracking/TimeEntriesList.tsx` - Replaced div list with AccessibleTable
+
+### Key patterns used
+- `TableColumn<T>` interface with `key`, `header`, `sortable`, `render`, `hideOnMobile`, `align`, `headerRender`
+- Actions columns use `headerRender: () => <span className="sr-only">Actions</span>` for screen reader only header
+- Rich content preserved via `render` functions (badges, avatars, dropdown menus, icons)
+- All icon-only buttons have `aria-label` attributes
+- Decorative icons have `aria-hidden="true"`
+- Caption provided via `caption` prop (with `hideCaption` for visual hiding when page heading serves as caption)
+
+### Accessibility features gained
+- Proper `<th>` scope attributes on all headers
+- Keyboard navigation between cells (arrow keys)
+- Sortable column announcements to screen readers
+- Proper table semantics with `<caption>`, `<thead>`, `<tbody>`
+- Screen reader announcements for sort state changes
+
+### Learnings
+- Card-to-table conversion: Use AccessibleTable's `render` function to maintain rich content (badges, icons, avatars, action menus) within table cells
+- Orphaned code cleanup: When replacing `.map()` loops with AccessibleTable, ensure all leftover JSX from the loop body is removed (variables from the loop iterator go out of scope)
+- The AccessibleTable component requires `T extends { id: string | number }` - data objects need an `id` field
+
+---
+
+## Session: US-009 - Fix critical any types in core modules
+**Date**: 2026-02-23
+**Branch**: enterprise-production-readiness (merged from main)
+**Status**: COMPLETE
+
+### Summary
+Removed `any` types and `@ts-expect-error` comments from core modules:
+- **src/contexts/**: Already clean - no `any` types found
+- **src/lib/**: Fixed 25+ `any` types across 8 files (analytics.ts, cache.ts, offline-sync.ts, queryClient.ts, touchOptimization.ts, sessionFingerprint.ts, react-native-web-fallback.ts, mobile-touch.ts)
+- **src/hooks/**: Fixed 22 hooks (exceeds 20 requirement)
+
+### Hooks fixed (22 total)
+useRealtimeSubscription, useRealTimeSync, useSupabaseMutation, useSupabaseQuery, useSecurity, useNotifications, useAuditLog, useTasks, usePerformanceMonitor, useLongPress, useTouchGestures, useTouchDevice, useInstallPrompt, usePWA, useOfflineSync, useSimpleNotifications, useAccessibilityHelpers, useDeviceTrust, useAccounting, useAutoClockInOut, useActivityTracking, useAutomatedSocialPosts
+
+### Patterns used
+- `fromTable()` helper for dynamic Supabase table access: `supabase.from(table as keyof Database['public']['Tables'])`
+- `ReturnType<typeof setTimeout>` instead of `NodeJS.Timeout` for timer refs
+- Intersection types for non-standard browser APIs: `Navigator & { deviceMemory?: number }`
+- `'prop' in navigator` guard before casting for non-standard props (msMaxTouchPoints, standalone, deviceMemory)
+- `catch (error: unknown)` + `error instanceof Error ? error.message : String(error)` pattern
+- `Record<string, unknown>` replacing `Record<string, any>` throughout
+- `EventListener` cast for addEventListener callbacks instead of `as any`
+
+### Quality checks
+- `npx tsc --noEmit`: PASS (zero errors)
+- `npm run build`: PASS (built in 3m 17s)
+- No runtime behavior changes
+
+---
+
+## 2026-02-23 - US-013: Migrate dialogs and modals to AccessibleModal
+
+### What was done
+Migrated 20 critical Dialog/AlertDialog components to AccessibleModal for WCAG 2.1 AA compliance with focus trapping, escape key handling, and screen reader support.
+
+### Files modified (20 modals)
+1. `src/components/tasks/CreateTaskDialog.tsx` - Create task form
+2. `src/components/tasks/EditTaskDialog.tsx` - Edit task form
+3. `src/components/estimates/ConvertToProjectDialog.tsx` - Estimate→project wizard
+4. `src/components/mfa/MFAVerificationModal.tsx` - MFA 6-digit code verification
+5. `src/components/auth/MFASetupDialog.tsx` - MFA setup wizard (3 steps)
+6. `src/pages/Projects.tsx` - Edit project + delete confirmation
+7. `src/pages/CRMContacts.tsx` - New contact form
+8. `src/pages/admin/Users.tsx` - User detail + impersonation confirmation
+9. `src/components/estimates/EstimatesTable.tsx` - Edit estimate + delete confirmation
+10. `src/components/expenses/ExpenseTracker.tsx` - Create/edit expense + delete confirmation
+11. `src/pages/EstimatesHub.tsx` - Create estimate dialog
+12. `src/components/filters/FilterPresetsManager.tsx` - Save preset + delete confirmation
+13. `src/components/crm/EmailSyncSetup.tsx` - Delete email account confirmation
+14. `src/components/bonds/BondForm.tsx` - Add/edit bond form
+15. `src/components/permits/PermitForm.tsx` - Add/edit permit form
+16. `src/components/documents/DocumentCard.tsx` - Document versions viewer
+17. `src/components/job-costing/BudgetManager.tsx` - Budget item form + delete confirmation
+18. `src/pages/admin/SSOManagement.tsx` - SSO config + MFA setup + delete confirmation
+19. `src/components/payments/PaymentMethodManager.tsx` - Add payment method
+20. `src/components/workflow/ChangeOrderManagement.tsx` - Create/edit change order
+
+### Key patterns used
+- `title` prop is string-only - stripped JSX icons from DialogTitle text
+- Size mapping: max-w-md→sm, max-w-lg→md, max-w-2xl→lg, max-w-4xl→xl
+- AlertDialog→AccessibleModal with `disableClickOutside` + destructive footer buttons
+- DialogTrigger removed - replaced with state-controlled button + `isOpen` state
+- Forms with footer buttons: used `id="form-name"` on form + `form="form-name"` on submit button in footer
+- MFA modals: `disableClickOutside={true}`, `disableEscapeKey={true}` for security-critical flows
+- MFASetupDialog: conditional close prevention with `hideCloseButton`/`disableClickOutside`/`disableEscapeKey` when MFA is required
+
+### Accessibility features gained
+- Focus trap in all modals (Tab cycles within modal)
+- Escape key closes modal (except security-critical flows)
+- Focus returns to trigger element when modal closes
+- All modals have `aria-labelledby` and `aria-describedby` attributes
+- `aria-modal="true"` and `role="dialog"` on all modals
+- Body scroll lock when modal is open
+
+### Learnings
+- DialogTrigger pattern (uncontrolled): Must add state variable (`showDialog`) and separate button onClick from dialog open/close
+- Forms in footer: Use HTML `form` attribute to connect external submit button to form element
+- Security modals: Use `disableClickOutside` + `disableEscapeKey` + `hideCloseButton` to prevent accidental dismissal
+- MFASetupDialog has 3 separate dialog renders for steps (intro/setup/success) - each needs independent AccessibleModal
+
+---
+
+## 2026-02-26 - Ralph Sync: All 51 Stories Verified Complete
+
+### PRD Progress: 51/51 stories complete (100%). ALL stories passing.
+
+### What was done
+- Verified all 51 PRD stories from `scripts/ralph/prd.json` were implemented in previous sessions
+- Synced `scripts/ralph/prd.json` — updated 26 stories from `passes: false` to `passes: true`
+- Fixed build failure: `@tanstack/react-virtual` was in package.json but not installed (added by US-037)
+- Ran `npm install` to restore missing dependency
+- Ran `npm run build` — **BUILD PASSES** (built in ~51s, 6294 modules)
+
+### Build Stats
+- Bundle: 6294 modules transformed
+- Image optimization: 86% savings on icons/logos
+- Service Worker version updated
+- SPA 404.html routing configured
+- Some chunks >400KB (xlsx, Three.js, index) — expected for this codebase
+
+### Stories verified (26 synced to passes: true)
+US-017 (Rate Limiting), US-019 (Monitoring Dashboard), US-020 (E2E Tests), US-021 (Fix any Types Components), US-022 (API Docs), US-023 (Performance Budget), US-024 (Hook Tests), US-025 (Keyboard Nav), US-026 (A11y Tests), US-027 (Fix any Types Pages), US-028 (Lighthouse CI), US-037 (Virtual Scrolling), US-038 (Visual Takeoff), US-039 (Drawing Viewer), US-040 (Client Selections), US-041 (E-Signature), US-042 (Sub Prequalification), US-043 (AI Project Assistant), US-044 (Schedule Import), US-045 (Submittal Tracking), US-046 (AI Photo Classification), US-047 (Meeting Minutes), US-048 (Project Closeout), US-049 (AI Client Updates), US-050 (Workforce Planning), US-051 (RFI Management)
+
+### Learnings for future iterations
+- **Missing node_modules**: Always run `npm install` before `npm run build` — packages in package.json may not be in node_modules if `npm install` wasn't run after the last dependency addition
+- **Dual prd.json sync**: Root `prd.json` and `scripts/ralph/prd.json` can drift — always update both when marking stories complete
+
+### COMPLETE
+
+---
+
+## 2026-02-28 - Ralph UI/UX Audit: All 25 Stories Implemented
+
+### PRD: `scripts/ralph/prd.json` (Brikly UI/UX Audit Improvements)
+### Branch: `claude/ralph-loops-prd-progress-HU3yc`
+### Status: COMPLETE — 25/25 stories passing, build passes
+
+### What was done
+Implemented all 25 UI/UX improvement stories from the UI/UX audit PRD across 12 source files. Changes are purely presentational (text, CTAs, styling, SEO schemas) with no routing, state management, or dependency changes.
+
+### Files modified (12)
+1. **src/components/Hero.tsx** — US-001 (trust signals), US-006 (headline), US-010 (mobile fallback), US-011 (logo badges), US-023 (rotating badge)
+2. **src/components/TestimonialsSection.tsx** — US-002 (CTA after testimonials), US-014 (Review JSON-LD), US-019 (dates)
+3. **src/components/FAQ.tsx** — US-003 (CTA section), US-015 (bullet points & links)
+4. **src/components/Pricing.tsx** — US-004 (single CTA), US-007 (social proof), US-016 (savings callout), US-020 (Offer schema)
+5. **src/components/Implementation.tsx** — US-005 (CTA section)
+6. **src/components/Footer.tsx** — US-008 (dynamic copyright, social icons), US-009 (newsletter)
+7. **src/components/SocialProof.tsx** — US-011 (logo badges)
+8. **src/components/ProblemSolution.tsx** — US-012 (CTA bridge)
+9. **src/components/FinancialIntelligenceShowcase.tsx** — US-013 (rename "Others"), US-024 (more rows)
+10. **src/pages/Index.tsx** — US-017 (scroll progress), US-018 (back-to-top), US-021 (loading text)
+11. **src/components/StickyDemoCTA.tsx** — US-022 (mobile optimization)
+12. **src/components/Header.tsx** — US-025 (dark mode nav fix)
+
+### Story Summary by Category
+
+**Conversion Optimization (Priority 1-2):**
+- US-001: Trust signal strip below hero CTA (4 items with CheckCircle icons)
+- US-002: CTA after testimonials section
+- US-003: CTA after FAQ accordion
+- US-004: Single CTA per pricing card (Enterprise → Contact Sales)
+- US-005: CTA after Implementation success metrics
+- US-006: Headline → "Know Your Real Profit Margins. Every Day."
+- US-007: Social proof badge + ROI line in pricing header
+
+**Engagement & Content (Priority 3):**
+- US-008: Dynamic copyright year + social media icons in footer
+- US-009: Newsletter signup form in footer
+- US-010: Dashboard mockup mobile fallback replacing placeholder text
+- US-011: Styled logo badges in SocialProof + Hero
+- US-012: CTA bridge between problem and solution sections
+- US-013: "Traditional PM Tools" replacing "Others" with competitor footnote
+- US-014: JSON-LD Review schema for SEO rich snippets
+- US-015: Bullet points + internal links in FAQ answers
+- US-016: Annual savings callout near billing toggle
+
+**Polish & SEO (Priority 4-5):**
+- US-017: Scroll progress indicator bar
+- US-018: Back-to-top floating button
+- US-019: Date timestamps on testimonials
+- US-020: JSON-LD Offer schema on pricing
+- US-021: "Loading..." text in lazy section fallbacks
+- US-022: Slim mobile bottom bar for StickyDemoCTA
+- US-023: Rotating hero badge (4 messages, 4s cycle, pause on hover)
+- US-024: 4 new comparison table rows with partial/amber indicator
+- US-025: dark:text-gray-200 on nav links for dark mode
+
+### Quality Checks
+- `npx vite build`: PASS (6294 modules, built in 1m 13s)
+- `npm run lint`: Only pre-existing errors (Hero.tsx GSAP `any` types, Footer.tsx placeholder `href="#"`)
+- No new dependencies added
+- No routing changes
+- No state management changes
+- All changes are UI-only (text, styling, CTAs, JSON-LD schemas)
+
+### Risk Assessment for Blank White Page
+- Zero risk from these changes: all modifications are presentational
+- No new imports of packages not already in node_modules
+- No changes to React Router config, AuthContext, or app initialization
+- No dynamic imports that could fail at runtime
+- Existing `sonner` toast import in Footer.tsx matches pattern used in 4 other files
+
+### COMPLETE
+
+---
+
+## 2026-03-07 - US-064, US-076, US-077, US-078: Critical Platform Improvements Batch
+
+### US-064: Project health score indicator
+- Created `src/components/projects/ProjectHealthBadge.tsx` with `computeHealth()` function
+- Health computed from budget variance, schedule variance, and progress gap
+- Integrated into Projects page cards and Dashboard ProjectStatusWidget
+
+### US-076: Real-time notification center in dashboard header
+- Added `RealtimeNotificationCenter` bell to DashboardLayout header
+- Uses existing `useSimpleNotifications` hook with 8 notification types
+
+### US-077: Global search with Ctrl+K
+- Created `src/components/search/DashboardSearchTrigger.tsx`
+- Ctrl+K/Cmd+K opens modal; 300ms debounced queries across 4 Supabase tables
+- Arrow key navigation; recent searches in localStorage
+
+### US-078: Guided onboarding wizard
+- Refactored Setup.tsx to use OnboardingWizard multi-step flow
+- Added Quick Tour step, Skip button, localStorage progress persistence
+
+### Quality: `npx vite build` PASS (58.45s)
+
+### Learnings
+- DashboardLayout header right side: integration point for global actions
+- RealtimeNotificationCenter: already fully built, just needed layout integration
+- CommandPalette (navigation) vs DashboardSearchTrigger (data search) serve different purposes
+- ProjectWithRelations has `total_budget`/`actual_cost`; widget ProjectSummary uses `budget`
+
+---
+
+## 2026-03-10 - Security PRD: All 18 Stories Verified & Critical Fixes
+
+### PRD: `scripts/ralph/prd.json` (Brikly AI Security Defenses & Internal Penetration Testing)
+### Branch: `claude/critical-platform-improvements-082qB`
+### Status: COMPLETE - 18/18 stories passing, build passes
+
+### 4 Critical Items Implemented
+
+#### 1. US-015: Fixed security:audit script integration
+- Updated `package.json` `security:audit` script from simple `npm audit --audit-level=high` to `bash scripts/security-audit.sh`
+- The full script (`scripts/security-audit.sh`) already existed with comprehensive features: allowlist support, expiry dates, severity filtering, human-readable output
+- Now CI and local development use the full-featured audit pipeline
+
+#### 2. US-018: Created scripts/secret-scan.sh
+- Created `scripts/secret-scan.sh` - comprehensive secret scanner for CI pipeline
+- Scans for: AWS access keys (AKIA*), JWT tokens (eyJ*), RSA private keys, hardcoded passwords, Supabase service role keys, Stripe secret keys, API keys, Slack webhooks, SendGrid keys, GitHub tokens
+- Excludes test files, fixtures, and known false positives (password filtering/masking patterns, placeholder URLs)
+- Returns exit 0 (pass) or exit 1 (fail) for CI integration
+- CI workflow `.github/workflows/ci.yml` already had a security job referencing this script
+
+#### 3. US-002: Verified CSP Hardening (already complete)
+- `public/_headers` CSP confirmed: no `unsafe-eval`, has `require-trusted-types-for 'script'`, `block-all-mixed-content`, `upgrade-insecure-requests`
+- Trusted Types policy `brikly` + `default` enforced
+
+#### 4. Verified All 18 Security Stories (US-001 through US-018)
+- All security utilities exist with full implementations and test suites
+- SSRF prevention (ssrfPrevention.ts), CSRF protection (csrfProtection.ts/tsx), rate limiter (rateLimiter.ts), error sanitizer (errorSanitizer.ts), trusted types (trustedTypes.ts), request signing (requestSigning.ts), SRI verification (sriVerification.ts), security headers (security-headers.ts), vulnerability manifest (vulnerabilityManifest.ts), security monitor hook (useSecurityMonitor.ts)
+- 13 security test files in `src/lib/security/__tests__/`
+- Updated all 18 stories from `passes: false` to `passes: true`
+
+### Files Created
+- `scripts/secret-scan.sh` - Secret scanner for CI
+
+### Files Modified
+- `package.json` - `security:audit` now points to full `scripts/security-audit.sh`
+- `scripts/ralph/prd.json` - All 18 stories marked `passes: true`
+
+### Quality: `npm run build` PASS (56.64s, 6322 modules)
+
+### Learnings
+- **Dual PRD sync**: Root `prd.json` (UX stories) and `scripts/ralph/prd.json` (security stories) are separate PRDs with independent story tracking
+- **Secret scan false positives**: Test fixtures, password filtering code, and placeholder URLs (T00000/XXXXX) need post-filter exclusions
+- **CI security job**: Already existed in `.github/workflows/ci.yml` but referenced non-existent `scripts/secret-scan.sh` - would have broken CI
+
+---
+
+## 2026-03-28 - US-001, US-002, US-003 (Comprehensive Security Audit & Top 3 Fixes)
+
+### What was implemented
+- Conducted full-codebase security audit covering input sanitization, bounds checking, auth/authorization, CORS, file uploads, open redirects, insecure randomness, unbounded queries, and error leakage
+- Created new prd.json with 16 security user stories organized by priority (P1-P4)
+- Fixed 3 highest priority issues:
+
+**US-001: File Upload Validation**
+- Created `src/lib/security/fileUploadValidation.ts` with validateFileUpload (type + extension + size checks), generateSecureFilename (crypto.randomUUID), sanitizeFilename (path traversal prevention)
+- Applied to `src/components/storage/FileStorageManager.tsx` (was accepting ANY file with NO validation)
+- Applied to `src/pages/DailyReports.tsx` (was using Math.random() for filenames, no type validation)
+
+**US-002: Strengthen sanitizeInput**
+- Updated `src/lib/security/sanitize.ts` sanitizeInput() to decode HTML entities (&lt; &#60; &#x3C;), URL-encoded characters (%3C), and double-encoded payloads before stripping angle brackets
+- Fixed known limitation TODOs in `src/lib/security/__tests__/xssPayloads.test.ts`
+
+**US-003: Open Redirect Prevention**
+- Created `src/lib/security/urlValidation.ts` with validateRedirectUrl (domain allowlist, protocol check, protocol-relative URL blocking)
+- Applied to: StripePaymentProcessor.tsx, QuickBooksIntegration.tsx, CalendarIntegration.tsx (Google + Outlook), Pricing.tsx
+
+### Files changed
+- `scripts/ralph/prd.json` - New PRD with 16 security stories, US-001/002/003 marked passes: true
+- `scripts/ralph/progress.txt` - This entry + consolidated patterns
+- `src/lib/security/fileUploadValidation.ts` (NEW)
+- `src/lib/security/urlValidation.ts` (NEW)
+- `src/lib/security/sanitize.ts` - Enhanced sanitizeInput
+- `src/lib/security/index.ts` - Added exports for new utilities
+- `src/lib/security/__tests__/xssPayloads.test.ts` - Updated tests for sanitizeInput fixes
+- `src/components/storage/FileStorageManager.tsx` - Added file validation
+- `src/pages/DailyReports.tsx` - Added photo validation + secure filenames
+- `src/components/financial/StripePaymentProcessor.tsx` - Added redirect URL validation
+- `src/components/integrations/QuickBooksIntegration.tsx` - Added redirect URL validation
+- `src/components/calendar/CalendarIntegration.tsx` - Added redirect URL validation (Google + Outlook)
+- `src/components/Pricing.tsx` - Added redirect URL validation
+
+### Quality: `npx vite build` PASS (52.09s)
+
+### Learnings for future iterations
+- **FileStorageManager had zero validation** - was the most dangerous upload component; other components like ImageUpload already had type/size checks
+- **sanitizeInput was used in ResetPassword.tsx** - security-critical path that was only doing basic regex stripping
+- **Open redirects via API responses** - 5+ components were blindly redirecting to URLs from edge function responses without domain validation
+- **Existing security infrastructure is strong** - DOMPurify, SSRF prevention, CSRF tokens, rate limiters, error sanitizers all exist but adoption is inconsistent
+- **Remaining 13 stories** cover: Math.random replacement (US-004), unbounded queries (US-005), JSON.parse try-catch (US-006), form sanitization (US-007), duplicate utils consolidation (US-008), maxLength on inputs (US-009), search schema bounds (US-010), edge function error sanitization (US-011), wildcard CORS replacement (US-012), unprotected edge functions (US-013), UTM param validation (US-014), returnTo validation (US-015), file extension allowlist (US-016)
+
+---

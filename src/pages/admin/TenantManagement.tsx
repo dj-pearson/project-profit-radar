@@ -1,9 +1,8 @@
 import { useState, useEffect } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   Dialog,
   DialogContent,
@@ -13,23 +12,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
-import {
-  Building2,
-  Users,
-  Settings,
-  TrendingUp,
-  AlertCircle,
-  CheckCircle,
-  Plus,
-  Edit,
-  Trash2,
-  Search,
-  Crown,
-  Shield,
-  Globe,
-  Copy,
-  RefreshCw,
-} from 'lucide-react';
+import { Building2, Users, Settings, TrendingUp, AlertCircle, CheckCircle, Plus, Edit, Search, Crown, Globe, Copy, RefreshCw } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
@@ -86,20 +69,34 @@ export const TenantManagement = () => {
 
       if (tenantsError) throw tenantsError;
 
-      // Load user counts for each tenant
+      // Load user counts for each tenant with proper error handling
       const tenantsWithCounts = await Promise.all(
         (tenantsData || []).map(async (tenant) => {
-          const { count: userCount } = await supabase
-            .from('tenant_users')
-            .select('*', { count: 'exact', head: true })
-            .eq('tenant_id', tenant.id)
-            .eq('is_active', true);
+          try {
+            const { count: userCount, error } = await supabase
+              .from('tenant_users')
+              .select('*', { count: 'exact', head: true })
+              .eq('tenant_id', tenant.id)
+              .eq('is_active', true);
 
-          return {
-            ...tenant,
-            user_count: userCount || 0,
-            project_count: 0, // TODO: Add actual project count
-          };
+            if (error) {
+              console.error(`Error fetching user count for tenant ${tenant.id}:`, error);
+            }
+
+            return {
+              ...tenant,
+              user_count: userCount || 0,
+              project_count: 0, // TODO: Add actual project count
+            };
+          } catch (error) {
+            console.error(`Error processing tenant ${tenant.id}:`, error);
+            // Return tenant with zero counts on error to prevent data loss
+            return {
+              ...tenant,
+              user_count: 0,
+              project_count: 0,
+            };
+          }
         })
       );
 
@@ -279,7 +276,7 @@ export const TenantManagement = () => {
         </div>
 
         {/* Stats Cards */}
-        <div className="grid gap-4 md:grid-cols-4">
+        <section className="grid gap-4 md:grid-cols-4" aria-label="Tenant statistics">
           <Card>
             <CardContent className="pt-6">
               <div className="flex items-start justify-between">
@@ -288,7 +285,7 @@ export const TenantManagement = () => {
                   <p className="text-2xl font-bold mt-2">{stats?.total_tenants || 0}</p>
                 </div>
                 <div className="bg-blue-100 p-3 rounded-lg">
-                  <Building2 className="w-6 h-6 text-blue-600" />
+                  <Building2 className="w-6 h-6 text-blue-600" aria-hidden="true" />
                 </div>
               </div>
             </CardContent>
@@ -302,7 +299,7 @@ export const TenantManagement = () => {
                   <p className="text-2xl font-bold mt-2">{stats?.active_tenants || 0}</p>
                 </div>
                 <div className="bg-green-100 p-3 rounded-lg">
-                  <CheckCircle className="w-6 h-6 text-green-600" />
+                  <CheckCircle className="w-6 h-6 text-green-600" aria-hidden="true" />
                 </div>
               </div>
             </CardContent>
@@ -316,7 +313,7 @@ export const TenantManagement = () => {
                   <p className="text-2xl font-bold mt-2">{stats?.trial_tenants || 0}</p>
                 </div>
                 <div className="bg-yellow-100 p-3 rounded-lg">
-                  <AlertCircle className="w-6 h-6 text-yellow-600" />
+                  <AlertCircle className="w-6 h-6 text-yellow-600" aria-hidden="true" />
                 </div>
               </div>
             </CardContent>
@@ -330,21 +327,22 @@ export const TenantManagement = () => {
                   <p className="text-2xl font-bold mt-2">{stats?.enterprise_tenants || 0}</p>
                 </div>
                 <div className="bg-purple-100 p-3 rounded-lg">
-                  <Crown className="w-6 h-6 text-purple-600" />
+                  <Crown className="w-6 h-6 text-purple-600" aria-hidden="true" />
                 </div>
               </div>
             </CardContent>
           </Card>
-        </div>
+        </section>
 
         {/* Search */}
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+        <div className="relative" role="search" aria-label="Search tenants">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" aria-hidden="true" />
           <Input
             placeholder="Search tenants..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="pl-10"
+            aria-label="Search tenants by name or slug"
           />
         </div>
 
@@ -451,10 +449,10 @@ export const TenantManagement = () => {
 
         {/* Domain Configuration Dialog */}
         <Dialog open={domainDialogOpen} onOpenChange={setDomainDialogOpen}>
-          <DialogContent className="max-w-2xl">
+          <DialogContent className="max-w-2xl" aria-describedby="domain-dialog-description">
             <DialogHeader>
               <DialogTitle>Custom Domain Configuration</DialogTitle>
-              <DialogDescription>
+              <DialogDescription id="domain-dialog-description">
                 Configure a custom domain for {selectedTenant?.name}
               </DialogDescription>
             </DialogHeader>
@@ -518,13 +516,13 @@ export const TenantManagement = () => {
                         <div className="flex-1">
                           <p className="text-xs font-semibold text-muted-foreground">Value</p>
                           <p className="font-mono text-sm break-all">
-                            builddesk.pearsonperformance.workers.dev
+                            brikly.pearsonperformance.workers.dev
                           </p>
                         </div>
                         <Button
                           size="sm"
                           variant="ghost"
-                          onClick={() => copyToClipboard('builddesk.pearsonperformance.workers.dev')}
+                          onClick={() => copyToClipboard('brikly.pearsonperformance.workers.dev')}
                         >
                           <Copy className="w-3 h-3" />
                         </Button>

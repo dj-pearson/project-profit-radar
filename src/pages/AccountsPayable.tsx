@@ -31,10 +31,42 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Trash2, Receipt, DollarSign } from 'lucide-react';
+import { Plus, Trash2, Receipt } from 'lucide-react';
 import { formatCurrency } from '@/utils/accountingUtils';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+
+interface Vendor {
+  id: string;
+  name: string;
+  address: string | null;
+  company_id: string;
+  contact_person: string | null;
+  created_at: string;
+  created_by: string | null;
+  email: string | null;
+  is_active: boolean;
+  notes: string | null;
+  payment_terms: string | null;
+  phone: string | null;
+  tax_id: string | null;
+  updated_at: string;
+}
+
+interface Bill {
+  id: string;
+  bill_number: string;
+  bill_date: string;
+  due_date: string;
+  status: string | null;
+  total_amount: number;
+  amount_due: number | null;
+  amount_paid: number | null;
+  vendor_id: string;
+  vendor?: { id: string; name: string };
+  memo: string | null;
+  company_id: string;
+}
 
 interface BillLineItem {
   id: string;
@@ -180,17 +212,17 @@ export default function AccountsPayable() {
   };
 
   // Calculate AP metrics
-  const totalAP = bills?.reduce((sum: number, bill: any) => sum + Number(bill.amount_due || 0), 0) || 0;
-  const overdueBills = bills?.filter((bill: any) => bill.status === 'overdue').length || 0;
-  const openBills = bills?.filter((bill: any) => ['open', 'partial', 'overdue'].includes(bill.status)).length || 0;
+  const totalAP = bills?.reduce((sum: number, bill: Bill) => sum + Number(bill.amount_due || 0), 0) || 0;
+  const overdueBills = bills?.filter((bill: Bill) => bill.status === 'overdue').length || 0;
+  const openBills = bills?.filter((bill: Bill) => ['open', 'partial', 'overdue'].includes(bill.status || '')).length || 0;
 
   return (
-    <div className="container mx-auto py-6 space-y-6">
+    <main className="container mx-auto py-6 space-y-6" role="main" aria-label="Accounts Payable">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <header className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight flex items-center gap-2">
-            <Receipt className="h-8 w-8" />
+            <Receipt className="h-8 w-8" aria-hidden="true" />
             Accounts Payable
           </h1>
           <p className="text-muted-foreground mt-1">
@@ -200,32 +232,35 @@ export default function AccountsPayable() {
 
         <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
           <DialogTrigger asChild>
-            <Button onClick={() => {
-              setFormData({
-                vendorId: '',
-                billDate: new Date().toISOString().split('T')[0],
-                dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-                vendorRefNumber: '',
-                memo: '',
-                lineItems: [{
-                  id: Math.random().toString(36).substr(2, 9),
-                  description: '',
-                  quantity: 1,
-                  unitPrice: 0,
-                  amount: 0,
-                  expenseAccountId: '',
-                }],
-              });
-            }}>
-              <Plus className="mr-2 h-4 w-4" />
+            <Button
+              aria-label="Create new bill"
+              onClick={() => {
+                setFormData({
+                  vendorId: '',
+                  billDate: new Date().toISOString().split('T')[0],
+                  dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+                  vendorRefNumber: '',
+                  memo: '',
+                  lineItems: [{
+                    id: Math.random().toString(36).substr(2, 9),
+                    description: '',
+                    quantity: 1,
+                    unitPrice: 0,
+                    amount: 0,
+                    expenseAccountId: '',
+                  }],
+                });
+              }}
+            >
+              <Plus className="mr-2 h-4 w-4" aria-hidden="true" />
               New Bill
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-            <form onSubmit={handleSubmit}>
+          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto" aria-describedby="create-bill-description">
+            <form onSubmit={handleSubmit} aria-label="Create bill form">
               <DialogHeader>
                 <DialogTitle>Create Bill</DialogTitle>
-                <DialogDescription>
+                <DialogDescription id="create-bill-description">
                   Enter a new vendor bill
                 </DialogDescription>
               </DialogHeader>
@@ -245,7 +280,7 @@ export default function AccountsPayable() {
                         <SelectValue placeholder="Select vendor" />
                       </SelectTrigger>
                       <SelectContent>
-                        {vendors?.map((vendor: any) => (
+                        {vendors?.map((vendor: Vendor) => (
                           <SelectItem key={vendor.id} value={vendor.id}>
                             {vendor.name}
                           </SelectItem>
@@ -432,31 +467,31 @@ export default function AccountsPayable() {
             </form>
           </DialogContent>
         </Dialog>
-      </div>
+      </header>
 
       {/* Metrics */}
-      <div className="grid gap-4 md:grid-cols-3">
-        <Card>
+      <section aria-label="Accounts payable metrics" className="grid gap-4 md:grid-cols-3">
+        <Card role="region" aria-label="Total accounts payable">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium">Total AP</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{formatCurrency(totalAP)}</div>
+            <div className="text-2xl font-bold" aria-label={`${formatCurrency(totalAP)} total accounts payable`}>{formatCurrency(totalAP)}</div>
             <p className="text-xs text-muted-foreground">{openBills} open bills</p>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card role="region" aria-label="Overdue bills">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium">Overdue Bills</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-red-600">{overdueBills}</div>
+            <div className="text-2xl font-bold text-red-600" aria-label={`${overdueBills} overdue bills`}>{overdueBills}</div>
             <p className="text-xs text-muted-foreground">Require attention</p>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card role="region" aria-label="This month's payments">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium">This Month</CardTitle>
           </CardHeader>
@@ -465,16 +500,17 @@ export default function AccountsPayable() {
             <p className="text-xs text-muted-foreground">Bills paid</p>
           </CardContent>
         </Card>
-      </div>
+      </section>
 
       {/* Filters */}
-      <Card>
-        <CardContent className="pt-6">
-          <div className="flex gap-4">
-            <Select value={filterStatus} onValueChange={setFilterStatus}>
-              <SelectTrigger className="w-[200px]">
-                <SelectValue placeholder="Filter by status" />
-              </SelectTrigger>
+      <section aria-label="Bill filters">
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex gap-4" role="search" aria-label="Filter bills">
+              <Select value={filterStatus} onValueChange={setFilterStatus}>
+                <SelectTrigger className="w-[200px]" aria-label="Filter by status">
+                  <SelectValue placeholder="Filter by status" />
+                </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Statuses</SelectItem>
                 <SelectItem value="open">Open</SelectItem>
@@ -486,58 +522,63 @@ export default function AccountsPayable() {
           </div>
         </CardContent>
       </Card>
+      </section>
 
       {/* Bills List */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Bills</CardTitle>
-          <CardDescription>All vendor bills</CardDescription>
-        </CardHeader>
-        <CardContent>
-          {isLoading ? (
-            <div className="text-center py-8">Loading bills...</div>
-          ) : bills && bills.length > 0 ? (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Bill Number</TableHead>
-                  <TableHead>Vendor</TableHead>
-                  <TableHead>Date</TableHead>
-                  <TableHead>Due Date</TableHead>
-                  <TableHead className="text-right">Amount</TableHead>
-                  <TableHead className="text-right">Amount Due</TableHead>
-                  <TableHead>Status</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {bills.map((bill: any) => (
-                  <TableRow key={bill.id}>
-                    <TableCell className="font-mono">{bill.bill_number}</TableCell>
-                    <TableCell>{bill.vendor?.name || 'Unknown'}</TableCell>
-                    <TableCell>{new Date(bill.bill_date).toLocaleDateString()}</TableCell>
-                    <TableCell>{new Date(bill.due_date).toLocaleDateString()}</TableCell>
-                    <TableCell className="text-right font-mono">
-                      {formatCurrency(bill.total_amount)}
-                    </TableCell>
-                    <TableCell className="text-right font-mono">
-                      {formatCurrency(bill.amount_due)}
-                    </TableCell>
-                    <TableCell>
-                      <Badge className={getStatusBadge(bill.status)}>
-                        {bill.status}
-                      </Badge>
-                    </TableCell>
+      <section aria-label="Bills list">
+        <Card>
+          <CardHeader>
+            <CardTitle>Bills</CardTitle>
+            <CardDescription>All vendor bills</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {isLoading ? (
+              <div className="space-y-3">{[1,2,3,4,5].map(i => <div key={i} className="h-8 bg-muted animate-pulse rounded" />)}</div>
+            ) : bills && bills.length > 0 ? (
+              <Table aria-label="Vendor bills">
+                <TableHeader>
+                  <TableRow>
+                    <TableHead scope="col">Bill Number</TableHead>
+                    <TableHead scope="col">Vendor</TableHead>
+                    <TableHead scope="col">Date</TableHead>
+                    <TableHead scope="col">Due Date</TableHead>
+                    <TableHead scope="col" className="text-right">Amount</TableHead>
+                    <TableHead scope="col" className="text-right">Amount Due</TableHead>
+                    <TableHead scope="col">Status</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          ) : (
-            <div className="text-center py-8 text-muted-foreground">
-              No bills found. Create your first bill to get started.
-            </div>
-          )}
-        </CardContent>
-      </Card>
-    </div>
+                </TableHeader>
+                <TableBody>
+                  {bills.map((bill: Bill) => (
+                    <TableRow key={bill.id}>
+                      <TableCell className="font-mono">{bill.bill_number}</TableCell>
+                      <TableCell>{bill.vendor?.name || 'Unknown'}</TableCell>
+                      <TableCell>{new Date(bill.bill_date).toLocaleDateString()}</TableCell>
+                      <TableCell>{new Date(bill.due_date).toLocaleDateString()}</TableCell>
+                      <TableCell className="text-right font-mono">
+                        <span className="sr-only">Total amount: </span>
+                        {formatCurrency(bill.total_amount)}
+                      </TableCell>
+                      <TableCell className="text-right font-mono">
+                        <span className="sr-only">Amount due: </span>
+                        {formatCurrency(bill.amount_due)}
+                      </TableCell>
+                      <TableCell>
+                        <Badge className={getStatusBadge(bill.status)} aria-label={`Status: ${bill.status}`}>
+                          {bill.status}
+                        </Badge>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            ) : (
+              <div className="text-center py-8 text-muted-foreground" role="status">
+                No bills found. Create your first bill to get started.
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </section>
+    </main>
   );
 }

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -12,19 +12,7 @@ import { Separator } from '@/components/ui/separator';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-import { 
-  Palette, 
-  Globe, 
-  Settings, 
-  Eye, 
-  Copy, 
-  Upload, 
-  Download,
-  Users,
-  Shield,
-  Link as LinkIcon,
-  Smartphone
-} from 'lucide-react';
+import { Palette, Globe, Settings, Eye, Copy, Upload } from 'lucide-react';
 
 interface PortalConfig {
   id?: string;
@@ -132,7 +120,7 @@ export const WhiteLabelPortal = () => {
   };
 
   const generatePreviewUrl = () => {
-    return `https://${config.subdomain}.builddesk.app`;
+    return `https://${config.subdomain}.brikly.app`;
   };
 
   const copyPortalUrl = () => {
@@ -173,7 +161,7 @@ export const WhiteLabelPortal = () => {
                   className="rounded-r-none"
                 />
                 <div className="flex items-center px-3 bg-muted border border-l-0 rounded-r-md text-sm text-muted-foreground">
-                  .builddesk.app
+                  .brikly.app
                 </div>
               </div>
             </div>

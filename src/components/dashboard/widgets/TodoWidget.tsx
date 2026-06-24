@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
@@ -7,6 +7,7 @@ import { Plus, Calendar } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { format } from 'date-fns';
+import { logger } from '@/lib/logger';
 
 interface Todo {
   id: string;
@@ -90,7 +91,7 @@ export const TodoWidget = () => {
         .limit(1);
 
       if (!projects || projects.length === 0) {
-        console.warn('No projects found to associate task with');
+        logger.warn('No projects found to associate task with');
         return;
       }
 

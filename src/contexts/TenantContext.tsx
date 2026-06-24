@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import type { Database } from '@/integrations/supabase/types';
+import { logger } from '@/lib/logger';
 
 type TenantRow = Database['public']['Tables']['tenants']['Row'];
 
@@ -36,12 +37,12 @@ interface TenantContextType {
 
 const TenantContext = createContext<TenantContextType | undefined>(undefined);
 
-// Default BuildDesk tenant configuration
+// Default Brikly tenant configuration
 const DEFAULT_TENANT: Partial<Tenant> = {
   id: 'default',
-  name: 'BuildDesk',
-  display_name: 'BuildDesk',
-  slug: 'builddesk',
+  name: 'Brikly',
+  display_name: 'Brikly',
+  slug: 'brikly',
   custom_domain: null,
   domain_verified: false,
   branding: {
@@ -100,13 +101,13 @@ export function TenantProvider({ children }: { children: React.ReactNode }) {
       const isDefaultDomain =
         hostname === 'localhost' ||
         hostname.includes('127.0.0.1') ||
-        hostname.includes('builddesk.com') ||
-        hostname.includes('build-desk.com') ||
-        hostname.includes('builddesk.pearsonperformance.workers.dev') ||
+        hostname.includes('brikly.net') ||
+        hostname.includes('brikly.net') ||
+        hostname.includes('brikly.pearsonperformance.workers.dev') ||
         hostname.includes('.pages.dev');
 
       if (isDefaultDomain) {
-        // Use default BuildDesk tenant
+        // Use default Brikly tenant
         setTenant(DEFAULT_TENANT as Tenant);
         applyBranding(DEFAULT_TENANT.branding!);
         setLoading(false);
@@ -123,7 +124,7 @@ export function TenantProvider({ children }: { children: React.ReactNode }) {
         .single();
 
       if (queryError || !data) {
-        console.warn('No verified tenant found for domain (or query failed):', hostname, queryError?.message);
+        logger.warn('No verified tenant found for domain (or query failed):', hostname, queryError?.message);
         // Fall back to default tenant - don't block auth if tenant query fails
         setTenant(DEFAULT_TENANT as Tenant);
         applyBranding(DEFAULT_TENANT.branding!);

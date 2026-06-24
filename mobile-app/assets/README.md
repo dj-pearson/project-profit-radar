@@ -1,4 +1,4 @@
-# BuildDesk Mobile Assets
+# Brikly Mobile Assets
 
 ## Required Assets
 
@@ -8,26 +8,26 @@ This directory needs the following image assets:
 - **Size**: 1024x1024 px
 - **Format**: PNG with transparency
 - **Usage**: App icon for both iOS and Android
-- **Design**: BuildDesk logo on transparent or branded background
+- **Design**: Brikly logo on transparent or branded background
 
 ### 2. `splash.png`
 - **Size**: 1284x2778 px (iPhone 14 Pro Max resolution)
 - **Format**: PNG
-- **Background**: #4A90E2 (BuildDesk blue)
+- **Background**: #4A90E2 (Brikly blue)
 - **Usage**: Launch screen
-- **Design**: BuildDesk logo centered, can include "BuildDesk" text
+- **Design**: Brikly logo centered, can include "Brikly" text
 
 ### 3. `adaptive-icon.png`
 - **Size**: 1024x1024 px
 - **Format**: PNG with transparency
 - **Usage**: Android adaptive icon foreground
-- **Design**: BuildDesk logo, keep important content within safe zone (center 66%)
+- **Design**: Brikly logo, keep important content within safe zone (center 66%)
 
 ### 4. `favicon.png`
 - **Size**: 48x48 px
 - **Format**: PNG
 - **Usage**: Web favicon (for Expo web builds)
-- **Design**: Simplified BuildDesk logo
+- **Design**: Simplified Brikly logo
 
 ## Temporary Solution
 

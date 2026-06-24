@@ -1,4 +1,3 @@
-import React from "react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { SEOMetaTags } from "@/components/SEOMetaTags";
@@ -75,7 +74,7 @@ const ConstructionManagementBasics = () => {
   return (
     <div className="min-h-screen bg-background">
       <SEOMetaTags
-        title="Construction Management Basics: Complete Guide for Small Contractors | BuildDesk"
+        title="Construction Management Basics: Complete Guide for Small Contractors | Brikly"
         description="Master construction management fundamentals: project planning, cost control, team management, and execution. Free guides and resources for growing contractors."
         keywords={[
           'construction management basics',
@@ -271,7 +270,7 @@ const ConstructionManagementBasics = () => {
             Ready to Master Construction Management?
           </h2>
           <p className="text-muted-foreground mb-6 max-w-2xl mx-auto">
-            BuildDesk provides all the tools covered in these guides: project planning, 
+            Brikly provides all the tools covered in these guides: project planning, 
             job costing, scheduling, and team management in one integrated platform.
           </p>
           <Button asChild size="lg">

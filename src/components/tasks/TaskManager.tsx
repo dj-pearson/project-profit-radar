@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -9,6 +9,8 @@ import { Filter, Plus, Calendar, Clock, User, Building } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { TaskCard } from './TaskCard';
+import { TaskBoard } from './TaskBoard';
+import { useToast } from '@/hooks/use-toast';
 import { CreateTaskDialog } from './CreateTaskDialog';
 import { TaskTemplatesDialog } from './TaskTemplatesDialog';
 import { format } from 'date-fns';
@@ -57,6 +59,7 @@ interface TaskManagerProps {
 
 export const TaskManager = ({ projectId }: TaskManagerProps = {}) => {
   const { userProfile } = useAuth();
+  const { toast } = useToast();
   const [tasks, setTasks] = useState<Task[]>([]);
   const [filteredTasks, setFilteredTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
@@ -182,8 +185,37 @@ export const TaskManager = ({ projectId }: TaskManagerProps = {}) => {
     return categoryColors[category] || 'bg-gray-100 text-gray-800';
   };
 
-  const getTasksByStatus = (status: string) => {
-    return filteredTasks.filter(task => task.status === status);
+  // Board (US-102): persist a drag between columns, optimistic in TaskBoard.
+  const handleBoardStatusChange = async (taskId: string, statusValue: string) => {
+    const { error } = await supabase.from('tasks').update({ status: statusValue }).eq('id', taskId);
+    if (error) {
+      toast({ title: 'Error', description: 'Failed to move task.', variant: 'destructive' });
+      throw error;
+    }
+    setTasks(prev => prev.map(t => (t.id === taskId ? { ...t, status: statusValue } : t)));
+  };
+
+  // Board quick-add: mirrors CreateTaskDialog's insert convention.
+  const handleBoardQuickAdd = async (title: string, statusValue: string) => {
+    if (!userProfile?.company_id) return;
+    if (!projectId) {
+      toast({ title: 'Pick a project', description: 'Open a project to quick-add tasks to its board.', variant: 'destructive' });
+      return;
+    }
+    const { error } = await supabase.from('tasks').insert({
+      name: title,
+      status: statusValue,
+      priority: 'medium',
+      project_id: projectId,
+      company_id: userProfile.company_id,
+      created_by: userProfile.id,
+      assigned_to: userProfile.id,
+    });
+    if (error) {
+      toast({ title: 'Error', description: 'Failed to add task.', variant: 'destructive' });
+      return;
+    }
+    await loadTasks();
   };
 
   if (loading) {
@@ -288,28 +320,11 @@ export const TaskManager = ({ projectId }: TaskManagerProps = {}) => {
         </TabsList>
 
         <TabsContent value="kanban">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            {['todo', 'in_progress', 'completed', 'on_hold'].map(status => (
-              <Card key={status}>
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-sm font-medium capitalize flex items-center justify-between">
-                    {status.replace('_', ' ')}
-                    <Badge variant="outline">{getTasksByStatus(status).length}</Badge>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  {getTasksByStatus(status).map(task => (
-                    <TaskCard 
-                      key={task.id} 
-                      task={task} 
-                      onUpdate={handleTaskUpdate}
-                      onDelete={handleTaskDelete}
-                    />
-                  ))}
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+          <TaskBoard
+            tasks={filteredTasks}
+            onStatusChange={handleBoardStatusChange}
+            onQuickAdd={handleBoardQuickAdd}
+          />
         </TabsContent>
 
         <TabsContent value="list">

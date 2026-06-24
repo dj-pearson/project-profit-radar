@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!--
+	aps-environment and com.apple.developer.location.push intentionally
+	omitted until push notifications and background location are implemented.
+	Declaring entitlements without using them increases App Store review risk.
+	-->
+
+	<!-- Keychain Access Groups for secure token storage -->
+	<key>keychain-access-groups</key>
+	<array>
+		<string>$(AppIdentifierPrefix)com.brikly.app</string>
+	</array>
+
+	<!-- Associated Domains for universal links and web credentials -->
+	<key>com.apple.developer.associated-domains</key>
+	<array>
+		<string>applinks:brikly.net</string>
+		<string>applinks:app.brikly.net</string>
+		<string>webcredentials:brikly.net</string>
+	</array>
+
+	<!-- Sign in with Apple -->
+	<key>com.apple.developer.applesignin</key>
+	<array>
+		<string>Default</string>
+	</array>
+</dict>
+</plist>

@@ -92,10 +92,22 @@ export default {
 			},
 			backdropBlur: {
 				xs: '2px',
+				'ios-sm': '12px',
+				ios: '22px',
+				'ios-lg': '32px',
 			},
 			boxShadow: {
 				'glass': '0 8px 32px 0 rgba(31, 38, 135, 0.37)',
 				'glass-hover': '0 12px 48px 0 rgba(31, 38, 135, 0.47)',
+				'ios-1': '0 1px 2px rgba(15, 23, 42, 0.06), 0 1px 3px rgba(15, 23, 42, 0.08)',
+				'ios-2': '0 4px 12px -2px rgba(15, 23, 42, 0.12), 0 2px 6px -1px rgba(15, 23, 42, 0.06)',
+				'ios-3': '0 10px 30px -12px rgba(15, 23, 42, 0.22), 0 4px 12px -4px rgba(15, 23, 42, 0.10)',
+				'ios-4': '0 20px 50px -20px rgba(15, 23, 42, 0.30), 0 8px 20px -8px rgba(15, 23, 42, 0.14)',
+				'ios-glow': '0 0 0 1px rgba(255,255,255,0.35) inset, 0 8px 24px -6px hsl(24 100% 38% / 0.35)',
+			},
+			transitionTimingFunction: {
+				ios: 'cubic-bezier(0.32, 0.72, 0, 1)',
+				'ios-in-out': 'cubic-bezier(0.4, 0, 0.2, 1)',
 			},
 			borderRadius: {
 				lg: 'var(--radius)',
@@ -118,11 +130,26 @@ export default {
 					to: {
 						height: '0'
 					}
-				}
+				},
+				'ios-rise': {
+					from: { opacity: '0', transform: 'translateY(10px) scale(0.985)' },
+					to: { opacity: '1', transform: 'translateY(0) scale(1)' },
+				},
+				'ios-sheet-in': {
+					from: { opacity: '0', transform: 'translateY(24px)' },
+					to: { opacity: '1', transform: 'translateY(0)' },
+				},
+				'ios-scale-in': {
+					from: { opacity: '0', transform: 'scale(0.9)' },
+					to: { opacity: '1', transform: 'scale(1)' },
+				},
 			},
 			animation: {
 				'accordion-down': 'accordion-down 0.2s ease-out',
-				'accordion-up': 'accordion-up 0.2s ease-out'
+				'accordion-up': 'accordion-up 0.2s ease-out',
+				'ios-rise': 'ios-rise 0.42s cubic-bezier(0.32, 0.72, 0, 1) both',
+				'ios-sheet-in': 'ios-sheet-in 0.42s cubic-bezier(0.32, 0.72, 0, 1) both',
+				'ios-scale-in': 'ios-scale-in 0.26s cubic-bezier(0.32, 0.72, 0, 1) both',
 			}
 		}
 	},

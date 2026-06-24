@@ -4,16 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
-import { 
-  Calendar, 
-  AlertTriangle, 
-  Clock, 
-  DollarSign,
-  CreditCard,
-  FileText,
-  Users,
-  Building
-} from 'lucide-react';
+import { Calendar, AlertTriangle, Clock, DollarSign, CreditCard, Users } from 'lucide-react';
 
 interface UpcomingPayment {
   id: string;

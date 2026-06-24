@@ -1,4 +1,3 @@
-import React from "react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { SEOMetaTags } from "@/components/SEOMetaTags";
@@ -6,7 +5,7 @@ import { ArticleSchema, FAQSchema } from "@/components/seo/EnhancedSchemaMarkup"
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Check, Star, DollarSign, Clock, Users, Shield } from "lucide-react";
+import { Check, Star, DollarSign, Clock, Users } from "lucide-react";
 import { Link } from "react-router-dom";
 import BreadcrumbsNavigation from "@/components/BreadcrumbsNavigation";
 
@@ -14,7 +13,7 @@ const BestConstructionManagementSoftware2025 = () => {
   const faqData = [
     {
       question: "What is the best construction management software for small contractors?",
-      answer: "BuildDesk leads for small contractors (10-100 employees) due to its quick setup, affordable pricing, and focus on essential features like job costing, scheduling, and OSHA compliance without enterprise complexity."
+      answer: "Brikly leads for small contractors (10-100 employees) due to its quick setup, affordable pricing, and focus on essential features like job costing, scheduling, and OSHA compliance without enterprise complexity."
     },
     {
       question: "How much should small contractors spend on construction software?",
@@ -22,7 +21,7 @@ const BestConstructionManagementSoftware2025 = () => {
     },
     {
       question: "Do I need expensive software like Procore for a small construction business?",
-      answer: "No. Procore costs $600-1,500+ monthly and requires months of setup. Small contractors get better value from BuildDesk ($149-299/month) with 1-week setup and features designed for smaller teams."
+      answer: "No. Procore costs $600-1,500+ monthly and requires months of setup. Small contractors get better value from Brikly ($149-299/month) with 1-week setup and features designed for smaller teams."
     },
     {
       question: "What features matter most for small construction businesses?",
@@ -32,7 +31,7 @@ const BestConstructionManagementSoftware2025 = () => {
 
   const softwareComparison = [
     {
-      name: "BuildDesk",
+      name: "Brikly",
       rating: 4.8,
       price: "$149-299/month",
       setup: "1-2 weeks",
@@ -63,7 +62,7 @@ const BestConstructionManagementSoftware2025 = () => {
   return (
     <div className="min-h-screen bg-background">
       <SEOMetaTags
-        title="Best Construction Management Software for Small Business (2025) | BuildDesk"
+        title="Best Construction Management Software for Small Business (2025) | Brikly"
         description="Compare the top construction management software for small contractors. Features, pricing, and ROI analysis for 2025. Get the right tool for your growing business."
         keywords={[
           'best construction management software small business',
@@ -77,10 +76,10 @@ const BestConstructionManagementSoftware2025 = () => {
       
       <ArticleSchema
         title="Best Construction Management Software for Small Business (2025)"
-        author="BuildDesk Team"
+        author="Brikly Team"
         datePublished="2025-01-24"
-        image="https://builddesk.com/images/best-construction-software-2025.jpg"
-        url="https://builddesk.com/resources/best-construction-management-software-small-business-2025"
+        image="https://brikly.net/images/best-construction-software-2025.jpg"
+        url="https://brikly.net/resources/best-construction-management-software-small-business-2025"
       />
       
       <FAQSchema questions={faqData} />
@@ -101,7 +100,7 @@ const BestConstructionManagementSoftware2025 = () => {
           <div className="bg-primary/10 border border-primary/20 rounded-lg p-6 mb-8">
             <h2 className="text-xl font-semibold mb-3">TL;DR - Quick Answer</h2>
             <p className="text-lg leading-relaxed">
-              <strong>BuildDesk leads for small contractors</strong> due to 60% lower cost than Procore, 
+              <strong>Brikly leads for small contractors</strong> due to 60% lower cost than Procore, 
               1-week setup vs. months, and features designed specifically for teams under 100 employees. 
               Expect 300-500% ROI through improved job costing and reduced administrative time.
             </p>
@@ -237,7 +236,7 @@ const BestConstructionManagementSoftware2025 = () => {
                   <p className="text-muted-foreground">Projects averaging 25% over budget, 3 hours daily on paperwork</p>
                 </div>
                 <div>
-                  <h4 className="font-semibold mb-2">Result with BuildDesk:</h4>
+                  <h4 className="font-semibold mb-2">Result with Brikly:</h4>
                   <p className="text-muted-foreground"><strong>18% profit increase in 6 months</strong>, 2.5 hours saved daily on administration</p>
                 </div>
               </div>
@@ -277,7 +276,7 @@ const BestConstructionManagementSoftware2025 = () => {
             <Card>
               <CardContent className="p-4">
                 <Link to="/procore-alternative-detailed" className="font-medium hover:text-primary">
-                  BuildDesk vs Procore →
+                  Brikly vs Procore →
                 </Link>
                 <p className="text-sm text-muted-foreground mt-1">Detailed comparison for small contractors</p>
               </CardContent>
@@ -285,7 +284,7 @@ const BestConstructionManagementSoftware2025 = () => {
             <Card>
               <CardContent className="p-4">
                 <Link to="/features" className="font-medium hover:text-primary">
-                  BuildDesk Features →
+                  Brikly Features →
                 </Link>
                 <p className="text-sm text-muted-foreground mt-1">See all construction management tools</p>
               </CardContent>
@@ -299,7 +298,7 @@ const BestConstructionManagementSoftware2025 = () => {
             Ready to Try the #1 Software for Small Contractors?
           </h2>
           <p className="text-muted-foreground mb-6 max-w-2xl mx-auto">
-            Join 500+ small contractors using BuildDesk to improve margins, reduce delays, 
+            Join 500+ small contractors using Brikly to improve margins, reduce delays, 
             and simplify project management. 14-day free trial, no credit card required.
           </p>
           <Button asChild size="lg">

@@ -8,7 +8,6 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { Button } from '@/components/ui/button';
 import {
   Select,
   SelectContent,
@@ -16,17 +15,7 @@ import {
   SelectTrigger,
   SelectValue
 } from '@/components/ui/select';
-import {
-  DollarSign,
-  TrendingUp,
-  TrendingDown,
-  AlertTriangle,
-  CheckCircle,
-  Activity,
-  Calendar,
-  PieChart,
-  BarChart3
-} from 'lucide-react';
+import { DollarSign, TrendingUp, TrendingDown, AlertTriangle, CheckCircle, Activity } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -49,10 +38,10 @@ export const ImprovedBudgetDashboard: React.FC<ImprovedBudgetDashboardProps> = (
 }) => {
   const { userProfile } = useAuth();
   const [loading, setLoading] = useState(true);
-  const [projects, setProjects] = useState<any[]>([]);
+  const [projects, setProjects] = useState<{ id: string; name: string; total_budget: number; status: string }[]>([]);
   const [selectedProject, setSelectedProject] = useState(initialProjectId || '');
   const [budgetData, setBudgetData] = useState<BudgetCategory[]>([]);
-  const [projectDetails, setProjectDetails] = useState<any>(null);
+  const [projectDetails, setProjectDetails] = useState<{ id: string; name: string; total_budget: number; start_date: string | null; end_date: string | null; expected_completion_date: string | null } | null>(null);
 
   useEffect(() => {
     loadProjects();
@@ -141,14 +130,14 @@ export const ImprovedBudgetDashboard: React.FC<ImprovedBudgetDashboardProps> = (
       if (committedError) throw committedError;
 
       // Aggregate data by cost code
-      const aggregated = (budgetItems || []).map((item: any) => {
+      const aggregated = (budgetItems || []).map((item: { cost_code_id: string; budgeted_amount: number; cost_codes: { code: string; name: string; category: string } | null }) => {
         const actual = (actualCosts || [])
-          .filter((c: any) => c.cost_code_id === item.cost_code_id)
-          .reduce((sum: number, c: any) => sum + c.amount, 0);
+          .filter((c: { cost_code_id: string; amount: number }) => c.cost_code_id === item.cost_code_id)
+          .reduce((sum: number, c: { cost_code_id: string; amount: number }) => sum + c.amount, 0);
 
         const committed = (committedCosts || [])
-          .filter((c: any) => c.cost_code_id === item.cost_code_id)
-          .reduce((sum: number, c: any) => sum + c.total_amount, 0);
+          .filter((c: { cost_code_id: string; total_amount: number }) => c.cost_code_id === item.cost_code_id)
+          .reduce((sum: number, c: { cost_code_id: string; total_amount: number }) => sum + c.total_amount, 0);
 
         return {
           id: item.cost_code_id,

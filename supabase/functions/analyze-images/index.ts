@@ -1,7 +1,8 @@
 // Analyze Images Edge Function
-// Updated with multi-tenant site_id isolation
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.3";
 import { initializeAuthContext, errorResponse } from '../_shared/auth-helpers.ts';
+import { checkRateLimit, rateLimitResponse, RATE_LIMITS } from '../_shared/rate-limiter.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -12,19 +13,28 @@ serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
 
   try {
-    // Initialize auth context - extracts user AND site_id from JWT
-    const authContext = await initializeAuthContext(req);
+        const authContext = await initializeAuthContext(req);
     if (!authContext) {
       return errorResponse('Unauthorized', 401);
     }
 
-    const { user, siteId, supabase: supabaseClient } = authContext;
+    const { user, supabase: supabaseClient } = authContext;
+
+    // Rate limit: 20 req/min per user for AI endpoints
+    const serviceClient = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+    );
+    const rlResult = await checkRateLimit(serviceClient, {
+      identifier: user.id, endpoint: 'analyze-images', ...RATE_LIMITS.AI
+    });
+    if (!rlResult.allowed) return rateLimitResponse(rlResult, corsHeaders);
 
     // Check user role with site isolation
     const { data: userProfile } = await supabaseClient
       .from('user_profiles')
       .select('role')
-      .eq('site_id', siteId)  // CRITICAL: Site isolation
+        // CRITICAL: Site isolation
       .eq('id', user.id)
       .single();
 
@@ -52,9 +62,7 @@ serve(async (req) => {
 
       if (srcMatch) {
         const imageUrl = new URL(srcMatch[1], url).href;
-        images.push({
-          site_id: siteId,  // CRITICAL: Include site_id
-          source_page_url: url,
+        images.push({            source_page_url: url,
           image_url: imageUrl,
           image_alt: altMatch ? altMatch[1] : null,
           image_title: titleMatch ? titleMatch[1] : null,

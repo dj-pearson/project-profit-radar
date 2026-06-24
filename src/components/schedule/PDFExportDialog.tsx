@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -7,7 +7,6 @@ import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
 import { Download, FileText, CheckCircle, AlertCircle, Loader2 } from 'lucide-react';
 import { Project } from '@/types/schedule';
-import { SchedulePDFExporter } from '@/utils/pdfExportUtils';
 
 interface PDFExportDialogProps {
   isOpen: boolean;
@@ -31,7 +30,7 @@ export function PDFExportDialog({ isOpen, onClose, project, templateName }: PDFE
     includeCriticalPath: true,
     includeTaskList: true,
     includeAnalytics: true,
-    companyName: 'BuildDesk',
+    companyName: 'Brikly',
     fileName: `${project.name.replace(/\s+/g, '_')}_Schedule`
   });
   
@@ -75,6 +74,9 @@ export function PDFExportDialog({ isOpen, onClose, project, templateName }: PDFE
 
       // Wait for progress simulation to complete
       await new Promise(resolve => setTimeout(resolve, totalDelay));
+
+      // Dynamically import PDF exporter to reduce bundle size
+      const { SchedulePDFExporter } = await import('@/utils/pdfExportUtils');
 
       // Create and configure PDF exporter
       const exporter = new SchedulePDFExporter(project, {

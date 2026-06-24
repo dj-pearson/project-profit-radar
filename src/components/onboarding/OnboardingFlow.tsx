@@ -36,7 +36,7 @@ interface OnboardingStep {
 const steps: OnboardingStep[] = [
   {
     id: 'welcome',
-    title: 'Welcome to BuildDesk!',
+    title: 'Welcome to Brikly!',
     description: 'Your 14-day free trial starts now',
     icon: <Sparkles className="h-6 w-6 text-construction-orange" />
   },
@@ -87,7 +87,7 @@ export const OnboardingFlow = () => {
   });
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  const { user } = useAuth();
+  const { user, userProfile } = useAuth();
   const { toast} = useToast();
   const navigate = useNavigate();
 
@@ -254,7 +254,8 @@ export const OnboardingFlow = () => {
           company_size: formData.teamSize.toString(),
           annual_revenue_range: 'startup', // Default for new companies
           subscription_tier: formData.selectedPlan as 'starter' | 'professional' | 'enterprise',
-          subscription_status: 'trial'
+          subscription_status: 'trial',
+          tenant_id: userProfile?.tenant_id || null,
         })
         .select()
         .single();
@@ -266,7 +267,7 @@ export const OnboardingFlow = () => {
         .from('user_profiles')
         .update({
           company_id: company.id,
-          // Store onboarding preferences for dashboard personalization
+          tenant_id: userProfile?.tenant_id || null,
           preferences: {
             onboarding_completed: true,
             primary_services: formData.primaryServices,
@@ -307,7 +308,7 @@ export const OnboardingFlow = () => {
                 <Sparkles className="h-10 w-10 text-white" />
               </div>
               <div>
-                <h3 className="text-2xl font-bold mb-2">Welcome to BuildDesk!</h3>
+                <h3 className="text-2xl font-bold mb-2">Welcome to Brikly!</h3>
                 <p className="text-muted-foreground text-lg">
                   Let's get you set up in just a few minutes
                 </p>
@@ -404,7 +405,7 @@ export const OnboardingFlow = () => {
             </Alert>
 
             <div className="space-y-2">
-              <Label htmlFor="teamSize">How many team members will use BuildDesk? *</Label>
+              <Label htmlFor="teamSize">How many team members will use Brikly? *</Label>
               <Select
                 value={formData.teamSize.toString()}
                 onValueChange={(value) => setFormData(prev => ({ ...prev, teamSize: parseInt(value) }))}

@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<network-security-config>
+    <!-- Enforce HTTPS for all connections by default -->
+    <base-config cleartextTrafficPermitted="false">
+        <trust-anchors>
+            <certificates src="system" />
+        </trust-anchors>
+    </base-config>
+
+    <!-- Pin certificates for critical domains -->
+    <domain-config>
+        <domain includeSubdomains="true">brikly.net</domain>
+        <pin-set expiration="2027-01-01">
+            <!-- Primary pin (SHA-256 of SPKI) - update with actual production certificate pins -->
+            <!-- Using Let's Encrypt / Cloudflare intermediate CA pins as baseline -->
+            <pin digest="SHA-256">YLh1dUR9y6Kja30RrAn7JKnbQG/uEtLMkBgFF2Fuihg=</pin>
+            <!-- Backup pin (required by Android) -->
+            <pin digest="SHA-256">sRHdihwgkaib1P1gN7akqREOQFLPkKWDlf7NpRqP3iM=</pin>
+        </pin-set>
+    </domain-config>
+
+    <domain-config>
+        <domain includeSubdomains="true">supabase.co</domain>
+        <pin-set expiration="2027-01-01">
+            <pin digest="SHA-256">YLh1dUR9y6Kja30RrAn7JKnbQG/uEtLMkBgFF2Fuihg=</pin>
+            <pin digest="SHA-256">sRHdihwgkaib1P1gN7akqREOQFLPkKWDlf7NpRqP3iM=</pin>
+        </pin-set>
+    </domain-config>
+
+    <!-- Debug overrides for local development -->
+    <debug-overrides>
+        <trust-anchors>
+            <certificates src="user" />
+            <certificates src="system" />
+        </trust-anchors>
+    </debug-overrides>
+</network-security-config>

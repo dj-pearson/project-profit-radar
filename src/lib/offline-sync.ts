@@ -1,33 +1,50 @@
-// Offline Sync Engine for BuildDesk Mobile
+// Offline Sync Engine for Brikly Mobile
 // Handles local data storage and synchronization with Supabase
 
 import { openDB, DBSchema, IDBPDatabase } from 'idb';
 import { supabase } from '@/integrations/supabase/client';
+import type { Database } from '@/integrations/supabase/types';
 
-interface BuildDeskDB extends DBSchema {
+/** Table names that the offline sync engine operates on */
+type SyncableTable = 'projects' | 'time_entries' | 'daily_reports' | 'documents';
+
+/** Helper to call supabase.from() with a runtime table name from the sync queue */
+function fromTable(table: string) {
+  return supabase.from(table as keyof Database['public']['Tables']);
+}
+
+/** Record stored in offline IndexedDB, with sync metadata */
+interface OfflineRecord {
+  id: string;
+  updated_at?: string;
+  synced?: number;
+  [key: string]: unknown;
+}
+
+interface BriklyDB extends DBSchema {
   projects: {
     key: string;
-    value: any;
+    value: OfflineRecord;
     indexes: { 'by-updated': string };
   };
   time_entries: {
     key: string;
-    value: any;
+    value: OfflineRecord;
     indexes: { 'by-updated': string; 'by-synced': number };
   };
   daily_reports: {
     key: string;
-    value: any;
+    value: OfflineRecord;
     indexes: { 'by-updated': string; 'by-synced': number };
   };
   documents: {
     key: string;
-    value: any;
+    value: OfflineRecord;
     indexes: { 'by-updated': string; 'by-synced': number };
   };
   photos: {
     key: string;
-    value: any;
+    value: OfflineRecord;
     indexes: { 'by-updated': string; 'by-synced': number };
   };
   sync_queue: {
@@ -36,7 +53,7 @@ interface BuildDeskDB extends DBSchema {
       id: string;
       table: string;
       action: 'insert' | 'update' | 'delete';
-      data: any;
+      data: OfflineRecord;
       created_at: string;
       attempts: number;
       last_error?: string;
@@ -54,13 +71,13 @@ interface BuildDeskDB extends DBSchema {
 }
 
 class OfflineSyncEngine {
-  private db: IDBPDatabase<BuildDeskDB> | null = null;
+  private db: IDBPDatabase<BriklyDB> | null = null;
   private syncInterval: number | null = null;
   private isSyncing = false;
 
   // Initialize the IndexedDB database
   async initialize(): Promise<void> {
-    this.db = await openDB<BuildDeskDB>('BuildDeskOffline', 1, {
+    this.db = await openDB<BriklyDB>('BriklyOffline', 1, {
       upgrade(db) {
         // Projects store
         if (!db.objectStoreNames.contains('projects')) {
@@ -156,9 +173,10 @@ class OfflineSyncEngine {
 
       return { success: true, errors };
 
-    } catch (error: any) {
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
       console.error('[OfflineSync] Sync error:', error);
-      errors.push(error.message);
+      errors.push(message);
       return { success: false, errors };
 
     } finally {
@@ -177,25 +195,25 @@ class OfflineSyncEngine {
       try {
         switch (item.action) {
           case 'insert':
-            await (supabase as any).from(item.table).insert(item.data);
+            await fromTable(item.table).insert(item.data as Record<string, unknown>);
             break;
           case 'update':
-            await (supabase as any).from(item.table).update(item.data).eq('id', item.data.id);
+            await fromTable(item.table).update(item.data as Record<string, unknown>).eq('id', item.data.id);
             break;
           case 'delete':
-            await (supabase as any).from(item.table).delete().eq('id', item.data.id);
+            await fromTable(item.table).delete().eq('id', item.data.id);
             break;
         }
 
         // Remove from queue on success
         await this.db.delete('sync_queue', item.id);
 
-      } catch (error: any) {
+      } catch (error) {
         console.error(`[OfflineSync] Failed to push ${item.action}:`, error);
 
         // Update attempt count and error
         item.attempts += 1;
-        item.last_error = error.message;
+        item.last_error = error instanceof Error ? error.message : String(error);
 
         // Remove from queue if too many failures
         if (item.attempts >= 5) {
@@ -221,8 +239,7 @@ class OfflineSyncEngine {
         const lastSyncAt = metadata?.last_sync_at || new Date(0).toISOString();
 
         // Fetch changes since last sync
-        const { data, error } = await (supabase as any)
-          .from(table)
+        const { data, error } = await fromTable(table)
           .select('*')
           .gte('updated_at', lastSyncAt)
           .order('updated_at', { ascending: true });
@@ -231,7 +248,7 @@ class OfflineSyncEngine {
 
         if (data && data.length > 0) {
           // Update local store
-          const tx = this.db.transaction(table as any, 'readwrite');
+          const tx = this.db.transaction(table as SyncableTable, 'readwrite');
 
           for (const record of data) {
             await tx.store.put({ ...record, synced: 1 });
@@ -248,7 +265,7 @@ class OfflineSyncEngine {
 
         }
 
-      } catch (error: any) {
+      } catch (error) {
         console.error(`[OfflineSync] Failed to pull from ${table}:`, error);
 
         // Update sync metadata with failure
@@ -264,7 +281,7 @@ class OfflineSyncEngine {
   // Save data locally (with queue for sync)
   async saveLocal(
     table: string,
-    data: any,
+    data: OfflineRecord,
     action: 'insert' | 'update' | 'delete' = 'insert'
   ): Promise<void> {
     if (!this.db) throw new Error('Database not initialized');
@@ -274,14 +291,14 @@ class OfflineSyncEngine {
 
     // Add to local store
     if (action !== 'delete') {
-      await this.db.put(table as any, {
+      await this.db.put(table as SyncableTable, {
         ...data,
         id,
         updated_at: now,
         synced: 0
       });
     } else {
-      await this.db.delete(table as any, id);
+      await this.db.delete(table as SyncableTable, id);
     }
 
     // Add to sync queue
@@ -301,15 +318,15 @@ class OfflineSyncEngine {
   }
 
   // Get all local records from a table
-  async getLocal(table: string): Promise<any[]> {
+  async getLocal(table: string): Promise<OfflineRecord[]> {
     if (!this.db) throw new Error('Database not initialized');
-    return await this.db.getAll(table as any);
+    return await this.db.getAll(table as SyncableTable);
   }
 
   // Get single record by ID
-  async getLocalById(table: string, id: string): Promise<any | undefined> {
+  async getLocalById(table: string, id: string): Promise<OfflineRecord | undefined> {
     if (!this.db) throw new Error('Database not initialized');
-    return await this.db.get(table as any, id);
+    return await this.db.get(table as SyncableTable, id);
   }
 
   // Get unsynced records count
@@ -326,7 +343,7 @@ class OfflineSyncEngine {
     const tables = ['projects', 'time_entries', 'daily_reports', 'documents', 'photos', 'sync_queue', 'sync_metadata'];
 
     for (const table of tables) {
-      await this.db.clear(table as any);
+      await this.db.clear(table as keyof BriklyDB);
     }
 
   }

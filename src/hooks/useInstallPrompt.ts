@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { logger } from '@/lib/logger';
 
 interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<void>;
@@ -17,7 +18,7 @@ export function useInstallPrompt() {
   useEffect(() => {
     // Check if already installed (running in standalone mode)
     const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
-    if (isStandalone || (window.navigator as any).standalone) {
+    if (isStandalone || ('standalone' in window.navigator && (window.navigator as Navigator & { standalone?: boolean }).standalone)) {
       setIsInstalled(true);
       return;
     }
@@ -47,7 +48,7 @@ export function useInstallPrompt() {
 
   const promptInstall = async () => {
     if (!deferredPrompt) {
-      console.warn('Install prompt not available');
+      logger.warn('Install prompt not available');
       return false;
     }
 

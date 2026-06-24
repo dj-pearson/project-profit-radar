@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 /**
- * Performance Audit Script for BuildDesk
+ * Performance Audit Script for Brikly
  * Runs Lighthouse audits and generates performance reports
  */
 
@@ -15,14 +15,14 @@ const __dirname = path.dirname(__filename);
 // Performance audit configuration
 const auditConfig = {
   urls: [
-    'https://build-desk.com/',
-    'https://build-desk.com/features',
-    'https://build-desk.com/pricing',
-    'https://build-desk.com/procore-alternative',
-    'https://build-desk.com/buildertrend-alternative',
-    'https://build-desk.com/job-costing-software',
-    'https://build-desk.com/construction-scheduling-software',
-    'https://build-desk.com/construction-project-management-software'
+    'https://brikly.net/',
+    'https://brikly.net/features',
+    'https://brikly.net/pricing',
+    'https://brikly.net/procore-alternative',
+    'https://brikly.net/buildertrend-alternative',
+    'https://brikly.net/job-costing-software',
+    'https://brikly.net/construction-scheduling-software',
+    'https://brikly.net/construction-project-management-software'
   ],
   thresholds: {
     performance: 90,

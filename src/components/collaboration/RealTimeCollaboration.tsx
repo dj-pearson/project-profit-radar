@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -7,7 +7,6 @@ import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { Users, MessageCircle, Activity, Send, Eye, Edit3, Clock } from 'lucide-react';
 
@@ -29,7 +28,7 @@ interface LiveUpdate {
   resource: string;
   resourceId: string;
   timestamp: Date;
-  metadata?: any;
+  metadata?: Record<string, string>;
 }
 
 interface ChatMessage {
@@ -97,7 +96,7 @@ export const RealTimeCollaboration = ({
 
       // Store in localStorage for now
       const presence = JSON.parse(localStorage.getItem('user_presence') || '[]');
-      const existingIndex = presence.findIndex((p: any) => p.user_id === user?.id);
+      const existingIndex = presence.findIndex((p: { user_id: string }) => p.user_id === user?.id);
       
       if (existingIndex >= 0) {
         presence[existingIndex] = presenceData;
@@ -115,7 +114,7 @@ export const RealTimeCollaboration = ({
     // Cleanup on page unload
     window.addEventListener('beforeunload', () => {
       const presence = JSON.parse(localStorage.getItem('user_presence') || '[]');
-      const updated = presence.map((p: any) => 
+      const updated = presence.map((p: { user_id: string; is_online: boolean }) =>
         p.user_id === user?.id ? { ...p, is_online: false } : p
       );
       localStorage.setItem('user_presence', JSON.stringify(updated));
@@ -155,7 +154,7 @@ export const RealTimeCollaboration = ({
   const setupChatSubscription = () => {
     // Load existing chat messages
     const existingMessages = JSON.parse(localStorage.getItem(`chat_${projectId || 'general'}`) || '[]');
-    setChatMessages(existingMessages.map((msg: any) => ({
+    setChatMessages(existingMessages.map((msg: ChatMessage & { timestamp: string }) => ({
       ...msg,
       timestamp: new Date(msg.timestamp)
     })));
@@ -173,13 +172,19 @@ export const RealTimeCollaboration = ({
     const presence = JSON.parse(localStorage.getItem('user_presence') || '[]');
     const currentTime = new Date();
     
+    interface PresenceData {
+      user_id: string;
+      last_seen: string;
+      current_page?: string;
+      is_online: boolean;
+    }
     const activeUsers: ActiveUser[] = presence
-      .filter((p: any) => {
+      .filter((p: PresenceData) => {
         const lastSeen = new Date(p.last_seen);
         const timeDiff = currentTime.getTime() - lastSeen.getTime();
         return timeDiff < 5 * 60000; // Consider active if seen within 5 minutes
       })
-      .map((p: any) => ({
+      .map((p: PresenceData) => ({
         id: p.user_id,
         name: p.user_id === user?.id ? 'You' : 'Team Member',
         role: 'Construction Worker',
@@ -196,13 +201,13 @@ export const RealTimeCollaboration = ({
     
     // Mark user as offline
     const presence = JSON.parse(localStorage.getItem('user_presence') || '[]');
-    const updated = presence.map((p: any) => 
+    const updated = presence.map((p: { user_id: string; is_online: boolean }) =>
       p.user_id === user?.id ? { ...p, is_online: false } : p
     );
     localStorage.setItem('user_presence', JSON.stringify(updated));
   };
 
-  const broadcastActivity = useCallback((action: string, resource: string, resourceId: string, metadata?: any) => {
+  const broadcastActivity = useCallback((action: string, resource: string, resourceId: string, metadata?: Record<string, string>) => {
     const update: LiveUpdate = {
       id: Date.now().toString(),
       userId: user?.id || '',

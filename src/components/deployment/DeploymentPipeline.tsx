@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from '@/hooks/use-toast';
-import { Settings, Activity, Bell, Calendar } from 'lucide-react';
+import { Settings, Activity } from 'lucide-react';
 
 interface DeploymentEnvironment {
   id: string;
@@ -48,7 +48,7 @@ const DeploymentPipeline = () => {
     {
       id: 'dev',
       name: 'Development',
-      url: 'https://dev.builddesk.app',
+      url: 'https://dev.brikly.app',
       status: 'active',
       lastDeploy: new Date(Date.now() - 3600000).toISOString(),
       version: 'v1.2.3-dev',
@@ -58,7 +58,7 @@ const DeploymentPipeline = () => {
     {
       id: 'staging',
       name: 'Staging',
-      url: 'https://staging.builddesk.app',
+      url: 'https://staging.brikly.app',
       status: 'active',
       lastDeploy: new Date(Date.now() - 7200000).toISOString(),
       version: 'v1.2.2',
@@ -68,7 +68,7 @@ const DeploymentPipeline = () => {
     {
       id: 'prod',
       name: 'Production',
-      url: 'https://app.builddesk.com',
+      url: 'https://app.brikly.net',
       status: 'active',
       lastDeploy: new Date(Date.now() - 86400000).toISOString(),
       version: 'v1.2.1',
@@ -416,11 +416,11 @@ const DeploymentPipeline = () => {
                   </div>
                   <div className="flex items-center justify-between p-2 bg-muted rounded">
                     <span className="font-mono text-sm">API_URL</span>
-                    <span className="text-sm">https://api.builddesk.com</span>
+                    <span className="text-sm">https://api.brikly.net</span>
                   </div>
                   <div className="flex items-center justify-between p-2 bg-muted rounded">
                     <span className="font-mono text-sm">CDN_URL</span>
-                    <span className="text-sm">https://cdn.builddesk.com</span>
+                    <span className="text-sm">https://cdn.brikly.net</span>
                   </div>
                 </div>
 

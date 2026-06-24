@@ -35,7 +35,7 @@ This guide provides the complete setup for daily blog generation AND social medi
 
 ```bash
 # Navigate to your project directory
-cd c:\Users\dpearson\OneDrive\Documents\BuildDesk\project-profit-radar
+cd c:\Users\dpearson\OneDrive\Documents\Brikly\project-profit-radar
 
 # Deploy both functions
 supabase functions deploy blog-ai-automation

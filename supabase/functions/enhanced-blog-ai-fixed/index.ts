@@ -1,31 +1,30 @@
-import "https://deno.land/x/xhr@0.1.0/mod.ts";
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.3";
+// Version: 2.0.2 - Export handler for self-hosted Supabase
+import { createClient } from "npm:@supabase/supabase-js@2";
 import { aiService } from "../_shared/ai-service.ts";
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
+import { getCorsHeaders } from "../_shared/secure-cors.ts";
+import { requireSystemOrAdmin } from "../_shared/system-auth.ts";
 
 const logStep = (step: string, details?: any) => {
   const timestamp = new Date().toISOString();
-  console.log(`[${timestamp}] [BLOG-AI] ${step}${details ? ` - ${JSON.stringify(details, null, 2)}` : ''}`);
+  console.log(`[${timestamp}] [BLOG-AI-FIXED] ${step}${details ? ` - ${JSON.stringify(details, null, 2)}` : ''}`);
 };
 
-serve(async (req) => {
+export default async (req: Request) => {
+  const corsHeaders = getCorsHeaders(req);
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
+  const denied = await requireSystemOrAdmin(req);
+  if (denied) return denied;
+
   try {
     const body = await req.json();
-    const { topic, company_id, queue_id, action, customSettings, site_id, site_key } = body;
+    const { topic, company_id, queue_id, action, customSettings } = body;
 
-    // Handle both payload formats:
-    // 1. Direct format: { topic, company_id, queue_id, site_id }
-    // 2. Make.com format: { action: "generate-auto-content", topic: "", customSettings: {...}, site_key }
+    logStep("Request received", { hasBody: !!body, action, hasTopic: !!topic });
 
+    // Handle both payload formats
     let finalTopic = topic;
     let finalCompanyId = company_id || customSettings?.company_id;
     let finalQueueId = queue_id || customSettings?.queue_id;
@@ -34,34 +33,6 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
-
-    // Resolve site_id for multi-tenant isolation
-    let siteId = site_id || customSettings?.site_id;
-    if (!siteId && site_key) {
-      const { data: siteData } = await supabaseClient
-        .from('sites')
-        .select('id')
-        .eq('key', site_key)
-        .eq('is_active', true)
-        .single();
-      siteId = siteData?.id;
-    }
-
-    // Fall back to default BuildDesk site if no site specified
-    if (!siteId) {
-      const { data: defaultSite } = await supabaseClient
-        .from('sites')
-        .select('id')
-        .eq('key', 'builddesk')
-        .single();
-      siteId = defaultSite?.id;
-    }
-
-    if (!siteId) {
-      throw new Error('Site not found. Provide site_id or site_key in the request body.');
-    }
-
-    logStep("Site context resolved", { siteId });
     
     // If no topic provided, generate a random one
     if (!finalTopic || finalTopic.trim() === '') {
@@ -82,25 +53,23 @@ serve(async (req) => {
       topic: finalTopic,
       company_id: finalCompanyId,
       queue_id: finalQueueId,
-      site_id: siteId,
       action: action || 'direct'
     });
 
-    // If no company_id, fetch the first available company within this site (for auto-generation mode)
+    // If no company_id, fetch the first available company (for auto-generation mode)
     if (!finalCompanyId) {
-      logStep("No company_id provided, fetching default company for site");
+      logStep("No company_id provided, fetching default company");
       const { data: companies } = await supabaseClient
         .from('companies')
         .select('id')
-        .eq('site_id', siteId)
         .limit(1)
         .single();
 
       if (companies) {
         finalCompanyId = companies.id;
-        logStep("Using default company", { company_id: finalCompanyId, site_id: siteId });
+        logStep("Using default company", { company_id: finalCompanyId });
       } else {
-        throw new Error('No company found for this site. Please provide a company_id.');
+        throw new Error('No company found. Please provide a company_id.');
       }
     }
 
@@ -109,16 +78,25 @@ serve(async (req) => {
     logStep("Using AI model", { model });
 
     // Use centralized AI service for blog generation
-    const blogContent = await aiService.generateBlogContent(finalTopic, model);
+    let blogContent;
+    try {
+      logStep("Calling AI service generateBlogContent");
+      blogContent = await aiService.generateBlogContent(finalTopic, model);
+      logStep("AI service returned successfully");
+    } catch (aiError) {
+      logStep("AI service error", { 
+        error: aiError instanceof Error ? aiError.message : 'Unknown error',
+        stack: aiError instanceof Error ? aiError.stack : undefined
+      });
+      throw new Error(`AI generation failed: ${aiError instanceof Error ? aiError.message : 'Unknown error'}`);
+    }
     
     logStep("Blog content generated", { 
       title: blogContent.title,
       contentLength: blogContent.content?.length || 0
     });
 
-    // Store the generated content in database with site_id for multi-tenant isolation
     const insertData = {
-      site_id: siteId,
       company_id: finalCompanyId,
       queue_id: finalQueueId,
       title: blogContent.title,
@@ -148,7 +126,6 @@ serve(async (req) => {
     
     logStep("Blog post created successfully", { id: blogPost.id, title: blogPost.title });
 
-    // Update queue item status to completed with site_id isolation (only if queue_id was provided)
     if (finalQueueId) {
       const { error: updateError } = await supabaseClient
         .from('blog_generation_queue')
@@ -157,7 +134,6 @@ serve(async (req) => {
           completed_at: new Date().toISOString(),
           error_message: null
         })
-        .eq('site_id', siteId)
         .eq('id', finalQueueId);
 
       if (updateError) {
@@ -178,7 +154,7 @@ serve(async (req) => {
           company_id: finalCompanyId,
           title: blogPost.title,
           excerpt: blogPost.excerpt || '',
-          url: `https://builddesk.com/blog/${blogPost.slug}`
+          url: `https://brikly.net/blog/${blogPost.slug}`
         }
       });
       logStep("Social media automation triggered successfully");
@@ -200,25 +176,39 @@ serve(async (req) => {
     });
 
   } catch (error) {
-    logStep("Fatal error", { error: error instanceof Error ? error.message : 'Unknown error', stack: error instanceof Error ? error.stack : undefined });
+    logStep("Fatal error", { 
+      error: error instanceof Error ? error.message : 'Unknown error', 
+      stack: error instanceof Error ? error.stack : undefined,
+      errorType: error?.constructor?.name
+    });
     
-    return new Response(JSON.stringify({
+    const errorDetails = {
       success: false,
       error: error instanceof Error ? error.message : 'Unknown error',
+      errorType: error?.constructor?.name || 'Unknown',
+      stack: error instanceof Error ? error.stack?.split('\n').slice(0, 5).join('\n') : undefined,
       message: "Blog generation failed"
-    }), {
+    };
+    
+    console.error("Full error details:", JSON.stringify(errorDetails, null, 2));
+    
+    return new Response(JSON.stringify(errorDetails), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   }
-});
+};
 
 function generateSlug(title: string): string {
-  return title
+  const baseSlug = title
     .toLowerCase()
     .replace(/[^a-z0-9\s-]/g, '')
     .replace(/\s+/g, '-')
     .replace(/-+/g, '-')
     .trim()
-    .substring(0, 100);
+    .substring(0, 80);
+
+  // Add timestamp suffix to ensure uniqueness
+  const timestamp = Date.now().toString(36);
+  return `${baseSlug}-${timestamp}`;
 }

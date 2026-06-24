@@ -1,115 +1,109 @@
-import { Star, TrendingUp, Users, Award } from "lucide-react";
+import { TrendingUp, Users, Award } from "lucide-react";
+import { AggregateRatingSchema } from "@/components/seo/AggregateRatingSchema";
+import { CLAIMS } from "@/config/claims";
 
+/**
+ * SocialProof
+ *
+ * NOTE: This component previously rendered fabricated customer testimonials
+ * (fake names paired with Unsplash stock photos) and unsubstantiated stats
+ * ("2,500+ Active Projects", "$12M+ Cost Saved", "500+ Contractors"). Those
+ * are FTC Endorsement Guide and §5 violations and have been removed.
+ *
+ * To re-enable specific numbers:
+ *   1. Replace the placeholder copy below with the verified figure.
+ *   2. Update src/config/claims.ts (set `verified: true` and add a source).
+ *   3. Read from CLAIMS.* and conditionally render only when verified.
+ *
+ * To re-enable testimonials:
+ *   - Use real, attributable quotes with the customer's signed permission on
+ *     file (FTC Endorsement Guides 16 C.F.R. § 255).
+ *   - Disclose any material connection (free service, payment, employee).
+ *   - Replace stock-photo headshots with the actual customer's photo or use
+ *     no photo at all.
+ */
+
+interface StatTile {
+  label: string;
+  value: string;
+  icon: typeof TrendingUp;
+  /** When false, the tile is hidden until the underlying claim is verified. */
+  show: boolean;
+}
+
+const stats: StatTile[] = [
+  {
+    label: "Active contractors",
+    value: CLAIMS.customerCount.value,
+    icon: Users,
+    show: CLAIMS.customerCount.verified,
+  },
+  {
+    label: "Built-in modules",
+    value: "30+",
+    icon: TrendingUp,
+    // Static product fact — describes the product itself, not a usage metric.
+    show: true,
+  },
+  {
+    label: "Avg. margin improvement",
+    value: CLAIMS.marginImprovement.value,
+    icon: Award,
+    show: CLAIMS.marginImprovement.verified,
+  },
+];
 
 const SocialProof = () => {
-  const testimonials = [
-    {
-      quote: "Increased project profit margins by 23% in our first year. The real-time cost tracking is a game-changer.",
-      author: "Mike R.",
-      role: "Owner",
-      company: "Regional Contractor",
-      metric: "+23% Profit",
-      image: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=faces"
-    },
-    {
-      quote: "Cut admin time from 6 hours to 30 minutes daily. Our team can focus on actual construction work now.",
-      author: "Sarah C.",
-      role: "CFO",
-      company: "Commercial Builder",
-      metric: "5.5hrs Saved/Day",
-      image: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop&crop=faces"
-    },
-    {
-      quote: "First time we've completed a project on time and under budget in 3 years. The scheduling tools are incredible.",
-      author: "Jim P.",
-      role: "Project Manager",
-      company: "Residential Contractor",
-      metric: "100% On-Time",
-      image: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&h=100&fit=crop&crop=faces"
-    }
-  ];
-
-  const stats = [
-    { label: "Active Projects", value: "2,500+", icon: TrendingUp },
-    { label: "Contractors", value: "500+", icon: Users },
-    { label: "Cost Saved", value: "$12M+", icon: Award },
-  ];
-
-  const companies = [
-    "ABC Construction", "Premier Builders", "Metro Contractors",
-    "Elite Construction", "Apex Builders", "Summit Construction"
-  ];
+  const visibleStats = stats.filter((s) => s.show);
 
   return (
     <div className="space-y-16">
-      {/* Trust Indicators */}
+      {/* Trust indicators — schema only renders when real review data exists
+          (see AggregateRatingSchema). Without it we still show a friendly
+          generic header rather than a fabricated star count. */}
       <div className="text-center space-y-4">
         <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-secondary/50 border border-border/50 backdrop-blur-sm">
-          <div className="flex">
-            {[...Array(5)].map((_, i) => (
-              <Star key={i} className="h-4 w-4 fill-construction-orange text-construction-orange" />
-            ))}
-          </div>
-          <span className="text-sm font-medium">Rated 4.9/5 by Construction Pros</span>
+          <AggregateRatingSchema
+            showVisual={true}
+            className="flex items-center gap-2"
+            schemaType="SoftwareApplication"
+          />
+          <span className="text-sm font-medium ml-2">
+            Built with input from working construction professionals
+          </span>
         </div>
 
         <h2 className="text-3xl sm:text-4xl font-bold text-construction-dark dark:text-white">
-          Trusted by the <span className="text-gradient">Best Builders</span>
+          Built for the way{" "}
+          <span className="text-gradient">contractors actually work</span>
         </h2>
       </div>
 
-      {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-4xl mx-auto">
-        {stats.map((stat, index) => (
-          <div key={index} className="glass-card p-6 rounded-2xl text-center relative overflow-hidden group">
-            <div className="absolute inset-0 bg-gradient-to-br from-construction-orange/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-            <stat.icon className="h-8 w-8 mx-auto mb-4 text-construction-orange" />
-            <div className="text-3xl font-bold text-construction-dark dark:text-white mb-1">{stat.value}</div>
-            <div className="text-sm text-muted-foreground font-medium">{stat.label}</div>
-          </div>
-        ))}
-      </div>
-
-      {/* Testimonials */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8">
-        {testimonials.map((t, i) => (
-          <div key={i} className="glass-card glass-card-hover p-6 rounded-2xl flex flex-col justify-between h-full">
-            <div>
-              <div className="flex items-center gap-1 mb-4">
-                {[...Array(5)].map((_, i) => (
-                  <Star key={i} className="h-4 w-4 fill-construction-orange text-construction-orange" />
-                ))}
+      {/* Stats grid — only renders when at least one tile has a verified
+          claim or is a static product fact. */}
+      {visibleStats.length > 0 && (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-4xl mx-auto">
+          {visibleStats.map((stat, index) => (
+            <div
+              key={index}
+              className="glass-card p-6 rounded-2xl text-center relative overflow-hidden group"
+            >
+              <div className="absolute inset-0 bg-gradient-to-br from-construction-orange/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+              <stat.icon className="h-8 w-8 mx-auto mb-4 text-construction-orange" />
+              <div className="text-3xl font-bold text-construction-dark dark:text-white mb-1">
+                {stat.value}
               </div>
-              <blockquote className="text-lg text-construction-dark dark:text-gray-200 mb-6 leading-relaxed">
-                "{t.quote}"
-              </blockquote>
-            </div>
-
-            <div className="flex items-center gap-4 pt-4 border-t border-border/50">
-              <img src={t.image} alt={t.author} className="w-10 h-10 rounded-full object-cover ring-2 ring-construction-orange/20" />
-              <div>
-                <div className="font-bold text-construction-dark dark:text-white">{t.author}</div>
-                <div className="text-xs text-muted-foreground">{t.role}, {t.company}</div>
-              </div>
-              <div className="ml-auto">
-                <span className="inline-block px-2 py-1 bg-green-500/10 text-green-600 dark:text-green-400 text-xs font-bold rounded-md">
-                  {t.metric}
-                </span>
+              <div className="text-sm text-muted-foreground font-medium">
+                {stat.label}
               </div>
             </div>
-          </div>
-        ))}
-      </div>
-
-      {/* Logos */}
-      <div className="pt-8 border-t border-border/30">
-        <p className="text-center text-sm text-muted-foreground mb-8">Powering construction companies of all sizes</p>
-        <div className="flex flex-wrap justify-center gap-8 md:gap-16 grayscale hover:grayscale-0 transition-all duration-500">
-          {companies.map((company, i) => (
-            <span key={i} className="text-xl font-bold text-construction-dark dark:text-white">{company}</span>
           ))}
         </div>
-      </div>
+      )}
+
+      {/* Testimonials and customer-logo grid removed pending real, signed
+          customer endorsements. Re-introduce here following the rules
+          documented at the top of this file. */}
     </div>
   );
 };

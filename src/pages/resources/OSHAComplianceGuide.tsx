@@ -1,4 +1,3 @@
-import React from "react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { SEOMetaTags } from "@/components/SEOMetaTags";
@@ -7,7 +6,7 @@ import { HowToSchema } from "@/components/seo/EnhancedSchemaMarkup";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Shield, AlertTriangle, CheckCircle, FileText, Users, Clock, ArrowRight, DollarSign } from "lucide-react";
+import { Shield, AlertTriangle, ArrowRight, DollarSign } from "lucide-react";
 import { Link } from "react-router-dom";
 import BreadcrumbsNavigation from "@/components/BreadcrumbsNavigation";
 
@@ -104,7 +103,7 @@ const OSHAComplianceGuide = () => {
   return (
     <div className="min-h-screen bg-background">
       <SEOMetaTags
-        title="OSHA Compliance Guide for Construction Contractors | BuildDesk"
+        title="OSHA Compliance Guide for Construction Contractors | Brikly"
         description="Complete OSHA compliance guide for construction contractors. Learn safety requirements, avoid violations, implement digital safety programs, and protect your workers and business."
         keywords={[
           'OSHA compliance construction',
@@ -362,7 +361,7 @@ const OSHAComplianceGuide = () => {
               <CardContent className="p-6">
                 <h3 className="font-semibold mb-2">Streamline OSHA Compliance</h3>
                 <p className="text-sm text-muted-foreground mb-4">
-                  See how BuildDesk's digital safety tools help contractors maintain compliance and protect workers.
+                  See how Brikly's digital safety tools help contractors maintain compliance and protect workers.
                 </p>
                 <Button asChild className="w-full">
                   <Link to="/auth">Start Free Trial</Link>
@@ -378,7 +377,7 @@ const OSHAComplianceGuide = () => {
             Protect Your Workers and Your Business
           </h2>
           <p className="text-muted-foreground mb-6 max-w-2xl mx-auto">
-            BuildDesk's digital safety tools help contractors reduce OSHA violations by 65% while 
+            Brikly's digital safety tools help contractors reduce OSHA violations by 65% while 
             streamlining compliance reporting and protecting workers on every job site.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">

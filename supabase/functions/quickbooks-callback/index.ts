@@ -1,6 +1,5 @@
 /**
  * QuickBooks OAuth Callback Handler
- * Updated with multi-tenant site_id isolation
  *
  * Exchanges authorization code for access/refresh tokens
  * and stores them in the database.
@@ -40,14 +39,13 @@ serve(async (req) => {
   }
 
   try {
-    // Initialize auth context - extracts user AND site_id from JWT
-    const authContext = await initializeAuthContext(req);
+        const authContext = await initializeAuthContext(req);
     if (!authContext) {
       return errorResponse('Unauthorized', 401);
     }
 
-    const { user, siteId, supabase: supabaseClient } = authContext;
-    console.log("[QUICKBOOKS-CALLBACK] User authenticated", { userId: user.id, siteId });
+    const { user, supabase: supabaseClient } = authContext;
+    console.log("[QUICKBOOKS-CALLBACK] User authenticated", { userId: user.id });
 
     const { code, state, realm_id, company_id, redirect_uri } = await req.json()
 
@@ -64,11 +62,10 @@ serve(async (req) => {
       throw new Error('QuickBooks credentials not configured')
     }
 
-    // Verify state parameter matches stored state with site isolation
+    // Verify state parameter matches stored state
     const { data: integration, error: stateError } = await supabaseClient
       .from('quickbooks_integrations')
       .select('oauth_state')
-      .eq('site_id', siteId)  // CRITICAL: Site isolation
       .eq('company_id', company_id)
       .single()
 
@@ -142,7 +139,7 @@ serve(async (req) => {
       }
     }
 
-    // Update integration record with tokens with site isolation
+    // Update integration record with tokens
     const { error: updateError } = await supabaseClient
       .from('quickbooks_integrations')
       .update({
@@ -158,7 +155,6 @@ serve(async (req) => {
         last_sync_status: 'never',
         updated_at: now.toISOString(),
       })
-      .eq('site_id', siteId)  // CRITICAL: Site isolation
       .eq('company_id', company_id)
 
     if (updateError) {
@@ -166,11 +162,10 @@ serve(async (req) => {
       throw new Error('Failed to save connection. Please try again.')
     }
 
-    // Log the successful connection with site isolation
+    // Log the successful connection
     await supabaseClient
       .from('quickbooks_sync_logs')
       .insert({
-        site_id: siteId,  // CRITICAL: Site isolation
         company_id: company_id,
         sync_type: 'connection',
         status: 'success',

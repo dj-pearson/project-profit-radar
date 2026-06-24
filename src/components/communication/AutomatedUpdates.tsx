@@ -8,20 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { 
-  Zap, 
-  Clock, 
-  Users, 
-  FileText, 
-  Settings, 
-  Play, 
-  Pause, 
-  Plus,
-  Edit,
-  Trash2,
-  Send,
-  Calendar
-} from 'lucide-react';
+import { Zap, Clock, Play, Pause, Plus, Edit, Trash2, Send, Calendar } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
@@ -30,8 +17,8 @@ interface AutomationRule {
   name: string;
   description: string;
   trigger_type: string;
-  trigger_conditions: any;
-  recipient_rules: any;
+  trigger_conditions: Record<string, unknown>;
+  recipient_rules: Record<string, unknown>;
   template_id: string;
   is_active: boolean;
   last_triggered?: string;
@@ -48,8 +35,15 @@ interface UpdateTemplate {
   variables: string[];
 }
 
+interface AutomatedUpdatesUserProfile {
+  id: string;
+  company_id: string;
+  first_name?: string;
+  last_name?: string;
+}
+
 interface AutomatedUpdatesProps {
-  userProfile: any;
+  userProfile: AutomatedUpdatesUserProfile;
   className?: string;
 }
 
@@ -101,7 +95,19 @@ export const AutomatedUpdates: React.FC<AutomatedUpdatesProps> = ({
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setAutomationRules((data || []).map((item: any) => ({
+      interface AutomationRuleRow {
+        id: string;
+        trigger_type: string;
+        description: string | null;
+        trigger_conditions: Record<string, unknown>;
+        recipient_rules: Record<string, unknown>;
+        template_id: string | null;
+        is_active: boolean;
+        last_triggered: string | null;
+        trigger_count: number;
+        created_at: string;
+      }
+      setAutomationRules((data || []).map((item: AutomationRuleRow) => ({
         id: item.id,
         name: item.trigger_type || 'Automation Rule',
         description: item.description || '',
@@ -110,7 +116,7 @@ export const AutomatedUpdates: React.FC<AutomatedUpdatesProps> = ({
         recipient_rules: item.recipient_rules,
         template_id: item.template_id || '',
         is_active: item.is_active,
-        last_triggered: item.last_triggered,
+        last_triggered: item.last_triggered ?? undefined,
         trigger_count: item.trigger_count,
         created_at: item.created_at
       })));

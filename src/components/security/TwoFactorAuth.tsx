@@ -27,7 +27,7 @@ export const TwoFactorAuth: React.FC<TwoFactorAuthProps> = ({ onClose }) => {
     setSecret(newSecret);
     
     // Generate QR code URL (would typically use a QR code library)
-    const appName = 'Build Desk';
+    const appName = 'Brikly';
     const userEmail = 'user@example.com'; // Would get from auth context
     const qrUrl = `otpauth://totp/${encodeURIComponent(appName)}:${encodeURIComponent(userEmail)}?secret=${newSecret}&issuer=${encodeURIComponent(appName)}`;
     setQrCodeUrl(qrUrl);

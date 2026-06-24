@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 /**
  * Intelligent Caching Layer
  * Supports Redis (production) and in-memory (development) caching
@@ -36,7 +37,7 @@ export interface ICacheLayer {
  * Used in development or as fallback
  */
 class InMemoryCache implements ICacheLayer {
-  private cache: Map<string, { value: any; expires: number; tags: string[] }> = new Map();
+  private cache: Map<string, { value: unknown; expires: number; tags: string[] }> = new Map();
   private stats: CacheStats = { hits: 0, misses: 0, sets: 0, deletes: 0, hitRate: 0 };
 
   async get<T>(key: string): Promise<T | null> {
@@ -146,7 +147,7 @@ class InMemoryCache implements ICacheLayer {
 class CacheManager {
   private cache: ICacheLayer;
   private defaultTTL: number = 300; // 5 minutes
-  private namespace: string = 'builddesk';
+  private namespace: string = 'brikly';
 
   constructor() {
     // Initialize in-memory cache
@@ -251,7 +252,7 @@ class CacheManager {
   /**
    * Generate cache key from object
    */
-  generateKey(prefix: string, params: Record<string, any>): string {
+  generateKey(prefix: string, params: Record<string, unknown>): string {
     const sortedParams = Object.keys(params)
       .sort()
       .map(key => `${key}:${JSON.stringify(params[key])}`)
@@ -270,13 +271,13 @@ class CacheManager {
  */
 export function Cacheable(options: CacheOptions = {}) {
   return function (
-    target: any,
+    _target: object,
     propertyKey: string,
     descriptor: PropertyDescriptor
   ) {
     const originalMethod = descriptor.value;
 
-    descriptor.value = async function (...args: any[]) {
+    descriptor.value = async function (...args: unknown[]) {
       const cacheKey = `${propertyKey}:${JSON.stringify(args)}`;
       return await cache.remember(
         cacheKey,
@@ -305,7 +306,7 @@ export const QueryCache = {
   /**
    * Cache project list
    */
-  projectList: (filters: Record<string, any>) => ({
+  projectList: (filters: Record<string, unknown>) => ({
     key: cache.generateKey('project:list', filters),
     tags: ['projects', 'project:list'],
     ttl: 180, // 3 minutes
@@ -332,7 +333,7 @@ export const QueryCache = {
   /**
    * Cache reports
    */
-  report: (reportType: string, params: Record<string, any>) => ({
+  report: (reportType: string, params: Record<string, unknown>) => ({
     key: cache.generateKey(`report:${reportType}`, params),
     tags: ['reports', `report:${reportType}`],
     ttl: 900, // 15 minutes
@@ -421,5 +422,5 @@ export const cache = new CacheManager();
  *
  * // Stats
  * const stats = cache.getStats();
- * console.log(`Hit rate: ${(stats.hitRate * 100).toFixed(2)}%`);
+ * logger.debug(`Hit rate: ${(stats.hitRate * 100).toFixed(2)}%`);
  */

@@ -1,0 +1,178 @@
+{
+  "project": "Brikly PageSpeed Insights Mobile Optimization",
+  "branchName": "claude/fix-page-insights-prd-FrIjH",
+  "description": "Address PageSpeed Insights mobile performance issues for brikly.net. Analysis from March 2026 revealed multiple opportunities across Performance, Accessibility, Best Practices, and SEO categories. Key findings: images missing explicit dimensions causing CLS, below-the-fold components eagerly loaded increasing TBT, scroll event listeners missing passive flag, LCP element lacks fetchpriority hint, framer-motion eagerly imported on landing page, and various accessibility gaps. This PRD prioritizes fixes by impact: Critical (P1) items directly affect Core Web Vitals scores, High (P2) items affect secondary metrics, Medium (P3) items are best practices and SEO improvements.",
+  "userStories": [
+    {
+      "id": "PSI-001",
+      "title": "Add explicit width/height to all landing page images to prevent CLS",
+      "description": "As a site visitor, I want the page layout to remain stable while loading so that content doesn't shift unexpectedly. Images in SocialProof.tsx (line 90) load from Unsplash without explicit width/height attributes, causing Cumulative Layout Shift (CLS). The img tags use CSS classes (w-10 h-10) but lack HTML width/height attributes which browsers need for aspect ratio calculation before CSS loads. Add width='40' height='40' to these avatar images. Also add loading='lazy' since they are below the fold. Search all components imported by Index.tsx for any other img tags missing dimensions.",
+      "acceptanceCriteria": [
+        "All <img> tags in components rendered on the landing page (Index.tsx) have explicit width and height HTML attributes",
+        "SocialProof.tsx img tags have width='40' height='40' matching their CSS w-10 h-10 (40px)",
+        "Below-fold images have loading='lazy' attribute",
+        "No visual changes to the rendered page",
+        "npm run build passes",
+        "npm run lint passes"
+      ],
+      "priority": 1,
+      "passes": true
+    },
+    {
+      "id": "PSI-002",
+      "title": "Add passive flag to Header scroll event listener",
+      "description": "As a mobile user, I want smooth scrolling performance so that the page feels responsive. The Header component (Header.tsx line 19) adds a scroll event listener without the { passive: true } option, which blocks the browser's scroll optimization on mobile. The scroll handler only reads scrollY and doesn't call preventDefault(), so it is safe to mark as passive. This directly impacts the Total Blocking Time (TBT) metric on mobile PageSpeed.",
+      "acceptanceCriteria": [
+        "Header.tsx scroll event listener uses { passive: true } option",
+        "No functional changes to scroll behavior",
+        "npm run build passes"
+      ],
+      "priority": 1,
+      "passes": true
+    },
+    {
+      "id": "PSI-003",
+      "title": "Lazy-load below-fold components on landing page to reduce initial bundle",
+      "description": "As a mobile user, I want the page to load faster by only loading visible content first. Index.tsx eagerly imports SocialProof, ProblemSolution, and FinancialIntelligenceShowcase which are all below the fold. These should be lazy-loaded like the other below-fold sections (FAQ, Implementation, Footer, etc.). This reduces the initial JavaScript parse/compile time, improving Time to Interactive (TTI) and Total Blocking Time (TBT). Convert these imports to use React.lazy() with Suspense fallbacks matching the existing SectionFallback pattern.",
+      "acceptanceCriteria": [
+        "SocialProof is lazy-loaded via React.lazy() in Index.tsx",
+        "ProblemSolution is lazy-loaded via React.lazy() in Index.tsx",
+        "FinancialIntelligenceShowcase is lazy-loaded via React.lazy() in Index.tsx",
+        "Each lazy component is wrapped in Suspense with an appropriate SectionFallback",
+        "Above-the-fold components (Header, Hero) remain eagerly loaded",
+        "No visual changes to fully loaded page",
+        "npm run build passes"
+      ],
+      "priority": 1,
+      "passes": true
+    },
+    {
+      "id": "PSI-004",
+      "title": "Add fetchpriority='high' hint to LCP element in Hero section",
+      "description": "As a mobile user, I want the main hero content to appear as fast as possible. The Largest Contentful Paint (LCP) element on the landing page is the hero headline (h1 tag in Hero.tsx). While text-based LCP doesn't benefit from fetchpriority directly, the hero section's visibility is delayed because GSAP animations set initial opacity to 0 and animate in. On mobile, the Hero component already skips GSAP and sets opacity to 1 immediately via JS, but the refs start with no inline style meaning they rely on the useEffect to fire. Add default CSS visibility so content is visible before JS runs. Also ensure the font preload in index.html has fetchpriority='high' since the LCP text depends on font loading.",
+      "acceptanceCriteria": [
+        "Hero section content is visible immediately without waiting for JavaScript on mobile",
+        "Font preload link in index.html has fetchpriority='high'",
+        "GSAP animation still works on desktop (elements start hidden, animate in)",
+        "Mobile users see hero content with no flash of invisible text",
+        "npm run build passes"
+      ],
+      "priority": 1,
+      "passes": true
+    },
+    {
+      "id": "PSI-005",
+      "title": "Reduce inline script blocking time in index.html",
+      "description": "As a mobile user, I want the page to reach interactive state faster. The index.html has two inline <script> blocks before the body: one for Trusted Types policy setup and one for URL cleanup. While the URL cleanup script is minimal, the Trusted Types script runs synchronously and could delay first paint on slow mobile devices. The deferred cache management script is already properly deferred. Move the Trusted Types policy to run asynchronously after DOMContentLoaded since it's not needed for initial render. Also consolidate the URL cleanup into the deferred script block to reduce the number of synchronous script evaluations.",
+      "acceptanceCriteria": [
+        "Trusted Types policy script is deferred or runs after DOMContentLoaded",
+        "URL cleanup script is consolidated into the existing deferred script block",
+        "Total number of synchronous inline scripts in <head> is reduced",
+        "Trusted Types still works correctly for dynamically injected scripts",
+        "Google Analytics deferred loading still works",
+        "npm run build passes"
+      ],
+      "priority": 2,
+      "passes": false
+    },
+    {
+      "id": "PSI-006",
+      "title": "Optimize framer-motion import in ModernSection to reduce JS payload",
+      "description": "As a mobile user, I want less JavaScript downloaded on initial page load. ModernSection.tsx imports from 'framer-motion' which adds ~20KB to the bundle. ModernSection is used extensively on the landing page. Consider either: (1) using CSS animations with IntersectionObserver instead of framer-motion for the simple fade-in animations ModernSection provides, or (2) lazy-loading framer-motion so it's only parsed after initial paint. The ModernSection only uses motion.div, useInView, and Variants - these can be replaced with native CSS @keyframes and the Intersection Observer API for a zero-JS-dependency solution.",
+      "acceptanceCriteria": [
+        "ModernSection no longer imports from framer-motion directly on initial page load",
+        "Scroll-triggered animations still work (elements animate in when scrolled into view)",
+        "Landing page bundle size is reduced by the framer-motion chunk previously included",
+        "No visual regressions in animation behavior",
+        "npm run build passes",
+        "npm run lint passes"
+      ],
+      "priority": 2,
+      "passes": false
+    },
+    {
+      "id": "PSI-007",
+      "title": "Add proper alt text and accessibility attributes to landing page images",
+      "description": "As a screen reader user, I want descriptive alt text on images so I can understand the content. SocialProof.tsx uses Unsplash avatar images with alt text set to just the person's name (e.g., 'Mike R.') which lacks context. These should include role context like 'Mike R., Regional Contractor Owner testimonial photo'. Also verify all other images on the landing page have descriptive alt attributes. Check that decorative background elements use aria-hidden='true'.",
+      "acceptanceCriteria": [
+        "SocialProof.tsx avatar images have descriptive alt text including role/context",
+        "All images on the landing page have meaningful alt text or alt='' for decorative images",
+        "Background decorative elements in Hero.tsx use aria-hidden='true'",
+        "No accessibility violations for image alt text on landing page",
+        "npm run build passes"
+      ],
+      "priority": 2,
+      "passes": true
+    },
+    {
+      "id": "PSI-008",
+      "title": "Add preconnect hints for Unsplash images and optimize external resource loading",
+      "description": "As a mobile user, I want third-party resources to load efficiently. The landing page loads avatar images from images.unsplash.com but there's no preconnect hint for this domain in index.html. Adding <link rel='preconnect' href='https://images.unsplash.com' crossorigin> would save ~100-200ms on the TLS handshake for these images. Also review all other external domains loaded on the landing page and ensure they have preconnect or dns-prefetch hints.",
+      "acceptanceCriteria": [
+        "index.html has <link rel='preconnect' href='https://images.unsplash.com' crossorigin>",
+        "All external domains loaded during initial page render have preconnect or dns-prefetch hints",
+        "No duplicate preconnect entries",
+        "npm run build passes"
+      ],
+      "priority": 2,
+      "passes": true
+    },
+    {
+      "id": "PSI-009",
+      "title": "Add Link preload headers for critical resources in _headers file",
+      "description": "As a mobile user, I want critical resources to begin downloading as early as possible. The _headers file has comprehensive caching but no Link preload headers. Add server-push/preload hints for: (1) the main JavaScript entry chunk, (2) the critical CSS chunk, (3) the Inter font woff2 file. These HTTP headers allow the browser to discover critical resources before parsing the HTML, which is especially impactful on slow mobile connections. Use Link: </assets/...>; rel=preload; as=script format.",
+      "acceptanceCriteria": [
+        "_headers file includes Link preload hints for the main JS and CSS chunks",
+        "Font preload is reinforced via HTTP header in addition to HTML <link>",
+        "Preload headers use correct 'as' attribute for each resource type",
+        "No changes break existing caching behavior",
+        "npm run build passes"
+      ],
+      "priority": 3,
+      "passes": false
+    },
+    {
+      "id": "PSI-010",
+      "title": "Optimize back-to-top button rendering for reduced layout impact",
+      "description": "As a mobile user, I want minimal layout impact from dynamic UI elements. The back-to-top button in Index.tsx renders/unmounts based on scroll position using conditional rendering ({showBackToTop && ...}), which can cause layout recalculation. Instead, always render the button but toggle visibility with CSS transform/opacity for a smoother experience. Also ensure the button has proper accessibility: role, aria-label (already present), and focus management.",
+      "acceptanceCriteria": [
+        "Back-to-top button is always rendered in DOM but visually hidden when not needed",
+        "Uses CSS transform/opacity transition instead of conditional mount/unmount",
+        "Button still has aria-label='Back to top'",
+        "Button transitions smoothly in/out",
+        "No CLS impact from button appearance",
+        "npm run build passes"
+      ],
+      "priority": 3,
+      "passes": true
+    },
+    {
+      "id": "PSI-011",
+      "title": "Add meta robots and canonical URL consistency for SEO",
+      "description": "As a search engine, I want consistent canonical URLs so I don't get confused about the primary domain. The index.html has canonical URL as 'https://brikly.net' but the site is served from 'brikly.net'. This mismatch can hurt SEO rankings. Verify the correct canonical domain and ensure consistency across all meta tags (og:url, twitter, canonical). Also ensure all pages have proper meta robots tags.",
+      "acceptanceCriteria": [
+        "Canonical URL in index.html matches the actual serving domain",
+        "og:url matches the canonical URL",
+        "All schema.org URLs use consistent domain",
+        "No mixed domain references in meta tags",
+        "npm run build passes"
+      ],
+      "priority": 3,
+      "passes": false
+    },
+    {
+      "id": "PSI-012",
+      "title": "Add structured error fallbacks with min-height to Suspense boundaries",
+      "description": "As a mobile user, I want stable page layout even when components are loading. The SectionFallback component in Index.tsx uses Tailwind height classes (h-64, h-96, etc.) which provide stable layout during loading. However, the PerformanceLazyWrapper in LazyComponents.tsx uses inline style height='400px' for its skeleton. Standardize all fallbacks to use consistent min-height values that match the actual rendered component heights, reducing CLS during lazy loading. Audit each Suspense boundary on the landing page.",
+      "acceptanceCriteria": [
+        "All Suspense fallbacks on the landing page have explicit min-height matching their content",
+        "PerformanceLazyWrapper and SectionFallback use consistent height strategies",
+        "CLS score is not negatively impacted by lazy loading",
+        "No visual changes when components are fully loaded",
+        "npm run build passes"
+      ],
+      "priority": 3,
+      "passes": false
+    }
+  ]
+}

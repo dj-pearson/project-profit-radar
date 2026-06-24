@@ -20,18 +20,17 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
-    // Initialize auth context - extracts user AND site_id from JWT
-    const authContext = await initializeAuthContext(req);
+        const authContext = await initializeAuthContext(req);
     if (!authContext) {
       return errorResponse('Unauthorized', 401);
     }
 
-    const { siteId, supabase: supabaseClient } = authContext;
-    console.log('[SEND-BOOKING-CONFIRMATION] Auth context initialized', { siteId });
+    const { supabase: supabaseClient } = authContext;
+    console.log('[SEND-BOOKING-CONFIRMATION] Auth context initialized');
 
     const { bookingId }: BookingConfirmationRequest = await req.json();
 
-    // Fetch booking details with booking page info and site isolation
+    // Fetch booking details with booking page info
     const { data: booking, error: bookingError } = await supabaseClient
       .from('bookings')
       .select(`
@@ -41,7 +40,6 @@ const handler = async (req: Request): Promise<Response> => {
           location
         )
       `)
-      .eq('site_id', siteId)  // CRITICAL: Site isolation
       .eq('id', bookingId)
       .single();
 
@@ -119,7 +117,7 @@ const handler = async (req: Request): Promise<Response> => {
         <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 24px 0;">
         
         <p style="color: #64748b; font-size: 12px; text-align: center;">
-          This is an automated confirmation from BuildDesk CRM.<br/>
+          This is an automated confirmation from Brikly CRM.<br/>
           If you need to reschedule or cancel, please contact us directly.
         </p>
       </div>
@@ -127,7 +125,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     // Send email to attendee
     const attendeeEmail = await resend.emails.send({
-      from: "BuildDesk CRM <notifications@resend.dev>",
+      from: "Brikly CRM <notifications@resend.dev>",
       to: [booking.attendee_email],
       subject: `Meeting Confirmed: ${booking.booking_pages?.title || 'Your Appointment'}`,
       html: emailHtml,

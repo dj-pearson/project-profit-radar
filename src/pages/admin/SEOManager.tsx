@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -9,25 +9,11 @@ import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
-import { 
-  Search,
-  Globe,
-  BarChart3,
-  Settings,
-  FileText,
-  ExternalLink,
-  RefreshCw,
-  CheckCircle,
-  AlertCircle,
-  TrendingUp,
-  Eye,
-  MousePointer,
-  Share2
-} from 'lucide-react';
+import { Search, Globe, BarChart3, Settings, FileText, ExternalLink, RefreshCw, CheckCircle, TrendingUp, Eye, MousePointer, Share2 } from 'lucide-react';
+import { logger } from '@/lib/logger';
 
 interface SEOConfig {
   id?: string;
@@ -77,7 +63,7 @@ const SEOManager = () => {
   const navigate = useNavigate();
   
   const [config, setConfig] = useState<SEOConfig>({
-    site_name: 'Build Desk',
+    site_name: 'Brikly',
     site_description: 'Construction Management Platform for SMB Contractors',
     site_keywords: ['construction', 'project management', 'contractor software', 'building'],
     default_og_image: '',
@@ -87,8 +73,8 @@ const SEOManager = () => {
     yandex_webmaster_id: '',
     google_ads_id: '',
     facebook_pixel_id: '',
-    twitter_site: '@builddesk',
-    canonical_domain: 'https://builddesk.com',
+    twitter_site: '@brikly',
+    canonical_domain: 'https://brikly.net',
     robots_txt: 'User-agent: *\nAllow: /',
     sitemap_enabled: true,
     schema_org_enabled: true
@@ -177,7 +163,7 @@ const SEOManager = () => {
       if (submissionError) throw submissionError;
       setSubmissions(submissionData || []);
 
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error loading SEO data:', error);
       toast({
         variant: "destructive",
@@ -224,7 +210,7 @@ const SEOManager = () => {
           "SEO configuration saved successfully. Page will reload to activate Google Analytics." :
           "SEO configuration saved successfully"
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error saving configuration:', error);
       toast({
         variant: "destructive",
@@ -272,7 +258,7 @@ const SEOManager = () => {
       });
 
       loadSEOData();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error adding meta tag:', error);
       toast({
         variant: "destructive",
@@ -302,7 +288,7 @@ const SEOManager = () => {
       });
 
       loadSEOData();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error submitting to search engines:', error);
       toast({
         variant: "destructive",
@@ -328,7 +314,7 @@ const SEOManager = () => {
       });
 
       if (fileError) {
-        console.warn('File-based sitemap generation failed:', fileError);
+        logger.warn('File-based sitemap generation failed:', fileError);
       }
 
       // Log the generated sitemap for manual copying if needed
@@ -350,12 +336,12 @@ const SEOManager = () => {
         description: "Your sitemap has been generated. The static sitemap.xml file will be updated on the next build deployment."
       });
       
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error generating sitemap:', error);
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Failed to generate sitemap: " + error.message
+        description: "Failed to generate sitemap: " + (error instanceof Error ? error.message : 'Unknown error')
       });
     } finally {
       setGenerating(prev => ({ ...prev, sitemap: false }));
@@ -409,12 +395,12 @@ ${content}`;
         description: "Your robots.txt file has been updated with SEO-friendly directives."
       });
       
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error updating robots.txt:', error);
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Failed to update robots.txt: " + error.message
+        description: "Failed to update robots.txt: " + (error instanceof Error ? error.message : 'Unknown error')
       });
     } finally {
       setGenerating(prev => ({ ...prev, robots: false }));
@@ -485,26 +471,26 @@ ${content}`;
         "mainEntity": [
           {
             "@type": "Question",
-            "name": "What is BuildDesk?",
+            "name": "What is Brikly?",
             "acceptedAnswer": {
               "@type": "Answer",
-              "text": "BuildDesk is a construction management platform designed for small to medium-sized construction businesses, providing real-time project management, financial tracking, and collaborative tools."
+              "text": "Brikly is a construction management platform designed for small to medium-sized construction businesses, providing real-time project management, financial tracking, and collaborative tools."
             }
           },
           {
             "@type": "Question",
-            "name": "How much does BuildDesk cost?",
+            "name": "How much does Brikly cost?",
             "acceptedAnswer": {
               "@type": "Answer",
-              "text": "BuildDesk costs $350 per month for unlimited users, providing comprehensive construction management features without per-user fees."
+              "text": "Brikly costs $350 per month for unlimited users, providing comprehensive construction management features without per-user fees."
             }
           },
           {
             "@type": "Question",
-            "name": "What industries does BuildDesk serve?",
+            "name": "What industries does Brikly serve?",
             "acceptedAnswer": {
               "@type": "Answer",
-              "text": "BuildDesk serves construction companies, contractors, project managers, and construction professionals across various construction industry sectors."
+              "text": "Brikly serves construction companies, contractors, project managers, and construction professionals across various construction industry sectors."
             }
           }
         ]
@@ -531,12 +517,12 @@ ${JSON.stringify(faqSchema, null, 2)}
         description: "Schema markup has been generated and copied to your clipboard. Add it to your website's <head> section."
       });
       
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error generating schema markup:', error);
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Failed to generate schema markup: " + error.message
+        description: "Failed to generate schema markup: " + (error instanceof Error ? error.message : 'Unknown error')
       });
     } finally {
       setGenerating(prev => ({ ...prev, schema: false }));
@@ -636,12 +622,12 @@ ${JSON.stringify(faqSchema, null, 2)}
       });
       
       
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error running SEO audit:', error);
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Failed to run SEO audit: " + error.message
+        description: "Failed to run SEO audit: " + (error instanceof Error ? error.message : 'Unknown error')
       });
     } finally {
       setGenerating(prev => ({ ...prev, audit: false }));
@@ -660,10 +646,12 @@ ${JSON.stringify(faqSchema, null, 2)}
 
   if (loading || loadingData) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-construction-blue mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Loading SEO manager...</p>
+      <div className="min-h-screen bg-background p-6">
+        <div className="space-y-6">
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+            {[1,2,3,4].map(i => <div key={i} className="h-24 bg-muted animate-pulse rounded-lg" />)}
+          </div>
+          <div className="h-[300px] bg-muted animate-pulse rounded-lg" />
         </div>
       </div>
     );
@@ -812,7 +800,7 @@ ${JSON.stringify(faqSchema, null, 2)}
                     <Label htmlFor="twitterSite">Twitter Site Handle</Label>
                     <Input
                       id="twitterSite"
-                      placeholder="@builddesk"
+                      placeholder="@brikly"
                       value={config.twitter_site}
                       onChange={(e) => setConfig(prev => ({ ...prev, twitter_site: e.target.value }))}
                     />

@@ -1,4 +1,3 @@
-import React from "react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { SEOMetaTags } from "@/components/SEOMetaTags";
@@ -6,7 +5,7 @@ import { ArticleSchema, FAQSchema } from "@/components/seo/EnhancedSchemaMarkup"
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Check, Clock, AlertTriangle, Calendar, TrendingUp } from "lucide-react";
+import { Check, Clock, AlertTriangle, TrendingUp } from "lucide-react";
 import { Link } from "react-router-dom";
 import BreadcrumbsNavigation from "@/components/BreadcrumbsNavigation";
 
@@ -26,7 +25,7 @@ const ConstructionSchedulingSoftwareGuide = () => {
     },
     {
       question: "Do I need expensive scheduling software like Primavera P6?",
-      answer: "No. P6 costs $1,500+ per user annually and requires dedicated schedulers. Small contractors get better results with construction-focused tools like BuildDesk that cost 80% less and include scheduling as part of complete project management."
+      answer: "No. P6 costs $1,500+ per user annually and requires dedicated schedulers. Small contractors get better results with construction-focused tools like Brikly that cost 80% less and include scheduling as part of complete project management."
     }
   ];
 
@@ -79,7 +78,7 @@ const ConstructionSchedulingSoftwareGuide = () => {
   return (
     <div className="min-h-screen bg-background">
       <SEOMetaTags
-        title="Construction Scheduling Software: Stop Project Delays | BuildDesk Guide"
+        title="Construction Scheduling Software: Stop Project Delays | Brikly Guide"
         description="Simple scheduling rules that prevent delays. Learn how small contractors improve project timelines by 40% with the right scheduling software and processes."
         keywords={[
           'construction scheduling software',
@@ -93,10 +92,10 @@ const ConstructionSchedulingSoftwareGuide = () => {
       
       <ArticleSchema
         title="Construction Scheduling Software: Stop Project Delays"
-        author="BuildDesk Team"
+        author="Brikly Team"
         datePublished="2025-01-24"
-        image="https://builddesk.com/images/construction-scheduling-guide.jpg"
-        url="https://builddesk.com/resources/construction-scheduling-software-prevent-delays"
+        image="https://brikly.net/images/construction-scheduling-guide.jpg"
+        url="https://brikly.net/resources/construction-scheduling-software-prevent-delays"
       />
       
       <FAQSchema questions={faqData} />
@@ -247,7 +246,7 @@ const ConstructionSchedulingSoftwareGuide = () => {
                   <p className="text-muted-foreground">Valley Construction (22 employees, commercial projects)</p>
                 </div>
                 <div>
-                  <h4 className="font-semibold mb-2">Before BuildDesk:</h4>
+                  <h4 className="font-semibold mb-2">Before Brikly:</h4>
                   <p className="text-muted-foreground">Excel schedules, 65% projects late, crews often idle or overbooked</p>
                 </div>
                 <div>
@@ -283,7 +282,7 @@ const ConstructionSchedulingSoftwareGuide = () => {
             <Card>
               <CardContent className="p-4">
                 <Link to="/construction-scheduling-software" className="font-medium hover:text-primary">
-                  BuildDesk Scheduling Features →
+                  Brikly Scheduling Features →
                 </Link>
                 <p className="text-sm text-muted-foreground mt-1">See our scheduling and resource management tools</p>
               </CardContent>
@@ -313,7 +312,7 @@ const ConstructionSchedulingSoftwareGuide = () => {
             Stop Project Delays Today
           </h2>
           <p className="text-muted-foreground mb-6 max-w-2xl mx-auto">
-            Join 300+ contractors using BuildDesk scheduling to finish projects on time. 
+            Join 300+ contractors using Brikly scheduling to finish projects on time. 
             Real-time updates, resource optimization, and mobile access included.
           </p>
           <Button asChild size="lg">

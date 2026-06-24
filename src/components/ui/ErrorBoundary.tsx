@@ -9,6 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { AlertTriangle, RefreshCw, Home, Bug } from 'lucide-react';
+import { captureException } from '@/lib/sentry';
 
 interface Props {
   children: ReactNode;
@@ -48,7 +49,11 @@ export class ErrorBoundary extends Component<Props, State> {
     // Call optional error callback
     this.props.onError?.(error, errorInfo);
 
-    // TODO: Log to error reporting service (Sentry, LogRocket, etc.)
+    // Log to Sentry for production error tracking
+    captureException(error, {
+      componentStack: errorInfo.componentStack || undefined,
+      boundary: 'ui/ErrorBoundary',
+    });
   }
 
   private handleReset = () => {
@@ -143,7 +148,7 @@ export class ErrorBoundary extends Component<Props, State> {
                   <a href="/help" className="text-blue-600 hover:underline">
                     contact support
                   </a>
-                  {' '}or email us at support@builddesk.com
+                  {' '}or email us at support@brikly.net
                 </p>
               </div>
             </CardContent>

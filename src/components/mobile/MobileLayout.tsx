@@ -1,35 +1,49 @@
 import { ReactNode } from 'react';
 import { cn } from '@/lib/utils';
 import { useIsMobile } from '@/hooks/useMediaQuery';
+import { useNativeStatusBar } from '@/hooks/useNativeStatusBar';
+import { useEdgeSwipeBack } from '@/hooks/useEdgeSwipeBack';
+import { MobileOfflineIndicator } from '@/components/mobile/MobileOfflineIndicator';
 
 interface MobileLayoutProps {
   children: ReactNode;
   className?: string;
   withPadding?: boolean;
   withBottomNav?: boolean;
+  /** Enable the ambient brand gradient background (default: true). */
+  ambientBackground?: boolean;
 }
 
 /**
- * Mobile-first layout wrapper with safe areas and proper spacing
+ * Mobile-first layout wrapper with safe areas, ambient iOS-style brand
+ * background and consistent vertical rhythm for glass surfaces.
  */
 export function MobileLayout({
   children,
   className,
   withPadding = true,
   withBottomNav = false,
+  ambientBackground = true,
 }: MobileLayoutProps) {
   const isMobile = useIsMobile();
+  useNativeStatusBar();
+  useEdgeSwipeBack({ disabled: !isMobile });
 
   return (
     <div
       className={cn(
         'w-full min-h-screen',
+        ambientBackground && 'ios-page-bg',
+        'safe-area-top safe-area-x',
         withPadding && 'px-4 py-4 md:px-6 md:py-6',
-        withBottomNav && 'pb-20 md:pb-6', // Extra padding for bottom nav on mobile
-        'safe-area-inset',
+        withBottomNav && 'md:pb-6',
         className
       )}
+      style={withBottomNav && isMobile ? {
+        paddingBottom: 'calc(80px + env(safe-area-inset-bottom, 0px))',
+      } : undefined}
     >
+      {isMobile && <MobileOfflineIndicator />}
       {children}
     </div>
   );

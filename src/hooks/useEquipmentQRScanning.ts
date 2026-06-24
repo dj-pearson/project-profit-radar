@@ -62,19 +62,17 @@ export interface ProcessScanParams {
 }
 
 export const useEquipmentQRScanning = () => {
-  const { userProfile, siteId } = useAuth();
+  const { userProfile } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [lastScannedEquipment, setLastScannedEquipment] = useState<EquipmentWithQR | null>(null);
 
-  // Query equipment with QR codes with site_id isolation
+  // Query equipment with QR codes
   const { data: equipmentWithQR, isLoading: loadingEquipment } = useQuery({
-    queryKey: ['equipment-with-qr', userProfile?.company_id, siteId],
+    queryKey: ['equipment-with-qr', userProfile?.company_id],
     queryFn: async () => {
-      if (!userProfile?.company_id || !siteId) return [];
+      if (!userProfile?.company_id) return [];
 
-      // Note: equipment_with_qr view should be filtered by site_id via RLS
-      // Adding explicit filter for extra security
       const { data, error } = await supabase
         .from('equipment_with_qr')
         .select('*')
@@ -84,16 +82,16 @@ export const useEquipmentQRScanning = () => {
       if (error) throw error;
       return data as EquipmentWithQR[];
     },
-    enabled: !!userProfile?.company_id && !!siteId,
+    enabled: !!userProfile?.company_id,
   });
 
-  // Query recent scan events with site_id isolation
+  // Query recent scan events
   const { data: recentScans, isLoading: loadingScans } = useQuery({
-    queryKey: ['recent-equipment-scans', userProfile?.company_id, siteId],
+    queryKey: ['recent-equipment-scans', userProfile?.company_id],
     queryFn: async () => {
-      if (!userProfile?.company_id || !siteId) return [];
+      if (!userProfile?.company_id) return [];
 
-      // Note: recent_equipment_scans view should be filtered by site_id via RLS
+      // Note: recent_equipment_scans view is filtered via RLS
       const { data, error } = await supabase
         .from('recent_equipment_scans')
         .select('*')
@@ -102,7 +100,7 @@ export const useEquipmentQRScanning = () => {
       if (error) throw error;
       return data as ScanEvent[];
     },
-    enabled: !!userProfile?.company_id && !!siteId,
+    enabled: !!userProfile?.company_id,
     refetchInterval: 30000, // Refresh every 30 seconds
   });
 

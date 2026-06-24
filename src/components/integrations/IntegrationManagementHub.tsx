@@ -1,14 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Progress } from '@/components/ui/progress';
-import { 
-  Zap, Link, Settings, CheckCircle, AlertTriangle, X, 
-  ExternalLink, RefreshCw, Key, Clock, Shield, Activity, Plus
-} from 'lucide-react';
+import { Zap, Settings, CheckCircle, AlertTriangle, X, ExternalLink, RefreshCw, Key, Clock, Activity, Plus } from 'lucide-react';
 
 interface Integration {
   id: string;
@@ -213,7 +210,7 @@ export const IntegrationManagementHub: React.FC = () => {
     {
       id: 'w3',
       name: 'Financial Data Export',
-      url: 'https://accounting.company.com/api/builddesk/import',
+      url: 'https://accounting.company.com/api/brikly/import',
       events: ['invoice.created', 'payment.received', 'expense.recorded'],
       status: 'failed',
       lastTriggered: new Date('2024-01-28T14:20:00'),

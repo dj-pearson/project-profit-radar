@@ -3,7 +3,7 @@ import { Helmet } from "react-helmet-async";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 
 interface GenericPageProps {
-  title: string;           // SEO title (will append | BuildDesk)
+  title: string;           // SEO title (will append | Brikly)
   description: string;     // Meta description (<=160 chars)
   canonical: string;       // Canonical path e.g. "/projects"
   h1?: string;             // Optional H1 override; defaults to title
@@ -17,7 +17,7 @@ export const GenericPage: React.FC<GenericPageProps> = ({
   h1,
   children
 }) => {
-  const pageTitle = `${title} | BuildDesk`;
+  const pageTitle = `${title} | Brikly`;
   const h1Text = h1 || title;
 
   return (

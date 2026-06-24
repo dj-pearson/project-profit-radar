@@ -1,9 +1,9 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { CalendarDays, Clock, AlertTriangle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-import { format, isAfter, isBefore, addDays } from 'date-fns';
+import { format, isBefore, addDays } from 'date-fns';
 
 interface Deadline {
   id: string;

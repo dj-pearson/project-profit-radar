@@ -9,18 +9,60 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
+
+interface EnvironmentalPermit {
+  id: string;
+  permit_number: string;
+  permit_name: string;
+  permit_type: string;
+  issuing_agency: string;
+  status: string;
+  nepa_category: string;
+  application_date: string;
+  expiration_date?: string;
+  target_decision_date?: string;
+  compliance_status: string;
+  priority: string;
+  assigned_to: string;
+}
+
+interface NEPAAssessment {
+  id: string;
+  permit_id: string;
+  assessment_type: string;
+  lead_agency: string;
+  nepa_process_stage: string;
+  finding?: string;
+  decision_date?: string;
+  scoping_period_start?: string;
+  scoping_period_end?: string;
+  prepared_by: string;
+}
+
+interface MonitoringRecord {
+  id: string;
+  permit_id: string;
+  monitoring_type: string;
+  parameter_measured: string;
+  measured_value: number;
+  permit_limit: number;
+  measurement_unit: string;
+  measurement_date: string;
+  within_limits: boolean;
+  exceedance_level?: number;
+  monitoring_location: string;
+}
 
 export default function EnvironmentalPermitting() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedTab, setSelectedTab] = useState("permits");
-  const [editingPermit, setEditingPermit] = useState<any>(null);
-  const [editingAssessment, setEditingAssessment] = useState<any>(null);
-  const [editingMonitoring, setEditingMonitoring] = useState<any>(null);
+  const [editingPermit, setEditingPermit] = useState<EnvironmentalPermit | null>(null);
+  const [editingAssessment, setEditingAssessment] = useState<NEPAAssessment | null>(null);
+  const [editingMonitoring, setEditingMonitoring] = useState<MonitoringRecord | null>(null);
   const { toast } = useToast();
 
-  const handleEditPermit = (permit: any) => {
+  const handleEditPermit = (permit: EnvironmentalPermit) => {
     setEditingPermit({ ...permit });
   };
 
@@ -32,7 +74,7 @@ export default function EnvironmentalPermitting() {
     setEditingPermit(null);
   };
 
-  const handleEditAssessment = (assessment: any) => {
+  const handleEditAssessment = (assessment: NEPAAssessment) => {
     setEditingAssessment({ ...assessment });
   };
 
@@ -44,7 +86,7 @@ export default function EnvironmentalPermitting() {
     setEditingAssessment(null);
   };
 
-  const handleEditMonitoring = (monitoring: any) => {
+  const handleEditMonitoring = (monitoring: MonitoringRecord) => {
     setEditingMonitoring({ ...monitoring });
   };
 
@@ -252,7 +294,7 @@ export default function EnvironmentalPermitting() {
         </TabsList>
 
         <div className="flex items-center space-x-2">
-          <Search className="h-4 w-4 text-muted-foreground" />
+          <Search className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
           <Input
             placeholder="Search permits, assessments, or monitoring data..."
             value={searchTerm}
@@ -799,7 +841,7 @@ export default function EnvironmentalPermitting() {
                   Agency coordination activities will appear here
                 </p>
                 <Button>
-                  <Plus className="h-4 w-4 mr-2" />
+                  <Plus className="h-4 w-4 mr-2" aria-hidden="true" />
                   Initiate Coordination
                 </Button>
               </div>

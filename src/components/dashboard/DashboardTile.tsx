@@ -154,18 +154,20 @@ export const DashboardTile = ({
             variant="ghost"
             size="sm"
             className="h-6 w-6 p-0 text-muted-foreground hover:text-foreground cursor-grab active:cursor-grabbing"
+            aria-label="Drag to reorder"
             {...dragHandleProps}
           >
-            <GripVertical className="h-3 w-3" />
+            <GripVertical className="h-3 w-3" aria-hidden="true" />
           </Button>
           {onRemove && (
             <Button
               variant="ghost"
               size="sm"
               className="h-6 w-6 p-0 text-muted-foreground hover:text-destructive"
+              aria-label={`Remove ${title} tile`}
               onClick={() => onRemove(id)}
             >
-              <X className="h-3 w-3" />
+              <X className="h-3 w-3" aria-hidden="true" />
             </Button>
           )}
         </div>

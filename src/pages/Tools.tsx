@@ -1,4 +1,3 @@
-import React from 'react';
 import { Link } from 'react-router-dom';
 import Header from "@/components/Header";
 import ToolsFooter from "@/components/ToolsFooter";
@@ -8,19 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { ResponsiveContainer } from "@/components/layout/ResponsiveContainer";
 import { SEOMetaTags } from "@/components/SEOMetaTags";
 import { SkipLink } from "@/components/accessibility/AccessibilityUtils";
-import { 
-  Calendar,
-  Calculator,
-  Clock,
-  DollarSign,
-  FileText,
-  BarChart3,
-  Users,
-  ArrowRight,
-  Wrench,
-  Target,
-  CheckCircle
-} from 'lucide-react';
+import { Calendar, Calculator, DollarSign, FileText, Users, ArrowRight, Wrench, Target, CheckCircle } from 'lucide-react';
 
 const Tools = () => {
   const tools = [
@@ -36,8 +23,8 @@ const Tools = () => {
     },
     {
       id: 'roi-calculator',
-      title: 'Build-Desk ROI Calculator',
-      description: 'Calculate your return on investment and potential cost savings from implementing Build-Desk construction management software.',
+      title: 'Brikly ROI Calculator',
+      description: 'Calculate your return on investment and potential cost savings from implementing Brikly construction management software.',
       icon: Calculator,
       href: '/roi-calculator',
       features: ['Cost Savings Analysis', 'ROI Projections', 'Payback Period', 'Efficiency Gains'],
@@ -87,7 +74,7 @@ const Tools = () => {
   return (
     <div className="min-h-screen bg-background">
       <SEOMetaTags
-        title="Free Construction Tools | Schedule Builder & Profit Calculator | Build-Desk"
+        title="Free Construction Tools | Schedule Builder & Profit Calculator | Brikly"
         description="Access free construction management tools including project schedule builder, profit calculator, and bid estimator. Professional tools for contractors and project managers."
         keywords={[
           'free construction tools',
@@ -105,13 +92,13 @@ const Tools = () => {
       
       <Header />
       
-      <main id="main-content">
+      <main id="main-content" aria-label="Free Construction Tools">
         {/* Hero Section */}
         <section className="py-12 lg:py-20 bg-gradient-to-b from-construction-light to-background">
           <ResponsiveContainer>
             <div className="text-center max-w-4xl mx-auto">
               <div className="flex items-center justify-center mb-6">
-                <Wrench className="h-12 w-12 text-construction-orange mr-4" />
+                <Wrench className="h-12 w-12 text-construction-orange mr-4" aria-hidden="true" />
                 <h1 className="text-4xl lg:text-6xl font-bold text-construction-dark">
                   Free Construction Tools
                 </h1>
@@ -121,15 +108,15 @@ const Tools = () => {
               </p>
               <div className="flex flex-wrap items-center justify-center gap-8 text-sm text-construction-dark/70">
                 <div className="flex items-center">
-                  <CheckCircle className="h-5 w-5 text-green-600 mr-2" />
+                  <CheckCircle className="h-5 w-5 text-green-600 mr-2" aria-hidden="true" />
                   <span>No signup required</span>
                 </div>
                 <div className="flex items-center">
-                  <CheckCircle className="h-5 w-5 text-green-600 mr-2" />
+                  <CheckCircle className="h-5 w-5 text-green-600 mr-2" aria-hidden="true" />
                   <span>Instant results</span>
                 </div>
                 <div className="flex items-center">
-                  <CheckCircle className="h-5 w-5 text-green-600 mr-2" />
+                  <CheckCircle className="h-5 w-5 text-green-600 mr-2" aria-hidden="true" />
                   <span>Professional outputs</span>
                 </div>
               </div>
@@ -144,7 +131,7 @@ const Tools = () => {
               {benefits.map((benefit, index) => (
                 <div key={index} className="text-center">
                   <div className="inline-flex items-center justify-center w-16 h-16 bg-construction-orange/10 rounded-full mb-4">
-                    <benefit.icon className="h-8 w-8 text-construction-orange" />
+                    <benefit.icon className="h-8 w-8 text-construction-orange" aria-hidden="true" />
                   </div>
                   <h3 className="text-xl font-bold text-construction-dark mb-2">{benefit.title}</h3>
                   <p className="text-construction-dark/70">{benefit.description}</p>
@@ -174,9 +161,10 @@ const Tools = () => {
                     tool.available ? 'hover:shadow-lg hover:scale-[1.02]' : 'opacity-75'
                   }`}>
                     {tool.badge && (
-                      <Badge 
-                        variant={tool.badge === 'New' ? 'default' : 'secondary'} 
+                      <Badge
+                        variant={tool.badge === 'New' ? 'default' : 'secondary'}
                         className="absolute top-4 right-4 z-10"
+                        aria-label={`Status: ${tool.badge}`}
                       >
                         {tool.badge}
                       </Badge>
@@ -185,7 +173,7 @@ const Tools = () => {
                     <CardHeader className="pb-4">
                       <div className="flex items-center mb-4">
                         <div className="inline-flex items-center justify-center w-12 h-12 bg-construction-orange/10 rounded-lg mr-4">
-                          <IconComponent className="h-6 w-6 text-construction-orange" />
+                          <IconComponent className="h-6 w-6 text-construction-orange" aria-hidden="true" />
                         </div>
                         <div>
                           <CardTitle className="text-xl text-construction-dark">{tool.title}</CardTitle>
@@ -202,7 +190,7 @@ const Tools = () => {
                         <ul className="grid grid-cols-2 gap-2">
                           {tool.features.map((feature, index) => (
                             <li key={index} className="flex items-center text-sm text-construction-dark/70">
-                              <CheckCircle className="h-4 w-4 text-green-600 mr-2 flex-shrink-0" />
+                              <CheckCircle className="h-4 w-4 text-green-600 mr-2 flex-shrink-0" aria-hidden="true" />
                               {feature}
                             </li>
                           ))}
@@ -213,7 +201,7 @@ const Tools = () => {
                         <Button asChild className="w-full" size="lg">
                           <Link to={tool.href} className="inline-flex items-center">
                             Launch Tool
-                            <ArrowRight className="ml-2 h-4 w-4" />
+                            <ArrowRight className="ml-2 h-4 w-4" aria-hidden="true" />
                           </Link>
                         </Button>
                       ) : (
@@ -304,7 +292,7 @@ const Tools = () => {
                 Ready for Complete Project Management?
               </h2>
               <p className="text-xl mb-8 opacity-90 max-w-2xl mx-auto">
-                These free tools are just the beginning. See how much you could save with Build-Desk's comprehensive 
+                These free tools are just the beginning. See how much you could save with Brikly's comprehensive 
                 construction management platform using our ROI Calculator, then start building professional schedules today.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">

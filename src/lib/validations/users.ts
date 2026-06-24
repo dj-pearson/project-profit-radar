@@ -1,6 +1,16 @@
 import { z } from 'zod';
 
 export const profileUpdateSchema = z.object({
+  first_name: z.string()
+    .trim()
+    .min(1, 'First name must be at least 1 character')
+    .max(50, 'First name must be less than 50 characters')
+    .optional(),
+  last_name: z.string()
+    .trim()
+    .min(1, 'Last name must be at least 1 character')
+    .max(50, 'Last name must be less than 50 characters')
+    .optional(),
   full_name: z.string()
     .trim()
     .min(2, 'Full name must be at least 2 characters')

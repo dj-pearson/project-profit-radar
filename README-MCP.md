@@ -112,7 +112,7 @@ To use the Supabase MCP server, you need to:
 
    - Go to https://supabase.com/dashboard/account/tokens
    - Click "Generate new token"
-   - Give it a name like "BuildDesk MCP"
+   - Give it a name like "Brikly MCP"
    - Select appropriate scopes (read:projects, write:projects recommended)
    - Copy the token
 
@@ -122,7 +122,7 @@ To use the Supabase MCP server, you need to:
    - Replace `your_personal_access_token_here` with your actual token
    - Source the environment file or set `SUPABASE_ACCESS_TOKEN` in your system
 
-3. **The server will automatically connect to your BuildDesk Supabase project** using:
+3. **The server will automatically connect to your Brikly Supabase project** using:
    - Project ID: `ilhzuvemiuyfuxfegtlv`
    - URL: `https://ilhzuvemiuyfuxfegtlv.supabase.co`
 
@@ -166,11 +166,11 @@ Once the Context7 MCP server is running, Claude Code can use these tools:
 - `context7_summarize` - Generate summaries of content
 - `context7_analyze` - Analyze content semantically
 
-### Example Use Cases for BuildDesk
+### Example Use Cases for Brikly
 
 #### Puppeteer MCP Server Use Cases:
 
-1. **Testing the BuildDesk application**
+1. **Testing the Brikly application**
 
    - Automated UI testing
    - Screenshot generation for documentation

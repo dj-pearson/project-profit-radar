@@ -36,7 +36,7 @@ export const HowToSchema: React.FC<HowToSchemaProps> = ({
     "@type": "HowTo",
     "name": name,
     "description": description,
-    "image": steps.find(step => step.image)?.image || `https://builddesk.com/images/${name.toLowerCase().replace(/\s+/g, '-')}.jpg`,
+    "image": steps.find(step => step.image)?.image || `https://brikly.net/images/${name.toLowerCase().replace(/\s+/g, '-')}.jpg`,
     "totalTime": totalTime,
     "estimatedCost": estimatedCost ? {
       "@type": "MonetaryAmount",

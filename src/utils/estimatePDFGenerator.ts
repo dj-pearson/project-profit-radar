@@ -56,15 +56,15 @@ export class EstimatePDFGenerator {
   private margin: number;
   private currentY: number;
 
-  constructor(estimate: EstimateData, companyInfo: CompanyInfo = { name: 'BuildDesk' }) {
+  constructor(estimate: EstimateData, companyInfo: CompanyInfo = { name: 'Brikly' }) {
     this.doc = new jsPDF('portrait', 'mm', 'a4');
     this.estimate = estimate;
     this.companyInfo = {
-      name: 'BuildDesk',
+      name: 'Brikly',
       address: '123 Construction Way, Builder City, ST 12345',
       phone: '(555) 123-4567',
-      email: 'estimates@builddesk.com',
-      website: 'www.builddesk.com',
+      email: 'estimates@brikly.net',
+      website: 'www.brikly.net',
       license: 'License #123456',
       ...companyInfo,
     };

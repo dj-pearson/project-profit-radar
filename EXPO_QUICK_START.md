@@ -5,7 +5,7 @@
 Your Expo project is ready at:
 
 ```
-C:\Users\dpearson\Documents\Build-Desk\BuildDeskExpo
+C:\Users\dpearson\Documents\Brikly\BriklyExpo
 ```
 
 ---
@@ -15,7 +15,7 @@ C:\Users\dpearson\Documents\Build-Desk\BuildDeskExpo
 ### Step 1: Navigate to Expo Project
 
 ```powershell
-cd C:\Users\dpearson\Documents\Build-Desk\BuildDeskExpo
+cd C:\Users\dpearson\Documents\Brikly\BriklyExpo
 ```
 
 ### Step 2: Login to Expo (if not already)
@@ -57,7 +57,7 @@ That's it! No Mac, no Xcode, no certificate headaches! ✨
 
 ```powershell
 # From Windows - No Mac needed!
-cd C:\Users\dpearson\Documents\Build-Desk\BuildDeskExpo
+cd C:\Users\dpearson\Documents\Brikly\BriklyExpo
 eas build --platform ios --profile production
 eas submit --platform ios
 ```
@@ -81,7 +81,7 @@ eas submit --platform ios
 
 ```powershell
 # Requires Mac!
-cd C:\Users\pears\Documents\Build Desk\project-profit-radar
+cd C:\Users\pears\Documents\Brikly\project-profit-radar
 npm run ios:build
 # Opens Xcode (Mac only) → Manual process
 ```
@@ -115,7 +115,7 @@ See if Expo works for you:
 
 ```powershell
 # 1. Check your Expo project
-cd C:\Users\dpearson\Documents\Build-Desk\BuildDeskExpo
+cd C:\Users\dpearson\Documents\Brikly\BriklyExpo
 eas project:info
 
 # 2. List your previous builds
@@ -153,10 +153,10 @@ You have two strategies:
 
 ## 📦 What's Already Configured
 
-In your Expo project (`BuildDeskExpo`):
+In your Expo project (`BriklyExpo`):
 
 ✅ **Project created** with ID: `689e69f0-18d0-40d6-a878-7d46aae0f2be`
-✅ **Bundle ID set**: `com.builddesk.app`
+✅ **Bundle ID set**: `com.brikly.app`
 ✅ **Build profiles configured**:
 
 - Development (for testing)
@@ -199,7 +199,7 @@ Do you have a Mac?
 
 ```powershell
 # Navigate to Expo project
-cd C:\Users\dpearson\Documents\Build-Desk\BuildDeskExpo
+cd C:\Users\dpearson\Documents\Brikly\BriklyExpo
 
 # Check project info
 eas project:info
@@ -230,7 +230,7 @@ eas build:cancel [BUILD_ID]
 ### Phase 1: Setup (5 minutes)
 
 ```powershell
-cd C:\Users\dpearson\Documents\Build-Desk\BuildDeskExpo
+cd C:\Users\dpearson\Documents\Brikly\BriklyExpo
 eas project:info  # Verify setup
 ```
 
@@ -270,7 +270,7 @@ npx eas-cli login
 ### "Project not found"
 
 ```powershell
-cd C:\Users\dpearson\Documents\Build-Desk\BuildDeskExpo
+cd C:\Users\dpearson\Documents\Brikly\BriklyExpo
 eas project:info
 ```
 
@@ -293,7 +293,7 @@ eas project:info
 **To test Expo right now:**
 
 ```powershell
-cd C:\Users\dpearson\Documents\Build-Desk\BuildDeskExpo
+cd C:\Users\dpearson\Documents\Brikly\BriklyExpo
 eas build --platform ios --profile development
 ```
 

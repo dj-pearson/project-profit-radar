@@ -1,16 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { 
-  Search, 
-  BookOpen, 
-  Clock, 
-  Star, 
-  Eye,
-  ChevronRight,
-  Filter,
-  Grid,
-  List
-} from 'lucide-react';
+import { Search, BookOpen, Clock, Star, Eye, ChevronRight, Grid, List } from 'lucide-react';
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -187,7 +177,7 @@ export default function KnowledgeBase() {
       <div className="mb-8">
         <h1 className="text-4xl font-bold mb-4">Knowledge Base</h1>
         <p className="text-lg text-muted-foreground">
-          Everything you need to know about using Build Desk effectively
+          Everything you need to know about using Brikly effectively
         </p>
       </div>
 

@@ -1,6 +1,5 @@
 /**
  * QuickBooks Disconnect Handler
- * Updated with multi-tenant site_id isolation
  *
  * Revokes OAuth tokens and disconnects QuickBooks integration.
  */
@@ -19,14 +18,13 @@ serve(async (req) => {
   }
 
   try {
-    // Initialize auth context - extracts user AND site_id from JWT
-    const authContext = await initializeAuthContext(req);
+        const authContext = await initializeAuthContext(req);
     if (!authContext) {
       return errorResponse('Unauthorized', 401);
     }
 
-    const { user, siteId, supabase: supabaseClient } = authContext;
-    console.log("[QUICKBOOKS-DISCONNECT] User authenticated", { userId: user.id, siteId });
+    const { user, supabase: supabaseClient } = authContext;
+    console.log("[QUICKBOOKS-DISCONNECT] User authenticated", { userId: user.id });
 
     const { company_id } = await req.json()
 
@@ -34,11 +32,10 @@ serve(async (req) => {
       throw new Error('Company ID is required')
     }
 
-    // Get current integration data to revoke the token with site isolation
+    // Get current integration data to revoke the token
     const { data: integration, error: fetchError } = await supabaseClient
       .from('quickbooks_integrations')
       .select('access_token, refresh_token')
-      .eq('site_id', siteId)  // CRITICAL: Site isolation
       .eq('company_id', company_id)
       .single()
 
@@ -73,7 +70,7 @@ serve(async (req) => {
       }
     }
 
-    // Clear integration data in database with site isolation
+    // Clear integration data in database
     const { error: updateError } = await supabaseClient
       .from('quickbooks_integrations')
       .update({
@@ -91,18 +88,16 @@ serve(async (req) => {
         last_error_message: null,
         updated_at: new Date().toISOString(),
       })
-      .eq('site_id', siteId)  // CRITICAL: Site isolation
       .eq('company_id', company_id)
 
     if (updateError) {
       throw new Error('Failed to disconnect: ' + updateError.message)
     }
 
-    // Log the disconnection with site isolation
+    // Log the disconnection
     await supabaseClient
       .from('quickbooks_sync_logs')
       .insert({
-        site_id: siteId,  // CRITICAL: Site isolation
         company_id: company_id,
         sync_type: 'disconnection',
         status: 'success',

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -8,26 +8,12 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { 
-  Plus,
-  DollarSign,
-  TrendingUp,
-  TrendingDown,
-  AlertTriangle,
-  Clock,
-  Users,
-  Wrench,
-  Package,
-  BarChart3,
-  Edit,
-  Save,
-  X
-} from 'lucide-react';
+import { DollarSign, TrendingUp, TrendingDown, AlertTriangle, Users, Wrench, Package, BarChart3, Edit, Save, X } from 'lucide-react';
+import { logger } from '@/lib/logger';
 
 interface JobCost {
   id: string;
@@ -156,21 +142,71 @@ const RealTimeJobCosting: React.FC<RealTimeJobCostingProps> = ({ projectId }) =>
     };
   }, [selectedProject]);
 
-  // Recalculate summary when costs change
+  // Memoized current project lookup
+  const currentProject = useMemo(() =>
+    projects.find(p => p.id === selectedProject),
+    [projects, selectedProject]
+  );
+
+  // Memoized cost summary calculation
+  const memoizedCostSummary = useMemo(() => {
+    if (!currentProject) {
+      return {
+        totalCost: 0,
+        laborCost: 0,
+        materialCost: 0,
+        equipmentCost: 0,
+        otherCost: 0,
+        budgetVariance: 0,
+        budgetVariancePercentage: 0
+      };
+    }
+
+    // Single pass through the array to calculate all cost totals
+    const costs = jobCosts.reduce((acc, cost) => {
+      acc.totalCost += cost.total_cost || 0;
+      acc.laborCost += cost.labor_cost || 0;
+      acc.materialCost += cost.material_cost || 0;
+      acc.equipmentCost += cost.equipment_cost || 0;
+      acc.otherCost += cost.other_cost || 0;
+      return acc;
+    }, {
+      totalCost: 0,
+      laborCost: 0,
+      materialCost: 0,
+      equipmentCost: 0,
+      otherCost: 0
+    });
+
+    const budget = currentProject.budget || 0;
+    const budgetVariance = budget - costs.totalCost;
+    const budgetVariancePercentage = budget > 0 ? (budgetVariance / budget) * 100 : 0;
+
+    return {
+      ...costs,
+      budgetVariance,
+      budgetVariancePercentage
+    };
+  }, [jobCosts, currentProject]);
+
+  // Update costSummary state when memoized value changes
   useEffect(() => {
-    calculateCostSummary();
-  }, [jobCosts, selectedProject]);
+    setCostSummary(memoizedCostSummary);
+  }, [memoizedCostSummary]);
 
   const loadData = async () => {
+    logger.time('loadData');
     try {
       setLoading(true);
       
       // Load projects
+      logger.time('loadProjects');
       const { data: projectsData, error: projectsError } = await supabase
         .from('projects')
         .select('id, name, budget, status')
         .eq('company_id', userProfile?.company_id)
         .order('created_at', { ascending: false });
+      logger.timeEnd('loadProjects');
 
       if (projectsError) throw projectsError;
       setProjects(projectsData || []);
@@ -181,17 +217,19 @@ const RealTimeJobCosting: React.FC<RealTimeJobCostingProps> = ({ projectId }) =>
       }
 
       // Load cost codes
+      logger.time('loadCostCodes');
       const { data: costCodesData, error: costCodesError } = await supabase
         .from('cost_codes')
         .select('id, code, name, category')
         .eq('company_id', userProfile?.company_id)
         .eq('is_active', true)
         .order('code');
+      logger.timeEnd('loadCostCodes');
 
       if (costCodesError) throw costCodesError;
       setCostCodes(costCodesData || []);
 
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error loading data:', error);
       toast({
         variant: "destructive",
@@ -200,10 +238,12 @@ const RealTimeJobCosting: React.FC<RealTimeJobCostingProps> = ({ projectId }) =>
       });
     } finally {
       setLoading(false);
+      logger.timeEnd('loadData');
     }
   };
 
   const loadJobCosts = async (projectId: string) => {
+    logger.time('loadJobCosts');
     try {
       const { data: costsData, error: costsError } = await supabase
         .from('job_costs')
@@ -214,22 +254,26 @@ const RealTimeJobCosting: React.FC<RealTimeJobCostingProps> = ({ projectId }) =>
       if (costsError) throw costsError;
       setJobCosts(costsData || []);
 
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error loading job costs:', error);
       toast({
         variant: "destructive",
         title: "Error",
         description: "Failed to load job costs"
       });
+    } finally {
+      logger.timeEnd('loadJobCosts');
     }
   };
 
-  const handleRealTimeUpdate = useCallback((payload: any) => {
+  const handleRealTimeUpdate = useCallback((payload: { eventType: string; new: Record<string, unknown>; old: Record<string, unknown> }) => {
+    logger.time('handleRealTimeUpdate');
     const { eventType, new: newRecord, old: oldRecord } = payload;
     
     switch (eventType) {
       case 'INSERT':
         // Fetch the complete record
+        logger.time('handleRealTimeUpdate-INSERT');
         supabase
           .from('job_costs')
           .select('*')
@@ -243,10 +287,12 @@ const RealTimeJobCosting: React.FC<RealTimeJobCostingProps> = ({ projectId }) =>
                 description: `Cost entry: $${data.total_cost?.toLocaleString()}`
               });
             }
+            logger.timeEnd('handleRealTimeUpdate-INSERT');
           });
         break;
         
       case 'UPDATE':
+        logger.time('handleRealTimeUpdate-UPDATE');
         setJobCosts(prev => 
           prev.map(cost => 
             cost.id === newRecord.id 
@@ -258,42 +304,22 @@ const RealTimeJobCosting: React.FC<RealTimeJobCostingProps> = ({ projectId }) =>
           title: "Cost Updated",
           description: "Job cost has been updated"
         });
+        logger.timeEnd('handleRealTimeUpdate-UPDATE');
         break;
         
       case 'DELETE':
+        logger.time('handleRealTimeUpdate-DELETE');
         setJobCosts(prev => prev.filter(cost => cost.id !== oldRecord.id));
         toast({
           title: "Cost Deleted",
           description: "Job cost has been removed"
         });
+        logger.timeEnd('handleRealTimeUpdate-DELETE');
         break;
     }
+    logger.timeEnd('handleRealTimeUpdate');
   }, []);
 
-  const calculateCostSummary = () => {
-    const currentProject = projects.find(p => p.id === selectedProject);
-    if (!currentProject) return;
-
-    const totalCost = jobCosts.reduce((sum, cost) => sum + (cost.total_cost || 0), 0);
-    const laborCost = jobCosts.reduce((sum, cost) => sum + (cost.labor_cost || 0), 0);
-    const materialCost = jobCosts.reduce((sum, cost) => sum + (cost.material_cost || 0), 0);
-    const equipmentCost = jobCosts.reduce((sum, cost) => sum + (cost.equipment_cost || 0), 0);
-    const otherCost = jobCosts.reduce((sum, cost) => sum + (cost.other_cost || 0), 0);
-    
-    const budget = currentProject.budget || 0;
-    const budgetVariance = budget - totalCost;
-    const budgetVariancePercentage = budget > 0 ? (budgetVariance / budget) * 100 : 0;
-
-    setCostSummary({
-      totalCost,
-      laborCost,
-      materialCost,
-      equipmentCost,
-      otherCost,
-      budgetVariance,
-      budgetVariancePercentage
-    });
-  };
 
   const handleProjectChange = (projectId: string) => {
     setSelectedProject(projectId);
@@ -354,7 +380,7 @@ const RealTimeJobCosting: React.FC<RealTimeJobCostingProps> = ({ projectId }) =>
         description: `Job cost of $${totalCost.toLocaleString()} has been added`
       });
 
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error adding job cost:', error);
       toast({
         variant: "destructive",
@@ -439,7 +465,7 @@ const RealTimeJobCosting: React.FC<RealTimeJobCostingProps> = ({ projectId }) =>
         description: "Job cost has been successfully updated"
       });
 
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error updating job cost:', error);
       toast({
         variant: "destructive",
@@ -449,16 +475,17 @@ const RealTimeJobCosting: React.FC<RealTimeJobCostingProps> = ({ projectId }) =>
     }
   };
 
-  const getVarianceColor = (percentage: number) => {
+  // Memoized helper functions
+  const getVarianceColor = useCallback((percentage: number) => {
     if (percentage > 10) return 'text-green-600';
     if (percentage > 0) return 'text-yellow-600';
     return 'text-red-600';
-  };
+  }, []);
 
-  const getVarianceIcon = (percentage: number) => {
+  const getVarianceIcon = useCallback((percentage: number) => {
     if (percentage > 0) return <TrendingUp className="h-4 w-4" />;
     return <TrendingDown className="h-4 w-4" />;
-  };
+  }, []);
 
   // Load job costs when project changes
   useEffect(() => {
@@ -477,8 +504,6 @@ const RealTimeJobCosting: React.FC<RealTimeJobCostingProps> = ({ projectId }) =>
       </div>
     );
   }
-
-  const currentProject = projects.find(p => p.id === selectedProject);
 
   return (
     <div className="space-y-6">

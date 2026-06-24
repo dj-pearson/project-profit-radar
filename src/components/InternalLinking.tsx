@@ -49,19 +49,19 @@ export const InternalLinking: React.FC<InternalLinkingProps> = ({
       software: [
         {
           title: 'Procore Alternative',
-          description: 'Why BuildDesk is a better choice than Procore for small-medium contractors.',
+          description: 'Why Brikly is a better choice than Procore for small-medium contractors.',
           url: '/procore-alternative',
           icon: Users
         },
         {
           title: 'Features Overview',
-          description: 'Explore all BuildDesk features designed for construction contractors.',
+          description: 'Explore all Brikly features designed for construction contractors.',
           url: '/features',
           icon: BookOpen
         },
         {
           title: 'Getting Started Guide',
-          description: 'Complete setup guide to get started with BuildDesk quickly.',
+          description: 'Complete setup guide to get started with Brikly quickly.',
           url: '/knowledge-base/article/getting-started-complete-setup-guide',
           icon: BookOpen
         }
@@ -101,7 +101,7 @@ export const InternalLinking: React.FC<InternalLinkingProps> = ({
         },
         {
           title: 'Start Free Trial',
-          description: 'Try BuildDesk scheduling tools free for 14 days.',
+          description: 'Try Brikly scheduling tools free for 14 days.',
           url: '/auth',
           icon: Users
         }

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -10,20 +10,9 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-import {
-  FileText,
-  Code,
-  PlayCircle,
-  Search,
-  BookOpen,
-  Terminal,
-  Copy,
-  Check,
-  TrendingUp,
-  Eye,
-  Clock
-} from 'lucide-react';
+import { FileText, Code, PlayCircle, Search, BookOpen, Terminal, Copy, Check, TrendingUp, Eye } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { logger } from '@/lib/logger';
 
 interface APIDoc {
   id: string;
@@ -32,9 +21,9 @@ interface APIDoc {
   category: string;
   title: string;
   description: string;
-  request_schema: any;
-  response_schema: any;
-  code_examples: any;
+  request_schema: Record<string, unknown> | null;
+  response_schema: Record<string, unknown> | null;
+  code_examples: Record<string, unknown> | null;
   version: string;
   is_deprecated: boolean;
   usage_count: number;
@@ -76,17 +65,33 @@ export function DeveloperPortal() {
         .from('api_documentation')
         .select('*')
         .order('category', { ascending: true })
-        .order('endpoint_path', { ascending: true }) as any;
+        .order('endpoint_path', { ascending: true });
 
       if (error) throw error;
-      setDocs(data as any || []);
+
+      const mappedDocs: APIDoc[] = (data ?? []).map((row) => ({
+        id: row.id,
+        endpoint: row.endpoint_path ?? '',
+        method: row.http_method ?? 'GET',
+        category: row.category,
+        title: row.title,
+        description: row.description ?? '',
+        request_schema: row.request_schema as Record<string, unknown> | null,
+        response_schema: row.response_schema as Record<string, unknown> | null,
+        code_examples: null,
+        version: row.version ?? 'v1',
+        is_deprecated: false,
+        usage_count: row.view_count ?? 0,
+      }));
+
+      setDocs(mappedDocs);
       if (data && data.length > 0 && !selectedDoc) {
         setSelectedDoc(data[0]);
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast({
         title: 'Error',
-        description: error.message,
+        description: error instanceof Error ? error.message : 'Failed to load documentation',
         variant: 'destructive',
       });
     } finally {
@@ -149,8 +154,9 @@ export function DeveloperPortal() {
         title: 'Request Sent',
         description: 'Check the response below',
       });
-    } catch (error: any) {
-      setPlaygroundResponse(JSON.stringify({ error: error.message }, null, 2));
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Unknown error';
+      setPlaygroundResponse(JSON.stringify({ error: message }, null, 2));
     }
   };
 
@@ -405,7 +411,7 @@ export function DeveloperPortal() {
                             variant="ghost"
                             size="sm"
                             onClick={() => handleCopyCode(
-                              `fetch('https://api.builddesk.com${selectedDoc.endpoint}', {\n  method: '${selectedDoc.method}',\n  headers: {\n    'Authorization': 'Bearer YOUR_API_KEY',\n    'Content-Type': 'application/json'\n  }${selectedDoc.method !== 'GET' ? ',\n  body: JSON.stringify({\n    // Your request data\n  })' : ''}\n})\n.then(response => response.json())\n.then(data => console.log(data))\n.catch(error => console.error(error));`,
+                              `fetch('https://api.brikly.net${selectedDoc.endpoint}', {\n  method: '${selectedDoc.method}',\n  headers: {\n    'Authorization': 'Bearer YOUR_API_KEY',\n    'Content-Type': 'application/json'\n  }${selectedDoc.method !== 'GET' ? ',\n  body: JSON.stringify({\n    // Your request data\n  })' : ''}\n})\n.then(response => response.json())\n.then(data => logger.debug(data))\n.catch(error => console.error(error));`,
                               'js'
                             )}
                           >
@@ -418,7 +424,7 @@ export function DeveloperPortal() {
                         </div>
                         <pre className="bg-muted p-4 rounded-lg overflow-x-auto">
                           <code className="text-sm">
-{`fetch('https://api.builddesk.com${selectedDoc.endpoint}', {
+{`fetch('https://api.brikly.net${selectedDoc.endpoint}', {
   method: '${selectedDoc.method}',
   headers: {
     'Authorization': 'Bearer YOUR_API_KEY',
@@ -429,7 +435,7 @@ export function DeveloperPortal() {
   })` : ''}
 })
 .then(response => response.json())
-.then(data => console.log(data))
+.then(data => logger.debug(data))
 .catch(error => console.error(error));`}
                           </code>
                         </pre>
@@ -444,7 +450,7 @@ export function DeveloperPortal() {
                             variant="ghost"
                             size="sm"
                             onClick={() => handleCopyCode(
-                              `import requests\n\nurl = 'https://api.builddesk.com${selectedDoc.endpoint}'\nheaders = {\n    'Authorization': 'Bearer YOUR_API_KEY',\n    'Content-Type': 'application/json'\n}\n${selectedDoc.method !== 'GET' ? `data = {\n    # Your request data\n}\n\nresponse = requests.${selectedDoc.method.toLowerCase()}(url, headers=headers, json=data)` : `\nresponse = requests.get(url, headers=headers)`}\nprint(response.json())`,
+                              `import requests\n\nurl = 'https://api.brikly.net${selectedDoc.endpoint}'\nheaders = {\n    'Authorization': 'Bearer YOUR_API_KEY',\n    'Content-Type': 'application/json'\n}\n${selectedDoc.method !== 'GET' ? `data = {\n    # Your request data\n}\n\nresponse = requests.${selectedDoc.method.toLowerCase()}(url, headers=headers, json=data)` : `\nresponse = requests.get(url, headers=headers)`}\nprint(response.json())`,
                               'py'
                             )}
                           >
@@ -459,7 +465,7 @@ export function DeveloperPortal() {
                           <code className="text-sm">
 {`import requests
 
-url = 'https://api.builddesk.com${selectedDoc.endpoint}'
+url = 'https://api.brikly.net${selectedDoc.endpoint}'
 headers = {
     'Authorization': 'Bearer YOUR_API_KEY',
     'Content-Type': 'application/json'
@@ -484,7 +490,7 @@ print(response.json())`}
                             variant="ghost"
                             size="sm"
                             onClick={() => handleCopyCode(
-                              `curl -X ${selectedDoc.method} 'https://api.builddesk.com${selectedDoc.endpoint}' \\\n  -H 'Authorization: Bearer YOUR_API_KEY' \\\n  -H 'Content-Type: application/json'${selectedDoc.method !== 'GET' ? ` \\\n  -d '{\n    "key": "value"\n  }'` : ''}`,
+                              `curl -X ${selectedDoc.method} 'https://api.brikly.net${selectedDoc.endpoint}' \\\n  -H 'Authorization: Bearer YOUR_API_KEY' \\\n  -H 'Content-Type: application/json'${selectedDoc.method !== 'GET' ? ` \\\n  -d '{\n    "key": "value"\n  }'` : ''}`,
                               'curl'
                             )}
                           >
@@ -497,7 +503,7 @@ print(response.json())`}
                         </div>
                         <pre className="bg-muted p-4 rounded-lg overflow-x-auto">
                           <code className="text-sm">
-{`curl -X ${selectedDoc.method} 'https://api.builddesk.com${selectedDoc.endpoint}' \\
+{`curl -X ${selectedDoc.method} 'https://api.brikly.net${selectedDoc.endpoint}' \\
   -H 'Authorization: Bearer YOUR_API_KEY' \\
   -H 'Content-Type: application/json'${selectedDoc.method !== 'GET' ? ` \\
   -d '{
@@ -644,3 +650,5 @@ print(response.json())`}
     </DashboardLayout>
   );
 }
+
+export default DeveloperPortal;

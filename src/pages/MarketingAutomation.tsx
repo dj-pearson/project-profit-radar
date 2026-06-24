@@ -1,4 +1,3 @@
-import React from "react";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { SocialMediaScheduler } from "@/components/marketing/SocialMediaScheduler";
 import { EmailMarketingCampaigns } from "@/components/marketing/EmailMarketingCampaigns";

@@ -4,10 +4,11 @@ import { Plus, Search, Filter, FileText, Calendar, DollarSign, TrendingUp } from
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { AccessibleModal } from "@/components/accessibility/AccessibleModal";
 import { EstimateForm } from "@/components/estimates/EstimateForm";
 import { EstimatesTable } from "@/components/estimates/EstimatesTable";
 import { useToast } from "@/hooks/use-toast";
@@ -15,10 +16,12 @@ import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { estimateService, EstimateStats } from "@/services/estimateService";
 import { useAuth } from "@/contexts/AuthContext";
 import { CSVImportButton } from "@/components/smart-import";
+import { AccessiblePageWrapper } from "@/components/accessibility/AccessiblePageWrapper";
 
 export default function EstimatesHub() {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [showMoreFilters, setShowMoreFilters] = useState(false);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [stats, setStats] = useState<EstimateStats>({
     totalEstimates: 0,
@@ -80,14 +83,15 @@ export default function EstimatesHub() {
   useEffect(() => {
     const urlParams = new URLSearchParams(location.search);
     const opportunityId = urlParams.get('opportunity');
-    
+
     if (opportunityId) {
       setIsCreateDialogOpen(true);
     }
   }, [location.search]);
 
   return (
-    <DashboardLayout title="Estimates">
+    <AccessiblePageWrapper pageTitle="Estimates">
+    <DashboardLayout title="Estimates" hasAccessibleWrapper>
       {/* Header Actions */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
         <div>
@@ -95,7 +99,7 @@ export default function EstimatesHub() {
             Create, manage, and track construction estimates
           </p>
         </div>
-        
+
         <div className="flex gap-2">
           <CSVImportButton
             dataType="estimates"
@@ -103,23 +107,23 @@ export default function EstimatesHub() {
             variant="outline"
           />
 
-          <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-            <DialogTrigger asChild>
-              <Button onClick={handleCreateEstimate} className="gap-2">
-                <Plus className="h-4 w-4" />
-                New Estimate
-              </Button>
-            </DialogTrigger>
-          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle>Create New Estimate</DialogTitle>
-            </DialogHeader>
-            <EstimateForm 
+          <Button onClick={handleCreateEstimate} className="gap-2">
+            <Plus className="h-4 w-4" aria-hidden="true" />
+            New Estimate
+          </Button>
+
+          <AccessibleModal
+            isOpen={isCreateDialogOpen}
+            onClose={() => setIsCreateDialogOpen(false)}
+            title="Create New Estimate"
+            description="Create a new estimate for a construction project"
+            size="xl"
+          >
+            <EstimateForm
               onSuccess={handleEstimateCreated}
               onCancel={() => setIsCreateDialogOpen(false)}
             />
-          </DialogContent>
-          </Dialog>
+          </AccessibleModal>
         </div>
       </div>
 
@@ -128,7 +132,7 @@ export default function EstimatesHub() {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Total Estimates</CardTitle>
-              <FileText className="h-4 w-4 text-muted-foreground" />
+              <FileText className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
             </CardHeader>
             <CardContent>
               {loading ? (
@@ -145,7 +149,7 @@ export default function EstimatesHub() {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Pending Value</CardTitle>
-              <DollarSign className="h-4 w-4 text-muted-foreground" />
+              <DollarSign className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
             </CardHeader>
             <CardContent>
               {loading ? (
@@ -162,7 +166,7 @@ export default function EstimatesHub() {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Conversion Rate</CardTitle>
-              <TrendingUp className="h-4 w-4 text-muted-foreground" />
+              <TrendingUp className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
             </CardHeader>
             <CardContent>
               {loading ? (
@@ -179,7 +183,7 @@ export default function EstimatesHub() {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Avg. Response Time</CardTitle>
-              <Calendar className="h-4 w-4 text-muted-foreground" />
+              <Calendar className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
             </CardHeader>
             <CardContent>
               {loading ? (
@@ -197,17 +201,18 @@ export default function EstimatesHub() {
         </div>
 
         {/* Filters and Search */}
-        <div className="flex flex-col md:flex-row gap-4 mb-6">
+        <div className="flex flex-col md:flex-row gap-4 mb-6" role="search" aria-label="Filter estimates">
           <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" aria-hidden="true" />
             <Input
               placeholder="Search estimates..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="pl-10"
+              aria-label="Search estimates"
             />
           </div>
-          
+
           <Select value={statusFilter} onValueChange={setStatusFilter}>
             <SelectTrigger className="w-full md:w-48">
               <SelectValue placeholder="Filter by status" />
@@ -223,11 +228,43 @@ export default function EstimatesHub() {
             </SelectContent>
           </Select>
 
-          <Button variant="outline" className="gap-2">
-            <Filter className="h-4 w-4" />
-            More Filters
+          <Button
+            variant="outline"
+            className="gap-2"
+            onClick={() => setShowMoreFilters(!showMoreFilters)}
+            aria-expanded={showMoreFilters}
+            aria-controls="more-filters-panel"
+          >
+            <Filter className="h-4 w-4" aria-hidden="true" />
+            {showMoreFilters ? 'Hide Filters' : 'More Filters'}
           </Button>
         </div>
+
+        {/* More Filters Panel */}
+        {showMoreFilters && (
+          <Card id="more-filters-panel" className="mb-6 p-4" role="region" aria-label="Additional filters">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="space-y-2">
+                <Label className="text-sm font-medium">Date Range</Label>
+                <div className="flex gap-2">
+                  <Input type="date" placeholder="From" className="text-sm" aria-label="Date from" />
+                  <Input type="date" placeholder="To" className="text-sm" aria-label="Date to" />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label className="text-sm font-medium">Value Range</Label>
+                <div className="flex gap-2">
+                  <Input type="number" placeholder="Min ($)" className="text-sm" aria-label="Minimum value" />
+                  <Input type="number" placeholder="Max ($)" className="text-sm" aria-label="Maximum value" />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label className="text-sm font-medium">Client</Label>
+                <Input placeholder="Filter by client name..." className="text-sm" aria-label="Filter by client" />
+              </div>
+            </div>
+          </Card>
+        )}
 
         {/* Main Content Tabs */}
         <Tabs defaultValue="all" className="w-full">
@@ -236,31 +273,31 @@ export default function EstimatesHub() {
             <TabsTrigger value="draft">
               Draft
               {!loading && stats.statusCounts.draft > 0 && (
-                <Badge variant="secondary" className="ml-2">{stats.statusCounts.draft}</Badge>
+                <Badge variant="secondary" className="ml-2" aria-label={`${stats.statusCounts.draft} draft estimates`}>{stats.statusCounts.draft}</Badge>
               )}
             </TabsTrigger>
             <TabsTrigger value="sent">
               Sent
               {!loading && stats.statusCounts.sent > 0 && (
-                <Badge variant="outline" className="ml-2">{stats.statusCounts.sent}</Badge>
+                <Badge variant="outline" className="ml-2" aria-label={`${stats.statusCounts.sent} sent estimates`}>{stats.statusCounts.sent}</Badge>
               )}
             </TabsTrigger>
             <TabsTrigger value="pending">
               Pending
               {!loading && stats.statusCounts.viewed > 0 && (
-                <Badge variant="outline" className="ml-2">{stats.statusCounts.viewed}</Badge>
+                <Badge variant="outline" className="ml-2" aria-label={`${stats.statusCounts.viewed} pending estimates`}>{stats.statusCounts.viewed}</Badge>
               )}
             </TabsTrigger>
             <TabsTrigger value="accepted">
               Accepted
               {!loading && stats.statusCounts.accepted > 0 && (
-                <Badge variant="default" className="ml-2">{stats.statusCounts.accepted}</Badge>
+                <Badge variant="default" className="ml-2" aria-label={`${stats.statusCounts.accepted} accepted estimates`}>{stats.statusCounts.accepted}</Badge>
               )}
             </TabsTrigger>
           </TabsList>
 
           <TabsContent value="all" className="mt-6">
-            <EstimatesTable 
+            <EstimatesTable
               searchTerm={searchTerm}
               statusFilter={statusFilter}
               onEstimateChange={loadStats}
@@ -268,7 +305,7 @@ export default function EstimatesHub() {
           </TabsContent>
 
           <TabsContent value="draft" className="mt-6">
-            <EstimatesTable 
+            <EstimatesTable
               searchTerm={searchTerm}
               statusFilter="draft"
               onEstimateChange={loadStats}
@@ -276,7 +313,7 @@ export default function EstimatesHub() {
           </TabsContent>
 
           <TabsContent value="sent" className="mt-6">
-            <EstimatesTable 
+            <EstimatesTable
               searchTerm={searchTerm}
               statusFilter="sent"
               onEstimateChange={loadStats}
@@ -284,7 +321,7 @@ export default function EstimatesHub() {
           </TabsContent>
 
           <TabsContent value="pending" className="mt-6">
-            <EstimatesTable 
+            <EstimatesTable
               searchTerm={searchTerm}
               statusFilter="viewed"
               onEstimateChange={loadStats}
@@ -292,7 +329,7 @@ export default function EstimatesHub() {
           </TabsContent>
 
           <TabsContent value="accepted" className="mt-6">
-            <EstimatesTable 
+            <EstimatesTable
               searchTerm={searchTerm}
               statusFilter="accepted"
               onEstimateChange={loadStats}
@@ -300,5 +337,6 @@ export default function EstimatesHub() {
           </TabsContent>
         </Tabs>
     </DashboardLayout>
+    </AccessiblePageWrapper>
   );
 }

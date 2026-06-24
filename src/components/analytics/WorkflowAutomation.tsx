@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -7,7 +7,7 @@ import { Progress } from "@/components/ui/progress";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { 
-  Play, 
+  Play,
   Pause, 
   Settings, 
   Clock, 
@@ -26,8 +26,8 @@ interface WorkflowDefinition {
   description: string;
   is_active: boolean;
   trigger_type: string;
-  trigger_config: any;
-  workflow_steps: any;
+  trigger_config: Record<string, unknown>;
+  workflow_steps: Array<{ name: string; [key: string]: unknown }>;
   created_at: string;
 }
 
@@ -39,7 +39,7 @@ interface WorkflowExecution {
   completed_at?: string;
   total_steps: number;
   completed_steps: number;
-  execution_log: any;
+  execution_log: Array<{ timestamp: string; level: string; message: string }>;
 }
 
 interface WorkflowAnalytics {
@@ -118,7 +118,7 @@ export default function WorkflowAutomation() {
     try {
       setExecuting(workflowId);
       
-      const { data, error } = await supabase.functions.invoke('execute-workflow', {
+      const { error } = await supabase.functions.invoke('execute-workflow', {
         body: { 
           workflowId,
           triggerData: { 
@@ -192,12 +192,12 @@ export default function WorkflowAutomation() {
     }
   };
 
-  const getTriggerDisplayName = (triggerType: string, config: any) => {
+  const getTriggerDisplayName = (triggerType: string, config: Record<string, unknown>) => {
     switch (triggerType) {
       case 'schedule':
-        return `Daily at ${config.time || '18:00'}`;
+        return `Daily at ${(config.time as string) || '18:00'}`;
       case 'event':
-        return `On ${config.event_type || 'event'}`;
+        return `On ${(config.event_type as string) || 'event'}`;
       case 'condition':
         return `When condition met`;
       default:
@@ -347,7 +347,7 @@ export default function WorkflowAutomation() {
                       <span>Steps: {Array.isArray(workflow.workflow_steps) ? workflow.workflow_steps.length : 0}</span>
                     </div>
                     <div className="flex flex-wrap gap-1">
-                      {Array.isArray(workflow.workflow_steps) && workflow.workflow_steps.map((step: any, index: number) => (
+                      {Array.isArray(workflow.workflow_steps) && workflow.workflow_steps.map((step: { name: string }, index: number) => (
                         <Badge key={index} variant="outline" className="text-xs">
                           {step.name}
                         </Badge>
@@ -401,7 +401,7 @@ export default function WorkflowAutomation() {
                         <div className="space-y-2">
                           <h4 className="text-sm font-medium">Recent Activity</h4>
                           <div className="space-y-1 max-h-32 overflow-y-auto">
-                            {execution.execution_log.slice(-5).map((log: any, index: number) => (
+                            {execution.execution_log.slice(-5).map((log: { timestamp: string; level: string; message: string }, index: number) => (
                               <div key={index} className="flex items-center gap-2 text-xs">
                                 <span className="text-muted-foreground">
                                   {new Date(log.timestamp).toLocaleTimeString()}

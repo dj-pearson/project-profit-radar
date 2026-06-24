@@ -12,8 +12,12 @@ import { useIsMobile } from '@/hooks/useMediaQuery';
 import { useImpersonation } from '@/hooks/useImpersonation';
 import TrialStatusBanner from '@/components/TrialStatusBanner';
 import { ImpersonationBanner } from '@/components/admin/ImpersonationBanner';
-import { Home, Building2, DollarSign, Users, Settings } from 'lucide-react';
+import { SkipLinks } from '@/components/accessibility/SkipLinks';
+import { AutoBreadcrumb } from '@/components/navigation/AutoBreadcrumb';
+import { Home, Building2, DollarSign, Users, Settings, Search } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { RealtimeNotificationCenter } from '@/components/realtime/RealtimeNotificationCenter';
+import { DashboardSearchTrigger } from '@/components/search/DashboardSearchTrigger';
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -21,14 +25,17 @@ interface DashboardLayoutProps {
   showTrialBanner?: boolean;
   showBottomNav?: boolean;
   actions?: React.ReactNode;
+  /** When true, suppresses <main> and <SkipLinks> since an outer AccessiblePageWrapper provides them */
+  hasAccessibleWrapper?: boolean;
 }
 
 export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
   children,
-  title = "BuildDesk",
+  title = "Brikly",
   showTrialBanner = true,
   showBottomNav = true,
-  actions
+  actions,
+  hasAccessibleWrapper = false,
 }) => {
   const { user, userProfile, signOut } = useAuth();
   const navigate = useNavigate();
@@ -39,6 +46,11 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
     await signOut();
     navigate('/auth');
   };
+
+  // Detail pages pass the entity name as `title`; the generic default
+  // ("Brikly") and empty titles shouldn't override the route-derived label.
+  const breadcrumbLabel =
+    title && title !== 'Brikly' ? title : undefined;
 
   // Mobile bottom navigation items
   const bottomNavItems = [
@@ -51,24 +63,38 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
 
   return (
     <SidebarProvider>
+      {/* Skip Links for keyboard navigation (suppressed when outer AccessiblePageWrapper provides them) */}
+      {!hasAccessibleWrapper && <SkipLinks />}
+
       <ImpersonationBanner />
       <div className={cn(
         "min-h-screen bg-background flex w-full",
         isImpersonating && "pt-20" // Add padding when impersonation banner is showing
       )}>
+        {/* Navigation Sidebar */}
         <SimplifiedSidebar />
 
         <div className="flex-1 flex flex-col">
-          {/* Mobile-First Header */}
-          <header className={cn(
-            "sticky z-30 border-b bg-background/95 backdrop-blur-sm",
-            isImpersonating ? "top-20" : "top-0" // Adjust header position when banner is showing
-          )}>
+          {/* Dashboard Header */}
+          <header
+            className={cn(
+              "sticky z-30 border-b bg-background/95 backdrop-blur-sm",
+              isImpersonating ? "top-20" : "top-0"
+            )}
+            role="banner"
+            aria-label="Dashboard header"
+          >
             <div className="flex items-center justify-between h-14 md:h-16 px-3 md:px-6">
               {/* Left: Menu + Title */}
               <div className="flex items-center gap-2 md:gap-3 flex-1 min-w-0">
-                <SidebarTrigger className="flex-shrink-0" />
-                <h1 className="text-base md:text-xl lg:text-2xl font-bold truncate">
+                <SidebarTrigger
+                  className="flex-shrink-0"
+                  aria-label="Toggle navigation menu"
+                />
+                <h1
+                  className="text-base md:text-xl lg:text-2xl font-bold truncate"
+                  id="page-title"
+                >
                   {title}
                 </h1>
               </div>
@@ -77,8 +103,17 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
               <div className="flex items-center gap-2 md:gap-3 flex-shrink-0">
                 {actions}
 
+                {/* Global Search Trigger */}
+                <DashboardSearchTrigger />
+
+                {/* Notification Bell */}
+                <RealtimeNotificationCenter />
+
                 {/* Desktop User Info */}
-                <span className="hidden lg:block text-sm text-muted-foreground max-w-[150px] truncate">
+                <span
+                  className="hidden lg:block text-sm text-muted-foreground max-w-[150px] truncate"
+                  aria-label={`Logged in as ${userProfile?.first_name || user?.email}`}
+                >
                   {userProfile?.first_name || user?.email}
                 </span>
 
@@ -90,6 +125,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
                   size="sm"
                   className="hidden md:flex h-9"
                   onClick={handleSignOut}
+                  aria-label="Sign out of your account"
                 >
                   Sign Out
                 </Button>
@@ -100,6 +136,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
                   size="sm"
                   className="md:hidden h-9 px-3"
                   onClick={handleSignOut}
+                  aria-label="Sign out"
                 >
                   Exit
                 </Button>
@@ -107,20 +144,47 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
             </div>
           </header>
 
-          {/* Main Content Area */}
-          <main className={cn(
-            'flex-1 overflow-auto',
-            showBottomNav && isMobile && 'pb-16', // Space for bottom nav
-          )}>
-            <ResponsiveContainer className="py-4 md:py-6" padding="sm">
-              {showTrialBanner && <TrialStatusBanner />}
-              {children}
-            </ResponsiveContainer>
-          </main>
+          {/* Main Content Area - renders as <div> when outer AccessiblePageWrapper provides <main> */}
+          {hasAccessibleWrapper ? (
+            <div
+              className={cn(
+                'flex-1 overflow-auto',
+                showBottomNav && isMobile && 'pb-16',
+              )}
+            >
+              <ResponsiveContainer className="py-4 md:py-6" padding="sm">
+                <AutoBreadcrumb currentLabel={breadcrumbLabel} />
+                {showTrialBanner && <TrialStatusBanner />}
+                {children}
+              </ResponsiveContainer>
+            </div>
+          ) : (
+            <main
+              id="main-content"
+              className={cn(
+                'flex-1 overflow-auto',
+                showBottomNav && isMobile && 'pb-16',
+              )}
+              role="main"
+              aria-labelledby="page-title"
+              tabIndex={-1}
+            >
+              <ResponsiveContainer className="py-4 md:py-6" padding="sm">
+                <AutoBreadcrumb currentLabel={breadcrumbLabel} />
+                {showTrialBanner && <TrialStatusBanner />}
+                {children}
+              </ResponsiveContainer>
+            </main>
+          )}
 
           {/* Mobile Bottom Navigation */}
           {showBottomNav && isMobile && (
-            <MobileBottomNav items={bottomNavItems} />
+            <nav
+              aria-label="Mobile navigation"
+              role="navigation"
+            >
+              <MobileBottomNav items={bottomNavItems} />
+            </nav>
           )}
         </div>
       </div>

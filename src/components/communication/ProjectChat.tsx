@@ -3,9 +3,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import { Card } from '@/components/ui/card';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Send, Paperclip, Image, FileText, MoreVertical, AtSign, Reply, Edit, Trash } from 'lucide-react';
+import { Send, Paperclip, FileText, MoreVertical, AtSign, Reply, Edit, Trash } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { formatDistanceToNow } from 'date-fns';
@@ -17,7 +16,7 @@ interface Message {
   user_id: string;
   channel_id: string;
   message_type: string;
-  attachments?: any[];
+  attachments?: { name: string; type: string; size: number; url: string }[];
   mentions?: string[];
   reply_to_message_id?: string;
   user_profiles?: {
@@ -28,9 +27,23 @@ interface Message {
   replies?: Message[];
 }
 
+interface ChatChannel {
+  id: string;
+  name: string;
+  project_name?: string;
+}
+
+interface ChatUserProfile {
+  id: string;
+  company_id: string;
+  first_name?: string;
+  last_name?: string;
+  avatar_url?: string;
+}
+
 interface ProjectChatProps {
-  channel: any;
-  userProfile: any;
+  channel: ChatChannel;
+  userProfile: ChatUserProfile;
 }
 
 export const ProjectChat: React.FC<ProjectChatProps> = ({ channel, userProfile }) => {
@@ -39,7 +52,7 @@ export const ProjectChat: React.FC<ProjectChatProps> = ({ channel, userProfile }
   const [loading, setLoading] = useState(false);
   const [mentionQuery, setMentionQuery] = useState('');
   const [showMentions, setShowMentions] = useState(false);
-  const [mentionUsers, setMentionUsers] = useState<any[]>([]);
+  const [mentionUsers, setMentionUsers] = useState<{ id: string; first_name: string; last_name: string }[]>([]);
   const [replyingTo, setReplyingTo] = useState<Message | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -74,7 +87,17 @@ export const ProjectChat: React.FC<ProjectChatProps> = ({ channel, userProfile }
       if (error) throw error;
       
       // Safely map the messages with proper type handling
-      const mappedMessages: Message[] = (data || []).map((m: any) => ({
+      interface ChatMessageRow {
+        id: string;
+        content: string;
+        created_at: string;
+        user_id: string;
+        channel_id: string;
+        message_type: string | null;
+        reply_to: string | null;
+        user_profiles: { first_name: string; last_name: string; avatar_url: string | null } | null;
+      }
+      const mappedMessages: Message[] = (data || []).map((m: ChatMessageRow) => ({
         id: m.id,
         content: m.content,
         created_at: m.created_at,
@@ -299,7 +322,7 @@ export const ProjectChat: React.FC<ProjectChatProps> = ({ channel, userProfile }
           }`}>
             {message.message_type === 'file' && message.attachments && message.attachments.length > 0 && (
               <div className="space-y-2 mb-2">
-                {message.attachments.map((file: any, index: number) => (
+                {message.attachments.map((file: { name: string; type: string; size: number; url: string }, index: number) => (
                   <div key={index} className="flex items-center gap-2 p-2 bg-background/50 rounded">
                     <FileText className="h-4 w-4" />
                     <span className="text-sm truncate">{file.name}</span>

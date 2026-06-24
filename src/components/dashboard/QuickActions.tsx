@@ -79,7 +79,7 @@ export const QuickActions = ({ userRole, onAction }: QuickActionsProps) => {
               className="w-full justify-start text-xs sm:text-sm min-h-[44px] sm:min-h-[40px] px-3 py-2.5 hover:bg-accent transition-colors"
               onClick={() => onAction(action.key)}
             >
-              <action.icon className="h-4 w-4 mr-2 shrink-0 text-muted-foreground" />
+              <action.icon className="h-4 w-4 mr-2 shrink-0 text-muted-foreground" aria-hidden="true" />
               <span className="truncate text-left">{action.label}</span>
             </Button>
           ))}

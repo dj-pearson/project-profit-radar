@@ -1,0 +1,16 @@
+# Sequential Thinking MCP Server Dockerfile
+FROM node:20-alpine
+
+WORKDIR /app
+
+# Install MCP server
+RUN npm install -g @modelcontextprotocol/server-sequential-thinking@latest
+
+# Create non-root user
+RUN adduser -D mcpuser
+USER mcpuser
+
+ENV NODE_ENV=production
+
+ENTRYPOINT ["npx", "@modelcontextprotocol/server-sequential-thinking"]
+

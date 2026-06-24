@@ -1,39 +1,172 @@
+# Brikly Robots.txt
+# https://brikly.net
+# Last Updated: 2026-04-04
+
+# ===========================================
+# AI SEARCH ENGINE CRAWLERS - ALLOW
+# These bots retrieve content for AI-powered search results.
+# Allowing them enables visibility in AI Overviews,
+# ChatGPT Search, Perplexity answers, and similar.
+# ===========================================
+
+# OpenAI Search Bots (ChatGPT Search, SearchGPT)
+User-agent: GPTBot
+Allow: /
+Crawl-delay: 1
+
+User-agent: ChatGPT-User
+Allow: /
+
+User-agent: OAI-SearchBot
+Allow: /
+
+# Anthropic Search Bot (Claude)
+User-agent: ClaudeBot
+Allow: /
+Crawl-delay: 1
+
+# Perplexity AI Search
+User-agent: PerplexityBot
+Allow: /
+Crawl-delay: 1
+
+# Google AI (Gemini, AI Overviews)
+User-agent: Google-Extended
+Allow: /
+
+# Apple AI (Siri, Apple Intelligence)
+User-agent: Applebot
+Allow: /
+
+User-agent: Applebot-Extended
+Allow: /
+
+# Microsoft Copilot / Bing AI
+User-agent: Bingbot
+Allow: /
+
+# Meta AI search
+User-agent: Meta-ExternalAgent
+Allow: /
+Crawl-delay: 2
+
+# Cohere AI (retrieval-augmented generation)
+User-agent: cohere-ai
+Allow: /
+Crawl-delay: 2
+
+# You.com AI search
+User-agent: YouBot
+Allow: /
+Crawl-delay: 1
+
+# ===========================================
+# TRADITIONAL SEARCH ENGINE CRAWLERS - ALLOW
+# ===========================================
+
+User-agent: Googlebot
+Allow: /
+
+User-agent: Slurp
+Allow: /
+
+User-agent: DuckDuckBot
+Allow: /
+
+User-agent: Yandex
+Allow: /
+
+# ===========================================
+# AI TRAINING-ONLY BOTS - BLOCK
+# These bots scrape content solely for model training
+# without providing search visibility in return.
+# ===========================================
+
+User-agent: CCBot
+Disallow: /
+
+User-agent: anthropic-ai
+Disallow: /
+
+User-agent: Bytespider
+Disallow: /
+
+User-agent: FacebookBot
+Disallow: /
+
+User-agent: omgili
+Disallow: /
+
+User-agent: Diffbot
+Disallow: /
+
+User-agent: ImagesiftBot
+Disallow: /
+
+User-agent: Timpibot
+Disallow: /
+
+# ===========================================
+# DEFAULT RULES - ALL OTHER CRAWLERS
+# ===========================================
+
 User-agent: *
 Allow: /
 
-# Block authenticated/app pages from indexing
+# Block authenticated/app pages (not indexable)
 Disallow: /dashboard/
-Disallow: /dashboard
 Disallow: /admin/
-Disallow: /admin
 Disallow: /auth/
-Disallow: /auth
 Disallow: /setup/
-Disallow: /setup
 Disallow: /api/
+Disallow: /payment-center/
+Disallow: /settings/
 
-# Block URL parameters that cause duplicate content
+# Block URL parameters that create duplicate content
 Disallow: /*?*refreshed=
 Disallow: /*?*v=
-Disallow: /*?utm_
+Disallow: /*?*timestamp=
+Disallow: /*?*cache=
 
-# Block internal testing pages if any
+# Block testing/internal pages
 Disallow: /testing/
 Disallow: /test/
+Disallow: /debug/
+Disallow: /component-showcase
 
-# Allow all marketing and public pages
+# Index pruning: block thin/auto-generated pages
+Disallow: /404
+Disallow: /not-found
+
+# Allow all marketing pages explicitly
 Allow: /features
 Allow: /pricing
 Allow: /blog
 Allow: /resources
+Allow: /topics
+Allow: /faq
+Allow: /solutions
+Allow: /procore-alternative
+Allow: /buildertrend-alternative
+Allow: /roi-calculator
 Allow: /knowledge-base
+Allow: /help
 
-# Sitemap
-Sitemap: https://builddesk.com/sitemap.xml
+# Allow marketing URL parameters
+Allow: /*?utm_source=
+Allow: /*?utm_medium=
+Allow: /*?utm_campaign=
+Allow: /*?ref=
 
-# LLM/AI-friendly information file
-# See: https://llmstxt.org/
-LLMs-txt: https://builddesk.com/.well-known/llms.txt
+# ===========================================
+# DISCOVERY FILES
+# ===========================================
 
-# Crawl-delay for polite crawling (optional)
-# Crawl-delay: 1
+# Sitemap location
+Sitemap: https://brikly.net/sitemap.xml
+
+# LLM discovery support
+LLMs-txt: https://brikly.net/.well-known/llms.txt
+
+# Crawl delay for unspecified bots
+Crawl-delay: 1

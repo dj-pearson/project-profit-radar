@@ -1,8 +1,8 @@
-# BuildDesk Newsletter Funnel Implementation Guide
+# Brikly Newsletter Funnel Implementation Guide
 
 ## Overview
 
-This guide provides step-by-step instructions to implement the BuildDesk newsletter signup email funnel. The funnel consists of 6 educational emails designed to provide valuable construction management insights to newsletter subscribers.
+This guide provides step-by-step instructions to implement the Brikly newsletter signup email funnel. The funnel consists of 6 educational emails designed to provide valuable construction management insights to newsletter subscribers.
 
 ## Email Sequence Summary
 
@@ -38,7 +38,7 @@ INSERT INTO public.lead_funnels (
   is_active
 ) VALUES (
   'fcfd2e31-637b-466b-b533-df70f7f1b3af'::uuid,
-  'BuildDesk Newsletter Signup Funnel',
+  'Brikly Newsletter Signup Funnel',
   'Educational email sequence for newsletter subscribers providing valuable construction management insights',
   'newsletter_signup',
   true
@@ -61,7 +61,7 @@ ORDER BY name;
 ```sql
 -- Get the funnel ID first
 SELECT id FROM public.lead_funnels 
-WHERE name = 'BuildDesk Newsletter Signup Funnel' 
+WHERE name = 'Brikly Newsletter Signup Funnel' 
 AND company_id = 'fcfd2e31-637b-466b-b533-df70f7f1b3af'::uuid;
 
 -- Create the funnel steps (replace IDs with actual values)
@@ -186,14 +186,14 @@ ORDER BY step.step_order;
 ## Content Highlights
 
 ### Email 1: Welcome & Platform Overview
-- Introduction to BuildDesk benefits
+- Introduction to Brikly benefits
 - Real-time job costing highlight  
 - Mobile-first design emphasis
 - Clear CTA to platform demo
 
 ### Email 2: Financial Management Mastery
 - 70% project overrun statistic
-- Traditional vs BuildDesk approach
+- Traditional vs Brikly approach
 - Customer success story
 - 80/20 rule for cost tracking
 
@@ -260,4 +260,4 @@ ORDER BY step.step_order;
 - `/supabase/functions/process-funnel-queue/index.ts` - Email processing logic
 - `/src/components/funnel/FunnelStepBuilder.tsx` - Admin interface
 
-This newsletter funnel is designed to educate prospects, showcase BuildDesk capabilities, and convert engaged subscribers into trial users through valuable, actionable content.
+This newsletter funnel is designed to educate prospects, showcase Brikly capabilities, and convert engaged subscribers into trial users through valuable, actionable content.

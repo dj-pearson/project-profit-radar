@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -46,6 +46,8 @@ interface CostCode {
 
 const PurchaseOrderForm = () => {
   const { id } = useParams();
+  const [searchParams] = useSearchParams();
+  const presetProjectId = searchParams.get('project');
   const navigate = useNavigate();
   const { userProfile } = useAuth();
   const { toast } = useToast();
@@ -58,7 +60,7 @@ const PurchaseOrderForm = () => {
   
   const [formData, setFormData] = useState({
     vendor_id: '',
-    project_id: '',
+    project_id: presetProjectId || '',
     po_date: new Date().toISOString().split('T')[0],
     delivery_date: '',
     delivery_address: '',

@@ -1,6 +1,7 @@
 import { useState, useEffect, ReactNode } from 'react';
 import { X } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useHaptics } from '@/hooks/useHaptics';
 
 interface BottomSheetProps {
   isOpen: boolean;
@@ -11,7 +12,8 @@ interface BottomSheetProps {
 }
 
 /**
- * Mobile bottom sheet with swipe-to-dismiss
+ * Mobile bottom sheet with swipe-to-dismiss, frosted-glass surface and
+ * iOS-style spring motion. Honors prefers-reduced-motion.
  */
 export function BottomSheet({
   isOpen,
@@ -23,6 +25,12 @@ export function BottomSheet({
   const [startY, setStartY] = useState(0);
   const [currentY, setCurrentY] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
+  const haptics = useHaptics();
+
+  const handleClose = () => {
+    haptics.impactMedium();
+    onClose();
+  };
 
   useEffect(() => {
     if (isOpen) {
@@ -49,11 +57,12 @@ export function BottomSheet({
 
   const handleTouchEnd = () => {
     const distance = currentY - startY;
-    
+
     if (distance > 100) {
+      haptics.impactMedium();
       onClose();
     }
-    
+
     setCurrentY(0);
     setStartY(0);
     setIsDragging(false);
@@ -65,45 +74,51 @@ export function BottomSheet({
 
   return (
     <>
-      {/* Backdrop */}
+      {/* Scrim */}
       <div
-        className={cn(
-          'fixed inset-0 bg-black/50 z-40 transition-opacity',
-          isOpen ? 'opacity-100' : 'opacity-0'
-        )}
-        onClick={onClose}
+        className="fixed inset-0 ios-scrim z-40 ios-fade-in"
+        onClick={handleClose}
+        aria-hidden="true"
       />
 
       {/* Sheet */}
       <div
         className={cn(
           'fixed bottom-0 left-0 right-0',
-          'bg-background rounded-t-xl shadow-xl',
-          'z-50 max-h-[85vh]',
+          'glass-thick rounded-t-[28px]',
+          'z-50 max-h-[88vh]',
+          'ios-sheet-in',
+          'safe-area-x',
           className
         )}
+        role="dialog"
+        aria-modal="true"
+        aria-label={title || 'Bottom sheet'}
         style={{
           transform: `translateY(${translateY}px)`,
-          transition: isDragging ? 'none' : 'transform 0.3s ease-out',
+          transition: isDragging ? 'none' : 'transform 0.42s cubic-bezier(0.32, 0.72, 0, 1)',
+          paddingBottom: 'env(safe-area-inset-bottom, 0px)',
         }}
       >
-        {/* Drag handle area */}
+        {/* Drag handle area (larger hit target) */}
         <div
-          className="flex justify-center pt-3 pb-2 cursor-grab active:cursor-grabbing"
+          className="flex justify-center pt-3 pb-2 cursor-grab active:cursor-grabbing touch-manipulation"
           onTouchStart={handleTouchStart}
           onTouchMove={handleTouchMove}
           onTouchEnd={handleTouchEnd}
+          aria-hidden="true"
         >
-          <div className="w-12 h-1 bg-muted-foreground/30 rounded-full" />
+          <div className="sheet-grabber" />
         </div>
 
         {/* Header */}
         {title && (
-          <div className="flex items-center justify-between px-6 pb-4 border-b">
-            <h2 className="text-lg font-semibold">{title}</h2>
+          <div className="flex items-center justify-between px-6 pb-4 border-b border-white/10 dark:border-white/5">
+            <h2 className="text-lg font-semibold tracking-tight">{title}</h2>
             <button
-              onClick={onClose}
-              className="p-2 rounded-full hover:bg-muted active:scale-95 transition-transform"
+              onClick={handleClose}
+              aria-label="Close"
+              className="p-2 rounded-full glass-interactive active:scale-95 transition-transform tap-highlight-transparent"
             >
               <X className="h-4 w-4" />
             </button>
@@ -113,15 +128,16 @@ export function BottomSheet({
         {/* Close button (if no title) */}
         {!title && (
           <button
-            onClick={onClose}
-            className="absolute right-4 top-4 p-2 rounded-full hover:bg-muted active:scale-95 transition-transform z-10"
+            onClick={handleClose}
+            aria-label="Close"
+            className="absolute right-4 top-4 p-2 rounded-full glass-interactive active:scale-95 transition-transform z-10 tap-highlight-transparent"
           >
             <X className="h-4 w-4" />
           </button>
         )}
 
         {/* Content */}
-        <div className="p-6 overflow-y-auto max-h-[calc(85vh-4rem)]">
+        <div className="p-6 overflow-y-auto max-h-[calc(88vh-4rem)]">
           {children}
         </div>
       </div>

@@ -1,14 +1,15 @@
-import React, { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { MessageCircle, Send, Headphones, Clock, CheckCircle2, AlertCircle, Mail } from 'lucide-react';
+import { logger } from '@/lib/logger';
 
 interface Message {
   id: string;
@@ -216,7 +217,7 @@ const CustomerSupportChat = () => {
           }
         });
       } catch (emailError) {
-        console.warn('Email notification failed:', emailError);
+        logger.warn('Email notification failed:', emailError);
       }
 
       setTickets([ticket, ...tickets]);
@@ -330,7 +331,7 @@ const CustomerSupportChat = () => {
     return (
       <div className="fixed bottom-4 right-4 z-50 flex flex-col gap-2">
         <Button
-          onClick={() => window.open('mailto:support@build-desk.com', '_blank')}
+          onClick={() => window.open('mailto:support@brikly.net', '_blank')}
           className="rounded-full h-12 w-12 shadow-lg bg-secondary hover:bg-secondary/80"
           size="sm"
         >

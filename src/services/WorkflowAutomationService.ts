@@ -1,5 +1,6 @@
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
+import { logger } from '@/lib/logger';
 
 export interface WorkflowTrigger {
   type: 'project_status_change' | 'task_completion' | 'invoice_created' | 'deadline_approaching' | 'budget_threshold';
@@ -57,7 +58,7 @@ class WorkflowAutomationService {
       toast.success('Workflow rule created successfully');
       return newRule;
     } catch (error: any) {
-      console.error('Error creating workflow rule:', error);
+      logger.error('Error creating workflow rule:', error);
       toast.error('Failed to create workflow rule');
       throw error;
     }
@@ -89,7 +90,7 @@ class WorkflowAutomationService {
         executionCount: 0
       }));
     } catch (error: any) {
-      console.error('Error fetching workflow rules:', error);
+      logger.error('Error fetching workflow rules:', error);
       toast.error('Failed to load workflow rules');
       return [];
     }
@@ -100,7 +101,7 @@ class WorkflowAutomationService {
       toast.success('Workflow rule updated successfully');
       return true;
     } catch (error: any) {
-      console.error('Error updating workflow rule:', error);
+      logger.error('Error updating workflow rule:', error);
       toast.error('Failed to update workflow rule');
       return false;
     }
@@ -111,7 +112,7 @@ class WorkflowAutomationService {
       toast.success('Workflow rule deleted successfully');
       return true;
     } catch (error: any) {
-      console.error('Error deleting workflow rule:', error);
+      logger.error('Error deleting workflow rule:', error);
       toast.error('Failed to delete workflow rule');
       return false;
     }
@@ -129,35 +130,32 @@ class WorkflowAutomationService {
 
       return execution;
     } catch (error: any) {
-      console.error('Error executing workflow:', error);
+      logger.error('Error executing workflow:', error);
       throw error;
     }
   }
 
   async processProjectStatusChange(projectId: string, oldStatus: string, newStatus: string): Promise<void> {
     try {
-        projectId,
-        oldStatus,
-        newStatus
-      });
+      logger.debug('Processing status change:', { projectId, oldStatus, newStatus });
 
       // Mock workflow execution
       if (newStatus === 'completed') {
         toast.success('Project completion workflows triggered');
       }
-    } catch (error: any) {
-      console.error('Error processing project status change:', error);
+    } catch (error) {
+      logger.error('Error processing project status change:', error);
       throw error;
     }
   }
 
   async processTaskCompletion(taskId: string, projectId: string): Promise<void> {
     try {
-      
+      logger.debug('Processing task completion:', { taskId, projectId });
       // Mock task completion processing
       toast.info('Task completion workflows processed');
-    } catch (error: any) {
-      console.error('Error processing task completion:', error);
+    } catch (error) {
+      logger.error('Error processing task completion:', error);
       throw error;
     }
   }
@@ -187,7 +185,7 @@ class WorkflowAutomationService {
         ? mockExecutions.filter(exec => exec.ruleId === ruleId).slice(0, limit)
         : mockExecutions.slice(0, limit);
     } catch (error: any) {
-      console.error('Error fetching workflow executions:', error);
+      logger.error('Error fetching workflow executions:', error);
       toast.error('Failed to load workflow executions');
       return [];
     }
@@ -198,7 +196,7 @@ class WorkflowAutomationService {
       toast.success(`Workflow rule ${isActive ? 'activated' : 'deactivated'}`);
       return true;
     } catch (error: any) {
-      console.error('Error toggling workflow rule:', error);
+      logger.error('Error toggling workflow rule:', error);
       toast.error('Failed to toggle workflow rule');
       return false;
     }

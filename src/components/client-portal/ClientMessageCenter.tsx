@@ -4,7 +4,6 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
@@ -16,20 +15,7 @@ import {
 } from '@/components/ui/select';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import {
-  Send,
-  Upload,
-  Image as ImageIcon,
-  File,
-  Download,
-  Clock,
-  Check,
-  CheckCheck,
-  HelpCircle,
-  AlertCircle,
-  CheckCircle2,
-  MessageSquare
-} from 'lucide-react';
+import { Send, Upload, File, Download, Clock, Check, CheckCheck, HelpCircle, AlertCircle, CheckCircle2, MessageSquare } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface Message {

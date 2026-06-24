@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 /**
  * Resource Prioritization Utilities
  * Manages resource loading priorities for optimal performance
@@ -18,19 +19,15 @@ export const resourcePriorities: Record<string, ResourcePriority[]> = {
   homepage: [
     // Critical resources
     { type: 'font', url: '/fonts/inter-400.woff2', priority: 'critical' },
-    { type: 'font', url: '/fonts/inter-600.woff2', priority: 'critical' },
+    { type: 'font', url: '/fonts/inter-600.woff2', priority: 'high' },
     { type: 'style', url: '/fonts/inter.css', priority: 'critical' },
-    
-    // High priority
-    { type: 'script', url: '/src/main.tsx', priority: 'high', defer: true },
-    
+
     // Medium priority
-    { type: 'image', url: '/BuildDeskLogo.png', priority: 'medium' },
+    { type: 'image', url: '/BriklyLogo.png', priority: 'medium' },
   ],
   dashboard: [
     { type: 'font', url: '/fonts/inter-400.woff2', priority: 'critical' },
-    { type: 'font', url: '/fonts/inter-600.woff2', priority: 'critical' },
-    { type: 'script', url: '/src/main.tsx', priority: 'high', defer: true },
+    { type: 'font', url: '/fonts/inter-600.woff2', priority: 'high' },
   ],
 };
 
@@ -178,7 +175,7 @@ export const monitorResourcePerformance = (): void => {
     
     
     if (slowResources.length > 0) {
-      console.warn('⚠️ Slow Resources (>1s):', slowResources.map(r => ({
+      logger.warn('⚠️ Slow Resources (>1s):', slowResources.map(r => ({
         name: r.name,
         duration: `${r.duration.toFixed(2)}ms`
       })));

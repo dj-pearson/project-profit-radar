@@ -1,4 +1,3 @@
-import React from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { SecurityMonitoringDashboard } from '@/components/security/SecurityMonitoringDashboard';
 import { MobilePageWrapper } from '@/utils/mobileHelpers';

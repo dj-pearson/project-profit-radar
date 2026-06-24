@@ -76,7 +76,7 @@ export const ExitIntentModal = ({
           icon: <Gift className="h-16 w-16 text-construction-orange" />,
           title: "Wait! Get 21 Days Free",
           subtitle: "Extended trial, no credit card required",
-          description: "Most people need a bit more time to fully explore BuildDesk. Get an extra week on us!",
+          description: "Most people need a bit more time to fully explore Brikly. Get an extra week on us!",
           ctaText: "Claim My 21-Day Trial",
           secondaryCta: "No thanks, I'll stick with 14 days"
         };
@@ -85,8 +85,8 @@ export const ExitIntentModal = ({
         return {
           icon: <Calendar className="h-16 w-16 text-construction-orange" />,
           title: "Before You Go...",
-          subtitle: "See BuildDesk in action with a personal demo",
-          description: "Not sure if BuildDesk is right for you? Let our construction experts show you exactly how it can help your business.",
+          subtitle: "See Brikly in action with a personal demo",
+          description: "Not sure if Brikly is right for you? Let our construction experts show you exactly how it can help your business.",
           ctaText: "Schedule Free Demo",
           secondaryCta: "Maybe later"
         };
@@ -116,7 +116,7 @@ export const ExitIntentModal = ({
           icon: <Gift className="h-16 w-16 text-construction-orange" />,
           title: "Wait! Special Offer",
           subtitle: "Don't miss this opportunity",
-          description: "Get started with BuildDesk today.",
+          description: "Get started with Brikly today.",
           ctaText: "Get Started",
           secondaryCta: "No thanks"
         };

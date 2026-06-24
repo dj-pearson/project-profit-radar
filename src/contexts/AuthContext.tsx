@@ -7,14 +7,28 @@ import React, {
   useCallback,
   useRef,
 } from "react";
-import { User, Session, AuthError } from "@supabase/supabase-js";
-import { supabase } from "@/integrations/supabase/client";
+import { User, Session } from "@supabase/supabase-js";
+import { z } from "zod";
+import { supabase, getEdgeFunctionUrl, supabaseAnonKey } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { gtag } from "@/hooks/useGoogleAnalytics";
 import { clearRememberedRoute } from "@/lib/routeMemory";
 import { setSentryUser, clearSentryUser } from "@/lib/sentry";
+import { setErrorLoggingUser } from "@/services/errorLoggingService";
 import { logger } from "@/lib/logger";
-import { getSiteConfig, getCurrentSiteId, clearSiteCache, type SiteConfig } from "@/lib/site-resolver";
+import { purgeSupabaseSessionStorage } from "@/lib/supabaseStorage";
+import { useSupabaseSessionResume } from "@/hooks/useSupabaseSessionResume";
+import {
+  checkLoginAttempt,
+  recordFailedLogin,
+  clearFailedAttempts,
+  getLockoutMessage,
+} from "@/lib/security/loginProtection";
+import {
+  registerSession,
+  checkSessionLimit,
+} from "@/lib/security/sessionManagement";
+// Site-resolver removed - single-tenant architecture
 import type { ReactNode, FC } from "react";
 
 // Platform-safe window location helpers
@@ -33,8 +47,6 @@ interface UserProfile {
   last_name?: string;
   phone?: string;
   company_id?: string;
-  site_id?: string;
-  tenant_id?: string;
   role:
     | "root_admin"
     | "admin"
@@ -46,12 +58,77 @@ interface UserProfile {
   is_active: boolean;
 }
 
+// SECURITY: Zod schema for validating cached user profile data
+// This prevents type confusion and injection attacks from tampered sessionStorage
+const UserProfileSchema = z.object({
+  id: z.string().uuid(),
+  email: z.string().email().max(255),
+  first_name: z.string().max(100).optional().nullable(),
+  last_name: z.string().max(100).optional().nullable(),
+  phone: z.string().max(20).optional().nullable(),
+  company_id: z.string().uuid().optional().nullable(),
+  role: z.enum([
+    "root_admin",
+    "admin",
+    "project_manager",
+    "field_supervisor",
+    "office_staff",
+    "accounting",
+    "client_portal",
+  ]),
+  is_active: z.boolean(),
+});
+
+// OTP types for email verification flows
+type OTPType =
+  | 'confirm_signup'
+  | 'invite_user'
+  | 'magic_link'
+  | 'change_email'
+  | 'reset_password'
+  | 'reauthentication';
+
+interface SendOTPOptions {
+  email: string;
+  type: OTPType;
+  recipientName?: string;
+  newEmail?: string;
+  inviterName?: string;
+  inviterUserId?: string;
+  companyId?: string;
+  companyName?: string;
+  metadata?: Record<string, unknown>;
+}
+
+interface VerifyOTPOptions {
+  email: string;
+  otpCode: string;
+  type: OTPType;
+  password?: string;
+  firstName?: string;
+  lastName?: string;
+}
+
+interface VerifyOTPResult {
+  success: boolean;
+  verified?: boolean;
+  emailConfirmed?: boolean;
+  userCreated?: boolean;
+  emailChanged?: boolean;
+  passwordReset?: boolean;
+  canResetPassword?: boolean;
+  reauthenticated?: boolean;
+  userId?: string;
+  newEmail?: string;
+  accessToken?: string;
+  refreshToken?: string;
+  error?: string;
+}
+
 interface AuthContextType {
   user: User | null;
   session: Session | null;
   userProfile: UserProfile | null;
-  siteId: string | null;
-  siteConfig: SiteConfig | null;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<{ error?: string }>;
   signInWithGoogle: () => Promise<{ error?: string }>;
@@ -59,15 +136,23 @@ interface AuthContextType {
   signUp: (
     email: string,
     password: string,
-    userData?: any
+    userData?: { first_name?: string; last_name?: string; role?: string }
   ) => Promise<{ error?: string }>;
   signOut: () => Promise<void>;
   resetPassword: (email: string) => Promise<{ error?: string }>;
   updateProfile: (updates: Partial<UserProfile>) => Promise<void>;
   refreshProfile: () => Promise<void>;
+  // OTP-based authentication methods
+  sendOTP: (options: SendOTPOptions) => Promise<{ error?: string; expiresInMinutes?: number }>;
+  verifyOTP: (options: VerifyOTPOptions) => Promise<VerifyOTPResult>;
+  resendOTP: (options: SendOTPOptions) => Promise<{ error?: string; expiresInMinutes?: number }>;
+  resetPasswordWithOTP: (email: string, otpCode: string, newPassword: string) => Promise<{ success: boolean; error?: string }>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+// Export types for use in components
+export type { OTPType, SendOTPOptions, VerifyOTPOptions, VerifyOTPResult };
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
@@ -81,12 +166,16 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
-  const [siteId, setSiteId] = useState<string | null>(null);
-  const [siteConfig, setSiteConfig] = useState<SiteConfig | null>(null);
+  // Removed: siteId and siteConfig - single-tenant architecture
   const [loading, setLoading] = useState(true);
   const [profileFetching, setProfileFetching] = useState(false);
   const [isProfileFetchInProgress, setIsProfileFetchInProgress] = useState(false);
   const { toast } = useToast();
+
+  // On Capacitor-native, refresh the Supabase session whenever the app
+  // returns to the foreground — otherwise a backgrounded app silently 401s
+  // on the first request after the access token's 1 h TTL elapses.
+  useSupabaseSessionResume();
 
   const successfulProfiles = useRef<Map<string, UserProfile>>(new Map());
   const sessionTimeoutRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -97,21 +186,7 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
   const INACTIVITY_TIMEOUT = 30 * 60 * 1000; // 30 minutes
   const SESSION_CHECK_INTERVAL = 5 * 60 * 1000; // 5 minutes
 
-  // Initialize site config on mount
-  useEffect(() => {
-    const initializeSite = async () => {
-      const config = await getSiteConfig();
-      if (config) {
-        setSiteConfig(config);
-        setSiteId(config.id);
-        logger.debug(`Site initialized: ${config.key} (${config.id})`);
-      } else {
-        logger.error('Failed to initialize site config');
-      }
-    };
-    
-    initializeSite();
-  }, []);
+  // Removed: Site initialization - single-tenant architecture
 
   // Clear all session-related state and redirect to auth
   const handleSessionExpired = useCallback(async (reason: string = 'Session expired') => {
@@ -135,13 +210,14 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
 
     // Clear Sentry user context
     clearSentryUser();
+    setErrorLoggingUser(null);
 
     // SECURITY: Clear both localStorage and sessionStorage
     try {
       // Clear localStorage auth tokens
       const localKeys = Object.keys(localStorage);
       localKeys.forEach(key => {
-        if (key.startsWith('sb-ilhzuvemiuyfuxfegtlv-auth-token')) {
+        if (key.startsWith('sb-') && key.includes('-auth-token')) {
           localStorage.removeItem(key);
         }
       });
@@ -167,18 +243,24 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
       logger.error('Error signing out:', error);
     }
 
-    // Show toast notification
-    toast({
-      title: "Session Expired",
-      description: "Your session has expired. Please sign in again.",
-      variant: "destructive",
-      duration: 5000,
-    });
-
-    // Redirect to auth page (web only)
+    // Only redirect if not already on auth page to prevent redirect loops
     const location = getWindowLocation();
     if (location) {
-      location.href = '/auth';
+      const currentPath = location.pathname;
+      const isOnAuthPage = currentPath === '/auth' || currentPath === '/login' || currentPath === '/reset-password';
+
+      if (!isOnAuthPage) {
+        // Show toast notification only when redirecting
+        toast({
+          title: "Session Expired",
+          description: "Your session has expired. Please sign in again.",
+          variant: "destructive",
+          duration: 5000,
+        });
+        location.href = '/auth';
+      } else {
+        logger.debug('Already on auth page, skipping redirect');
+      }
     }
   }, [toast]);
 
@@ -299,7 +381,7 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
 
         const fetchPromise = supabase
           .from("user_profiles")
-          .select("id, email, first_name, last_name, phone, company_id, site_id, tenant_id, role, is_active")
+          .select("id, email, first_name, last_name, phone, company_id, role, is_active")
           .eq("id", userId)
           .maybeSingle(); // Use maybeSingle() to handle cases where user doesn't exist
 
@@ -346,6 +428,9 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
           return null;
         }
 
+        // Cast to mutable profile for role override
+        const profile = data as UserProfile;
+
         // SECURITY: Get authoritative role from user_roles via RPC
         try {
           const { data: secureRole, error: roleError } = await supabase
@@ -354,39 +439,39 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
           if (roleError) {
             logger.error('Error fetching user role from user_roles:', roleError);
           } else if (secureRole) {
-            (data as any).role = secureRole;
+            profile.role = secureRole;
           }
         } catch (roleErr) {
           logger.error('Exception fetching user role from user_roles:', roleErr);
         }
 
         logger.debug('Profile fetched successfully:', {
-          role: (data as any).role,
-          site_id: data.site_id,
-          tenant_id: data.tenant_id,
+          role: profile.role,
         });
-        
-        // Update site context if needed
-        if (data.site_id && data.site_id !== siteId) {
-          logger.debug(`Updating site context to: ${data.site_id}`);
-          setSiteId(data.site_id);
-        }
-        
+
+        // Removed: Site context update - single-tenant architecture
+
         // Set Sentry user context for error tracking
         setSentryUser({
-          id: data.id,
-          email: data.email,
-          role: (data as any).role,
-          site_id: data.site_id,
-          tenant_id: data.tenant_id,
+          id: profile.id,
+          email: profile.email,
+          role: profile.role,
         });
-        
+
+        // Set error logging user context
+        setErrorLoggingUser({
+          id: profile.id,
+          email: profile.email,
+          role: profile.role,
+          company_id: profile.company_id,
+        });
+
         // SECURITY: Use sessionStorage instead of localStorage for PII
         // sessionStorage is cleared when browser/tab closes, reducing exposure
         try {
-          sessionStorage.setItem(`bd.userProfile.${userId}`, JSON.stringify(data));
+          sessionStorage.setItem(`bd.userProfile.${userId}`, JSON.stringify(profile));
         } catch {}
-        return data as UserProfile;
+        return profile;
       } catch (error) {
         logger.error("Profile fetch exception:", error);
         const isTimeout =
@@ -454,8 +539,18 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
           try {
             const stored = sessionStorage.getItem(`bd.userProfile.${session.user.id}`);
             if (stored) {
-              const parsed = JSON.parse(stored);
-              logger.debug("Initial session: Using stored profile (will refresh in background)");
+              // SECURITY: Validate cached data with Zod schema to prevent injection attacks
+              const rawParsed = JSON.parse(stored);
+              const parseResult = UserProfileSchema.safeParse(rawParsed);
+
+              if (!parseResult.success) {
+                logger.warn("Cached profile validation failed, removing corrupted data:", parseResult.error.errors);
+                sessionStorage.removeItem(`bd.userProfile.${session.user.id}`);
+                throw new Error("Invalid cached profile data");
+              }
+
+              const parsed = parseResult.data as UserProfile;
+              logger.debug("Initial session: Using validated stored profile (will refresh in background)");
               setUserProfile(parsed);
               successfulProfiles.current.set(parsed.id, parsed);
 
@@ -688,6 +783,14 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
         role: userProfile.role,
         company_id: userProfile.company_id,
       });
+
+      // Set error logging user context
+      setErrorLoggingUser({
+        id: user.id,
+        email: userProfile.email,
+        role: userProfile.role,
+        company_id: userProfile.company_id,
+      });
     }
   }, [user?.id, userProfile?.role, userProfile?.email, userProfile?.company_id]);
 
@@ -696,12 +799,12 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
       logger.debug("Signing in...");
       setLoading(true);
 
-      // Get current site ID before authentication
-      const currentSiteId = await getCurrentSiteId();
-      if (!currentSiteId) {
-        logger.error("Unable to determine site_id");
+      // SECURITY: Check if login attempt is allowed (brute force protection)
+      const attemptCheck = await checkLoginAttempt(email);
+      if (!attemptCheck.allowed) {
+        logger.warn("Login blocked due to account lockout");
         setLoading(false);
-        return { error: "Unable to determine site. Please try again." };
+        return { error: getLockoutMessage(attemptCheck) };
       }
 
       const { data, error } = await supabase.auth.signInWithPassword({
@@ -711,18 +814,31 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
 
       if (error) {
         logger.error("Sign in error:", error);
+        // SECURITY: Record failed login attempt
+        const failResult = await recordFailedLogin(email);
         setLoading(false);
-        return { error: error.message };
+
+        // Return lockout message if account is now locked
+        if (!failResult.allowed) {
+          return { error: getLockoutMessage(failResult) };
+        }
+
+        // Add warning about remaining attempts if low
+        const warningMessage = failResult.message
+          ? `${error.message}. ${failResult.message}`
+          : error.message;
+        return { error: warningMessage };
       }
 
-      // Update user metadata to include site_id
-      if (data.user && !data.user.app_metadata?.site_id) {
-        logger.debug(`Setting site_id ${currentSiteId} for user ${data.user.id}`);
-        await supabase.auth.updateUser({
-          data: {
-            site_id: currentSiteId,
-          },
-        });
+      // SECURITY: Clear failed attempts on successful login
+      if (data.user) {
+        await clearFailedAttempts(data.user.id);
+
+        // SECURITY: Enforce concurrent session limits and register new session
+        await checkSessionLimit(data.user.id);
+        if (data.session?.access_token) {
+          await registerSession(data.user.id, data.session.access_token.slice(0, 64));
+        }
       }
 
       logger.debug("Sign in successful");
@@ -738,39 +854,23 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
 
   const signInWithGoogle = useCallback(async () => {
     try {
-      logger.debug("Signing in with Google...");
+      logger.debug("Signing in with Google via OAuth proxy...");
       setLoading(true);
 
-      // Resolve current site so OAuth users are scoped to the correct tenant/site
-      const currentSiteId = await getCurrentSiteId();
-      if (!currentSiteId) {
-        logger.error("Unable to determine site_id during Google sign in");
-        setLoading(false);
-        return { error: "Unable to determine site. Please try again." };
-      }
+      // Use our custom OAuth proxy edge function to bypass GoTrue's GOTRUE_SITE_URL limitation
+      const edgeFunctionsUrl = getEdgeFunctionUrl('oauth-proxy');
+      const redirectTo = '/dashboard';
 
-      const location = getWindowLocation();
-      const redirectUrl = location ? `${location.origin}/dashboard` : 'builddesk://dashboard';
+      const oauthUrl = `${edgeFunctionsUrl}?action=authorize&provider=google&redirect_to=${encodeURIComponent(redirectTo)}`;
 
-      const { data, error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: redirectUrl,
-          data: {
-            site_id: currentSiteId,
-          },
-        },
-      });
-
-      if (error) {
-        logger.error("Google sign in error:", error);
-        setLoading(false);
-        return { error: error.message };
-      }
-
-      logger.debug("Google sign in successful");
       gtag.trackAuth('login', 'google');
-      // User will be redirected, loading will be handled by redirect
+
+      // Redirect to OAuth proxy which handles the full flow
+      const location = getWindowLocation();
+      if (location) {
+        location.href = oauthUrl;
+      }
+
       return {};
     } catch (error) {
       logger.error("Google sign in exception:", error);
@@ -781,39 +881,23 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
 
   const signInWithApple = useCallback(async () => {
     try {
-      logger.debug("Signing in with Apple...");
+      logger.debug("Signing in with Apple via OAuth proxy...");
       setLoading(true);
 
-      // Resolve current site so OAuth users are scoped to the correct tenant/site
-      const currentSiteId = await getCurrentSiteId();
-      if (!currentSiteId) {
-        logger.error("Unable to determine site_id during Apple sign in");
-        setLoading(false);
-        return { error: "Unable to determine site. Please try again." };
-      }
+      // Use our custom OAuth proxy edge function to bypass GoTrue's GOTRUE_SITE_URL limitation
+      const edgeFunctionsUrl = getEdgeFunctionUrl('oauth-proxy');
+      const redirectTo = '/dashboard';
 
-      const location = getWindowLocation();
-      const redirectUrl = location ? `${location.origin}/dashboard` : 'builddesk://dashboard';
+      const oauthUrl = `${edgeFunctionsUrl}?action=authorize&provider=apple&redirect_to=${encodeURIComponent(redirectTo)}`;
 
-      const { data, error } = await supabase.auth.signInWithOAuth({
-        provider: 'apple',
-        options: {
-          redirectTo: redirectUrl,
-          data: {
-            site_id: currentSiteId,
-          },
-        },
-      });
-
-      if (error) {
-        logger.error("Apple sign in error:", error);
-        setLoading(false);
-        return { error: error.message };
-      }
-
-      logger.debug("Apple sign in successful");
       gtag.trackAuth('login', 'apple');
-      // User will be redirected, loading will be handled by redirect
+
+      // Redirect to OAuth proxy which handles the full flow
+      const location = getWindowLocation();
+      if (location) {
+        location.href = oauthUrl;
+      }
+
       return {};
     } catch (error) {
       logger.error("Apple sign in exception:", error);
@@ -822,46 +906,46 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
     }
   }, []);
 
+  // Sign up using our custom edge function (bypasses Supabase's email)
   const signUp = useCallback(
-    async (email: string, password: string, userData?: any) => {
+    async (email: string, password: string, userData?: { first_name?: string; last_name?: string; role?: string }): Promise<{ error?: string; userId?: string; expiresInMinutes?: number }> => {
       try {
-        logger.debug("FIXED AuthContext: Signing up...");
+        logger.debug("AuthContext: Signing up via OTP flow...");
         setLoading(true);
 
-        // Resolve current site so new users are scoped to the correct tenant/site
-        const currentSiteId = await getCurrentSiteId();
-        if (!currentSiteId) {
-          logger.error("Unable to determine site_id during sign up");
-          setLoading(false);
-          return { error: "Unable to determine site. Please try again." };
-        }
-
-        const location = getWindowLocation();
-        const redirectUrl = location ? `${location.origin}/` : "builddesk://";
-        const { data, error } = await supabase.auth.signUp({
-          email,
-          password,
-          options: {
-            emailRedirectTo: redirectUrl,
-            data: {
-              ...(userData || {}),
-              site_id: currentSiteId,
+        // Call our custom signup edge function (doesn't trigger Supabase email)
+        const response = await fetch(
+          getEdgeFunctionUrl('signup-with-otp'),
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              apikey: supabaseAnonKey,
             },
-          },
-        });
+            body: JSON.stringify({
+              email,
+              password,
+              firstName: userData?.first_name || "",
+              lastName: userData?.last_name || "",
+              role: userData?.role || "admin",
+            }),
+          }
+        );
 
-        if (error) {
-          logger.error("FIXED AuthContext: Sign up error:", error);
+        const data = await response.json();
+
+        if (!response.ok) {
+          logger.error("AuthContext: Sign up error:", data.error);
           setLoading(false);
-          return { error: error.message };
+          return { error: data.error || "Failed to create account" };
         }
 
-        logger.debug("FIXED AuthContext: Sign up successful");
+        logger.debug("AuthContext: Sign up successful, OTP sent");
         gtag.trackAuth("signup", "email");
         setLoading(false);
-        return {};
+        return { userId: data.userId, expiresInMinutes: data.expiresInMinutes };
       } catch (error) {
-        logger.error("FIXED AuthContext: Sign up exception:", error);
+        logger.error("AuthContext: Sign up exception:", error);
         setLoading(false);
         return { error: "An unexpected error occurred" };
       }
@@ -880,18 +964,21 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
         logger.error("AuthContext: Supabase signOut error:", error);
       }
 
+      // Scrub any stray auth tokens from BOTH localStorage and
+      // @capacitor/preferences. supabase.auth.signOut() resolves optimistically
+      // while offline, so without this an attacker with the device could
+      // reinstate the session from leftover Preferences data.
+      await purgeSupabaseSessionStorage();
+
       // Clear all state
       setUser(null);
       setSession(null);
       setUserProfile(null);
-      setSiteId(null);
       successfulProfiles.current.clear();
-
-      // Clear site cache
-      clearSiteCache();
 
       // Clear Sentry user context
       clearSentryUser();
+      setErrorLoggingUser(null);
 
       // Clear route memory on sign out
       clearRememberedRoute();
@@ -901,37 +988,94 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
 
     } catch (error) {
       logger.error("AuthContext: Sign out error:", error);
-      // Still clear state on error
+      // Still clear state on error — including the stored tokens
+      await purgeSupabaseSessionStorage().catch(() => {});
       setUser(null);
       setSession(null);
       setUserProfile(null);
       successfulProfiles.current.clear();
       clearSentryUser();
+      setErrorLoggingUser(null);
       clearRememberedRoute();
     } finally {
       setLoading(false);
     }
   }, []);
 
-  const resetPassword = useCallback(async (email: string) => {
+  // Request password reset using our custom edge function (bypasses Supabase's email)
+  const resetPassword = useCallback(async (email: string): Promise<{ error?: string; expiresInMinutes?: number }> => {
     try {
-      logger.debug("FIXED AuthContext: Resetting password...");
-      const location = getWindowLocation();
-      const redirectUrl = location ? `${location.origin}/auth` : 'builddesk://auth';
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: redirectUrl,
-      });
+      logger.debug("AuthContext: Requesting password reset via OTP flow...");
 
-      if (error) {
-        logger.error("FIXED AuthContext: Reset password error:", error);
-        return { error: error.message };
+      // Call our custom reset password edge function
+      const response = await fetch(
+        getEdgeFunctionUrl('reset-password-otp'),
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            apikey: supabaseAnonKey,
+          },
+          body: JSON.stringify({
+            action: "request",
+            email,
+          }),
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        logger.error("AuthContext: Reset password error:", data.error);
+        return { error: data.error || "Failed to send reset code" };
       }
 
-      logger.debug("FIXED AuthContext: Password reset email sent");
-      return {};
+      logger.debug("AuthContext: Password reset OTP sent");
+      return { expiresInMinutes: data.expiresInMinutes };
     } catch (error) {
-      logger.error("FIXED AuthContext: Reset password exception:", error);
+      logger.error("AuthContext: Reset password exception:", error);
       return { error: "An unexpected error occurred" };
+    }
+  }, []);
+
+  // Verify OTP and set new password
+  const resetPasswordWithOTP = useCallback(async (
+    email: string,
+    otpCode: string,
+    newPassword: string
+  ): Promise<{ success: boolean; error?: string }> => {
+    try {
+      logger.debug("AuthContext: Verifying reset OTP and updating password...");
+
+      const response = await fetch(
+        getEdgeFunctionUrl('reset-password-otp'),
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            apikey: supabaseAnonKey,
+          },
+          body: JSON.stringify({
+            action: "verify",
+            email,
+            otpCode,
+            newPassword,
+          }),
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        logger.error("AuthContext: Reset password verify error:", data.error);
+        return { success: false, error: data.error || "Failed to reset password" };
+      }
+
+      logger.debug("AuthContext: Password reset successful");
+      return { success: true };
+    } catch (error) {
+      logger.error("AuthContext: Reset password verify exception:", error);
+      return { success: false, error: "An unexpected error occurred" };
     }
   }, []);
 
@@ -967,13 +1111,97 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
     }
   }, [user, fetchUserProfile]);
 
+  // OTP-based authentication functions
+  const sendOTP = useCallback(
+    async (options: SendOTPOptions): Promise<{ error?: string; expiresInMinutes?: number }> => {
+      try {
+        logger.debug(`Sending OTP for ${options.type} to ${options.email}`);
+
+        const response = await fetch(
+          getEdgeFunctionUrl('send-auth-otp'),
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              apikey: supabaseAnonKey,
+            },
+            body: JSON.stringify({
+              ...options,
+            }),
+          }
+        );
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          logger.error("Send OTP error:", data.error);
+          return { error: data.error || "Failed to send verification code" };
+        }
+
+        logger.debug("OTP sent successfully");
+        return { expiresInMinutes: data.expiresInMinutes || 15 };
+      } catch (error) {
+        logger.error("Send OTP exception:", error);
+        return { error: "An unexpected error occurred" };
+      }
+    },
+    []
+  );
+
+  const verifyOTP = useCallback(
+    async (options: VerifyOTPOptions): Promise<VerifyOTPResult> => {
+      try {
+        logger.debug(`Verifying OTP for ${options.type}`);
+
+        const response = await fetch(
+          getEdgeFunctionUrl('verify-auth-otp'),
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              apikey: supabaseAnonKey,
+            },
+            body: JSON.stringify({
+              ...options,
+            }),
+          }
+        );
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          logger.error("Verify OTP error:", data.error);
+          return { success: false, error: data.error || "Verification failed" };
+        }
+
+        logger.debug("OTP verified successfully:", data);
+        gtag.trackAuth("otp_verified", options.type);
+
+        return {
+          success: true,
+          ...data,
+        };
+      } catch (error) {
+        logger.error("Verify OTP exception:", error);
+        return { success: false, error: "An unexpected error occurred" };
+      }
+    },
+    []
+  );
+
+  const resendOTP = useCallback(
+    async (options: SendOTPOptions): Promise<{ error?: string; expiresInMinutes?: number }> => {
+      // Resend is just sending again
+      return sendOTP(options);
+    },
+    [sendOTP]
+  );
+
   const value = useMemo(
     () => ({
       user,
       session,
       userProfile,
-      siteId,
-      siteConfig,
       loading: effectiveLoading,
       signIn,
       signInWithGoogle,
@@ -981,15 +1209,17 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
       signUp,
       signOut,
       resetPassword,
+      resetPasswordWithOTP,
       updateProfile,
       refreshProfile,
+      sendOTP,
+      verifyOTP,
+      resendOTP,
     }),
     [
       user,
       session,
       userProfile,
-      siteId,
-      siteConfig,
       effectiveLoading,
       signIn,
       signInWithGoogle,
@@ -997,8 +1227,12 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
       signUp,
       signOut,
       resetPassword,
+      resetPasswordWithOTP,
       updateProfile,
       refreshProfile,
+      sendOTP,
+      verifyOTP,
+      resendOTP,
     ]
   );
 

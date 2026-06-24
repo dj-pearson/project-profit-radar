@@ -1,25 +1,15 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
-import { Separator } from '@/components/ui/separator';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-import { 
-  Calendar,
-  RefreshCw,
-  Settings,
-  CheckCircle,
-  AlertCircle,
-  Plus,
-  Trash2,
-  ExternalLink
-} from 'lucide-react';
+import { validateRedirectUrl } from '@/lib/security/urlValidation';
+import { Calendar, RefreshCw, Settings, CheckCircle, Plus, Trash2 } from 'lucide-react';
 
 interface CalendarIntegration {
   id: string;
@@ -110,7 +100,11 @@ const CalendarIntegration = () => {
 
       if (error) throw error;
 
-      // Redirect to Google OAuth
+      // Redirect to Google OAuth (validate URL first)
+      const googleUrlCheck = validateRedirectUrl(data.auth_url);
+      if (!googleUrlCheck.valid) {
+        throw new Error('Invalid Google OAuth URL received.');
+      }
       window.location.href = data.auth_url;
     } catch (error) {
       console.error('Google auth error:', error);
@@ -131,7 +125,11 @@ const CalendarIntegration = () => {
 
       if (error) throw error;
 
-      // Redirect to Microsoft OAuth
+      // Redirect to Microsoft OAuth (validate URL first)
+      const outlookUrlCheck = validateRedirectUrl(data.auth_url);
+      if (!outlookUrlCheck.valid) {
+        throw new Error('Invalid Microsoft OAuth URL received.');
+      }
       window.location.href = data.auth_url;
     } catch (error) {
       console.error('Outlook auth error:', error);

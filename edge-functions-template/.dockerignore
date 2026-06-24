@@ -1,0 +1,70 @@
+# Git
+.git
+.gitignore
+.gitattributes
+
+# Documentation
+*.md
+docs/
+DEPLOYMENT.md
+README.md
+QUICKSTART.md
+START_HERE.md
+TEMPLATE_INFO.md
+
+# Environment files
+.env
+.env.*
+!env.example.txt
+
+# Node modules (if any)
+node_modules/
+npm-debug.log
+
+# Build artifacts
+dist/
+build/
+*.log
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Test files
+*.test.ts
+*.spec.ts
+test/
+tests/
+__tests__/
+
+# Docker
+docker-compose.yml
+docker-compose.*.yml
+Dockerfile.production
+
+# Scripts
+setup.sh
+setup.ps1
+deploy-functions.sh
+deploy-functions.ps1
+
+# CI/CD
+.github/
+.gitlab-ci.yml
+.circleci/
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# Logs
+logs/
+*.log

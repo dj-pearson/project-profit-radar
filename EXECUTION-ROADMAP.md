@@ -1,4 +1,4 @@
-# BuildDesk Financial Intelligence Build Timeline
+# Brikly Financial Intelligence Build Timeline
 ## Product Requirements Document - Strategic Transformation
 
 **Version:** 1.0  
@@ -11,7 +11,7 @@
 ## Executive Summary
 
 ### The Opportunity
-BuildDesk is 70% complete as a construction management platform. Rather than chasing feature parity with competitors, we will **own financial intelligence** - the category where SMB contractors have the greatest pain and competitors have the weakest offerings.
+Brikly is 70% complete as a construction management platform. Rather than chasing feature parity with competitors, we will **own financial intelligence** - the category where SMB contractors have the greatest pain and competitors have the weakest offerings.
 
 ### Strategic Positioning
 - **From:** "Another construction management tool"
@@ -453,8 +453,8 @@ change_order_templates (category, default_markup, approval_rules)
 
 **Remaining Work**
 1. **Bi-directional Sync**
-   - Push transactions from BuildDesk → QB
-   - Pull updates from QB → BuildDesk
+   - Push transactions from Brikly → QB
+   - Pull updates from QB → Brikly
    - Conflict resolution strategy
    - Sync status dashboard
 
@@ -516,13 +516,13 @@ change_order_templates (category, default_markup, approval_rules)
 #### Google Calendar (50% → 100%)
 
 **Complete 2-Way Sync**
-1. **BuildDesk → Calendar**
+1. **Brikly → Calendar**
    - Project milestones
    - Crew schedules
    - Client meetings
    - Inspection appointments
 
-2. **Calendar → BuildDesk**
+2. **Calendar → Brikly**
    - External meeting imports
    - Availability checking
    - Conflict detection
@@ -748,7 +748,7 @@ prediction_accuracy (prediction_id, actual_value, variance, notes)
 - By season (weather impacts)
 
 **Anonymized Data Pool**
-- Aggregate data across BuildDesk users
+- Aggregate data across Brikly users
 - Privacy-preserving analytics
 - Opt-in participation
 - Value exchange: share data, get benchmarks
@@ -1452,7 +1452,7 @@ performance_trends (company_id, metric, value, period, comparison)
 **SEO Focus**
 - Keywords: construction job costing, contractor profitability, real-time construction financials
 - Landing pages: industry-specific (electrical, HVAC, plumbing)
-- Competitor comparisons: "BuildDesk vs Procore"
+- Competitor comparisons: "Brikly vs Procore"
 
 **Paid Advertising (Phase 2)**
 - Google Ads: high-intent keywords
@@ -1582,7 +1582,7 @@ performance_trends (company_id, metric, value, period, comparison)
 ### Support Strategy
 
 **Support Channels**
-- Email: support@builddesk.com (4-hour response)
+- Email: support@brikly.net (4-hour response)
 - Chat: In-app messaging (business hours)
 - Phone: Enterprise tier only (priority support)
 - Help center: Self-service knowledge base

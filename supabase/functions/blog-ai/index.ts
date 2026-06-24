@@ -1,20 +1,16 @@
 // Blog AI Edge Function
-// Updated with multi-tenant site_id isolation
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { aiService } from "../_shared/ai-service.ts";
 import { initializeAuthContext, errorResponse } from '../_shared/auth-helpers.ts';
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
+import { getCorsHeaders } from '../_shared/secure-cors.ts';
 
 const logStep = (step: string, details?: any) => {
   console.log(`[BLOG-AI] ${step}${details ? ` - ${JSON.stringify(details)}` : ''}`);
 };
 
 serve(async (req) => {
+  const corsHeaders = getCorsHeaders(req);
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
@@ -22,21 +18,20 @@ serve(async (req) => {
   try {
     logStep("Function started", { method: req.method });
 
-    // Initialize auth context - extracts user AND site_id from JWT
-    const authContext = await initializeAuthContext(req);
+        const authContext = await initializeAuthContext(req);
     if (!authContext) {
       return errorResponse('Unauthorized', 401);
     }
 
-    const { user, siteId, supabase: supabaseClient } = authContext;
+    const { user, supabase: supabaseClient } = authContext;
     if (!user?.id) throw new Error("User not authenticated");
-    logStep("User authenticated", { userId: user.id, siteId });
+    logStep("User authenticated", { userId: user.id });
 
     // Check if user is root admin with site isolation
     const { data: userProfile, error: profileError } = await supabaseClient
       .from('user_profiles')
       .select('role')
-      .eq('site_id', siteId)  // CRITICAL: Site isolation
+        // CRITICAL: Site isolation
       .eq('id', user.id)
       .single();
 

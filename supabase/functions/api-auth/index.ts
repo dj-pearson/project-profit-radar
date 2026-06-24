@@ -11,7 +11,6 @@ const corsHeaders = {
 
 interface APIKey {
   id: string
-  site_id: string
   user_id: string
   tenant_id: string
   name: string
@@ -178,11 +177,9 @@ serve(async (req) => {
       .update({ last_used_at: new Date().toISOString() })
       .eq('id', apiKey.id)
 
-    // Return success with user context including site_id for multi-tenant isolation
     return new Response(
       JSON.stringify({
         success: true,
-        site_id: apiKey.site_id,
         user_id: apiKey.user_id,
         tenant_id: apiKey.tenant_id,
         scopes: apiKey.scopes,

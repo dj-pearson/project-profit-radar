@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Device } from '@capacitor/device';
 import { Filesystem, Directory, Encoding } from '@capacitor/filesystem';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -9,19 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
-import { 
-  Mic, 
-  MicOff, 
-  Play, 
-  Pause, 
-  Square, 
-  Upload, 
-  Download,
-  Trash2,
-  MessageSquareText,
-  Clock,
-  Tag
-} from 'lucide-react';
+import { Mic, Play, Pause, Square, Upload, Trash2, MessageSquareText, Clock, Tag } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -70,7 +57,7 @@ const VoiceNotes: React.FC<VoiceNotesProps> = ({
   const recordedChunksRef = useRef<Blob[]>([]);
 
   const { toast } = useToast();
-  const { user, userProfile, siteId } = useAuth();
+  const { user, userProfile } = useAuth();
 
   useEffect(() => {
     loadProjects();
@@ -489,7 +476,6 @@ const VoiceNotes: React.FC<VoiceNotesProps> = ({
         .from('documents')
         .insert({
           company_id: userProfile?.company_id,
-          site_id: siteId,
           project_id: note.projectId,
           name: note.title,
           description: `${note.description}\nDuration: ${Math.floor(note.duration / 60)}:${(note.duration % 60).toString().padStart(2, '0')}\nTags: ${note.tags.join(', ')}\n${note.transcription ? `Transcription: ${note.transcription}` : ''}`,

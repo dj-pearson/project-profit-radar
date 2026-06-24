@@ -1,16 +1,12 @@
 // Setup MFA Edge Function
-// Updated with multi-tenant site_id isolation
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { TOTP } from "https://deno.land/x/otpauth@v9.2.4/dist/otpauth.esm.js";
 import QRCode from "https://esm.sh/qrcode@1.5.4";
 import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
 import { validateRequest, sanitizeError, createErrorResponse } from "../_shared/validation.ts";
 import { initializeAuthContext, errorResponse } from '../_shared/auth-helpers.ts';
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
+import { getCorsHeaders, handleCorsPreflightRequest } from "../_shared/secure-cors.ts";
+import { checkRateLimit, getClientIP, rateLimitResponse } from "../_shared/rate-limiter.ts";
 
 // SECURITY: Input validation schema
 const SetupMFASchema = z.object({
@@ -18,18 +14,31 @@ const SetupMFASchema = z.object({
 });
 
 serve(async (req) => {
+  const corsHeaders = getCorsHeaders(req);
+
   if (req.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders });
+    return handleCorsPreflightRequest(req);
   }
 
   try {
-    // Initialize auth context - extracts user AND site_id from JWT
     const authContext = await initializeAuthContext(req);
     if (!authContext) {
       return errorResponse('Unauthorized', 401);
     }
 
-    const { user, siteId, supabase: supabaseClient } = authContext;
+    const { user, supabase: supabaseClient } = authContext;
+
+    // Rate limit: 3 MFA setup attempts per hour per user (prevents secret regeneration abuse)
+    const rateLimitResult = await checkRateLimit(supabaseClient, {
+      identifier: user.id,
+      endpoint: 'setup-mfa',
+      maxRequests: 3,
+      windowMinutes: 60,
+    });
+
+    if (!rateLimitResult.allowed) {
+      return rateLimitResponse(rateLimitResult, corsHeaders);
+    }
 
     // SECURITY: Validate request body
     const requestBody = await req.json();
@@ -48,7 +57,7 @@ serve(async (req) => {
 
     // Generate a secret for TOTP
     const secret = new TOTP({
-      issuer: "Project Profit Radar",
+      issuer: "Brikly",
       label: user.email,
       algorithm: "SHA1",
       digits: 6,
@@ -58,17 +67,16 @@ serve(async (req) => {
     // Generate QR code
     const qrCodeDataUrl = await QRCode.toDataURL(secret.toString());
 
-    // Store the secret (temporarily) in user_security table with site isolation
+    // Store the secret (temporarily) in user_security table
     const { error: updateError } = await supabaseClient
       .from("user_security")
       .upsert({
-        site_id: siteId,  // CRITICAL: Include site_id
         user_id: user_id,
         two_factor_secret: secret.secret,
         two_factor_enabled: false, // Not enabled until verified
         updated_at: new Date().toISOString(),
       }, {
-        onConflict: 'user_id,site_id'  // Update conflict resolution for multi-tenant
+        onConflict: 'user_id'
       });
 
     if (updateError) {
@@ -76,9 +84,8 @@ serve(async (req) => {
       throw new Error("Failed to initialize MFA setup");
     }
 
-    // Log security event with site isolation
+    // Log security event
     await supabaseClient.from("security_logs").insert({
-      site_id: siteId,  // CRITICAL: Include site_id
       user_id: user_id,
       event_type: "mfa_setup_initiated",
       ip_address: req.headers.get("cf-connecting-ip") || req.headers.get("x-forwarded-for"),

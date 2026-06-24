@@ -1,13 +1,13 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { RoleGuard, ROLE_GROUPS } from '@/components/auth/RoleGuard';
+import { AccessibleTable, type TableColumn } from '@/components/accessibility/AccessibleTable';
+import { AccessibleModal } from '@/components/accessibility/AccessibleModal';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Textarea } from '@/components/ui/textarea';
@@ -15,19 +15,7 @@ import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { useImpersonation } from '@/hooks/useImpersonation';
-import {
-  Users,
-  Search,
-  Filter,
-  UserCheck,
-  UserX,
-  Calendar,
-  Building2,
-  Mail,
-  Phone,
-  Eye,
-  UserCog
-} from 'lucide-react';
+import { Users, Search, Filter, UserCheck, UserX, Building2, Mail, Phone, Eye, UserCog } from 'lucide-react';
 
 interface UserProfile {
   id: string;
@@ -64,7 +52,7 @@ const UsersPage = () => {
     if (!loading && !user) {
       navigate('/auth');
     }
-    
+
     if (!loading && userProfile && userProfile.role !== 'root_admin') {
       navigate('/dashboard');
       toast({
@@ -74,7 +62,7 @@ const UsersPage = () => {
       });
       return;
     }
-    
+
     if (userProfile?.role === 'root_admin') {
       loadUsers();
     }
@@ -83,7 +71,7 @@ const UsersPage = () => {
   const loadUsers = async () => {
     try {
       setLoadingData(true);
-      
+
       const { data: usersData, error } = await supabase
         .from('user_profiles')
         .select(`
@@ -96,7 +84,7 @@ const UsersPage = () => {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      
+
       setUsers(usersData || []);
     } catch (error: any) {
       console.error('Error loading users:', error);
@@ -133,11 +121,11 @@ const UsersPage = () => {
     if (!isActive) {
       return <Badge variant="destructive">Inactive</Badge>;
     }
-    
-    const daysSinceLogin = lastLogin 
+
+    const daysSinceLogin = lastLogin
       ? Math.floor((new Date().getTime() - new Date(lastLogin).getTime()) / (1000 * 60 * 60 * 24))
       : null;
-    
+
     if (!lastLogin) {
       return <Badge variant="outline">Never Logged In</Badge>;
     } else if (daysSinceLogin && daysSinceLogin < 7) {
@@ -154,10 +142,10 @@ const UsersPage = () => {
                          `${user.first_name} ${user.last_name}`.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          user.companies?.name?.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesRole = filterRole === 'all' || user.role === filterRole;
-    const matchesStatus = filterStatus === 'all' || 
+    const matchesStatus = filterStatus === 'all' ||
                          (filterStatus === 'active' && user.is_active) ||
                          (filterStatus === 'inactive' && !user.is_active);
-    
+
     return matchesSearch && matchesRole && matchesStatus;
   });
 
@@ -206,12 +194,12 @@ const UsersPage = () => {
   if (loading || loadingData) {
     return (
       <DashboardLayout title="Users" showTrialBanner={false}>
-        <div className="flex items-center justify-center py-12">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-construction-blue mx-auto mb-4"></div>
-            <p className="text-muted-foreground">Loading users...</p>
+        <div className="space-y-6" role="status" aria-live="polite" aria-label="Loading content">
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+              {[1,2,3,4].map(i => <div key={i} className="h-24 bg-muted animate-pulse rounded-lg" />)}
+            </div>
+            <div className="h-[300px] bg-muted animate-pulse rounded-lg" />
           </div>
-        </div>
       </DashboardLayout>
     );
   }
@@ -221,15 +209,16 @@ const UsersPage = () => {
       <DashboardLayout title="Users" showTrialBanner={false}>
         <div className="space-y-6">
         {/* Filters */}
-        <div className="flex flex-col sm:flex-row gap-4">
-          <div className="flex-1">
+        <section className="flex flex-col sm:flex-row gap-4" aria-label="User filters">
+          <div className="flex-1" role="search" aria-label="Search users">
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" aria-hidden="true" />
               <Input
                 placeholder="Search users by name, email, or company..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-10"
+                aria-label="Search users by name, email, or company"
               />
             </div>
           </div>
@@ -257,243 +246,267 @@ const UsersPage = () => {
               <SelectItem value="inactive">Inactive</SelectItem>
             </SelectContent>
           </Select>
-        </div>
+        </section>
 
         {/* Users Table */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Platform Users ({filteredUsers.length})</CardTitle>
-            <CardDescription>
-              All registered users across the platform
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {filteredUsers.map((userItem) => (
-                <div key={userItem.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50">
-                  <div className="flex items-center space-x-4">
-                    <Avatar className="h-10 w-10">
-                      <AvatarFallback>
-                        {userItem.first_name?.[0]}{userItem.last_name?.[0]}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div>
-                      <div className="flex items-center space-x-2">
-                        <p className="font-medium">
-                          {userItem.first_name && userItem.last_name 
-                            ? `${userItem.first_name} ${userItem.last_name}`
-                            : userItem.email
-                          }
-                        </p>
-                        {getRoleBadge(userItem.role)}
-                        {getStatusBadge(userItem.is_active, userItem.last_login)}
-                      </div>
-                      <div className="flex items-center space-x-4 text-sm text-muted-foreground">
-                        <span className="flex items-center">
-                          <Mail className="h-3 w-3 mr-1" />
-                          {userItem.email}
-                        </span>
-                        {userItem.companies && (
-                          <span className="flex items-center">
-                            <Building2 className="h-3 w-3 mr-1" />
-                            {userItem.companies.name}
-                          </span>
-                        )}
-                        <span className="flex items-center">
-                          <Calendar className="h-3 w-3 mr-1" />
-                          Joined {new Date(userItem.created_at).toLocaleDateString()}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-center space-x-2">
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => {
-                        setSelectedUser(userItem);
-                        setIsDetailDialogOpen(true);
-                      }}
-                    >
-                      <Eye className="h-3 w-3 mr-1" />
-                      View
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="secondary"
-                      onClick={() => handleImpersonateClick(userItem)}
-                      disabled={userItem.id === user?.id}
-                      title={userItem.id === user?.id ? "Cannot impersonate yourself" : "Impersonate this user"}
-                    >
-                      <UserCog className="h-3 w-3 mr-1" />
-                      Impersonate
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant={userItem.is_active ? "destructive" : "default"}
-                      onClick={() => toggleUserStatus(userItem.id, userItem.is_active)}
-                    >
-                      {userItem.is_active ? (
-                        <>
-                          <UserX className="h-3 w-3 mr-1" />
-                          Deactivate
-                        </>
-                      ) : (
-                        <>
-                          <UserCheck className="h-3 w-3 mr-1" />
-                          Activate
-                        </>
-                      )}
-                    </Button>
-                  </div>
+        {(() => {
+          const userColumns: TableColumn<UserProfile>[] = [
+            {
+              key: 'first_name',
+              header: 'Name',
+              sortable: true,
+              render: (_, row) => (
+                <div className="flex items-center gap-3">
+                  <Avatar className="h-8 w-8">
+                    <AvatarFallback className="text-xs">
+                      {row.first_name?.[0]}{row.last_name?.[0]}
+                    </AvatarFallback>
+                  </Avatar>
+                  <span className="font-medium">
+                    {row.first_name && row.last_name
+                      ? `${row.first_name} ${row.last_name}`
+                      : row.email}
+                  </span>
                 </div>
-              ))}
+              ),
+            },
+            {
+              key: 'email',
+              header: 'Email',
+              hideOnMobile: true,
+              render: (value) => (
+                <span className="flex items-center gap-1 text-sm">
+                  <Mail className="h-3 w-3 text-muted-foreground" aria-hidden="true" />
+                  {value}
+                </span>
+              ),
+            },
+            {
+              key: 'role',
+              header: 'Role',
+              sortable: true,
+              render: (value) => getRoleBadge(value),
+            },
+            {
+              key: 'is_active',
+              header: 'Status',
+              sortable: true,
+              render: (_, row) => getStatusBadge(row.is_active, row.last_login),
+            },
+            {
+              key: 'companies',
+              header: 'Company',
+              hideOnMobile: true,
+              render: (value) => (
+                <span className="flex items-center gap-1 text-sm">
+                  <Building2 className="h-3 w-3 text-muted-foreground" aria-hidden="true" />
+                  {value?.name || 'No company'}
+                </span>
+              ),
+            },
+            {
+              key: 'created_at',
+              header: 'Joined',
+              hideOnMobile: true,
+              sortable: true,
+              render: (value) => (
+                <span className="text-sm text-muted-foreground">
+                  {new Date(value).toLocaleDateString()}
+                </span>
+              ),
+            },
+            {
+              key: 'actions',
+              header: 'Actions',
+              headerRender: () => <span className="sr-only">Actions</span>,
+              render: (_, row) => (
+                <div className="flex items-center space-x-1">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setSelectedUser(row);
+                      setIsDetailDialogOpen(true);
+                    }}
+                    aria-label={`View details for ${row.first_name || row.email}`}
+                  >
+                    <Eye className="h-3 w-3" aria-hidden="true" />
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="secondary"
+                    onClick={(e) => { e.stopPropagation(); handleImpersonateClick(row); }}
+                    disabled={row.id === user?.id}
+                    title={row.id === user?.id ? "Cannot impersonate yourself" : "Impersonate this user"}
+                    aria-label={`Impersonate ${row.first_name || row.email}`}
+                  >
+                    <UserCog className="h-3 w-3" aria-hidden="true" />
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant={row.is_active ? "destructive" : "default"}
+                    onClick={(e) => { e.stopPropagation(); toggleUserStatus(row.id, row.is_active); }}
+                    aria-label={row.is_active ? `Deactivate ${row.first_name || row.email}` : `Activate ${row.first_name || row.email}`}
+                  >
+                    {row.is_active ? (
+                      <UserX className="h-3 w-3" aria-hidden="true" />
+                    ) : (
+                      <UserCheck className="h-3 w-3" aria-hidden="true" />
+                    )}
+                  </Button>
+                </div>
+              ),
+            },
+          ];
 
-              {filteredUsers.length === 0 && (
-                <div className="text-center py-12">
-                  <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+          return (
+            <AccessibleTable<UserProfile>
+              caption={`Platform Users (${filteredUsers.length})`}
+              hideCaption
+              columns={userColumns}
+              data={filteredUsers}
+              loading={loadingData}
+              emptyContent={
+                <div className="text-center py-8">
+                  <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" aria-hidden="true" />
                   <h3 className="text-lg font-medium mb-2">No Users Found</h3>
                   <p className="text-muted-foreground">No users match your current filters.</p>
                 </div>
-              )}
-            </div>
-          </CardContent>
-        </Card>
+              }
+            />
+          );
+        })()}
       </div>
 
-      {/* User Detail Dialog */}
-      <Dialog open={isDetailDialogOpen} onOpenChange={setIsDetailDialogOpen}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>User Details</DialogTitle>
-            <DialogDescription>
-              Detailed information about {selectedUser?.first_name} {selectedUser?.last_name}
-            </DialogDescription>
-          </DialogHeader>
-          
-          {selectedUser && (
-            <div className="space-y-6">
-              <div className="flex items-center space-x-4">
-                <Avatar className="h-16 w-16">
-                  <AvatarFallback className="text-lg">
-                    {selectedUser.first_name?.[0]}{selectedUser.last_name?.[0]}
-                  </AvatarFallback>
-                </Avatar>
-                <div>
-                  <h3 className="text-lg font-medium">
-                    {selectedUser.first_name} {selectedUser.last_name}
-                  </h3>
-                  <div className="flex space-x-2 mt-1">
-                    {getRoleBadge(selectedUser.role)}
-                    {getStatusBadge(selectedUser.is_active, selectedUser.last_login)}
-                  </div>
-                </div>
-              </div>
-              
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label className="text-sm font-medium text-muted-foreground">Email</Label>
-                  <p className="text-sm">{selectedUser.email}</p>
-                </div>
-                <div>
-                  <Label className="text-sm font-medium text-muted-foreground">Phone</Label>
-                  <p className="text-sm">{selectedUser.phone || 'Not provided'}</p>
-                </div>
-                <div>
-                  <Label className="text-sm font-medium text-muted-foreground">Company</Label>
-                  <p className="text-sm">{selectedUser.companies?.name || 'No company assigned'}</p>
-                </div>
-                <div>
-                  <Label className="text-sm font-medium text-muted-foreground">Role</Label>
-                  <p className="text-sm">{selectedUser.role.replace('_', ' ').toUpperCase()}</p>
-                </div>
-                <div>
-                  <Label className="text-sm font-medium text-muted-foreground">Status</Label>
-                  <p className="text-sm">{selectedUser.is_active ? 'Active' : 'Inactive'}</p>
-                </div>
-                <div>
-                  <Label className="text-sm font-medium text-muted-foreground">Last Login</Label>
-                  <p className="text-sm">
-                    {selectedUser.last_login 
-                      ? new Date(selectedUser.last_login).toLocaleDateString()
-                      : 'Never'
-                    }
-                  </p>
-                </div>
-              </div>
-              
+      {/* User Detail Modal */}
+      <AccessibleModal
+        isOpen={isDetailDialogOpen}
+        onClose={() => setIsDetailDialogOpen(false)}
+        title="User Details"
+        description={`Detailed information about ${selectedUser?.first_name || ''} ${selectedUser?.last_name || ''}`}
+        size="lg"
+      >
+        {selectedUser && (
+          <div className="space-y-6">
+            <div className="flex items-center space-x-4">
+              <Avatar className="h-16 w-16">
+                <AvatarFallback className="text-lg">
+                  {selectedUser.first_name?.[0]}{selectedUser.last_name?.[0]}
+                </AvatarFallback>
+              </Avatar>
               <div>
-                <Label className="text-sm font-medium text-muted-foreground">Member Since</Label>
+                <h3 className="text-lg font-medium">
+                  {selectedUser.first_name} {selectedUser.last_name}
+                </h3>
+                <div className="flex space-x-2 mt-1">
+                  {getRoleBadge(selectedUser.role)}
+                  {getStatusBadge(selectedUser.is_active, selectedUser.last_login)}
+                </div>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label className="text-sm font-medium text-muted-foreground">Email</Label>
+                <p className="text-sm">{selectedUser.email}</p>
+              </div>
+              <div>
+                <Label className="text-sm font-medium text-muted-foreground">Phone</Label>
+                <p className="text-sm">{selectedUser.phone || 'Not provided'}</p>
+              </div>
+              <div>
+                <Label className="text-sm font-medium text-muted-foreground">Company</Label>
+                <p className="text-sm">{selectedUser.companies?.name || 'No company assigned'}</p>
+              </div>
+              <div>
+                <Label className="text-sm font-medium text-muted-foreground">Role</Label>
+                <p className="text-sm">{selectedUser.role.replace('_', ' ').toUpperCase()}</p>
+              </div>
+              <div>
+                <Label className="text-sm font-medium text-muted-foreground">Status</Label>
+                <p className="text-sm">{selectedUser.is_active ? 'Active' : 'Inactive'}</p>
+              </div>
+              <div>
+                <Label className="text-sm font-medium text-muted-foreground">Last Login</Label>
                 <p className="text-sm">
-                  {new Date(selectedUser.created_at).toLocaleDateString()} 
-                  ({Math.floor((new Date().getTime() - new Date(selectedUser.created_at).getTime()) / (1000 * 60 * 60 * 24))} days ago)
+                  {selectedUser.last_login
+                    ? new Date(selectedUser.last_login).toLocaleDateString()
+                    : 'Never'
+                  }
                 </p>
               </div>
             </div>
-          )}
-        </DialogContent>
-      </Dialog>
 
-      {/* Impersonation Dialog */}
-      <Dialog open={isImpersonateDialogOpen} onOpenChange={setIsImpersonateDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Impersonate User</DialogTitle>
-            <DialogDescription>
-              Enter a detailed reason for impersonating {selectedUser?.first_name} {selectedUser?.last_name}. All actions will be logged for security.
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="impersonation-reason">Reason for Impersonation</Label>
-              <Textarea
-                id="impersonation-reason"
-                placeholder="e.g., Investigating reported bug with project creation, reproducing error for support ticket #1234, etc."
-                value={impersonationReason}
-                onChange={(e) => setImpersonationReason(e.target.value)}
-                rows={4}
-                className="resize-none"
-              />
-              <p className="text-xs text-muted-foreground">
-                Minimum 10 characters required. Be specific about why you need to impersonate this user.
+            <div>
+              <Label className="text-sm font-medium text-muted-foreground">Member Since</Label>
+              <p className="text-sm">
+                {new Date(selectedUser.created_at).toLocaleDateString()}
+                ({Math.floor((new Date().getTime() - new Date(selectedUser.created_at).getTime()) / (1000 * 60 * 60 * 24))} days ago)
               </p>
             </div>
+          </div>
+        )}
+      </AccessibleModal>
 
-            <div className="bg-orange-50 dark:bg-orange-950 border border-orange-200 dark:border-orange-800 rounded p-3">
-              <div className="flex items-start space-x-2">
-                <UserCog className="h-4 w-4 text-orange-600 dark:text-orange-400 mt-0.5" />
-                <div className="text-xs text-orange-900 dark:text-orange-100">
-                  <p className="font-medium mb-1">Security Notice:</p>
-                  <ul className="list-disc list-inside space-y-1">
-                    <li>You will see the platform exactly as this user sees it</li>
-                    <li>All actions will be logged with your admin account</li>
-                    <li>The user will be notified of this access</li>
-                    <li>Session can be ended at any time from the banner</li>
-                  </ul>
-                </div>
+      {/* Impersonation Modal */}
+      <AccessibleModal
+        isOpen={isImpersonateDialogOpen}
+        onClose={() => setIsImpersonateDialogOpen(false)}
+        title="Impersonate User"
+        description={`Enter a detailed reason for impersonating ${selectedUser?.first_name || ''} ${selectedUser?.last_name || ''}. All actions will be logged for security.`}
+        size="md"
+        disableClickOutside
+        footer={
+          <>
+            <Button
+              variant="outline"
+              onClick={() => setIsImpersonateDialogOpen(false)}
+              disabled={impersonationLoading}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleStartImpersonation}
+              disabled={impersonationLoading || impersonationReason.trim().length < 10}
+            >
+              {impersonationLoading ? 'Starting...' : 'Start Impersonation'}
+            </Button>
+          </>
+        }
+      >
+        <div className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="impersonation-reason">Reason for Impersonation</Label>
+            <Textarea
+              id="impersonation-reason"
+              placeholder="e.g., Investigating reported bug with project creation, reproducing error for support ticket #1234, etc."
+              value={impersonationReason}
+              onChange={(e) => setImpersonationReason(e.target.value)}
+              rows={4}
+              className="resize-none"
+            />
+            <p className="text-xs text-muted-foreground">
+              Minimum 10 characters required. Be specific about why you need to impersonate this user.
+            </p>
+          </div>
+
+          <div className="bg-orange-50 dark:bg-orange-950 border border-orange-200 dark:border-orange-800 rounded p-3">
+            <div className="flex items-start space-x-2">
+              <UserCog className="h-4 w-4 text-orange-600 dark:text-orange-400 mt-0.5" />
+              <div className="text-xs text-orange-900 dark:text-orange-100">
+                <p className="font-medium mb-1">Security Notice:</p>
+                <ul className="list-disc list-inside space-y-1">
+                  <li>You will see the platform exactly as this user sees it</li>
+                  <li>All actions will be logged with your admin account</li>
+                  <li>The user will be notified of this access</li>
+                  <li>Session can be ended at any time from the banner</li>
+                </ul>
               </div>
             </div>
-
-            <div className="flex justify-end space-x-2">
-              <Button
-                variant="outline"
-                onClick={() => setIsImpersonateDialogOpen(false)}
-                disabled={impersonationLoading}
-              >
-                Cancel
-              </Button>
-              <Button
-                onClick={handleStartImpersonation}
-                disabled={impersonationLoading || impersonationReason.trim().length < 10}
-              >
-                {impersonationLoading ? 'Starting...' : 'Start Impersonation'}
-              </Button>
-            </div>
           </div>
-        </DialogContent>
-      </Dialog>
+        </div>
+      </AccessibleModal>
     </DashboardLayout>
     </RoleGuard>
   );

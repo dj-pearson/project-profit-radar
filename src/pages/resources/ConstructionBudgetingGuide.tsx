@@ -1,13 +1,12 @@
-import React from "react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { SEOMetaTags } from "@/components/SEOMetaTags";
 import { QuickAnswerSnippet, LastUpdated, QuickFacts } from "@/components/seo/QuickAnswerSnippet";
 import { HowToSchema } from "@/components/seo/EnhancedSchemaMarkup";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Calculator, TrendingUp, AlertTriangle, Clock, CheckCircle, ArrowRight } from "lucide-react";
+import { Calculator, AlertTriangle, ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
 import BreadcrumbsNavigation from "@/components/BreadcrumbsNavigation";
 
@@ -69,7 +68,7 @@ const ConstructionBudgetingGuide = () => {
   return (
     <div className="min-h-screen bg-background">
       <SEOMetaTags
-        title="Construction Budgeting Guide: Cost Control for Small Contractors | BuildDesk"
+        title="Construction Budgeting Guide: Cost Control for Small Contractors | Brikly"
         description="Complete construction budgeting guide for small contractors. Learn job costing, cost control, change order management, and profit margin improvement strategies."
         keywords={[
           'construction budgeting guide',
@@ -261,7 +260,7 @@ const ConstructionBudgetingGuide = () => {
               <CardContent className="p-6">
                 <h3 className="font-semibold mb-2">Ready to Improve Your Budgeting?</h3>
                 <p className="text-sm text-muted-foreground mb-4">
-                  See how BuildDesk's real-time job costing helps contractors stay on budget.
+                  See how Brikly's real-time job costing helps contractors stay on budget.
                 </p>
                 <Button asChild className="w-full">
                   <Link to="/auth">Start Free Trial</Link>
@@ -274,10 +273,10 @@ const ConstructionBudgetingGuide = () => {
         {/* Bottom CTA */}
         <div className="bg-primary/5 rounded-lg p-8 text-center">
           <h2 className="text-2xl font-semibold mb-4">
-            Master Construction Budgeting with BuildDesk
+            Master Construction Budgeting with Brikly
           </h2>
           <p className="text-muted-foreground mb-6 max-w-2xl mx-auto">
-            Stop losing money on projects. BuildDesk's real-time job costing and budget tracking 
+            Stop losing money on projects. Brikly's real-time job costing and budget tracking 
             help small contractors improve profit margins by an average of 18%.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">

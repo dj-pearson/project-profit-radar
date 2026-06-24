@@ -1,0 +1,478 @@
+name: Build & Submit iOS to App Store
+
+on:
+  # Manual trigger with options
+  workflow_dispatch:
+    inputs:
+      app_version:
+        description: "App version (e.g., 1.0.2)"
+        required: true
+        default: "1.0.1"
+        type: string
+      environment:
+        description: "Build environment"
+        required: true
+        default: "production"
+        type: choice
+        options:
+          - production
+          - staging
+      submit_to_testflight:
+        description: "Submit to TestFlight after build?"
+        required: true
+        default: true
+        type: boolean
+      skip_tests:
+        description: "Skip tests before build?"
+        required: false
+        default: false
+        type: boolean
+
+# Prevent concurrent builds
+concurrency:
+  group: ios-build-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build-ios:
+    name: Build & Submit iOS App (Native Swift)
+    runs-on: macos-15
+    timeout-minutes: 60
+
+    env:
+      XCODE_VERSION: "26.0"
+      PROJECT_DIR: Brikly-iOS
+      SCHEME: Brikly
+      BUNDLE_ID: com.brikly.app
+
+    steps:
+      # ====================================
+      # 1. SETUP & CHECKOUT
+      # ====================================
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Select Xcode
+        run: |
+          sudo xcode-select -s /Applications/Xcode_${{ env.XCODE_VERSION }}.app/Contents/Developer
+          xcodebuild -version
+          echo "Selected Xcode:"
+          xcode-select -p
+
+      # ====================================
+      # 2. CONFIGURE APP
+      # ====================================
+
+      - name: Inject Supabase anon key into Info.plist
+        run: |
+          INFO_PLIST="${{ env.PROJECT_DIR }}/Brikly/Info.plist"
+
+          # Inject the Supabase URL (already hardcoded in AppConfiguration but set here for clarity)
+          /usr/libexec/PlistBuddy -c "Add :SUPABASE_URL string 'https://api.brikly.net'" "$INFO_PLIST" 2>/dev/null || \
+          /usr/libexec/PlistBuddy -c "Set :SUPABASE_URL 'https://api.brikly.net'" "$INFO_PLIST"
+
+          # Inject the Supabase anon key so AppConfiguration.swift can read it
+          /usr/libexec/PlistBuddy -c "Add :SUPABASE_ANON_KEY string '${{ secrets.SUPABASE_ANON_KEY }}'" "$INFO_PLIST" 2>/dev/null || \
+          /usr/libexec/PlistBuddy -c "Set :SUPABASE_ANON_KEY '${{ secrets.SUPABASE_ANON_KEY }}'" "$INFO_PLIST"
+
+          echo "Supabase config injected into Info.plist"
+
+      - name: Inject Sentry DSN into Info.plist
+        env:
+          SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
+        run: |
+          INFO_PLIST="${{ env.PROJECT_DIR }}/Brikly/Info.plist"
+
+          if [ -z "$SENTRY_DSN" ]; then
+            # Strip the placeholder so AppConfiguration sees an empty value
+            # and CrashReporter logs "Sentry DSN not configured" instead of trying
+            # to start with the literal "$(SENTRY_DSN)" string.
+            /usr/libexec/PlistBuddy -c "Set :SENTRY_DSN ''" "$INFO_PLIST" 2>/dev/null || true
+            echo "SENTRY_DSN secret not set; crash reporting disabled in this build."
+            exit 0
+          fi
+
+          /usr/libexec/PlistBuddy -c "Add :SENTRY_DSN string '${SENTRY_DSN}'" "$INFO_PLIST" 2>/dev/null || \
+          /usr/libexec/PlistBuddy -c "Set :SENTRY_DSN '${SENTRY_DSN}'" "$INFO_PLIST"
+
+          echo "Sentry DSN injected into Info.plist"
+
+      - name: Set App Version
+        run: |
+          INFO_PLIST="${{ env.PROJECT_DIR }}/Brikly/Info.plist"
+          APP_VERSION="${{ inputs.app_version }}"
+          BUILD_NUMBER="${APP_VERSION}.${{ github.run_number }}"
+
+          /usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString ${APP_VERSION}" "$INFO_PLIST"
+          /usr/libexec/PlistBuddy -c "Set :CFBundleVersion ${BUILD_NUMBER}" "$INFO_PLIST"
+
+          echo "APP_VERSION=${APP_VERSION}" >> $GITHUB_ENV
+          echo "BUILD_NUMBER=${BUILD_NUMBER}" >> $GITHUB_ENV
+          echo "Version: ${APP_VERSION} (${BUILD_NUMBER})"
+
+      - name: Add Encryption Export Compliance
+        run: |
+          INFO_PLIST="${{ env.PROJECT_DIR }}/Brikly/Info.plist"
+
+          # Standard HTTPS only, no custom encryption
+          /usr/libexec/PlistBuddy -c "Add :ITSAppUsesNonExemptEncryption bool false" "$INFO_PLIST" 2>/dev/null || \
+          /usr/libexec/PlistBuddy -c "Set :ITSAppUsesNonExemptEncryption false" "$INFO_PLIST"
+
+          echo "Encryption export compliance set (HTTPS only)"
+
+      # ====================================
+      # 3. PREPARE APP ICON
+      # ====================================
+
+      - name: Ensure app icon is 1024x1024 without alpha
+        run: |
+          ICON_PATH="${{ env.PROJECT_DIR }}/Brikly/Assets.xcassets/AppIcon.appiconset/AppIcon.png"
+
+          if [ ! -f "$ICON_PATH" ]; then
+            echo "ERROR: AppIcon.png not found at $ICON_PATH"
+            exit 1
+          fi
+
+          # Get current dimensions
+          CURRENT_SIZE=$(sips -g pixelWidth "$ICON_PATH" | tail -1 | awk '{print $2}')
+          echo "Current icon size: ${CURRENT_SIZE}x${CURRENT_SIZE}"
+
+          if [ "$CURRENT_SIZE" != "1024" ]; then
+            echo "Resizing icon to 1024x1024..."
+            sips -z 1024 1024 "$ICON_PATH"
+            echo "Icon resized to 1024x1024"
+          else
+            echo "Icon is already 1024x1024"
+          fi
+
+          # Strip alpha channel — Apple rejects icons with transparency
+          # Convert PNG -> JPEG (strips alpha, composites on white) -> PNG
+          TEMP_JPG="${ICON_PATH%.png}.jpg"
+          sips -s format jpeg "$ICON_PATH" --out "$TEMP_JPG"
+          sips -s format png "$TEMP_JPG" --out "$ICON_PATH"
+          rm -f "$TEMP_JPG"
+          echo "Alpha channel stripped from app icon"
+
+          # Verify final properties
+          sips -g pixelWidth -g pixelHeight -g hasAlpha "$ICON_PATH"
+
+      # ====================================
+      # 4. RESOLVE SWIFT PACKAGES
+      # ====================================
+
+      - name: Resolve Swift Package dependencies
+        run: |
+          cd ${{ env.PROJECT_DIR }}
+
+          xcodebuild -resolvePackageDependencies \
+            -project Brikly.xcodeproj \
+            -scheme ${{ env.SCHEME }} \
+            -clonedSourcePackagesDirPath ../SPMCache
+
+          echo "Swift packages resolved"
+
+      - name: Verify project structure
+        run: |
+          echo "Checking project structure..."
+          ls -la ${{ env.PROJECT_DIR }}/
+          ls -la ${{ env.PROJECT_DIR }}/Brikly.xcodeproj/
+
+          if [ ! -f "${{ env.PROJECT_DIR }}/Brikly.xcodeproj/project.pbxproj" ]; then
+            echo "ERROR: project.pbxproj not found!"
+            exit 1
+          fi
+          echo "Project structure verified"
+
+      # ====================================
+      # 5. TESTS (OPTIONAL)
+      # ====================================
+
+      - name: Run unit tests
+        if: ${{ !inputs.skip_tests }}
+        run: |
+          cd ${{ env.PROJECT_DIR }}
+
+          # `set -o pipefail` so xcodebuild's exit code propagates through xcpretty.
+          # `xcpretty` is allowed to fail (no xcpretty == raw output, still useful)
+          # but xcodebuild itself MUST succeed.
+          set -o pipefail
+          xcodebuild test \
+            -project Brikly.xcodeproj \
+            -scheme ${{ env.SCHEME }} \
+            -destination 'platform=iOS Simulator,name=iPhone 16,OS=latest' \
+            -clonedSourcePackagesDirPath ../SPMCache \
+            -resultBundlePath build/TestResults.xcresult \
+            | xcpretty || {
+              EXIT=${PIPESTATUS[0]}
+              if [ $EXIT -ne 0 ]; then exit $EXIT; fi
+            }
+
+          echo "Tests passed"
+
+      - name: Upload test results on failure
+        if: failure() && !inputs.skip_tests
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results-${{ github.sha }}
+          path: ${{ env.PROJECT_DIR }}/build/TestResults.xcresult
+          retention-days: 7
+          if-no-files-found: ignore
+
+      # ====================================
+      # 6. CODE SIGNING SETUP
+      # ====================================
+
+      - name: Import Apple Distribution Certificate
+        uses: apple-actions/import-codesign-certs@v3
+        with:
+          p12-file-base64: ${{ secrets.IOS_DISTRIBUTION_CERT_P12 }}
+          p12-password: ${{ secrets.IOS_DISTRIBUTION_CERT_PASSWORD }}
+
+      - name: Install Provisioning Profile
+        run: |
+          PP_PATH=~/Library/MobileDevice/Provisioning\ Profiles
+          mkdir -p "$PP_PATH"
+
+          echo "${{ secrets.IOS_PROVISIONING_PROFILE }}" | base64 --decode > "$PP_PATH/Brikly.mobileprovision"
+
+          echo "Provisioning profile installed"
+          ls -la "$PP_PATH"
+
+      - name: Configure Manual Code Signing
+        env:
+          TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          PROFILE_NAME: ${{ secrets.IOS_PROVISIONING_PROFILE_NAME }}
+          PBXPROJ_PATH: ${{ env.PROJECT_DIR }}/Brikly.xcodeproj/project.pbxproj
+        run: |
+          PBXPROJ="${PBXPROJ_PATH}"
+
+          echo "Patching project.pbxproj for manual signing..."
+
+          # Switch to Manual provisioning
+          sed -i '' 's/CODE_SIGN_STYLE = Automatic;/CODE_SIGN_STYLE = Manual;/g' "$PBXPROJ"
+
+          # Set DEVELOPMENT_TEAM wherever it's empty
+          sed -i '' "s/DEVELOPMENT_TEAM = \"\";/DEVELOPMENT_TEAM = \"${TEAM_ID}\";/g" "$PBXPROJ"
+
+          # Add PROVISIONING_PROFILE_SPECIFIER and CODE_SIGN_IDENTITY next to PRODUCT_BUNDLE_IDENTIFIER
+          # These are set in the pbxproj (app target only) so SPM dependency targets are NOT affected
+          python3 -c '
+          import os
+          path = os.environ["PBXPROJ_PATH"]
+          with open(path) as f:
+              content = f.read()
+          pn = os.environ["PROFILE_NAME"]
+          old = "PRODUCT_BUNDLE_IDENTIFIER = com.brikly.app;"
+          new = (
+              "CODE_SIGN_IDENTITY = \"Apple Distribution\";\n"
+              "\t\t\t\tPROVISIONING_PROFILE_SPECIFIER = \"" + pn + "\";\n"
+              "\t\t\t\tPRODUCT_BUNDLE_IDENTIFIER = com.brikly.app;"
+          )
+          content = content.replace(old, new)
+          with open(path, "w") as f:
+              f.write(content)
+          print("Added CODE_SIGN_IDENTITY and PROVISIONING_PROFILE_SPECIFIER")
+          '
+
+      - name: Verify code signing configuration
+        run: |
+          PBXPROJ="${{ env.PROJECT_DIR }}/Brikly.xcodeproj/project.pbxproj"
+          grep -c "CODE_SIGN_STYLE = Manual" "$PBXPROJ" || echo "WARNING: No Manual code sign style found"
+          grep "PROVISIONING_PROFILE_SPECIFIER" "$PBXPROJ" | head -5
+          echo "Code signing configured"
+
+      - name: Generate ExportOptions.plist
+        run: |
+          cat > ${{ env.PROJECT_DIR }}/ExportOptions.plist << 'PLIST_EOF'
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+              <key>method</key>
+              <string>app-store-connect</string>
+              <key>teamID</key>
+              <string>TEAM_ID_PLACEHOLDER</string>
+              <key>uploadBitcode</key>
+              <false/>
+              <key>uploadSymbols</key>
+              <true/>
+              <key>signingStyle</key>
+              <string>manual</string>
+              <key>provisioningProfiles</key>
+              <dict>
+                  <key>com.brikly.app</key>
+                  <string>PROFILE_NAME_PLACEHOLDER</string>
+              </dict>
+              <key>signingCertificate</key>
+              <string>Apple Distribution</string>
+              <key>generateAppStoreInformation</key>
+              <true/>
+              <key>destination</key>
+              <string>export</string>
+              <key>stripSwiftSymbols</key>
+              <true/>
+              <key>compileBitcode</key>
+              <false/>
+              <key>manageAppVersionAndBuildNumber</key>
+              <true/>
+          </dict>
+          </plist>
+          PLIST_EOF
+
+          sed -i '' "s/TEAM_ID_PLACEHOLDER/${{ secrets.APPLE_TEAM_ID }}/g" ${{ env.PROJECT_DIR }}/ExportOptions.plist
+          sed -i '' "s/PROFILE_NAME_PLACEHOLDER/${{ secrets.IOS_PROVISIONING_PROFILE_NAME }}/g" ${{ env.PROJECT_DIR }}/ExportOptions.plist
+
+          echo "ExportOptions.plist generated"
+
+      # ====================================
+      # 7. BUILD IPA
+      # ====================================
+
+      - name: Build iOS Archive
+        run: |
+          cd ${{ env.PROJECT_DIR }}
+
+          xcodebuild archive \
+            -project Brikly.xcodeproj \
+            -scheme ${{ env.SCHEME }} \
+            -configuration Release \
+            -archivePath build/Brikly.xcarchive \
+            -destination 'generic/platform=iOS' \
+            -clonedSourcePackagesDirPath ../SPMCache \
+            -allowProvisioningUpdates \
+            DEVELOPMENT_TEAM="${{ secrets.APPLE_TEAM_ID }}"
+
+          echo "Archive created successfully"
+          ls -la build/
+
+      - name: Export IPA
+        run: |
+          cd ${{ env.PROJECT_DIR }}
+
+          xcodebuild -exportArchive \
+            -archivePath build/Brikly.xcarchive \
+            -exportPath build/output \
+            -exportOptionsPlist ExportOptions.plist \
+            -allowProvisioningUpdates
+
+          echo "IPA exported successfully"
+          ls -la build/output/
+
+          IPA_SIZE=$(du -h build/output/*.ipa | cut -f1)
+          echo "IPA_SIZE=$IPA_SIZE" >> $GITHUB_ENV
+
+      # ====================================
+      # 8. UPLOAD ARTIFACT
+      # ====================================
+
+      - name: Upload IPA as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Brikly-iOS-${{ github.sha }}
+          path: ${{ env.PROJECT_DIR }}/build/output/*.ipa
+          retention-days: 30
+          if-no-files-found: error
+
+      # ====================================
+      # 9. SUBMIT TO TESTFLIGHT
+      # ====================================
+
+      - name: Submit to TestFlight
+        if: ${{ inputs.submit_to_testflight == true }}
+        env:
+          API_KEY_ID: ${{ secrets.APPSTORE_API_KEY_ID }}
+          API_PRIVATE_KEY: ${{ secrets.APPSTORE_API_PRIVATE_KEY }}
+          API_ISSUER_ID: ${{ secrets.APPSTORE_ISSUER_ID }}
+        run: |
+          # Write API key to the location altool expects
+          mkdir -p ~/private_keys
+          echo "$API_PRIVATE_KEY" > ~/private_keys/AuthKey_${API_KEY_ID}.p8
+
+          echo "Uploading IPA to App Store Connect via altool..."
+          xcrun altool --upload-app \
+            --file "${{ env.PROJECT_DIR }}/build/output/Brikly.ipa" \
+            --type ios \
+            --apiKey "$API_KEY_ID" \
+            --apiIssuer "$API_ISSUER_ID" \
+            2>&1 | tee /tmp/altool_output.txt
+
+          ALTOOL_EXIT=${PIPESTATUS[0]}
+
+          # Check for failure in both exit code and output
+          if [ $ALTOOL_EXIT -ne 0 ] || grep -q "UPLOAD FAILED" /tmp/altool_output.txt; then
+            echo ""
+            echo "::error::TestFlight upload FAILED! See altool output above for Apple validation errors."
+            echo "TESTFLIGHT_RESULT=FAILED" >> $GITHUB_ENV
+            exit 1
+          else
+            echo ""
+            echo "TestFlight upload succeeded!"
+            echo "TESTFLIGHT_RESULT=SUCCESS" >> $GITHUB_ENV
+          fi
+
+          # Clean up API key
+          rm -f ~/private_keys/AuthKey_${API_KEY_ID}.p8
+
+      # ====================================
+      # 10. SUMMARY
+      # ====================================
+
+      - name: Build Summary
+        if: always()
+        run: |
+          echo "# iOS Build Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## Build Information" >> $GITHUB_STEP_SUMMARY
+          echo "- **App Type:** Native SwiftUI" >> $GITHUB_STEP_SUMMARY
+          echo "- **Environment:** ${{ inputs.environment }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **App Version:** ${{ env.APP_VERSION }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Build Number:** ${{ env.BUILD_NUMBER }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Bundle ID:** ${{ env.BUNDLE_ID }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Commit:** \`${{ github.sha }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- **Branch:** \`${{ github.ref_name }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- **IPA Size:** ${{ env.IPA_SIZE }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **iOS Target:** 17.0+" >> $GITHUB_STEP_SUMMARY
+          echo "- **Dependencies:** supabase-swift (SPM)" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          if [ "${{ inputs.submit_to_testflight }}" == "true" ]; then
+            UPLOAD_RESULT="${{ env.TESTFLIGHT_RESULT }}"
+            if [ "$UPLOAD_RESULT" == "SUCCESS" ]; then
+              echo "## TestFlight Upload: SUCCESS" >> $GITHUB_STEP_SUMMARY
+              echo "" >> $GITHUB_STEP_SUMMARY
+              echo "## Next Steps" >> $GITHUB_STEP_SUMMARY
+              echo "1. Wait 5-30 minutes for App Store Connect processing" >> $GITHUB_STEP_SUMMARY
+              echo "2. Go to [App Store Connect](https://appstoreconnect.apple.com)" >> $GITHUB_STEP_SUMMARY
+              echo "3. Check TestFlight tab for your build" >> $GITHUB_STEP_SUMMARY
+              echo "4. Add test groups or submit for external testing" >> $GITHUB_STEP_SUMMARY
+            else
+              echo "## TestFlight Upload: FAILED" >> $GITHUB_STEP_SUMMARY
+              echo "" >> $GITHUB_STEP_SUMMARY
+              echo "The IPA was built successfully but Apple rejected the upload." >> $GITHUB_STEP_SUMMARY
+              echo "Check the 'Submit to TestFlight' step logs for validation errors." >> $GITHUB_STEP_SUMMARY
+              echo "" >> $GITHUB_STEP_SUMMARY
+              echo "The IPA artifact is still available for manual upload." >> $GITHUB_STEP_SUMMARY
+            fi
+          else
+            echo "## Next Steps" >> $GITHUB_STEP_SUMMARY
+            echo "1. Download IPA from GitHub Actions artifacts" >> $GITHUB_STEP_SUMMARY
+            echo "2. Upload manually to App Store Connect if needed" >> $GITHUB_STEP_SUMMARY
+          fi
+
+      - name: Failure Notification
+        if: failure()
+        run: |
+          echo "# iOS Build Failed" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "The iOS build has failed. Check the logs above for details." >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## Common Issues:" >> $GITHUB_STEP_SUMMARY
+          echo "- Missing or expired certificates" >> $GITHUB_STEP_SUMMARY
+          echo "- Provisioning profile mismatch" >> $GITHUB_STEP_SUMMARY
+          echo "- Bundle ID configuration error" >> $GITHUB_STEP_SUMMARY
+          echo "- Swift Package Manager resolution failure" >> $GITHUB_STEP_SUMMARY
+          echo "- Xcode build errors in Swift code" >> $GITHUB_STEP_SUMMARY
+          echo "- Missing SUPABASE_ANON_KEY secret" >> $GITHUB_STEP_SUMMARY

@@ -6,26 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Separator } from '@/components/ui/separator';
-import { 
-  FileText, 
-  Camera, 
-  Users, 
-  Clock,
-  CloudRain,
-  AlertTriangle,
-  CheckCircle2,
-  X,
-  Plus,
-  Send,
-  Calendar,
-  MapPin,
-  Thermometer,
-  Wind,
-  Eye,
-  Wrench,
-  Truck
-} from 'lucide-react';
+import { FileText, Camera, Users, CheckCircle2, X, Plus, Send, Calendar, Eye, Wrench, Truck } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { useOfflineSync } from '@/hooks/useOfflineSync';
@@ -86,7 +67,7 @@ interface DailyReportData {
 
 interface MobileDailyReportProps {
   projectId?: string;
-  onReportSubmitted?: (report: any) => void;
+  onReportSubmitted?: (report: Record<string, unknown>) => void;
   onClose?: () => void;
 }
 
@@ -118,7 +99,7 @@ const MobileDailyReportManager: React.FC<MobileDailyReportProps> = ({
 
   const [currentStep, setCurrentStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [projects, setProjects] = useState<any[]>([]);
+  const [projects, setProjects] = useState<{ id: string; name: string; client_name: string; status: string }[]>([]);
   const [showCamera, setShowCamera] = useState(false);
   const [newCrewMember, setNewCrewMember] = useState<CrewMember>({
     name: '',
@@ -149,9 +130,14 @@ const MobileDailyReportManager: React.FC<MobileDailyReportProps> = ({
   const { isOnline, saveOfflineData } = useOfflineSync();
   const { position, getCurrentPosition } = useGeolocation();
 
+  // Load projects and get position only once on mount
   useEffect(() => {
     getCurrentPosition();
     loadProjects();
+  }, []);
+
+  // Recalculate total hours when crew members change
+  useEffect(() => {
     calculateTotalHours();
   }, [reportData.crew_members]);
 
@@ -218,7 +204,7 @@ const MobileDailyReportManager: React.FC<MobileDailyReportProps> = ({
     setReportData(prev => ({ ...prev, total_crew_hours: total }));
   };
 
-  const handlePhotoCapture = (file: File, metadata?: any) => {
+  const handlePhotoCapture = (file: File, metadata?: Record<string, unknown>) => {
     const reader = new FileReader();
     reader.onload = () => {
       const base64 = reader.result as string;
@@ -463,7 +449,7 @@ const MobileDailyReportManager: React.FC<MobileDailyReportProps> = ({
   return (
     <div className="min-h-screen bg-background p-4 space-y-4">
       {/* Header */}
-      <Card className="border-blue-200 bg-blue-50">
+      <Card className="rounded-2xl glass shadow-ios-1 border-blue-200/60 dark:border-blue-500/30 bg-blue-50/80 dark:bg-blue-950/20">
         <CardHeader className="pb-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
@@ -754,7 +740,7 @@ const MobileDailyReportManager: React.FC<MobileDailyReportProps> = ({
               <div>
                 <Label>Status</Label>
                 <Select value={newTask.status} onValueChange={(value) => 
-                  setNewTask(prev => ({ ...prev, status: value as any }))
+                  setNewTask(prev => ({ ...prev, status: value as TaskProgress['status'] }))
                 }>
                   <SelectTrigger>
                     <SelectValue />
@@ -936,7 +922,7 @@ const MobileDailyReportManager: React.FC<MobileDailyReportProps> = ({
                   <div>
                     <Label>Condition</Label>
                     <Select value={newEquipment.condition} onValueChange={(value) => 
-                      setNewEquipment(prev => ({ ...prev, condition: value as any }))
+                      setNewEquipment(prev => ({ ...prev, condition: value as EquipmentUsage['condition'] }))
                     }>
                       <SelectTrigger>
                         <SelectValue />

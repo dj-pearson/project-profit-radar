@@ -15,13 +15,13 @@ export interface EmailTemplateProps {
 }
 
 export const baseEmailTemplate = ({
-  previewText = 'BuildDesk - Construction Management Made Simple',
+  previewText = 'Brikly - Construction Management Made Simple',
   headline,
   subheadline,
   bodyContent,
   ctaText,
   ctaUrl,
-  footerText = 'BuildDesk - Construction Management Software',
+  footerText = 'Brikly - Construction Management Software',
   unsubscribeUrl = '{{unsubscribe_url}}',
 }: EmailTemplateProps): string => {
   return `
@@ -104,7 +104,7 @@ export const baseEmailTemplate = ({
           <!-- Header -->
           <tr>
             <td style="padding: 40px 40px 0; text-align: center; background: linear-gradient(135deg, #FEF3C7 0%, #FFFFFF 100%);">
-              <img src="https://build-desk.com/logo.png" alt="BuildDesk" width="150" style="max-width: 150px; height: auto; margin-bottom: 20px;" />
+              <img src="https://brikly.net/logo.png" alt="Brikly" width="150" style="max-width: 150px; height: auto; margin-bottom: 20px;" />
             </td>
           </tr>
 
@@ -147,18 +147,31 @@ export const baseEmailTemplate = ({
           </tr>
           ` : ''}
 
-          <!-- Footer -->
+          <!-- Footer
+               CAN-SPAM Act (15 U.S.C. § 7704) and CASL require:
+                 - clear identification of the sender,
+                 - a physical postal address,
+                 - a working unsubscribe mechanism honored within 10 business days.
+               GDPR/ePrivacy further require a one-click withdrawal of consent
+               for marketing emails. Keep all four elements present below. -->
           <tr>
             <td style="padding: 40px; background-color: #F9FAFB; border-top: 1px solid #E5E7EB; text-align: center;">
               <p style="margin: 0 0 16px; color: #6B7280; font-size: 14px; line-height: 1.5;">
                 ${footerText}
               </p>
+              <p style="margin: 0 0 12px; color: #6B7280; font-size: 12px; line-height: 1.5;">
+                <strong>Brikly Inc.</strong><br />
+                123 Construction Way, Suite 100<br />
+                Builder City, BC 12345, USA
+              </p>
               <p style="margin: 0 0 8px; color: #9CA3AF; font-size: 12px;">
-                Questions? Reply to this email or visit our <a href="https://build-desk.com/support" style="color: #F97316;">Help Center</a>
+                You're receiving this email because you have an account with Brikly or signed up for product updates. Questions? Reply to this email or visit our <a href="https://brikly.net/support" style="color: #F97316;">Help Center</a>.
               </p>
               <p style="margin: 0; color: #9CA3AF; font-size: 12px;">
                 <a href="${unsubscribeUrl}" style="color: #9CA3AF; text-decoration: underline;">Unsubscribe</a> |
-                <a href="https://build-desk.com/privacy" style="color: #9CA3AF; text-decoration: underline;">Privacy Policy</a>
+                <a href="https://brikly.net/email-preferences" style="color: #9CA3AF; text-decoration: underline;">Email Preferences</a> |
+                <a href="https://brikly.net/privacy-policy" style="color: #9CA3AF; text-decoration: underline;">Privacy Policy</a> |
+                <a href="https://brikly.net/terms-of-service" style="color: #9CA3AF; text-decoration: underline;">Terms</a>
               </p>
             </td>
           </tr>
@@ -170,7 +183,7 @@ export const baseEmailTemplate = ({
           <tr>
             <td style="padding: 20px; text-align: center; color: #9CA3AF; font-size: 12px;">
               <p style="margin: 0;">
-                © ${new Date().getFullYear()} BuildDesk. All rights reserved.
+                © ${new Date().getFullYear()} Brikly. All rights reserved.
               </p>
             </td>
           </tr>

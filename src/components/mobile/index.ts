@@ -19,6 +19,32 @@ export { MobileButton, MobileFAB, MobileButtonGroup, MobileIconButton } from './
 export { MobileActionSheet, MobileActionSheetItem, MobileActionMenu } from './MobileActionSheet';
 export { MobileDrawer, MobileFilterDrawer } from './MobileDrawer';
 
+// iOS-style modal alerts / confirmations (US-140)
+export { MobileConfirm, type MobileConfirmProps } from './MobileConfirm';
+export { MobileAlert } from './MobileAlert';
+
+// Shared-element page transitions (US-138)
+export {
+  SharedElement,
+  SharedElementRoot,
+  sharedId,
+} from './SharedElementTransition';
+
+// Glass form primitives with floating labels (US-137)
+export {
+  MobileTextField,
+  MobileTextArea,
+  MobileSelectField,
+  MobileSegmentedControl,
+  MobileToggleRow,
+  useKeyboardAwareScroll,
+  type MobileTextFieldProps,
+  type MobileTextAreaProps,
+  type MobileSelectFieldProps,
+  type MobileSelectOption,
+  type SegmentedOption,
+} from './forms';
+
 // Form Components
 export {
   MobileInput,

@@ -5,23 +5,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { 
-  Shield, 
-  CheckCircle2, 
-  AlertTriangle, 
-  XCircle, 
-  Clock,
-  Building,
-  FileText,
-  Calendar,
-  Search,
-  Upload,
-  Eye
-} from 'lucide-react';
+import { Shield, CheckCircle2, AlertTriangle, XCircle, Clock, Building, FileText, Calendar, Search, Upload } from 'lucide-react';
 
 interface ComplianceRequirement {
   id: string;

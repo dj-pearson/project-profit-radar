@@ -1,4 +1,4 @@
-# BuildDesk Subscription System - Gap Analysis & Implementation Plan
+# Brikly Subscription System - Gap Analysis & Implementation Plan
 
 **Date:** 2025-11-07
 **Status:** Comprehensive Review Complete
@@ -8,7 +8,7 @@
 
 ## Executive Summary
 
-The BuildDesk subscription system has a **solid foundation** with automated trial management, Stripe integration, and complimentary subscription support. However, there are **7 critical gaps** that could lead to customer loss and revenue leakage.
+The Brikly subscription system has a **solid foundation** with automated trial management, Stripe integration, and complimentary subscription support. However, there are **7 critical gaps** that could lead to customer loss and revenue leakage.
 
 ### Risk Assessment
 - **HIGH RISK:** Project limit enforcement missing (users can exceed limits)
@@ -281,7 +281,7 @@ Enhanced onboarding after signup:
 - Company name, address, industry
 
 **Step 3: Team Size** (new)
-- "How many team members will use BuildDesk?"
+- "How many team members will use Brikly?"
 - If answer > current tier limit: "We recommend [higher tier]"
 
 **Step 4: Use Case** (new)
@@ -404,7 +404,7 @@ Enhanced onboarding after signup:
 
 ### Edge Case #4: Multiple Simultaneous Tab Sessions
 
-**Scenario:** User has BuildDesk open in 3 tabs, reaches team member limit in tab 1
+**Scenario:** User has Brikly open in 3 tabs, reaches team member limit in tab 1
 
 **Current Behavior:** Other tabs don't know limit was reached
 
@@ -683,7 +683,7 @@ Enhanced onboarding after signup:
 
 ## Conclusion
 
-The BuildDesk subscription system is **70% complete** with excellent foundational work. The remaining 30% involves:
+The Brikly subscription system is **70% complete** with excellent foundational work. The remaining 30% involves:
 - **Critical:** Enforcing project limits (prevent revenue leakage)
 - **High:** Centralizing subscription state (prevent bugs)
 - **Medium:** Improving visibility and UX (increase conversions)

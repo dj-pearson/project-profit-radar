@@ -48,7 +48,7 @@ Make sure these secrets are configured in Supabase Dashboard > Settings > Secret
 - `GOOGLE_CLIENT_EMAIL`: Your service account email
 - `GOOGLE_PRIVATE_KEY`: Your private key (with \n characters or actual newlines)
 - `GA4_PROPERTY_ID`: 496297904
-- `SEARCH_CONSOLE_SITE_URL`: https://build-desk.com
+- `SEARCH_CONSOLE_SITE_URL`: https://brikly.net
 
 ### Step 4: Test the Fixes
 

@@ -1,25 +1,16 @@
 import { useState, useEffect } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import {
-  Shield,
-  Key,
-  CheckCircle,
-  XCircle,
-  Plus,
-  Edit,
-  Trash2,
-  Settings,
-  Users,
-  Lock,
-  Smartphone,
-} from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
+import { AccessibleModal } from '@/components/accessibility/AccessibleModal';
+import { Shield, Key, CheckCircle, XCircle, Plus, Edit, Trash2, Smartphone, RefreshCw, Loader2 } from 'lucide-react';
+import { supabase, getEdgeFunctionUrl, supabaseAnonKey } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
+import { SSOConfigurationForm } from '@/components/sso/SSOConfigurationForm';
+import { TOTPSetupScreen } from '@/components/mfa/TOTPSetupScreen';
 
 interface SSOConnection {
   id: string;
@@ -32,6 +23,7 @@ interface SSOConnection {
   total_logins: number;
   last_used_at: string;
   created_at: string;
+  config?: Record<string, unknown>;
 }
 
 interface UserSession {
@@ -56,6 +48,11 @@ interface MFADevice {
   last_used_at: string;
 }
 
+interface UserSecurity {
+  two_factor_enabled: boolean;
+  backup_codes?: string[];
+}
+
 export const SSOManagement = () => {
   const { user } = useAuth();
   const { toast } = useToast();
@@ -64,6 +61,14 @@ export const SSOManagement = () => {
   const [ssoConnections, setSSOConnections] = useState<SSOConnection[]>([]);
   const [userSessions, setUserSessions] = useState<UserSession[]>([]);
   const [mfaDevices, setMFADevices] = useState<MFADevice[]>([]);
+  const [userSecurity, setUserSecurity] = useState<UserSecurity | null>(null);
+
+  // Dialog states
+  const [showSSOForm, setShowSSOForm] = useState(false);
+  const [editingConnection, setEditingConnection] = useState<SSOConnection | null>(null);
+  const [showMFASetup, setShowMFASetup] = useState(false);
+  const [deletingConnectionId, setDeletingConnectionId] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
     loadSSOData();
@@ -72,14 +77,37 @@ export const SSOManagement = () => {
   const loadSSOData = async () => {
     setLoading(true);
     try {
-      // Load SSO connections
-      const { data: ssoData, error: ssoError } = await supabase
-        .from('sso_connections')
-        .select('*')
-        .order('created_at', { ascending: false });
+      // Load SSO connections via edge function for proper filtering
+      const { data: session } = await supabase.auth.getSession();
+      if (session?.session?.access_token) {
+        try {
+          const response = await fetch(
+            getEdgeFunctionUrl('sso-manage'),
+            {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${session.session.access_token}`,
+                apikey: supabaseAnonKey,
+              },
+              body: JSON.stringify({ action: 'list' }),
+            }
+          );
 
-      if (ssoError) throw ssoError;
-      setSSOConnections(ssoData || []);
+          const result = await response.json();
+          if (response.ok && result.data?.connections) {
+            setSSOConnections(result.data.connections);
+          }
+        } catch (err) {
+          console.error('Failed to load SSO connections via edge function:', err);
+          // Fallback to direct query
+          const { data: ssoData } = await supabase
+            .from('sso_connections')
+            .select('*')
+            .order('created_at', { ascending: false });
+          setSSOConnections(ssoData || []);
+        }
+      }
 
       // Load user sessions
       const { data: sessionsData, error: sessionsError } = await supabase
@@ -89,8 +117,9 @@ export const SSOManagement = () => {
         .eq('is_active', true)
         .order('last_activity_at', { ascending: false });
 
-      if (sessionsError) throw sessionsError;
-      setUserSessions(sessionsData || []);
+      if (!sessionsError) {
+        setUserSessions(sessionsData || []);
+      }
 
       // Load MFA devices
       const { data: mfaData, error: mfaError } = await supabase
@@ -99,13 +128,23 @@ export const SSOManagement = () => {
         .eq('user_id', user?.id)
         .order('created_at', { ascending: false });
 
-      if (mfaError) throw mfaError;
-      setMFADevices(mfaData || []);
+      if (!mfaError) {
+        setMFADevices(mfaData || []);
+      }
+
+      // Load user security status
+      const { data: securityData } = await supabase
+        .from('user_security')
+        .select('two_factor_enabled, backup_codes')
+        .eq('user_id', user?.id)
+        .single();
+
+      setUserSecurity(securityData);
     } catch (error) {
       console.error('Failed to load SSO data:', error);
       toast({
         title: 'Error',
-        description: 'Failed to load SSO data.',
+        description: 'Failed to load authentication data.',
         variant: 'destructive',
       });
     } finally {
@@ -115,16 +154,39 @@ export const SSOManagement = () => {
 
   const toggleSSOConnection = async (connectionId: string, currentStatus: boolean) => {
     try {
-      const { error } = await supabase
-        .from('sso_connections')
-        .update({ is_enabled: !currentStatus })
-        .eq('id', connectionId);
+      const { data: session } = await supabase.auth.getSession();
+      if (!session?.session?.access_token) {
+        throw new Error('Not authenticated');
+      }
 
-      if (error) throw error;
+      const response = await fetch(
+        getEdgeFunctionUrl('sso-manage'),
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${session.session.access_token}`,
+            apikey: supabaseAnonKey,
+          },
+          body: JSON.stringify({
+            action: 'update',
+            id: connectionId,
+            is_enabled: !currentStatus,
+          }),
+        }
+      );
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to update SSO connection');
+      }
 
       toast({
         title: currentStatus ? 'SSO Disabled' : 'SSO Enabled',
-        description: currentStatus ? 'SSO connection has been disabled.' : 'SSO connection is now enabled.',
+        description: currentStatus
+          ? 'SSO connection has been disabled.'
+          : 'SSO connection is now enabled.',
       });
 
       loadSSOData();
@@ -135,6 +197,57 @@ export const SSOManagement = () => {
         description: 'Failed to update SSO connection.',
         variant: 'destructive',
       });
+    }
+  };
+
+  const deleteConnection = async () => {
+    if (!deletingConnectionId) return;
+
+    setIsDeleting(true);
+    try {
+      const { data: session } = await supabase.auth.getSession();
+      if (!session?.session?.access_token) {
+        throw new Error('Not authenticated');
+      }
+
+      const response = await fetch(
+        getEdgeFunctionUrl('sso-manage'),
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${session.session.access_token}`,
+            apikey: supabaseAnonKey,
+          },
+          body: JSON.stringify({
+            action: 'delete',
+            id: deletingConnectionId,
+          }),
+        }
+      );
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to delete SSO connection');
+      }
+
+      toast({
+        title: 'Connection Deleted',
+        description: 'SSO connection has been removed.',
+      });
+
+      loadSSOData();
+    } catch (error) {
+      console.error('Failed to delete connection:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to delete SSO connection.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsDeleting(false);
+      setDeletingConnectionId(null);
     }
   };
 
@@ -163,8 +276,78 @@ export const SSOManagement = () => {
     }
   };
 
+  const revokeAllSessions = async () => {
+    try {
+      const { error } = await supabase
+        .from('user_sessions')
+        .update({ is_active: false })
+        .eq('user_id', user?.id)
+        .eq('is_active', true);
+
+      if (error) throw error;
+
+      toast({
+        title: 'All Sessions Revoked',
+        description: 'All active sessions have been revoked.',
+      });
+
+      loadSSOData();
+    } catch (error) {
+      console.error('Failed to revoke all sessions:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to revoke sessions.',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const disableMFA = async () => {
+    try {
+      const { data: session } = await supabase.auth.getSession();
+      if (!session?.session?.access_token || !user?.id) {
+        throw new Error('Not authenticated');
+      }
+
+      const response = await fetch(
+        getEdgeFunctionUrl('disable-mfa'),
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${session.session.access_token}`,
+            apikey: supabaseAnonKey,
+          },
+          body: JSON.stringify({
+            user_id: user.id,
+          }),
+        }
+      );
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to disable MFA');
+      }
+
+      toast({
+        title: 'MFA Disabled',
+        description: 'Two-factor authentication has been disabled.',
+      });
+
+      loadSSOData();
+    } catch (error) {
+      console.error('Failed to disable MFA:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to disable MFA.',
+        variant: 'destructive',
+      });
+    }
+  };
+
   const getProviderBadge = (provider: string) => {
-    const config = {
+    const config: Record<string, { color: string; label: string }> = {
       saml: { color: 'bg-purple-500', label: 'SAML 2.0' },
       oauth_google: { color: 'bg-red-500', label: 'Google OAuth' },
       oauth_microsoft: { color: 'bg-blue-500', label: 'Microsoft OAuth' },
@@ -172,19 +355,19 @@ export const SSOManagement = () => {
       ldap: { color: 'bg-green-500', label: 'LDAP' },
     };
 
-    const { color, label } = config[provider as keyof typeof config] || { color: 'bg-gray-500', label: provider };
+    const { color, label } = config[provider] || { color: 'bg-gray-500', label: provider };
     return <Badge className={`${color} text-white`}>{label}</Badge>;
   };
 
   const getMFATypeBadge = (type: string) => {
-    const config = {
+    const config: Record<string, { color: string; label: string }> = {
       totp: { color: 'bg-blue-500', label: 'Authenticator App' },
       sms: { color: 'bg-green-500', label: 'SMS' },
       email: { color: 'bg-purple-500', label: 'Email' },
       backup_codes: { color: 'bg-orange-500', label: 'Backup Codes' },
     };
 
-    const { color, label } = config[type as keyof typeof config] || { color: 'bg-gray-500', label: type };
+    const { color, label } = config[type] || { color: 'bg-gray-500', label: type };
     return <Badge className={`${color} text-white`}>{label}</Badge>;
   };
 
@@ -215,14 +398,20 @@ export const SSOManagement = () => {
               Manage single sign-on, multi-factor authentication, and security settings
             </p>
           </div>
+          <Button variant="outline" onClick={loadSSOData}>
+            <RefreshCw className="w-4 h-4 mr-2" />
+            Refresh
+          </Button>
         </div>
 
         {/* Tabs */}
-        <Tabs defaultValue="sso">
-          <TabsList>
+        <Tabs defaultValue="sso" aria-label="SSO and authentication settings">
+          <TabsList aria-label="Authentication categories">
             <TabsTrigger value="sso">SSO Connections ({ssoConnections.length})</TabsTrigger>
             <TabsTrigger value="sessions">Active Sessions ({userSessions.length})</TabsTrigger>
-            <TabsTrigger value="mfa">MFA Devices ({mfaDevices.length})</TabsTrigger>
+            <TabsTrigger value="mfa">
+              MFA {userSecurity?.two_factor_enabled && <CheckCircle className="w-3 h-3 ml-1 text-green-500" />}
+            </TabsTrigger>
           </TabsList>
 
           {/* SSO Connections Tab */}
@@ -231,7 +420,7 @@ export const SSOManagement = () => {
               <p className="text-sm text-muted-foreground">
                 Configure enterprise single sign-on for your organization
               </p>
-              <Button>
+              <Button onClick={() => { setEditingConnection(null); setShowSSOForm(true); }}>
                 <Plus className="w-4 h-4 mr-2" />
                 Add SSO Connection
               </Button>
@@ -242,7 +431,10 @@ export const SSOManagement = () => {
                 <CardContent className="pt-6 text-center py-12">
                   <Shield className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
                   <p className="text-muted-foreground mb-4">No SSO connections configured</p>
-                  <Button>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    Set up SAML 2.0, OAuth, or LDAP authentication for your organization
+                  </p>
+                  <Button onClick={() => { setEditingConnection(null); setShowSSOForm(true); }}>
                     <Plus className="w-4 h-4 mr-2" />
                     Configure SSO
                   </Button>
@@ -284,7 +476,7 @@ export const SSOManagement = () => {
                       <div className="grid grid-cols-3 gap-4 mb-4">
                         <div>
                           <p className="text-xs text-muted-foreground">Total Logins</p>
-                          <p className="font-semibold">{connection.total_logins}</p>
+                          <p className="font-semibold">{connection.total_logins || 0}</p>
                         </div>
                         <div>
                           <p className="text-xs text-muted-foreground">Last Used</p>
@@ -310,15 +502,19 @@ export const SSOManagement = () => {
                         >
                           {connection.is_enabled ? 'Disable' : 'Enable'}
                         </Button>
-                        <Button size="sm" variant="outline">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => { setEditingConnection(connection); setShowSSOForm(true); }}
+                        >
                           <Edit className="w-4 h-4 mr-2" />
                           Edit
                         </Button>
-                        <Button size="sm" variant="outline">
-                          <Settings className="w-4 h-4 mr-2" />
-                          Configure
-                        </Button>
-                        <Button size="sm" variant="outline">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => setDeletingConnectionId(connection.id)}
+                        >
                           <Trash2 className="w-4 h-4 mr-2" />
                           Delete
                         </Button>
@@ -332,9 +528,17 @@ export const SSOManagement = () => {
 
           {/* Active Sessions Tab */}
           <TabsContent value="sessions" className="space-y-4">
-            <p className="text-sm text-muted-foreground">
-              Manage your active sessions across devices
-            </p>
+            <div className="flex justify-between items-center">
+              <p className="text-sm text-muted-foreground">
+                Manage your active sessions across devices
+              </p>
+              {userSessions.length > 1 && (
+                <Button variant="outline" onClick={revokeAllSessions}>
+                  <XCircle className="w-4 h-4 mr-2" />
+                  Revoke All Sessions
+                </Button>
+              )}
+            </div>
 
             {userSessions.length === 0 ? (
               <Card>
@@ -352,8 +556,12 @@ export const SSOManagement = () => {
                         <div className="flex-1">
                           <div className="flex items-center gap-3 mb-2">
                             <h4 className="font-semibold">{session.device_name || 'Unknown Device'}</h4>
-                            <Badge variant="outline" className="capitalize">{session.device_type}</Badge>
-                            <Badge variant="outline" className="capitalize">{session.auth_method}</Badge>
+                            <Badge variant="outline" className="capitalize">
+                              {session.device_type}
+                            </Badge>
+                            <Badge variant="outline" className="capitalize">
+                              {session.auth_method}
+                            </Badge>
                           </div>
                           <p className="text-sm text-muted-foreground">
                             {session.browser} on {session.os} • {session.ip_address}
@@ -376,11 +584,7 @@ export const SSOManagement = () => {
                         </div>
                       </div>
 
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => revokeSession(session.id)}
-                      >
+                      <Button size="sm" variant="outline" onClick={() => revokeSession(session.id)}>
                         <XCircle className="w-4 h-4 mr-2" />
                         Revoke Session
                       </Button>
@@ -391,41 +595,89 @@ export const SSOManagement = () => {
             )}
           </TabsContent>
 
-          {/* MFA Devices Tab */}
+          {/* MFA Tab */}
           <TabsContent value="mfa" className="space-y-4">
             <div className="flex justify-between items-center">
               <p className="text-sm text-muted-foreground">
                 Secure your account with multi-factor authentication
               </p>
-              <Button>
-                <Plus className="w-4 h-4 mr-2" />
-                Add MFA Device
-              </Button>
+              {!userSecurity?.two_factor_enabled && (
+                <Button onClick={() => setShowMFASetup(true)}>
+                  <Plus className="w-4 h-4 mr-2" />
+                  Set Up MFA
+                </Button>
+              )}
             </div>
 
-            {mfaDevices.length === 0 ? (
-              <Card>
-                <CardContent className="pt-6 text-center py-12">
-                  <Smartphone className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-                  <p className="text-muted-foreground mb-4">No MFA devices configured</p>
-                  <p className="text-sm text-muted-foreground mb-4">
-                    Add an authenticator app or SMS verification to secure your account
-                  </p>
-                  <Button>
-                    <Plus className="w-4 h-4 mr-2" />
-                    Set Up MFA
-                  </Button>
-                </CardContent>
-              </Card>
-            ) : (
+            {/* MFA Status Card */}
+            <Card>
+              <CardContent className="pt-6">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-4">
+                    <div
+                      className={`w-12 h-12 rounded-full flex items-center justify-center ${
+                        userSecurity?.two_factor_enabled ? 'bg-green-100' : 'bg-gray-100'
+                      }`}
+                    >
+                      <Shield
+                        className={`w-6 h-6 ${
+                          userSecurity?.two_factor_enabled ? 'text-green-600' : 'text-gray-400'
+                        }`}
+                      />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold">Two-Factor Authentication</h3>
+                      <p className="text-sm text-muted-foreground">
+                        {userSecurity?.two_factor_enabled
+                          ? 'Your account is protected with 2FA'
+                          : 'Add an extra layer of security to your account'}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {userSecurity?.two_factor_enabled ? (
+                      <>
+                        <Badge className="bg-green-500 text-white">
+                          <CheckCircle className="w-3 h-3 mr-1" />
+                          Enabled
+                        </Badge>
+                        <Button variant="outline" size="sm" onClick={disableMFA}>
+                          Disable
+                        </Button>
+                      </>
+                    ) : (
+                      <Button onClick={() => setShowMFASetup(true)}>
+                        <Shield className="w-4 h-4 mr-2" />
+                        Enable 2FA
+                      </Button>
+                    )}
+                  </div>
+                </div>
+
+                {userSecurity?.two_factor_enabled && userSecurity.backup_codes && (
+                  <div className="mt-4 pt-4 border-t">
+                    <p className="text-sm text-muted-foreground">
+                      <strong>{userSecurity.backup_codes.length}</strong> backup codes remaining
+                    </p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* MFA Devices List */}
+            {mfaDevices.length > 0 && (
               <div className="space-y-3">
+                <h4 className="font-semibold">Registered Devices</h4>
                 {mfaDevices.map((device) => (
                   <Card key={device.id}>
                     <CardContent className="pt-6">
                       <div className="flex items-start justify-between mb-3">
                         <div className="flex-1">
                           <div className="flex items-center gap-3 mb-2">
-                            <h4 className="font-semibold">{device.display_name || device.mfa_type}</h4>
+                            <Smartphone className="w-5 h-5 text-muted-foreground" />
+                            <h4 className="font-semibold">
+                              {device.display_name || 'Authenticator App'}
+                            </h4>
                             {getMFATypeBadge(device.mfa_type)}
                             {device.is_verified ? (
                               <Badge className="bg-green-500 text-white">
@@ -433,10 +685,7 @@ export const SSOManagement = () => {
                                 Verified
                               </Badge>
                             ) : (
-                              <Badge className="bg-yellow-500 text-white">Pending Verification</Badge>
-                            )}
-                            {device.is_enabled && (
-                              <Badge className="bg-blue-500 text-white">Active</Badge>
+                              <Badge className="bg-yellow-500 text-white">Pending</Badge>
                             )}
                           </div>
                         </div>
@@ -452,19 +701,6 @@ export const SSOManagement = () => {
                           </p>
                         </div>
                       </div>
-
-                      <div className="flex gap-2">
-                        <Button size="sm" variant="outline">
-                          {device.is_enabled ? 'Disable' : 'Enable'}
-                        </Button>
-                        {!device.is_verified && (
-                          <Button size="sm">Verify</Button>
-                        )}
-                        <Button size="sm" variant="outline">
-                          <Trash2 className="w-4 h-4 mr-2" />
-                          Remove
-                        </Button>
-                      </div>
                     </CardContent>
                   </Card>
                 ))}
@@ -473,6 +709,74 @@ export const SSOManagement = () => {
           </TabsContent>
         </Tabs>
       </div>
+
+      {/* SSO Configuration Dialog */}
+      <AccessibleModal
+        isOpen={showSSOForm}
+        onClose={() => { setShowSSOForm(false); setEditingConnection(null); }}
+        title={editingConnection ? 'Edit SSO Configuration' : 'Add SSO Configuration'}
+        size="xl"
+      >
+        <SSOConfigurationForm
+          existingConnection={editingConnection}
+          onSuccess={() => {
+            setShowSSOForm(false);
+            setEditingConnection(null);
+            loadSSOData();
+          }}
+          onCancel={() => {
+            setShowSSOForm(false);
+            setEditingConnection(null);
+          }}
+        />
+      </AccessibleModal>
+
+      {/* MFA Setup Dialog */}
+      <AccessibleModal
+        isOpen={showMFASetup}
+        onClose={() => setShowMFASetup(false)}
+        title="Set Up Multi-Factor Authentication"
+        size="md"
+      >
+        <TOTPSetupScreen
+          onComplete={() => {
+            setShowMFASetup(false);
+            loadSSOData();
+          }}
+          onSkip={() => setShowMFASetup(false)}
+          showSkip={true}
+        />
+      </AccessibleModal>
+
+      {/* Delete Confirmation Dialog */}
+      <AccessibleModal
+        isOpen={!!deletingConnectionId}
+        onClose={() => setDeletingConnectionId(null)}
+        title="Delete SSO Connection?"
+        description="This action cannot be undone. Users who rely on this SSO connection will no longer be able to sign in using it."
+        size="sm"
+        disableClickOutside
+        footer={
+          <>
+            <Button variant="outline" onClick={() => setDeletingConnectionId(null)} disabled={isDeleting}>Cancel</Button>
+            <Button
+              variant="destructive"
+              onClick={deleteConnection}
+              disabled={isDeleting}
+              className="gap-2"
+            >
+              {isDeleting ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  Deleting...
+                </>
+              ) : (
+                'Delete'
+              )}
+            </Button>
+          </>
+        }
+      />
     </DashboardLayout>
   );
 };

@@ -1,4 +1,4 @@
-# BuildDesk CRM - Quick Reference Guide
+# Brikly CRM - Quick Reference Guide
 
 ## Complete CRM Table List (30 Tables)
 

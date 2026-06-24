@@ -1,4 +1,3 @@
-import React from "react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import FinancialHealthCheck from "@/components/tools/FinancialHealthCheck";
@@ -9,7 +8,7 @@ const FinancialHealthCheckPage = () => {
   return (
     <div className="min-h-screen bg-background">
       <PageSEO
-        title="Free Financial Intelligence Health Check for Contractors | BuildDesk"
+        title="Free Financial Intelligence Health Check for Contractors | Brikly"
         description="Take our 2-minute assessment to discover what financial blindness is costing your construction business. Get personalized report showing hidden costs, time waste, and ROI projections. 500+ contractors improved margins by 4%+ after identifying their financial gaps."
         keywords={[
           'contractor financial assessment',
@@ -20,7 +19,7 @@ const FinancialHealthCheckPage = () => {
           'construction financial audit',
           'contractor profitability tool'
         ]}
-        canonicalUrl="https://builddesk.com/financial-health-check"
+        canonicalUrl="https://brikly.net/financial-health-check"
         lastModified="2025-11-11"
       />
 

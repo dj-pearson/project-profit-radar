@@ -1,7 +1,31 @@
-import { QueryClient } from '@tanstack/react-query';
+import { QueryClient, type Query } from '@tanstack/react-query';
 import { toast } from '@/hooks/use-toast';
 import { safeStorage } from './safeStorage';
 import { logger } from './logger';
+
+/**
+ * Capped exponential backoff with jitter for query/mutation retries.
+ * attemptIndex is 0-based: ~1s, ~2s, ~4s ... up to 30s, plus up to 1s jitter.
+ */
+const backoffWithJitter = (attemptIndex: number): number => {
+  const base = Math.min(1000 * 2 ** attemptIndex, 30_000);
+  return base + Math.round(Math.random() * 1000);
+};
+
+/**
+ * Auth/client errors (401/403/404/422) won't succeed on retry, so fail fast
+ * instead of retrying. Supabase/PostgREST surface the HTTP status on the error
+ * object; we sniff common shapes defensively since errors are typed `unknown`.
+ */
+const isNonRetryableError = (error: unknown): boolean => {
+  const status =
+    (error as { status?: number; statusCode?: number; code?: unknown })?.status ??
+    (error as { statusCode?: number })?.statusCode;
+  if (typeof status === 'number') {
+    return status === 401 || status === 403 || status === 404 || status === 422;
+  }
+  return false;
+};
 
 /**
  * Enhanced React Query configuration for optimal performance
@@ -13,16 +37,28 @@ export const queryClient = new QueryClient({
       staleTime: 5 * 60 * 1000,
       // Keep data in cache for 10 minutes
       gcTime: 10 * 60 * 1000,
-      // Retry failed requests 2 times
-      retry: 2,
+      // Retry failed requests up to 2 times, but never retry client/auth
+      // errors (they won't succeed on retry and just hammer the backend).
+      retry: (failureCount, error) => {
+        if (isNonRetryableError(error)) return false;
+        return failureCount < 2;
+      },
+      // Exponential backoff with jitter, capped at 30s. Prevents a thundering
+      // herd against Supabase (and 429 amplification) when a request fails on a
+      // shared/flaky network, e.g. multiple field users on one job site.
+      retryDelay: backoffWithJitter,
       // Don't refetch on window focus for better mobile experience
       refetchOnWindowFocus: false,
       // Refetch on reconnect
       refetchOnReconnect: true,
     },
     mutations: {
-      // Retry mutations once
-      retry: 1,
+      // Retry mutations once, but never retry non-idempotent client/auth errors
+      retry: (failureCount, error) => {
+        if (isNonRetryableError(error)) return false;
+        return failureCount < 1;
+      },
+      retryDelay: backoffWithJitter,
     },
   },
 });
@@ -186,8 +222,8 @@ export const cacheUtils = {
     
       return {
         totalQueries: queries.length,
-        staleQueries: queries.filter(q => (q as any).isStale?.()).length,
-        fetchingQueries: queries.filter(q => (q as any).state?.fetchStatus === 'fetching').length,
+        staleQueries: queries.filter(q => q.isStale()).length,
+        fetchingQueries: queries.filter(q => q.state.fetchStatus === 'fetching').length,
         cacheSize: JSON.stringify(queryCache).length,
       };
   },
@@ -201,13 +237,13 @@ export const devTools = {
   logQueries: () => {
     if (process.env.NODE_ENV === 'development') {
       const queries = queryClient.getQueryCache().getAll();
-      console.table(
+      logger.table(
         queries.map(query => ({
           queryKey: JSON.stringify(query.queryKey),
-          state: (query as any).state?.status,
-          dataUpdatedAt: new Date(((query as any).state?.dataUpdatedAt ?? 0)).toLocaleTimeString(),
-          isStale: (query as any).isStale?.(),
-          isFetching: (query as any).state?.fetchStatus === 'fetching',
+          state: query.state.status,
+          dataUpdatedAt: new Date(query.state.dataUpdatedAt ?? 0).toLocaleTimeString(),
+          isStale: query.isStale(),
+          isFetching: query.state.fetchStatus === 'fetching',
         }))
       );
     }
@@ -226,14 +262,20 @@ export const devTools = {
 /**
  * Query cache persistence for offline support
  */
-const CACHE_KEY = 'builddesk-query-cache';
+const CACHE_KEY = 'brikly-query-cache';
 const CACHE_VERSION = 1;
 const MAX_CACHE_AGE = 24 * 60 * 60 * 1000; // 24 hours
+
+interface PersistedQueryData {
+  queryKey: readonly unknown[];
+  queryHash: string;
+  state: Query['state'];
+}
 
 interface PersistedCache {
   version: number;
   timestamp: number;
-  data: any;
+  data: PersistedQueryData[];
 }
 
 /**
@@ -245,15 +287,14 @@ export const persistQueryCache = () => {
     const queries = cache.getAll();
 
     // Filter out stale or error queries
-    const dataToCache = queries
+    const dataToCache: PersistedQueryData[] = queries
       .filter(query => {
-        const state = (query as any).state;
-        return state.status === 'success' && state.data !== undefined;
+        return query.state.status === 'success' && query.state.data !== undefined;
       })
       .map(query => ({
         queryKey: query.queryKey,
         queryHash: query.queryHash,
-        state: (query as any).state,
+        state: query.state,
       }));
 
     const persistedCache: PersistedCache = {
@@ -302,13 +343,11 @@ export const restoreQueryCache = () => {
     const cache = queryClient.getQueryCache();
     let restored = 0;
 
-    persistedCache.data.forEach((queryData: any) => {
+    persistedCache.data.forEach((queryData: PersistedQueryData) => {
       try {
-        const query = cache.find(queryData.queryKey);
-        if (query) {
-          (query as any).state = queryData.state;
-          restored++;
-        }
+        // Restore by setting query data directly through the client API
+        queryClient.setQueryData(queryData.queryKey, queryData.state.data);
+        restored++;
       } catch (error) {
         logger.warn('Failed to restore individual query', error as Error);
       }

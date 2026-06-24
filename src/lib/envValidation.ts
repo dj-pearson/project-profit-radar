@@ -6,20 +6,36 @@
 import { logger } from './logger';
 
 interface EnvConfig {
-  /** Supabase project URL */
+  /** Supabase project URL (main API: Kong, Auth, Database, Storage) */
   VITE_SUPABASE_URL: string;
   /** Supabase anonymous/public key */
   VITE_SUPABASE_PUBLISHABLE_KEY: string;
+  /** Edge Functions URL (optional, defaults to SUPABASE_URL/functions/v1) */
+  VITE_EDGE_FUNCTIONS_URL?: string;
   /** Supabase project ID (optional) */
   VITE_SUPABASE_PROJECT_ID?: string;
   /** PostHog API key (optional) */
   VITE_POSTHOG_API_KEY?: string;
   /** PostHog host URL (optional) */
   VITE_POSTHOG_HOST?: string;
+  /** Sentry DSN for error tracking (optional, but strongly recommended in production) */
+  VITE_SENTRY_DSN?: string;
+  /** App release/version for Sentry release tagging (optional) */
+  VITE_APP_VERSION?: string;
 }
 
 /**
+ * Default fallback values for single-tenant production deployment.
+ * URL falls back to production default. The anon key MUST be provided via
+ * environment variables — no hardcoded tokens in source code.
+ */
+const FALLBACK_VALUES: Partial<EnvConfig> = {
+  VITE_SUPABASE_URL: 'https://api.brikly.net',
+};
+
+/**
  * Required environment variables
+ * Note: These have fallbacks in development, so missing values are warnings not errors
  */
 const REQUIRED_ENV_VARS: (keyof EnvConfig)[] = [
   'VITE_SUPABASE_URL',
@@ -30,9 +46,12 @@ const REQUIRED_ENV_VARS: (keyof EnvConfig)[] = [
  * Optional environment variables
  */
 const OPTIONAL_ENV_VARS: (keyof EnvConfig)[] = [
+  'VITE_EDGE_FUNCTIONS_URL',
   'VITE_SUPABASE_PROJECT_ID',
   'VITE_POSTHOG_API_KEY',
   'VITE_POSTHOG_HOST',
+  'VITE_SENTRY_DSN',
+  'VITE_APP_VERSION',
 ];
 
 /**
@@ -47,11 +66,22 @@ const getEnvVar = (key: string): string | undefined => {
  */
 const validateEnvVar = (key: string, required: boolean): boolean => {
   const value = getEnvVar(key);
+  const hasFallback = key in FALLBACK_VALUES;
 
   if (!value || value.trim() === '') {
     if (required) {
-      logger.error(`Missing required environment variable: ${key}`);
-      return false;
+      if (hasFallback && import.meta.env.DEV) {
+        // In development with fallback available, just warn
+        logger.warn(`Using fallback value for: ${key}`);
+        return true;
+      } else if (!import.meta.env.PROD) {
+        // Only log errors in production without fallbacks
+        logger.warn(`Missing environment variable: ${key} (using fallback)`);
+        return true;
+      } else {
+        logger.error(`Missing required environment variable: ${key}`);
+        return false;
+      }
     } else {
       logger.info(`Optional environment variable not set: ${key}`);
       return true;
@@ -65,6 +95,14 @@ const validateEnvVar = (key: string, required: boolean): boolean => {
     } catch {
       logger.error(`Invalid VITE_SUPABASE_URL: Must be a valid URL`, undefined, { value });
       return false;
+    }
+  }
+
+  if (key === 'VITE_EDGE_FUNCTIONS_URL' && value) {
+    try {
+      new URL(value);
+    } catch {
+      logger.warn(`Invalid VITE_EDGE_FUNCTIONS_URL: Should be a valid URL`, { value });
     }
   }
 
@@ -101,6 +139,16 @@ export const validateEnvironment = (): boolean => {
     validateEnvVar(key, false);
   }
 
+  // Sentry is technically optional, but shipping production without error
+  // tracking is a real operational gap — warn loudly so a missing DSN is
+  // caught in deploy logs instead of silently disabling all error reporting.
+  if (import.meta.env.PROD && !getEnvVar('VITE_SENTRY_DSN')) {
+    logger.warn(
+      'VITE_SENTRY_DSN is not set in production — Sentry error tracking is DISABLED. ' +
+      'Set it in the Cloudflare Pages environment to capture production errors.'
+    );
+  }
+
   if (isValid) {
     logger.info('Environment validation successful');
   } else {
@@ -111,15 +159,18 @@ export const validateEnvironment = (): boolean => {
 };
 
 /**
- * Get environment configuration with defaults
+ * Get environment configuration with defaults/fallbacks
  */
 export const getEnvConfig = (): EnvConfig => {
   return {
-    VITE_SUPABASE_URL: getEnvVar('VITE_SUPABASE_URL') || '',
-    VITE_SUPABASE_PUBLISHABLE_KEY: getEnvVar('VITE_SUPABASE_PUBLISHABLE_KEY') || '',
+    VITE_SUPABASE_URL: getEnvVar('VITE_SUPABASE_URL') || FALLBACK_VALUES.VITE_SUPABASE_URL || '',
+    VITE_SUPABASE_PUBLISHABLE_KEY: getEnvVar('VITE_SUPABASE_PUBLISHABLE_KEY') || FALLBACK_VALUES.VITE_SUPABASE_PUBLISHABLE_KEY || '',
+    VITE_EDGE_FUNCTIONS_URL: getEnvVar('VITE_EDGE_FUNCTIONS_URL'),
     VITE_SUPABASE_PROJECT_ID: getEnvVar('VITE_SUPABASE_PROJECT_ID'),
     VITE_POSTHOG_API_KEY: getEnvVar('VITE_POSTHOG_API_KEY'),
     VITE_POSTHOG_HOST: getEnvVar('VITE_POSTHOG_HOST'),
+    VITE_SENTRY_DSN: getEnvVar('VITE_SENTRY_DSN'),
+    VITE_APP_VERSION: getEnvVar('VITE_APP_VERSION'),
   };
 };
 
@@ -156,6 +207,7 @@ export const displayEnvInfo = (): void => {
     logger.debug('Mode:', getMode());
     logger.debug('Supabase URL:', config.VITE_SUPABASE_URL ? '✓ Set' : '✗ Missing');
     logger.debug('Supabase Key:', config.VITE_SUPABASE_PUBLISHABLE_KEY ? '✓ Set' : '✗ Missing');
+    logger.debug('Edge Functions URL:', config.VITE_EDGE_FUNCTIONS_URL ? '✓ Set' : '- Using default');
     logger.debug('Supabase Project ID:', config.VITE_SUPABASE_PROJECT_ID ? '✓ Set' : '- Optional');
     logger.debug('PostHog API Key:', config.VITE_POSTHOG_API_KEY ? '✓ Set' : '- Optional');
     logger.debug('PostHog Host:', config.VITE_POSTHOG_HOST || '- Using default');
@@ -177,10 +229,11 @@ export const assertValidEnvironment = (): void => {
 ║                                                               ║
 ║  Please create a .env file in the project root with:         ║
 ║                                                               ║
-║  VITE_SUPABASE_URL=https://your-project.supabase.co          ║
+║  VITE_SUPABASE_URL=https://api.brikly.net                ║
 ║  VITE_SUPABASE_PUBLISHABLE_KEY=your-anon-key                 ║
 ║                                                               ║
-║  Optional variables:                                          ║
+║  Optional variables (for self-hosted):                        ║
+║  VITE_EDGE_FUNCTIONS_URL=https://functions.brikly.net    ║
 ║  VITE_POSTHOG_API_KEY=your-posthog-key                       ║
 ║                                                               ║
 ╚═══════════════════════════════════════════════════════════════╝

@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
@@ -19,6 +18,7 @@ import {
   MapIcon,
   Zap
 } from 'lucide-react';
+import { logger } from '@/lib/logger';
 
 interface GPSLocation {
   id: string;
@@ -256,7 +256,7 @@ export const GPSTrackingSystem: React.FC<GPSTrackingProps> = ({
 
       // Check accuracy threshold
       if (position.coords.accuracy > settings.accuracy_threshold) {
-        console.warn('Location accuracy too low:', position.coords.accuracy);
+        logger.warn('Location accuracy too low:', position.coords.accuracy);
         return;
       }
 

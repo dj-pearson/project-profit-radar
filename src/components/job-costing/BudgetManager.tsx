@@ -4,9 +4,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { AccessibleModal } from '@/components/accessibility/AccessibleModal';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Edit, Trash2, Save, X } from 'lucide-react';
+import { Plus, Edit, Trash2, Save, X, Loader2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
@@ -41,6 +41,9 @@ export const BudgetManager: React.FC<BudgetManagerProps> = ({ projectId }) => {
   const [loading, setLoading] = useState(true);
   const [editingItem, setEditingItem] = useState<BudgetItem | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [deletingItemId, setDeletingItemId] = useState<string | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const categories = ['labor', 'materials', 'equipment', 'subcontractors', 'overhead'];
 
@@ -94,6 +97,7 @@ export const BudgetManager: React.FC<BudgetManagerProps> = ({ projectId }) => {
   };
 
   const handleSave = async (item: Partial<BudgetItem>) => {
+    setIsSaving(true);
     try {
     const itemData = {
       project_id: projectId,
@@ -126,7 +130,7 @@ export const BudgetManager: React.FC<BudgetManagerProps> = ({ projectId }) => {
       await loadData();
       setEditingItem(null);
       setIsDialogOpen(false);
-      
+
       toast({
         title: "Success",
         description: editingItem ? "Budget item updated" : "Budget item created",
@@ -138,10 +142,13 @@ export const BudgetManager: React.FC<BudgetManagerProps> = ({ projectId }) => {
         description: "Failed to save budget item",
         variant: "destructive",
       });
+    } finally {
+      setIsSaving(false);
     }
   };
 
   const handleDelete = async (itemId: string) => {
+    setIsDeleting(true);
     try {
       const { error } = await supabase
         .from('budget_line_items')
@@ -151,6 +158,7 @@ export const BudgetManager: React.FC<BudgetManagerProps> = ({ projectId }) => {
       if (error) throw error;
 
       await loadData();
+      setDeletingItemId(null);
       toast({
         title: "Success",
         description: "Budget item deleted",
@@ -162,6 +170,8 @@ export const BudgetManager: React.FC<BudgetManagerProps> = ({ projectId }) => {
         description: "Failed to delete budget item",
         variant: "destructive",
       });
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -178,10 +188,11 @@ export const BudgetManager: React.FC<BudgetManagerProps> = ({ projectId }) => {
     return <Badge variant="outline">On Budget</Badge>;
   };
 
-  const BudgetItemForm = ({ item, onSave, onCancel }: {
+  const BudgetItemForm = ({ item, onSave, onCancel, isSaving }: {
     item?: BudgetItem;
     onSave: (item: Partial<BudgetItem>) => void;
     onCancel: () => void;
+    isSaving?: boolean;
   }) => {
     const [formData, setFormData] = useState({
       category: item?.category || '',
@@ -291,13 +302,17 @@ export const BudgetManager: React.FC<BudgetManagerProps> = ({ projectId }) => {
         </div>
 
         <div className="flex justify-end gap-2">
-          <Button variant="outline" onClick={onCancel}>
+          <Button variant="outline" onClick={onCancel} disabled={isSaving}>
             <X className="h-4 w-4 mr-2" />
             Cancel
           </Button>
-          <Button onClick={() => onSave(formData)}>
-            <Save className="h-4 w-4 mr-2" />
-            Save
+          <Button onClick={() => onSave(formData)} disabled={isSaving} className="gap-2">
+            {isSaving ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Save className="h-4 w-4" />
+            )}
+            {isSaving ? 'Saving...' : 'Save'}
           </Button>
         </div>
       </div>
@@ -314,29 +329,10 @@ export const BudgetManager: React.FC<BudgetManagerProps> = ({ projectId }) => {
         <CardHeader>
           <div className="flex items-center justify-between">
             <CardTitle>Budget vs Actual Costs</CardTitle>
-            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-              <DialogTrigger asChild>
-                <Button onClick={() => setEditingItem(null)}>
-                  <Plus className="h-4 w-4 mr-2" />
-                  Add Budget Item
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-                <DialogHeader>
-                  <DialogTitle>
-                    {editingItem ? 'Edit Budget Item' : 'Add Budget Item'}
-                  </DialogTitle>
-                </DialogHeader>
-                <BudgetItemForm
-                  item={editingItem || undefined}
-                  onSave={handleSave}
-                  onCancel={() => {
-                    setEditingItem(null);
-                    setIsDialogOpen(false);
-                  }}
-                />
-              </DialogContent>
-            </Dialog>
+            <Button onClick={() => { setEditingItem(null); setIsDialogOpen(true); }}>
+              <Plus className="h-4 w-4 mr-2" />
+              Add Budget Item
+            </Button>
           </div>
         </CardHeader>
         <CardContent>
@@ -387,7 +383,7 @@ export const BudgetManager: React.FC<BudgetManagerProps> = ({ projectId }) => {
                         <Button
                           variant="ghost"
                           size="sm"
-                          onClick={() => handleDelete(item.id)}
+                          onClick={() => setDeletingItemId(item.id)}
                         >
                           <Trash2 className="h-4 w-4" />
                         </Button>
@@ -406,6 +402,48 @@ export const BudgetManager: React.FC<BudgetManagerProps> = ({ projectId }) => {
           )}
         </CardContent>
       </Card>
+
+      {/* Delete Confirmation Dialog */}
+      <AccessibleModal
+        isOpen={!!deletingItemId}
+        onClose={() => setDeletingItemId(null)}
+        title="Delete Budget Item"
+        description="Are you sure you want to delete this budget item? This action cannot be undone."
+        size="sm"
+        disableClickOutside
+        footer={
+          <>
+            <Button variant="outline" onClick={() => setDeletingItemId(null)} disabled={isDeleting}>Cancel</Button>
+            <Button
+              variant="destructive"
+              onClick={() => deletingItemId && handleDelete(deletingItemId)}
+              disabled={isDeleting}
+              className="gap-2"
+            >
+              {isDeleting && <Loader2 className="h-4 w-4 animate-spin" />}
+              {isDeleting ? 'Deleting...' : 'Delete'}
+            </Button>
+          </>
+        }
+      />
+
+      {/* Add/Edit Budget Item Dialog */}
+      <AccessibleModal
+        isOpen={isDialogOpen}
+        onClose={() => { setEditingItem(null); setIsDialogOpen(false); }}
+        title={editingItem ? 'Edit Budget Item' : 'Add Budget Item'}
+        size="lg"
+      >
+        <BudgetItemForm
+          item={editingItem || undefined}
+          onSave={handleSave}
+          onCancel={() => {
+            setEditingItem(null);
+            setIsDialogOpen(false);
+          }}
+          isSaving={isSaving}
+        />
+      </AccessibleModal>
     </div>
   );
 };

@@ -1,14 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Progress } from '@/components/ui/progress';
-import { 
-  Shield, Calendar, AlertTriangle, CheckCircle, Clock, 
-  Phone, Mail, FileText, Wrench, User
-} from 'lucide-react';
+import { Shield, Calendar, AlertTriangle, Clock, FileText, Wrench, User } from 'lucide-react';
 
 interface Warranty {
   id: string;
@@ -104,7 +101,7 @@ export const WarrantyManagementSystem: React.FC = () => {
         'Lack of proper maintenance'
       ],
       terms: 'Standard 24-month comprehensive warranty with immediate response for critical issues',
-      responsibleParty: 'BuildDesk Construction',
+      responsibleParty: 'Brikly Construction',
       notes: 'Premium client - priority service required'
     },
     {
@@ -134,7 +131,7 @@ export const WarrantyManagementSystem: React.FC = () => {
         'Normal settling'
       ],
       terms: 'One-year workmanship warranty with 30-day callback guarantee',
-      responsibleParty: 'BuildDesk Construction'
+      responsibleParty: 'Brikly Construction'
     }
   ]);
 

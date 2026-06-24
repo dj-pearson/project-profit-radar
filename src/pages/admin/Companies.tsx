@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { RoleGuard, ROLE_GROUPS } from '@/components/auth/RoleGuard';
@@ -7,23 +7,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
-import { 
-  Building2,
-  Users,
-  Calendar,
-  DollarSign,
-  Search,
-  Filter,
-  MoreHorizontal,
-  Edit,
-  Trash2,
-  Eye
-} from 'lucide-react';
+import { Building2, Users, Calendar, Search, Filter, Eye } from 'lucide-react';
 
 interface Company {
   id: string;
@@ -115,26 +104,39 @@ const Companies = () => {
 
       if (error) throw error;
 
-      // Get user counts for each company
+      // Get user counts for each company with proper error handling
       const companiesWithCounts = await Promise.all(
         (companiesData || []).map(async (company) => {
-          const { count: userCount } = await supabase
-            .from('user_profiles')
-            .select('*', { count: 'exact', head: true })
-            .eq('company_id', company.id);
+          try {
+            const [userResult, projectResult] = await Promise.all([
+              supabase
+                .from('user_profiles')
+                .select('*', { count: 'exact', head: true })
+                .eq('company_id', company.id),
+              supabase
+                .from('projects')
+                .select('*', { count: 'exact', head: true })
+                .eq('company_id', company.id)
+            ]);
 
-          const { count: projectCount } = await supabase
-            .from('projects')
-            .select('*', { count: 'exact', head: true })
-            .eq('company_id', company.id);
-
-          return {
-            ...company,
-            _count: {
-              users: userCount || 0,
-              projects: projectCount || 0
-            }
-          };
+            return {
+              ...company,
+              _count: {
+                users: userResult.count || 0,
+                projects: projectResult.count || 0
+              }
+            };
+          } catch (error) {
+            console.error(`Error fetching counts for company ${company.id}:`, error);
+            // Return company with zero counts on error to prevent data loss
+            return {
+              ...company,
+              _count: {
+                users: 0,
+                projects: 0
+              }
+            };
+          }
         })
       );
 
@@ -215,12 +217,12 @@ const Companies = () => {
   if (loading || loadingData) {
     return (
       <DashboardLayout title="Companies" showTrialBanner={false}>
-        <div className="flex items-center justify-center py-12">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-construction-blue mx-auto mb-4"></div>
-            <p className="text-muted-foreground">Loading companies...</p>
+        <div className="space-y-6" role="status" aria-live="polite" aria-label="Loading content">
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+              {[1,2,3,4].map(i => <div key={i} className="h-24 bg-muted animate-pulse rounded-lg" />)}
+            </div>
+            <div className="h-[300px] bg-muted animate-pulse rounded-lg" />
           </div>
-        </div>
       </DashboardLayout>
     );
   }
@@ -230,15 +232,16 @@ const Companies = () => {
       <DashboardLayout title="Companies" showTrialBanner={false}>
         <div className="space-y-6">
         {/* Filters */}
-        <div className="flex flex-col sm:flex-row gap-4">
-          <div className="flex-1">
+        <section className="flex flex-col sm:flex-row gap-4" aria-label="Company filters">
+          <div className="flex-1" role="search" aria-label="Search companies">
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" aria-hidden="true" />
               <Input
                 placeholder="Search companies..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-10"
+                aria-label="Search companies"
               />
             </div>
           </div>
@@ -265,7 +268,7 @@ const Companies = () => {
               <SelectItem value="enterprise">Enterprise</SelectItem>
             </SelectContent>
           </Select>
-        </div>
+        </section>
 
         {/* Companies Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -287,21 +290,21 @@ const Companies = () => {
                 <div className="space-y-3">
                   <div className="flex items-center justify-between text-sm">
                     <span className="flex items-center text-muted-foreground">
-                      <Users className="h-4 w-4 mr-1" />
+                      <Users className="h-4 w-4 mr-1" aria-hidden="true" />
                       Users
                     </span>
                     <span className="font-medium">{company._count?.users || 0}</span>
                   </div>
                   <div className="flex items-center justify-between text-sm">
                     <span className="flex items-center text-muted-foreground">
-                      <Building2 className="h-4 w-4 mr-1" />
+                      <Building2 className="h-4 w-4 mr-1" aria-hidden="true" />
                       Projects
                     </span>
                     <span className="font-medium">{company._count?.projects || 0}</span>
                   </div>
                   <div className="flex items-center justify-between text-sm">
                     <span className="flex items-center text-muted-foreground">
-                      <Calendar className="h-4 w-4 mr-1" />
+                      <Calendar className="h-4 w-4 mr-1" aria-hidden="true" />
                       Created
                     </span>
                     <span className="font-medium">
@@ -318,8 +321,9 @@ const Companies = () => {
                         setIsDetailDialogOpen(true);
                         await loadCompanySettings(company.id);
                       }}
+                      aria-label={`View details for ${company.name}`}
                     >
-                      <Eye className="h-3 w-3 mr-1" />
+                      <Eye className="h-3 w-3 mr-1" aria-hidden="true" />
                       View
                     </Button>
                   </div>
@@ -342,10 +346,10 @@ const Companies = () => {
 
       {/* Company Detail Dialog */}
       <Dialog open={isDetailDialogOpen} onOpenChange={setIsDetailDialogOpen}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto" aria-describedby="company-detail-description">
           <DialogHeader>
             <DialogTitle>Company Details</DialogTitle>
-            <DialogDescription>
+            <DialogDescription id="company-detail-description">
               Detailed information and settings for {selectedCompany?.name}
             </DialogDescription>
           </DialogHeader>

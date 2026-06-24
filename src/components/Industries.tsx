@@ -52,7 +52,7 @@ const Industries = () => {
             Built for Every Type of Construction Business
           </h2>
           <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-            From residential remodelers to commercial contractors, Build Desk adapts to your specific industry needs
+            From residential remodelers to commercial contractors, Brikly adapts to your specific industry needs
           </p>
         </div>
 
@@ -113,7 +113,7 @@ const Industries = () => {
             Don't See Your Industry?
           </h3>
           <p className="text-muted-foreground mb-6 max-w-2xl mx-auto">
-            Build Desk is flexible enough to work with any construction business. 
+            Brikly is flexible enough to work with any construction business. 
             Our team will help customize the platform for your specific needs.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">

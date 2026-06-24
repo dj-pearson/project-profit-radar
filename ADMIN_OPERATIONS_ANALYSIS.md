@@ -1,4 +1,4 @@
-# BuildDesk Admin Operations Analysis
+# Brikly Admin Operations Analysis
 
 **Date:** 2025-11-08
 **Objective:** Evaluate daily admin operations and design time-saving automation features
@@ -7,7 +7,7 @@
 
 ## Executive Summary
 
-BuildDesk has a **solid foundation** of admin tools for user/company management, but lacks critical automation and debugging capabilities that would save significant admin time daily. The platform is currently **60-70% manual** in key operational areas like trial management, support, and revenue operations.
+Brikly has a **solid foundation** of admin tools for user/company management, but lacks critical automation and debugging capabilities that would save significant admin time daily. The platform is currently **60-70% manual** in key operational areas like trial management, support, and revenue operations.
 
 **Key Findings:**
 - ⏰ **Estimated Admin Time Savings:** 15-20 hours/week with proposed features
@@ -643,14 +643,14 @@ When ticket arrives:
 │ To fix this:                            │
 │ 1. Go to Settings → Integrations        │
 │ 2. Click "Reconnect QuickBooks"         │
-│ 3. Authorize BuildDesk again            │
+│ 3. Authorize Brikly again            │
 │                                        │
 │ Here's a quick video guide: [link]      │
 │                                        │
 │ Let me know if you need help!           │
 │                                        │
 │ Best,                                   │
-│ BuildDesk Support                       │
+│ Brikly Support                       │
 │                                        │
 │ [✏️  Edit] [📤 Send] [❌ Discard]       │
 └────────────────────────────────────────┘
@@ -806,7 +806,7 @@ After clicking "View as User":
 ┌────────────────────────────────────────┐
 │ ⚠️  IMPERSONATION MODE ACTIVE           │
 │ Viewing as: John Smith (Acme Corp)      │
-│ Your admin session: admin@builddesk.com │
+│ Your admin session: admin@brikly.net │
 │ [🚪 Exit Impersonation] [🐛 Debug]      │
 └────────────────────────────────────────┘
 ```
@@ -953,7 +953,7 @@ CREATE TABLE admin_impersonation_sessions (
 - Only `root_admin` and specific support admins can impersonate
 - Impersonation requires entering reason (logged)
 - Cannot modify billing or delete data while impersonating
-- User receives email notification: "BuildDesk support accessed your account for debugging"
+- User receives email notification: "Brikly support accessed your account for debugging"
 
 #### Technical Implementation:
 
@@ -1146,7 +1146,7 @@ CREATE TABLE session_replay_data (
 
 ## 10. Conclusion
 
-BuildDesk has strong admin fundamentals but is **heavily manual** in areas that directly impact revenue and customer satisfaction. The three proposed features would:
+Brikly has strong admin fundamentals but is **heavily manual** in areas that directly impact revenue and customer satisfaction. The three proposed features would:
 
 1. **Unified Admin Intelligence Dashboard:** Transform reactive admin work into proactive account management
 2. **Smart Support Assistant:** Reduce support burden by 70% through automation and context

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { useChartOfAccounts, useAccountBalances } from '@/hooks/useAccounting';
+import { useChartOfAccounts } from '@/hooks/useAccounting';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -109,12 +109,12 @@ export default function BalanceSheet() {
   };
 
   return (
-    <div className="container mx-auto py-6 space-y-6">
+    <main className="container mx-auto py-6 space-y-6" role="main" aria-label="Balance Sheet">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <header className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight flex items-center gap-2">
-            <BarChart3 className="h-8 w-8" />
+            <BarChart3 className="h-8 w-8" aria-hidden="true" />
             Balance Sheet
           </h1>
           <p className="text-muted-foreground mt-1">
@@ -122,52 +122,56 @@ export default function BalanceSheet() {
           </p>
         </div>
 
-        <div className="flex gap-2">
-          <Button variant="outline" onClick={handlePrint}>
-            <Printer className="mr-2 h-4 w-4" />
+        <div className="flex gap-2" role="toolbar" aria-label="Report actions">
+          <Button variant="outline" onClick={handlePrint} aria-label="Print balance sheet">
+            <Printer className="mr-2 h-4 w-4" aria-hidden="true" />
             Print
           </Button>
-          <Button variant="outline" onClick={handleExport}>
-            <Download className="mr-2 h-4 w-4" />
+          <Button variant="outline" onClick={handleExport} aria-label="Export balance sheet">
+            <Download className="mr-2 h-4 w-4" aria-hidden="true" />
             Export
           </Button>
         </div>
-      </div>
+      </header>
 
       {/* Filters */}
-      <Card>
-        <CardContent className="pt-6">
-          <div className="flex gap-4 items-end">
-            <div className="space-y-2">
-              <Label htmlFor="asOfDate">As of Date</Label>
-              <Input
-                id="asOfDate"
-                type="date"
-                value={asOfDate}
-                onChange={(e) => setAsOfDate(e.target.value)}
-                className="w-[200px]"
-              />
+      <section aria-label="Report filters">
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex gap-4 items-end">
+              <div className="space-y-2">
+                <Label htmlFor="asOfDate">As of Date</Label>
+                <Input
+                  id="asOfDate"
+                  type="date"
+                  value={asOfDate}
+                  onChange={(e) => setAsOfDate(e.target.value)}
+                  className="w-[200px]"
+                  aria-label="Select date for balance sheet"
+                />
+              </div>
             </div>
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      </section>
 
       {/* Balance Sheet */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Balance Sheet</CardTitle>
-          <CardDescription>
-            As of {new Date(asOfDate).toLocaleDateString('en-US', {
-              year: 'numeric',
-              month: 'long',
-              day: 'numeric',
-            })}
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          {isLoading ? (
-            <div className="text-center py-8">Loading balance sheet...</div>
-          ) : (
+      <section aria-label="Balance sheet report">
+        <Card>
+          <CardHeader>
+            <CardTitle>Balance Sheet</CardTitle>
+            <CardDescription>
+              As of {new Date(asOfDate).toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+              })}
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {isLoading ? (
+              <div className="space-y-3">{[1,2,3,4,5].map(i => <div key={i} className="h-8 bg-muted animate-pulse rounded" />)}</div>
+            ) : (
             <div className="space-y-8">
               {/* ASSETS */}
               <div>
@@ -303,8 +307,8 @@ export default function BalanceSheet() {
 
               {/* Balance Check */}
               {!isBalanced && (
-                <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-red-800">
-                  <p className="font-semibold">⚠️ Balance Sheet is Out of Balance</p>
+                <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-red-800" role="alert">
+                  <p className="font-semibold"><span aria-hidden="true">⚠️</span> Balance Sheet is Out of Balance</p>
                   <p className="text-sm">
                     Assets: {formatCurrency(totalAssets)} <br />
                     Liabilities + Equity: {formatCurrency(totalLiabilitiesAndEquity)} <br />
@@ -314,8 +318,8 @@ export default function BalanceSheet() {
               )}
 
               {isBalanced && (
-                <div className="bg-green-50 border border-green-200 rounded-lg p-4 text-green-800">
-                  <p className="font-semibold">✓ Balance Sheet is Balanced</p>
+                <div className="bg-green-50 border border-green-200 rounded-lg p-4 text-green-800" role="status">
+                  <p className="font-semibold"><span aria-hidden="true">✓</span> Balance Sheet is Balanced</p>
                   <p className="text-sm">
                     Assets = Liabilities + Equity = {formatCurrency(totalAssets)}
                   </p>
@@ -325,6 +329,7 @@ export default function BalanceSheet() {
           )}
         </CardContent>
       </Card>
-    </div>
+      </section>
+    </main>
   );
 }

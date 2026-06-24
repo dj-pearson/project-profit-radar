@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { Bell, Mail, Settings, Calendar } from 'lucide-react';
+import { Bell, Mail, Settings } from 'lucide-react';
 
 interface NotificationPreference {
   id: string;
@@ -168,7 +168,7 @@ const EmailNotificationSystem = () => {
         body: {
           type: 'test',
           to: testEmail,
-          subject: 'Test Notification from BuildDesk',
+          subject: 'Test Notification from Brikly',
           content: 'This is a test notification to verify your email settings.'
         }
       });

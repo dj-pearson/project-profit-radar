@@ -1,4 +1,4 @@
-# BuildDesk Mobile App - Quick Start Guide
+# Brikly Mobile App - Quick Start Guide
 
 Get the mobile app running in 5 minutes!
 

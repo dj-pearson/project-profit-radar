@@ -1,4 +1,4 @@
-# BuildDesk Mobile App Deployment Checklist
+# Brikly Mobile App Deployment Checklist
 
 ## 🚀 Pre-Deployment Checklist
 
@@ -15,7 +15,7 @@
 #### **iOS App Store**
 - [ ] **Apple Developer Account** - Ensure you have an active Apple Developer Program membership ($99/year)
 - [ ] **App Store Connect App** - Create app record in App Store Connect
-- [ ] **Bundle Identifier** - Verify `com.builddesk.app` is available and registered
+- [ ] **Bundle Identifier** - Verify `com.brikly.app` is available and registered
 - [ ] **Certificates & Provisioning** - EAS will handle automatically, but verify Apple Team ID
 - [ ] **App Icons** - Create and add all required icon sizes (see icon requirements below)
 - [ ] **Screenshots** - Prepare screenshots for all device sizes
@@ -26,7 +26,7 @@
 #### **Google Play Store**
 - [ ] **Google Play Console Account** - Create developer account ($25 one-time fee)
 - [ ] **App Bundle** - EAS will generate AAB format automatically
-- [ ] **Package Name** - Verify `com.builddesk.app` is available
+- [ ] **Package Name** - Verify `com.brikly.app` is available
 - [ ] **Signing Key** - EAS will handle app signing automatically
 - [ ] **Store Listing** - Prepare screenshots, descriptions, feature graphics
 - [ ] **Content Rating** - Complete content rating questionnaire
@@ -227,4 +227,4 @@ eas build --profile production --platform all
 
 **Total Time to Launch**: 1-2 weeks
 
-Your BuildDesk mobile app is production-ready and can be deployed to app stores! 🎉
+Your Brikly mobile app is production-ready and can be deployed to app stores! 🎉

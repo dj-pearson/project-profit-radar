@@ -591,10 +591,15 @@ describe('Period Management', () => {
   });
 
   describe('generateMonthlyPeriods()', () => {
+    // Use the local-time `Date(year, month, day)` constructor — `new
+    // Date('2024-01-01')` parses as UTC, which in negative-offset
+    // timezones drifts back to Dec 31 2023 local and breaks the period
+    // count and labels.
+
     it('should generate 12 periods for a full year', () => {
       const periods = generateMonthlyPeriods(
-        new Date('2024-01-01'),
-        new Date('2024-12-31')
+        new Date(2024, 0, 1),
+        new Date(2024, 11, 31)
       );
 
       expect(periods.length).toBe(12);
@@ -602,8 +607,8 @@ describe('Period Management', () => {
 
     it('should number periods sequentially', () => {
       const periods = generateMonthlyPeriods(
-        new Date('2024-01-01'),
-        new Date('2024-03-31')
+        new Date(2024, 0, 1),
+        new Date(2024, 2, 31)
       );
 
       expect(periods[0].periodNumber).toBe(1);
@@ -613,8 +618,8 @@ describe('Period Management', () => {
 
     it('should include correct month names', () => {
       const periods = generateMonthlyPeriods(
-        new Date('2024-01-01'),
-        new Date('2024-03-31')
+        new Date(2024, 0, 1),
+        new Date(2024, 2, 31)
       );
 
       expect(periods[0].periodName).toContain('January');

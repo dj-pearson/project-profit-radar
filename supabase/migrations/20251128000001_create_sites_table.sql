@@ -1,7 +1,7 @@
 -- =====================================================
 -- MULTI-SITE ARCHITECTURE - Phase 1
 -- =====================================================
--- Purpose: Enable multiple Pearson Media products (Build-Desk, RealEstate Bio, SalonPros Bio, etc.)
+-- Purpose: Enable multiple Pearson Media products (Brikly, RealEstate Bio, SalonPros Bio, etc.)
 --          to share a single Supabase database with complete data isolation
 -- Migration: Phase 1 - Create sites table infrastructure
 -- Date: 2025-11-28
@@ -20,9 +20,9 @@ CREATE TABLE sites (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   
   -- Site identity
-  key TEXT UNIQUE NOT NULL, -- 'builddesk', 'realestate', 'salonpros', etc.
-  name TEXT NOT NULL, -- Display name: 'Build-Desk', 'RealEstate Bio', etc.
-  domain TEXT NOT NULL, -- Primary domain: 'build-desk.com', 'realestatebio.com', etc.
+  key TEXT UNIQUE NOT NULL, -- 'brikly', 'realestate', 'salonpros', etc.
+  name TEXT NOT NULL, -- Display name: 'Brikly', 'RealEstate Bio', etc.
+  domain TEXT NOT NULL, -- Primary domain: 'brikly.net', 'realestatebio.com', etc.
   
   -- Additional domains (for staging, custom domains, etc.)
   additional_domains TEXT[] DEFAULT '{}',
@@ -168,7 +168,7 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 -- 6. SEED DATA - Initial Sites
 -- =====================================================
 
--- Insert Build-Desk as the primary site
+-- Insert Brikly as the primary site
 INSERT INTO sites (
   key,
   name,
@@ -180,10 +180,10 @@ INSERT INTO sites (
   is_production,
   config
 ) VALUES (
-  'builddesk',
-  'Build-Desk',
-  'build-desk.com',
-  ARRAY['builddesk.pearsonperformance.workers.dev', 'www.build-desk.com'],
+  'brikly',
+  'Brikly',
+  'brikly.net',
+  ARRAY['brikly.pearsonperformance.workers.dev', 'www.brikly.net'],
   'Construction management platform for small to medium-sized construction businesses',
   'construction',
   TRUE,
@@ -220,10 +220,10 @@ INSERT INTO sites (
 -- =====================================================
 
 COMMENT ON TABLE sites IS
-  'Multi-site architecture - Each Pearson Media product (Build-Desk, RealEstate Bio, etc.) gets one row';
+  'Multi-site architecture - Each Pearson Media product (Brikly, RealEstate Bio, etc.) gets one row';
 
 COMMENT ON COLUMN sites.key IS
-  'URL-safe unique identifier for the site (builddesk, realestate, salonpros)';
+  'URL-safe unique identifier for the site (brikly, realestate, salonpros)';
 
 COMMENT ON COLUMN sites.domain IS
   'Primary domain name for routing and site resolution';
@@ -239,15 +239,15 @@ DO $$
 DECLARE
   v_site_count INTEGER;
 BEGIN
-  SELECT COUNT(*) INTO v_site_count FROM sites WHERE key = 'builddesk';
+  SELECT COUNT(*) INTO v_site_count FROM sites WHERE key = 'brikly';
   
   IF v_site_count > 0 THEN
     RAISE NOTICE '✓ Migration 20251128000001_create_sites_table.sql completed successfully';
     RAISE NOTICE '✓ Created sites table with indexes and RLS';
     RAISE NOTICE '✓ Created helper functions: get_site_by_domain, get_site_by_key';
-    RAISE NOTICE '✓ Seeded Build-Desk as primary site';
+    RAISE NOTICE '✓ Seeded Brikly as primary site';
   ELSE
-    RAISE EXCEPTION 'Migration failed: Build-Desk site not created';
+    RAISE EXCEPTION 'Migration failed: Brikly site not created';
   END IF;
 END $$;
 

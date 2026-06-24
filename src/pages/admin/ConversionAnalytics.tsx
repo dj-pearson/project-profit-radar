@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   Select,
@@ -10,20 +9,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import {
-  TrendingUp,
-  TrendingDown,
-  Users,
-  Mail,
-  Target,
-  CheckCircle,
-  DollarSign,
-  Activity,
-  Zap,
-  BarChart3,
-  PieChart,
-  Trophy,
-} from 'lucide-react';
+import { TrendingUp, TrendingDown, Users, Mail, Target, CheckCircle, DollarSign, Activity, Zap, BarChart3, Trophy } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';

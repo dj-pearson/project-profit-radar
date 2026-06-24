@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 const EmployeeManagement: React.FC = () => {
   return (
-    <div className="container mx-auto py-6">
+    <main className="container mx-auto py-6" aria-label="Employee management settings">
       <Card>
         <CardHeader>
           <CardTitle>Employee Management</CardTitle>
@@ -12,7 +12,7 @@ const EmployeeManagement: React.FC = () => {
           <p className="text-muted-foreground">Employee management coming soon...</p>
         </CardContent>
       </Card>
-    </div>
+    </main>
   );
 };
 

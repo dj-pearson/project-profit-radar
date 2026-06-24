@@ -1,20 +1,6 @@
-import React from 'react';
 import { Helmet } from 'react-helmet-async';
 import { Link } from 'react-router-dom';
-import {
-  FileText,
-  TrendingUp,
-  AlertTriangle,
-  CheckCircle2,
-  DollarSign,
-  PieChart,
-  Calculator,
-  Target,
-  XCircle,
-  ArrowRight,
-  Eye,
-  BarChart3
-} from 'lucide-react';
+import { FileText, TrendingUp, AlertTriangle, CheckCircle2, DollarSign, Calculator, Target, XCircle, ArrowRight, Eye, BarChart3 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 
@@ -26,21 +12,21 @@ const ReadingFinancialStatementsGuide = () => {
     "description": "Learn how to read and interpret construction financial statements including P&L, balance sheet, and cash flow. Practical guide for contractors with real examples and red flags to watch for.",
     "author": {
       "@type": "Organization",
-      "name": "BuildDesk"
+      "name": "Brikly"
     },
     "publisher": {
       "@type": "Organization",
-      "name": "BuildDesk",
+      "name": "Brikly",
       "logo": {
         "@type": "ImageObject",
-        "url": "https://builddesk.com/logo.png"
+        "url": "https://brikly.net/logo.png"
       }
     },
     "datePublished": "2025-01-14",
     "dateModified": "2025-01-14",
     "mainEntityOfPage": {
       "@type": "WebPage",
-      "@id": "https://builddesk.com/resources/reading-financial-statements-guide"
+      "@id": "https://brikly.net/resources/reading-financial-statements-guide"
     },
     "keywords": "construction financial statements, read construction P&L, construction balance sheet, contractor financial reports, understand construction financials"
   };
@@ -134,7 +120,7 @@ const ReadingFinancialStatementsGuide = () => {
   return (
     <>
       <Helmet>
-        <title>How to Read Construction Financial Statements | Contractor's Guide | BuildDesk</title>
+        <title>How to Read Construction Financial Statements | Contractor's Guide | Brikly</title>
         <meta
           name="description"
           content="Learn how to read and interpret construction financial statements including P&L, balance sheet, and cash flow. Practical guide for contractors with real examples and red flags to watch for."
@@ -143,7 +129,7 @@ const ReadingFinancialStatementsGuide = () => {
           name="keywords"
           content="construction financial statements, read construction P&L, construction balance sheet, contractor financial reports, understand construction financials, WIP report, construction accounting"
         />
-        <link rel="canonical" href="https://builddesk.com/resources/reading-financial-statements-guide" />
+        <link rel="canonical" href="https://brikly.net/resources/reading-financial-statements-guide" />
         <script type="application/ld+json">
           {JSON.stringify(articleSchema)}
         </script>
@@ -926,11 +912,11 @@ const ReadingFinancialStatementsGuide = () => {
               See Your Financial Statements in Real-Time
             </h2>
             <p className="text-xl text-gray-300 mb-8 max-w-2xl mx-auto">
-              BuildDesk generates live P&L by project, WIP schedules, and cash flow forecasts automatically. No waiting for month-end reports—see profitability and cash position today.
+              Brikly generates live P&L by project, WIP schedules, and cash flow forecasts automatically. No waiting for month-end reports—see profitability and cash position today.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Button size="lg" className="bg-construction-orange hover:bg-construction-orange/90 text-white">
-                Try BuildDesk Free for 14 Days
+                Try Brikly Free for 14 Days
               </Button>
               <Button size="lg" variant="outline" className="border-white text-white hover:bg-white/10">
                 See Live Financial Dashboard

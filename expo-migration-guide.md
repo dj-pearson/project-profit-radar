@@ -1,4 +1,4 @@
-# Expo Migration Guide for BuildDesk
+# Expo Migration Guide for Brikly
 
 ## Current Setup Analysis
 
@@ -6,7 +6,7 @@
 - **React + Vite** web app
 - **Capacitor** for mobile builds (v7.4.1)
 - **Native plugins**: Camera, Geolocation, Local Notifications, Push Notifications
-- **App ID**: `com.builddesk.app`
+- **App ID**: `com.brikly.app`
 - **Build output**: `dist/` directory
 
 ### 🎯 Migration Options
@@ -25,8 +25,8 @@
 #### Step 1: Install Expo CLI
 ```bash
 npm install -g @expo/cli
-npx create-expo-app --template blank-typescript BuildDeskExpo
-cd BuildDeskExpo
+npx create-expo-app --template blank-typescript BriklyExpo
+cd BriklyExpo
 ```
 
 #### Step 2: Configure Expo App
@@ -34,8 +34,8 @@ Create `app.json`:
 ```json
 {
   "expo": {
-    "name": "BuildDesk",
-    "slug": "builddesk",
+    "name": "Brikly",
+    "slug": "brikly",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -48,7 +48,7 @@ Create `app.json`:
     "assetBundlePatterns": ["**/*"],
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.builddesk.app",
+      "bundleIdentifier": "com.brikly.app",
       "buildNumber": "1"
     },
     "android": {
@@ -56,7 +56,7 @@ Create `app.json`:
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "com.builddesk.app",
+      "package": "com.brikly.app",
       "versionCode": 1
     },
     "web": {
@@ -143,7 +143,7 @@ Create `eas.json`:
     "production": {
       "ios": {
         "simulator": false,
-        "scheme": "BuildDesk"
+        "scheme": "Brikly"
       }
     }
   },
@@ -174,8 +174,8 @@ npx expo install expo-dev-client
 ```json
 {
   "expo": {
-    "name": "BuildDesk",
-    "slug": "builddesk",
+    "name": "Brikly",
+    "slug": "brikly",
     "platforms": ["ios", "android"],
     "plugins": [
       "expo-dev-client",
@@ -316,7 +316,7 @@ To begin migration immediately:
 
 ```bash
 # Option 1: Full migration
-npx create-expo-app@latest BuildDeskExpo --template blank-typescript
+npx create-expo-app@latest BriklyExpo --template blank-typescript
 
 # Option 2: Add to existing project
 cd project-profit-radar

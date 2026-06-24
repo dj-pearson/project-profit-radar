@@ -1,0 +1,35 @@
+## Consolidated Patterns
+
+### iOS App Architecture
+- Native SwiftUI app at `Brikly-iOS/Brikly/` using MVVM pattern
+- ViewModels use `@Observable` macro with `@MainActor` for thread safety
+- Services are actor-based singletons accessing Supabase via `supabase-swift` SPM package
+- All models conform to `Codable`, `Sendable`, `Identifiable`, `Hashable`
+- SupabaseService.swift has a shared JSONDecoder with snake_case key strategy and multi-format date parsing
+
+### Edge Functions
+- Use `getCorsHeaders(req)` from `_shared/secure-cors.ts` for whitelist-based CORS (NOT wildcard `*`)
+- Use `checkRateLimit()` from `_shared/rate-limiter.ts` for rate limiting
+- Use `getClientIP(req)` from rate-limiter.ts for consistent IP extraction
+- Auth pattern: `initializeAuthContext(req)` from `_shared/auth-helpers.ts`
+- Input validation: Zod schemas with `validateRequest()` from `_shared/validation.ts`
+
+### Xcode Project File
+- File references use AB0000xx IDs
+- Build file refs use AE0000xx IDs
+- Group refs use AD0000xx IDs
+- Build config refs use AF0000xx IDs
+- Always add new files to both PBXFileReference section AND the appropriate PBXGroup
+
+### Build Verification
+- `npm run build` must pass (TypeScript + Vite build)
+- `npm run lint` must pass (ESLint)
+- Swift files cannot be compiled in CI - verify syntax manually
+- Use `PUPPETEER_SKIP_DOWNLOAD=true npm install` if deps need reinstalling
+
+---
+
+## 2026-03-31 - Initial Setup
+- Created ralph-ios directory with CLAUDE.md and progress.txt
+- Documented iOS app architecture patterns from deep dive review
+---

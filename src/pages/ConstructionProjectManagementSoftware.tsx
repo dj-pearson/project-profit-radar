@@ -1,6 +1,5 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
-import { CheckCircle, Clock, Calendar, AlertTriangle, TrendingUp, ArrowRight, Download, Users, Zap, Target, BarChart3, Layers, Shield, DollarSign, FileText, Smartphone } from 'lucide-react';
+import { CheckCircle, Clock, AlertTriangle, TrendingUp, ArrowRight, Users, Zap, Target, Layers, Shield, DollarSign, FileText, Smartphone } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -20,7 +19,7 @@ const ConstructionProjectManagementSoftware = () => {
     },
     {
       question: "How much does construction project management software cost?",
-      answer: "Construction project management software typically costs $30-150 per user per month. BuildDesk offers competitive pricing starting at $49/month for small contractors, with enterprise plans for larger operations. The ROI typically pays for itself within 2-3 months through improved efficiency."
+      answer: "Construction project management software typically costs $30-150 per user per month. Brikly offers competitive pricing starting at $49/month for small contractors, with enterprise plans for larger operations. The ROI typically pays for itself within 2-3 months through improved efficiency."
     },
     {
       question: "What features should I look for in construction project management software?",
@@ -28,11 +27,11 @@ const ConstructionProjectManagementSoftware = () => {
     },
     {
       question: "Can construction project management software work offline?",
-      answer: "Modern construction project management software like BuildDesk offers offline mobile capabilities, allowing field teams to update progress, capture photos, and log time even without internet. Data syncs automatically when connection is restored."
+      answer: "Modern construction project management software like Brikly offers offline mobile capabilities, allowing field teams to update progress, capture photos, and log time even without internet. Data syncs automatically when connection is restored."
     },
     {
       question: "How long does it take to implement construction project management software?",
-      answer: "Implementation typically takes 1-4 weeks depending on company size and complexity. BuildDesk provides dedicated onboarding support, data migration assistance, and team training to ensure smooth adoption within 2 weeks for most contractors."
+      answer: "Implementation typically takes 1-4 weeks depending on company size and complexity. Brikly provides dedicated onboarding support, data migration assistance, and team training to ensure smooth adoption within 2 weeks for most contractors."
     }
   ];
 
@@ -75,7 +74,7 @@ const ConstructionProjectManagementSoftware = () => {
         "Integration with accounting systems"
       ],
       bestFor: "General contractors managing multiple projects",
-      examples: ["BuildDesk", "Procore", "Buildertrend"]
+      examples: ["Brikly", "Procore", "Buildertrend"]
     },
     {
       title: "Field Management Solutions",
@@ -129,28 +128,28 @@ const ConstructionProjectManagementSoftware = () => {
     {
       category: "Project Planning",
       features: [
-        { name: "Gantt Chart Scheduling", builddesk: true, procore: true, buildertrend: true, basic: false },
-        { name: "Resource Allocation", builddesk: true, procore: true, buildertrend: false, basic: false },
-        { name: "Critical Path Analysis", builddesk: true, procore: true, buildertrend: false, basic: false },
-        { name: "Weather Integration", builddesk: true, procore: false, buildertrend: false, basic: false }
+        { name: "Gantt Chart Scheduling", brikly: true, procore: true, buildertrend: true, basic: false },
+        { name: "Resource Allocation", brikly: true, procore: true, buildertrend: false, basic: false },
+        { name: "Critical Path Analysis", brikly: true, procore: true, buildertrend: false, basic: false },
+        { name: "Weather Integration", brikly: true, procore: false, buildertrend: false, basic: false }
       ]
     },
     {
       category: "Financial Management",
       features: [
-        { name: "Budget Tracking", builddesk: true, procore: true, buildertrend: true, basic: true },
-        { name: "Cost Forecasting", builddesk: true, procore: true, buildertrend: false, basic: false },
-        { name: "Change Order Management", builddesk: true, procore: true, buildertrend: true, basic: false },
-        { name: "Profit Margin Analysis", builddesk: true, procore: false, buildertrend: false, basic: false }
+        { name: "Budget Tracking", brikly: true, procore: true, buildertrend: true, basic: true },
+        { name: "Cost Forecasting", brikly: true, procore: true, buildertrend: false, basic: false },
+        { name: "Change Order Management", brikly: true, procore: true, buildertrend: true, basic: false },
+        { name: "Profit Margin Analysis", brikly: true, procore: false, buildertrend: false, basic: false }
       ]
     },
     {
       category: "Team Collaboration",
       features: [
-        { name: "Real-time Messaging", builddesk: true, procore: true, buildertrend: true, basic: false },
-        { name: "Document Sharing", builddesk: true, procore: true, buildertrend: true, basic: true },
-        { name: "Mobile App", builddesk: true, procore: true, buildertrend: true, basic: false },
-        { name: "Client Portal", builddesk: true, procore: true, buildertrend: true, basic: false }
+        { name: "Real-time Messaging", brikly: true, procore: true, buildertrend: true, basic: false },
+        { name: "Document Sharing", brikly: true, procore: true, buildertrend: true, basic: true },
+        { name: "Mobile App", brikly: true, procore: true, buildertrend: true, basic: false },
+        { name: "Client Portal", brikly: true, procore: true, buildertrend: true, basic: false }
       ]
     }
   ];
@@ -164,7 +163,7 @@ const ConstructionProjectManagementSoftware = () => {
       projectSize: "$2M-$8M",
       improvement: "Reduced project delays by 78%",
       savings: "$420,000 annually",
-      quote: "BuildDesk transformed how we manage projects. The integrated scheduling and budget tracking caught three potential overruns early, saving us over $150K on a single project.",
+      quote: "Brikly transformed how we manage projects. The integrated scheduling and budget tracking caught three potential overruns early, saving us over $150K on a single project.",
       metrics: {
         onTimeCompletion: { before: 58, after: 94 },
         budgetAccuracy: { before: 72, after: 96 },
@@ -179,7 +178,7 @@ const ConstructionProjectManagementSoftware = () => {
       projectSize: "$1M-$5M",
       improvement: "Increased project capacity by 40%",
       savings: "$280,000 annually",
-      quote: "The efficiency gains from BuildDesk allowed us to take on 40% more projects with the same team. Our clients love the transparency and real-time updates.",
+      quote: "The efficiency gains from Brikly allowed us to take on 40% more projects with the same team. Our clients love the transparency and real-time updates.",
       metrics: {
         onTimeCompletion: { before: 65, after: 91 },
         budgetAccuracy: { before: 69, after: 93 },
@@ -194,7 +193,7 @@ const ConstructionProjectManagementSoftware = () => {
       projectSize: "$500K-$3M",
       improvement: "Improved profit margins by 32%",
       savings: "$195,000 annually",
-      quote: "BuildDesk's cost tracking and change order management helped us identify profit leaks we didn't even know existed. Our margins improved dramatically.",
+      quote: "Brikly's cost tracking and change order management helped us identify profit leaks we didn't even know existed. Our margins improved dramatically.",
       metrics: {
         onTimeCompletion: { before: 72, after: 89 },
         budgetAccuracy: { before: 74, after: 95 },
@@ -351,14 +350,14 @@ const ConstructionProjectManagementSoftware = () => {
   const articleSchema = createArticleSchema(
     "Best Construction Project Management Software 2025 - Complete Guide",
     "Comprehensive guide to construction project management software, featuring comparisons, ROI analysis, and implementation best practices for contractors.",
-    "https://build-desk.com/construction-project-management-software",
+    "https://brikly.net/construction-project-management-software",
     ["construction project management software", "construction management", "project management for contractors"]
   );
 
   const breadcrumbSchema = createBreadcrumbSchema([
-    { name: "Home", url: "https://build-desk.com" },
-    { name: "Solutions", url: "https://build-desk.com/solutions" },
-    { name: "Construction Project Management Software", url: "https://build-desk.com/construction-project-management-software" }
+    { name: "Home", url: "https://brikly.net" },
+    { name: "Solutions", url: "https://brikly.net/solutions" },
+    { name: "Construction Project Management Software", url: "https://brikly.net/construction-project-management-software" }
   ]);
 
   const howToSchema = createHowToSchema(
@@ -375,8 +374,8 @@ const ConstructionProjectManagementSoftware = () => {
   return (
     <>
       <PageSEO
-        title="Best Construction Project Management Software 2025 - Reduce Delays 78% | BuildDesk"
-        description="Compare top construction project management software for contractors. Reduce delays by 78%, improve profit margins 32%, increase capacity 40%. Features, pricing, ROI calculator. BuildDesk $350/month vs Procore $500+/user. Free trial."
+        title="Best Construction Project Management Software 2025 - Reduce Delays 78% | Brikly"
+        description="Compare top construction project management software for contractors. Reduce delays by 78%, improve profit margins 32%, increase capacity 40%. Features, pricing, ROI calculator. Brikly $350/month vs Procore $500+/user. Free trial."
         keywords={[
           'construction project management software',
           'construction management software',
@@ -388,7 +387,7 @@ const ConstructionProjectManagementSoftware = () => {
           'construction project tracking software',
           'best construction pm software'
         ]}
-        canonicalUrl="https://build-desk.com/construction-project-management-software"
+        canonicalUrl="https://brikly.net/construction-project-management-software"
         schema={[articleSchema, breadcrumbSchema, howToSchema]}
         ogType="article"
         lastModified="2025-11-07"
@@ -445,7 +444,7 @@ const ConstructionProjectManagementSoftware = () => {
             {/* Primary CTAs */}
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Button size="lg" className="bg-construction-orange hover:bg-construction-orange/90">
-                Start Free BuildDesk Trial
+                Start Free Brikly Trial
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
               <Button size="lg" variant="outline">
@@ -557,7 +556,7 @@ const ConstructionProjectManagementSoftware = () => {
                         <thead>
                           <tr className="border-b">
                             <th className="text-left py-2 font-medium">Feature</th>
-                            <th className="text-center py-2 font-medium text-construction-blue">BuildDesk</th>
+                            <th className="text-center py-2 font-medium text-construction-blue">Brikly</th>
                             <th className="text-center py-2 font-medium">Procore</th>
                             <th className="text-center py-2 font-medium">Buildertrend</th>
                             <th className="text-center py-2 font-medium">Basic Tools</th>
@@ -568,7 +567,7 @@ const ConstructionProjectManagementSoftware = () => {
                             <tr key={featureIndex} className="border-b">
                               <td className="py-3 text-sm">{feature.name}</td>
                               <td className="text-center py-3">
-                                {feature.builddesk ? (
+                                {feature.brikly ? (
                                   <CheckCircle className="h-5 w-5 text-green-600 mx-auto" />
                                 ) : (
                                   <span className="text-gray-300">—</span>
@@ -705,10 +704,10 @@ const ConstructionProjectManagementSoftware = () => {
             </div>
           </div>
 
-          {/* Why Choose BuildDesk */}
+          {/* Why Choose Brikly */}
           <div className="max-w-4xl mx-auto mb-16">
             <h2 className="text-3xl font-bold text-construction-dark text-center mb-8">
-              Why BuildDesk is the Smart Choice for Contractors
+              Why Brikly is the Smart Choice for Contractors
             </h2>
             <div className="grid md:grid-cols-2 gap-8">
               <div className="space-y-6">
@@ -795,7 +794,7 @@ const ConstructionProjectManagementSoftware = () => {
                 </h2>
                 <p className="text-lg text-muted-foreground mb-6">
                   Join thousands of contractors who've reduced delays by 78% and increased profits by 32%
-                  with BuildDesk's comprehensive project management platform.
+                  with Brikly's comprehensive project management platform.
                 </p>
 
                 <div className="flex flex-col sm:flex-row gap-4 justify-center mb-6">

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -12,20 +12,7 @@ import { Switch } from '@/components/ui/switch';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { 
-  Calendar,
-  CheckCircle,
-  AlertTriangle,
-  Clock,
-  Target,
-  Image,
-  FileText,
-  Plus,
-  Eye,
-  Edit3,
-  Upload,
-  MessageSquare
-} from 'lucide-react';
+import { Calendar, CheckCircle, AlertTriangle, Clock, Target, Plus, Eye, Edit3, MessageSquare } from 'lucide-react';
 
 interface ProjectStatusUpdate {
   id: string;
@@ -34,8 +21,8 @@ interface ProjectStatusUpdate {
   description: string;
   status_type: string;
   visibility: string;
-  images: any;
-  attachments: any;
+  images: string[] | null;
+  attachments: string[] | null;
   is_published: boolean;
   published_at: string | null;
   created_at: string;
@@ -95,10 +82,10 @@ export const ProjectStatusUpdates = () => {
 
       if (projectsError) throw projectsError;
 
-      setUpdates((updatesData as any) || []);
-      setProjects((projectsData as any) || []);
+      setUpdates((updatesData as unknown as ProjectStatusUpdate[]) || []);
+      setProjects((projectsData as unknown as Project[]) || []);
 
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error loading status updates:', error);
       toast({
         variant: "destructive",
@@ -153,7 +140,7 @@ export const ProjectStatusUpdates = () => {
 
       loadStatusUpdates();
 
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error creating status update:', error);
       toast({
         variant: "destructive",
@@ -182,7 +169,7 @@ export const ProjectStatusUpdates = () => {
 
       loadStatusUpdates();
 
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error updating publish status:', error);
       toast({
         variant: "destructive",

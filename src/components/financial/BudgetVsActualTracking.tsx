@@ -6,14 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { supabase } from '@/integrations/supabase/client';
-import { 
-  BarChart3, 
-  TrendingUp, 
-  TrendingDown, 
-  AlertTriangle,
-  CheckCircle,
-  DollarSign
-} from 'lucide-react';
+import { BarChart3, TrendingDown, AlertTriangle, CheckCircle } from 'lucide-react';
 
 interface BudgetItem {
   id: string;
@@ -176,7 +169,7 @@ export const BudgetVsActualTracking: React.FC = () => {
       <CardHeader>
         <div className="flex items-center justify-between">
           <CardTitle className="flex items-center gap-2">
-            <BarChart3 className="h-5 w-5" />
+            <BarChart3 className="h-5 w-5" aria-hidden="true" />
             Budget vs Actual Tracking
           </CardTitle>
           <Select value={selectedProject} onValueChange={setSelectedProject}>
@@ -242,8 +235,8 @@ export const BudgetVsActualTracking: React.FC = () => {
                         {item.cost_code.code} - {item.cost_code.name}
                       </h4>
                       <div className="flex items-center gap-2 mt-1">
-                        <StatusIcon className={`h-4 w-4 ${color}`} />
-                        <Badge variant={status === 'good' ? 'default' : status === 'over' ? 'destructive' : 'secondary'}>
+                        <StatusIcon className={`h-4 w-4 ${color}`} aria-hidden="true" />
+                        <Badge variant={status === 'good' ? 'default' : status === 'over' ? 'destructive' : 'secondary'} aria-label={`Budget status: ${item.variance >= 0 ? 'Under Budget' : 'Over Budget'}`}>
                           {item.variance >= 0 ? 'Under Budget' : 'Over Budget'}
                         </Badge>
                       </div>

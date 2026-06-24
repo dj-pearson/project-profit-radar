@@ -4,18 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
-import {
-  Plug,
-  Search,
-  CheckCircle,
-  XCircle,
-  Settings,
-  ExternalLink,
-  Zap,
-  Star,
-  Users,
-  Loader2,
-} from 'lucide-react';
+import { Plug, Search, CheckCircle, XCircle, Settings, ExternalLink, Zap, Users, Loader2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
@@ -71,28 +60,38 @@ export const IntegrationMarketplace = () => {
     setLoading(true);
     try {
       // Load available apps
-      const { data: appsData, error: appsError } = await (supabase as any)
-        .from('integration_apps')
+      const { data: appsData, error: appsError } = await supabase
+        .from('integration_apps' as 'projects')
         .select('*')
         .eq('is_active', true)
-        .order('install_count', { ascending: false });
+        .order('install_count', { ascending: false }) as { data: IntegrationApp[] | null; error: Error | null };
 
       if (appsError) throw appsError;
       setApps(appsData || []);
 
       // Load user's installed integrations
       if (user) {
-        const { data: userIntegrationsData, error: userIntegrationsError } = await (supabase as any)
-          .from('user_integrations')
+        interface UserIntegrationRow {
+          id: string;
+          app_id: string;
+          status: string;
+          is_active: boolean;
+          sync_enabled: boolean;
+          last_sync_at: string;
+          integration_apps: { name: string; slug: string; category: string };
+        }
+
+        const { data: userIntegrationsData, error: userIntegrationsError } = await supabase
+          .from('user_integrations' as 'projects')
           .select(`
             *,
             integration_apps!inner(name, slug, category)
           `)
-          .eq('user_id', user.id);
+          .eq('user_id', user.id) as { data: UserIntegrationRow[] | null; error: Error | null };
 
         if (userIntegrationsError) throw userIntegrationsError;
 
-        const transformedIntegrations: UserIntegration[] = (userIntegrationsData || []).map((ui: any) => ({
+        const transformedIntegrations: UserIntegration[] = (userIntegrationsData || []).map((ui: UserIntegrationRow) => ({
           id: ui.id,
           app_id: ui.app_id,
           status: ui.status,
@@ -126,11 +125,11 @@ export const IntegrationMarketplace = () => {
         window.location.href = `/integrations/${app.slug}/oauth/authorize`;
       } else {
         // Create integration record
-        const { error } = await (supabase as any).from('user_integrations').insert({
+        const { error } = await supabase.from('user_integrations' as 'projects').insert({
           user_id: user?.id,
           app_id: app.id,
           status: 'pending',
-        });
+        } as Record<string, unknown>);
 
         if (error) throw error;
 
@@ -155,9 +154,9 @@ export const IntegrationMarketplace = () => {
 
   const disconnectIntegration = async (integrationId: string, appName: string) => {
     try {
-      const { error } = await (supabase as any)
-        .from('user_integrations')
-        .update({ status: 'disconnected', is_active: false })
+      const { error } = await supabase
+        .from('user_integrations' as 'projects')
+        .update({ status: 'disconnected', is_active: false } as Record<string, unknown>)
         .eq('id', integrationId);
 
       if (error) throw error;
@@ -250,7 +249,7 @@ export const IntegrationMarketplace = () => {
         <div>
           <h1 className="text-3xl font-bold text-construction-dark">Integration Marketplace</h1>
           <p className="text-muted-foreground">
-            Connect BuildDesk with your favorite tools and apps
+            Connect Brikly with your favorite tools and apps
           </p>
         </div>
 

@@ -1,4 +1,3 @@
-import React from "react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { SEOMetaTags } from "@/components/SEOMetaTags";
@@ -340,7 +339,7 @@ const SafetyAndOSHACompliance = () => {
             Protect Your Team & Business Today
           </h2>
           <p className="text-muted-foreground mb-6 max-w-2xl mx-auto">
-            BuildDesk includes comprehensive safety management tools: digital OSHA forms, 
+            Brikly includes comprehensive safety management tools: digital OSHA forms, 
             automated compliance tracking, and mobile incident reporting to keep your team safe.
           </p>
           <Button asChild size="lg">

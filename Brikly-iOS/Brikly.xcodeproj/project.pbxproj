@@ -1,0 +1,732 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 56;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		AA000001 /* BriklyApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000001; };
+		AA000002 /* AppConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000002; };
+		AA000003 /* SupabaseService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000003; };
+		AA000004 /* DateDecoding.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000004; };
+		AA000005 /* DecodingErrorHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000005; };
+		AA000006 /* UserProfile.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000006; };
+		AA000007 /* Project.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000007; };
+		AA000008 /* ProjectTask.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000008; };
+		AA000009 /* DailyReport.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000009; };
+		AA000010 /* JobCost.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000010; };
+		AA000011 /* CostCode.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000011; };
+		AA000012 /* Document.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000012; };
+		AA000013 /* AuthService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000013; };
+		AA000014 /* ProjectService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000014; };
+		AA000015 /* TaskService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000015; };
+		AA000016 /* DailyReportService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000016; };
+		AA000017 /* JobCostService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000017; };
+		AA000018 /* DocumentService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000018; };
+		AA000019 /* AuthViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000019; };
+		AA000020 /* ProjectListViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000020; };
+		AA000021 /* ProjectDetailViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000021; };
+		AA000022 /* TaskListViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000022; };
+		AA000023 /* DailyReportListViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000023; };
+		AA000024 /* JobCostListViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000024; };
+		AA000025 /* DocumentListViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000025; };
+		AA000026 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000026; };
+		AA000027 /* LoginView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000027; };
+		AA000028 /* ProjectListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000028; };
+		AA000029 /* ProjectRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000029; };
+		AA000030 /* ProjectDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000030; };
+		AA000031 /* ProjectOverviewView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000031; };
+		AA000032 /* TaskListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000032; };
+		AA000033 /* TaskRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000033; };
+		AA000034 /* TaskFormView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000034; };
+		AA000035 /* DailyReportListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000035; };
+		AA000036 /* DailyReportRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000036; };
+		AA000037 /* DailyReportFormView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000037; };
+		AA000038 /* JobCostListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000038; };
+		AA000039 /* JobCostRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000039; };
+		AA000040 /* JobCostSummaryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000040; };
+		AA000041 /* JobCostFormView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000041; };
+		AA000042 /* DocumentListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000042; };
+		AA000043 /* DocumentRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000043; };
+		AA000044 /* LoadingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000044; };
+		AA000045 /* ErrorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000045; };
+		AA000046 /* EmptyStateView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000046; };
+		AA000047 /* StatusBadge.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000047; };
+		AA000048 /* CurrencyText.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000048; };
+		AA000049 /* CurrencyFormatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000049; };
+		AA000050 /* DateFormatting.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000050; };
+		AA000051 /* Color+Brand.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000051; };
+		AA000052 /* View+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000052; };
+		AA000053 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = AB000053; };
+		AA000054 /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = AB000057; };
+		AA000055 /* OfflineStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000058; };
+		AA000056 /* SyncEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000059; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		AB000001 /* BriklyApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BriklyApp.swift; sourceTree = "<group>"; };
+		AB000002 /* AppConfiguration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppConfiguration.swift; sourceTree = "<group>"; };
+		AB000003 /* SupabaseService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SupabaseService.swift; sourceTree = "<group>"; };
+		AB000004 /* DateDecoding.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DateDecoding.swift; sourceTree = "<group>"; };
+		AB000005 /* DecodingErrorHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DecodingErrorHelper.swift; sourceTree = "<group>"; };
+		AB000006 /* UserProfile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserProfile.swift; sourceTree = "<group>"; };
+		AB000007 /* Project.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Project.swift; sourceTree = "<group>"; };
+		AB000008 /* ProjectTask.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectTask.swift; sourceTree = "<group>"; };
+		AB000009 /* DailyReport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DailyReport.swift; sourceTree = "<group>"; };
+		AB000010 /* JobCost.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JobCost.swift; sourceTree = "<group>"; };
+		AB000011 /* CostCode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CostCode.swift; sourceTree = "<group>"; };
+		AB000012 /* Document.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Document.swift; sourceTree = "<group>"; };
+		AB000013 /* AuthService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthService.swift; sourceTree = "<group>"; };
+		AB000014 /* ProjectService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectService.swift; sourceTree = "<group>"; };
+		AB000015 /* TaskService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TaskService.swift; sourceTree = "<group>"; };
+		AB000016 /* DailyReportService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DailyReportService.swift; sourceTree = "<group>"; };
+		AB000017 /* JobCostService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JobCostService.swift; sourceTree = "<group>"; };
+		AB000018 /* DocumentService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DocumentService.swift; sourceTree = "<group>"; };
+		AB000019 /* AuthViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthViewModel.swift; sourceTree = "<group>"; };
+		AB000020 /* ProjectListViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectListViewModel.swift; sourceTree = "<group>"; };
+		AB000021 /* ProjectDetailViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectDetailViewModel.swift; sourceTree = "<group>"; };
+		AB000022 /* TaskListViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TaskListViewModel.swift; sourceTree = "<group>"; };
+		AB000023 /* DailyReportListViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DailyReportListViewModel.swift; sourceTree = "<group>"; };
+		AB000024 /* JobCostListViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JobCostListViewModel.swift; sourceTree = "<group>"; };
+		AB000025 /* DocumentListViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DocumentListViewModel.swift; sourceTree = "<group>"; };
+		AB000026 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		AB000027 /* LoginView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginView.swift; sourceTree = "<group>"; };
+		AB000028 /* ProjectListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectListView.swift; sourceTree = "<group>"; };
+		AB000029 /* ProjectRowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectRowView.swift; sourceTree = "<group>"; };
+		AB000030 /* ProjectDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectDetailView.swift; sourceTree = "<group>"; };
+		AB000031 /* ProjectOverviewView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectOverviewView.swift; sourceTree = "<group>"; };
+		AB000032 /* TaskListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TaskListView.swift; sourceTree = "<group>"; };
+		AB000033 /* TaskRowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TaskRowView.swift; sourceTree = "<group>"; };
+		AB000034 /* TaskFormView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TaskFormView.swift; sourceTree = "<group>"; };
+		AB000035 /* DailyReportListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DailyReportListView.swift; sourceTree = "<group>"; };
+		AB000036 /* DailyReportRowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DailyReportRowView.swift; sourceTree = "<group>"; };
+		AB000037 /* DailyReportFormView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DailyReportFormView.swift; sourceTree = "<group>"; };
+		AB000038 /* JobCostListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JobCostListView.swift; sourceTree = "<group>"; };
+		AB000039 /* JobCostRowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JobCostRowView.swift; sourceTree = "<group>"; };
+		AB000040 /* JobCostSummaryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JobCostSummaryView.swift; sourceTree = "<group>"; };
+		AB000041 /* JobCostFormView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JobCostFormView.swift; sourceTree = "<group>"; };
+		AB000042 /* DocumentListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DocumentListView.swift; sourceTree = "<group>"; };
+		AB000043 /* DocumentRowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DocumentRowView.swift; sourceTree = "<group>"; };
+		AB000044 /* LoadingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoadingView.swift; sourceTree = "<group>"; };
+		AB000045 /* ErrorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ErrorView.swift; sourceTree = "<group>"; };
+		AB000046 /* EmptyStateView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmptyStateView.swift; sourceTree = "<group>"; };
+		AB000047 /* StatusBadge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatusBadge.swift; sourceTree = "<group>"; };
+		AB000048 /* CurrencyText.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CurrencyText.swift; sourceTree = "<group>"; };
+		AB000049 /* CurrencyFormatter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CurrencyFormatter.swift; sourceTree = "<group>"; };
+		AB000050 /* DateFormatting.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DateFormatting.swift; sourceTree = "<group>"; };
+		AB000051 /* Color+Brand.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Color+Brand.swift"; sourceTree = "<group>"; };
+		AB000052 /* View+Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "View+Extensions.swift"; sourceTree = "<group>"; };
+		AB000053 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		AB000054 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		AB000055 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		AB000056 /* Brikly.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Brikly.entitlements; sourceTree = "<group>"; };
+		AB000057 /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Localizable.xcstrings; sourceTree = "<group>"; };
+		AB000058 /* OfflineStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OfflineStore.swift; sourceTree = "<group>"; };
+		AB000059 /* SyncEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyncEngine.swift; sourceTree = "<group>"; };
+		AB000099 /* Brikly.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Brikly.app; sourceTree = BUILT_PRODUCTS_DIR; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		AC000001 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		AD000001 = {
+			isa = PBXGroup;
+			children = (
+				AD000002 /* Brikly */,
+				AD000098 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		AD000098 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				AB000099 /* Brikly.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		AD000002 /* Brikly */ = {
+			isa = PBXGroup;
+			children = (
+				AB000001 /* BriklyApp.swift */,
+				AB000054 /* Info.plist */,
+				AB000055 /* PrivacyInfo.xcprivacy */,
+				AB000056 /* Brikly.entitlements */,
+				AB000053 /* Assets.xcassets */,
+				AB000057 /* Localizable.xcstrings */,
+				AD000003 /* Configuration */,
+				AD000004 /* Models */,
+				AD000005 /* Services */,
+				AD000006 /* ViewModels */,
+				AD000007 /* Views */,
+				AD000014 /* Utilities */,
+				AD000015 /* Extensions */,
+			);
+			path = Brikly;
+			sourceTree = "<group>";
+		};
+		AD000003 /* Configuration */ = {
+			isa = PBXGroup;
+			children = (
+				AB000002 /* AppConfiguration.swift */,
+			);
+			path = Configuration;
+			sourceTree = "<group>";
+		};
+		AD000004 /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				AB000006 /* UserProfile.swift */,
+				AB000007 /* Project.swift */,
+				AB000008 /* ProjectTask.swift */,
+				AB000009 /* DailyReport.swift */,
+				AB000010 /* JobCost.swift */,
+				AB000011 /* CostCode.swift */,
+				AB000012 /* Document.swift */,
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
+		AD000005 /* Services */ = {
+			isa = PBXGroup;
+			children = (
+				AB000003 /* SupabaseService.swift */,
+				AB000013 /* AuthService.swift */,
+				AB000014 /* ProjectService.swift */,
+				AB000015 /* TaskService.swift */,
+				AB000016 /* DailyReportService.swift */,
+				AB000017 /* JobCostService.swift */,
+				AB000018 /* DocumentService.swift */,
+				AB000058 /* OfflineStore.swift */,
+				AB000059 /* SyncEngine.swift */,
+			);
+			path = Services;
+			sourceTree = "<group>";
+		};
+		AD000006 /* ViewModels */ = {
+			isa = PBXGroup;
+			children = (
+				AB000019 /* AuthViewModel.swift */,
+				AB000020 /* ProjectListViewModel.swift */,
+				AB000021 /* ProjectDetailViewModel.swift */,
+				AB000022 /* TaskListViewModel.swift */,
+				AB000023 /* DailyReportListViewModel.swift */,
+				AB000024 /* JobCostListViewModel.swift */,
+				AB000025 /* DocumentListViewModel.swift */,
+			);
+			path = ViewModels;
+			sourceTree = "<group>";
+		};
+		AD000007 /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				AD000008 /* App */,
+				AD000009 /* Auth */,
+				AD000010 /* Projects */,
+				AD000011 /* Overview */,
+				AD000012 /* Tasks */,
+				AD000016 /* DailyReports */,
+				AD000017 /* JobCosting */,
+				AD000018 /* Documents */,
+				AD000013 /* Shared */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
+		AD000008 /* App */ = {
+			isa = PBXGroup;
+			children = (
+				AB000026 /* ContentView.swift */,
+			);
+			path = App;
+			sourceTree = "<group>";
+		};
+		AD000009 /* Auth */ = {
+			isa = PBXGroup;
+			children = (
+				AB000027 /* LoginView.swift */,
+			);
+			path = Auth;
+			sourceTree = "<group>";
+		};
+		AD000010 /* Projects */ = {
+			isa = PBXGroup;
+			children = (
+				AB000028 /* ProjectListView.swift */,
+				AB000029 /* ProjectRowView.swift */,
+				AB000030 /* ProjectDetailView.swift */,
+			);
+			path = Projects;
+			sourceTree = "<group>";
+		};
+		AD000011 /* Overview */ = {
+			isa = PBXGroup;
+			children = (
+				AB000031 /* ProjectOverviewView.swift */,
+			);
+			path = Overview;
+			sourceTree = "<group>";
+		};
+		AD000012 /* Tasks */ = {
+			isa = PBXGroup;
+			children = (
+				AB000032 /* TaskListView.swift */,
+				AB000033 /* TaskRowView.swift */,
+				AB000034 /* TaskFormView.swift */,
+			);
+			path = Tasks;
+			sourceTree = "<group>";
+		};
+		AD000016 /* DailyReports */ = {
+			isa = PBXGroup;
+			children = (
+				AB000035 /* DailyReportListView.swift */,
+				AB000036 /* DailyReportRowView.swift */,
+				AB000037 /* DailyReportFormView.swift */,
+			);
+			path = DailyReports;
+			sourceTree = "<group>";
+		};
+		AD000017 /* JobCosting */ = {
+			isa = PBXGroup;
+			children = (
+				AB000038 /* JobCostListView.swift */,
+				AB000039 /* JobCostRowView.swift */,
+				AB000040 /* JobCostSummaryView.swift */,
+				AB000041 /* JobCostFormView.swift */,
+			);
+			path = JobCosting;
+			sourceTree = "<group>";
+		};
+		AD000018 /* Documents */ = {
+			isa = PBXGroup;
+			children = (
+				AB000042 /* DocumentListView.swift */,
+				AB000043 /* DocumentRowView.swift */,
+			);
+			path = Documents;
+			sourceTree = "<group>";
+		};
+		AD000013 /* Shared */ = {
+			isa = PBXGroup;
+			children = (
+				AB000044 /* LoadingView.swift */,
+				AB000045 /* ErrorView.swift */,
+				AB000046 /* EmptyStateView.swift */,
+				AB000047 /* StatusBadge.swift */,
+				AB000048 /* CurrencyText.swift */,
+			);
+			path = Shared;
+			sourceTree = "<group>";
+		};
+		AD000014 /* Utilities */ = {
+			isa = PBXGroup;
+			children = (
+				AB000004 /* DateDecoding.swift */,
+				AB000005 /* DecodingErrorHelper.swift */,
+				AB000049 /* CurrencyFormatter.swift */,
+				AB000050 /* DateFormatting.swift */,
+			);
+			path = Utilities;
+			sourceTree = "<group>";
+		};
+		AD000015 /* Extensions */ = {
+			isa = PBXGroup;
+			children = (
+				AB000051 /* Color+Brand.swift */,
+				AB000052 /* View+Extensions.swift */,
+			);
+			path = Extensions;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		AE000001 /* Brikly */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = AF000003 /* Build configuration list for PBXNativeTarget "Brikly" */;
+			buildPhases = (
+				AE000002 /* Sources */,
+				AC000001 /* Frameworks */,
+				AE000003 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = Brikly;
+			packageProductDependencies = (
+				BA000001 /* Supabase */,
+				BA000002 /* Sentry */,
+			);
+			productName = Brikly;
+			productReference = AB000099 /* Brikly.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		AE000099 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 1540;
+				LastUpgradeCheck = 1540;
+				TargetAttributes = {
+					AE000001 = {
+						CreatedOnToolsVersion = 15.4;
+					};
+				};
+			};
+			buildConfigurationList = AF000001 /* Build configuration list for PBXProject "Brikly" */;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = AD000001;
+			packageReferences = (
+				BB000001 /* XCRemoteSwiftPackageReference "supabase-swift" */,
+				BB000002 /* XCRemoteSwiftPackageReference "sentry-cocoa" */,
+			);
+			productRefGroup = AD000098 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				AE000001 /* Brikly */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		AE000003 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				AA000053 /* Assets.xcassets in Resources */,
+				AA000054 /* Localizable.xcstrings in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		AE000002 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				AA000001 /* BriklyApp.swift in Sources */,
+				AA000002 /* AppConfiguration.swift in Sources */,
+				AA000003 /* SupabaseService.swift in Sources */,
+				AA000004 /* DateDecoding.swift in Sources */,
+				AA000005 /* DecodingErrorHelper.swift in Sources */,
+				AA000006 /* UserProfile.swift in Sources */,
+				AA000007 /* Project.swift in Sources */,
+				AA000008 /* ProjectTask.swift in Sources */,
+				AA000009 /* DailyReport.swift in Sources */,
+				AA000010 /* JobCost.swift in Sources */,
+				AA000011 /* CostCode.swift in Sources */,
+				AA000012 /* Document.swift in Sources */,
+				AA000013 /* AuthService.swift in Sources */,
+				AA000014 /* ProjectService.swift in Sources */,
+				AA000015 /* TaskService.swift in Sources */,
+				AA000016 /* DailyReportService.swift in Sources */,
+				AA000017 /* JobCostService.swift in Sources */,
+				AA000018 /* DocumentService.swift in Sources */,
+				AA000019 /* AuthViewModel.swift in Sources */,
+				AA000020 /* ProjectListViewModel.swift in Sources */,
+				AA000021 /* ProjectDetailViewModel.swift in Sources */,
+				AA000022 /* TaskListViewModel.swift in Sources */,
+				AA000023 /* DailyReportListViewModel.swift in Sources */,
+				AA000024 /* JobCostListViewModel.swift in Sources */,
+				AA000025 /* DocumentListViewModel.swift in Sources */,
+				AA000026 /* ContentView.swift in Sources */,
+				AA000027 /* LoginView.swift in Sources */,
+				AA000028 /* ProjectListView.swift in Sources */,
+				AA000029 /* ProjectRowView.swift in Sources */,
+				AA000030 /* ProjectDetailView.swift in Sources */,
+				AA000031 /* ProjectOverviewView.swift in Sources */,
+				AA000032 /* TaskListView.swift in Sources */,
+				AA000033 /* TaskRowView.swift in Sources */,
+				AA000034 /* TaskFormView.swift in Sources */,
+				AA000035 /* DailyReportListView.swift in Sources */,
+				AA000036 /* DailyReportRowView.swift in Sources */,
+				AA000037 /* DailyReportFormView.swift in Sources */,
+				AA000038 /* JobCostListView.swift in Sources */,
+				AA000039 /* JobCostRowView.swift in Sources */,
+				AA000040 /* JobCostSummaryView.swift in Sources */,
+				AA000041 /* JobCostFormView.swift in Sources */,
+				AA000042 /* DocumentListView.swift in Sources */,
+				AA000043 /* DocumentRowView.swift in Sources */,
+				AA000044 /* LoadingView.swift in Sources */,
+				AA000045 /* ErrorView.swift in Sources */,
+				AA000046 /* EmptyStateView.swift in Sources */,
+				AA000047 /* StatusBadge.swift in Sources */,
+				AA000048 /* CurrencyText.swift in Sources */,
+				AA000049 /* CurrencyFormatter.swift in Sources */,
+				AA000050 /* DateFormatting.swift in Sources */,
+				AA000051 /* Color+Brand.swift in Sources */,
+				AA000052 /* View+Extensions.swift in Sources */,
+				AA000055 /* OfflineStore.swift in Sources */,
+				AA000056 /* SyncEngine.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		AF000010 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		AF000011 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_VERSION = 5.0;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		AF000020 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = Brikly/Brikly.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = Brikly/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = Brikly;
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.brikly.app;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_STRICT_CONCURRENCY = complete;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		AF000021 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = Brikly/Brikly.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = Brikly/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = Brikly;
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.brikly.app;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_STRICT_CONCURRENCY = complete;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		AF000001 /* Build configuration list for PBXProject "Brikly" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				AF000010 /* Debug */,
+				AF000011 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		AF000003 /* Build configuration list for PBXNativeTarget "Brikly" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				AF000020 /* Debug */,
+				AF000021 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		BB000001 /* XCRemoteSwiftPackageReference "supabase-swift" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/supabase/supabase-swift.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.0.0;
+			};
+		};
+		BB000002 /* XCRemoteSwiftPackageReference "sentry-cocoa" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/getsentry/sentry-cocoa.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 8.36.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		BA000001 /* Supabase */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = BB000001 /* XCRemoteSwiftPackageReference "supabase-swift" */;
+			productName = Supabase;
+		};
+		BA000002 /* Sentry */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = BB000002 /* XCRemoteSwiftPackageReference "sentry-cocoa" */;
+			productName = Sentry;
+		};
+/* End XCSwiftPackageProductDependency section */
+
+	};
+	rootObject = AE000099 /* Project object */;
+}

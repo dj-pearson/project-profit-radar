@@ -1,5 +1,6 @@
 # Handle auth recovery redirects properly
 /auth?error_recovery*  /auth  302
 
-# SPA routing is handled by 404.html (automatically served by Cloudflare Pages)
-# See scripts/copy-404.js which creates 404.html from index.html during build
+# SPA catch-all: serve index.html for all non-static routes with 200 status
+# Cloudflare Pages checks static files first, then falls through to this rule
+/* /index.html 200

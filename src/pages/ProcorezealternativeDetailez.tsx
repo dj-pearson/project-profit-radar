@@ -1,10 +1,9 @@
-import React from "react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { SEOMetaTags } from "@/components/SEOMetaTags";
 import { FAQSchema } from "@/components/seo/EnhancedSchemaMarkup";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Check, X, ArrowRight, Users, DollarSign, Clock, Shield } from "lucide-react";
 import { Link } from "react-router-dom";
@@ -15,61 +14,61 @@ const ProcoreAlternativeDetailed = () => {
     {
       feature: "Setup Time",
       procore: "2-4 months",
-      builddesk: "1-2 weeks",
+      brikly: "1-2 weeks",
       procoreIcon: <X className="h-4 w-4 text-destructive" />,
-      builddeskIcon: <Check className="h-4 w-4 text-green-600" />
+      briklyIcon: <Check className="h-4 w-4 text-green-600" />
     },
     {
       feature: "Monthly Cost (10 users)",
       procore: "$600-900+",
-      builddesk: "$149-299",
+      brikly: "$149-299",
       procoreIcon: <X className="h-4 w-4 text-destructive" />,
-      builddeskIcon: <Check className="h-4 w-4 text-green-600" />
+      briklyIcon: <Check className="h-4 w-4 text-green-600" />
     },
     {
       feature: "Learning Curve",
       procore: "Steep (weeks)",
-      builddesk: "Simple (hours)",
+      brikly: "Simple (hours)",
       procoreIcon: <X className="h-4 w-4 text-destructive" />,
-      builddeskIcon: <Check className="h-4 w-4 text-green-600" />
+      briklyIcon: <Check className="h-4 w-4 text-green-600" />
     },
     {
       feature: "Mobile Offline Access",
       procore: "Limited",
-      builddesk: "Full featured",
+      brikly: "Full featured",
       procoreIcon: <X className="h-4 w-4 text-destructive" />,
-      builddeskIcon: <Check className="h-4 w-4 text-green-600" />
+      briklyIcon: <Check className="h-4 w-4 text-green-600" />
     }
   ];
 
   const faqData = [
     {
-      question: "Is BuildDesk a good alternative to Procore for small contractors?",
-      answer: "Yes. BuildDesk is specifically designed for small to mid-size contractors (10-100 employees) who need job costing, scheduling, daily logs, and OSHA reporting without the complexity and high cost of enterprise solutions like Procore."
+      question: "Is Brikly a good alternative to Procore for small contractors?",
+      answer: "Yes. Brikly is specifically designed for small to mid-size contractors (10-100 employees) who need job costing, scheduling, daily logs, and OSHA reporting without the complexity and high cost of enterprise solutions like Procore."
     },
     {
-      question: "How much can I save switching from Procore to BuildDesk?",
+      question: "How much can I save switching from Procore to Brikly?",
       answer: "Small contractors typically save 60-70% on software costs. For a 15-person team, that's $400-600+ monthly savings, or $4,800-7,200 per year."
     },
     {
-      question: "Is BuildDesk easier to use than Procore?",
-      answer: "Yes. BuildDesk focuses on simplicity with guided setup, intuitive mobile apps, and features designed specifically for small contractor workflows. Most teams are productive within hours, not weeks."
+      question: "Is Brikly easier to use than Procore?",
+      answer: "Yes. Brikly focuses on simplicity with guided setup, intuitive mobile apps, and features designed specifically for small contractor workflows. Most teams are productive within hours, not weeks."
     },
     {
-      question: "Does BuildDesk integrate with QuickBooks like Procore?",
-      answer: "Yes. BuildDesk has native QuickBooks integration that syncs job costs, invoices, and financial data automatically. The integration is simpler to set up than Procore's."
+      question: "Does Brikly integrate with QuickBooks like Procore?",
+      answer: "Yes. Brikly has native QuickBooks integration that syncs job costs, invoices, and financial data automatically. The integration is simpler to set up than Procore's."
     }
   ];
 
   return (
     <div className="min-h-screen bg-background">
       <SEOMetaTags
-        title="Procore Alternative for Small Contractors | BuildDesk vs Procore 2025"
-        description="Why small contractors choose BuildDesk over Procore: 60% lower cost, 1-week setup, simple mobile tools. Compare features, pricing, and ease of use."
+        title="Procore Alternative for Small Contractors | Brikly vs Procore 2025"
+        description="Why small contractors choose Brikly over Procore: 60% lower cost, 1-week setup, simple mobile tools. Compare features, pricing, and ease of use."
         keywords={[
           'procore alternative',
           'procore alternative small contractors',
-          'builddesk vs procore',
+          'brikly vs procore',
           'procore too expensive',
           'construction management software small business',
           'cheaper than procore',
@@ -89,10 +88,10 @@ const ProcoreAlternativeDetailed = () => {
         <div className="text-center mb-12">
           <Badge className="mb-4">Procore Alternative</Badge>
           <h1 className="text-4xl font-bold tracking-tight mb-4">
-            BuildDesk vs Procore: Better Choice for Small Contractors
+            Brikly vs Procore: Better Choice for Small Contractors
           </h1>
           <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-            <strong>TL;DR:</strong> BuildDesk offers the same core features as Procore 
+            <strong>TL;DR:</strong> Brikly offers the same core features as Procore 
             at 60% lower cost, with simpler setup and better mobile experience for teams under 100.
           </p>
         </div>
@@ -142,7 +141,7 @@ const ProcoreAlternativeDetailed = () => {
                     <tr>
                       <th className="text-left p-4 font-semibold">Feature</th>
                       <th className="text-center p-4 font-semibold">Procore</th>
-                      <th className="text-center p-4 font-semibold">BuildDesk</th>
+                      <th className="text-center p-4 font-semibold">Brikly</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -157,8 +156,8 @@ const ProcoreAlternativeDetailed = () => {
                         </td>
                         <td className="p-4 text-center">
                           <div className="flex items-center justify-center gap-2">
-                            {item.builddeskIcon}
-                            <span className="font-semibold">{item.builddesk}</span>
+                            {item.briklyIcon}
+                            <span className="font-semibold">{item.brikly}</span>
                           </div>
                         </td>
                       </tr>
@@ -199,7 +198,7 @@ const ProcoreAlternativeDetailed = () => {
 
             <Card className="border-primary">
               <CardHeader>
-                <CardTitle className="text-xl">Choose BuildDesk if you:</CardTitle>
+                <CardTitle className="text-xl">Choose Brikly if you:</CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
                 <div className="flex items-start gap-2">
@@ -246,7 +245,7 @@ const ProcoreAlternativeDetailed = () => {
             Ready to Switch from Procore?
           </h2>
           <p className="text-muted-foreground mb-6 max-w-2xl mx-auto">
-            Join 500+ small contractors who switched to BuildDesk and saved 
+            Join 500+ small contractors who switched to Brikly and saved 
             thousands annually while improving their project management.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -46,7 +46,7 @@ export const QuickBooksSyncStatus = ({ compact = false }: QuickBooksSyncStatusPr
         .from('quickbooks_integrations')
         .select('*')
         .eq('company_id', userProfile.company_id)
-        .single();
+        .maybeSingle();
 
       if (error || !data) {
         setStatus({

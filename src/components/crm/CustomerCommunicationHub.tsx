@@ -13,23 +13,7 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { 
-  MessageSquare,
-  Mail,
-  Phone,
-  Calendar,
-  FileText,
-  Bell,
-  Settings,
-  Users,
-  Send,
-  Plus,
-  Eye,
-  Download,
-  Clock,
-  CheckCircle,
-  AlertCircle
-} from 'lucide-react';
+import { MessageSquare, Mail, Phone, Calendar, FileText, Bell, Settings, Send, Plus, Eye, Clock, CheckCircle, AlertCircle } from 'lucide-react';
 
 interface CommunicationLogEntry {
   id: string;
@@ -39,7 +23,7 @@ interface CommunicationLogEntry {
   content: string;
   status: string;
   created_at: string;
-  participants: any;
+  participants: string[] | null;
   project?: { name: string };
   lead?: { first_name: string; last_name: string; company_name: string };
 }
@@ -51,7 +35,7 @@ interface CommunicationTemplate {
   communication_type: string;
   subject_template: string;
   content_template: string;
-  variables: any;
+  variables: string[];
 }
 
 interface NotificationRule {
@@ -59,7 +43,7 @@ interface NotificationRule {
   name: string;
   trigger_event: string;
   template_id: string;
-  recipients: any;
+  recipients: string[];
   delay_minutes: number;
   is_active: boolean;
 }
@@ -122,7 +106,7 @@ export const CustomerCommunicationHub = () => {
       setTemplates(templatesData as CommunicationTemplate[] || []);
       setNotificationRules(rulesData as NotificationRule[] || []);
 
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error loading communication data:', error);
       toast({
         variant: "destructive",
@@ -168,7 +152,7 @@ export const CustomerCommunicationHub = () => {
       setNewMessageContent('');
       loadCommunicationData();
 
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error sending communication:', error);
       toast({
         variant: "destructive",
@@ -202,7 +186,7 @@ export const CustomerCommunicationHub = () => {
 
       loadCommunicationData();
 
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error creating template:', error);
       toast({
         variant: "destructive",
@@ -236,7 +220,7 @@ export const CustomerCommunicationHub = () => {
 
       loadCommunicationData();
 
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error creating notification rule:', error);
       toast({
         variant: "destructive",

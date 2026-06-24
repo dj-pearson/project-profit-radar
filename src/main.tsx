@@ -5,18 +5,54 @@ import "./index.css";
 import './styles/accessibility.css';
 import { logger } from "./lib/logger";
 import { validateEnvironment } from "./lib/envValidation";
+import { initSentry } from "./lib/sentry";
+import { logError } from "./services/errorLoggingService";
+import { initDevicePerformance } from "./hooks/useDevicePerformance";
 
 // Validate environment variables immediately (lightweight)
 if (typeof window !== 'undefined') {
   validateEnvironment();
 }
 
+// Set the `low-gpu` class on <html> before the first paint so glass
+// surfaces degrade gracefully on older iPhones / low-end Androids and
+// on devices where the user has opted into Reduce Transparency.
+initDevicePerformance();
+
+// Initialize Sentry immediately for error tracking
+initSentry();
+
+// Global error handlers for error logging service
+if (typeof window !== 'undefined') {
+  window.addEventListener('error', (event) => {
+    // Skip errors from browser extensions (no filename)
+    if (!event.filename) return;
+    logError({
+      error: event.error instanceof Error ? event.error : new Error(event.message),
+      errorType: 'runtime',
+      severity: 'high',
+      metadata: {
+        filename: event.filename,
+        lineno: event.lineno,
+        colno: event.colno,
+      },
+    });
+  });
+
+  window.addEventListener('unhandledrejection', (event) => {
+    const error = event.reason instanceof Error
+      ? event.reason
+      : new Error(String(event.reason));
+    logError({
+      error,
+      errorType: 'unhandled_rejection',
+      severity: 'high',
+    });
+  });
+}
+
 // Defer non-critical initializations until after first paint
 const initDeferredServices = () => {
-  // Import and initialize Sentry (lazy loaded ~200KB savings)
-  import("./lib/sentry").then(({ initSentry }) => {
-    initSentry();
-  });
 
   // Initialize resource optimizations
   import("./utils/resourcePrioritization").then(({ initializeResourceOptimizations }) => {
@@ -38,8 +74,10 @@ const initDeferredServices = () => {
     });
   });
 
-  // Register service worker (production only)
-  if (import.meta.env.PROD && 'serviceWorker' in navigator) {
+  // Register service worker (production web only, not in Capacitor native)
+  const isCapacitorNative = typeof window !== 'undefined' &&
+    window.Capacitor?.isNativePlatform?.();
+  if (import.meta.env.PROD && 'serviceWorker' in navigator && !isCapacitorNative) {
     import("./utils/serviceWorkerManager").then(({ registerServiceWorker }) => {
       registerServiceWorker({
         enabled: true,

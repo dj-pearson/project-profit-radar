@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { usePermissions } from '@/hooks/usePermissions';
@@ -10,7 +10,6 @@ import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
@@ -37,7 +36,7 @@ interface CompanyAdminSettings {
   company_logo_url?: string;
   primary_color: string;
   secondary_color: string;
-  custom_theme: Record<string, any>;
+  custom_theme: Record<string, string | number | boolean>;
   email_signature?: string;
   user_invite_settings: {
     require_approval: boolean;
@@ -56,16 +55,16 @@ interface CompanyAdminSettings {
     require_2fa: boolean;
   };
   custom_fields: {
-    projects: any[];
-    contacts: any[];
-    tasks: any[];
-    estimates: any[];
+    projects: CustomField[];
+    contacts: CustomField[];
+    tasks: CustomField[];
+    estimates: CustomField[];
   };
   workflow_settings: {
     auto_approve_estimates_under?: number;
     auto_assign_tasks: boolean;
-    notification_rules: any[];
-    approval_workflows: any[];
+    notification_rules: Record<string, string | boolean>[];
+    approval_workflows: Record<string, string | boolean>[];
   };
   integration_config: {
     quickbooks: {
@@ -75,7 +74,7 @@ interface CompanyAdminSettings {
     };
     email: {
       provider: string;
-      smtp_settings: Record<string, any>;
+      smtp_settings: Record<string, string | number | boolean>;
     };
     calendar: {
       enabled: boolean;
@@ -102,7 +101,7 @@ interface CustomField {
   id?: string;
   field_name: string;
   field_type: string;
-  field_options: Record<string, any>;
+  field_options: Record<string, string | number | boolean | string[]>;
   applies_to: string;
   is_required: boolean;
   is_active: boolean;
@@ -153,14 +152,14 @@ const CompanyAdminSettings = () => {
       if (data) {
         setSettings({
           ...data,
-          custom_theme: data.custom_theme as Record<string, any>,
-          user_invite_settings: data.user_invite_settings as any,
-          security_policies: data.security_policies as any,
-          custom_fields: data.custom_fields as any,
-          workflow_settings: data.workflow_settings as any,
-          integration_config: data.integration_config as any,
-          data_retention: data.data_retention as any,
-          billing_settings: data.billing_settings as any
+          custom_theme: data.custom_theme as CompanyAdminSettings['custom_theme'],
+          user_invite_settings: data.user_invite_settings as CompanyAdminSettings['user_invite_settings'],
+          security_policies: data.security_policies as CompanyAdminSettings['security_policies'],
+          custom_fields: data.custom_fields as CompanyAdminSettings['custom_fields'],
+          workflow_settings: data.workflow_settings as CompanyAdminSettings['workflow_settings'],
+          integration_config: data.integration_config as CompanyAdminSettings['integration_config'],
+          data_retention: data.data_retention as CompanyAdminSettings['data_retention'],
+          billing_settings: data.billing_settings as CompanyAdminSettings['billing_settings']
         } as CompanyAdminSettings);
       } else {
         // Create default settings
@@ -228,7 +227,7 @@ const CompanyAdminSettings = () => {
         };
         setSettings(defaultSettings);
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error loading settings:', error);
       toast({
         variant: "destructive",
@@ -251,9 +250,9 @@ const CompanyAdminSettings = () => {
       if (error) throw error;
       setCustomFields((data || []).map(field => ({
         ...field,
-        field_options: field.field_options as Record<string, any>
+        field_options: field.field_options as CustomField['field_options']
       })));
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error loading custom fields:', error);
     }
   };
@@ -277,7 +276,7 @@ const CompanyAdminSettings = () => {
         title: "Success",
         description: "Company settings saved successfully"
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error saving settings:', error);
       toast({
         variant: "destructive",
@@ -348,7 +347,7 @@ const CompanyAdminSettings = () => {
       });
       
       loadCustomFields();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error saving custom fields:', error);
       toast({
         variant: "destructive",

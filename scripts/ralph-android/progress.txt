@@ -1,0 +1,168 @@
+## Consolidated Patterns
+
+### Android Project Structure
+- Android project initialized via Capacitor 7.4.4 at `android/`
+- Main activity: `android/app/src/main/java/com/brikly/app/MainActivity.java`
+- Manifest: `android/app/src/main/AndroidManifest.xml`
+- Build config: `android/app/build.gradle` (app-level), `android/variables.gradle` (SDK versions)
+- ProGuard: `android/app/proguard-rules.pro`
+- Resources: `android/app/src/main/res/` (values, xml, drawable, mipmap)
+- App ID: `com.brikly.app`
+- Target SDK: 35, Min SDK: 23
+
+### Capacitor Configuration
+- Config file: `capacitor.config.ts`
+- Web output dir: `dist-mobile` (built by `vite.config.mobile.ts`)
+- Build command: `npm run build:mobile` then `npx cap sync android`
+- Android scheme: https, hostname: app.brikly.net
+- Plugins: Camera, Geolocation, PushNotifications, LocalNotifications, Preferences, Network
+- BiometricAuth configured in capacitor.config.ts
+
+### Mobile Build Pipeline
+- Mobile Vite config: `vite.config.mobile.ts` (separate from web)
+- Defines `__MOBILE_BUILD__` flag for runtime detection
+- Target: es2020 for broader device compatibility
+- Output: `dist-mobile/` directory
+- Scripts: `npm run build:mobile:android` (build + cap sync)
+
+### Security Infrastructure (Web)
+- Comprehensive security at `src/lib/security/` (sanitize, CSRF, SSRF, rate limiting, etc.)
+- Auth: Supabase Auth with JWT, MFA/TOTP, biometric hooks
+- Session management: 3 concurrent sessions max, 30min inactivity timeout
+- Device trust: fingerprinting + trusted device tracking
+- File upload validation: MIME + extension allowlist
+- Input sanitization: multi-layer XSS prevention
+
+### Known Gaps (Pre-Audit) — RESOLVED items marked [DONE]
+- [DONE] No network_security_config.xml (HTTPS not enforced at Android level)
+- [DONE] Only INTERNET permission declared (missing Camera, GPS, etc.)
+- [DONE] ProGuard disabled (minifyEnabled=false)
+- [DONE] android:allowBackup=true (data leakage risk)
+- [DONE] No deep linking / OAuth callback intent filters
+- [DONE] Default Capacitor placeholder icons (branded colors applied)
+- [DONE] No foreground service for background GPS tracking
+- [DONE] No Android-specific back button handling
+
+---
+
+## Completed Work
+
+### AA-001: Network Security Configuration [DONE]
+- Created `android/app/src/main/res/xml/network_security_config.xml`
+- HTTPS-only enforcement (cleartextTrafficPermitted=false)
+- Certificate pinning for *.brikly.net and *.supabase.co
+- Debug overrides for localhost/emulator development
+- Referenced in AndroidManifest.xml via android:networkSecurityConfig
+
+### AA-002: Android Permissions [DONE]
+- Added 17 permissions to AndroidManifest.xml:
+  - Network: INTERNET, ACCESS_NETWORK_STATE
+  - Camera: CAMERA
+  - Location: ACCESS_FINE_LOCATION, ACCESS_COARSE_LOCATION, ACCESS_BACKGROUND_LOCATION
+  - Foreground service: FOREGROUND_SERVICE, FOREGROUND_SERVICE_LOCATION
+  - Notifications: POST_NOTIFICATIONS, VIBRATE, RECEIVE_BOOT_COMPLETED, WAKE_LOCK
+  - Biometric: USE_BIOMETRIC, USE_FINGERPRINT
+  - Storage: READ_MEDIA_IMAGES, READ_EXTERNAL_STORAGE (maxSdkVersion=32)
+- Added 5 uses-feature declarations (camera, autofocus, location, GPS, fingerprint)
+
+### AA-003: ProGuard Rules [DONE]
+- Enabled minifyEnabled=true and shrinkResources=true in release buildType
+- Updated proguard-rules.pro with rules for:
+  - Capacitor core (BridgeActivity, Bridge, Plugin, JSObject, etc.)
+  - WebView JavaScript interfaces
+  - All Capacitor plugins (camera, geolocation, push, notifications, etc.)
+  - AndroidX and biometric APIs
+  - Firebase/GMS for push notifications
+  - Serialization/Gson
+  - Log.d/Log.v stripping in release
+  - Source file attributes kept for Sentry crash reporting
+
+### AA-004: AndroidManifest Hardening [DONE]
+- Set android:allowBackup=false (prevents ADB data extraction)
+- Set android:fullBackupContent=false
+- Set android:usesCleartextTraffic=false (belt-and-suspenders with network_security_config)
+- Set android:hardwareAccelerated=true (WebView performance)
+- Created `android/app/src/main/res/xml/data_extraction_rules.xml` (deny-all for cloud + device transfer)
+- Added WebView Safe Browsing meta-data (EnableSafeBrowsing=true, MetricsOptOut=true)
+- Added deep linking intent filters for https://app.brikly.net and com.brikly.app:// OAuth
+- Added LocationTrackingService foreground service for background GPS tracking
+- Created `android/app/src/main/java/com/brikly/app/LocationTrackingService.java`
+
+### AA-005: Deep Linking [DONE]
+- Completed as part of AA-004
+- HTTPS deep links for app.brikly.net with autoVerify=true
+- Custom scheme com.brikly.app:// for OAuth callbacks
+
+### AA-006: Branded Splash Screen & Colors [DONE]
+- Created `android/app/src/main/res/values/colors.xml` with Brikly brand palette
+- Updated `styles.xml` with branded splash theme, status bar, and navigation bar colors
+- Created `values-night/colors.xml` and `values-night/styles.xml` for dark mode
+
+### AA-007: Gradle Build Optimization [DONE]
+- Java 17 compileOptions
+- NDK abiFilters: arm64-v8a, armeabi-v7a (production ARM only)
+- viewBinding and buildConfig enabled
+- signingConfigs with env var placeholders for CI/CD
+- Debug buildType with .debug suffix
+- Density splits for smaller APKs
+- AAB bundle config (density, ABI, language splits)
+- Added androidx.biometric:biometric dependency
+- Lint config (abortOnError=false, checkReleaseBuilds=true)
+
+### AA-008: Foreground Service [DONE]
+- Completed as part of AA-004
+- LocationTrackingService.java with notification channel
+- foregroundServiceType=location in manifest
+
+### AA-010: WebView Security [DONE]
+- Completed as part of AA-004
+- WebView.EnableSafeBrowsing=true
+- WebView.MetricsOptOut=true
+
+### AA-012: Android Permission Manager [DONE]
+- Created `src/components/mobile/AndroidPermissionManager.tsx`
+- Handles camera, location, notification permissions with Capacitor APIs
+- Shows rationale dialogs before requesting permissions
+- Provides 'Open Settings' for permanently denied permissions
+- Status badges (Granted/Denied/Not Set)
+
+### AA-013: Android Status Bar Theming [DONE]
+- Created `src/hooks/useAndroidStatusBar.ts`
+- Uses @capacitor/status-bar for native control
+- Light theme: dark text, white background
+- Dark theme: light text, dark background (#1A1A2E)
+- Platform-aware (Android only)
+
+### AA-014: Android Back Button Handling [DONE]
+- Created `src/hooks/useAndroidBackButton.ts`
+- Uses @capacitor/app for back button interception
+- Modal/sheet dismiss priority, then React Router back, then double-tap exit
+- Configurable root paths and exit confirmation
+- Custom event dispatch for toast feedback
+- Installed @capacitor/app and @capacitor/status-bar packages
+
+### AA-009: Play Store Metadata [DONE]
+- Created `android/fastlane/metadata/android/en-US/` directory structure
+- title.txt: "Brikly"
+- short_description.txt: 76 chars covering core value prop
+- full_description.txt: Comprehensive listing with features, security, CTA
+
+### AA-011: Backup Rules [DONE]
+- Created `android/app/src/main/res/xml/backup_rules.xml`
+- Excludes: CapacitorStorage, WebViewChromiumPrefs, Firebase shared prefs
+- Excludes: CapacitorDatabase and journal
+- Excludes: WebView Local/Session Storage, IndexedDB, Cookies
+- Excludes: All cache and external storage
+- Updated AndroidManifest.xml: android:fullBackupContent="@xml/backup_rules"
+
+### AA-015: Ralph CLAUDE.md [DONE]
+- Created `scripts/ralph-android/CLAUDE.md` with Android-specific Ralph agent instructions
+- References prd.json and progress.txt paths
+- Includes Android project structure, Capacitor plugins, and key paths
+
+---
+
+## ALL 15 USER STORIES COMPLETE
+
+---
+

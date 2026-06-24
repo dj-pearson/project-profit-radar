@@ -1,4 +1,3 @@
-import React from 'react';
 import { Helmet } from 'react-helmet-async';
 import { PageLayout } from '@/components/layouts/PageLayout';
 import { AccessibilityPanel } from '@/components/accessibility/AccessibilityPanel';
@@ -37,7 +36,7 @@ export default function AccessibilityPage() {
         <div className="container mx-auto p-6 space-y-8">
           <div className="text-center mb-8">
             <h1 className="text-3xl font-bold mb-2 flex items-center justify-center gap-3">
-              <AccessibilityIcon className="h-8 w-8" />
+              <AccessibilityIcon className="h-8 w-8" aria-hidden="true" />
               Accessibility Settings
             </h1>
             <p className="text-muted-foreground max-w-2xl mx-auto">
@@ -58,7 +57,7 @@ export default function AccessibilityPage() {
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2 text-lg">
-                    <Keyboard className="h-5 w-5" />
+                    <Keyboard className="h-5 w-5" aria-hidden="true" />
                     Keyboard Shortcuts
                   </CardTitle>
                 </CardHeader>
@@ -80,13 +79,13 @@ export default function AccessibilityPage() {
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2 text-lg">
-                    <HelpCircle className="h-5 w-5" />
+                    <HelpCircle className="h-5 w-5" aria-hidden="true" />
                     Features
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="flex items-start gap-3">
-                    <Eye className="h-5 w-5 text-blue-500 mt-0.5 flex-shrink-0" />
+                    <Eye className="h-5 w-5 text-blue-500 mt-0.5 flex-shrink-0" aria-hidden="true" />
                     <div>
                       <h4 className="font-medium text-sm">Visual Accessibility</h4>
                       <p className="text-xs text-muted-foreground">
@@ -96,7 +95,7 @@ export default function AccessibilityPage() {
                   </div>
 
                   <div className="flex items-start gap-3">
-                    <Volume2 className="h-5 w-5 text-green-500 mt-0.5 flex-shrink-0" />
+                    <Volume2 className="h-5 w-5 text-green-500 mt-0.5 flex-shrink-0" aria-hidden="true" />
                     <div>
                       <h4 className="font-medium text-sm">Screen Reader Support</h4>
                       <p className="text-xs text-muted-foreground">
@@ -106,7 +105,7 @@ export default function AccessibilityPage() {
                   </div>
 
                   <div className="flex items-start gap-3">
-                    <Keyboard className="h-5 w-5 text-purple-500 mt-0.5 flex-shrink-0" />
+                    <Keyboard className="h-5 w-5 text-purple-500 mt-0.5 flex-shrink-0" aria-hidden="true" />
                     <div>
                       <h4 className="font-medium text-sm">Keyboard Navigation</h4>
                       <p className="text-xs text-muted-foreground">

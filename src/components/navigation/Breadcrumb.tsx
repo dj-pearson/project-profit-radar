@@ -56,23 +56,23 @@ export const Breadcrumb: React.FC = () => {
   }
   
   return (
-    <nav className="flex items-center space-x-1 text-sm text-muted-foreground mb-4">
+    <nav aria-label="Breadcrumb" className="flex items-center space-x-1 text-sm text-muted-foreground mb-4">
       {breadcrumbItems.map((item, index) => (
         <React.Fragment key={index}>
           {index > 0 && (
-            <ChevronRight className="h-4 w-4 mx-1" />
+            <ChevronRight className="h-4 w-4 mx-1" aria-hidden="true" />
           )}
           {item.href && !item.isActive ? (
             <Link 
               to={item.href} 
               className="hover:text-foreground transition-colors flex items-center"
             >
-              {index === 0 && <Home className="h-4 w-4 mr-1" />}
+              {index === 0 && <Home className="h-4 w-4 mr-1" aria-hidden="true" />}
               {item.label}
             </Link>
           ) : (
             <span className={`flex items-center ${item.isActive ? 'text-foreground font-medium' : ''}`}>
-              {index === 0 && <Home className="h-4 w-4 mr-1" />}
+              {index === 0 && <Home className="h-4 w-4 mr-1" aria-hidden="true" />}
               {item.label}
             </span>
           )}

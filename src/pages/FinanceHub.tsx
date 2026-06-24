@@ -3,24 +3,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
-import {
-  BookOpen,
-  FileText,
-  Receipt,
-  CreditCard,
-  TrendingUp,
-  PieChart,
-  DollarSign,
-  Building2,
-  Calculator,
-  ClipboardList,
-  Landmark,
-  ArrowRightLeft,
-  BarChart3,
-  FileBarChart,
-  Wallet,
-  ArrowUpDown,
-} from 'lucide-react';
+import { BookOpen, FileText, Receipt, CreditCard, TrendingUp, PieChart, DollarSign, Building2, Calculator, ClipboardList, Landmark, ArrowRightLeft, BarChart3, FileBarChart, Wallet } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 
@@ -217,20 +200,20 @@ export default function FinanceHub() {
   };
 
   return (
-    <div className="container mx-auto py-6 space-y-6">
+    <main className="container mx-auto py-6 space-y-6" role="main" aria-label="Finance Hub">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <header className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Finance Hub</h1>
           <p className="text-muted-foreground mt-1">
             Enterprise-level financial management and accounting
           </p>
         </div>
-      </div>
+      </header>
 
       {/* Info Alert */}
-      <Alert>
-        <Building2 className="h-4 w-4" />
+      <Alert role="region" aria-label="Welcome message">
+        <Building2 className="h-4 w-4" aria-hidden="true" />
         <AlertDescription>
           Welcome to the enhanced Finance Hub! You now have access to a complete
           double-entry accounting system with Chart of Accounts, General Ledger,
@@ -240,7 +223,7 @@ export default function FinanceHub() {
 
       {/* Main Content */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-3" aria-label="Finance Hub sections">
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="modules">All Modules</TabsTrigger>
           <TabsTrigger value="quick-actions">Quick Actions</TabsTrigger>
@@ -249,73 +232,77 @@ export default function FinanceHub() {
         {/* Overview Tab */}
         <TabsContent value="overview" className="space-y-6">
           {/* Key Metrics */}
-          <div className="grid gap-4 md:grid-cols-4">
-            <Card>
+          <section aria-label="Key financial metrics" className="grid gap-4 md:grid-cols-4">
+            <Card role="region" aria-label="Total assets">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">Total Assets</CardTitle>
-                <TrendingUp className="h-4 w-4 text-muted-foreground" />
+                <TrendingUp className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">$0.00</div>
+                <div className="text-2xl font-bold" aria-label="$0.00 total assets">$0.00</div>
                 <p className="text-xs text-muted-foreground">
                   As of today
                 </p>
               </CardContent>
             </Card>
 
-            <Card>
+            <Card role="region" aria-label="Accounts payable">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">
                   Accounts Payable
                 </CardTitle>
-                <Receipt className="h-4 w-4 text-muted-foreground" />
+                <Receipt className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">$0.00</div>
+                <div className="text-2xl font-bold" aria-label="$0.00 accounts payable">$0.00</div>
                 <p className="text-xs text-muted-foreground">0 open bills</p>
               </CardContent>
             </Card>
 
-            <Card>
+            <Card role="region" aria-label="Accounts receivable">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">
                   Accounts Receivable
                 </CardTitle>
-                <DollarSign className="h-4 w-4 text-muted-foreground" />
+                <DollarSign className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">$0.00</div>
+                <div className="text-2xl font-bold" aria-label="$0.00 accounts receivable">$0.00</div>
                 <p className="text-xs text-muted-foreground">0 open invoices</p>
               </CardContent>
             </Card>
 
-            <Card>
+            <Card role="region" aria-label="Net income month to date">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">Net Income MTD</CardTitle>
-                <BarChart3 className="h-4 w-4 text-muted-foreground" />
+                <BarChart3 className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">$0.00</div>
+                <div className="text-2xl font-bold" aria-label="$0.00 net income month to date">$0.00</div>
                 <p className="text-xs text-muted-foreground">Month to date</p>
               </CardContent>
             </Card>
-          </div>
+          </section>
 
           {/* Featured Modules */}
-          <div>
+          <section aria-label="Featured modules">
             <h2 className="text-xl font-semibold mb-4">Featured Modules</h2>
-            <div className="grid gap-4 md:grid-cols-3">
+            <nav className="grid gap-4 md:grid-cols-3" aria-label="Core accounting modules">
               {modulesByCategory.core.map((module) => {
                 const IconComponent = module.icon;
                 return (
                   <Card
                     key={module.id}
-                    className="hover:shadow-md transition-shadow cursor-pointer"
+                    className="hover:shadow-md transition-shadow cursor-pointer focus-within:ring-2 focus-within:ring-primary"
                     onClick={() => navigate(module.route)}
+                    role="link"
+                    tabIndex={0}
+                    onKeyDown={(e) => e.key === 'Enter' && navigate(module.route)}
+                    aria-label={`${module.title}: ${module.description}`}
                   >
                     <CardHeader>
                       <div className="flex items-center gap-3">
-                        <div className={`p-2 rounded-lg ${module.bgColor}`}>
+                        <div className={`p-2 rounded-lg ${module.bgColor}`} aria-hidden="true">
                           <IconComponent className={`h-5 w-5 ${module.color}`} />
                         </div>
                         <div>
@@ -329,29 +316,33 @@ export default function FinanceHub() {
                   </Card>
                 );
               })}
-            </div>
-          </div>
+            </nav>
+          </section>
         </TabsContent>
 
         {/* All Modules Tab */}
         <TabsContent value="modules" className="space-y-6">
           {Object.entries(modulesByCategory).map(([category, modules]) => (
-            <div key={category}>
-              <h2 className="text-xl font-semibold mb-4">
+            <section key={category} aria-labelledby={`category-${category}`}>
+              <h2 id={`category-${category}`} className="text-xl font-semibold mb-4">
                 {categoryLabels[category]}
               </h2>
-              <div className="grid gap-4 md:grid-cols-3">
+              <nav className="grid gap-4 md:grid-cols-3" aria-label={`${categoryLabels[category]} modules`}>
                 {modules.map((module) => {
                   const IconComponent = module.icon;
                   return (
                     <Card
                       key={module.id}
-                      className="hover:shadow-md transition-shadow cursor-pointer"
+                      className="hover:shadow-md transition-shadow cursor-pointer focus-within:ring-2 focus-within:ring-primary"
                       onClick={() => navigate(module.route)}
+                      role="link"
+                      tabIndex={0}
+                      onKeyDown={(e) => e.key === 'Enter' && navigate(module.route)}
+                      aria-label={`${module.title}: ${module.description}`}
                     >
                       <CardHeader>
                         <div className="flex items-center gap-3">
-                          <div className={`p-2 rounded-lg ${module.bgColor}`}>
+                          <div className={`p-2 rounded-lg ${module.bgColor}`} aria-hidden="true">
                             <IconComponent className={`h-5 w-5 ${module.color}`} />
                           </div>
                           <div>
@@ -367,8 +358,8 @@ export default function FinanceHub() {
                     </Card>
                   );
                 })}
-              </div>
-            </div>
+              </nav>
+            </section>
           ))}
         </TabsContent>
 
@@ -381,63 +372,65 @@ export default function FinanceHub() {
                 Common tasks and frequently used features
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-2">
-              <Button
-                className="w-full justify-start"
-                variant="outline"
-                onClick={() => navigate('/finance/journal-entries/new')}
-              >
-                <Calculator className="mr-2 h-4 w-4" />
-                Create Journal Entry
-              </Button>
-              <Button
-                className="w-full justify-start"
-                variant="outline"
-                onClick={() => navigate('/finance/accounts-payable/new')}
-              >
-                <Receipt className="mr-2 h-4 w-4" />
-                Enter New Bill
-              </Button>
-              <Button
-                className="w-full justify-start"
-                variant="outline"
-                onClick={() => navigate('/invoices/create')}
-              >
-                <FileText className="mr-2 h-4 w-4" />
-                Create Invoice
-              </Button>
-              <Button
-                className="w-full justify-start"
-                variant="outline"
-                onClick={() => navigate('/finance/bill-payments/new')}
-              >
-                <CreditCard className="mr-2 h-4 w-4" />
-                Pay Bills
-              </Button>
-              <Button
-                className="w-full justify-start"
-                variant="outline"
-                onClick={() => navigate('/finance/bank-reconciliation')}
-              >
-                <Landmark className="mr-2 h-4 w-4" />
-                Reconcile Bank Account
-              </Button>
-              <Button
-                className="w-full justify-start"
-                variant="outline"
-                onClick={() => navigate('/finance/balance-sheet')}
-              >
-                <BarChart3 className="mr-2 h-4 w-4" />
-                View Balance Sheet
-              </Button>
-              <Button
-                className="w-full justify-start"
-                variant="outline"
-                onClick={() => navigate('/finance/profit-loss')}
-              >
-                <TrendingUp className="mr-2 h-4 w-4" />
-                View Profit & Loss
-              </Button>
+            <CardContent>
+              <nav className="space-y-2" aria-label="Quick actions">
+                <Button
+                  className="w-full justify-start"
+                  variant="outline"
+                  onClick={() => navigate('/finance/journal-entries/new')}
+                >
+                  <Calculator className="mr-2 h-4 w-4" aria-hidden="true" />
+                  Create Journal Entry
+                </Button>
+                <Button
+                  className="w-full justify-start"
+                  variant="outline"
+                  onClick={() => navigate('/finance/accounts-payable/new')}
+                >
+                  <Receipt className="mr-2 h-4 w-4" aria-hidden="true" />
+                  Enter New Bill
+                </Button>
+                <Button
+                  className="w-full justify-start"
+                  variant="outline"
+                  onClick={() => navigate('/invoices/create')}
+                >
+                  <FileText className="mr-2 h-4 w-4" aria-hidden="true" />
+                  Create Invoice
+                </Button>
+                <Button
+                  className="w-full justify-start"
+                  variant="outline"
+                  onClick={() => navigate('/finance/bill-payments/new')}
+                >
+                  <CreditCard className="mr-2 h-4 w-4" aria-hidden="true" />
+                  Pay Bills
+                </Button>
+                <Button
+                  className="w-full justify-start"
+                  variant="outline"
+                  onClick={() => navigate('/finance/bank-reconciliation')}
+                >
+                  <Landmark className="mr-2 h-4 w-4" aria-hidden="true" />
+                  Reconcile Bank Account
+                </Button>
+                <Button
+                  className="w-full justify-start"
+                  variant="outline"
+                  onClick={() => navigate('/finance/balance-sheet')}
+                >
+                  <BarChart3 className="mr-2 h-4 w-4" aria-hidden="true" />
+                  View Balance Sheet
+                </Button>
+                <Button
+                  className="w-full justify-start"
+                  variant="outline"
+                  onClick={() => navigate('/finance/profit-loss')}
+                >
+                  <TrendingUp className="mr-2 h-4 w-4" aria-hidden="true" />
+                  View Profit & Loss
+                </Button>
+              </nav>
             </CardContent>
           </Card>
 
@@ -450,13 +443,13 @@ export default function FinanceHub() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="text-sm text-muted-foreground text-center py-8">
+              <div className="text-sm text-muted-foreground text-center py-8" role="status">
                 No recent activity to display
               </div>
             </CardContent>
           </Card>
         </TabsContent>
       </Tabs>
-    </div>
+    </main>
   );
 }

@@ -1,12 +1,8 @@
 // Send Scheduled Emails Edge Function
-// Updated with multi-tenant site_id isolation (cron job pattern)
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.3";
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
+import { getCorsHeaders } from "../_shared/secure-cors.ts";
+import { requireSystemOrAdmin } from "../_shared/system-auth.ts";
 
 const logStep = (step: string, details?: any) => {
   const detailsStr = details ? ` - ${JSON.stringify(details)}` : '';
@@ -19,9 +15,13 @@ const logStep = (step: string, details?: any) => {
  * Iterates through all active sites for multi-tenant support
  */
 serve(async (req) => {
+  const corsHeaders = getCorsHeaders(req);
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
+
+  const denied = await requireSystemOrAdmin(req);
+  if (denied) return denied;
 
   try {
     logStep("Email sender started");
@@ -60,7 +60,6 @@ serve(async (req) => {
           *,
           email_campaigns (*)
         `)
-        .eq('site_id', site.id)  // CRITICAL: Site isolation
         .eq('status', 'pending')
         .lte('scheduled_for', new Date().toISOString())
         .order('priority', { ascending: true })
@@ -85,11 +84,10 @@ serve(async (req) => {
 
       for (const queuedEmail of pendingEmails) {
         try {
-          // Check if user has unsubscribed with site isolation
+          // Check if user has unsubscribed
           const { data: unsubscribed } = await supabaseClient
             .from('email_unsubscribes')
             .select('id')
-            .eq('site_id', site.id)  // CRITICAL: Site isolation
             .eq('email', queuedEmail.recipient_email)
             .eq('is_active', true)
             .single();
@@ -105,11 +103,10 @@ serve(async (req) => {
           continue;
         }
 
-        // Check user preferences with site isolation
+        // Check user preferences
           const { data: preferences } = await supabaseClient
             .from('email_preferences')
             .select('*')
-            .eq('site_id', site.id)  // CRITICAL: Site isolation
             .eq('user_id', queuedEmail.user_id)
             .single();
 
@@ -143,11 +140,10 @@ serve(async (req) => {
         });
 
           if (sendResult.success) {
-            // Create email send record with site isolation
+            // Create email send record
             const { data: emailSend } = await supabaseClient
               .from('email_sends')
               .insert({
-                site_id: site.id,  // CRITICAL: Site isolation
                 campaign_id: queuedEmail.campaign_id,
                 user_id: queuedEmail.user_id,
                 recipient_email: queuedEmail.recipient_email,
@@ -206,11 +202,10 @@ serve(async (req) => {
           })
           .eq('id', queuedEmail.id);
 
-          // Create failed email send record with site isolation
+          // Create failed email send record
           await supabaseClient
             .from('email_sends')
             .insert({
-              site_id: site.id,  // CRITICAL: Site isolation
               campaign_id: queuedEmail.campaign_id,
               user_id: queuedEmail.user_id,
               recipient_email: queuedEmail.recipient_email,
@@ -272,8 +267,8 @@ async function generateEmailHtml(campaignName: string, metadata: any): Promise<s
     firstName: metadata.first_name || 'there',
     companyName: metadata.company_name,
     daysRemaining: metadata.days_remaining || 14,
-    dashboardUrl: 'https://build-desk.com/dashboard',
-    unsubscribeUrl: metadata.unsubscribe_url || 'https://build-desk.com/unsubscribe',
+    dashboardUrl: 'https://brikly.net/dashboard',
+    unsubscribeUrl: metadata.unsubscribe_url || 'https://brikly.net/unsubscribe',
   };
 
   // Map campaign names to templates
@@ -289,7 +284,7 @@ async function generateEmailHtml(campaignName: string, metadata: any): Promise<s
   return `
     <html>
       <body>
-        <h1>BuildDesk</h1>
+        <h1>Brikly</h1>
         <p>Hi ${data.firstName},</p>
         <p>This is a ${campaignName} email.</p>
         <p>Dashboard: <a href="${data.dashboardUrl}">Click here</a></p>

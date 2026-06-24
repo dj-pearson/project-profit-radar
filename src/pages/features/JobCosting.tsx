@@ -1,4 +1,3 @@
-import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
 import { ArrowRight, DollarSign, TrendingUp, AlertTriangle, Clock, CheckCircle } from 'lucide-react';
@@ -6,6 +5,8 @@ import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { PageSEO, createHowToSchema, createFAQSchema } from '@/components/seo/PageSEO';
 import { GEOOptimizedFAQ } from '@/components/seo/GEOOptimizedFAQ';
+import { BreadcrumbsNavigation } from '@/components/BreadcrumbsNavigation';
+import { AggregateRatingSchema } from '@/components/seo/AggregateRatingSchema';
 
 const JobCostingPage = () => {
   const faqs = [
@@ -19,22 +20,22 @@ const JobCostingPage = () => {
     },
     {
       question: "Can I integrate job costing with QuickBooks?",
-      answer: "Yes! BuildDesk integrates seamlessly with QuickBooks Online, syncing your job costs, invoices, and expenses automatically. This eliminates duplicate data entry while maintaining your existing accounting workflow."
+      answer: "Yes! Brikly integrates seamlessly with QuickBooks Online, syncing your job costs, invoices, and expenses automatically. This eliminates duplicate data entry while maintaining your existing accounting workflow."
     },
     {
       question: "How much time does real-time job costing save?",
-      answer: "Contractors using BuildDesk report saving 10-15 hours per week on job cost tracking and financial reporting. Month-end close goes from 3 days to 5 minutes, and you eliminate the back-and-forth with your accountant trying to reconcile field costs."
+      answer: "Contractors using Brikly report saving 10-15 hours per week on job cost tracking and financial reporting. Month-end close goes from 3 days to 5 minutes, and you eliminate the back-and-forth with your accountant trying to reconcile field costs."
     },
     {
-      question: "What size contractor is BuildDesk built for?",
-      answer: "BuildDesk is purpose-built for small to mid-size contractors with $1M-$50M in annual revenue. We focus on the financial intelligence you need without the enterprise complexity and per-seat pricing of tools like Procore."
+      question: "What size contractor is Brikly built for?",
+      answer: "Brikly is purpose-built for small to mid-size contractors with $1M-$50M in annual revenue. We focus on the financial intelligence you need without the enterprise complexity and per-seat pricing of tools like Procore."
     }
   ];
 
   const howToSteps = [
     {
       name: "Set up your cost codes",
-      text: "Create a simple chart of accounts with cost codes for labor, materials, equipment, and subcontractors. BuildDesk includes templates for most construction trades."
+      text: "Create a simple chart of accounts with cost codes for labor, materials, equipment, and subcontractors. Brikly includes templates for most construction trades."
     },
     {
       name: "Track time in the field",
@@ -42,7 +43,7 @@ const JobCostingPage = () => {
     },
     {
       name: "Capture material costs",
-      text: "Scan receipts with your phone or forward vendor emails. BuildDesk automatically extracts costs and assigns them to projects using AI."
+      text: "Scan receipts with your phone or forward vendor emails. Brikly automatically extracts costs and assigns them to projects using AI."
     },
     {
       name: "Monitor profitability daily",
@@ -64,16 +65,35 @@ const JobCostingPage = () => {
           'contractor job costing',
           'real-time construction budgeting'
         ]}
-        canonicalUrl="https://builddesk.com/features/job-costing"
+        canonicalUrl="https://brikly.net/features/job-costing"
         schema={[
           createHowToSchema("How to Track Construction Job Costs in Real-Time", howToSteps),
           createFAQSchema(faqs)
         ]}
       />
 
+      {/* Enhanced SEO: Aggregate Rating Schema */}
+      <AggregateRatingSchema
+        schemaType="SoftwareApplication"
+        itemName="Brikly Job Costing Software"
+        itemDescription="Real-time job costing software for construction contractors"
+      />
+
       <Header />
 
       <main>
+        {/* Breadcrumb Navigation */}
+        <div className="container mx-auto px-4 pt-4">
+          <BreadcrumbsNavigation
+            items={[
+              { label: 'Home', href: '/' },
+              { label: 'Features', href: '/features' },
+              { label: 'Job Costing', isActive: true }
+            ]}
+            includeSchema={true}
+          />
+        </div>
+
         {/* Hero Section */}
         <section className="bg-gradient-to-br from-background via-background to-secondary py-20">
           <div className="container mx-auto px-4">
@@ -150,7 +170,7 @@ const JobCostingPage = () => {
           <div className="container mx-auto px-4">
             <div className="max-w-4xl mx-auto">
               <h2 className="text-3xl md:text-4xl font-bold text-center mb-12">
-                How BuildDesk Solves This
+                How Brikly Solves This
               </h2>
               <div className="grid md:grid-cols-2 gap-8">
                 <div className="bg-muted/30 p-6 rounded-lg">
@@ -202,7 +222,7 @@ const JobCostingPage = () => {
 
               <div className="mt-8 bg-construction-orange/10 p-8 rounded-lg border border-construction-orange/20">
                 <div className="text-center">
-                  <h3 className="text-2xl font-bold mb-4">The BuildDesk Difference</h3>
+                  <h3 className="text-2xl font-bold mb-4">The Brikly Difference</h3>
                   <div className="grid md:grid-cols-3 gap-6 text-center">
                     <div>
                       <div className="text-4xl font-bold text-construction-orange mb-2">24 hours</div>

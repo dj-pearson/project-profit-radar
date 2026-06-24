@@ -1,16 +1,16 @@
-# BuildDesk - Living Technical Specification (LTS)
+# Brikly - Living Technical Specification (LTS)
 
 **Version:** 1.0
 **Last Updated:** November 11, 2025
 **Status:** Active Development - 70% Complete for SMB Market
 
-> **Purpose:** This Living Technical Specification serves as the single source of truth for BuildDesk's current implementation state, architecture decisions, and growth opportunities. It bridges the gap between documentation and reality.
+> **Purpose:** This Living Technical Specification serves as the single source of truth for Brikly's current implementation state, architecture decisions, and growth opportunities. It bridges the gap between documentation and reality.
 
 ---
 
 ## Executive Summary
 
-BuildDesk is a B2B SaaS construction management platform targeting SMB contractors ($199-799/month segment). The platform provides real-time job costing, project management, and financial control without enterprise complexity.
+Brikly is a B2B SaaS construction management platform targeting SMB contractors ($199-799/month segment). The platform provides real-time job costing, project management, and financial control without enterprise complexity.
 
 ### Current State
 - **564 React components** across 110 domain categories
@@ -575,8 +575,8 @@ npm run preview           # Local preview
 
 **Primary Platform:** Cloudflare Pages
 - Configuration: `wrangler.toml`
-- Domain: builddesk.pearsonperformance.workers.dev
-- Custom domain: build-desk.com
+- Domain: brikly.pearsonperformance.workers.dev
+- Custom domain: brikly.net
 - Node version: 18+
 
 **Mobile Deployment**
@@ -1336,7 +1336,7 @@ npm run dev
 
 ### Platform Status
 
-BuildDesk is a **substantial, well-architected construction management platform** that is **70-75% complete for the SMB web application market**. The platform demonstrates:
+Brikly is a **substantial, well-architected construction management platform** that is **70-75% complete for the SMB web application market**. The platform demonstrates:
 
 **Strong Foundation**
 - Modern technology stack (React 19, TypeScript, Supabase)
@@ -1403,14 +1403,14 @@ BuildDesk is a **substantial, well-architected construction management platform*
 
 ### Final Assessment
 
-BuildDesk has a **strong technical foundation** and **significant functionality implemented**. The platform is closest to production-ready for **financial management focused customers using web browsers**.
+Brikly has a **strong technical foundation** and **significant functionality implemented**. The platform is closest to production-ready for **financial management focused customers using web browsers**.
 
 The main barriers to broader production deployment are:
 1. Lack of automated testing (critical risk)
 2. Mobile app immaturity (market expectation)
 3. Integration incompleteness (customer expectations)
 
-**With 8-12 weeks of focused effort on these gaps, BuildDesk can be production-ready for its target SMB market.**
+**With 8-12 weeks of focused effort on these gaps, Brikly can be production-ready for its target SMB market.**
 
 ---
 
@@ -1499,4 +1499,4 @@ Region: [Check Supabase dashboard]
 **Maintained By:** Development Team
 **Review Frequency:** Monthly
 
-This Living Technical Specification should be updated whenever significant architectural changes occur or new major features are implemented. It serves as the single source of truth for the current state of the BuildDesk platform.
+This Living Technical Specification should be updated whenever significant architectural changes occur or new major features are implemented. It serves as the single source of truth for the current state of the Brikly platform.

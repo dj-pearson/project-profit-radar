@@ -1,5 +1,5 @@
 /**
- * Route Configuration for BuildDesk
+ * Route Configuration for Brikly
  * Centralizes route definitions and access control
  */
 
@@ -125,6 +125,7 @@ export const ROUTE_ACCESS: Record<string, UserRole[]> = {
   // Admin Routes
   '/admin/companies': ['root_admin'],
   '/admin/users': ['root_admin', 'admin'],
+  '/admin/disposable-email-domains': ['root_admin'],
   '/admin/billing': ['root_admin', 'admin'],
   '/admin/promotions': ['root_admin', 'admin'],
   '/admin/analytics': ['root_admin', 'admin'],

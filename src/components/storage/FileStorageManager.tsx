@@ -7,7 +7,8 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { File, Upload, Search, Settings } from 'lucide-react';
+import { File, Upload, Search } from 'lucide-react';
+import { validateFileUpload, generateSecureFilename } from '@/lib/security/fileUploadValidation';
 
 interface StorageFile {
   id: string;
@@ -113,11 +114,22 @@ const FileStorageManager = () => {
     const file = event.target.files?.[0];
     if (!file || !userProfile?.company_id) return;
 
+    // Validate file type and size before upload
+    const validation = validateFileUpload(file);
+    if (!validation.valid) {
+      toast({
+        variant: "destructive",
+        title: "Invalid File",
+        description: validation.error || "File validation failed."
+      });
+      return;
+    }
+
     setUploading(true);
     setUploadProgress(0);
 
     try {
-      const fileName = `${Date.now()}-${file.name}`;
+      const fileName = generateSecureFilename(file.name);
       
       // Simulate upload progress
       const progressInterval = setInterval(() => {

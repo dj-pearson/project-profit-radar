@@ -1,4 +1,4 @@
-# BuildDesk Financial Intelligence - Implementation Roadmap
+# Brikly Financial Intelligence - Implementation Roadmap
 ## Strategic Transformation Progress & Next Steps
 
 **Status:** Phase 1 Complete (60%)
@@ -18,7 +18,7 @@
 
 ### **2. Financial Intelligence Showcase**
 ✓ Comprehensive component highlighting 4 core differentiators
-✓ Competitive comparison table (BuildDesk vs Procore/Buildertrend)
+✓ Competitive comparison table (Brikly vs Procore/Buildertrend)
 ✓ Real results with proof points (4%+ margin improvement, 3-week early warning)
 ✓ "They manage projects. We prevent financial disasters." positioning
 
@@ -177,7 +177,7 @@ Algorithm:
 - Subject: "Fixing Your [Visibility/Efficiency/Predictive/Accuracy] Gap"
 - Deep dive on their lowest scoring category
 - Quick wins they can implement today
-- How BuildDesk solves this specifically
+- How Brikly solves this specifically
 
 **Day 5:** Case Study - Similar Company
 - Subject: "How [Company] went from [Low Score] to [High Score]"
@@ -267,7 +267,7 @@ Algorithm:
 - Google Analytics 4 with custom events
 - Hotjar for heatmaps and session recordings
 - Email platform analytics (Resend stats)
-- Custom dashboard in BuildDesk admin
+- Custom dashboard in Brikly admin
 - Weekly automated reports
 
 ---
@@ -358,8 +358,8 @@ Complete month-end close in <5 minutes (vs 3 days manual)
 3. "Thompson Construction: 8% → 13% Margin in 90 Days"
 
 **Comparison Guides:**
-1. "BuildDesk vs Procore: Financial Intelligence Comparison"
-2. "BuildDesk vs Buildertrend: Why We Win on Profitability"
+1. "Brikly vs Procore: Financial Intelligence Comparison"
+2. "Brikly vs Buildertrend: Why We Win on Profitability"
 3. "Real-Time Job Costing vs Traditional Accounting"
 
 **Industry Reports:**
@@ -447,7 +447,7 @@ Complete month-end close in <5 minutes (vs 3 days manual)
 
 ### **Market Position Metrics:**
 - [ ] "Financial intelligence for contractors" #1 ranking
-- [ ] 5+ industry publications mention BuildDesk
+- [ ] 5+ industry publications mention Brikly
 - [ ] 100+ inbound leads per month
 - [ ] 4.9/5 average customer rating
 - [ ] 60+ NPS score
@@ -577,7 +577,7 @@ Complete month-end close in <5 minutes (vs 3 days manual)
 ## The Solution
 [How to fix it]
 
-## How BuildDesk Helps
+## How Brikly Helps
 [Specific features]
 
 ## Real Results
@@ -595,7 +595,7 @@ Complete month-end close in <5 minutes (vs 3 days manual)
 [What they were struggling with]
 
 **Solution:**
-[How BuildDesk solved it]
+[How Brikly solved it]
 
 **Results:**
 - [Metric 1]: X% improvement
@@ -626,7 +626,7 @@ Body:
 Signature:
 [Name]
 [Title]
-BuildDesk
+Brikly
 [Link to book demo]
 ```
 

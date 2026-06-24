@@ -1,5 +1,4 @@
 // Execute Workflow Edge Function
-// Updated with multi-tenant site_id isolation
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.50.3'
 
 const corsHeaders = {
@@ -61,10 +60,9 @@ Deno.serve(async (req) => {
 })
 
 async function startExecution(supabase: any, workflowId: string, triggerData: Record<string, any>) {
-  // Get workflow definition with site_id
   const { data: workflow, error: workflowError } = await supabase
     .from('workflow_definitions')
-    .select('*, site_id')  // Include site_id
+    .select('*')
     .eq('id', workflowId)
     .single()
 
@@ -72,61 +70,11 @@ async function startExecution(supabase: any, workflowId: string, triggerData: Re
   if (!workflow.is_active) throw new Error('Workflow is not active')
 
   const steps = workflow.workflow_steps as WorkflowStep[]
-  const siteId = workflow.site_id
-
-  console.log('[EXECUTE-WORKFLOW] Starting execution', { workflowId, siteId, companyId: workflow.company_id })
-
-  // Create execution record with site isolation
-  const { data: execution, error: executionError } = await supabase
-    .from('workflow_executions')
-    .insert({
-      site_id: siteId,  // CRITICAL: Site isolation
-      company_id: workflow.company_id,
-      workflow_id: workflowId,
-      trigger_data: triggerData,
-      total_steps: steps.length,
-      execution_log: [{
-        timestamp: new Date().toISOString(),
-        message: 'Workflow execution started',
-        step: 'initialization'
-      }]
-    })
-    .select()
-    .single()
-
-  if (executionError) throw executionError
-
-  // Execute steps (pass siteId)
-  await executeSteps(supabase, execution, steps, 0, siteId)
-
-  return execution
-}
-
-async function continueExecution(supabase: any, executionId: string) {
-  const { data: execution, error } = await supabase
-    .from('workflow_executions')
-    .select('*, site_id, workflow_definitions(*)')
-    .eq('id', executionId)
-    .single()
-
-  if (error) throw error
-
-  const steps = execution.workflow_definitions.workflow_steps as WorkflowStep[]
-  const siteId = execution.site_id
-
-  console.log('[EXECUTE-WORKFLOW] Continuing execution', { executionId, siteId })
-
-  await executeSteps(supabase, execution, steps, execution.completed_steps, siteId)
-
-  return execution
-}
-
-async function executeSteps(supabase: any, execution: any, steps: WorkflowStep[], startIndex: number = 0, siteId?: string) {
-  for (let i = startIndex; i < steps.length; i++) {
+    for (let i = startIndex; i < steps.length; i++) {
     const step = steps[i]
 
     try {
-      // Create step execution record with site isolation
+      // Create step execution record
       const stepInsertData: any = {
         company_id: execution.company_id,
         execution_id: execution.id,
@@ -135,10 +83,6 @@ async function executeSteps(supabase: any, execution: any, steps: WorkflowStep[]
         step_type: step.type,
         step_config: step.config,
         started_at: new Date().toISOString()
-      }
-
-      if (siteId) {
-        stepInsertData.site_id = siteId  // CRITICAL: Site isolation
       }
 
       const { data: stepExecution, error: stepError } = await supabase
@@ -252,22 +196,43 @@ async function executeStep(supabase: any, step: WorkflowStep, execution: any, st
     switch (step.type) {
       case 'notification':
         return await executeNotificationStep(supabase, step, execution)
-      
+
+      case 'send_email':
+        return await executeEmailStep(supabase, step, execution)
+
+      case 'send_sms':
+        return await executeSMSStep(supabase, step, execution)
+
       case 'task_creation':
         return await executeTaskCreationStep(supabase, step, execution)
-      
+
       case 'status_update':
         return await executeStatusUpdateStep(supabase, step, execution)
-      
+
+      case 'field_update':
+        return await executeFieldUpdateStep(supabase, step, execution)
+
       case 'calculation':
         return await executeCalculationStep(supabase, step, execution)
-      
+
       case 'report_generation':
         return await executeReportGenerationStep(supabase, step, execution)
-      
+
       case 'condition':
         return await executeConditionStep(supabase, step, execution)
-      
+
+      case 'webhook':
+        return await executeWebhookStep(supabase, step, execution)
+
+      case 'create_activity':
+        return await executeCreateActivityStep(supabase, step, execution)
+
+      case 'enroll_campaign':
+        return await executeEnrollCampaignStep(supabase, step, execution)
+
+      case 'delay':
+        return await executeDelayStep(supabase, step, execution)
+
       default:
         return {
           success: false,
@@ -391,11 +356,11 @@ async function executeReportGenerationStep(supabase: any, step: WorkflowStep, ex
 
 async function executeConditionStep(supabase: any, step: WorkflowStep, execution: any) {
   const { condition, if_true_action, if_false_action } = step.config
-  
+
   // Mock condition evaluation - in real implementation, evaluate actual conditions
   const conditionMet = Math.random() > 0.5 // Random for demo
   const action = conditionMet ? if_true_action : if_false_action
-  
+
   return {
     success: true,
     output: {
@@ -406,3 +371,23 @@ async function executeConditionStep(supabase: any, step: WorkflowStep, execution
     }
   }
 }
+
+// ============================================================================
+// EMAIL AUTOMATION STEP FUNCTIONS
+// ============================================================================
+
+async function executeEmailStep(supabase: any, step: WorkflowStep, execution: any) {
+  const {
+    to,
+    subject,
+    template_id,
+    html_content,
+    text_content,
+    from_email,
+    from_name,
+    reply_to,
+    delay_minutes,
+    variables
+  } = step.config
+
+  }

@@ -1,5 +1,4 @@
 // Sync Calendar Edge Function
-// Updated with multi-tenant site_id isolation
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { initializeAuthContext, errorResponse } from '../_shared/auth-helpers.ts';
 
@@ -20,15 +19,14 @@ serve(async (req) => {
   try {
     logStep("Function started", { method: req.method });
 
-    // Initialize auth context - extracts user AND site_id from JWT
-    const authContext = await initializeAuthContext(req);
+        const authContext = await initializeAuthContext(req);
     if (!authContext) {
       return errorResponse('Unauthorized', 401);
     }
 
-    const { user, siteId, supabase: supabaseClient } = authContext;
+    const { user, supabase: supabaseClient } = authContext;
     if (!user?.id) throw new Error("User not authenticated");
-    logStep("User authenticated", { userId: user.id, siteId });
+    logStep("User authenticated", { userId: user.id });
 
     const body = await req.json();
     const { integration_id, company_id } = body;
@@ -37,11 +35,10 @@ serve(async (req) => {
       throw new Error("Integration ID and Company ID are required");
     }
 
-    // Get integration details with site isolation
+    // Get integration details
     const { data: integration, error: integrationError } = await supabaseClient
       .from('calendar_integrations')
       .select('*')
-      .eq('site_id', siteId)  // CRITICAL: Site isolation
       .eq('id', integration_id)
       .eq('company_id', company_id)
       .single();
@@ -60,12 +57,11 @@ serve(async (req) => {
       throw new Error(`Unsupported provider: ${integration.provider}`);
     }
 
-    // Store events in database with site isolation
+    // Store events in database
     for (const event of events) {
       await supabaseClient
         .from('calendar_events')
         .upsert({
-          site_id: siteId,  // CRITICAL: Site isolation
           company_id,
           title: event.title,
           start_time: event.start_time,
@@ -75,15 +71,14 @@ serve(async (req) => {
           external_id: event.external_id,
           integration_id,
         }, {
-          onConflict: 'external_id,integration_id,site_id'
+          onConflict: 'external_id,integration_id'
         });
     }
 
-    // Update last sync time with site isolation
+    // Update last sync time
     await supabaseClient
       .from('calendar_integrations')
       .update({ last_sync: new Date().toISOString() })
-      .eq('site_id', siteId)  // CRITICAL: Site isolation
       .eq('id', integration_id);
 
     logStep("Sync completed", { eventsCount: events.length });

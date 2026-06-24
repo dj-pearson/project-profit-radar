@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
@@ -9,10 +8,23 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Play, StepForward, RotateCcw, CheckCircle2, XCircle, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
 
+interface WorkflowNode {
+  id: string;
+  data: { label?: string; actionType?: string };
+  [key: string]: unknown;
+}
+
+interface WorkflowEdge {
+  id: string;
+  source: string;
+  target: string;
+  [key: string]: unknown;
+}
+
 interface WorkflowTesterProps {
   workflowId?: string;
-  nodes: any[];
-  edges: any[];
+  nodes: WorkflowNode[];
+  edges: WorkflowEdge[];
 }
 
 interface TestStep {
@@ -20,8 +32,8 @@ interface TestStep {
   nodeId: string;
   label: string;
   status: 'pending' | 'running' | 'success' | 'failed' | 'skipped';
-  input?: any;
-  output?: any;
+  input?: unknown;
+  output?: unknown;
   error?: string;
   duration?: number;
 }

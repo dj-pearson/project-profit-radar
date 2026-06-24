@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { AccessibleModal } from '@/components/accessibility/AccessibleModal';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -164,137 +164,135 @@ export const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="w-[95vw] max-w-md h-[90vh] flex flex-col p-3 sm:p-6">
-        <div className="flex-1 overflow-y-auto space-y-4">
-        <DialogHeader>
-          <DialogTitle>Create New Task</DialogTitle>
-        </DialogHeader>
+    <AccessibleModal
+      isOpen={isOpen}
+      onClose={handleClose}
+      title="Create New Task"
+      size="sm"
+      footer={
+        <>
+          <Button type="button" variant="outline" onClick={handleClose} className="flex-1">
+            Cancel
+          </Button>
+          <Button type="submit" form="create-task-form" disabled={loading} className="flex-1">
+            {loading ? 'Creating...' : 'Create Task'}
+          </Button>
+        </>
+      }
+    >
+      <form id="create-task-form" onSubmit={handleSubmit} className="space-y-4">
+        <div className="space-y-2">
+          <Label htmlFor="name">Task Name *</Label>
+          <Input
+            id="name"
+            value={formData.name}
+            onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+            placeholder="Enter task name"
+            required
+          />
+        </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <div className="space-y-2">
+          <Label htmlFor="description">Description</Label>
+          <Textarea
+            id="description"
+            value={formData.description}
+            onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+            placeholder="Task description (optional)"
+            rows={3}
+          />
+        </div>
+
+        <div className="grid grid-cols-2 gap-4">
           <div className="space-y-2">
-            <Label htmlFor="name">Task Name *</Label>
-            <Input
-              id="name"
-              value={formData.name}
-              onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-              placeholder="Enter task name"
-              required
-            />
+            <Label htmlFor="category">Category</Label>
+          <Select value={formData.category} onValueChange={(value: TaskCategory) => setFormData(prev => ({ ...prev, category: value }))}>
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {TASK_CATEGORIES.map(category => (
+                <SelectItem key={category} value={category}>
+                  {category.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="description">Description</Label>
-            <Textarea
-              id="description"
-              value={formData.description}
-              onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-              placeholder="Task description (optional)"
-              rows={3}
-            />
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="category">Category</Label>
-            <Select value={formData.category} onValueChange={(value: TaskCategory) => setFormData(prev => ({ ...prev, category: value }))}>
+            <Label htmlFor="priority">Priority</Label>
+            <Select value={formData.priority} onValueChange={(value) => setFormData(prev => ({ ...prev, priority: value }))}>
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                {TASK_CATEGORIES.map(category => (
-                  <SelectItem key={category} value={category}>
-                    {category.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="priority">Priority</Label>
-              <Select value={formData.priority} onValueChange={(value) => setFormData(prev => ({ ...prev, priority: value }))}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="low">Low</SelectItem>
-                  <SelectItem value="medium">Medium</SelectItem>
-                  <SelectItem value="high">High</SelectItem>
-                  <SelectItem value="urgent">Urgent</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="project">Project *</Label>
-            <Select value={formData.project_id} onValueChange={(value) => setFormData(prev => ({ ...prev, project_id: value }))}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select a project" />
-              </SelectTrigger>
-              <SelectContent>
-                {projects.map(project => (
-                  <SelectItem key={project.id} value={project.id}>
-                    {project.name}
-                  </SelectItem>
-                ))}
+                <SelectItem value="low">Low</SelectItem>
+                <SelectItem value="medium">Medium</SelectItem>
+                <SelectItem value="high">High</SelectItem>
+                <SelectItem value="urgent">Urgent</SelectItem>
               </SelectContent>
             </Select>
           </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="assigned_to">Assigned To</Label>
-            <Select value={formData.assigned_to} onValueChange={(value) => setFormData(prev => ({ ...prev, assigned_to: value }))}>
-              <SelectTrigger>
-                <SelectValue placeholder="Assign to..." />
-              </SelectTrigger>
-              <SelectContent>
-                {users.map(user => (
-                  <SelectItem key={user.id} value={user.id}>
-                    {user.first_name} {user.last_name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="due_date">Due Date</Label>
-              <Input
-                id="due_date"
-                type="date"
-                value={formData.due_date}
-                onChange={(e) => setFormData(prev => ({ ...prev, due_date: e.target.value }))}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="estimated_hours">Estimated Hours</Label>
-              <Input
-                id="estimated_hours"
-                type="number"
-                step="0.5"
-                min="0"
-                value={formData.estimated_hours}
-                onChange={(e) => setFormData(prev => ({ ...prev, estimated_hours: e.target.value }))}
-                placeholder="0"
-              />
-            </div>
-          </div>
-
-          <div className="flex gap-2 pt-4">
-            <Button type="button" variant="outline" onClick={handleClose} className="flex-1">
-              Cancel
-            </Button>
-            <Button type="submit" disabled={loading} className="flex-1">
-              {loading ? 'Creating...' : 'Create Task'}
-            </Button>
-          </div>
-        </form>
         </div>
-      </DialogContent>
-    </Dialog>
+
+        <div className="space-y-2">
+          <Label htmlFor="project">Project *</Label>
+          <Select value={formData.project_id} onValueChange={(value) => setFormData(prev => ({ ...prev, project_id: value }))}>
+            <SelectTrigger>
+              <SelectValue placeholder="Select a project" />
+            </SelectTrigger>
+            <SelectContent>
+              {projects.map(project => (
+                <SelectItem key={project.id} value={project.id}>
+                  {project.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="assigned_to">Assigned To</Label>
+          <Select value={formData.assigned_to} onValueChange={(value) => setFormData(prev => ({ ...prev, assigned_to: value }))}>
+            <SelectTrigger>
+              <SelectValue placeholder="Assign to..." />
+            </SelectTrigger>
+            <SelectContent>
+              {users.map(user => (
+                <SelectItem key={user.id} value={user.id}>
+                  {user.first_name} {user.last_name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <Label htmlFor="due_date">Due Date</Label>
+            <Input
+              id="due_date"
+              type="date"
+              value={formData.due_date}
+              onChange={(e) => setFormData(prev => ({ ...prev, due_date: e.target.value }))}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="estimated_hours">Estimated Hours</Label>
+            <Input
+              id="estimated_hours"
+              type="number"
+              step="0.5"
+              min="0"
+              value={formData.estimated_hours}
+              onChange={(e) => setFormData(prev => ({ ...prev, estimated_hours: e.target.value }))}
+              placeholder="0"
+            />
+          </div>
+        </div>
+      </form>
+    </AccessibleModal>
   );
 };

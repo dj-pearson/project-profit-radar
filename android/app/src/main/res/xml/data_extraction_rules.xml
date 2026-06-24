@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Data extraction rules for Android 12+ (API 31+).
+    Prevents sensitive app data from being transferred via cloud backup
+    or device-to-device migration.
+-->
+<data-extraction-rules>
+    <cloud-backup>
+        <!-- Deny all cloud backup to prevent auth tokens and financial data leakage -->
+        <exclude domain="root" />
+        <exclude domain="sharedpref" />
+        <exclude domain="database" />
+        <exclude domain="file" />
+        <exclude domain="external" />
+    </cloud-backup>
+    <device-transfer>
+        <!-- Deny device-to-device transfer of sensitive data -->
+        <exclude domain="root" />
+        <exclude domain="sharedpref" />
+        <exclude domain="database" />
+        <exclude domain="file" />
+    </device-transfer>
+</data-extraction-rules>

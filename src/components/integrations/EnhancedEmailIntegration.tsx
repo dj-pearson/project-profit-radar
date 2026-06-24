@@ -1,30 +1,14 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { Textarea } from '@/components/ui/textarea';
-import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-import { 
-  Mail, 
-  Send, 
-  Users, 
-  Settings, 
-  Plus,
-  BarChart3,
-  Calendar,
-  Zap,
-  Target,
-  TrendingUp,
-  Eye,
-  Edit
-} from 'lucide-react';
+import { Mail, Settings, Plus, Calendar, Zap, Target, TrendingUp, Eye, Edit } from 'lucide-react';
 
 interface EmailProvider {
   id: string;
@@ -96,8 +80,8 @@ const EnhancedEmailIntegration = () => {
           name: 'Resend',
           connected: true,
           config: {
-            domain: 'builddesk.app',
-            webhookUrl: 'https://api.builddesk.app/webhooks/resend'
+            domain: 'brikly.app',
+            webhookUrl: 'https://api.brikly.app/webhooks/resend'
           }
         },
         {
@@ -124,7 +108,7 @@ const EnhancedEmailIntegration = () => {
             conditions: { client_type: 'new' }
           },
           emails: [
-            { subject: 'Welcome to BuildDesk!', template: 'welcome', delay_hours: 0 },
+            { subject: 'Welcome to Brikly!', template: 'welcome', delay_hours: 0 },
             { subject: 'Getting Started Guide', template: 'getting_started', delay_hours: 24 },
             { subject: 'Your First Project Setup', template: 'first_project', delay_hours: 72 }
           ],
@@ -167,8 +151,8 @@ const EnhancedEmailIntegration = () => {
         {
           id: '1',
           name: 'Welcome Email',
-          subject: 'Welcome to BuildDesk, {{client_name}}!',
-          html: '<h1>Welcome to BuildDesk</h1><p>Dear {{client_name}}, we are excited to work with you on your construction project.</p>',
+          subject: 'Welcome to Brikly, {{client_name}}!',
+          html: '<h1>Welcome to Brikly</h1><p>Dear {{client_name}}, we are excited to work with you on your construction project.</p>',
           variables: ['client_name', 'project_name', 'company_name'],
           category: 'onboarding'
         },

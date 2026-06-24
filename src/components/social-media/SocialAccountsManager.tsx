@@ -17,9 +17,6 @@ import {
   XCircle
 } from 'lucide-react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 
 interface SocialAccountsManagerProps {
   accounts: any[];
@@ -141,7 +138,7 @@ export const SocialAccountsManager: React.FC<SocialAccountsManagerProps> = ({
             <DialogHeader>
               <DialogTitle>Connect Social Media Account</DialogTitle>
               <DialogDescription>
-                Choose a platform to connect to your BuildDesk account
+                Choose a platform to connect to your Brikly account
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-4">
@@ -281,7 +278,7 @@ export const SocialAccountsManager: React.FC<SocialAccountsManagerProps> = ({
                 <DialogHeader>
                   <DialogTitle>Connect Social Media Account</DialogTitle>
                   <DialogDescription>
-                    Choose a platform to connect to your BuildDesk account
+                    Choose a platform to connect to your Brikly account
                   </DialogDescription>
                 </DialogHeader>
                 <div className="space-y-4">

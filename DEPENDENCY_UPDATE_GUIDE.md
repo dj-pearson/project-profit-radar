@@ -1,6 +1,6 @@
 # Dependency Update Guide
 
-This guide outlines safe dependency updates that can be performed to keep the BuildDesk platform up-to-date with security patches and performance improvements.
+This guide outlines safe dependency updates that can be performed to keep the Brikly platform up-to-date with security patches and performance improvements.
 
 ## ⚠️ Important Notes
 

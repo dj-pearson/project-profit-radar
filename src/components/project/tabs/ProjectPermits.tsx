@@ -10,22 +10,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
-import { 
-  Shield, 
-  PlusCircle,
-  ExternalLink,
-  Edit,
-  Trash2,
-  Calendar,
-  User,
-  Building,
-  AlertTriangle,
-  CheckCircle,
-  Clock,
-  FileText,
-  DollarSign,
-  Search
-} from 'lucide-react';
+import { Shield, PlusCircle, ExternalLink, Edit, Trash2, AlertTriangle, CheckCircle, Clock, FileText, DollarSign, Search } from 'lucide-react';
 
 interface EnvironmentalPermit {
   id: string;

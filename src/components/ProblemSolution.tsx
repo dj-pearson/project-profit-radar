@@ -1,6 +1,7 @@
 import { AlertTriangle, CheckCircle, Clock, DollarSign, ArrowRight, ShieldAlert, TrendingDown } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import { Link } from "react-router-dom";
 
 const ProblemSolution = () => {
   return (
@@ -81,6 +82,19 @@ const ProblemSolution = () => {
             </div>
           </div>
         </div>
+      </div>
+
+      {/* CTA Bridge */}
+      <div className="bg-construction-orange/5 rounded-2xl p-8 border-t border-b border-border/30 text-center">
+        <h3 className="text-xl font-semibold text-construction-dark dark:text-white mb-4">
+          See How Brikly Catches Overruns in Real-Time
+        </h3>
+        <Button variant="hero" size="lg" asChild>
+          <Link to="/auth">
+            Start Free Trial
+            <ArrowRight className="ml-2 h-5 w-5" />
+          </Link>
+        </Button>
       </div>
 
       {/* The Solution */}

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { RoleGuard, ROLE_GROUPS } from '@/components/auth/RoleGuard';
@@ -9,26 +9,17 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import type { SupabaseClient } from '@supabase/supabase-js';
 import { Helmet } from 'react-helmet-async';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
-import { 
-  ArrowLeft, 
-  FileText,
-  HelpCircle,
-  PlusCircle,
-  MessageSquare,
-  Clock,
-  CheckCircle,
-  XCircle,
-  AlertCircle,
-  User,
-  Calendar,
-  Edit
-} from 'lucide-react';
+
+// Helper to query tables not yet in the generated Database types.
+const untypedFrom = (table: string) =>
+  (supabase as unknown as SupabaseClient).from(table);
+import { HelpCircle, PlusCircle, MessageSquare, Clock, CheckCircle, XCircle, AlertCircle, User, Calendar, Edit } from 'lucide-react';
 
 interface Project {
   id: string;
@@ -70,6 +61,33 @@ interface RFIResponse {
   response_date: string;
   is_final_response: boolean;
   responder: { first_name: string; last_name: string };
+}
+
+interface RawRFIRow {
+  id: string;
+  project_id: string;
+  rfi_number: string | null;
+  subject: string | null;
+  description: string;
+  priority: string;
+  status: string;
+  submitted_to: string | null;
+  created_by: string | null;
+  due_date: string | null;
+  response_date: string | null;
+  company_id: string;
+  created_at: string;
+  updated_at: string;
+  projects: { name: string; client_name: string };
+}
+
+interface RawRFIResponseRow {
+  id: string;
+  rfi_id: string;
+  response_text: string;
+  responded_by: string;
+  response_date: string;
+  is_final_response: boolean;
 }
 
 const RFIs = () => {
@@ -181,17 +199,16 @@ const RFIs = () => {
       }));
 
       // Fetch responses for these RFIs
-      const rfiIds = (rfisData || []).map((r: any) => r.id);
+      const rfiIds = (rfisData || []).map((r: RawRFIRow) => r.id);
       let responsesByRfi: Record<string, RFIResponse[]> = {};
       if (rfiIds.length > 0) {
-        const { data: responsesData } = await (supabase as any)
-          .from('rfi_responses')
+        const { data: responsesData } = await untypedFrom('rfi_responses')
           .select('*')
           .in('rfi_id', rfiIds)
           .order('response_date', { ascending: true });
 
-        (responsesData || []).forEach((resp: any) => {
-          const arr = responsesByRfi[resp.rfi_id] || [] as RFIResponse[];
+        (responsesData || []).forEach((resp: RawRFIResponseRow) => {
+          const arr = responsesByRfi[resp.rfi_id] || ([] as RFIResponse[]);
           arr.push({
             ...resp,
             responder: { first_name: 'User', last_name: '' }
@@ -200,14 +217,14 @@ const RFIs = () => {
         });
       }
 
-      const enrichedRFIs = transformedRFIs.map((r: any) => ({
+      const enrichedRFIs = transformedRFIs.map((r) => ({
         ...r,
         responses: responsesByRfi[r.id] || []
       }));
 
       setRFIs(enrichedRFIs);
 
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error loading data:', error);
       toast({
         variant: "destructive",
@@ -268,7 +285,7 @@ const RFIs = () => {
       });
       
       loadData();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error creating RFI:', error);
       toast({
         variant: "destructive",
@@ -336,7 +353,7 @@ const RFIs = () => {
       });
       
       loadData();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error updating RFI:', error);
       toast({
         variant: "destructive",
@@ -359,8 +376,7 @@ const RFIs = () => {
     try {
       if (!selectedRFI || !user || !userProfile) return;
 
-      const { error: insertErr } = await (supabase as any)
-        .from('rfi_responses')
+      const { error: insertErr } = await untypedFrom('rfi_responses')
         .insert({
           rfi_id: selectedRFI.id,
           response_text: responseText.trim(),
@@ -389,7 +405,7 @@ const RFIs = () => {
       setIsFinalResponse(false);
       setSelectedRFI(null);
       loadData();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error adding response:', error);
       toast({
         variant: 'destructive',
@@ -402,13 +418,13 @@ const RFIs = () => {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'open':
-        return <Badge variant="outline"><Clock className="h-3 w-3 mr-1" />Open</Badge>;
+        return <Badge variant="outline"><Clock className="h-3 w-3 mr-1" aria-hidden="true" />Open</Badge>;
       case 'in_progress':
-        return <Badge variant="secondary"><MessageSquare className="h-3 w-3 mr-1" />In Progress</Badge>;
+        return <Badge variant="secondary"><MessageSquare className="h-3 w-3 mr-1" aria-hidden="true" />In Progress</Badge>;
       case 'closed':
-        return <Badge className="bg-green-500"><CheckCircle className="h-3 w-3 mr-1" />Closed</Badge>;
+        return <Badge className="bg-green-500"><CheckCircle className="h-3 w-3 mr-1" aria-hidden="true" />Closed</Badge>;
       case 'cancelled':
-        return <Badge variant="destructive"><XCircle className="h-3 w-3 mr-1" />Cancelled</Badge>;
+        return <Badge variant="destructive"><XCircle className="h-3 w-3 mr-1" aria-hidden="true" />Cancelled</Badge>;
       default:
         return <Badge variant="outline">{status}</Badge>;
     }
@@ -417,7 +433,7 @@ const RFIs = () => {
   const getPriorityBadge = (priority: string) => {
     switch (priority) {
       case 'urgent':
-        return <Badge variant="destructive"><AlertCircle className="h-3 w-3 mr-1" />Urgent</Badge>;
+        return <Badge variant="destructive"><AlertCircle className="h-3 w-3 mr-1" aria-hidden="true" />Urgent</Badge>;
       case 'high':
         return <Badge variant="destructive">High</Badge>;
       case 'medium':
@@ -436,12 +452,12 @@ const RFIs = () => {
   if (loading || loadingRFIs) {
     return (
       <DashboardLayout title="Request for Information (RFI)">
-        <div className="flex items-center justify-center h-96">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-construction-blue mx-auto mb-4"></div>
-            <p className="text-muted-foreground">Loading RFIs...</p>
+        <div className="space-y-6" role="status" aria-live="polite" aria-label="Loading content">
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+              {[1,2,3,4].map(i => <div key={i} className="h-24 bg-muted animate-pulse rounded-lg" />)}
+            </div>
+            <div className="h-[300px] bg-muted animate-pulse rounded-lg" />
           </div>
-        </div>
       </DashboardLayout>
     );
   }
@@ -450,7 +466,7 @@ const RFIs = () => {
     <RoleGuard allowedRoles={ROLE_GROUPS.PROJECT_VIEWERS}>
       <DashboardLayout title="Request for Information (RFI)">
         <Helmet>
-        <title>RFIs Tracker – Formal Questions & Approvals | BuildDesk</title>
+        <title>RFIs Tracker – Formal Questions & Approvals | Brikly</title>
         <meta name="description" content="Create and track RFIs with due dates, responses, and audit trail for accountability." />
         <link rel="canonical" href="/rfis" />
       </Helmet>
@@ -463,14 +479,14 @@ const RFIs = () => {
           <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
             <DialogTrigger asChild>
               <Button>
-                <PlusCircle className="h-4 w-4 mr-2" />
+                <PlusCircle className="h-4 w-4 mr-2" aria-hidden="true" />
                 Create RFI
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-2xl">
+            <DialogContent className="max-w-2xl" aria-describedby="create-rfi-description">
                 <DialogHeader>
                   <DialogTitle>Create Request for Information</DialogTitle>
-                  <DialogDescription>
+                  <DialogDescription id="create-rfi-description">
                     Create a new RFI to formally request information from clients, architects, or vendors.
                   </DialogDescription>
                 </DialogHeader>
@@ -478,7 +494,7 @@ const RFIs = () => {
                   <div>
                     <Label htmlFor="project">Project *</Label>
                     <Select value={newRFI.project_id} onValueChange={(value) => setNewRFI({...newRFI, project_id: value})}>
-                      <SelectTrigger>
+                      <SelectTrigger aria-required="true">
                         <SelectValue placeholder="Select project" />
                       </SelectTrigger>
                       <SelectContent>
@@ -498,6 +514,7 @@ const RFIs = () => {
                       placeholder="Brief description of the information request"
                       value={newRFI.title}
                       onChange={(e) => setNewRFI({...newRFI, title: e.target.value})}
+                      aria-required="true"
                     />
                   </div>
 
@@ -509,6 +526,7 @@ const RFIs = () => {
                       value={newRFI.description}
                       onChange={(e) => setNewRFI({...newRFI, description: e.target.value})}
                       rows={4}
+                      aria-required="true"
                     />
                   </div>
 
@@ -554,7 +572,7 @@ const RFIs = () => {
         {/* Filters */}
         <Card className="mb-6">
           <CardContent className="p-6">
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-4" role="search" aria-label="Filter RFIs">
               <div className="flex-1">
                 <Label htmlFor="project-filter">Filter by Project</Label>
                 <Select value={selectedProject} onValueChange={setSelectedProject}>
@@ -580,13 +598,13 @@ const RFIs = () => {
           {filteredRFIs.length === 0 ? (
             <Card>
               <CardContent className="text-center py-12">
-                <HelpCircle className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                <HelpCircle className="h-12 w-12 text-muted-foreground mx-auto mb-4" aria-hidden="true" />
                 <h3 className="text-lg font-medium mb-2">No RFIs</h3>
                 <p className="text-muted-foreground mb-4">
                   {selectedProject ? 'No RFIs found for selected project' : 'No RFIs have been created yet'}
                 </p>
                 <Button onClick={() => setIsCreateDialogOpen(true)}>
-                  <PlusCircle className="h-4 w-4 mr-2" />
+                  <PlusCircle className="h-4 w-4 mr-2" aria-hidden="true" />
                   Create First RFI
                 </Button>
               </CardContent>
@@ -599,7 +617,7 @@ const RFIs = () => {
                     <div className="flex items-center justify-between">
                       <div>
                         <CardTitle className="flex items-center space-x-2">
-                          <HelpCircle className="h-5 w-5 text-construction-blue" />
+                          <HelpCircle className="h-5 w-5 text-construction-blue" aria-hidden="true" />
                           <span>{rfi.title}</span>
                           <Badge variant="outline">#{rfi.rfi_number}</Badge>
                         </CardTitle>
@@ -622,7 +640,7 @@ const RFIs = () => {
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                       <div>
                         <h4 className="font-medium mb-2 flex items-center">
-                          <User className="h-4 w-4 mr-2" />
+                          <User className="h-4 w-4 mr-2" aria-hidden="true" />
                           Requested By
                         </h4>
                         <p className="text-sm text-muted-foreground">
@@ -632,7 +650,7 @@ const RFIs = () => {
                       
                       <div>
                         <h4 className="font-medium mb-2 flex items-center">
-                          <User className="h-4 w-4 mr-2" />
+                          <User className="h-4 w-4 mr-2" aria-hidden="true" />
                           Assigned To
                         </h4>
                         <p className="text-sm text-muted-foreground">
@@ -642,7 +660,7 @@ const RFIs = () => {
                       
                       <div>
                         <h4 className="font-medium mb-2 flex items-center">
-                          <Calendar className="h-4 w-4 mr-2" />
+                          <Calendar className="h-4 w-4 mr-2" aria-hidden="true" />
                           Due Date
                         </h4>
                         <p className="text-sm text-muted-foreground">
@@ -683,7 +701,7 @@ const RFIs = () => {
                         size="sm"
                         onClick={() => handleEditRFI(rfi)}
                       >
-                        <Edit className="h-3 w-3 mr-1" />
+                        <Edit className="h-3 w-3 mr-1" aria-hidden="true" />
                         Edit
                       </Button>
                       <Button 
@@ -694,7 +712,7 @@ const RFIs = () => {
                           setIsResponseDialogOpen(true);
                         }}
                       >
-                        <MessageSquare className="h-3 w-3 mr-1" />
+                        <MessageSquare className="h-3 w-3 mr-1" aria-hidden="true" />
                         Add Response
                       </Button>
                     </div>
@@ -708,10 +726,10 @@ const RFIs = () => {
 
       {/* Edit RFI Dialog */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-2xl" aria-describedby="edit-rfi-description">
           <DialogHeader>
             <DialogTitle>Edit Request for Information</DialogTitle>
-            <DialogDescription>
+            <DialogDescription id="edit-rfi-description">
               Update the RFI details and status.
             </DialogDescription>
           </DialogHeader>
@@ -719,7 +737,7 @@ const RFIs = () => {
             <div>
               <Label htmlFor="edit-project">Project *</Label>
               <Select value={editedRFI.project_id} onValueChange={(value) => setEditedRFI({...editedRFI, project_id: value})}>
-                <SelectTrigger>
+                <SelectTrigger aria-required="true">
                   <SelectValue placeholder="Select project" />
                 </SelectTrigger>
                 <SelectContent>
@@ -739,6 +757,7 @@ const RFIs = () => {
                 placeholder="Brief description of the information request"
                 value={editedRFI.title}
                 onChange={(e) => setEditedRFI({...editedRFI, title: e.target.value})}
+                aria-required="true"
               />
             </div>
 
@@ -750,6 +769,7 @@ const RFIs = () => {
                 value={editedRFI.description}
                 onChange={(e) => setEditedRFI({...editedRFI, description: e.target.value})}
                 rows={4}
+                aria-required="true"
               />
             </div>
 
@@ -822,10 +842,10 @@ const RFIs = () => {
 
       {/* Response Dialog */}
       <Dialog open={isResponseDialogOpen} onOpenChange={setIsResponseDialogOpen}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-2xl" aria-describedby="add-response-description">
           <DialogHeader>
             <DialogTitle>Add Response</DialogTitle>
-            <DialogDescription>
+            <DialogDescription id="add-response-description">
               Add a response to RFI: {selectedRFI?.title}
             </DialogDescription>
           </DialogHeader>

@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -16,38 +16,9 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { enterpriseSeoService } from '@/services/EnterpriseSeOService';
 import { contentSeoGenerator, ContentSEOConfig } from '@/services/ContentSEOGenerator';
-import {
-  Search,
-  Globe,
-  BarChart3,
-  Settings,
-  FileText,
-  Zap,
-  Target,
-  Lightbulb,
-  Rocket,
-  CheckCircle,
-  AlertTriangle,
-  Plus,
-  Eye,
-  MousePointer,
-  TrendingUp,
-  Brain,
-  RefreshCw,
-  ExternalLink,
-  Share2
-} from 'lucide-react';
-import {
-  AreaChart,
-  Area,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  LineChart,
-  Line
-} from 'recharts';
+import { Search, Globe, BarChart3, Settings, FileText, Zap, Target, Rocket, CheckCircle, AlertTriangle, Plus, Eye, MousePointer, TrendingUp, Brain, RefreshCw } from 'lucide-react';
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { logger } from '@/lib/logger';
 
 // Interfaces
 interface SEOConfig {
@@ -93,13 +64,13 @@ const UnifiedSEODashboard = () => {
   
   // SEO Configuration
   const [config, setConfig] = useState<SEOConfig>({
-    site_name: 'BuildDesk',
+    site_name: 'Brikly',
     site_description: 'Construction Management Platform for SMB Contractors',
     site_keywords: ['construction management', 'contractor software', 'project management', 'construction software'],
     default_og_image: '',
     google_analytics_id: '',
     google_search_console_id: '',
-    canonical_domain: 'https://builddesk.com',
+    canonical_domain: 'https://brikly.net',
     robots_txt: 'User-agent: *\nAllow: /',
     sitemap_enabled: true,
     schema_org_enabled: true
@@ -115,7 +86,7 @@ const UnifiedSEODashboard = () => {
     cta: 'Start Free Trial',
     internalLinks: []
   });
-  const [generatedContent, setGeneratedContent] = useState<any>(null);
+  const [generatedContent, setGeneratedContent] = useState<Record<string, unknown> | null>(null);
   
   // Meta Tags
   const [metaTags, setMetaTags] = useState<MetaTag[]>([]);
@@ -197,7 +168,7 @@ const UnifiedSEODashboard = () => {
       if (metaData) {
         setMetaTags(metaData);
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error loading SEO data:', error);
     }
   };
@@ -223,9 +194,9 @@ const UnifiedSEODashboard = () => {
       toast.success('SEO System Initialized', {
         description: 'Enterprise SEO optimization is now active across all pages'
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast.error('Initialization Error', {
-        description: error.message
+        description: error instanceof Error ? error.message : String(error)
       });
     } finally {
       setIsInitializing(false);
@@ -243,7 +214,7 @@ const UnifiedSEODashboard = () => {
       if (error) throw error;
 
       toast.success('SEO configuration saved successfully');
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error saving configuration:', error);
       toast.error('Failed to save configuration');
     } finally {
@@ -262,8 +233,8 @@ const UnifiedSEODashboard = () => {
       const result = await contentSeoGenerator.generateContent(contentConfig as ContentSEOConfig);
       setGeneratedContent(result);
       toast.success(`SEO-optimized content created with ${result.seoScore}/100 score`);
-    } catch (error: any) {
-      toast.error(error.message);
+    } catch (error: unknown) {
+      toast.error(error instanceof Error ? error.message : String(error));
     } finally {
       setIsGenerating(false);
     }
@@ -286,7 +257,7 @@ const UnifiedSEODashboard = () => {
       });
 
       if (fileError) {
-        console.warn('File-based sitemap generation failed:', fileError);
+        logger.warn('File-based sitemap generation failed:', fileError);
       }
 
       // Update robots.txt to include sitemap reference if needed
@@ -297,8 +268,8 @@ const UnifiedSEODashboard = () => {
       }
 
       toast.success('Sitemap generated and robots.txt updated successfully');
-    } catch (error: any) {
-      toast.error('Failed to generate sitemap: ' + error.message);
+    } catch (error: unknown) {
+      toast.error('Failed to generate sitemap: ' + (error instanceof Error ? error.message : String(error)));
     } finally {
       setIsGenerating(false);
     }
@@ -319,9 +290,9 @@ const UnifiedSEODashboard = () => {
       setConfig(prev => ({ ...prev, robots_txt: data }));
       
       toast.success('Robots.txt updated and saved to storage');
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error updating robots.txt:', error);
-      toast.error('Failed to update robots.txt: ' + error.message);
+      toast.error('Failed to update robots.txt: ' + (error instanceof Error ? error.message : String(error)));
     } finally {
       setIsGenerating(false);
     }
@@ -393,26 +364,26 @@ const UnifiedSEODashboard = () => {
         "mainEntity": [
           {
             "@type": "Question",
-            "name": "What is BuildDesk?",
+            "name": "What is Brikly?",
             "acceptedAnswer": {
               "@type": "Answer",
-              "text": "BuildDesk is a construction management platform designed for small to medium-sized construction businesses, providing real-time project management, financial tracking, and collaborative tools."
+              "text": "Brikly is a construction management platform designed for small to medium-sized construction businesses, providing real-time project management, financial tracking, and collaborative tools."
             }
           },
           {
             "@type": "Question",
-            "name": "How much does BuildDesk cost?",
+            "name": "How much does Brikly cost?",
             "acceptedAnswer": {
               "@type": "Answer",
-              "text": "BuildDesk offers tiered pricing starting at $149/month for unlimited users, providing comprehensive construction management features without per-user fees."
+              "text": "Brikly offers tiered pricing starting at $149/month for unlimited users, providing comprehensive construction management features without per-user fees."
             }
           },
           {
             "@type": "Question",
-            "name": "What industries does BuildDesk serve?",
+            "name": "What industries does Brikly serve?",
             "acceptedAnswer": {
               "@type": "Answer",
-              "text": "BuildDesk serves construction companies, contractors, project managers, and construction professionals across various construction industry sectors."
+              "text": "Brikly serves construction companies, contractors, project managers, and construction professionals across various construction industry sectors."
             }
           }
         ]
@@ -435,9 +406,9 @@ ${JSON.stringify(faqSchema, null, 2)}
       await navigator.clipboard.writeText(schemaMarkup);
       
       toast.success('Schema markup generated and copied to clipboard');
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error generating schema markup:', error);
-      toast.error('Failed to generate schema markup: ' + error.message);
+      toast.error('Failed to generate schema markup: ' + (error instanceof Error ? error.message : String(error)));
     } finally {
       setIsGenerating(false);
     }
@@ -458,9 +429,9 @@ ${JSON.stringify(faqSchema, null, 2)}
       await navigator.clipboard.writeText(data);
       
       toast.success('LLMs.txt generated, saved to storage, and copied to clipboard');
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error generating LLMs.txt:', error);
-      toast.error('Failed to generate LLMs.txt: ' + error.message);
+      toast.error('Failed to generate LLMs.txt: ' + (error instanceof Error ? error.message : String(error)));
     } finally {
       setIsGenerating(false);
     }
@@ -555,9 +526,9 @@ ${JSON.stringify(faqSchema, null, 2)}
       const errorCount = auditResults.filter(r => r.status === 'error').length;
       
       toast.success(`SEO Audit Complete: ${goodCount} good, ${warningCount} warnings, ${errorCount} errors. Check console for details.`);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error running SEO audit:', error);
-      toast.error('Failed to run SEO audit: ' + error.message);
+      toast.error('Failed to run SEO audit: ' + (error instanceof Error ? error.message : String(error)));
     } finally {
       setIsGenerating(false);
     }
@@ -590,7 +561,7 @@ ${JSON.stringify(faqSchema, null, 2)}
         no_follow: false
       });
       loadSEOData();
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast.error('Failed to add meta tag');
     }
   };
@@ -603,7 +574,7 @@ ${JSON.stringify(faqSchema, null, 2)}
         checkAPICredentials()
       ]);
       toast.success('SEO data refreshed');
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast.error('Failed to refresh data');
     }
   };
@@ -709,7 +680,7 @@ ${JSON.stringify(faqSchema, null, 2)}
   const analytics = analyticsData?.analytics || [];
 
   // Prepare chart data
-  const chartData = analytics.slice(0, 30).reverse().map((item: any) => ({
+  const chartData = analytics.slice(0, 30).reverse().map((item: { date: string; impressions: number; clicks: number; ctr: number; average_position: number }) => ({
     date: new Date(item.date).toLocaleDateString(),
     impressions: item.impressions,
     clicks: item.clicks,
@@ -909,7 +880,7 @@ ${JSON.stringify(faqSchema, null, 2)}
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-4">
-                      {analytics?.[0]?.top_queries?.slice(0, 10).map((query: any, index: number) => (
+                      {analytics?.[0]?.top_queries?.slice(0, 10).map((query: { query: string; position: string; ctr: string; impressions: number; clicks: number }, index: number) => (
                         <div key={index} className="flex items-center justify-between p-4 border rounded-lg">
                           <div className="flex-1">
                             <h4 className="font-medium">{query.query}</h4>
@@ -940,7 +911,7 @@ ${JSON.stringify(faqSchema, null, 2)}
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-4">
-                      {analytics?.[0]?.top_pages?.slice(0, 10).map((page: any, index: number) => (
+                      {analytics?.[0]?.top_pages?.slice(0, 10).map((page: { page: string; ctr: string; impressions: number; clicks: number }, index: number) => (
                         <div key={index} className="flex items-center justify-between p-4 border rounded-lg">
                           <div className="flex-1">
                             <h4 className="font-medium">{page.page}</h4>
@@ -1074,7 +1045,7 @@ ${JSON.stringify(faqSchema, null, 2)}
                       <label className="text-sm font-medium">Content Type</label>
                       <Select
                         value={contentConfig.contentType}
-                        onValueChange={(value) => setContentConfig({...contentConfig, contentType: value as any})}
+                        onValueChange={(value) => setContentConfig({...contentConfig, contentType: value as ContentSEOConfig['contentType']})}
                       >
                         <SelectTrigger>
                           <SelectValue />
@@ -1092,7 +1063,7 @@ ${JSON.stringify(faqSchema, null, 2)}
                       <label className="text-sm font-medium">Target Audience</label>
                       <Select
                         value={contentConfig.targetAudience}
-                        onValueChange={(value) => setContentConfig({...contentConfig, targetAudience: value as any})}
+                        onValueChange={(value) => setContentConfig({...contentConfig, targetAudience: value as ContentSEOConfig['targetAudience']})}
                       >
                         <SelectTrigger>
                           <SelectValue />

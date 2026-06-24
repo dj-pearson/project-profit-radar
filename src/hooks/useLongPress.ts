@@ -17,7 +17,7 @@ export function useLongPress({
   onClick,
   enableHaptic = true,
 }: UseLongPressOptions) {
-  const timeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const isLongPress = useRef(false);
 
   const triggerHaptic = useCallback(() => {
@@ -32,7 +32,7 @@ export function useLongPress({
       isLongPress.current = true;
       triggerHaptic();
       onLongPress();
-    }, delay) as any;
+    }, delay);
   }, [onLongPress, delay, triggerHaptic]);
 
   const clear = useCallback(() => {

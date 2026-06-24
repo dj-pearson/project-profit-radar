@@ -1,37 +1,24 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { LoadingState } from '@/components/ui/loading-spinner';
-import { ErrorBoundary, ErrorState, EmptyState } from '@/components/ui/error-boundary';
-import { ResponsiveContainer, ResponsiveGrid } from '@/components/layout/ResponsiveContainer';
+import { ErrorBoundary, ErrorState } from '@/components/ui/error-boundary';
+import { AccessibleTable, type TableColumn } from '@/components/accessibility/AccessibleTable';
+import { AccessibleModal } from '@/components/accessibility/AccessibleModal';
 import { useLoadingState } from '@/hooks/useLoadingState';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { ThemeToggle } from '@/components/ui/theme-toggle';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { 
-  Users, 
-  Search,
-  Plus,
-  Phone,
-  Mail,
-  MapPin,
-  Building2,
-  User,
-  Edit,
-  Trash2,
-  Globe,
-  Calendar,
-  Tag
-} from 'lucide-react';
+import { AccessibleForm, AccessibleFormField, AccessibleTextarea, AccessibleFieldset } from '@/components/accessibility/AccessibleForm';
+import { Users, Search, Plus, Phone, Mail, Building2, Edit, Trash2, Download, Tag, Send, X } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
+import { filterAndSortContacts, collectContactTags, type ContactRow } from '@/components/crm/contactListUtils';
 
 interface Contact {
   id: string;
@@ -71,9 +58,16 @@ const CRMContacts = () => {
   const { user, userProfile, signOut, loading } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
-  
+
   const [searchTerm, setSearchTerm] = useState('');
   const [typeFilter, setTypeFilter] = useState('all');
+  // Sort, tag filter, and bulk-selection state (US-090).
+  const [sortField, setSortField] = useState('first_name');
+  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
+  const [tagFilter, setTagFilter] = useState('all');
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [bulkLoading, setBulkLoading] = useState(false);
+  const [tagToAdd, setTagToAdd] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [showNewContactDialog, setShowNewContactDialog] = useState(false);
   const [newContact, setNewContact] = useState<Partial<Contact>>({
@@ -82,23 +76,23 @@ const CRMContacts = () => {
     preferred_contact_method: 'email',
     country: 'United States'
   });
-  
-  const { 
-    data: contacts, 
-    loading: contactsLoading, 
-    error: contactsError, 
-    execute: loadContacts 
+
+  const {
+    data: contacts,
+    loading: contactsLoading,
+    error: contactsError,
+    execute: loadContacts
   } = useLoadingState<Contact[]>([]);
 
   useEffect(() => {
     if (!loading && !user) {
       navigate('/auth');
     }
-    
+
     if (!loading && user && userProfile && !userProfile.company_id && userProfile.role !== 'root_admin') {
       navigate('/setup');
     }
-    
+
     if (!loading && user && userProfile) {
       loadContacts(loadContactsData);
     }
@@ -229,18 +223,97 @@ const CRMContacts = () => {
     });
   };
 
-  const filteredContacts = contacts?.filter(contact => {
-    const matchesSearch = searchTerm === '' || 
-      `${contact.first_name} ${contact.last_name}`.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      contact.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      contact.company_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      contact.job_title?.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    const matchesType = typeFilter === 'all' || contact.contact_type === typeFilter;
-    const matchesStatus = statusFilter === 'all' || contact.relationship_status === statusFilter;
-    
-    return matchesSearch && matchesType && matchesStatus;
-  }) || [];
+  const filteredContacts = filterAndSortContacts((contacts || []) as ContactRow[], {
+    searchTerm,
+    typeFilter,
+    statusFilter,
+    tagFilter,
+    sortField,
+    sortDir,
+  });
+
+  const availableTags = collectContactTags((contacts || []) as ContactRow[]);
+  const allVisibleSelected =
+    filteredContacts.length > 0 && filteredContacts.every((c) => selectedIds.has(c.id));
+
+  const handleSelectionChange = (ids: (string | number)[]) =>
+    setSelectedIds(new Set(ids as string[]));
+
+  const bulkSendEmail = () => {
+    const emails = filteredContacts
+      .filter((c) => selectedIds.has(c.id) && c.email)
+      .map((c) => c.email as string);
+    if (emails.length === 0) {
+      toast({ title: 'No emails', description: 'None of the selected contacts have an email.' });
+      return;
+    }
+    window.location.href = `mailto:?bcc=${encodeURIComponent(emails.join(','))}`;
+  };
+
+  const bulkAddTag = async () => {
+    const tag = tagToAdd.trim();
+    const ids = [...selectedIds];
+    if (!tag || ids.length === 0) return;
+    setBulkLoading(true);
+    try {
+      // Append the tag to each selected contact's tags array (dedup).
+      await Promise.all(
+        filteredContacts
+          .filter((c) => selectedIds.has(c.id))
+          .map((c) => {
+            const next = Array.from(new Set([...(c.tags || []), tag]));
+            return supabase.from('contacts').update({ tags: next }).eq('id', c.id);
+          }),
+      );
+      toast({ title: 'Tag added', description: `"${tag}" added to ${ids.length} contact(s).` });
+      setTagToAdd('');
+      setSelectedIds(new Set());
+      loadContacts(loadContactsData);
+    } catch (err: any) {
+      toast({ variant: 'destructive', title: 'Add tag failed', description: err.message });
+    } finally {
+      setBulkLoading(false);
+    }
+  };
+
+  const bulkExportContacts = () => {
+    const rows = filteredContacts.filter((c) => selectedIds.has(c.id));
+    if (rows.length === 0) return;
+    const headers = ['First Name', 'Last Name', 'Email', 'Phone', 'Company', 'Type', 'Status', 'Tags'];
+    const csv = [
+      headers.join(','),
+      ...rows.map((r) =>
+        [r.first_name, r.last_name, r.email, r.phone, r.company_name, r.contact_type, r.relationship_status, (r.tags || []).join('; ')]
+          .map((v) => `"${String(v ?? '').replace(/"/g, '""')}"`)
+          .join(','),
+      ),
+    ].join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `contacts-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const bulkDeleteContacts = async () => {
+    const ids = [...selectedIds];
+    if (ids.length === 0) return;
+    if (!window.confirm(`Delete ${ids.length} contact(s)? This cannot be undone.`)) return;
+    setBulkLoading(true);
+    try {
+      const { error: err } = await supabase.from('contacts').delete().in('id', ids);
+      if (err) throw err;
+      toast({ title: 'Contacts deleted', description: `${ids.length} removed.` });
+      setSelectedIds(new Set());
+      loadContacts(loadContactsData);
+    } catch (err: any) {
+      toast({ variant: 'destructive', title: 'Bulk delete failed', description: err.message });
+    } finally {
+      setBulkLoading(false);
+    }
+  };
 
   if (loading) {
     return <LoadingState message="Loading contacts..." />;
@@ -252,26 +325,27 @@ const CRMContacts = () => {
 
   return (
     <DashboardLayout title="Contact Management">
-            
+
             {/* Filters and Actions */}
             <Card className="mb-6">
               <CardContent className="pt-6">
                 <div className="flex flex-col lg:flex-row gap-4">
-                  <div className="flex-1">
+                  <div className="flex-1" role="search" aria-label="Search contacts">
                     <div className="relative">
-                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" aria-hidden="true" />
                       <Input
                         placeholder="Search contacts by name, email, company, or job title..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                         className="pl-10"
+                        aria-label="Search contacts"
                       />
                     </div>
                   </div>
-                  
+
                   <div className="flex flex-col sm:flex-row gap-2">
                     <Select value={typeFilter} onValueChange={setTypeFilter}>
-                      <SelectTrigger className="w-full sm:w-40">
+                      <SelectTrigger className="w-full sm:w-40" aria-label="Filter by contact type">
                         <SelectValue placeholder="Type" />
                       </SelectTrigger>
                       <SelectContent>
@@ -283,9 +357,9 @@ const CRMContacts = () => {
                         <SelectItem value="referral">Referral</SelectItem>
                       </SelectContent>
                     </Select>
-                    
+
                     <Select value={statusFilter} onValueChange={setStatusFilter}>
-                      <SelectTrigger className="w-full sm:w-40">
+                      <SelectTrigger className="w-full sm:w-40" aria-label="Filter by relationship status">
                         <SelectValue placeholder="Status" />
                       </SelectTrigger>
                       <SelectContent>
@@ -295,237 +369,295 @@ const CRMContacts = () => {
                         <SelectItem value="do_not_contact">Do Not Contact</SelectItem>
                       </SelectContent>
                     </Select>
-                    
-                    <Dialog open={showNewContactDialog} onOpenChange={setShowNewContactDialog}>
-                      <DialogTrigger asChild>
-                        <Button>
-                          <Plus className="h-4 w-4 mr-2" />
-                          New Contact
-                        </Button>
-                      </DialogTrigger>
-                      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
-                        <DialogHeader>
-                          <DialogTitle>Create New Contact</DialogTitle>
-                          <DialogDescription>
-                            Add a new contact to your CRM system.
-                          </DialogDescription>
-                        </DialogHeader>
-                        
-                        <div className="grid gap-6 py-4">
-                          {/* Basic Information */}
-                          <div className="space-y-4">
-                            <h3 className="text-lg font-medium">Contact Information</h3>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                              <div>
-                                <Label htmlFor="first_name">First Name *</Label>
-                                <Input
-                                  id="first_name"
-                                  value={newContact.first_name || ''}
-                                  onChange={(e) => setNewContact({...newContact, first_name: e.target.value})}
-                                  placeholder="John"
-                                />
-                              </div>
-                              <div>
-                                <Label htmlFor="last_name">Last Name *</Label>
-                                <Input
-                                  id="last_name"
-                                  value={newContact.last_name || ''}
-                                  onChange={(e) => setNewContact({...newContact, last_name: e.target.value})}
-                                  placeholder="Smith"
-                                />
-                              </div>
-                              <div>
-                                <Label htmlFor="email">Email</Label>
-                                <Input
-                                  id="email"
-                                  type="email"
-                                  value={newContact.email || ''}
-                                  onChange={(e) => setNewContact({...newContact, email: e.target.value})}
-                                  placeholder="john.smith@email.com"
-                                />
-                              </div>
-                              <div>
-                                <Label htmlFor="phone">Phone</Label>
-                                <Input
-                                  id="phone"
-                                  value={newContact.phone || ''}
-                                  onChange={(e) => setNewContact({...newContact, phone: e.target.value})}
-                                  placeholder="(555) 123-4567"
-                                />
-                              </div>
-                              <div>
-                                <Label htmlFor="company_name">Company</Label>
-                                <Input
-                                  id="company_name"
-                                  value={newContact.company_name || ''}
-                                  onChange={(e) => setNewContact({...newContact, company_name: e.target.value})}
-                                  placeholder="ABC Corporation"
-                                />
-                              </div>
-                              <div>
-                                <Label htmlFor="job_title">Job Title</Label>
-                                <Input
-                                  id="job_title"
-                                  value={newContact.job_title || ''}
-                                  onChange={(e) => setNewContact({...newContact, job_title: e.target.value})}
-                                  placeholder="Property Manager"
-                                />
-                              </div>
-                            </div>
-                          </div>
 
-                          {/* Contact Type and Status */}
-                          <div className="space-y-4">
-                            <h3 className="text-lg font-medium">Classification</h3>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                              <div>
-                                <Label htmlFor="contact_type">Contact Type</Label>
-                                <Select value={newContact.contact_type} onValueChange={(value) => setNewContact({...newContact, contact_type: value})}>
-                                  <SelectTrigger>
-                                    <SelectValue />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    <SelectItem value="client">Client</SelectItem>
-                                    <SelectItem value="prospect">Prospect</SelectItem>
-                                    <SelectItem value="vendor">Vendor</SelectItem>
-                                    <SelectItem value="partner">Partner</SelectItem>
-                                    <SelectItem value="referral">Referral</SelectItem>
-                                  </SelectContent>
-                                </Select>
-                              </div>
-                              <div>
-                                <Label htmlFor="relationship_status">Status</Label>
-                                <Select value={newContact.relationship_status} onValueChange={(value) => setNewContact({...newContact, relationship_status: value})}>
-                                  <SelectTrigger>
-                                    <SelectValue />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    <SelectItem value="active">Active</SelectItem>
-                                    <SelectItem value="inactive">Inactive</SelectItem>
-                                    <SelectItem value="do_not_contact">Do Not Contact</SelectItem>
-                                  </SelectContent>
-                                </Select>
-                              </div>
-                            </div>
-                          </div>
+                    <Select value={tagFilter} onValueChange={setTagFilter}>
+                      <SelectTrigger className="w-full sm:w-40" aria-label="Filter by tag">
+                        <SelectValue placeholder="Tag" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Tags</SelectItem>
+                        {availableTags.map((t) => (
+                          <SelectItem key={t} value={t}>{t}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
 
-                          {/* Notes */}
-                          <div className="space-y-4">
-                            <div>
-                              <Label htmlFor="notes">Notes</Label>
-                              <Textarea
-                                id="notes"
-                                value={newContact.notes || ''}
-                                onChange={(e) => setNewContact({...newContact, notes: e.target.value})}
-                                placeholder="Additional notes about this contact..."
-                              />
-                            </div>
-                          </div>
-                        </div>
-                        
-                        <div className="flex justify-end space-x-2">
-                          <Button variant="outline" onClick={() => setShowNewContactDialog(false)}>
-                            Cancel
-                          </Button>
-                          <Button onClick={createContact}>
-                            Create Contact
-                          </Button>
-                        </div>
-                      </DialogContent>
-                    </Dialog>
+                    <Button aria-label="Create new contact" onClick={() => setShowNewContactDialog(true)}>
+                      <Plus className="h-4 w-4 mr-2" aria-hidden="true" />
+                      New Contact
+                    </Button>
                   </div>
                 </div>
               </CardContent>
             </Card>
 
-            {/* Contacts List */}
+            {/* New Contact Modal */}
+            <AccessibleModal
+              isOpen={showNewContactDialog}
+              onClose={() => setShowNewContactDialog(false)}
+              title="Create New Contact"
+              description="Add a new contact to your CRM system."
+              size="xl"
+              footer={
+                <>
+                  <Button type="button" variant="outline" onClick={() => setShowNewContactDialog(false)}>
+                    Cancel
+                  </Button>
+                  <Button type="submit" form="create-contact-form">
+                    Create Contact
+                  </Button>
+                </>
+              }
+            >
+              <AccessibleForm
+                id="create-contact-form"
+                onSubmit={() => { createContact(); }}
+                ariaLabel="Create new contact form"
+                className="space-y-6"
+              >
+                <AccessibleFieldset legend="Contact Information">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <AccessibleFormField
+                      name="first_name"
+                      label="First Name"
+                      required
+                      value={newContact.first_name || ''}
+                      onChange={(e) => setNewContact({...newContact, first_name: e.target.value})}
+                      placeholder="John"
+                    />
+                    <AccessibleFormField
+                      name="last_name"
+                      label="Last Name"
+                      required
+                      value={newContact.last_name || ''}
+                      onChange={(e) => setNewContact({...newContact, last_name: e.target.value})}
+                      placeholder="Smith"
+                    />
+                    <AccessibleFormField
+                      name="email"
+                      label="Email"
+                      type="email"
+                      value={newContact.email || ''}
+                      onChange={(e) => setNewContact({...newContact, email: e.target.value})}
+                      placeholder="john.smith@email.com"
+                    />
+                    <AccessibleFormField
+                      name="phone"
+                      label="Phone"
+                      type="tel"
+                      value={newContact.phone || ''}
+                      onChange={(e) => setNewContact({...newContact, phone: e.target.value})}
+                      placeholder="(555) 123-4567"
+                    />
+                    <AccessibleFormField
+                      name="company_name"
+                      label="Company"
+                      value={newContact.company_name || ''}
+                      onChange={(e) => setNewContact({...newContact, company_name: e.target.value})}
+                      placeholder="ABC Corporation"
+                    />
+                    <AccessibleFormField
+                      name="job_title"
+                      label="Job Title"
+                      value={newContact.job_title || ''}
+                      onChange={(e) => setNewContact({...newContact, job_title: e.target.value})}
+                      placeholder="Property Manager"
+                    />
+                  </div>
+                </AccessibleFieldset>
+
+                <AccessibleFieldset legend="Classification">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="contact_type">Contact Type</Label>
+                      <Select value={newContact.contact_type} onValueChange={(value) => setNewContact({...newContact, contact_type: value})}>
+                        <SelectTrigger aria-label="Contact type">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="client">Client</SelectItem>
+                          <SelectItem value="prospect">Prospect</SelectItem>
+                          <SelectItem value="vendor">Vendor</SelectItem>
+                          <SelectItem value="partner">Partner</SelectItem>
+                          <SelectItem value="referral">Referral</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <Label htmlFor="relationship_status">Status</Label>
+                      <Select value={newContact.relationship_status} onValueChange={(value) => setNewContact({...newContact, relationship_status: value})}>
+                        <SelectTrigger aria-label="Relationship status">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="active">Active</SelectItem>
+                          <SelectItem value="inactive">Inactive</SelectItem>
+                          <SelectItem value="do_not_contact">Do Not Contact</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                </AccessibleFieldset>
+
+                <AccessibleTextarea
+                  name="notes"
+                  label="Notes"
+                  value={newContact.notes || ''}
+                  onChange={(e) => setNewContact({...newContact, notes: e.target.value})}
+                  placeholder="Additional notes about this contact..."
+                />
+              </AccessibleForm>
+            </AccessibleModal>
+
+            {/* Contacts Table */}
             <ErrorBoundary>
-              {contactsLoading ? (
-                <LoadingState message="Loading contacts..." />
-              ) : contactsError ? (
-                <ErrorState 
-                  error={contactsError} 
+              {contactsError ? (
+                <ErrorState
+                  error={contactsError}
                   onRetry={() => loadContacts(loadContactsData)}
                 />
-              ) : !filteredContacts.length ? (
-                <EmptyState
-                  icon={Users}
-                  title="No contacts found"
-                  description={searchTerm ? "No contacts match your search criteria." : "Start building your contact database by adding your first contact."}
-                  action={!searchTerm ? {
-                    label: "Add First Contact",
-                    onClick: () => setShowNewContactDialog(true)
-                  } : undefined}
-                />
-              ) : (
-                <ResponsiveGrid cols={{ default: 1, md: 2, lg: 3 }} gap="sm">
-                  {filteredContacts.map((contact) => (
-                    <Card key={contact.id} className="hover:shadow-md transition-shadow">
-                      <CardHeader className="pb-3">
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <CardTitle className="text-lg">
-                              {contact.first_name} {contact.last_name}
-                            </CardTitle>
-                            {contact.job_title && (
-                              <CardDescription>{contact.job_title}</CardDescription>
-                            )}
-                          </div>
-                          <div className="flex space-x-1">
-                            <Badge variant="outline" className={`text-${getTypeColor(contact.contact_type)}-600`}>
-                              {contact.contact_type}
-                            </Badge>
-                            <Badge variant="outline" className={`text-${getStatusColor(contact.relationship_status)}-600`}>
-                              {contact.relationship_status}
-                            </Badge>
-                          </div>
-                        </div>
-                      </CardHeader>
-                      <CardContent className="space-y-3">
-                        {contact.company_name && (
-                          <div className="flex items-center space-x-2">
-                            <Building2 className="h-4 w-4 text-muted-foreground" />
-                            <span className="text-sm">{contact.company_name}</span>
-                          </div>
+              ) : (() => {
+                const contactColumns: TableColumn<Contact>[] = [
+                  {
+                    key: 'first_name',
+                    header: 'Name',
+                    sortable: true,
+                    render: (_, row) => (
+                      <div>
+                        <span className="font-medium">{row.first_name} {row.last_name}</span>
+                        {row.job_title && (
+                          <span className="block text-xs text-muted-foreground">{row.job_title}</span>
                         )}
-                        {contact.email && (
-                          <div className="flex items-center space-x-2">
-                            <Mail className="h-4 w-4 text-muted-foreground" />
-                            <span className="text-sm truncate">{contact.email}</span>
-                          </div>
+                      </div>
+                    ),
+                  },
+                  {
+                    key: 'email',
+                    header: 'Email',
+                    hideOnMobile: true,
+                    render: (value) => (
+                      <span className="flex items-center gap-1 text-sm">
+                        <Mail className="h-3 w-3 text-muted-foreground" aria-hidden="true" />
+                        {value || '--'}
+                      </span>
+                    ),
+                  },
+                  {
+                    key: 'phone',
+                    header: 'Phone',
+                    hideOnMobile: true,
+                    render: (value) => (
+                      <span className="flex items-center gap-1 text-sm">
+                        <Phone className="h-3 w-3 text-muted-foreground" aria-hidden="true" />
+                        {value || '--'}
+                      </span>
+                    ),
+                  },
+                  {
+                    key: 'company_name',
+                    header: 'Company',
+                    hideOnMobile: true,
+                    sortable: true,
+                    render: (value) => (
+                      <span className="flex items-center gap-1 text-sm">
+                        <Building2 className="h-3 w-3 text-muted-foreground" aria-hidden="true" />
+                        {value || '--'}
+                      </span>
+                    ),
+                  },
+                  {
+                    key: 'contact_type',
+                    header: 'Type',
+                    sortable: true,
+                    render: (value) => (
+                      <Badge variant="outline" className={`text-${getTypeColor(value)}-600`} aria-label={`Type: ${value}`}>
+                        {value}
+                      </Badge>
+                    ),
+                  },
+                  {
+                    key: 'relationship_status',
+                    header: 'Status',
+                    sortable: true,
+                    render: (value) => (
+                      <Badge variant="outline" className={`text-${getStatusColor(value)}-600`} aria-label={`Status: ${value.replace('_', ' ')}`}>
+                        {value}
+                      </Badge>
+                    ),
+                  },
+                  {
+                    key: 'actions',
+                    header: 'Actions',
+                    headerRender: () => <span className="sr-only">Actions</span>,
+                    render: (_, row) => (
+                      <div className="flex space-x-1">
+                        <Button size="sm" variant="ghost" className="h-8 w-8 p-0" aria-label={`Edit ${row.first_name} ${row.last_name}`}>
+                          <Edit className="h-4 w-4" aria-hidden="true" />
+                        </Button>
+                        <Button size="sm" variant="ghost" className="h-8 w-8 p-0" aria-label={`Delete ${row.first_name} ${row.last_name}`}>
+                          <Trash2 className="h-4 w-4" aria-hidden="true" />
+                        </Button>
+                      </div>
+                    ),
+                  },
+                ];
+
+                return (
+                  <>
+                  {selectedIds.size > 0 && (
+                    <div role="region" aria-label="Bulk actions" className="flex flex-wrap items-center gap-2 mb-4 p-3 rounded-lg border bg-muted/40">
+                      <span className="text-sm font-medium">{selectedIds.size} selected</span>
+                      <Button size="sm" variant="outline" disabled={bulkLoading} onClick={bulkSendEmail}>
+                        <Send className="h-4 w-4 mr-1" /> Send Email
+                      </Button>
+                      <div className="flex items-center gap-1">
+                        <Input value={tagToAdd} onChange={(e) => setTagToAdd(e.target.value)} placeholder="tag…" className="h-8 w-28" aria-label="Tag to add" />
+                        <Button size="sm" variant="outline" disabled={bulkLoading || !tagToAdd.trim()} onClick={bulkAddTag}>
+                          <Tag className="h-4 w-4 mr-1" /> Add Tag
+                        </Button>
+                      </div>
+                      <Button size="sm" variant="outline" disabled={bulkLoading} onClick={bulkExportContacts}>
+                        <Download className="h-4 w-4 mr-1" /> Export
+                      </Button>
+                      <Button size="sm" variant="destructive" disabled={bulkLoading} onClick={bulkDeleteContacts}>
+                        <Trash2 className="h-4 w-4 mr-1" /> Delete
+                      </Button>
+                      <Button size="sm" variant="ghost" className="ml-auto" onClick={() => setSelectedIds(new Set())}>
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  )}
+                  <AccessibleTable<Contact>
+                    caption="CRM Contacts"
+                    hideCaption
+                    columns={contactColumns}
+                    data={filteredContacts}
+                    onSort={(column, direction) => { setSortField(column); setSortDir(direction === 'ascending' ? 'asc' : 'desc'); }}
+                    sortColumn={sortField}
+                    sortDirection={sortDir === 'asc' ? 'ascending' : 'descending'}
+                    selectable
+                    selectedRows={[...selectedIds]}
+                    onSelectionChange={handleSelectionChange}
+                    loading={contactsLoading}
+                    emptyContent={
+                      <div className="text-center py-8">
+                        <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" aria-hidden="true" />
+                        <h3 className="text-lg font-medium mb-2">No contacts found</h3>
+                        <p className="text-muted-foreground mb-4">
+                          {searchTerm ? "No contacts match your search criteria." : "Start building your contact database by adding your first contact."}
+                        </p>
+                        {!searchTerm && (
+                          <Button onClick={() => setShowNewContactDialog(true)}>
+                            <Plus className="h-4 w-4 mr-2" aria-hidden="true" />
+                            Add First Contact
+                          </Button>
                         )}
-                        {contact.phone && (
-                          <div className="flex items-center space-x-2">
-                            <Phone className="h-4 w-4 text-muted-foreground" />
-                            <span className="text-sm">{contact.phone}</span>
-                          </div>
-                        )}
-                        {(contact.city || contact.state) && (
-                          <div className="flex items-center space-x-2">
-                            <MapPin className="h-4 w-4 text-muted-foreground" />
-                            <span className="text-sm">
-                              {[contact.city, contact.state].filter(Boolean).join(', ')}
-                            </span>
-                          </div>
-                        )}
-                        <div className="flex items-center justify-between pt-2">
-                          <span className="text-xs text-muted-foreground">
-                            Added {formatDate(contact.created_at)}
-                          </span>
-                          <div className="flex space-x-1">
-                            <Button size="sm" variant="ghost" className="h-8 w-8 p-0">
-                              <Edit className="h-4 w-4" />
-                            </Button>
-                            <Button size="sm" variant="ghost" className="h-8 w-8 p-0">
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </ResponsiveGrid>
-              )}
+                      </div>
+                    }
+                  />
+                  </>
+                );
+              })()}
             </ErrorBoundary>
     </DashboardLayout>
   );

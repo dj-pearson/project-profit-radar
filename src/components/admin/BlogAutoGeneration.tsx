@@ -296,7 +296,7 @@ const BlogAutoGeneration = () => {
         description: "Creating your blog article with AI... This may take a few moments."
       });
       
-      const { data, error } = await supabase.functions.invoke('enhanced-blog-ai-fixed', {
+      const { error } = await supabase.functions.invoke('enhanced-blog-ai-fixed', {
         body: {
           action: 'generate-auto-content',
           customSettings: {

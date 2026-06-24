@@ -1,10 +1,11 @@
 import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/contexts/AuthContext';
 
 export interface Task {
   id: string;
   company_id: string;
+  site_id: string;
   project_id: string;
+  phase_id?: string | null;
   assigned_to: string | null;
   created_by: string | null;
   name: string;
@@ -69,30 +70,20 @@ export interface UpdateTaskData {
 
 class TaskService {
   /**
-   * Get tasks with multi-tenant site_id isolation
-   * @param siteId - REQUIRED: Site ID for multi-tenant isolation
+   * Get tasks
    * @param filters - Optional filters for status, assigned_to, project_id, search
    */
-  async getTasks(siteId: string, filters?: {
+  async getTasks(filters?: {
     status?: string[];
     assigned_to?: string;
     project_id?: string;
     search?: string;
   }): Promise<TaskWithDetails[]> {
-    if (!siteId) throw new Error('Site ID is required for multi-tenant isolation');
-
-    // Use Supabase foreign key joins to fetch related data in a single query
+    // Fetch tasks - use * to get all available columns dynamically
+    // This avoids 400 errors if some columns don't exist in the database
     let query = supabase
       .from('tasks')
-      .select(`
-        id, name, description, status, priority, due_date, assigned_to, created_by,
-        start_date, end_date, estimated_hours, actual_hours, completion_percentage,
-        project_id, parent_task_id, dependencies, tags, created_at, updated_at,
-        project:projects!project_id(id, name),
-        assigned_to_profile:user_profiles!assigned_to(id, first_name, last_name, email),
-        created_by_profile:user_profiles!created_by(id, first_name, last_name, email)
-      `)
-      .eq('site_id', siteId)  // CRITICAL: Site isolation
+      .select('*')
       .order('created_at', { ascending: false });
 
     if (filters?.status && filters.status.length > 0) {
@@ -105,6 +96,7 @@ class TaskService {
       query = query.eq('project_id', filters.project_id);
     }
     if (filters?.search) {
+      // Use 'or' filter for search - handle both 'name' and 'title' columns
       query = query.or(`name.ilike.%${filters.search}%,description.ilike.%${filters.search}%`);
     }
 
@@ -113,26 +105,72 @@ class TaskService {
       throw new Error(`Error fetching tasks: ${error.message}`);
     }
 
+    const tasks = (data || []) as any[];
+    if (tasks.length === 0) return [];
+
+    // Fetch project names separately
+    const projectIds = Array.from(
+      new Set(tasks.map(t => t.project_id).filter((v): v is string => !!v))
+    );
+
+    const projectsMap = new Map<string, string>();
+    if (projectIds.length > 0) {
+      const { data: projects } = await supabase
+        .from('projects')
+        .select('id, name')
+        .in('id', projectIds);
+
+      if (projects) {
+        for (const project of projects) {
+          projectsMap.set(project.id, project.name);
+        }
+      }
+    }
+
+    // Fetch user profiles separately since there's no FK relationship
+    const userIds = Array.from(
+      new Set(
+        tasks
+          .flatMap(t => [t.assigned_to, t.created_by])
+          .filter((v): v is string => !!v)
+      )
+    );
+
+    const profilesMap = new Map<string, { first_name: string; last_name: string; email: string }>();
+
+    if (userIds.length > 0) {
+      const { data: profiles, error: profilesError } = await supabase
+        .from('user_profiles')
+        .select('id, first_name, last_name, email')
+        .in('id', userIds);
+
+      if (!profilesError && profiles) {
+        for (const profile of profiles) {
+          profilesMap.set(profile.id, profile);
+        }
+      }
+    }
+
     // Transform the data to match TaskWithDetails interface
-    return (data || []).map((task: any) => ({
+    // Handle both 'name' and 'title' column names for backwards compatibility
+    return tasks.map((task: any) => ({
       ...task,
-      project_name: task.project?.name || null,
-      tags: task.tags || [],
+      name: task.name || task.title || 'Untitled Task',
+      project_name: task.project_id ? projectsMap.get(task.project_id) || null : null,
+      assigned_to_profile: task.assigned_to ? profilesMap.get(task.assigned_to) || null : null,
+      created_by_profile: task.created_by ? profilesMap.get(task.created_by) || null : null,
+      tags: Array.isArray(task.tags) ? task.tags : [],
     }));
   }
 
   /**
-   * Get a single task with multi-tenant site_id isolation
-   * @param siteId - REQUIRED: Site ID for multi-tenant isolation
+   * Get a single task
    * @param id - Task ID
    */
-  async getTask(siteId: string, id: string): Promise<TaskWithDetails | null> {
-    if (!siteId) throw new Error('Site ID is required for multi-tenant isolation');
-
+  async getTask(id: string): Promise<TaskWithDetails | null> {
     const { data, error } = await supabase
       .from('tasks')
       .select('*')
-      .eq('site_id', siteId)  // CRITICAL: Site isolation
       .eq('id', id)
       .maybeSingle();
 
@@ -145,12 +183,12 @@ class TaskService {
     const task = data as Task;
 
     const projectPromise = task.project_id
-      ? supabase.from('projects').select('id, name, site_id').eq('id', task.project_id).maybeSingle()
+      ? supabase.from('projects').select('id, name').eq('id', task.project_id).maybeSingle()
       : Promise.resolve({ data: null, error: null } as { data: any; error: null });
 
     const userIds = [task.assigned_to, task.created_by].filter((v): v is string => !!v);
     const profilesPromise = userIds.length
-      ? supabase.from('user_profiles').select('id, first_name, last_name, email, site_id').in('id', userIds)
+      ? supabase.from('user_profiles').select('id, first_name, last_name, email').in('id', userIds)
       : Promise.resolve({ data: [], error: null } as { data: any[]; error: null });
 
     const [projectRes, profilesRes] = await Promise.all([projectPromise, profilesPromise]);
@@ -160,46 +198,62 @@ class TaskService {
       for (const u of profilesRes.data as any[]) profilesMap.set(u.id, u);
     }
 
+    const taskData = task as any;
     return {
-      ...task,
+      ...taskData,
+      name: taskData.name || taskData.title || 'Untitled Task',
       project_name: projectRes.data?.name || null,
       assigned_to_profile: task.assigned_to ? profilesMap.get(task.assigned_to) || null : null,
       created_by_profile: task.created_by ? profilesMap.get(task.created_by) || null : null,
-      tags: task.tags || [],
+      tags: Array.isArray(taskData.tags) ? taskData.tags : [],
     };
   }
 
   /**
-   * Create a task with multi-tenant site_id isolation
-   * @param siteId - REQUIRED: Site ID for multi-tenant isolation
+   * Create a task
    * @param taskData - Task data to create
    */
-  async createTask(siteId: string, taskData: CreateTaskData): Promise<Task> {
-    if (!siteId) throw new Error('Site ID is required for multi-tenant isolation');
-
+  async createTask(taskData: CreateTaskData): Promise<Task> {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error('User not authenticated');
 
-    const { data: userProfile } = await supabase
+    // Fetch user profile - only select company_id which is guaranteed to exist
+    const { data: userProfile, error: profileError } = await supabase
       .from('user_profiles')
       .select('company_id')
-      .eq('site_id', siteId)  // CRITICAL: Site isolation
       .eq('id', user.id)
       .single();
 
+    if (profileError) {
+      console.error('Error fetching user profile:', profileError);
+      throw new Error('Failed to load user profile');
+    }
+
     if (!userProfile) throw new Error('User profile not found');
+
+    // Build insert data with only essential fields
+    const insertData: Record<string, any> = {
+      name: taskData.name,
+      description: taskData.description || null,
+      project_id: taskData.project_id,
+      priority: taskData.priority || 'medium',
+      due_date: taskData.due_date || null,
+      estimated_hours: taskData.estimated_hours || null,
+      company_id: userProfile.company_id,
+      created_by: user.id,
+      assigned_to: taskData.assigned_to || user.id,
+      tags: taskData.tags || [],
+      status: 'open'
+    };
+
+    // Add category if provided
+    if (taskData.category) {
+      insertData.category = taskData.category;
+    }
 
     const { data, error } = await supabase
       .from('tasks')
-      .insert({
-        ...taskData,
-        site_id: siteId,  // CRITICAL: Site isolation
-        company_id: userProfile.company_id,
-        created_by: user.id,
-        assigned_to: taskData.assigned_to || user.id,
-        tags: taskData.tags || [],
-        status: 'open'
-      })
+      .insert(insertData)
       .select()
       .single();
 
@@ -211,18 +265,14 @@ class TaskService {
   }
 
   /**
-   * Update a task with multi-tenant site_id isolation
-   * @param siteId - REQUIRED: Site ID for multi-tenant isolation
+   * Update a task
    * @param id - Task ID
    * @param updates - Task data to update
    */
-  async updateTask(siteId: string, id: string, updates: UpdateTaskData): Promise<Task> {
-    if (!siteId) throw new Error('Site ID is required for multi-tenant isolation');
-
+  async updateTask(id: string, updates: UpdateTaskData): Promise<Task> {
     const { data, error } = await supabase
       .from('tasks')
       .update(updates)
-      .eq('site_id', siteId)  // CRITICAL: Site isolation
       .eq('id', id)
       .select()
       .single();
@@ -235,17 +285,13 @@ class TaskService {
   }
 
   /**
-   * Delete a task with multi-tenant site_id isolation
-   * @param siteId - REQUIRED: Site ID for multi-tenant isolation
+   * Delete a task
    * @param id - Task ID
    */
-  async deleteTask(siteId: string, id: string): Promise<void> {
-    if (!siteId) throw new Error('Site ID is required for multi-tenant isolation');
-
+  async deleteTask(id: string): Promise<void> {
     const { error } = await supabase
       .from('tasks')
       .delete()
-      .eq('site_id', siteId)  // CRITICAL: Site isolation
       .eq('id', id);
 
     if (error) {
@@ -254,20 +300,16 @@ class TaskService {
   }
 
   /**
-   * Get task comments with multi-tenant site_id isolation
-   * @param siteId - REQUIRED: Site ID for multi-tenant isolation
+   * Get task comments
    * @param taskId - Task ID
    */
-  async getTaskComments(siteId: string, taskId: string) {
-    if (!siteId) throw new Error('Site ID is required for multi-tenant isolation');
-
+  async getTaskComments(taskId: string) {
     const { data, error } = await supabase
       .from('task_comments')
       .select(`
         *,
         user_profiles!task_comments_user_id_fkey(first_name, last_name, email)
       `)
-      .eq('site_id', siteId)  // CRITICAL: Site isolation
       .eq('task_id', taskId)
       .order('created_at', { ascending: true });
 
@@ -279,21 +321,17 @@ class TaskService {
   }
 
   /**
-   * Add task comment with multi-tenant site_id isolation
-   * @param siteId - REQUIRED: Site ID for multi-tenant isolation
+   * Add task comment
    * @param taskId - Task ID
    * @param comment - Comment text
    */
-  async addTaskComment(siteId: string, taskId: string, comment: string) {
-    if (!siteId) throw new Error('Site ID is required for multi-tenant isolation');
-
+  async addTaskComment(taskId: string, comment: string) {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error('User not authenticated');
 
     const { data, error } = await supabase
       .from('task_comments')
       .insert({
-        site_id: siteId,  // CRITICAL: Site isolation
         task_id: taskId,
         user_id: user.id,
         comment
@@ -312,37 +350,30 @@ class TaskService {
   }
 
   /**
-   * Get tasks assigned to current user with multi-tenant site_id isolation
-   * @param siteId - REQUIRED: Site ID for multi-tenant isolation
+   * Get tasks assigned to current user
    * @param status - Optional status filter
    */
-  async getMyTasks(siteId: string, status?: string[]): Promise<TaskWithDetails[]> {
-    if (!siteId) throw new Error('Site ID is required for multi-tenant isolation');
-
+  async getMyTasks(status?: string[]): Promise<TaskWithDetails[]> {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error('User not authenticated');
 
-    return this.getTasks(siteId, {
+    return this.getTasks({
       assigned_to: user.id,
       status
     });
   }
 
   /**
-   * Get tasks created by current user with multi-tenant site_id isolation
-   * @param siteId - REQUIRED: Site ID for multi-tenant isolation
+   * Get tasks created by current user
    * @param status - Optional status filter
    */
-  async getTasksCreatedByMe(siteId: string, status?: string[]): Promise<TaskWithDetails[]> {
-    if (!siteId) throw new Error('Site ID is required for multi-tenant isolation');
-
+  async getTasksCreatedByMe(status?: string[]): Promise<TaskWithDetails[]> {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error('User not authenticated');
 
     let query = supabase
       .from('tasks')
       .select('*')
-      .eq('site_id', siteId)  // CRITICAL: Site isolation
       .eq('created_by', user.id)
       .order('created_at', { ascending: false });
 
@@ -370,10 +401,10 @@ class TaskService {
 
     const [projectsRes, profilesRes] = await Promise.all([
       projectIds.length
-        ? supabase.from('projects').select('id, name, site_id').eq('site_id', siteId).in('id', projectIds)
+        ? supabase.from('projects').select('id, name').in('id', projectIds)
         : Promise.resolve({ data: [], error: null } as { data: any[]; error: null }),
       userIds.length
-        ? supabase.from('user_profiles').select('id, first_name, last_name, email, site_id').eq('site_id', siteId).in('id', userIds)
+        ? supabase.from('user_profiles').select('id, first_name, last_name, email').in('id', userIds)
         : Promise.resolve({ data: [], error: null } as { data: any[]; error: null }),
     ]);
 
@@ -387,12 +418,14 @@ class TaskService {
       for (const u of profilesRes.data as any[]) profilesMap.set(u.id, u);
     }
 
-    return tasks.map(task => ({
+    // Transform tasks with name/title compatibility
+    return tasks.map((task: any) => ({
       ...task,
+      name: task.name || task.title || 'Untitled Task',
       project_name: task.project_id ? projectsMap.get(task.project_id)?.name || null : null,
       assigned_to_profile: task.assigned_to ? profilesMap.get(task.assigned_to) || null : null,
       created_by_profile: task.created_by ? profilesMap.get(task.created_by) || null : null,
-      tags: task.tags || []
+      tags: Array.isArray(task.tags) ? task.tags : []
     }));
   }
 }

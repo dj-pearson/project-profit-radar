@@ -26,7 +26,7 @@ class Logger {
     this.config = {
       enabled: import.meta.env.DEV,
       level: import.meta.env.DEV ? 'debug' : 'error',
-      prefix: '[BuildDesk]',
+      prefix: '[Brikly]',
       ...config,
     };
     // Enable error tracking in production
@@ -107,6 +107,7 @@ class Logger {
    */
   debug(message: string, ...args: any[]) {
     if (this.shouldLog('debug')) {
+      console.debug(this.formatMessage(message, 'debug'), ...args);
     }
   }
 
@@ -115,6 +116,7 @@ class Logger {
    */
   info(message: string, ...args: any[]) {
     if (this.shouldLog('info')) {
+      console.info(this.formatMessage(message, 'info'), ...args);
     }
   }
 

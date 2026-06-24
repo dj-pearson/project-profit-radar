@@ -1,0 +1,20 @@
+# Supabase MCP Server Dockerfile
+FROM node:20-alpine
+
+WORKDIR /app
+
+# Install MCP server
+RUN npm install -g @supabase/mcp-server-supabase@latest
+
+# Create non-root user
+RUN adduser -D mcpuser
+USER mcpuser
+
+ENV NODE_ENV=production
+
+# Environment variables (passed at runtime)
+# SUPABASE_URL
+# SUPABASE_ACCESS_TOKEN
+
+ENTRYPOINT ["npx", "@supabase/mcp-server-supabase@latest"]
+

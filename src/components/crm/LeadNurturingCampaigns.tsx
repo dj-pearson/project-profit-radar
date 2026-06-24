@@ -11,19 +11,7 @@ import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { 
-  Mail, 
-  Plus, 
-  Play, 
-  Pause,
-  Users,
-  TrendingUp,
-  Clock,
-  CheckCircle,
-  AlertCircle,
-  Edit,
-  Trash2
-} from 'lucide-react';
+import { Mail, Plus, Play, Pause, Clock, CheckCircle, AlertCircle } from 'lucide-react';
 
 interface NurturingCampaign {
   id: string;
@@ -107,10 +95,10 @@ export const LeadNurturingCampaigns: React.FC = () => {
 
       if (error) throw error;
       setCampaigns(data || []);
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast({
         title: "Error loading campaigns",
-        description: error.message,
+        description: error instanceof Error ? error.message : "Unknown error",
         variant: "destructive"
       });
     } finally {
@@ -143,11 +131,11 @@ export const LeadNurturingCampaigns: React.FC = () => {
       if (enrollmentsError) throw enrollmentsError;
 
       setCampaignSteps(stepsData || []);
-      setEnrollments((enrollmentsData as any) || []);
-    } catch (error: any) {
+      setEnrollments((enrollmentsData as unknown as CampaignEnrollment[]) || []);
+    } catch (error: unknown) {
       toast({
         title: "Error loading campaign details",
-        description: error.message,
+        description: error instanceof Error ? error.message : "Unknown error",
         variant: "destructive"
       });
     }
@@ -181,10 +169,10 @@ export const LeadNurturingCampaigns: React.FC = () => {
       });
 
       await loadCampaigns();
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast({
         title: "Error creating campaign",
-        description: error.message,
+        description: error instanceof Error ? error.message : "Unknown error",
         variant: "destructive"
       });
     } finally {
@@ -228,10 +216,10 @@ export const LeadNurturingCampaigns: React.FC = () => {
 
       await loadCampaignDetails(campaignId);
       await loadCampaigns();
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast({
         title: "Error adding step",
-        description: error.message,
+        description: error instanceof Error ? error.message : "Unknown error",
         variant: "destructive"
       });
     }
@@ -252,10 +240,10 @@ export const LeadNurturingCampaigns: React.FC = () => {
       });
 
       await loadCampaigns();
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast({
         title: "Error updating campaign",
-        description: error.message,
+        description: error instanceof Error ? error.message : "Unknown error",
         variant: "destructive"
       });
     }

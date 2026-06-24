@@ -1,18 +1,17 @@
-// Service Worker for BuildDesk - Performance and SEO Optimization
+// Service Worker for Brikly - Performance and SEO Optimization
 // Auto-generated version: __BUILD_VERSION__
 const BUILD_VERSION = '__BUILD_VERSION__';
-const CACHE_NAME = `builddesk-v${BUILD_VERSION}`;
-const STATIC_CACHE = `builddesk-static-v${BUILD_VERSION}`;
-const DYNAMIC_CACHE = `builddesk-dynamic-v${BUILD_VERSION}`;
-const API_CACHE = `builddesk-api-v${BUILD_VERSION}`;
-const IMAGE_CACHE = `builddesk-images-v${BUILD_VERSION}`;
+const CACHE_NAME = `brikly-v${BUILD_VERSION}`;
+const STATIC_CACHE = `brikly-static-v${BUILD_VERSION}`;
+const DYNAMIC_CACHE = `brikly-dynamic-v${BUILD_VERSION}`;
+const API_CACHE = `brikly-api-v${BUILD_VERSION}`;
+const IMAGE_CACHE = `brikly-images-v${BUILD_VERSION}`;
 
 // Resources to cache immediately
 const STATIC_ASSETS = [
-  '/',
   '/index.html',
   '/manifest.json',
-  '/BuildDeskLogo.png',
+  '/BriklyLogo.png',
   '/robots.txt',
   '/sitemap.xml'
 ];
@@ -36,6 +35,15 @@ const API_PATTERNS = [
   /supabase\.co.*\/rest\/v1\/blog_posts/,
   /supabase\.co.*\/rest\/v1\/knowledge_base_articles/
 ];
+
+// Cache size limits (LRU eviction when exceeded)
+const CACHE_LIMITS = {
+  static: 50,
+  dynamic: 30,
+  api: 30,
+  images: 20,
+  navigation: 10
+};
 
 // Resources to cache on first request
 const DYNAMIC_ASSETS = [
@@ -61,7 +69,7 @@ self.addEventListener('install', (event) => {
 
 // Activate event - clean up old caches
 self.addEventListener('activate', (event) => {
-  console.log(`✅ Service Worker activated - BuildDesk v${BUILD_VERSION}`);
+  console.log(`✅ Service Worker activated - Brikly v${BUILD_VERSION}`);
   
   event.waitUntil(
     Promise.all([
@@ -93,6 +101,14 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
+  // Skip external/cross-origin requests (Unsplash, Google, etc.) - let browser handle them
+  // This prevents CSP issues and service worker errors with external resources
+  if (url.origin !== self.location.origin && 
+      !url.hostname.includes('supabase') &&
+      !url.hostname.includes('brikly.net')) {
+    return;
+  }
+
   // Handle API requests with network-first strategy
   if (url.pathname.startsWith('/api/') || url.hostname.includes('supabase')) {
     event.respondWith(networkFirst(request));
@@ -105,9 +121,9 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Handle navigation requests with stale-while-revalidate
+  // Handle navigation requests with network-first to avoid stale HTML/chunk mismatches
   if (request.mode === 'navigate') {
-    event.respondWith(staleWhileRevalidate(request));
+    event.respondWith(navigationNetworkFirst(request));
     return;
   }
 
@@ -119,7 +135,7 @@ self.addEventListener('fetch', (event) => {
 async function cacheFirst(request) {
   const cache = await caches.open(STATIC_CACHE);
   const cached = await cache.match(request);
-  
+
   if (cached) {
     return cached;
   }
@@ -128,43 +144,103 @@ async function cacheFirst(request) {
     const response = await fetch(request);
     if (response.ok) {
       cache.put(request, response.clone());
+      enforceLimit(STATIC_CACHE, CACHE_LIMITS.static);
     }
     return response;
   } catch (error) {
-    // Return offline fallback if available
-    return new Response('Offline', { status: 503 });
+    console.warn('Service Worker: Failed to fetch static asset:', request.url, error);
+    return new Response('Resource unavailable', {
+      status: 503,
+      statusText: 'Service Unavailable',
+      headers: { 'Content-Type': 'text/plain' }
+    });
   }
 }
 
 // Network-first strategy for API calls
 async function networkFirst(request) {
   const cache = await caches.open(DYNAMIC_CACHE);
-  
+
   try {
     const response = await fetch(request);
     if (response.ok) {
       cache.put(request, response.clone());
+      enforceLimit(DYNAMIC_CACHE, CACHE_LIMITS.dynamic);
     }
     return response;
   } catch (error) {
+    console.warn('Service Worker: Network request failed, trying cache:', request.url, error);
     const cached = await cache.match(request);
-    return cached || new Response('Offline', { status: 503 });
+    if (cached) {
+      return cached;
+    }
+    // Return a proper error response instead of throwing
+    return new Response(JSON.stringify({ error: 'Network request failed' }), {
+      status: 503,
+      statusText: 'Service Unavailable',
+      headers: { 'Content-Type': 'application/json' }
+    });
   }
 }
 
-// Stale-while-revalidate for navigation
-async function staleWhileRevalidate(request) {
-  const cache = await caches.open(DYNAMIC_CACHE);
-  const cached = await cache.match(request);
-  
-  const networkPromise = fetch(request).then((response) => {
-    if (response.ok) {
-      cache.put(request, response.clone());
-    }
-    return response;
-  }).catch(() => cached);
+// Network-first for navigation to prioritize fresh HTML on each deployment.
+// For SPA routing: if the server returns 404 for a client-side route,
+// serve index.html so React Router can handle it.
+async function navigationNetworkFirst(request) {
+  try {
+    const response = await fetch(request, { cache: 'no-store' });
 
-  return cached || networkPromise;
+    // If the server returned HTML successfully, use it
+    if (response.ok) {
+      return response;
+    }
+
+    // Server returned 404 for a client route - serve the app shell instead
+    // so React Router can handle the routing client-side
+    if (response.status === 404) {
+      const cache = await caches.open(STATIC_CACHE);
+      const appShell = await cache.match('/index.html');
+      if (appShell) {
+        return appShell;
+      }
+      // If no cached app shell, fetch index.html from network
+      const freshShell = await fetch('/index.html', { cache: 'no-store' });
+      if (freshShell.ok) {
+        return freshShell;
+      }
+    }
+
+    return response;
+  } catch (error) {
+    console.warn('Service Worker: Navigation request failed, trying offline fallback:', request.url, error);
+    const cache = await caches.open(STATIC_CACHE);
+    const appShell = await cache.match('/index.html');
+    if (appShell) {
+      return appShell;
+    }
+
+    return new Response(
+      '<!doctype html><html><head><meta charset="utf-8"><title>Offline</title></head><body><h1>Offline</h1><p>Please reconnect and refresh.</p></body></html>',
+      {
+        status: 503,
+        statusText: 'Service Unavailable',
+        headers: { 'Content-Type': 'text/html; charset=utf-8' }
+      }
+    );
+  }
+}
+
+// Enforce cache size limit using LRU eviction
+async function enforceLimit(cacheName, maxEntries) {
+  const cache = await caches.open(cacheName);
+  const keys = await cache.keys();
+  if (keys.length > maxEntries) {
+    // Delete oldest entries (first in list = oldest)
+    const excess = keys.length - maxEntries;
+    for (let i = 0; i < excess; i++) {
+      await cache.delete(keys[i]);
+    }
+  }
 }
 
 // Check if URL is a static asset
@@ -239,13 +315,13 @@ self.addEventListener('push', (event) => {
   const data = event.data.json();
   const options = {
     body: data.body,
-    icon: '/BuildDeskLogo.png',
+    icon: '/BriklyLogo.png',
     badge: '/badge.png',
     data: data.url,
     actions: [
       {
         action: 'open',
-        title: 'Open BuildDesk'
+        title: 'Open Brikly'
       },
       {
         action: 'dismiss',

@@ -1,10 +1,10 @@
-# iOS App Store Deployment Guide - BuildDesk
+# iOS App Store Deployment Guide - Brikly
 
 ## 🎯 Current Status
 
 - ✅ Capacitor iOS setup complete
 - ✅ Xcode project created
-- ✅ Bundle ID configured: `com.builddesk.app`
+- ✅ Bundle ID configured: `com.brikly.app`
 - ⚠️ Need to configure Apple Developer account
 - ⚠️ Need to fix Capacitor configuration for production
 
@@ -37,9 +37,9 @@ Create separate config files or remove the server block entirely since you're bu
 
 **Current Settings:**
 
-- Bundle ID: `com.builddesk.app` ✅
-- Display Name: `project-profit-radar` ⚠️ (Should be "BuildDesk")
-- App Name: `BuildDesk` ✅
+- Bundle ID: `com.brikly.app` ✅
+- Display Name: `project-profit-radar` ⚠️ (Should be "Brikly")
+- App Name: `Brikly` ✅
 
 ---
 
@@ -91,7 +91,7 @@ This is your **PRIMARY STEP** right now!
 3. Click the **Signing & Capabilities** tab
 4. Check **"Automatically manage signing"**
 5. Select your **Team** from the dropdown (your Apple Developer account)
-6. Verify the **Bundle Identifier**: `com.builddesk.app`
+6. Verify the **Bundle Identifier**: `com.brikly.app`
 
 **Xcode will automatically:**
 
@@ -102,11 +102,11 @@ This is your **PRIMARY STEP** right now!
 ### 3.3 Verify Bundle ID is Unique
 
 - Go to [Apple Developer Portal](https://developer.apple.com/account/resources/identifiers/list)
-- Check if `com.builddesk.app` is available
+- Check if `com.brikly.app` is available
 - If taken, you'll need to change it to something like:
-  - `com.yourcompany.builddesk`
-  - `com.builddesk.construction`
-  - `app.builddesk.construction`
+  - `com.yourcompany.brikly`
+  - `com.brikly.construction`
+  - `app.brikly.construction`
 
 ---
 
@@ -118,7 +118,7 @@ In `ios/App/App/Info.plist`, change:
 
 ```xml
 <key>CFBundleDisplayName</key>
-<string>BuildDesk</string>
+<string>Brikly</string>
 ```
 
 ### 4.2 Update App Version
@@ -136,13 +136,13 @@ Your app uses these features, so you need to add permission descriptions in `Inf
 
 ```xml
 <key>NSCameraUsageDescription</key>
-<string>BuildDesk needs camera access to capture photos of construction sites, materials, and documents.</string>
+<string>Brikly needs camera access to capture photos of construction sites, materials, and documents.</string>
 
 <key>NSPhotoLibraryUsageDescription</key>
-<string>BuildDesk needs photo library access to save and retrieve construction site images.</string>
+<string>Brikly needs photo library access to save and retrieve construction site images.</string>
 
 <key>NSLocationWhenInUseUsageDescription</key>
-<string>BuildDesk uses your location to tag construction sites and field reports.</string>
+<string>Brikly uses your location to tag construction sites and field reports.</string>
 ```
 
 ---
@@ -207,10 +207,10 @@ First time running:
 3. Click **+** → **New App**
 4. Fill in:
    - **Platform**: iOS
-   - **Name**: BuildDesk
+   - **Name**: Brikly
    - **Primary Language**: English
-   - **Bundle ID**: com.builddesk.app
-   - **SKU**: BUILDDESK001 (or any unique identifier)
+   - **Bundle ID**: com.brikly.app
+   - **SKU**: BRIKLY001 (or any unique identifier)
 
 ### 7.2 Prepare App Store Screenshots
 
@@ -299,7 +299,7 @@ In App Store Connect:
 ### Priority 1: Configuration (Do This Now)
 
 1. ✅ Fix `capacitor.config.ts` - remove development server URL
-2. ✅ Update app display name to "BuildDesk" in Info.plist
+2. ✅ Update app display name to "Brikly" in Info.plist
 3. ✅ Add permission descriptions to Info.plist
 4. ✅ Run `npm run build` to create production web assets
 5. ✅ Run `npx cap sync ios` to update iOS project
@@ -309,7 +309,7 @@ In App Store Connect:
 6. ✅ Open project in Xcode: `npx cap open ios`
 7. ✅ Add your Apple Developer account to Xcode
 8. ✅ Configure automatic signing with your Team
-9. ✅ Verify bundle ID `com.builddesk.app` (or update if taken)
+9. ✅ Verify bundle ID `com.brikly.app` (or update if taken)
 10. ✅ Test on your physical iPhone device
 
 ### Priority 3: Assets & Testing

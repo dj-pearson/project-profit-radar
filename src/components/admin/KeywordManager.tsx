@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -28,6 +28,7 @@ import {
   Plus,
   Minus
 } from 'lucide-react';
+import { logger } from '@/lib/logger';
 
 interface KeywordData {
   keyword: string;
@@ -56,7 +57,7 @@ const parseKeywordStatsCSV = async (file: File): Promise<ParsedKeywordStats> => 
       try {
         const csv = e.target?.result as string;
         const lines = csv.split('\n');
-        const headers = lines[0].split(',').map(h => h.trim());
+        lines[0].split(',').map(h => h.trim());
         
         const keywords: KeywordData[] = lines.slice(1)
           .filter(line => line.trim())
@@ -180,7 +181,7 @@ const KeywordManager = () => {
           .delete()
           .eq('company_id', userProfile.company_id);
 
-        if (deleteError) console.warn('Delete warning:', deleteError);
+        if (deleteError) logger.warn('Delete warning:', deleteError);
       }
 
       // Insert new keyword data in batches
@@ -423,21 +424,24 @@ const KeywordManager = () => {
     }
   };
 
-  const toggleKeywordForDeletion = (keyword: string) => {
-    const newSelected = new Set(selectedForDeletion);
-    if (newSelected.has(keyword)) {
-      newSelected.delete(keyword);
-    } else {
-      newSelected.add(keyword);
-    }
-    setSelectedForDeletion(newSelected);
-  };
+  const toggleKeywordForDeletion = useCallback((keyword: string) => {
+    setSelectedForDeletion(prev => {
+      const newSelected = new Set(prev);
+      if (newSelected.has(keyword)) {
+        newSelected.delete(keyword);
+      } else {
+        newSelected.add(keyword);
+      }
+      return newSelected;
+    });
+  }, []);
 
-  const getFilteredKeywords = () => {
+  // Memoized filtered and sorted keywords to prevent recalculation on every render
+  const filteredKeywords = useMemo(() => {
     if (!keywordStats) return [];
-    
+
     let filtered = keywordStats.keywords;
-    
+
     if (activeFilter !== 'all') {
       if (activeFilter === 'high-priority') {
         filtered = filtered.filter(k => k.priority === 'high');
@@ -450,8 +454,8 @@ const KeywordManager = () => {
       }
     }
 
-    // Sort keywords
-    filtered.sort((a, b) => {
+    // Sort keywords (create new array to avoid mutating)
+    const sorted = [...filtered].sort((a, b) => {
       switch (sortBy) {
         case 'volume':
           return b.searchVolume - a.searchVolume;
@@ -465,8 +469,8 @@ const KeywordManager = () => {
       }
     });
 
-    return filtered;
-  };
+    return sorted;
+  }, [keywordStats, activeFilter, sortBy]);
 
   const clearAllKeywords = async () => {
     if (!userProfile?.company_id) return;
@@ -588,23 +592,24 @@ construction reporting,450,30,12.30,informational,reporting,low,,`;
     loadKeywordData();
   }, [userProfile?.company_id]);
 
-  const getPriorityColor = (priority: string) => {
+  // Memoized helper functions
+  const getPriorityColor = useCallback((priority: string) => {
     switch (priority) {
       case 'high': return 'bg-red-500';
       case 'medium': return 'bg-yellow-500';
       case 'low': return 'bg-green-500';
       default: return 'bg-gray-500';
     }
-  };
+  }, []);
 
-  const getIntentIcon = (intent: string) => {
+  const getIntentIcon = useCallback((intent: string) => {
     switch (intent) {
       case 'commercial': return <TrendingUp className="h-3 w-3" />;
       case 'transactional': return <Target className="h-3 w-3" />;
       case 'navigational': return <Search className="h-3 w-3" />;
       default: return <Eye className="h-3 w-3" />;
     }
-  };
+  }, []);
 
   return (
     <div className="space-y-6">
@@ -974,7 +979,7 @@ construction reporting,450,30,12.30,informational,reporting,low,,`;
 
                  {/* Keywords List */}
                 <div className="space-y-2 max-h-96 overflow-y-auto">
-                  {getFilteredKeywords().map((keyword, index) => {
+                  {filteredKeywords.map((keyword, index) => {
                     const isUsed = (keyword.usedCount || 0) > 0;
                     const isSelected = selectedForBlog.has(keyword.keyword);
                     

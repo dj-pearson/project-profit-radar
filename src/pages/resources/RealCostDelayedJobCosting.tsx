@@ -1,4 +1,3 @@
-import React from "react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { PageSEO, createArticleSchema, createFAQSchema } from "@/components/seo/PageSEO";
@@ -26,11 +25,11 @@ const RealCostDelayedJobCosting = () => {
     },
     {
       question: "How quickly can I implement real-time job costing?",
-      answer: "With BuildDesk, most contractors see their first real-time profitability reports within 2-3 days. Full implementation (crew onboarding, QuickBooks integration, budget templates) typically takes 7-14 days. You start catching overruns earlier immediately."
+      answer: "With Brikly, most contractors see their first real-time profitability reports within 2-3 days. Full implementation (crew onboarding, QuickBooks integration, budget templates) typically takes 7-14 days. You start catching overruns earlier immediately."
     },
     {
       question: "Is real-time job costing only for large contractors?",
-      answer: "No! In fact, small contractors need it MORE because they have less margin for error. A single $10,000 overrun can wipe out a quarter's profit for a $2M contractor. BuildDesk brings enterprise-level real-time costing to small contractors for $350/month, making it affordable for companies with $1M-$50M revenue."
+      answer: "No! In fact, small contractors need it MORE because they have less margin for error. A single $10,000 overrun can wipe out a quarter's profit for a $2M contractor. Brikly brings enterprise-level real-time costing to small contractors for $350/month, making it affordable for companies with $1M-$50M revenue."
     }
   ];
 
@@ -48,14 +47,14 @@ const RealCostDelayedJobCosting = () => {
           'job cost tracking',
           'construction cost overruns'
         ]}
-        canonicalUrl="https://builddesk.com/resources/real-cost-delayed-job-costing"
+        canonicalUrl="https://brikly.net/resources/real-cost-delayed-job-costing"
         schema={[
           createArticleSchema(
             "The Real Cost of Delayed Job Costing (And How to Fix It)",
             "Why waiting 30 days for job cost reports costs contractors $50,000+ annually and how to fix it",
             "2025-11-14",
             "2025-11-14",
-            "BuildDesk Team"
+            "Brikly Team"
           ),
           createFAQSchema(faqs)
         ]}
@@ -95,7 +94,7 @@ const RealCostDelayedJobCosting = () => {
             </Card>
 
             <div className="flex items-center gap-4 text-sm text-muted-foreground mb-8">
-              <span>By BuildDesk Team</span>
+              <span>By Brikly Team</span>
               <span>•</span>
               <span>November 14, 2025</span>
               <span>•</span>
@@ -332,7 +331,7 @@ const RealCostDelayedJobCosting = () => {
                     <div className="bg-muted p-3 rounded text-sm">
                       <strong>Time savings:</strong><br />
                       Traditional: 15 hours/week<br />
-                      BuildDesk: <span className="text-construction-orange font-bold">2 hours/week</span><br />
+                      Brikly: <span className="text-construction-orange font-bold">2 hours/week</span><br />
                       <strong className="text-construction-orange">Save 13 hours/week</strong>
                     </div>
                   </CardContent>
@@ -341,11 +340,11 @@ const RealCostDelayedJobCosting = () => {
             </div>
           </div>
 
-          {/* The BuildDesk Difference */}
+          {/* The Brikly Difference */}
           <div className="max-w-4xl mx-auto mb-12">
             <Card className="bg-gradient-to-br from-construction-orange/10 to-construction-orange/5">
               <CardHeader>
-                <CardTitle className="text-3xl text-center">The BuildDesk Difference</CardTitle>
+                <CardTitle className="text-3xl text-center">The Brikly Difference</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="grid md:grid-cols-3 gap-6 text-center mb-6">
@@ -414,7 +413,7 @@ const RealCostDelayedJobCosting = () => {
                       Real-Time Job Costing Software
                     </Link>
                   </CardTitle>
-                  <p className="text-sm text-muted-foreground">See how BuildDesk tracks costs in real-time</p>
+                  <p className="text-sm text-muted-foreground">See how Brikly tracks costs in real-time</p>
                 </CardHeader>
               </Card>
             </div>

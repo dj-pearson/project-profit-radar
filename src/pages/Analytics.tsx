@@ -1,35 +1,26 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, Suspense } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { RoleGuard, ROLE_GROUPS } from '@/components/auth/RoleGuard';
+import { AccessiblePageWrapper } from "@/components/accessibility/AccessiblePageWrapper";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
-import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
+import { ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
+import { DeferredChartContainer } from '@/components/ui/DeferredChartContainer';
 import { KPICard } from '@/components/dashboard/KPICard';
 import { LoadingState } from '@/components/ui/loading-spinner';
 import { ResponsiveContainer, ResponsiveGrid } from '@/components/layout/ResponsiveContainer';
 import { mobileGridClasses, mobileFilterClasses, mobileButtonClasses, mobileTextClasses } from '@/utils/mobileHelpers';
-import PredictiveAnalytics from '@/components/analytics/PredictiveAnalytics';
-import RiskAssessment from '@/components/analytics/RiskAssessment';
-import TimelineOptimization from '@/components/analytics/TimelineOptimization';
-import PerformanceBenchmarking from '@/components/analytics/PerformanceBenchmarking';
-import ResourceOptimization from '@/components/analytics/ResourceOptimization';
-import WorkflowAutomation from '@/components/analytics/WorkflowAutomation';
-import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, PieChart, Pie, Cell, Area, AreaChart } from 'recharts';
-import { 
-  TrendingUp, 
-  DollarSign, 
-  Users, 
-  Building2, 
-  Calendar,
-  Target,
-  Activity,
-  BarChart3,
-  Download,
-  Filter
-} from 'lucide-react';
+const PredictiveAnalytics = React.lazy(() => import('@/components/analytics/PredictiveAnalytics'));
+const RiskAssessment = React.lazy(() => import('@/components/analytics/RiskAssessment'));
+const TimelineOptimization = React.lazy(() => import('@/components/analytics/TimelineOptimization'));
+const PerformanceBenchmarking = React.lazy(() => import('@/components/analytics/PerformanceBenchmarking'));
+const ResourceOptimization = React.lazy(() => import('@/components/analytics/ResourceOptimization'));
+const WorkflowAutomation = React.lazy(() => import('@/components/analytics/WorkflowAutomation'));
+import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, PieChart, Pie, Area, AreaChart } from 'recharts';
+import { TrendingUp, DollarSign, Building2, Target, Activity, BarChart3, Download, Filter } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
@@ -96,34 +87,34 @@ const Analytics = () => {
     }
   }, [user, userProfile, loading, navigate, selectedPeriod]);
 
-  const loadAnalyticsData = async () => {
+  const loadAnalyticsData = useCallback(async () => {
     try {
       setAnalyticsLoading(true);
-      
-      // Load projects data
-      const { data: projects, error: projectsError } = await supabase
-        .from('projects')
-        .select('*')
-        .eq('company_id', userProfile?.company_id);
 
-      if (projectsError) throw projectsError;
+      // Load projects and job costs in parallel
+      const [projectsResult, jobCostsResult] = await Promise.all([
+        supabase
+          .from('projects')
+          .select('*')
+          .eq('company_id', userProfile?.company_id),
+        supabase
+          .from('job_costs')
+          .select('*, projects(name)')
+      ]);
 
-      // Load job costs
-      const { data: jobCosts, error: costsError } = await supabase
-        .from('job_costs')
-        .select('*, projects(name)')
-        .in('project_id', projects?.map(p => p.id) || []);
+      if (projectsResult.error) throw projectsResult.error;
+      if (jobCostsResult.error) throw jobCostsResult.error;
 
-      if (costsError) throw costsError;
-
-      // Create mock time entries data since table doesn't exist yet
-      const timeEntries: any[] = [];
+      const projects = projectsResult.data || [];
+      // Filter job costs to only include ones for our projects
+      const projectIds = new Set(projects.map(p => p.id));
+      const jobCosts = (jobCostsResult.data || []).filter(c => projectIds.has(c.project_id));
 
       // Process data
-      const processedData = processAnalyticsData(projects || [], jobCosts || [], timeEntries || []);
+      const processedData = processAnalyticsData(projects, jobCosts, []);
       setAnalyticsData(processedData);
 
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error loading analytics:', error);
       toast({
         variant: "destructive",
@@ -133,7 +124,7 @@ const Analytics = () => {
     } finally {
       setAnalyticsLoading(false);
     }
-  };
+  }, [userProfile?.company_id, toast]);
 
   const processAnalyticsData = (projects: any[], jobCosts: any[], timeEntries: any[]): AnalyticsData => {
     // Calculate executive metrics
@@ -255,6 +246,7 @@ const Analytics = () => {
   }
 
   return (
+    <AccessiblePageWrapper pageTitle="Analytics">
     <RoleGuard allowedRoles={ROLE_GROUPS.ADMINS}>
       <div className="min-h-screen bg-background">
         {/* Header */}
@@ -278,8 +270,8 @@ const Analytics = () => {
                   <SelectItem value="ytd">Year to Date</SelectItem>
                 </SelectContent>
               </Select>
-              <Button variant="outline" className={mobileButtonClasses.secondary}>
-                <Download className="h-4 w-4 mr-2" />
+              <Button variant="outline" className={mobileButtonClasses.secondary} aria-label="Export analytics data">
+                <Download className="h-4 w-4 mr-2" aria-hidden="true" />
                 <span className="hidden sm:inline">Export</span>
               </Button>
             </div>
@@ -364,7 +356,7 @@ const Analytics = () => {
                   <CardDescription>Monthly financial performance</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <ChartContainer config={chartConfig} className="h-[300px]">
+                  <DeferredChartContainer config={chartConfig} className="h-[300px]">
                     <AreaChart data={analyticsData.revenueByPeriod}>
                       <CartesianGrid strokeDasharray="3 3" />
                       <XAxis dataKey="period" />
@@ -390,7 +382,7 @@ const Analytics = () => {
                         fillOpacity={0.6}
                       />
                     </AreaChart>
-                  </ChartContainer>
+                  </DeferredChartContainer>
                 </CardContent>
               </Card>
 
@@ -400,7 +392,7 @@ const Analytics = () => {
                   <CardDescription>Current project distribution</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <ChartContainer config={chartConfig} className="h-[300px]">
+                  <DeferredChartContainer config={chartConfig} className="h-[300px]">
                     <PieChart>
                       <Pie
                         data={[
@@ -417,7 +409,7 @@ const Analytics = () => {
                       />
                       <ChartTooltip content={<ChartTooltipContent />} />
                     </PieChart>
-                  </ChartContainer>
+                  </DeferredChartContainer>
                 </CardContent>
               </Card>
             </ResponsiveGrid>
@@ -432,9 +424,9 @@ const Analytics = () => {
               <CardContent>
                 <div className="space-y-4">
                   {analyticsData.projectPerformance.slice(0, 10).map((project) => (
-                    <div key={project.projectId} className="flex items-center justify-between p-4 border rounded-lg">
+                    <div key={project.projectId} className="flex items-center justify-between p-4 border rounded-lg" role="article" aria-labelledby={`project-perf-${project.projectId}`}>
                       <div className="flex-1">
-                        <h4 className="font-medium">{project.projectName}</h4>
+                        <h4 id={`project-perf-${project.projectId}`} className="font-medium">{project.projectName}</h4>
                         <p className="text-sm text-muted-foreground">{project.completion}% complete</p>
                       </div>
                       <div className="flex items-center space-x-4 text-sm">
@@ -466,7 +458,7 @@ const Analytics = () => {
                   <CardDescription>Monthly labor hours and efficiency</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <ChartContainer config={chartConfig} className="h-[300px]">
+                  <DeferredChartContainer config={chartConfig} className="h-[300px]">
                     <LineChart data={analyticsData.resourceUtilization}>
                       <CartesianGrid strokeDasharray="3 3" />
                       <XAxis dataKey="period" />
@@ -479,7 +471,7 @@ const Analytics = () => {
                         strokeWidth={2}
                       />
                     </LineChart>
-                  </ChartContainer>
+                  </DeferredChartContainer>
                 </CardContent>
               </Card>
 
@@ -489,7 +481,7 @@ const Analytics = () => {
                   <CardDescription>Resource efficiency over time</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <ChartContainer config={chartConfig} className="h-[300px]">
+                  <DeferredChartContainer config={chartConfig} className="h-[300px]">
                     <LineChart data={analyticsData.resourceUtilization}>
                       <CartesianGrid strokeDasharray="3 3" />
                       <XAxis dataKey="period" />
@@ -502,7 +494,7 @@ const Analytics = () => {
                         strokeWidth={2}
                       />
                     </LineChart>
-                  </ChartContainer>
+                  </DeferredChartContainer>
                 </CardContent>
               </Card>
             </ResponsiveGrid>
@@ -513,7 +505,7 @@ const Analytics = () => {
                 <CardDescription>Current resource distribution across projects</CardDescription>
               </CardHeader>
               <CardContent>
-                <ChartContainer config={chartConfig} className="h-[300px]">
+                <DeferredChartContainer config={chartConfig} className="h-[300px]">
                   <BarChart data={analyticsData.resourceUtilization.slice(-6)}>
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis dataKey="period" />
@@ -522,7 +514,7 @@ const Analytics = () => {
                     <Bar dataKey="materialCost" fill="var(--color-revenue)" />
                     <Bar dataKey="laborHours" fill="var(--color-costs)" />
                   </BarChart>
-                </ChartContainer>
+                </DeferredChartContainer>
               </CardContent>
             </Card>
           </TabsContent>
@@ -535,7 +527,7 @@ const Analytics = () => {
                   <CardDescription>Projects started vs completed by month</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <ChartContainer config={chartConfig} className="h-[300px]">
+                  <DeferredChartContainer config={chartConfig} className="h-[300px]">
                     <BarChart data={analyticsData.trendData}>
                       <CartesianGrid strokeDasharray="3 3" />
                       <XAxis dataKey="month" />
@@ -544,7 +536,7 @@ const Analytics = () => {
                       <Bar dataKey="projectsStarted" fill="var(--color-revenue)" />
                       <Bar dataKey="projectsCompleted" fill="var(--color-profit)" />
                     </BarChart>
-                  </ChartContainer>
+                  </DeferredChartContainer>
                 </CardContent>
               </Card>
 
@@ -554,7 +546,7 @@ const Analytics = () => {
                   <CardDescription>Project value trends over time</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <ChartContainer config={chartConfig} className="h-[300px]">
+                  <DeferredChartContainer config={chartConfig} className="h-[300px]">
                     <LineChart data={analyticsData.trendData}>
                       <CartesianGrid strokeDasharray="3 3" />
                       <XAxis dataKey="month" />
@@ -570,7 +562,7 @@ const Analytics = () => {
                         strokeWidth={3}
                       />
                     </LineChart>
-                  </ChartContainer>
+                  </DeferredChartContainer>
                 </CardContent>
               </Card>
             </ResponsiveGrid>
@@ -604,32 +596,45 @@ const Analytics = () => {
           </TabsContent>
 
           <TabsContent value="predictive">
-            <PredictiveAnalytics />
+            <Suspense fallback={<LoadingState message="Loading predictive analytics..." />}>
+              <PredictiveAnalytics />
+            </Suspense>
           </TabsContent>
 
           <TabsContent value="risk">
-            <RiskAssessment />
+            <Suspense fallback={<LoadingState message="Loading risk assessment..." />}>
+              <RiskAssessment />
+            </Suspense>
           </TabsContent>
 
           <TabsContent value="optimization">
-            <ResourceOptimization />
+            <Suspense fallback={<LoadingState message="Loading resource optimization..." />}>
+              <ResourceOptimization />
+            </Suspense>
           </TabsContent>
 
           <TabsContent value="workflow">
-            <WorkflowAutomation />
+            <Suspense fallback={<LoadingState message="Loading workflow automation..." />}>
+              <WorkflowAutomation />
+            </Suspense>
           </TabsContent>
 
           <TabsContent value="timeline">
-            <TimelineOptimization />
+            <Suspense fallback={<LoadingState message="Loading timeline optimization..." />}>
+              <TimelineOptimization />
+            </Suspense>
           </TabsContent>
 
           <TabsContent value="benchmarks">
-            <PerformanceBenchmarking />
+            <Suspense fallback={<LoadingState message="Loading benchmarks..." />}>
+              <PerformanceBenchmarking />
+            </Suspense>
           </TabsContent>
         </Tabs>
       </ResponsiveContainer>
     </div>
     </RoleGuard>
+    </AccessiblePageWrapper>
   );
 };
 

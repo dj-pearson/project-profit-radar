@@ -4,7 +4,8 @@ import path from "path";
 import { componentTagger } from "lovable-tagger";
 import { visualizer } from 'rollup-plugin-visualizer';
 import { ViteImageOptimizer } from 'vite-plugin-image-optimizer';
-import { copyFileSync } from 'fs';
+import { sentryVitePlugin } from '@sentry/vite-plugin';
+import { copyFileSync, existsSync, mkdirSync } from 'fs';
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
@@ -31,15 +32,32 @@ export default defineConfig(({ mode }) => ({
     // Copy service worker during build
     mode === "production" && {
       name: 'copy-sw',
-      closeBundle() {
+      writeBundle() {
         try {
-          copyFileSync('public/sw.js', 'dist/sw.js');
-          console.log('✅ Service worker copied to dist/');
+          // Ensure dist directory exists
+          if (!existsSync('dist')) {
+            mkdirSync('dist', { recursive: true });
+          }
+          if (existsSync('public/sw.js')) {
+            copyFileSync('public/sw.js', 'dist/sw.js');
+          }
         } catch (err) {
-          console.error('Failed to copy service worker:', err);
+          // Non-fatal: service worker copy failed
         }
       }
-    }
+    },
+    // Upload sourcemaps to Sentry so production stack traces de-minify.
+    // Only active when SENTRY_AUTH_TOKEN is present (CI release build), so
+    // normal/local builds are unaffected. Must be the LAST plugin.
+    mode === "production" && process.env.SENTRY_AUTH_TOKEN && sentryVitePlugin({
+      org: process.env.SENTRY_ORG,
+      project: process.env.SENTRY_PROJECT,
+      authToken: process.env.SENTRY_AUTH_TOKEN,
+      release: { name: process.env.VITE_APP_VERSION || undefined },
+      // We emit hidden sourcemaps via build.sourcemap below; delete them from
+      // the deployed assets after upload so they aren't served publicly.
+      sourcemaps: { filesToDeleteAfterUpload: ['./dist/**/*.map'] },
+    }),
   ].filter(Boolean),
   resolve: {
     alias: {
@@ -85,6 +103,10 @@ export default defineConfig(({ mode }) => ({
         __dirname,
         "./src/lib/capacitor-web-fallback.ts"
       ),
+      "@capacitor/haptics": path.resolve(
+        __dirname,
+        "./src/lib/capacitor-web-fallback.ts"
+      ),
     },
     dedupe: [
       "react",
@@ -97,7 +119,14 @@ export default defineConfig(({ mode }) => ({
   build: {
     target: "esnext",
     minify: "esbuild",
-    sourcemap: false,
+    // Emit hidden sourcemaps (no //# sourceMappingURL comment in the bundle)
+    // when explicitly requested OR when a Sentry upload is configured, so the
+    // release build can de-minify stack traces. The Sentry plugin deletes the
+    // .map files after upload so they aren't served publicly from Cloudflare.
+    sourcemap:
+      process.env.VITE_SOURCEMAP === "true" || !!process.env.SENTRY_AUTH_TOKEN
+        ? "hidden"
+        : false,
     chunkSizeWarningLimit: 400, // More aggressive warning
     reportCompressedSize: true,
     emptyOutDir: true,
@@ -122,59 +151,58 @@ export default defineConfig(({ mode }) => ({
     // Performance optimizations
     rollupOptions: {
       output: {
-        // More granular chunking for better caching
-        manualChunks: {
-          // Core framework
-          'react-core': ['react', 'react-dom'],
-          'react-router': ['react-router-dom'],
-          
-          // UI framework  
-          'ui-core': [
-            '@radix-ui/react-slot',
-            '@radix-ui/react-dialog', 
-            '@radix-ui/react-dropdown-menu'
-          ],
-          'ui-extended': [
-            '@radix-ui/react-accordion',
-            '@radix-ui/react-alert-dialog',
-            '@radix-ui/react-tabs',
-            '@radix-ui/react-toast',
-            '@radix-ui/react-tooltip'
-          ],
-          
-          // Utilities
-          'utils': ['clsx', 'tailwind-merge', 'class-variance-authority'],
-          'date-utils': ['date-fns'],
-          
-          // Feature chunks
-          'forms': ['react-hook-form', '@hookform/resolvers', 'zod'],
-          'auth': ['@supabase/supabase-js'],
-          'charts': ['recharts'],
-          'documents': ['jspdf', 'jspdf-autotable', 'xlsx'],
-          'query': ['@tanstack/react-query'],
-          'three': ['three', '@react-three/fiber', '@react-three/drei'],
-          'dnd': ['@dnd-kit/core', '@dnd-kit/sortable', '@dnd-kit/utilities', '@hello-pangea/dnd'],
-          'media': ['qr-scanner', 'qrcode', 'signature_pad', 'tesseract.js'],
-          'markdown': ['react-markdown'],
-          
-          // Performance and monitoring
-          'performance': [
-            '@/components/performance/LazyComponents',
-            '@/hooks/usePerformanceMonitor'
-          ],
-          
-          // SEO and analytics
-          'seo': [
-            'react-helmet-async',
-            '@/components/SEOMetaTags',
-            '@/components/EnhancedSchemaMarkup'
-          ]
+        manualChunks(id) {
+          // Framework chunk: React + ReactDOM + React Router must stay together
+          if (
+            id.includes('node_modules/react/') ||
+            id.includes('node_modules/react-dom/') ||
+            id.includes('node_modules/react-router-dom/') ||
+            id.includes('node_modules/react-router/') ||
+            id.includes('node_modules/scheduler/')
+          ) {
+            return 'framework';
+          }
+          // UI library chunk: Radix UI + CVA
+          if (
+            id.includes('node_modules/@radix-ui/') ||
+            id.includes('node_modules/class-variance-authority')
+          ) {
+            return 'ui-library';
+          }
+          // Query chunk: TanStack Query
+          if (id.includes('node_modules/@tanstack/')) {
+            return 'query';
+          }
+          // XLSX chunk: Heavy spreadsheet library
+          if (id.includes('node_modules/xlsx/')) {
+            return 'xlsx';
+          }
+          // Three.js chunk: 3D rendering
+          if (id.includes('node_modules/three/') || id.includes('node_modules/@react-three/')) {
+            return 'three';
+          }
+          // Recharts chunk: charting lib (~320KB gzip) + its d3/victory deps.
+          // Isolating it keeps charts out of route chunks that never render a
+          // chart and lets the chart chunk be cached independently (US-218).
+          if (
+            id.includes('node_modules/recharts/') ||
+            id.includes('node_modules/recharts-scale/') ||
+            id.includes('node_modules/victory-vendor/') ||
+            id.includes('node_modules/d3-')
+          ) {
+            return 'recharts';
+          }
         },
-        
+
         // Optimized file naming for better caching
         chunkFileNames: (chunkInfo) => {
-          const facadeModuleId = chunkInfo.facadeModuleId ? 
-            chunkInfo.facadeModuleId.split('/').pop()?.replace('.tsx', '').replace('.ts', '') : 
+          // Use manual chunk name when available (framework, ui-library, etc.)
+          const manualNames = ['framework', 'ui-library', 'query', 'xlsx', 'three', 'recharts'];
+          if (manualNames.includes(chunkInfo.name)) {
+            return `assets/${chunkInfo.name}-[hash].js`;
+          }
+          const facadeModuleId = chunkInfo.facadeModuleId ?
+            chunkInfo.facadeModuleId.split('/').pop()?.replace('.tsx', '').replace('.ts', '') :
             'chunk';
           return `assets/${facadeModuleId}-[hash].js`;
         },

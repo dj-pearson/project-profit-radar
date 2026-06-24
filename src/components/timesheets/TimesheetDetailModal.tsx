@@ -13,17 +13,7 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Label } from '@/components/ui/label';
-import {
-  Clock,
-  MapPin,
-  User,
-  Building2,
-  Calendar,
-  CheckCircle2,
-  XCircle,
-  AlertCircle,
-  History,
-} from 'lucide-react';
+import { Clock, MapPin, User, Building2, CheckCircle2, XCircle, AlertCircle, History } from 'lucide-react';
 import { format } from 'date-fns';
 
 interface TimesheetDetailModalProps {
@@ -166,7 +156,7 @@ export const TimesheetDetailModal = ({
               <div className="grid grid-cols-2 gap-4 p-4 bg-secondary/50 rounded-lg">
                 <div>
                   <Label className="text-xs text-muted-foreground">Name</Label>
-                  <p className="text-sm font-medium">{timesheet.worker?.full_name || 'Unknown'}</p>
+                  <p className="text-sm font-medium">{timesheet.worker ? `${timesheet.worker.first_name || ''} ${timesheet.worker.last_name || ''}`.trim() || 'Unknown' : 'Unknown'}</p>
                 </div>
                 <div>
                   <Label className="text-xs text-muted-foreground">Email</Label>
@@ -293,7 +283,7 @@ export const TimesheetDetailModal = ({
                       <Label className="text-xs text-muted-foreground">
                         {timesheet.approval_status === 'approved' ? 'Approved' : 'Rejected'} By
                       </Label>
-                      <p className="text-sm">{timesheet.approver?.full_name || 'Unknown'}</p>
+                      <p className="text-sm">{timesheet.approver ? `${timesheet.approver.first_name || ''} ${timesheet.approver.last_name || ''}`.trim() || 'Unknown' : 'Unknown'}</p>
                     </div>
                     <div>
                       <Label className="text-xs text-muted-foreground">Date</Label>
@@ -369,7 +359,7 @@ export const TimesheetDetailModal = ({
                         <div className="flex items-center gap-2">
                           {getStatusBadge(entry.action)}
                           <span className="text-sm font-medium">
-                            {entry.performed_by_user?.full_name || 'System'}
+                            {entry.performed_by_user ? `${entry.performed_by_user.first_name || ''} ${entry.performed_by_user.last_name || ''}`.trim() || 'System' : 'System'}
                           </span>
                         </div>
                         <span className="text-xs text-muted-foreground">

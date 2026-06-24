@@ -16,33 +16,8 @@ import {
   TabsList,
   TabsTrigger,
 } from '@/components/ui/tabs';
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  LineChart,
-  Line,
-  PieChart,
-  Pie,
-  Cell,
-  ComposedChart,
-  Area,
-  AreaChart
-} from 'recharts';
-import {
-  TrendingUp,
-  TrendingDown,
-  DollarSign,
-  AlertCircle,
-  Target,
-  Calendar,
-  Filter,
-  Download
-} from 'lucide-react';
+import { Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Line, ComposedChart } from 'recharts';
+import { TrendingUp, TrendingDown, DollarSign, AlertCircle, Target, Download } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface ProjectCostData {

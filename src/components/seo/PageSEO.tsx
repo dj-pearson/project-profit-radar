@@ -14,6 +14,7 @@
 import React from 'react';
 import { Helmet } from 'react-helmet-async';
 import { useLocation } from 'react-router-dom';
+import { BRIKLY_LOGO_URL } from '@/lib/utils';
 
 export interface PageSEOProps {
   // Basic SEO
@@ -47,29 +48,29 @@ export const PageSEO: React.FC<PageSEOProps> = ({
   description,
   keywords = [],
   canonicalUrl,
-  ogImage = 'https://ilhzuvemiuyfuxfegtlv.supabase.co/storage/v1/object/public/site-assets/BuildDeskLogo.png',
+  ogImage = BRIKLY_LOGO_URL,
   ogType = 'website',
   twitterCard = 'summary_large_image',
   schema = [],
   noIndex = false,
   noFollow = false,
   lastModified,
-  author = 'BuildDesk',
+  author = 'Brikly',
   articlePublishDate
 }) => {
   const location = useLocation();
 
   // Construct full URL
-  const baseUrl = 'https://builddesk.com';
+  const baseUrl = 'https://brikly.net';
   const fullUrl = canonicalUrl || `${baseUrl}${location.pathname}`;
 
   // Robots meta tag
   const robotsContent = `${noIndex ? 'noindex' : 'index'}, ${noFollow ? 'nofollow' : 'follow'}`;
 
   // Full title with branding
-  const fullTitle = title.includes('BuildDesk')
+  const fullTitle = title.includes('Brikly')
     ? title
-    : `${title} | BuildDesk`;
+    : `${title} | Brikly`;
 
   return (
     <Helmet>
@@ -94,11 +95,11 @@ export const PageSEO: React.FC<PageSEOProps> = ({
       <meta property="og:type" content={ogType} />
       <meta property="og:url" content={fullUrl} />
       <meta property="og:image" content={ogImage} />
-      <meta property="og:site_name" content="BuildDesk" />
+      <meta property="og:site_name" content="Brikly" />
 
       {/* Twitter Card Tags */}
       <meta name="twitter:card" content={twitterCard} />
-      <meta name="twitter:site" content="@builddesk" />
+      <meta name="twitter:site" content="@brikly" />
       <meta name="twitter:title" content={title} />
       <meta name="twitter:description" content={description} />
       <meta name="twitter:image" content={ogImage} />
@@ -109,6 +110,11 @@ export const PageSEO: React.FC<PageSEOProps> = ({
           <meta property="article:published_time" content={articlePublishDate} />
           <meta property="article:author" content={author} />
         </>
+      )}
+
+      {/* Content freshness signal for AI search engines */}
+      {lastModified && (
+        <meta property="article:modified_time" content={lastModified} />
       )}
 
       {/* Structured Data (JSON-LD) */}
@@ -130,9 +136,9 @@ export const PageSEO: React.FC<PageSEOProps> = ({
 export const createOrganizationSchema = () => ({
   "@context": "https://schema.org",
   "@type": "Organization",
-  "name": "BuildDesk",
-  "url": "https://builddesk.com",
-  "logo": "https://builddesk.com/logo.png",
+  "name": "Brikly",
+  "url": "https://brikly.net",
+  "logo": "https://brikly.net/logo.png",
   "description": "Construction management software for small and mid-size contractors in the United States.",
   "foundingDate": "2024",
   "address": {
@@ -140,8 +146,8 @@ export const createOrganizationSchema = () => ({
     "addressCountry": "US"
   },
   "sameAs": [
-    "https://linkedin.com/company/builddesk",
-    "https://twitter.com/builddesk"
+    "https://linkedin.com/company/brikly",
+    "https://twitter.com/brikly"
   ],
   "contactPoint": {
     "@type": "ContactPoint",
@@ -154,7 +160,7 @@ export const createOrganizationSchema = () => ({
 export const createSoftwareApplicationSchema = (additionalProps?: object) => ({
   "@context": "https://schema.org",
   "@type": "SoftwareApplication",
-  "name": "BuildDesk",
+  "name": "Brikly",
   "applicationCategory": "BusinessApplication",
   "operatingSystem": "Web, iOS, Android",
   "offers": {
@@ -239,14 +245,14 @@ export const createProductSchema = (
   "description": description,
   "brand": {
     "@type": "Brand",
-    "name": "BuildDesk"
+    "name": "Brikly"
   },
   "offers": {
     "@type": "Offer",
     "price": price,
     "priceCurrency": "USD",
     "availability": "https://schema.org/InStock",
-    "url": "https://builddesk.com/pricing"
+    "url": "https://brikly.net/pricing"
   },
   ...additionalProps
 });
@@ -256,7 +262,7 @@ export const createArticleSchema = (
   description: string,
   datePublished: string,
   dateModified: string,
-  author: string = "BuildDesk Team"
+  author: string = "Brikly Team"
 ) => ({
   "@context": "https://schema.org",
   "@type": "Article",
@@ -268,10 +274,10 @@ export const createArticleSchema = (
   },
   "publisher": {
     "@type": "Organization",
-    "name": "BuildDesk",
+    "name": "Brikly",
     "logo": {
       "@type": "ImageObject",
-      "url": "https://builddesk.com/logo.png"
+      "url": "https://brikly.net/logo.png"
     }
   },
   "datePublished": datePublished,
@@ -290,8 +296,61 @@ export const createWebPageSchema = (
   "url": url,
   "publisher": {
     "@type": "Organization",
-    "name": "BuildDesk"
+    "name": "Brikly"
   }
+});
+
+/**
+ * WebSite Schema with SearchAction
+ * Required for sitelinks search box in Google and AI search engines
+ */
+export const createWebSiteSchema = () => ({
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  "name": "Brikly",
+  "url": "https://brikly.net",
+  "description": "Construction management software for small and mid-size contractors. Real-time job costing, mobile crew tracking, and OSHA compliance.",
+  "publisher": {
+    "@type": "Organization",
+    "name": "Brikly"
+  },
+  "potentialAction": {
+    "@type": "SearchAction",
+    "target": {
+      "@type": "EntryPoint",
+      "urlTemplate": "https://brikly.net/search?q={search_term_string}"
+    },
+    "query-input": "required name=search_term_string"
+  }
+});
+
+/**
+ * Comparison/ItemList Schema for "vs" pages
+ * AI engines heavily favor structured comparison data
+ */
+export const createComparisonSchema = (
+  title: string,
+  products: Array<{ name: string; description: string; price: string; url?: string }>
+) => ({
+  "@context": "https://schema.org",
+  "@type": "ItemList",
+  "name": title,
+  "itemListElement": products.map((product, index) => ({
+    "@type": "ListItem",
+    "position": index + 1,
+    "item": {
+      "@type": "SoftwareApplication",
+      "name": product.name,
+      "description": product.description,
+      "applicationCategory": "BusinessApplication",
+      "offers": {
+        "@type": "Offer",
+        "price": product.price,
+        "priceCurrency": "USD"
+      },
+      ...(product.url && { "url": product.url })
+    }
+  }))
 });
 
 export default PageSEO;

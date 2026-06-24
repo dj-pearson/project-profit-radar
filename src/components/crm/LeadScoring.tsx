@@ -6,16 +6,7 @@ import { Progress } from '@/components/ui/progress';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { formatCurrency } from '@/utils/formatters';
-import { 
-  Star, 
-  TrendingUp, 
-  TrendingDown, 
-  Target,
-  DollarSign,
-  Calendar,
-  Activity,
-  RefreshCw
-} from 'lucide-react';
+import { Star, Target, DollarSign, Calendar, Activity, RefreshCw } from 'lucide-react';
 
 interface LeadScore {
   id: string;

@@ -3,6 +3,8 @@ import ErrorBoundary from './ErrorBoundary';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { AlertTriangle, Home } from 'lucide-react';
+import { logError } from '@/services/errorLoggingService';
+import { captureException } from '@/lib/sentry';
 
 interface CriticalErrorFallbackProps {
   error?: Error;
@@ -54,8 +56,17 @@ const CriticalErrorBoundary: React.FC<CriticalErrorBoundaryProps> = ({ children 
     <ErrorBoundary
       fallback={<CriticalErrorFallback />}
       onError={(error, errorInfo) => {
-        // Log critical errors to external service in production
-        console.error('Critical error:', { error, errorInfo });
+        logError({
+          error,
+          errorType: 'render',
+          severity: 'critical',
+          componentStack: errorInfo.componentStack || undefined,
+        });
+        captureException(error, {
+          componentStack: errorInfo.componentStack || undefined,
+          boundary: 'CriticalErrorBoundary',
+          severity: 'critical',
+        });
       }}
     >
       {children}

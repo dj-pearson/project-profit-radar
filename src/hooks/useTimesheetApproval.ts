@@ -1,11 +1,9 @@
 /**
  * Timesheet Approval Hook
- * Updated with multi-tenant site_id isolation
  */
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 
 export interface TimesheetEntry {
@@ -42,61 +40,54 @@ export interface TimesheetApprovalHistoryEntry {
 
 export const useTimesheetApproval = () => {
   const { toast } = useToast();
-  const { siteId } = useAuth();
-  const queryClient = useQueryClient();
+    const queryClient = useQueryClient();
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
-  // Fetch pending timesheets with site isolation
+  // Tenant scoping for these views is enforced in the database: migration
+  // 20260613120000 (US-197) sets security_invoker=true on
+  // pending_timesheet_approvals / approved_timesheets so the caller's
+  // time_entries RLS applies (managers see their company; other tenants are
+  // filtered out). Do not assume these are global.
+  // Fetch pending timesheets
   const { data: pendingTimesheets, isLoading: isPendingLoading } = useQuery({
-    queryKey: ['pending-timesheets', siteId],
+    queryKey: ['pending-timesheets'],
     queryFn: async () => {
-      if (!siteId) throw new Error('No site ID - multi-tenant isolation required');
-
-      const { data, error } = await supabase
+            const { data, error } = await supabase
         .from('pending_timesheet_approvals')
         .select('*')
-        .eq('site_id', siteId)  // CRITICAL: Site isolation
         .order('submitted_at', { ascending: false, nullsFirst: false })
         .order('created_at', { ascending: false });
 
       if (error) throw error;
       return data as TimesheetEntry[];
     },
-    enabled: !!siteId,
   });
 
-  // Fetch approved timesheets with site isolation
+  // Fetch approved timesheets
   const { data: approvedTimesheets, isLoading: isApprovedLoading } = useQuery({
-    queryKey: ['approved-timesheets', siteId],
+    queryKey: ['approved-timesheets'],
     queryFn: async () => {
-      if (!siteId) throw new Error('No site ID - multi-tenant isolation required');
-
-      const { data, error } = await supabase
+            const { data, error } = await supabase
         .from('approved_timesheets')
         .select('*')
-        .eq('site_id', siteId)  // CRITICAL: Site isolation
         .order('approved_at', { ascending: false });
 
       if (error) throw error;
       return data;
     },
-    enabled: !!siteId,
   });
 
-  // Fetch timesheet detail with site isolation
+  // Fetch timesheet detail
   const fetchTimesheetDetail = async (id: string) => {
-    if (!siteId) throw new Error('No site ID - multi-tenant isolation required');
-
-    const { data, error } = await supabase
+        const { data, error } = await supabase
       .from('time_entries')
       .select(`
         *,
-        worker:user_profiles!time_entries_user_id_fkey(full_name, email, role),
+        worker:user_profiles!time_entries_user_id_fkey(first_name, last_name, email, role),
         project:projects(name, site_address, client_name),
         cost_code:cost_codes(code, description),
-        approver:user_profiles!time_entries_approved_by_fkey(full_name, email)
+        approver:user_profiles!time_entries_approved_by_fkey(first_name, last_name, email)
       `)
-      .eq('site_id', siteId)  // CRITICAL: Site isolation
       .eq('id', id)
       .single();
 
@@ -104,17 +95,14 @@ export const useTimesheetApproval = () => {
     return data;
   };
 
-  // Fetch approval history with site isolation
+  // Fetch approval history
   const fetchApprovalHistory = async (timeEntryId: string) => {
-    if (!siteId) throw new Error('No site ID - multi-tenant isolation required');
-
-    const { data, error } = await supabase
+        const { data, error } = await supabase
       .from('timesheet_approval_history')
       .select(`
         *,
-        performed_by_user:user_profiles!timesheet_approval_history_performed_by_fkey(full_name, email)
+        performed_by_user:user_profiles!timesheet_approval_history_performed_by_fkey(first_name, last_name, email)
       `)
-      .eq('site_id', siteId)  // CRITICAL: Site isolation
       .eq('time_entry_id', timeEntryId)
       .order('performed_at', { ascending: false });
 
@@ -122,12 +110,10 @@ export const useTimesheetApproval = () => {
     return data as TimesheetApprovalHistoryEntry[];
   };
 
-  // Approve single timesheet with site isolation
+  // Approve single timesheet
   const approveMutation = useMutation({
     mutationFn: async ({ id, notes }: { id: string; notes?: string }) => {
-      if (!siteId) throw new Error('No site ID - multi-tenant isolation required');
-
-      const { data: { user } } = await supabase.auth.getUser();
+            const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Not authenticated');
 
       const { data, error } = await supabase
@@ -138,7 +124,6 @@ export const useTimesheetApproval = () => {
           approved_at: new Date().toISOString(),
           approval_notes: notes || null,
         })
-        .eq('site_id', siteId)  // CRITICAL: Site isolation on update
         .eq('id', id)
         .select()
         .single();
@@ -147,8 +132,8 @@ export const useTimesheetApproval = () => {
       return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['pending-timesheets', siteId] });
-      queryClient.invalidateQueries({ queryKey: ['approved-timesheets', siteId] });
+      queryClient.invalidateQueries({ queryKey: ['pending-timesheets'] });
+      queryClient.invalidateQueries({ queryKey: ['approved-timesheets'] });
       toast({
         title: 'Timesheet Approved',
         description: 'The timesheet has been approved successfully.',
@@ -163,12 +148,10 @@ export const useTimesheetApproval = () => {
     },
   });
 
-  // Reject single timesheet with site isolation
+  // Reject single timesheet
   const rejectMutation = useMutation({
     mutationFn: async ({ id, reason }: { id: string; reason: string }) => {
-      if (!siteId) throw new Error('No site ID - multi-tenant isolation required');
-
-      const { data: { user } } = await supabase.auth.getUser();
+            const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Not authenticated');
 
       const { data, error } = await supabase
@@ -179,7 +162,6 @@ export const useTimesheetApproval = () => {
           approved_at: new Date().toISOString(),
           rejection_reason: reason,
         })
-        .eq('site_id', siteId)  // CRITICAL: Site isolation on update
         .eq('id', id)
         .select()
         .single();
@@ -188,8 +170,8 @@ export const useTimesheetApproval = () => {
       return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['pending-timesheets', siteId] });
-      queryClient.invalidateQueries({ queryKey: ['approved-timesheets', siteId] });
+      queryClient.invalidateQueries({ queryKey: ['pending-timesheets'] });
+      queryClient.invalidateQueries({ queryKey: ['approved-timesheets'] });
       toast({
         title: 'Timesheet Rejected',
         description: 'The timesheet has been rejected.',
@@ -204,27 +186,24 @@ export const useTimesheetApproval = () => {
     },
   });
 
-  // Bulk approve timesheets with site isolation
+  // Bulk approve timesheets
   const bulkApproveMutation = useMutation({
     mutationFn: async ({ ids, notes }: { ids: string[]; notes?: string }) => {
-      if (!siteId) throw new Error('No site ID - multi-tenant isolation required');
-
-      const { data: { user } } = await supabase.auth.getUser();
+            const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Not authenticated');
 
       const { data, error } = await supabase.rpc('bulk_approve_timesheets', {
-        p_site_id: siteId,  // CRITICAL: Pass site_id to RPC
-        timesheet_ids: ids,
-        approver_id: user.id,
-        notes: notes || null,
+        p_timesheet_ids: ids,
+        p_approver_id: user.id,
+        p_notes: notes || null,
       });
 
       if (error) throw error;
       return data;
     },
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ['pending-timesheets', siteId] });
-      queryClient.invalidateQueries({ queryKey: ['approved-timesheets', siteId] });
+      queryClient.invalidateQueries({ queryKey: ['pending-timesheets'] });
+      queryClient.invalidateQueries({ queryKey: ['approved-timesheets'] });
       setSelectedIds([]);
       toast({
         title: 'Bulk Approval Complete',
@@ -240,18 +219,15 @@ export const useTimesheetApproval = () => {
     },
   });
 
-  // Bulk reject timesheets with site isolation
+  // Bulk reject timesheets
   const bulkRejectMutation = useMutation({
     mutationFn: async ({ ids, reason }: { ids: string[]; reason: string }) => {
-      if (!siteId) throw new Error('No site ID - multi-tenant isolation required');
-
-      const { data: { user } } = await supabase.auth.getUser();
+            const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Not authenticated');
 
       const { data, error } = await supabase.rpc('bulk_reject_timesheets', {
-        p_site_id: siteId,  // CRITICAL: Pass site_id to RPC
-        timesheet_ids: ids,
-        rejector_id: user.id,
+        p_timesheet_ids: ids,
+        p_rejector_id: user.id,
         rejection_reason: reason,
       });
 
@@ -259,8 +235,8 @@ export const useTimesheetApproval = () => {
       return data;
     },
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ['pending-timesheets', siteId] });
-      queryClient.invalidateQueries({ queryKey: ['approved-timesheets', siteId] });
+      queryClient.invalidateQueries({ queryKey: ['pending-timesheets'] });
+      queryClient.invalidateQueries({ queryKey: ['approved-timesheets'] });
       setSelectedIds([]);
       toast({
         title: 'Bulk Rejection Complete',

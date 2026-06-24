@@ -6,30 +6,8 @@ import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useAuth } from '@/contexts/AuthContext';
-import { workflowAutomationService } from '@/services/WorkflowAutomationService';
-import { complianceAutomationService } from '@/services/ComplianceAutomationService';
-import { integrationEcosystemService } from '@/services/IntegrationEcosystemService';
 import { toast } from '@/hooks/use-toast';
-import {
-  Zap,
-  Shield,
-  Link,
-  BarChart3,
-  CheckCircle,
-  AlertTriangle,
-  Clock,
-  Users,
-  Building2,
-  Settings,
-  RefreshCw,
-  TrendingUp,
-  Target,
-  Award,
-  Globe,
-  Cpu,
-  FileText,
-  Plus
-} from 'lucide-react';
+import { Zap, Shield, Link, BarChart3, CheckCircle, AlertTriangle, Settings, RefreshCw, Target, Award, Globe, Cpu, FileText, Plus } from 'lucide-react';
 
 export interface EnterpriseDashboardProps {
   className?: string;
@@ -39,9 +17,34 @@ export const EnterpriseDashboard: React.FC<EnterpriseDashboardProps> = ({
   className = ''
 }) => {
   const { userProfile } = useAuth();
-  const [workflowStats, setWorkflowStats] = useState<any>(null);
-  const [complianceStats, setComplianceStats] = useState<any>(null);
-  const [integrationStats, setIntegrationStats] = useState<any>(null);
+  interface WorkflowStats {
+    totalWorkflows: number;
+    activeWorkflows: number;
+    executionsToday: number;
+    successRate: number;
+    recentExecutions: { name: string; status: string; executedAt: string }[];
+  }
+
+  interface ComplianceStats {
+    totalRequirements: number;
+    compliantRequirements: number;
+    pendingChecks: number;
+    complianceRate: number;
+    recentAlerts: { type: string; severity: string; dueDate: string }[];
+    upcomingDeadlines: { requirement: string; dueDate: string; status: string }[];
+  }
+
+  interface IntegrationStats {
+    totalIntegrations: number;
+    activeIntegrations: number;
+    lastSyncSuccess: string;
+    syncSuccessRate: number;
+    integrations: { name: string; status: string; lastSync: string; health: string }[];
+  }
+
+  const [workflowStats, setWorkflowStats] = useState<WorkflowStats | null>(null);
+  const [complianceStats, setComplianceStats] = useState<ComplianceStats | null>(null);
+  const [integrationStats, setIntegrationStats] = useState<IntegrationStats | null>(null);
   const [loading, setLoading] = useState(false);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
 
@@ -97,7 +100,7 @@ export const EnterpriseDashboard: React.FC<EnterpriseDashboardProps> = ({
       setIntegrationStats(mockIntegrationStats);
       setLastUpdated(new Date());
 
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error loading enterprise metrics:', error);
       toast({
         title: "Error Loading Metrics",
@@ -280,7 +283,7 @@ export const EnterpriseDashboard: React.FC<EnterpriseDashboardProps> = ({
                   <CardTitle className="text-sm">Recent Executions</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-2">
-                  {workflowStats?.recentExecutions?.map((execution: any, index: number) => (
+                  {workflowStats?.recentExecutions?.map((execution: { name: string; status: string; executedAt: string }, index: number) => (
                     <div key={index} className="flex items-center justify-between p-2 border rounded">
                       <div className="flex items-center space-x-2">
                         <CheckCircle className="h-4 w-4 text-green-500" />
@@ -345,7 +348,7 @@ export const EnterpriseDashboard: React.FC<EnterpriseDashboardProps> = ({
                   <CardTitle className="text-sm">Upcoming Deadlines</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-2">
-                  {complianceStats?.upcomingDeadlines?.map((deadline: any, index: number) => (
+                  {complianceStats?.upcomingDeadlines?.map((deadline: { requirement: string; dueDate: string; status: string }, index: number) => (
                     <div key={index} className="flex items-center justify-between p-2 border rounded">
                       <div>
                         <p className="text-sm font-medium">{deadline.requirement}</p>
@@ -366,7 +369,7 @@ export const EnterpriseDashboard: React.FC<EnterpriseDashboardProps> = ({
             {complianceStats?.recentAlerts?.length > 0 && (
               <div className="space-y-2">
                 <h4 className="font-semibold text-sm">Recent Alerts</h4>
-                {complianceStats.recentAlerts.map((alert: any, index: number) => (
+                {complianceStats.recentAlerts.map((alert: { type: string; severity: string; dueDate: string }, index: number) => (
                   <Alert key={index} variant={getSeverityColor(alert.severity)}>
                     <AlertTriangle className="h-4 w-4" />
                     <AlertDescription>
@@ -403,7 +406,7 @@ export const EnterpriseDashboard: React.FC<EnterpriseDashboardProps> = ({
                   <CardTitle className="text-sm">Integration Health</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3">
-                  {integrationStats?.integrations?.map((integration: any, index: number) => (
+                  {integrationStats?.integrations?.map((integration: { name: string; status: string; lastSync: string; health: string }, index: number) => (
                     <div key={index} className="flex items-center justify-between">
                       <div className="flex items-center space-x-2">
                         <div className={`w-2 h-2 rounded-full ${

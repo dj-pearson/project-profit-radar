@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -6,17 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { 
-  FileText, 
-  Shield, 
-  Edit, 
-  Eye, 
-  Clock, 
-  CheckCircle2,
-  AlertTriangle,
-  Save,
-  History
-} from 'lucide-react';
+import { FileText, Shield, Edit, Eye, CheckCircle2, Save, History } from 'lucide-react';
 
 interface LegalDocument {
   id: string;
@@ -65,13 +55,13 @@ const TermsPrivacyManager = () => {
           id: '1',
           type: 'terms_of_service',
           title: 'Terms of Service',
-          content: `# Terms of Service for BuildDesk
+          content: `# Terms of Service for Brikly
 
 ## 1. Acceptance of Terms
-By accessing and using BuildDesk, you accept and agree to be bound by the terms and provision of this agreement.
+By accessing and using Brikly, you accept and agree to be bound by the terms and provision of this agreement.
 
 ## 2. Service Description
-BuildDesk provides construction management software solutions including project management, financial tracking, and team collaboration tools.
+Brikly provides construction management software solutions including project management, financial tracking, and team collaboration tools.
 
 ## 3. User Responsibilities
 - Maintain accurate account information
@@ -86,7 +76,7 @@ We are committed to protecting your data in accordance with applicable privacy l
 While we strive for 99.9% uptime, we cannot guarantee uninterrupted service availability.
 
 ## 6. Limitation of Liability
-BuildDesk shall not be liable for any indirect, incidental, special, consequential, or punitive damages.
+Brikly shall not be liable for any indirect, incidental, special, consequential, or punitive damages.
 
 ## 7. Changes to Terms
 We reserve the right to modify these terms at any time with appropriate notice to users.
@@ -105,7 +95,7 @@ Last updated: ${new Date().toLocaleDateString()}`,
           id: '2',
           type: 'privacy_policy',
           title: 'Privacy Policy',
-          content: `# Privacy Policy for BuildDesk
+          content: `# Privacy Policy for Brikly
 
 ## 1. Information We Collect
 - Account information (name, email, company details)
@@ -143,7 +133,7 @@ You have the right to:
 We retain data as long as your account is active or as needed to provide services.
 
 ## 7. Contact Information
-For privacy questions, contact: privacy@builddesk.com
+For privacy questions, contact: privacy@brikly.net
 
 Last updated: ${new Date().toLocaleDateString()}`,
           version: '3.0',

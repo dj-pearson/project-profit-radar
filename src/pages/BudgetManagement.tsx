@@ -3,16 +3,16 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 const BudgetManagement: React.FC = () => {
   return (
-    <div className="container mx-auto py-6">
+    <main className="container mx-auto py-6" role="main" aria-label="Budget Management">
       <Card>
         <CardHeader>
           <CardTitle>Budget Management</CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-muted-foreground">Budget management coming soon...</p>
+          <p className="text-muted-foreground" role="status">Budget management coming soon...</p>
         </CardContent>
       </Card>
-    </div>
+    </main>
   );
 };
 

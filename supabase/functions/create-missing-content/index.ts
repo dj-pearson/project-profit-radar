@@ -12,27 +12,6 @@ Deno.serve(async (req) => {
   try {
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    // Get site_id from request body or default to BuildDesk site for seeding
-    const body = await req.json().catch(() => ({}));
-    let siteId = body.site_id;
-
-    if (!siteId) {
-      // Get BuildDesk site_id for default content seeding
-      const { data: site } = await supabase
-        .from('sites')
-        .select('id')
-        .eq('key', 'builddesk')
-        .single();
-
-      if (!site?.id) {
-        return new Response(
-          JSON.stringify({ error: 'BuildDesk site not found. Please provide site_id.' }),
-          { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
-        );
-      }
-      siteId = site.id;
-    }
-
     const blogPosts = [
       {
         title: "Construction CRM Implementation Guide",
@@ -169,7 +148,7 @@ Track these key metrics to measure CRM success:
 
 A well-implemented CRM system can significantly improve your construction business operations. Take time to plan properly, train your team thoroughly, and continuously optimize your processes for maximum benefit.
 
-Ready to implement a CRM system designed specifically for construction? BuildDesk offers integrated CRM functionality built into our construction management platform, making implementation seamless and adoption natural.`,
+Ready to implement a CRM system designed specifically for construction? Brikly offers integrated CRM functionality built into our construction management platform, making implementation seamless and adoption natural.`,
         seo_title: "Construction CRM Implementation Guide - Step-by-Step Setup",
         seo_description: "Complete guide to implementing CRM in construction businesses. Best practices, common pitfalls, and step-by-step implementation strategies for contractors.",
         status: "published",
@@ -328,9 +307,9 @@ Use this template to calculate ROI for any construction investment:
 - Process refinement
 - Additional feature adoption
 
-## BuildDesk ROI Calculator
+## Brikly ROI Calculator
 
-Ready to calculate your potential ROI with BuildDesk? Our interactive ROI calculator helps you:
+Ready to calculate your potential ROI with Brikly? Our interactive ROI calculator helps you:
 
 - Estimate time and cost savings
 - Project revenue improvements
@@ -355,24 +334,22 @@ Remember that ROI isn't just about immediate financial returns - consider long-t
     let skipped = 0;
 
     for (const post of blogPosts) {
-      // Check if post already exists for this site (multi-tenant isolation)
+      // Check if post already exists
       const { data: existing } = await supabase
         .from('blog_posts')
         .select('id')
-        .eq('site_id', siteId)
         .eq('slug', post.slug)
         .maybeSingle();
 
       if (existing) {
-        console.log(`Post ${post.slug} already exists for site ${siteId}, skipping...`);
+        console.log(`Post ${post.slug} already exists, skipping...`);
         skipped++;
         continue;
       }
 
-      // Create the blog post with site_id for multi-tenant isolation
       const { data, error } = await supabase
         .from('blog_posts')
-        .insert([{ ...post, site_id: siteId }])
+        .insert([{ ...post }])
         .select();
       
       if (error) {
@@ -387,8 +364,7 @@ Remember that ROI isn't just about immediate financial returns - consider long-t
     return new Response(
       JSON.stringify({
         success: true,
-        message: `Content creation complete for site ${siteId}! Created: ${created}, Skipped: ${skipped}`,
-        site_id: siteId,
+        message: `Content creation complete! Created: ${created}, Skipped: ${skipped}`,
         created,
         skipped
       }),

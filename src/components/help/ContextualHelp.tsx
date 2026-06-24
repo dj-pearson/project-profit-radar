@@ -11,7 +11,6 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover';
-import { Badge } from '@/components/ui/badge';
 import {
   HelpCircle,
   ExternalLink,

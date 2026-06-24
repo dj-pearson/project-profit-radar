@@ -1,11 +1,8 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.3";
 import { Resend } from "https://esm.sh/resend@2.0.0";
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
+import { getCorsHeaders } from "../_shared/secure-cors.ts";
+import { requireSystemOrAdmin } from "../_shared/system-auth.ts";
 
 const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
 const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -14,9 +11,13 @@ const resendApiKey = Deno.env.get("RESEND_API_KEY");
 const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
 const handler = async (req: Request): Promise<Response> => {
+  const corsHeaders = getCorsHeaders(req);
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
+
+  const denied = await requireSystemOrAdmin(req);
+  if (denied) return denied;
 
   try {
     console.log("Processing funnel email queue...");
@@ -112,7 +113,7 @@ const handler = async (req: Request): Promise<Response> => {
           const resend = new Resend(resendApiKey);
           
           await resend.emails.send({
-            from: "BuildDesk <notifications@resend.dev>",
+            from: "Brikly <notifications@resend.dev>",
             to: [subscriber.email],
             subject: emailSubject,
             html: `

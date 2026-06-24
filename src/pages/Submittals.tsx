@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
@@ -15,21 +15,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { Helmet } from 'react-helmet-async';
-import { 
-  ArrowLeft, 
-  FileText,
-  Upload,
-  PlusCircle,
-  CheckCircle,
-  XCircle,
-  Clock,
-  AlertCircle,
-  User,
-  Calendar,
-  Download,
-  Eye,
-  Edit
-} from 'lucide-react';
+import { ArrowLeft, FileText, Upload, PlusCircle, CheckCircle, XCircle, AlertCircle, User, Calendar, Eye, Edit } from 'lucide-react';
 
 interface Project {
   id: string;
@@ -156,12 +142,12 @@ const Submittals = () => {
 
       setSubmittals(submittalsData || []);
 
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error loading data:', error);
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Failed to load submittals data"
+        description: error instanceof Error ? error.message : "Failed to load submittals data"
       });
     } finally {
       setLoadingSubmittals(false);
@@ -221,12 +207,12 @@ const Submittals = () => {
       });
       
       loadData();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error creating submittal:', error);
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Failed to create submittal"
+        description: error instanceof Error ? error.message : "Failed to create submittal"
       });
     }
   };
@@ -255,15 +241,15 @@ const Submittals = () => {
       if (error) throw error;
 
       // Log review entry for accountability
-      await (supabase as any)
-        .from('submittal_reviews')
+      await supabase
+        .from('submittal_reviews' as 'submittals')
         .insert({
           submittal_id: selectedSubmittal.id,
           reviewer_id: user?.id,
           review_status: reviewStatus,
           comments: reviewComments || null,
           company_id: userProfile?.company_id
-        });
+        } as Record<string, unknown>);
 
       toast({
         title: "Success",
@@ -276,12 +262,12 @@ const Submittals = () => {
       setSelectedSubmittal(null);
       
       loadData();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error reviewing submittal:', error);
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Failed to review submittal"
+        description: error instanceof Error ? error.message : "Failed to review submittal"
       });
     }
   };
@@ -289,17 +275,17 @@ const Submittals = () => {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'draft':
-        return <Badge variant="outline"><FileText className="h-3 w-3 mr-1" />Draft</Badge>;
+        return <Badge variant="outline"><FileText className="h-3 w-3 mr-1" aria-hidden="true" />Draft</Badge>;
       case 'submitted':
-        return <Badge variant="secondary"><Upload className="h-3 w-3 mr-1" />Submitted</Badge>;
+        return <Badge variant="secondary"><Upload className="h-3 w-3 mr-1" aria-hidden="true" />Submitted</Badge>;
       case 'under_review':
-        return <Badge variant="secondary"><Eye className="h-3 w-3 mr-1" />Under Review</Badge>;
+        return <Badge variant="secondary"><Eye className="h-3 w-3 mr-1" aria-hidden="true" />Under Review</Badge>;
       case 'approved':
-        return <Badge className="bg-green-500"><CheckCircle className="h-3 w-3 mr-1" />Approved</Badge>;
+        return <Badge className="bg-green-500"><CheckCircle className="h-3 w-3 mr-1" aria-hidden="true" />Approved</Badge>;
       case 'rejected':
-        return <Badge variant="destructive"><XCircle className="h-3 w-3 mr-1" />Rejected</Badge>;
+        return <Badge variant="destructive"><XCircle className="h-3 w-3 mr-1" aria-hidden="true" />Rejected</Badge>;
       case 'revise_resubmit':
-        return <Badge variant="outline"><AlertCircle className="h-3 w-3 mr-1" />Revise & Resubmit</Badge>;
+        return <Badge variant="outline"><AlertCircle className="h-3 w-3 mr-1" aria-hidden="true" />Revise & Resubmit</Badge>;
       default:
         return <Badge variant="outline">{status}</Badge>;
     }
@@ -357,12 +343,12 @@ const Submittals = () => {
       setIsEditDialogOpen(false);
       setEditingSubmittal(null);
       loadData();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error updating submittal:', error);
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Failed to update submittal"
+        description: error instanceof Error ? error.message : "Failed to update submittal"
       });
     }
   };
@@ -374,12 +360,12 @@ const Submittals = () => {
   if (loading || loadingSubmittals) {
     return (
       <DashboardLayout title="Submittals">
-        <div className="flex items-center justify-center h-96">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-construction-blue mx-auto mb-4"></div>
-            <p className="text-muted-foreground">Loading submittals...</p>
+        <div className="space-y-6" role="status" aria-live="polite" aria-label="Loading content">
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+              {[1,2,3,4].map(i => <div key={i} className="h-24 bg-muted animate-pulse rounded-lg" />)}
+            </div>
+            <div className="h-[300px] bg-muted animate-pulse rounded-lg" />
           </div>
-        </div>
       </DashboardLayout>
     );
   }
@@ -388,7 +374,7 @@ const Submittals = () => {
     <RoleGuard allowedRoles={ROLE_GROUPS.PROJECT_VIEWERS}>
       <DashboardLayout title="Submittals">
         <Helmet>
-        <title>Submittals Tracker – Approvals & Accountability | BuildDesk</title>
+        <title>Submittals Tracker – Approvals & Accountability | Brikly</title>
         <meta name="description" content="Manage submittals with formal approvals, due dates, and review history for full accountability." />
         <link rel="canonical" href="/submittals" />
       </Helmet>
@@ -404,7 +390,7 @@ const Submittals = () => {
                 onClick={() => navigate('/dashboard')}
                 className="w-full sm:w-auto"
               >
-                <ArrowLeft className="h-4 w-4 mr-2" />
+                <ArrowLeft className="h-4 w-4 mr-2" aria-hidden="true" />
                 <span className="hidden sm:inline">Back to Dashboard</span>
                 <span className="sm:hidden">Back</span>
               </Button>
@@ -417,15 +403,15 @@ const Submittals = () => {
             <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
               <DialogTrigger asChild>
                 <Button className="w-full sm:w-auto">
-                  <PlusCircle className="h-4 w-4 mr-2" />
+                  <PlusCircle className="h-4 w-4 mr-2" aria-hidden="true" />
                   <span className="hidden sm:inline">Create Submittal</span>
                   <span className="sm:hidden">Create</span>
                 </Button>
               </DialogTrigger>
-              <DialogContent className="max-w-2xl">
+              <DialogContent className="max-w-2xl" aria-describedby="create-submittal-description">
                 <DialogHeader>
                   <DialogTitle>Create New Submittal</DialogTitle>
-                  <DialogDescription>
+                  <DialogDescription id="create-submittal-description">
                     Submit drawings, product data, or samples for approval before construction.
                   </DialogDescription>
                 </DialogHeader>
@@ -433,7 +419,7 @@ const Submittals = () => {
                   <div>
                     <Label htmlFor="project">Project *</Label>
                     <Select value={newSubmittal.project_id} onValueChange={(value) => setNewSubmittal({...newSubmittal, project_id: value})}>
-                      <SelectTrigger>
+                      <SelectTrigger aria-required="true">
                         <SelectValue placeholder="Select project" />
                       </SelectTrigger>
                       <SelectContent>
@@ -453,6 +439,7 @@ const Submittals = () => {
                       placeholder="Brief description of the submittal"
                       value={newSubmittal.title}
                       onChange={(e) => setNewSubmittal({...newSubmittal, title: e.target.value})}
+                      aria-required="true"
                     />
                   </div>
 
@@ -464,6 +451,7 @@ const Submittals = () => {
                       value={newSubmittal.description}
                       onChange={(e) => setNewSubmittal({...newSubmittal, description: e.target.value})}
                       rows={3}
+                      aria-required="true"
                     />
                   </div>
 
@@ -521,10 +509,10 @@ const Submittals = () => {
 
       {/* Edit Submittal Dialog */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-2xl" aria-describedby="edit-submittal-description">
           <DialogHeader>
             <DialogTitle>Edit Submittal</DialogTitle>
-            <DialogDescription>
+            <DialogDescription id="edit-submittal-description">
               Update submittal information and details.
             </DialogDescription>
           </DialogHeader>
@@ -536,6 +524,7 @@ const Submittals = () => {
                 placeholder="Brief description of the submittal"
                 value={editingSubmittal?.title || ''}
                 onChange={(e) => setEditingSubmittal(prev => prev ? {...prev, title: e.target.value} : null)}
+                aria-required="true"
               />
             </div>
 
@@ -547,6 +536,7 @@ const Submittals = () => {
                 value={editingSubmittal?.description || ''}
                 onChange={(e) => setEditingSubmittal(prev => prev ? {...prev, description: e.target.value} : null)}
                 rows={3}
+                aria-required="true"
               />
             </div>
 
@@ -613,7 +603,7 @@ const Submittals = () => {
            {/* Filters */}
            <Card className="mb-4 sm:mb-6">
              <CardContent className="p-4 sm:p-6">
-               <div className="flex flex-col sm:flex-row sm:items-center space-y-4 sm:space-y-0 sm:space-x-4">
+               <div className="flex flex-col sm:flex-row sm:items-center space-y-4 sm:space-y-0 sm:space-x-4" role="search" aria-label="Filter submittals">
                  <div className="flex-1">
                    <Label htmlFor="project-filter" className="text-sm sm:text-base">Filter by Project</Label>
                    <Select value={selectedProject} onValueChange={setSelectedProject}>
@@ -639,13 +629,13 @@ const Submittals = () => {
           {filteredSubmittals.length === 0 ? (
             <Card>
               <CardContent className="text-center py-12">
-                <Upload className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                <Upload className="h-12 w-12 text-muted-foreground mx-auto mb-4" aria-hidden="true" />
                 <h3 className="text-lg font-medium mb-2">No Submittals</h3>
                 <p className="text-muted-foreground mb-4">
                   {selectedProject ? 'No submittals found for selected project' : 'No submittals have been created yet'}
                 </p>
                 <Button onClick={() => setIsCreateDialogOpen(true)}>
-                  <PlusCircle className="h-4 w-4 mr-2" />
+                  <PlusCircle className="h-4 w-4 mr-2" aria-hidden="true" />
                   Create First Submittal
                 </Button>
               </CardContent>
@@ -658,7 +648,7 @@ const Submittals = () => {
                     <div className="flex items-center justify-between">
                       <div>
                         <CardTitle className="flex items-center space-x-2">
-                          <Upload className="h-5 w-5 text-construction-blue" />
+                          <Upload className="h-5 w-5 text-construction-blue" aria-hidden="true" />
                           <span>{submittal.title}</span>
                           <Badge variant="outline">#{submittal.submittal_number}</Badge>
                         </CardTitle>
@@ -681,7 +671,7 @@ const Submittals = () => {
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                       <div>
                         <h4 className="font-medium mb-2 flex items-center">
-                          <User className="h-4 w-4 mr-2" />
+                          <User className="h-4 w-4 mr-2" aria-hidden="true" />
                           Submitted By
                         </h4>
                          <p className="text-sm text-muted-foreground">
@@ -694,7 +684,7 @@ const Submittals = () => {
                        
                        <div>
                          <h4 className="font-medium mb-2 flex items-center">
-                           <User className="h-4 w-4 mr-2" />
+                           <User className="h-4 w-4 mr-2" aria-hidden="true" />
                            Priority
                          </h4>
                          <p className="text-sm text-muted-foreground">
@@ -707,7 +697,7 @@ const Submittals = () => {
                       
                       <div>
                         <h4 className="font-medium mb-2 flex items-center">
-                          <Calendar className="h-4 w-4 mr-2" />
+                          <Calendar className="h-4 w-4 mr-2" aria-hidden="true" />
                           Due Date
                         </h4>
                         <p className="text-sm text-muted-foreground">
@@ -719,7 +709,7 @@ const Submittals = () => {
 
                      <div className="flex justify-end space-x-2">
                        <Button size="sm" variant="outline">
-                         <Eye className="h-4 w-4 mr-1" />
+                         <Eye className="h-4 w-4 mr-1" aria-hidden="true" />
                          View
                        </Button>
                        <Button 
@@ -727,7 +717,7 @@ const Submittals = () => {
                          variant="outline"
                          onClick={() => handleEditSubmittal(submittal)}
                        >
-                         <Edit className="h-4 w-4 mr-1" />
+                         <Edit className="h-4 w-4 mr-1" aria-hidden="true" />
                          Edit
                        </Button>
                        <Button 
@@ -737,7 +727,7 @@ const Submittals = () => {
                            setIsReviewDialogOpen(true);
                          }}
                        >
-                         <CheckCircle className="h-4 w-4 mr-1" />
+                         <CheckCircle className="h-4 w-4 mr-1" aria-hidden="true" />
                          Review
                        </Button>
                      </div>
@@ -751,10 +741,10 @@ const Submittals = () => {
 
       {/* Review Dialog */}
       <Dialog open={isReviewDialogOpen} onOpenChange={setIsReviewDialogOpen}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-2xl" aria-describedby="review-submittal-description">
           <DialogHeader>
             <DialogTitle>Review Submittal</DialogTitle>
-            <DialogDescription>
+            <DialogDescription id="review-submittal-description">
               Review and approve/reject submittal: {selectedSubmittal?.title}
             </DialogDescription>
           </DialogHeader>

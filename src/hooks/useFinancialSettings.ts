@@ -6,22 +6,20 @@ import { FinancialSettings, DEFAULT_FINANCIAL_SETTINGS } from '@/utils/financial
 
 /**
  * Hook to manage company financial settings
- * Updated with multi-tenant site_id isolation
  */
 export function useFinancialSettings() {
-  const { userProfile, siteId } = useAuth();
+  const { userProfile } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
   const { data: settings, isLoading, error } = useQuery({
-    queryKey: ['financial-settings', userProfile?.company_id, siteId],
+    queryKey: ['financial-settings', userProfile?.company_id],
     queryFn: async () => {
-      if (!userProfile?.company_id || !siteId) return DEFAULT_FINANCIAL_SETTINGS;
+      if (!userProfile?.company_id) return DEFAULT_FINANCIAL_SETTINGS;
 
       const { data, error } = await supabase
         .from('company_settings')
         .select('additional_settings, default_markup')
-        .eq('site_id', siteId)  // CRITICAL: Site isolation
         .eq('company_id', userProfile.company_id)
         .maybeSingle();
 
@@ -39,20 +37,17 @@ export function useFinancialSettings() {
         ...financialSettings,
       } as FinancialSettings;
     },
-    enabled: !!userProfile?.company_id && !!siteId,
+    enabled: !!userProfile?.company_id,
     staleTime: 60000, // 1 minute
   });
 
   const updateSettings = useMutation({
     mutationFn: async (newSettings: Partial<FinancialSettings>) => {
       if (!userProfile?.company_id) throw new Error('No company ID');
-      if (!siteId) throw new Error('No site ID - multi-tenant isolation required');
-
-      // Get current additional_settings with site isolation
+            // Get current additional_settings
       const { data: currentData } = await supabase
         .from('company_settings')
         .select('additional_settings')
-        .eq('site_id', siteId)  // CRITICAL: Site isolation
         .eq('company_id', userProfile.company_id)
         .maybeSingle();
 
@@ -73,7 +68,6 @@ export function useFinancialSettings() {
           additional_settings: updatedAdditional,
           default_markup: newSettings.defaultProfitMargin || currentAdditional.financial_settings?.defaultProfitMargin,
         })
-        .eq('site_id', siteId)  // CRITICAL: Site isolation
         .eq('company_id', userProfile.company_id)
         .select()
         .single();
@@ -82,7 +76,7 @@ export function useFinancialSettings() {
       return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['financial-settings', userProfile?.company_id, siteId] });
+      queryClient.invalidateQueries({ queryKey: ['financial-settings', userProfile?.company_id] });
       toast({
         title: 'Settings Updated',
         description: 'Financial settings have been saved successfully.',
@@ -108,22 +102,20 @@ export function useFinancialSettings() {
 
 /**
  * Hook to calculate project costs using company settings
- * Updated with multi-tenant site_id isolation
  */
 export function useProjectCostCalculation(projectId: string) {
   const { settings } = useFinancialSettings();
-  const { userProfile, siteId } = useAuth();
+  const { userProfile } = useAuth();
 
   return useQuery({
-    queryKey: ['project-costs', projectId, settings, siteId],
+    queryKey: ['project-costs', projectId, settings],
     queryFn: async () => {
-      if (!userProfile?.company_id || !projectId || !siteId) return null;
+      if (!userProfile?.company_id || !projectId) return null;
 
-      // Fetch project cost data with site isolation
+      // Fetch project cost data
       const { data: costs, error } = await (supabase as any)
         .from('job_costs')
         .select('labor_cost, material_cost, equipment_cost, other_cost')
-        .eq('site_id', siteId)  // CRITICAL: Site isolation
         .eq('project_id', projectId)
         .eq('company_id', userProfile.company_id);
 
@@ -143,6 +135,6 @@ export function useProjectCostCalculation(projectId: string) {
         otherDirectCosts: totalOtherCost,
       };
     },
-    enabled: !!projectId && !!userProfile?.company_id && !!siteId,
+    enabled: !!projectId && !!userProfile?.company_id,
   });
 }

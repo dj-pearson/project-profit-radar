@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
@@ -19,7 +19,7 @@ import {
 const SEOManager = () => {
   const [activeTab, setActiveTab] = useState('audit');
   const [loading, setLoading] = useState(false);
-  const [auditUrl, setAuditUrl] = useState('https://build-desk.com');
+  const [auditUrl, setAuditUrl] = useState('https://brikly.net');
 
   // Results state
   const [auditResult, setAuditResult] = useState<any>(null);
@@ -315,7 +315,7 @@ const SEOManager = () => {
                 <Input placeholder="Start URL" value={auditUrl} onChange={(e) => setAuditUrl(e.target.value)} />
                 <Input type="number" placeholder="Max Pages" defaultValue="50" id="max-pages" />
                 <Button onClick={async () => {
-                  const data = await runFunction('crawl-site', {
+                  await runFunction('crawl-site', {
                     start_url: auditUrl,
                     max_pages: parseInt((document.getElementById('max-pages') as HTMLInputElement)?.value || '50')
                   }, 'Crawl complete');
@@ -425,7 +425,7 @@ const SEOManager = () => {
             <CardHeader><CardTitle>robots.txt Editor</CardTitle></CardHeader>
             <CardContent className="space-y-4">
               <Textarea
-                placeholder="User-agent: *&#10;Disallow: /admin&#10;Sitemap: https://build-desk.com/sitemap.xml"
+                placeholder="User-agent: *&#10;Disallow: /admin&#10;Sitemap: https://brikly.net/sitemap.xml"
                 rows={10}
                 className="font-mono text-sm"
                 value={robotsTxt}

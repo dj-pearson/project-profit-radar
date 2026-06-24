@@ -1,5 +1,7 @@
-import { CheckCircle, Clock, Users, Zap } from "lucide-react";
+import { CheckCircle, Clock, Users, Zap, ArrowRight } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Link } from "react-router-dom";
 
 const Implementation = () => {
   const timeline = [
@@ -13,7 +15,7 @@ const Implementation = () => {
         "Team training sessions (2-hour sessions)",
         "Mobile app installation and setup"
       ],
-      outcome: "Your team is trained and ready to start using Build Desk"
+      outcome: "Your team is trained and ready to start using Brikly"
     },
     {
       week: "Week 3-4", 
@@ -160,6 +162,23 @@ const Implementation = () => {
               <div className="text-construction-dark font-semibold">Implementation Rating</div>
               <div className="text-sm text-muted-foreground">Customer feedback</div>
             </div>
+          </div>
+        </div>
+
+        {/* CTA Section */}
+        <div className="text-center mt-12">
+          <h3 className="text-2xl font-bold text-construction-dark dark:text-white mb-2">Ready to Get Started?</h3>
+          <p className="text-muted-foreground mb-6">Live in 30 days or your money back</p>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Button variant="hero" size="lg" asChild>
+              <Link to="/auth">
+                Start Free Trial
+                <ArrowRight className="ml-2 h-5 w-5" />
+              </Link>
+            </Button>
+            <Button variant="outline" size="lg" asChild>
+              <Link to="/demo">Schedule a Demo</Link>
+            </Button>
           </div>
         </div>
       </div>

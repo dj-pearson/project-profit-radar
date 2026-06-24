@@ -1,4 +1,4 @@
-# BuildDesk - Comprehensive Improvement Plan
+# Brikly - Comprehensive Improvement Plan
 
 **Date:** 2025-11-13
 **Version:** 1.0
@@ -9,7 +9,7 @@
 
 ## Executive Summary
 
-This document outlines a comprehensive improvement plan for BuildDesk across 7 key dimensions: **Features, Cohesion, Performance, Security, SEO, Mobile, and Optimization**. The plan is structured in 4 phases over 6 months, prioritizing high-impact improvements that will elevate the platform to industry-leading status.
+This document outlines a comprehensive improvement plan for Brikly across 7 key dimensions: **Features, Cohesion, Performance, Security, SEO, Mobile, and Optimization**. The plan is structured in 4 phases over 6 months, prioritizing high-impact improvements that will elevate the platform to industry-leading status.
 
 ### Current State
 - **Feature Completeness:** 70-75%
@@ -356,12 +356,12 @@ Day 6-7: Build and submit
 
 **App Store Listing:**
 ```yaml
-App Name: BuildDesk - Construction Manager
+App Name: Brikly - Construction Manager
 
 Subtitle: Job Costing & Project Management
 
 Description: |
-  BuildDesk is the construction management platform built for contractors,
+  Brikly is the construction management platform built for contractors,
   builders, and project managers who need real-time job costing without
   enterprise complexity.
 
@@ -408,8 +408,8 @@ Description: |
   Starting at $350/month with unlimited users.
   Try free for 14 days - no credit card required.
 
-  🏆 WHY BUILDDESK?
-  Unlike complicated enterprise software, BuildDesk is designed
+  🏆 WHY BRIKLY?
+  Unlike complicated enterprise software, Brikly is designed
   specifically for SMB contractors who need powerful features
   without the complexity.
 
@@ -437,8 +437,8 @@ Age Rating: 4+
 ```bash
 # Week 1: Preparation
 Day 1: Generate signing keystore
-  keytool -genkey -v -keystore builddesk-release.keystore \
-    -alias builddesk -keyalg RSA -keysize 2048 -validity 10000
+  keytool -genkey -v -keystore brikly-release.keystore \
+    -alias brikly -keyalg RSA -keysize 2048 -validity 10000
 
 Day 2: Configure build
   - Update android/app/build.gradle
@@ -467,12 +467,12 @@ Day 5: Build and submit
 
 **Play Store Listing:**
 ```yaml
-App Name: BuildDesk - Construction Management
+App Name: Brikly - Construction Management
 
 Short Description: Real-time job costing and project management for contractors
 
 Full Description: |
-  BuildDesk is the construction management platform designed for contractors
+  Brikly is the construction management platform designed for contractors
   who need real-time financial control without enterprise complexity.
 
   ⚡ REAL-TIME JOB COSTING
@@ -519,7 +519,7 @@ Full Description: |
   PRICING: $350/month, unlimited users
   FREE TRIAL: 14 days, no credit card required
 
-  Join hundreds of contractors who trust BuildDesk for their
+  Join hundreds of contractors who trust Brikly for their
   construction management needs.
 
 Category: Business
@@ -618,7 +618,7 @@ export const useBiometricAuth = () => {
   const authenticate = async () => {
     try {
       await BiometricAuth.authenticate({
-        reason: 'Authenticate to access BuildDesk',
+        reason: 'Authenticate to access Brikly',
         cancelTitle: 'Cancel',
         allowDeviceCredential: true,
         iosFallbackTitle: 'Use Passcode',
@@ -690,7 +690,7 @@ export const useGeofencing = () => {
       stopOnTerminate: false,
       startOnBoot: true,
       notification: {
-        title: 'BuildDesk Location',
+        title: 'Brikly Location',
         text: 'Tracking your location for automatic check-in',
       },
     });
@@ -747,7 +747,7 @@ class SyncQueue extends Dexie {
   queue: Dexie.Table<SyncItem, number>;
 
   constructor() {
-    super('BuildDeskSyncQueue');
+    super('BriklySyncQueue');
     this.version(1).stores({
       queue: '++id, priority, timestamp, status',
     });
@@ -1277,7 +1277,7 @@ npm install react-joyride
 // src/components/onboarding/OnboardingWizard.tsx
 const steps = [
   {
-    title: 'Welcome to BuildDesk',
+    title: 'Welcome to Brikly',
     description: 'Let\'s get your account set up',
     component: WelcomeStep,
   },
@@ -1298,7 +1298,7 @@ const steps = [
   },
   {
     title: 'You\'re All Set!',
-    description: 'Time to explore BuildDesk',
+    description: 'Time to explore Brikly',
     component: CompletionStep,
   },
 ];
@@ -1433,8 +1433,8 @@ FreshBooks:
   - Two-way daily reports
 
 # Use cases:
-  - BuildDesk as field tool, Procore as main system
-  - Migrate from Procore to BuildDesk
+  - Brikly as field tool, Procore as main system
+  - Migrate from Procore to Brikly
   - Hybrid usage (some projects in each)
 ```
 
@@ -1656,7 +1656,7 @@ export const generateLocalBusinessSchema = (company: Company) => ({
   '@type': 'LocalBusiness',
   name: company.name,
   image: company.logo,
-  '@id': `https://builddesk.com/company/${company.id}`,
+  '@id': `https://brikly.net/company/${company.id}`,
   url: company.website,
   telephone: company.phone,
   address: {
@@ -1877,14 +1877,14 @@ Total Monthly: ~$50-100/month
 
 ## Conclusion
 
-This comprehensive improvement plan will elevate BuildDesk from a B+ (82/100) platform to an A+ (95/100) industry-leading solution. The plan balances immediate critical needs (monitoring, testing, mobile deployment) with medium-term UX improvements and long-term competitive differentiators.
+This comprehensive improvement plan will elevate Brikly from a B+ (82/100) platform to an A+ (95/100) industry-leading solution. The plan balances immediate critical needs (monitoring, testing, mobile deployment) with medium-term UX improvements and long-term competitive differentiators.
 
 **Key Priorities:**
 1. 🔴 **Month 1**: Deploy mobile apps, implement monitoring, establish testing
 2. 🟡 **Months 2-4**: Achieve mobile excellence, optimize performance, polish UX
 3. 🟢 **Months 5-6**: Add AI features, expand integrations, prepare for scale
 
-By following this roadmap, BuildDesk will be positioned as the premier construction management platform for SMB contractors, with exceptional mobile experience, rock-solid reliability, and innovative AI-powered features.
+By following this roadmap, Brikly will be positioned as the premier construction management platform for SMB contractors, with exceptional mobile experience, rock-solid reliability, and innovative AI-powered features.
 
 ---
 

@@ -2,17 +2,7 @@ import { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { 
-  Smartphone, 
-  MapPin, 
-  Camera, 
-  Wifi, 
-  WifiOff, 
-  Battery, 
-  HardDrive,
-  Vibrate,
-  Bell
-} from 'lucide-react';
+import { Smartphone, MapPin, Camera, Wifi, WifiOff, HardDrive, Vibrate, Bell } from 'lucide-react';
 import { useDeviceInfo } from '@/hooks/useDeviceInfo';
 import { useGeolocation } from '@/hooks/useGeolocation';
 

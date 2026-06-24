@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -11,20 +11,7 @@ import { Switch } from '@/components/ui/switch';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { 
-  Key,
-  Mail,
-  Calendar,
-  Globe,
-  Users,
-  Lock,
-  Unlock,
-  Plus,
-  Eye,
-  EyeOff,
-  Copy,
-  Trash2
-} from 'lucide-react';
+import { Key, Mail, Calendar, Users, Lock, Unlock, Plus, Eye, Copy, Trash2 } from 'lucide-react';
 
 interface ClientPortalAccess {
   id: string;
@@ -88,10 +75,10 @@ export const ClientPortalAccess = () => {
 
       if (projectsError) throw projectsError;
 
-      setPortalAccess((accessData as any) || []);
-      setProjects((projectsData as any) || []);
+      setPortalAccess((accessData as unknown as ClientPortalAccess[]) || []);
+      setProjects((projectsData as unknown as Project[]) || []);
 
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error loading portal data:', error);
       toast({
         variant: "destructive",
@@ -131,7 +118,7 @@ export const ClientPortalAccess = () => {
           access_level: newAccess.access_level,
           expires_at: expiresAt,
           created_by: userProfile?.id
-        } as any);
+        });
 
       if (error) throw error;
 
@@ -149,7 +136,7 @@ export const ClientPortalAccess = () => {
 
       loadPortalData();
 
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error creating portal access:', error);
       toast({
         variant: "destructive",
@@ -175,7 +162,7 @@ export const ClientPortalAccess = () => {
 
       loadPortalData();
 
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error updating portal access:', error);
       toast({
         variant: "destructive",
@@ -210,7 +197,7 @@ export const ClientPortalAccess = () => {
 
       loadPortalData();
 
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error deleting portal access:', error);
       toast({
         variant: "destructive",

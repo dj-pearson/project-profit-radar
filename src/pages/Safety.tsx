@@ -1,22 +1,12 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { AccessiblePageWrapper } from "@/components/accessibility/AccessiblePageWrapper";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { 
-  AlertTriangle, 
-  Shield, 
-  FileText, 
-  Calendar, 
-  Users, 
-  Plus,
-  TrendingUp,
-  Clock,
-  CheckCircle,
-  ArrowLeft
-} from 'lucide-react';
+import { AlertTriangle, Shield, FileText, Calendar, Plus, Clock, CheckCircle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
@@ -62,7 +52,7 @@ const Safety = () => {
   const [loading, setLoading] = useState(true);
   const [showIncidentDialog, setShowIncidentDialog] = useState(false);
   const [showChecklistDialog, setShowChecklistDialog] = useState(false);
-  const { user, userProfile, siteId } = useAuth();
+  const { user, userProfile } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -90,7 +80,6 @@ const Safety = () => {
         .from('safety_incidents')
         .select('*')
         .eq('company_id', profile.company_id)
-        .eq('site_id', siteId)
         .gte('incident_date', `${currentYear}-01-01`)
         .lte('incident_date', `${currentYear}-12-31`)
         .order('incident_date', { ascending: true });
@@ -193,8 +182,7 @@ const Safety = () => {
         supabase
           .from('safety_incidents')
           .select('id, status')
-          .eq('company_id', profile.company_id)
-          .eq('site_id', siteId),
+          .eq('company_id', profile.company_id),
         
         // Completed checklists this month
         supabase
@@ -224,7 +212,6 @@ const Safety = () => {
           .from('safety_incidents')
           .select('id, incident_type, severity, incident_date, status')
           .eq('company_id', profile.company_id)
-          .eq('site_id', siteId)
           .order('incident_date', { ascending: false })
           .limit(5),
 
@@ -277,7 +264,8 @@ const Safety = () => {
   }
 
   return (
-    <DashboardLayout title="Safety & OSHA Compliance">
+    <AccessiblePageWrapper pageTitle="Safety">
+    <DashboardLayout title="Safety & OSHA Compliance" hasAccessibleWrapper>
       <div className="space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">
@@ -288,21 +276,22 @@ const Safety = () => {
           </div>
           <div className="flex flex-col sm:flex-row gap-3">
             <Button variant="outline" onClick={generateOSHA300Log} className="text-xs md:text-sm">
-              <FileText className="mr-1 md:mr-2 h-3 w-3 md:h-4 md:w-4" />
+              <FileText className="mr-1 md:mr-2 h-3 w-3 md:h-4 md:w-4" aria-hidden="true" />
               <span className="hidden sm:inline">Generate OSHA 300 Log</span>
               <span className="sm:hidden">OSHA 300</span>
             </Button>
             <Dialog open={showIncidentDialog} onOpenChange={setShowIncidentDialog}>
               <DialogTrigger asChild>
                 <Button className="bg-construction-orange hover:bg-construction-orange/90 text-xs md:text-sm">
-                  <Plus className="mr-1 md:mr-2 h-3 w-3 md:h-4 md:w-4" />
+                  <Plus className="mr-1 md:mr-2 h-3 w-3 md:h-4 md:w-4" aria-hidden="true" />
                   <span className="hidden sm:inline">Report Incident</span>
                   <span className="sm:hidden">Report</span>
                 </Button>
               </DialogTrigger>
-              <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+              <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto" aria-describedby="incident-dialog-description">
                 <DialogHeader>
                   <DialogTitle>Report Safety Incident</DialogTitle>
+                  <p id="incident-dialog-description" className="sr-only">Report a workplace safety incident for documentation and investigation</p>
                 </DialogHeader>
                 <SafetyIncidentForm 
                   onSuccess={() => {
@@ -321,7 +310,7 @@ const Safety = () => {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-xs md:text-sm font-medium">Total Incidents</CardTitle>
-              <AlertTriangle className="h-3 w-3 md:h-4 md:w-4 text-construction-orange" />
+              <AlertTriangle className="h-3 w-3 md:h-4 md:w-4 text-construction-orange" aria-hidden="true" />
             </CardHeader>
             <CardContent>
               <div className="text-lg md:text-2xl font-bold">{stats.totalIncidents}</div>
@@ -334,7 +323,7 @@ const Safety = () => {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-xs md:text-sm font-medium">Safety Checklists</CardTitle>
-              <CheckCircle className="h-3 w-3 md:h-4 md:w-4 text-green-600" />
+              <CheckCircle className="h-3 w-3 md:h-4 md:w-4 text-green-600" aria-hidden="true" />
             </CardHeader>
             <CardContent>
               <div className="text-lg md:text-2xl font-bold">{stats.checklistsCompleted}</div>
@@ -347,7 +336,7 @@ const Safety = () => {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-xs md:text-sm font-medium">Expiring Certifications</CardTitle>
-              <Clock className="h-3 w-3 md:h-4 md:w-4 text-construction-orange" />
+              <Clock className="h-3 w-3 md:h-4 md:w-4 text-construction-orange" aria-hidden="true" />
             </CardHeader>
             <CardContent>
               <div className="text-lg md:text-2xl font-bold">{stats.expiringCertifications}</div>
@@ -360,7 +349,7 @@ const Safety = () => {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-xs md:text-sm font-medium">Upcoming Deadlines</CardTitle>
-              <Calendar className="h-3 w-3 md:h-4 md:w-4 text-red-600" />
+              <Calendar className="h-3 w-3 md:h-4 md:w-4 text-red-600" aria-hidden="true" />
             </CardHeader>
             <CardContent>
               <div className="text-lg md:text-2xl font-bold">{stats.upcomingDeadlines}</div>
@@ -393,7 +382,7 @@ const Safety = () => {
                   <Dialog open={showIncidentDialog} onOpenChange={setShowIncidentDialog}>
                     <DialogTrigger asChild>
                       <Button className="bg-construction-orange hover:bg-construction-orange/90">
-                        <Plus className="mr-2 h-4 w-4" />
+                        <Plus className="mr-2 h-4 w-4" aria-hidden="true" />
                         Report Incident
                       </Button>
                     </DialogTrigger>
@@ -415,21 +404,21 @@ const Safety = () => {
               <CardContent>
                 {recentIncidents.length === 0 ? (
                   <div className="text-center py-8 text-muted-foreground">
-                    <CheckCircle className="mx-auto h-12 w-12 mb-4 text-green-600" />
+                    <CheckCircle className="mx-auto h-12 w-12 mb-4 text-green-600" aria-hidden="true" />
                     <p className="text-lg font-medium mb-2">No Recent Incidents</p>
                     <p>Great job maintaining a safe workplace!</p>
                   </div>
                 ) : (
                   <div className="space-y-4">
                     {recentIncidents.map(incident => (
-                      <div key={incident.id} className="flex items-center justify-between p-4 border rounded-lg">
+                      <div key={incident.id} className="flex items-center justify-between p-4 border rounded-lg" role="article" aria-labelledby={`incident-${incident.id}`}>
                         <div>
-                          <h3 className="font-medium">{incident.incident_type.replace('_', ' ').toUpperCase()}</h3>
+                          <h3 id={`incident-${incident.id}`} className="font-medium">{incident.incident_type.replace('_', ' ').toUpperCase()}</h3>
                           <p className="text-sm text-muted-foreground">
                             {new Date(incident.incident_date).toLocaleDateString()} • Severity: {incident.severity}
                           </p>
                         </div>
-                        <Badge variant={incident.status === 'closed' ? 'default' : 'destructive'}>
+                        <Badge variant={incident.status === 'closed' ? 'default' : 'destructive'} aria-label={`Status: ${incident.status}`}>
                           {incident.status}
                         </Badge>
                       </div>
@@ -453,7 +442,7 @@ const Safety = () => {
                   <Dialog open={showChecklistDialog} onOpenChange={setShowChecklistDialog}>
                     <DialogTrigger asChild>
                       <Button className="bg-construction-orange hover:bg-construction-orange/90">
-                        <Plus className="mr-2 h-4 w-4" />
+                        <Plus className="mr-2 h-4 w-4" aria-hidden="true" />
                         Create Checklist
                       </Button>
                     </DialogTrigger>
@@ -475,7 +464,7 @@ const Safety = () => {
               <CardContent>
                 {checklists.length === 0 ? (
                   <div className="text-center py-8 text-muted-foreground">
-                    <Shield className="mx-auto h-12 w-12 mb-4" />
+                    <Shield className="mx-auto h-12 w-12 mb-4" aria-hidden="true" />
                     <p className="text-lg font-medium mb-2">No Safety Checklists</p>
                     <p>Create your first safety checklist to get started</p>
                   </div>
@@ -508,6 +497,7 @@ const Safety = () => {
         </Tabs>
       </div>
     </DashboardLayout>
+    </AccessiblePageWrapper>
   );
 };
 

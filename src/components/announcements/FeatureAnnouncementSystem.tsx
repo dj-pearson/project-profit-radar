@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -7,27 +7,12 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { 
-  Megaphone, 
-  Plus, 
-  Eye, 
-  Send, 
-  Calendar, 
-  Users, 
-  Star,
-  Zap,
-  Info,
-  AlertTriangle,
-  Gift,
-  Sparkles,
-  Bell,
-  X
-} from 'lucide-react';
+import { Megaphone, Plus, Eye, Send, Users, Star, Zap, Info, AlertTriangle, Gift, Sparkles, X } from 'lucide-react';
+import { logger } from '@/lib/logger';
 
 interface Announcement {
   id: string;
@@ -86,7 +71,7 @@ const FeatureAnnouncementSystem = () => {
   const loadAnnouncements = async () => {
     try {
       const { data, error } = await supabase
-        .from('feature_announcements' as any)
+        .from('feature_announcements')
         .select('*')
         .order('created_at', { ascending: false });
 
@@ -94,7 +79,7 @@ const FeatureAnnouncementSystem = () => {
         console.error('Error loading announcements:', error);
         setAnnouncements([]);
       } else {
-        const items: Announcement[] = (data || []).map((row: any) => ({
+        const items: Announcement[] = (data || []).map((row: Record<string, unknown>) => ({
           id: row.id,
           title: row.title,
           content: row.content,
@@ -136,15 +121,15 @@ const FeatureAnnouncementSystem = () => {
 
     try {
       const { data, error } = await supabase
-        .from('user_announcements' as any)
+        .from('user_announcements')
         .select('*')
         .eq('user_id', userProfile.id);
 
       if (error) {
-        console.warn('user_announcements table not available, proceeding without per-user dismissals');
+        logger.warn('user_announcements table not available, proceeding without per-user dismissals');
         setUserAnnouncements([]);
       } else {
-        setUserAnnouncements((data as any) || []);
+        setUserAnnouncements((data as unknown as UserAnnouncement[]) || []);
       }
     } catch (error) {
       console.error('Error loading user announcements:', error);
@@ -163,7 +148,7 @@ const FeatureAnnouncementSystem = () => {
     }
 
     try {
-      const payload: any = {
+      const payload: Record<string, unknown> = {
         title,
         content,
         type,
@@ -191,8 +176,8 @@ const FeatureAnnouncementSystem = () => {
         throw new Error('No data returned from insert');
       }
 
-      // Cast to any to handle type issues
-      const result = data as any;
+      // Cast to Record to handle type issues
+      const result = data as Record<string, unknown>;
 
       const newAnnouncement: Announcement = {
         id: result.id || '',
@@ -246,7 +231,7 @@ const FeatureAnnouncementSystem = () => {
   const publishAnnouncement = async (id: string) => {
     try {
       const { error } = await supabase
-        .from('feature_announcements' as any)
+        .from('feature_announcements')
         .update({ status: 'published', published_at: new Date().toISOString() })
         .eq('id', id);
 
@@ -276,7 +261,7 @@ const FeatureAnnouncementSystem = () => {
     if (!userProfile?.id) return;
 
     try {
-      const payload: any = {
+      const payload: Record<string, unknown> = {
         announcement_id: announcementId,
         user_id: userProfile.id,
         viewed: true,
@@ -284,13 +269,13 @@ const FeatureAnnouncementSystem = () => {
       };
 
       const { data, error } = await supabase
-        .from('user_announcements' as any)
+        .from('user_announcements')
         .insert([payload])
         .select('*')
         .single();
 
       if (!error && data) {
-        setUserAnnouncements(prev => [...prev, data as any]);
+        setUserAnnouncements(prev => [...prev, data as unknown as UserAnnouncement]);
       }
 
       setActivePopupAnnouncement(null);

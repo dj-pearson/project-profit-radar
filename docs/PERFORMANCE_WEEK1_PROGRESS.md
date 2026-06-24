@@ -64,8 +64,8 @@ useWebVitals({
 import { OptimizedSupabaseImage } from '@/components/ui/optimized-supabase-image';
 
 <OptimizedSupabaseImage
-  src="https://.../BuildDeskLogo.png"
-  alt="BuildDesk Logo"
+  src="https://.../BriklyLogo.png"
+  alt="Brikly Logo"
   sizes="(min-width: 1024px) 400px, 100vw"
   quality={80}
   priority={false}

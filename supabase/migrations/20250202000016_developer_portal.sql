@@ -328,7 +328,7 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 
 -- Insert basic documentation categories
 INSERT INTO api_documentation (title, slug, category, description, content, endpoint_path, http_method, sort_order) VALUES
-('Authentication', 'authentication', 'getting-started', 'Learn how to authenticate with the BuildDesk API', '# Authentication\n\nAll API requests require authentication using an API key.', '/api/v1/auth', 'POST', 1),
+('Authentication', 'authentication', 'getting-started', 'Learn how to authenticate with the Brikly API', '# Authentication\n\nAll API requests require authentication using an API key.', '/api/v1/auth', 'POST', 1),
 ('Projects API', 'projects-list', 'projects', 'List all projects in your account', '# List Projects\n\nRetrieve a list of all projects.', '/api/v1/projects', 'GET', 10),
 ('Create Project', 'projects-create', 'projects', 'Create a new project', '# Create Project\n\nCreate a new project in your account.', '/api/v1/projects', 'POST', 11),
 ('Invoices API', 'invoices-list', 'invoices', 'List all invoices', '# List Invoices\n\nRetrieve a list of all invoices.', '/api/v1/invoices', 'GET', 20),

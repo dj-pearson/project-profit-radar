@@ -1,5 +1,6 @@
 import { useEffect, useCallback } from 'react';
 import { addSecurityHeaders, generateCSRFToken, setCSRFToken } from '@/utils/security';
+import { logger } from '@/lib/logger';
 
 interface SecurityConfig {
   enableCSP: boolean;
@@ -33,7 +34,7 @@ export const useSecurityEnhancement = (config: SecurityConfig = {
   useEffect(() => {
     if (config.logViolations) {
       const handleCSPViolation = (event: SecurityPolicyViolationEvent) => {
-        console.warn('CSP Violation:', {
+        logger.warn('CSP Violation:', {
           blockedURI: event.blockedURI,
           violatedDirective: event.violatedDirective,
           originalPolicy: event.originalPolicy,
@@ -124,7 +125,7 @@ export const useSecurityEnhancement = (config: SecurityConfig = {
     const expectedSessionId = localStorage.getItem('expected_session_id');
     
     if (sessionId && expectedSessionId && sessionId !== expectedSessionId) {
-      console.warn('Potential session fixation detected');
+      logger.warn('Potential session fixation detected');
       // Force re-authentication
       sessionStorage.clear();
       window.location.href = '/login';

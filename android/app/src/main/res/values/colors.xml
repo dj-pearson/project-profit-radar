@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Brikly Brand Colors -->
+    <color name="colorPrimary">#4A90E2</color>
+    <color name="colorPrimaryDark">#2E6BC6</color>
+    <color name="colorAccent">#7BB3F0</color>
+
+    <!-- Splash Screen -->
+    <color name="splashBackground">#FFFFFF</color>
+    <color name="splashText">#1A1A2E</color>
+
+    <!-- Status Bar & Navigation Bar -->
+    <color name="statusBarColor">#2E6BC6</color>
+    <color name="navigationBarColor">#FFFFFF</color>
+
+    <!-- Surface Colors -->
+    <color name="surface">#FFFFFF</color>
+    <color name="surfaceVariant">#F5F7FA</color>
+    <color name="onSurface">#1A1A2E</color>
+    <color name="onSurfaceVariant">#64748B</color>
+
+    <!-- Error / Success -->
+    <color name="error">#DC2626</color>
+    <color name="success">#16A34A</color>
+    <color name="warning">#F59E0B</color>
+</resources>

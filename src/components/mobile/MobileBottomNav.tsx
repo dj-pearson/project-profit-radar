@@ -13,7 +13,7 @@ interface MobileBottomNavProps {
 }
 
 /**
- * Mobile bottom navigation with thumb-friendly positioning
+ * Mobile bottom navigation with thumb-friendly positioning and safe area support
  */
 export function MobileBottomNav({ items }: MobileBottomNavProps) {
   const location = useLocation();
@@ -22,13 +22,21 @@ export function MobileBottomNav({ items }: MobileBottomNavProps) {
     <nav
       className={cn(
         'fixed bottom-0 left-0 right-0',
-        'bg-background border-t',
-        'md:hidden', // Only show on mobile
+        'glass-chrome border-t border-white/10 dark:border-white/5',
+        'md:hidden',
         'z-50',
-        'safe-area-inset-bottom'
+        'safe-area-x'
       )}
+      style={{
+        paddingBottom: 'env(safe-area-inset-bottom, 0px)',
+      }}
+      aria-label="Primary"
     >
-      <div className="flex items-center justify-around h-16">
+      <div
+        className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/40 dark:via-white/10 to-transparent"
+        aria-hidden="true"
+      />
+      <div className="flex items-center justify-around h-16 px-1">
         {items.map((item) => (
           <NavButton
             key={item.href}
@@ -55,26 +63,46 @@ function NavButton({ icon: Icon, label, href, active }: NavButtonProps) {
     <Link
       to={href}
       className={cn(
-        'flex flex-col items-center justify-center',
-        'min-w-[64px] min-h-[44px]',
-        'space-y-1',
-        'transition-colors',
-        active ? 'text-primary' : 'text-muted-foreground',
-        'active:scale-95 transition-transform'
+        'relative flex flex-col items-center justify-center',
+        'min-w-[64px] min-h-[48px] py-2 px-3 space-y-1',
+        'transition-all duration-[180ms] ease-ios',
+        'touch-manipulation tap-highlight-transparent',
+        active ? 'text-primary' : 'text-muted-foreground hover:text-foreground',
+        'active:scale-95',
+        'rounded-2xl'
       )}
+      aria-current={active ? 'page' : undefined}
     >
-      <Icon className="h-5 w-5" />
-      <span className="text-xs font-medium">{label}</span>
+      {active && (
+        <span
+          aria-hidden="true"
+          className="absolute inset-x-2 inset-y-1 rounded-2xl bg-gradient-to-b from-primary/18 to-primary/8 ring-1 ring-inset ring-primary/20"
+        />
+      )}
+      <Icon className={cn('h-5 w-5 relative z-[1]', active && 'drop-shadow-sm')} />
+      <span
+        className={cn(
+          'text-xs font-medium leading-tight relative z-[1]',
+          active && 'font-semibold'
+        )}
+      >
+        {label}
+      </span>
     </Link>
   );
 }
 
 /**
- * Wrapper to add padding for mobile bottom navigation
+ * Wrapper to add padding for mobile bottom navigation with safe area support
  */
 export function MobileBottomNavWrapper({ children }: { children: React.ReactNode }) {
   return (
-    <div className="pb-16 md:pb-0">
+    <div
+      className="pb-20 md:pb-0"
+      style={{
+        paddingBottom: 'calc(64px + env(safe-area-inset-bottom, 0px))',
+      }}
+    >
       {children}
     </div>
   );

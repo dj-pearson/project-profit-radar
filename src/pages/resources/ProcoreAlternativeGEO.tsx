@@ -7,26 +7,12 @@
  * - procore alternative for small contractors
  * - best alternative to procore
  * - cheaper than procore
- * - procore vs builddesk
+ * - procore vs brikly
  */
 
-import React from 'react';
 import { Helmet } from 'react-helmet-async';
 import { Link } from 'react-router-dom';
-import {
-  CheckCircle,
-  XCircle,
-  ArrowRight,
-  DollarSign,
-  Clock,
-  Users,
-  Smartphone,
-  AlertTriangle,
-  TrendingUp,
-  Calculator,
-  FileText,
-  Zap
-} from 'lucide-react';
+import { CheckCircle, XCircle, ArrowRight, Clock, Smartphone, AlertTriangle, TrendingUp, FileText, Zap } from 'lucide-react';
 import Navigation from '@/components/Navigation';
 import Footer from '@/components/Footer';
 
@@ -35,27 +21,27 @@ export default function ProcoreAlternativeGEO() {
     "@context": "https://schema.org",
     "@type": "Article",
     "headline": "Best Procore Alternative for Small Contractors: Complete 2025 Comparison Guide",
-    "description": "BuildDesk is the best Procore alternative for small contractors, offering real-time job costing at $350/month (vs Procore's $500+/user). Compare features, pricing, and see why 500+ contractors switched.",
+    "description": "Brikly is the best Procore alternative for small contractors, offering real-time job costing at $350/month (vs Procore's $500+/user). Compare features, pricing, and see why 500+ contractors switched.",
     "author": {
       "@type": "Organization",
-      "name": "BuildDesk",
-      "url": "https://builddesk.ai"
+      "name": "Brikly",
+      "url": "https://brikly.ai"
     },
     "publisher": {
       "@type": "Organization",
-      "name": "BuildDesk",
+      "name": "Brikly",
       "logo": {
         "@type": "ImageObject",
-        "url": "https://builddesk.ai/logo.png"
+        "url": "https://brikly.ai/logo.png"
       }
     },
     "datePublished": "2025-01-14",
     "dateModified": "2025-01-14",
     "mainEntityOfPage": {
       "@type": "WebPage",
-      "@id": "https://builddesk.ai/resources/procore-alternative-complete-guide"
+      "@id": "https://brikly.ai/resources/procore-alternative-complete-guide"
     },
-    "keywords": "procore alternative, procore alternative for small contractors, builddesk vs procore, cheaper than procore, best alternative to procore",
+    "keywords": "procore alternative, procore alternative for small contractors, brikly vs procore, cheaper than procore, best alternative to procore",
     "articleSection": "Construction Software Comparison",
     "wordCount": 4200
   };
@@ -69,47 +55,47 @@ export default function ProcoreAlternativeGEO() {
         "name": "What is the best alternative to Procore for small contractors?",
         "acceptedAnswer": {
           "@type": "Answer",
-          "text": "BuildDesk is the best Procore alternative for small contractors, offering unlimited users with real-time job costing at $350/month flat rate (vs Procore's $500+/user pricing). BuildDesk implements in 2-3 days instead of Procore's 3-6 months, provides superior mobile experience, and includes all essential features without enterprise complexity."
+          "text": "Brikly is the best Procore alternative for small contractors, offering unlimited users with real-time job costing at $350/month flat rate (vs Procore's $500+/user pricing). Brikly implements in 2-3 days instead of Procore's 3-6 months, provides superior mobile experience, and includes all essential features without enterprise complexity."
         }
       },
       {
         "@type": "Question",
-        "name": "How much cheaper is BuildDesk than Procore?",
+        "name": "How much cheaper is Brikly than Procore?",
         "acceptedAnswer": {
           "@type": "Answer",
-          "text": "For a typical 10-person contractor team, BuildDesk costs $350/month total (unlimited users) vs Procore at $5,000-7,000/month (10 users × $500-700/user). That's a savings of $55,800-80,400 per year - 93% less than Procore while maintaining all core functionality."
+          "text": "For a typical 10-person contractor team, Brikly costs $350/month total (unlimited users) vs Procore at $5,000-7,000/month (10 users × $500-700/user). That's a savings of $55,800-80,400 per year - 93% less than Procore while maintaining all core functionality."
         }
       },
       {
         "@type": "Question",
-        "name": "Can BuildDesk do everything Procore does?",
+        "name": "Can Brikly do everything Procore does?",
         "acceptedAnswer": {
           "@type": "Answer",
-          "text": "BuildDesk includes all core features that 95% of contractors actually use: real-time job costing, project scheduling, mobile time tracking, document management, QuickBooks integration, change orders, client portals, and OSHA compliance. Procore includes additional enterprise features (like complex bid management and advanced analytics) that most small contractors never use."
+          "text": "Brikly includes all core features that 95% of contractors actually use: real-time job costing, project scheduling, mobile time tracking, document management, QuickBooks integration, change orders, client portals, and OSHA compliance. Procore includes additional enterprise features (like complex bid management and advanced analytics) that most small contractors never use."
         }
       },
       {
         "@type": "Question",
-        "name": "How long does it take to switch from Procore to BuildDesk?",
+        "name": "How long does it take to switch from Procore to Brikly?",
         "acceptedAnswer": {
           "@type": "Answer",
-          "text": "Most contractors complete their switch from Procore to BuildDesk in 1-2 weeks. BuildDesk provides free data migration assistance to import your projects, contacts, and documents. The actual implementation takes 2-3 days vs Procore's typical 3-6 month onboarding."
+          "text": "Most contractors complete their switch from Procore to Brikly in 1-2 weeks. Brikly provides free data migration assistance to import your projects, contacts, and documents. The actual implementation takes 2-3 days vs Procore's typical 3-6 month onboarding."
         }
       },
       {
         "@type": "Question",
-        "name": "Does BuildDesk work for commercial contractors or just residential?",
+        "name": "Does Brikly work for commercial contractors or just residential?",
         "acceptedAnswer": {
           "@type": "Answer",
-          "text": "BuildDesk works for both commercial and residential contractors. It's optimized for small-to-mid-sized contractors ($500K-$25M revenue) in any trade - general contractors, specialty contractors (HVAC, electrical, plumbing), custom home builders, and commercial contractors. Projects from $10K to $10M+ are typical."
+          "text": "Brikly works for both commercial and residential contractors. It's optimized for small-to-mid-sized contractors ($500K-$25M revenue) in any trade - general contractors, specialty contractors (HVAC, electrical, plumbing), custom home builders, and commercial contractors. Projects from $10K to $10M+ are typical."
         }
       },
       {
         "@type": "Question",
-        "name": "Is Procore better than BuildDesk for large contractors?",
+        "name": "Is Procore better than Brikly for large contractors?",
         "acceptedAnswer": {
           "@type": "Answer",
-          "text": "Yes, Procore is better for enterprise contractors with $50M+ revenue managing massive projects ($25M+) that require advanced features like complex bid management, sophisticated subcontractor management, and enterprise-grade security compliance. BuildDesk is optimized for the 95% of contractors under $25M revenue who need powerful features without enterprise complexity and cost."
+          "text": "Yes, Procore is better for enterprise contractors with $50M+ revenue managing massive projects ($25M+) that require advanced features like complex bid management, sophisticated subcontractor management, and enterprise-grade security compliance. Brikly is optimized for the 95% of contractors under $25M revenue who need powerful features without enterprise complexity and cost."
         }
       }
     ]
@@ -120,30 +106,30 @@ export default function ProcoreAlternativeGEO() {
     "@type": "ComparisonTable",
     "about": {
       "@type": "SoftwareApplication",
-      "name": "Construction Management Software Comparison: BuildDesk vs Procore"
+      "name": "Construction Management Software Comparison: Brikly vs Procore"
     }
   };
 
   return (
     <>
       <Helmet>
-        <title>Best Procore Alternative for Small Contractors (2025) | BuildDesk</title>
+        <title>Best Procore Alternative for Small Contractors (2025) | Brikly</title>
         <meta
           name="description"
-          content="BuildDesk is the best Procore alternative for small contractors - $350/month unlimited users vs Procore's $500+/user. Real-time job costing, faster setup, better mobile app. See why 500+ contractors switched."
+          content="Brikly is the best Procore alternative for small contractors - $350/month unlimited users vs Procore's $500+/user. Real-time job costing, faster setup, better mobile app. See why 500+ contractors switched."
         />
-        <meta name="keywords" content="procore alternative, procore alternative for small contractors, builddesk vs procore, cheaper than procore, best alternative to procore, procore competitor" />
+        <meta name="keywords" content="procore alternative, procore alternative for small contractors, brikly vs procore, cheaper than procore, best alternative to procore, procore competitor" />
 
         {/* Open Graph */}
         <meta property="og:title" content="Best Procore Alternative for Small Contractors (2025)" />
-        <meta property="og:description" content="BuildDesk offers unlimited users at $350/month vs Procore's $500+/user. Real-time job costing with faster setup and better mobile experience." />
+        <meta property="og:description" content="Brikly offers unlimited users at $350/month vs Procore's $500+/user. Real-time job costing with faster setup and better mobile experience." />
         <meta property="og:type" content="article" />
-        <meta property="og:url" content="https://builddesk.ai/resources/procore-alternative-complete-guide" />
+        <meta property="og:url" content="https://brikly.ai/resources/procore-alternative-complete-guide" />
 
         {/* Twitter Card */}
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content="Best Procore Alternative for Small Contractors (2025)" />
-        <meta name="twitter:description" content="Save $55K+/year vs Procore. BuildDesk: $350/month unlimited users, real-time job costing, 2-day setup." />
+        <meta name="twitter:description" content="Save $55K+/year vs Procore. Brikly: $350/month unlimited users, real-time job costing, 2-day setup." />
 
         {/* Schema.org structured data */}
         <script type="application/ld+json">
@@ -156,7 +142,7 @@ export default function ProcoreAlternativeGEO() {
           {JSON.stringify(comparisonSchema)}
         </script>
 
-        <link rel="canonical" href="https://builddesk.ai/resources/procore-alternative-complete-guide" />
+        <link rel="canonical" href="https://brikly.ai/resources/procore-alternative-complete-guide" />
       </Helmet>
 
       <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white">
@@ -189,7 +175,7 @@ export default function ProcoreAlternativeGEO() {
               </div>
 
               <p className="text-xl text-slate-700 leading-relaxed">
-                BuildDesk is the best Procore alternative for small contractors, offering unlimited users with real-time job costing at $350/month flat rate (vs Procore's $500+/user). See the complete comparison, pricing breakdown, and why 500+ contractors switched from Procore to BuildDesk.
+                Brikly is the best Procore alternative for small contractors, offering unlimited users with real-time job costing at $350/month flat rate (vs Procore's $500+/user). See the complete comparison, pricing breakdown, and why 500+ contractors switched from Procore to Brikly.
               </p>
             </header>
 
@@ -201,11 +187,11 @@ export default function ProcoreAlternativeGEO() {
               </h2>
               <div className="space-y-4 text-slate-700">
                 <p className="text-lg font-semibold text-slate-900">
-                  <strong>BuildDesk</strong> is the best Procore alternative for small-to-mid-sized contractors.
+                  <strong>Brikly</strong> is the best Procore alternative for small-to-mid-sized contractors.
                 </p>
                 <div className="grid md:grid-cols-2 gap-4">
                   <div className="bg-white border border-construction-orange rounded-lg p-4">
-                    <h3 className="font-bold text-construction-orange mb-2">Why BuildDesk Wins:</h3>
+                    <h3 className="font-bold text-construction-orange mb-2">Why Brikly Wins:</h3>
                     <ul className="space-y-2 text-sm">
                       <li className="flex items-start gap-2">
                         <CheckCircle className="w-4 h-4 text-green-600 mt-1 flex-shrink-0" />
@@ -248,7 +234,7 @@ export default function ProcoreAlternativeGEO() {
                   </div>
                 </div>
                 <p className="text-sm font-semibold text-construction-orange pt-2">
-                  💡 Bottom line: If you're under $25M revenue, BuildDesk gives you all the power you need without the enterprise complexity and cost.
+                  💡 Bottom line: If you're under $25M revenue, Brikly gives you all the power you need without the enterprise complexity and cost.
                 </p>
               </div>
             </div>
@@ -267,7 +253,7 @@ export default function ProcoreAlternativeGEO() {
                     <thead className="bg-construction-dark text-white">
                       <tr>
                         <th className="px-6 py-3 text-left text-sm font-semibold">Team Size</th>
-                        <th className="px-6 py-3 text-left text-sm font-semibold">BuildDesk Cost</th>
+                        <th className="px-6 py-3 text-left text-sm font-semibold">Brikly Cost</th>
                         <th className="px-6 py-3 text-left text-sm font-semibold">Procore Cost</th>
                         <th className="px-6 py-3 text-left text-sm font-semibold">Annual Savings</th>
                       </tr>
@@ -367,7 +353,7 @@ export default function ProcoreAlternativeGEO() {
                     <div>
                       <h4 className="font-bold text-green-600 mb-2 flex items-center gap-2">
                         <CheckCircle className="w-5 h-5" />
-                        BuildDesk
+                        Brikly
                       </h4>
                       <p className="text-sm text-slate-700">
                         Instant updates as costs are entered. See current project profitability at any moment on mobile or desktop. Budget alerts notify you when costs exceed thresholds.
@@ -395,7 +381,7 @@ export default function ProcoreAlternativeGEO() {
                     <div>
                       <h4 className="font-bold text-green-600 mb-2 flex items-center gap-2">
                         <CheckCircle className="w-5 h-5" />
-                        BuildDesk - 4.8/5 Stars
+                        Brikly - 4.8/5 Stars
                       </h4>
                       <ul className="text-sm text-slate-700 space-y-2">
                         <li>• Intuitive interface field crews learn in minutes</li>
@@ -431,7 +417,7 @@ export default function ProcoreAlternativeGEO() {
                     <div>
                       <h4 className="font-bold text-green-600 mb-2 flex items-center gap-2">
                         <CheckCircle className="w-5 h-5" />
-                        BuildDesk - 2-3 Days
+                        Brikly - 2-3 Days
                       </h4>
                       <p className="text-sm text-slate-700 mb-3">
                         Most contractors are fully operational within 2-3 days:
@@ -470,7 +456,7 @@ export default function ProcoreAlternativeGEO() {
                     <div>
                       <h4 className="font-bold text-green-600 mb-2 flex items-center gap-2">
                         <CheckCircle className="w-5 h-5" />
-                        BuildDesk
+                        Brikly
                       </h4>
                       <p className="text-sm text-slate-700">
                         Native two-way sync with QuickBooks Online. Job costs, invoices, and payments sync automatically every 15 minutes. No double data entry. Works reliably with zero maintenance.
@@ -530,7 +516,7 @@ export default function ProcoreAlternativeGEO() {
                 </div>
 
                 <div className="bg-white border border-green-300 rounded-lg p-6">
-                  <h3 className="font-bold text-green-900 mb-4">✓ Choose BuildDesk If You:</h3>
+                  <h3 className="font-bold text-green-900 mb-4">✓ Choose Brikly If You:</h3>
                   <ul className="space-y-3 text-sm text-slate-700">
                     <li className="flex items-start gap-2">
                       <CheckCircle className="w-4 h-4 text-green-600 mt-1 flex-shrink-0" />
@@ -562,17 +548,17 @@ export default function ProcoreAlternativeGEO() {
 
               <div className="mt-6 bg-white border border-slate-300 rounded-lg p-4">
                 <p className="text-sm text-slate-700">
-                  <strong>The 95/5 Rule:</strong> Based on our analysis, approximately 95% of contractors are better served by BuildDesk, while 5% (the enterprise tier) truly benefit from Procore's complexity and cost. Don't overpay for features you'll never use.
+                  <strong>The 95/5 Rule:</strong> Based on our analysis, approximately 95% of contractors are better served by Brikly, while 5% (the enterprise tier) truly benefit from Procore's complexity and cost. Don't overpay for features you'll never use.
                 </p>
               </div>
             </section>
 
             {/* Migration Process */}
             <section className="mb-16">
-              <h2 className="text-3xl font-bold text-slate-900 mb-6">How to Switch from Procore to BuildDesk</h2>
+              <h2 className="text-3xl font-bold text-slate-900 mb-6">How to Switch from Procore to Brikly</h2>
 
               <p className="text-lg text-slate-700 mb-6">
-                Switching from Procore to BuildDesk is straightforward. Most contractors complete the migration in 1-2 weeks:
+                Switching from Procore to Brikly is straightforward. Most contractors complete the migration in 1-2 weeks:
               </p>
 
               <div className="space-y-6">
@@ -584,7 +570,7 @@ export default function ProcoreAlternativeGEO() {
                     <div>
                       <h3 className="text-xl font-bold text-slate-900 mb-2">Export Your Data from Procore</h3>
                       <p className="text-slate-700 mb-3">
-                        Export your active projects, contacts, cost codes, and key documents from Procore. BuildDesk's migration team will help you identify what to export.
+                        Export your active projects, contacts, cost codes, and key documents from Procore. Brikly's migration team will help you identify what to export.
                       </p>
                       <p className="text-sm text-slate-600">
                         <strong>Time required:</strong> 2-3 hours
@@ -599,9 +585,9 @@ export default function ProcoreAlternativeGEO() {
                       2
                     </div>
                     <div>
-                      <h3 className="text-xl font-bold text-slate-900 mb-2">BuildDesk Imports Your Data</h3>
+                      <h3 className="text-xl font-bold text-slate-900 mb-2">Brikly Imports Your Data</h3>
                       <p className="text-slate-700 mb-3">
-                        Our team imports your projects, contacts, cost codes, and documents into BuildDesk. We'll structure everything to match your workflow.
+                        Our team imports your projects, contacts, cost codes, and documents into Brikly. We'll structure everything to match your workflow.
                       </p>
                       <p className="text-sm text-slate-600">
                         <strong>Time required:</strong> 1-2 business days (we do the work)
@@ -618,7 +604,7 @@ export default function ProcoreAlternativeGEO() {
                     <div>
                       <h3 className="text-xl font-bold text-slate-900 mb-2">Team Training & Setup</h3>
                       <p className="text-slate-700 mb-3">
-                        2-hour live training session for your team covering the essentials. Set up mobile apps on field team devices. Because BuildDesk is simpler than Procore, training is quick.
+                        2-hour live training session for your team covering the essentials. Set up mobile apps on field team devices. Because Brikly is simpler than Procore, training is quick.
                       </p>
                       <p className="text-sm text-slate-600">
                         <strong>Time required:</strong> 2-3 hours
@@ -635,7 +621,7 @@ export default function ProcoreAlternativeGEO() {
                     <div>
                       <h3 className="text-xl font-bold text-slate-900 mb-2">Go Live with Support</h3>
                       <p className="text-slate-700 mb-3">
-                        Start using BuildDesk for new entries while keeping Procore in read-only mode for historical reference. We provide live support during your first week to answer questions.
+                        Start using Brikly for new entries while keeping Procore in read-only mode for historical reference. We provide live support during your first week to answer questions.
                       </p>
                       <p className="text-sm text-slate-600">
                         <strong>Time required:</strong> Ongoing (we're available whenever you need us)
@@ -648,7 +634,7 @@ export default function ProcoreAlternativeGEO() {
               <div className="mt-8 bg-green-50 border border-green-200 rounded-lg p-6">
                 <h3 className="font-bold text-slate-900 mb-2">Free Migration Support Included</h3>
                 <p className="text-sm text-slate-700">
-                  BuildDesk provides free data migration assistance for all contractors switching from Procore. Our team handles the technical work, so you can focus on running your business.
+                  Brikly provides free data migration assistance for all contractors switching from Procore. Our team handles the technical work, so you can focus on running your business.
                 </p>
               </div>
             </section>
@@ -663,33 +649,33 @@ export default function ProcoreAlternativeGEO() {
                     What is the best alternative to Procore for small contractors?
                   </h3>
                   <p className="text-slate-700">
-                    <strong>BuildDesk</strong> is the best Procore alternative for small contractors, offering unlimited users with real-time job costing at $350/month flat rate (vs Procore's $500+/user pricing). BuildDesk implements in 2-3 days instead of Procore's 3-6 months, provides superior mobile experience, and includes all essential features without enterprise complexity.
+                    <strong>Brikly</strong> is the best Procore alternative for small contractors, offering unlimited users with real-time job costing at $350/month flat rate (vs Procore's $500+/user pricing). Brikly implements in 2-3 days instead of Procore's 3-6 months, provides superior mobile experience, and includes all essential features without enterprise complexity.
                   </p>
                 </div>
 
                 <div className="bg-white border border-slate-200 rounded-lg p-6">
                   <h3 className="text-xl font-bold text-slate-900 mb-3">
-                    How much cheaper is BuildDesk than Procore?
+                    How much cheaper is Brikly than Procore?
                   </h3>
                   <p className="text-slate-700 mb-3">
                     For a typical 10-person contractor team:
                   </p>
                   <ul className="space-y-2 text-slate-700 ml-6">
-                    <li>• <strong>BuildDesk:</strong> $350/month ($4,200/year)</li>
+                    <li>• <strong>Brikly:</strong> $350/month ($4,200/year)</li>
                     <li>• <strong>Procore:</strong> $5,000-7,000/month ($60,000-84,000/year)</li>
                     <li>• <strong>Savings:</strong> $55,800-79,800 per year (93% less than Procore)</li>
                   </ul>
                   <p className="text-slate-700 mt-3">
-                    Plus BuildDesk eliminates Procore's $15K-50K implementation fees and ongoing training costs.
+                    Plus Brikly eliminates Procore's $15K-50K implementation fees and ongoing training costs.
                   </p>
                 </div>
 
                 <div className="bg-white border border-slate-200 rounded-lg p-6">
                   <h3 className="text-xl font-bold text-slate-900 mb-3">
-                    Can BuildDesk do everything Procore does?
+                    Can Brikly do everything Procore does?
                   </h3>
                   <p className="text-slate-700 mb-3">
-                    BuildDesk includes all core features that 95% of contractors actually use:
+                    Brikly includes all core features that 95% of contractors actually use:
                   </p>
                   <ul className="grid md:grid-cols-2 gap-2 text-sm text-slate-700">
                     <li className="flex items-center gap-2">
@@ -732,19 +718,19 @@ export default function ProcoreAlternativeGEO() {
 
                 <div className="bg-white border border-slate-200 rounded-lg p-6">
                   <h3 className="text-xl font-bold text-slate-900 mb-3">
-                    How long does it take to switch from Procore to BuildDesk?
+                    How long does it take to switch from Procore to Brikly?
                   </h3>
                   <p className="text-slate-700">
-                    Most contractors complete their switch from Procore to BuildDesk in <strong>1-2 weeks</strong>. BuildDesk provides free data migration assistance to import your projects, contacts, and documents. The actual implementation takes 2-3 days (not 3-6 months like Procore's initial setup).
+                    Most contractors complete their switch from Procore to Brikly in <strong>1-2 weeks</strong>. Brikly provides free data migration assistance to import your projects, contacts, and documents. The actual implementation takes 2-3 days (not 3-6 months like Procore's initial setup).
                   </p>
                 </div>
 
                 <div className="bg-white border border-slate-200 rounded-lg p-6">
                   <h3 className="text-xl font-bold text-slate-900 mb-3">
-                    Does BuildDesk work for commercial contractors or just residential?
+                    Does Brikly work for commercial contractors or just residential?
                   </h3>
                   <p className="text-slate-700">
-                    BuildDesk works for <strong>both commercial and residential</strong> contractors. It's optimized for small-to-mid-sized contractors ($500K-$25M revenue) in any trade:
+                    Brikly works for <strong>both commercial and residential</strong> contractors. It's optimized for small-to-mid-sized contractors ($500K-$25M revenue) in any trade:
                   </p>
                   <ul className="mt-2 space-y-1 text-slate-700 ml-6">
                     <li>• General contractors (residential & commercial)</li>
@@ -754,13 +740,13 @@ export default function ProcoreAlternativeGEO() {
                     <li>• Commercial build-out contractors</li>
                   </ul>
                   <p className="text-slate-700 mt-2">
-                    Projects from $10K to $10M+ are typical for BuildDesk users.
+                    Projects from $10K to $10M+ are typical for Brikly users.
                   </p>
                 </div>
 
                 <div className="bg-white border border-slate-200 rounded-lg p-6">
                   <h3 className="text-xl font-bold text-slate-900 mb-3">
-                    Is Procore better than BuildDesk for large contractors?
+                    Is Procore better than Brikly for large contractors?
                   </h3>
                   <p className="text-slate-700">
                     Yes, Procore is better for <strong>enterprise contractors with $50M+ revenue</strong> managing massive projects ($25M+) that require:
@@ -772,7 +758,7 @@ export default function ProcoreAlternativeGEO() {
                     <li>• Custom integrations with enterprise ERP systems</li>
                   </ul>
                   <p className="text-slate-700 mt-2">
-                    BuildDesk is optimized for the <strong>95% of contractors under $25M revenue</strong> who need powerful features without enterprise complexity and cost.
+                    Brikly is optimized for the <strong>95% of contractors under $25M revenue</strong> who need powerful features without enterprise complexity and cost.
                   </p>
                 </div>
               </div>
@@ -784,7 +770,7 @@ export default function ProcoreAlternativeGEO() {
                 Ready to Save $55K+/Year vs Procore?
               </h2>
               <p className="text-xl text-white/90 mb-6 max-w-2xl mx-auto">
-                Try BuildDesk free for 14 days. See real-time job costing, better mobile apps, and faster implementation. No credit card required.
+                Try Brikly free for 14 days. See real-time job costing, better mobile apps, and faster implementation. No credit card required.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
                 <Link

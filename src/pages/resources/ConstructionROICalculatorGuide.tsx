@@ -1,19 +1,6 @@
-import React from 'react';
 import { Helmet } from 'react-helmet-async';
 import { Link } from 'react-router-dom';
-import {
-  Calculator,
-  TrendingUp,
-  AlertTriangle,
-  CheckCircle2,
-  DollarSign,
-  Target,
-  Clock,
-  ArrowRight,
-  XCircle,
-  BarChart3,
-  Zap
-} from 'lucide-react';
+import { Calculator, TrendingUp, AlertTriangle, CheckCircle2, DollarSign, Target, ArrowRight, XCircle, BarChart3, Zap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 
@@ -25,21 +12,21 @@ const ConstructionROICalculatorGuide = () => {
     "description": "Learn how to calculate ROI for construction management software, equipment, and tools. Includes step-by-step formulas, real examples, and free ROI calculator for contractors.",
     "author": {
       "@type": "Organization",
-      "name": "BuildDesk"
+      "name": "Brikly"
     },
     "publisher": {
       "@type": "Organization",
-      "name": "BuildDesk",
+      "name": "Brikly",
       "logo": {
         "@type": "ImageObject",
-        "url": "https://builddesk.com/logo.png"
+        "url": "https://brikly.net/logo.png"
       }
     },
     "datePublished": "2025-01-14",
     "dateModified": "2025-01-14",
     "mainEntityOfPage": {
       "@type": "WebPage",
-      "@id": "https://builddesk.com/resources/construction-roi-calculator-guide"
+      "@id": "https://brikly.net/resources/construction-roi-calculator-guide"
     },
     "keywords": "construction ROI calculator, calculate construction software ROI, construction management software ROI, equipment ROI calculator, contractor ROI tool"
   };
@@ -133,16 +120,16 @@ const ConstructionROICalculatorGuide = () => {
   return (
     <>
       <Helmet>
-        <title>Construction ROI Calculator: Calculate Software & Tool ROI | BuildDesk</title>
+        <title>Construction ROI Calculator: Calculate Software & Tool ROI | Brikly</title>
         <meta
           name="description"
           content="Learn how to calculate ROI for construction management software, equipment, and tools. Includes step-by-step formulas, real examples, and free ROI calculator for contractors."
         />
         <meta
           name="keywords"
-          content="construction ROI calculator, calculate construction software ROI, construction management software ROI, equipment ROI calculator, contractor ROI tool, BuildDesk ROI"
+          content="construction ROI calculator, calculate construction software ROI, construction management software ROI, equipment ROI calculator, contractor ROI tool, Brikly ROI"
         />
-        <link rel="canonical" href="https://builddesk.com/resources/construction-roi-calculator-guide" />
+        <link rel="canonical" href="https://brikly.net/resources/construction-roi-calculator-guide" />
         <script type="application/ld+json">
           {JSON.stringify(articleSchema)}
         </script>
@@ -227,7 +214,7 @@ const ConstructionROICalculatorGuide = () => {
               Free Construction ROI Calculator
             </h2>
             <p className="text-lg mb-6 opacity-90 max-w-2xl mx-auto">
-              Skip the spreadsheet. Use our free calculator to instantly see your ROI from BuildDesk or any construction software/tool.
+              Skip the spreadsheet. Use our free calculator to instantly see your ROI from Brikly or any construction software/tool.
             </p>
             <Link to="/profitability-calculator">
               <Button size="lg" className="bg-white text-construction-orange hover:bg-gray-100">
@@ -713,7 +700,7 @@ const ConstructionROICalculatorGuide = () => {
               Calculate Your Exact ROI in 2 Minutes
             </h2>
             <p className="text-xl text-gray-300 mb-8 max-w-2xl mx-auto">
-              Use our free ROI calculator to see exactly how much BuildDesk (or any construction software) will save you annually.
+              Use our free ROI calculator to see exactly how much Brikly (or any construction software) will save you annually.
             </p>
             <Link to="/profitability-calculator">
               <Button size="lg" className="bg-construction-orange hover:bg-construction-orange/90 text-white mb-4">

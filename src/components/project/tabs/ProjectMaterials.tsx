@@ -10,19 +10,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
-import { 
-  Package, 
-  PlusCircle,
-  ExternalLink,
-  Edit,
-  Trash2,
-  AlertTriangle,
-  DollarSign,
-  TrendingUp,
-  TrendingDown,
-  Calendar,
-  User
-} from 'lucide-react';
+import { Package, PlusCircle, ExternalLink, Trash2, DollarSign, TrendingUp, Calendar, User } from 'lucide-react';
 
 interface Material {
   id: string;

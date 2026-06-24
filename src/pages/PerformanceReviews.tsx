@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 const PerformanceReviews: React.FC = () => {
   return (
-    <div className="container mx-auto py-6">
+    <main className="container mx-auto py-6" aria-label="Performance reviews settings">
       <Card>
         <CardHeader>
           <CardTitle>Performance Reviews</CardTitle>
@@ -12,7 +12,7 @@ const PerformanceReviews: React.FC = () => {
           <p className="text-muted-foreground">Performance reviews coming soon...</p>
         </CardContent>
       </Card>
-    </div>
+    </main>
   );
 };
 

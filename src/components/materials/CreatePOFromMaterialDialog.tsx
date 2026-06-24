@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Dialog,
@@ -13,7 +13,6 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import {
   Select,
@@ -29,18 +28,7 @@ import {
   MaterialData,
   PurchaseOrderData
 } from '@/services/materialToPurchaseOrderService';
-import {
-  FileText,
-  Package,
-  DollarSign,
-  Calendar,
-  MapPin,
-  AlertTriangle,
-  CheckCircle,
-  ArrowRight,
-  Loader2,
-  Building2
-} from 'lucide-react';
+import { FileText, Calendar, MapPin, AlertTriangle, CheckCircle, ArrowRight, Loader2, Building2 } from 'lucide-react';
 
 interface CreatePOFromMaterialDialogProps {
   materialIds: string[];
@@ -55,7 +43,7 @@ export const CreatePOFromMaterialDialog = ({
   onClose,
   onSuccess
 }: CreatePOFromMaterialDialogProps) => {
-  const { userProfile, user, siteId } = useAuth();
+  const { userProfile, user } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -84,11 +72,9 @@ export const CreatePOFromMaterialDialog = ({
   }, [isOpen, materialIds]);
 
   const loadPreview = async () => {
-    if (!siteId) return;
-
     setLoading(true);
     try {
-      const preview = await materialToPOService.getPOPreview(siteId, materialIds);
+      const preview = await materialToPOService.getPOPreview(materialIds);
 
       setMaterials(preview.materials || []);
       setTotalCost(preview.totalCost);
@@ -115,11 +101,10 @@ export const CreatePOFromMaterialDialog = ({
   };
 
   const loadVendors = async () => {
-    if (!userProfile?.company_id || !siteId) return;
+    if (!userProfile?.company_id) return;
 
     try {
       const vendorList = await materialToPOService.getSuggestedVendors(
-        siteId,  // CRITICAL: Site isolation
         userProfile.company_id
       );
       setVendors(vendorList);
@@ -129,7 +114,7 @@ export const CreatePOFromMaterialDialog = ({
   };
 
   const handleCreate = async () => {
-    if (!userProfile?.company_id || !user?.id || !siteId || !canCreate) return;
+    if (!userProfile?.company_id || !user?.id || !canCreate) return;
 
     // Validate vendor
     if (!vendorId && !vendorName.trim()) {
@@ -153,7 +138,6 @@ export const CreatePOFromMaterialDialog = ({
       };
 
       const result = await materialToPOService.createPOFromMaterials(
-        siteId,  // CRITICAL: Site isolation
         materialIds,
         userProfile.company_id,
         user.id,

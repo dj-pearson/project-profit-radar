@@ -1,11 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
-import { ResponsiveContainer } from '@/components/layout/ResponsiveContainer';
-import { mobileGridClasses, mobileFilterClasses, mobileButtonClasses, mobileTextClasses, mobileCardClasses } from '@/utils/mobileHelpers';
+import { mobileFilterClasses, mobileButtonClasses, mobileTextClasses, mobileCardClasses } from '@/utils/mobileHelpers';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
@@ -31,6 +30,8 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Calendar } from "@/components/ui/calendar";
 import { Checkbox } from "@/components/ui/checkbox";
 import { format } from "date-fns";
+import { AccessiblePageWrapper } from "@/components/accessibility/AccessiblePageWrapper";
+import { AccessibleTable, type TableColumn } from "@/components/accessibility/AccessibleTable";
 
 interface Project {
   id: string;
@@ -159,12 +160,12 @@ const ChangeOrders = () => {
         setChangeOrders([]);
       }
 
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error loading data:', error);
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Failed to load change orders data"
+        description: error instanceof Error ? error.message : "Failed to load change orders data"
       });
     } finally {
       setLoadingOrders(false);
@@ -194,13 +195,6 @@ const ChangeOrders = () => {
     }
 
     try {
-        action: 'create',
-        ...newOrder,
-        amount: amount,
-        assigned_approvers: selectedApprovers,
-        approval_due_date: approvalDueDate ? format(approvalDueDate, 'yyyy-MM-dd') : null
-      });
-      
       const { data, error } = await supabase.functions.invoke('change-orders', {
         body: { 
           action: 'create',
@@ -233,12 +227,12 @@ const ChangeOrders = () => {
       setEditingOrder(null);
       
       loadData();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error creating change order:', error);
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Failed to create change order"
+        description: error instanceof Error ? error.message : "Failed to create change order"
       });
     }
   };
@@ -300,12 +294,12 @@ const ChangeOrders = () => {
       setEditingOrder(null);
       
       loadData();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error updating change order:', error);
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Failed to update change order"
+        description: error instanceof Error ? error.message : "Failed to update change order"
       });
     }
   };
@@ -329,12 +323,12 @@ const ChangeOrders = () => {
       });
       
       loadData();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error updating approval:', error);
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Failed to update approval status"
+        description: error instanceof Error ? error.message : "Failed to update approval status"
       });
     }
   };
@@ -377,25 +371,25 @@ const ChangeOrders = () => {
       setIsRejectionDialogOpen(false);
       setRejectionReason('');
       loadData();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error rejecting change order:', error);
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Failed to reject change order"
+        description: error instanceof Error ? error.message : "Failed to reject change order"
       });
     }
   };
 
   const getStatusBadge = (order: ChangeOrder) => {
     if (order.status === 'rejected') {
-      return <Badge variant="destructive">Rejected</Badge>;
+      return <Badge variant="destructive" aria-label="Status: Rejected">Rejected</Badge>;
     } else if (order.client_approved && order.internal_approved) {
-      return <Badge className="bg-green-500">Approved</Badge>;
+      return <Badge className="bg-green-500" aria-label="Status: Approved">Approved</Badge>;
     } else if (!order.client_approved && !order.internal_approved) {
-      return <Badge variant="secondary">Pending</Badge>;
+      return <Badge variant="secondary" aria-label="Status: Pending">Pending</Badge>;
     } else {
-      return <Badge variant="outline">Partial Approval</Badge>;
+      return <Badge variant="outline" aria-label="Status: Partial Approval">Partial Approval</Badge>;
     }
   };
 
@@ -403,21 +397,126 @@ const ChangeOrders = () => {
     ? changeOrders.filter(order => order.project_id === selectedProject)
     : changeOrders;
 
+  const changeOrderColumns: TableColumn<ChangeOrder>[] = [
+    {
+      key: 'change_order_number',
+      header: 'CO #',
+      sortable: true,
+      render: (value) => <Badge variant="outline" className="font-mono" aria-label={`Change order number ${value}`}>#{value}</Badge>,
+    },
+    {
+      key: 'title',
+      header: 'Title',
+      sortable: true,
+      render: (value) => <span className="font-medium">{value}</span>,
+    },
+    {
+      key: 'projects',
+      header: 'Project',
+      hideOnMobile: true,
+      render: (value) => (
+        <span className="text-sm text-muted-foreground">
+          {value?.name || '-'}
+        </span>
+      ),
+    },
+    {
+      key: 'amount',
+      header: 'Amount',
+      sortable: true,
+      align: 'right',
+      render: (value) => (
+        <span className="font-mono font-medium">
+          <DollarSign className="h-3 w-3 inline mr-0.5" aria-hidden="true" />
+          {Number(value).toLocaleString()}
+        </span>
+      ),
+    },
+    {
+      key: 'status',
+      header: 'Status',
+      render: (_value, order) => getStatusBadge(order),
+    },
+    {
+      key: 'internal_approved',
+      header: 'Internal',
+      hideOnMobile: true,
+      render: (value) => value ? (
+        <CheckCircle className="h-4 w-4 text-green-500" aria-label="Internally approved" />
+      ) : (
+        <Clock className="h-4 w-4 text-yellow-500" aria-label="Internal approval pending" />
+      ),
+    },
+    {
+      key: 'client_approved',
+      header: 'Client',
+      hideOnMobile: true,
+      render: (value) => value ? (
+        <CheckCircle className="h-4 w-4 text-green-500" aria-label="Client approved" />
+      ) : (
+        <Clock className="h-4 w-4 text-yellow-500" aria-label="Client approval pending" />
+      ),
+    },
+    {
+      key: 'actions',
+      header: 'Actions',
+      headerRender: () => <span className="sr-only">Actions</span>,
+      render: (_value, order) => (
+        <div className="flex items-center gap-1">
+          {!order.internal_approved && order.status !== 'rejected' && (
+            <>
+              <Button size="sm" variant="outline" onClick={() => handleApproval(order.id, 'internal', true)} aria-label={`Approve ${order.title} internally`}>
+                <CheckCircle className="h-3 w-3" aria-hidden="true" />
+              </Button>
+              <Button size="sm" variant="outline" onClick={() => handleRejectWithReason(order.id, 'internal')} aria-label={`Reject ${order.title} internally`}>
+                <XCircle className="h-3 w-3" aria-hidden="true" />
+              </Button>
+            </>
+          )}
+          <Button
+            variant="outline"
+            size="sm"
+            aria-label={`Edit change order ${order.title}`}
+            onClick={() => {
+              setNewOrder({
+                project_id: order.project_id,
+                title: order.title,
+                description: order.description || '',
+                amount: order.amount.toString(),
+                reason: order.reason || '',
+                approval_notes: order.approval_notes || ''
+              });
+              setSelectedApprovers(order.assigned_approvers || []);
+              setApprovalDueDate(order.approval_due_date ? new Date(order.approval_due_date) : undefined);
+              setEditingOrder(order);
+              setIsCreateDialogOpen(true);
+            }}
+          >
+            <Edit className="h-3 w-3" aria-hidden="true" />
+          </Button>
+        </div>
+      ),
+    },
+  ];
+
   if (loading || loadingOrders) {
     return (
-      <DashboardLayout title="Change Orders">
-        <div className="flex items-center justify-center h-96">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-construction-blue mx-auto mb-4"></div>
-            <p className="text-muted-foreground">Loading change orders...</p>
+      <AccessiblePageWrapper pageTitle="Change Orders">
+      <DashboardLayout title="Change Orders" hasAccessibleWrapper>
+        <div className="space-y-6" role="status" aria-live="polite" aria-label="Loading content">
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+              {[1,2,3,4].map(i => <div key={i} className="h-24 bg-muted animate-pulse rounded-lg" />)}
+            </div>
+            <div className="h-[300px] bg-muted animate-pulse rounded-lg" />
           </div>
-        </div>
       </DashboardLayout>
+      </AccessiblePageWrapper>
     );
   }
 
   return (
-    <DashboardLayout title="Change Orders">
+    <AccessiblePageWrapper pageTitle="Change Orders">
+    <DashboardLayout title="Change Orders" hasAccessibleWrapper>
       <div className="space-y-6">
         {/* Header */}
         <div className={mobileCardClasses.header}>
@@ -429,7 +528,7 @@ const ChangeOrders = () => {
                 onClick={() => navigate('/dashboard')}
                 className={mobileButtonClasses.secondary}
               >
-                <ArrowLeft className="h-4 w-4 mr-2" />
+                <ArrowLeft className="h-4 w-4 mr-2" aria-hidden="true" />
                 Back to Dashboard
               </Button>
               <Separator orientation="vertical" className="h-6 hidden sm:block" />
@@ -441,14 +540,14 @@ const ChangeOrders = () => {
             <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
               <DialogTrigger asChild>
                 <Button className={mobileButtonClasses.primary}>
-                  <PlusCircle className="h-4 w-4 mr-2" />
+                  <PlusCircle className="h-4 w-4 mr-2" aria-hidden="true" />
                   Create Change Order
                 </Button>
               </DialogTrigger>
-              <DialogContent className="max-w-2xl">
+              <DialogContent className="max-w-2xl" aria-describedby="change-order-dialog-description">
                 <DialogHeader>
                   <DialogTitle>{editingOrder ? 'Edit Change Order' : 'Create Change Order'}</DialogTitle>
-                  <DialogDescription>
+                  <DialogDescription id="change-order-dialog-description">
                     {editingOrder ? 'Update the change order details and approval workflow.' : 'Create a new change order for project modifications that require client approval.'}
                   </DialogDescription>
                 </DialogHeader>
@@ -525,7 +624,7 @@ const ChangeOrders = () => {
                   {/* Approval Assignment Section */}
                   <div className="space-y-4 p-4 border rounded-lg bg-muted/50">
                     <div className="flex items-center space-x-2">
-                      <Users className="h-4 w-4" />
+                      <Users className="h-4 w-4" aria-hidden="true" />
                       <Label className="text-sm font-medium">Approval Assignment</Label>
                     </div>
                     
@@ -561,8 +660,9 @@ const ChangeOrders = () => {
                             <Button
                               variant="outline"
                               className="w-full justify-start text-left font-normal"
+                              aria-label="Select approval due date"
                             >
-                              <CalendarIcon className="mr-2 h-4 w-4" />
+                              <CalendarIcon className="mr-2 h-4 w-4" aria-hidden="true" />
                               {approvalDueDate ? format(approvalDueDate, "PPP") : "Select date"}
                             </Button>
                           </PopoverTrigger>
@@ -622,11 +722,11 @@ const ChangeOrders = () => {
         {/* Filters */}
         <Card className={mobileCardClasses.container}>
           <CardContent className={mobileCardClasses.content}>
-            <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-4" role="search" aria-label="Filter change orders">
               <div className="flex-1">
                 <Label htmlFor="project-filter" className={mobileTextClasses.body}>Filter by Project</Label>
                 <Select value={selectedProject} onValueChange={setSelectedProject}>
-                  <SelectTrigger className={mobileFilterClasses.input}>
+                  <SelectTrigger className={mobileFilterClasses.input} aria-label="Filter by project">
                     <SelectValue placeholder="All projects" />
                   </SelectTrigger>
                   <SelectContent>
@@ -643,179 +743,38 @@ const ChangeOrders = () => {
           </CardContent>
         </Card>
 
-        {/* Change Orders List */}
-        <div className="space-y-6">
-          {filteredOrders.length === 0 ? (
-            <Card className={mobileCardClasses.container}>
-              <CardContent className="text-center py-12">
-                <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                <h3 className={mobileTextClasses.header}>No Change Orders</h3>
-                <p className={`${mobileTextClasses.muted} mb-4`}>
-                  {selectedProject ? 'No change orders found for selected project' : 'No change orders have been created yet'}
-                </p>
-                <Button onClick={() => setIsCreateDialogOpen(true)} className={mobileButtonClasses.primary}>
-                  <PlusCircle className="h-4 w-4 mr-2" />
-                  Create First Change Order
-                </Button>
-              </CardContent>
-            </Card>
-          ) : (
-            <div className="space-y-6">
-              {filteredOrders.map((order) => (
-                <Card key={order.id} className={mobileCardClasses.container}>
-                  <CardHeader className={mobileCardClasses.header}>
-                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                      <div>
-                        <CardTitle className="flex flex-col sm:flex-row sm:items-center gap-2">
-                          <div className="flex items-center space-x-2">
-                            <FileText className="h-5 w-5 text-construction-blue" />
-                            <span className={mobileTextClasses.cardTitle}>{order.title}</span>
-                          </div>
-                          <Badge variant="outline" className={mobileCardClasses.badge}>#{order.change_order_number}</Badge>
-                        </CardTitle>
-                        <CardDescription className={mobileTextClasses.muted}>
-                          {order.projects?.name} - {order.projects?.client_name}
-                        </CardDescription>
-                       </div>
-                       <div className={`${mobileCardClasses.badges} gap-2`}>
-                         {getStatusBadge(order)}
-                         <Badge variant="outline" className={`${mobileCardClasses.badge} font-mono`}>
-                           <DollarSign className="h-3 w-3 mr-1" />
-                           {order.amount.toLocaleString()}
-                         </Badge>
-                         <Button 
-                           variant="outline" 
-                           size="sm"
-                           onClick={() => {
-                             setNewOrder({
-                               project_id: order.project_id,
-                               title: order.title,
-                               description: order.description || '',
-                               amount: order.amount.toString(),
-                               reason: order.reason || '',
-                               approval_notes: order.approval_notes || ''
-                             });
-                             setSelectedApprovers(order.assigned_approvers || []);
-                             setApprovalDueDate(order.approval_due_date ? new Date(order.approval_due_date) : undefined);
-                             setEditingOrder(order);
-                             setIsCreateDialogOpen(true);
-                           }}
-                         >
-                           <Edit className="h-4 w-4" />
-                         </Button>
-                       </div>
-                    </div>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div>
-                      <h4 className="font-medium mb-2">Description</h4>
-                      <p className="text-sm text-muted-foreground">{order.description}</p>
-                    </div>
-                    
-                    {order.reason && (
-                      <div>
-                        <h4 className="font-medium mb-2">Reason</h4>
-                        <p className="text-sm text-muted-foreground">{order.reason}</p>
-                      </div>
-                    )}
-
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                      <div>
-                        <h4 className={`${mobileTextClasses.cardTitle} mb-2 flex items-center`}>
-                          Internal Approval
-                          {order.internal_approved ? (
-                            <CheckCircle className="h-4 w-4 ml-2 text-green-500" />
-                          ) : (
-                            <Clock className="h-4 w-4 ml-2 text-yellow-500" />
-                          )}
-                        </h4>
-                        <div className="space-y-2">
-                          <p className={mobileTextClasses.muted}>
-                            Status: {order.internal_approved ? 'Approved' : 'Pending'}
-                          </p>
-                          {order.internal_approved_date && (
-                            <p className={mobileTextClasses.muted}>
-                              Approved: {new Date(order.internal_approved_date).toLocaleDateString()}
-                            </p>
-                          )}
-                          {!order.internal_approved && (
-                            <div className={mobileFilterClasses.buttonGroup}>
-                              <Button 
-                                size="sm" 
-                                onClick={() => handleApproval(order.id, 'internal', true)}
-                                className={mobileButtonClasses.secondary}
-                              >
-                                <CheckCircle className="h-3 w-3 mr-1" />
-                                Approve
-                              </Button>
-                              <Button 
-                                size="sm" 
-                                variant="outline"
-                                onClick={() => handleRejectWithReason(order.id, 'internal')}
-                                className={mobileButtonClasses.secondary}
-                              >
-                                <XCircle className="h-3 w-3 mr-1" />
-                                Reject
-                              </Button>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-
-                      <div>
-                        <h4 className="font-medium mb-2 flex items-center">
-                          Client Approval
-                          {order.client_approved ? (
-                            <CheckCircle className="h-4 w-4 ml-2 text-green-500" />
-                          ) : (
-                            <Clock className="h-4 w-4 ml-2 text-yellow-500" />
-                          )}
-                        </h4>
-                        <div className="space-y-2">
-                          <p className="text-sm text-muted-foreground">
-                            Status: {order.client_approved ? 'Approved' : 'Pending'}
-                          </p>
-                          {order.client_approved_date && (
-                            <p className="text-xs text-muted-foreground">
-                              Approved: {new Date(order.client_approved_date).toLocaleDateString()}
-                            </p>
-                          )}
-                          {!order.client_approved && (
-                            <div className="flex space-x-2">
-                              <Button 
-                                size="sm" 
-                                onClick={() => handleApproval(order.id, 'client', true)}
-                              >
-                                <CheckCircle className="h-3 w-3 mr-1" />
-                                Client Approved
-                              </Button>
-                              <Button 
-                                size="sm" 
-                                variant="outline"
-                                onClick={() => handleRejectWithReason(order.id, 'client')}
-                              >
-                                <XCircle className="h-3 w-3 mr-1" />
-                                Client Rejected
-                              </Button>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          )}
-        </div>
+        {/* Change Orders Table */}
+        <Card>
+          <CardContent className="pt-6">
+            <AccessibleTable<ChangeOrder>
+              caption="Change Orders"
+              hideCaption
+              columns={changeOrderColumns}
+              data={filteredOrders}
+              emptyContent={
+                <div className="text-center py-8">
+                  <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" aria-hidden="true" />
+                  <h3 className="font-medium mb-2">No Change Orders</h3>
+                  <p className="text-muted-foreground mb-4">
+                    {selectedProject && selectedProject !== 'all' ? 'No change orders found for selected project' : 'No change orders have been created yet'}
+                  </p>
+                  <Button onClick={() => setIsCreateDialogOpen(true)}>
+                    <PlusCircle className="h-4 w-4 mr-2" aria-hidden="true" />
+                    Create First Change Order
+                  </Button>
+                </div>
+              }
+            />
+          </CardContent>
+        </Card>
       </div>
 
       {/* Rejection Reason Dialog */}
       <Dialog open={isRejectionDialogOpen} onOpenChange={setIsRejectionDialogOpen}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-md" aria-describedby="rejection-dialog-description">
           <DialogHeader>
             <DialogTitle>Reject Change Order</DialogTitle>
-            <DialogDescription>
+            <DialogDescription id="rejection-dialog-description">
               Please provide a reason for rejecting this change order. This will be recorded and visible to all stakeholders.
             </DialogDescription>
           </DialogHeader>
@@ -846,7 +805,7 @@ const ChangeOrders = () => {
                 onClick={submitRejection}
                 disabled={!rejectionReason.trim()}
               >
-                <XCircle className="h-4 w-4 mr-2" />
+                <XCircle className="h-4 w-4 mr-2" aria-hidden="true" />
                 Reject Change Order
               </Button>
             </div>
@@ -854,6 +813,7 @@ const ChangeOrders = () => {
         </DialogContent>
       </Dialog>
     </DashboardLayout>
+    </AccessiblePageWrapper>
   );
 };
 

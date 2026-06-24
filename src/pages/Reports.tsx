@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
@@ -8,19 +8,65 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
-import { Separator } from '@/components/ui/separator';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { CustomReportBuilder } from '@/components/reports/CustomReportBuilder';
-import ExecutiveDashboard from '@/components/analytics/ExecutiveDashboard';
-import { ArrowLeft, FileSpreadsheet, FileText, Download, BarChart3, Settings, Eye } from 'lucide-react';
-import { MobilePageWrapper, MobileStatsGrid, MobileFilters, mobileGridClasses, mobileFilterClasses, mobileButtonClasses, mobileTextClasses, mobileCardClasses } from '@/utils/mobileHelpers';
+const CustomReportBuilder = React.lazy(() => import('@/components/reports/CustomReportBuilder').then(m => ({ default: m.CustomReportBuilder })));
+const ExecutiveDashboard = React.lazy(() => import('@/components/analytics/ExecutiveDashboard'));
+import { FileSpreadsheet, FileText, Download, BarChart3, Settings } from 'lucide-react';
+import { AccessiblePageWrapper } from "@/components/accessibility/AccessiblePageWrapper";
+import { MobilePageWrapper, mobileGridClasses, mobileFilterClasses, mobileButtonClasses, mobileTextClasses, mobileCardClasses } from '@/utils/mobileHelpers';
+
+interface ReportProject {
+  id: string;
+  name: string;
+}
+
+interface JobCost {
+  date: string;
+  description: string | null;
+  cost_codes: { code: string; name: string } | null;
+  labor_cost: number | null;
+  material_cost: number | null;
+  equipment_cost: number | null;
+  total_cost: number | null;
+  labor_hours: number | null;
+}
+
+interface ChangeOrder {
+  change_order_number: string;
+  title: string;
+  amount: number;
+  status: string;
+  client_approved: boolean;
+  internal_approved: boolean;
+  created_at: string;
+}
+
+interface ProjectReportData {
+  name: string;
+  description: string | null;
+  status: string;
+  budget: number | null;
+  start_date: string | null;
+  end_date: string | null;
+  completion_percentage: number | null;
+  site_address: string | null;
+  job_costs: JobCost[];
+  change_orders: ChangeOrder[];
+  daily_reports: Record<string, unknown>[];
+  time_entries: Record<string, unknown>[];
+}
+
+interface AutoTableDoc {
+  autoTable: (options: Record<string, unknown>) => void;
+  lastAutoTable: { finalY: number };
+}
 
 const Reports = () => {
   const { user, userProfile, loading } = useAuth();
   const navigate = useNavigate();
   
-  const [projects, setProjects] = useState([]);
+  const [projects, setProjects] = useState<ReportProject[]>([]);
   const [selectedProject, setSelectedProject] = useState('');
   const [dateRange, setDateRange] = useState({
     start: new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0],
@@ -52,7 +98,7 @@ const Reports = () => {
 
       if (error) throw error;
       setProjects(data || []);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error loading projects:', error);
     }
   };
@@ -86,7 +132,7 @@ const Reports = () => {
         title: "Success",
         description: `${format.toUpperCase()} report generated successfully`
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error generating report:', error);
       toast({
         variant: "destructive",
@@ -98,7 +144,7 @@ const Reports = () => {
     }
   };
 
-  const generateExcelReport = async (projectData: any) => {
+  const generateExcelReport = async (projectData: ProjectReportData) => {
     // Lazy load XLSX library only when exporting
     const XLSX = await import('xlsx');
 
@@ -120,7 +166,7 @@ const Reports = () => {
     // Job Costs Sheet
     if (projectData.job_costs?.length > 0) {
       const jobCostsSheet = XLSX.utils.json_to_sheet(
-        projectData.job_costs.map((cost: any) => ({
+        projectData.job_costs.map((cost: JobCost) => ({
           'Date': cost.date,
           'Description': cost.description,
           'Cost Code': cost.cost_codes?.code,
@@ -137,7 +183,7 @@ const Reports = () => {
     // Change Orders Sheet
     if (projectData.change_orders?.length > 0) {
       const changeOrdersSheet = XLSX.utils.json_to_sheet(
-        projectData.change_orders.map((co: any) => ({
+        projectData.change_orders.map((co: ChangeOrder) => ({
           'Number': co.change_order_number,
           'Title': co.title,
           'Amount': co.amount,
@@ -154,7 +200,7 @@ const Reports = () => {
     XLSX.writeFile(wb, `${projectData.name}_Report_${new Date().toISOString().split('T')[0]}.xlsx`);
   };
 
-  const generatePDFReport = async (projectData: any) => {
+  const generatePDFReport = async (projectData: ProjectReportData) => {
     // Lazy load jsPDF library only when exporting
     const { default: jsPDF } = await import('jspdf');
     await import('jspdf-autotable');
@@ -179,10 +225,10 @@ const Reports = () => {
       doc.text('Job Costs', 20, yPosition);
       yPosition += 10;
       
-      (doc as any).autoTable({
+      (doc as unknown as AutoTableDoc).autoTable({
         startY: yPosition,
         head: [['Date', 'Description', 'Labor', 'Materials', 'Equipment', 'Total']],
-        body: projectData.job_costs.map((cost: any) => [
+        body: projectData.job_costs.map((cost: JobCost) => [
           cost.date,
           cost.description || '',
           `$${cost.labor_cost || 0}`,
@@ -192,7 +238,7 @@ const Reports = () => {
         ]),
       });
       
-      yPosition = (doc as any).lastAutoTable.finalY + 20;
+      yPosition = (doc as unknown as AutoTableDoc).lastAutoTable.finalY + 20;
     }
 
     // Change Orders Table
@@ -200,10 +246,10 @@ const Reports = () => {
       doc.text('Change Orders', 20, yPosition);
       yPosition += 10;
       
-      (doc as any).autoTable({
+      (doc as unknown as AutoTableDoc).autoTable({
         startY: yPosition,
         head: [['Number', 'Title', 'Amount', 'Status', 'Client Approved']],
-        body: projectData.change_orders.map((co: any) => [
+        body: projectData.change_orders.map((co: ChangeOrder) => [
           co.change_order_number,
           co.title,
           `$${co.amount}`,
@@ -219,54 +265,61 @@ const Reports = () => {
 
   if (loading) {
     return (
-      <DashboardLayout title="Reports & Analytics">
-        <div className="flex items-center justify-center h-96">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-construction-blue mx-auto mb-4"></div>
-            <p className="text-muted-foreground">Loading reports...</p>
+      <AccessiblePageWrapper pageTitle="Reports">
+      <DashboardLayout title="Reports & Analytics" hasAccessibleWrapper>
+        <div className="space-y-6" role="status" aria-live="polite" aria-label="Loading content">
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+              {[1,2,3,4].map(i => <div key={i} className="h-24 bg-muted animate-pulse rounded-lg" />)}
+            </div>
+            <div className="h-[300px] bg-muted animate-pulse rounded-lg" />
           </div>
-        </div>
       </DashboardLayout>
+      </AccessiblePageWrapper>
     );
   }
 
   return (
-    <DashboardLayout title="Reports & Analytics">
+    <AccessiblePageWrapper pageTitle="Reports">
+    <DashboardLayout title="Reports & Analytics" hasAccessibleWrapper>
       <MobilePageWrapper title="Reports & Analytics">
         <Tabs defaultValue="dashboard" className="space-y-6">
           <TabsList className="grid w-full grid-cols-1 sm:grid-cols-3 h-auto">
             <TabsTrigger value="dashboard" className={mobileTextClasses.body}>
-              <BarChart3 className="h-4 w-4 mr-1 sm:mr-2" />
+              <BarChart3 className="h-4 w-4 mr-1 sm:mr-2" aria-hidden="true" />
               <span className="hidden sm:inline">Executive Dashboard</span>
               <span className="sm:hidden">Dashboard</span>
             </TabsTrigger>
             <TabsTrigger value="builder" className={mobileTextClasses.body}>
-              <Settings className="h-4 w-4 mr-1 sm:mr-2" />
+              <Settings className="h-4 w-4 mr-1 sm:mr-2" aria-hidden="true" />
               <span className="hidden sm:inline">Custom Reports</span>
               <span className="sm:hidden">Custom</span>
             </TabsTrigger>
             <TabsTrigger value="exports" className={mobileTextClasses.body}>
-              <Download className="h-4 w-4 mr-1 sm:mr-2" />
+              <Download className="h-4 w-4 mr-1 sm:mr-2" aria-hidden="true" />
               <span className="hidden sm:inline">Export Center</span>
               <span className="sm:hidden">Export</span>
             </TabsTrigger>
           </TabsList>
 
           <TabsContent value="dashboard">
-            <ExecutiveDashboard />
+            <Suspense fallback={<div className="flex items-center justify-center p-12"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" /></div>}>
+              <ExecutiveDashboard />
+            </Suspense>
           </TabsContent>
 
           <TabsContent value="builder">
-            <CustomReportBuilder
-              onSave={(config) => {
-                toast({
-                  title: "Success",
-                  description: "Report configuration saved successfully"
-                });
-              }}
-              onExecute={(config) => {
-              }}
-            />
+            <Suspense fallback={<div className="flex items-center justify-center p-12"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" /></div>}>
+              <CustomReportBuilder
+                onSave={(config) => {
+                  toast({
+                    title: "Success",
+                    description: "Report configuration saved successfully"
+                  });
+                }}
+                onExecute={(config) => {
+                }}
+              />
+            </Suspense>
           </TabsContent>
 
           <TabsContent value="exports" className="space-y-6">
@@ -284,7 +337,7 @@ const Reports = () => {
                         <SelectValue placeholder="Choose a project" />
                       </SelectTrigger>
                       <SelectContent>
-                        {projects.map((project: any) => (
+                        {projects.map((project: ReportProject) => (
                           <SelectItem key={project.id} value={project.id}>
                             {project.name}
                           </SelectItem>
@@ -315,7 +368,7 @@ const Reports = () => {
                     disabled={!selectedProject || generating}
                     className={mobileButtonClasses.primary}
                   >
-                    <FileSpreadsheet className="h-4 w-4 mr-2" />
+                    <FileSpreadsheet className="h-4 w-4 mr-2" aria-hidden="true" />
                     <span className="hidden sm:inline">{generating ? 'Generating...' : 'Export to Excel'}</span>
                     <span className="sm:hidden">Excel</span>
                   </Button>
@@ -325,7 +378,7 @@ const Reports = () => {
                     variant="outline"
                     className={mobileButtonClasses.secondary}
                   >
-                    <FileText className="h-4 w-4 mr-2" />
+                    <FileText className="h-4 w-4 mr-2" aria-hidden="true" />
                     <span className="hidden sm:inline">{generating ? 'Generating...' : 'Export to PDF'}</span>
                     <span className="sm:hidden">PDF</span>
                   </Button>
@@ -341,7 +394,7 @@ const Reports = () => {
                 </CardHeader>
                 <CardContent>
                   <Button className={mobileButtonClasses.primary} variant="outline">
-                    <Download className="h-4 w-4 mr-2" />
+                    <Download className="h-4 w-4 mr-2" aria-hidden="true" />
                     <span className="hidden sm:inline">Generate Financial Report</span>
                     <span className="sm:hidden">Financial</span>
                   </Button>
@@ -355,7 +408,7 @@ const Reports = () => {
                 </CardHeader>
                 <CardContent>
                   <Button className={mobileButtonClasses.primary} variant="outline">
-                    <Download className="h-4 w-4 mr-2" />
+                    <Download className="h-4 w-4 mr-2" aria-hidden="true" />
                     <span className="hidden sm:inline">Generate Time Report</span>
                     <span className="sm:hidden">Time</span>
                   </Button>
@@ -366,6 +419,7 @@ const Reports = () => {
         </Tabs>
       </MobilePageWrapper>
     </DashboardLayout>
+    </AccessiblePageWrapper>
   );
 };
 

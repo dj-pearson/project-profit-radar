@@ -1,6 +1,6 @@
 # 📚 Expo Build Documentation Index
 
-Complete documentation for successfully building and deploying the BuildDesk mobile app with Expo.
+Complete documentation for successfully building and deploying the Brikly mobile app with Expo.
 
 ---
 
@@ -207,7 +207,7 @@ From our successful build, the most important lessons are:
 - **Expo Documentation:** https://docs.expo.dev
 - **EAS Build Docs:** https://docs.expo.dev/build/introduction/
 - **React Native Platform:** https://reactnative.dev/docs/platform-specific-code
-- **Our Build Page:** https://expo.dev/accounts/djpearson/projects/build-desk-2rirxbgg70kpf2ce6py3e
+- **Our Build Page:** https://expo.dev/accounts/djpearson/projects/brikly-2rirxbgg70kpf2ce6py3e
 
 ---
 

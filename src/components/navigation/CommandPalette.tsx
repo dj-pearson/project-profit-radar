@@ -394,8 +394,8 @@ export function CommandPalette({
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogContent className="max-w-2xl p-0 gap-0 overflow-hidden">
         {/* Search input */}
-        <div className="flex items-center border-b px-4 py-3">
-          <Search className="h-5 w-5 text-muted-foreground mr-2" />
+        <div className="flex items-center border-b px-4 py-3" role="search" aria-label="Command palette search">
+          <Search className="h-5 w-5 text-muted-foreground mr-2" aria-hidden="true" />
           <Input
             placeholder="Type a command or search..."
             value={searchQuery}
@@ -404,6 +404,7 @@ export function CommandPalette({
               setSelectedIndex(0);
             }}
             className="border-0 focus-visible:ring-0 focus-visible:ring-offset-0 h-auto p-0"
+            aria-label="Search commands"
             autoFocus
           />
           <kbd className="hidden sm:inline-flex h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-xs text-muted-foreground">
@@ -440,7 +441,7 @@ export function CommandPalette({
                             globalIndex === selectedIndex && "bg-muted"
                           )}
                         >
-                          <Icon className="h-4 w-4 text-muted-foreground shrink-0" />
+                          <Icon className="h-4 w-4 text-muted-foreground shrink-0" aria-hidden="true" />
                           <div className="flex-1 min-w-0">
                             <div className="text-sm font-medium">
                               {action.label}
@@ -457,7 +458,7 @@ export function CommandPalette({
                             </kbd>
                           )}
                           {globalIndex === selectedIndex && (
-                            <ArrowRight className="h-4 w-4 text-muted-foreground shrink-0" />
+                            <ArrowRight className="h-4 w-4 text-muted-foreground shrink-0" aria-hidden="true" />
                           )}
                         </button>
                       );

@@ -6,28 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Separator } from '@/components/ui/separator';
-import { 
-  Truck,
-  MapPin,
-  Clock,
-  User,
-  QrCode,
-  Camera,
-  AlertTriangle,
-  CheckCircle2,
-  X,
-  LogIn,
-  LogOut,
-  Search,
-  Filter,
-  RefreshCw,
-  Settings,
-  Wrench,
-  Fuel,
-  Calendar,
-  Phone
-} from 'lucide-react';
+import { Truck, MapPin, Clock, QrCode, Camera, X, LogIn, LogOut, Search, Filter, RefreshCw, Wrench, Fuel } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { useOfflineSync } from '@/hooks/useOfflineSync';
@@ -74,7 +53,7 @@ interface EquipmentTransaction {
 
 interface MobileEquipmentManagerProps {
   projectId?: string;
-  onTransactionComplete?: (transaction: any) => void;
+  onTransactionComplete?: (transaction: Record<string, unknown>) => void;
   onClose?: () => void;
 }
 
@@ -83,15 +62,15 @@ const MobileEquipmentManager: React.FC<MobileEquipmentManagerProps> = ({
   onTransactionComplete,
   onClose
 }) => {
-  const [equipment, setEquipment] = useState<any[]>([]);
-  const [selectedEquipment, setSelectedEquipment] = useState<any | null>(null);
+  const [equipment, setEquipment] = useState<Equipment[]>([]);
+  const [selectedEquipment, setSelectedEquipment] = useState<Equipment | null>(null);
   const [actionType, setActionType] = useState<'check_out' | 'check_in' | 'maintenance' | 'inspection'>('check_out');
   const [searchQuery, setSearchQuery] = useState('');
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const [showCamera, setShowCamera] = useState(false);
   const [showQRScanner, setShowQRScanner] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [projects, setProjects] = useState<any[]>([]);
+  const [projects, setProjects] = useState<{ id: string; name: string; client_name: string }[]>([]);
   const [selectedProject, setSelectedProject] = useState(projectId || '');
   
   const [transactionData, setTransactionData] = useState<EquipmentTransaction>({
@@ -152,7 +131,7 @@ const MobileEquipmentManager: React.FC<MobileEquipmentManagerProps> = ({
     }
   };
 
-  const handlePhotoCapture = (file: File, metadata?: any) => {
+  const handlePhotoCapture = (file: File, metadata?: Record<string, unknown>) => {
     const reader = new FileReader();
     reader.onload = () => {
       const base64 = reader.result as string;
@@ -223,7 +202,7 @@ const MobileEquipmentManager: React.FC<MobileEquipmentManagerProps> = ({
     }
   };
 
-  const selectEquipment = (item: any) => {
+  const selectEquipment = (item: Equipment) => {
     setSelectedEquipment(item);
     setTransactionData(prev => ({
       ...prev,
@@ -404,7 +383,7 @@ const MobileEquipmentManager: React.FC<MobileEquipmentManagerProps> = ({
   return (
     <div className="min-h-screen bg-background p-4 space-y-4">
       {/* Header */}
-      <Card className="border-blue-200 bg-blue-50">
+      <Card className="rounded-2xl glass shadow-ios-1 border-blue-200/60 dark:border-blue-500/30 bg-blue-50/80 dark:bg-blue-950/20">
         <CardHeader className="pb-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
@@ -425,7 +404,7 @@ const MobileEquipmentManager: React.FC<MobileEquipmentManagerProps> = ({
 
       {/* Selected Equipment Transaction */}
       {selectedEquipment && (
-        <Card className="border-yellow-200 bg-yellow-50">
+        <Card className="rounded-2xl glass shadow-ios-1 border-yellow-200/60 dark:border-yellow-500/30 bg-yellow-50/80 dark:bg-yellow-950/20">
           <CardHeader>
             <CardTitle className="flex items-center justify-between">
               <span>Equipment Transaction</span>
@@ -457,8 +436,8 @@ const MobileEquipmentManager: React.FC<MobileEquipmentManagerProps> = ({
             <div>
               <Label>Action Type</Label>
               <Select value={actionType} onValueChange={(value) => {
-                setActionType(value as any);
-                setTransactionData(prev => ({ ...prev, action_type: value as any }));
+                setActionType(value as EquipmentTransaction['action_type']);
+                setTransactionData(prev => ({ ...prev, action_type: value as EquipmentTransaction['action_type'] }));
               }}>
                 <SelectTrigger>
                   <SelectValue />

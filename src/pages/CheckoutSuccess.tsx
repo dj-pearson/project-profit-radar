@@ -3,7 +3,7 @@ import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { CheckCircle, Sparkles, ArrowRight, Calendar, DollarSign, Shield, Loader2 } from 'lucide-react';
+import { CheckCircle, Sparkles, ArrowRight, Shield, Loader2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -84,7 +84,7 @@ export const CheckoutSuccess = () => {
             <CheckCircle className="w-12 h-12 text-green-600" />
           </div>
           <h1 className="text-3xl font-bold text-construction-dark mb-2">
-            Welcome to BuildDesk!
+            Welcome to Brikly!
           </h1>
           <p className="text-xl text-muted-foreground">
             Your {planName} trial is now active
@@ -219,7 +219,7 @@ export const CheckoutSuccess = () => {
 
         {/* Support */}
         <p className="text-center text-sm text-muted-foreground mt-6 animate-in fade-in duration-700 delay-1000">
-          Questions? Contact us at <a href="mailto:support@builddesk.com" className="text-construction-blue hover:text-construction-orange">support@builddesk.com</a> or use the chat in your dashboard.
+          Questions? Contact us at <a href="mailto:support@brikly.net" className="text-construction-blue hover:text-construction-orange">support@brikly.net</a> or use the chat in your dashboard.
         </p>
       </div>
     </div>

@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   Image as ImageIcon,
@@ -17,7 +16,6 @@ import {
   ChevronLeft,
   ChevronRight
 } from 'lucide-react';
-import { cn } from '@/lib/utils';
 
 export interface Document {
   id: string;

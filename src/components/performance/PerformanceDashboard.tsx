@@ -1,9 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
-import { BarChart3, Clock, Zap, AlertTriangle, TrendingUp, RefreshCw } from 'lucide-react';
+import { BarChart3, Clock, AlertTriangle, TrendingUp, RefreshCw } from 'lucide-react';
 import { usePerformanceMonitor, useRealUserMetrics } from '@/hooks/usePerformanceMonitor';
 
 interface PerformanceMetric {

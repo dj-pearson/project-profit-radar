@@ -1,6 +1,7 @@
 import { useState, useRef, ReactNode } from 'react';
 import { RefreshCw } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useHaptics } from '@/hooks/useHaptics';
 
 interface PullToRefreshProps {
   onRefresh: () => Promise<void>;
@@ -23,6 +24,8 @@ export function PullToRefresh({
   const [isRefreshing, setIsRefreshing] = useState(false);
   const startY = useRef(0);
   const containerRef = useRef<HTMLDivElement>(null);
+  const hasCrossedThreshold = useRef(false);
+  const haptics = useHaptics();
 
   const handleTouchStart = (e: React.TouchEvent) => {
     if (disabled || isRefreshing) return;
@@ -43,28 +46,39 @@ export function PullToRefresh({
     if (distance > 0) {
       // Add resistance - gets harder to pull as you go further
       const resistance = 0.5;
-      setPullDistance(Math.min(distance * resistance, threshold * 1.5));
+      const next = Math.min(distance * resistance, threshold * 1.5);
+      setPullDistance(next);
+      if (!hasCrossedThreshold.current && next >= threshold) {
+        hasCrossedThreshold.current = true;
+        haptics.reveal();
+      } else if (hasCrossedThreshold.current && next < threshold) {
+        hasCrossedThreshold.current = false;
+      }
     }
   };
 
   const handleTouchEnd = async () => {
     if (disabled) return;
-    
+
     if (pullDistance >= threshold && !isRefreshing) {
       setIsRefreshing(true);
       try {
         await onRefresh();
+        haptics.success();
       } finally {
         setIsRefreshing(false);
       }
     }
 
+    hasCrossedThreshold.current = false;
     setIsPulling(false);
     setPullDistance(0);
   };
 
   const progress = Math.min((pullDistance / threshold) * 100, 100);
   const rotation = progress * 3.6; // Convert to degrees
+
+  const isTriggered = pullDistance >= threshold;
 
   return (
     <div
@@ -74,24 +88,36 @@ export function PullToRefresh({
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
     >
-      {/* Pull indicator */}
+      {/* Pull indicator — floating glass pill */}
       <div
-        className="absolute top-0 left-0 right-0 flex items-center justify-center transition-all z-10"
+        className="absolute left-1/2 -translate-x-1/2 top-3 z-10 flex items-center justify-center"
         style={{
-          height: `${pullDistance}px`,
-          opacity: pullDistance > 0 ? 1 : 0,
+          opacity: pullDistance > 0 || isRefreshing ? 1 : 0,
+          transform: `translate(-50%, ${Math.min(pullDistance, 72)}px) scale(${
+            isTriggered || isRefreshing ? 1 : 0.9 + (pullDistance / threshold) * 0.1
+          })`,
+          transition: isPulling ? 'opacity 120ms ease-out' : 'all 260ms cubic-bezier(0.32, 0.72, 0, 1)',
         }}
+        aria-hidden="true"
       >
-        <RefreshCw
+        <div
           className={cn(
-            'h-6 w-6 text-primary transition-all',
-            isRefreshing && 'animate-spin',
-            pullDistance >= threshold && 'scale-110'
+            'glass-thick rounded-full shadow-ios-3 flex items-center gap-2 px-3 py-2',
+            'ring-1 ring-inset ring-white/30 dark:ring-white/10',
+            isTriggered && 'ring-primary/30'
           )}
-          style={{
-            transform: isRefreshing ? undefined : `rotate(${rotation}deg)`,
-          }}
-        />
+        >
+          <RefreshCw
+            className={cn(
+              'h-5 w-5 text-primary transition-transform duration-[180ms]',
+              isRefreshing && 'animate-spin',
+              isTriggered && !isRefreshing && 'scale-110'
+            )}
+            style={{
+              transform: isRefreshing ? undefined : `rotate(${rotation}deg)`,
+            }}
+          />
+        </div>
       </div>
 
       {/* Content */}
@@ -100,7 +126,7 @@ export function PullToRefresh({
           transform: isRefreshing
             ? 'translateY(60px)'
             : `translateY(${Math.min(pullDistance * 0.5, 60)}px)`,
-          transition: isPulling ? 'none' : 'transform 0.3s ease-out',
+          transition: isPulling ? 'none' : 'transform 0.42s cubic-bezier(0.32, 0.72, 0, 1)',
         }}
       >
         {children}

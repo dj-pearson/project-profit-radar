@@ -1,16 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
-import { 
-  BarChart3, 
-  TrendingUp, 
-  TrendingDown,
-  DollarSign
-} from 'lucide-react';
+import { BarChart3, TrendingUp, TrendingDown } from 'lucide-react';
 
 interface JobData {
   id: string;
@@ -76,7 +70,7 @@ const JobProfitabilityOverview = () => {
       if (projectsError) throw projectsError;
 
       // Get actual job costs for all projects (bypass type inference)
-      const jobCostsResult = await (supabase as any)
+      const jobCostsResult = await (supabase as unknown as { from: (table: string) => ReturnType<typeof supabase.from> })
         .from('job_costs')
         .select('project_id, labor_cost, material_cost, equipment_cost, other_cost')
         .eq('company_id', userProfile?.company_id);
@@ -85,7 +79,7 @@ const JobProfitabilityOverview = () => {
       if (jobCostsError) throw jobCostsError;
 
       // Get actual expenses for all projects  
-      const expensesResult = await (supabase as any)
+      const expensesResult = await (supabase as unknown as { from: (table: string) => ReturnType<typeof supabase.from> })
         .from('expenses')
         .select('project_id, amount')
         .eq('company_id', userProfile?.company_id)
@@ -95,7 +89,7 @@ const JobProfitabilityOverview = () => {
       if (expensesError) throw expensesError;
 
       // Get actual revenue from paid invoices
-      const invoicesResult = await (supabase as any)
+      const invoicesResult = await (supabase as unknown as { from: (table: string) => ReturnType<typeof supabase.from> })
         .from('invoices')
         .select('project_id, amount_paid')
         .eq('company_id', userProfile?.company_id)

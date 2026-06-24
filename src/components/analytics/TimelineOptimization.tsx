@@ -1,13 +1,13 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, LineChart, Line, ScatterChart, Scatter } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, LineChart, Line } from 'recharts';
 import { 
   Clock, 
-  Zap, 
+  Zap,
   TrendingUp, 
   Calendar,
   ArrowRight,
@@ -114,7 +114,7 @@ const TimelineOptimization = () => {
   const applyOptimizations = async () => {
     setOptimizing(true);
     try {
-      const { data, error } = await supabase.functions.invoke('apply-timeline-optimization', {
+      const { error } = await supabase.functions.invoke('apply-timeline-optimization', {
         body: { 
           company_id: userProfile?.company_id,
           optimizations: optimizationData?.optimizedSchedule 

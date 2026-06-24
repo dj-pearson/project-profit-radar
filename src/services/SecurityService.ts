@@ -1,4 +1,5 @@
 import { toast } from 'sonner';
+import { logger } from '@/lib/logger';
 
 export interface SecurityAlert {
   id: string;
@@ -44,9 +45,10 @@ class SecurityService {
     severity: 'low' | 'medium' | 'high' | 'critical',
     description: string,
     userId?: string,
-    metadata?: any
+    metadata?: Record<string, unknown>
   ): Promise<void> {
     try {
+      logger.debug('Security event:', {
         type,
         severity,
         description,
@@ -58,8 +60,8 @@ class SecurityService {
       if (severity === 'high' || severity === 'critical') {
         toast.warning(`Security alert: ${description}`);
       }
-    } catch (error: any) {
-      console.error('Error logging security event:', error);
+    } catch (error) {
+      logger.error('Error logging security event:', error);
     }
   }
 
@@ -91,7 +93,7 @@ class SecurityService {
 
       return mockAlerts;
     } catch (error: any) {
-      console.error('Error fetching security alerts:', error);
+      logger.error('Error fetching security alerts:', error);
       toast.error('Failed to load security alerts');
       return [];
     }
@@ -125,7 +127,7 @@ class SecurityService {
 
       return mockLogs.slice(0, limit);
     } catch (error: any) {
-      console.error('Error fetching access logs:', error);
+      logger.error('Error fetching access logs:', error);
       toast.error('Failed to load access logs');
       return [];
     }
@@ -136,7 +138,7 @@ class SecurityService {
       toast.success('Security settings updated successfully');
       return true;
     } catch (error: any) {
-      console.error('Error updating security settings:', error);
+      logger.error('Error updating security settings:', error);
       toast.error('Failed to update security settings');
       return false;
     }
@@ -162,7 +164,7 @@ class SecurityService {
 
       return defaultSettings;
     } catch (error: any) {
-      console.error('Error fetching security settings:', error);
+      logger.error('Error fetching security settings:', error);
       throw error;
     }
   }
@@ -177,7 +179,7 @@ class SecurityService {
 
       return mockResult;
     } catch (error: any) {
-      console.error('Error checking rate limit:', error);
+      logger.error('Error checking rate limit:', error);
       return { allowed: true };
     }
   }
@@ -187,7 +189,7 @@ class SecurityService {
       toast.success('Security alert resolved');
       return true;
     } catch (error: any) {
-      console.error('Error resolving security alert:', error);
+      logger.error('Error resolving security alert:', error);
       toast.error('Failed to resolve security alert');
       return false;
     }
@@ -217,7 +219,7 @@ class SecurityService {
 
       return mockResult;
     } catch (error: any) {
-      console.error('Error performing security scan:', error);
+      logger.error('Error performing security scan:', error);
       throw error;
     }
   }

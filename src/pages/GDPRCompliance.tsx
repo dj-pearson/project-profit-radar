@@ -8,37 +8,12 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { 
-  Shield, 
-  AlertTriangle, 
-  Eye, 
-  FileText, 
-  Clock,
-  Users,
-  Database,
-  Settings,
-  Download,
-  Search,
-  Plus,
-  CheckCircle,
-  XCircle,
-  Calendar,
-  ArrowLeft,
-  Edit
-} from 'lucide-react';
+import { AlertTriangle, Eye, FileText, Database, Settings, Download, Plus, CheckCircle, XCircle, Calendar, Edit } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { format, addDays } from 'date-fns';
-import { 
-  MobilePageWrapper, 
-  MobileStatsGrid, 
-  MobileFilters,
-  mobileCardClasses,
-  mobileButtonClasses,
-  mobileTextClasses,
-  mobileFilterClasses
-} from "@/utils/mobileHelpers";
+import { MobilePageWrapper, MobileStatsGrid, mobileCardClasses, mobileButtonClasses, mobileTextClasses, mobileFilterClasses } from "@/utils/mobileHelpers";
 
 interface GDPRStats {
   activeRequests: number;
@@ -368,7 +343,7 @@ const GDPRCompliance = () => {
       case 'portability':
         return <Download className="h-4 w-4 text-green-500" />;
       case 'erasure':
-        return <XCircle className="h-4 w-4 text-red-500" />;
+        return <XCircle className="h-4 w-4 text-red-500" aria-hidden="true" />;
       case 'rectification':
         return <Settings className="h-4 w-4 text-orange-500" />;
       default:
@@ -399,7 +374,7 @@ const GDPRCompliance = () => {
       
       <div className="flex justify-end mb-6">
         <Button onClick={() => setShowNewRequestForm(true)} className={mobileButtonClasses.primary}>
-          <Plus className="mr-2 h-3 w-3 sm:h-4 sm:w-4" />
+          <Plus className="mr-2 h-3 w-3 sm:h-4 sm:w-4" aria-hidden="true" />
           <span className="hidden sm:inline">New Request</span>
           <span className="sm:hidden">New</span>
         </Button>
@@ -410,7 +385,7 @@ const GDPRCompliance = () => {
         <Card className={mobileCardClasses.container}>
           <CardHeader className={mobileCardClasses.header}>
             <CardTitle className={mobileTextClasses.cardTitle}>Active</CardTitle>
-            <FileText className="h-4 w-4 text-construction-orange" />
+            <FileText className="h-4 w-4 text-construction-orange" aria-hidden="true" />
           </CardHeader>
           <CardContent>
             <div className={`${mobileTextClasses.header} font-bold`}>{stats.activeRequests}</div>
@@ -421,7 +396,7 @@ const GDPRCompliance = () => {
         <Card className={mobileCardClasses.container}>
           <CardHeader className={mobileCardClasses.header}>
             <CardTitle className={mobileTextClasses.cardTitle}>Due Soon</CardTitle>
-            <AlertTriangle className="h-4 w-4 text-red-600" />
+            <AlertTriangle className="h-4 w-4 text-red-600" aria-hidden="true" />
           </CardHeader>
           <CardContent>
             <div className={`${mobileTextClasses.header} font-bold`}>{stats.overdueSoon}</div>
@@ -432,7 +407,7 @@ const GDPRCompliance = () => {
         <Card className={mobileCardClasses.container}>
           <CardHeader className={mobileCardClasses.header}>
             <CardTitle className={mobileTextClasses.cardTitle}>Consents</CardTitle>
-            <CheckCircle className="h-4 w-4 text-green-600" />
+            <CheckCircle className="h-4 w-4 text-green-600" aria-hidden="true" />
           </CardHeader>
           <CardContent>
             <div className={`${mobileTextClasses.header} font-bold`}>{stats.consentRecords}</div>
@@ -443,7 +418,7 @@ const GDPRCompliance = () => {
         <Card className={mobileCardClasses.container}>
           <CardHeader className={mobileCardClasses.header}>
             <CardTitle className={mobileTextClasses.cardTitle}>Retention</CardTitle>
-            <Database className="h-4 w-4 text-blue-600" />
+            <Database className="h-4 w-4 text-blue-600" aria-hidden="true" />
           </CardHeader>
           <CardContent>
             <div className={`${mobileTextClasses.header} font-bold`}>{stats.retentionPolicies}</div>
@@ -454,7 +429,7 @@ const GDPRCompliance = () => {
         <Card className={mobileCardClasses.container}>
           <CardHeader className={mobileCardClasses.header}>
             <CardTitle className={mobileTextClasses.cardTitle}>Processing</CardTitle>
-            <Settings className="h-4 w-4 text-construction-orange" />
+            <Settings className="h-4 w-4 text-construction-orange" aria-hidden="true" />
           </CardHeader>
           <CardContent>
             <div className={`${mobileTextClasses.header} font-bold`}>{stats.processingActivities}</div>
@@ -475,7 +450,7 @@ const GDPRCompliance = () => {
               <div>
                 <Label htmlFor="request_type" className={mobileTextClasses.body}>Request Type *</Label>
                 <Select value={newRequest.request_type} onValueChange={(value) => setNewRequest({...newRequest, request_type: value})}>
-                  <SelectTrigger className={mobileFilterClasses.input}>
+                  <SelectTrigger className={mobileFilterClasses.input} aria-required="true">
                     <SelectValue placeholder="Select request type" />
                   </SelectTrigger>
                   <SelectContent>
@@ -497,6 +472,7 @@ const GDPRCompliance = () => {
                   onChange={(e) => setNewRequest({...newRequest, requester_email: e.target.value})}
                   placeholder="requester@example.com"
                   className={mobileFilterClasses.input}
+                  aria-required="true"
                 />
               </div>
             </div>
@@ -550,7 +526,7 @@ const GDPRCompliance = () => {
               <div className="space-y-4">
                 {requests.length === 0 ? (
                   <div className="text-center py-8 text-muted-foreground">
-                    <FileText className="mx-auto h-8 w-8 sm:h-12 sm:w-12 mb-4" />
+                    <FileText className="mx-auto h-8 w-8 sm:h-12 sm:w-12 mb-4" aria-hidden="true" />
                     <p className={mobileTextClasses.body}>No data subject requests yet</p>
                   </div>
                 ) : (
@@ -567,7 +543,7 @@ const GDPRCompliance = () => {
                           </div>
                           {request.due_date && (
                             <div className={`${mobileTextClasses.muted} flex items-center gap-1 mt-1`}>
-                              <Calendar className="h-3 w-3" />
+                              <Calendar className="h-3 w-3" aria-hidden="true" />
                               Due: {format(new Date(request.due_date), 'MMM d, yyyy')}
                             </div>
                           )}
@@ -588,7 +564,7 @@ const GDPRCompliance = () => {
                             }}
                             className={mobileButtonClasses.secondary}
                           >
-                            <Edit className="h-3 w-3 sm:h-4 sm:w-4" />
+                            <Edit className="h-3 w-3 sm:h-4 sm:w-4" aria-hidden="true" />
                             <span className="hidden sm:inline ml-1">Edit</span>
                           </Button>
                           <div className={`${mobileTextClasses.muted} text-right`}>
@@ -621,7 +597,7 @@ const GDPRCompliance = () => {
               <div className="space-y-4">
                 {consents.length === 0 ? (
                   <div className="text-center py-8 text-muted-foreground">
-                    <CheckCircle className="mx-auto h-8 w-8 sm:h-12 sm:w-12 mb-4" />
+                    <CheckCircle className="mx-auto h-8 w-8 sm:h-12 sm:w-12 mb-4" aria-hidden="true" />
                     <p className={mobileTextClasses.body}>No consent records yet</p>
                   </div>
                 ) : (
@@ -629,9 +605,9 @@ const GDPRCompliance = () => {
                     <div key={consent.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-3 sm:p-4 border rounded-lg gap-3">
                       <div className="flex items-center gap-3">
                         {consent.consent_given ? (
-                          <CheckCircle className="h-4 w-4 text-green-500" />
+                          <CheckCircle className="h-4 w-4 text-green-500" aria-hidden="true" />
                         ) : (
-                          <XCircle className="h-4 w-4 text-red-500" />
+                          <XCircle className="h-4 w-4 text-red-500" aria-hidden="true" />
                         )}
                         <div>
                           <div className={`${mobileTextClasses.cardTitle} font-medium`}>
@@ -656,7 +632,7 @@ const GDPRCompliance = () => {
                             }}
                             className={mobileButtonClasses.secondary}
                           >
-                            <Edit className="h-3 w-3 sm:h-4 sm:w-4" />
+                            <Edit className="h-3 w-3 sm:h-4 sm:w-4" aria-hidden="true" />
                             <span className="hidden sm:inline ml-1">Edit</span>
                           </Button>
                           <Badge variant={consent.consent_given ? "default" : "destructive"} className={mobileCardClasses.badge}>
@@ -688,7 +664,7 @@ const GDPRCompliance = () => {
             </CardHeader>
             <CardContent>
               <div className="text-center py-8 text-muted-foreground">
-                <Database className="mx-auto h-8 w-8 sm:h-12 sm:w-12 mb-4" />
+                <Database className="mx-auto h-8 w-8 sm:h-12 sm:w-12 mb-4" aria-hidden="true" />
                 <p className={mobileTextClasses.body}>Data retention management coming soon</p>
                 <p className={mobileTextClasses.muted}>Automated data lifecycle and deletion policies</p>
               </div>
@@ -706,7 +682,7 @@ const GDPRCompliance = () => {
             </CardHeader>
             <CardContent>
               <div className="text-center py-8 text-muted-foreground">
-                <Settings className="mx-auto h-8 w-8 sm:h-12 sm:w-12 mb-4" />
+                <Settings className="mx-auto h-8 w-8 sm:h-12 sm:w-12 mb-4" aria-hidden="true" />
                 <p className={mobileTextClasses.body}>Processing activities register coming soon</p>
                 <p className={mobileTextClasses.muted}>Complete Article 30 compliance documentation</p>
               </div>
@@ -717,10 +693,10 @@ const GDPRCompliance = () => {
 
       {/* Edit Request Dialog */}
       <Dialog open={editRequestDialogOpen} onOpenChange={setEditRequestDialogOpen}>
-        <DialogContent className="max-w-md mx-auto">
+        <DialogContent className="max-w-md mx-auto" aria-describedby="edit-request-description">
           <DialogHeader>
             <DialogTitle className={mobileTextClasses.header}>Edit Data Subject Request</DialogTitle>
-            <DialogDescription className={mobileTextClasses.muted}>
+            <DialogDescription id="edit-request-description" className={mobileTextClasses.muted}>
               Update the request details
             </DialogDescription>
           </DialogHeader>
@@ -843,10 +819,10 @@ const GDPRCompliance = () => {
 
       {/* Edit Consent Dialog */}
       <Dialog open={editConsentDialogOpen} onOpenChange={setEditConsentDialogOpen}>
-        <DialogContent className="max-w-md mx-auto">
+        <DialogContent className="max-w-md mx-auto" aria-describedby="edit-consent-description">
           <DialogHeader>
             <DialogTitle className={mobileTextClasses.header}>Edit Consent Record</DialogTitle>
-            <DialogDescription className={mobileTextClasses.muted}>
+            <DialogDescription id="edit-consent-description" className={mobileTextClasses.muted}>
               Update the consent record details
             </DialogDescription>
           </DialogHeader>

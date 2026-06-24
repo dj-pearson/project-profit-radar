@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { initializeAuthContext, errorResponse, successResponse } from '../_shared/auth-helpers.ts';
+import { checkEntitlement } from '../_shared/entitlements.ts';
 
 const logStep = (step: string, details?: any) => {
   console.log(`[PROJECTS] ${step}${details ? ` - ${JSON.stringify(details)}` : ''}`);
@@ -26,19 +27,18 @@ serve(async (req) => {
       return errorResponse('Unauthorized - Missing or invalid authentication', 401);
     }
 
-    const { user, siteId, supabase } = authContext;
-    logStep("User authenticated", { userId: user.id, siteId });
+    const { user, supabase } = authContext;
+    logStep("User authenticated", { userId: user.id });
 
     // Get user profile to check role and company
     const { data: userProfile, error: profileError } = await supabase
       .from('user_profiles')
       .select('*')
       .eq('id', user.id)
-      .eq('site_id', siteId)
       .single();
 
     if (profileError) throw new Error(`Profile error: ${profileError.message}`);
-    logStep("User profile retrieved", { role: userProfile.role, companyId: userProfile.company_id, siteId });
+    logStep("User profile retrieved", { role: userProfile.role, companyId: userProfile.company_id });
 
     const url = new URL(req.url);
     const method = req.method;
@@ -57,13 +57,12 @@ serve(async (req) => {
               job_costs(sum:total_cost),
               change_orders(count)
             `)
-            .eq('site_id', siteId)
             .eq('company_id', userProfile.company_id)
             .order('created_at', { ascending: false });
 
           if (projectsError) throw new Error(`Projects fetch error: ${projectsError.message}`);
           
-          logStep("Projects retrieved", { count: projects?.length, siteId });
+          logStep("Projects retrieved", { count: projects?.length });
           return successResponse({ projects });
         }
 
@@ -82,13 +81,12 @@ serve(async (req) => {
               daily_reports(*)
             `)
             .eq('id', projectId)
-            .eq('site_id', siteId)
             .eq('company_id', userProfile.company_id)
             .single();
 
           if (projectError) throw new Error(`Project fetch error: ${projectError.message}`);
           
-          logStep("Project detail retrieved", { projectId, siteId });
+          logStep("Project detail retrieved", { projectId });
           return successResponse({ project });
         }
 
@@ -104,9 +102,26 @@ serve(async (req) => {
             throw new Error("Insufficient permissions to create projects");
           }
 
+          // Enforce plan limits server-side. The client checkLimit() only gates
+          // the UI and is bypassable by calling this endpoint directly, so the
+          // server is the authoritative gate (US-199).
+          const entitlement = await checkEntitlement(
+            supabase,
+            userProfile.company_id,
+            'projects',
+            { userId: user.id }
+          );
+          if (!entitlement.allowed) {
+            logStep("Project limit reached", entitlement);
+            return errorResponse(
+              entitlement.reason || 'Project limit reached for your plan',
+              403,
+              req
+            );
+          }
+
           const projectData = {
             ...body,
-            site_id: siteId,
             company_id: userProfile.company_id,
             created_by: user.id,
             project_manager_id: body.project_manager_id || user.id
@@ -120,7 +135,7 @@ serve(async (req) => {
 
           if (createError) throw new Error(`Project creation error: ${createError.message}`);
 
-          logStep("Project created", { projectId: newProject.id, siteId });
+          logStep("Project created", { projectId: newProject.id });
           return successResponse({ project: newProject });
         }
 
@@ -141,14 +156,13 @@ serve(async (req) => {
             .from('projects')
             .update(body)
             .eq('id', projectId)
-            .eq('site_id', siteId)
             .eq('company_id', userProfile.company_id)
             .select()
             .single();
 
           if (updateError) throw new Error(`Project update error: ${updateError.message}`);
 
-          logStep("Project updated", { projectId, siteId });
+          logStep("Project updated", { projectId });
           return successResponse({ project: updatedProject });
         }
 
@@ -168,12 +182,11 @@ serve(async (req) => {
             .from('projects')
             .delete()
             .eq('id', projectId)
-            .eq('site_id', siteId)
             .eq('company_id', userProfile.company_id);
 
           if (deleteError) throw new Error(`Project deletion error: ${deleteError.message}`);
 
-          logStep("Project deleted", { projectId, siteId });
+          logStep("Project deleted", { projectId });
           return successResponse({ success: true });
         }
 

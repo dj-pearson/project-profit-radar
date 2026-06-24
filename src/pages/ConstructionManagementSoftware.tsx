@@ -1,4 +1,3 @@
-import React from "react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { PageSEO, createArticleSchema, createBreadcrumbSchema, createSoftwareApplicationSchema } from "@/components/seo/PageSEO";
@@ -35,32 +34,32 @@ const ConstructionManagementSoftware = () => {
   const cmsFAQs = [
     {
       question: "What is construction management software?",
-      answer: "Construction management software is an all-in-one platform that helps contractors manage projects, finances, teams, and operations. It includes project scheduling, job costing, budget tracking, team communication, document management, time tracking, and financial reporting. BuildDesk costs $350/month with unlimited users vs competitors charging $500+/user/month.",
+      answer: "Construction management software is an all-in-one platform that helps contractors manage projects, finances, teams, and operations. It includes project scheduling, job costing, budget tracking, team communication, document management, time tracking, and financial reporting. Brikly costs $350/month with unlimited users vs competitors charging $500+/user/month.",
       category: "Definition"
     },
     {
       question: "What features should construction management software have?",
-      answer: "Essential features include: project scheduling with Gantt charts, real-time job costing and budget tracking, mobile apps for field crews, time and attendance tracking, document management, team communication, change order management, QuickBooks integration, client portals, and compliance tracking. BuildDesk includes all these features at $350/month flat rate.",
+      answer: "Essential features include: project scheduling with Gantt charts, real-time job costing and budget tracking, mobile apps for field crews, time and attendance tracking, document management, team communication, change order management, QuickBooks integration, client portals, and compliance tracking. Brikly includes all these features at $350/month flat rate.",
       category: "Features"
     },
     {
       question: "How much does construction management software cost?",
-      answer: "Construction management software costs $30-$500+ per user per month. BuildDesk offers flat-rate pricing at $350/month with unlimited users, making it 50% cheaper than Procore ($500+/user/month) and more affordable than Buildertrend ($399+/month). No hidden fees, no per-seat charges, no long-term contracts.",
+      answer: "Construction management software costs $30-$500+ per user per month. Brikly offers flat-rate pricing at $350/month with unlimited users, making it 50% cheaper than Procore ($500+/user/month) and more affordable than Buildertrend ($399+/month). No hidden fees, no per-seat charges, no long-term contracts.",
       category: "Pricing"
     },
     {
       question: "Is construction management software worth it?",
-      answer: "Yes, construction management software typically delivers 300-500% ROI within the first year. Contractors see 23% profit margin improvement, 40% reduction in administrative time, 78% fewer project delays, and 96% better budget accuracy. BuildDesk pays for itself in 2-3 months through improved efficiency and cost control.",
+      answer: "Yes, construction management software typically delivers 300-500% ROI within the first year. Contractors see 23% profit margin improvement, 40% reduction in administrative time, 78% fewer project delays, and 96% better budget accuracy. Brikly pays for itself in 2-3 months through improved efficiency and cost control.",
       category: "ROI"
     },
     {
       question: "Can construction management software integrate with QuickBooks?",
-      answer: "Yes, BuildDesk has native QuickBooks Online integration with 2-way sync. Job costs, invoices, expenses, vendor bills, and time entries sync automatically between BuildDesk and QuickBooks, eliminating double data entry. Financial data stays synchronized in real-time for accurate bookkeeping and job profitability analysis.",
+      answer: "Yes, Brikly has native QuickBooks Online integration with 2-way sync. Job costs, invoices, expenses, vendor bills, and time entries sync automatically between Brikly and QuickBooks, eliminating double data entry. Financial data stays synchronized in real-time for accurate bookkeeping and job profitability analysis.",
       category: "Integration"
     },
     {
       question: "Does construction management software work on mobile devices?",
-      answer: "Yes, BuildDesk includes native iOS and Android mobile apps with full offline capability. Field crews can clock in/out with GPS tracking, capture photos, complete daily reports, update project progress, and communicate with the office—all from their smartphones. Data syncs automatically when internet connection is available.",
+      answer: "Yes, Brikly includes native iOS and Android mobile apps with full offline capability. Field crews can clock in/out with GPS tracking, capture photos, complete daily reports, update project progress, and communicate with the office—all from their smartphones. Data syncs automatically when internet connection is available.",
       category: "Mobile"
     }
   ];
@@ -68,14 +67,14 @@ const ConstructionManagementSoftware = () => {
   const articleSchema = createArticleSchema(
     "Construction Management Software - Complete Guide 2025",
     "Comprehensive construction management software for contractors. All-in-one platform for project management, job costing, scheduling, and team collaboration.",
-    "https://build-desk.com/construction-management-software",
+    "https://brikly.net/construction-management-software",
     ["construction management software", "construction project management", "contractor management system"]
   );
 
   const breadcrumbSchema = createBreadcrumbSchema([
-    { name: "Home", url: "https://build-desk.com" },
-    { name: "Solutions", url: "https://build-desk.com/solutions" },
-    { name: "Construction Management Software", url: "https://build-desk.com/construction-management-software" }
+    { name: "Home", url: "https://brikly.net" },
+    { name: "Solutions", url: "https://brikly.net/solutions" },
+    { name: "Construction Management Software", url: "https://brikly.net/construction-management-software" }
   ]);
 
   const softwareSchema = createSoftwareApplicationSchema();
@@ -83,7 +82,7 @@ const ConstructionManagementSoftware = () => {
   return (
     <>
       <PageSEO
-        title="Construction Management Software - All-in-One Platform for Contractors | BuildDesk"
+        title="Construction Management Software - All-in-One Platform for Contractors | Brikly"
         description="Complete construction management software for contractors. Project scheduling, real-time job costing, mobile crew tracking, QuickBooks sync. $350/month unlimited users vs $500+/user competitors. 23% profit improvement, 40% less admin time, 78% fewer delays. Free trial."
         keywords={[
           'construction management software',
@@ -95,7 +94,7 @@ const ConstructionManagementSoftware = () => {
           'construction management platform',
           'all-in-one construction software'
         ]}
-        canonicalUrl="https://build-desk.com/construction-management-software"
+        canonicalUrl="https://brikly.net/construction-management-software"
         schema={[articleSchema, breadcrumbSchema, softwareSchema]}
         ogType="article"
         lastModified="2025-11-07"
@@ -152,7 +151,7 @@ const ConstructionManagementSoftware = () => {
             {/* Benefits Section */}
             <div className="bg-white rounded-lg border p-8 mb-16">
               <h2 className="text-3xl font-bold text-construction-dark mb-8 text-center">
-                Why Choose BuildDesk for Construction Management
+                Why Choose Brikly for Construction Management
               </h2>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div className="text-center">
@@ -191,7 +190,7 @@ const ConstructionManagementSoftware = () => {
                 Ready to Transform Your Construction Management?
               </h2>
               <p className="text-lg mb-6 opacity-90">
-                Join 500+ contractors who have streamlined their operations and increased profitability with BuildDesk.
+                Join 500+ contractors who have streamlined their operations and increased profitability with Brikly.
               </p>
               <Link to="/auth">
                 <Button size="lg" variant="secondary">

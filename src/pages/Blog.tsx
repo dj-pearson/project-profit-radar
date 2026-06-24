@@ -1,4 +1,3 @@
-import React from "react";
 import { Link } from "react-router-dom";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -10,7 +9,7 @@ const Blog = () => {
   return (
     <>
       <SEOMetaTags
-        title="Construction Industry Blog - BuildDesk"
+        title="Construction Industry Blog - Brikly"
         description="Expert insights on construction management, project efficiency, safety compliance, and industry best practices. Stay updated with the latest construction technology trends."
         keywords={['construction blog', 'construction management articles', 'construction industry insights', 'construction best practices', 'construction technology']}
         canonicalUrl="/blog"
@@ -29,7 +28,7 @@ const Blog = () => {
               <Link to="/resources">
                 <Button className="bg-construction-blue hover:bg-construction-blue/90">
                   Browse All Articles
-                  <ArrowRight className="ml-2 h-4 w-4" />
+                  <ArrowRight className="ml-2 h-4 w-4" aria-hidden="true" />
                 </Button>
               </Link>
             </div>

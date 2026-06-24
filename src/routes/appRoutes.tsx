@@ -1,10 +1,14 @@
 /**
  * Core Application Routes
  * Main app navigation, dashboards, hubs, and settings
+ *
+ * ⚡ Performance: All routes are lazy-loaded to reduce initial bundle size
  */
 
 import { Route } from 'react-router-dom';
+import { RouteGuard } from '@/components/ProtectedRoute';
 import {
+  createLazyRoute,
   LazyIndex,
   LazyDashboard,
   LazyMyTasks,
@@ -23,22 +27,26 @@ import {
   LazyWorkflowManagement,
   LazyWorkflowTesting,
   LazyAuth,
+  LazyAuthCallback,
   LazySetup,
   LazyCheckoutSuccess,
+  LazyPaymentSuccess,
+  LazyPaymentCancelled,
   LazyTools,
   LazyResources,
   LazyBlogPost,
+  LazyUserProfile,
 } from '@/utils/lazyRoutes';
 
-// Non-lazy imports
-import { ReferralProgram } from '@/pages/ReferralProgram';
-import { IntegrationMarketplace } from '@/pages/IntegrationMarketplace';
-import { WorkflowAutomation } from '@/pages/WorkflowAutomation';
-import { AIInsights } from '@/pages/AIInsights';
-import MobileShowcase from '@/pages/MobileShowcase';
-import AdvancedMobileShowcase from '@/pages/AdvancedMobileShowcase';
-import { VisualProjectManagementPage } from '@/pages/VisualProjectManagementPage';
-import { CustomDomain } from '@/pages/settings/CustomDomain';
+// Lazy-loaded feature pages (with ErrorBoundary + Suspense via createLazyRoute)
+const ReferralProgram = createLazyRoute(() => import('@/pages/ReferralProgram').then(m => ({ default: m.ReferralProgram })));
+const IntegrationMarketplace = createLazyRoute(() => import('@/pages/IntegrationMarketplace').then(m => ({ default: m.IntegrationMarketplace })));
+const WorkflowAutomation = createLazyRoute(() => import('@/pages/WorkflowAutomation').then(m => ({ default: m.WorkflowAutomation })));
+const AIInsights = createLazyRoute(() => import('@/pages/AIInsights').then(m => ({ default: m.AIInsights })));
+const MobileShowcase = createLazyRoute(() => import('@/pages/MobileShowcase'));
+const AdvancedMobileShowcase = createLazyRoute(() => import('@/pages/AdvancedMobileShowcase'));
+const VisualProjectManagementPage = createLazyRoute(() => import('@/pages/VisualProjectManagementPage').then(m => ({ default: m.VisualProjectManagementPage })));
+const CustomDomain = createLazyRoute(() => import('@/pages/settings/CustomDomain').then(m => ({ default: m.CustomDomain })));
 
 export const appRoutes = (
   <>
@@ -46,23 +54,27 @@ export const appRoutes = (
     <Route path="/" element={<LazyIndex />} />
 
     {/* Core App Routes */}
-    <Route path="/dashboard" element={<LazyDashboard />} />
-    <Route path="/my-tasks" element={<LazyMyTasks />} />
+    <Route path="/dashboard" element={<RouteGuard><LazyDashboard /></RouteGuard>} />
+    <Route path="/my-tasks" element={<RouteGuard><LazyMyTasks /></RouteGuard>} />
     <Route path="/auth" element={<LazyAuth />} />
+    <Route path="/auth/callback" element={<LazyAuthCallback />} />
     <Route path="/setup" element={<LazySetup />} />
     <Route path="/checkout/success" element={<LazyCheckoutSuccess />} />
+    <Route path="/payment-success" element={<LazyPaymentSuccess />} />
+    <Route path="/payment-cancelled" element={<LazyPaymentCancelled />} />
 
     {/* Hubs */}
-    <Route path="/projects-hub" element={<LazyProjectsHub />} />
-    <Route path="/financial-hub" element={<LazyFinancialHub />} />
-    <Route path="/people-hub" element={<LazyPeopleHub />} />
-    <Route path="/operations-hub" element={<LazyOperationsHub />} />
-    <Route path="/admin-hub" element={<LazyAdminHub />} />
+    <Route path="/projects-hub" element={<RouteGuard><LazyProjectsHub /></RouteGuard>} />
+    <Route path="/financial-hub" element={<RouteGuard><LazyFinancialHub /></RouteGuard>} />
+    <Route path="/people-hub" element={<RouteGuard><LazyPeopleHub /></RouteGuard>} />
+    <Route path="/operations-hub" element={<RouteGuard><LazyOperationsHub /></RouteGuard>} />
+    <Route path="/admin-hub" element={<RouteGuard><LazyAdminHub /></RouteGuard>} />
 
-    {/* Settings */}
-    <Route path="/user-settings" element={<LazyUserSettings />} />
-    <Route path="/subscription-settings" element={<LazySubscriptionSettings />} />
-    <Route path="/settings/custom-domain" element={<CustomDomain />} />
+    {/* Profile & Settings */}
+    <Route path="/profile" element={<RouteGuard><LazyUserProfile /></RouteGuard>} />
+    <Route path="/user-settings" element={<RouteGuard><LazyUserSettings /></RouteGuard>} />
+    <Route path="/subscription-settings" element={<RouteGuard><LazySubscriptionSettings /></RouteGuard>} />
+    <Route path="/settings/custom-domain" element={<RouteGuard><CustomDomain /></RouteGuard>} />
 
     {/* Features */}
     <Route path="/marketplace" element={<LazyAPIMarketplace />} />

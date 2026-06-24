@@ -1,4 +1,3 @@
-import React from "react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { SEOMetaTags } from "@/components/SEOMetaTags";
@@ -17,12 +16,12 @@ const FAQ = () => {
       title: "Getting Started",
       questions: [
         {
-          question: "How quickly can I get started with BuildDesk?",
+          question: "How quickly can I get started with Brikly?",
           answer: "Most small contractors are live and productive within 1-2 weeks. Our setup wizard guides you through company configuration, team setup, and project templates. No technical expertise required."
         },
         {
-          question: "Do I need technical skills to use BuildDesk?",
-          answer: "No. BuildDesk is designed for contractors, not IT professionals. If you can use email and text messaging, you can use BuildDesk. Our mobile app is as simple as using your phone's camera."
+          question: "Do I need technical skills to use Brikly?",
+          answer: "No. Brikly is designed for contractors, not IT professionals. If you can use email and text messaging, you can use Brikly. Our mobile app is as simple as using your phone's camera."
         },
         {
           question: "Can I import data from my current system?",
@@ -38,7 +37,7 @@ const FAQ = () => {
       title: "Features & Functionality",
       questions: [
         {
-          question: "Does BuildDesk work offline?",
+          question: "Does Brikly work offline?",
           answer: "Yes. Our mobile apps work fully offline for field teams. When connectivity returns, all data syncs automatically. Critical for job sites with poor cell service."
         },
         {
@@ -59,8 +58,8 @@ const FAQ = () => {
       title: "Pricing & Plans",
       questions: [
         {
-          question: "How much does BuildDesk cost compared to Procore?",
-          answer: "BuildDesk costs 60-70% less than Procore. Our Professional plan ($299/month) includes features that cost $800-1,500+ monthly with Procore. Same core functionality, better price for small contractors."
+          question: "How much does Brikly cost compared to Procore?",
+          answer: "Brikly costs 60-70% less than Procore. Our Professional plan ($299/month) includes features that cost $800-1,500+ monthly with Procore. Same core functionality, better price for small contractors."
         },
         {
           question: "Are there setup fees or hidden costs?",
@@ -101,14 +100,14 @@ const FAQ = () => {
   return (
     <div className="min-h-screen bg-background">
       <SEOMetaTags
-        title="Frequently Asked Questions | BuildDesk Construction Management"
-        description="Get answers to common questions about BuildDesk construction management software. Setup, features, pricing, support, and more for small contractors."
+        title="Frequently Asked Questions | Brikly Construction Management"
+        description="Get answers to common questions about Brikly construction management software. Setup, features, pricing, support, and more for small contractors."
         keywords={[
-          'builddesk faq',
+          'brikly faq',
           'construction software questions',
-          'builddesk help',
+          'brikly help',
           'construction management software support',
-          'builddesk pricing questions'
+          'brikly pricing questions'
         ]}
         canonicalUrl="/faq"
       />
@@ -127,21 +126,21 @@ const FAQ = () => {
           </h1>
           <LastUpdated date="September 2025" />
           <p className="text-xl text-muted-foreground max-w-3xl mx-auto mb-6">
-            Get quick answers to common questions about BuildDesk construction management software.
+            Get quick answers to common questions about Brikly construction management software.
             Can't find what you're looking for? Our support team is here to help.
           </p>
         </div>
         
         <QuickAnswerSnippet
           question="What are the most common questions about construction management software?"
-          answer="Most contractors ask about setup time (1-2 weeks for BuildDesk), user limits (unlimited on all plans), offline functionality (full mobile offline capability), QuickBooks integration (two-way sync), and cost compared to competitors (60-70% less than Procore)."
+          answer="Most contractors ask about setup time (1-2 weeks for Brikly), user limits (unlimited on all plans), offline functionality (full mobile offline capability), QuickBooks integration (two-way sync), and cost compared to competitors (60-70% less than Procore)."
         />
 
         {/* FAQ Categories */}
         {faqCategories.map((category, categoryIndex) => (
           <section key={categoryIndex} className="mb-12">
             <div className="flex items-center gap-3 mb-6">
-              <HelpCircle className="h-6 w-6 text-primary" />
+              <HelpCircle className="h-6 w-6 text-primary" aria-hidden="true" />
               <h2 className="text-2xl font-semibold">{category.title}</h2>
             </div>
             <div className="space-y-4">
@@ -172,7 +171,7 @@ const FAQ = () => {
               <CardContent>
                 <Button asChild variant="outline" className="w-full">
                   <Link to="/resources">
-                    View Guide <ArrowRight className="ml-2 h-4 w-4" />
+                    View Guide <ArrowRight className="ml-2 h-4 w-4" aria-hidden="true" />
                   </Link>
                 </Button>
               </CardContent>
@@ -182,12 +181,12 @@ const FAQ = () => {
               <CardHeader>
                 <Badge className="w-fit mb-2">Features</Badge>
                 <CardTitle className="text-lg">Feature Overview</CardTitle>
-                <CardDescription>Complete list of BuildDesk capabilities</CardDescription>
+                <CardDescription>Complete list of Brikly capabilities</CardDescription>
               </CardHeader>
               <CardContent>
                 <Button asChild variant="outline" className="w-full">
                   <Link to="/features">
-                    View Features <ArrowRight className="ml-2 h-4 w-4" />
+                    View Features <ArrowRight className="ml-2 h-4 w-4" aria-hidden="true" />
                   </Link>
                 </Button>
               </CardContent>
@@ -197,12 +196,12 @@ const FAQ = () => {
               <CardHeader>
                 <Badge className="w-fit mb-2">Comparison</Badge>
                 <CardTitle className="text-lg">vs. Competitors</CardTitle>
-                <CardDescription>See how BuildDesk compares to other solutions</CardDescription>
+                <CardDescription>See how Brikly compares to other solutions</CardDescription>
               </CardHeader>
               <CardContent>
                 <Button asChild variant="outline" className="w-full">
                   <Link to="/procore-alternative-detailed">
-                    View Comparison <ArrowRight className="ml-2 h-4 w-4" />
+                    View Comparison <ArrowRight className="ml-2 h-4 w-4" aria-hidden="true" />
                   </Link>
                 </Button>
               </CardContent>
@@ -217,7 +216,7 @@ const FAQ = () => {
           </h2>
           <p className="text-muted-foreground mb-6 max-w-2xl mx-auto">
             Our construction-focused support team is here to help. Get personalized answers 
-            to your specific questions about BuildDesk and construction management.
+            to your specific questions about Brikly and construction management.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button asChild size="lg">
@@ -225,7 +224,7 @@ const FAQ = () => {
             </Button>
             <Button asChild variant="outline" size="lg">
               <Link to="/support">
-                Contact Support <ArrowRight className="ml-2 h-4 w-4" />
+                Contact Support <ArrowRight className="ml-2 h-4 w-4" aria-hidden="true" />
               </Link>
             </Button>
           </div>

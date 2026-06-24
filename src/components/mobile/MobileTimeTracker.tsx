@@ -3,27 +3,12 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { 
-  Clock, 
-  Play,
-  Pause,
-  Square,
-  MapPin,
-  Wifi,
-  WifiOff,
-  Users,
-  UserCheck,
-  Timer,
-  CheckCircle,
-  AlertTriangle,
-  CalendarDays,
-  DollarSign,
-  Target
-} from 'lucide-react';
+import {
+  MobileTextField,
+  MobileTextArea,
+  MobileSelectField,
+} from '@/components/mobile/forms';
+import { Clock, Play, Pause, Square, MapPin, Wifi, WifiOff, Users, AlertTriangle, CalendarDays, DollarSign } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { useOfflineSync } from '@/hooks/useOfflineSync';
@@ -32,7 +17,7 @@ import { Geolocation } from '@capacitor/geolocation';
 
 interface MobileTimeTrackerProps {
   projectId?: string;
-  onTimeEntryChange?: (entry: any) => void;
+  onTimeEntryChange?: (entry: TimeEntry | null) => void;
 }
 
 interface TimeEntry {
@@ -86,13 +71,34 @@ const MobileTimeTracker: React.FC<MobileTimeTrackerProps> = ({
   const [breakStartTime, setBreakStartTime] = useState<Date | null>(null);
   
   // Location state
-  const [location, setLocation] = useState<any>(null);
+  const [location, setLocation] = useState<{ latitude: number; longitude: number; accuracy: number } | null>(null);
   const [isInGeofence, setIsInGeofence] = useState<boolean | null>(null);
   
   // Project & task state
-  const [projects, setProjects] = useState<any[]>([]);
-  const [tasks, setTasks] = useState<any[]>([]);
-  const [costCodes, setCostCodes] = useState<any[]>([]);
+  interface ProjectOption {
+    id: string;
+    name: string;
+    client_name: string;
+    site_address?: string;
+    site_latitude?: number | null;
+    site_longitude?: number | null;
+    geofence_radius_meters?: number;
+  }
+  interface TaskOption {
+    id: string;
+    name: string;
+    status: string;
+  }
+  interface CostCodeOption {
+    id: string;
+    code: string;
+    name: string;
+    category?: string;
+    is_active?: boolean;
+  }
+  const [projects, setProjects] = useState<ProjectOption[]>([]);
+  const [tasks, setTasks] = useState<TaskOption[]>([]);
+  const [costCodes, setCostCodes] = useState<CostCodeOption[]>([]);
   const [selectedProject, setSelectedProject] = useState(projectId || '');
   const [selectedTask, setSelectedTask] = useState('');
   const [selectedCostCode, setSelectedCostCode] = useState('');
@@ -279,7 +285,7 @@ const MobileTimeTracker: React.FC<MobileTimeTrackerProps> = ({
         .order('start_time', { ascending: false });
 
       if (error) throw error;
-      setDailyEntries((data || []) as any as TimeEntry[]);
+      setDailyEntries((data || []) as unknown as TimeEntry[]);
     } catch (error) {
       console.error('Error loading daily entries:', error);
     }
@@ -359,12 +365,12 @@ const MobileTimeTracker: React.FC<MobileTimeTrackerProps> = ({
       if (error) throw error;
 
       if (data) {
-        setCurrentEntry(data as any as TimeEntry);
+        setCurrentEntry(data as unknown as TimeEntry);
         setIsTracking(true);
         setSelectedProject(data.project_id);
         setSelectedTask(data.task_id || '');
         setSelectedCostCode(data.cost_code_id || '');
-        setNotes((data as any).notes || '');
+        setNotes((data as unknown as TimeEntry).notes || '');
         
         const startTime = new Date(data.start_time);
         const now = new Date();
@@ -414,12 +420,12 @@ const MobileTimeTracker: React.FC<MobileTimeTrackerProps> = ({
       if (isOnline) {
         const { data, error } = await supabase
           .from('time_entries')
-          .insert(entryData as any)
+          .insert(entryData as unknown as Record<string, unknown>)
           .select()
           .single();
 
         if (error) throw error;
-        setCurrentEntry(data as any as TimeEntry);
+        setCurrentEntry(data as unknown as TimeEntry);
       } else {
         await saveOfflineData('time_entry', entryData);
         setCurrentEntry({ ...entryData, id: `offline_${Date.now()}` } as TimeEntry);
@@ -605,83 +611,63 @@ const MobileTimeTracker: React.FC<MobileTimeTrackerProps> = ({
 
           {/* Project Selection */}
           {!isTracking && (
-            <Card>
+            <Card className="glass rounded-2xl shadow-ios-2 border-transparent">
               <CardHeader>
-                <CardTitle className="text-lg">Time Entry Setup</CardTitle>
+                <CardTitle className="text-lg tracking-tight">Time Entry Setup</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="project">Project</Label>
-                  <Select value={selectedProject} onValueChange={setSelectedProject}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select project..." />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {projects.map((project) => (
-                        <SelectItem key={project.id} value={project.id}>
-                          {project.name} - {project.client_name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+                <MobileSelectField
+                  label="Project"
+                  required
+                  placeholder="Select project…"
+                  value={selectedProject}
+                  onChange={(e) => setSelectedProject(e.target.value)}
+                  options={projects.map((p) => ({
+                    value: p.id,
+                    label: `${p.name} - ${p.client_name}`,
+                  }))}
+                />
 
                 {selectedProject && (
                   <>
-                    <div className="space-y-2">
-                      <Label htmlFor="task">Task (Optional)</Label>
-                      <Select value={selectedTask} onValueChange={setSelectedTask}>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select task..." />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {tasks.map((task) => (
-                            <SelectItem key={task.id} value={task.id}>
-                              {task.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
+                    <MobileSelectField
+                      label="Task (Optional)"
+                      placeholder="Select task…"
+                      value={selectedTask}
+                      onChange={(e) => setSelectedTask(e.target.value)}
+                      options={tasks.map((t) => ({ value: t.id, label: t.name }))}
+                    />
 
-                    <div className="space-y-2">
-                      <Label htmlFor="costCode">Cost Code (Optional)</Label>
-                      <Select value={selectedCostCode} onValueChange={setSelectedCostCode}>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select cost code..." />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {costCodes.map((code) => (
-                            <SelectItem key={code.id} value={code.id}>
-                              {code.code} - {code.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
+                    <MobileSelectField
+                      label="Cost Code (Optional)"
+                      placeholder="Select cost code…"
+                      value={selectedCostCode}
+                      onChange={(e) => setSelectedCostCode(e.target.value)}
+                      options={costCodes.map((c) => ({
+                        value: c.id,
+                        label: `${c.code} - ${c.name}`,
+                      }))}
+                    />
 
-                    <div className="space-y-2">
-                      <Label htmlFor="hourlyRate">Hourly Rate</Label>
-                      <Input
-                        id="hourlyRate"
-                        type="number"
-                        step="0.01"
-                        value={hourlyRate}
-                        onChange={(e) => setHourlyRate(Number(e.target.value))}
-                        placeholder="0.00"
-                      />
-                    </div>
+                    <MobileTextField
+                      label="Hourly Rate"
+                      type="number"
+                      inputMode="decimal"
+                      step="0.01"
+                      value={hourlyRate}
+                      onChange={(e) =>
+                        setHourlyRate(Number(e.target.value))
+                      }
+                      placeholder="0.00"
+                    />
 
-                    <div className="space-y-2">
-                      <Label htmlFor="notes">Notes (Optional)</Label>
-                      <Textarea
-                        id="notes"
-                        value={notes}
-                        onChange={(e) => setNotes(e.target.value)}
-                        placeholder="Add notes about your work..."
-                        rows={3}
-                      />
-                    </div>
+                    <MobileTextArea
+                      label="Notes (Optional)"
+                      value={notes}
+                      onChange={(e) => setNotes(e.target.value)}
+                      placeholder="Add notes about your work…"
+                      rows={3}
+                    />
                   </>
                 )}
               </CardContent>
@@ -769,7 +755,7 @@ const MobileTimeTracker: React.FC<MobileTimeTrackerProps> = ({
 
           {/* GPS Warning */}
           {isTracking && isInGeofence === false && (
-            <Card className="border-yellow-200 bg-yellow-50">
+            <Card className="rounded-2xl glass shadow-ios-1 border-yellow-200/60 dark:border-yellow-500/30 bg-yellow-50/80 dark:bg-yellow-950/20">
               <CardContent className="pt-6">
                 <div className="flex items-center gap-2 text-yellow-800">
                   <AlertTriangle className="h-4 w-4" />

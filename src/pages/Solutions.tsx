@@ -1,4 +1,3 @@
-import React from "react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { SEOMetaTags } from "@/components/SEOMetaTags";
@@ -13,7 +12,7 @@ import BreadcrumbsNavigation from "@/components/BreadcrumbsNavigation";
 const Solutions = () => {
   const solutions = [
     {
-      icon: <Home className="h-8 w-8 text-blue-600" />,
+      icon: <Home className="h-8 w-8 text-blue-600" aria-hidden="true" />,
       title: "Residential Contractors",
       description: "Perfect for home builders, remodelers, and custom home contractors managing 5-50 projects annually.",
       features: [
@@ -27,7 +26,7 @@ const Solutions = () => {
       slug: "residential-contractors"
     },
     {
-      icon: <Building className="h-8 w-8 text-green-600" />,
+      icon: <Building className="h-8 w-8 text-green-600" aria-hidden="true" />,
       title: "Commercial Contractors", 
       description: "Streamlined tools for office fit-outs, retail construction, and light commercial projects.",
       features: [
@@ -41,7 +40,7 @@ const Solutions = () => {
       slug: "commercial-contractors"
     },
     {
-      icon: <Wrench className="h-8 w-8 text-orange-600" />,
+      icon: <Wrench className="h-8 w-8 text-orange-600" aria-hidden="true" />,
       title: "Specialty Trade Contractors",
       description: "Built for electrical, plumbing, HVAC, and other specialty trades managing multiple concurrent jobs.",
       features: [
@@ -55,7 +54,7 @@ const Solutions = () => {
       slug: "specialty-contractors"
     },
     {
-      icon: <Users className="h-8 w-8 text-purple-600" />,
+      icon: <Users className="h-8 w-8 text-purple-600" aria-hidden="true" />,
       title: "Small General Contractors",
       description: "Complete project management for GCs with 10-50 employees managing diverse project types.",
       features: [
@@ -73,8 +72,8 @@ const Solutions = () => {
   return (
     <div className="min-h-screen bg-background">
       <SEOMetaTags
-        title="Construction Management Solutions by Contractor Type | BuildDesk"
-        description="Specialized construction management solutions for residential contractors, commercial builders, specialty trades, and small GCs. See how BuildDesk fits your business."
+        title="Construction Management Solutions by Contractor Type | Brikly"
+        description="Specialized construction management solutions for residential contractors, commercial builders, specialty trades, and small GCs. See how Brikly fits your business."
         keywords={[
           'construction management solutions',
           'residential contractor software',
@@ -105,13 +104,13 @@ const Solutions = () => {
         
         <QuickAnswerSnippet
           question="What construction management solution is best for my contractor type?"
-          answer="BuildDesk offers specialized workflows for residential contractors (homeowner portals, change orders), commercial contractors (multi-phase tracking, compliance), specialty trades (service calls, material tracking), and small GCs (subcontractor management, financial reporting)."
+          answer="Brikly offers specialized workflows for residential contractors (homeowner portals, change orders), commercial contractors (multi-phase tracking, compliance), specialty trades (service calls, material tracking), and small GCs (subcontractor management, financial reporting)."
         />
 
         {/* Solutions Grid */}
         <div className="grid lg:grid-cols-2 gap-8 mb-12">
           {solutions.map((solution, index) => (
-            <Card key={index} className="h-full flex flex-col">
+            <Card key={index} className="h-full flex flex-col" role="article" aria-label={solution.title}>
               <CardHeader>
                 <div className="flex items-center gap-3 mb-2">
                   {solution.icon}
@@ -128,7 +127,7 @@ const Solutions = () => {
                   <ul className="space-y-2">
                     {solution.features.map((feature, featureIndex) => (
                       <li key={featureIndex} className="flex items-start gap-2">
-                        <CheckCircle className="h-4 w-4 text-green-600 mt-0.5 flex-shrink-0" />
+                        <CheckCircle className="h-4 w-4 text-green-600 mt-0.5 flex-shrink-0" aria-hidden="true" />
                         <span className="text-sm text-muted-foreground">{feature}</span>
                       </li>
                     ))}
@@ -143,7 +142,7 @@ const Solutions = () => {
                 <div className="mt-auto">
                   <Button asChild className="w-full">
                     <Link to={`/solutions/${solution.slug}`}>
-                      Learn More <ArrowRight className="ml-2 h-4 w-4" />
+                      Learn More <ArrowRight className="ml-2 h-4 w-4" aria-hidden="true" />
                     </Link>
                   </Button>
                 </div>
@@ -160,7 +159,7 @@ const Solutions = () => {
           <div className="grid md:grid-cols-3 gap-6">
             <div className="text-center">
               <div className="bg-primary/10 w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4">
-                <CheckCircle className="h-6 w-6 text-primary" />
+                <CheckCircle className="h-6 w-6 text-primary" aria-hidden="true" />
               </div>
               <h3 className="font-semibold mb-2">Faster Setup</h3>
               <p className="text-sm text-muted-foreground">
@@ -169,7 +168,7 @@ const Solutions = () => {
             </div>
             <div className="text-center">
               <div className="bg-primary/10 w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4">
-                <CheckCircle className="h-6 w-6 text-primary" />
+                <CheckCircle className="h-6 w-6 text-primary" aria-hidden="true" />
               </div>
               <h3 className="font-semibold mb-2">Better Margins</h3>
               <p className="text-sm text-muted-foreground">
@@ -178,7 +177,7 @@ const Solutions = () => {
             </div>
             <div className="text-center">
               <div className="bg-primary/10 w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4">
-                <CheckCircle className="h-6 w-6 text-primary" />
+                <CheckCircle className="h-6 w-6 text-primary" aria-hidden="true" />
               </div>
               <h3 className="font-semibold mb-2">Mobile First</h3>
               <p className="text-sm text-muted-foreground">
@@ -191,10 +190,10 @@ const Solutions = () => {
         {/* CTA Section */}
         <div className="bg-primary/5 rounded-lg p-8 text-center">
           <h2 className="text-2xl font-semibold mb-4">
-            Ready to See BuildDesk in Action?
+            Ready to See Brikly in Action?
           </h2>
           <p className="text-muted-foreground mb-6 max-w-2xl mx-auto">
-            Schedule a personalized demo to see how BuildDesk works for your specific 
+            Schedule a personalized demo to see how Brikly works for your specific 
             type of construction business. No generic presentations – just your workflows.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -203,7 +202,7 @@ const Solutions = () => {
             </Button>
             <Button asChild variant="outline" size="lg">
               <Link to="/pricing">
-                View Pricing <ArrowRight className="ml-2 h-4 w-4" />
+                View Pricing <ArrowRight className="ml-2 h-4 w-4" aria-hidden="true" />
               </Link>
             </Button>
           </div>

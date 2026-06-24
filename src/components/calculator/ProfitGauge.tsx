@@ -3,7 +3,6 @@
  * Visual gauge showing profit margin with color coding
  */
 
-import React from 'react';
 import { getMarginColor } from '@/lib/profitabilityCalculations';
 
 interface ProfitGaugeProps {

@@ -1,19 +1,17 @@
 // Stripe Webhook Handler
-// Updated with multi-tenant site_id isolation
 // Note: This is a webhook endpoint called by Stripe, not user-authenticated
-// Site_id is determined from subscriber records linked to stripe_customer_id
+// SECURITY: Webhooks are verified using Stripe signature - no CORS needed for Stripe calls
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@14.21.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.3";
-import { getSiteByDomain } from '../_shared/auth-helpers.ts';
+import { checkRateLimit, getClientIP, rateLimitResponse, RATE_LIMITS } from "../_shared/rate-limiter.ts";
 
+// Webhook endpoints from Stripe don't need CORS (server-to-server)
+// But we keep minimal headers for potential health checks
 const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Origin": "https://brikly.net",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, stripe-signature",
 };
-
-// Default site_id for BuildDesk (will be resolved dynamically in production)
-const DEFAULT_BUILDDESK_SITE_KEY = 'builddesk';
 
 const logStep = (step: string, details?: any) => {
   const detailsStr = details ? ` - ${JSON.stringify(details)}` : '';
@@ -43,6 +41,13 @@ serve(async (req) => {
       { auth: { persistSession: false } }
     );
 
+    // Rate limit: 200 req/min per IP for webhook endpoints
+    const clientIP = getClientIP(req);
+    const rlResult = await checkRateLimit(supabaseClient, {
+      identifier: clientIP, endpoint: 'stripe-webhook', ...RATE_LIMITS.WEBHOOK
+    });
+    if (!rlResult.allowed) return rateLimitResponse(rlResult, corsHeaders);
+
     const signature = req.headers.get("stripe-signature");
     if (!signature) {
       throw new Error("Missing stripe-signature header");
@@ -61,42 +66,54 @@ serve(async (req) => {
 
     logStep("Processing event", { type: event.type, id: event.id });
 
-    // Get the default site_id for BuildDesk (webhook is platform-level)
-    const { data: siteData } = await supabaseClient
-      .from('sites')
-      .select('id')
-      .eq('key', DEFAULT_BUILDDESK_SITE_KEY)
-      .single();
+    // Idempotency guard: Stripe retries webhook deliveries, so the same event
+    // can arrive multiple times. If we already fully processed this event,
+    // skip it to avoid double-applying billing effects (duplicate payment
+    // failures, repeated subscription/company updates, etc.). A row that
+    // exists but is NOT yet processed means a prior attempt failed mid-way —
+    // that one is safe to reprocess.
+    const { data: existingEvent } = await supabaseClient
+      .from("webhook_events")
+      .select("processed, processing_attempts")
+      .eq("stripe_event_id", event.id)
+      .maybeSingle();
 
-    const siteId = siteData?.id;
-    if (!siteId) {
-      logStep("Warning: BuildDesk site not found, webhook processing without site isolation");
+    if (existingEvent?.processed) {
+      logStep("Duplicate event already processed — skipping", { id: event.id });
+      return new Response(JSON.stringify({ received: true, duplicate: true }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 200,
+      });
     }
 
-    // Log webhook event with site isolation
-    await supabaseClient
-      .from("webhook_events")
-      .upsert({
-        site_id: siteId,  // CRITICAL: Include site_id
-        stripe_event_id: event.id,
-        event_type: event.type,
-        event_data: event.data,
-        processed: false,
-        processing_attempts: 0
-      }, { onConflict: "stripe_event_id" });
+    const priorAttempts: number = existingEvent?.processing_attempts ?? 0;
+
+    // Record the event the first time we see it. Crucially we do NOT upsert an
+    // existing row here — the previous code reset processed=false on every
+    // delivery, defeating idempotency. Insert only when new.
+    if (!existingEvent) {
+      await supabaseClient
+        .from("webhook_events")
+        .insert({
+          stripe_event_id: event.id,
+          event_type: event.type,
+          event_data: event.data,
+          processed: false,
+          processing_attempts: 0,
+        });
+    }
 
     try {
-      await processWebhookEvent(event, supabaseClient, stripe, siteId);
+      await processWebhookEvent(event, supabaseClient, stripe);
 
-      // Mark as processed with site isolation
+      // Mark as processed
       await supabaseClient
         .from("webhook_events")
         .update({
           processed: true,
           processed_at: new Date().toISOString()
         })
-        .eq("stripe_event_id", event.id)
-        .eq("site_id", siteId);  // CRITICAL: Site isolation on update
+        .eq("stripe_event_id", event.id);
 
       logStep("Event processed successfully", { type: event.type });
       return new Response(JSON.stringify({ received: true }), {
@@ -108,15 +125,15 @@ serve(async (req) => {
       const errorObj = error as Error;
       logStep("Error processing event", { type: event.type, error: errorObj.message });
 
-      // Update processing attempt with site isolation
+      // Increment the real attempt counter (was hardcoded to 1) so repeated
+      // failures are visible and retry behaviour can be reasoned about.
       await supabaseClient
         .from("webhook_events")
         .update({
-          processing_attempts: 1,
+          processing_attempts: priorAttempts + 1,
           last_processing_error: errorObj.message
         })
-        .eq("stripe_event_id", event.id)
-        .eq("site_id", siteId);  // CRITICAL: Site isolation on update
+        .eq("stripe_event_id", event.id);
 
       throw error;
     }
@@ -131,27 +148,50 @@ serve(async (req) => {
   }
 });
 
-async function processWebhookEvent(event: Stripe.Event, supabaseClient: any, stripe: Stripe, siteId: string | null) {
+async function processWebhookEvent(event: Stripe.Event, supabaseClient: any, stripe: Stripe) {
   switch (event.type) {
     case 'customer.subscription.created':
     case 'customer.subscription.updated':
-      await handleSubscriptionChange(event.data.object as Stripe.Subscription, supabaseClient, siteId);
+      await handleSubscriptionChange(event.data.object as Stripe.Subscription, supabaseClient);
       break;
 
     case 'customer.subscription.deleted':
-      await handleSubscriptionCancellation(event.data.object as Stripe.Subscription, supabaseClient, siteId);
+      await handleSubscriptionCancellation(event.data.object as Stripe.Subscription, supabaseClient);
       break;
 
     case 'invoice.payment_failed':
-      await handlePaymentFailure(event.data.object as Stripe.Invoice, supabaseClient, stripe, siteId);
+      await handlePaymentFailure(event.data.object as Stripe.Invoice, supabaseClient, stripe);
       break;
 
     case 'invoice.payment_succeeded':
-      await handlePaymentSuccess(event.data.object as Stripe.Invoice, supabaseClient, siteId);
+      await handlePaymentSuccess(event.data.object as Stripe.Invoice, supabaseClient);
       break;
 
     case 'customer.subscription.trial_will_end':
-      await handleTrialWillEnd(event.data.object as Stripe.Subscription, supabaseClient, siteId);
+      await handleTrialWillEnd(event.data.object as Stripe.Subscription, supabaseClient);
+      break;
+
+    // Refund events
+    case 'charge.refunded':
+      await handleChargeRefunded(event.data.object as Stripe.Charge, supabaseClient);
+      break;
+
+    case 'refund.created':
+    case 'refund.updated':
+      await handleRefundEvent(event.data.object as Stripe.Refund, supabaseClient);
+      break;
+
+    // Dispute/Chargeback events
+    case 'charge.dispute.created':
+      await handleDisputeCreated(event.data.object as Stripe.Dispute, supabaseClient);
+      break;
+
+    case 'charge.dispute.updated':
+      await handleDisputeUpdated(event.data.object as Stripe.Dispute, supabaseClient);
+      break;
+
+    case 'charge.dispute.closed':
+      await handleDisputeClosed(event.data.object as Stripe.Dispute, supabaseClient);
       break;
 
     default:
@@ -159,20 +199,15 @@ async function processWebhookEvent(event: Stripe.Event, supabaseClient: any, str
   }
 }
 
-async function handleSubscriptionChange(subscription: Stripe.Subscription, supabaseClient: any, siteId: string | null) {
-  // Query subscribers with site isolation
-  let query = supabaseClient
+async function handleSubscriptionChange(subscription: Stripe.Subscription, supabaseClient: any) {
+  // Query subscribers
+  const { data: customer } = await supabaseClient
     .from("subscribers")
-    .select("*")
-    .eq("stripe_customer_id", subscription.customer);
+    .select("*, user_id")
+    .eq("stripe_customer_id", subscription.customer)
+    .single();
 
-  if (siteId) {
-    query = query.eq("site_id", siteId);  // CRITICAL: Site isolation
-  }
-
-  const customer = await query.single();
-
-  if (customer.data) {
+  if (customer) {
     const priceId = subscription.items.data[0].price.id;
     const amount = subscription.items.data[0].price.unit_amount || 0;
 
@@ -180,28 +215,73 @@ async function handleSubscriptionChange(subscription: Stripe.Subscription, supab
     if (amount >= 59900) subscriptionTier = "enterprise";
     else if (amount >= 29900) subscriptionTier = "professional";
 
-    // Update with site isolation
-    let updateQuery = supabaseClient
+    const isActive = subscription.status === "active";
+    const billingPeriod = subscription.items.data[0].price.recurring?.interval === "year" ? "annual" : "monthly";
+    const subscriptionEnd = new Date(subscription.current_period_end * 1000).toISOString();
+
+    // Update subscriber
+    await supabaseClient
       .from("subscribers")
       .update({
-        subscribed: subscription.status === "active",
+        subscribed: isActive,
         subscription_tier: subscriptionTier,
-        subscription_end: new Date(subscription.current_period_end * 1000).toISOString(),
-        billing_period: subscription.items.data[0].price.recurring?.interval === "year" ? "annual" : "monthly",
+        subscription_end: subscriptionEnd,
+        billing_period: billingPeriod,
         updated_at: new Date().toISOString()
       })
       .eq("stripe_customer_id", subscription.customer);
 
-    if (siteId) {
-      updateQuery = updateQuery.eq("site_id", siteId);  // CRITICAL: Site isolation on update
-    }
+    logStep("Updated subscriber record", {
+      customerId: subscription.customer,
+      tier: subscriptionTier,
+      status: subscription.status
+    });
 
-    await updateQuery;
+    // CRITICAL: Also update the company's subscription status
+    // Find the company through the user profile
+    if (customer.user_id) {
+      const { data: userProfile } = await supabaseClient
+        .from("user_profiles")
+        .select("company_id")
+        .eq("id", customer.user_id)
+        .single();
+
+      if (userProfile?.company_id) {
+        const companyStatus = isActive ? "active" :
+          (subscription.status === "past_due" ? "grace_period" :
+          (subscription.status === "canceled" ? "suspended" : "pending"));
+
+        await supabaseClient
+          .from("companies")
+          .update({
+            subscription_tier: subscriptionTier,
+            subscription_status: companyStatus,
+            stripe_customer_id: subscription.customer as string,
+            stripe_subscription_id: subscription.id,
+            updated_at: new Date().toISOString()
+          })
+          .eq("id", userProfile.company_id);
+
+        logStep("Updated company subscription status", {
+          companyId: userProfile.company_id,
+          status: companyStatus,
+          tier: subscriptionTier
+        });
+      }
+    }
   }
 }
 
-async function handleSubscriptionCancellation(subscription: Stripe.Subscription, supabaseClient: any, siteId: string | null) {
-  let query = supabaseClient
+async function handleSubscriptionCancellation(subscription: Stripe.Subscription, supabaseClient: any) {
+  // Get subscriber data first to find the company
+  const { data: customer } = await supabaseClient
+    .from("subscribers")
+    .select("*, user_id")
+    .eq("stripe_customer_id", subscription.customer)
+    .single();
+
+  // Update subscriber
+  await supabaseClient
     .from("subscribers")
     .update({
       subscribed: false,
@@ -211,52 +291,58 @@ async function handleSubscriptionCancellation(subscription: Stripe.Subscription,
     })
     .eq("stripe_customer_id", subscription.customer);
 
-  if (siteId) {
-    query = query.eq("site_id", siteId);  // CRITICAL: Site isolation on update
-  }
+  logStep("Subscription cancelled", { customerId: subscription.customer });
 
-  await query;
+  // Also update the company's subscription status
+  if (customer?.user_id) {
+    const { data: userProfile } = await supabaseClient
+      .from("user_profiles")
+      .select("company_id")
+      .eq("id", customer.user_id)
+      .single();
+
+    if (userProfile?.company_id) {
+      await supabaseClient
+        .from("companies")
+        .update({
+          subscription_status: "suspended",
+          updated_at: new Date().toISOString()
+        })
+        .eq("id", userProfile.company_id);
+
+      logStep("Updated company to suspended", { companyId: userProfile.company_id });
+    }
+  }
 }
 
-async function handlePaymentFailure(invoice: Stripe.Invoice, supabaseClient: any, stripe: Stripe, siteId: string | null) {
+async function handlePaymentFailure(invoice: Stripe.Invoice, supabaseClient: any, stripe: Stripe) {
   if (!invoice.subscription) return;
 
-  // Query subscriber with site isolation
-  let subscriberQuery = supabaseClient
+  // Query subscriber
+  const { data: subscriber } = await supabaseClient
     .from("subscribers")
     .select("*")
-    .eq("stripe_customer_id", invoice.customer);
+    .eq("stripe_customer_id", invoice.customer)
+    .single();
 
-  if (siteId) {
-    subscriberQuery = subscriberQuery.eq("site_id", siteId);  // CRITICAL: Site isolation
-  }
-
-  const subscriber = await subscriberQuery.single();
-
-  if (subscriber.data) {
-    // Check if failure already exists with site isolation
-    let failureQuery = supabaseClient
+  if (subscriber) {
+    // Check if failure already exists
+    const { data: existingFailure } = await supabaseClient
       .from("payment_failures")
       .select("*")
-      .eq("subscriber_id", subscriber.data.id)
-      .eq("stripe_invoice_id", invoice.id);
+      .eq("subscriber_id", subscriber.id)
+      .eq("stripe_invoice_id", invoice.id)
+      .single();
 
-    if (siteId) {
-      failureQuery = failureQuery.eq("site_id", siteId);  // CRITICAL: Site isolation
-    }
-
-    const existingFailure = await failureQuery.single();
-
-    if (!existingFailure.data) {
-      // Create new payment failure record with site isolation
+    if (!existingFailure) {
+      // Create new payment failure record
       const nextRetry = new Date();
       nextRetry.setHours(nextRetry.getHours() + 24); // Retry in 24 hours
 
       await supabaseClient
         .from("payment_failures")
         .insert({
-          site_id: siteId,  // CRITICAL: Include site_id
-          subscriber_id: subscriber.data.id,
+          subscriber_id: subscriber.id,
           stripe_invoice_id: invoice.id,
           failure_reason: invoice.last_finalization_error?.message || "Payment failed",
           attempt_count: 1,
@@ -264,12 +350,12 @@ async function handlePaymentFailure(invoice: Stripe.Invoice, supabaseClient: any
           dunning_status: "active"
         });
     } else {
-      // Update existing failure with site isolation
-      const newAttemptCount = existingFailure.data.attempt_count + 1;
+      // Update existing failure
+      const newAttemptCount = existingFailure.attempt_count + 1;
       const nextRetry = new Date();
       nextRetry.setDate(nextRetry.getDate() + newAttemptCount); // Exponential backoff
 
-      let updateQuery = supabaseClient
+      await supabaseClient
         .from("payment_failures")
         .update({
           attempt_count: newAttemptCount,
@@ -277,52 +363,189 @@ async function handlePaymentFailure(invoice: Stripe.Invoice, supabaseClient: any
           dunning_status: newAttemptCount >= 3 ? "suspended" : "active",
           failure_reason: invoice.last_finalization_error?.message || "Payment failed"
         })
-        .eq("id", existingFailure.data.id);
-
-      if (siteId) {
-        updateQuery = updateQuery.eq("site_id", siteId);  // CRITICAL: Site isolation on update
-      }
-
-      await updateQuery;
+        .eq("id", existingFailure.id);
     }
   }
 }
 
-async function handlePaymentSuccess(invoice: Stripe.Invoice, supabaseClient: any, siteId: string | null) {
+async function handlePaymentSuccess(invoice: Stripe.Invoice, supabaseClient: any) {
   if (!invoice.subscription) return;
 
-  // Query subscriber with site isolation
-  let subscriberQuery = supabaseClient
+  // Query subscriber
+  const { data: subscriber } = await supabaseClient
     .from("subscribers")
     .select("*")
-    .eq("stripe_customer_id", invoice.customer);
+    .eq("stripe_customer_id", invoice.customer)
+    .single();
 
-  if (siteId) {
-    subscriberQuery = subscriberQuery.eq("site_id", siteId);  // CRITICAL: Site isolation
-  }
-
-  const subscriber = await subscriberQuery.single();
-
-  if (subscriber.data) {
-    // Resolve any payment failures with site isolation
-    let updateQuery = supabaseClient
+  if (subscriber) {
+    // Resolve any payment failures
+    await supabaseClient
       .from("payment_failures")
       .update({
         dunning_status: "resolved",
         resolved_at: new Date().toISOString()
       })
-      .eq("subscriber_id", subscriber.data.id)
+      .eq("subscriber_id", subscriber.id)
       .is("resolved_at", null);
-
-    if (siteId) {
-      updateQuery = updateQuery.eq("site_id", siteId);  // CRITICAL: Site isolation on update
-    }
-
-    await updateQuery;
   }
 }
 
-async function handleTrialWillEnd(subscription: Stripe.Subscription, supabaseClient: any, siteId: string | null) {
+async function handleTrialWillEnd(subscription: Stripe.Subscription, supabaseClient: any) {
   // Could trigger email notifications here
-  logStep("Trial ending soon", { customerId: subscription.customer, trialEnd: subscription.trial_end, siteId });
+  logStep("Trial ending soon", { customerId: subscription.customer, trialEnd: subscription.trial_end });
+}
+
+// Refund Handlers
+async function handleChargeRefunded(charge: Stripe.Charge, supabaseClient: any) {
+  logStep("Charge refunded", { chargeId: charge.id, amountRefunded: charge.amount_refunded });
+
+  // Find and update the refund record
+  const { data: refund } = await supabaseClient
+    .from("refunds")
+    .select("id")
+    .eq("stripe_charge_id", charge.id)
+    .single();
+
+  if (refund) {
+    await supabaseClient
+      .from("refunds")
+      .update({
+        status: "succeeded",
+        updated_at: new Date().toISOString()
+      })
+      .eq("id", refund.id);
+
+    logStep("Updated refund record", { refundId: refund.id });
+  }
+}
+
+async function handleRefundEvent(refund: Stripe.Refund, supabaseClient: any) {
+  logStep("Refund event", { refundId: refund.id, status: refund.status });
+
+  // Find and update the refund record by Stripe refund ID
+  const { data: existingRefund } = await supabaseClient
+    .from("refunds")
+    .select("id")
+    .eq("stripe_refund_id", refund.id)
+    .single();
+
+  if (existingRefund) {
+    const statusMap: Record<string, string> = {
+      'succeeded': 'succeeded',
+      'pending': 'processing',
+      'failed': 'failed',
+      'canceled': 'canceled'
+    };
+
+    await supabaseClient
+      .from("refunds")
+      .update({
+        status: statusMap[refund.status] || refund.status,
+        failure_reason: refund.failure_reason || null,
+        updated_at: new Date().toISOString()
+      })
+      .eq("id", existingRefund.id);
+
+    logStep("Updated refund from webhook", { refundId: existingRefund.id, status: refund.status });
+  }
+}
+
+// Dispute/Chargeback Handlers
+async function handleDisputeCreated(dispute: Stripe.Dispute, supabaseClient: any) {
+  logStep("Dispute created", { disputeId: dispute.id, amount: dispute.amount, reason: dispute.reason });
+
+  // Check if dispute already exists
+  const { data: existing } = await supabaseClient
+    .from("chargebacks")
+    .select("id")
+    .eq("stripe_dispute_id", dispute.id)
+    .single();
+
+  if (!existing) {
+    // Create new chargeback record
+    await supabaseClient
+      .from("chargebacks")
+      .insert({
+        stripe_dispute_id: dispute.id,
+        stripe_charge_id: dispute.charge as string,
+        stripe_payment_intent_id: dispute.payment_intent as string,
+        amount: dispute.amount / 100,
+        currency: dispute.currency,
+        reason: dispute.reason,
+        status: dispute.status,
+        evidence_due_by: dispute.evidence_details?.due_by
+          ? new Date(dispute.evidence_details.due_by * 1000).toISOString()
+          : null,
+        fee_amount: 15.00,
+        net_impact: (dispute.amount / 100) + 15.00
+      });
+
+    logStep("Created chargeback record", { disputeId: dispute.id });
+  }
+}
+
+async function handleDisputeUpdated(dispute: Stripe.Dispute, supabaseClient: any) {
+  logStep("Dispute updated", { disputeId: dispute.id, status: dispute.status });
+
+  const statusMap: Record<string, string> = {
+    'warning_needs_response': 'warning_needs_response',
+    'warning_under_review': 'warning_under_review',
+    'warning_closed': 'warning_closed',
+    'needs_response': 'needs_response',
+    'under_review': 'under_review',
+    'charge_refunded': 'charge_refunded',
+    'won': 'won',
+    'lost': 'lost'
+  };
+
+  await supabaseClient
+    .from("chargebacks")
+    .update({
+      status: statusMap[dispute.status] || dispute.status,
+      evidence_due_by: dispute.evidence_details?.due_by
+        ? new Date(dispute.evidence_details.due_by * 1000).toISOString()
+        : null,
+      updated_at: new Date().toISOString()
+    })
+    .eq("stripe_dispute_id", dispute.id);
+}
+
+async function handleDisputeClosed(dispute: Stripe.Dispute, supabaseClient: any) {
+  logStep("Dispute closed", { disputeId: dispute.id, status: dispute.status });
+
+  const isWon = dispute.status === 'won';
+  const isLost = dispute.status === 'lost';
+
+  await supabaseClient
+    .from("chargebacks")
+    .update({
+      status: dispute.status,
+      resolved_at: new Date().toISOString(),
+      fee_applied: isLost,
+      updated_at: new Date().toISOString()
+    })
+    .eq("stripe_dispute_id", dispute.id);
+
+  // If lost, record the chargeback fee
+  if (isLost) {
+    const { data: chargeback } = await supabaseClient
+      .from("chargebacks")
+      .select("company_id, amount, fee_amount")
+      .eq("stripe_dispute_id", dispute.id)
+      .single();
+
+    if (chargeback?.company_id) {
+      await supabaseClient
+        .from("chargeback_fees")
+        .insert({
+          company_id: chargeback.company_id,
+          chargeback_amount: chargeback.amount,
+          fee_type: 'chargeback_loss',
+          status: 'applied'
+        });
+    }
+  }
+
+  logStep("Dispute closed and processed", { disputeId: dispute.id, won: isWon, lost: isLost });
 }

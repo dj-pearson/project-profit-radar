@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -10,12 +10,12 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Cloud, CloudOff, Download, Upload, RefreshCw, HardDrive, Wifi, WifiOff } from 'lucide-react';
 
 interface OfflineData {
-  projects: any[];
-  tasks: any[];
-  timeEntries: any[];
-  expenses: any[];
-  locations: any[];
-  inspections: any[];
+  projects: Record<string, unknown>[];
+  tasks: Record<string, unknown>[];
+  timeEntries: Record<string, unknown>[];
+  expenses: Record<string, unknown>[];
+  locations: Record<string, unknown>[];
+  inspections: Record<string, unknown>[];
 }
 
 interface SyncStatus {

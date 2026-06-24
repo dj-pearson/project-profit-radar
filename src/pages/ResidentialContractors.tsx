@@ -1,4 +1,3 @@
-import React from "react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { PageSEO, createArticleSchema, createBreadcrumbSchema } from "@/components/seo/PageSEO";
@@ -6,20 +5,20 @@ import { GEOOptimizedFAQ, residentialContractorFAQs } from "@/components/seo/GEO
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Link } from "react-router-dom";
-import { CheckCircle, Home, DollarSign, Users, Calendar, ArrowRight, BarChart3, Heart } from "lucide-react";
+import { CheckCircle, Home, DollarSign, Users, ArrowRight, Heart } from "lucide-react";
 
 const ResidentialContractors = () => {
   // Create schemas for SEO
   const articleSchema = createArticleSchema(
-    "Residential Construction Management Software | BuildDesk",
+    "Residential Construction Management Software | Brikly",
     "Complete guide to construction management software for residential contractors, custom home builders, and remodelers. Features client portals, warranty tracking, and homeowner communication.",
     "2025-01-15",
     "2025-11-07"
   );
 
   const breadcrumbSchema = createBreadcrumbSchema([
-    { name: "Home", url: "https://builddesk.com" },
-    { name: "Residential Contractors", url: "https://builddesk.com/residential-contractors" }
+    { name: "Home", url: "https://brikly.net" },
+    { name: "Residential Contractors", url: "https://brikly.net/residential-contractors" }
   ]);
 
   const features = [
@@ -48,7 +47,7 @@ const ResidentialContractors = () => {
   return (
     <>
       <PageSEO
-        title="Residential Construction Software - Custom Home Builders & Remodelers | BuildDesk"
+        title="Residential Construction Software - Custom Home Builders & Remodelers | Brikly"
         description="Construction management software for residential contractors, custom home builders, and remodelers. Client portals, selections tracking, warranty management. $350/month. 60% better customer satisfaction. See features."
         keywords={[
           'residential construction software',
@@ -120,7 +119,7 @@ const ResidentialContractors = () => {
             {/* Benefits Section */}
             <div className="bg-white rounded-lg border p-8 mb-16">
               <h2 className="text-3xl font-bold text-construction-dark mb-8 text-center">
-                Why Residential Contractors Choose BuildDesk
+                Why Residential Contractors Choose Brikly
               </h2>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div className="text-center">

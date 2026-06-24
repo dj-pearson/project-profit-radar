@@ -1,0 +1,8 @@
+GOTRUE_EXTERNAL_GOOGLE_ENABLED=true
+GOTRUE_EXTERNAL_GOOGLE_CLIENT_ID=your-google-client-id
+GOTRUE_EXTERNAL_GOOGLE_SECRET=your-google-client-secret
+GOTRUE_EXTERNAL_GOOGLE_REDIRECT_URI=https://your-supabase-url/auth/v1/callback
+GOTRUE_EXTERNAL_APPLE_ENABLED=true
+GOTRUE_EXTERNAL_APPLE_CLIENT_ID=your-apple-service-id
+GOTRUE_EXTERNAL_APPLE_SECRET=your-apple-generated-secret
+GOTRUE_EXTERNAL_APPLE_REDIRECT_URI=https://your-supabase-url/auth/v1/callback

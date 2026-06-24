@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { validateRedirectUrl } from '@/lib/security/urlValidation';
 import { CreditCard, DollarSign, Receipt, Loader2 } from 'lucide-react';
 
 interface StripePaymentProcessorProps {
@@ -53,7 +54,16 @@ export const StripePaymentProcessor = ({
       if (error) throw error;
 
       if (data?.checkout_url) {
-        window.location.href = data.checkout_url;
+        const urlCheck = validateRedirectUrl(data.checkout_url);
+        if (urlCheck.valid) {
+          window.location.href = data.checkout_url;
+        } else {
+          toast({
+            title: "Security Error",
+            description: "Invalid checkout URL received. Please try again.",
+            variant: "destructive"
+          });
+        }
       }
     } catch (error) {
       console.error('Payment processing error:', error);

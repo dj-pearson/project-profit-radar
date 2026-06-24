@@ -150,7 +150,7 @@
 ### Step 1: Check Your Expo Project
 
 ```powershell
-cd C:\Users\dpearson\Documents\Build-Desk\BuildDeskExpo
+cd C:\Users\dpearson\Documents\Brikly\BriklyExpo
 eas project:info
 ```
 
@@ -253,14 +253,14 @@ eas submit --platform ios
 ### Path A: Try Expo (30 minutes to first build)
 
 ```powershell
-cd C:\Users\dpearson\Documents\Build-Desk\BuildDeskExpo
+cd C:\Users\dpearson\Documents\Brikly\BriklyExpo
 eas build --platform ios --profile development
 ```
 
 ### Path B: Continue with Capacitor (if you have Mac)
 
 ```powershell
-cd C:\Users\pears\Documents\Build Desk\project-profit-radar
+cd C:\Users\pears\Documents\Brikly\project-profit-radar
 npm run ios:build
 # Then configure Xcode as previously described
 ```

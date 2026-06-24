@@ -1,4 +1,4 @@
-import { Check, Calculator, Loader2, Shield, Lock } from "lucide-react";
+import { Check, Calculator, Loader2, Shield, Lock, Users, TrendingUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -8,6 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { usePromotions } from "@/hooks/usePromotions";
 import { PRICING_PLANS, getPlanPrice, getAnnualSavings, type BillingPeriod } from "@/config/pricing";
+import { validateRedirectUrl } from "@/lib/security/urlValidation";
 
 const Pricing = () => {
   const navigate = useNavigate();
@@ -50,7 +51,11 @@ const Pricing = () => {
       if (error) throw error;
 
       if (data?.url) {
-        // Redirect to Stripe checkout in same tab for clearer flow
+        // Validate redirect URL before navigating
+        const urlCheck = validateRedirectUrl(data.url);
+        if (!urlCheck.valid) {
+          throw new Error('Invalid checkout URL received.');
+        }
         window.location.href = data.url;
       } else {
         throw new Error('No checkout URL received');
@@ -88,14 +93,22 @@ const Pricing = () => {
         <div className="container mx-auto px-4">
         {/* Section Header */}
         <div className="text-center mb-16">
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-secondary/50 border border-border/50 mb-4">
+            <Users className="h-4 w-4 text-construction-orange" />
+            <span className="text-sm font-medium text-muted-foreground">Trusted by 500+ Contractors</span>
+          </div>
           <h2 className="text-3xl lg:text-4xl font-bold text-construction-dark mb-4">
             Investment in Financial Intelligence, Not Just Software
           </h2>
           <p className="text-xl text-muted-foreground max-w-3xl mx-auto mb-4">
             Average customers recoup their investment in under 30 days from prevented cost overruns alone
           </p>
+          <div className="flex items-center justify-center gap-2 text-sm text-green-600 dark:text-green-400 mb-4">
+            <TrendingUp className="h-4 w-4" />
+            <span className="font-medium">Average customer ROI payback in under 30 days</span>
+          </div>
           <p className="text-base text-construction-orange font-semibold mb-8">
-            Prevent a single $40K+ cost overrun and BuildDesk pays for itself for years
+            Prevent a single $40K+ cost overrun and Brikly pays for itself for years
           </p>
           
           {/* Billing Toggle */}
@@ -116,6 +129,17 @@ const Pricing = () => {
           <div className="flex items-center justify-center gap-2 text-construction-orange font-semibold">
             <Calculator className="h-5 w-5" />
             {billingPeriod === 'annual' ? 'Save 20% with annual billing' : 'Switch to annual for 20% savings'}
+          </div>
+          <div className="mt-2 text-sm font-medium transition-all duration-300">
+            {billingPeriod === 'annual' ? (
+              <span className="text-green-600 dark:text-green-400">
+                Save ${getAnnualSavings('professional')}/year on Professional plan
+              </span>
+            ) : (
+              <span className="text-muted-foreground">
+                Switch to annual to save 20%
+              </span>
+            )}
           </div>
         </div>
 
@@ -195,22 +219,24 @@ const Pricing = () => {
                   ))}
                 </div>
                 <div className="space-y-2">
-                  <Button 
-                    variant={plan.isPopular ? "hero" : "construction"} 
-                    className="w-full"
-                    onClick={() => handleCheckout(plan.tier)}
-                    disabled={loadingPlan === plan.tier}
-                  >
-                    {loadingPlan === plan.tier ? "Processing..." : "Start Free Trial"}
-                  </Button>
-                  <Button 
-                    variant="outline"
-                    className="w-full text-construction-blue border-construction-blue hover:bg-construction-blue hover:text-white"
-                    onClick={() => handleCheckout(plan.tier)}
-                    disabled={loadingPlan === plan.tier}
-                  >
-                    {loadingPlan === plan.tier ? "Processing..." : "Get Started Now"}
-                  </Button>
+                  {plan.tier === 'enterprise' ? (
+                    <Button
+                      variant="construction"
+                      className="w-full"
+                      asChild
+                    >
+                      <a href="mailto:support@brikly.net">Contact Sales</a>
+                    </Button>
+                  ) : (
+                    <Button
+                      variant={plan.isPopular ? "hero" : "construction"}
+                      className="w-full"
+                      onClick={() => handleCheckout(plan.tier)}
+                      disabled={loadingPlan === plan.tier}
+                    >
+                      {loadingPlan === plan.tier ? "Processing..." : "Start Free Trial"}
+                    </Button>
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -275,7 +301,7 @@ const Pricing = () => {
               What's Early Cost Detection Worth to You?
             </h3>
             <p className="text-muted-foreground mb-4 max-w-2xl mx-auto">
-              If catching one $40K cost overrun 3 weeks early saves your project, BuildDesk pays for itself for the next 10 years.
+              If catching one $40K cost overrun 3 weeks early saves your project, Brikly pays for itself for the next 10 years.
             </p>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-6 max-w-3xl mx-auto">
               <div className="bg-white p-4 rounded-lg shadow-sm">
@@ -300,6 +326,28 @@ const Pricing = () => {
           </div>
         </div>
       </div>
+
+      {/* Structured Data for SEO */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "Product",
+            "name": "Brikly Construction Management Software",
+            "description": "Real-time job costing and construction management software for contractors",
+            "offers": PRICING_PLANS.map((plan) => ({
+              "@type": "Offer",
+              "name": plan.name,
+              "description": plan.description,
+              "price": plan.monthlyPrice,
+              "priceCurrency": "USD",
+              "availability": "https://schema.org/InStock",
+              "priceValidUntil": `${new Date().getFullYear()}-12-31`,
+            })),
+          }),
+        }}
+      />
     </section>
     </>
   );

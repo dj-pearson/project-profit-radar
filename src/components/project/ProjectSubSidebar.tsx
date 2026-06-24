@@ -1,27 +1,7 @@
 import React from 'react';
 import { cn } from '@/lib/utils';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { 
-  BarChart3, 
-  Package, 
-  TrendingUp, 
-  FileText, 
-  DollarSign, 
-  HelpCircle, 
-  Send, 
-  FileX, 
-  CheckSquare, 
-  Hammer, 
-  Shield, 
-  Clock, 
-  Users, 
-  Receipt,
-  ListTodo,
-  FolderOpen,
-  Home,
-  Calculator,
-  MessageSquare
-} from 'lucide-react';
+import { Package, TrendingUp, FileText, DollarSign, HelpCircle, Send, FileX, CheckSquare, Hammer, Shield, Clock, Users, Receipt, ListTodo, FolderOpen, Home, Calculator, MessageSquare, Hash, Activity } from 'lucide-react';
 
 interface ProjectSubSidebarProps {
   activeTab: string;
@@ -55,6 +35,7 @@ const navigationSections = [
     items: [
       { id: 'estimates', label: 'Estimates', icon: Calculator },
       { id: 'jobcosting', label: 'Job Costing', icon: DollarSign },
+      { id: 'costcodes', label: 'Cost Codes', icon: Hash },
       { id: 'invoicing', label: 'Invoicing', icon: Receipt },
       { id: 'changeorders', label: 'Change Orders', icon: FileX },
     ]
@@ -80,6 +61,12 @@ const navigationSections = [
     title: 'Documentation',
     items: [
       { id: 'documents', label: 'Documents', icon: FolderOpen },
+    ]
+  },
+  {
+    title: 'Activity',
+    items: [
+      { id: 'activity', label: 'Activity Feed', icon: Activity },
     ]
   },
 ];

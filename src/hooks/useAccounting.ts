@@ -1,6 +1,5 @@
 /**
  * Accounting Hooks for Enterprise Finance Module
- * Updated with multi-tenant site_id isolation
  *
  * Provides React hooks for:
  * - Chart of Accounts management
@@ -13,26 +12,21 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
-import { validateJournalEntry, JournalEntry } from '@/utils/accountingUtils';
+import { validateJournalEntry } from '@/utils/accountingUtils';
 
 // =====================================================
 // CHART OF ACCOUNTS
 // =====================================================
 
 export function useChartOfAccounts(companyId?: string) {
-  const { siteId } = useAuth();
-
-  return useQuery({
-    queryKey: ['chart-of-accounts', companyId, siteId],
+    return useQuery({
+    queryKey: ['chart-of-accounts', companyId],
     queryFn: async () => {
-      if (!siteId) throw new Error('No site ID - multi-tenant isolation required');
-
-      let query = supabase
+            let query = supabase
         .from('chart_of_accounts')
         .select('*')
-        .eq('site_id', siteId)  // CRITICAL: Site isolation
+          // CRITICAL: Site isolation
         .eq('is_active', true)
         .order('account_number');
 
@@ -45,45 +39,36 @@ export function useChartOfAccounts(companyId?: string) {
       if (error) throw error;
       return data;
     },
-    enabled: !!companyId && !!siteId,
+    enabled: !!companyId,
   });
 }
 
 export function useAccount(accountId: string) {
-  const { siteId } = useAuth();
-
-  return useQuery({
-    queryKey: ['account', accountId, siteId],
+    return useQuery({
+    queryKey: ['account', accountId],
     queryFn: async () => {
-      if (!siteId) throw new Error('No site ID - multi-tenant isolation required');
-
-      const { data, error } = await supabase
+            const { data, error } = await supabase
         .from('chart_of_accounts')
         .select('*')
         .eq('id', accountId)
-        .eq('site_id', siteId)  // CRITICAL: Site isolation
+          // CRITICAL: Site isolation
         .single();
 
       if (error) throw error;
       return data;
     },
-    enabled: !!accountId && !!siteId,
+    enabled: !!accountId,
   });
 }
 
 export function useCreateAccount() {
   const queryClient = useQueryClient();
-  const { siteId } = useAuth();
-
-  return useMutation({
-    mutationFn: async (accountData: any) => {
-      if (!siteId) throw new Error('No site ID - multi-tenant isolation required');
-
-      const { data, error } = await supabase
+    return useMutation({
+    mutationFn: async (accountData: Record<string, unknown>) => {
+            const { data, error } = await supabase
         .from('chart_of_accounts')
         .insert({
           ...accountData,
-          site_id: siteId,  // CRITICAL: Include site_id
         })
         .select()
         .single();
@@ -95,7 +80,7 @@ export function useCreateAccount() {
       queryClient.invalidateQueries({ queryKey: ['chart-of-accounts'] });
       toast.success('Account created successfully');
     },
-    onError: (error: any) => {
+    onError: (error: Error) => {
       toast.error(`Failed to create account: ${error.message}`);
     },
   });
@@ -103,17 +88,13 @@ export function useCreateAccount() {
 
 export function useUpdateAccount() {
   const queryClient = useQueryClient();
-  const { siteId } = useAuth();
-
-  return useMutation({
-    mutationFn: async ({ id, updates }: { id: string; updates: any }) => {
-      if (!siteId) throw new Error('No site ID - multi-tenant isolation required');
-
-      const { data, error } = await supabase
+    return useMutation({
+    mutationFn: async ({ id, updates }: { id: string; updates: Record<string, unknown> }) => {
+            const { data, error } = await supabase
         .from('chart_of_accounts')
         .update(updates)
         .eq('id', id)
-        .eq('site_id', siteId)  // CRITICAL: Site isolation
+          // CRITICAL: Site isolation
         .select()
         .single();
 
@@ -125,7 +106,7 @@ export function useUpdateAccount() {
       queryClient.invalidateQueries({ queryKey: ['account'] });
       toast.success('Account updated successfully');
     },
-    onError: (error: any) => {
+    onError: (error: Error) => {
       toast.error(`Failed to update account: ${error.message}`);
     },
   });
@@ -140,14 +121,10 @@ export function useJournalEntries(companyId?: string, filters?: {
   endDate?: string;
   status?: string;
 }) {
-  const { siteId } = useAuth();
-
-  return useQuery({
-    queryKey: ['journal-entries', companyId, filters, siteId],
+    return useQuery({
+    queryKey: ['journal-entries', companyId, filters],
     queryFn: async () => {
-      if (!siteId) throw new Error('No site ID - multi-tenant isolation required');
-
-      let query = supabase
+            let query = supabase
         .from('journal_entries')
         .select(`
           *,
@@ -156,7 +133,7 @@ export function useJournalEntries(companyId?: string, filters?: {
             account:chart_of_accounts(account_number, account_name)
           )
         `)
-        .eq('site_id', siteId)  // CRITICAL: Site isolation
+          // CRITICAL: Site isolation
         .order('entry_date', { ascending: false });
 
       if (companyId) {
@@ -180,19 +157,15 @@ export function useJournalEntries(companyId?: string, filters?: {
       if (error) throw error;
       return data;
     },
-    enabled: !!companyId && !!siteId,
+    enabled: !!companyId,
   });
 }
 
 export function useJournalEntry(entryId: string) {
-  const { siteId } = useAuth();
-
-  return useQuery({
-    queryKey: ['journal-entry', entryId, siteId],
+    return useQuery({
+    queryKey: ['journal-entry', entryId],
     queryFn: async () => {
-      if (!siteId) throw new Error('No site ID - multi-tenant isolation required');
-
-      const { data, error } = await supabase
+            const { data, error } = await supabase
         .from('journal_entries')
         .select(`
           *,
@@ -202,21 +175,19 @@ export function useJournalEntry(entryId: string) {
           )
         `)
         .eq('id', entryId)
-        .eq('site_id', siteId)  // CRITICAL: Site isolation
+          // CRITICAL: Site isolation
         .single();
 
       if (error) throw error;
       return data;
     },
-    enabled: !!entryId && !!siteId,
+    enabled: !!entryId,
   });
 }
 
 export function useCreateJournalEntry() {
   const queryClient = useQueryClient();
-  const { siteId } = useAuth();
-
-  return useMutation({
+    return useMutation({
     mutationFn: async (entry: {
       companyId: string;
       entryDate: string;
@@ -232,9 +203,7 @@ export function useCreateJournalEntry() {
         costCodeId?: string;
       }>;
     }) => {
-      if (!siteId) throw new Error('No site ID - multi-tenant isolation required');
-
-      // Validate entry before submission
+            // Validate entry before submission
       const validation = validateJournalEntry({
         entryDate: entry.entryDate,
         description: entry.description,
@@ -262,7 +231,6 @@ export function useCreateJournalEntry() {
       const { data: headerData, error: headerError } = await supabase
         .from('journal_entries')
         .insert({
-          site_id: siteId,  // CRITICAL: Include site_id
           company_id: entry.companyId,
           entry_number: entryNumber,
           entry_date: entry.entryDate,
@@ -279,7 +247,6 @@ export function useCreateJournalEntry() {
       // Create journal entry lines with site isolation
       const lines = entry.lines.map((line, index) => ({
         journal_entry_id: headerData.id,
-        site_id: siteId,  // CRITICAL: Include site_id
         company_id: entry.companyId,
         line_number: index + 1,
         account_id: line.accountId,
@@ -296,7 +263,7 @@ export function useCreateJournalEntry() {
 
       if (linesError) {
         // Rollback: delete the header
-        await supabase.from('journal_entries').delete().eq('id', headerData.id).eq('site_id', siteId);
+        await supabase.from('journal_entries').delete().eq('id', headerData.id);
         throw linesError;
       }
 
@@ -306,7 +273,7 @@ export function useCreateJournalEntry() {
       queryClient.invalidateQueries({ queryKey: ['journal-entries'] });
       toast.success('Journal entry created successfully');
     },
-    onError: (error: any) => {
+    onError: (error: Error) => {
       toast.error(`Failed to create journal entry: ${error.message}`);
     },
   });
@@ -314,20 +281,16 @@ export function useCreateJournalEntry() {
 
 export function usePostJournalEntry() {
   const queryClient = useQueryClient();
-  const { siteId } = useAuth();
-
-  return useMutation({
+    return useMutation({
     mutationFn: async (entryId: string) => {
-      if (!siteId) throw new Error('No site ID - multi-tenant isolation required');
-
-      const { data, error } = await supabase
+            const { data, error } = await supabase
         .from('journal_entries')
         .update({
           transaction_status: 'posted',
           posting_date: new Date().toISOString().split('T')[0],
         })
         .eq('id', entryId)
-        .eq('site_id', siteId)  // CRITICAL: Site isolation
+          // CRITICAL: Site isolation
         .select()
         .single();
 
@@ -341,7 +304,7 @@ export function usePostJournalEntry() {
       queryClient.invalidateQueries({ queryKey: ['account-balances'] });
       toast.success('Journal entry posted successfully');
     },
-    onError: (error: any) => {
+    onError: (error: Error) => {
       toast.error(`Failed to post journal entry: ${error.message}`);
     },
   });
@@ -355,14 +318,10 @@ export function useBills(companyId?: string, filters?: {
   status?: string;
   vendorId?: string;
 }) {
-  const { siteId } = useAuth();
-
-  return useQuery({
-    queryKey: ['bills', companyId, filters, siteId],
+    return useQuery({
+    queryKey: ['bills', companyId, filters],
     queryFn: async () => {
-      if (!siteId) throw new Error('No site ID - multi-tenant isolation required');
-
-      let query = supabase
+            let query = supabase
         .from('bills')
         .select(`
           *,
@@ -372,7 +331,7 @@ export function useBills(companyId?: string, filters?: {
             expense_account:chart_of_accounts(account_number, account_name)
           )
         `)
-        .eq('site_id', siteId)  // CRITICAL: Site isolation
+          // CRITICAL: Site isolation
         .order('bill_date', { ascending: false });
 
       if (companyId) {
@@ -392,15 +351,13 @@ export function useBills(companyId?: string, filters?: {
       if (error) throw error;
       return data;
     },
-    enabled: !!companyId && !!siteId,
+    enabled: !!companyId,
   });
 }
 
 export function useCreateBill() {
   const queryClient = useQueryClient();
-  const { siteId } = useAuth();
-
-  return useMutation({
+    return useMutation({
     mutationFn: async (bill: {
       companyId: string;
       vendorId: string;
@@ -419,9 +376,7 @@ export function useCreateBill() {
       memo?: string;
       projectId?: string;
     }) => {
-      if (!siteId) throw new Error('No site ID - multi-tenant isolation required');
-
-      // Generate bill number
+            // Generate bill number
       const { data: seqData, error: seqError } = await supabase
         .rpc('nextval', { sequence_name: 'bill_number_seq' });
 
@@ -436,7 +391,6 @@ export function useCreateBill() {
       const { data: billData, error: billError } = await supabase
         .from('bills')
         .insert({
-          site_id: siteId,  // CRITICAL: Include site_id
           company_id: bill.companyId,
           bill_number: billNumber,
           vendor_id: bill.vendorId,
@@ -457,7 +411,6 @@ export function useCreateBill() {
       // Create line items with site isolation
       const lineItems = bill.lineItems.map((item, index) => ({
         bill_id: billData.id,
-        site_id: siteId,  // CRITICAL: Include site_id
         company_id: bill.companyId,
         line_number: index + 1,
         description: item.description,
@@ -475,7 +428,7 @@ export function useCreateBill() {
 
       if (linesError) {
         // Rollback
-        await supabase.from('bills').delete().eq('id', billData.id).eq('site_id', siteId);
+        await supabase.from('bills').delete().eq('id', billData.id);
         throw linesError;
       }
 
@@ -485,7 +438,7 @@ export function useCreateBill() {
       queryClient.invalidateQueries({ queryKey: ['bills'] });
       toast.success('Bill created successfully');
     },
-    onError: (error: any) => {
+    onError: (error: Error) => {
       toast.error(`Failed to create bill: ${error.message}`);
     },
   });
@@ -496,17 +449,13 @@ export function useCreateBill() {
 // =====================================================
 
 export function useFiscalPeriods(companyId?: string, fiscalYearId?: string) {
-  const { siteId } = useAuth();
-
-  return useQuery({
-    queryKey: ['fiscal-periods', companyId, fiscalYearId, siteId],
+    return useQuery({
+    queryKey: ['fiscal-periods', companyId, fiscalYearId],
     queryFn: async () => {
-      if (!siteId) throw new Error('No site ID - multi-tenant isolation required');
-
-      let query = supabase
+            let query = supabase
         .from('fiscal_periods')
         .select('*')
-        .eq('site_id', siteId)  // CRITICAL: Site isolation
+          // CRITICAL: Site isolation
         .order('period_number');
 
       if (companyId) {
@@ -522,24 +471,20 @@ export function useFiscalPeriods(companyId?: string, fiscalYearId?: string) {
       if (error) throw error;
       return data;
     },
-    enabled: !!companyId && !!siteId,
+    enabled: !!companyId,
   });
 }
 
 export function useCurrentFiscalPeriod(companyId?: string) {
-  const { siteId } = useAuth();
-
-  return useQuery({
-    queryKey: ['current-fiscal-period', companyId, siteId],
+    return useQuery({
+    queryKey: ['current-fiscal-period', companyId],
     queryFn: async () => {
-      if (!siteId) throw new Error('No site ID - multi-tenant isolation required');
-
-      const today = new Date().toISOString().split('T')[0];
+            const today = new Date().toISOString().split('T')[0];
 
       const { data, error } = await supabase
         .from('fiscal_periods')
         .select('*')
-        .eq('site_id', siteId)  // CRITICAL: Site isolation
+          // CRITICAL: Site isolation
         .eq('company_id', companyId)
         .lte('start_date', today)
         .gte('end_date', today)
@@ -548,7 +493,7 @@ export function useCurrentFiscalPeriod(companyId?: string) {
       if (error) throw error;
       return data;
     },
-    enabled: !!companyId && !!siteId,
+    enabled: !!companyId,
   });
 }
 
@@ -557,14 +502,10 @@ export function useCurrentFiscalPeriod(companyId?: string) {
 // =====================================================
 
 export function useAccountBalances(companyId?: string, fiscalPeriodId?: string) {
-  const { siteId } = useAuth();
-
-  return useQuery({
-    queryKey: ['account-balances', companyId, fiscalPeriodId, siteId],
+    return useQuery({
+    queryKey: ['account-balances', companyId, fiscalPeriodId],
     queryFn: async () => {
-      if (!siteId) throw new Error('No site ID - multi-tenant isolation required');
-
-      let query = supabase
+            let query = supabase
         .from('account_balances')
         .select(`
           *,
@@ -575,7 +516,7 @@ export function useAccountBalances(companyId?: string, fiscalPeriodId?: string) 
             account_subtype
           )
         `)
-        .eq('site_id', siteId)  // CRITICAL: Site isolation
+          // CRITICAL: Site isolation
         .order('account(account_number)');
 
       if (companyId) {
@@ -591,7 +532,7 @@ export function useAccountBalances(companyId?: string, fiscalPeriodId?: string) 
       if (error) throw error;
       return data;
     },
-    enabled: !!companyId && !!siteId,
+    enabled: !!companyId,
   });
 }
 
@@ -600,20 +541,16 @@ export function useAccountBalances(companyId?: string, fiscalPeriodId?: string) 
 // =====================================================
 
 export function useBankAccounts(companyId?: string) {
-  const { siteId } = useAuth();
-
-  return useQuery({
-    queryKey: ['bank-accounts', companyId, siteId],
+    return useQuery({
+    queryKey: ['bank-accounts', companyId],
     queryFn: async () => {
-      if (!siteId) throw new Error('No site ID - multi-tenant isolation required');
-
-      const { data, error } = await supabase
+            const { data, error } = await supabase
         .from('bank_accounts')
         .select(`
           *,
           account:chart_of_accounts(account_number, account_name)
         `)
-        .eq('site_id', siteId)  // CRITICAL: Site isolation
+          // CRITICAL: Site isolation
         .eq('company_id', companyId)
         .eq('is_active', true)
         .order('bank_name');
@@ -621,7 +558,7 @@ export function useBankAccounts(companyId?: string) {
       if (error) throw error;
       return data;
     },
-    enabled: !!companyId && !!siteId,
+    enabled: !!companyId,
   });
 }
 
@@ -630,17 +567,13 @@ export function useBankTransactions(bankAccountId: string, filters?: {
   endDate?: string;
   reconciled?: boolean;
 }) {
-  const { siteId } = useAuth();
-
-  return useQuery({
-    queryKey: ['bank-transactions', bankAccountId, filters, siteId],
+    return useQuery({
+    queryKey: ['bank-transactions', bankAccountId, filters],
     queryFn: async () => {
-      if (!siteId) throw new Error('No site ID - multi-tenant isolation required');
-
-      let query = supabase
+            let query = supabase
         .from('bank_transactions')
         .select('*')
-        .eq('site_id', siteId)  // CRITICAL: Site isolation
+          // CRITICAL: Site isolation
         .eq('bank_account_id', bankAccountId)
         .order('transaction_date', { ascending: false });
 
@@ -661,7 +594,7 @@ export function useBankTransactions(bankAccountId: string, filters?: {
       if (error) throw error;
       return data;
     },
-    enabled: !!bankAccountId && !!siteId,
+    enabled: !!bankAccountId,
   });
 }
 
@@ -670,14 +603,10 @@ export function useBankTransactions(bankAccountId: string, filters?: {
 // =====================================================
 
 export function useTrialBalance(companyId: string, asOfDate: string) {
-  const { siteId } = useAuth();
-
-  return useQuery({
-    queryKey: ['trial-balance', companyId, asOfDate, siteId],
+    return useQuery({
+    queryKey: ['trial-balance', companyId, asOfDate],
     queryFn: async () => {
-      if (!siteId) throw new Error('No site ID - multi-tenant isolation required');
-
-      // This would typically call a database function or view
+            // This would typically call a database function or view
       // For now, we'll fetch from account_balances
       const { data, error } = await supabase
         .from('account_balances')
@@ -685,13 +614,13 @@ export function useTrialBalance(companyId: string, asOfDate: string) {
           *,
           account:chart_of_accounts(*)
         `)
-        .eq('site_id', siteId)  // CRITICAL: Site isolation
+          // CRITICAL: Site isolation
         .eq('company_id', companyId);
 
       if (error) throw error;
       return data;
     },
-    enabled: !!companyId && !!asOfDate && !!siteId,
+    enabled: !!companyId && !!asOfDate,
   });
 }
 

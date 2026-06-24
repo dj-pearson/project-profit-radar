@@ -1,4 +1,3 @@
-import React from "react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { PageSEO, createArticleSchema, createFAQSchema } from "@/components/seo/PageSEO";
@@ -26,11 +25,11 @@ const FinancialIntelligenceGuide = () => {
     },
     {
       question: "Can I get financial intelligence without expensive enterprise software?",
-      answer: "Yes. BuildDesk brings enterprise-level financial intelligence to small contractors for $350/month with unlimited users. Traditional enterprise tools like Procore charge $500+ per user per month, making them unaffordable for most small contractors. BuildDesk is purpose-built for the $1M-$50M revenue segment."
+      answer: "Yes. Brikly brings enterprise-level financial intelligence to small contractors for $350/month with unlimited users. Traditional enterprise tools like Procore charge $500+ per user per month, making them unaffordable for most small contractors. Brikly is purpose-built for the $1M-$50M revenue segment."
     },
     {
       question: "How long does it take to implement financial intelligence?",
-      answer: "Most contractors see their first real-time profitability reports within 2-3 days of starting with BuildDesk. Full implementation (QuickBooks integration, crew onboarding, historical data migration) typically takes 7-14 days. You'll start catching budget overruns earlier immediately."
+      answer: "Most contractors see their first real-time profitability reports within 2-3 days of starting with Brikly. Full implementation (QuickBooks integration, crew onboarding, historical data migration) typically takes 7-14 days. You'll start catching budget overruns earlier immediately."
     }
   ];
 
@@ -93,14 +92,14 @@ const FinancialIntelligenceGuide = () => {
           'construction budget tracking',
           'cash flow forecasting construction'
         ]}
-        canonicalUrl="https://builddesk.com/resources/financial-intelligence-guide"
+        canonicalUrl="https://brikly.net/resources/financial-intelligence-guide"
         schema={[
           createArticleSchema(
             "Financial Intelligence for Construction Contractors: Complete Guide",
             "Comprehensive guide to implementing real-time financial intelligence in your construction business",
             "2025-11-14",
             "2025-11-14",
-            "BuildDesk Team"
+            "Brikly Team"
           ),
           createFAQSchema(faqs)
         ]}
@@ -236,7 +235,7 @@ const FinancialIntelligenceGuide = () => {
           {/* The Solution */}
           <div className="max-w-4xl mx-auto mb-16">
             <h2 className="text-3xl font-bold text-construction-dark mb-6">
-              The BuildDesk Approach to Financial Intelligence
+              The Brikly Approach to Financial Intelligence
             </h2>
             <div className="space-y-6">
               <Card>

@@ -88,8 +88,21 @@ describe('useOfflineSync', () => {
   });
 
   describe('saveOfflineData', () => {
+    // The hook fires `loadPendingSyncData()` from a mount effect; if we
+    // call `saveOfflineData` before that initial load settles, the
+    // load's `setOfflineState({ pendingSync: [] })` races against (and
+    // can clobber) the optimistic state update from `saveOfflineData`.
+    // Flushing the microtask queue once after mount lets the load
+    // resolve before we exercise save behavior.
+    const flushPendingEffects = async () => {
+      await act(async () => {
+        await Promise.resolve();
+      });
+    };
+
     it('should return an id when saving data', async () => {
       const { result } = renderHook(() => useOfflineSync());
+      await flushPendingEffects();
 
       let id: string | undefined;
       await act(async () => {
@@ -102,6 +115,7 @@ describe('useOfflineSync', () => {
 
     it('should add item to pending sync', async () => {
       const { result } = renderHook(() => useOfflineSync());
+      await flushPendingEffects();
 
       await act(async () => {
         await result.current.saveOfflineData('time_entry', { hours: 8 });
@@ -113,6 +127,7 @@ describe('useOfflineSync', () => {
 
     it('should set synced to false for new items', async () => {
       const { result } = renderHook(() => useOfflineSync());
+      await flushPendingEffects();
 
       await act(async () => {
         await result.current.saveOfflineData('daily_report', { notes: 'Test' });
@@ -123,6 +138,7 @@ describe('useOfflineSync', () => {
 
     it('should set retryCount to 0 for new items', async () => {
       const { result } = renderHook(() => useOfflineSync());
+      await flushPendingEffects();
 
       await act(async () => {
         await result.current.saveOfflineData('expense', { amount: 100 });
@@ -133,6 +149,7 @@ describe('useOfflineSync', () => {
 
     it('should include timestamp in saved item', async () => {
       const { result } = renderHook(() => useOfflineSync());
+      await flushPendingEffects();
 
       const beforeSave = new Date().toISOString();
       await act(async () => {
@@ -226,6 +243,11 @@ describe('useOfflineSync', () => {
   describe('OfflineData type', () => {
     it('should support all offline data types', async () => {
       const { result } = renderHook(() => useOfflineSync());
+      // Flush mount-effect's `loadPendingSyncData` so its setState
+      // doesn't race against the optimistic save updates below.
+      await act(async () => {
+        await Promise.resolve();
+      });
 
       const types: OfflineData['type'][] = [
         'time_entry',

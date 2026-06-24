@@ -1,4 +1,3 @@
-import React from 'react';
 import { SEOMetaTags } from '../../components/SEOMetaTags';
 import { HowToSchema } from '../../components/seo/HowToSchema';
 import { BreadcrumbsNavigation } from '../../components/BreadcrumbsNavigation';
@@ -9,16 +8,16 @@ import { CheckCircle2, DollarSign, FileText, Settings, Zap, Clock } from 'lucide
 const QuickBooksIntegrationGuide = () => {
   const howToSteps = [
     {
-      name: "Install BuildDesk Integration",
-      text: "Navigate to your BuildDesk dashboard and click on 'Integrations' in the settings menu. Select QuickBooks and click 'Connect Account'."
+      name: "Install Brikly Integration",
+      text: "Navigate to your Brikly dashboard and click on 'Integrations' in the settings menu. Select QuickBooks and click 'Connect Account'."
     },
     {
       name: "Authorize QuickBooks Access", 
-      text: "You'll be redirected to QuickBooks where you'll log in and authorize BuildDesk to access your accounting data. This creates a secure connection."
+      text: "You'll be redirected to QuickBooks where you'll log in and authorize Brikly to access your accounting data. This creates a secure connection."
     },
     {
       name: "Map Chart of Accounts",
-      text: "Configure how your construction cost codes map to your QuickBooks chart of accounts. BuildDesk provides intelligent suggestions based on your account structure."
+      text: "Configure how your construction cost codes map to your QuickBooks chart of accounts. Brikly provides intelligent suggestions based on your account structure."
     },
     {
       name: "Configure Sync Settings",
@@ -26,11 +25,11 @@ const QuickBooksIntegrationGuide = () => {
     },
     {
       name: "Test Integration",
-      text: "Create a test project and invoice to verify data flows correctly between BuildDesk and QuickBooks. Check that costs appear in the right accounts."
+      text: "Create a test project and invoice to verify data flows correctly between Brikly and QuickBooks. Check that costs appear in the right accounts."
     },
     {
       name: "Train Your Team",
-      text: "Ensure your team understands the new workflow. BuildDesk data now automatically appears in QuickBooks, eliminating double entry."
+      text: "Ensure your team understands the new workflow. Brikly data now automatically appears in QuickBooks, eliminating double entry."
     }
   ];
 
@@ -70,7 +69,7 @@ const QuickBooksIntegrationGuide = () => {
   const troubleshooting = [
     {
       issue: "Sync Not Working",
-      solution: "Check your QuickBooks connection status in BuildDesk settings. Re-authorize if needed."
+      solution: "Check your QuickBooks connection status in Brikly settings. Re-authorize if needed."
     },
     {
       issue: "Wrong Account Mapping",
@@ -89,7 +88,7 @@ const QuickBooksIntegrationGuide = () => {
   return (
     <div className="min-h-screen bg-background">
       <SEOMetaTags
-        title="QuickBooks Integration Guide for Construction Companies | BuildDesk"
+        title="QuickBooks Integration Guide for Construction Companies | Brikly"
         description="Step-by-step guide to integrate QuickBooks with construction management software. Eliminate double entry, sync job costs automatically, and streamline your accounting workflow."
         keywords={[
           'quickbooks construction integration',
@@ -101,21 +100,21 @@ const QuickBooksIntegrationGuide = () => {
           'construction cost tracking',
           'quickbooks for contractors'
         ]}
-        canonicalUrl="https://builddesk.com/resources/quickbooks-integration-guide"
+        canonicalUrl="https://brikly.net/resources/quickbooks-integration-guide"
       />
       
       <HowToSchema
         name="How to Integrate QuickBooks with Construction Management Software"
-        description="Complete guide to connecting QuickBooks with BuildDesk for automated construction accounting and job cost tracking."
+        description="Complete guide to connecting QuickBooks with Brikly for automated construction accounting and job cost tracking."
         totalTime="PT30M"
         estimatedCost={{
           currency: "USD",
           value: "0"
         }}
-        supply={["QuickBooks Account", "BuildDesk Account", "Internet Connection"]}
+        supply={["QuickBooks Account", "Brikly Account", "Internet Connection"]}
         tool={["Computer", "Web Browser"]}
         steps={howToSteps}
-        url="https://builddesk.com/resources/quickbooks-integration-guide"
+        url="https://brikly.net/resources/quickbooks-integration-guide"
       />
 
       <div className="container mx-auto px-4 py-8">
@@ -128,7 +127,7 @@ const QuickBooksIntegrationGuide = () => {
               QuickBooks Integration Guide for Construction Companies
             </h1>
             <p className="text-xl text-muted-foreground">
-              Connect BuildDesk with QuickBooks to eliminate double entry, automate job costing, 
+              Connect Brikly with QuickBooks to eliminate double entry, automate job costing, 
               and get real-time financial visibility across your construction projects.
             </p>
           </div>
@@ -136,7 +135,7 @@ const QuickBooksIntegrationGuide = () => {
           {/* Benefits Section */}
           <Card className="mb-8">
             <CardHeader>
-              <CardTitle>Why Integrate QuickBooks with BuildDesk?</CardTitle>
+              <CardTitle>Why Integrate QuickBooks with Brikly?</CardTitle>
               <CardDescription>
                 Streamline your construction accounting and eliminate manual data entry
               </CardDescription>
@@ -161,7 +160,7 @@ const QuickBooksIntegrationGuide = () => {
             <CardHeader>
               <CardTitle>Step-by-Step Integration Process</CardTitle>
               <CardDescription>
-                Follow these steps to connect QuickBooks with BuildDesk
+                Follow these steps to connect QuickBooks with Brikly
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -206,7 +205,7 @@ const QuickBooksIntegrationGuide = () => {
             <CardHeader>
               <CardTitle>Ready to Get Started?</CardTitle>
               <CardDescription>
-                See how BuildDesk's QuickBooks integration can transform your construction accounting
+                See how Brikly's QuickBooks integration can transform your construction accounting
               </CardDescription>
             </CardHeader>
             <CardContent>

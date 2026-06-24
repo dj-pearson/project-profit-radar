@@ -2,7 +2,7 @@
 
 ## Overview
 
-The QuickBooks Data Routing System is a comprehensive solution for automatically and manually assigning QuickBooks transactions to specific projects in BuildDesk. This system eliminates the manual work of categorizing financial data and ensures accurate project cost tracking.
+The QuickBooks Data Routing System is a comprehensive solution for automatically and manually assigning QuickBooks transactions to specific projects in Brikly. This system eliminates the manual work of categorizing financial data and ensures accurate project cost tracking.
 
 ## 🎯 Key Benefits
 
@@ -163,7 +163,7 @@ When using regex patterns like `PROJ-\d{3}`, the system can:
 
 **Cost Code Integration**:
 - Rules can assign both project AND cost code
-- Support for BuildDesk's detailed cost tracking
+- Support for Brikly's detailed cost tracking
 - Integration with budget vs. actual reporting
 
 **Budget Impact Analysis**:

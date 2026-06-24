@@ -1,22 +1,9 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Task, Project, ScheduleAnalytics } from "@/types/schedule";
-import { 
-  Calendar, 
-  Clock, 
-  Users, 
-  AlertCircle, 
-  GripVertical,
-  Plus,
-  Settings,
-  Share,
-  Download,
-  Link2,
-  Copy,
-  Check
-} from 'lucide-react';
+import { Clock, AlertCircle, GripVertical, Plus, Settings, Share, Download, Copy, Check } from 'lucide-react';
 
 interface GanttChartProps {
   project: Project;
@@ -196,7 +183,7 @@ export const GanttChart: React.FC<GanttChartProps> = ({
           includeCriticalPath: true,
           includeTaskList: true,
           includeAnalytics: true,
-          companyName: 'BuildDesk'
+          companyName: 'Brikly'
         });
         
         await exporter.generatePDF();

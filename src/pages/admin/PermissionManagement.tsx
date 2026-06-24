@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { AccessibleTable, type TableColumn } from '@/components/accessibility/AccessibleTable';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -22,9 +23,15 @@ import {
   FileText,
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import type { SupabaseClient } from '@supabase/supabase-js';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
+
+// Helper to query tables not yet in the generated Database types.
+// Returns a standard Supabase query builder for the given table name.
+const untypedFrom = (table: string) =>
+  (supabase as unknown as SupabaseClient).from(table);
 
 interface Permission {
   id: string;
@@ -72,7 +79,7 @@ interface PermissionAuditLog {
   resource_id: string;
   changed_by_user_id: string;
   reason: string;
-  metadata: any;
+  metadata: Record<string, string | number | boolean | null>;
   created_at: string;
   user_email?: string;
   changed_by_email?: string;
@@ -104,8 +111,7 @@ export const PermissionManagement = () => {
     setLoading(true);
     try {
       // Load all permissions
-      const { data: permissionsData, error: permissionsError } = await (supabase as any)
-        .from('permissions')
+      const { data: permissionsData, error: permissionsError } = await untypedFrom('permissions')
         .select('*')
         .order('category', { ascending: true })
         .order('name', { ascending: true });
@@ -114,8 +120,7 @@ export const PermissionManagement = () => {
       setPermissions(permissionsData || []);
 
       // Load custom roles with counts
-      const { data: rolesData, error: rolesError } = await (supabase as any)
-        .from('custom_roles')
+      const { data: rolesData, error: rolesError } = await untypedFrom('custom_roles')
         .select('*')
         .order('created_at', { ascending: false });
 
@@ -124,13 +129,11 @@ export const PermissionManagement = () => {
       // Get permission and user counts for each role
       const rolesWithCounts = await Promise.all(
         (rolesData || []).map(async (role) => {
-          const { count: permCount } = await (supabase as any)
-            .from('role_permissions')
+          const { count: permCount } = await untypedFrom('role_permissions')
             .select('*', { count: 'exact', head: true })
             .eq('role_id', role.id);
 
-          const { count: userCount } = await (supabase as any)
-            .from('tenant_users')
+          const { count: userCount } = await untypedFrom('tenant_users')
             .select('*', { count: 'exact', head: true })
             .contains('custom_roles', [role.id]);
 
@@ -142,27 +145,25 @@ export const PermissionManagement = () => {
         })
       );
 
-      setCustomRoles(rolesWithCounts as any);
+      setCustomRoles(rolesWithCounts as CustomRole[]);
 
       // Load user permissions
-      const { data: userPermsData, error: userPermsError } = await (supabase as any)
-        .from('user_permissions')
+      const { data: userPermsData, error: userPermsError } = await untypedFrom('user_permissions')
         .select('*')
         .order('created_at', { ascending: false })
         .limit(50);
 
       if (userPermsError) throw userPermsError;
-      setUserPermissions((userPermsData as any) || []);
+      setUserPermissions((userPermsData as UserPermission[]) || []);
 
       // Load audit logs
-      const { data: auditData, error: auditError } = await (supabase as any)
-        .from('permission_audit_log')
+      const { data: auditData, error: auditError } = await untypedFrom('permission_audit_log')
         .select('*')
         .order('created_at', { ascending: false })
         .limit(100);
 
       if (auditError) throw auditError;
-      setAuditLogs((auditData as any) || []);
+      setAuditLogs((auditData as PermissionAuditLog[]) || []);
     } catch (error) {
       console.error('Failed to load permission data:', error);
       toast({
@@ -187,8 +188,7 @@ export const PermissionManagement = () => {
 
     try {
       // Create role
-      const { data: role, error: roleError } = await (supabase as any)
-        .from('custom_roles')
+      const { data: role, error: roleError } = await untypedFrom('custom_roles')
         .insert({
           name: newRoleName,
           slug: newRoleName.toLowerCase().replace(/\s+/g, '_'),
@@ -207,8 +207,7 @@ export const PermissionManagement = () => {
         permission_id: permId,
       }));
 
-      const { error: permError } = await (supabase as any)
-        .from('role_permissions')
+      const { error: permError } = await untypedFrom('role_permissions')
         .insert(rolePermissions);
 
       if (permError) throw permError;
@@ -236,8 +235,7 @@ export const PermissionManagement = () => {
 
   const toggleRoleStatus = async (roleId: string, currentStatus: boolean) => {
     try {
-      const { error } = await (supabase as any)
-        .from('custom_roles')
+      const { error } = await untypedFrom('custom_roles')
         .update({ is_active: !currentStatus })
         .eq('id', roleId);
 
@@ -267,8 +265,7 @@ export const PermissionManagement = () => {
     }
 
     try {
-      const { error } = await (supabase as any)
-        .from('custom_roles')
+      const { error } = await untypedFrom('custom_roles')
         .delete()
         .eq('id', roleId);
 
@@ -473,46 +470,70 @@ export const PermissionManagement = () => {
               </div>
             </div>
 
-            <div className="grid grid-cols-1 gap-3">
-              {filteredPermissions.map((permission) => (
-                <Card key={permission.id}>
-                  <CardContent className="pt-6">
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-3 mb-2">
-                          <code className="text-sm font-mono font-semibold">
-                            {permission.name}
-                          </code>
-                          {getActionBadge(permission.action)}
-                          {getCategoryBadge(permission.category)}
-                          {permission.is_dangerous && (
-                            <Badge className="bg-red-500 text-white">
-                              <AlertCircle className="w-3 h-3 mr-1" />
-                              Dangerous
-                            </Badge>
-                          )}
-                        </div>
-                        <p className="text-sm text-muted-foreground">
-                          {permission.description}
-                        </p>
-                        <p className="text-xs text-muted-foreground mt-1">
-                          Resource: <span className="font-mono">{permission.resource_type}</span>
-                        </p>
-                      </div>
+            {(() => {
+              const permissionColumns: TableColumn<Permission>[] = [
+                {
+                  key: 'name',
+                  header: 'Name',
+                  sortable: true,
+                  render: (value) => (
+                    <code className="text-sm font-mono font-semibold">{value}</code>
+                  ),
+                },
+                {
+                  key: 'resource_type',
+                  header: 'Resource Type',
+                  hideOnMobile: true,
+                  sortable: true,
+                  render: (value) => (
+                    <span className="font-mono text-xs">{value}</span>
+                  ),
+                },
+                {
+                  key: 'action',
+                  header: 'Action',
+                  sortable: true,
+                  render: (value) => getActionBadge(value),
+                },
+                {
+                  key: 'category',
+                  header: 'Category',
+                  sortable: true,
+                  render: (value) => getCategoryBadge(value),
+                },
+                {
+                  key: 'description',
+                  header: 'Description',
+                  hideOnMobile: true,
+                  render: (value, row) => (
+                    <div>
+                      <span className="text-sm text-muted-foreground">{value}</span>
+                      {row.is_dangerous && (
+                        <Badge className="bg-red-500 text-white ml-2">
+                          <AlertCircle className="w-3 h-3 mr-1" aria-hidden="true" />
+                          Dangerous
+                        </Badge>
+                      )}
                     </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
+                  ),
+                },
+              ];
 
-            {filteredPermissions.length === 0 && (
-              <Card>
-                <CardContent className="pt-6 text-center py-12">
-                  <Search className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-                  <p className="text-muted-foreground">No permissions found</p>
-                </CardContent>
-              </Card>
-            )}
+              return (
+                <AccessibleTable<Permission>
+                  caption="All Permissions"
+                  hideCaption
+                  columns={permissionColumns}
+                  data={filteredPermissions}
+                  emptyContent={
+                    <div className="text-center py-8">
+                      <Search className="w-12 h-12 text-muted-foreground mx-auto mb-4" aria-hidden="true" />
+                      <p className="text-muted-foreground">No permissions found</p>
+                    </div>
+                  }
+                />
+              );
+            })()}
           </TabsContent>
 
           {/* Custom Roles Tab */}
@@ -611,94 +632,108 @@ export const PermissionManagement = () => {
               </Card>
             )}
 
-            {customRoles.length === 0 ? (
-              <Card>
-                <CardContent className="pt-6 text-center py-12">
-                  <Users className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-                  <p className="text-muted-foreground mb-4">No custom roles created</p>
-                  <Button onClick={() => setShowCreateRole(true)}>
-                    <Plus className="w-4 h-4 mr-2" />
-                    Create Your First Role
-                  </Button>
-                </CardContent>
-              </Card>
-            ) : (
-              <div className="space-y-3">
-                {customRoles.map((role) => (
-                  <Card key={role.id}>
-                    <CardContent className="pt-6">
-                      <div className="flex items-start justify-between mb-4">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-3 mb-2">
-                            <h3 className="text-lg font-semibold">{role.name}</h3>
-                            {role.is_active ? (
-                              <Badge className="bg-green-500 text-white">
-                                <CheckCircle className="w-3 h-3 mr-1" />
-                                Active
-                              </Badge>
-                            ) : (
-                              <Badge className="bg-gray-500 text-white">
-                                <XCircle className="w-3 h-3 mr-1" />
-                                Inactive
-                              </Badge>
-                            )}
-                            {role.is_system_role && (
-                              <Badge className="bg-blue-500 text-white">System Role</Badge>
-                            )}
-                          </div>
-                          {role.description && (
-                            <p className="text-sm text-muted-foreground mb-2">
-                              {role.description}
-                            </p>
-                          )}
-                        </div>
-                      </div>
-
-                      <div className="grid grid-cols-3 gap-4 mb-4">
-                        <div>
-                          <p className="text-xs text-muted-foreground">Permissions</p>
-                          <p className="font-semibold">{role.permission_count}</p>
-                        </div>
-                        <div>
-                          <p className="text-xs text-muted-foreground">Users</p>
-                          <p className="font-semibold">{role.user_count}</p>
-                        </div>
-                        <div>
-                          <p className="text-xs text-muted-foreground">Created</p>
-                          <p className="font-semibold">
-                            {new Date(role.created_at).toLocaleDateString()}
-                          </p>
-                        </div>
-                      </div>
-
-                      {!role.is_system_role && (
-                        <div className="flex gap-2">
-                          <Button
-                            size="sm"
-                            variant={role.is_active ? 'outline' : 'default'}
-                            onClick={() => toggleRoleStatus(role.id, role.is_active)}
-                          >
-                            {role.is_active ? 'Disable' : 'Enable'}
-                          </Button>
-                          <Button size="sm" variant="outline">
-                            <Edit className="w-4 h-4 mr-2" />
-                            Edit
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => deleteRole(role.id, role.name)}
-                          >
-                            <Trash2 className="w-4 h-4 mr-2" />
-                            Delete
-                          </Button>
-                        </div>
+            {(() => {
+              const roleColumns: TableColumn<CustomRole>[] = [
+                {
+                  key: 'name',
+                  header: 'Name',
+                  sortable: true,
+                  render: (value) => (
+                    <span className="text-base font-semibold">{value}</span>
+                  ),
+                },
+                {
+                  key: 'description',
+                  header: 'Description',
+                  hideOnMobile: true,
+                  render: (value) => (
+                    <span className="text-sm text-muted-foreground">{value || '--'}</span>
+                  ),
+                },
+                {
+                  key: 'permission_count',
+                  header: 'Permissions',
+                  sortable: true,
+                  render: (value) => <span className="font-semibold">{value}</span>,
+                },
+                {
+                  key: 'user_count',
+                  header: 'Users',
+                  sortable: true,
+                  render: (value) => <span className="font-semibold">{value}</span>,
+                },
+                {
+                  key: 'is_active',
+                  header: 'Status',
+                  sortable: true,
+                  render: (value, row) => (
+                    <div className="flex items-center gap-2">
+                      {value ? (
+                        <Badge className="bg-green-500 text-white">
+                          <CheckCircle className="w-3 h-3 mr-1" aria-hidden="true" />
+                          Active
+                        </Badge>
+                      ) : (
+                        <Badge className="bg-gray-500 text-white">
+                          <XCircle className="w-3 h-3 mr-1" aria-hidden="true" />
+                          Inactive
+                        </Badge>
                       )}
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            )}
+                      {row.is_system_role && (
+                        <Badge className="bg-blue-500 text-white">System</Badge>
+                      )}
+                    </div>
+                  ),
+                },
+                {
+                  key: 'actions',
+                  header: 'Actions',
+                  headerRender: () => <span className="sr-only">Actions</span>,
+                  render: (_, row) => !row.is_system_role ? (
+                    <div className="flex gap-1">
+                      <Button
+                        size="sm"
+                        variant={row.is_active ? 'outline' : 'default'}
+                        onClick={() => toggleRoleStatus(row.id, row.is_active)}
+                        aria-label={row.is_active ? `Disable role ${row.name}` : `Enable role ${row.name}`}
+                      >
+                        {row.is_active ? 'Disable' : 'Enable'}
+                      </Button>
+                      <Button size="sm" variant="outline" aria-label={`Edit role ${row.name}`}>
+                        <Edit className="w-3 h-3" aria-hidden="true" />
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => deleteRole(row.id, row.name)}
+                        aria-label={`Delete role ${row.name}`}
+                      >
+                        <Trash2 className="w-3 h-3" aria-hidden="true" />
+                      </Button>
+                    </div>
+                  ) : null,
+                },
+              ];
+
+              return (
+                <AccessibleTable<CustomRole>
+                  caption="Custom Roles"
+                  hideCaption
+                  columns={roleColumns}
+                  data={customRoles}
+                  emptyContent={
+                    <div className="text-center py-8">
+                      <Users className="w-12 h-12 text-muted-foreground mx-auto mb-4" aria-hidden="true" />
+                      <p className="text-muted-foreground mb-4">No custom roles created</p>
+                      <Button onClick={() => setShowCreateRole(true)}>
+                        <Plus className="w-4 h-4 mr-2" aria-hidden="true" />
+                        Create Your First Role
+                      </Button>
+                    </div>
+                  }
+                />
+              );
+            })()}
           </TabsContent>
 
           {/* User Permissions Tab */}

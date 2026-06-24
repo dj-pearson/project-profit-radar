@@ -1,6 +1,6 @@
 # Modern 3D Web Technologies for Construction Management Hero Sections
 
-Build-Desk.com can achieve a powerful competitive advantage by implementing strategic 3D visualization that combines cutting-edge web technologies with construction industry-specific visual concepts. Based on comprehensive research across technical frameworks, design trends, industry applications, and performance optimization, here are the key findings and actionable recommendations.
+Brikly.com can achieve a powerful competitive advantage by implementing strategic 3D visualization that combines cutting-edge web technologies with construction industry-specific visual concepts. Based on comprehensive research across technical frameworks, design trends, industry applications, and performance optimization, here are the key findings and actionable recommendations.
 
 ## Technical foundation: React Three Fiber dominates the landscape
 
@@ -46,14 +46,14 @@ The **2024-2025 B2B SaaS design landscape** has shifted toward text-focused, con
 
 **Device-specific adaptations** based on capability detection ensure reliable performance across the full spectrum of professional devices. High-end desktop receives full 3D experience, mobile devices get simplified interactions, and legacy systems fall back to 2D alternatives.
 
-## Recommended showpiece concepts for Build-Desk.com
+## Recommended showpiece concepts for Brikly.com
 
-**Primary recommendation: Interactive 4D project progression** combining blueprint-to-reality transformation with timeline scrubbing functionality. Users land on a hero section showing a 2D construction plan that morphs into a 3D building model, with an interactive timeline allowing exploration of construction phases. This directly demonstrates Build-Desk's core value: transforming planning into successful project execution.
+**Primary recommendation: Interactive 4D project progression** combining blueprint-to-reality transformation with timeline scrubbing functionality. Users land on a hero section showing a 2D construction plan that morphs into a 3D building model, with an interactive timeline allowing exploration of construction phases. This directly demonstrates Brikly's core value: transforming planning into successful project execution.
 
 **Technical implementation approach:**
 ```typescript
 // Recommended stack architecture
-interface BuildDeskHeroStack {
+interface BriklyHeroStack {
   core: 'React 19 + TypeScript + React Three Fiber v9'
   engine: 'Three.js r180 with WebGPU integration'
   optimization: 'Draco compression + Progressive loading'
@@ -78,10 +78,10 @@ interface BuildDeskHeroStack {
 
 ## Competitive differentiation through strategic implementation
 
-Build-Desk.com can achieve meaningful competitive advantage by **combining technical excellence with construction-specific visual metaphors**. While competitors like Procore focus on collaborative intelligence and Autodesk emphasizes BIM integration, Build-Desk can own the "seamless planning to execution" narrative through superior 3D visualization.
+Brikly.com can achieve meaningful competitive advantage by **combining technical excellence with construction-specific visual metaphors**. While competitors like Procore focus on collaborative intelligence and Autodesk emphasizes BIM integration, Brikly can own the "seamless planning to execution" narrative through superior 3D visualization.
 
 **The key differentiator lies in implementation quality** rather than feature complexity. Professional construction managers value reliability and clarity over flashy effects. Success comes from creating 3D experiences that feel natural, load quickly, work reliably across devices, and directly communicate construction management value propositions.
 
 **Recommended development approach** progresses through three phases: establish responsive foundation with clear value proposition, enhance with strategic 3D visualization elements, then optimize based on user interaction data. This ensures reliable deployment while maximizing visual impact.
 
-The construction management software market is ready for platforms that combine professional trustworthiness with innovative 3D visualization. Build-Desk.com can capture this opportunity by implementing modern web 3D technologies within a carefully optimized, user-focused framework that prioritizes performance and accessibility alongside visual appeal.
+The construction management software market is ready for platforms that combine professional trustworthiness with innovative 3D visualization. Brikly.com can capture this opportunity by implementing modern web 3D technologies within a carefully optimized, user-focused framework that prioritizes performance and accessibility alongside visual appeal.

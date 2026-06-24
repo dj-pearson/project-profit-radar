@@ -17,8 +17,8 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.ico', 'robots.txt', 'apple-touch-icon.png'],
       manifest: {
-        name: 'BuildDesk',
-        short_name: 'BuildDesk',
+        name: 'Brikly',
+        short_name: 'Brikly',
         theme_color: '#3b82f6',
         icons: [
           {
@@ -204,7 +204,7 @@ npx cap open ios
 
 #### 3. App Store Information
 ```yaml
-App Name: BuildDesk
+App Name: Brikly
 Subtitle: Construction Management
 Description: |
   Professional construction project management platform.
@@ -232,8 +232,8 @@ Age Rating: 4+
 #### 1. Generate Signing Key
 ```bash
 # Generate keystore
-keytool -genkey -v -keystore builddesk-release.keystore \
-  -alias builddesk -keyalg RSA -keysize 2048 -validity 10000
+keytool -genkey -v -keystore brikly-release.keystore \
+  -alias brikly -keyalg RSA -keysize 2048 -validity 10000
 ```
 
 #### 2. Configure Gradle
@@ -242,9 +242,9 @@ keytool -genkey -v -keystore builddesk-release.keystore \
 android {
   signingConfigs {
     release {
-      storeFile file('builddesk-release.keystore')
+      storeFile file('brikly-release.keystore')
       storePassword System.getenv('KEYSTORE_PASSWORD')
-      keyAlias 'builddesk'
+      keyAlias 'brikly'
       keyPassword System.getenv('KEY_PASSWORD')
     }
   }
@@ -271,11 +271,11 @@ cd android
 
 #### 4. Play Store Listing
 ```yaml
-App Name: BuildDesk
+App Name: Brikly
 Short Description: Construction project management made simple
 
 Full Description: |
-  BuildDesk is a comprehensive construction management platform
+  Brikly is a comprehensive construction management platform
   designed for contractors, builders, and project managers.
   
   Features:

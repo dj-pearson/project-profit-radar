@@ -1,5 +1,5 @@
-// BuildDesk Comprehensive Testing Script
-// This script will test every aspect of the BuildDesk application
+// Brikly Comprehensive Testing Script
+// This script will test every aspect of the Brikly application
 
 const TEST_CONFIG = {
   baseUrl: 'http://localhost:8080',
@@ -145,7 +145,7 @@ async function testNavigation() {
 
 // Main test execution
 async function runTests() {
-  console.log('🚀 Starting BuildDesk Comprehensive Testing...');
+  console.log('🚀 Starting Brikly Comprehensive Testing...');
   
   // Initialize browser if using Puppeteer
   if (typeof page === 'undefined') {

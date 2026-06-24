@@ -64,7 +64,7 @@ WHERE up.email = 'user@example.com';
 ```typescript
 // src/lib/site-resolver.ts
 const siteKeyMap: Record<string, string> = {
-  'build-desk.com': 'builddesk',
+  'brikly.net': 'brikly',
   'newsite.com': 'newsite',  // ← Add here
 };
 ```

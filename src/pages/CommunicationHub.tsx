@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -10,15 +10,7 @@ import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { ProjectCommunication } from '@/components/communication/ProjectCommunication';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { 
-  MessageSquare,
-  Search,
-  Building2,
-  Clock,
-  Users,
-  Filter,
-  ArrowRight
-} from 'lucide-react';
+import { MessageSquare, Search, Building2, Clock, Users, ArrowRight } from 'lucide-react';
 
 interface Project {
   id: string;

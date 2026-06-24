@@ -6,6 +6,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Upload, X, Image as ImageIcon, ExternalLink } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { compressImage } from '@/lib/image-compression';
 
 interface ImageUploadProps {
   value: string;
@@ -59,15 +60,21 @@ export const ImageUpload = ({
     try {
       setUploading(true);
 
-      // Create unique filename
-      const fileExt = file.name.split('.').pop();
+      // Compress raster images before upload so field users on cellular
+      // don't burn their data plan. SVG/GIF and already-small files pass
+      // through untouched.
+      const uploadFile = await compressImage(file);
+
+      // Use the compressed file's extension (may have become .jpg) so the
+      // filename and MIME on Storage stay consistent.
+      const fileExt = uploadFile.name.split('.').pop() || file.name.split('.').pop();
       const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
       const filePath = path ? `${path}/${fileName}` : fileName;
 
       // Upload file to Supabase Storage
       const { data, error } = await supabase.storage
         .from(bucket)
-        .upload(filePath, file, {
+        .upload(filePath, uploadFile, {
           cacheControl: '3600',
           upsert: false
         });

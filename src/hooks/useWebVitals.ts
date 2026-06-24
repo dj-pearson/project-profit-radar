@@ -36,12 +36,7 @@ export const useWebVitals = (config: WebVitalsConfig = {}) => {
         id: metric.id,
       };
 
-      if (enableLogging) {
-          value: `${metric.value.toFixed(2)}ms`,
-          rating: metric.rating,
-          id: metric.id,
-        });
-      }
+      // Logging handled by RUM system in development
 
       // Send to RUM system
       const rumMetric = createRUMMetric(metric);

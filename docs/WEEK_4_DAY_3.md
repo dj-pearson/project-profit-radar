@@ -6,8 +6,8 @@
 ```json
 // public/manifest.json
 {
-  "name": "BuildDesk - Construction Management",
-  "short_name": "BuildDesk",
+  "name": "Brikly - Construction Management",
+  "short_name": "Brikly",
   "description": "Professional construction project management platform",
   "start_url": "/",
   "display": "standalone",
@@ -108,7 +108,7 @@
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="BuildDesk">
+  <meta name="apple-mobile-web-app-title" content="Brikly">
   
   <!-- iOS Icons -->
   <link rel="apple-touch-icon" href="/icons/icon-152x152.png">
@@ -131,7 +131,7 @@
 ### Basic Service Worker
 ```typescript
 // public/sw.js
-const CACHE_NAME = 'builddesk-v1';
+const CACHE_NAME = 'brikly-v1';
 const RUNTIME_CACHE = 'runtime-cache';
 
 // Assets to cache on install
@@ -271,7 +271,7 @@ registerServiceWorker();
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Offline - BuildDesk</title>
+  <title>Offline - Brikly</title>
   <style>
     body {
       font-family: system-ui, -apple-system, sans-serif;
@@ -453,7 +453,7 @@ export function InstallBanner() {
         <X className="h-4 w-4" />
       </button>
 
-      <h3 className="font-semibold mb-2">Install BuildDesk</h3>
+      <h3 className="font-semibold mb-2">Install Brikly</h3>
       <p className="text-sm text-muted-foreground mb-4">
         Install our app for quick access and a better experience
       </p>

@@ -1,10 +1,10 @@
 # 3D Hero Testing Protocol
 
-This document outlines the testing protocol for the BuildDesk 3D hero component implementation.
+This document outlines the testing protocol for the Brikly 3D hero component implementation.
 
 ## Overview
 
-The 3D hero component (`BuildDeskHero3D`) features:
+The 3D hero component (`BriklyHero3D`) features:
 - 3D building blocks animation (3000 instances using instanced meshes)
 - Glassmorphism UI elements
 - Ambient particle effects
@@ -81,7 +81,7 @@ Test on actual devices (minimum 30fps):
   - Check: Landscape orientation working
   - Check: Touch targets adequate (44x44px)
 
-## Field Tablet Testing (CRITICAL for BuildDesk)
+## Field Tablet Testing (CRITICAL for Brikly)
 
 These devices are commonly used by contractors on job sites:
 

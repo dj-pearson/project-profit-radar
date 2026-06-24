@@ -1,6 +1,6 @@
 Complete Workup: Construction Schedule Builder (Simplified)
 Executive Summary
-A free, web-based construction scheduling tool that allows contractors to create professional project timelines using drag-and-drop functionality. This tool serves as a lead magnet while demonstrating Build-Desk.com's scheduling capabilities, targeting the keyword "construction schedule builder" and related terms.
+A free, web-based construction scheduling tool that allows contractors to create professional project timelines using drag-and-drop functionality. This tool serves as a lead magnet while demonstrating Brikly.com's scheduling capabilities, targeting the keyword "construction schedule builder" and related terms.
 
 Strategic Objectives
 Primary Goals
@@ -120,7 +120,7 @@ Print-optimized format
 
 User Interface Design
 Landing Page Layout
-Header: Build-Desk.com logo + navigation
+Header: Brikly.com logo + navigation
 Hero Section: 
   - Headline: "Create Professional Construction Schedules in Minutes"
   - Subheadline: "Free drag-and-drop scheduling tool used by 10,000+ contractors"
@@ -306,10 +306,10 @@ Blog Posts to Create:
 "Construction Scheduling Best Practices for 2025"
 
 On-Page SEO
-Title Tag: "Free Construction Schedule Builder | Create Professional Timelines | Build-Desk"
+Title Tag: "Free Construction Schedule Builder | Create Professional Timelines | Brikly"
 Meta Description: "Build professional construction schedules in minutes with our free drag-and-drop tool. Choose from 6 project templates, export PDFs, and eliminate scheduling errors."
 H1: "Free Construction Schedule Builder"
-URL: builddesk.com/tools/schedule-builder
+URL: brikly.net/tools/schedule-builder
 
 Lead Nurturing Sequence
 Email Automation Flow
@@ -685,4 +685,4 @@ Failure Indicators:
 High cost per acquisition with no improvement trend
 
 
-This comprehensive workup provides the complete foundation for implementing the Construction Schedule Builder as a lead generation tool for Build-Desk.com. The detailed specifications, timeline, and success metrics ensure the project can be executed effectively while maximizing its impact on business growth.
+This comprehensive workup provides the complete foundation for implementing the Construction Schedule Builder as a lead generation tool for Brikly.com. The detailed specifications, timeline, and success metrics ensure the project can be executed effectively while maximizing its impact on business growth.

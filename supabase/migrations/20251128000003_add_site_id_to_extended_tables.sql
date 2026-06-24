@@ -9,15 +9,15 @@
 
 DO $$
 DECLARE
-  v_builddesk_site_id UUID;
+  v_brikly_site_id UUID;
   v_table_name TEXT;
   v_tables_updated INTEGER := 0;
 BEGIN
-  -- Get Build-Desk site_id
-  SELECT id INTO v_builddesk_site_id FROM sites WHERE key = 'builddesk' LIMIT 1;
+  -- Get Brikly site_id
+  SELECT id INTO v_brikly_site_id FROM sites WHERE key = 'brikly' LIMIT 1;
   
-  IF v_builddesk_site_id IS NULL THEN
-    RAISE EXCEPTION 'Build-Desk site not found';
+  IF v_brikly_site_id IS NULL THEN
+    RAISE EXCEPTION 'Brikly site not found';
   END IF;
   
   -- =====================================================
@@ -27,7 +27,7 @@ BEGIN
     IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'project_templates' AND column_name = 'site_id') THEN
       ALTER TABLE project_templates ADD COLUMN site_id UUID REFERENCES sites(id) ON DELETE RESTRICT;
       UPDATE project_templates pt SET site_id = c.site_id FROM companies c WHERE pt.company_id = c.id AND pt.site_id IS NULL;
-      UPDATE project_templates SET site_id = v_builddesk_site_id WHERE site_id IS NULL;
+      UPDATE project_templates SET site_id = v_brikly_site_id WHERE site_id IS NULL;
       ALTER TABLE project_templates ALTER COLUMN site_id SET NOT NULL;
       CREATE INDEX idx_project_templates_site_id ON project_templates(site_id);
       v_tables_updated := v_tables_updated + 1;
@@ -39,7 +39,7 @@ BEGIN
     IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'estimate_templates' AND column_name = 'site_id') THEN
       ALTER TABLE estimate_templates ADD COLUMN site_id UUID REFERENCES sites(id) ON DELETE RESTRICT;
       UPDATE estimate_templates et SET site_id = c.site_id FROM companies c WHERE et.company_id = c.id AND et.site_id IS NULL;
-      UPDATE estimate_templates SET site_id = v_builddesk_site_id WHERE site_id IS NULL;
+      UPDATE estimate_templates SET site_id = v_brikly_site_id WHERE site_id IS NULL;
       ALTER TABLE estimate_templates ALTER COLUMN site_id SET NOT NULL;
       CREATE INDEX idx_estimate_templates_site_id ON estimate_templates(site_id);
       v_tables_updated := v_tables_updated + 1;
@@ -51,7 +51,7 @@ BEGIN
     IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'daily_report_templates' AND column_name = 'site_id') THEN
       ALTER TABLE daily_report_templates ADD COLUMN site_id UUID REFERENCES sites(id) ON DELETE RESTRICT;
       UPDATE daily_report_templates drt SET site_id = c.site_id FROM companies c WHERE drt.company_id = c.id AND drt.site_id IS NULL;
-      UPDATE daily_report_templates SET site_id = v_builddesk_site_id WHERE site_id IS NULL;
+      UPDATE daily_report_templates SET site_id = v_brikly_site_id WHERE site_id IS NULL;
       ALTER TABLE daily_report_templates ALTER COLUMN site_id SET NOT NULL;
       CREATE INDEX idx_daily_report_templates_site_id ON daily_report_templates(site_id);
       v_tables_updated := v_tables_updated + 1;
@@ -66,7 +66,7 @@ BEGIN
     IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'timesheet_approvals' AND column_name = 'site_id') THEN
       ALTER TABLE timesheet_approvals ADD COLUMN site_id UUID REFERENCES sites(id) ON DELETE RESTRICT;
       UPDATE timesheet_approvals ta SET site_id = te.site_id FROM time_entries te WHERE ta.time_entry_id = te.id AND ta.site_id IS NULL;
-      UPDATE timesheet_approvals SET site_id = v_builddesk_site_id WHERE site_id IS NULL;
+      UPDATE timesheet_approvals SET site_id = v_brikly_site_id WHERE site_id IS NULL;
       ALTER TABLE timesheet_approvals ALTER COLUMN site_id SET NOT NULL;
       CREATE INDEX idx_timesheet_approvals_site_id ON timesheet_approvals(site_id);
       v_tables_updated := v_tables_updated + 1;
@@ -81,7 +81,7 @@ BEGIN
     IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'equipment_qr_codes' AND column_name = 'site_id') THEN
       ALTER TABLE equipment_qr_codes ADD COLUMN site_id UUID REFERENCES sites(id) ON DELETE RESTRICT;
       UPDATE equipment_qr_codes eqc SET site_id = c.site_id FROM companies c WHERE eqc.company_id = c.id AND eqc.site_id IS NULL;
-      UPDATE equipment_qr_codes SET site_id = v_builddesk_site_id WHERE site_id IS NULL;
+      UPDATE equipment_qr_codes SET site_id = v_brikly_site_id WHERE site_id IS NULL;
       ALTER TABLE equipment_qr_codes ALTER COLUMN site_id SET NOT NULL;
       CREATE INDEX idx_equipment_qr_codes_site_id ON equipment_qr_codes(site_id);
       v_tables_updated := v_tables_updated + 1;
@@ -97,7 +97,7 @@ BEGIN
       ALTER TABLE saved_filter_presets ADD COLUMN site_id UUID REFERENCES sites(id) ON DELETE RESTRICT;
       UPDATE saved_filter_presets sfp SET site_id = up.site_id FROM user_profiles up WHERE sfp.user_id = up.id AND sfp.site_id IS NULL;
       UPDATE saved_filter_presets sfp SET site_id = p.site_id FROM profiles p WHERE sfp.user_id = p.id AND sfp.site_id IS NULL;
-      UPDATE saved_filter_presets SET site_id = v_builddesk_site_id WHERE site_id IS NULL;
+      UPDATE saved_filter_presets SET site_id = v_brikly_site_id WHERE site_id IS NULL;
       ALTER TABLE saved_filter_presets ALTER COLUMN site_id SET NOT NULL;
       CREATE INDEX idx_saved_filter_presets_site_id ON saved_filter_presets(site_id);
       v_tables_updated := v_tables_updated + 1;
@@ -113,7 +113,7 @@ BEGIN
       ALTER TABLE payments ADD COLUMN site_id UUID REFERENCES sites(id) ON DELETE RESTRICT;
       UPDATE payments pm SET site_id = i.site_id FROM invoices i WHERE pm.invoice_id = i.id AND pm.site_id IS NULL;
       UPDATE payments pm SET site_id = c.site_id FROM companies c WHERE pm.company_id = c.id AND pm.site_id IS NULL;
-      UPDATE payments SET site_id = v_builddesk_site_id WHERE site_id IS NULL;
+      UPDATE payments SET site_id = v_brikly_site_id WHERE site_id IS NULL;
       ALTER TABLE payments ALTER COLUMN site_id SET NOT NULL;
       CREATE INDEX idx_payments_site_id ON payments(site_id);
       v_tables_updated := v_tables_updated + 1;
@@ -128,7 +128,7 @@ BEGIN
     IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'quickbooks_expenses' AND column_name = 'site_id') THEN
       ALTER TABLE quickbooks_expenses ADD COLUMN site_id UUID REFERENCES sites(id) ON DELETE RESTRICT;
       UPDATE quickbooks_expenses qe SET site_id = c.site_id FROM companies c WHERE qe.company_id = c.id AND qe.site_id IS NULL;
-      UPDATE quickbooks_expenses SET site_id = v_builddesk_site_id WHERE site_id IS NULL;
+      UPDATE quickbooks_expenses SET site_id = v_brikly_site_id WHERE site_id IS NULL;
       ALTER TABLE quickbooks_expenses ALTER COLUMN site_id SET NOT NULL;
       CREATE INDEX idx_quickbooks_expenses_site_id ON quickbooks_expenses(site_id);
       v_tables_updated := v_tables_updated + 1;
@@ -140,7 +140,7 @@ BEGIN
     IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'quickbooks_payments' AND column_name = 'site_id') THEN
       ALTER TABLE quickbooks_payments ADD COLUMN site_id UUID REFERENCES sites(id) ON DELETE RESTRICT;
       UPDATE quickbooks_payments qp SET site_id = c.site_id FROM companies c WHERE qp.company_id = c.id AND qp.site_id IS NULL;
-      UPDATE quickbooks_payments SET site_id = v_builddesk_site_id WHERE site_id IS NULL;
+      UPDATE quickbooks_payments SET site_id = v_brikly_site_id WHERE site_id IS NULL;
       ALTER TABLE quickbooks_payments ALTER COLUMN site_id SET NOT NULL;
       CREATE INDEX idx_quickbooks_payments_site_id ON quickbooks_payments(site_id);
       v_tables_updated := v_tables_updated + 1;
@@ -154,7 +154,7 @@ BEGIN
   IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'seo_keywords') THEN
     IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'seo_keywords' AND column_name = 'site_id') THEN
       ALTER TABLE seo_keywords ADD COLUMN site_id UUID REFERENCES sites(id) ON DELETE RESTRICT;
-      UPDATE seo_keywords SET site_id = v_builddesk_site_id WHERE site_id IS NULL;
+      UPDATE seo_keywords SET site_id = v_brikly_site_id WHERE site_id IS NULL;
       ALTER TABLE seo_keywords ALTER COLUMN site_id SET NOT NULL;
       CREATE INDEX idx_seo_keywords_site_id ON seo_keywords(site_id);
       v_tables_updated := v_tables_updated + 1;
@@ -168,7 +168,7 @@ BEGIN
       
       -- Use session_replication_role to bypass triggers during migration
       SET session_replication_role = replica;
-      UPDATE blog_posts SET site_id = v_builddesk_site_id WHERE site_id IS NULL;
+      UPDATE blog_posts SET site_id = v_brikly_site_id WHERE site_id IS NULL;
       SET session_replication_role = DEFAULT;
       
       ALTER TABLE blog_posts ALTER COLUMN site_id SET NOT NULL;
@@ -185,12 +185,12 @@ BEGIN
     IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'email_campaigns' AND column_name = 'site_id') THEN
       ALTER TABLE email_campaigns ADD COLUMN site_id UUID REFERENCES sites(id) ON DELETE RESTRICT;
       
-      -- Check if company_id column exists, otherwise just set to builddesk
+      -- Check if company_id column exists, otherwise just set to brikly
       IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'email_campaigns' AND column_name = 'company_id') THEN
         UPDATE email_campaigns ec SET site_id = c.site_id FROM companies c WHERE ec.company_id = c.id AND ec.site_id IS NULL;
       END IF;
       
-      UPDATE email_campaigns SET site_id = v_builddesk_site_id WHERE site_id IS NULL;
+      UPDATE email_campaigns SET site_id = v_brikly_site_id WHERE site_id IS NULL;
       ALTER TABLE email_campaigns ALTER COLUMN site_id SET NOT NULL;
       CREATE INDEX idx_email_campaigns_site_id ON email_campaigns(site_id);
       v_tables_updated := v_tables_updated + 1;
@@ -205,7 +205,7 @@ BEGIN
     IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'api_keys' AND column_name = 'site_id') THEN
       ALTER TABLE api_keys ADD COLUMN site_id UUID REFERENCES sites(id) ON DELETE RESTRICT;
       UPDATE api_keys ak SET site_id = c.site_id FROM companies c WHERE ak.company_id = c.id AND ak.site_id IS NULL;
-      UPDATE api_keys SET site_id = v_builddesk_site_id WHERE site_id IS NULL;
+      UPDATE api_keys SET site_id = v_brikly_site_id WHERE site_id IS NULL;
       ALTER TABLE api_keys ALTER COLUMN site_id SET NOT NULL;
       CREATE INDEX idx_api_keys_site_id ON api_keys(site_id);
       v_tables_updated := v_tables_updated + 1;
@@ -217,7 +217,7 @@ BEGIN
     IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'webhooks' AND column_name = 'site_id') THEN
       ALTER TABLE webhooks ADD COLUMN site_id UUID REFERENCES sites(id) ON DELETE RESTRICT;
       UPDATE webhooks w SET site_id = c.site_id FROM companies c WHERE w.company_id = c.id AND w.site_id IS NULL;
-      UPDATE webhooks SET site_id = v_builddesk_site_id WHERE site_id IS NULL;
+      UPDATE webhooks SET site_id = v_brikly_site_id WHERE site_id IS NULL;
       ALTER TABLE webhooks ALTER COLUMN site_id SET NOT NULL;
       CREATE INDEX idx_webhooks_site_id ON webhooks(site_id);
       v_tables_updated := v_tables_updated + 1;

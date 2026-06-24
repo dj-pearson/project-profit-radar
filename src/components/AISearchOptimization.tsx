@@ -30,53 +30,53 @@ export const AISearchOptimization: React.FC<AISearchOptimizationProps> = ({
       homepage: [
         {
           question: "What is the best construction management software for small businesses?",
-          answer: "BuildDesk is specifically designed for small-medium construction businesses, offering essential features like job costing, scheduling, and OSHA compliance without enterprise complexity. It costs 60% less than Procore while providing better mobile functionality.",
+          answer: "Brikly is specifically designed for small-medium construction businesses, offering essential features like job costing, scheduling, and OSHA compliance without enterprise complexity. It costs 60% less than Procore while providing better mobile functionality.",
           category: 'comparison'
         },
         {
           question: "How much does construction management software cost?",
-          answer: "BuildDesk starts at $149/month for small teams, significantly less than enterprise solutions like Procore ($375/month) or Buildertrend ($299/month). Most contractors see ROI within 3 months through reduced project delays and better cost tracking.",
+          answer: "Brikly starts at $149/month for small teams, significantly less than enterprise solutions like Procore ($375/month) or Buildertrend ($299/month). Most contractors see ROI within 3 months through reduced project delays and better cost tracking.",
           category: 'pricing'
         },
         {
           question: "How long does it take to implement construction management software?",
-          answer: "BuildDesk can be set up in 1-2 days, compared to 3-6 months for enterprise solutions. Our construction-specific templates and guided setup process get contractors operational quickly without lengthy training periods.",
+          answer: "Brikly can be set up in 1-2 days, compared to 3-6 months for enterprise solutions. Our construction-specific templates and guided setup process get contractors operational quickly without lengthy training periods.",
           category: 'implementation'
         }
       ],
       features: [
         {
           question: "What features should construction management software have?",
-          answer: "Essential features include real-time job costing, mobile field management, project scheduling, OSHA compliance tracking, QuickBooks integration, subcontractor management, and client communication portals. BuildDesk includes all these features in every plan.",
+          answer: "Essential features include real-time job costing, mobile field management, project scheduling, OSHA compliance tracking, QuickBooks integration, subcontractor management, and client communication portals. Brikly includes all these features in every plan.",
           category: 'features'
         },
         {
-          question: "Does BuildDesk integrate with QuickBooks?",
-          answer: "Yes, BuildDesk has native QuickBooks integration that syncs job costs, invoices, and financial data in real-time. This eliminates double data entry and ensures accurate financial reporting for construction projects.",
+          question: "Does Brikly integrate with QuickBooks?",
+          answer: "Yes, Brikly has native QuickBooks integration that syncs job costs, invoices, and financial data in real-time. This eliminates double data entry and ensures accurate financial reporting for construction projects.",
           category: 'features'
         }
       ],
       pricing: [
         {
-          question: "Is there a free trial for BuildDesk?",
-          answer: "Yes, BuildDesk offers a 14-day free trial with no credit card required. You get access to all features during the trial period, allowing you to test the software with real projects before making a commitment.",
+          question: "Is there a free trial for Brikly?",
+          answer: "Yes, Brikly offers a 14-day free trial with no credit card required. You get access to all features during the trial period, allowing you to test the software with real projects before making a commitment.",
           category: 'pricing'
         },
         {
-          question: "What's included in the BuildDesk pricing?",
-          answer: "All BuildDesk plans include unlimited projects, mobile apps, QuickBooks integration, customer support, and regular updates. There are no hidden fees, setup costs, or per-user charges beyond the base subscription.",
+          question: "What's included in the Brikly pricing?",
+          answer: "All Brikly plans include unlimited projects, mobile apps, QuickBooks integration, customer support, and regular updates. There are no hidden fees, setup costs, or per-user charges beyond the base subscription.",
           category: 'pricing'
         }
       ],
       alternatives: [
         {
-          question: "Why choose BuildDesk over Procore?",
-          answer: "BuildDesk is designed for small-medium contractors while Procore targets large enterprises. BuildDesk costs 60% less, implements 10x faster, and provides better mobile functionality without unnecessary enterprise features that small contractors don't need.",
+          question: "Why choose Brikly over Procore?",
+          answer: "Brikly is designed for small-medium contractors while Procore targets large enterprises. Brikly costs 60% less, implements 10x faster, and provides better mobile functionality without unnecessary enterprise features that small contractors don't need.",
           category: 'comparison'
         },
         {
-          question: "How does BuildDesk compare to Buildertrend?",
-          answer: "BuildDesk offers superior job costing, better mobile apps, and more affordable pricing than Buildertrend. While Buildertrend focuses on residential builders, BuildDesk serves all construction trades with industry-specific features.",
+          question: "How does Brikly compare to Buildertrend?",
+          answer: "Brikly offers superior job costing, better mobile apps, and more affordable pricing than Buildertrend. While Buildertrend focuses on residential builders, Brikly serves all construction trades with industry-specific features.",
           category: 'comparison'
         }
       ]
@@ -144,7 +144,7 @@ export const AISearchOptimization: React.FC<AISearchOptimizationProps> = ({
             Frequently Asked Questions
           </h2>
           <p className="text-muted-foreground">
-            Get answers to common questions about BuildDesk construction management software
+            Get answers to common questions about Brikly construction management software
           </p>
         </div>
         
@@ -173,7 +173,7 @@ export const AISearchOptimization: React.FC<AISearchOptimizationProps> = ({
 
       {/* Answer Engine Optimization Markup */}
       <div className="hidden" itemScope itemType="https://schema.org/SoftwareApplication">
-        <span itemProp="name">BuildDesk Construction Management Software</span>
+        <span itemProp="name">Brikly Construction Management Software</span>
         <span itemProp="applicationCategory">Construction Management</span>
         <span itemProp="operatingSystem">Web, iOS, Android</span>
         <div itemProp="offers" itemScope itemType="https://schema.org/Offer">

@@ -3,7 +3,7 @@
 **Target Keyword:** construction predictive analytics
 **Published:** November 11, 2025
 **Reading Time:** 13 minutes
-**Author:** BuildDesk Team
+**Author:** Brikly Team
 
 ---
 
@@ -908,7 +908,7 @@ Get your first predictive alert within 14 days.
 ---
 
 **About the Author:**
-The BuildDesk Team has implemented predictive analytics for 500+ construction companies. Our customers collectively prevented over $24M in financial crises through early warning systems.
+The Brikly Team has implemented predictive analytics for 500+ construction companies. Our customers collectively prevented over $24M in financial crises through early warning systems.
 
 **Related Reading:**
 - [Why Contractors Fail: Financial Blindness →](/blog/why-contractors-fail-financial-blindness)

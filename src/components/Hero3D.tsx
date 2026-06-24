@@ -19,10 +19,16 @@
  * - WebGL fallback to static hero
  */
 
-import BuildDeskHero3D from './hero/BuildDeskHero3D';
+import { lazy, Suspense } from 'react';
+
+const BriklyHero3D = lazy(() => import('./hero/BriklyHero3D'));
 
 const Hero3D = () => {
-  return <BuildDeskHero3D />;
+  return (
+    <Suspense fallback={<div className="h-screen bg-gradient-to-b from-slate-900 to-slate-800" />}>
+      <BriklyHero3D />
+    </Suspense>
+  );
 };
 
 export default Hero3D;

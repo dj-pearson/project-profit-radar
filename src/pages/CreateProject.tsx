@@ -7,28 +7,13 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { projectService } from '@/services/projectService';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
-import {
-  ArrowLeft,
-  Calendar,
-  DollarSign,
-  MapPin,
-  User,
-  Building2,
-  Clock,
-  Plus,
-  X,
-  CheckCircle2,
-  Zap,
-  ChevronDown,
-  History
-} from 'lucide-react';
-import { MobilePageWrapper, MobileStatsGrid, MobileFilters, mobileGridClasses, mobileFilterClasses, mobileButtonClasses } from '@/utils/mobileHelpers';
+import { Calendar, DollarSign, MapPin, User, Building2, Clock, Plus, X, Zap, History } from 'lucide-react';
+import { mobileFilterClasses } from '@/utils/mobileHelpers';
 import { ProjectTemplatesLibrary } from '@/components/projects/ProjectTemplatesLibrary';
 import {
   Command,
@@ -169,12 +154,12 @@ const CreateProject = () => {
   if (loading) {
     return (
       <DashboardLayout title="Create Project">
-        <div className="flex items-center justify-center h-96">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-construction-blue mx-auto mb-4"></div>
-            <p className="text-muted-foreground">Loading...</p>
+        <div className="space-y-6" role="status" aria-live="polite" aria-label="Loading content">
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+              {[1,2,3,4].map(i => <div key={i} className="h-24 bg-muted animate-pulse rounded-lg" />)}
+            </div>
+            <div className="h-[300px] bg-muted animate-pulse rounded-lg" />
           </div>
-        </div>
       </DashboardLayout>
     );
   }
@@ -280,12 +265,12 @@ const CreateProject = () => {
             {/* Quick Mode Toggle */}
             <div className="flex items-center justify-between pb-3 border-b border-primary/20">
               <div className="flex items-center gap-3">
-                <div className={`p-2 rounded-lg ${quickMode ? 'bg-primary text-primary-foreground' : 'bg-muted'}`}>
+                <div className={`p-2 rounded-lg ${quickMode ? 'bg-primary text-primary-foreground' : 'bg-muted'}`} aria-hidden="true">
                   <Zap className="h-4 w-4" />
                 </div>
                 <div>
-                  <h3 className="font-semibold">Quick Entry Mode</h3>
-                  <p className="text-xs text-muted-foreground">
+                  <h3 className="font-semibold" id="quick-mode-label">Quick Entry Mode</h3>
+                  <p className="text-xs text-muted-foreground" id="quick-mode-description">
                     {quickMode
                       ? 'Essential fields only - Create projects faster'
                       : 'All fields visible - Full customization'}
@@ -297,6 +282,9 @@ const CreateProject = () => {
                 variant={quickMode ? "default" : "outline"}
                 size="sm"
                 onClick={() => setQuickMode(!quickMode)}
+                aria-pressed={quickMode}
+                aria-labelledby="quick-mode-label"
+                aria-describedby="quick-mode-description"
               >
                 {quickMode ? 'Switch to Detailed' : 'Switch to Quick'}
               </Button>
@@ -306,10 +294,10 @@ const CreateProject = () => {
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
               <div className="flex-1">
                 <h3 className="font-semibold flex items-center gap-2">
-                  <Building2 className="h-4 w-4 text-primary" />
+                  <Building2 className="h-4 w-4 text-primary" aria-hidden="true" />
                   Start with a Template
                 </h3>
-                <p className="text-sm text-muted-foreground mt-1">
+                <p className="text-sm text-muted-foreground mt-1" role="status" aria-live="polite">
                   {appliedTemplate
                     ? `Using template: ${appliedTemplate}`
                     : 'Pre-fill form with a project template'}
@@ -321,20 +309,21 @@ const CreateProject = () => {
                 size="sm"
                 onClick={() => setShowTemplates(true)}
                 className="shrink-0"
+                aria-label={appliedTemplate ? 'Change template' : 'Choose a project template'}
               >
-                <Plus className="h-4 w-4 mr-2" />
+                <Plus className="h-4 w-4 mr-2" aria-hidden="true" />
                 {appliedTemplate ? 'Change' : 'Choose Template'}
               </Button>
             </div>
           </CardContent>
         </Card>
 
-        <form onSubmit={handleSubmit} className="space-y-8">
+        <form onSubmit={handleSubmit} className="space-y-8" aria-label="Create new project form">
           {/* Basic Information */}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center">
-                <Building2 className="h-5 w-5 mr-2" />
+                <Building2 className="h-5 w-5 mr-2" aria-hidden="true" />
                 Project Information
               </CardTitle>
               <CardDescription>
@@ -351,6 +340,7 @@ const CreateProject = () => {
                     onChange={(e) => setProjectName(e.target.value)}
                     placeholder="Kitchen Renovation - Smith Residence"
                     required
+                    aria-required="true"
                   />
                 </div>
                 {!quickMode && (
@@ -409,7 +399,7 @@ const CreateProject = () => {
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center">
-                <User className="h-5 w-5 mr-2" />
+                <User className="h-5 w-5 mr-2" aria-hidden="true" />
                 Client & Location
               </CardTitle>
               <CardDescription>
@@ -424,8 +414,8 @@ const CreateProject = () => {
                     {recentClients.length > 0 && (
                       <Popover open={clientComboOpen} onOpenChange={setClientComboOpen}>
                         <PopoverTrigger asChild>
-                          <Button variant="ghost" size="sm" className="h-6 text-xs gap-1">
-                            <History className="h-3 w-3" />
+                          <Button variant="ghost" size="sm" className="h-6 text-xs gap-1" aria-label="Select from recent clients">
+                            <History className="h-3 w-3" aria-hidden="true" />
                             Recent
                           </Button>
                         </PopoverTrigger>
@@ -441,7 +431,7 @@ const CreateProject = () => {
                                     onSelect={() => selectRecentClient(client)}
                                     className="cursor-pointer"
                                   >
-                                    <User className="h-4 w-4 mr-2" />
+                                    <User className="h-4 w-4 mr-2" aria-hidden="true" />
                                     <div>
                                       <div className="font-medium">{client.name}</div>
                                       {client.email && (
@@ -481,7 +471,7 @@ const CreateProject = () => {
               {!quickMode && (
                 <div className="space-y-2">
                   <Label htmlFor="siteAddress">
-                    <MapPin className="h-4 w-4 inline mr-1" />
+                    <MapPin className="h-4 w-4 inline mr-1" aria-hidden="true" />
                     Project Site Address
                   </Label>
                   <Input
@@ -499,7 +489,7 @@ const CreateProject = () => {
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center">
-                <Calendar className="h-5 w-5 mr-2" />
+                <Calendar className="h-5 w-5 mr-2" aria-hidden="true" />
                 Timeline & Budget
               </CardTitle>
               <CardDescription>
@@ -531,7 +521,7 @@ const CreateProject = () => {
               <div className={quickMode ? "space-y-2" : mobileFilterClasses.container}>
                 <div className="space-y-2">
                   <Label htmlFor="budget">
-                    <DollarSign className="h-4 w-4 inline mr-1" />
+                    <DollarSign className="h-4 w-4 inline mr-1" aria-hidden="true" />
                     Total Budget
                   </Label>
                   <Input
@@ -547,7 +537,7 @@ const CreateProject = () => {
                 {!quickMode && (
                   <div className="space-y-2">
                     <Label htmlFor="estimatedHours">
-                      <Clock className="h-4 w-4 inline mr-1" />
+                      <Clock className="h-4 w-4 inline mr-1" aria-hidden="true" />
                       Estimated Hours
                     </Label>
                     <Input
@@ -575,28 +565,31 @@ const CreateProject = () => {
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex space-x-2">
+                <label htmlFor="newPermit" className="sr-only">Add permit number</label>
                 <Input
+                  id="newPermit"
                   value={newPermit}
                   onChange={(e) => setNewPermit(e.target.value)}
                   placeholder="Enter permit number"
                   onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addPermit())}
                 />
-                <Button type="button" onClick={addPermit} variant="outline">
-                  <Plus className="h-4 w-4" />
+                <Button type="button" onClick={addPermit} variant="outline" aria-label="Add permit">
+                  <Plus className="h-4 w-4" aria-hidden="true" />
                 </Button>
               </div>
-              
+
               {permitNumbers.length > 0 && (
-                <div className="flex flex-wrap gap-2">
+                <div className="flex flex-wrap gap-2" role="list" aria-label="Added permits">
                   {permitNumbers.map((permit) => (
-                    <Badge key={permit} variant="secondary" className="flex items-center gap-1">
+                    <Badge key={permit} variant="secondary" className="flex items-center gap-1" role="listitem">
                       {permit}
                       <button
                         type="button"
                         onClick={() => removePermit(permit)}
                         className="ml-1 hover:text-destructive"
+                        aria-label={`Remove permit ${permit}`}
                       >
-                        <X className="h-3 w-3" />
+                        <X className="h-3 w-3" aria-hidden="true" />
                       </button>
                     </Badge>
                   ))}
@@ -618,6 +611,7 @@ const CreateProject = () => {
             <Button
               type="submit"
               disabled={createLoading || !projectName}
+              aria-busy={createLoading}
             >
               {createLoading ? 'Creating Project...' : 'Create Project'}
             </Button>

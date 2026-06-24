@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useSubscription } from '@/contexts/SubscriptionContext';
@@ -9,33 +9,18 @@ import { Badge } from '@/components/ui/badge';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { LoadingState } from '@/components/ui/loading-spinner';
 import { ErrorBoundary, ErrorState, EmptyState } from '@/components/ui/error-boundary';
-import { ResponsiveContainer, ResponsiveGrid } from '@/components/layout/ResponsiveContainer';
+import { ResponsiveGrid } from '@/components/layout/ResponsiveContainer';
 import { useLoadingState } from '@/hooks/useLoadingState';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { ThemeToggle } from '@/components/ui/theme-toggle';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
+import { AccessibleForm, AccessibleFormField, AccessibleTextarea, AccessibleFieldset } from '@/components/accessibility/AccessibleForm';
 import { Progress } from '@/components/ui/progress';
-import { 
-  Target, 
-  Search,
-  Plus,
-  DollarSign,
-  Calendar,
-  TrendingUp,
-  User,
-  Building2,
-  FileText,
-  Clock,
-  Percent,
-  Award,
-  AlertTriangle
-} from 'lucide-react';
+import { Target, Search, Plus, DollarSign, Calendar, TrendingUp, Building2, FileText, Clock, Percent, AlertTriangle } from 'lucide-react';
 
 interface Opportunity {
   id: string;
@@ -346,11 +331,12 @@ const CRMOpportunities = () => {
     <DashboardLayout title="Sales Opportunities">
             
             {/* Pipeline Summary */}
-            <ResponsiveGrid cols={{ default: 1, sm: 2, lg: 4 }} className="mb-6">
-              <Card>
-                <CardContent className="pt-6">
-                  <div className="flex items-center space-x-2">
-                    <Target className="h-5 w-5 text-blue-600" />
+            <section aria-label="Pipeline summary">
+              <ResponsiveGrid cols={{ default: 1, sm: 2, lg: 4 }} className="mb-6">
+                <Card>
+                  <CardContent className="pt-6">
+                    <div className="flex items-center space-x-2">
+                      <Target className="h-5 w-5 text-blue-600" aria-hidden="true" />
                     <div>
                       <p className="text-sm font-medium text-muted-foreground">Total Pipeline</p>
                       <p className="text-2xl font-bold">{formatCurrency(totalPipelineValue)}</p>
@@ -361,7 +347,7 @@ const CRMOpportunities = () => {
               <Card>
                 <CardContent className="pt-6">
                   <div className="flex items-center space-x-2">
-                    <DollarSign className="h-5 w-5 text-green-600" />
+                    <DollarSign className="h-5 w-5 text-green-600" aria-hidden="true" />
                     <div>
                       <p className="text-sm font-medium text-muted-foreground">Weighted Value</p>
                       <p className="text-2xl font-bold">{formatCurrency(totalWeightedValue)}</p>
@@ -372,7 +358,7 @@ const CRMOpportunities = () => {
               <Card>
                 <CardContent className="pt-6">
                   <div className="flex items-center space-x-2">
-                    <TrendingUp className="h-5 w-5 text-purple-600" />
+                    <TrendingUp className="h-5 w-5 text-purple-600" aria-hidden="true" />
                     <div>
                       <p className="text-sm font-medium text-muted-foreground">Opportunities</p>
                       <p className="text-2xl font-bold">{filteredOpportunities.length}</p>
@@ -383,11 +369,11 @@ const CRMOpportunities = () => {
               <Card>
                 <CardContent className="pt-6">
                   <div className="flex items-center space-x-2">
-                    <Percent className="h-5 w-5 text-orange-600" />
+                    <Percent className="h-5 w-5 text-orange-600" aria-hidden="true" />
                     <div>
                       <p className="text-sm font-medium text-muted-foreground">Avg. Probability</p>
                       <p className="text-2xl font-bold">
-                        {filteredOpportunities.length > 0 
+                        {filteredOpportunities.length > 0
                           ? Math.round(filteredOpportunities.reduce((sum, opp) => sum + opp.probability_percent, 0) / filteredOpportunities.length)
                           : 0
                         }%
@@ -396,20 +382,22 @@ const CRMOpportunities = () => {
                   </div>
                 </CardContent>
               </Card>
-            </ResponsiveGrid>
+              </ResponsiveGrid>
+            </section>
 
             {/* Filters and Actions */}
             <Card className="mb-6">
               <CardContent className="pt-6">
                 <div className="flex flex-col lg:flex-row gap-4">
-                  <div className="flex-1">
+                  <div className="flex-1" role="search" aria-label="Search opportunities">
                     <div className="relative">
-                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" aria-hidden="true" />
                       <Input
                         placeholder="Search opportunities by name, description, or project type..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                         className="pl-10"
+                        aria-label="Search opportunities"
                       />
                     </div>
                   </div>
@@ -445,37 +433,38 @@ const CRMOpportunities = () => {
                     
                     <Dialog open={showNewOpportunityDialog} onOpenChange={setShowNewOpportunityDialog}>
                       <DialogTrigger asChild>
-                        <Button>
-                          <Plus className="h-4 w-4 mr-2" />
+                        <Button aria-label="Create new opportunity">
+                          <Plus className="h-4 w-4 mr-2" aria-hidden="true" />
                           New Opportunity
                         </Button>
                       </DialogTrigger>
-                      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+                      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto" aria-describedby="new-opportunity-description">
                         <DialogHeader>
                           <DialogTitle>Create New Opportunity</DialogTitle>
-                          <DialogDescription>
+                          <DialogDescription id="new-opportunity-description">
                             Add a new sales opportunity to your pipeline.
                           </DialogDescription>
                         </DialogHeader>
                         
-                        <div className="grid gap-6 py-4">
-                          {/* Basic Information */}
-                          <div className="space-y-4">
-                            <h3 className="text-lg font-medium">Opportunity Details</h3>
+                        <AccessibleForm
+                          onSubmit={() => { createOpportunity(); }}
+                          ariaLabel="Create new opportunity form"
+                          className="space-y-6 py-4"
+                        >
+                          <AccessibleFieldset legend="Opportunity Details">
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                              <div>
-                                <Label htmlFor="name">Opportunity Name *</Label>
-                                <Input
-                                  id="name"
-                                  value={newOpportunity.name || ''}
-                                  onChange={(e) => setNewOpportunity({...newOpportunity, name: e.target.value})}
-                                  placeholder="Main Street Office Building"
-                                />
-                              </div>
+                              <AccessibleFormField
+                                name="name"
+                                label="Opportunity Name"
+                                required
+                                value={newOpportunity.name || ''}
+                                onChange={(e) => setNewOpportunity({...newOpportunity, name: e.target.value})}
+                                placeholder="Main Street Office Building"
+                              />
                               <div>
                                 <Label htmlFor="lead_id">Related Lead</Label>
                                 <Select value={newOpportunity.lead_id || 'none'} onValueChange={(value) => setNewOpportunity({...newOpportunity, lead_id: value === 'none' ? undefined : value})}>
-                                  <SelectTrigger>
+                                  <SelectTrigger aria-label="Related lead">
                                     <SelectValue placeholder="Select lead (optional)" />
                                   </SelectTrigger>
                                   <SelectContent>
@@ -488,57 +477,49 @@ const CRMOpportunities = () => {
                                   </SelectContent>
                                 </Select>
                               </div>
-                              <div className="md:col-span-2">
-                                <Label htmlFor="description">Description</Label>
-                                <Textarea
-                                  id="description"
-                                  value={newOpportunity.description || ''}
-                                  onChange={(e) => setNewOpportunity({...newOpportunity, description: e.target.value})}
-                                  placeholder="Describe the opportunity and project scope..."
-                                  rows={3}
-                                />
-                              </div>
+                              <AccessibleTextarea
+                                name="description"
+                                label="Description"
+                                value={newOpportunity.description || ''}
+                                onChange={(e) => setNewOpportunity({...newOpportunity, description: e.target.value})}
+                                placeholder="Describe the opportunity and project scope..."
+                                rows={3}
+                                className="md:col-span-2"
+                              />
                             </div>
-                          </div>
+                          </AccessibleFieldset>
 
-                          {/* Financial Information */}
-                          <div className="space-y-4">
-                            <h3 className="text-lg font-medium">Financial Details</h3>
+                          <AccessibleFieldset legend="Financial Details">
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                              <div>
-                                <Label htmlFor="estimated_value">Estimated Value ($) *</Label>
-                                <Input
-                                  id="estimated_value"
-                                  type="number"
-                                  value={newOpportunity.estimated_value || ''}
-                                  onChange={(e) => setNewOpportunity({...newOpportunity, estimated_value: Number(e.target.value)})}
-                                  placeholder="150000"
-                                />
-                              </div>
-                              <div>
-                                <Label htmlFor="probability_percent">Probability (%)</Label>
-                                <Input
-                                  id="probability_percent"
-                                  type="number"
-                                  min="0"
-                                  max="100"
-                                  value={newOpportunity.probability_percent || 50}
-                                  onChange={(e) => setNewOpportunity({...newOpportunity, probability_percent: Number(e.target.value)})}
-                                />
-                              </div>
-                              <div>
-                                <Label htmlFor="expected_close_date">Expected Close Date</Label>
-                                <Input
-                                  id="expected_close_date"
-                                  type="date"
-                                  value={newOpportunity.expected_close_date || ''}
-                                  onChange={(e) => setNewOpportunity({...newOpportunity, expected_close_date: e.target.value})}
-                                />
-                              </div>
+                              <AccessibleFormField
+                                name="estimated_value"
+                                label="Estimated Value ($)"
+                                type="number"
+                                required
+                                value={newOpportunity.estimated_value || ''}
+                                onChange={(e) => setNewOpportunity({...newOpportunity, estimated_value: Number(e.target.value)})}
+                                placeholder="150000"
+                              />
+                              <AccessibleFormField
+                                name="probability_percent"
+                                label="Probability (%)"
+                                type="number"
+                                min={0}
+                                max={100}
+                                value={newOpportunity.probability_percent || 50}
+                                onChange={(e) => setNewOpportunity({...newOpportunity, probability_percent: Number(e.target.value)})}
+                              />
+                              <AccessibleFormField
+                                name="expected_close_date"
+                                label="Expected Close Date"
+                                type="date"
+                                value={newOpportunity.expected_close_date || ''}
+                                onChange={(e) => setNewOpportunity({...newOpportunity, expected_close_date: e.target.value})}
+                              />
                               <div>
                                 <Label htmlFor="project_type">Project Type</Label>
                                 <Select value={newOpportunity.project_type || ''} onValueChange={(value) => setNewOpportunity({...newOpportunity, project_type: value})}>
-                                  <SelectTrigger>
+                                  <SelectTrigger aria-label="Project type">
                                     <SelectValue placeholder="Select project type" />
                                   </SelectTrigger>
                                   <SelectContent>
@@ -556,16 +537,14 @@ const CRMOpportunities = () => {
                                 </Select>
                               </div>
                             </div>
-                          </div>
+                          </AccessibleFieldset>
 
-                          {/* Pipeline Information */}
-                          <div className="space-y-4">
-                            <h3 className="text-lg font-medium">Pipeline Information</h3>
+                          <AccessibleFieldset legend="Pipeline Information">
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                               <div>
                                 <Label htmlFor="stage">Stage</Label>
                                 <Select value={newOpportunity.stage || 'prospecting'} onValueChange={(value) => setNewOpportunity({...newOpportunity, stage: value})}>
-                                  <SelectTrigger>
+                                  <SelectTrigger aria-label="Pipeline stage">
                                     <SelectValue />
                                   </SelectTrigger>
                                   <SelectContent>
@@ -581,7 +560,7 @@ const CRMOpportunities = () => {
                               <div>
                                 <Label htmlFor="risk_level">Risk Level</Label>
                                 <Select value={newOpportunity.risk_level || 'medium'} onValueChange={(value) => setNewOpportunity({...newOpportunity, risk_level: value})}>
-                                  <SelectTrigger>
+                                  <SelectTrigger aria-label="Risk level">
                                     <SelectValue />
                                   </SelectTrigger>
                                   <SelectContent>
@@ -601,46 +580,35 @@ const CRMOpportunities = () => {
                                 <Label htmlFor="bid_required">Bid Required</Label>
                               </div>
                             </div>
-                          </div>
+                          </AccessibleFieldset>
 
-                          {/* Competitive Information */}
-                          <div className="space-y-4">
-                            <h3 className="text-lg font-medium">Competitive Analysis</h3>
-                            <div className="space-y-4">
-                              <div>
-                                <Label htmlFor="our_competitive_advantage">Our Competitive Advantage</Label>
-                                <Textarea
-                                  id="our_competitive_advantage"
-                                  value={newOpportunity.our_competitive_advantage || ''}
-                                  onChange={(e) => setNewOpportunity({...newOpportunity, our_competitive_advantage: e.target.value})}
-                                  placeholder="What makes us the best choice for this project?"
-                                  rows={2}
-                                />
-                              </div>
-                            </div>
-                          </div>
+                          <AccessibleTextarea
+                            name="our_competitive_advantage"
+                            label="Our Competitive Advantage"
+                            value={newOpportunity.our_competitive_advantage || ''}
+                            onChange={(e) => setNewOpportunity({...newOpportunity, our_competitive_advantage: e.target.value})}
+                            placeholder="What makes us the best choice for this project?"
+                            rows={2}
+                          />
 
-                          {/* Notes */}
-                          <div>
-                            <Label htmlFor="notes">Notes</Label>
-                            <Textarea
-                              id="notes"
-                              value={newOpportunity.notes || ''}
-                              onChange={(e) => setNewOpportunity({...newOpportunity, notes: e.target.value})}
-                              placeholder="Additional notes about this opportunity..."
-                              rows={3}
-                            />
-                          </div>
-                        </div>
+                          <AccessibleTextarea
+                            name="notes"
+                            label="Notes"
+                            value={newOpportunity.notes || ''}
+                            onChange={(e) => setNewOpportunity({...newOpportunity, notes: e.target.value})}
+                            placeholder="Additional notes about this opportunity..."
+                            rows={3}
+                          />
 
-                        <div className="flex justify-end space-x-2">
-                          <Button variant="outline" onClick={() => setShowNewOpportunityDialog(false)}>
-                            Cancel
-                          </Button>
-                          <Button onClick={createOpportunity}>
-                            Create Opportunity
-                          </Button>
-                        </div>
+                          <div className="flex justify-end space-x-2">
+                            <Button type="button" variant="outline" onClick={() => setShowNewOpportunityDialog(false)}>
+                              Cancel
+                            </Button>
+                            <Button type="submit">
+                              Create Opportunity
+                            </Button>
+                          </div>
+                        </AccessibleForm>
                       </DialogContent>
                     </Dialog>
                   </div>
@@ -719,18 +687,18 @@ const CRMOpportunities = () => {
 
                           <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-3">
                             <div className="flex items-center space-x-2">
-                              <Building2 className="h-4 w-4 text-muted-foreground" />
+                              <Building2 className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
                               <span className="text-sm">{opportunity.project_type?.replace('_', ' ') || 'General Construction'}</span>
                             </div>
                             {opportunity.expected_close_date && (
                               <div className="flex items-center space-x-2">
-                                <Calendar className="h-4 w-4 text-muted-foreground" />
+                                <Calendar className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
                                 <span className="text-sm">Close: {formatDate(opportunity.expected_close_date)}</span>
                               </div>
                             )}
                             {opportunity.bid_required && (
                               <div className="flex items-center space-x-2">
-                                <FileText className="h-4 w-4 text-muted-foreground" />
+                                <FileText className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
                                 <span className="text-sm">Bid Required</span>
                                 {opportunity.bid_due_date && (
                                   <span className="text-xs text-orange-600">
@@ -740,7 +708,7 @@ const CRMOpportunities = () => {
                               </div>
                             )}
                             <div className="flex items-center space-x-2">
-                              <Clock className="h-4 w-4 text-muted-foreground" />
+                              <Clock className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
                               <span className="text-sm">Created: {formatDate(opportunity.created_at)}</span>
                             </div>
                           </div>
@@ -754,8 +722,8 @@ const CRMOpportunities = () => {
                           )}
 
                           {opportunity.risk_factors && opportunity.risk_factors.length > 0 && (
-                            <div className="flex items-center space-x-2 mb-3">
-                              <AlertTriangle className="h-4 w-4 text-orange-500" />
+                            <div className="flex items-center space-x-2 mb-3" role="alert">
+                              <AlertTriangle className="h-4 w-4 text-orange-500" aria-hidden="true" />
                               <p className="text-sm text-orange-600">
                                 Risk factors identified
                               </p>
@@ -770,18 +738,20 @@ const CRMOpportunities = () => {
                                   size="sm"
                                   onClick={() => handleConvertToProject(opportunity)}
                                   className="bg-green-600 hover:bg-green-700"
+                                  aria-label={`Convert ${opportunity.name} to project`}
                                 >
-                                  <Building2 className="h-4 w-4 mr-2" />
+                                  <Building2 className="h-4 w-4 mr-2" aria-hidden="true" />
                                   Convert to Project
                                 </Button>
                               )}
                               {(opportunity.stage === 'proposal' || opportunity.stage === 'negotiation') && (
-                                <Button 
-                                  size="sm" 
+                                <Button
+                                  size="sm"
                                   variant="outline"
                                   onClick={() => navigate(`/estimates?opportunity=${opportunity.id}`)}
+                                  aria-label={`Create estimate for ${opportunity.name}`}
                                 >
-                                  <FileText className="h-4 w-4 mr-2" />
+                                  <FileText className="h-4 w-4 mr-2" aria-hidden="true" />
                                   Create Estimate
                                 </Button>
                               )}

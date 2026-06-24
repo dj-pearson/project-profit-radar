@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { logger } from '@/lib/logger';
 
 interface PerformanceMetrics {
   fcp: number | null; // First Contentful Paint
@@ -36,27 +37,31 @@ export const usePerformanceMonitor = () => {
             setMetrics(prev => ({ ...prev, lcp: entry.startTime }));
             break;
             
-          case 'first-input':
+          case 'first-input': {
             const fidEntry = entry as PerformanceEventTiming;
             setMetrics(prev => ({ ...prev, fid: fidEntry.processingStart - fidEntry.startTime }));
             break;
+          }
             
-          case 'layout-shift':
-            if (!(entry as any).hadRecentInput) {
-              setMetrics(prev => ({ 
-                ...prev, 
-                cls: (prev.cls || 0) + (entry as any).value 
+          case 'layout-shift': {
+            const lsEntry = entry as PerformanceEntry & { hadRecentInput: boolean; value: number };
+            if (!lsEntry.hadRecentInput) {
+              setMetrics(prev => ({
+                ...prev,
+                cls: (prev.cls || 0) + lsEntry.value
               }));
             }
             break;
-            
-          case 'navigation':
+          }
+
+          case 'navigation': {
             const navEntry = entry as PerformanceNavigationTiming;
-            setMetrics(prev => ({ 
-              ...prev, 
-              ttfb: navEntry.responseStart - navEntry.requestStart 
+            setMetrics(prev => ({
+              ...prev,
+              ttfb: navEntry.responseStart - navEntry.requestStart
             }));
             break;
+          }
             
           case 'event':
             // INP (Interaction to Next Paint) - experimental
@@ -78,7 +83,7 @@ export const usePerformanceMonitor = () => {
       observer.observe({ entryTypes: ['paint', 'largest-contentful-paint', 'first-input', 'layout-shift', 'navigation', 'event'] });
     } catch (e) {
       // Fallback for browsers that don't support all entry types
-      console.warn('Some performance metrics not available');
+      logger.warn('Some performance metrics not available');
     }
 
     return () => observer.disconnect();
@@ -170,7 +175,7 @@ export const useRealUserMetrics = (): RealUserMetrics => {
 
       // Get connection info if available
       if ('connection' in navigator) {
-        const connection = (navigator as any).connection;
+        const connection = (navigator as Navigator & { connection?: { effectiveType?: string } }).connection;
         setRumData(prev => ({
           ...prev,
           connectionType: connection?.effectiveType || 'unknown'
@@ -179,9 +184,10 @@ export const useRealUserMetrics = (): RealUserMetrics => {
 
       // Get device memory if available
       if ('deviceMemory' in navigator) {
+        const navWithMemory = navigator as Navigator & { deviceMemory?: number };
         setRumData(prev => ({
           ...prev,
-          deviceMemory: (navigator as any).deviceMemory || 0
+          deviceMemory: navWithMemory.deviceMemory || 0
         }));
       }
     };

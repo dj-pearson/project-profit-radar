@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -9,17 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { supabase, getEdgeFunctionUrl } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-import {
-  Brain,
-  TrendingUp,
-  DollarSign,
-  FileText,
-  Target,
-  AlertCircle,
-  CheckCircle,
-  Clock,
-  Sparkles
-} from 'lucide-react';
+import { Brain, FileText, Target, CheckCircle, Clock, Sparkles } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 interface AIEstimate {
@@ -33,6 +23,28 @@ interface AIEstimate {
   confidence_score: number;
   status: string;
   created_at: string;
+}
+
+interface AIEstimateResult {
+  estimate_name: string;
+  predictions: {
+    total_cost: number;
+    labor_cost: number;
+    material_cost: number;
+    equipment_cost: number;
+    subcontractor_cost: number;
+    labor_hours: number;
+  };
+  recommendations: {
+    bid_amount: number;
+    markup_percentage: number;
+    win_probability: number;
+  };
+  confidence: {
+    score: number;
+    similar_projects: number;
+    data_quality: string;
+  };
 }
 
 export function AIEstimating() {
@@ -51,27 +63,30 @@ export function AIEstimating() {
   const [durationDays, setDurationDays] = useState('30');
 
   // Result state
-  const [currentEstimate, setCurrentEstimate] = useState<any>(null);
+  const [currentEstimate, setCurrentEstimate] = useState<AIEstimateResult | null>(null);
 
   useEffect(() => {
     fetchEstimates();
   }, []);
 
+  // Helper for querying tables not yet in the generated Supabase types
+  const fromUntypedTable = (table: string) =>
+    (supabase.from as (t: string) => ReturnType<typeof supabase.from>)(table);
+
   const fetchEstimates = async () => {
     setLoading(true);
     try {
-      const { data, error } = await (supabase as any)
-        .from('ai_cost_predictions')
+      const { data, error } = await fromUntypedTable('ai_cost_predictions')
         .select('*')
         .order('created_at', { ascending: false })
-        .limit(20) as any;
+        .limit(20);
 
       if (error) throw error;
-      setEstimates(data as any || []);
-    } catch (error: any) {
+      setEstimates((data as unknown as AIEstimate[]) ?? []);
+    } catch (error: unknown) {
       toast({
         title: 'Error',
-        description: error.message,
+        description: error instanceof Error ? error.message : 'Failed to fetch estimates',
         variant: 'destructive',
       });
     } finally {
@@ -135,11 +150,11 @@ export function AIEstimating() {
       setLocationZip('');
       setDurationDays('30');
 
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Generate estimate error:', error);
       toast({
         title: 'Generation Failed',
-        description: error.message,
+        description: error instanceof Error ? error.message : 'Failed to generate estimate',
         variant: 'destructive',
       });
     } finally {
@@ -493,3 +508,5 @@ export function AIEstimating() {
     </DashboardLayout>
   );
 }
+
+export default AIEstimating;

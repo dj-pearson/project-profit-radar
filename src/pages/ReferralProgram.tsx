@@ -3,20 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import {
-  Copy,
-  Check,
-  Gift,
-  Users,
-  DollarSign,
-  Share2,
-  Mail,
-  MessageCircle,
-  Twitter,
-  Facebook,
-  Linkedin,
-  TrendingUp,
-} from 'lucide-react';
+import { Copy, Check, Gift, Users, DollarSign, Mail, Twitter, Linkedin, TrendingUp } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
@@ -113,7 +100,7 @@ export const ReferralProgram = () => {
   };
 
   const copyReferralLink = () => {
-    const link = `https://build-desk.com/?ref=${referralCode?.code}`;
+    const link = `https://brikly.net/?ref=${referralCode?.code}`;
     navigator.clipboard.writeText(link);
     setCopied(true);
     toast({
@@ -134,19 +121,19 @@ export const ReferralProgram = () => {
   };
 
   const shareViaEmail = () => {
-    const subject = 'Try BuildDesk - Get $50 Off!';
-    const body = `I've been using BuildDesk for construction management and it's been a game-changer. Sign up with my referral code and get $50 off your first month!\n\nReferral link: https://build-desk.com/?ref=${referralCode?.code}\n\nBuildDesk helps you manage projects, track time, and stay profitable. Give it a try!`;
+    const subject = 'Try Brikly - Get $50 Off!';
+    const body = `I've been using Brikly for construction management and it's been a game-changer. Sign up with my referral code and get $50 off your first month!\n\nReferral link: https://brikly.net/?ref=${referralCode?.code}\n\nBrikly helps you manage projects, track time, and stay profitable. Give it a try!`;
     window.location.href = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
   };
 
   const shareOnTwitter = () => {
-    const text = `Just discovered @BuildDesk for construction management! Get $50 off with my referral code: ${referralCode?.code}`;
-    const url = `https://build-desk.com/?ref=${referralCode?.code}`;
+    const text = `Just discovered @Brikly for construction management! Get $50 off with my referral code: ${referralCode?.code}`;
+    const url = `https://brikly.net/?ref=${referralCode?.code}`;
     window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`, '_blank');
   };
 
   const shareOnLinkedIn = () => {
-    const url = `https://build-desk.com/?ref=${referralCode?.code}`;
+    const url = `https://brikly.net/?ref=${referralCode?.code}`;
     window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(url)}`, '_blank');
   };
 
@@ -190,7 +177,7 @@ export const ReferralProgram = () => {
     );
   }
 
-  const referralLink = `https://build-desk.com/?ref=${referralCode.code}`;
+  const referralLink = `https://brikly.net/?ref=${referralCode.code}`;
 
   return (
     <DashboardLayout title="Referral Program">

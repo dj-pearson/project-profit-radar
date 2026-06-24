@@ -8,7 +8,7 @@ Run these commands in your terminal from the project root:
 
 ```bash
 # Navigate to your project directory
-cd c:\Users\dpearson\OneDrive\Documents\BuildDesk\project-profit-radar
+cd c:\Users\dpearson\OneDrive\Documents\Brikly\project-profit-radar
 
 # Deploy the new function
 supabase functions deploy blog-ai-automation

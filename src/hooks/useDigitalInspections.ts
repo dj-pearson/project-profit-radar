@@ -5,7 +5,6 @@ import { useToast } from '@/hooks/use-toast';
 
 export interface QualityInspection {
   id: string;
-  site_id: string;
   company_id: string;
   project_id: string;
   inspection_number: string;
@@ -27,20 +26,19 @@ export interface QualityInspection {
 }
 
 export const useDigitalInspections = (projectId?: string) => {
-  const { userProfile, siteId } = useAuth();
+  const { userProfile } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  // Fetch inspections with site_id and company_id isolation
+  // Fetch inspections
   const { data: inspections, isLoading } = useQuery({
-    queryKey: ['quality-inspections', projectId, siteId, userProfile?.company_id],
+    queryKey: ['quality-inspections', projectId, userProfile?.company_id],
     queryFn: async () => {
-      if (!siteId || !userProfile?.company_id) return [];
+      if (!userProfile?.company_id) return [];
 
       let query = supabase
         .from('quality_inspections')
         .select('*')
-        .eq('site_id', siteId)
         .eq('company_id', userProfile.company_id)
         .order('created_at', { ascending: false });
 
@@ -52,21 +50,16 @@ export const useDigitalInspections = (projectId?: string) => {
       if (error) throw error;
       return data as QualityInspection[];
     },
-    enabled: !!siteId && !!userProfile?.company_id,
+    enabled: !!userProfile?.company_id,
   });
 
-  // Create inspection with site_id and company_id isolation
+  // Create inspection
   const createInspection = useMutation({
     mutationFn: async (inspection: any) => {
-      if (!siteId || !userProfile?.company_id) {
-        throw new Error('Site ID and Company ID required');
-      }
-
       const { data, error } = await supabase
         .from('quality_inspections')
         .insert([{
           ...inspection,
-          site_id: siteId,
           company_id: userProfile.company_id,
         }])
         .select()
@@ -88,15 +81,12 @@ export const useDigitalInspections = (projectId?: string) => {
     },
   });
 
-  // Update inspection with site_id isolation
+  // Update inspection
   const updateInspection = useMutation({
     mutationFn: async ({ id, updates }: { id: string; updates: any }) => {
-      if (!siteId) throw new Error('Site ID required');
-
       const { data, error } = await supabase
         .from('quality_inspections')
         .update(updates)
-        .eq('site_id', siteId)
         .eq('id', id)
         .select()
         .single();
@@ -117,15 +107,12 @@ export const useDigitalInspections = (projectId?: string) => {
     },
   });
 
-  // Delete inspection with site_id isolation
+  // Delete inspection
   const deleteInspection = useMutation({
     mutationFn: async (id: string) => {
-      if (!siteId) throw new Error('Site ID required');
-
-      const { error } = await supabase
+            const { error } = await supabase
         .from('quality_inspections')
         .delete()
-        .eq('site_id', siteId)
         .eq('id', id);
 
       if (error) throw error;

@@ -1,12 +1,8 @@
 /**
  * Tasks Hook
- * Updated with multi-tenant site_id isolation
- * Now passes siteId to taskService for complete isolation
  */
-import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { taskService, Task, TaskWithDetails, CreateTaskData, UpdateTaskData } from '@/services/taskService';
-import { useAuth } from '@/contexts/AuthContext';
+import { taskService, Task, CreateTaskData, UpdateTaskData } from '@/services/taskService';
 import { toast } from '@/hooks/use-toast';
 
 export const useTasks = (filters?: {
@@ -15,70 +11,53 @@ export const useTasks = (filters?: {
   project_id?: string;
   search?: string;
 }) => {
-  const { siteId } = useAuth();
-
   return useQuery({
-    queryKey: ['tasks', filters, siteId],
+    queryKey: ['tasks', filters],
     queryFn: () => {
-      if (!siteId) throw new Error('Site ID is required');
-      return taskService.getTasks(siteId, filters);  // Pass siteId to service
+      return taskService.getTasks(filters);
     },
     staleTime: 1000 * 60 * 5, // 5 minutes
-    enabled: !!siteId,
   });
 };
 
 export const useTask = (id: string) => {
-  const { siteId } = useAuth();
-
   return useQuery({
-    queryKey: ['task', id, siteId],
+    queryKey: ['task', id],
     queryFn: () => {
-      if (!siteId) throw new Error('Site ID is required');
-      return taskService.getTask(siteId, id);  // Pass siteId to service
+      return taskService.getTask(id);
     },
-    enabled: !!id && !!siteId,
+    enabled: !!id,
   });
 };
 
 export const useMyTasks = (status?: string[]) => {
-  const { siteId } = useAuth();
-
   return useQuery({
-    queryKey: ['my-tasks', status, siteId],
+    queryKey: ['my-tasks', status],
     queryFn: () => {
-      if (!siteId) throw new Error('Site ID is required');
-      return taskService.getMyTasks(siteId, status);  // Pass siteId to service
+      return taskService.getMyTasks(status);
     },
     staleTime: 1000 * 60 * 2, // 2 minutes
     refetchOnMount: 'always',
-    enabled: !!siteId,
   });
 };
 
 export const useTasksCreatedByMe = (status?: string[]) => {
-  const { siteId } = useAuth();
-
   return useQuery({
-    queryKey: ['tasks-created-by-me', status, siteId],
+    queryKey: ['tasks-created-by-me', status],
     queryFn: () => {
-      if (!siteId) throw new Error('Site ID is required');
-      return taskService.getTasksCreatedByMe(siteId, status);  // Pass siteId to service
+      return taskService.getTasksCreatedByMe(status);
     },
     staleTime: 1000 * 60 * 2, // 2 minutes
     refetchOnMount: 'always',
-    enabled: !!siteId,
   });
 };
 
 export const useCreateTask = () => {
-  const { siteId } = useAuth();
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: (taskData: CreateTaskData) => {
-      if (!siteId) throw new Error('Site ID is required');
-      return taskService.createTask(siteId, taskData);  // Pass siteId to service
+      return taskService.createTask(taskData);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['tasks'] });
@@ -89,7 +68,7 @@ export const useCreateTask = () => {
         description: 'Task created successfully',
       });
     },
-    onError: (error: any) => {
+    onError: (error: Error) => {
       toast({
         variant: 'destructive',
         title: 'Error',
@@ -100,13 +79,11 @@ export const useCreateTask = () => {
 };
 
 export const useUpdateTask = () => {
-  const { siteId } = useAuth();
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: ({ id, updates }: { id: string; updates: UpdateTaskData }) => {
-      if (!siteId) throw new Error('Site ID is required');
-      return taskService.updateTask(siteId, id, updates);  // Pass siteId to service
+      return taskService.updateTask(id, updates);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['tasks'] });
@@ -118,7 +95,7 @@ export const useUpdateTask = () => {
         description: 'Task updated successfully',
       });
     },
-    onError: (error: any) => {
+    onError: (error: Error) => {
       toast({
         variant: 'destructive',
         title: 'Error',
@@ -129,13 +106,11 @@ export const useUpdateTask = () => {
 };
 
 export const useDeleteTask = () => {
-  const { siteId } = useAuth();
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: (id: string) => {
-      if (!siteId) throw new Error('Site ID is required');
-      return taskService.deleteTask(siteId, id);  // Pass siteId to service
+      return taskService.deleteTask(id);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['tasks'] });
@@ -146,7 +121,7 @@ export const useDeleteTask = () => {
         description: 'Task deleted successfully',
       });
     },
-    onError: (error: any) => {
+    onError: (error: Error) => {
       toast({
         variant: 'destructive',
         title: 'Error',
@@ -157,26 +132,21 @@ export const useDeleteTask = () => {
 };
 
 export const useTaskComments = (taskId: string) => {
-  const { siteId } = useAuth();
-
   return useQuery({
-    queryKey: ['task-comments', taskId, siteId],
+    queryKey: ['task-comments', taskId],
     queryFn: () => {
-      if (!siteId) throw new Error('Site ID is required');
-      return taskService.getTaskComments(siteId, taskId);  // Pass siteId to service
+      return taskService.getTaskComments(taskId);
     },
-    enabled: !!taskId && !!siteId,
+    enabled: !!taskId,
   });
 };
 
 export const useAddTaskComment = () => {
-  const { siteId } = useAuth();
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: ({ taskId, comment }: { taskId: string; comment: string }) => {
-      if (!siteId) throw new Error('Site ID is required');
-      return taskService.addTaskComment(siteId, taskId, comment);  // Pass siteId to service
+      return taskService.addTaskComment(taskId, comment);
     },
     onSuccess: (_, { taskId }) => {
       queryClient.invalidateQueries({ queryKey: ['task-comments', taskId] });
@@ -185,7 +155,7 @@ export const useAddTaskComment = () => {
         description: 'Comment added successfully',
       });
     },
-    onError: (error: any) => {
+    onError: (error: Error) => {
       toast({
         variant: 'destructive',
         title: 'Error',

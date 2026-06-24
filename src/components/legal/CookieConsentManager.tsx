@@ -1,4 +1,13 @@
-import React, { useState, useEffect } from 'react';
+/**
+ * @deprecated Use CookieConsentBanner (src/components/legal/CookieConsentBanner.tsx)
+ * as the user-facing consent surface. This component is an admin-style
+ * management UI that is not mounted in routing and does NOT gate analytics
+ * script loading — it predates consentStore.ts and Google Consent Mode v2.
+ *
+ * Kept only as a reference for the admin/audit dashboard that eventually
+ * replaces it. Do not wire this into the public app.
+ */
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -69,13 +78,13 @@ const CookieConsentManager = () => {
             name: '_session',
             purpose: 'Maintains user session and authentication state',
             duration: 'Session',
-            provider: 'BuildDesk'
+            provider: 'Brikly'
           },
           {
             name: '_csrf',
             purpose: 'Security token to prevent cross-site request forgery',
             duration: 'Session',
-            provider: 'BuildDesk'
+            provider: 'Brikly'
           }
         ]
       },
@@ -132,13 +141,13 @@ const CookieConsentManager = () => {
             name: 'theme',
             purpose: 'Remembers your preferred theme (light/dark)',
             duration: '1 year',
-            provider: 'BuildDesk'
+            provider: 'Brikly'
           },
           {
             name: 'language',
             purpose: 'Stores your language preference',
             duration: '1 year',
-            provider: 'BuildDesk'
+            provider: 'Brikly'
           }
         ]
       }

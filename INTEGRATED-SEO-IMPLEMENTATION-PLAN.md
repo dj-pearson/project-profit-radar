@@ -1,4 +1,4 @@
-# 🚀 BuildDesk Integrated SEO Implementation Plan 2025
+# 🚀 Brikly Integrated SEO Implementation Plan 2025
 
 ## Executive Summary
 
@@ -54,12 +54,12 @@ This integrated implementation plan combines our comprehensive SEO strategy with
 #### **Priority Content Calendar** 📝
 
 **Week 5-6: Competitor Alternative Content** (Highest ROI)
-1. **"Procore Alternative: Why 500+ Contractors Choose BuildDesk"**
+1. **"Procore Alternative: Why 500+ Contractors Choose Brikly"**
    - Target: "procore alternative" (1,800 searches/month)
    - Investment: $4,000 (comprehensive comparison + interactive elements)
    - Expected ROI: 150+ trial signups in first 6 months
 
-2. **"Buildertrend vs BuildDesk: Complete 2025 Comparison"**
+2. **"Buildertrend vs Brikly: Complete 2025 Comparison"**
    - Target: "buildertrend alternative" (680 searches/month)
    - Investment: $3,500 (detailed feature comparison + migration guide)
    - Expected ROI: 75+ trial signups in first 6 months
@@ -184,14 +184,14 @@ interface HeroVariant {
 const heroVariants: HeroVariant[] = [
   {
     headline: "Stop Losing Money on Construction Projects",
-    subheadline: "Join 500+ contractors saving $50K+ annually with BuildDesk",
+    subheadline: "Join 500+ contractors saving $50K+ annually with Brikly",
     ctaText: "Start Free 14-Day Trial",
     trustSignal: "✓ No Credit Card Required ✓ Setup in 5 Minutes"
   },
   {
     headline: "The Procore Alternative That Actually Works",
     subheadline: "60% less cost, 10x faster setup, better mobile experience",
-    ctaText: "Try BuildDesk Free",
+    ctaText: "Try Brikly Free",
     trustSignal: "✓ Trusted by 500+ Contractors ✓ 4.8/5 Rating"
   }
 ];
@@ -352,6 +352,6 @@ const roiProjections: ROICalculation[] = [
 4. **Industry Integration**: Deep partnerships with construction trade associations
 5. **Local Market Dominance**: Geographic expansion with targeted local content
 
-This integrated implementation plan combines the strategic vision with practical execution steps, ensuring BuildDesk captures maximum organic growth while building sustainable competitive advantages in the construction management software market.
+This integrated implementation plan combines the strategic vision with practical execution steps, ensuring Brikly captures maximum organic growth while building sustainable competitive advantages in the construction management software market.
 
 **Ready to dominate construction software search results! 🏗️🚀**

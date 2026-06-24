@@ -1,7 +1,9 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { HardHat, Building } from "lucide-react";
+import { HardHat } from "lucide-react";
+import { BriklyLogoIcon } from "./BriklyLogoIcon";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { BRIKLY_LOGO_URL } from "@/lib/utils";
 
 interface ResponsiveLogoProps {
   className?: string;
@@ -75,8 +77,8 @@ const ResponsiveLogo = ({
     remote:
       isMobile && mobileRemoteUrl
         ? mobileRemoteUrl
-        : "https://ilhzuvemiuyfuxfegtlv.supabase.co/storage/v1/object/public/site-assets/BuildDeskLogo.png?width=200&quality=90",
-    local: isMobile && mobileLocalUrl ? mobileLocalUrl : "/BuildDeskLogo.png",
+        : BRIKLY_LOGO_URL,
+    local: isMobile && mobileLocalUrl ? mobileLocalUrl : "/BriklyLogo.png",
   };
 
   // Force text mode if requested
@@ -144,28 +146,16 @@ const ResponsiveLogo = ({
         <div className={`flex items-center gap-2 ${textClassName}`}>
           {/* Icon representation */}
           <div className="relative flex items-center justify-center">
-            <div
-              className={`${iconSizes[currentSize]} bg-construction-blue rounded-full flex items-center justify-center relative overflow-hidden`}
-            >
-              {/* Background pattern */}
-              <div className="absolute inset-0 opacity-20">
-                <Building className="h-4 w-4 absolute top-1 left-1 text-white" />
-                <div className="absolute bottom-1 right-1 w-2 h-2 bg-white/30 rounded-sm" />
-                <div className="absolute bottom-1 left-1 w-1 h-3 bg-white/30 rounded-sm" />
-                <div className="absolute bottom-1 left-2.5 w-1 h-2 bg-white/30 rounded-sm" />
-              </div>
-              {/* Hard hat icon */}
-              <HardHat className="h-4 w-4 text-construction-orange relative z-10" />
-            </div>
+            <BriklyLogoIcon className={`${iconSizes[currentSize]} drop-shadow-sm`} />
           </div>
 
           {/* Text - Hide on very small screens if needed */}
           {!isMobile || currentSize !== "sm" ? (
             <div
-              className={`font-bold tracking-tight ${textSizes[currentSize]}`}
+              className={`font-bold tracking-tighter ${textSizes[currentSize]} ml-1`}
             >
-              <span className="text-construction-orange">Build</span>
-              <span className="text-construction-blue">Desk</span>
+              <span className="text-construction-blue dark:text-white">Brik</span>
+              <span className="text-construction-orange">ly</span>
             </div>
           ) : null}
         </div>
@@ -179,7 +169,7 @@ const ResponsiveLogo = ({
     return (
       <img
         src={currentSrc}
-        alt="BuildDesk"
+        alt="Brikly"
         className={`${sizeClasses[currentSize]} ${className}`}
         style={{ 
           objectFit: "contain",
@@ -237,18 +227,16 @@ export const useResponsiveLogoStatus = () => {
     state: "checking",
     device: isMobile ? "mobile" : "desktop",
     sources: {
-      remote:
-        "https://ilhzuvemiuyfuxfegtlv.supabase.co/storage/v1/object/public/site-assets/BuildDeskLogo.png?width=200&quality=90",
-      local: "/BuildDeskLogo.png",
+      remote: BRIKLY_LOGO_URL,
+      local: "/BriklyLogo.png",
     },
   });
 
   useEffect(() => {
     const checkImages = async () => {
       const sources = {
-        remote:
-          "https://ilhzuvemiuyfuxfegtlv.supabase.co/storage/v1/object/public/site-assets/BuildDeskLogo.png?width=200&quality=90",
-        local: "/BuildDeskLogo.png",
+        remote: BRIKLY_LOGO_URL,
+        local: "/BriklyLogo.png",
       };
 
       try {

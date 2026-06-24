@@ -76,7 +76,16 @@ const createMaterials = (isBuildMode: boolean) => {
 
 // --- Architectural Components ---
 
-const FramingStuds = ({ position, count, height, width, depth, material }: any) => {
+interface FramingStudsProps {
+    position: [number, number, number];
+    count: number;
+    height: number;
+    width: number;
+    depth: number;
+    material: THREE.Material;
+}
+
+const FramingStuds = ({ position, count, height, width, depth, material }: FramingStudsProps) => {
     const studs = useMemo(() => {
         const items = [];
         const spacing = width / count;
@@ -93,7 +102,14 @@ const FramingStuds = ({ position, count, height, width, depth, material }: any) 
     return <group position={position}>{studs}</group>;
 };
 
-const IBeam = ({ length, material, ...props }: any) => (
+interface IBeamProps {
+    length: number;
+    material: THREE.Material;
+    position?: [number, number, number];
+    rotation?: [number, number, number];
+}
+
+const IBeam = ({ length, material, ...props }: IBeamProps) => (
     <group {...props}>
         {/* Top Flange */}
         <mesh position={[0, 0.1, 0]} castShadow receiveShadow material={material}>
@@ -110,7 +126,17 @@ const IBeam = ({ length, material, ...props }: any) => (
     </group>
 );
 
-const Staircase = ({ position, steps = 12, width = 1.2, height = 2.5, depth = 2.5, material, stringerMaterial }: any) => {
+interface StaircaseProps {
+    position: [number, number, number];
+    steps?: number;
+    width?: number;
+    height?: number;
+    depth?: number;
+    material: THREE.Material;
+    stringerMaterial: THREE.Material;
+}
+
+const Staircase = ({ position, steps = 12, width = 1.2, height = 2.5, depth = 2.5, material, stringerMaterial }: StaircaseProps) => {
     const stepHeight = height / steps;
     const stepDepth = depth / steps;
     const angle = Math.atan2(height, depth);
@@ -153,7 +179,14 @@ const Staircase = ({ position, steps = 12, width = 1.2, height = 2.5, depth = 2.
     );
 };
 
-const WoodPanelWall = ({ width, height, depth = 0.1, material }: any) => {
+interface WoodPanelWallProps {
+    width: number;
+    height: number;
+    depth?: number;
+    material: THREE.Material;
+}
+
+const WoodPanelWall = ({ width, height, depth = 0.1, material }: WoodPanelWallProps) => {
     // Create horizontal planks
     const plankHeight = 0.2;
     const planks = Math.ceil(height / plankHeight);
@@ -175,7 +208,14 @@ const WoodPanelWall = ({ width, height, depth = 0.1, material }: any) => {
     );
 };
 
-const WindowFrame = ({ width, height, material, glassMaterial }: any) => (
+interface WindowFrameProps {
+    width: number;
+    height: number;
+    material: THREE.Material;
+    glassMaterial: THREE.Material;
+}
+
+const WindowFrame = ({ width, height, material, glassMaterial }: WindowFrameProps) => (
     <group>
         {/* Frame */}
         <mesh position={[0, height/2, 0]} material={material}>
@@ -572,7 +612,7 @@ const PremiumBlueprint3D: React.FC<BlueprintProps> = ({ isBuildMode, onToggleMod
                     <div className="flex items-center gap-2">
                         <div className="h-[1px] w-6 sm:w-8 bg-white/30" />
                         <span className="text-[8px] sm:text-[10px] font-mono tracking-[0.2em] text-white/50 uppercase">
-                            Project: Profit Radar
+                            Brikly
                         </span>
                     </div>
                     <h3 className="text-lg sm:text-2xl font-bold text-white tracking-tight">

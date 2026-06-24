@@ -1,4 +1,3 @@
-import React from "react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { SEOMetaTags } from "@/components/SEOMetaTags";
@@ -79,7 +78,7 @@ const ConstructionDailyLogsGuide = () => {
   return (
     <div className="min-h-screen bg-background">
       <SEOMetaTags
-        title="Construction Daily Logs: What to Track and Why It Pays | BuildDesk"
+        title="Construction Daily Logs: What to Track and Why It Pays | Brikly"
         description="Essential guide to daily logs that reduce rework and improve project outcomes. Digital templates, best practices, and mobile solutions for construction teams."
         keywords={[
           'construction daily logs',
@@ -93,10 +92,10 @@ const ConstructionDailyLogsGuide = () => {
       
       <ArticleSchema
         title="Construction Daily Logs: What to Track and Why It Pays"
-        author="BuildDesk Team"
+        author="Brikly Team"
         datePublished="2025-01-24"
-        image="https://builddesk.com/images/daily-logs-guide.jpg"
-        url="https://builddesk.com/resources/construction-daily-logs-best-practices"
+        image="https://brikly.net/images/daily-logs-guide.jpg"
+        url="https://brikly.net/resources/construction-daily-logs-best-practices"
       />
       
       <FAQSchema questions={faqData} />
@@ -387,7 +386,7 @@ const ConstructionDailyLogsGuide = () => {
             Start Better Daily Logs Today
           </h2>
           <p className="text-muted-foreground mb-6 max-w-2xl mx-auto">
-            BuildDesk's mobile daily logs include photos, GPS, weather integration, 
+            Brikly's mobile daily logs include photos, GPS, weather integration, 
             and templates that prevent missed details. Reduce rework and protect your projects.
           </p>
           <Button asChild size="lg">

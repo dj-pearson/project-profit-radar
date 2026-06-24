@@ -7,19 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
-import {
-  Key,
-  Copy,
-  Eye,
-  EyeOff,
-  CheckCircle,
-  XCircle,
-  Activity,
-  TrendingUp,
-  AlertCircle,
-  Plus,
-  Trash2,
-} from 'lucide-react';
+import { Key, Copy, CheckCircle, XCircle, Activity, TrendingUp, AlertCircle, Plus, Trash2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
@@ -94,10 +82,10 @@ export const APIKeyManagement = () => {
         .from('api_keys')
         .select('*')
         .eq('created_by', user?.id)
-        .order('created_at', { ascending: false }) as any;
+        .order('created_at', { ascending: false });
 
       if (keysError) throw keysError;
-      setApiKeys(keysData as any || []);
+      setApiKeys((keysData as APIKey[]) || []);
 
       // Load recent request logs
       if (keysData && keysData.length > 0) {
@@ -109,7 +97,7 @@ export const APIKeyManagement = () => {
           .limit(50);
 
         if (logsError) throw logsError;
-        setRequestLogs(logsData as any || []);
+        setRequestLogs((logsData as APIRequestLog[]) || []);
       }
     } catch (error) {
       console.error('Failed to load API data:', error);
@@ -159,7 +147,7 @@ export const APIKeyManagement = () => {
           api_key_hash: keyHash,
           permissions: newKeyScopes,
           is_active: true,
-        } as any);
+        });
 
       if (error) throw error;
 

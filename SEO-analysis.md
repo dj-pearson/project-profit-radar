@@ -1,4 +1,4 @@
-**Build-Desk.com SEO + AI Visibility Audit & Implementation Plan**
+**Brikly.com SEO + AI Visibility Audit & Implementation Plan**
 
 **Last Updated:** September 2025
 **Prepared by:** Robert (AI SEO Consultant)
@@ -7,7 +7,7 @@
 
 ## 📊 Executive Summary
 
-This document outlines a comprehensive SEO and AI search visibility audit for Build-Desk.com, followed by a detailed, prioritized implementation roadmap. It includes technical, content, AI-readiness, trust-building, and performance-focused fixes. The goal is to enhance Build-Desk's presence in both traditional search and AI-generated answers.
+This document outlines a comprehensive SEO and AI search visibility audit for Brikly.com, followed by a detailed, prioritized implementation roadmap. It includes technical, content, AI-readiness, trust-building, and performance-focused fixes. The goal is to enhance Brikly's presence in both traditional search and AI-generated answers.
 
 ---
 

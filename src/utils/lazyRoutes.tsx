@@ -1,12 +1,6 @@
-import { lazy } from 'react';
+import React, { lazy, Suspense } from 'react';
 import { LoadingState } from '@/components/ui/loading-spinner';
-
-/**
- * Utility for creating lazy-loaded route components with consistent loading states
- */
-export const createLazyRoute = (importFn: () => Promise<{ default: React.ComponentType<any> }>) => {
-  return lazy(importFn);
-};
+import { RouteErrorBoundary } from '@/components/RouteErrorBoundary';
 
 /**
  * Common loading component for all lazy routes
@@ -17,11 +11,35 @@ export const RouteLoadingFallback = () => (
   </div>
 );
 
+/**
+ * Creates a lazy-loaded route component wrapped with Suspense + ErrorBoundary.
+ * Every lazy route automatically gets:
+ * - A loading spinner while the chunk downloads
+ * - Chunk-load error detection with user-friendly retry UI
+ * - Generic error boundary for runtime errors within the page
+ */
+export const createLazyRoute = (importFn: () => Promise<{ default: React.ComponentType<any> }>) => {
+  const LazyComponent = lazy(importFn);
+
+  const WrappedRoute = (props: Record<string, unknown>) => (
+    <RouteErrorBoundary>
+      <Suspense fallback={<RouteLoadingFallback />}>
+        <LazyComponent {...props} />
+      </Suspense>
+    </RouteErrorBoundary>
+  );
+
+  return WrappedRoute;
+};
+
 // Lazy load all major route components
 export const LazyIndex = createLazyRoute(() => import('@/pages/Index'));
 export const LazyAuth = createLazyRoute(() => import('@/pages/Auth'));
+export const LazyAuthCallback = createLazyRoute(() => import('@/pages/AuthCallback'));
 export const LazySetup = createLazyRoute(() => import('@/pages/Setup'));
 export const LazyCheckoutSuccess = createLazyRoute(() => import('@/pages/CheckoutSuccess'));
+export const LazyPaymentSuccess = createLazyRoute(() => import('@/pages/PaymentSuccess'));
+export const LazyPaymentCancelled = createLazyRoute(() => import('@/pages/PaymentCancelled'));
 export const LazyDashboard = createLazyRoute(() => import('@/pages/Dashboard'));
 
 // Hub pages
@@ -46,6 +64,7 @@ export const LazyDocumentManagement = createLazyRoute(() => import('@/pages/Docu
 export const LazyMaterials = createLazyRoute(() => import('@/pages/Materials'));
 export const LazyMaterialTracking = createLazyRoute(() => import('@/pages/MaterialTracking'));
 export const LazyEquipment = createLazyRoute(() => import('@/pages/Equipment'));
+export const LazySubcontractors = createLazyRoute(() => import('@/pages/Subcontractors'));
 
 // Financial area pages
 export const LazyFinancialDashboard = createLazyRoute(() => import('@/pages/FinancialDashboard'));
@@ -56,9 +75,12 @@ export const LazyVendors = createLazyRoute(() => import('@/pages/Vendors'));
 export const LazyQuickBooksRouting = createLazyRoute(() => import('@/pages/QuickBooksRouting'));
 export const LazyQuickBooksCallback = createLazyRoute(() => import('@/pages/QuickBooksCallback'));
 export const LazyInvoices = createLazyRoute(() => import('@/pages/Invoices'));
+export const LazyARAgingReport = createLazyRoute(() => import('@/pages/ARAgingReport'));
 export const LazyExpenses = createLazyRoute(() => import('@/pages/Expenses'));
 export const LazyBudgetManagement = createLazyRoute(() => import('@/pages/BudgetManagement'));
 export const LazyFinancialReports = createLazyRoute(() => import('@/pages/FinancialReports'));
+export const LazyFinancialOverview = createLazyRoute(() => import('@/pages/FinancialOverview'));
+export const LazyUserProfile = createLazyRoute(() => import('@/pages/UserProfile'));
 export const LazyTaxManagement = createLazyRoute(() => import('@/pages/TaxManagement'));
 
 // CRM area pages
@@ -95,6 +117,7 @@ export const LazyRateLimitingDashboard = createLazyRoute(() => import('@/pages/R
 export const LazyCompanies = createLazyRoute(() => import('@/pages/admin/Companies'));
 export const LazyUsers = createLazyRoute(() => import('@/pages/admin/Users'));
 export const LazyPermissionManagement = createLazyRoute(() => import('@/pages/admin/PermissionManagement'));
+export const LazyDisposableEmailDomains = createLazyRoute(() => import('@/pages/admin/DisposableEmailDomains'));
 
 // Admin - Billing & Revenue
 export const LazyBilling = createLazyRoute(() => import('@/pages/admin/Billing'));
@@ -114,6 +137,8 @@ export const LazyChurnPrediction = createLazyRoute(() => import('@/pages/admin/C
 export const LazyUnifiedSEODashboard = createLazyRoute(() => import('@/pages/UnifiedSEODashboard'));
 export const LazySEODashboard = createLazyRoute(() => import('@/pages/SEODashboard'));
 export const LazySearchTrafficDashboard = createLazyRoute(() => import('@/pages/admin/SearchTrafficDashboard'));
+export const LazyPSEOAdminDashboard = createLazyRoute(() => import('@/pages/admin/pseo/PSEOAdminDashboard'));
+export const LazyPSEOPageRenderer = createLazyRoute(() => import('@/pages/pseo/PSEOPageRenderer'));
 export const LazyBlogManager = createLazyRoute(() => import('@/pages/BlogManager'));
 export const LazySocialMediaManager = createLazyRoute(() => import('@/pages/admin/SocialMediaManager'));
 export const LazyLeadManagementAdmin = createLazyRoute(() => import('@/pages/admin/LeadManagement'));
@@ -130,6 +155,7 @@ export const LazyTenantManagement = createLazyRoute(() => import('@/pages/admin/
 export const LazySSOManagement = createLazyRoute(() => import('@/pages/admin/SSOManagement'));
 export const LazyAuditLoggingCompliance = createLazyRoute(() => import('@/pages/admin/AuditLoggingCompliance'));
 export const LazyGPSTimeTracking = createLazyRoute(() => import('@/pages/admin/GPSTimeTracking'));
+export const LazyErrorLogs = createLazyRoute(() => import('@/pages/admin/ErrorLogs'));
 
 // Admin - API & Developer
 export const LazyAPIKeyManagement = createLazyRoute(() => import('@/pages/admin/APIKeyManagement'));
@@ -151,6 +177,7 @@ export const LazyAIModelManagerPage = createLazyRoute(() => import('@/pages/admi
 // Admin - Tools
 export const LazyScheduleBuilder = createLazyRoute(() => import('@/pages/tools/ScheduleBuilder'));
 export const LazyAccessibilityPage = createLazyRoute(() => import('@/pages/AccessibilityPage'));
+export const LazyAccessibilityStatement = createLazyRoute(() => import('@/pages/AccessibilityStatement'));
 
 // Utility and settings pages
 export const LazyMyTasks = createLazyRoute(() => import('@/pages/MyTasks'));
@@ -175,7 +202,7 @@ export const LazyProjectTaskCreate = createLazyRoute(() => import('@/pages/Proje
  */
 export interface LazyRouteConfig {
   path: string;
-  component: React.LazyExoticComponent<React.ComponentType<any>>;
+  component: React.ComponentType<any>;
   preload?: boolean; // Whether to preload this route
   chunkName?: string; // Custom chunk name for webpack
 }
@@ -260,13 +287,40 @@ export const lazyRouteConfigs: LazyRouteConfig[] = [
 ];
 
 /**
- * Preload high-priority routes for better perceived performance
+ * Preload high-priority routes for better perceived performance.
+ * Deferred until after user interaction to avoid "preloaded but not used" warnings.
  */
 export const preloadHighPriorityRoutes = () => {
-  // Note: React.lazy components don't have a preload method
-  // This function is kept for future implementation if needed
-    lazyRouteConfigs.filter(config => config.preload).map(config => config.path)
-  );
+  if (typeof window === 'undefined') return;
+
+  const preload = () => {
+    const preloadImports = [
+      () => import('@/pages/Index'),
+      () => import('@/pages/Auth'),
+      () => import('@/pages/Dashboard'),
+      () => import('@/pages/hubs/ProjectsHub'),
+      () => import('@/pages/Projects'),
+    ];
+
+    preloadImports.forEach((importFn, index) => {
+      setTimeout(() => {
+        importFn().catch(() => {});
+      }, index * 200);
+    });
+  };
+
+  // Wait for first user interaction before preloading to avoid
+  // "preloaded but not used" browser warnings
+  const events = ['mousedown', 'keydown', 'touchstart', 'scroll'];
+  const onInteraction = () => {
+    events.forEach(e => window.removeEventListener(e, onInteraction));
+    if ('requestIdleCallback' in window) {
+      (window as any).requestIdleCallback(preload, { timeout: 10000 });
+    } else {
+      setTimeout(preload, 2000);
+    }
+  };
+  events.forEach(e => window.addEventListener(e, onInteraction, { once: true, passive: true }));
 };
 
 /**

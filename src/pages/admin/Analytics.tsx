@@ -1,24 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
-import { 
-  TrendingUp,
-  TrendingDown,
-  BarChart3,
-  Users,
-  Building2,
-  DollarSign,
-  Clock,
-  CheckCircle,
-  AlertTriangle,
-  Activity
-} from 'lucide-react';
+import { TrendingUp, TrendingDown, BarChart3, Users, Building2, DollarSign, Activity } from 'lucide-react';
 
 interface AnalyticsData {
   totalCompanies: number;
@@ -232,12 +220,12 @@ const Analytics = () => {
   if (loading || loadingData) {
     return (
       <DashboardLayout title="Analytics" showTrialBanner={false}>
-        <div className="flex items-center justify-center py-12">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-construction-blue mx-auto mb-4"></div>
-            <p className="text-muted-foreground">Loading analytics...</p>
+        <div className="space-y-6" role="status" aria-live="polite" aria-label="Loading content">
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+              {[1,2,3,4].map(i => <div key={i} className="h-24 bg-muted animate-pulse rounded-lg" />)}
+            </div>
+            <div className="h-[300px] bg-muted animate-pulse rounded-lg" />
           </div>
-        </div>
       </DashboardLayout>
     );
   }
@@ -260,11 +248,11 @@ const Analytics = () => {
           </Select>
         </div>
         {/* Key Metrics */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <section className="grid grid-cols-1 md:grid-cols-4 gap-6" aria-label="Key performance metrics">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Total Users</CardTitle>
-              <Users className="h-4 w-4 text-muted-foreground" />
+              <Users className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{analyticsData.totalUsers.toLocaleString()}</div>
@@ -277,7 +265,7 @@ const Analytics = () => {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Total Companies</CardTitle>
-              <Building2 className="h-4 w-4 text-muted-foreground" />
+              <Building2 className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{analyticsData.totalCompanies.toLocaleString()}</div>
@@ -288,7 +276,7 @@ const Analytics = () => {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Monthly Revenue</CardTitle>
-              <DollarSign className="h-4 w-4 text-muted-foreground" />
+              <DollarSign className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{formatCurrency(analyticsData.monthlyRevenue)}</div>
@@ -299,7 +287,7 @@ const Analytics = () => {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Active Projects</CardTitle>
-              <BarChart3 className="h-4 w-4 text-muted-foreground" />
+              <BarChart3 className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{analyticsData.activeProjects.toLocaleString()}</div>
@@ -308,7 +296,7 @@ const Analytics = () => {
               </p>
             </CardContent>
           </Card>
-        </div>
+        </section>
 
         {/* Additional Metrics */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

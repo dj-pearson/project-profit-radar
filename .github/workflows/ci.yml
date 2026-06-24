@@ -1,0 +1,134 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 18
+          cache: npm
+      - run: npm ci
+        env:
+          PUPPETEER_SKIP_DOWNLOAD: true
+      - run: npm run lint
+
+  typecheck:
+    name: Type Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 18
+          cache: npm
+      - run: npm ci
+        env:
+          PUPPETEER_SKIP_DOWNLOAD: true
+      - run: npx tsc --noEmit -p tsconfig.app.json
+
+  unit-test:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 18
+          cache: npm
+      - run: npm ci
+        env:
+          PUPPETEER_SKIP_DOWNLOAD: true
+      - run: npm run test:run
+
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 18
+          cache: npm
+      - run: npm ci
+        env:
+          PUPPETEER_SKIP_DOWNLOAD: true
+      - run: npm run build
+        env:
+          # When these secrets are configured, the build emits hidden
+          # sourcemaps and uploads them to Sentry, then deletes the .map files
+          # from dist so they are not served publicly. Unset => plugin no-ops.
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+          SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
+          SENTRY_PROJECT: ${{ secrets.SENTRY_PROJECT }}
+          VITE_APP_VERSION: ${{ github.sha }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: build-output
+          path: dist/
+          retention-days: 7
+
+  e2e-test:
+    name: E2E Tests
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 18
+          cache: npm
+      - run: npm ci
+        env:
+          PUPPETEER_SKIP_DOWNLOAD: true
+      - run: npx playwright install chromium --with-deps
+      - run: npm run build
+      - run: npx playwright test --project=chromium
+        env:
+          CI: true
+
+  security:
+    name: Security Smoke Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 18
+          cache: npm
+      - run: npm ci
+        env:
+          PUPPETEER_SKIP_DOWNLOAD: true
+
+      - name: Run security unit tests
+        run: npm run test:security
+
+      - name: Dependency vulnerability audit
+        run: npm run security:audit || true
+
+      - name: Secret scanning
+        run: bash scripts/secret-scan.sh
+
+      - name: Verify CSP does not contain unsafe-eval
+        run: |
+          if grep -q "unsafe-eval" public/_headers; then
+            echo "::error::CSP in public/_headers contains 'unsafe-eval'. This is a security risk."
+            exit 1
+          else
+            echo "CSP check passed: no unsafe-eval found."
+          fi
+
+      - name: Edge function auth guard (US-198)
+        run: node scripts/check-edge-function-auth.mjs

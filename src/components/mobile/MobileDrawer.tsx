@@ -15,7 +15,8 @@ interface MobileDrawerProps {
 }
 
 /**
- * Mobile drawer that slides in from the side or bottom
+ * Mobile drawer that slides in from side or bottom with frosted-glass
+ * surface and iOS-style easing.
  */
 export function MobileDrawer({
   isOpen,
@@ -41,46 +42,56 @@ export function MobileDrawer({
   };
 
   const positionClasses = {
-    left: 'top-0 left-0 bottom-0 animate-in slide-in-from-left',
-    right: 'top-0 right-0 bottom-0 animate-in slide-in-from-right',
-    bottom: 'bottom-0 left-0 right-0 rounded-t-2xl animate-in slide-in-from-bottom',
+    left: 'top-0 left-0 bottom-0 animate-in slide-in-from-left duration-300',
+    right: 'top-0 right-0 bottom-0 animate-in slide-in-from-right duration-300',
+    bottom: 'bottom-0 left-0 right-0 rounded-t-[28px] ios-sheet-in',
   };
 
   return (
     <>
-      {/* Backdrop */}
+      {/* Scrim */}
       <div
-        className="fixed inset-0 bg-black/50 z-50 animate-in fade-in duration-200"
+        className="fixed inset-0 ios-scrim z-50 ios-fade-in"
         onClick={onClose}
+        aria-hidden="true"
       />
 
       {/* Drawer */}
       <div
+        role="dialog"
+        aria-modal="true"
+        aria-label={title}
         className={cn(
-          'fixed z-50 bg-background shadow-lg',
+          'fixed z-50 glass-thick',
           positionClasses[position],
           sizeClasses[size],
           'overflow-hidden flex flex-col',
-          position === 'bottom' && 'safe-area-inset-bottom',
+          position === 'bottom' && 'safe-area-x',
           className
         )}
+        style={
+          position === 'bottom'
+            ? { paddingBottom: 'env(safe-area-inset-bottom, 0px)' }
+            : undefined
+        }
       >
         {/* Drag handle for bottom drawer */}
         {position === 'bottom' && (
-          <div className="flex justify-center py-2 flex-shrink-0">
-            <div className="w-12 h-1 bg-muted rounded-full" />
+          <div className="flex justify-center pt-3 pb-2 flex-shrink-0" aria-hidden="true">
+            <div className="sheet-grabber" />
           </div>
         )}
 
         {/* Header */}
         {title && (
-          <div className="flex items-center justify-between px-4 py-3 border-b flex-shrink-0">
-            <h3 className="text-lg font-semibold">{title}</h3>
+          <div className="flex items-center justify-between px-4 py-3 border-b border-white/10 dark:border-white/5 flex-shrink-0">
+            <h3 className="text-lg font-semibold tracking-tight">{title}</h3>
             <Button
               variant="ghost"
               size="sm"
               onClick={onClose}
-              className="h-8 w-8 p-0"
+              className="h-9 w-9 p-0 rounded-full"
+              aria-label="Close"
             >
               <X className="h-4 w-4" />
             </Button>
@@ -123,11 +134,11 @@ export function MobileFilterDrawer({
       <div className="space-y-6">
         {children}
 
-        <div className="flex gap-3 pt-4 border-t sticky bottom-0 bg-background">
+        <div className="flex gap-3 pt-4 border-t border-white/10 dark:border-white/5 sticky bottom-0 glass-chrome -mx-4 px-4 pb-2">
           <Button
             variant="outline"
             onClick={onReset}
-            className="flex-1 h-12"
+            className="flex-1 h-12 rounded-xl"
           >
             Reset
           </Button>
@@ -136,7 +147,7 @@ export function MobileFilterDrawer({
               onApply();
               onClose();
             }}
-            className="flex-1 h-12"
+            className="flex-1 h-12 rounded-xl shadow-ios-2"
           >
             Apply Filters
           </Button>

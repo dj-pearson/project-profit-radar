@@ -3,7 +3,6 @@
  * Shows distribution of materials, labor, overhead, and profit
  */
 
-import React from 'react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
 import { formatCurrency } from '@/lib/profitabilityCalculations';
 

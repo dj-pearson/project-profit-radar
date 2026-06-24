@@ -905,6 +905,13 @@ export const hierarchicalNavigation: NavigationArea[] = [
             roles: ["root_admin"],
             badge: "Admin",
           },
+          {
+            title: "Error Logs",
+            url: "/admin/error-logs",
+            icon: AlertTriangle,
+            roles: ["root_admin", "admin"],
+            badge: "New",
+          },
         ],
       },
       {

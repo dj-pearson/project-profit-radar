@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { TrendingUp, TrendingDown, Calendar, Target } from 'lucide-react';
+import { TrendingUp, Calendar, Target } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine } from 'recharts';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -112,7 +112,7 @@ export const BudgetForecast: React.FC<BudgetForecastProps> = ({ projectId }) => 
     }
   };
 
-  const processHistoricalData = (costs: any[]) => {
+  const processHistoricalData = (costs: { created_at: string; labor_cost: number | null; material_cost: number | null; equipment_cost: number | null; other_cost: number | null }[]) => {
     const weeklyData = new Map();
     
     costs.forEach(cost => {
@@ -141,7 +141,7 @@ export const BudgetForecast: React.FC<BudgetForecastProps> = ({ projectId }) => 
     return new Date(d.setDate(diff));
   };
 
-  const calculateBurnRate = (weeklyData: any[]) => {
+  const calculateBurnRate = (weeklyData: { date: string; total: number }[]) => {
     if (weeklyData.length < 2) return { costRate: 0, completionRate: 1 };
     
     const recentWeeks = weeklyData.slice(-4); // Last 4 weeks
@@ -153,7 +153,7 @@ export const BudgetForecast: React.FC<BudgetForecastProps> = ({ projectId }) => 
     };
   };
 
-  const generateProjection = (historicalData: any[], project: any) => {
+  const generateProjection = (historicalData: { date: string; total: number }[], project: { budget: number; completion_percentage: number | null }) => {
     const data: ForecastData[] = [];
     let cumulativeCost = 0;
     

@@ -5,40 +5,22 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { ProjectWithRelations } from '@/services/projectService';
 import ProjectEquipmentView from '@/components/equipment/ProjectEquipmentView';
-import { ConstructionTimelineManager } from '@/components/construction/ConstructionTimelineManager';
+import { ProjectFinancialDashboard } from '@/components/financial/ProjectFinancialDashboard';
+import { ChangeOrderImpactSummary } from '@/components/financial/ChangeOrderImpactSummary';
 import { ProjectDailyReports } from '@/components/project/tabs/ProjectDailyReports';
 import { ProjectEstimates } from '@/components/project/tabs/ProjectEstimates';
 import { ProjectRFIs } from '@/components/project/tabs/ProjectRFIs';
 import { ProjectSubmittals } from '@/components/project/tabs/ProjectSubmittals';
 import { ProjectChangeOrders } from '@/components/project/tabs/ProjectChangeOrders';
 import { ProjectMaterials } from '@/components/project/tabs/ProjectMaterials';
+import { ProjectProcurement } from '@/components/project/tabs/ProjectProcurement';
 import { ProjectJobCosting } from '@/components/project/tabs/ProjectJobCosting';
 import { ProjectContacts } from '@/components/project/tabs/ProjectContacts';
 import { ProjectPermits } from '@/components/project/tabs/ProjectPermits';
 import { ProjectPunchList } from '@/components/project/tabs/ProjectPunchList';
-import {
-  Building2,
-  Calendar,
-  DollarSign,
-  MapPin,
-  User,
-  TrendingUp,
-  CheckCircle2,
-  Clock,
-  FileText,
-  Package,
-  Hammer,
-  Calculator,
-  Receipt,
-  FileX,
-  MessageSquare,
-  HelpCircle,
-  Send,
-  Users,
-  Shield,
-  CheckSquare,
-  FolderOpen
-} from 'lucide-react';
+import { ProjectCostCodes } from '@/components/project/tabs/ProjectCostCodes';
+import { DashboardActivityFeed } from '@/components/activity/DashboardActivityFeed';
+import { Building2, Calendar, DollarSign, MapPin, TrendingUp, CheckCircle2, Clock, FileText, Receipt, MessageSquare, FolderOpen } from 'lucide-react';
 
 interface ProjectContentProps {
   project: ProjectWithRelations;
@@ -174,6 +156,22 @@ export const ProjectContent: React.FC<ProjectContentProps> = ({
           )}
         </CardContent>
       </Card>
+
+      {/* Financial Summary */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center">
+            <DollarSign className="h-5 w-5 mr-2" aria-hidden="true" />
+            Financial Summary
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <ProjectFinancialDashboard projectId={project.id} />
+        </CardContent>
+      </Card>
+
+      {/* Change Order Impact on contract (US-097) */}
+      <ChangeOrderImpactSummary projectId={project.id} originalContract={project.budget ?? 0} />
     </div>
   );
 
@@ -265,6 +263,10 @@ export const ProjectContent: React.FC<ProjectContentProps> = ({
 
   const renderMaterials = () => (
     <ProjectMaterials projectId={project.id} onNavigate={onNavigate} />
+  );
+
+  const renderProcurement = () => (
+    <ProjectProcurement projectId={project.id} onNavigate={onNavigate} />
   );
 
   const renderEquipment = () => (
@@ -420,6 +422,14 @@ export const ProjectContent: React.FC<ProjectContentProps> = ({
     </Card>
   );
 
+  const renderCostCodes = () => (
+    <ProjectCostCodes projectId={project.id} />
+  );
+
+  const renderActivity = () => (
+    <DashboardActivityFeed projectId={project.id} maxItems={30} />
+  );
+
   // Content mapping
   const contentMap: Record<string, () => React.ReactNode> = {
     overview: renderOverview,
@@ -427,6 +437,7 @@ export const ProjectContent: React.FC<ProjectContentProps> = ({
     tasks: renderTasks,
     dailyreports: renderDailyReports,
     materials: renderMaterials,
+    procurement: renderProcurement,
     equipment: renderEquipment,
     estimates: renderEstimates,
     jobcosting: renderJobCosting,
@@ -440,6 +451,8 @@ export const ProjectContent: React.FC<ProjectContentProps> = ({
     warranties: renderWarranties,
     punchlist: renderPunchList,
     documents: renderDocuments,
+    costcodes: renderCostCodes,
+    activity: renderActivity,
   };
 
   const renderContent = contentMap[activeTab] || renderOverview;

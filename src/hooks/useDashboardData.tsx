@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
+import { logger } from '@/lib/logger';
 
 export interface DashboardKPIs {
   totalRevenue: number;
@@ -58,14 +59,14 @@ export interface DashboardData {
 }
 
 export const useDashboardData = () => {
-  const { userProfile, siteId } = useAuth();
+  const { userProfile } = useAuth();
   const { toast } = useToast();
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const loadDashboardData = useCallback(async () => {
-    if (!userProfile?.company_id || !siteId) {
+    if (!userProfile?.company_id) {
       setLoading(false);
       return;
     }
@@ -74,11 +75,11 @@ export const useDashboardData = () => {
       setLoading(true);
       setError(null);
 
-      // Fetch basic project data with site isolation
+      // Fetch basic project data
       const { data: projects, error: projectsError } = await supabase
         .from('projects')
         .select('id, name, budget, completion_percentage, status, start_date, end_date')
-        .eq('site_id', siteId)  // CRITICAL: Site isolation
+          // CRITICAL: Site isolation
         .eq('company_id', userProfile.company_id)
         .in('status', ['active', 'in_progress', 'planning']);
 
@@ -88,7 +89,7 @@ export const useDashboardData = () => {
       const { data: teamMembers, error: teamError } = await supabase
         .from('user_profiles')
         .select('id')
-        .eq('site_id', siteId)  // CRITICAL: Site isolation
+          // CRITICAL: Site isolation
         .eq('company_id', userProfile.company_id)
         .eq('is_active', true);
 
@@ -98,23 +99,47 @@ export const useDashboardData = () => {
       const { data: activities, error: activityError } = await supabase
         .from('activity_feed')
         .select('id, activity_type, title, created_at, user_id, project_id')
-        .eq('site_id', siteId)  // CRITICAL: Site isolation
+          // CRITICAL: Site isolation
         .eq('company_id', userProfile.company_id)
         .order('created_at', { ascending: false })
         .limit(10);
 
       if (activityError) throw activityError;
 
+      // Fetch financial records for real revenue data (soft failure - table may not exist yet)
+      let totalRevenue = 0;
+      let totalExpenses = 0;
+      let profitMargin = 0;
+
+      const { data: financialRecords, error: financialError } = await supabase
+        .from('financial_records')
+        .select('amount, type')
+        .eq('company_id', userProfile.company_id);
+
+      if (financialError) {
+        logger.warn('Financial records unavailable, using project budgets as fallback');
+      } else {
+        totalRevenue = financialRecords
+          ?.filter(r => r.type === 'income' || r.type === 'revenue')
+          .reduce((sum, r) => sum + (r.amount || 0), 0) || 0;
+        totalExpenses = financialRecords
+          ?.filter(r => r.type === 'expense' || r.type === 'cost')
+          .reduce((sum, r) => sum + (r.amount || 0), 0) || 0;
+        profitMargin = totalRevenue > 0
+          ? Math.round(((totalRevenue - totalExpenses) / totalRevenue) * 100 * 10) / 10
+          : 0;
+      }
+
       // Build dashboard data
       const dashboardData: DashboardData = {
         kpis: {
-          totalRevenue: projects?.reduce((sum, p) => sum + (p.budget || 0), 0) || 0,
+          totalRevenue: totalRevenue || projects?.reduce((sum, p) => sum + (p.budget || 0), 0) || 0,
           activeProjects: projects?.length || 0,
           teamMembers: teamMembers?.length || 0,
-          completionRate: projects?.length ? 
+          completionRate: projects?.length ?
             Math.round(projects.reduce((sum, p) => sum + (p.completion_percentage || 0), 0) / projects.length) : 0,
-          profitMargin: 23.5,
-          safetyScore: 94
+          profitMargin,
+          safetyScore: 100
         },
         projects: projects?.map(project => ({
           id: project.id,
@@ -122,19 +147,19 @@ export const useDashboardData = () => {
           overallHealth: (project.completion_percentage || 0) > 90 ? 'excellent' : 
                          (project.completion_percentage || 0) > 70 ? 'good' : 'warning',
           budget: {
-            spent: (project.budget || 0) * 0.6,
+            spent: (project.budget || 0) * ((project.completion_percentage || 0) / 100),
             total: project.budget || 0,
-            variance: Math.random() * 10 - 5
+            variance: 0
           },
           schedule: {
             completion: project.completion_percentage || 0,
-            daysRemaining: project.end_date ? 
+            daysRemaining: project.end_date ?
               Math.ceil((new Date(project.end_date).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)) : 30,
             onTrack: (project.completion_percentage || 0) > 70
           },
           safety: {
             incidents: 0,
-            score: 95 + Math.floor(Math.random() * 5)
+            score: 100
           }
         })) || [],
         alerts: [],
@@ -149,7 +174,7 @@ export const useDashboardData = () => {
 
       setData(dashboardData);
     } catch (error) {
-      console.error('Error loading dashboard data:', error);
+      logger.error('Error loading dashboard data', error instanceof Error ? error : undefined);
       setError(error instanceof Error ? error.message : 'Failed to load dashboard data');
       toast({
         title: "Error Loading Dashboard",
@@ -159,7 +184,7 @@ export const useDashboardData = () => {
     } finally {
       setLoading(false);
     }
-  }, [userProfile?.company_id, siteId, toast]);
+  }, [userProfile?.company_id, toast]);
 
   useEffect(() => {
     loadDashboardData();

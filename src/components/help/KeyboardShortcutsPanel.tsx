@@ -9,7 +9,6 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 
 interface KeyboardShortcut {
@@ -138,7 +137,7 @@ export function KeyboardShortcutsPanel({
             Keyboard Shortcuts
           </DialogTitle>
           <DialogDescription>
-            Use these shortcuts to navigate BuildDesk faster. Press{" "}
+            Use these shortcuts to navigate Brikly faster. Press{" "}
             <kbd className="px-2 py-1 text-xs font-semibold text-gray-800 bg-gray-100 border border-gray-200 rounded-lg dark:bg-gray-600 dark:text-gray-100 dark:border-gray-500">
               Ctrl + /
             </kbd>{" "}

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { Mail, Users, TrendingUp, Clock, Send, Plus, Edit, Trash2, Target } from "lucide-react";
+import { Mail, Users, TrendingUp, Send, Plus, Edit, Trash2, Target } from "lucide-react";
 
 interface EmailCampaign {
   id: string;
@@ -29,8 +29,8 @@ const mockCampaigns: EmailCampaign[] = [
   {
     id: "1",
     name: "Welcome Series - New Leads",
-    subject: "Welcome to BuildDesk - Your Construction Management Solution",
-    content: "Thank you for your interest in BuildDesk...",
+    subject: "Welcome to Brikly - Your Construction Management Solution",
+    content: "Thank you for your interest in Brikly...",
     audience: "New Leads",
     status: "sent",
     stats: { sent: 1250, delivered: 1225, opened: 588, clicked: 94 }

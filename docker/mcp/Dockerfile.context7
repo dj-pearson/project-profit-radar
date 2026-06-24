@@ -1,0 +1,20 @@
+# Context7 MCP Server Dockerfile
+FROM node:20-alpine
+
+WORKDIR /app
+
+# Install MCP server
+RUN npm install -g @upstash/context7-mcp@latest
+
+# Create non-root user
+RUN adduser -D mcpuser
+USER mcpuser
+
+ENV NODE_ENV=production
+
+# Environment variables for Upstash Redis (passed at runtime)
+# UPSTASH_REDIS_REST_URL
+# UPSTASH_REDIS_REST_TOKEN
+
+ENTRYPOINT ["npx", "@upstash/context7-mcp"]
+

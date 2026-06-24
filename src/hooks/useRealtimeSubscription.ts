@@ -1,25 +1,33 @@
 import { useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { RealtimeChannel, REALTIME_POSTGRES_CHANGES_LISTEN_EVENT } from '@supabase/supabase-js';
+import { RealtimeChannel, RealtimePostgresChangesPayload } from '@supabase/supabase-js';
+import { createReconnectingChannel } from '@/lib/realtime/reconnectingChannel';
+import {
+  registerRealtimeChannel,
+  reportRealtimeChannelState,
+  unregisterRealtimeChannel,
+} from '@/lib/realtime/connectionStore';
 
 export type RealtimeEvent = 'INSERT' | 'UPDATE' | 'DELETE' | '*';
+
+type RealtimePayload = RealtimePostgresChangesPayload<Record<string, unknown>>;
 
 interface UseRealtimeSubscriptionOptions {
   table: string;
   schema?: string;
   event?: RealtimeEvent;
   filter?: string;
-  onInsert?: (payload: any) => void;
-  onUpdate?: (payload: any) => void;
-  onDelete?: (payload: any) => void;
-  onChange?: (payload: any) => void;
+  onInsert?: (payload: RealtimePayload) => void;
+  onUpdate?: (payload: RealtimePayload) => void;
+  onDelete?: (payload: RealtimePayload) => void;
+  onChange?: (payload: RealtimePayload) => void;
   enabled?: boolean;
 }
 
 /**
  * Hook for subscribing to real-time database changes
  * Automatically handles cleanup on unmount
- * 
+ *
  * @example
  * useRealtimeSubscription({
  *   table: 'time_entries',
@@ -41,23 +49,15 @@ export const useRealtimeSubscription = ({
   useEffect(() => {
     if (!enabled) return;
 
-    const channelName = `realtime-${table}-${filter || 'all'}-${Date.now()}`;
-    let channel: RealtimeChannel;
-
-    const setupChannel = () => {
-      channel = supabase
-        .channel(channelName)
+    // Each effect run gets a fresh channel name so a reconnect doesn't collide
+    // with the dying channel.
+    const buildChannel = (): RealtimeChannel =>
+      supabase
+        .channel(`realtime-${table}-${filter || 'all'}-${Date.now()}-${Math.random().toString(36).slice(2)}`)
         .on(
-          REALTIME_POSTGRES_CHANGES_LISTEN_EVENT.ALL as any,
-          {
-            event: event as any,
-            schema,
-            table,
-            filter,
-          },
-          (payload: any) => {
-
-            // Call specific event handlers
+          'postgres_changes',
+          { event, schema, table, filter },
+          (payload: RealtimePayload) => {
             switch (payload.eventType) {
               case 'INSERT':
                 onInsert?.(payload);
@@ -69,22 +69,26 @@ export const useRealtimeSubscription = ({
                 onDelete?.(payload);
                 break;
             }
-
-            // Call general change handler
             onChange?.(payload);
-          }
-        )
-        .subscribe((status) => {
-        });
-    };
+          },
+        );
 
-    setupChannel();
+    // Centralized auto-reconnect with backoff + jitter (US-210). On recovery
+    // after a drop, refetch missed rows via onChange (a no-payload signal).
+    const channelId = registerRealtimeChannel();
+    const handle = createReconnectingChannel<RealtimeChannel>({
+      createChannel: buildChannel,
+      removeChannel: (ch) => supabase.removeChannel(ch),
+      onStateChange: (state) => reportRealtimeChannelState(channelId, state),
+      onReconnect: () => {
+        // We can't replay individual missed events, so signal a full refetch.
+        onChange?.({ eventType: 'UPDATE' } as unknown as RealtimePayload);
+      },
+    });
 
-    // Cleanup
     return () => {
-      if (channel) {
-        supabase.removeChannel(channel);
-      }
+      handle.teardown();
+      unregisterRealtimeChannel(channelId);
     };
   }, [table, schema, event, filter, enabled, onInsert, onUpdate, onDelete, onChange]);
 };
@@ -107,14 +111,14 @@ export const useRealtimeSubscriptions = (
       const channel = supabase
         .channel(channelName)
         .on(
-          REALTIME_POSTGRES_CHANGES_LISTEN_EVENT.ALL as any,
+          'postgres_changes',
           {
-            event: (sub.event || '*') as any,
+            event: sub.event || '*',
             schema: sub.schema || 'public',
             table: sub.table,
             filter: sub.filter,
           },
-          (payload: any) => {
+          (payload: RealtimePayload) => {
 
             switch (payload.eventType) {
               case 'INSERT':

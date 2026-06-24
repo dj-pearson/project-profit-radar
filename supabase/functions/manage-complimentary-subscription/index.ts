@@ -43,19 +43,9 @@ serve(async (req) => {
     const adminUser = userData.user;
     if (!adminUser?.email) throw new Error("Admin user not authenticated");
 
-    // Extract site_id from JWT metadata for multi-tenant isolation
-    const siteId = adminUser.app_metadata?.site_id || adminUser.user_metadata?.site_id;
-    if (!siteId) {
-      throw new Error("Site ID not found in user context. Multi-tenant isolation required.");
-    }
-
-    logStep("Site context extracted", { siteId });
-
-    // Verify admin is root_admin with site_id isolation
     const { data: adminProfile } = await supabaseClient
       .from('user_profiles')
       .select('role')
-      .eq('site_id', siteId)
       .eq('id', adminUser.id)
       .single();
 
@@ -81,16 +71,13 @@ serve(async (req) => {
       const tier = request.subscription_tier || 'professional';
       const type = request.type || 'temporary';
 
-      // Update or create subscriber record with site_id isolation
       const { data: existingSubscriber } = await supabaseClient
         .from('subscribers')
         .select('id')
-        .eq('site_id', siteId)
         .eq('user_id', targetUser.id)
         .single();
 
       if (existingSubscriber) {
-        // Update existing subscriber with site_id isolation
         await supabaseClient
           .from('subscribers')
           .update({
@@ -104,14 +91,11 @@ serve(async (req) => {
             complimentary_reason: request.reason,
             updated_at: new Date().toISOString()
           })
-          .eq('site_id', siteId)
           .eq('id', existingSubscriber.id);
       } else {
-        // Create new subscriber with site_id for multi-tenant isolation
         await supabaseClient
           .from('subscribers')
           .insert({
-            site_id: siteId,
             user_id: targetUser.id,
             email: targetUser.email,
             subscribed: true,
@@ -125,11 +109,9 @@ serve(async (req) => {
           });
       }
 
-      // Log in history with site_id isolation
       const { data: subscriber } = await supabaseClient
         .from('subscribers')
         .select('id')
-        .eq('site_id', siteId)
         .eq('user_id', targetUser.id)
         .single();
 
@@ -140,7 +122,6 @@ serve(async (req) => {
       await supabaseClient
         .from('complimentary_subscription_history')
         .insert({
-          site_id: siteId,
           subscriber_id: subscriber.id,
           granted_by: adminUser.id,
           expires_at: expiresAt,
@@ -167,11 +148,9 @@ serve(async (req) => {
       });
 
     } else if (request.action === 'revoke') {
-      // Revoke complimentary subscription with site_id isolation
       const { data: subscriber } = await supabaseClient
         .from('subscribers')
         .select('id')
-        .eq('site_id', siteId)
         .eq('user_id', targetUser.id)
         .single();
 
@@ -179,7 +158,6 @@ serve(async (req) => {
         throw new Error("Subscriber not found");
       }
 
-      // Update subscriber to remove complimentary status with site_id isolation
       await supabaseClient
         .from('subscribers')
         .update({
@@ -192,10 +170,8 @@ serve(async (req) => {
           complimentary_reason: null,
           updated_at: new Date().toISOString()
         })
-        .eq('site_id', siteId)
         .eq('id', subscriber.id);
 
-      // Update history with site_id isolation
       await supabaseClient
         .from('complimentary_subscription_history')
         .update({
@@ -204,7 +180,6 @@ serve(async (req) => {
           revoked_at: new Date().toISOString(),
           revoked_reason: request.reason
         })
-        .eq('site_id', siteId)
         .eq('subscriber_id', subscriber.id)
         .eq('status', 'active');
 

@@ -4,16 +4,7 @@ import { useSubscription } from '@/contexts/SubscriptionContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import UpgradePrompt from '@/components/subscription/UpgradePrompt';
-import { 
-  Plus, 
-  Building2, 
-  Users, 
-  FileText, 
-  Target,
-  DollarSign,
-  TrendingUp,
-  Clock
-} from 'lucide-react';
+import { Plus, Building2, Users, FileText, Target, TrendingUp, Clock } from 'lucide-react';
 
 interface QuickAction {
   title: string;
@@ -96,7 +87,7 @@ export const QuickActions: React.FC = () => {
     <Card className="mb-6">
       <CardHeader>
         <CardTitle className="flex items-center text-lg">
-          <Plus className="h-5 w-5 mr-2 text-primary" />
+          <Plus className="h-5 w-5 mr-2 text-primary" aria-hidden="true" />
           Quick Actions
         </CardTitle>
         <CardDescription>
@@ -112,7 +103,7 @@ export const QuickActions: React.FC = () => {
               className="h-auto p-4 flex flex-col items-center text-center space-y-2"
               onClick={action.onClick}
             >
-              <action.icon className="h-6 w-6" />
+              <action.icon className="h-6 w-6" aria-hidden="true" />
               <div>
                 <p className="font-medium text-sm">{action.title}</p>
                 <p className="text-xs text-muted-foreground">{action.description}</p>

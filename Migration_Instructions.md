@@ -1,4 +1,4 @@
-Below is a **PRD-style document** that lays out a clean, safe, and complete plan for migrating Edge Functions from all your separate Supabase projects into the **single Build-Desk shared project**, including:
+Below is a **PRD-style document** that lays out a clean, safe, and complete plan for migrating Edge Functions from all your separate Supabase projects into the **single Brikly shared project**, including:
 
 - What the change is
 - Why it’s being done
@@ -7,12 +7,12 @@ Below is a **PRD-style document** that lays out a clean, safe, and complete plan
 - How to perform the first migration run safely
 - How to avoid breaking existing production systems
 
-This PRD matches your Build-Desk architecture from the CLAUDE.md file.
+This PRD matches your Brikly architecture from the CLAUDE.md file.
 (No banned words, plain writing.)
 
 ---
 
-# **PRD — Migration of All Supabase Edge Functions to Shared Build-Desk Project**
+# **PRD — Migration of All Supabase Edge Functions to Shared Brikly Project**
 
 ## **Document Type**
 
@@ -34,10 +34,10 @@ Draft v1.0
 
 # **1. Goal**
 
-Move all Edge Functions from all Pearson Media Supabase projects into one main project (Build-Desk).
+Move all Edge Functions from all Pearson Media Supabase projects into one main project (Brikly).
 During the transition, each function gains support for `site_id` so the shared project can run many websites without mixing data.
 
-This is the first major step toward making Build-Desk the central system for all Pearson Media platforms.
+This is the first major step toward making Brikly the central system for all Pearson Media platforms.
 
 ---
 
@@ -78,7 +78,7 @@ Functions cannot talk to each other.
 
 ### **After**
 
-Build-Desk becomes the main Supabase project.
+Brikly becomes the main Supabase project.
 All Edge Functions from the other projects get merged into this project.
 Each function will:
 
@@ -132,7 +132,7 @@ The migration is done in four large steps:
 3. **Add `site_id` isolation logic**
 4. **Deploy functions in controlled batches**
 
-The process repeats for each platform until every function lives in Build-Desk.
+The process repeats for each platform until every function lives in Brikly.
 
 ---
 
@@ -343,7 +343,7 @@ This avoids drift.
 
 ## **6.10 Remove the Old Project When Stable**
 
-Once a site is stable on Build-Desk:
+Once a site is stable on Brikly:
 
 - Check error logs
 - Check billing logs
@@ -360,7 +360,7 @@ This lowers cost and simplifies billing.
 
 The migration is considered successful when:
 
-- All Edge Functions run inside Build-Desk
+- All Edge Functions run inside Brikly
 - The logic works per site using `site_id`
 - No data leaks between sites
 - All frontends can call the new functions
@@ -374,7 +374,7 @@ The migration is considered successful when:
 
 ### Before touching production:
 
-1. Clone the Build-Desk project from a backup
+1. Clone the Brikly project from a backup
 2. Load one small site into the clone
 3. Deploy its functions only
 4. Test:
@@ -392,7 +392,7 @@ The migration is considered successful when:
 7. Validate site isolation
 8. Fix issues
 9. Repeat with the next site
-10. Once stable → deploy batch to real Build-Desk
+10. Once stable → deploy batch to real Brikly
 
 This prevents damage.
 
@@ -403,7 +403,7 @@ This prevents damage.
 If anything fails:
 
 1. Stop incoming traffic
-2. Restore Build-Desk from SQL dump backup
+2. Restore Brikly from SQL dump backup
 3. Remove the broken batch of functions
 4. Re-deploy old functions
 5. Re-run migration on the sandbox
@@ -424,7 +424,7 @@ This keeps production safe at all times.
 7. Testing document
 8. Rollback guide
 9. Sandbox project for validation
-10. Cleaned and unified Build-Desk Edge Functions folder
+10. Cleaned and unified Brikly Edge Functions folder
 
 ---
 

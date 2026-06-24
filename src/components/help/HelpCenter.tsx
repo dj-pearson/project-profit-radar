@@ -8,21 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import {
-  Search,
-  BookOpen,
-  Video,
-  HelpCircle,
-  MessageCircle,
-  ChevronRight,
-  ExternalLink,
-  FileText,
-  Zap,
-  DollarSign,
-  Users,
-  Calendar,
-  Settings
-} from 'lucide-react';
+import { Search, BookOpen, Video, HelpCircle, MessageCircle, ChevronRight, FileText, Zap, DollarSign, Users, Calendar, Settings } from 'lucide-react';
 
 interface HelpArticle {
   id: string;
@@ -56,7 +42,7 @@ export const HelpCenter: React.FC = () => {
       id: '1',
       title: 'How to create your first project',
       category: 'getting-started',
-      description: 'Learn how to set up a new construction project in BuildDesk'
+      description: 'Learn how to set up a new construction project in Brikly'
     },
     {
       id: '2',
@@ -109,8 +95,8 @@ export const HelpCenter: React.FC = () => {
       category: 'settings'
     },
     {
-      question: 'Can I use BuildDesk on my phone?',
-      answer: 'Yes! BuildDesk is fully mobile-responsive and also available as a native app for iOS and Android. Download from the App Store or Google Play.',
+      question: 'Can I use Brikly on my phone?',
+      answer: 'Yes! Brikly is fully mobile-responsive and also available as a native app for iOS and Android. Download from the App Store or Google Play.',
       category: 'getting-started'
     },
     {
@@ -120,7 +106,7 @@ export const HelpCenter: React.FC = () => {
     },
     {
       question: 'Can I integrate with QuickBooks?',
-      answer: 'Yes, BuildDesk offers 2-way sync with QuickBooks Online. You can sync invoices, expenses, and financial data automatically.',
+      answer: 'Yes, Brikly offers 2-way sync with QuickBooks Online. You can sync invoices, expenses, and financial data automatically.',
       category: 'financial'
     },
     {
@@ -130,7 +116,7 @@ export const HelpCenter: React.FC = () => {
     },
     {
       question: 'What file types can I upload?',
-      answer: 'BuildDesk supports all common file types including PDF, DOCX, XLSX, images (JPG, PNG), and CAD files (DWG, DXF).',
+      answer: 'Brikly supports all common file types including PDF, DOCX, XLSX, images (JPG, PNG), and CAD files (DWG, DXF).',
       category: 'projects'
     }
   ];

@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { AccessibleModal } from '@/components/accessibility/AccessibleModal';
 import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
@@ -186,17 +186,15 @@ export const BondForm: React.FC<BondFormProps> = ({ bond, onClose, onSave }) => 
   ];
 
   return (
-    <Dialog open={true} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>{bond ? 'Edit Bond' : 'Add New Bond'}</DialogTitle>
-          <DialogDescription>
-            {bond ? 'Update bond information' : 'Add a new bond for tracking'}
-          </DialogDescription>
-        </DialogHeader>
-
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <AccessibleModal
+      isOpen={true}
+      onClose={onClose}
+      title={bond ? 'Edit Bond' : 'Add New Bond'}
+      description={bond ? 'Update bond information' : 'Add a new bond for tracking'}
+      size="xl"
+    >
+      <form onSubmit={handleSubmit} className="space-y-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="project_id">Project</Label>
               <Select
@@ -506,16 +504,15 @@ export const BondForm: React.FC<BondFormProps> = ({ bond, onClose, onSave }) => 
             />
           </div>
 
-          <div className="flex justify-end space-x-2">
-            <Button type="button" variant="outline" onClick={onClose}>
-              Cancel
-            </Button>
-            <Button type="submit" disabled={loading}>
-              {loading ? 'Saving...' : bond ? 'Update Bond' : 'Add Bond'}
-            </Button>
-          </div>
-        </form>
-      </DialogContent>
-    </Dialog>
+        <div className="flex justify-end space-x-2">
+          <Button type="button" variant="outline" onClick={onClose}>
+            Cancel
+          </Button>
+          <Button type="submit" disabled={loading}>
+            {loading ? 'Saving...' : bond ? 'Update Bond' : 'Add Bond'}
+          </Button>
+        </div>
+      </form>
+    </AccessibleModal>
   );
 };

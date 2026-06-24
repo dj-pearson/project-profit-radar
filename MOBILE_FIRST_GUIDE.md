@@ -1,8 +1,8 @@
-# BuildDesk Mobile-First Enhancement Guide
+# Brikly Mobile-First Enhancement Guide
 
 ## Overview
 
-BuildDesk has been comprehensively enhanced with a mobile-first design approach. Every component, layout, and interaction has been optimized for mobile devices while maintaining an excellent desktop experience.
+Brikly has been comprehensively enhanced with a mobile-first design approach. Every component, layout, and interaction has been optimized for mobile devices while maintaining an excellent desktop experience.
 
 ## What's New
 
@@ -408,4 +408,4 @@ For issues or questions about mobile features:
 
 ---
 
-**BuildDesk** - Construction Management Software, Mobile-First
+**Brikly** - Construction Management Software, Mobile-First

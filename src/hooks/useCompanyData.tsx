@@ -13,13 +13,13 @@ export interface Company {
 }
 
 export const useCompanyData = () => {
-  const { userProfile, siteId } = useAuth();
+  const { userProfile } = useAuth();
   const [company, setCompany] = useState<Company | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const fetchCompany = useCallback(async () => {
-    if (!userProfile?.company_id || !siteId) {
+    if (!userProfile?.company_id) {
       setLoading(false);
       return;
     }
@@ -32,7 +32,6 @@ export const useCompanyData = () => {
         .from('companies')
         .select('*')
         .eq('id', userProfile.company_id)
-        .eq('site_id', siteId) // ← Add site filter
         .single();
 
       if (error) {
@@ -46,7 +45,7 @@ export const useCompanyData = () => {
     } finally {
       setLoading(false);
     }
-  }, [userProfile?.company_id, siteId]);
+  }, [userProfile?.company_id]);
 
   useEffect(() => {
     fetchCompany();

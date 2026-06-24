@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
@@ -211,7 +211,7 @@ export const PushNotificationManager = () => {
         body: {
           user_id: user?.id,
           title: 'Test Notification',
-          body: 'This is a test notification from BuildDesk',
+          body: 'This is a test notification from Brikly',
           icon: '/favicon.ico',
           badge: '/favicon.ico'
         }

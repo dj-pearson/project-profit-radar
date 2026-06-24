@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { 
@@ -154,7 +153,7 @@ const MCPSEOAnalytics: React.FC = () => {
                   <div>• <code>GOOGLE_CLIENT_EMAIL</code> - Service account email</div>
                   <div>• <code>GOOGLE_PRIVATE_KEY</code> - Service account private key</div>
                   <div>• <code>GA4_PROPERTY_ID</code> - Your Google Analytics property ID</div>
-                  <div>• <code>SEARCH_CONSOLE_SITE_URL</code> - Your website URL (e.g., https://build-desk.com)</div>
+                  <div>• <code>SEARCH_CONSOLE_SITE_URL</code> - Your website URL (e.g., https://brikly.net)</div>
                 </div>
                 <div className="mt-2 p-2 bg-blue-50 rounded border border-blue-200">
                   <p className="text-xs text-blue-700">

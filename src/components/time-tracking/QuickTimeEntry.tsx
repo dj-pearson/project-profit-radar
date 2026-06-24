@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -128,7 +128,7 @@ export const QuickTimeEntry = ({ onEntryCreated }: QuickTimeEntryProps) => {
               `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=18`,
               {
                 headers: {
-                  'User-Agent': 'BuildDesk Construction Management App'
+                  'User-Agent': 'Brikly Construction Management App'
                 }
               }
             );

@@ -1,16 +1,13 @@
 // Create Stripe Checkout Edge Function
-// Updated with multi-tenant site_id isolation
+// SECURITY: Uses secure CORS whitelist
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@14.21.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.3";
 import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
 import { validateRequest, createErrorResponse } from "../_shared/validation.ts";
 import { initializeAuthContext, errorResponse } from '../_shared/auth-helpers.ts';
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
+import { getCorsHeaders } from '../_shared/secure-cors.ts';
+import { checkRateLimit, rateLimitResponse, RATE_LIMITS } from '../_shared/rate-limiter.ts';
 
 // SECURITY: Input validation schema
 const CheckoutRequestSchema = z.object({
@@ -32,6 +29,8 @@ const logStep = (step: string, details?: any) => {
 };
 
 serve(async (req) => {
+  const corsHeaders = getCorsHeaders(req);
+
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
@@ -43,15 +42,25 @@ serve(async (req) => {
     if (!stripeKey) throw new Error("STRIPE_SECRET_KEY is not set");
     logStep("Stripe key verified");
 
-    // Initialize auth context - extracts user AND site_id from JWT
     const authContext = await initializeAuthContext(req);
     if (!authContext) {
-      return errorResponse('Unauthorized', 401);
+      return errorResponse('Unauthorized', 401, req);
     }
 
-    const { user, siteId, supabase: supabaseClient } = authContext;
+    const { user, supabase: supabaseClient } = authContext;
     if (!user?.email) throw new Error("User not authenticated or email not available");
-    logStep("User authenticated", { userId: user.id, email: user.email, siteId });
+
+    // Rate limit: 100 req/min per user for general API
+    const serviceRLClient = createClient(
+      Deno.env.get("SUPABASE_URL") ?? "",
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
+    );
+    const rlResult = await checkRateLimit(serviceRLClient, {
+      identifier: user.id, endpoint: 'create-stripe-checkout', ...RATE_LIMITS.GENERAL
+    });
+    if (!rlResult.allowed) return rateLimitResponse(rlResult, corsHeaders);
+
+    logStep("User authenticated", { userId: user.id, email: user.email });
 
     // SECURITY: Validate request body
     const requestBody = await req.json();
@@ -62,8 +71,22 @@ serve(async (req) => {
       return createErrorResponse(400, validation.error, corsHeaders);
     }
 
-    const { subscription_tier, billing_period, company_id } = validation.data;
-    logStep("Request validated", { subscription_tier, billing_period, company_id, siteId });
+    let { subscription_tier, billing_period, company_id } = validation.data;
+    logStep("Request validated", { subscription_tier, billing_period, company_id });
+
+    // If company_id not provided, get it from user profile
+    if (!company_id) {
+      const { data: userProfile } = await supabaseClient
+        .from('user_profiles')
+        .select('company_id')
+        .eq('id', user.id)
+        .single();
+
+      if (userProfile?.company_id) {
+        company_id = userProfile.company_id;
+        logStep("Retrieved company_id from user profile", { company_id });
+      }
+    }
 
     // Initialize Stripe
     const stripe = new Stripe(stripeKey, { apiVersion: "2023-10-16" });
@@ -78,7 +101,7 @@ serve(async (req) => {
       logStep("No existing customer found, will create during checkout");
     }
 
-    // Define pricing based on tier and billing period
+    // Define pricing based on tier and billing period (amounts in cents)
     const pricing = {
       starter: { monthly: 14900, annual: 149000 }, // $149/month, $1490/year (save $298)
       professional: { monthly: 29900, annual: 299000 }, // $299/month, $2990/year (save $598)
@@ -89,8 +112,8 @@ serve(async (req) => {
     const interval = billing_period === 'annual' ? 'year' : 'month';
     logStep("Pricing calculated", { amount, interval });
 
-    // Create checkout session
-    const origin = req.headers.get("origin") || "http://localhost:3000";
+    // Create checkout session with secure configuration
+    const origin = req.headers.get("origin") || "https://brikly.net";
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
       customer_email: customerId ? undefined : user.email,
@@ -98,9 +121,9 @@ serve(async (req) => {
         {
           price_data: {
             currency: "usd",
-            product_data: { 
-              name: `${subscription_tier.charAt(0).toUpperCase() + subscription_tier.slice(1)} Plan`,
-              description: `Build Desk ${subscription_tier} subscription - ${billing_period} billing`
+            product_data: {
+              name: `Brikly ${subscription_tier.charAt(0).toUpperCase() + subscription_tier.slice(1)} Plan`,
+              description: `Brikly ${subscription_tier} subscription - ${billing_period} billing`
             },
             unit_amount: amount,
             recurring: { interval },
@@ -111,24 +134,29 @@ serve(async (req) => {
       mode: "subscription",
       success_url: `${origin}/setup?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${origin}/?canceled=true`,
+      // SECURITY: Store user info in metadata for webhook processing
       metadata: {
         user_id: user.id,
         subscription_tier,
         billing_period,
         company_id: company_id || ''
-      }
+      },
+      // SECURITY: Allow promotion codes for discounts
+      allow_promotion_codes: true,
+      // Collect billing address for compliance
+      billing_address_collection: 'auto',
     });
 
     logStep("Stripe checkout session created", { sessionId: session.id, url: session.url });
 
-    // Update company subscription status to 'pending' if company_id provided with site isolation
+    // Update company subscription status to 'pending' if company_id provided
     if (company_id) {
       const supabaseService = createClient(
         Deno.env.get("SUPABASE_URL") ?? "",
         Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
       );
 
-      let updateQuery = supabaseService
+      await supabaseService
         .from("companies")
         .update({
           subscription_tier,
@@ -137,17 +165,30 @@ serve(async (req) => {
         })
         .eq("id", company_id);
 
-      if (siteId) {
-        updateQuery = updateQuery.eq("site_id", siteId);  // CRITICAL: Site isolation on update
-      }
-
-      await updateQuery;
-
-      logStep("Updated company subscription status", { company_id, siteId, status: "pending" });
+      logStep("Updated company subscription status", { company_id, status: "pending" });
     }
 
+    // Also create/update subscriber record for this user
+    const supabaseService = createClient(
+      Deno.env.get("SUPABASE_URL") ?? "",
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
+    );
+
+    await supabaseService
+      .from("subscribers")
+      .upsert({
+        user_id: user.id,
+        email: user.email,
+        stripe_customer_id: customerId || null,
+        subscribed: false,
+        subscription_tier: null,
+        updated_at: new Date().toISOString()
+      }, { onConflict: 'user_id' });
+
+    logStep("Ensured subscriber record exists");
+
     return new Response(
-      JSON.stringify({ 
+      JSON.stringify({
         url: session.url,
         session_id: session.id
       }),
@@ -161,8 +202,9 @@ serve(async (req) => {
     const errorMessage = error instanceof Error ? error.message : String(error);
     logStep("ERROR in create-checkout", { message: errorMessage });
     console.error("Error creating checkout:", error);
+    // SECURITY: Return generic error message to client
     return new Response(
-      JSON.stringify({ error: errorMessage }),
+      JSON.stringify({ error: "Failed to create checkout session" }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 500,

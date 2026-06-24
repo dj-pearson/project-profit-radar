@@ -67,16 +67,50 @@ class MobileNotificationService {
     });
   }
 
+  /**
+   * Validates that an ID is safe for use in URLs (UUID format or numeric)
+   * Security: Prevents open redirect attacks by validating IDs
+   */
+  private isValidId(id: any): boolean {
+    if (!id || typeof id !== 'string') return false;
+
+    // Check if it's a valid UUID format (8-4-4-4-12)
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    // Or a valid numeric ID
+    const numericRegex = /^[0-9]+$/;
+
+    return uuidRegex.test(id) || numericRegex.test(id);
+  }
+
+  /**
+   * Safely encodes a URL parameter
+   * Security: Prevents injection attacks by encoding special characters
+   */
+  private encodeParam(value: string): string {
+    return encodeURIComponent(value);
+  }
+
   private handleNotificationTap(data: any) {
+    // Security: Validate all IDs before using them in URLs to prevent open redirect attacks
     if (data?.type === 'inspection') {
-      // Navigate to inspection
-      window.location.href = `/mobile?tab=inspections&id=${data.inspectionId}`;
+      if (this.isValidId(data.inspectionId)) {
+        // Navigate to inspection with validated and encoded ID
+        const safeId = this.encodeParam(data.inspectionId);
+        window.location.href = `/mobile?tab=inspections&id=${safeId}`;
+      } else {
+        console.error('Invalid inspection ID format');
+      }
     } else if (data?.type === 'safety') {
-      // Navigate to safety reports
+      // Navigate to safety reports (no user input)
       window.location.href = `/mobile?tab=safety`;
     } else if (data?.type === 'deficiency') {
-      // Navigate to punch list
-      window.location.href = `/mobile?tab=punch-lists&id=${data.deficiencyId}`;
+      if (this.isValidId(data.deficiencyId)) {
+        // Navigate to punch list with validated and encoded ID
+        const safeId = this.encodeParam(data.deficiencyId);
+        window.location.href = `/mobile?tab=punch-lists&id=${safeId}`;
+      } else {
+        console.error('Invalid deficiency ID format');
+      }
     }
   }
 

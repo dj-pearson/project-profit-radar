@@ -15,24 +15,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
+import { AccessibleModal } from "@/components/accessibility/AccessibleModal";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
-import { LoadingState } from "@/components/ui/loading-spinner";
 import { ProjectCardSkeleton } from "@/components/ui/loading-skeleton";
-import {
-  ResponsiveContainer,
-  ResponsiveGrid,
-} from "@/components/layout/ResponsiveContainer";
-import { TaskManager } from "@/components/tasks/TaskManager";
-import { supabase } from "@/integrations/supabase/client";
+import { ResponsiveGrid } from "@/components/layout/ResponsiveContainer";
+import { VirtualizedGrid } from "@/components/ui/virtualized-grid";
+import { SharedElement, sharedId } from "@/components/mobile/SharedElementTransition";
 import { useToast } from "@/hooks/use-toast";
 import { gtag } from "@/hooks/useGoogleAnalytics";
 import { usePersistedState } from "@/hooks/usePersistedState";
@@ -54,6 +44,9 @@ import {
   Package,
   FilterX,
   SlidersHorizontal,
+  ArrowUpDown,
+  ArrowUp,
+  ArrowDown,
 } from "lucide-react";
 import { projectService, ProjectWithRelations } from "@/services/projectService";
 import {
@@ -62,17 +55,6 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
 import {
   Popover,
   PopoverContent,
@@ -86,6 +68,8 @@ import { BulkActionsToolbar } from "@/components/projects/BulkActionsToolbar";
 import { Checkbox } from "@/components/ui/checkbox";
 import { FilterPresetsManager } from "@/components/filters/FilterPresetsManager";
 import { CSVImportButton } from "@/components/smart-import";
+import { AccessiblePageWrapper } from "@/components/accessibility/AccessiblePageWrapper";
+import { ProjectHealthBadge } from "@/components/projects/ProjectHealthBadge";
 
 interface Project {
   id: string;
@@ -123,6 +107,7 @@ const Projects = () => {
   const [saveTemplateProject, setSaveTemplateProject] = useState<ProjectWithRelations | null>(null);
   const [saveTemplateDialogOpen, setSaveTemplateDialogOpen] = useState(false);
   const [selectedProjects, setSelectedProjects] = useState<Set<string>>(new Set());
+  const [deletingProject, setDeletingProject] = useState<{ id: string; name: string } | null>(null);
 
   // Advanced filter states with persistence
   const [budgetMin, setBudgetMin] = usePersistedState<string>("projects-budget-min", "");
@@ -134,6 +119,28 @@ const Projects = () => {
   const [taskFilter, setTaskFilter] = usePersistedState<string>("projects-task-filter", "");
   const [documentFilter, setDocumentFilter] = usePersistedState<string>("projects-document-filter", "");
 
+  // Sort state
+  type SortField = 'name' | 'status' | 'budget' | 'start_date' | 'completion_percentage';
+  type SortDirection = 'asc' | 'desc';
+  const [sortField, setSortField] = usePersistedState<SortField>("projects-sort-field", "name");
+  const [sortDirection, setSortDirection] = usePersistedState<SortDirection>("projects-sort-dir", "asc");
+
+  const toggleSort = (field: SortField) => {
+    if (sortField === field) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortField(field);
+      setSortDirection('asc');
+    }
+  };
+
+  const SortIcon = ({ field }: { field: SortField }) => {
+    if (sortField !== field) return <ArrowUpDown className="h-3 w-3 ml-1 opacity-50" aria-hidden="true" />;
+    return sortDirection === 'asc'
+      ? <ArrowUp className="h-3 w-3 ml-1" aria-hidden="true" />
+      : <ArrowDown className="h-3 w-3 ml-1" aria-hidden="true" />;
+  };
+
   useEffect(() => {
     loadProjects();
   }, []);
@@ -144,11 +151,11 @@ const Projects = () => {
       const companyId = userProfile?.role !== "root_admin" ? userProfile?.company_id : undefined;
       const data = await projectService.getProjects(companyId);
       setProjects(data || []);
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast({
         variant: "destructive",
         title: "Error loading projects",
-        description: error.message,
+        description: error instanceof Error ? error.message : "Unknown error",
       });
     } finally {
       setLoading(false);
@@ -171,7 +178,7 @@ const Projects = () => {
 
   const handleUpdateProject = async (
     projectId: string,
-    updates: any
+    updates: Partial<Project>
   ) => {
     try {
       // Pass company_id to enforce access control (null for root_admin)
@@ -188,11 +195,11 @@ const Projects = () => {
         title: "Project updated",
         description: "Project has been updated successfully.",
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast({
         variant: "destructive",
         title: "Error updating project",
-        description: error.message,
+        description: error instanceof Error ? error.message : "Unknown error",
       });
     }
   };
@@ -208,11 +215,11 @@ const Projects = () => {
         title: "Project deleted",
         description: "Project has been deleted successfully.",
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast({
         variant: "destructive",
         title: "Error deleting project",
-        description: error.message,
+        description: error instanceof Error ? error.message : "Unknown error",
       });
     }
   };
@@ -286,20 +293,24 @@ const Projects = () => {
       endDate: endDate?.toISOString(),
       materialFilter,
       taskFilter,
-      documentFilter
+      documentFilter,
+      sortField,
+      sortDirection
     };
   };
 
-  const handleLoadPreset = (filters: any) => {
-    setSearchTerm(filters.searchTerm || "");
-    setStatusFilter(filters.statusFilter || "all");
-    setBudgetMin(filters.budgetMin || "");
-    setBudgetMax(filters.budgetMax || "");
-    setStartDate(filters.startDate ? new Date(filters.startDate) : undefined);
-    setEndDate(filters.endDate ? new Date(filters.endDate) : undefined);
-    setMaterialFilter(filters.materialFilter || "");
-    setTaskFilter(filters.taskFilter || "");
-    setDocumentFilter(filters.documentFilter || "");
+  const handleLoadPreset = (filters: Record<string, unknown>) => {
+    setSearchTerm((filters.searchTerm as string) || "");
+    setStatusFilter((filters.statusFilter as string) || "all");
+    setBudgetMin((filters.budgetMin as string) || "");
+    setBudgetMax((filters.budgetMax as string) || "");
+    setStartDate(filters.startDate ? new Date(filters.startDate as string) : undefined);
+    setEndDate(filters.endDate ? new Date(filters.endDate as string) : undefined);
+    setMaterialFilter((filters.materialFilter as string) || "");
+    setTaskFilter((filters.taskFilter as string) || "");
+    setDocumentFilter((filters.documentFilter as string) || "");
+    if (filters.sortField) setSortField(filters.sortField as SortField);
+    if (filters.sortDirection) setSortDirection(filters.sortDirection as SortDirection);
   };
 
   const toggleProjectSelection = (projectId: string) => {
@@ -349,7 +360,7 @@ const Projects = () => {
       (project.materials &&
         Array.isArray(project.materials) &&
         project.materials.some(
-          (material: any) =>
+          (material) =>
             material.name
               ?.toLowerCase()
               .includes(materialFilter.toLowerCase()) ||
@@ -364,7 +375,7 @@ const Projects = () => {
       (project.tasks &&
         Array.isArray(project.tasks) &&
         project.tasks.some(
-          (task: any) =>
+          (task) =>
             task.name?.toLowerCase().includes(taskFilter.toLowerCase()) ||
             task.description?.toLowerCase().includes(taskFilter.toLowerCase())
         ));
@@ -375,9 +386,9 @@ const Projects = () => {
       (project.documents &&
         Array.isArray(project.documents) &&
         project.documents.some(
-          (doc: any) =>
+          (doc) =>
             doc.name?.toLowerCase().includes(documentFilter.toLowerCase()) ||
-            doc.description
+            doc.file_path
               ?.toLowerCase()
               .includes(documentFilter.toLowerCase())
         ));
@@ -392,6 +403,22 @@ const Projects = () => {
       matchesTask &&
       matchesDocument
     );
+  }).sort((a, b) => {
+    const dir = sortDirection === 'asc' ? 1 : -1;
+    switch (sortField) {
+      case 'name':
+        return dir * a.name.localeCompare(b.name);
+      case 'status':
+        return dir * a.status.localeCompare(b.status);
+      case 'budget':
+        return dir * ((a.budget || 0) - (b.budget || 0));
+      case 'start_date':
+        return dir * (new Date(a.start_date).getTime() - new Date(b.start_date).getTime());
+      case 'completion_percentage':
+        return dir * ((a.completion_percentage || 0) - (b.completion_percentage || 0));
+      default:
+        return 0;
+    }
   });
 
   const getProjectsByStatus = (status: string) => {
@@ -407,9 +434,15 @@ const Projects = () => {
 
   const ProjectCard = ({ project }: { project: ProjectWithRelations }) => {
     const isSelected = selectedProjects.has(project.id);
+    const projectCardId = `project-${project.id}`;
 
     return (
-      <Card className={`hover:shadow-md transition-all ${isSelected ? 'border-primary bg-primary/5' : ''}`}>
+      <SharedElement id={sharedId('project', project.id)} className="block">
+      <Card
+        className={`hover:shadow-md transition-all ${isSelected ? 'border-primary bg-primary/5' : ''}`}
+        role="article"
+        aria-labelledby={`${projectCardId}-title`}
+      >
         <CardHeader className="pb-3 px-3 sm:px-6">
           <div className="flex items-start gap-3">
             {/* Checkbox */}
@@ -418,48 +451,59 @@ const Projects = () => {
                 checked={isSelected}
                 onCheckedChange={() => toggleProjectSelection(project.id)}
                 onClick={(e) => e.stopPropagation()}
+                aria-label={`Select project ${project.name}`}
               />
             </div>
 
             <div className="flex items-start justify-between gap-2 flex-1 min-w-0">
               <div className="space-y-1 min-w-0 flex-1">
-                <CardTitle className="text-base sm:text-lg leading-tight break-words">
+                <CardTitle id={`${projectCardId}-title`} className="text-base sm:text-lg leading-tight break-words">
                   {project.name}
                 </CardTitle>
                 <div className="flex items-center text-sm text-muted-foreground">
-                  <User className="h-3 w-3 mr-1 shrink-0" />
+                  <User className="h-3 w-3 mr-1 shrink-0" aria-hidden="true" />
                   <span className="break-words">{project.client_name}</span>
                 </div>
               </div>
               <div className="flex items-center gap-1 sm:gap-2 shrink-0">
+                <ProjectHealthBadge
+                  budget={project.total_budget}
+                  spent={project.actual_cost || 0}
+                  completion_percentage={project.completion_percentage}
+                  start_date={project.start_date}
+                  end_date={project.end_date}
+                  status={project.status}
+                  className="hidden sm:flex"
+                />
                 <Badge
                   variant={getStatusColor(project.status)}
                   className="text-xs px-1.5 py-0.5"
+                  aria-label={`Status: ${project.status.replace("_", " ")}`}
                 >
                   <span className="hidden sm:inline">
                     {project.status.replace("_", " ")}
                   </span>
-                  <span className="sm:hidden">
+                  <span className="sm:hidden" aria-hidden="true">
                     {project.status.charAt(0).toUpperCase()}
                   </span>
                 </Badge>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="sm" className="h-8 w-8 p-0" aria-label="Project actions menu">
-                  <MoreHorizontal className="h-4 w-4" />
+                <Button variant="ghost" size="sm" className="h-8 w-8 p-0" aria-label={`Actions for project ${project.name}`}>
+                  <MoreHorizontal className="h-4 w-4" aria-hidden="true" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
                 <DropdownMenuItem
                   onClick={() => navigate(`/projects/${project.id}`)}
                 >
-                  <Eye className="h-4 w-4 mr-2" />
+                  <Eye className="h-4 w-4 mr-2" aria-hidden="true" />
                   View Project Details
                 </DropdownMenuItem>
                 <DropdownMenuItem
                   onClick={() => navigate(`/projects/${project.id}`)}
                 >
-                  <Edit className="h-4 w-4 mr-2" />
+                  <Edit className="h-4 w-4 mr-2" aria-hidden="true" />
                   Edit Project
                 </DropdownMenuItem>
                 {['admin', 'root_admin'].includes(userProfile?.role || '') && (
@@ -469,35 +513,16 @@ const Projects = () => {
                       setSaveTemplateDialogOpen(true);
                     }}
                   >
-                    <Plus className="h-4 w-4 mr-2" />
+                    <Plus className="h-4 w-4 mr-2" aria-hidden="true" />
                     Save as Template
                   </DropdownMenuItem>
                 )}
-                <AlertDialog>
-                  <AlertDialogTrigger asChild>
-                    <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
-                      <Trash2 className="h-4 w-4 mr-2" />
-                      Delete Project
-                    </DropdownMenuItem>
-                  </AlertDialogTrigger>
-                  <AlertDialogContent>
-                    <AlertDialogHeader>
-                      <AlertDialogTitle>Delete Project</AlertDialogTitle>
-                      <AlertDialogDescription>
-                        Are you sure you want to delete "{project.name}"? This
-                        action cannot be undone.
-                      </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                      <AlertDialogCancel>Cancel</AlertDialogCancel>
-                      <AlertDialogAction
-                        onClick={() => handleDeleteProject(project.id)}
-                      >
-                        Delete
-                      </AlertDialogAction>
-                    </AlertDialogFooter>
-                  </AlertDialogContent>
-                </AlertDialog>
+                <DropdownMenuItem
+                  onSelect={() => setDeletingProject({ id: project.id, name: project.name })}
+                >
+                  <Trash2 className="h-4 w-4 mr-2" aria-hidden="true" />
+                  Delete Project
+                </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
               </div>
@@ -507,29 +532,37 @@ const Projects = () => {
         <CardContent className="space-y-3 px-3 sm:px-6">
         {project.site_address && (
           <div className="flex items-start text-sm text-muted-foreground">
-            <MapPin className="h-3 w-3 mr-1 mt-0.5 shrink-0" />
+            <MapPin className="h-3 w-3 mr-1 mt-0.5 shrink-0" aria-hidden="true" />
             <span className="break-words">{project.site_address}</span>
           </div>
         )}
 
         <div className="space-y-2">
           <div className="flex items-center justify-between text-sm">
-            <span>Progress</span>
+            <span id={`${projectCardId}-progress-label`}>Progress</span>
             <span
               className={getHealthColor(
                 project.completion_percentage,
                 project.status
               )}
+              aria-label={`${project.completion_percentage}% complete`}
             >
               {project.completion_percentage}%
             </span>
           </div>
-          <Progress value={project.completion_percentage} className="h-2" />
+          <Progress
+            value={project.completion_percentage}
+            className="h-2"
+            aria-labelledby={`${projectCardId}-progress-label`}
+            aria-valuenow={project.completion_percentage}
+            aria-valuemin={0}
+            aria-valuemax={100}
+          />
         </div>
 
         {project.budget && (
           <div className="flex items-center text-sm text-muted-foreground">
-            <DollarSign className="h-3 w-3 mr-1 shrink-0" />
+            <DollarSign className="h-3 w-3 mr-1 shrink-0" aria-hidden="true" />
             <span className="break-words">
               Budget: ${project.budget.toLocaleString()}
             </span>
@@ -538,39 +571,45 @@ const Projects = () => {
 
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 text-xs text-muted-foreground">
           <div className="flex items-center">
-            <Calendar className="h-3 w-3 mr-1 shrink-0" />
+            <Calendar className="h-3 w-3 mr-1 shrink-0" aria-hidden="true" />
             <span className="whitespace-nowrap">
+              <span className="sr-only">Start date: </span>
               {new Date(project.start_date).toLocaleDateString()}
             </span>
           </div>
           <div className="whitespace-nowrap">
+            <span className="sr-only">End date: </span>
             Due: {new Date(project.end_date).toLocaleDateString()}
           </div>
         </div>
       </CardContent>
     </Card>
+    </SharedElement>
     );
   };
 
   if (loading) {
     return (
-      <DashboardLayout title="Projects" showTrialBanner={false}>
-        <div className="space-y-6">
-          <div className="flex justify-end">
-            <div className="h-9 w-32 bg-muted animate-pulse rounded-md" />
+      <AccessiblePageWrapper pageTitle="Projects">
+        <DashboardLayout title="Projects" showTrialBanner={false} hasAccessibleWrapper>
+          <div className="space-y-6">
+            <div className="flex justify-end">
+              <div className="h-9 w-32 bg-muted animate-pulse rounded-md" />
+            </div>
+            <ResponsiveGrid cols={{ default: 1, md: 2, lg: 3 }} className="gap-6">
+              {[...Array(6)].map((_, i) => (
+                <ProjectCardSkeleton key={i} />
+              ))}
+            </ResponsiveGrid>
           </div>
-          <ResponsiveGrid cols={{ default: 1, md: 2, lg: 3 }} className="gap-6">
-            {[...Array(6)].map((_, i) => (
-              <ProjectCardSkeleton key={i} />
-            ))}
-          </ResponsiveGrid>
-        </div>
-      </DashboardLayout>
+        </DashboardLayout>
+      </AccessiblePageWrapper>
     );
   }
 
   return (
-    <DashboardLayout title="Projects" showTrialBanner={false}>
+    <AccessiblePageWrapper pageTitle="Projects">
+    <DashboardLayout title="Projects" showTrialBanner={false} hasAccessibleWrapper>
       <div className="flex justify-end gap-2 mb-4 sm:mb-6">
         <CSVImportButton
           dataType="projects"
@@ -582,32 +621,36 @@ const Projects = () => {
           onClick={handleCreateProject}
           size="sm"
           className="text-sm"
+          aria-label="Create new project"
         >
-          <Plus className="h-4 w-4 mr-2" />
+          <Plus className="h-4 w-4 mr-2" aria-hidden="true" />
           <span className="hidden sm:inline">New Project</span>
           <span className="sm:hidden">New</span>
-          <kbd className="ml-2 hidden lg:inline-block px-2 py-0.5 text-xs bg-muted rounded border border-border">
+          <kbd className="ml-2 hidden lg:inline-block px-2 py-0.5 text-xs bg-muted rounded border border-border" aria-hidden="true">
             Ctrl+N
           </kbd>
         </Button>
       </div>
       {/* Search and Filters */}
-      <div className="space-y-4 mb-6">
+      <div className="space-y-4 mb-6" role="search" aria-label="Filter projects">
         {/* Main Search Bar */}
         <div className="flex flex-col gap-4">
           <div className="relative">
-            <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+            <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" aria-hidden="true" />
+            <label htmlFor="project-search" className="sr-only">Search projects</label>
             <Input
+              id="project-search"
               placeholder="Search projects..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="pl-10"
+              aria-label="Search projects by name, client, address, or description"
             />
           </div>
           <div className="flex flex-col sm:flex-row gap-2">
             <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-full">
-                <Filter className="h-4 w-4 mr-2" />
+              <SelectTrigger className="w-full" aria-label="Filter by project status">
+                <Filter className="h-4 w-4 mr-2" aria-hidden="true" />
                 <SelectValue placeholder="Filter by status" />
               </SelectTrigger>
               <SelectContent>
@@ -631,8 +674,10 @@ const Projects = () => {
                 variant="outline"
                 onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
                 className="flex-1 sm:flex-none"
+                aria-expanded={showAdvancedFilters}
+                aria-controls="advanced-filters"
               >
-                <SlidersHorizontal className="h-4 w-4 mr-2" />
+                <SlidersHorizontal className="h-4 w-4 mr-2" aria-hidden="true" />
                 <span className="hidden sm:inline">Advanced</span>
                 <span className="sm:hidden">Filters</span>
               </Button>
@@ -647,8 +692,9 @@ const Projects = () => {
                   variant="ghost"
                   onClick={clearAllFilters}
                   className="flex-1 sm:flex-none"
+                  aria-label="Clear all filters"
                 >
-                  <FilterX className="h-4 w-4 mr-2" />
+                  <FilterX className="h-4 w-4 mr-2" aria-hidden="true" />
                   <span className="hidden sm:inline">Clear</span>
                   <span className="sm:hidden">Clear</span>
                 </Button>
@@ -659,11 +705,11 @@ const Projects = () => {
 
         {/* Advanced Filters */}
         {showAdvancedFilters && (
-          <Card className="p-3 sm:p-4">
+          <Card id="advanced-filters" className="p-3 sm:p-4" role="region" aria-label="Advanced filters">
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
               {/* Budget Range */}
-              <div className="space-y-2">
-                <Label className="text-sm font-medium">Budget Range</Label>
+              <fieldset className="space-y-2">
+                <legend className="text-sm font-medium">Budget Range</legend>
                 <div className="flex gap-2">
                   <Input
                     placeholder="Min ($)"
@@ -671,6 +717,7 @@ const Projects = () => {
                     value={budgetMin}
                     onChange={(e) => setBudgetMin(e.target.value)}
                     className="text-sm"
+                    aria-label="Minimum budget"
                   />
                   <Input
                     placeholder="Max ($)"
@@ -678,20 +725,22 @@ const Projects = () => {
                     value={budgetMax}
                     onChange={(e) => setBudgetMax(e.target.value)}
                     className="text-sm"
+                    aria-label="Maximum budget"
                   />
                 </div>
-              </div>
+              </fieldset>
 
               {/* Start Date Range */}
               <div className="space-y-2">
-                <Label className="text-sm font-medium">Start Date From</Label>
+                <Label id="start-date-label" className="text-sm font-medium">Start Date From</Label>
                 <Popover>
                   <PopoverTrigger asChild>
                     <Button
                       variant="outline"
                       className="w-full justify-start text-left font-normal"
+                      aria-labelledby="start-date-label"
                     >
-                      <CalendarDays className="mr-2 h-4 w-4" />
+                      <CalendarDays className="mr-2 h-4 w-4" aria-hidden="true" />
                       {startDate ? format(startDate, "PPP") : "Pick start date"}
                     </Button>
                   </PopoverTrigger>
@@ -709,14 +758,15 @@ const Projects = () => {
 
               {/* End Date Range */}
               <div className="space-y-2">
-                <Label className="text-sm font-medium">End Date To</Label>
+                <Label id="end-date-label" className="text-sm font-medium">End Date To</Label>
                 <Popover>
                   <PopoverTrigger asChild>
                     <Button
                       variant="outline"
                       className="w-full justify-start text-left font-normal"
+                      aria-labelledby="end-date-label"
                     >
-                      <CalendarDays className="mr-2 h-4 w-4" />
+                      <CalendarDays className="mr-2 h-4 w-4" aria-hidden="true" />
                       {endDate ? format(endDate, "PPP") : "Pick end date"}
                     </Button>
                   </PopoverTrigger>
@@ -734,10 +784,11 @@ const Projects = () => {
 
               {/* Materials Filter */}
               <div className="space-y-2">
-                <Label className="text-sm font-medium">Materials</Label>
+                <Label htmlFor="materials-filter" className="text-sm font-medium">Materials</Label>
                 <div className="relative">
-                  <Package className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                  <Package className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" aria-hidden="true" />
                   <Input
+                    id="materials-filter"
                     placeholder="Search materials..."
                     value={materialFilter}
                     onChange={(e) => setMaterialFilter(e.target.value)}
@@ -748,10 +799,11 @@ const Projects = () => {
 
               {/* Tasks Filter */}
               <div className="space-y-2">
-                <Label className="text-sm font-medium">Tasks</Label>
+                <Label htmlFor="tasks-filter" className="text-sm font-medium">Tasks</Label>
                 <div className="relative">
-                  <Calendar className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                  <Calendar className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" aria-hidden="true" />
                   <Input
+                    id="tasks-filter"
                     placeholder="Search tasks..."
                     value={taskFilter}
                     onChange={(e) => setTaskFilter(e.target.value)}
@@ -762,10 +814,11 @@ const Projects = () => {
 
               {/* Documents Filter */}
               <div className="space-y-2">
-                <Label className="text-sm font-medium">Documents</Label>
+                <Label htmlFor="documents-filter" className="text-sm font-medium">Documents</Label>
                 <div className="relative">
-                  <FileText className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                  <FileText className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" aria-hidden="true" />
                   <Input
+                    id="documents-filter"
                     placeholder="Search documents..."
                     value={documentFilter}
                     onChange={(e) => setDocumentFilter(e.target.value)}
@@ -778,7 +831,7 @@ const Projects = () => {
         )}
 
         {/* Results Count */}
-        <div className="flex items-center justify-between text-sm text-muted-foreground">
+        <div className="flex items-center justify-between text-sm text-muted-foreground" role="status" aria-live="polite">
           <span>
             Showing {filteredProjects.length} of {projects.length} projects
           </span>
@@ -788,6 +841,31 @@ const Projects = () => {
             </span>
           )}
         </div>
+      </div>
+
+      {/* Sort Bar */}
+      <div className="flex items-center gap-1 mb-4 text-xs text-muted-foreground overflow-x-auto pb-1" role="toolbar" aria-label="Sort projects">
+        <span className="font-medium mr-1 whitespace-nowrap">Sort by:</span>
+        {([
+          { field: 'name' as SortField, label: 'Name' },
+          { field: 'status' as SortField, label: 'Status' },
+          { field: 'budget' as SortField, label: 'Budget' },
+          { field: 'start_date' as SortField, label: 'Start Date' },
+          { field: 'completion_percentage' as SortField, label: 'Progress' },
+        ]).map(({ field, label }) => (
+          <Button
+            key={field}
+            variant={sortField === field ? "secondary" : "ghost"}
+            size="sm"
+            className="h-7 text-xs px-2"
+            onClick={() => toggleSort(field)}
+            aria-label={`Sort by ${label} ${sortField === field ? (sortDirection === 'asc' ? 'descending' : 'ascending') : 'ascending'}`}
+            aria-pressed={sortField === field}
+          >
+            {label}
+            <SortIcon field={field} />
+          </Button>
+        ))}
       </div>
 
       {/* Bulk Actions Toolbar */}
@@ -802,31 +880,31 @@ const Projects = () => {
       />
 
       {/* Projects Tabs */}
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 h-auto">
-          <TabsTrigger value="active" className="text-xs sm:text-sm py-2">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6" aria-label="Projects by status">
+        <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 h-auto" aria-label="Project status categories">
+          <TabsTrigger value="active" className="text-xs sm:text-sm py-2" aria-label={`Active projects: ${activeProjects.length}`}>
             <span className="hidden sm:inline">
               Active ({activeProjects.length})
             </span>
-            <span className="sm:hidden">Active</span>
+            <span className="sm:hidden" aria-hidden="true">Active</span>
           </TabsTrigger>
-          <TabsTrigger value="completed" className="text-xs sm:text-sm py-2">
+          <TabsTrigger value="completed" className="text-xs sm:text-sm py-2" aria-label={`Completed projects: ${completedProjects.length}`}>
             <span className="hidden sm:inline">
               Completed ({completedProjects.length})
             </span>
-            <span className="sm:hidden">Done</span>
+            <span className="sm:hidden" aria-hidden="true">Done</span>
           </TabsTrigger>
-          <TabsTrigger value="on_hold" className="text-xs sm:text-sm py-2">
+          <TabsTrigger value="on_hold" className="text-xs sm:text-sm py-2" aria-label={`On hold projects: ${onHoldProjects.length}`}>
             <span className="hidden sm:inline">
               On Hold ({onHoldProjects.length})
             </span>
-            <span className="sm:hidden">Hold</span>
+            <span className="sm:hidden" aria-hidden="true">Hold</span>
           </TabsTrigger>
-          <TabsTrigger value="planning" className="text-xs sm:text-sm py-2">
+          <TabsTrigger value="planning" className="text-xs sm:text-sm py-2" aria-label={`Planning projects: ${planningProjects.length}`}>
             <span className="hidden sm:inline">
               Planning ({planningProjects.length})
             </span>
-            <span className="sm:hidden">Plan</span>
+            <span className="sm:hidden" aria-hidden="true">Plan</span>
           </TabsTrigger>
         </TabsList>
 
@@ -834,7 +912,7 @@ const Projects = () => {
           {activeProjects.length === 0 ? (
             <Card>
               <CardContent className="flex flex-col items-center justify-center py-12">
-                <Building2 className="h-12 w-12 text-muted-foreground mb-4" />
+                <Building2 className="h-12 w-12 text-muted-foreground mb-4" aria-hidden="true" />
                 <h3 className="text-lg font-semibold mb-2">
                   No active projects
                 </h3>
@@ -842,20 +920,21 @@ const Projects = () => {
                   Get started by creating your first project.
                 </p>
                 <Button onClick={() => handleCreateProject("empty_state_click")}>
-                  <Plus className="h-4 w-4 mr-2" />
+                  <Plus className="h-4 w-4 mr-2" aria-hidden="true" />
                   Create Project
                 </Button>
               </CardContent>
             </Card>
           ) : (
-            <ResponsiveGrid
-              cols={{ default: 1, md: 2, lg: 3 }}
-              className="gap-6"
-            >
-              {activeProjects.map((project) => (
+            <VirtualizedGrid
+              items={activeProjects}
+              renderItem={(project) => (
                 <ProjectCard key={project.id} project={project} />
-              ))}
-            </ResponsiveGrid>
+              )}
+              columns={3}
+              estimateRowHeight={280}
+              virtualizeThreshold={50}
+            />
           )}
         </TabsContent>
 
@@ -863,7 +942,7 @@ const Projects = () => {
           {completedProjects.length === 0 ? (
             <Card>
               <CardContent className="flex flex-col items-center justify-center py-12">
-                <Building2 className="h-12 w-12 text-muted-foreground mb-4" />
+                <Building2 className="h-12 w-12 text-muted-foreground mb-4" aria-hidden="true" />
                 <h3 className="text-lg font-semibold mb-2">
                   No completed projects
                 </h3>
@@ -873,14 +952,15 @@ const Projects = () => {
               </CardContent>
             </Card>
           ) : (
-            <ResponsiveGrid
-              cols={{ default: 1, md: 2, lg: 3 }}
-              className="gap-6"
-            >
-              {completedProjects.map((project) => (
+            <VirtualizedGrid
+              items={completedProjects}
+              renderItem={(project) => (
                 <ProjectCard key={project.id} project={project} />
-              ))}
-            </ResponsiveGrid>
+              )}
+              columns={3}
+              estimateRowHeight={280}
+              virtualizeThreshold={50}
+            />
           )}
         </TabsContent>
 
@@ -888,7 +968,7 @@ const Projects = () => {
           {onHoldProjects.length === 0 ? (
             <Card>
               <CardContent className="flex flex-col items-center justify-center py-12">
-                <Building2 className="h-12 w-12 text-muted-foreground mb-4" />
+                <Building2 className="h-12 w-12 text-muted-foreground mb-4" aria-hidden="true" />
                 <h3 className="text-lg font-semibold mb-2">
                   No projects on hold
                 </h3>
@@ -898,14 +978,15 @@ const Projects = () => {
               </CardContent>
             </Card>
           ) : (
-            <ResponsiveGrid
-              cols={{ default: 1, md: 2, lg: 3 }}
-              className="gap-6"
-            >
-              {onHoldProjects.map((project) => (
+            <VirtualizedGrid
+              items={onHoldProjects}
+              renderItem={(project) => (
                 <ProjectCard key={project.id} project={project} />
-              ))}
-            </ResponsiveGrid>
+              )}
+              columns={3}
+              estimateRowHeight={280}
+              virtualizeThreshold={50}
+            />
           )}
         </TabsContent>
 
@@ -913,7 +994,7 @@ const Projects = () => {
           {planningProjects.length === 0 ? (
             <Card>
               <CardContent className="flex flex-col items-center justify-center py-12">
-                <Building2 className="h-12 w-12 text-muted-foreground mb-4" />
+                <Building2 className="h-12 w-12 text-muted-foreground mb-4" aria-hidden="true" />
                 <h3 className="text-lg font-semibold mb-2">
                   No projects in planning
                 </h3>
@@ -923,143 +1004,166 @@ const Projects = () => {
               </CardContent>
             </Card>
           ) : (
-            <ResponsiveGrid
-              cols={{ default: 1, md: 2, lg: 3 }}
-              className="gap-6"
-            >
-              {planningProjects.map((project) => (
+            <VirtualizedGrid
+              items={planningProjects}
+              renderItem={(project) => (
                 <ProjectCard key={project.id} project={project} />
-              ))}
-            </ResponsiveGrid>
+              )}
+              columns={3}
+              estimateRowHeight={280}
+              virtualizeThreshold={50}
+            />
           )}
         </TabsContent>
       </Tabs>
 
-      {/* Edit Project Dialog */}
-      <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
-        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Edit Project</DialogTitle>
-          </DialogHeader>
-          {editingProject && (
-            <form onSubmit={handleEditSubmit} className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="name">Project Name</Label>
-                  <Input
-                    id="name"
-                    name="name"
-                    defaultValue={editingProject.name}
-                    required
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="client_name">Client Name</Label>
-                  <Input
-                    id="client_name"
-                    name="client_name"
-                    defaultValue={editingProject.client_name}
-                    required
-                  />
-                </div>
-              </div>
-
+      {/* Edit Project Modal */}
+      <AccessibleModal
+        isOpen={editDialogOpen}
+        onClose={() => setEditDialogOpen(false)}
+        title="Edit Project"
+        description="Edit project details including name, client, address, status, and dates."
+        size="lg"
+        footer={
+          <>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setEditDialogOpen(false)}
+            >
+              Cancel
+            </Button>
+            <Button type="submit" form="edit-project-form">Update Project</Button>
+          </>
+        }
+      >
+        {editingProject && (
+          <form id="edit-project-form" onSubmit={handleEditSubmit} className="space-y-4" aria-label="Edit project form">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="site_address">Site Address</Label>
+                <Label htmlFor="name">Project Name</Label>
                 <Input
-                  id="site_address"
-                  name="site_address"
-                  defaultValue={editingProject.site_address}
+                  id="name"
+                  name="name"
+                  defaultValue={editingProject.name}
+                  required
+                  aria-required="true"
                 />
               </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="status">Status</Label>
-                  <Select name="status" defaultValue={editingProject.status}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="planning">Planning</SelectItem>
-                      <SelectItem value="active">Active</SelectItem>
-                      <SelectItem value="in_progress">In Progress</SelectItem>
-                      <SelectItem value="on_hold">On Hold</SelectItem>
-                      <SelectItem value="completed">Completed</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <Label htmlFor="completion_percentage">Completion %</Label>
-                  <Input
-                    id="completion_percentage"
-                    name="completion_percentage"
-                    type="number"
-                    min="0"
-                    max="100"
-                    defaultValue={editingProject.completion_percentage}
-                  />
-                </div>
-              </div>
-
               <div>
-                <Label htmlFor="budget">Budget</Label>
+                <Label htmlFor="client_name">Client Name</Label>
                 <Input
-                  id="budget"
-                  name="budget"
+                  id="client_name"
+                  name="client_name"
+                  defaultValue={editingProject.client_name}
+                  required
+                  aria-required="true"
+                />
+              </div>
+            </div>
+
+            <div>
+              <Label htmlFor="site_address">Site Address</Label>
+              <Input
+                id="site_address"
+                name="site_address"
+                defaultValue={editingProject.site_address}
+              />
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="status">Status</Label>
+                <Select name="status" defaultValue={editingProject.status}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="planning">Planning</SelectItem>
+                    <SelectItem value="active">Active</SelectItem>
+                    <SelectItem value="in_progress">In Progress</SelectItem>
+                    <SelectItem value="on_hold">On Hold</SelectItem>
+                    <SelectItem value="completed">Completed</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label htmlFor="completion_percentage">Completion %</Label>
+                <Input
+                  id="completion_percentage"
+                  name="completion_percentage"
                   type="number"
-                  step="0.01"
-                  defaultValue={editingProject.budget}
+                  min="0"
+                  max="100"
+                  defaultValue={editingProject.completion_percentage}
                 />
               </div>
+            </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="start_date">Start Date</Label>
-                  <Input
-                    id="start_date"
-                    name="start_date"
-                    type="date"
-                    defaultValue={editingProject.start_date}
-                    required
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="end_date">End Date</Label>
-                  <Input
-                    id="end_date"
-                    name="end_date"
-                    type="date"
-                    defaultValue={editingProject.end_date}
-                    required
-                  />
-                </div>
-              </div>
+            <div>
+              <Label htmlFor="budget">Budget</Label>
+              <Input
+                id="budget"
+                name="budget"
+                type="number"
+                step="0.01"
+                defaultValue={editingProject.budget}
+              />
+            </div>
 
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="description">Description</Label>
-                <Textarea
-                  id="description"
-                  name="description"
-                  defaultValue={editingProject.description}
-                  rows={3}
+                <Label htmlFor="start_date">Start Date</Label>
+                <Input
+                  id="start_date"
+                  name="start_date"
+                  type="date"
+                  defaultValue={editingProject.start_date}
+                  required
+                  aria-required="true"
                 />
               </div>
-
-              <div className="flex justify-end space-x-2 pt-4">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => setEditDialogOpen(false)}
-                >
-                  Cancel
-                </Button>
-                <Button type="submit">Update Project</Button>
+              <div>
+                <Label htmlFor="end_date">End Date</Label>
+                <Input
+                  id="end_date"
+                  name="end_date"
+                  type="date"
+                  defaultValue={editingProject.end_date}
+                  required
+                  aria-required="true"
+                />
               </div>
-            </form>
-          )}
-        </DialogContent>
-      </Dialog>
+            </div>
+
+            <div>
+              <Label htmlFor="description">Description</Label>
+              <Textarea
+                id="description"
+                name="description"
+                defaultValue={editingProject.description}
+                rows={3}
+              />
+            </div>
+          </form>
+        )}
+      </AccessibleModal>
+
+      {/* Delete Project Confirmation Modal */}
+      <AccessibleModal
+        isOpen={!!deletingProject}
+        onClose={() => setDeletingProject(null)}
+        title="Delete Project"
+        description={`Are you sure you want to delete "${deletingProject?.name || ''}"? This action cannot be undone.`}
+        size="sm"
+        disableClickOutside
+        footer={
+          <>
+            <Button variant="outline" onClick={() => setDeletingProject(null)}>Cancel</Button>
+            <Button variant="destructive" onClick={() => { if (deletingProject) { handleDeleteProject(deletingProject.id); setDeletingProject(null); } }}>Delete</Button>
+          </>
+        }
+      />
 
       {/* Upgrade Prompt */}
       <UpgradePrompt
@@ -1082,6 +1186,7 @@ const Projects = () => {
         />
       )}
     </DashboardLayout>
+    </AccessiblePageWrapper>
   );
 };
 

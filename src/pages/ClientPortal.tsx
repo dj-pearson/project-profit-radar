@@ -1,28 +1,17 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { AccessiblePageWrapper } from '@/components/accessibility/AccessiblePageWrapper';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { ProjectCommunication } from '@/components/communication/ProjectCommunication';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
-import { 
-  Building2,
-  Calendar,
-  DollarSign,
-  FileText,
-  Camera,
-  CheckCircle2,
-  Clock,
-  AlertTriangle,
-  CreditCard,
-  ExternalLink
-} from 'lucide-react';
+import { Building2, Calendar, DollarSign, FileText, CheckCircle2, Clock, CreditCard, ExternalLink } from 'lucide-react';
 
 interface Project {
   id: string;
@@ -264,10 +253,12 @@ const ClientPortal = () => {
 
   if (loading || loadingData) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-construction-blue mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Loading your projects...</p>
+      <div className="min-h-screen bg-background p-6">
+        <div className="space-y-6">
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+            {[1,2,3,4].map(i => <div key={i} className="h-24 bg-muted animate-pulse rounded-lg" />)}
+          </div>
+          <div className="h-[300px] bg-muted animate-pulse rounded-lg" />
         </div>
       </div>
     );
@@ -275,7 +266,8 @@ const ClientPortal = () => {
 
   if (projects.length === 0) {
     return (
-      <DashboardLayout title="Client Portal">
+      <AccessiblePageWrapper pageTitle="Client Portal">
+      <DashboardLayout title="Client Portal" hasAccessibleWrapper>
         <Card>
           <CardContent className="text-center py-12">
             <Building2 className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
@@ -286,11 +278,13 @@ const ClientPortal = () => {
           </CardContent>
         </Card>
       </DashboardLayout>
+      </AccessiblePageWrapper>
     );
   }
 
   return (
-    <DashboardLayout title="Client Portal">
+    <AccessiblePageWrapper pageTitle="Client Portal">
+    <DashboardLayout title="Client Portal" hasAccessibleWrapper>
       <div className="space-y-6">
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
           {/* Project Selector */}
@@ -605,6 +599,7 @@ const ClientPortal = () => {
         </div>
       </div>
     </DashboardLayout>
+    </AccessiblePageWrapper>
   );
 };
 

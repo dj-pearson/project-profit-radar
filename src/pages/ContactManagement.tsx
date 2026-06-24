@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 const ContactManagement: React.FC = () => {
   return (
-    <div className="container mx-auto py-6">
+    <main className="container mx-auto py-6" role="main" aria-label="Contact Management">
       <Card>
         <CardHeader>
           <CardTitle>Contact Management</CardTitle>
@@ -12,7 +12,7 @@ const ContactManagement: React.FC = () => {
           <p className="text-muted-foreground">Contact management coming soon...</p>
         </CardContent>
       </Card>
-    </div>
+    </main>
   );
 };
 

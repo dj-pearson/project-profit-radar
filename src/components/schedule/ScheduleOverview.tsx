@@ -1,21 +1,9 @@
 import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Input } from "@/components/ui/input";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-  Calendar,
-  DollarSign,
-  Users,
-  TrendingUp,
-  Clock,
-  AlertTriangle,
-  Search,
-  Filter,
-  ArrowRight,
-} from "lucide-react";
+import { Calendar, DollarSign, TrendingUp, Clock, AlertTriangle, Search, Filter, ArrowRight } from "lucide-react";
 import { format, parseISO, differenceInDays } from "date-fns";
 import { useNavigate } from "react-router-dom";
 

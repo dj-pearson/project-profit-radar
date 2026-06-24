@@ -279,7 +279,7 @@ export const GeofenceManager = () => {
       <CardContent className="space-y-4">
         {/* Permission Check */}
         {!permissionGranted && (
-          <Alert className="border-orange-200 bg-orange-50">
+          <Alert className="rounded-xl glass-thin border-orange-200/60 dark:border-orange-500/30 bg-orange-50/80 dark:bg-orange-950/20">
             <AlertCircle className="h-4 w-4 text-orange-600" />
             <AlertDescription className="text-sm text-orange-900 flex items-center justify-between">
               <span>Location permissions are required for geofencing</span>
@@ -311,7 +311,7 @@ export const GeofenceManager = () => {
 
         {/* Active Regions */}
         {activeRegions.length > 0 && (
-          <Alert className="border-green-200 bg-green-50">
+          <Alert className="rounded-xl glass-thin border-green-200/60 dark:border-green-500/30 bg-green-50/80 dark:bg-green-950/20">
             <CheckCircle className="h-4 w-4 text-green-600" />
             <AlertDescription className="text-sm text-green-900">
               You are currently at: {activeRegions.map((r) => r.name).join(', ')}
@@ -470,7 +470,7 @@ export const GeofenceManager = () => {
         </div>
 
         {/* Info */}
-        <Alert className="border-blue-200 bg-blue-50">
+        <Alert className="rounded-xl glass-thin border-blue-200/60 dark:border-blue-500/30 bg-blue-50/80 dark:bg-blue-950/20">
           <MapPin className="h-4 w-4 text-blue-600" />
           <AlertDescription className="text-sm text-blue-900">
             <strong>How it works:</strong> When you enter or exit a geofenced area, the

@@ -1,4 +1,3 @@
-import React from 'react';
 import { Helmet } from 'react-helmet-async';
 import { Link } from 'react-router-dom';
 import {
@@ -24,21 +23,21 @@ const QuickBooksVsConstructionSoftware = () => {
     "description": "Should contractors use QuickBooks or construction management software? The answer: both. Learn what QuickBooks does well, what it can't do for construction, and why you need both systems working together.",
     "author": {
       "@type": "Organization",
-      "name": "BuildDesk"
+      "name": "Brikly"
     },
     "publisher": {
       "@type": "Organization",
-      "name": "BuildDesk",
+      "name": "Brikly",
       "logo": {
         "@type": "ImageObject",
-        "url": "https://builddesk.com/logo.png"
+        "url": "https://brikly.net/logo.png"
       }
     },
     "datePublished": "2025-01-14",
     "dateModified": "2025-01-14",
     "mainEntityOfPage": {
       "@type": "WebPage",
-      "@id": "https://builddesk.com/resources/quickbooks-vs-construction-software"
+      "@id": "https://brikly.net/resources/quickbooks-vs-construction-software"
     },
     "keywords": "quickbooks vs construction software, quickbooks for construction, construction management software, quickbooks limitations, construction accounting software"
   };
@@ -52,7 +51,7 @@ const QuickBooksVsConstructionSoftware = () => {
         "name": "Is QuickBooks enough for construction contractors?",
         "acceptedAnswer": {
           "@type": "Answer",
-          "text": "No, QuickBooks alone is NOT enough for construction contractors. QuickBooks is excellent for accounting (invoicing, A/P, A/R, general ledger), but it lacks critical construction-specific features: real-time job costing, project management, change order workflows, field communication, daily reports, and photo documentation. The best solution: Use QuickBooks for accounting + construction management software (like BuildDesk) for project operations and job costing. Most construction software syncs with QuickBooks automatically, giving you the best of both worlds."
+          "text": "No, QuickBooks alone is NOT enough for construction contractors. QuickBooks is excellent for accounting (invoicing, A/P, A/R, general ledger), but it lacks critical construction-specific features: real-time job costing, project management, change order workflows, field communication, daily reports, and photo documentation. The best solution: Use QuickBooks for accounting + construction management software (like Brikly) for project operations and job costing. Most construction software syncs with QuickBooks automatically, giving you the best of both worlds."
         }
       },
       {
@@ -68,7 +67,7 @@ const QuickBooksVsConstructionSoftware = () => {
         "name": "Should I replace QuickBooks with construction management software?",
         "acceptedAnswer": {
           "@type": "Answer",
-          "text": "No—don't replace QuickBooks. Keep QuickBooks for accounting and add construction management software for operations. Here's why: QuickBooks excels at accounting tasks (payroll, taxes, financial reporting, bank reconciliation). Your accountant knows QuickBooks. Replacing it creates unnecessary disruption. Instead, integrate construction software (like BuildDesk) WITH QuickBooks. Construction software handles job costing, project management, and field operations, then syncs financial data to QuickBooks automatically. This 'best of both worlds' approach is what successful contractors use."
+          "text": "No—don't replace QuickBooks. Keep QuickBooks for accounting and add construction management software for operations. Here's why: QuickBooks excels at accounting tasks (payroll, taxes, financial reporting, bank reconciliation). Your accountant knows QuickBooks. Replacing it creates unnecessary disruption. Instead, integrate construction software (like Brikly) WITH QuickBooks. Construction software handles job costing, project management, and field operations, then syncs financial data to QuickBooks automatically. This 'best of both worlds' approach is what successful contractors use."
         }
       },
       {
@@ -76,7 +75,7 @@ const QuickBooksVsConstructionSoftware = () => {
         "name": "How much does construction management software cost compared to QuickBooks?",
         "acceptedAnswer": {
           "@type": "Answer",
-          "text": "QuickBooks Desktop costs $350-$550/year for basic versions or $30-$200/month for QuickBooks Online. Construction management software costs $300-$600/month for small contractors (tools like BuildDesk at $350/month unlimited users). Combined cost: ~$400-$650/month total. ROI calculation: Construction software saves 10-15 hours/week in admin time ($20K-$30K annual value) plus reduces cost overruns by 2-3% of revenue ($40K-$60K for a $2M contractor). So the $4,000-$8,000 annual investment in construction software pays for itself many times over."
+          "text": "QuickBooks Desktop costs $350-$550/year for basic versions or $30-$200/month for QuickBooks Online. Construction management software costs $300-$600/month for small contractors (tools like Brikly at $350/month unlimited users). Combined cost: ~$400-$650/month total. ROI calculation: Construction software saves 10-15 hours/week in admin time ($20K-$30K annual value) plus reduces cost overruns by 2-3% of revenue ($40K-$60K for a $2M contractor). So the $4,000-$8,000 annual investment in construction software pays for itself many times over."
         }
       },
       {
@@ -84,7 +83,7 @@ const QuickBooksVsConstructionSoftware = () => {
         "name": "Can QuickBooks and construction software work together?",
         "acceptedAnswer": {
           "@type": "Answer",
-          "text": "Yes, and they should. Modern construction management software (like BuildDesk, Procore, Buildertrend) integrates directly with QuickBooks. Here's how it works: Track time, costs, and progress in construction software throughout the project. At period-end (weekly or monthly), construction software syncs invoices, bills, time entries, and job cost data to QuickBooks automatically. No double data entry. Your accountant works in QuickBooks as normal. You work in construction software for daily operations. Financial data flows seamlessly between systems. This is the standard setup for professional contractors."
+          "text": "Yes, and they should. Modern construction management software (like Brikly, Procore, Buildertrend) integrates directly with QuickBooks. Here's how it works: Track time, costs, and progress in construction software throughout the project. At period-end (weekly or monthly), construction software syncs invoices, bills, time entries, and job cost data to QuickBooks automatically. No double data entry. Your accountant works in QuickBooks as normal. You work in construction software for daily operations. Financial data flows seamlessly between systems. This is the standard setup for professional contractors."
         }
       }
     ]
@@ -93,7 +92,7 @@ const QuickBooksVsConstructionSoftware = () => {
   return (
     <>
       <Helmet>
-        <title>QuickBooks vs Construction Management Software: What You Need | BuildDesk</title>
+        <title>QuickBooks vs Construction Management Software: What You Need | Brikly</title>
         <meta
           name="description"
           content="Should contractors use QuickBooks or construction management software? The answer: both. Learn what QuickBooks does well, what it can't do for construction, and why you need both systems working together."
@@ -102,7 +101,7 @@ const QuickBooksVsConstructionSoftware = () => {
           name="keywords"
           content="quickbooks vs construction software, quickbooks for construction, construction management software, quickbooks limitations, construction accounting software, quickbooks integration"
         />
-        <link rel="canonical" href="https://builddesk.com/resources/quickbooks-vs-construction-software" />
+        <link rel="canonical" href="https://brikly.net/resources/quickbooks-vs-construction-software" />
         <script type="application/ld+json">
           {JSON.stringify(articleSchema)}
         </script>
@@ -342,7 +341,7 @@ const QuickBooksVsConstructionSoftware = () => {
                   <div className="bg-red-50 p-4 rounded-lg mb-4">
                     <p className="text-sm font-semibold text-red-800 mb-2">Real-World Impact:</p>
                     <p className="text-sm text-gray-700">
-                      By the time QuickBooks shows you're $15K over budget on a project, you've already spent the money. With <strong>real-time job costing</strong> (like BuildDesk provides), you'd catch the overrun at day 5, not day 30—limiting losses to $1K-$2K instead of $15K.
+                      By the time QuickBooks shows you're $15K over budget on a project, you've already spent the money. With <strong>real-time job costing</strong> (like Brikly provides), you'd catch the overrun at day 5, not day 30—limiting losses to $1K-$2K instead of $15K.
                     </p>
                   </div>
                   <p className="text-sm text-gray-700">
@@ -512,7 +511,7 @@ const QuickBooksVsConstructionSoftware = () => {
               <ol className="space-y-3 text-sm">
                 <li className="flex gap-3">
                   <span className="font-bold">1.</span>
-                  <span>Track time, costs, and project progress in <strong>construction software</strong> (BuildDesk) throughout the week</span>
+                  <span>Track time, costs, and project progress in <strong>construction software</strong> (Brikly) throughout the week</span>
                 </li>
                 <li className="flex gap-3">
                   <span className="font-bold">2.</span>
@@ -553,7 +552,7 @@ const QuickBooksVsConstructionSoftware = () => {
                   <div className="inline-block bg-construction-orange text-white px-3 py-1 rounded-full text-xs font-semibold mb-2">
                     BEST VALUE
                   </div>
-                  <p className="text-sm text-gray-600 mb-2">BuildDesk</p>
+                  <p className="text-sm text-gray-600 mb-2">Brikly</p>
                   <p className="text-4xl font-bold text-construction-dark mb-2">$350</p>
                   <p className="text-sm text-gray-600">/month</p>
                   <p className="text-xs text-gray-500 mt-4">Unlimited users</p>
@@ -574,7 +573,7 @@ const QuickBooksVsConstructionSoftware = () => {
               <p className="font-bold text-construction-dark mb-3">ROI Calculation:</p>
               <div className="space-y-2 text-sm text-gray-700">
                 <p className="flex justify-between">
-                  <span>Annual cost (QuickBooks + BuildDesk):</span>
+                  <span>Annual cost (QuickBooks + Brikly):</span>
                   <strong>$4,800</strong>
                 </p>
                 <p className="flex justify-between">
@@ -615,7 +614,7 @@ const QuickBooksVsConstructionSoftware = () => {
                     Is QuickBooks enough for construction contractors?
                   </h3>
                   <p className="text-gray-600 leading-relaxed">
-                    No, QuickBooks alone is NOT enough for construction contractors. QuickBooks is excellent for accounting (invoicing, A/P, A/R, general ledger), but it lacks critical construction-specific features: real-time job costing, project management, change order workflows, field communication, daily reports, and photo documentation. The best solution: Use QuickBooks for accounting + construction management software (like BuildDesk) for project operations and job costing. Most construction software syncs with QuickBooks automatically, giving you the best of both worlds.
+                    No, QuickBooks alone is NOT enough for construction contractors. QuickBooks is excellent for accounting (invoicing, A/P, A/R, general ledger), but it lacks critical construction-specific features: real-time job costing, project management, change order workflows, field communication, daily reports, and photo documentation. The best solution: Use QuickBooks for accounting + construction management software (like Brikly) for project operations and job costing. Most construction software syncs with QuickBooks automatically, giving you the best of both worlds.
                   </p>
                 </CardContent>
               </Card>
@@ -637,7 +636,7 @@ const QuickBooksVsConstructionSoftware = () => {
                     Should I replace QuickBooks with construction management software?
                   </h3>
                   <p className="text-gray-600 leading-relaxed">
-                    No—don't replace QuickBooks. Keep QuickBooks for accounting and add construction management software for operations. Here's why: QuickBooks excels at accounting tasks (payroll, taxes, financial reporting, bank reconciliation). Your accountant knows QuickBooks. Replacing it creates unnecessary disruption. Instead, integrate construction software (like BuildDesk) WITH QuickBooks. Construction software handles job costing, project management, and field operations, then syncs financial data to QuickBooks automatically. This 'best of both worlds' approach is what successful contractors use.
+                    No—don't replace QuickBooks. Keep QuickBooks for accounting and add construction management software for operations. Here's why: QuickBooks excels at accounting tasks (payroll, taxes, financial reporting, bank reconciliation). Your accountant knows QuickBooks. Replacing it creates unnecessary disruption. Instead, integrate construction software (like Brikly) WITH QuickBooks. Construction software handles job costing, project management, and field operations, then syncs financial data to QuickBooks automatically. This 'best of both worlds' approach is what successful contractors use.
                   </p>
                 </CardContent>
               </Card>
@@ -648,7 +647,7 @@ const QuickBooksVsConstructionSoftware = () => {
                     How much does construction management software cost compared to QuickBooks?
                   </h3>
                   <p className="text-gray-600 leading-relaxed">
-                    QuickBooks Desktop costs $350-$550/year for basic versions or $30-$200/month for QuickBooks Online. Construction management software costs $300-$600/month for small contractors (tools like BuildDesk at $350/month unlimited users). Combined cost: ~$400-$650/month total. ROI calculation: Construction software saves 10-15 hours/week in admin time ($20K-$30K annual value) plus reduces cost overruns by 2-3% of revenue ($40K-$60K for a $2M contractor). So the $4,000-$8,000 annual investment in construction software pays for itself many times over.
+                    QuickBooks Desktop costs $350-$550/year for basic versions or $30-$200/month for QuickBooks Online. Construction management software costs $300-$600/month for small contractors (tools like Brikly at $350/month unlimited users). Combined cost: ~$400-$650/month total. ROI calculation: Construction software saves 10-15 hours/week in admin time ($20K-$30K annual value) plus reduces cost overruns by 2-3% of revenue ($40K-$60K for a $2M contractor). So the $4,000-$8,000 annual investment in construction software pays for itself many times over.
                   </p>
                 </CardContent>
               </Card>
@@ -659,7 +658,7 @@ const QuickBooksVsConstructionSoftware = () => {
                     Can QuickBooks and construction software work together?
                   </h3>
                   <p className="text-gray-600 leading-relaxed">
-                    Yes, and they should. Modern construction management software (like BuildDesk, Procore, Buildertrend) integrates directly with QuickBooks. Here's how it works: Track time, costs, and progress in construction software throughout the project. At period-end (weekly or monthly), construction software syncs invoices, bills, time entries, and job cost data to QuickBooks automatically. No double data entry. Your accountant works in QuickBooks as normal. You work in construction software for daily operations. Financial data flows seamlessly between systems. This is the standard setup for professional contractors.
+                    Yes, and they should. Modern construction management software (like Brikly, Procore, Buildertrend) integrates directly with QuickBooks. Here's how it works: Track time, costs, and progress in construction software throughout the project. At period-end (weekly or monthly), construction software syncs invoices, bills, time entries, and job cost data to QuickBooks automatically. No double data entry. Your accountant works in QuickBooks as normal. You work in construction software for daily operations. Financial data flows seamlessly between systems. This is the standard setup for professional contractors.
                   </p>
                 </CardContent>
               </Card>
@@ -675,12 +674,12 @@ const QuickBooksVsConstructionSoftware = () => {
               Ready to Add Construction Software to Your QuickBooks Setup?
             </h2>
             <p className="text-xl text-gray-300 mb-8 max-w-2xl mx-auto">
-              BuildDesk integrates seamlessly with QuickBooks. Get real-time job costing and project management without disrupting your accounting workflow.
+              Brikly integrates seamlessly with QuickBooks. Get real-time job costing and project management without disrupting your accounting workflow.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link to="/">
                 <Button size="lg" className="bg-construction-orange hover:bg-construction-orange/90 text-white">
-                  Try BuildDesk Free for 14 Days
+                  Try Brikly Free for 14 Days
                 </Button>
               </Link>
               <Link to="/resources/quickbooks-integration-guide">

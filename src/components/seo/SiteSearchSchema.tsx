@@ -6,14 +6,14 @@ interface SiteSearchSchemaProps {
 }
 
 export const SiteSearchSchema: React.FC<SiteSearchSchemaProps> = ({
-  searchUrl = "https://builddesk.com/search?q={search_term_string}",
+  searchUrl = "https://brikly.net/search?q={search_term_string}",
   placeholder = "Search construction management resources..."
 }) => {
   const schemaData = {
     "@context": "https://schema.org",
     "@type": "WebSite",
-    "name": "BuildDesk",
-    "url": "https://builddesk.com",
+    "name": "Brikly",
+    "url": "https://brikly.net",
     "potentialAction": {
       "@type": "SearchAction",
       "target": {
@@ -78,7 +78,7 @@ export const ReviewSchema: React.FC<ReviewSchemaProps> = ({
   reviewRating,
   reviewerName,
   datePublished,
-  publisher = "BuildDesk"
+  publisher = "Brikly"
 }) => {
   const schemaData = {
     "@context": "https://schema.org",

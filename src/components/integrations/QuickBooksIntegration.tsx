@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -7,17 +7,8 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { 
-  RefreshCw, 
-  CheckCircle, 
-  AlertCircle, 
-  DollarSign, 
-  FileText, 
-  Users, 
-  Calendar,
-  ArrowUpDown,
-  TrendingUp
-} from 'lucide-react';
+import { validateRedirectUrl } from '@/lib/security/urlValidation';
+import { RefreshCw, CheckCircle, AlertCircle, DollarSign, ArrowUpDown } from 'lucide-react';
 import { QuickBooksSync } from './QuickBooksSync';
 
 interface QBIntegrationStatus {
@@ -67,7 +58,7 @@ export const QuickBooksIntegration = () => {
         .from('quickbooks_integrations')
         .select('*')
         .eq('company_id', userProfile.company_id)
-        .single();
+        .maybeSingle();
 
       if (integrationError || !integrationData) {
         setStatus({
@@ -144,7 +135,11 @@ export const QuickBooksIntegration = () => {
 
       if (error) throw error;
 
-      // Redirect to QuickBooks OAuth
+      // Redirect to QuickBooks OAuth (validate URL first)
+      const urlCheck = validateRedirectUrl(data.auth_url);
+      if (!urlCheck.valid) {
+        throw new Error('Invalid OAuth URL received from server.');
+      }
       window.location.href = data.auth_url;
 
     } catch (error: any) {

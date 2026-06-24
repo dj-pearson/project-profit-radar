@@ -1,9 +1,51 @@
 import { expect, afterEach, beforeEach, vi } from 'vitest';
+import { webcrypto as nodeWebcrypto } from 'node:crypto';
 import { cleanup } from '@testing-library/react';
 import * as matchers from '@testing-library/jest-dom/matchers';
+import { toHaveNoA11yViolations } from './accessibility-utils';
+
+// Capacitor plugins throw "not implemented on web" when their JS APIs are
+// invoked outside a native runtime. Stub them globally so any code path
+// that lazily imports them (e.g. supabaseStorage's profile resume,
+// useOfflineSync, useSupabaseSessionResume) doesn't hang waiting on a
+// rejected promise. Preferences keeps an in-memory store so hooks that
+// write-then-read see consistent values within a single test.
+vi.mock('@capacitor/preferences', () => {
+  const store = new Map<string, string>();
+  return {
+    Preferences: {
+      get: vi.fn(async ({ key }: { key: string }) => ({
+        value: store.has(key) ? store.get(key)! : null,
+      })),
+      set: vi.fn(async ({ key, value }: { key: string; value: string }) => {
+        store.set(key, value);
+      }),
+      remove: vi.fn(async ({ key }: { key: string }) => {
+        store.delete(key);
+      }),
+      clear: vi.fn(async () => {
+        store.clear();
+      }),
+      keys: vi.fn(async () => ({ keys: Array.from(store.keys()) })),
+    },
+  };
+});
+
+vi.mock('@capacitor/app', () => ({
+  App: {
+    addListener: vi.fn().mockResolvedValue({ remove: vi.fn() }),
+    removeAllListeners: vi.fn().mockResolvedValue(undefined),
+    getInfo: vi.fn().mockResolvedValue({ name: 'test', id: 'test', build: '1', version: '1.0.0' }),
+    getState: vi.fn().mockResolvedValue({ isActive: true }),
+    exitApp: vi.fn().mockResolvedValue(undefined),
+  },
+}));
 
 // Extend Vitest's expect with jest-dom matchers
 expect.extend(matchers);
+
+// Extend with accessibility matchers
+expect.extend({ toHaveNoA11yViolations });
 
 // Reset fixture counters between tests
 beforeEach(() => {
@@ -53,52 +95,20 @@ global.ResizeObserver = class ResizeObserver {
 // Mock scrollTo
 window.scrollTo = vi.fn();
 
-// Mock localStorage
-const localStorageMock = (() => {
-  let store: Record<string, string> = {};
-
-  return {
-    getItem: (key: string) => store[key] || null,
-    setItem: (key: string, value: string) => {
-      store[key] = value.toString();
-    },
-    removeItem: (key: string) => {
-      delete store[key];
-    },
-    clear: () => {
-      store = {};
-    },
-  };
-})();
-
-Object.defineProperty(window, 'localStorage', {
-  value: localStorageMock,
-});
-
-// Mock sessionStorage
-const sessionStorageMock = (() => {
-  let store: Record<string, string> = {};
-
-  return {
-    getItem: (key: string) => store[key] || null,
-    setItem: (key: string, value: string) => {
-      store[key] = value.toString();
-    },
-    removeItem: (key: string) => {
-      delete store[key];
-    },
-    clear: () => {
-      store = {};
-    },
-  };
-})();
-
-Object.defineProperty(window, 'sessionStorage', {
-  value: sessionStorageMock,
+// Use happy-dom's native localStorage / sessionStorage — they correctly
+// expose stored keys via `Object.keys(storage)` (which a closure-based
+// stub does not). Just clear between tests so files don't leak state.
+beforeEach(() => {
+  try {
+    window.localStorage.clear();
+    window.sessionStorage.clear();
+  } catch {
+    // Ignore environments without DOM storage.
+  }
 });
 
 // Mock environment variables for tests
-process.env.VITE_SUPABASE_URL = 'https://test.supabase.co';
+process.env.VITE_SUPABASE_URL = 'https://api.brikly.net';
 process.env.VITE_SUPABASE_PUBLISHABLE_KEY = 'test-key';
 
 // Mock navigator.geolocation
@@ -144,9 +154,12 @@ global.fetch = vi.fn().mockImplementation(() =>
   })
 );
 
-// Mock crypto.randomUUID
+// Provide a crypto global that keeps real Web Crypto (subtle) so security
+// code under test (HMAC, SHA-256, etc.) works, while still allowing the
+// test-friendly randomUUID override.
 Object.defineProperty(globalThis, 'crypto', {
   value: {
+    subtle: nodeWebcrypto.subtle,
     randomUUID: () => 'test-uuid-' + Math.random().toString(36).substring(7),
     getRandomValues: (arr: Uint8Array) => {
       for (let i = 0; i < arr.length; i++) {
@@ -155,6 +168,7 @@ Object.defineProperty(globalThis, 'crypto', {
       return arr;
     },
   },
+  configurable: true,
 });
 
 // Mock URL.createObjectURL

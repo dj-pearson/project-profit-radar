@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -8,15 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
-import { 
-  Send, 
-  Clock, 
-  Image, 
-  CheckCircle, 
-  Settings,
-  Mail,
-  MessageSquare
-} from 'lucide-react';
+import { Send, CheckCircle, Settings, Mail, MessageSquare } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 
 interface UpdateSettings {

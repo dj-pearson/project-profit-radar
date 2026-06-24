@@ -1,0 +1,9 @@
+{
+  "allowlist": [
+    {
+      "id": "EXAMPLE-0000",
+      "reason": "Sample entry - replace or remove. No actual vulnerability.",
+      "expires": "2026-04-01"
+    }
+  ]
+}

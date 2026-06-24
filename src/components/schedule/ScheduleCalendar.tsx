@@ -4,23 +4,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useSubscription } from "@/contexts/SubscriptionContext";
 import UpgradePrompt from "@/components/subscription/UpgradePrompt";
-import {
-  format,
-  isSameDay,
-  parseISO,
-  startOfMonth,
-  endOfMonth,
-} from "date-fns";
-import {
-  CalendarDays,
-  Clock,
-  Users,
-  DollarSign,
-  ArrowRight,
-} from "lucide-react";
+import { format, parseISO, startOfMonth, endOfMonth } from "date-fns";
+import { CalendarDays, Clock, Users, ArrowRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 interface Project {

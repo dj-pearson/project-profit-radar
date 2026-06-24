@@ -14,7 +14,7 @@ The current error means your `Microsoft_Bing_API` key is invalid. Here's how to 
    - Sign in with Microsoft account
 
 2. **Verify Your Site is Added**:
-   - Look for `build-desk.com` in your sites list
+   - Look for `brikly.net` in your sites list
    - If not there, click "Add a site" and add it
    - **Important**: Site must be verified first!
 

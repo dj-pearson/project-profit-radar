@@ -9754,6 +9754,7 @@ export type Database = {
           project_id: string | null
           routing_confidence: string | null
           site_id: string
+          tags: string[] | null
           updated_at: string
           uploaded_by: string | null
           version: number | null
@@ -9780,6 +9781,7 @@ export type Database = {
           project_id?: string | null
           routing_confidence?: string | null
           site_id: string
+          tags?: string[] | null
           updated_at?: string
           uploaded_by?: string | null
           version?: number | null
@@ -9806,6 +9808,7 @@ export type Database = {
           project_id?: string | null
           routing_confidence?: string | null
           site_id?: string
+          tags?: string[] | null
           updated_at?: string
           uploaded_by?: string | null
           version?: number | null
@@ -12892,64 +12895,100 @@ export type Database = {
       }
       error_logs: {
         Row: {
+          browser: string | null
           browser_info: Json | null
           company_id: string | null
           component: string | null
+          component_stack: string | null
           created_at: string | null
+          device_type: string | null
           environment: string | null
           error_code: string | null
           error_message: string
           error_type: string
           id: string
+          metadata: Json | null
+          os: string | null
+          page_route: string | null
           resolved: boolean | null
           resolved_at: string | null
           resolved_by: string | null
+          screen_resolution: string | null
+          session_id: string | null
           severity: string | null
           stack_trace: string | null
           timestamp: string | null
           url: string | null
           user_action: string | null
+          user_agent: string | null
+          user_email: string | null
           user_id: string | null
+          user_role: string | null
+          viewport_size: string | null
         }
         Insert: {
+          browser?: string | null
           browser_info?: Json | null
           company_id?: string | null
           component?: string | null
+          component_stack?: string | null
           created_at?: string | null
+          device_type?: string | null
           environment?: string | null
           error_code?: string | null
           error_message: string
           error_type: string
           id?: string
+          metadata?: Json | null
+          os?: string | null
+          page_route?: string | null
           resolved?: boolean | null
           resolved_at?: string | null
           resolved_by?: string | null
+          screen_resolution?: string | null
+          session_id?: string | null
           severity?: string | null
           stack_trace?: string | null
           timestamp?: string | null
           url?: string | null
           user_action?: string | null
+          user_agent?: string | null
+          user_email?: string | null
           user_id?: string | null
+          user_role?: string | null
+          viewport_size?: string | null
         }
         Update: {
+          browser?: string | null
           browser_info?: Json | null
           company_id?: string | null
           component?: string | null
+          component_stack?: string | null
           created_at?: string | null
+          device_type?: string | null
           environment?: string | null
           error_code?: string | null
           error_message?: string
           error_type?: string
           id?: string
+          metadata?: Json | null
+          os?: string | null
+          page_route?: string | null
           resolved?: boolean | null
           resolved_at?: string | null
           resolved_by?: string | null
+          screen_resolution?: string | null
+          session_id?: string | null
           severity?: string | null
           stack_trace?: string | null
           timestamp?: string | null
           url?: string | null
           user_action?: string | null
+          user_agent?: string | null
+          user_email?: string | null
           user_id?: string | null
+          user_role?: string | null
+          viewport_size?: string | null
         }
         Relationships: [
           {
@@ -16004,6 +16043,7 @@ export type Database = {
           current_amount_due: number | null
           discount_amount: number | null
           due_date: string
+          estimate_id: string | null
           id: string
           invoice_date: string | null
           invoice_number: string
@@ -16048,6 +16088,7 @@ export type Database = {
           current_amount_due?: number | null
           discount_amount?: number | null
           due_date: string
+          estimate_id?: string | null
           id?: string
           invoice_date?: string | null
           invoice_number: string
@@ -16092,6 +16133,7 @@ export type Database = {
           current_amount_due?: number | null
           discount_amount?: number | null
           due_date?: string
+          estimate_id?: string | null
           id?: string
           invoice_date?: string | null
           invoice_number?: string
@@ -21711,7 +21753,7 @@ export type Database = {
           email: string | null
           id: string
           role: string | null
-          site_id: string
+          site_id: string | null
           updated_at: string | null
           user_id: string | null
         }
@@ -21721,7 +21763,7 @@ export type Database = {
           email?: string | null
           id: string
           role?: string | null
-          site_id: string
+          site_id?: string | null
           updated_at?: string | null
           user_id?: string | null
         }
@@ -21731,7 +21773,7 @@ export type Database = {
           email?: string | null
           id?: string
           role?: string | null
-          site_id?: string
+          site_id?: string | null
           updated_at?: string | null
           user_id?: string | null
         }
@@ -24245,6 +24287,66 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      recurring_invoices: {
+        Row: {
+          client_name: string | null
+          company_id: string
+          created_at: string
+          created_by: string | null
+          end_date: string | null
+          frequency: string
+          id: string
+          line_items: Json
+          name: string
+          next_run_date: string | null
+          notes: string | null
+          occurrence_limit: number | null
+          occurrences_generated: number
+          project_id: string | null
+          start_date: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          client_name?: string | null
+          company_id: string
+          created_at?: string
+          created_by?: string | null
+          end_date?: string | null
+          frequency?: string
+          id?: string
+          line_items?: Json
+          name: string
+          next_run_date?: string | null
+          notes?: string | null
+          occurrence_limit?: number | null
+          occurrences_generated?: number
+          project_id?: string | null
+          start_date: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          client_name?: string | null
+          company_id?: string
+          created_at?: string
+          created_by?: string | null
+          end_date?: string | null
+          frequency?: string
+          id?: string
+          line_items?: Json
+          name?: string
+          next_run_date?: string | null
+          notes?: string | null
+          occurrence_limit?: number | null
+          occurrences_generated?: number
+          project_id?: string | null
+          start_date?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       referral_codes: {
         Row: {

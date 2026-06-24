@@ -1,4 +1,3 @@
-import React from "react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { PageSEO, createArticleSchema, createFAQSchema, createHowToSchema } from "@/components/seo/PageSEO";
@@ -22,7 +21,7 @@ const CashFlowManagementGuide = () => {
     },
     {
       question: "How far ahead should I forecast cash flow?",
-      answer: "Best practice is 30-90 days. Look at 30 days for immediate payroll and vendor obligations, 60 days for upcoming project starts (equipment deposits, material orders), and 90 days for strategic decisions (can you afford that new truck, should you take on another project). BuildDesk provides 30/60/90 day cash flow forecasts automatically."
+      answer: "Best practice is 30-90 days. Look at 30 days for immediate payroll and vendor obligations, 60 days for upcoming project starts (equipment deposits, material orders), and 90 days for strategic decisions (can you afford that new truck, should you take on another project). Brikly provides 30/60/90 day cash flow forecasts automatically."
     },
     {
       question: "What's the difference between profit and cash flow?",
@@ -53,7 +52,7 @@ const CashFlowManagementGuide = () => {
     },
     {
       name: "Monitor and adjust weekly",
-      text: "Update your forecast weekly as actual payments come in and new projects start. Real-time data (like BuildDesk provides) makes this automatic instead of requiring hours of spreadsheet work."
+      text: "Update your forecast weekly as actual payments come in and new projects start. Real-time data (like Brikly provides) makes this automatic instead of requiring hours of spreadsheet work."
     }
   ];
 
@@ -71,14 +70,14 @@ const CashFlowManagementGuide = () => {
           'construction payment cycle',
           'contractor cash flow solutions'
         ]}
-        canonicalUrl="https://builddesk.com/resources/cash-flow-management-guide"
+        canonicalUrl="https://brikly.net/resources/cash-flow-management-guide"
         schema={[
           createArticleSchema(
             "Construction Cash Flow Management: Complete Guide for Small Contractors",
             "How to forecast cash flow 30-90 days ahead and avoid cash crunches in construction",
             "2025-11-14",
             "2025-11-14",
-            "BuildDesk Team"
+            "Brikly Team"
           ),
           createHowToSchema("Manage Construction Cash Flow Effectively", howToSteps),
           createFAQSchema(faqs)
@@ -119,7 +118,7 @@ const CashFlowManagementGuide = () => {
             </Card>
 
             <div className="flex items-center gap-4 text-sm text-muted-foreground mb-8">
-              <span>By BuildDesk Team</span>
+              <span>By Brikly Team</span>
               <span>•</span>
               <span>November 14, 2025</span>
               <span>•</span>
@@ -334,7 +333,7 @@ const CashFlowManagementGuide = () => {
                     </li>
                     <li className="flex items-start">
                       <CheckCircle className="h-4 w-4 text-construction-orange mr-2 mt-0.5 flex-shrink-0" />
-                      <span><strong>Use automated reminders:</strong> BuildDesk sends automatic payment reminders</span>
+                      <span><strong>Use automated reminders:</strong> Brikly sends automatic payment reminders</span>
                     </li>
                   </ul>
                   <div className="mt-4 p-3 bg-background rounded text-sm">
@@ -457,7 +456,7 @@ const CashFlowManagementGuide = () => {
                 </CardHeader>
                 <CardContent>
                   <p className="text-muted-foreground mb-4">
-                    BuildDesk automatically forecasts your cash position 30/60/90 days out:
+                    Brikly automatically forecasts your cash position 30/60/90 days out:
                   </p>
                   <ul className="space-y-2 text-sm">
                     <li className="flex items-start">
@@ -486,11 +485,11 @@ const CashFlowManagementGuide = () => {
             </div>
           </div>
 
-          {/* BuildDesk Solution */}
+          {/* Brikly Solution */}
           <div className="max-w-4xl mx-auto mb-12">
             <Card className="bg-gradient-to-br from-construction-orange/10 to-construction-orange/5">
               <CardHeader>
-                <CardTitle className="text-3xl text-center">How BuildDesk Automates Cash Flow Management</CardTitle>
+                <CardTitle className="text-3xl text-center">How Brikly Automates Cash Flow Management</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="grid md:grid-cols-3 gap-6 mb-8 text-center">

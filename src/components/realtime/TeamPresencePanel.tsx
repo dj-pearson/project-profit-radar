@@ -16,20 +16,8 @@ import {
   TabsList,
   TabsTrigger,
 } from '@/components/ui/tabs';
-import {
-  Users,
-  MapPin,
-  Filter,
-  Search,
-  MessageCircle,
-  Phone,
-  Settings,
-  Circle,
-  Clock,
-  Minus
-} from 'lucide-react';
-import { cn } from '@/lib/utils';
-import { UserPresence, useSimplePresence } from '@/hooks/useSimplePresence';
+import { Users, Filter, Search, Settings, Circle, Clock, Minus } from 'lucide-react';
+import { useSimplePresence } from '@/hooks/useSimplePresence';
 import { UserPresenceIndicator } from './UserPresenceIndicator';
 
 interface TeamPresencePanelProps {

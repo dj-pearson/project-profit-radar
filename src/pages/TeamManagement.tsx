@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { AccessiblePageWrapper } from '@/components/accessibility/AccessiblePageWrapper';
 import { RoleGuard, ROLE_GROUPS } from '@/components/auth/RoleGuard';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -8,26 +9,14 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
+import { AccessibleTable, type TableColumn } from '@/components/accessibility/AccessibleTable';
 import { useSubscriptionLimits } from '@/hooks/useSubscriptionLimits';
 import UpgradePrompt from '@/components/subscription/UpgradePrompt';
-import { 
-  Users, 
-  Plus,
-  Edit,
-  Trash2,
-  Mail,
-  Phone,
-  Calendar,
-  Shield,
-  UserCheck,
-  UserX,
-  Crown
-} from 'lucide-react';
+import { Users, Plus, Edit, Mail, Phone, Shield, UserCheck, UserX, Crown } from 'lucide-react';
 
 interface TeamMember {
   id: string;
@@ -126,46 +115,32 @@ const TeamManagement = () => {
     setInviteLoading(true);
 
     try {
-      // Generate a secure temporary password
-      const generatePassword = () => {
-        const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*';
-        let password = '';
-        for (let i = 0; i < 16; i++) {
-          password += chars.charAt(Math.floor(Math.random() * chars.length));
+      // Invites go through the invite-team-member edge function (US-199): it
+      // authenticates the caller, enforces the seat plan-limit SERVER-SIDE
+      // (the client checkLimit below is UX-only and bypassable), derives
+      // company_id from the authenticated session — never the client — and
+      // performs the privileged auth.admin.createUser + profile insert with the
+      // service role instead of exposing it to the browser.
+      const { data: invite, error: inviteError } = await supabase.functions.invoke(
+        'invite-team-member',
+        {
+          body: {
+            email: inviteEmail,
+            first_name: inviteFirstName,
+            last_name: inviteLastName,
+            role: inviteRole,
+            phone: invitePhone || null,
+          },
         }
-        return password;
-      };
+      );
 
-      // For now, we'll create the user profile directly
-      // In a real implementation, you'd want to send an invitation email
-      const { data: authUser, error: authError } = await supabase.auth.admin.createUser({
-        email: inviteEmail,
-        password: generatePassword(), // Generate random secure password
-        email_confirm: true,
-        user_metadata: {
-          first_name: inviteFirstName,
-          last_name: inviteLastName,
-          role: inviteRole
-        }
-      });
-
-      if (authError) throw authError;
-
-      // Create user profile
-      const { error: profileError } = await supabase
-        .from('user_profiles')
-        .insert([{
-          id: authUser.user.id,
-          email: inviteEmail,
-          first_name: inviteFirstName,
-          last_name: inviteLastName,
-          role: inviteRole as any,
-          phone: invitePhone || null,
-          company_id: userProfile?.company_id,
-          is_active: true
-        }]);
-
-      if (profileError) throw profileError;
+      // supabase.functions.invoke surfaces non-2xx as `error`; the function also
+      // returns the standard { success, error } envelope for limit/permission
+      // denials, so check both.
+      if (inviteError) throw inviteError;
+      if (invite && invite.success === false) {
+        throw new Error(invite.error || 'Failed to invite the user');
+      }
 
       toast({
         title: "User Invited Successfully",
@@ -222,10 +197,12 @@ const TeamManagement = () => {
 
   if (loading || loadingTeam) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-construction-blue mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Loading team...</p>
+      <div className="min-h-screen bg-background p-6">
+        <div className="space-y-6">
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+            {[1,2,3,4].map(i => <div key={i} className="h-24 bg-muted animate-pulse rounded-lg" />)}
+          </div>
+          <div className="h-[300px] bg-muted animate-pulse rounded-lg" />
         </div>
       </div>
     );
@@ -303,23 +280,122 @@ const TeamManagement = () => {
     }
   };
 
+  const teamColumns: TableColumn<TeamMember>[] = [
+    {
+      key: 'name',
+      header: 'Name',
+      sortable: true,
+      render: (_value, member) => (
+        <div className="flex items-center space-x-3">
+          <div className="w-8 h-8 bg-construction-blue rounded-full flex items-center justify-center text-white font-semibold shrink-0 text-sm">
+            {member.first_name?.charAt(0) || member.email.charAt(0).toUpperCase()}
+          </div>
+          <span className="font-medium">
+            {member.first_name && member.last_name
+              ? `${member.first_name} ${member.last_name}`
+              : member.email}
+          </span>
+        </div>
+      ),
+    },
+    {
+      key: 'email',
+      header: 'Email',
+      hideOnMobile: true,
+      render: (value) => (
+        <span className="flex items-center text-sm text-muted-foreground">
+          <Mail className="h-3 w-3 mr-1 shrink-0" aria-hidden="true" />
+          <span className="truncate">{value}</span>
+        </span>
+      ),
+    },
+    {
+      key: 'role',
+      header: 'Role',
+      render: (value) => (
+        <Badge variant={getRoleBadgeVariant(value)} className="text-xs" aria-label={`Role: ${getRoleDisplayName(value)}`}>
+          {getRoleDisplayName(value)}
+        </Badge>
+      ),
+    },
+    {
+      key: 'is_active',
+      header: 'Status',
+      render: (value) => (
+        <Badge variant={value ? "default" : "secondary"} className="text-xs" aria-label={`Status: ${value ? 'Active' : 'Inactive'}`}>
+          {value ? "Active" : "Inactive"}
+        </Badge>
+      ),
+    },
+    {
+      key: 'phone',
+      header: 'Phone',
+      hideOnMobile: true,
+      render: (value) => value ? (
+        <span className="flex items-center text-sm text-muted-foreground">
+          <Phone className="h-3 w-3 mr-1 shrink-0" aria-hidden="true" />
+          {value}
+        </span>
+      ) : <span className="text-muted-foreground">-</span>,
+    },
+    {
+      key: 'created_at',
+      header: 'Joined',
+      hideOnMobile: true,
+      sortable: true,
+      render: (value) => (
+        <span className="text-sm text-muted-foreground">
+          {new Date(value).toLocaleDateString()}
+        </span>
+      ),
+    },
+    {
+      key: 'actions',
+      header: 'Actions',
+      headerRender: () => <span className="sr-only">Actions</span>,
+      render: (_value, member) => (
+        <div className="flex items-center space-x-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => toggleUserStatus(member.id, member.is_active)}
+            disabled={member.id === user?.id}
+            aria-label={member.is_active ? `Deactivate ${member.first_name} ${member.last_name}` : `Activate ${member.first_name} ${member.last_name}`}
+          >
+            {member.is_active ? (
+              <><UserX className="h-4 w-4 mr-1" aria-hidden="true" />Deactivate</>
+            ) : (
+              <><UserCheck className="h-4 w-4 mr-1" aria-hidden="true" />Activate</>
+            )}
+          </Button>
+          <Button variant="outline" size="sm" aria-label={`Edit ${member.first_name} ${member.last_name}`}>
+            <Edit className="h-4 w-4 mr-1" aria-hidden="true" />
+            Edit
+          </Button>
+        </div>
+      ),
+    },
+  ];
+
   return (
+    <AccessiblePageWrapper pageTitle="Team Management">
     <RoleGuard allowedRoles={ROLE_GROUPS.TEAM_MANAGERS}>
       <DashboardLayout
         title="Team Management"
         showTrialBanner={false}
+        hasAccessibleWrapper
       >
         <div className="flex justify-end mb-6">
             <Dialog open={isInviteOpen} onOpenChange={setIsInviteOpen}>
               <Button size="sm" className="shrink-0" onClick={handleInviteClick}>
-                <Plus className="h-4 w-4 mr-1 sm:mr-2" />
+                <Plus className="h-4 w-4 mr-1 sm:mr-2" aria-hidden="true" />
                 <span className="hidden sm:inline">Invite User</span>
                 <span className="sm:hidden">Invite</span>
               </Button>
-              <DialogContent className="sm:max-w-md">
+              <DialogContent className="sm:max-w-md" aria-describedby="invite-dialog-description">
                 <DialogHeader>
                   <DialogTitle>Invite Team Member</DialogTitle>
-                  <DialogDescription>
+                  <DialogDescription id="invite-dialog-description">
                     Add a new team member to your organization
                   </DialogDescription>
                 </DialogHeader>
@@ -332,6 +408,7 @@ const TeamManagement = () => {
                         value={inviteFirstName}
                         onChange={(e) => setInviteFirstName(e.target.value)}
                         required
+                        aria-required="true"
                       />
                     </div>
                     <div className="space-y-2">
@@ -341,6 +418,7 @@ const TeamManagement = () => {
                         value={inviteLastName}
                         onChange={(e) => setInviteLastName(e.target.value)}
                         required
+                        aria-required="true"
                       />
                     </div>
                   </div>
@@ -353,13 +431,14 @@ const TeamManagement = () => {
                       value={inviteEmail}
                       onChange={(e) => setInviteEmail(e.target.value)}
                       required
+                      aria-required="true"
                     />
                   </div>
                   
                   <div className="space-y-2">
                     <Label htmlFor="role">Role *</Label>
-                    <Select value={inviteRole} onValueChange={setInviteRole} required>
-                      <SelectTrigger>
+                    <Select value={inviteRole} onValueChange={setInviteRole} required aria-required="true">
+                      <SelectTrigger aria-label="Select role">
                         <SelectValue placeholder="Select role" />
                       </SelectTrigger>
                       <SelectContent>
@@ -414,44 +493,44 @@ const TeamManagement = () => {
         </div>
         
         {/* Team Stats */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-6 mb-6 sm:mb-8">
-          <Card>
+        <section aria-label="Team statistics" className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-6 mb-6 sm:mb-8">
+          <Card role="region" aria-label="Total members statistic">
             <CardContent className="p-3 sm:p-6">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-xs sm:text-sm font-medium text-muted-foreground">Total Members</p>
                   <p className="text-lg sm:text-2xl font-bold">{teamMembers.length}</p>
                 </div>
-                <Users className="h-6 w-6 sm:h-8 sm:w-8 text-construction-blue" />
+                <Users className="h-6 w-6 sm:h-8 sm:w-8 text-construction-blue" aria-hidden="true" />
               </div>
             </CardContent>
           </Card>
 
-          <Card>
+          <Card role="region" aria-label="Active members statistic">
             <CardContent className="p-3 sm:p-6">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-xs sm:text-sm font-medium text-muted-foreground">Active</p>
                   <p className="text-lg sm:text-2xl font-bold">{teamMembers.filter(m => m.is_active).length}</p>
                 </div>
-                <UserCheck className="h-6 w-6 sm:h-8 sm:w-8 text-green-600" />
+                <UserCheck className="h-6 w-6 sm:h-8 sm:w-8 text-green-600" aria-hidden="true" />
               </div>
             </CardContent>
           </Card>
 
-          <Card>
+          <Card role="region" aria-label="Inactive members statistic">
             <CardContent className="p-3 sm:p-6">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-xs sm:text-sm font-medium text-muted-foreground">Inactive</p>
                   <p className="text-lg sm:text-2xl font-bold">{teamMembers.filter(m => !m.is_active).length}</p>
                 </div>
-                <UserX className="h-6 w-6 sm:h-8 sm:w-8 text-red-600" />
+                <UserX className="h-6 w-6 sm:h-8 sm:w-8 text-red-600" aria-hidden="true" />
               </div>
             </CardContent>
           </Card>
 
-          <Card>
+          <Card role="region" aria-label="Administrators statistic">
             <CardContent className="p-3 sm:p-6">
               <div className="flex items-center justify-between">
                 <div>
@@ -460,11 +539,11 @@ const TeamManagement = () => {
                     {teamMembers.filter(m => ['admin', 'root_admin'].includes(m.role)).length}
                   </p>
                 </div>
-                <Shield className="h-6 w-6 sm:h-8 sm:w-8 text-construction-blue" />
+                <Shield className="h-6 w-6 sm:h-8 sm:w-8 text-construction-blue" aria-hidden="true" />
               </div>
             </CardContent>
           </Card>
-        </div>
+        </section>
 
         {/* Team Members */}
         <Card>
@@ -475,81 +554,18 @@ const TeamManagement = () => {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            {teamMembers.length === 0 ? (
-              <div className="text-center py-8">
-                <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                <p className="text-muted-foreground">No team members found</p>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {teamMembers.map((member) => (
-                  <div key={member.id} className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-3 sm:p-4 border rounded-lg space-y-3 sm:space-y-0">
-                    <div className="flex items-center space-x-3 sm:space-x-4 w-full sm:w-auto">
-                      <div className="w-8 h-8 sm:w-10 sm:h-10 bg-construction-blue rounded-full flex items-center justify-center text-white font-semibold shrink-0">
-                        {member.first_name?.charAt(0) || member.email.charAt(0).toUpperCase()}
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <div className="flex flex-wrap items-center gap-2 mb-1">
-                          <h3 className="font-medium text-sm sm:text-base truncate">
-                            {member.first_name && member.last_name 
-                              ? `${member.first_name} ${member.last_name}`
-                              : member.email
-                            }
-                          </h3>
-                          <Badge variant={getRoleBadgeVariant(member.role)} className="text-xs">
-                            {getRoleDisplayName(member.role)}
-                          </Badge>
-                          <Badge variant={member.is_active ? "default" : "secondary"} className="text-xs">
-                            {member.is_active ? "Active" : "Inactive"}
-                          </Badge>
-                        </div>
-                        <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-4 text-xs sm:text-sm text-muted-foreground">
-                          <span className="flex items-center truncate">
-                            <Mail className="h-3 w-3 mr-1 shrink-0" />
-                            <span className="truncate">{member.email}</span>
-                          </span>
-                          {member.phone && (
-                            <span className="flex items-center">
-                              <Phone className="h-3 w-3 mr-1 shrink-0" />
-                              {member.phone}
-                            </span>
-                          )}
-                          <span className="flex items-center">
-                            <Calendar className="h-3 w-3 mr-1 shrink-0" />
-                            Joined {new Date(member.created_at).toLocaleDateString()}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                    
-                    <div className="flex items-center space-x-2 w-full sm:w-auto justify-end">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => toggleUserStatus(member.id, member.is_active)}
-                        disabled={member.id === user?.id} // Can't deactivate yourself
-                      >
-                        {member.is_active ? (
-                          <>
-                            <UserX className="h-4 w-4 mr-1" />
-                            Deactivate
-                          </>
-                        ) : (
-                          <>
-                            <UserCheck className="h-4 w-4 mr-1" />
-                            Activate
-                          </>
-                        )}
-                      </Button>
-                      <Button variant="outline" size="sm">
-                        <Edit className="h-4 w-4 mr-1" />
-                        Edit
-                      </Button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
+            <AccessibleTable<TeamMember>
+              caption="Team Members"
+              hideCaption
+              columns={teamColumns}
+              data={teamMembers}
+              emptyContent={
+                <div className="text-center py-4">
+                  <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" aria-hidden="true" />
+                  <p className="text-muted-foreground">No team members found</p>
+                </div>
+              }
+            />
           </CardContent>
         </Card>
 
@@ -559,14 +575,14 @@ const TeamManagement = () => {
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <Crown className="h-4 w-4 text-construction-orange" />
+                  <Crown className="h-4 w-4 text-construction-orange" aria-hidden="true" />
                   <span className="text-sm font-medium">Team Member Limit</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <span className="text-sm text-muted-foreground">
                     {teamMembers.length} / {checkLimit('teamMembers').limit === -1 ? '∞' : checkLimit('teamMembers').limit}
                   </span>
-                  <Badge variant={subscriptionData.subscription_tier === 'enterprise' ? 'default' : 'secondary'}>
+                  <Badge variant={subscriptionData.subscription_tier === 'enterprise' ? 'default' : 'secondary'} aria-label={`Subscription tier: ${subscriptionData.subscription_tier?.charAt(0).toUpperCase() + subscriptionData.subscription_tier?.slice(1) || 'Free'}`}>
                     {subscriptionData.subscription_tier?.charAt(0).toUpperCase() + subscriptionData.subscription_tier?.slice(1) || 'Free'}
                   </Badge>
                 </div>
@@ -592,6 +608,7 @@ const TeamManagement = () => {
         />
     </DashboardLayout>
     </RoleGuard>
+    </AccessiblePageWrapper>
   );
 };
 

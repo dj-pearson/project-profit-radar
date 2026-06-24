@@ -1,6 +1,5 @@
 // Google Analytics & Search Console OAuth Flow
 // Handles OAuth 2.0 authentication for Google platforms
-// Updated with multi-tenant site_id isolation
 
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { initializeAuthContext, errorResponse } from '../_shared/auth-helpers.ts';
@@ -32,14 +31,13 @@ serve(async (req) => {
   }
 
   try {
-    // Initialize auth context - extracts user AND site_id from JWT
-    const authContext = await initializeAuthContext(req);
+        const authContext = await initializeAuthContext(req);
     if (!authContext) {
       return errorResponse('Unauthorized', 401);
     }
 
-    const { user, siteId, supabase: supabaseClient } = authContext;
-    console.log("[ANALYTICS-OAUTH-GOOGLE] User authenticated", { userId: user.id, siteId });
+    const { user, supabase: supabaseClient } = authContext;
+    console.log("[ANALYTICS-OAUTH-GOOGLE] User authenticated", { userId: user.id });
 
     const url = new URL(req.url);
     const action = url.searchParams.get('action');
@@ -123,7 +121,7 @@ serve(async (req) => {
       const { data: userProfile } = await supabaseClient
         .from('user_profiles')
         .select('company_id')
-        .eq('site_id', siteId)  // CRITICAL: Site isolation
+          // CRITICAL: Site isolation
         .eq('id', user.id)
         .single();
 
@@ -136,8 +134,7 @@ serve(async (req) => {
       // Store connection in database with site isolation
       const { data: connection, error: dbError } = await supabaseClient
         .from('analytics_platform_connections')
-        .upsert({
-          site_id: siteId,  // CRITICAL: Site isolation
+        .upsert({  // CRITICAL: Site isolation
           company_id: userProfile.company_id,
           platform_name: platform,
           platform_display_name: platform === 'google_analytics' ? 'Google Analytics 4' : 'Google Search Console',
@@ -184,8 +181,7 @@ serve(async (req) => {
         if (propertiesData.accountSummaries) {
           for (const account of propertiesData.accountSummaries) {
             for (const propertySummary of account.propertySummaries || []) {
-              await supabaseClient.from('ga4_properties').upsert({
-                site_id: siteId,  // CRITICAL: Site isolation
+              await supabaseClient.from('ga4_properties').upsert({  // CRITICAL: Site isolation
                 connection_id: connection.id,
                 company_id: userProfile.company_id,
                 property_id: propertySummary.property.split('/').pop(),
@@ -224,8 +220,7 @@ serve(async (req) => {
               .eq('id', connection.id);
 
             // Also create in gsc_properties if exists with site isolation
-            await supabaseClient.from('gsc_properties').upsert({
-              site_id: siteId,  // CRITICAL: Site isolation
+            await supabaseClient.from('gsc_properties').upsert({  // CRITICAL: Site isolation
               company_id: userProfile.company_id,
               credentials_id: connection.id,
               property_url: site.siteUrl,
@@ -265,7 +260,7 @@ serve(async (req) => {
       const { data: connection } = await supabaseClient
         .from('analytics_platform_connections')
         .select('*')
-        .eq('site_id', siteId)  // CRITICAL: Site isolation
+          // CRITICAL: Site isolation
         .eq('id', connection_id)
         .single();
 
@@ -303,7 +298,7 @@ serve(async (req) => {
           expires_at: expiresAt,
           connection_status: 'connected',
         })
-        .eq('site_id', siteId)  // CRITICAL: Site isolation
+          // CRITICAL: Site isolation
         .eq('id', connection_id);
 
       return new Response(
@@ -329,7 +324,7 @@ serve(async (req) => {
       const { data: connection } = await supabaseClient
         .from('analytics_platform_connections')
         .select('access_token_encrypted')
-        .eq('site_id', siteId)  // CRITICAL: Site isolation
+          // CRITICAL: Site isolation
         .eq('id', connection_id)
         .single();
 
@@ -352,7 +347,7 @@ serve(async (req) => {
           access_token_encrypted: null,
           refresh_token_encrypted: null,
         })
-        .eq('site_id', siteId)  // CRITICAL: Site isolation
+          // CRITICAL: Site isolation
         .eq('id', connection_id);
 
       return new Response(

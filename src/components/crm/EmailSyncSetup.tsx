@@ -13,16 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { Mail, RefreshCw, Trash2, CheckCircle, AlertCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+import { AccessibleModal } from "@/components/accessibility/AccessibleModal";
 
 interface EmailAccount {
   id: string;
@@ -251,32 +242,30 @@ export const EmailSyncSetup = ({ companyId }: { companyId: string }) => {
         </CardContent>
       </Card>
 
-      {/* Delete Confirmation Dialog */}
-      <AlertDialog
-        open={!!deleteAccountId}
-        onOpenChange={() => setDeleteAccountId(null)}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Remove Email Account?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This will disconnect your email account and stop syncing messages.
-              Existing synced emails will remain in your CRM.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
+      {/* Delete Confirmation Modal */}
+      <AccessibleModal
+        isOpen={!!deleteAccountId}
+        onClose={() => setDeleteAccountId(null)}
+        title="Remove Email Account?"
+        description="This will disconnect your email account and stop syncing messages. Existing synced emails will remain in your CRM."
+        size="sm"
+        disableClickOutside
+        footer={
+          <>
+            <Button variant="outline" onClick={() => setDeleteAccountId(null)}>
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
               onClick={() =>
                 deleteAccountId && deleteMutation.mutate(deleteAccountId)
               }
-              className="bg-destructive text-destructive-foreground"
             >
               Remove Account
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+            </Button>
+          </>
+        }
+      />
     </>
   );
 };

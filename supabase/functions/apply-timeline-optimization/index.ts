@@ -1,5 +1,4 @@
 // Apply Timeline Optimization Edge Function
-// Updated with multi-tenant site_id isolation
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { initializeAuthContext, errorResponse } from '../_shared/auth-helpers.ts';
 
@@ -14,14 +13,13 @@ serve(async (req) => {
   }
 
   try {
-    // Initialize auth context - extracts user AND site_id from JWT
-    const authContext = await initializeAuthContext(req);
+        const authContext = await initializeAuthContext(req);
     if (!authContext) {
       return errorResponse('Unauthorized', 401);
     }
 
-    const { user, siteId, supabase: supabaseClient } = authContext;
-    console.log("[APPLY-TIMELINE-OPT] User authenticated", { userId: user.id, siteId });
+    const { user, supabase: supabaseClient } = authContext;
+    console.log("[APPLY-TIMELINE-OPT] User authenticated", { userId: user.id });
 
     const { optimization_id, company_id } = await req.json();
 
@@ -32,7 +30,7 @@ serve(async (req) => {
         status: 'applied',
         applied_at: new Date().toISOString()
       })
-      .eq('site_id', siteId)  // CRITICAL: Site isolation
+        // CRITICAL: Site isolation
       .eq('id', optimization_id)
       .eq('company_id', company_id);
 

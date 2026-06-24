@@ -1,17 +1,16 @@
 import { useState, useEffect, useCallback } from 'react';
 import { LocalNotifications, ScheduleOptions } from '@capacitor/local-notifications';
-import { PushNotifications, PermissionStatus } from '@capacitor/push-notifications';
+import { PushNotifications } from '@capacitor/push-notifications';
 import { Device } from '@capacitor/device';
 import { Preferences } from '@capacitor/preferences';
 import { useToast } from './use-toast';
-import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 
 export interface NotificationPayload {
   id?: number;
   title: string;
   body: string;
-  data?: any;
+  data?: Record<string, unknown>;
   schedule?: {
     at: Date;
     repeats?: boolean;
@@ -21,10 +20,10 @@ export interface NotificationPayload {
   attachments?: Array<{
     id: string;
     url: string;
-    options?: any;
+    options?: Record<string, unknown>;
   }>;
   actionTypeId?: string;
-  extra?: any;
+  extra?: Record<string, unknown>;
 }
 
 interface NotificationSettings {
@@ -162,7 +161,7 @@ export const useNotifications = () => {
     }
   };
 
-  const handleNotificationAction = (notificationAction: any) => {
+  const handleNotificationAction = (notificationAction: { actionId: string; notification: NotificationPayload }) => {
     const { actionId, notification } = notificationAction;
     
     switch (actionId) {

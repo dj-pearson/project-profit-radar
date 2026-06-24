@@ -75,13 +75,13 @@ supabase db push --project-ref staging-project-ref
 ### 2.1 Verify Sites Table
 
 ```sql
--- Test: Sites table exists and has Build-Desk site
-SELECT * FROM sites WHERE key = 'builddesk';
+-- Test: Sites table exists and has Brikly site
+SELECT * FROM sites WHERE key = 'brikly';
 
--- Expected: 1 row with Build-Desk configuration
+-- Expected: 1 row with Brikly configuration
 -- ✓ id is UUID
--- ✓ key = 'builddesk'
--- ✓ domain = 'build-desk.com'
+-- ✓ key = 'brikly'
+-- ✓ domain = 'brikly.net'
 -- ✓ is_active = true
 ```
 
@@ -189,7 +189,7 @@ SELECT auth.current_site_id();
 
 ```sql
 -- Create test users and data for two different sites
--- Site A (Build-Desk)
+-- Site A (Brikly)
 INSERT INTO sites (key, name, domain, is_active) 
 VALUES ('test_site_a', 'Test Site A', 'test-a.com', true) 
 RETURNING id;  -- Save as site_a_id
@@ -362,14 +362,14 @@ Update and test each function category:
 import { getSiteConfig, getCurrentSiteId } from '@/lib/site-resolver';
 
 describe('Site Resolver', () => {
-  it('should resolve builddesk domain', async () => {
+  it('should resolve brikly domain', async () => {
     // Mock window.location.hostname
     Object.defineProperty(window, 'location', {
-      value: { hostname: 'build-desk.com' },
+      value: { hostname: 'brikly.net' },
     });
     
     const config = await getSiteConfig();
-    expect(config?.key).toBe('builddesk');
+    expect(config?.key).toBe('brikly');
   });
   
   it('should return null for unknown domain', async () => {
@@ -395,11 +395,11 @@ describe('AuthContext', () => {
     const { result } = renderHook(() => useAuth());
     
     await act(async () => {
-      await result.current.signIn('test@builddesk.com', 'password');
+      await result.current.signIn('test@brikly.net', 'password');
     });
     
     expect(result.current.siteId).toBeTruthy();
-    expect(result.current.siteConfig?.key).toBe('builddesk');
+    expect(result.current.siteConfig?.key).toBe('brikly');
   });
 });
 ```
@@ -428,7 +428,7 @@ describe('useProjects', () => {
 
 ### 5.4 Manual Frontend Testing
 
-- [ ] Visit build-desk.com → Sign in → Verify site_id in localStorage
+- [ ] Visit brikly.net → Sign in → Verify site_id in localStorage
 - [ ] Create project → Verify site_id in database
 - [ ] Query projects → Verify only current site's projects returned
 - [ ] Check network requests → Verify site_id in query params
@@ -447,13 +447,13 @@ import { test, expect } from '@playwright/test';
 test.describe('Multi-Site Isolation', () => {
   test('Site A user cannot see Site B data', async ({ page }) => {
     // Login as Site A user
-    await page.goto('https://build-desk.com/login');
-    await page.fill('[name="email"]', 'usera@builddesk.com');
+    await page.goto('https://brikly.net/login');
+    await page.fill('[name="email"]', 'usera@brikly.net');
     await page.fill('[name="password"]', 'password');
     await page.click('button[type="submit"]');
     
     // Navigate to projects
-    await page.goto('https://build-desk.com/projects');
+    await page.goto('https://brikly.net/projects');
     
     // Get all project names
     const projectNames = await page.locator('[data-testid="project-name"]').allTextContents();
@@ -518,7 +518,7 @@ describe('API Site Isolation', () => {
 -- Test: Query performance with site_id filter
 EXPLAIN ANALYZE
 SELECT * FROM projects
-WHERE site_id = 'builddesk-site-id'
+WHERE site_id = 'brikly-site-id'
 AND company_id = 'some-company-id';
 
 -- Expected: Uses indexes efficiently (idx_projects_site_company)
@@ -532,7 +532,7 @@ AND company_id = 'some-company-id';
 EXPLAIN ANALYZE
 INSERT INTO projects (site_id, company_id, name)
 SELECT
-  'builddesk-site-id',
+  'brikly-site-id',
   'company-id',
   'Test Project ' || generate_series(1, 1000);
 

@@ -1,14 +1,14 @@
-# BuildDesk SEO Strategy Implementation Summary
+# Brikly SEO Strategy Implementation Summary
 
 **Implementation Date:** January 14, 2025  
-**Branch:** `claude/builddesk-seo-strategy-01QDQ75YqRVoLvdrAU2uKE6Q`  
+**Branch:** `claude/brikly-seo-strategy-01QDQ75YqRVoLvdrAU2uKE6Q`  
 **Status:** Phases 1-3 Complete (Weeks 1-8 of 12-week strategy)
 
 ---
 
 ## Executive Summary
 
-Successfully implemented a comprehensive GEO-first (Generative Engine Optimization) SEO strategy targeting AI search engines (ChatGPT Search, Perplexity, Google AI Overviews) and traditional search. Completed **3 of 4 phases** from the builddesk-seo-strategy.md playbook, creating **18 new/modified pages** with **~25,000 words** of high-quality, schema-optimized content.
+Successfully implemented a comprehensive GEO-first (Generative Engine Optimization) SEO strategy targeting AI search engines (ChatGPT Search, Perplexity, Google AI Overviews) and traditional search. Completed **3 of 4 phases** from the brikly-seo-strategy.md playbook, creating **18 new/modified pages** with **~25,000 words** of high-quality, schema-optimized content.
 
 ### Key Achievements
 
@@ -49,7 +49,7 @@ Successfully implemented a comprehensive GEO-first (Generative Engine Optimizati
 
 ## Phase 4: What's Remaining
 
-According to builddesk-seo-strategy.md:
+According to brikly-seo-strategy.md:
 
 ### Comparison Content (Weeks 9-10)
 - Enhance existing Procore/Buildertrend comparison pages with GEO optimization
@@ -86,5 +86,5 @@ According to builddesk-seo-strategy.md:
 
 ---
 
-**Document Owner:** BuildDesk SEO Implementation Team  
+**Document Owner:** Brikly SEO Implementation Team  
 **Last Updated:** January 14, 2025

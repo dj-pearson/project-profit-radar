@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -7,37 +7,21 @@ import { Badge } from '@/components/ui/badge';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { LoadingState } from '@/components/ui/loading-spinner';
 import { ErrorBoundary, ErrorState, EmptyState } from '@/components/ui/error-boundary';
-import { ResponsiveContainer, ResponsiveGrid } from '@/components/layout/ResponsiveContainer';
 import { useLoadingState } from '@/hooks/useLoadingState';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { ThemeToggle } from '@/components/ui/theme-toggle';
 import { usePersistedState } from '@/hooks/usePersistedState';
 import { TableSkeleton } from '@/components/ui/loading-skeleton';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { LeadsKanbanBoard } from '@/components/crm/LeadsKanbanBoard';
+import { LayoutGrid, List } from 'lucide-react';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
-import { 
-  Users, 
-  Search,
-  Filter,
-  Plus,
-  Phone,
-  Mail,
-  MapPin,
-  Building2,
-  DollarSign,
-  Calendar,
-  User,
-  Edit,
-  Trash2,
-  FileText,
-  AlertCircle,
-  CheckCircle2
-} from 'lucide-react';
+import { AccessibleForm, AccessibleFormField, AccessibleTextarea, AccessibleFieldset } from '@/components/accessibility/AccessibleForm';
+import { Users, Search, Plus, Phone, Mail, Building2, DollarSign, Edit } from 'lucide-react';
 import { LeadDetailView } from '@/components/crm/LeadDetailView';
 import { CSVImportButton } from '@/components/smart-import';
 
@@ -339,14 +323,15 @@ const CRMLeads = () => {
             <Card className="mb-6">
               <CardContent className="pt-6">
                 <div className="flex flex-col lg:flex-row gap-4">
-                  <div className="flex-1">
+                  <div className="flex-1" role="search" aria-label="Search leads">
                     <div className="relative">
-                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" aria-hidden="true" />
                       <Input
                         placeholder="Search leads by name, email, company, or project..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                         className="pl-10"
+                        aria-label="Search leads"
                       />
                     </div>
                   </div>
@@ -408,102 +393,91 @@ const CRMLeads = () => {
 
                     <Dialog open={showNewLeadDialog} onOpenChange={setShowNewLeadDialog}>
                       <DialogTrigger asChild>
-                        <Button>
-                          <Plus className="h-4 w-4 mr-2" />
+                        <Button aria-label="Create new lead">
+                          <Plus className="h-4 w-4 mr-2" aria-hidden="true" />
                           New Lead
-                          <kbd className="ml-2 hidden lg:inline-block px-2 py-0.5 text-xs bg-background/50 rounded border border-border">
+                          <kbd className="ml-2 hidden lg:inline-block px-2 py-0.5 text-xs bg-background/50 rounded border border-border" aria-label="Keyboard shortcut: Control plus L">
                             Ctrl+L
                           </kbd>
                         </Button>
                       </DialogTrigger>
-                      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+                      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto" aria-describedby="new-lead-description">
                         <DialogHeader>
                           <DialogTitle>Create New Lead</DialogTitle>
-                          <DialogDescription>
+                          <DialogDescription id="new-lead-description">
                             Add a new construction lead to your pipeline.
                           </DialogDescription>
                         </DialogHeader>
                         
-                        <div className="grid gap-6 py-4">
-                          {/* Basic Information */}
-                          <div className="space-y-4">
-                            <h3 className="text-lg font-medium">Contact Information</h3>
+                        <AccessibleForm
+                          onSubmit={() => { createLead(); }}
+                          ariaLabel="Create new lead form"
+                          className="space-y-6 py-4"
+                        >
+                          <AccessibleFieldset legend="Contact Information">
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                              <div>
-                                <Label htmlFor="first_name">First Name *</Label>
-                                <Input
-                                  id="first_name"
-                                  value={newLead.first_name || ''}
-                                  onChange={(e) => setNewLead({...newLead, first_name: e.target.value})}
-                                  placeholder="John"
-                                />
-                              </div>
-                              <div>
-                                <Label htmlFor="last_name">Last Name *</Label>
-                                <Input
-                                  id="last_name"
-                                  value={newLead.last_name || ''}
-                                  onChange={(e) => setNewLead({...newLead, last_name: e.target.value})}
-                                  placeholder="Smith"
-                                />
-                              </div>
-                              <div>
-                                <Label htmlFor="email">Email</Label>
-                                <Input
-                                  id="email"
-                                  type="email"
-                                  value={newLead.email || ''}
-                                  onChange={(e) => setNewLead({...newLead, email: e.target.value})}
-                                  placeholder="john.smith@email.com"
-                                />
-                              </div>
-                              <div>
-                                <Label htmlFor="phone">Phone</Label>
-                                <Input
-                                  id="phone"
-                                  value={newLead.phone || ''}
-                                  onChange={(e) => setNewLead({...newLead, phone: e.target.value})}
-                                  placeholder="(555) 123-4567"
-                                />
-                              </div>
-                              <div>
-                                <Label htmlFor="company_name">Company Name</Label>
-                                <Input
-                                  id="company_name"
-                                  value={newLead.company_name || ''}
-                                  onChange={(e) => setNewLead({...newLead, company_name: e.target.value})}
-                                  placeholder="ABC Corporation"
-                                />
-                              </div>
-                              <div>
-                                <Label htmlFor="job_title">Job Title</Label>
-                                <Input
-                                  id="job_title"
-                                  value={newLead.job_title || ''}
-                                  onChange={(e) => setNewLead({...newLead, job_title: e.target.value})}
-                                  placeholder="Property Manager"
-                                />
-                              </div>
+                              <AccessibleFormField
+                                name="first_name"
+                                label="First Name"
+                                required
+                                value={newLead.first_name || ''}
+                                onChange={(e) => setNewLead({...newLead, first_name: e.target.value})}
+                                placeholder="John"
+                              />
+                              <AccessibleFormField
+                                name="last_name"
+                                label="Last Name"
+                                required
+                                value={newLead.last_name || ''}
+                                onChange={(e) => setNewLead({...newLead, last_name: e.target.value})}
+                                placeholder="Smith"
+                              />
+                              <AccessibleFormField
+                                name="email"
+                                label="Email"
+                                type="email"
+                                value={newLead.email || ''}
+                                onChange={(e) => setNewLead({...newLead, email: e.target.value})}
+                                placeholder="john.smith@email.com"
+                              />
+                              <AccessibleFormField
+                                name="phone"
+                                label="Phone"
+                                type="tel"
+                                value={newLead.phone || ''}
+                                onChange={(e) => setNewLead({...newLead, phone: e.target.value})}
+                                placeholder="(555) 123-4567"
+                              />
+                              <AccessibleFormField
+                                name="company_name"
+                                label="Company Name"
+                                value={newLead.company_name || ''}
+                                onChange={(e) => setNewLead({...newLead, company_name: e.target.value})}
+                                placeholder="ABC Corporation"
+                              />
+                              <AccessibleFormField
+                                name="job_title"
+                                label="Job Title"
+                                value={newLead.job_title || ''}
+                                onChange={(e) => setNewLead({...newLead, job_title: e.target.value})}
+                                placeholder="Property Manager"
+                              />
                             </div>
-                          </div>
+                          </AccessibleFieldset>
 
-                          {/* Project Information */}
-                          <div className="space-y-4">
-                            <h3 className="text-lg font-medium">Project Details</h3>
+                          <AccessibleFieldset legend="Project Details">
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                              <div>
-                                <Label htmlFor="project_name">Project Name</Label>
-                                <Input
-                                  id="project_name"
-                                  value={newLead.project_name || ''}
-                                  onChange={(e) => setNewLead({...newLead, project_name: e.target.value})}
-                                  placeholder="Kitchen Renovation"
-                                />
-                              </div>
+                              <AccessibleFormField
+                                name="project_name"
+                                label="Project Name"
+                                value={newLead.project_name || ''}
+                                onChange={(e) => setNewLead({...newLead, project_name: e.target.value})}
+                                placeholder="Kitchen Renovation"
+                              />
                               <div>
                                 <Label htmlFor="project_type">Project Type</Label>
                                 <Select value={newLead.project_type || ''} onValueChange={(value) => setNewLead({...newLead, project_type: value})}>
-                                  <SelectTrigger>
+                                  <SelectTrigger aria-label="Project type">
                                     <SelectValue placeholder="Select project type" />
                                   </SelectTrigger>
                                   <SelectContent>
@@ -520,30 +494,27 @@ const CRMLeads = () => {
                                   </SelectContent>
                                 </Select>
                               </div>
-                              <div className="md:col-span-2">
-                                <Label htmlFor="project_description">Project Description</Label>
-                                <Textarea
-                                  id="project_description"
-                                  value={newLead.project_description || ''}
-                                  onChange={(e) => setNewLead({...newLead, project_description: e.target.value})}
-                                  placeholder="Describe the project scope and requirements..."
-                                  rows={3}
-                                />
-                              </div>
-                              <div>
-                                <Label htmlFor="estimated_budget">Estimated Budget ($)</Label>
-                                <Input
-                                  id="estimated_budget"
-                                  type="number"
-                                  value={newLead.estimated_budget || ''}
-                                  onChange={(e) => setNewLead({...newLead, estimated_budget: Number(e.target.value)})}
-                                  placeholder="50000"
-                                />
-                              </div>
+                              <AccessibleTextarea
+                                name="project_description"
+                                label="Project Description"
+                                value={newLead.project_description || ''}
+                                onChange={(e) => setNewLead({...newLead, project_description: e.target.value})}
+                                placeholder="Describe the project scope and requirements..."
+                                rows={3}
+                                className="md:col-span-2"
+                              />
+                              <AccessibleFormField
+                                name="estimated_budget"
+                                label="Estimated Budget ($)"
+                                type="number"
+                                value={newLead.estimated_budget || ''}
+                                onChange={(e) => setNewLead({...newLead, estimated_budget: Number(e.target.value)})}
+                                placeholder="50000"
+                              />
                               <div>
                                 <Label htmlFor="budget_range">Budget Range</Label>
                                 <Select value={newLead.budget_range || ''} onValueChange={(value) => setNewLead({...newLead, budget_range: value})}>
-                                  <SelectTrigger>
+                                  <SelectTrigger aria-label="Budget range">
                                     <SelectValue placeholder="Select budget range" />
                                   </SelectTrigger>
                                   <SelectContent>
@@ -559,16 +530,14 @@ const CRMLeads = () => {
                                 </Select>
                               </div>
                             </div>
-                          </div>
+                          </AccessibleFieldset>
 
-                          {/* Lead Classification */}
-                          <div className="space-y-4">
-                            <h3 className="text-lg font-medium">Lead Classification</h3>
+                          <AccessibleFieldset legend="Lead Classification">
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                               <div>
                                 <Label htmlFor="status">Status</Label>
                                 <Select value={newLead.status || 'new'} onValueChange={(value) => setNewLead({...newLead, status: value})}>
-                                  <SelectTrigger>
+                                  <SelectTrigger aria-label="Lead status">
                                     <SelectValue />
                                   </SelectTrigger>
                                   <SelectContent>
@@ -582,7 +551,7 @@ const CRMLeads = () => {
                               <div>
                                 <Label htmlFor="priority">Priority</Label>
                                 <Select value={newLead.priority || 'medium'} onValueChange={(value) => setNewLead({...newLead, priority: value})}>
-                                  <SelectTrigger>
+                                  <SelectTrigger aria-label="Lead priority">
                                     <SelectValue />
                                   </SelectTrigger>
                                   <SelectContent>
@@ -596,7 +565,7 @@ const CRMLeads = () => {
                               <div>
                                 <Label htmlFor="lead_source">Lead Source</Label>
                                 <Select value={newLead.lead_source || 'website'} onValueChange={(value) => setNewLead({...newLead, lead_source: value})}>
-                                  <SelectTrigger>
+                                  <SelectTrigger aria-label="Lead source">
                                     <SelectValue />
                                   </SelectTrigger>
                                   <SelectContent>
@@ -614,11 +583,9 @@ const CRMLeads = () => {
                                 </Select>
                               </div>
                             </div>
-                          </div>
+                          </AccessibleFieldset>
 
-                          {/* Construction-Specific Fields */}
-                          <div className="space-y-4">
-                            <h3 className="text-lg font-medium">Construction Details</h3>
+                          <AccessibleFieldset legend="Construction Details">
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                               <div className="space-y-2">
                                 <div className="flex items-center space-x-2">
@@ -666,7 +633,7 @@ const CRMLeads = () => {
                                 <div>
                                   <Label htmlFor="financing_type">Financing Type</Label>
                                   <Select value={newLead.financing_type || ''} onValueChange={(value) => setNewLead({...newLead, financing_type: value})}>
-                                    <SelectTrigger>
+                                    <SelectTrigger aria-label="Financing type">
                                       <SelectValue placeholder="Select financing type" />
                                     </SelectTrigger>
                                     <SelectContent>
@@ -682,7 +649,7 @@ const CRMLeads = () => {
                                 <div>
                                   <Label htmlFor="decision_timeline">Decision Timeline</Label>
                                   <Select value={newLead.decision_timeline || ''} onValueChange={(value) => setNewLead({...newLead, decision_timeline: value})}>
-                                    <SelectTrigger>
+                                    <SelectTrigger aria-label="Decision timeline">
                                       <SelectValue placeholder="When will they decide?" />
                                     </SelectTrigger>
                                     <SelectContent>
@@ -696,29 +663,26 @@ const CRMLeads = () => {
                                 </div>
                               </div>
                             </div>
-                          </div>
+                          </AccessibleFieldset>
 
-                          {/* Notes */}
-                          <div>
-                            <Label htmlFor="notes">Notes</Label>
-                            <Textarea
-                              id="notes"
-                              value={newLead.notes || ''}
-                              onChange={(e) => setNewLead({...newLead, notes: e.target.value})}
-                              placeholder="Additional notes about this lead..."
-                              rows={3}
-                            />
-                          </div>
-                        </div>
+                          <AccessibleTextarea
+                            name="notes"
+                            label="Notes"
+                            value={newLead.notes || ''}
+                            onChange={(e) => setNewLead({...newLead, notes: e.target.value})}
+                            placeholder="Additional notes about this lead..."
+                            rows={3}
+                          />
 
-                        <div className="flex justify-end space-x-2">
-                          <Button variant="outline" onClick={() => setShowNewLeadDialog(false)}>
-                            Cancel
-                          </Button>
-                          <Button onClick={createLead}>
-                            Create Lead
-                          </Button>
-                        </div>
+                          <div className="flex justify-end space-x-2">
+                            <Button type="button" variant="outline" onClick={() => setShowNewLeadDialog(false)}>
+                              Cancel
+                            </Button>
+                            <Button type="submit">
+                              Create Lead
+                            </Button>
+                          </div>
+                        </AccessibleForm>
                       </DialogContent>
                     </Dialog>
                   </div>
@@ -726,6 +690,42 @@ const CRMLeads = () => {
               </CardContent>
             </Card>
 
+            {/* Leads: List + Kanban views */}
+            <Tabs defaultValue="list" className="w-full">
+              <TabsList className="mb-4">
+                <TabsTrigger value="list" className="flex items-center gap-2">
+                  <List className="h-4 w-4" aria-hidden="true" />
+                  List
+                </TabsTrigger>
+                <TabsTrigger value="kanban" className="flex items-center gap-2">
+                  <LayoutGrid className="h-4 w-4" aria-hidden="true" />
+                  Kanban
+                </TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="kanban">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Pipeline ({filteredLeads.length})</CardTitle>
+                    <CardDescription>
+                      Drag leads between stages to update their status. Cards are color-coded by estimated value.
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    {leadsLoading ? (
+                      <TableSkeleton rows={4} columns={4} />
+                    ) : (
+                      <LeadsKanbanBoard
+                        leads={filteredLeads}
+                        onStatusChange={(leadId, status) => updateLead(leadId, { status })}
+                        onLeadClick={(leadId) => setSelectedLead(leadId)}
+                      />
+                    )}
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              <TabsContent value="list">
             {/* Leads List */}
             <Card>
               <CardHeader>
@@ -873,6 +873,8 @@ const CRMLeads = () => {
                 </ErrorBoundary>
               </CardContent>
             </Card>
+              </TabsContent>
+            </Tabs>
     </DashboardLayout>
   );
 };

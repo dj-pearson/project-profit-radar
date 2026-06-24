@@ -1,4 +1,4 @@
-import { Suspense, useEffect } from "react";
+import { Suspense, useEffect, lazy, type ReactNode } from "react";
 import { BrowserRouter, Routes } from "react-router-dom";
 import { HelmetProvider } from "react-helmet-async";
 import { QueryClientProvider } from "@tanstack/react-query";
@@ -8,50 +8,109 @@ import { ThemeProvider } from "@/contexts/ThemeContext";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { SubscriptionProvider } from "@/contexts/SubscriptionContext";
 import { PlatformProvider } from "@/contexts/PlatformContext";
-import { PWAInstallPrompt } from "@/components/PWAInstallPrompt";
-import { OfflineIndicator } from "@/components/OfflineIndicator";
-import { NotificationPermission } from "@/components/NotificationPermission";
 import { Toaster } from "@/components/ui/toaster";
-import { ShortcutsHelp } from '@/components/ui/shortcuts-help';
 import { ContextMenuProvider } from '@/components/ui/context-menu-provider';
 import CriticalErrorBoundary from "@/components/CriticalErrorBoundary";
 import { DashboardSkeleton } from "@/components/ui/loading-skeleton";
 import { preloadHighPriorityRoutes } from "@/utils/lazyRoutes";
-import { UnifiedSEOSystem } from "@/components/seo/UnifiedSEOSystem";
 import { AccessibilityProvider } from "@/components/accessibility/AccessibilityProvider";
-import { CommandPalette } from "@/components/navigation/CommandPalette";
-import { KeyboardShortcutsPanel } from "@/components/help/KeyboardShortcutsPanel";
 import { useGlobalShortcuts } from "@/hooks/useKeyboardShortcuts";
+import { useNavigationShortcuts } from "@/hooks/useNavigationShortcuts";
+import { SharedElementRoot } from "@/components/mobile/SharedElementTransition";
 
 // Import centralized route configuration
 import { allRoutes } from "@/routes";
 
+// Lazy load non-critical components that aren't needed for initial render
+const CookieConsentBanner = lazy(() => import("@/components/legal/CookieConsentBanner"));
+const PWAInstallPrompt = lazy(() => import("@/components/PWAInstallPrompt").then(m => ({ default: m.PWAInstallPrompt })));
+const OfflineIndicator = lazy(() => import("@/components/OfflineIndicator").then(m => ({ default: m.OfflineIndicator })));
+const SyncQueueIndicator = lazy(() => import("@/components/OfflineIndicator").then(m => ({ default: m.SyncQueueIndicator })));
+const NotificationPermission = lazy(() => import("@/components/NotificationPermission").then(m => ({ default: m.NotificationPermission })));
+const ShortcutsHelp = lazy(() => import("@/components/ui/shortcuts-help").then(m => ({ default: m.ShortcutsHelp })));
+const UnifiedSEOSystem = lazy(() => import("@/components/seo/UnifiedSEOSystem").then(m => ({ default: m.UnifiedSEOSystem })));
+const AutoSchemaInjector = lazy(() => import("@/components/seo/AutoSchemaInjector"));
+const CommandPalette = lazy(() => import("@/components/navigation/CommandPalette").then(m => ({ default: m.CommandPalette })));
+const KeyboardShortcutsPanel = lazy(() => import("@/components/help/KeyboardShortcutsPanel").then(m => ({ default: m.KeyboardShortcutsPanel })));
+
 // Component that needs Router context
 const AppContent = () => {
   const globalShortcuts = useGlobalShortcuts();
+  // Power-user navigation shortcuts: Shift+? overlay, G-chords, context-aware N (US-095).
+  useNavigationShortcuts();
 
   return (
     <>
-      <UnifiedSEOSystem autoOptimize={true} enableAnalytics={true} />
+      {/* SEO - deferred to not block initial render */}
+      <Suspense fallback={null}>
+        <UnifiedSEOSystem autoOptimize={true} enableAnalytics={true} />
+        <AutoSchemaInjector />
+      </Suspense>
+
+      {/* Main Routes */}
       <Suspense fallback={<DashboardSkeleton />}>
         <Routes>
           {allRoutes}
         </Routes>
       </Suspense>
 
-      {/* PWA Components */}
-      <PWAInstallPrompt />
-      <OfflineIndicator />
-      <NotificationPermission />
+      {/* Essential UI */}
       <Toaster />
-      <ShortcutsHelp />
 
-      {/* Usability Enhancements */}
-      <CommandPalette />
-      <KeyboardShortcutsPanel shortcuts={globalShortcuts} />
+      {/* Cookie consent banner — appears on every public page until the user
+          makes a choice. Honors GPC, persists choices in localStorage, and
+          drives Google Consent Mode v2 / PostHog opt-in. */}
+      <Suspense fallback={null}>
+        <CookieConsentBanner />
+      </Suspense>
+
+      {/* PWA Components - deferred, not critical for initial render */}
+      <Suspense fallback={null}>
+        <PWAInstallPrompt />
+        <OfflineIndicator />
+        <NotificationPermission />
+        <ShortcutsHelp />
+      </Suspense>
+
+      {/* Usability Enhancements - deferred */}
+      <Suspense fallback={null}>
+        <CommandPalette />
+        <KeyboardShortcutsPanel shortcuts={globalShortcuts} />
+      </Suspense>
     </>
   );
 };
+
+// Composed provider to reduce nesting from 9 to 6 levels
+const UIProviders = ({ children }: { children: ReactNode }) => (
+  <AccessibilityProvider>
+    <ContextMenuProvider>
+      <PlatformProvider>
+        <ThemeProvider>
+          {children}
+        </ThemeProvider>
+      </PlatformProvider>
+    </ContextMenuProvider>
+  </AccessibilityProvider>
+);
+
+const AppProviders = ({ children }: { children: ReactNode }) => (
+  <CriticalErrorBoundary>
+    <QueryClientProvider client={queryClient}>
+      <TenantProvider>
+        <AuthProvider>
+          <SubscriptionProvider>
+            <UIProviders>
+              <HelmetProvider>
+                {children}
+              </HelmetProvider>
+            </UIProviders>
+          </SubscriptionProvider>
+        </AuthProvider>
+      </TenantProvider>
+    </QueryClientProvider>
+  </CriticalErrorBoundary>
+);
 
 const App = () => {
   // Preload high-priority routes on app initialization
@@ -60,29 +119,13 @@ const App = () => {
   }, []);
 
   return (
-    <CriticalErrorBoundary>
-      <QueryClientProvider client={queryClient}>
-        <TenantProvider>
-          <AuthProvider>
-            <SubscriptionProvider>
-              <AccessibilityProvider>
-                <ContextMenuProvider>
-                  <PlatformProvider>
-                    <ThemeProvider>
-                      <HelmetProvider>
-                        <BrowserRouter>
-                          <AppContent />
-                        </BrowserRouter>
-                      </HelmetProvider>
-                    </ThemeProvider>
-                  </PlatformProvider>
-                </ContextMenuProvider>
-              </AccessibilityProvider>
-            </SubscriptionProvider>
-          </AuthProvider>
-        </TenantProvider>
-      </QueryClientProvider>
-    </CriticalErrorBoundary>
+    <AppProviders>
+      <BrowserRouter>
+        <SharedElementRoot scope="brikly">
+          <AppContent />
+        </SharedElementRoot>
+      </BrowserRouter>
+    </AppProviders>
   );
 };
 

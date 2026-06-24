@@ -1,5 +1,3 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
 import { CheckCircle, Clock, Calendar, AlertTriangle, TrendingUp, ArrowRight, Download, Users, Zap, Target, BarChart3, Layers, Cloud } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -24,15 +22,15 @@ const ConstructionSchedulingSoftware = () => {
     },
     {
       question: "What's the ROI of construction scheduling software?",
-      answer: "Most contractors see 20-30% reduction in project delays and 15-25% improvement in on-time completion rates. BuildDesk customers typically save $75,000+ annually through better scheduling, reduced delays, and improved resource utilization."
+      answer: "Most contractors see 20-30% reduction in project delays and 15-25% improvement in on-time completion rates. Brikly customers typically save $75,000+ annually through better scheduling, reduced delays, and improved resource utilization."
     },
     {
       question: "Can construction scheduling software integrate with other tools?",
-      answer: "Yes, BuildDesk's scheduling software integrates with QuickBooks for cost tracking, project management tools, and mobile apps for field updates. This ensures your schedule stays synchronized with actual progress and costs."
+      answer: "Yes, Brikly's scheduling software integrates with QuickBooks for cost tracking, project management tools, and mobile apps for field updates. This ensures your schedule stays synchronized with actual progress and costs."
     },
     {
       question: "How accurate is automated construction scheduling?",
-      answer: "BuildDesk's automated scheduling is 90%+ accurate because it uses historical project data, resource availability, and weather patterns to create realistic timelines. Manual adjustments can be made as conditions change, maintaining accuracy throughout the project."
+      answer: "Brikly's automated scheduling is 90%+ accurate because it uses historical project data, resource availability, and weather patterns to create realistic timelines. Manual adjustments can be made as conditions change, maintaining accuracy throughout the project."
     }
   ];
 
@@ -121,7 +119,7 @@ const ConstructionSchedulingSoftware = () => {
       projectSize: "$1M-$5M",
       improvement: "Reduced delays by 85%",
       savings: "$180,000 annually",
-      quote: "BuildDesk's scheduling prevented four major delays in our first quarter. The weather integration alone saved us $40K by proactively adjusting our outdoor work.",
+      quote: "Brikly's scheduling prevented four major delays in our first quarter. The weather integration alone saved us $40K by proactively adjusting our outdoor work.",
       metrics: {
         onTimeCompletion: { before: 60, after: 95 },
         averageDelay: { before: "3.2 weeks", after: "0.5 weeks" }
@@ -208,8 +206,8 @@ const ConstructionSchedulingSoftware = () => {
   );
 
   const breadcrumbSchema = createBreadcrumbSchema([
-    { name: "Home", url: "https://builddesk.com" },
-    { name: "Construction Scheduling Software", url: "https://builddesk.com/construction-scheduling-software" }
+    { name: "Home", url: "https://brikly.net" },
+    { name: "Construction Scheduling Software", url: "https://brikly.net/construction-scheduling-software" }
   ]);
 
   const howToSchema = createHowToSchema(
@@ -227,7 +225,7 @@ const ConstructionSchedulingSoftware = () => {
     <>
       {/* Enhanced SEO with PageSEO Component */}
       <PageSEO
-        title="Construction Scheduling Software - Gantt Charts & Resource Management | BuildDesk"
+        title="Construction Scheduling Software - Gantt Charts & Resource Management | Brikly"
         description="Construction scheduling software with Gantt charts, resource management, critical path analysis. Reduce delays 30%. $350/month. Weather integration, crew scheduling, mobile updates. See features."
         keywords={[
           'construction scheduling software',
@@ -498,10 +496,10 @@ const ConstructionSchedulingSoftware = () => {
             </div>
           </div>
 
-          {/* BuildDesk Scheduling Features */}
+          {/* Brikly Scheduling Features */}
           <div className="max-w-4xl mx-auto mb-16">
             <h2 className="text-3xl font-bold text-construction-dark text-center mb-8">
-              Why Choose BuildDesk for Construction Scheduling?
+              Why Choose Brikly for Construction Scheduling?
             </h2>
             <div className="grid md:grid-cols-2 gap-8">
               <div className="space-y-6">
@@ -619,7 +617,7 @@ const ConstructionSchedulingSoftware = () => {
                   Ready to Eliminate Project Delays?
                 </h2>
                 <p className="text-lg text-muted-foreground mb-6">
-                  Join contractors who've reduced delays by 85% with BuildDesk's advanced scheduling. 
+                  Join contractors who've reduced delays by 85% with Brikly's advanced scheduling. 
                   Get Gantt charts, resource management, and weather integration in one platform.
                 </p>
                 

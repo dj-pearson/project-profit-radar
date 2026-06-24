@@ -27,21 +27,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import {
-  Search,
-  Download,
-  Calendar,
-  Mail,
-  Phone,
-  Building,
-  TrendingUp,
-  Clock,
-  CheckCircle,
-  XCircle,
-  AlertCircle,
-  User,
-  Filter,
-} from 'lucide-react';
+import { Search, Download, Calendar, Mail, Phone, Building, TrendingUp, Clock, CheckCircle, XCircle, AlertCircle, Filter, type LucideIcon } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
@@ -95,6 +81,16 @@ interface SalesContact {
   leads?: Lead;
 }
 
+interface LeadActivity {
+  id: string;
+  lead_id: string;
+  activity_type: string;
+  activity_metadata?: Record<string, unknown>;
+  created_at: string;
+}
+
+type CSVCellValue = string | number;
+
 export const LeadManagement = () => {
   const { userProfile } = useAuth();
   const navigate = useNavigate();
@@ -108,7 +104,7 @@ export const LeadManagement = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
-  const [leadActivities, setLeadActivities] = useState<any[]>([]);
+  const [leadActivities, setLeadActivities] = useState<LeadActivity[]>([]);
 
   // Check if user is admin
   useEffect(() => {
@@ -136,10 +132,10 @@ export const LeadManagement = () => {
           .from('leads')
           .select('*')
           .order('created_at', { ascending: false })
-          .limit(100) as any;
+          .limit(100);
 
         if (error) throw error;
-        setLeads(data as any || []);
+        setLeads((data as Lead[]) || []);
       } else if (activeTab === 'demos') {
         const { data, error } = await supabase
           .from('demo_requests')
@@ -148,10 +144,10 @@ export const LeadManagement = () => {
             leads (*)
           `)
           .order('created_at', { ascending: false })
-          .limit(100) as any;
+          .limit(100);
 
         if (error) throw error;
-        setDemoRequests(data as any || []);
+        setDemoRequests((data as DemoRequest[]) || []);
       } else if (activeTab === 'sales') {
         const { data, error } = await supabase
           .from('sales_contact_requests')
@@ -160,10 +156,10 @@ export const LeadManagement = () => {
             leads (*)
           `)
           .order('created_at', { ascending: false })
-          .limit(100) as any;
+          .limit(100);
 
         if (error) throw error;
-        setSalesContacts(data as any || []);
+        setSalesContacts((data as SalesContact[]) || []);
       }
     } catch (error) {
       console.error('Failed to load data:', error);
@@ -247,7 +243,7 @@ export const LeadManagement = () => {
 
   // Export to CSV
   const exportToCSV = () => {
-    let data: any[] = [];
+    let data: CSVCellValue[][] = [];
     let headers: string[] = [];
 
     if (activeTab === 'leads') {
@@ -353,7 +349,7 @@ export const LeadManagement = () => {
 
   // Get status badge
   const getStatusBadge = (status: string) => {
-    const statusConfig: Record<string, { color: string; icon: any }> = {
+    const statusConfig: Record<string, { color: string; icon: LucideIcon }> = {
       new: { color: 'bg-blue-500', icon: AlertCircle },
       contacted: { color: 'bg-purple-500', icon: Mail },
       qualified: { color: 'bg-green-500', icon: CheckCircle },
@@ -397,14 +393,15 @@ export const LeadManagement = () => {
         {/* Search and Filters */}
         <Card>
           <CardContent className="pt-6">
-            <div className="flex gap-4">
+            <div className="flex gap-4" role="search" aria-label="Search and filter leads">
               <div className="flex-1 relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" aria-hidden="true" />
                 <Input
                   placeholder="Search by email, name, or company..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="pl-10"
+                  aria-label="Search by email, name, or company"
                 />
               </div>
               <Select value={statusFilter} onValueChange={setStatusFilter}>
@@ -446,8 +443,8 @@ export const LeadManagement = () => {
         </Card>
 
         {/* Tabs */}
-        <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid w-full grid-cols-3">
+        <Tabs value={activeTab} onValueChange={setActiveTab} aria-label="Lead management categories">
+          <TabsList className="grid w-full grid-cols-3" aria-label="Lead categories">
             <TabsTrigger value="leads">
               Leads ({leads.length})
             </TabsTrigger>
@@ -470,7 +467,7 @@ export const LeadManagement = () => {
               </CardHeader>
               <CardContent>
                 {loading ? (
-                  <div className="text-center py-8">Loading...</div>
+                  <div className="space-y-3">{[1,2,3,4,5].map(i => <div key={i} className="h-8 bg-muted animate-pulse rounded" />)}</div>
                 ) : filteredLeads.length === 0 ? (
                   <div className="text-center py-8 text-muted-foreground">
                     No leads found

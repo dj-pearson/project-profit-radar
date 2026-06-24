@@ -9,7 +9,7 @@ import { supabase } from '@/integrations/supabase/client';
 
 interface ActivityEvent {
   actionType: string;
-  actionDetails?: Record<string, any>;
+  actionDetails?: Record<string, unknown>;
   url?: string;
   duration?: number;
 }
@@ -116,7 +116,7 @@ export const useActivityTracking = () => {
    * Track a feature usage
    */
   const trackFeatureUsage = useCallback(
-    async (featureName: string, details?: Record<string, any>) => {
+    async (featureName: string, details?: Record<string, unknown>) => {
       await trackAction({
         actionType: 'feature_used',
         actionDetails: {

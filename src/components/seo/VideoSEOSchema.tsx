@@ -23,8 +23,8 @@ export const VideoSEOSchema: React.FC<VideoSEOProps> = ({
   contentUrl,
   embedUrl,
   publisher = {
-    name: "BuildDesk",
-    logo: "https://builddesk.com/logo.png"
+    name: "Brikly",
+    logo: "https://brikly.net/logo.png"
   }
 }) => {
   const schemaData = {
@@ -106,11 +106,11 @@ export const WebPageSEOSchema: React.FC<WebPageSEOProps> = ({
     mainEntity,
     publisher: {
       "@type": "Organization",
-      name: "BuildDesk",
-      url: "https://builddesk.com",
+      name: "Brikly",
+      url: "https://brikly.net",
       logo: {
         "@type": "ImageObject",
-        url: "https://builddesk.com/logo.png"
+        url: "https://brikly.net/logo.png"
       }
     }
   };

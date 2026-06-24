@@ -2,18 +2,18 @@
 
 **Last Updated:** 2025-11-13
 **Version:** 1.0
-**App ID:** com.builddesk.app
-**App Name:** BuildDesk
+**App ID:** com.brikly.app
+**App Name:** Brikly
 
 ---
 
 ## Overview
 
-This guide covers the complete process for deploying BuildDesk to the Apple App Store (iOS) and Google Play Store (Android).
+This guide covers the complete process for deploying Brikly to the Apple App Store (iOS) and Google Play Store (Android).
 
 ### Current Status
 - ✅ Capacitor configured (v7.4.1)
-- ✅ App ID: com.builddesk.app
+- ✅ App ID: com.brikly.app
 - ✅ Android project initialized
 - ⚠️ iOS project needs initialization
 - ❌ Not yet deployed to stores
@@ -114,19 +114,19 @@ Add the following keys to `ios/App/App/Info.plist` after initialization:
 ```xml
 <!-- Camera and Photo Library -->
 <key>NSCameraUsageDescription</key>
-<string>BuildDesk needs access to your camera to capture photos of work sites, materials, and documents.</string>
+<string>Brikly needs access to your camera to capture photos of work sites, materials, and documents.</string>
 <key>NSPhotoLibraryUsageDescription</key>
-<string>BuildDesk needs access to your photo library to attach images to daily reports and documents.</string>
+<string>Brikly needs access to your photo library to attach images to daily reports and documents.</string>
 <key>NSPhotoLibraryAddUsageDescription</key>
-<string>BuildDesk needs permission to save photos to your library.</string>
+<string>Brikly needs permission to save photos to your library.</string>
 
 <!-- Location Services -->
 <key>NSLocationWhenInUseUsageDescription</key>
-<string>BuildDesk needs your location to track time entries at job sites and provide location-based features.</string>
+<string>Brikly needs your location to track time entries at job sites and provide location-based features.</string>
 <key>NSLocationAlwaysUsageDescription</key>
-<string>BuildDesk needs continuous location access for geofencing and automatic check-in/out at job sites.</string>
+<string>Brikly needs continuous location access for geofencing and automatic check-in/out at job sites.</string>
 <key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
-<string>BuildDesk uses your location to track work hours at job sites and enable automatic time tracking.</string>
+<string>Brikly uses your location to track work hours at job sites and enable automatic time tracking.</string>
 ```
 
 ### Android Permissions (AndroidManifest.xml)
@@ -183,7 +183,7 @@ npx cap open ios
    - Select "App" target in project navigator
    - Go to "Signing & Capabilities" tab
    - Select your Apple Developer Team
-   - Verify Bundle Identifier: `com.builddesk.app`
+   - Verify Bundle Identifier: `com.brikly.app`
    - Enable "Automatically manage signing"
 
 3. **Configure App Icons**
@@ -197,7 +197,7 @@ npx cap open ios
 
 4. **Configure Launch Screen**
    - Update LaunchScreen.storyboard
-   - Add BuildDesk logo and branding
+   - Add Brikly logo and branding
 
 5. **Set Deployment Target**
    - Set to iOS 13.0 or higher
@@ -217,14 +217,14 @@ npx cap open ios
    - Click "My Apps" → "+" → "New App"
    - Fill in required information:
      - Platform: iOS
-     - Name: BuildDesk
+     - Name: Brikly
      - Primary Language: English (U.S.)
-     - Bundle ID: com.builddesk.app
-     - SKU: com.builddesk.app
+     - Bundle ID: com.brikly.app
+     - SKU: com.brikly.app
 
 2. **App Information**
    ```
-   Name: BuildDesk - Construction Management
+   Name: Brikly - Construction Management
    Subtitle: Real-time Job Costing & Project Tracking
    Category: Business
    Secondary Category: Productivity
@@ -261,7 +261,7 @@ iPad Pro (12.9" - 3rd Gen):
 **Text Content:**
 ```
 Description:
-BuildDesk is the construction management platform built for contractors who need real-time job costing without enterprise complexity.
+Brikly is the construction management platform built for contractors who need real-time job costing without enterprise complexity.
 
 ⭐ KEY FEATURES
 
@@ -319,14 +319,14 @@ Starting at $350/month with unlimited users
 ✓ All features included
 ✓ Cancel anytime
 
-🏆 WHY BUILDDESK?
-Unlike complicated enterprise software, BuildDesk is designed specifically for SMB contractors who need powerful features without the complexity. Get up and running in minutes, not months.
+🏆 WHY BRIKLY?
+Unlike complicated enterprise software, Brikly is designed specifically for SMB contractors who need powerful features without the complexity. Get up and running in minutes, not months.
 
 📞 SUPPORT:
 • In-app chat support
 • Knowledge base
 • Video tutorials
-• Email support: support@builddesk.com
+• Email support: support@brikly.net
 
 Built by contractors, for contractors. Start managing your projects more profitably today.
 
@@ -412,7 +412,7 @@ What's New (Version 1.0.0):
        compileSdk 34
 
        defaultConfig {
-           applicationId "com.builddesk.app"
+           applicationId "com.brikly.app"
            minSdk 22
            targetSdk 34
            versionCode 1
@@ -424,9 +424,9 @@ What's New (Version 1.0.0):
 3. **Update app name and colors**
    - Edit `android/app/src/main/res/values/strings.xml`:
    ```xml
-   <string name="app_name">BuildDesk</string>
-   <string name="title_activity_main">BuildDesk</string>
-   <string name="package_name">com.builddesk.app</string>
+   <string name="app_name">Brikly</string>
+   <string name="title_activity_main">Brikly</string>
+   <string name="package_name">com.brikly.app</string>
    ```
 
 ### Step 2: Generate Signing Key
@@ -436,8 +436,8 @@ What's New (Version 1.0.0):
 cd android
 
 # Generate keystore (run once, keep secure!)
-keytool -genkey -v -keystore builddesk-release.keystore \
-  -alias builddesk \
+keytool -genkey -v -keystore brikly-release.keystore \
+  -alias brikly \
   -keyalg RSA \
   -keysize 2048 \
   -validity 10000
@@ -459,8 +459,8 @@ Create `android/key.properties`:
 ```properties
 storePassword=YOUR_KEYSTORE_PASSWORD
 keyPassword=YOUR_KEY_PASSWORD
-keyAlias=builddesk
-storeFile=builddesk-release.keystore
+keyAlias=brikly
+storeFile=brikly-release.keystore
 ```
 
 Add to `android/.gitignore`:
@@ -529,7 +529,7 @@ Phone (at least 2, up to 8):
    - Go to https://play.google.com/console
    - Click "Create app"
    - Fill in:
-     - App name: BuildDesk
+     - App name: Brikly
      - Default language: English (United States)
      - App or game: App
      - Free or paid: Free
@@ -540,7 +540,7 @@ Phone (at least 2, up to 8):
    Real-time job costing and project management for contractors
 
    Full description (4000 chars max):
-   BuildDesk is the construction management platform designed for contractors
+   Brikly is the construction management platform designed for contractors
    who need real-time financial control without enterprise complexity.
 
    ⚡ REAL-TIME JOB COSTING
@@ -587,7 +587,7 @@ Phone (at least 2, up to 8):
    PRICING: $350/month, unlimited users
    FREE TRIAL: 14 days, no credit card required
 
-   Join hundreds of contractors who trust BuildDesk for their
+   Join hundreds of contractors who trust Brikly for their
    construction management needs.
    ```
 
@@ -633,7 +633,7 @@ cd android
    ```
    Version 1.0.0
 
-   Initial release of BuildDesk for Android!
+   Initial release of Brikly for Android!
 
    Features:
    • Real-time job costing and project management
@@ -783,7 +783,7 @@ cd android
 # Build script for mobile apps
 set -e
 
-echo "🏗️  Building BuildDesk Mobile Apps"
+echo "🏗️  Building Brikly Mobile Apps"
 
 # Build web assets
 echo "📦 Building web assets..."
@@ -856,4 +856,4 @@ echo "⚠️  Don't forget to update Android and iOS version numbers!"
 
 ---
 
-*This guide is part of the BuildDesk documentation suite. For other guides, see `/docs/README.md`*
+*This guide is part of the Brikly documentation suite. For other guides, see `/docs/README.md`*

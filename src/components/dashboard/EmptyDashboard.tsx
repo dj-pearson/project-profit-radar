@@ -1,5 +1,4 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { 
   Building2, 
   Users, 
@@ -19,7 +18,7 @@ export const EmptyDashboard = ({ userRole, onAction }: EmptyDashboardProps) => {
     switch (userRole) {
       case 'root_admin':
         return {
-          title: "Welcome to BuildDesk Platform",
+          title: "Welcome to Brikly Platform",
           subtitle: "Set up your construction management platform",
           actions: [
             {
@@ -107,13 +106,13 @@ export const EmptyDashboard = ({ userRole, onAction }: EmptyDashboardProps) => {
         
       default:
         return {
-          title: "Welcome to BuildDesk",
+          title: "Welcome to Brikly",
           subtitle: "Your construction management platform",
           actions: [
             {
               key: 'explore',
               title: 'Explore Features',
-              description: 'Discover what you can do with BuildDesk',
+              description: 'Discover what you can do with Brikly',
               icon: Sparkles,
               primary: true
             }
@@ -195,7 +194,7 @@ export const EmptyDashboard = ({ userRole, onAction }: EmptyDashboardProps) => {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Sparkles className="w-5 h-5 text-primary" />
-                What You Can Do With BuildDesk
+                What You Can Do With Brikly
               </CardTitle>
             </CardHeader>
             <CardContent>

@@ -3,7 +3,6 @@
  * Manages templates and auto-population for daily reports
  */
 
-import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -53,20 +52,19 @@ export interface AutoPopulationResult {
 }
 
 export const useDailyReportTemplates = () => {
-  const { userProfile, siteId } = useAuth();
+  const { userProfile } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  // Query templates for company with site_id isolation
+  // Query templates for company
   const { data: templates, isLoading: loadingTemplates } = useQuery({
-    queryKey: ['daily-report-templates', userProfile?.company_id, siteId],
+    queryKey: ['daily-report-templates', userProfile?.company_id],
     queryFn: async () => {
-      if (!userProfile?.company_id || !siteId) return [];
+      if (!userProfile?.company_id) return [];
 
       const { data, error } = await supabase
         .from('daily_report_templates')
         .select('*')
-        .eq('site_id', siteId)
         .eq('company_id', userProfile.company_id)
         .eq('is_active', true)
         .order('name');
@@ -74,17 +72,14 @@ export const useDailyReportTemplates = () => {
       if (error) throw error;
       return data as DailyReportTemplate[];
     },
-    enabled: !!userProfile?.company_id && !!siteId,
+    enabled: !!userProfile?.company_id,
   });
 
-  // Query template task presets with site_id isolation
+  // Query template task presets
   const getTemplatePresets = async (templateId: string) => {
-    if (!siteId) throw new Error('No site_id available');
-
     const { data, error } = await supabase
       .from('template_task_presets')
       .select('*')
-      .eq('site_id', siteId)
       .eq('template_id', templateId)
       .order('display_order');
 
@@ -92,21 +87,17 @@ export const useDailyReportTemplates = () => {
     return data as TemplateTaskPreset[];
   };
 
-  // Create template mutation with site_id isolation
+  // Create template mutation
   const createTemplateMutation = useMutation({
     mutationFn: async (template: Partial<DailyReportTemplate>) => {
       if (!userProfile?.company_id) {
         throw new Error('Company ID not found');
-      }
-      if (!siteId) {
-        throw new Error('Site ID not found');
       }
 
       const { data, error } = await supabase
         .from('daily_report_templates')
         .insert({
           ...template,
-          site_id: siteId,
           company_id: userProfile.company_id,
           created_by: userProfile.id,
         })
@@ -132,18 +123,15 @@ export const useDailyReportTemplates = () => {
     },
   });
 
-  // Update template mutation with site_id isolation
+  // Update template mutation
   const updateTemplateMutation = useMutation({
     mutationFn: async ({ id, updates }: { id: string; updates: Partial<DailyReportTemplate> }) => {
-      if (!siteId) throw new Error('Site ID not found');
-
-      const { data, error } = await supabase
+            const { data, error } = await supabase
         .from('daily_report_templates')
         .update({
           ...updates,
           updated_at: new Date().toISOString(),
         })
-        .eq('site_id', siteId)
         .eq('id', id)
         .select()
         .single();
@@ -167,15 +155,12 @@ export const useDailyReportTemplates = () => {
     },
   });
 
-  // Delete template mutation with site_id isolation
+  // Delete template mutation
   const deleteTemplateMutation = useMutation({
     mutationFn: async (id: string) => {
-      if (!siteId) throw new Error('Site ID not found');
-
-      const { error } = await supabase
+            const { error } = await supabase
         .from('daily_report_templates')
         .update({ is_active: false })
-        .eq('site_id', siteId)
         .eq('id', id);
 
       if (error) throw error;
@@ -242,19 +227,16 @@ export const useDailyReportTemplates = () => {
     },
   });
 
-  // Add task presets to template with site_id isolation
+  // Add task presets to template
   const addTemplateTaskPreset = async (
     templateId: string,
     taskName: string,
     taskDescription: string | null,
     displayOrder: number
   ) => {
-    if (!siteId) throw new Error('Site ID not found');
-
-    const { data, error} = await supabase
+        const { data, error} = await supabase
       .from('template_task_presets')
       .insert({
-        site_id: siteId,
         template_id: templateId,
         task_name: taskName,
         task_description: taskDescription,
@@ -267,14 +249,11 @@ export const useDailyReportTemplates = () => {
     return data;
   };
 
-  // Delete task preset with site_id isolation
+  // Delete task preset
   const deleteTemplateTaskPreset = async (presetId: string) => {
-    if (!siteId) throw new Error('Site ID not found');
-
-    const { error } = await supabase
+        const { error } = await supabase
       .from('template_task_presets')
       .delete()
-      .eq('site_id', siteId)
       .eq('id', presetId);
 
     if (error) throw error;

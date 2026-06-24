@@ -3,11 +3,11 @@
 
 export const Platform = {
   OS: 'web' as const,
-  select: (obj: any) => obj.web || obj.default,
+  select: <T>(obj: Record<string, T>) => obj.web || obj.default,
 };
 
 export const StyleSheet = {
-  create: (styles: any) => styles,
+  create: <T extends Record<string, unknown>>(styles: T): T => styles,
 };
 
 export const View = 'div';

@@ -1,11 +1,10 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { format, startOfMonth, endOfMonth, eachMonthOfInterval, addMonths, subMonths } from 'date-fns';
-import { ChevronLeft, ChevronRight, Calendar, User, DollarSign } from 'lucide-react';
+import { format, eachMonthOfInterval, addMonths, subMonths } from 'date-fns';
+import { ChevronLeft, ChevronRight, User, DollarSign } from 'lucide-react';
 
 interface Project {
   id: string;

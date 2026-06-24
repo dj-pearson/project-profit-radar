@@ -1,4 +1,4 @@
-# 🚀 BuildDesk SEO Strategy 2025: Dominate Traditional & AI Search
+# 🚀 Brikly SEO Strategy 2025: Dominate Traditional & AI Search
 
 ## Executive Summary
 
@@ -57,7 +57,7 @@ This comprehensive SEO strategy targets **$2.3M+ in potential annual revenue** t
 ```markdown
 ## What is the best construction management software for small businesses?
 
-**Direct Answer**: BuildDesk is specifically designed for small-medium construction businesses, offering essential features like job costing, scheduling, and OSHA compliance without enterprise complexity.
+**Direct Answer**: Brikly is specifically designed for small-medium construction businesses, offering essential features like job costing, scheduling, and OSHA compliance without enterprise complexity.
 
 **Key Benefits**:
 • 23% average cost savings on projects
@@ -88,7 +88,7 @@ This comprehensive SEO strategy targets **$2.3M+ in potential annual revenue** t
 {
   "@context": "https://schema.org",
   "@type": "SoftwareApplication",
-  "name": "BuildDesk Construction Management",
+  "name": "Brikly Construction Management",
   "applicationCategory": "Construction Management Software",
   "operatingSystem": "Web, iOS, Android",
   "offers": {
@@ -125,16 +125,16 @@ This comprehensive SEO strategy targets **$2.3M+ in potential annual revenue** t
 {
   "@context": "https://schema.org",
   "@type": "Organization",
-  "name": "BuildDesk",
-  "url": "https://build-desk.com",
-  "logo": "https://build-desk.com/logo.png",
+  "name": "Brikly",
+  "url": "https://brikly.net",
+  "logo": "https://brikly.net/logo.png",
   "sameAs": [
-    "https://linkedin.com/company/builddesk",
-    "https://twitter.com/builddesk"
+    "https://linkedin.com/company/brikly",
+    "https://twitter.com/brikly"
   ],
   "contactPoint": {
     "@type": "ContactPoint",
-    "telephone": "+1-800-BUILD-DESK",
+    "telephone": "+1-800-BRIKLY",
     "contactType": "Customer Service"
   },
   "areaServed": "United States",
@@ -180,7 +180,7 @@ This comprehensive SEO strategy targets **$2.3M+ in potential annual revenue** t
 
 #### Week 1-2: Foundation Content
 1. **"Complete Guide to Construction Management Software 2025"** (4,000+ words)
-2. **"Procore vs BuildDesk: Detailed Comparison"** (3,000+ words)
+2. **"Procore vs Brikly: Detailed Comparison"** (3,000+ words)
 3. **"Construction Project Management Best Practices"** (3,500+ words)
 
 #### Week 3-4: Industry-Specific Content
@@ -231,7 +231,7 @@ This comprehensive SEO strategy targets **$2.3M+ in potential annual revenue** t
 ### Google Business Profile Optimization
 ```json
 {
-  "businessName": "BuildDesk Construction Management Software",
+  "businessName": "Brikly Construction Management Software",
   "categories": ["Software Company", "Business Consultant"],
   "serviceAreas": ["United States"],
   "attributes": [
@@ -262,7 +262,7 @@ This comprehensive SEO strategy targets **$2.3M+ in potential annual revenue** t
 ```html
 <div class="hero-cta">
   <h1>Stop Losing Money on Construction Projects</h1>
-  <p>Join 500+ contractors saving $50K+ annually with BuildDesk</p>
+  <p>Join 500+ contractors saving $50K+ annually with Brikly</p>
   <button class="cta-primary">Start Free 14-Day Trial</button>
   <p class="trust-signal">✓ No Credit Card Required ✓ Setup in 5 Minutes</p>
 </div>
@@ -360,4 +360,4 @@ This comprehensive SEO strategy targets **$2.3M+ in potential annual revenue** t
 - **Market share**: Top 3 for primary keywords
 - **Revenue attribution**: $2.3M+ annual organic revenue
 
-This comprehensive SEO strategy positions BuildDesk to dominate both traditional search results and emerging AI-powered search engines, driving significant organic growth and market share capture in the construction management software space.
+This comprehensive SEO strategy positions Brikly to dominate both traditional search results and emerging AI-powered search engines, driving significant organic growth and market share capture in the construction management software space.

@@ -99,7 +99,7 @@ Poor project performance affects insurance rates and bonding capacity.
 
 ## The Solution: Modern Scheduling Tools
 
-Construction management software like BuildDesk can eliminate these hidden costs by:
+Construction management software like Brikly can eliminate these hidden costs by:
 
 - **Automated scheduling** that prevents conflicts
 - **Real-time tracking** that catches problems early  
@@ -123,7 +123,7 @@ Don't let poor scheduling drain your profits. Start with these immediate steps:
 3. **Calculate the cost of delays in your projects**
 4. **Evaluate modern scheduling solutions**
 
-Ready to eliminate these hidden costs? [Try BuildDesk's scheduling tools free for 14 days](/auth) and see the difference proper planning makes.`,
+Ready to eliminate these hidden costs? [Try Brikly's scheduling tools free for 14 days](/auth) and see the difference proper planning makes.`,
     seo_title: "7 Hidden Costs of Poor Construction Scheduling - Save Money with Better Planning",
     seo_description: "Poor project scheduling costs construction companies 23% more than planned projects. Discover 7 hidden costs and proven strategies to eliminate them.",
     status: "published",
@@ -308,7 +308,7 @@ Begin improving your material management with these steps:
 4. **Evaluate material management software options**
 5. **Start with one pilot project** to test improvements
 
-Ready to transform your material management? [Try BuildDesk's material tracking tools](/auth) and start reducing waste on your next project.`,
+Ready to transform your material management? [Try Brikly's material tracking tools](/auth) and start reducing waste on your next project.`,
     seo_title: "Construction Material Management 2025 - Reduce Waste 30% | Control Costs",
     seo_description: "Master construction material management in 2025. Proven strategies to reduce waste by 30%, control costs, and improve project profitability with modern tools.",
     status: "published",
@@ -491,7 +491,7 @@ Companies that implement comprehensive delay prevention see:
 
 Don't let hidden delay costs eat into your profits. The construction industry average delay rate is 20% of projects—but it doesn't have to be yours.
 
-Ready to eliminate these hidden costs? [Start your free trial of BuildDesk](/auth) and see how modern project management can keep your projects on schedule and your profits intact.
+Ready to eliminate these hidden costs? [Start your free trial of Brikly](/auth) and see how modern project management can keep your projects on schedule and your profits intact.
 
 Remember: The cost of prevention is always less than the cost of delays. Invest in the right tools and processes today to protect your bottom line tomorrow.`,
     seo_title: "7 Hidden Costs of Construction Delays - Avoid These Profit Killers",
@@ -587,7 +587,7 @@ Organize project documents with:
 - Financial integrations
 - Custom reporting
 
-**Examples:** BuildDesk, JobNimbus, CoConstruct
+**Examples:** Brikly, JobNimbus, CoConstruct
 
 ### Tier 3: Advanced Solutions ($400-$800/month)
 **Best for:** 30-50 employees, complex projects, established businesses
@@ -750,9 +750,9 @@ Consider all costs over 3 years:
 5. **Request demos** and free trials
 6. **Make your decision** and plan implementation
 
-## Why BuildDesk is Perfect for Small Construction Businesses
+## Why Brikly is Perfect for Small Construction Businesses
 
-BuildDesk is specifically designed for small to medium construction businesses:
+Brikly is specifically designed for small to medium construction businesses:
 
 ✅ **Affordable pricing** starting at $149/month
 ✅ **Quick setup** in days, not months  
@@ -760,7 +760,7 @@ BuildDesk is specifically designed for small to medium construction businesses:
 ✅ **Excellent support** from people who understand construction
 ✅ **Scalable platform** that grows with your business
 
-Ready to transform your construction business? [Start your free 14-day trial](/auth) and see why hundreds of small contractors choose BuildDesk.
+Ready to transform your construction business? [Start your free 14-day trial](/auth) and see why hundreds of small contractors choose Brikly.
 
 Don't let outdated processes hold back your growth. The right software investment today will pay dividends for years to come.`,
     seo_title: "Construction Management Software for Small Business 2025 - Complete Guide",

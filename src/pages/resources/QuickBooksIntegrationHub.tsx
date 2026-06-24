@@ -1,4 +1,3 @@
-import React from "react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { SEOMetaTags } from "@/components/SEOMetaTags";
@@ -15,11 +14,11 @@ const QuickBooksIntegrationHub = () => {
   const integrationSteps = [
     {
       name: "Connect Your Accounts",
-      text: "Link your BuildDesk account with QuickBooks using secure OAuth authentication. This creates a two-way data connection that keeps both systems synchronized automatically."
+      text: "Link your Brikly account with QuickBooks using secure OAuth authentication. This creates a two-way data connection that keeps both systems synchronized automatically."
     },
     {
       name: "Map Chart of Accounts",
-      text: "Configure how BuildDesk job cost categories map to your QuickBooks accounts. Set up proper expense tracking, revenue recognition, and work-in-progress reporting structures."
+      text: "Configure how Brikly job cost categories map to your QuickBooks accounts. Set up proper expense tracking, revenue recognition, and work-in-progress reporting structures."
     },
     {
       name: "Configure Sync Settings",
@@ -46,7 +45,7 @@ const QuickBooksIntegrationHub = () => {
   return (
     <div className="min-h-screen bg-background">
       <SEOMetaTags
-        title="QuickBooks Integration Hub for Construction Contractors | BuildDesk"
+        title="QuickBooks Integration Hub for Construction Contractors | Brikly"
         description="Complete QuickBooks integration resource center for construction contractors. Setup guides, troubleshooting, job costing integration, and automation best practices."
         keywords={[
           'QuickBooks construction integration',
@@ -106,7 +105,7 @@ const QuickBooksIntegrationHub = () => {
                 Initial Setup Guide
               </CardTitle>
               <CardDescription>
-                Step-by-step instructions for connecting BuildDesk with QuickBooks
+                Step-by-step instructions for connecting Brikly with QuickBooks
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -371,7 +370,7 @@ const QuickBooksIntegrationHub = () => {
             Ready to Streamline Your Construction Accounting?
           </h2>
           <p className="text-muted-foreground mb-6 max-w-2xl mx-auto">
-            BuildDesk's seamless QuickBooks integration eliminates double data entry and provides 
+            Brikly's seamless QuickBooks integration eliminates double data entry and provides 
             real-time financial insights that help contractors improve profit margins by 15-20%.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">

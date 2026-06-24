@@ -2,19 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import {
-  Clock,
-  Play,
-  Pause,
-  Square,
-  MapPin,
-  Wifi,
-  WifiOff,
-  Timer,
-  CheckCircle,
-  AlertTriangle,
-  Navigation
-} from 'lucide-react';
+import { Play, Pause, Square, MapPin, Wifi, WifiOff, CheckCircle, AlertTriangle, Navigation } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { useOfflineSync } from '@/hooks/useOfflineSync';
@@ -557,7 +545,7 @@ const MobileTimeClock: React.FC<MobileTimeClockProps> = ({
 
       {/* GPS Warning */}
       {isTracking && isInGeofence === false && (
-        <Card className="border-yellow-200 bg-yellow-50">
+        <Card className="rounded-2xl glass shadow-ios-1 border-yellow-200/60 dark:border-yellow-500/30 bg-yellow-50/80 dark:bg-yellow-950/20">
           <CardContent className="pt-6">
             <div className="flex items-center gap-2 text-yellow-800">
               <AlertTriangle className="h-4 w-4" />

@@ -1,7 +1,7 @@
 # Google Analytics Implementation Summary
 
 ## Overview
-Google Analytics (GA4) has been successfully integrated into the BuildDesk application to track user traffic and key business metrics.
+Google Analytics (GA4) has been successfully integrated into the Brikly application to track user traffic and key business metrics.
 
 ## Google Analytics ID
 - **Tracking ID**: G-LNDT7H4SJR

@@ -13,19 +13,19 @@ export const generateAdvancedMetaTags = (page: string, data: any) => {
     // Open Graph Enhanced
     'og:title': data.ogTitle || data.title,
     'og:description': data.ogDescription || data.description,
-    'og:image': data.ogImage || 'https://builddesk.com/og-image.jpg',
-    'og:url': `https://builddesk.com${data.canonicalUrl || ''}`,
+    'og:image': data.ogImage || 'https://brikly.net/og-image.jpg',
+    'og:url': `https://brikly.net${data.canonicalUrl || ''}`,
     'og:type': data.ogType || 'website',
-    'og:site_name': 'BuildDesk',
+    'og:site_name': 'Brikly',
     'og:locale': 'en_US',
     
     // Twitter Card Enhanced
     'twitter:card': data.twitterCard || 'summary_large_image',
-    'twitter:site': '@builddesk',
-    'twitter:creator': '@builddesk',
+    'twitter:site': '@brikly',
+    'twitter:creator': '@brikly',
     'twitter:title': data.twitterTitle || data.title,
     'twitter:description': data.twitterDescription || data.description,
-    'twitter:image': data.twitterImage || data.ogImage || 'https://builddesk.com/twitter-card.jpg',
+    'twitter:image': data.twitterImage || data.ogImage || 'https://brikly.net/twitter-card.jpg',
     
     // Advanced SEO
     'article:author': data.author,
@@ -38,7 +38,7 @@ export const generateAdvancedMetaTags = (page: string, data: any) => {
     'mobile-web-app-capable': 'yes',
     'apple-mobile-web-app-capable': 'yes',
     'apple-mobile-web-app-status-bar-style': 'default',
-    'apple-mobile-web-app-title': 'BuildDesk',
+    'apple-mobile-web-app-title': 'Brikly',
     
     // Robots & Indexing
     robots: data.noIndex ? 'noindex,nofollow' : 'index,follow,max-snippet:-1,max-image-preview:large,max-video-preview:-1',
@@ -66,15 +66,15 @@ export const generateAISearchPrompts = (pageType: string, keywords: string[]) =>
   const prompts = {
     homepage: [
       `What is the best construction management software for small contractors?`,
-      `Compare BuildDesk vs Procore for small construction companies`,
+      `Compare Brikly vs Procore for small construction companies`,
       `How much does construction project management software cost?`,
       `What features should construction management software have?`
     ],
     comparison: [
-      `BuildDesk vs ${keywords[0]} comparison`,
-      `Which is better: BuildDesk or ${keywords[0]}?`,
+      `Brikly vs ${keywords[0]} comparison`,
+      `Which is better: Brikly or ${keywords[0]}?`,
       `${keywords[0]} alternative for small contractors`,
-      `BuildDesk ${keywords[0]} pricing comparison`
+      `Brikly ${keywords[0]} pricing comparison`
     ],
     guide: [
       `How to ${keywords[0]} in construction`,
@@ -83,8 +83,8 @@ export const generateAISearchPrompts = (pageType: string, keywords: string[]) =>
       `Construction ${keywords[0]} software comparison`
     ],
     pricing: [
-      `How much does BuildDesk cost?`,
-      `BuildDesk pricing vs competitors`,
+      `How much does Brikly cost?`,
+      `Brikly pricing vs competitors`,
       `Affordable construction management software pricing`,
       `Construction software cost comparison`
     ]
@@ -203,7 +203,7 @@ export const generateAdvancedSitemap = (pages: any[]) => {
   };
 
   return pages.map(page => ({
-    url: `https://builddesk.com${page.path}`,
+    url: `https://brikly.net${page.path}`,
     lastmod: page.lastModified || new Date().toISOString().split('T')[0],
     changefreq: changeFreqs[page.type as keyof typeof changeFreqs] || 'monthly',
     priority: priorities[page.type as keyof typeof priorities] || 0.5,

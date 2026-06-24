@@ -1,23 +1,21 @@
 /**
  * Audit Log Hook
- * Updated with multi-tenant site_id isolation
  */
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-import { toast } from '@/hooks/use-toast';
 
 interface AuditLogParams {
   actionType: string;
   resourceType: string;
   resourceId?: string;
   resourceName?: string;
-  oldValues?: any;
-  newValues?: any;
+  oldValues?: Record<string, unknown>;
+  newValues?: Record<string, unknown>;
   riskLevel?: 'low' | 'medium' | 'high' | 'critical';
   complianceCategory?: string;
   description?: string;
-  metadata?: any;
+  metadata?: Record<string, unknown>;
 }
 
 interface DataAccessParams {
@@ -31,7 +29,7 @@ interface DataAccessParams {
 }
 
 export const useAuditLog = () => {
-  const { user, userProfile, siteId } = useAuth();
+  const { user, userProfile } = useAuth();
   const [loading, setLoading] = useState(false);
 
   const getClientIP = async (): Promise<string | null> => {
@@ -46,19 +44,18 @@ export const useAuditLog = () => {
   };
 
   const logAuditEvent = async (params: AuditLogParams) => {
-    if (!user || !siteId) return null;
+    if (!user) return null;
 
     try {
       setLoading(true);
       const ip = await getClientIP();
 
-      // Use userProfile from context if available, otherwise fetch with site isolation
+      // Use userProfile from context if available, otherwise fetch
       let companyId = userProfile?.company_id;
       if (!companyId) {
         const { data: profile } = await supabase
           .from('user_profiles')
           .select('company_id')
-          .eq('site_id', siteId)  // CRITICAL: Site isolation
           .eq('id', user.id)
           .single();
         companyId = profile?.company_id;
@@ -70,7 +67,6 @@ export const useAuditLog = () => {
       }
 
       const { data, error } = await supabase.rpc('log_audit_event', {
-        p_site_id: siteId,  // CRITICAL: Pass site_id to RPC
         p_company_id: companyId,
         p_user_id: user.id,
         p_action_type: params.actionType,
@@ -99,7 +95,7 @@ export const useAuditLog = () => {
   };
 
   const logDataAccess = async (params: DataAccessParams) => {
-    if (!user || !siteId) return null;
+    if (!user) return null;
 
     try {
       setLoading(true);
@@ -111,7 +107,7 @@ export const useAuditLog = () => {
         const { data: profile } = await supabase
           .from('user_profiles')
           .select('company_id')
-          .eq('site_id', siteId)  // CRITICAL: Site isolation
+            // CRITICAL: Site isolation
           .eq('id', user.id)
           .single();
         companyId = profile?.company_id;
@@ -123,7 +119,6 @@ export const useAuditLog = () => {
       }
 
       const { data, error } = await supabase.rpc('log_data_access', {
-        p_site_id: siteId,  // CRITICAL: Pass site_id to RPC
         p_company_id: companyId,
         p_user_id: user.id,
         p_data_type: params.dataType,
@@ -160,30 +155,30 @@ export const useAuditLog = () => {
     });
   };
 
-  const logFinancialDataAccess = (resourceId: string, resourceName: string, accessMethod: string = 'view') => {
+  const logFinancialDataAccess = (resourceId: string, resourceName: string, accessMethod: DataAccessParams['accessMethod'] = 'view') => {
     return logDataAccess({
       dataType: 'financial',
       dataClassification: 'confidential',
       resourceId,
       resourceName,
-      accessMethod: accessMethod as any,
+      accessMethod,
       accessPurpose: 'Business operations and reporting',
       lawfulBasis: 'Legitimate interests'
     });
   };
 
-  const logDocumentAccess = (documentId: string, documentName: string, accessMethod: string = 'view') => {
+  const logDocumentAccess = (documentId: string, documentName: string, accessMethod: DataAccessParams['accessMethod'] = 'view') => {
     return logDataAccess({
       dataType: 'document',
       dataClassification: 'internal',
       resourceId: documentId,
       resourceName: documentName,
-      accessMethod: accessMethod as any,
+      accessMethod,
       accessPurpose: 'Document management and collaboration'
     });
   };
 
-  const logUserManagement = (actionType: string, targetUserId: string, targetUserName: string, changes?: any) => {
+  const logUserManagement = (actionType: string, targetUserId: string, targetUserName: string, changes?: Record<string, unknown>) => {
     return logAuditEvent({
       actionType,
       resourceType: 'user',
@@ -196,7 +191,7 @@ export const useAuditLog = () => {
     });
   };
 
-  const logSecurityEvent = (eventType: string, details: any, riskLevel: 'low' | 'medium' | 'high' | 'critical' = 'medium') => {
+  const logSecurityEvent = (eventType: string, details: Record<string, unknown>, riskLevel: 'low' | 'medium' | 'high' | 'critical' = 'medium') => {
     return logAuditEvent({
       actionType: eventType,
       resourceType: 'security',

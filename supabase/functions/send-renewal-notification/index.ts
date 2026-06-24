@@ -1,11 +1,8 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { Resend } from "https://esm.sh/resend@2.0.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.3";
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
+import { getCorsHeaders } from "../_shared/secure-cors.ts";
+import { requireSystemOrAdmin } from "../_shared/system-auth.ts";
 
 const logStep = (step: string, details?: any) => {
   const detailsStr = details ? ` - ${JSON.stringify(details)}` : '';
@@ -13,9 +10,13 @@ const logStep = (step: string, details?: any) => {
 };
 
 serve(async (req) => {
+  const corsHeaders = getCorsHeaders(req);
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
+
+  const denied = await requireSystemOrAdmin(req);
+  if (denied) return denied;
 
   try {
     logStep("Function started");
@@ -48,12 +49,10 @@ serve(async (req) => {
     const thirtyDaysFromNow = new Date(today.getTime() + (30 * 24 * 60 * 60 * 1000));
     const sevenDaysFromNow = new Date(today.getTime() + (7 * 24 * 60 * 60 * 1000));
 
-    // Include site_id for multi-tenant isolation in all downstream operations
-    let query = supabaseClient
+        let query = supabaseClient
       .from('subscribers')
       .select(`
         id,
-        site_id,
         email,
         user_id,
         subscription_tier,
@@ -97,11 +96,9 @@ serve(async (req) => {
 
       if (!notificationType) continue;
 
-      // Check if we already sent this type of notification with site_id isolation
-      const { data: existingNotifications } = await supabaseClient
+            const { data: existingNotifications } = await supabaseClient
         .from('renewal_notifications')
         .select('notification_type')
-        .eq('site_id', subscriber.site_id)
         .eq('subscriber_id', subscriber.id)
         .eq('notification_type', notificationType);
 
@@ -113,11 +110,9 @@ serve(async (req) => {
         continue;
       }
 
-      // Get user profile for name with site_id isolation
-      const { data: profile } = await supabaseClient
+            const { data: profile } = await supabaseClient
         .from('user_profiles')
         .select('first_name, last_name')
-        .eq('site_id', subscriber.site_id)
         .eq('id', subscriber.user_id)
         .single();
 
@@ -131,12 +126,12 @@ serve(async (req) => {
         month: 'long',
         day: 'numeric'
       });
-      const manageUrl = `${Deno.env.get("SUPABASE_URL")?.replace('.supabase.co', '')}.vercel.app/subscription`;
+      const manageUrl = Deno.env.get("APP_URL") || 'https://brikly.net/subscription';
       
       const html = `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
           <div style="background: linear-gradient(135deg, #1e40af, #3b82f6); padding: 30px; border-radius: 10px; text-align: center; margin-bottom: 30px;">
-            <h1 style="color: white; margin: 0; font-size: 28px;">BuildDesk</h1>
+            <h1 style="color: white; margin: 0; font-size: 28px;">Brikly</h1>
             <p style="color: #e0e7ff; margin: 10px 0 0 0; font-size: 16px;">Construction Management Platform</p>
           </div>
           
@@ -148,7 +143,7 @@ serve(async (req) => {
             </p>
             
             <p style="color: #475569; font-size: 16px; line-height: 1.6; margin-bottom: 30px;">
-              No action is required - your subscription will automatically renew to ensure uninterrupted access to all BuildDesk features.
+              No action is required - your subscription will automatically renew to ensure uninterrupted access to all Brikly features.
             </p>
             
             <div style="text-align: center; margin: 30px 0;">
@@ -170,13 +165,13 @@ serve(async (req) => {
           </div>
           
           <p style="color: #64748b; font-size: 14px; line-height: 1.5; margin-top: 30px;">
-            Questions? Contact our support team at support@builddesk.com or visit our help center.
+            Questions? Contact our support team at support@brikly.net or visit our help center.
           </p>
           
           <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 30px 0;">
           
           <p style="color: #94a3b8; font-size: 12px; text-align: center;">
-            This is an automated notification from BuildDesk Construction Management Platform.<br>
+            This is an automated notification from Brikly Construction Management Platform.<br>
             You're receiving this because your subscription is set to auto-renew.
           </p>
         </div>
@@ -184,7 +179,7 @@ serve(async (req) => {
 
       // Send the email
       const { error: emailError } = await resend.emails.send({
-        from: 'BuildDesk <notifications@builddesk.com>',
+        from: 'Brikly <notifications@brikly.net>',
         to: [subscriber.email],
         subject: `Your subscription renews in ${daysUntilRenewal} days`,
         html,
@@ -198,21 +193,17 @@ serve(async (req) => {
         continue;
       }
 
-      // Record the notification with site_id for multi-tenant isolation
-      await supabaseClient
+            await supabaseClient
         .from('renewal_notifications')
         .insert({
-          site_id: subscriber.site_id,
           subscriber_id: subscriber.id,
           notification_type: notificationType,
           subscription_end_date: subscriber.subscription_end
         });
 
-      // Update the last notification timestamp with site_id isolation
-      await supabaseClient
+            await supabaseClient
         .from('subscribers')
         .update({ renewal_notification_sent_at: new Date().toISOString() })
-        .eq('site_id', subscriber.site_id)
         .eq('id', subscriber.id);
 
       notificationsSent++;

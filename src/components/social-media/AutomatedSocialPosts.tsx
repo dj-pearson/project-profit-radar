@@ -23,16 +23,7 @@ import { Separator } from "@/components/ui/separator";
 import { PostQueueActions } from "./PostQueueActions";
 import { useAutomatedSocialPosts } from "@/hooks/useAutomatedSocialPosts";
 import { useAuth } from '@/contexts/AuthContext';
-import {
-  Clock,
-  Play,
-  Settings,
-  BarChart3,
-  Calendar,
-  CheckCircle,
-  XCircle,
-  AlertCircle,
-} from "lucide-react";
+import { Clock, Play, Settings, BarChart3, CheckCircle, XCircle, AlertCircle } from "lucide-react";
 import { formatDistanceToNow, format } from "date-fns";
 
 export const AutomatedSocialPosts = () => {

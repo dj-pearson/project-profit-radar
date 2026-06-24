@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { RoleGuard, ROLE_GROUPS } from "@/components/auth/RoleGuard";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
@@ -9,24 +9,84 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { Save, Plus, Trash2, Mail, FileText, BarChart3, FolderOpen } from "lucide-react";
+import { Save, Mail, FileText, BarChart3, FolderOpen } from "lucide-react";
+import type { User } from "@supabase/supabase-js";
+
+interface EmailTemplate {
+  enabled: boolean;
+  subject: string;
+  template: string;
+}
+
+interface FormField {
+  label: string;
+  type: string;
+  required: boolean;
+}
+
+interface FormTemplate {
+  name: string;
+  enabled: boolean;
+  fields?: FormField[];
+}
+
+interface KPI {
+  label: string;
+  format: string;
+}
+
+interface ReportTemplate {
+  name: string;
+  enabled: boolean;
+  kpis?: KPI[];
+  charts?: string[];
+}
+
+interface FolderConfig {
+  subfolders?: string[];
+  naming_convention: string;
+}
+
+interface WorkflowStep {
+  role: string;
+  action: string;
+}
+
+interface ApprovalWorkflow {
+  enabled: boolean;
+  steps?: WorkflowStep[];
+}
+
+interface RetentionPolicy {
+  years: number;
+}
+
+interface DocumentManagement {
+  folder_structure?: Record<string, FolderConfig>;
+  approval_workflows?: Record<string, ApprovalWorkflow>;
+  retention_policies?: Record<string, RetentionPolicy>;
+  [key: string]: Record<string, FolderConfig | ApprovalWorkflow | RetentionPolicy> | undefined;
+}
+
+interface UserProfileRole {
+  role: string;
+}
 
 interface SystemSettings {
-  email_templates: Record<string, any>;
-  form_templates: Record<string, any>;
-  report_templates: Record<string, any>;
-  document_management: Record<string, any>;
-  system_preferences: Record<string, any>;
+  email_templates: Record<string, EmailTemplate>;
+  form_templates: Record<string, FormTemplate>;
+  report_templates: Record<string, ReportTemplate>;
+  document_management: DocumentManagement;
+  system_preferences: Record<string, string | number | boolean>;
 }
 
 export default function SystemAdminSettings() {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [user, setUser] = useState<any>(null);
-  const [profile, setProfile] = useState<any>(null);
+  const [user, setUser] = useState<User | null>(null);
+  const [profile, setProfile] = useState<UserProfileRole | null>(null);
   const [settings, setSettings] = useState<SystemSettings>({
     email_templates: {},
     form_templates: {},
@@ -84,11 +144,11 @@ export default function SystemAdminSettings() {
 
       if (data) {
         setSettings({
-          email_templates: (data.email_templates as Record<string, any>) || {},
-          form_templates: (data.form_templates as Record<string, any>) || {},
-          report_templates: (data.report_templates as Record<string, any>) || {},
-          document_management: (data.document_management as Record<string, any>) || {},
-          system_preferences: (data.system_preferences as Record<string, any>) || {}
+          email_templates: (data.email_templates as Record<string, EmailTemplate>) || {},
+          form_templates: (data.form_templates as Record<string, FormTemplate>) || {},
+          report_templates: (data.report_templates as Record<string, ReportTemplate>) || {},
+          document_management: (data.document_management as DocumentManagement) || {},
+          system_preferences: (data.system_preferences as Record<string, string | number | boolean>) || {}
         });
       }
     } catch (error) {
@@ -138,7 +198,7 @@ export default function SystemAdminSettings() {
     }
   };
 
-  const updateEmailTemplate = (templateKey: string, field: string, value: any) => {
+  const updateEmailTemplate = (templateKey: string, field: string, value: string | boolean) => {
     setSettings(prev => ({
       ...prev,
       email_templates: {
@@ -151,7 +211,7 @@ export default function SystemAdminSettings() {
     }));
   };
 
-  const updateFormTemplate = (templateKey: string, field: string, value: any) => {
+  const updateFormTemplate = (templateKey: string, field: string, value: string | boolean) => {
     setSettings(prev => ({
       ...prev,
       form_templates: {
@@ -164,7 +224,7 @@ export default function SystemAdminSettings() {
     }));
   };
 
-  const updateReportTemplate = (templateKey: string, field: string, value: any) => {
+  const updateReportTemplate = (templateKey: string, field: string, value: string | boolean) => {
     setSettings(prev => ({
       ...prev,
       report_templates: {
@@ -177,7 +237,7 @@ export default function SystemAdminSettings() {
     }));
   };
 
-  const updateDocumentManagement = (section: string, field: string, value: any) => {
+  const updateDocumentManagement = (section: string, field: string, value: FolderConfig | ApprovalWorkflow | RetentionPolicy) => {
     setSettings(prev => ({
       ...prev,
       document_management: {
@@ -306,7 +366,7 @@ export default function SystemAdminSettings() {
                     <div>
                       <Label>Form Fields</Label>
                       <div className="space-y-2 mt-2">
-                        {template.fields?.map((field: any, index: number) => (
+                        {template.fields?.map((field: FormField, index: number) => (
                           <div key={index} className="flex items-center gap-2 p-2 bg-muted rounded">
                             <span className="font-medium">{field.label}</span>
                             <span className="text-sm text-muted-foreground">({field.type})</span>
@@ -347,7 +407,7 @@ export default function SystemAdminSettings() {
                       <div>
                         <Label>Key Performance Indicators</Label>
                         <div className="space-y-1 mt-2">
-                          {template.kpis?.map((kpi: any, index: number) => (
+                          {template.kpis?.map((kpi: KPI, index: number) => (
                             <div key={index} className="text-sm flex justify-between">
                               <span>{kpi.label}</span>
                               <span className="text-muted-foreground">{kpi.format}</span>
@@ -383,7 +443,7 @@ export default function SystemAdminSettings() {
                 </CardHeader>
                 <CardContent className="space-y-4">
                   {Object.entries(settings.document_management.folder_structure || {}).map(([key, folder]) => {
-                    const folderData = folder as any;
+                    const folderData = folder as FolderConfig;
                     return (
                       <div key={key} className="border rounded p-3 space-y-2">
                         <h5 className="font-medium capitalize">{key}</h5>
@@ -406,20 +466,20 @@ export default function SystemAdminSettings() {
                 </CardHeader>
                 <CardContent className="space-y-4">
                   {Object.entries(settings.document_management.approval_workflows || {}).map(([key, workflow]) => {
-                    const workflowData = workflow as any;
+                    const workflowData = workflow as ApprovalWorkflow;
                     return (
                       <div key={key} className="border rounded p-3 space-y-2">
                         <div className="flex justify-between items-center">
                           <h5 className="font-medium">{key.replace(/_/g, ' ')}</h5>
                           <Switch
                             checked={workflowData.enabled}
-                            onCheckedChange={(checked) => 
+                            onCheckedChange={(checked) =>
                               updateDocumentManagement('approval_workflows', key, { ...workflowData, enabled: checked })
                             }
                           />
                         </div>
                         <div className="text-sm space-y-1">
-                          {workflowData.steps?.map((step: any, index: number) => (
+                          {workflowData.steps?.map((step: WorkflowStep, index: number) => (
                             <div key={index} className="flex justify-between">
                               <span>{step.role.replace(/_/g, ' ')}</span>
                               <span className="text-muted-foreground">{step.action}</span>
@@ -442,7 +502,7 @@ export default function SystemAdminSettings() {
                 <CardContent>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                     {Object.entries(settings.document_management.retention_policies || {}).map(([key, policy]) => {
-                      const policyData = policy as any;
+                      const policyData = policy as RetentionPolicy;
                       return (
                         <div key={key} className="border rounded p-3 space-y-2">
                           <h5 className="font-medium text-sm">{key.replace(/_/g, ' ')}</h5>

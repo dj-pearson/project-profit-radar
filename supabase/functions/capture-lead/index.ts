@@ -1,9 +1,8 @@
 // Lead Capture Edge Function (Public Endpoint)
-// Updated with multi-tenant site_id isolation
 // Note: This is a public endpoint called from marketing forms
-// Site_id is determined from X-Site-Key header or referrer domain
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.3";
+import { checkRateLimit, getClientIP } from "../_shared/rate-limiter.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -11,8 +10,8 @@ const corsHeaders = {
   "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
 };
 
-// Default site key for BuildDesk
-const DEFAULT_SITE_KEY = 'builddesk';
+// Default site key for Brikly
+const DEFAULT_SITE_KEY = 'brikly';
 
 interface LeadCaptureRequest {
   email: string;
@@ -39,6 +38,50 @@ const logStep = (step: string, details?: any) => {
   console.log(`[LEAD-CAPTURE] ${step}${detailsStr}`);
 };
 
+/**
+ * Sanitize string input to prevent injection attacks
+ * Security: Removes potentially dangerous characters and limits length
+ */
+const sanitizeString = (input: string | undefined, maxLength: number = 255): string | null => {
+  if (!input || typeof input !== 'string') return null;
+
+  // Trim and limit length
+  let sanitized = input.trim().substring(0, maxLength);
+
+  // Remove null bytes and other control characters
+  sanitized = sanitized.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '');
+
+  // Remove or escape potentially dangerous SQL/HTML characters
+  // Note: Supabase handles SQL injection, but this adds defense in depth
+  sanitized = sanitized
+    .replace(/[<>]/g, '') // Remove HTML tags
+    .replace(/javascript:/gi, '') // Remove javascript: protocol
+    .replace(/data:/gi, ''); // Remove data: protocol
+
+  return sanitized || null;
+};
+
+/**
+ * Validate email format
+ * Security: Ensures email is in valid format before processing
+ */
+const isValidEmail = (email: string): boolean => {
+  if (!email || typeof email !== 'string') return false;
+  const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+  return emailRegex.test(email) && email.length <= 255;
+};
+
+/**
+ * Validate phone format (optional, allows common formats)
+ * Security: Ensures phone contains only valid characters
+ */
+const sanitizePhone = (phone: string | undefined): string | null => {
+  if (!phone || typeof phone !== 'string') return null;
+  // Allow only digits, spaces, dashes, parentheses, plus sign
+  const cleaned = phone.replace(/[^0-9\s\-\(\)\+]/g, '').trim();
+  return cleaned.length > 0 && cleaned.length <= 20 ? cleaned : null;
+};
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -47,66 +90,83 @@ serve(async (req) => {
   try {
     logStep("Lead capture started");
 
+    // SECURITY NOTE: Using SERVICE_ROLE_KEY to bypass RLS for public lead capture
+    // This is necessary because:
+    // 1. This is a public endpoint (no user authentication)
+    // 2. Leads table requires company_id which unauthenticated users don't have
+    // 3. Input validation and sanitization (below) provides security
+    //
+    // RECOMMENDATION: Consider migrating to anon key with RLS policies that allow
+    // public inserts to leads table with null company_id for better security
     const supabaseClient = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
       { auth: { persistSession: false } }
     );
 
-    // Get site_id from header or default to BuildDesk
-    const siteKey = req.headers.get("x-site-key") || DEFAULT_SITE_KEY;
-    const { data: siteData } = await supabaseClient
-      .from('sites')
-      .select('id')
-      .eq('key', siteKey)
-      .single();
+    // SECURITY: Rate limiting to prevent abuse
+    const clientIP = getClientIP(req);
+    const rateLimitResult = await checkRateLimit(supabaseClient, {
+      identifier: clientIP,
+      endpoint: 'capture-lead',
+      maxRequests: 10, // Allow 10 leads per minute per IP
+      windowMinutes: 1,
+    });
 
-    const siteId = siteData?.id;
-    if (!siteId) {
-      logStep("Warning: Site not found, using default isolation");
+    if (!rateLimitResult.allowed) {
+      logStep("Rate limit exceeded", { ip: clientIP, count: rateLimitResult.requestCount });
+      return new Response(JSON.stringify({
+        success: false,
+        error: 'Too many requests. Please try again later.'
+      }), {
+        headers: {
+          ...corsHeaders,
+          "Content-Type": "application/json",
+          "Retry-After": String(rateLimitResult.retryAfter),
+          "X-RateLimit-Limit": String(rateLimitResult.limit),
+          "X-RateLimit-Remaining": String(Math.max(0, rateLimitResult.limit - rateLimitResult.requestCount)),
+        },
+        status: 429,
+      });
     }
-
-    logStep("Site resolved", { siteKey, siteId });
 
     const requestData: LeadCaptureRequest = await req.json();
-    const {
-      email,
-      firstName,
-      lastName,
-      companyName,
-      phone,
-      companySize,
-      industry,
-      leadSource = 'website',
-      interestType = 'just_browsing',
-      downloadedResource,
-      utm_source,
-      utm_medium,
-      utm_campaign,
-      utm_content,
-      utm_term,
-      landingPage,
-      referrer
-    } = requestData;
 
-    // Validate required fields
-    if (!email) {
-      throw new Error("Email is required");
+    // Security: Validate and sanitize all input fields
+    const rawEmail = requestData.email;
+
+    // Validate email format first
+    if (!rawEmail || !isValidEmail(rawEmail)) {
+      throw new Error("Valid email is required");
     }
 
-    logStep("Processing lead capture", { email, interestType, siteId });
+    // Sanitize all string inputs
+    const email = sanitizeString(rawEmail, 255) || rawEmail.toLowerCase().trim();
+    const firstName = sanitizeString(requestData.firstName, 100);
+    const lastName = sanitizeString(requestData.lastName, 100);
+    const companyName = sanitizeString(requestData.companyName, 200);
+    const phone = sanitizePhone(requestData.phone);
+    const companySize = sanitizeString(requestData.companySize, 50);
+    const industry = sanitizeString(requestData.industry, 100);
+    const leadSource = sanitizeString(requestData.leadSource, 50) || 'website';
+    const interestType = sanitizeString(requestData.interestType, 50) || 'just_browsing';
+    const downloadedResource = sanitizeString(requestData.downloadedResource, 200);
+    const utm_source = sanitizeString(requestData.utm_source, 100);
+    const utm_medium = sanitizeString(requestData.utm_medium, 100);
+    const utm_campaign = sanitizeString(requestData.utm_campaign, 200);
+    const utm_content = sanitizeString(requestData.utm_content, 200);
+    const utm_term = sanitizeString(requestData.utm_term, 100);
+    const landingPage = sanitizeString(requestData.landingPage, 500);
+    const referrer = sanitizeString(requestData.referrer, 500);
 
-    // Check if lead already exists with site isolation
-    let existingLeadQuery = supabaseClient
+    logStep("Processing lead capture", { email, interestType });
+
+    // Check if lead already exists
+    const { data: existingLead } = await supabaseClient
       .from('leads')
       .select('*')
-      .eq('email', email);
-
-    if (siteId) {
-      existingLeadQuery = existingLeadQuery.eq('site_id', siteId);  // CRITICAL: Site isolation
-    }
-
-    const { data: existingLead } = await existingLeadQuery.single();
+      .eq('email', email)
+      .single();
 
     let leadId: string;
     let isNewLead = false;
@@ -132,27 +192,21 @@ serve(async (req) => {
       if (!existingLead.utm_medium && utm_medium) updateData.utm_medium = utm_medium;
       if (!existingLead.utm_campaign && utm_campaign) updateData.utm_campaign = utm_campaign;
 
-      // Update with site isolation
-      let updateQuery = supabaseClient
+      const { data: updatedLead, error: updateError } = await supabaseClient
         .from('leads')
         .update(updateData)
-        .eq('id', existingLead.id);
-
-      if (siteId) {
-        updateQuery = updateQuery.eq('site_id', siteId);  // CRITICAL: Site isolation on update
-      }
-
-      const { data: updatedLead, error: updateError } = await updateQuery.select().single();
+        .eq('id', existingLead.id)
+        .select()
+        .single();
 
       if (updateError) throw updateError;
       leadId = updatedLead.id;
-      logStep("Updated existing lead", { leadId, siteId });
+      logStep("Updated existing lead", { leadId });
     } else {
-      // Create new lead with site isolation
+      // Create new lead
       const { data: newLead, error: createError } = await supabaseClient
         .from('leads')
         .insert({
-          site_id: siteId,  // CRITICAL: Include site_id
           email,
           first_name: firstName || null,
           last_name: lastName || null,
@@ -177,10 +231,10 @@ serve(async (req) => {
       if (createError) throw createError;
       leadId = newLead.id;
       isNewLead = true;
-      logStep("Created new lead", { leadId, siteId });
+      logStep("Created new lead", { leadId });
     }
 
-    // Track activity with site isolation
+    // Track activity
     const activityType = downloadedResource ? 'resource_downloaded' :
                         interestType === 'newsletter' ? 'newsletter_signup' :
                         'lead_captured';
@@ -188,7 +242,6 @@ serve(async (req) => {
     await supabaseClient
       .from('lead_activities')
       .insert({
-        site_id: siteId,  // CRITICAL: Include site_id
         lead_id: leadId,
         activity_type: activityType,
         activity_data: {
@@ -200,11 +253,10 @@ serve(async (req) => {
         user_agent: req.headers.get('user-agent')
       });
 
-    // Track conversion event with site isolation
+    // Track conversion event
     await supabaseClient
       .from('conversion_events')
       .insert({
-        site_id: siteId,  // CRITICAL: Include site_id
         event_type: 'lead_captured',
         event_step: 1,
         funnel_name: 'marketing_funnel',
@@ -220,12 +272,11 @@ serve(async (req) => {
         }
       });
 
-    // Store attribution if new lead with site isolation
+    // Store attribution if new lead
     if (isNewLead && (utm_source || utm_medium || utm_campaign)) {
       await supabaseClient
         .from('user_attribution')
         .insert({
-          site_id: siteId,  // CRITICAL: Include site_id
           // Note: We'll need to link this later when user signs up
           first_touch_utm_source: utm_source,
           first_touch_utm_medium: utm_medium,

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
-import { CreditCard, AlertTriangle, RefreshCw } from 'lucide-react';
+import { CreditCard, AlertTriangle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
@@ -30,6 +30,11 @@ const PaymentFailureAlert: React.FC = () => {
 
   const checkPaymentFailures = async () => {
     try {
+      // Tenant scoping is enforced by RLS: the "Users can view their payment
+      // failures" policy restricts rows to the caller's own subscriber record
+      // (subscriber_id -> subscribers.user_id = auth.uid()). The previously
+      // over-permissive "System can manage ... USING(true)" policy that exposed
+      // all tenants' rows was removed in migration 20260613120000 (US-197).
       const { data, error } = await supabase
         .from('payment_failures')
         .select('*')

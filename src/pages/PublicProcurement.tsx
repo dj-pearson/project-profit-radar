@@ -3,7 +3,7 @@ import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { Plus, Search, FileText, Users, Calendar, CheckCircle, AlertCircle, ArrowLeft, Edit } from "lucide-react";
+import { Plus, Search, FileText, Users, Calendar, CheckCircle, AlertCircle, Edit } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -11,7 +11,6 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -237,7 +236,7 @@ export default function PublicProcurement() {
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
             <DialogTrigger asChild>
               <Button onClick={() => setIsDialogOpen(true)}>
-                <Plus className="mr-2 h-4 w-4" />
+                <Plus className="mr-2 h-4 w-4" aria-hidden="true" />
                 Add Opportunity
               </Button>
             </DialogTrigger>
@@ -360,7 +359,7 @@ export default function PublicProcurement() {
 
         <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-2 sm:space-y-0 sm:space-x-2">
           <div className="flex items-center space-x-2 w-full sm:w-auto">
-            <Search className="h-4 w-4 text-muted-foreground" />
+            <Search className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
             <Input
               placeholder="Search opportunities, bids, or subcontractors..."
               value={searchTerm}
@@ -383,7 +382,7 @@ export default function PublicProcurement() {
                 Add your first procurement opportunity to get started
               </p>
               <Button onClick={() => setIsDialogOpen(true)}>
-                <Plus className="h-4 w-4 mr-2" />
+                <Plus className="h-4 w-4 mr-2" aria-hidden="true" />
                 Add Opportunity
               </Button>
             </div>
@@ -444,7 +443,7 @@ export default function PublicProcurement() {
                         View Details
                       </Button>
                       <Button size="sm" className="w-full sm:w-auto">
-                        <Plus className="h-4 w-4 mr-2" />
+                        <Plus className="h-4 w-4 mr-2" aria-hidden="true" />
                         Submit Bid
                       </Button>
                     </div>
@@ -526,7 +525,7 @@ export default function PublicProcurement() {
                   Add subcontractor information required for bid submissions
                 </p>
                 <Button>
-                  <Plus className="h-4 w-4 mr-2" />
+                  <Plus className="h-4 w-4 mr-2" aria-hidden="true" />
                   Add Subcontractor
                 </Button>
               </div>

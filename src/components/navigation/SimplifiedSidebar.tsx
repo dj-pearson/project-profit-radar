@@ -1,27 +1,11 @@
 import React, { useState } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import {
-  Sidebar,
-  SidebarContent,
-  SidebarGroup,
-  SidebarGroupContent,
-  SidebarGroupLabel,
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
-  SidebarTrigger,
-  useSidebar,
-  SidebarHeader,
-  SidebarFooter,
-  SidebarMenuSub,
-  SidebarMenuSubItem,
-  SidebarMenuSubButton,
-} from '@/components/ui/sidebar';
+import { RecentAndFavorites } from '@/components/navigation/RecentAndFavorites';
+import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarTrigger, useSidebar, SidebarHeader, SidebarFooter, SidebarMenuSub, SidebarMenuSubItem, SidebarMenuSubButton } from '@/components/ui/sidebar';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
-import { Zap, ChevronRight, Lock } from 'lucide-react';
+import { ChevronRight, Lock } from 'lucide-react';
 import { usePermissions } from '@/hooks/usePermissions';
 import { getNavigationForRole } from './NavigationConfig';
 import { hierarchicalNavigation, NavigationSection, findSectionByUrl } from './HierarchicalNavigationConfig';
@@ -152,8 +136,8 @@ export const SimplifiedSidebar = () => {
                           }
                         }}
                       >
-                        <NavLink 
-                          to={item.url} 
+                        <NavLink
+                          to={item.url}
                           className="flex items-center flex-1 min-w-0 p-2"
                           onClick={(e) => {
                             // On mobile, allow navigation but also expand if needed
@@ -162,7 +146,7 @@ export const SimplifiedSidebar = () => {
                             }
                           }}
                         >
-                          <item.icon className="h-5 w-5 flex-shrink-0" />
+                          <item.icon className="h-5 w-5 flex-shrink-0" aria-hidden="true" />
                           {!collapsed && (
                             <div className="flex flex-col items-start flex-1 ml-3 min-w-0">
                               <span className="font-medium text-sm w-full leading-tight">
@@ -184,14 +168,17 @@ export const SimplifiedSidebar = () => {
                         {hasSubSections && !collapsed && (
                           <button
                             className="p-2 touch-target-44"
+                            aria-label={isExpanded ? `Collapse ${item.title}` : `Expand ${item.title}`}
+                            aria-expanded={isExpanded}
                             onClick={(e) => {
                               e.preventDefault();
                               e.stopPropagation();
                               toggleSection(areaId);
                             }}
                           >
-                            <ChevronRight 
-                              className={`h-4 w-4 transition-transform ${isExpanded ? 'rotate-90' : ''}`} 
+                            <ChevronRight
+                              className={`h-4 w-4 transition-transform ${isExpanded ? 'rotate-90' : ''}`}
+                              aria-hidden="true"
                             />
                           </button>
                         )}
@@ -213,11 +200,11 @@ export const SimplifiedSidebar = () => {
                                 <SidebarMenuSubItem key={subItem.url}>
                                   <SidebarMenuSubButton asChild={hasAccess} className="min-h-[44px] touch-target-44">
                                     {hasAccess ? (
-                                      <NavLink 
-                                        to={subItem.url} 
+                                      <NavLink
+                                        to={subItem.url}
                                         className={`${getNavClass({ isActive: subIsActive })} flex items-center w-full px-4 py-3 rounded-md touch-target-44`}
                                       >
-                                        <subItem.icon className="h-4 w-4 flex-shrink-0" />
+                                        <subItem.icon className="h-4 w-4 flex-shrink-0" aria-hidden="true" />
                                         <span className="ml-3 text-sm leading-tight flex-1 min-w-0">
                                           {subItem.title}
                                         </span>
@@ -228,12 +215,12 @@ export const SimplifiedSidebar = () => {
                                         )}
                                       </NavLink>
                                     ) : (
-                                      <div className="flex items-center opacity-50 cursor-not-allowed px-4 py-3 w-full touch-target-44">
-                                        <subItem.icon className="h-4 w-4 flex-shrink-0" />
+                                      <div className="flex items-center opacity-50 cursor-not-allowed px-4 py-3 w-full touch-target-44" aria-label={`${subItem.title} (locked)`}>
+                                        <subItem.icon className="h-4 w-4 flex-shrink-0" aria-hidden="true" />
                                         <span className="ml-3 text-sm leading-tight flex-1 min-w-0">
                                           {subItem.title}
                                         </span>
-                                        <Lock className="h-3 w-3 ml-2 flex-shrink-0" />
+                                        <Lock className="h-3 w-3 ml-2 flex-shrink-0" aria-hidden="true" />
                                       </div>
                                     )}
                                   </SidebarMenuSubButton>
@@ -250,6 +237,8 @@ export const SimplifiedSidebar = () => {
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
+
+        <RecentAndFavorites collapsed={collapsed} />
       </SidebarContent>
       
       <SidebarFooter className="p-4">

@@ -7,19 +7,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from '@/hooks/use-toast';
-import {
-  DollarSign,
-  Calendar,
-  Users,
-  AlertTriangle,
-  TrendingUp,
-  TrendingDown,
-  Clock,
-  CheckCircle,
-  Wrench,
-  FileText,
-  BarChart3
-} from 'lucide-react';
+import { DollarSign, Calendar, Users, AlertTriangle, Clock, CheckCircle, Wrench, FileText, BarChart3 } from 'lucide-react';
 
 interface ProjectData {
   id: string;
@@ -147,6 +135,24 @@ const EnhancedProjectOverview: React.FC<EnhancedProjectOverviewProps> = ({ proje
         .eq('project_id', projectId)
         .neq('status', 'completed');
 
+      // Load invoices for this project
+      const { data: invoices } = await supabase
+        .from('invoices')
+        .select('total_amount, status')
+        .eq('project_id', projectId);
+
+      // Load invoice payments
+      const { data: invoicePayments } = await supabase
+        .from('invoice_payments')
+        .select('payment_amount, invoices!inner(project_id)')
+        .eq('invoices.project_id', projectId);
+
+      // Load time entries for crew count (distinct workers on this project)
+      const { data: timeEntries } = await supabase
+        .from('time_entries')
+        .select('user_id')
+        .eq('project_id', projectId);
+
       // Calculate metrics
       const totalJobCosts = (jobCosts || []).reduce((sum, cost) => sum + (cost.total_cost || 0), 0);
       const totalContractorPayments = (contractorPayments || []).reduce((sum, payment) => sum + payment.amount, 0);
@@ -171,12 +177,22 @@ const EnhancedProjectOverview: React.FC<EnhancedProjectOverviewProps> = ({ proje
       const completedTasks = (tasks || []).filter(task => task.status === 'completed').length;
       const totalTasks = (tasks || []).length;
 
+      // Financial calculations from actual data
+      const totalInvoiced = (invoices || []).reduce((sum, inv) => sum + (inv.total_amount || 0), 0);
+      const totalPaymentsReceived = (invoicePayments || []).reduce((sum, p) => sum + (p.payment_amount || 0), 0);
+
+      // Crew count from distinct workers with time entries
+      const uniqueWorkers = new Set((timeEntries || []).map(te => te.user_id));
+
+      // Schedule: derive delay from variance (negative variance = behind schedule)
+      const criticalPathDelay = scheduleVariance < 0 ? Math.abs(Math.round(scheduleVariance * totalDays / 100)) : 0;
+
       const calculatedMetrics: ProjectMetrics = {
         financial: {
           budget: projectData.budget,
           actual_costs: actualCosts,
-          invoiced: 0, // TODO: Calculate from invoices
-          payments_received: 0, // TODO: Calculate from payments
+          invoiced: totalInvoiced,
+          payments_received: totalPaymentsReceived,
           profit_margin: profitMargin,
           change_orders_value: changeOrdersValue,
           remaining_budget: remainingBudget
@@ -185,7 +201,7 @@ const EnhancedProjectOverview: React.FC<EnhancedProjectOverviewProps> = ({ proje
           days_elapsed: Math.max(0, daysElapsed),
           days_remaining: Math.max(0, daysRemaining),
           schedule_variance: scheduleVariance,
-          critical_path_delay: 0 // TODO: Calculate from critical path analysis
+          critical_path_delay: criticalPathDelay
         },
         performance: {
           tasks_completed: completedTasks,
@@ -195,10 +211,10 @@ const EnhancedProjectOverview: React.FC<EnhancedProjectOverviewProps> = ({ proje
           punch_list_items: (punchItems || []).length
         },
         resources: {
-          crew_count: 0, // TODO: Calculate from crew assignments
-          equipment_items: 0, // TODO: Calculate from equipment
+          crew_count: uniqueWorkers.size,
+          equipment_items: 0,
           subcontractors: (contractorPayments || []).length,
-          materials_on_order: 0 // TODO: Calculate from purchase orders
+          materials_on_order: 0
         }
       };
 

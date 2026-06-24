@@ -69,7 +69,7 @@ const CaseStudyCard: React.FC<CaseStudyProps> = ({
         </div>
         
         <div>
-          <h4 className="font-semibold mb-2 text-blue-700">BuildDesk Solution</h4>
+          <h4 className="font-semibold mb-2 text-blue-700">Brikly Solution</h4>
           <p className="text-muted-foreground text-sm">{solution}</p>
         </div>
         
@@ -103,7 +103,7 @@ export const CaseStudiesSection: React.FC = () => {
       industry: "Residential Construction",
       teamSize: "12 employees",
       challenge: "Job costs were consistently 15-20% over budget due to poor time tracking and material cost estimation. Excel spreadsheets couldn't keep up with multiple active projects, leading to cash flow problems and reduced profitability.",
-      solution: "Implemented BuildDesk's real-time job costing with mobile time tracking for field crews. Used integrated material cost tracking and automated QuickBooks sync to eliminate manual data entry errors.",
+      solution: "Implemented Brikly's real-time job costing with mobile time tracking for field crews. Used integrated material cost tracking and automated QuickBooks sync to eliminate manual data entry errors.",
       results: [
         {
           metric: "Profit Margin",
@@ -130,7 +130,7 @@ export const CaseStudiesSection: React.FC = () => {
           icon: <DollarSign className="h-5 w-5 text-green-600" />
         }
       ],
-      quote: "BuildDesk transformed our business from barely breaking even to consistently profitable. The real-time job costing showed us exactly where we were losing money, and now we make data-driven decisions on every project.",
+      quote: "Brikly transformed our business from barely breaking even to consistently profitable. The real-time job costing showed us exactly where we were losing money, and now we make data-driven decisions on every project.",
       author: "Mike Rodriguez",
       title: "Owner",
       timeframe: "2 weeks",
@@ -141,7 +141,7 @@ export const CaseStudiesSection: React.FC = () => {
       industry: "Commercial Construction",
       teamSize: "28 employees",
       challenge: "Managing 8-12 concurrent commercial projects with multiple subcontractors was chaotic. Change orders were getting lost, client communication was poor, and project delays were costing $15,000+ monthly in penalties.",
-      solution: "Deployed BuildDesk's project management suite with subcontractor portals, digital change order workflows, and client communication tools. Integrated scheduling and document management streamlined operations.",
+      solution: "Deployed Brikly's project management suite with subcontractor portals, digital change order workflows, and client communication tools. Integrated scheduling and document management streamlined operations.",
       results: [
         {
           metric: "Project Delays",
@@ -179,7 +179,7 @@ export const CaseStudiesSection: React.FC = () => {
       industry: "General Contracting",
       teamSize: "18 employees", 
       challenge: "Using Procore was overwhelming and expensive ($14,400/year). The complexity required dedicated admin staff and extensive training. Features were too enterprise-focused for their small team's actual needs.",
-      solution: "Migrated to BuildDesk with guided data transfer and simplified workflows. Maintained essential features (scheduling, job costing, document management) while eliminating unnecessary complexity and cost.",
+      solution: "Migrated to Brikly with guided data transfer and simplified workflows. Maintained essential features (scheduling, job costing, document management) while eliminating unnecessary complexity and cost.",
       results: [
         {
           metric: "Software Cost",
@@ -206,7 +206,7 @@ export const CaseStudiesSection: React.FC = () => {
           icon: <TrendingUp className="h-5 w-5 text-green-600" />
         }
       ],
-      quote: "BuildDesk gives us everything we actually use from expensive enterprise software, without the complexity we don't need. My team adopted it immediately because it actually makes their jobs easier, not harder.",
+      quote: "Brikly gives us everything we actually use from expensive enterprise software, without the complexity we don't need. My team adopted it immediately because it actually makes their jobs easier, not harder.",
       author: "David Thompson", 
       title: "General Contractor",
       timeframe: "2 weeks",
@@ -220,7 +220,7 @@ export const CaseStudiesSection: React.FC = () => {
         <div className="text-center mb-12">
           <h2 className="text-3xl font-bold mb-4">Real Results from Real Contractors</h2>
           <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-            See how BuildDesk helped small contractors improve profitability, reduce delays, 
+            See how Brikly helped small contractors improve profitability, reduce delays, 
             and streamline operations with measurable ROI.
           </p>
         </div>

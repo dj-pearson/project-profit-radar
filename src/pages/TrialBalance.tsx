@@ -14,7 +14,16 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { ClipboardList, Download, Printer, CheckCircle, AlertCircle } from 'lucide-react';
-import { formatCurrency, getAccountTypeLabel } from '@/utils/accountingUtils';
+import { formatCurrency, getAccountTypeLabel, type AccountType } from '@/utils/accountingUtils';
+
+interface ChartAccount {
+  id: string;
+  account_name: string;
+  account_number: string;
+  account_type: AccountType;
+  account_subtype: string;
+  current_balance: number | null;
+}
 
 export default function TrialBalance() {
   const { user } = useAuth();
@@ -44,11 +53,12 @@ export default function TrialBalance() {
   const isBalanced = difference < 0.01;
 
   // Group accounts by type
-  const accountsByType = accounts?.reduce((acc: any, account: any) => {
-    if (!acc[account.account_type]) {
-      acc[account.account_type] = [];
+  const accountsByType = accounts?.reduce<Record<string, ChartAccount[]>>((acc, account) => {
+    const typedAccount = account as unknown as ChartAccount;
+    if (!acc[typedAccount.account_type]) {
+      acc[typedAccount.account_type] = [];
     }
-    acc[account.account_type].push(account);
+    acc[typedAccount.account_type].push(typedAccount);
     return acc;
   }, {});
 
@@ -72,12 +82,12 @@ export default function TrialBalance() {
   };
 
   return (
-    <div className="container mx-auto py-6 space-y-6">
+    <main className="container mx-auto py-6 space-y-6" role="main" aria-label="Trial Balance">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <header className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight flex items-center gap-2">
-            <ClipboardList className="h-8 w-8" />
+            <ClipboardList className="h-8 w-8" aria-hidden="true" />
             Trial Balance
           </h1>
           <p className="text-muted-foreground mt-1">
@@ -85,79 +95,83 @@ export default function TrialBalance() {
           </p>
         </div>
 
-        <div className="flex gap-2">
-          <Button variant="outline" onClick={handlePrint}>
-            <Printer className="mr-2 h-4 w-4" />
+        <div className="flex gap-2" role="toolbar" aria-label="Report actions">
+          <Button variant="outline" onClick={handlePrint} aria-label="Print trial balance">
+            <Printer className="mr-2 h-4 w-4" aria-hidden="true" />
             Print
           </Button>
-          <Button variant="outline" onClick={handleExport}>
-            <Download className="mr-2 h-4 w-4" />
+          <Button variant="outline" onClick={handleExport} aria-label="Export trial balance">
+            <Download className="mr-2 h-4 w-4" aria-hidden="true" />
             Export
           </Button>
         </div>
-      </div>
+      </header>
 
       {/* Filters */}
-      <Card>
-        <CardContent className="pt-6">
-          <div className="flex gap-4 items-end">
-            <div className="space-y-2">
-              <Label htmlFor="asOfDate">As of Date</Label>
-              <Input
-                id="asOfDate"
-                type="date"
-                value={asOfDate}
-                onChange={(e) => setAsOfDate(e.target.value)}
-                className="w-[200px]"
-              />
-            </div>
+      <section aria-label="Report filters">
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex gap-4 items-end">
+              <div className="space-y-2">
+                <Label htmlFor="asOfDate">As of Date</Label>
+                <Input
+                  id="asOfDate"
+                  type="date"
+                  value={asOfDate}
+                  onChange={(e) => setAsOfDate(e.target.value)}
+                  className="w-[200px]"
+                  aria-label="Select date for trial balance"
+                />
+              </div>
 
-            {/* Balance Status */}
-            <div className="flex items-center gap-2 ml-auto">
-              {isBalanced ? (
-                <div className="flex items-center gap-2 text-green-600 bg-green-50 px-4 py-2 rounded-lg">
-                  <CheckCircle className="h-5 w-5" />
-                  <span className="font-semibold">Balanced</span>
-                </div>
-              ) : (
-                <div className="flex items-center gap-2 text-red-600 bg-red-50 px-4 py-2 rounded-lg">
-                  <AlertCircle className="h-5 w-5" />
-                  <span className="font-semibold">
-                    Out of Balance: {formatCurrency(difference)}
-                  </span>
-                </div>
-              )}
+              {/* Balance Status */}
+              <div className="flex items-center gap-2 ml-auto">
+                {isBalanced ? (
+                  <div className="flex items-center gap-2 text-green-600 bg-green-50 px-4 py-2 rounded-lg" role="status" aria-live="polite">
+                    <CheckCircle className="h-5 w-5" aria-hidden="true" />
+                    <span className="font-semibold">Balanced</span>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2 text-red-600 bg-red-50 px-4 py-2 rounded-lg" role="alert">
+                    <AlertCircle className="h-5 w-5" aria-hidden="true" />
+                    <span className="font-semibold">
+                      Out of Balance: {formatCurrency(difference)}
+                    </span>
+                  </div>
+                )}
+              </div>
             </div>
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      </section>
 
       {/* Trial Balance */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Trial Balance</CardTitle>
-          <CardDescription>
-            As of {new Date(asOfDate).toLocaleDateString('en-US', {
-              year: 'numeric',
-              month: 'long',
-              day: 'numeric',
-            })}
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          {isLoading ? (
-            <div className="text-center py-8">Loading trial balance...</div>
-          ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Account Number</TableHead>
-                  <TableHead>Account Name</TableHead>
-                  <TableHead>Type</TableHead>
-                  <TableHead className="text-right">Debit</TableHead>
-                  <TableHead className="text-right">Credit</TableHead>
-                </TableRow>
-              </TableHeader>
+      <section aria-label="Trial balance report">
+        <Card>
+          <CardHeader>
+            <CardTitle>Trial Balance</CardTitle>
+            <CardDescription>
+              As of {new Date(asOfDate).toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+              })}
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {isLoading ? (
+              <div className="space-y-3">{[1,2,3,4,5].map(i => <div key={i} className="h-8 bg-muted animate-pulse rounded" />)}</div>
+            ) : (
+              <Table aria-label="Trial Balance">
+                <TableHeader>
+                  <TableRow>
+                    <TableHead scope="col">Account Number</TableHead>
+                    <TableHead scope="col">Account Name</TableHead>
+                    <TableHead scope="col">Type</TableHead>
+                    <TableHead scope="col" className="text-right">Debit</TableHead>
+                    <TableHead scope="col" className="text-right">Credit</TableHead>
+                  </TableRow>
+                </TableHeader>
               <TableBody>
                 {accountOrder.map((type) => {
                   const typeAccounts = accountsByType?.[type] || [];
@@ -166,7 +180,7 @@ export default function TrialBalance() {
                   // Calculate subtotals for this type
                   const isDebitType = ['asset', 'expense', 'cost_of_goods_sold', 'other_expense'].includes(type);
                   const subtotal = typeAccounts.reduce(
-                    (sum: number, account: any) => sum + Math.abs(Number(account.current_balance) || 0),
+                    (sum: number, account: ChartAccount) => sum + Math.abs(Number(account.current_balance) || 0),
                     0
                   );
 
@@ -175,12 +189,12 @@ export default function TrialBalance() {
                       {/* Type Header */}
                       <TableRow className="bg-muted/50">
                         <TableCell colSpan={5} className="font-semibold">
-                          {getAccountTypeLabel(type as any)}
+                          {getAccountTypeLabel(type as AccountType)}
                         </TableCell>
                       </TableRow>
 
                       {/* Accounts */}
-                      {typeAccounts.map((account: any) => {
+                      {typeAccounts.map((account: ChartAccount) => {
                         const balance = Math.abs(Number(account.current_balance) || 0);
 
                         return (
@@ -205,7 +219,7 @@ export default function TrialBalance() {
                       {/* Subtotal */}
                       <TableRow className="font-semibold bg-muted/30">
                         <TableCell colSpan={3} className="text-right">
-                          Total {getAccountTypeLabel(type as any)}
+                          Total {getAccountTypeLabel(type as AccountType)}
                         </TableCell>
                         <TableCell className="text-right font-mono border-t">
                           {isDebitType ? formatCurrency(subtotal) : '-'}
@@ -236,7 +250,7 @@ export default function TrialBalance() {
 
                 {/* Difference (if any) */}
                 {!isBalanced && (
-                  <TableRow className="bg-red-50 font-semibold">
+                  <TableRow className="bg-red-50 font-semibold" role="row" aria-label="Out of balance warning">
                     <TableCell colSpan={3} className="text-red-800">
                       DIFFERENCE (OUT OF BALANCE)
                     </TableCell>
@@ -253,9 +267,11 @@ export default function TrialBalance() {
           )}
         </CardContent>
       </Card>
+      </section>
 
       {/* Summary */}
-      <div className="grid gap-4 md:grid-cols-3">
+      <section aria-label="Trial balance summary">
+        <div className="grid gap-4 md:grid-cols-3">
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium">Total Debits</CardTitle>
@@ -287,7 +303,8 @@ export default function TrialBalance() {
             </p>
           </CardContent>
         </Card>
-      </div>
-    </div>
+        </div>
+      </section>
+    </main>
   );
 }

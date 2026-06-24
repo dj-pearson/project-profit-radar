@@ -8,7 +8,7 @@
 
 ## Executive Summary
 
-This document provides everything you need to migrate your project to the **Pearson Media unified multi-tenant database**. The central database (formerly Build-Desk) now hosts all Pearson Media products with complete data isolation between tenants.
+This document provides everything you need to migrate your project to the **Pearson Media unified multi-tenant database**. The central database (formerly Brikly) now hosts all Pearson Media products with complete data isolation between tenants.
 
 ### What This Migration Achieves
 
@@ -25,9 +25,9 @@ BEFORE (Current):                    AFTER (Multi-Tenant):
 │ Your Project │                    │    Unified Supabase Project       │
 │   Supabase   │                    ├───────────────────────────────────┤
 │  (separate)  │        ───>        │ Sites Table                       │
-└──────────────┘                    │ ├─ builddesk (Build-Desk)         │
+└──────────────┘                    │ ├─ brikly (Brikly)         │
 ┌──────────────┐                    │ ├─ realestate (RealEstate Bio)    │
-│ Build-Desk   │                    │ ├─ salonpros (SalonPros Bio)      │
+│ Brikly   │                    │ ├─ salonpros (SalonPros Bio)      │
 │   Supabase   │        ───>        │ ├─ yoursite  (Your Project)       │
 └──────────────┘                    │ └─ ...more sites                  │
 ┌──────────────┐                    ├───────────────────────────────────┤
@@ -67,10 +67,10 @@ Every Pearson Media product gets a row in the `sites` table:
 ```sql
 CREATE TABLE sites (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  key TEXT UNIQUE NOT NULL,           -- 'builddesk', 'realestate', 'yoursite'
-  name TEXT NOT NULL,                 -- 'Build-Desk', 'RealEstate Bio'
-  domain TEXT NOT NULL,               -- 'build-desk.com', 'realestatebio.com'
-  additional_domains TEXT[],          -- ['www.build-desk.com', 'staging.build-desk.com']
+  key TEXT UNIQUE NOT NULL,           -- 'brikly', 'realestate', 'yoursite'
+  name TEXT NOT NULL,                 -- 'Brikly', 'RealEstate Bio'
+  domain TEXT NOT NULL,               -- 'brikly.net', 'realestatebio.com'
+  additional_domains TEXT[],          -- ['www.brikly.net', 'staging.brikly.net']
   description TEXT,
   industry TEXT,
   is_active BOOLEAN DEFAULT true,
@@ -526,9 +526,9 @@ export interface SiteConfig {
 
 // Map domains to site keys
 const siteKeyMap: Record<string, string> = {
-  // Build-Desk
-  'build-desk.com': 'builddesk',
-  'www.build-desk.com': 'builddesk',
+  // Brikly
+  'brikly.net': 'brikly',
+  'www.brikly.net': 'brikly',
 
   // Your Site - ADD YOUR DOMAINS HERE
   'yoursite.com': 'yoursite',
@@ -536,7 +536,7 @@ const siteKeyMap: Record<string, string> = {
   'yoursite-staging.pearsonperformance.workers.dev': 'yoursite',
 
   // Development
-  'localhost': 'builddesk',  // or 'yoursite' for your development
+  'localhost': 'brikly',  // or 'yoursite' for your development
 };
 
 export async function getSiteConfig(): Promise<SiteConfig | null> {
@@ -803,9 +803,9 @@ CREATE POLICY "Site isolation"
 ### Test 1: Data Isolation
 
 ```sql
--- As user from YOUR site, try to access Build-Desk data
+-- As user from YOUR site, try to access Brikly data
 SET LOCAL request.jwt.claims TO '{"app_metadata": {"site_id": "YOUR-SITE-ID"}}';
-SELECT * FROM projects WHERE site_id = 'BUILDDESK-SITE-ID';
+SELECT * FROM projects WHERE site_id = 'BRIKLY-SITE-ID';
 -- Should return 0 rows
 ```
 
@@ -828,7 +828,7 @@ const { data } = await supabase
 # Test that Edge Function rejects cross-site access
 curl -X POST https://project.supabase.co/functions/v1/your-function \
   -H "Authorization: Bearer YOUR_SITE_JWT" \
-  -d '{"projectId": "BUILDDESK_PROJECT_ID"}'
+  -d '{"projectId": "BRIKLY_PROJECT_ID"}'
 
 # Should return 404 or empty (not the actual project)
 ```

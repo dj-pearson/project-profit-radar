@@ -7,20 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { formatCurrency } from '@/utils/formatters';
-import { 
-  Brain, 
-  TrendingUp, 
-  Target,
-  DollarSign,
-  Calendar,
-  Activity,
-  Users,
-  Zap,
-  AlertTriangle,
-  CheckCircle,
-  Clock,
-  BarChart3
-} from 'lucide-react';
+import { Brain, Zap, AlertTriangle, CheckCircle, Clock, BarChart3 } from 'lucide-react';
 
 interface AILeadScore {
   id: string;
@@ -36,10 +23,10 @@ interface AILeadScore {
   conversion_probability: number;
   estimated_deal_size: number;
   estimated_close_time_days: number;
-  key_insights: any;
-  risk_factors: any;
-  opportunities: any;
-  next_best_actions: any;
+  key_insights: string[];
+  risk_factors: string[];
+  opportunities: string[];
+  next_best_actions: string[];
   calculated_at: string;
   lead: {
     first_name: string;
@@ -107,7 +94,7 @@ export const EnhancedLeadIntelligence: React.FC = () => {
 
       if (roiError) throw roiError;
 
-      setAiLeadScores(((scoresData || []) as any).map((score: any) => ({
+      setAiLeadScores(((scoresData || []) as unknown as AILeadScore[]).map((score: AILeadScore) => ({
         ...score,
         key_insights: Array.isArray(score.key_insights) ? score.key_insights : [],
         risk_factors: Array.isArray(score.risk_factors) ? score.risk_factors : [],
@@ -120,10 +107,10 @@ export const EnhancedLeadIntelligence: React.FC = () => {
         qualified_leads: 0,
         converted_deals: 0
       })));
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast({
         title: "Error loading intelligence data",
-        description: error.message,
+        description: error instanceof Error ? error.message : "Unknown error",
         variant: "destructive"
       });
     } finally {
@@ -141,18 +128,28 @@ export const EnhancedLeadIntelligence: React.FC = () => {
       if (error) throw error;
 
       // Store the enhanced score in AI lead scores table
+      interface EnhancedScoreResult {
+        overall_score?: number;
+        demographic_score?: number;
+        behavioral_score?: number;
+        engagement_score?: number;
+        fit_score?: number;
+        intent_score?: number;
+        timing_score?: number;
+      }
+      const scoreResult = data as unknown as EnhancedScoreResult | null;
       const { error: insertError } = await supabase
         .from('ai_lead_scores')
         .upsert({
           lead_id: leadId,
           company_id: 'your-company-id', // This should come from user context
-          overall_score: (data as any)?.overall_score || 0,
-          demographic_score: (data as any)?.demographic_score || 0,
-          behavioral_score: (data as any)?.behavioral_score || 0,
-          engagement_score: (data as any)?.engagement_score || 0,
-          fit_score: (data as any)?.fit_score || 0,
-          intent_score: (data as any)?.intent_score || 0,
-          timing_score: (data as any)?.timing_score || 0,
+          overall_score: scoreResult?.overall_score || 0,
+          demographic_score: scoreResult?.demographic_score || 0,
+          behavioral_score: scoreResult?.behavioral_score || 0,
+          engagement_score: scoreResult?.engagement_score || 0,
+          fit_score: scoreResult?.fit_score || 0,
+          intent_score: scoreResult?.intent_score || 0,
+          timing_score: scoreResult?.timing_score || 0,
           calculated_at: new Date().toISOString()
         });
 
@@ -160,14 +157,14 @@ export const EnhancedLeadIntelligence: React.FC = () => {
 
       toast({
         title: "Enhanced score calculated",
-        description: `New AI score: ${(data as any)?.overall_score || 0}`
+        description: `New AI score: ${scoreResult?.overall_score || 0}`
       });
 
       await loadIntelligenceData();
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast({
         title: "Error calculating enhanced score",
-        description: error.message,
+        description: error instanceof Error ? error.message : "Unknown error",
         variant: "destructive"
       });
     } finally {

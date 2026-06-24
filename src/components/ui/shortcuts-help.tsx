@@ -14,34 +14,52 @@ import { useGlobalShortcuts } from '@/hooks/useKeyboardShortcuts';
 
 interface ShortcutItemProps {
   shortcut: {
-    key: string;
+    key?: string;
     ctrlKey?: boolean;
     altKey?: boolean;
     shiftKey?: boolean;
     description: string;
     category?: string;
+    /** Pre-formatted key badges (used for sequences like "G then P"). */
+    displayKeys?: string[];
   };
 }
 
+// Power-user shortcuts (US-095) displayed alongside the registered Ctrl ones.
+const STATIC_SHORTCUTS = [
+  { displayKeys: ['G', 'then', 'P'], description: 'Go to Projects', category: 'Navigation', key: '' },
+  { displayKeys: ['G', 'then', 'I'], description: 'Go to Invoices', category: 'Navigation', key: '' },
+  { displayKeys: ['G', 'then', 'T'], description: 'Go to Time Tracking', category: 'Navigation', key: '' },
+  { displayKeys: ['G', 'then', 'D'], description: 'Go to Dashboard', category: 'Navigation', key: '' },
+  { displayKeys: ['N'], description: 'New item in the current context', category: 'Actions', key: '' },
+  { displayKeys: ['Shift', '?'], description: 'Show this shortcuts overlay', category: 'Help', key: '' },
+  { displayKeys: ['Esc'], description: 'Close dialog / panel', category: 'Help', key: '' },
+];
+
 const ShortcutItem = ({ shortcut }: ShortcutItemProps) => {
   const formatKeys = () => {
+    if (shortcut.displayKeys) return shortcut.displayKeys;
     const keys = [];
     if (shortcut.ctrlKey) keys.push('Ctrl');
     if (shortcut.altKey) keys.push('Alt');
     if (shortcut.shiftKey) keys.push('Shift');
-    keys.push(shortcut.key.toUpperCase());
+    keys.push((shortcut.key || '').toUpperCase());
     return keys;
   };
 
   return (
     <div className="flex items-center justify-between py-2">
       <span className="text-sm text-foreground">{shortcut.description}</span>
-      <div className="flex gap-1">
-        {formatKeys().map((key, index) => (
-          <Badge key={index} variant="outline" className="px-2 py-1 text-xs font-mono">
-            {key}
-          </Badge>
-        ))}
+      <div className="flex items-center gap-1">
+        {formatKeys().map((key, index) =>
+          key === 'then' ? (
+            <span key={index} className="text-xs text-muted-foreground">then</span>
+          ) : (
+            <Badge key={index} variant="outline" className="px-2 py-1 text-xs font-mono">
+              {key}
+            </Badge>
+          )
+        )}
       </div>
     </div>
   );
@@ -58,8 +76,9 @@ export const ShortcutsHelp = () => {
     return () => window.removeEventListener('showShortcutsHelp', handleShowShortcuts);
   }, []);
 
-  // Group shortcuts by category
-  const groupedShortcuts = shortcuts.reduce((acc, shortcut) => {
+  // Group shortcuts by category (registered Ctrl shortcuts + the US-095 set)
+  const allShortcuts = [...shortcuts, ...STATIC_SHORTCUTS];
+  const groupedShortcuts = allShortcuts.reduce((acc, shortcut) => {
     const category = 'category' in shortcut ? shortcut.category || 'General' : 'General';
     if (!acc[category]) acc[category] = [];
     acc[category].push(shortcut);
@@ -129,7 +148,7 @@ export const ShortcutsHelp = () => {
           <div className="text-xs text-muted-foreground bg-muted/30 p-3 rounded-lg">
             <p className="font-medium mb-1">Pro Tips:</p>
             <ul className="space-y-1">
-              <li>• Press <kbd className="bg-muted px-1.5 py-0.5 rounded">Ctrl+/</kbd> anytime to show this dialog</li>
+              <li>• Press <kbd className="bg-muted px-1.5 py-0.5 rounded">Shift+?</kbd> anytime to show this dialog</li>
               <li>• Most shortcuts work from anywhere in the app</li>
               <li>• Navigation shortcuts will redirect you to the appropriate page</li>
             </ul>

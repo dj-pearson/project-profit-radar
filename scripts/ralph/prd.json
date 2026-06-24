@@ -1,0 +1,277 @@
+{
+  "project": "Brikly Comprehensive Security Audit & Hardening",
+  "branchName": "claude/security-audit-fixes-Fu9e4",
+  "description": "Comprehensive security hardening initiative based on a full-codebase security audit covering input sanitization, bounds checking, authentication/authorization, CORS, file upload validation, open redirects, insecure randomness, unbounded queries, and error information leakage. This PRD documents all identified vulnerabilities as user stories for systematic remediation via Ralph AI loops. Priority 1 items are critical/high severity requiring immediate action, Priority 2 are high/medium, Priority 3 are medium, and Priority 4 are low/hardening improvements.",
+  "userStories": [
+    {
+      "id": "US-001",
+      "title": "Harden file upload validation across all upload components",
+      "description": "As a security engineer, I want all file upload components to validate file type, size, and sanitize filenames so that attackers cannot upload malicious files or exploit path traversal. Currently FileStorageManager.tsx (line 112) accepts ANY file with NO type or size validation and uses unsanitized file.name directly in the storage path. DailyReports.tsx (line 177) also lacks file type/size validation and uses Math.random() for filename generation. Create a reusable file upload validation utility at src/lib/security/fileUploadValidation.ts with: (1) validateFileUpload() that checks file type against an allowlist, validates file size against a configurable max, and sanitizes the filename by stripping path separators and special characters, (2) generateSecureFilename() that uses crypto.randomUUID() instead of Math.random(), (3) ALLOWED_FILE_TYPES constant with safe MIME types, (4) MAX_FILE_SIZES constant with per-type size limits. Then apply this utility to FileStorageManager.tsx and DailyReports.tsx.",
+      "acceptanceCriteria": [
+        "src/lib/security/fileUploadValidation.ts exports validateFileUpload, generateSecureFilename, ALLOWED_FILE_TYPES, MAX_FILE_SIZES",
+        "validateFileUpload checks file.type against ALLOWED_FILE_TYPES allowlist and rejects unknown types",
+        "validateFileUpload checks file.size against MAX_FILE_SIZES limits (default 10MB for documents, 5MB for images)",
+        "generateSecureFilename uses crypto.randomUUID() instead of Math.random() and strips path separators from original filename",
+        "FileStorageManager.tsx handleFileUpload calls validateFileUpload before uploading and shows error toast on rejection",
+        "DailyReports.tsx handleCreateReport validates each photo file before upload using validateFileUpload",
+        "DailyReports.tsx uses generateSecureFilename instead of Math.random()-based naming",
+        "npm run build passes",
+        "npm run lint passes"
+      ],
+      "priority": 1,
+      "passes": true,
+      "notes": "COMPLETED. Created src/lib/security/fileUploadValidation.ts with validateFileUpload, generateSecureFilename, sanitizeFilename, ALLOWED_FILE_TYPES, MAX_FILE_SIZES, ALLOWED_EXTENSIONS. Applied to FileStorageManager.tsx and DailyReports.tsx. Exported from src/lib/security/index.ts."
+    },
+    {
+      "id": "US-002",
+      "title": "Strengthen sanitizeInput to handle encoded XSS payloads",
+      "description": "As a security engineer, I want sanitizeInput() to neutralize HTML-entity-encoded and URL-encoded XSS payloads so that encoded attack vectors like &lt;script&gt; and %3Cscript%3E are blocked. The current implementation in src/lib/security/sanitize.ts (line 51-56) only strips literal < and > characters with a simple regex replace, which is insufficient against encoded payloads. The existing test suite at src/lib/security/__tests__/xssPayloads.test.ts (lines 528-547) documents this as known gaps with TODO comments. Update sanitizeInput to: (1) decode HTML entities before stripping (handle &lt; &gt; &amp; &#60; &#x3C; etc), (2) decode URL-encoded characters (%3C %3E %22 etc), (3) strip the decoded angle brackets and dangerous characters, (4) handle double-encoding attacks. Also update the test TODOs to verify the fixes work.",
+      "acceptanceCriteria": [
+        "sanitizeInput in src/lib/security/sanitize.ts decodes HTML entities (&lt; &gt; &#60; &#x3C; etc) before stripping angle brackets",
+        "sanitizeInput decodes URL-encoded characters (%3C %3E %22 %27 etc) before stripping",
+        "sanitizeInput handles double-encoded payloads (%253C becomes %3C becomes < which is stripped)",
+        "sanitizeInput still preserves normal text without angle brackets or encoded characters",
+        "The TODO comments in xssPayloads.test.ts lines 528-547 are resolved with passing assertions",
+        "All existing sanitize tests continue to pass",
+        "npm run build passes",
+        "npm run lint passes"
+      ],
+      "priority": 1,
+      "passes": true,
+      "notes": "COMPLETED. Updated sanitizeInput in src/lib/security/sanitize.ts to decode HTML entities and URL-encoded characters before stripping angle brackets. Handles double-encoding attacks. Updated xssPayloads.test.ts to verify fixes."
+    },
+    {
+      "id": "US-003",
+      "title": "Add URL validation for open redirect prevention on API-returned URLs",
+      "description": "As a security engineer, I want all window.location.href assignments that use URLs from API responses to validate the URL domain before redirecting so that compromised or malicious API responses cannot redirect users to attacker-controlled sites. Currently multiple components redirect to URLs returned from edge functions without validation: StripePaymentProcessor.tsx (line 56) redirects to data.checkout_url, QuickBooksIntegration.tsx (line 148) redirects to data.auth_url, CalendarIntegration.tsx (lines 114, 135) redirects to data.auth_url, and Pricing.tsx (line 54) redirects to data.url. Create src/lib/security/urlValidation.ts with: (1) validateRedirectUrl() that checks the URL against an allowlist of trusted domains (stripe.com, intuit.com, accounts.google.com, login.microsoftonline.com, the app's own domain), (2) isTrustedDomain() helper, (3) TRUSTED_REDIRECT_DOMAINS constant. Apply validateRedirectUrl to all identified redirect locations.",
+      "acceptanceCriteria": [
+        "src/lib/security/urlValidation.ts exports validateRedirectUrl, isTrustedDomain, TRUSTED_REDIRECT_DOMAINS",
+        "validateRedirectUrl parses the URL and checks the hostname against TRUSTED_REDIRECT_DOMAINS",
+        "validateRedirectUrl rejects javascript: and data: protocol URLs",
+        "validateRedirectUrl rejects protocol-relative URLs (//evil.com)",
+        "StripePaymentProcessor.tsx validates data.checkout_url before redirect with toast error on failure",
+        "QuickBooksIntegration.tsx validates data.auth_url before redirect",
+        "CalendarIntegration.tsx validates data.auth_url before redirect (both Google and Outlook)",
+        "Pricing.tsx validates data.url before redirect",
+        "npm run build passes",
+        "npm run lint passes"
+      ],
+      "priority": 1,
+      "passes": true,
+      "notes": "COMPLETED. Created src/lib/security/urlValidation.ts with validateRedirectUrl, isTrustedDomain, TRUSTED_REDIRECT_DOMAINS. Applied to StripePaymentProcessor.tsx, QuickBooksIntegration.tsx, CalendarIntegration.tsx (Google + Outlook), and Pricing.tsx. Exported from src/lib/security/index.ts."
+    },
+    {
+      "id": "US-004",
+      "title": "Replace Math.random() with crypto.randomUUID() for security-sensitive IDs",
+      "description": "As a security engineer, I want all security-sensitive random value generation to use crypto.randomUUID() or crypto.getRandomValues() instead of Math.random() so that generated tokens and IDs are not predictable. Currently ClientPortalAccess.tsx (line 107) generates portal access tokens using Math.random() which is cryptographically insecure and predictable. Multiple file upload components also use Math.random() for filename generation. Audit and fix all instances where Math.random() is used for security-adjacent purposes (tokens, access codes, file paths) in src/ directory.",
+      "acceptanceCriteria": [
+        "ClientPortalAccess.tsx uses crypto.randomUUID() for portal access token generation instead of Math.random()",
+        "All file upload components in src/ use crypto.randomUUID() for filename generation instead of Math.random()",
+        "DailyReports.tsx uses crypto.randomUUID() for uploaded photo filenames",
+        "No Math.random() usage remains in src/ for token, ID, or filename generation (non-UI purposes)",
+        "npm run build passes",
+        "npm run lint passes"
+      ],
+      "priority": 2,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-005",
+      "title": "Add pagination and limits to unbounded Supabase queries",
+      "description": "As a security engineer, I want all Supabase select queries to have explicit .limit() or .range() calls so that no single query can return an unbounded number of rows causing memory exhaustion or DoS. Currently multiple services query without limits: analyticsEngine.ts (lines 200-203 and 260-263) queries financial_records and time_entries with select('*') without limit, taskService.ts (line 85-104) queries all tasks without limit, FileStorageManager.tsx (line 66) has limit(100) which is good but many other query sites don't. Add .limit(1000) as a safety cap to all unbounded select queries in src/services/ and src/hooks/ directories. For user-facing list views, use the paginationSchema from src/lib/validation/schemas.ts.",
+      "acceptanceCriteria": [
+        "analyticsEngine.ts financial_records query has .limit(1000) applied",
+        "analyticsEngine.ts time_entries query has .limit(1000) applied",
+        "taskService.ts tasks query has .limit(500) applied",
+        "All .select('*') queries in src/services/ directory have explicit .limit() calls",
+        "No new unbounded queries introduced",
+        "npm run build passes",
+        "npm run lint passes"
+      ],
+      "priority": 2,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-006",
+      "title": "Add try-catch to all JSON.parse calls on external data",
+      "description": "As a security engineer, I want all JSON.parse() calls on data from localStorage, sessionStorage, or API responses to be wrapped in try-catch blocks so that malformed data cannot crash the application. Currently QuickLeadCapture.tsx (line 89) calls JSON.parse without try-catch on localStorage data, and CookieConsentManager.tsx (line 184) parses savedConsent without error handling. Audit all JSON.parse calls in src/ and wrap any that handle external/stored data in try-catch with appropriate fallback values.",
+      "acceptanceCriteria": [
+        "QuickLeadCapture.tsx JSON.parse call is wrapped in try-catch with fallback to empty/default state",
+        "CookieConsentManager.tsx JSON.parse call is wrapped in try-catch with fallback to show consent banner",
+        "All JSON.parse calls in src/ on localStorage/sessionStorage data have try-catch wrappers",
+        "Fallback values are sensible defaults, not null or undefined",
+        "npm run build passes",
+        "npm run lint passes"
+      ],
+      "priority": 2,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-007",
+      "title": "Add input sanitization to high-risk form submissions",
+      "description": "As a security engineer, I want the top 10 most security-sensitive forms to use the useSanitizedForm hook or apply sanitizeInput before database mutations so that user input is sanitized before storage. The useSanitizedForm hook exists at src/hooks/useSanitizedForm.ts but is barely used (only in tests). Of 89 files with form submissions and 237 files with database mutations, very few apply sanitization. Priority forms to fix: (1) CreateProject.tsx - project name/description, (2) TeamManagement.tsx - user info, (3) BlogManager.tsx - blog content, (4) CRMContacts.tsx - contact info, (5) CRMLeads.tsx - lead data, (6) DocumentManagement.tsx - document metadata, (7) Subcontractors.tsx - subcontractor info, (8) JournalEntries.tsx - financial descriptions, (9) BillPayments.tsx - payment notes, (10) CompanySettings.tsx - company details. For each, add sanitizeInput() calls on text fields before the Supabase insert/update call.",
+      "acceptanceCriteria": [
+        "CreateProject.tsx sanitizes project name and description before insert",
+        "TeamManagement.tsx sanitizes user name and contact fields before insert/update",
+        "BlogManager.tsx sanitizes title and content fields before insert (use sanitizeHtml for rich text)",
+        "CRMContacts.tsx sanitizes contact name, email, phone, notes before insert",
+        "CRMLeads.tsx sanitizes lead name, email, notes before insert",
+        "At least 10 form files apply sanitization before database mutations",
+        "Sanitization uses functions from src/lib/security/sanitize.ts",
+        "npm run build passes",
+        "npm run lint passes"
+      ],
+      "priority": 2,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-008",
+      "title": "Consolidate duplicate sanitization utilities",
+      "description": "As a security engineer, I want a single source of truth for sanitization functions so that developers always use the correct, most secure version. Currently there are duplicate implementations: src/utils/security.ts (lines 57-63) exports sanitizeInput and sanitizeHtml, while src/lib/security/sanitize.ts exports the same function names with different implementations. The src/utils/security.ts version is weaker (simple regex). Consolidate by making src/utils/security.ts re-export from src/lib/security/sanitize.ts, and update all imports of sanitization functions from src/utils/security.ts to use src/lib/security/sanitize.ts instead.",
+      "acceptanceCriteria": [
+        "src/utils/security.ts sanitizeInput and sanitizeHtml re-export from src/lib/security/sanitize.ts",
+        "No duplicate sanitization implementations exist",
+        "All files importing sanitizeInput or sanitizeHtml from src/utils/security.ts still work correctly",
+        "The stronger DOMPurify-based sanitizeHtml is always used",
+        "npm run build passes",
+        "npm run lint passes"
+      ],
+      "priority": 3,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-009",
+      "title": "Add maxLength attributes to form input elements",
+      "description": "As a security engineer, I want all text input and textarea elements in forms to have maxLength HTML attributes matching their Zod schema limits so that client-side bounds are enforced in addition to server-side validation. Currently only 14 of 89+ form files set maxLength on inputs. While Zod schemas define max lengths (100 for names, 255 for emails, 5000 for messages), the HTML inputs lack corresponding maxLength attributes. Add maxLength to inputs in the top 15 most used forms: Auth SignUpForm, Auth SignInForm, CreateProject, CRMContacts, CRMLeads, EstimateForm, DailyReports, TeamManagement, CompanySettings, UserProfile, BlogPostFormDialog, LeadCaptureForm, ContactSalesModal, SafetyIncidentForm, PermitForm.",
+      "acceptanceCriteria": [
+        "SignUpForm.tsx password and email inputs have maxLength attributes",
+        "CreateProject.tsx name input has maxLength={200} matching projectSchema",
+        "CRMContacts.tsx name and email inputs have maxLength attributes",
+        "At least 15 form files have maxLength on their text inputs",
+        "maxLength values match corresponding Zod schema max values where schemas exist",
+        "npm run build passes",
+        "npm run lint passes"
+      ],
+      "priority": 3,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-010",
+      "title": "Add bounds to search schema filters and unbounded record types",
+      "description": "As a security engineer, I want the searchSchema in src/lib/validation/schemas.ts to have bounded filters so that attackers cannot send thousands of filter parameters causing performance degradation. Currently line 131-139 defines filters as z.record(z.string()).optional() with no bounds on the number of entries or value lengths. Update to z.record(z.string().max(200)).refine(obj => Object.keys(obj).length <= 20) to limit to 20 filters of max 200 chars each. Also audit other z.record() usages in the codebase for similar unbounded patterns.",
+      "acceptanceCriteria": [
+        "searchSchema filters field limits to max 20 keys with max 200 char values",
+        "All z.record() usages in src/lib/validation/ have bounds on key count and value length",
+        "npm run build passes",
+        "npm run lint passes"
+      ],
+      "priority": 3,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-011",
+      "title": "Sanitize error messages in edge function responses",
+      "description": "As a security engineer, I want all edge function error responses to return generic error messages instead of raw error.message so that internal system details (database schema, file paths, connection strings) are not leaked to clients. Currently multiple edge functions return raw error messages: generate-risk-assessment/index.ts (line 169), save-robots-txt/index.ts (line 54), projects/index.ts (line 40), blog-ai-automation/index.ts (line 131), and many others. For each function in supabase/functions/, replace error.message in response bodies with generic messages like 'An error occurred' while logging the detailed error server-side with console.error.",
+      "acceptanceCriteria": [
+        "No edge function in supabase/functions/ returns raw error.message directly in the response body",
+        "All error responses use generic messages: 'An error occurred', 'Authentication failed', 'Invalid request'",
+        "Detailed errors are logged server-side with console.error for debugging",
+        "At least 10 edge functions are updated with sanitized error responses",
+        "npm run build passes",
+        "npm run lint passes"
+      ],
+      "priority": 3,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-012",
+      "title": "Replace wildcard CORS with origin validation in edge functions",
+      "description": "As a security engineer, I want all edge functions to use origin-validated CORS headers instead of Access-Control-Allow-Origin: * so that cross-origin requests are restricted to trusted domains only. Currently the majority of edge functions in edge-functions-template/functions/ define local corsHeaders with '*' for the origin. A secure CORS utility exists at edge-functions-template/functions/_shared/secure-cors.ts that validates origins against a whitelist. Update at least 15 of the most sensitive edge functions (auth-related, payment, data mutation) to use getCorsHeaders() from secure-cors.ts instead of hardcoded '*' headers.",
+      "acceptanceCriteria": [
+        "At least 15 edge functions use getCorsHeaders() from _shared/secure-cors.ts instead of wildcard CORS",
+        "All auth-related edge functions (verify-mfa-*, disable-mfa, sso-*) use validated CORS",
+        "All payment-related edge functions (stripe-*, enhanced-create-checkout) use validated CORS",
+        "Secure CORS allowlist includes: app domain, localhost:8080, localhost:5173 (dev only)",
+        "npm run build passes",
+        "npm run lint passes"
+      ],
+      "priority": 3,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-013",
+      "title": "Add authentication checks to unprotected edge functions",
+      "description": "As a security engineer, I want all edge functions that perform privileged operations to require authentication so that unauthenticated users cannot trigger webhooks, modify settings, or access sensitive data. Currently webhook-trigger/index.ts processes webhook triggers without auth checks and accepts tenant_id from user input (IDOR vulnerability), dos-protection/index.ts uses service role key without auth, and verify-domain/index.ts modifies domain settings without auth. Add auth checks using the shared auth-helpers.ts pattern to these functions.",
+      "acceptanceCriteria": [
+        "webhook-trigger/index.ts requires a valid JWT auth token before processing",
+        "webhook-trigger/index.ts validates that the authenticated user has access to the specified tenant_id",
+        "dos-protection/index.ts requires admin role authentication before allowing IP block/whitelist operations",
+        "verify-domain/index.ts requires authentication and validates company ownership",
+        "All three functions return 401 for unauthenticated requests",
+        "npm run build passes",
+        "npm run lint passes"
+      ],
+      "priority": 3,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-014",
+      "title": "Validate UTM parameters and search params with bounds",
+      "description": "As a security engineer, I want all URL search parameters extracted from the URL to be validated and bounded so that oversized or malformed parameters cannot cause issues. Currently LeadCaptureForm.tsx (line 38-56), DemoRequestForm.tsx (line 44-47), ExitIntentModal.tsx (line 32-43), and ContactSalesModal.tsx (line 42-47) extract UTM parameters without any validation of format or length. Add validation: UTM parameters should be alphanumeric with dashes/underscores only, max 100 chars each.",
+      "acceptanceCriteria": [
+        "LeadCaptureForm.tsx validates UTM parameters with max 100 char length and alphanumeric-dash-underscore format",
+        "DemoRequestForm.tsx validates UTM parameters similarly",
+        "ExitIntentModal.tsx validates UTM parameters similarly",
+        "ContactSalesModal.tsx validates UTM parameters similarly",
+        "Invalid UTM parameters are silently dropped (set to undefined) rather than passed through",
+        "npm run build passes",
+        "npm run lint passes"
+      ],
+      "priority": 4,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-015",
+      "title": "Strengthen returnTo parameter validation for open redirect prevention",
+      "description": "As a security engineer, I want the getReturnUrl() function in src/lib/routeMemory.ts to have stricter validation so that protocol-relative URLs and encoded redirects cannot bypass the current shouldRememberRoute() check. Currently (lines 115-120) the returnTo parameter is validated by shouldRememberRoute() which checks against a route list, but doesn't explicitly block protocol-relative URLs (//evil.com) or encoded variants. Add explicit checks: returnTo must start with '/' and must not start with '//'.",
+      "acceptanceCriteria": [
+        "getReturnUrl in src/lib/routeMemory.ts rejects returnTo values that start with '//'",
+        "getReturnUrl rejects returnTo values containing '://' (protocol URLs)",
+        "getReturnUrl rejects URL-encoded protocol-relative URLs (%2F%2F)",
+        "Valid internal paths like /dashboard, /projects/123 still work correctly",
+        "npm run build passes",
+        "npm run lint passes"
+      ],
+      "priority": 4,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-016",
+      "title": "Add file extension allowlist validation to upload components",
+      "description": "As a security engineer, I want all file upload components to validate file extensions against an allowlist (not just MIME type) so that double-extension attacks like file.jpg.exe are blocked. Currently useSecurityEnhancement.ts (lines 148-152) only checks file.type MIME type which is user-controllable. The file extension should also be checked. Add extension validation to the file upload validation utility created in US-001, and apply it in image-upload.tsx, video-upload.tsx, and TaskAttachments.tsx.",
+      "acceptanceCriteria": [
+        "fileUploadValidation.ts validates file extension against an allowlist in addition to MIME type",
+        "Double-extension files like 'file.jpg.exe' are rejected",
+        "Extension check is case-insensitive",
+        "Allowed extensions include: jpg, jpeg, png, gif, webp, pdf, doc, docx, xls, xlsx, csv, txt, mp4, mov",
+        "npm run build passes",
+        "npm run lint passes"
+      ],
+      "priority": 4,
+      "passes": false,
+      "notes": ""
+    }
+  ]
+}

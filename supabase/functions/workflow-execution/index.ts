@@ -1,5 +1,4 @@
 // Workflow Execution Edge Function
-// Updated with multi-tenant site_id isolation
 import { initializeAuthContext, errorResponse } from '../_shared/auth-helpers.ts';
 
 const corsHeaders = {
@@ -31,24 +30,22 @@ Deno.serve(async (req) => {
   }
 
   try {
-    // Initialize auth context - extracts user AND site_id from JWT
     const authContext = await initializeAuthContext(req);
     if (!authContext) {
       return errorResponse('Unauthorized', 401);
     }
 
-    const { user, siteId, supabase } = authContext;
-    logStep("User authenticated", { userId: user.id, siteId });
+    const { user, supabase } = authContext;
+    logStep("User authenticated", { userId: user.id });
 
     const { workflow_id, trigger_data } = await req.json() as WorkflowExecution;
 
-    logStep('Executing workflow', { siteId, workflow_id, trigger_data });
+    logStep('Executing workflow', { workflow_id, trigger_data });
 
-    // Get workflow definition with site isolation
+    // Get workflow definition
     const { data: workflow, error: workflowError } = await supabase
       .from('workflow_definitions')
       .select('*, workflow_steps(*)')
-      .eq('site_id', siteId)  // CRITICAL: Site isolation
       .eq('id', workflow_id)
       .single();
 
@@ -60,11 +57,10 @@ Deno.serve(async (req) => {
       throw new Error('Workflow is not active');
     }
 
-    // Create execution record with site isolation
+    // Create execution record
     const { data: execution, error: executionError } = await supabase
       .from('workflow_executions')
       .insert({
-        site_id: siteId,  // CRITICAL: Site isolation
         workflow_id,
         status: 'running',
         trigger_data,
@@ -97,7 +93,7 @@ Deno.serve(async (req) => {
       try {
         switch (step.step_type) {
           case 'action':
-            stepOutput = await executeAction(step, executionContext, supabase, siteId);
+            stepOutput = await executeAction(step, executionContext, supabase);
             break;
           
           case 'condition':
@@ -127,9 +123,8 @@ Deno.serve(async (req) => {
             stepOutput = { skipped: true };
         }
 
-        // Record step execution with site isolation
+        // Record step execution
         await supabase.from('workflow_step_executions').insert({
-          site_id: siteId,  // CRITICAL: Site isolation
           execution_id: execution.id,
           step_id: step.id,
           status: stepStatus,
@@ -152,7 +147,6 @@ Deno.serve(async (req) => {
         errorMessage = stepError.message;
 
         await supabase.from('workflow_step_executions').insert({
-          site_id: siteId,  // CRITICAL: Site isolation
           execution_id: execution.id,
           step_id: step.id,
           status: stepStatus,
@@ -166,7 +160,7 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Update execution record with site isolation
+    // Update execution record
     const finalStatus = stepResults.some(r => r.status === 'failed') ? 'failed' : 'completed';
     await supabase
       .from('workflow_executions')
@@ -175,14 +169,12 @@ Deno.serve(async (req) => {
         completed_at: new Date().toISOString(),
         output: { steps: stepResults },
       })
-      .eq('site_id', siteId)  // CRITICAL: Site isolation
       .eq('id', execution.id);
 
-    // Update workflow last_executed_at with site isolation
+    // Update workflow last_executed_at
     await supabase
       .from('workflow_definitions')
       .update({ last_executed_at: new Date().toISOString() })
-      .eq('site_id', siteId)  // CRITICAL: Site isolation
       .eq('id', workflow_id);
 
     console.log('Workflow execution completed:', finalStatus);
@@ -206,7 +198,7 @@ Deno.serve(async (req) => {
   }
 });
 
-async function executeAction(step: WorkflowStep, context: any, supabase: any, siteId: string) {
+async function executeAction(step: WorkflowStep, context: any, supabase: any) {
   const { action_type, ...params } = step.config;
 
   console.log('Executing action:', action_type, params);
@@ -219,10 +211,10 @@ async function executeAction(step: WorkflowStep, context: any, supabase: any, si
       return await sendSMS(params, context);
 
     case 'create_task':
-      return await createTask(params, context, supabase, siteId);
+      return await createTask(params, context, supabase);
 
     case 'update_field':
-      return await updateField(params, context, supabase, siteId);
+      return await updateField(params, context, supabase);
 
     case 'send_notification':
       return await sendNotification(params, context, supabase);
@@ -309,13 +301,12 @@ async function sendSMS(params: any, context: any) {
   }
 }
 
-async function createTask(params: any, context: any, supabase: any, siteId: string) {
+async function createTask(params: any, context: any, supabase: any) {
   console.log('Creating task:', params);
 
   const { data, error } = await supabase
     .from('tasks')
     .insert({
-      site_id: siteId,  // CRITICAL: Site isolation
       title: params.title || 'Automated Task',
       description: params.description || '',
       status: 'pending',
@@ -333,7 +324,7 @@ async function createTask(params: any, context: any, supabase: any, siteId: stri
   return { task_created: true, task_id: data.id };
 }
 
-async function updateField(params: any, context: any, supabase: any, siteId: string) {
+async function updateField(params: any, context: any, supabase: any) {
   console.log('Updating field:', params);
 
   const { table, record_id, field, value } = params;
@@ -341,7 +332,6 @@ async function updateField(params: any, context: any, supabase: any, siteId: str
   const { error } = await supabase
     .from(table)
     .update({ [field]: value })
-    .eq('site_id', siteId)  // CRITICAL: Site isolation
     .eq('id', record_id || context.record_id);
 
   if (error) {

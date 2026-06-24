@@ -22,10 +22,10 @@ serve(async (req) => {
     console.log('Triggering Expo build:', { platform, profile })
 
     // Get Expo access token from environment
-    const expoAccessToken = Deno.env.get('Expo_Access_Token')
-    
+    const expoAccessToken = Deno.env.get('EXPO_ACCESS_TOKEN')
+
     if (!expoAccessToken) {
-      throw new Error('Expo_Access_Token not configured in Supabase environment variables')
+      throw new Error('EXPO_ACCESS_TOKEN not configured in Supabase environment variables')
     }
 
     // EAS Build API endpoint
@@ -67,7 +67,7 @@ serve(async (req) => {
         profile: profile,
         status: 'in-progress',
         triggered_at: new Date().toISOString(),
-        build_url: `https://expo.dev/accounts/djpearson/projects/builddesk/builds/${buildData.id}`,
+        build_url: `https://expo.dev/accounts/djpearson/projects/brikly/builds/${buildData.id}`,
         metadata: buildData
       })
 
@@ -80,7 +80,7 @@ serve(async (req) => {
       JSON.stringify({ 
         success: true, 
         buildId: buildData.id,
-        buildUrl: `https://expo.dev/accounts/djpearson/projects/builddesk/builds/${buildData.id}`,
+        buildUrl: `https://expo.dev/accounts/djpearson/projects/brikly/builds/${buildData.id}`,
         platform: platform,
         profile: profile,
         message: 'Build triggered successfully'

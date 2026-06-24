@@ -3,15 +3,16 @@ import * as BackgroundFetch from 'expo-background-fetch';
 import * as TaskManager from 'expo-task-manager';
 import * as Location from 'expo-location';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { logger } from '@/lib/logger';
 
 // Storage keys for geofencing state
 const STORAGE_KEYS = {
-  ACTIVE_GEOFENCES: 'builddesk_active_geofences',
-  INSIDE_GEOFENCES: 'builddesk_inside_geofences',
-  ACTIVE_TIME_ENTRY: 'builddesk_active_time_entry',
-  USER_ID: 'builddesk_user_id',
-  COMPANY_ID: 'builddesk_company_id',
-  PENDING_CLOCK_EVENTS: 'builddesk_pending_clock_events',
+  ACTIVE_GEOFENCES: 'brikly_active_geofences',
+  INSIDE_GEOFENCES: 'brikly_inside_geofences',
+  ACTIVE_TIME_ENTRY: 'brikly_active_time_entry',
+  USER_ID: 'brikly_user_id',
+  COMPANY_ID: 'brikly_company_id',
+  PENDING_CLOCK_EVENTS: 'brikly_pending_clock_events',
 };
 
 // Geofence interface for storage
@@ -150,7 +151,7 @@ class MobileBackgroundService {
     try {
       const { granted } = await Location.requestBackgroundPermissionsAsync();
       if (!granted) {
-        console.warn('Background location permission not granted');
+        logger.warn('Background location permission not granted');
         return;
       }
 
@@ -159,7 +160,7 @@ class MobileBackgroundService {
         timeInterval: 30000, // 30 seconds
         distanceInterval: 50, // 50 meters
         foregroundService: {
-          notificationTitle: 'BuildDesk Location Tracking',
+          notificationTitle: 'Brikly Location Tracking',
           notificationBody: 'Tracking your location for job site management',
           notificationColor: '#4A90E2',
         },
@@ -515,7 +516,7 @@ async function handleGeofenceEntry(
   const companyId = await AsyncStorage.getItem(STORAGE_KEYS.COMPANY_ID);
 
   if (!userId || !companyId) {
-    console.warn('User not authenticated for geofence entry');
+    logger.warn('User not authenticated for geofence entry');
     return;
   }
 
@@ -573,7 +574,7 @@ async function handleGeofenceExit(
   const companyId = await AsyncStorage.getItem(STORAGE_KEYS.COMPANY_ID);
 
   if (!userId || !companyId) {
-    console.warn('User not authenticated for geofence exit');
+    logger.warn('User not authenticated for geofence exit');
     return;
   }
 

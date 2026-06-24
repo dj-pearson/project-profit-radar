@@ -1,9 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Skeleton } from '@/components/ui/skeleton';
 import {
   TrendingUp,
   TrendingDown,
@@ -13,9 +13,13 @@ import {
   CalendarDays,
   ArrowDownCircle,
   ArrowUpCircle,
-  Activity
+  Activity,
+  FileX
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { useCashFlowData, useCashFlowActivity } from '@/hooks/useCashFlow';
+import { useQueryClient } from '@tanstack/react-query';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface CashFlowData {
   current_cash: number;
@@ -40,98 +44,42 @@ interface CashFlowItem {
 }
 
 export const CashFlowRunwayWidget = () => {
-  const [cashFlowData, setCashFlowData] = useState<CashFlowData | null>(null);
-  const [recentActivity, setRecentActivity] = useState<CashFlowItem[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { userProfile } = useAuth();
+  const queryClient = useQueryClient();
+  const companyId = userProfile?.company_id;
 
+  // Fetch real data from database
+  const { data: cashFlowData, isLoading: dataLoading, error: dataError } = useCashFlowData();
+  const { data: recentActivity, isLoading: activityLoading } = useCashFlowActivity();
+
+  const loading = dataLoading || activityLoading;
+
+  // Real-time subscription for updates
   useEffect(() => {
-    loadCashFlowData();
+    if (!companyId) return;
 
-    // Real-time subscription
     const subscription = supabase
       .channel('cash_flow_updates')
       .on('postgres_changes',
         { event: '*', schema: 'public', table: 'invoices' },
-        () => loadCashFlowData()
+        () => {
+          queryClient.invalidateQueries({ queryKey: ['cash-flow-data'] });
+          queryClient.invalidateQueries({ queryKey: ['cash-flow-activity'] });
+        }
       )
       .on('postgres_changes',
         { event: '*', schema: 'public', table: 'expenses' },
-        () => loadCashFlowData()
+        () => {
+          queryClient.invalidateQueries({ queryKey: ['cash-flow-data'] });
+          queryClient.invalidateQueries({ queryKey: ['cash-flow-activity'] });
+        }
       )
       .subscribe();
 
     return () => {
       subscription.unsubscribe();
     };
-  }, []);
-
-  const loadCashFlowData = async () => {
-    try {
-      // Mock data - in production, this would call edge function
-      const mockData: CashFlowData = {
-        current_cash: 187500,
-        daily_burn_rate: 4200,
-        runway_days: 44,
-        trend: 'declining',
-        last_30_days_change: -12,
-        total_receivables: 145000,
-        total_payables: 89500,
-        forecast_30: 175000,
-        forecast_60: 162000,
-        forecast_90: 151000
-      };
-
-      const mockActivity: CashFlowItem[] = [
-        {
-          date: new Date().toISOString(),
-          type: 'outflow',
-          amount: 12500,
-          description: 'Payroll - Crew A',
-          category: 'Labor',
-          status: 'completed'
-        },
-        {
-          date: new Date(Date.now() - 86400000).toISOString(),
-          type: 'inflow',
-          amount: 45000,
-          description: 'Invoice #1247 - Downtown Office',
-          category: 'Payment Received',
-          status: 'completed'
-        },
-        {
-          date: new Date(Date.now() - 172800000).toISOString(),
-          type: 'outflow',
-          amount: 8750,
-          description: 'Material Purchase - Lumber',
-          category: 'Materials',
-          status: 'completed'
-        },
-        {
-          date: new Date(Date.now() + 86400000).toISOString(),
-          type: 'inflow',
-          amount: 32000,
-          description: 'Invoice #1251 - Kitchen Remodel',
-          category: 'Expected Payment',
-          status: 'pending'
-        },
-        {
-          date: new Date(Date.now() + 259200000).toISOString(),
-          type: 'outflow',
-          amount: 15600,
-          description: 'Subcontractor Payment - HVAC',
-          category: 'Subcontractors',
-          status: 'pending'
-        }
-      ];
-
-      setCashFlowData(mockData);
-      setRecentActivity(mockActivity);
-    } catch (error) {
-      console.error('Error loading cash flow data:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  }, [companyId, queryClient]);
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-US', {
@@ -170,13 +118,50 @@ export const CashFlowRunwayWidget = () => {
     return 'Critical';
   };
 
-  if (loading || !cashFlowData) {
+  // Loading state with skeleton
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <Card>
+          <CardHeader>
+            <Skeleton className="h-8 w-48" />
+            <Skeleton className="h-4 w-64 mt-2" />
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div className="flex justify-center">
+              <Skeleton className="h-48 w-48 rounded-full" />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <Skeleton className="h-24 w-full" />
+              <Skeleton className="h-24 w-full" />
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader>
+            <Skeleton className="h-6 w-40" />
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-2 gap-4">
+              <Skeleton className="h-20 w-full" />
+              <Skeleton className="h-20 w-full" />
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  // No data state
+  if (!cashFlowData) {
     return (
       <Card>
-        <CardContent className="p-6">
-          <div className="flex items-center justify-center">
-            <Activity className="h-8 w-8 animate-pulse text-construction-orange" />
-          </div>
+        <CardContent className="flex flex-col items-center justify-center py-12">
+          <FileX className="h-12 w-12 text-muted-foreground mb-4" />
+          <h3 className="text-lg font-semibold mb-2">No Cash Flow Data</h3>
+          <p className="text-muted-foreground text-center max-w-md">
+            Start by adding invoices and expenses to track your cash flow and runway.
+          </p>
         </CardContent>
       </Card>
     );
@@ -390,37 +375,45 @@ export const CashFlowRunwayWidget = () => {
               <TabsTrigger value="outflow">Outflows</TabsTrigger>
             </TabsList>
 
-            {['all', 'inflow', 'outflow'].map(tab => (
-              <TabsContent key={tab} value={tab} className="space-y-3">
-                {recentActivity
-                  .filter(item => tab === 'all' || item.type === tab)
-                  .map((item, index) => (
-                    <div key={index} className="flex items-center justify-between p-3 border rounded-lg hover:bg-secondary/50 transition-colors">
-                      <div className="flex items-center gap-3">
-                        {item.type === 'inflow' ? (
-                          <ArrowDownCircle className="h-5 w-5 text-green-600" />
-                        ) : (
-                          <ArrowUpCircle className="h-5 w-5 text-red-600" />
-                        )}
-                        <div>
-                          <p className="font-medium text-sm">{item.description}</p>
-                          <div className="flex items-center gap-2 mt-1">
-                            <span className="text-xs text-muted-foreground">{item.category}</span>
-                            <span className="text-xs text-muted-foreground">•</span>
-                            <span className="text-xs text-muted-foreground">{formatDate(item.date)}</span>
-                            <Badge variant={item.status === 'completed' ? 'default' : 'outline'} className="text-xs">
-                              {item.status}
-                            </Badge>
+            {['all', 'inflow', 'outflow'].map(tab => {
+              const filteredItems = (recentActivity || []).filter(item => tab === 'all' || item.type === tab);
+              return (
+                <TabsContent key={tab} value={tab} className="space-y-3">
+                  {filteredItems.length === 0 ? (
+                    <div className="text-center py-8 text-muted-foreground">
+                      <Activity className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                      <p className="text-sm">No {tab === 'all' ? 'activity' : tab === 'inflow' ? 'inflows' : 'outflows'} to display</p>
+                    </div>
+                  ) : (
+                    filteredItems.map((item) => (
+                      <div key={item.id} className="flex items-center justify-between p-3 border rounded-lg hover:bg-secondary/50 transition-colors">
+                        <div className="flex items-center gap-3">
+                          {item.type === 'inflow' ? (
+                            <ArrowDownCircle className="h-5 w-5 text-green-600" />
+                          ) : (
+                            <ArrowUpCircle className="h-5 w-5 text-red-600" />
+                          )}
+                          <div>
+                            <p className="font-medium text-sm">{item.description}</p>
+                            <div className="flex items-center gap-2 mt-1">
+                              <span className="text-xs text-muted-foreground">{item.category}</span>
+                              <span className="text-xs text-muted-foreground">•</span>
+                              <span className="text-xs text-muted-foreground">{formatDate(item.date)}</span>
+                              <Badge variant={item.status === 'completed' ? 'default' : 'outline'} className="text-xs">
+                                {item.status}
+                              </Badge>
+                            </div>
                           </div>
                         </div>
+                        <div className={`font-bold ${item.type === 'inflow' ? 'text-green-600' : 'text-red-600'}`}>
+                          {item.type === 'inflow' ? '+' : '-'}{formatCurrency(item.amount)}
+                        </div>
                       </div>
-                      <div className={`font-bold ${item.type === 'inflow' ? 'text-green-600' : 'text-red-600'}`}>
-                        {item.type === 'inflow' ? '+' : '-'}{formatCurrency(item.amount)}
-                      </div>
-                    </div>
-                  ))}
-              </TabsContent>
-            ))}
+                    ))
+                  )}
+                </TabsContent>
+              );
+            })}
           </Tabs>
         </CardContent>
       </Card>

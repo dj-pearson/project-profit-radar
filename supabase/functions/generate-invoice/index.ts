@@ -44,22 +44,19 @@ serve(async (req) => {
       return errorResponse('Unauthorized - Missing or invalid authentication', 401);
     }
 
-    const { user, siteId, supabase } = authContext;
-    logStep("User authenticated", { userId: user.id, siteId });
+    const { user, supabase } = authContext;
+    logStep("User authenticated", { userId: user.id });
 
     const invoiceData: InvoiceRequest = await req.json();
     logStep("Invoice data received", {
       client: invoiceData.client_name,
-      itemCount: invoiceData.line_items.length,
-      siteId
-    });
+      itemCount: invoiceData.line_items.length });
 
     // Get user's company with site isolation
     const { data: profile, error: profileError } = await supabase
       .from('user_profiles')
       .select('company_id, role')
       .eq('id', user.id)
-      .eq('site_id', siteId)
       .single();
 
     if (profileError || !profile?.company_id) {
@@ -81,15 +78,13 @@ serve(async (req) => {
     const discountAmount = invoiceData.discount_amount || 0;
     const totalAmount = subtotal + taxAmount - discountAmount;
 
-    logStep("Calculated totals", { subtotal, taxAmount, totalAmount, siteId });
+    logStep("Calculated totals", { subtotal, taxAmount, totalAmount });
 
     // Create invoice with site isolation
     const { data: invoice, error: invoiceError } = await supabase
       .from('invoices')
       .insert({
-        company_id: profile.company_id,
-        site_id: siteId,  // CRITICAL: Include site_id
-        client_name: invoiceData.client_name,
+        company_id: profile.company_id,          client_name: invoiceData.client_name,
         client_email: invoiceData.client_email,
         project_id: invoiceData.project_id || null,
         due_date: invoiceData.due_date,
@@ -111,13 +106,11 @@ serve(async (req) => {
       return errorResponse(`Error creating invoice: ${invoiceError.message}`, 500);
     }
 
-    logStep("Invoice created", { invoiceId: invoice.id, invoiceNumber: invoice.invoice_number, siteId });
+    logStep("Invoice created", { invoiceId: invoice.id, invoiceNumber: invoice.invoice_number });
 
     // Create line items with site isolation
     const lineItemsToInsert = invoiceData.line_items.map(item => ({
-      invoice_id: invoice.id,
-      site_id: siteId,  // CRITICAL: Include site_id
-      description: item.description,
+      invoice_id: invoice.id,        description: item.description,
       quantity: item.quantity,
       unit_price: item.unit_price,
       cost_code_id: item.cost_code_id || null,
@@ -133,7 +126,7 @@ serve(async (req) => {
       return errorResponse(`Error creating line items: ${lineItemsError.message}`, 500);
     }
 
-    logStep("Line items created", { count: lineItemsToInsert.length, siteId });
+    logStep("Line items created", { count: lineItemsToInsert.length });
 
     // Return complete invoice data with site isolation
     const { data: completeInvoice } = await supabase
@@ -145,7 +138,6 @@ serve(async (req) => {
         companies(name)
       `)
       .eq('id', invoice.id)
-      .eq('site_id', siteId)
       .single();
 
     return successResponse({

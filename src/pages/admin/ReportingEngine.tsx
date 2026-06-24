@@ -293,3 +293,5 @@ export function ReportingEngine() {
     </div>
   );
 }
+
+export default ReportingEngine;

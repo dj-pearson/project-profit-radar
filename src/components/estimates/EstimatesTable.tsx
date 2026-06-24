@@ -10,18 +10,13 @@ import {
   ExternalLink,
   Archive,
   Trash2,
-  Building2
+  Building2,
+  Receipt
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { AccessibleTable, type TableColumn } from "@/components/accessibility/AccessibleTable";
+import { AccessibleModal } from "@/components/accessibility/AccessibleModal";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -29,9 +24,9 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { EstimateForm } from "./EstimateForm";
 import { ConvertToProjectDialog } from "./ConvertToProjectDialog";
+import { ConvertToInvoiceDialog } from "./ConvertToInvoiceDialog";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
@@ -63,6 +58,8 @@ export function EstimatesTable({ searchTerm, statusFilter, onEstimateChange }: E
   const [loading, setLoading] = useState(true);
   const [editingEstimate, setEditingEstimate] = useState<string | null>(null);
   const [convertingEstimate, setConvertingEstimate] = useState<string | null>(null);
+  const [invoicingEstimate, setInvoicingEstimate] = useState<string | null>(null);
+  const [deletingEstimate, setDeletingEstimate] = useState<string | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -175,8 +172,6 @@ export function EstimatesTable({ searchTerm, statusFilter, onEstimateChange }: E
   };
 
   const handleDelete = async (estimateId: string) => {
-    if (!confirm("Are you sure you want to delete this estimate?")) return;
-
     try {
       const { error } = await supabase
         .from("estimates")
@@ -190,6 +185,7 @@ export function EstimatesTable({ searchTerm, statusFilter, onEstimateChange }: E
         description: "The estimate has been deleted successfully.",
       });
 
+      setDeletingEstimate(null);
       fetchEstimates();
       onEstimateChange?.();
     } catch (error) {
@@ -206,7 +202,7 @@ export function EstimatesTable({ searchTerm, statusFilter, onEstimateChange }: E
     try {
       const { error } = await supabase
         .from("estimates")
-        .update({ 
+        .update({
           status: "sent",
           sent_date: new Date().toISOString().split('T')[0]
         })
@@ -243,7 +239,7 @@ export function EstimatesTable({ searchTerm, statusFilter, onEstimateChange }: E
     return (
       <div className="text-center py-8">
         <div className="text-muted-foreground mb-4">
-          {searchTerm || statusFilter !== "all" 
+          {searchTerm || statusFilter !== "all"
             ? "No estimates match your filters."
             : "No estimates found. Create your first estimate to get started."
           }
@@ -252,145 +248,172 @@ export function EstimatesTable({ searchTerm, statusFilter, onEstimateChange }: E
     );
   }
 
+  const estimateColumns: TableColumn<Estimate>[] = [
+    {
+      key: 'estimate_number',
+      header: 'Estimate #',
+      sortable: true,
+      render: (value) => <span className="font-medium">{value}</span>,
+    },
+    {
+      key: 'title',
+      header: 'Title',
+      sortable: true,
+      render: (value) => <span className="font-medium">{value}</span>,
+    },
+    {
+      key: 'client_name',
+      header: 'Client',
+      sortable: true,
+    },
+    {
+      key: 'project',
+      header: 'Project',
+      render: (_value, row) =>
+        row.project ? (
+          <Button variant="link" size="sm" className="p-0 h-auto">
+            {row.project.name}
+            <ExternalLink className="ml-1 h-3 w-3" aria-hidden="true" />
+          </Button>
+        ) : (
+          <span className="text-muted-foreground">-</span>
+        ),
+    },
+    {
+      key: 'total_amount',
+      header: 'Amount',
+      sortable: true,
+      align: 'right',
+      render: (value) => <span className="font-medium">${Number(value).toLocaleString()}</span>,
+    },
+    {
+      key: 'status',
+      header: 'Status',
+      render: (value) => getStatusBadge(value),
+    },
+    {
+      key: 'estimate_date',
+      header: 'Date',
+      sortable: true,
+      render: (value) => format(new Date(value), "MMM d, yyyy"),
+    },
+    {
+      key: 'valid_until',
+      header: 'Valid Until',
+      hideOnMobile: true,
+      render: (value) =>
+        value ? (
+          <span className={new Date(value) < new Date() ? "text-destructive" : ""}>
+            {format(new Date(value), "MMM d, yyyy")}
+          </span>
+        ) : (
+          <span className="text-muted-foreground">-</span>
+        ),
+    },
+    {
+      key: 'actions',
+      header: 'Actions',
+      width: '48px',
+      headerRender: () => <span className="sr-only">Actions</span>,
+      render: (_value, estimate) => (
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="sm" aria-label={`Actions for estimate ${estimate.estimate_number}`}>
+              <MoreHorizontal className="h-4 w-4" aria-hidden="true" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem>
+              <Eye className="mr-2 h-4 w-4" aria-hidden="true" />
+              View
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setEditingEstimate(estimate.id)}>
+              <Edit className="mr-2 h-4 w-4" aria-hidden="true" />
+              Edit
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => handleDuplicate(estimate)}>
+              <Copy className="mr-2 h-4 w-4" aria-hidden="true" />
+              Duplicate
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            {estimate.status === "draft" && (
+              <DropdownMenuItem onClick={() => handleSendEstimate(estimate.id)}>
+                <Send className="mr-2 h-4 w-4" aria-hidden="true" />
+                Send to Client
+              </DropdownMenuItem>
+            )}
+            {!estimate.project && (estimate.status === "accepted" || estimate.status === "sent" || estimate.status === "viewed") && (
+              <DropdownMenuItem
+                onClick={() => setConvertingEstimate(estimate.id)}
+                className="text-construction-blue font-medium"
+              >
+                <Building2 className="mr-2 h-4 w-4" aria-hidden="true" />
+                Convert to Project
+              </DropdownMenuItem>
+            )}
+            {(estimate.status === "accepted" || estimate.status === "sent" || estimate.status === "viewed") && (
+              <DropdownMenuItem
+                onClick={() => setInvoicingEstimate(estimate.id)}
+                className="text-construction-orange font-medium"
+              >
+                <Receipt className="mr-2 h-4 w-4" aria-hidden="true" />
+                Convert to Invoice
+              </DropdownMenuItem>
+            )}
+            <DropdownMenuItem>
+              <Download className="mr-2 h-4 w-4" aria-hidden="true" />
+              Download PDF
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem>
+              <Archive className="mr-2 h-4 w-4" aria-hidden="true" />
+              Archive
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() => setDeletingEstimate(estimate.id)}
+              className="text-destructive"
+            >
+              <Trash2 className="mr-2 h-4 w-4" aria-hidden="true" />
+              Delete
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      ),
+    },
+  ];
+
   return (
     <>
       <div className="border rounded-lg">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Estimate #</TableHead>
-              <TableHead>Title</TableHead>
-              <TableHead>Client</TableHead>
-              <TableHead>Project</TableHead>
-              <TableHead>Amount</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Date</TableHead>
-              <TableHead>Valid Until</TableHead>
-              <TableHead className="w-12"></TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {estimates.map((estimate) => (
-              <TableRow key={estimate.id}>
-                <TableCell className="font-medium">
-                  {estimate.estimate_number}
-                </TableCell>
-                <TableCell>
-                  <div className="font-medium">{estimate.title}</div>
-                </TableCell>
-                <TableCell>{estimate.client_name}</TableCell>
-                <TableCell>
-                  {estimate.project ? (
-                    <Button variant="link" size="sm" className="p-0 h-auto">
-                      {estimate.project.name}
-                      <ExternalLink className="ml-1 h-3 w-3" />
-                    </Button>
-                  ) : (
-                    <span className="text-muted-foreground">-</span>
-                  )}
-                </TableCell>
-                <TableCell className="font-medium">
-                  ${estimate.total_amount.toLocaleString()}
-                </TableCell>
-                <TableCell>
-                  {getStatusBadge(estimate.status)}
-                </TableCell>
-                <TableCell>
-                  {format(new Date(estimate.estimate_date), "MMM d, yyyy")}
-                </TableCell>
-                <TableCell>
-                  {estimate.valid_until ? (
-                    <span className={
-                      new Date(estimate.valid_until) < new Date() 
-                        ? "text-destructive" 
-                        : ""
-                    }>
-                      {format(new Date(estimate.valid_until), "MMM d, yyyy")}
-                    </span>
-                  ) : (
-                    <span className="text-muted-foreground">-</span>
-                  )}
-                </TableCell>
-                <TableCell>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="sm">
-                        <MoreHorizontal className="h-4 w-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem>
-                        <Eye className="mr-2 h-4 w-4" />
-                        View
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => setEditingEstimate(estimate.id)}>
-                        <Edit className="mr-2 h-4 w-4" />
-                        Edit
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => handleDuplicate(estimate)}>
-                        <Copy className="mr-2 h-4 w-4" />
-                        Duplicate
-                      </DropdownMenuItem>
-                      <DropdownMenuSeparator />
-                      {estimate.status === "draft" && (
-                        <DropdownMenuItem onClick={() => handleSendEstimate(estimate.id)}>
-                          <Send className="mr-2 h-4 w-4" />
-                          Send to Client
-                        </DropdownMenuItem>
-                      )}
-                      {!estimate.project && (estimate.status === "accepted" || estimate.status === "sent" || estimate.status === "viewed") && (
-                        <DropdownMenuItem
-                          onClick={() => setConvertingEstimate(estimate.id)}
-                          className="text-construction-blue font-medium"
-                        >
-                          <Building2 className="mr-2 h-4 w-4" />
-                          Convert to Project
-                        </DropdownMenuItem>
-                      )}
-                      <DropdownMenuItem>
-                        <Download className="mr-2 h-4 w-4" />
-                        Download PDF
-                      </DropdownMenuItem>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem>
-                        <Archive className="mr-2 h-4 w-4" />
-                        Archive
-                      </DropdownMenuItem>
-                      <DropdownMenuItem 
-                        onClick={() => handleDelete(estimate.id)}
-                        className="text-destructive"
-                      >
-                        <Trash2 className="mr-2 h-4 w-4" />
-                        Delete
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+        <AccessibleTable<Estimate>
+          caption="Estimates"
+          hideCaption
+          columns={estimateColumns}
+          data={estimates}
+          loading={loading}
+          emptyContent="No estimates found"
+        />
       </div>
 
-      {/* Edit Dialog */}
-      <Dialog open={!!editingEstimate} onOpenChange={() => setEditingEstimate(null)}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Edit Estimate</DialogTitle>
-          </DialogHeader>
-          {editingEstimate && (
-            <EstimateForm
-              estimateId={editingEstimate}
-                onSuccess={() => {
-                  setEditingEstimate(null);
-                  fetchEstimates();
-                  onEstimateChange?.();
-                }}
-              onCancel={() => setEditingEstimate(null)}
-            />
-          )}
-        </DialogContent>
-      </Dialog>
+      {/* Edit Estimate Modal */}
+      <AccessibleModal
+        isOpen={!!editingEstimate}
+        onClose={() => setEditingEstimate(null)}
+        title="Edit Estimate"
+        size="xl"
+      >
+        {editingEstimate && (
+          <EstimateForm
+            estimateId={editingEstimate}
+              onSuccess={() => {
+                setEditingEstimate(null);
+                fetchEstimates();
+                onEstimateChange?.();
+              }}
+            onCancel={() => setEditingEstimate(null)}
+          />
+        )}
+      </AccessibleModal>
 
       {/* Convert to Project Dialog */}
       <ConvertToProjectDialog
@@ -402,6 +425,39 @@ export function EstimatesTable({ searchTerm, statusFilter, onEstimateChange }: E
           fetchEstimates();
           onEstimateChange?.();
         }}
+      />
+
+      {/* Convert to Invoice Dialog (US-101) */}
+      <ConvertToInvoiceDialog
+        estimateId={invoicingEstimate}
+        isOpen={!!invoicingEstimate}
+        onClose={() => setInvoicingEstimate(null)}
+        onSuccess={() => {
+          setInvoicingEstimate(null);
+          fetchEstimates();
+          onEstimateChange?.();
+        }}
+      />
+
+      {/* Delete Confirmation Modal */}
+      <AccessibleModal
+        isOpen={!!deletingEstimate}
+        onClose={() => setDeletingEstimate(null)}
+        title="Delete Estimate"
+        description="Are you sure you want to delete this estimate? This action cannot be undone."
+        size="sm"
+        disableClickOutside
+        footer={
+          <>
+            <Button variant="outline" onClick={() => setDeletingEstimate(null)}>Cancel</Button>
+            <Button
+              variant="destructive"
+              onClick={() => deletingEstimate && handleDelete(deletingEstimate)}
+            >
+              Delete
+            </Button>
+          </>
+        }
       />
     </>
   );

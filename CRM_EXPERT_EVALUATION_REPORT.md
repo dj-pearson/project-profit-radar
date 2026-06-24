@@ -1,4 +1,4 @@
-# BuildDesk CRM Expert Evaluation & Recommendations
+# Brikly CRM Expert Evaluation & Recommendations
 ## Comprehensive Analysis: Lead Generation to Contract & Project Development
 
 **Date:** November 6, 2025
@@ -9,7 +9,7 @@
 
 ## Executive Summary
 
-BuildDesk has developed an **impressively comprehensive CRM system** with 85-90% feature completeness for the SMB construction market. The system includes 30+ CRM tables, sophisticated lead scoring, multi-pipeline architecture, email campaigns with A/B testing, and construction-specific workflows.
+Brikly has developed an **impressively comprehensive CRM system** with 85-90% feature completeness for the SMB construction market. The system includes 30+ CRM tables, sophisticated lead scoring, multi-pipeline architecture, email campaigns with A/B testing, and construction-specific workflows.
 
 **Overall Assessment:** **8.5/10** - Production-ready with strategic enhancements needed to rival HubSpot
 
@@ -619,7 +619,7 @@ Lead (CRMLeads.tsx)
 
 ### HubSpot Key Features Comparison
 
-| Feature Category | HubSpot | BuildDesk | Gap Analysis |
+| Feature Category | HubSpot | Brikly | Gap Analysis |
 |-----------------|---------|-----------|--------------|
 | **Lead Capture** | Live chat, chatbots, forms, pop-ups | Email forms, UTM tracking | ⚠️ Need live chat, chatbot |
 | **Lead Scoring** | Predictive (ML), manual | Manual with auto-scoring | ⚠️ Need ML-based scoring |
@@ -644,13 +644,13 @@ Lead (CRMLeads.tsx)
 - Visual workflow builder (no-code)
 - Template marketplace
 
-**BuildDesk Strengths:**
+**Brikly Strengths:**
 - Purpose-built for construction (no configuration needed)
 - Integrated with project management (no separate tools)
 - Construction-specific terminology
 - Real-time job costing integration
 
-**BuildDesk Gaps:**
+**Brikly Gaps:**
 - No visual workflow builder (requires database knowledge)
 - Limited in-app help/documentation
 - Steeper learning curve for non-technical users
@@ -747,7 +747,7 @@ CREATE TABLE email_messages (
 
 **Implementation:**
 - User availability rules (Monday-Friday 9am-5pm, etc.)
-- Booking page per user: `builddesk.com/book/john-smith`
+- Booking page per user: `brikly.net/book/john-smith`
 - Calendar integration (Google Calendar, Outlook)
 - Automatic meeting creation in activities
 - Email confirmations and reminders
@@ -1208,7 +1208,7 @@ CREATE TABLE territory_assignments (
 ## Section 9: Conclusion & Executive Summary
 
 ### Current State
-BuildDesk has built an **impressive, production-ready CRM** that is 85-90% complete for the SMB construction market. The system includes sophisticated lead management, opportunity tracking, email campaigns, task management, and construction-specific workflows that general-purpose CRMs like HubSpot cannot match.
+Brikly has built an **impressive, production-ready CRM** that is 85-90% complete for the SMB construction market. The system includes sophisticated lead management, opportunity tracking, email campaigns, task management, and construction-specific workflows that general-purpose CRMs like HubSpot cannot match.
 
 ### Critical Gaps
 The main areas requiring immediate attention are:
@@ -1224,7 +1224,7 @@ To rival HubSpot's ease of use while maintaining construction-industry leadershi
 3. **Phase 3 (90 days):** Integration marketplace, advanced features
 
 ### Competitive Positioning
-**BuildDesk's Unique Advantages:**
+**Brikly's Unique Advantages:**
 - Deep construction industry expertise
 - Integrated with project management (no separate tools)
 - Real-time job costing integration
@@ -1235,7 +1235,7 @@ To rival HubSpot's ease of use while maintaining construction-industry leadershi
 - Match HubSpot's core sales automation
 - Add construction-specific intelligence HubSpot can't provide
 - Position as "the only CRM built for construction companies"
-- Marketing message: "Stop forcing general CRMs to work for construction. Use BuildDesk."
+- Marketing message: "Stop forcing general CRMs to work for construction. Use Brikly."
 
 ### Investment & ROI
 - **Total Investment:** $89,000 (Year 1)
@@ -1244,9 +1244,9 @@ To rival HubSpot's ease of use while maintaining construction-industry leadershi
 - **Time to Breakeven:** 1-2 months
 
 ### Final Recommendation
-**Proceed with full implementation.** BuildDesk has a strong CRM foundation that can be elevated to HubSpot-level sophistication with focused investment in sales automation, communication features, and ease-of-use improvements. The construction-industry focus provides a defensible competitive advantage that HubSpot cannot replicate.
+**Proceed with full implementation.** Brikly has a strong CRM foundation that can be elevated to HubSpot-level sophistication with focused investment in sales automation, communication features, and ease-of-use improvements. The construction-industry focus provides a defensible competitive advantage that HubSpot cannot replicate.
 
-The CRM is ready to support BuildDesk's growth from current state (~70% platform complete) to market-leading construction management platform with best-in-class sales and customer relationship management.
+The CRM is ready to support Brikly's growth from current state (~70% platform complete) to market-leading construction management platform with best-in-class sales and customer relationship management.
 
 ---
 
@@ -1549,4 +1549,4 @@ COMMENT ON TABLE territory_assignments IS 'Assign sales reps to territories';
 
 **End of Report**
 
-This comprehensive evaluation provides BuildDesk with a clear roadmap to transform its already-strong CRM into a construction-industry leader that rivals HubSpot's ease of use while maintaining deep vertical specialization.
+This comprehensive evaluation provides Brikly with a clear roadmap to transform its already-strong CRM into a construction-industry leader that rivals HubSpot's ease of use while maintaining deep vertical specialization.

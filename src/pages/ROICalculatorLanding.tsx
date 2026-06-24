@@ -9,7 +9,6 @@
  * - free construction calculator
  */
 
-import React from 'react';
 import { Helmet } from 'react-helmet-async';
 import { Link } from 'react-router-dom';
 import {
@@ -30,9 +29,9 @@ export default function ROICalculatorLanding() {
   const articleSchema = {
     "@context": "https://schema.org",
     "@type": "WebApplication",
-    "name": "BuildDesk Construction ROI Calculator",
+    "name": "Brikly Construction ROI Calculator",
     "description": "Free construction ROI calculator for contractors. Calculate true project profitability including overhead, validate bids in 2 minutes, and protect your profit margins.",
-    "url": "https://builddesk.ai/roi-calculator",
+    "url": "https://brikly.ai/roi-calculator",
     "applicationCategory": "BusinessApplication",
     "operatingSystem": "Web",
     "offers": {
@@ -91,7 +90,7 @@ export default function ROICalculatorLanding() {
         "name": "How often should I calculate ROI on my projects?",
         "acceptedAnswer": {
           "@type": "Answer",
-          "text": "Calculate ROI at three stages: 1) Before bidding - validate if the project is worth pursuing, 2) Mid-project - track if actual costs match estimates, 3) After completion - compare projected vs actual ROI. Tools like BuildDesk calculate ROI in real-time, so you always know current profitability."
+          "text": "Calculate ROI at three stages: 1) Before bidding - validate if the project is worth pursuing, 2) Mid-project - track if actual costs match estimates, 3) After completion - compare projected vs actual ROI. Tools like Brikly calculate ROI in real-time, so you always know current profitability."
         }
       }
     ]
@@ -134,7 +133,7 @@ export default function ROICalculatorLanding() {
   return (
     <>
       <Helmet>
-        <title>Free Construction ROI Calculator - Calculate True Project Profitability | BuildDesk</title>
+        <title>Free Construction ROI Calculator - Calculate True Project Profitability | Brikly</title>
         <meta
           name="description"
           content="Free construction ROI calculator for contractors. Calculate true project profitability in 2 minutes including overhead, validate bids, and protect profit margins. No signup required."
@@ -142,14 +141,14 @@ export default function ROICalculatorLanding() {
         <meta name="keywords" content="construction roi calculator, contractor profitability calculator, construction profit calculator, free construction calculator, bid validation calculator, project roi tool" />
 
         {/* Open Graph */}
-        <meta property="og:title" content="Free Construction ROI Calculator - BuildDesk" />
+        <meta property="og:title" content="Free Construction ROI Calculator - Brikly" />
         <meta property="og:description" content="Calculate true project profitability in 2 minutes. Free tool for contractors to validate bids and protect margins." />
         <meta property="og:type" content="website" />
-        <meta property="og:url" content="https://builddesk.ai/roi-calculator" />
+        <meta property="og:url" content="https://brikly.ai/roi-calculator" />
 
         {/* Twitter Card */}
         <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content="Free Construction ROI Calculator - BuildDesk" />
+        <meta name="twitter:title" content="Free Construction ROI Calculator - Brikly" />
         <meta name="twitter:description" content="Calculate true project profitability in 2 minutes. Validate bids and protect your margins." />
 
         {/* Schema.org structured data */}
@@ -163,7 +162,7 @@ export default function ROICalculatorLanding() {
           {JSON.stringify(howToSchema)}
         </script>
 
-        <link rel="canonical" href="https://builddesk.ai/roi-calculator" />
+        <link rel="canonical" href="https://brikly.ai/roi-calculator" />
       </Helmet>
 
       <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white">
@@ -532,7 +531,7 @@ export default function ROICalculatorLanding() {
                     <li><strong>After completion</strong> - Compare projected vs actual ROI to improve future estimates</li>
                   </ol>
                   <p className="text-slate-700 mt-3">
-                    Tools like BuildDesk calculate ROI in real-time during the project, so you always know current profitability and can adjust before it's too late.
+                    Tools like Brikly calculate ROI in real-time during the project, so you always know current profitability and can adjust before it's too late.
                   </p>
                 </div>
               </div>
@@ -568,7 +567,7 @@ export default function ROICalculatorLanding() {
                       <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
                         <Zap className="w-5 h-5 text-green-600" />
                       </div>
-                      <h3 className="font-bold text-slate-900">With BuildDesk:</h3>
+                      <h3 className="font-bold text-slate-900">With Brikly:</h3>
                     </div>
                     <ul className="space-y-2 text-sm text-slate-700">
                       <li>• Real-time ROI updates as costs are entered</li>

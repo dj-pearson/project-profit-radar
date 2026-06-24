@@ -1,23 +1,23 @@
 Below is the **PRD-style document** you asked for.
-It is written specifically for **Build-Desk.com**, using the real info from your CLAUDE.md file.
-It describes exactly **how to transition Build-Desk to the new multi-tenant structure (Option A)** while keeping your current 482-table / 155-function setup stable.
+It is written specifically for **Brikly.com**, using the real info from your CLAUDE.md file.
+It describes exactly **how to transition Brikly to the new multi-tenant structure (Option A)** while keeping your current 482-table / 155-function setup stable.
 
-This is structured like a clean product requirement doc, and cites your Build-Desk file as the source when referencing details.
+This is structured like a clean product requirement doc, and cites your Brikly file as the source when referencing details.
 
 ---
 
-# **PRD — Transition Plan for Build-Desk.com to Multi-Tenant Supabase Architecture (Option A)**
+# **PRD — Transition Plan for Brikly.com to Multi-Tenant Supabase Architecture (Option A)**
 
 **Document Type:** Product Requirements Document
-**Applies To:** Build-Desk.com platform
-**Source:** BuildDesk reference file (CLAUDE.md)
-**Goal:** Move Build-Desk from a single-tenant Supabase project into a **shared multi-tenant structure** so one Supabase instance can power all Pearson Media platforms.
+**Applies To:** Brikly.com platform
+**Source:** Brikly reference file (CLAUDE.md)
+**Goal:** Move Brikly from a single-tenant Supabase project into a **shared multi-tenant structure** so one Supabase instance can power all Pearson Media platforms.
 
 ---
 
 # **1. Summary**
 
-Build-Desk.com is a large system with:
+Brikly.com is a large system with:
 
 - 482+ tables
 - 155+ Edge Functions
@@ -25,9 +25,9 @@ Build-Desk.com is a large system with:
 - Full multi-role RBAC, GPS tracking, financial modules, CRM, mobile apps
 - Complex RLS
 
-The goal is to **transition Build-Desk to a shared multi-tenant system** that allows multiple Pearson Media products to run inside a single Supabase project.
+The goal is to **transition Brikly to a shared multi-tenant system** that allows multiple Pearson Media products to run inside a single Supabase project.
 
-Build-Desk becomes the “main project” that will hold all other platforms.
+Brikly becomes the “main project” that will hold all other platforms.
 This gives the lowest cost and the strongest long-term structure.
 
 ---
@@ -58,7 +58,7 @@ We want one scalable project with **tenant isolation** inside the database.
 
 # **3. Core Multi-Tenant Requirement**
 
-### Build-Desk will shift from:
+### Brikly will shift from:
 
 **company-based isolation → site-based isolation + company isolation inside each site.**
 
@@ -72,14 +72,14 @@ We add **one more layer above company: `site`**.
 
 ## **4.1 New “sites” Table**
 
-Every Pearson Media product (Build-Desk, RealEstate Bio, SalonPros Bio, etc.) gets a row.
+Every Pearson Media product (Brikly, RealEstate Bio, SalonPros Bio, etc.) gets a row.
 
 ### Table Structure
 
 ```
 sites (
   id uuid primary key,
-  key text unique,      -- "builddesk", "realestate", "salonpros"
+  key text unique,      -- "brikly", "realestate", "salonpros"
   domain text,          -- the live domain for routing
   created_at timestamp
 )
@@ -136,14 +136,14 @@ company_id IN (SELECT company_id... )
 
 This creates **two-layer isolation**:
 
-1. User must belong to the correct Build-Desk site (or another Pearson platform site).
+1. User must belong to the correct Brikly site (or another Pearson platform site).
 2. User must belong to the correct company inside that site.
 
 ---
 
 # **6. Auth Requirements**
 
-Build-Desk uses Supabase Auth for:
+Brikly uses Supabase Auth for:
 
 - Email/password
 - OAuth
@@ -169,7 +169,7 @@ Mobile apps (Capacitor + Expo) must also add this value during login.
 
 # **7. Edge Function Requirements**
 
-Build-Desk has 155+ edge functions:
+Brikly has 155+ edge functions:
 
 - payments
 - AI
@@ -204,7 +204,7 @@ These functions must be made multi-tenant safe.
 
 # **8. Frontend Requirements**
 
-Build-Desk frontend is large (115+ component domains, 260+ pages).
+Brikly frontend is large (115+ component domains, 260+ pages).
 
 ### 8.1 Add `site_id` to the global auth context
 
@@ -215,7 +215,7 @@ Build-Desk frontend is large (115+ component domains, 260+ pages).
 Check domain:
 
 ```
-build-desk.com → builddesk
+brikly.net → brikly
 realestatebio.com → realestate
 salonpros.bio → salonpros
 ```
@@ -251,8 +251,8 @@ Shared global assets remain unchanged.
 ### **Phase 1 — Infrastructure Setup**
 
 1. Create `sites` table
-2. Create a row for Build-Desk
-3. Add `site_id` to the Build-Desk companies and users
+2. Create a row for Brikly
+3. Add `site_id` to the Brikly companies and users
 4. Add `site_id` to core tables (100+ tables)
 
 ### **Phase 2 — Update RLS**
@@ -293,7 +293,7 @@ For each new Pearson site:
 
 1. Create a site row
 2. Export data from old project
-3. Import into Build-Desk shared project
+3. Import into Brikly shared project
 4. Backfill `site_id`
 5. Update frontend config
 6. Test and validate
@@ -334,7 +334,7 @@ For each new Pearson site:
 - All apps run on one Supabase project
 - Zero cross-tenant data leaks
 - Stripe billing isolated per tenant
-- Build-Desk performance remains fast
+- Brikly performance remains fast
 - Mobile apps authenticate correctly
 - All Edge Functions return site-filtered results
 - Cost drops by ~80% (fewer Supabase projects needed)

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { RoleGuard, ROLE_GROUPS } from '@/components/auth/RoleGuard';
@@ -176,12 +176,12 @@ const Billing = () => {
   if (loading || loadingData) {
     return (
       <DashboardLayout title="Billing & Subscriptions" showTrialBanner={false}>
-        <div className="flex items-center justify-center py-12">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-construction-blue mx-auto mb-4"></div>
-            <p className="text-muted-foreground">Loading billing data...</p>
+        <div className="space-y-6" role="status" aria-live="polite" aria-label="Loading content">
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+              {[1,2,3,4].map(i => <div key={i} className="h-24 bg-muted animate-pulse rounded-lg" />)}
+            </div>
+            <div className="h-[300px] bg-muted animate-pulse rounded-lg" />
           </div>
-        </div>
       </DashboardLayout>
     );
   }
@@ -191,11 +191,11 @@ const Billing = () => {
       <DashboardLayout title="Billing & Subscriptions" showTrialBanner={false}>
         <div className="space-y-6">
         {/* Analytics Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
+        <section className="grid grid-cols-1 md:grid-cols-5 gap-6" aria-label="Revenue metrics">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Annual Revenue</CardTitle>
-              <DollarSign className="h-4 w-4 text-muted-foreground" />
+              <DollarSign className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">${analytics.totalRevenue.toLocaleString()}</div>
@@ -206,7 +206,7 @@ const Billing = () => {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Monthly Revenue</CardTitle>
-              <TrendingUp className="h-4 w-4 text-muted-foreground" />
+              <TrendingUp className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">${analytics.monthlyRevenue.toLocaleString()}</div>
@@ -217,7 +217,7 @@ const Billing = () => {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Active Subscriptions</CardTitle>
-              <CheckCircle className="h-4 w-4 text-muted-foreground" />
+              <CheckCircle className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{analytics.activeSubscriptions}</div>
@@ -228,7 +228,7 @@ const Billing = () => {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Trial Users</CardTitle>
-              <AlertTriangle className="h-4 w-4 text-muted-foreground" />
+              <AlertTriangle className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{analytics.trialUsers}</div>
@@ -239,7 +239,7 @@ const Billing = () => {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Avg Revenue/Customer</CardTitle>
-              <CreditCard className="h-4 w-4 text-muted-foreground" />
+              <CreditCard className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
@@ -248,18 +248,19 @@ const Billing = () => {
               <p className="text-xs text-muted-foreground">Monthly average</p>
             </CardContent>
           </Card>
-        </div>
+        </section>
 
         {/* Filters */}
-        <div className="flex flex-col sm:flex-row gap-4">
-          <div className="flex-1">
+        <section className="flex flex-col sm:flex-row gap-4" aria-label="Billing filters">
+          <div className="flex-1" role="search" aria-label="Search companies">
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" aria-hidden="true" />
               <Input
                 placeholder="Search companies..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-10"
+                aria-label="Search companies by name"
               />
             </div>
           </div>
@@ -286,7 +287,7 @@ const Billing = () => {
               <SelectItem value="cancelled">Cancelled</SelectItem>
             </SelectContent>
           </Select>
-        </div>
+        </section>
 
         {/* Billing Table */}
         <Card>
@@ -358,10 +359,10 @@ const Billing = () => {
 
       {/* Billing Detail Dialog */}
       <Dialog open={isDetailDialogOpen} onOpenChange={setIsDetailDialogOpen}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-2xl" aria-describedby="billing-detail-description">
           <DialogHeader>
             <DialogTitle>Billing Details</DialogTitle>
-            <DialogDescription>
+            <DialogDescription id="billing-detail-description">
               Subscription and billing information for {selectedCompany?.name}
             </DialogDescription>
           </DialogHeader>

@@ -4,7 +4,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
@@ -228,7 +227,7 @@ const SupportTickets = () => {
   }
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
+    <main className="container mx-auto p-6 space-y-6" role="main" aria-label="Support Tickets Management">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">Support Tickets</h1>
@@ -238,11 +237,11 @@ const SupportTickets = () => {
       </div>
 
       {/* Stats */}
-      <div className="grid gap-4 md:grid-cols-3">
+      <section className="grid gap-4 md:grid-cols-3" aria-label="Ticket statistics">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Open Tickets</CardTitle>
-            <AlertCircle className="h-4 w-4 text-destructive" />
+            <AlertCircle className="h-4 w-4 text-destructive" aria-hidden="true" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{openTickets}</div>
@@ -251,7 +250,7 @@ const SupportTickets = () => {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">In Progress</CardTitle>
-            <Clock className="h-4 w-4 text-primary" />
+            <Clock className="h-4 w-4 text-primary" aria-hidden="true" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{inProgressTickets}</div>
@@ -260,16 +259,16 @@ const SupportTickets = () => {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Resolved</CardTitle>
-            <CheckCircle className="h-4 w-4 text-green-600" />
+            <CheckCircle className="h-4 w-4 text-green-600" aria-hidden="true" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{resolvedTickets}</div>
           </CardContent>
         </Card>
-      </div>
+      </section>
 
       {/* Filters */}
-      <div className="flex gap-4">
+      <section className="flex gap-4" aria-label="Ticket filters">
         <Select value={statusFilter} onValueChange={setStatusFilter}>
           <SelectTrigger className="w-48">
             <SelectValue placeholder="Filter by status" />
@@ -295,7 +294,7 @@ const SupportTickets = () => {
             <SelectItem value="low">Low</SelectItem>
           </SelectContent>
         </Select>
-      </div>
+      </section>
 
       {/* Tickets List */}
       <div className="grid gap-4">
@@ -419,7 +418,7 @@ const SupportTickets = () => {
           ))
         )}
       </div>
-    </div>
+    </main>
   );
 };
 

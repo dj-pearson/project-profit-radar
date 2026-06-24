@@ -1,7 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -10,16 +9,7 @@ import { Separator } from '@/components/ui/separator';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-import { 
-  RefreshCw, 
-  CheckCircle, 
-  AlertCircle, 
-  DollarSign, 
-  FileText, 
-  Users, 
-  Calendar,
-  Settings
-} from 'lucide-react';
+import { RefreshCw, CheckCircle, DollarSign, FileText, Users, Calendar, Settings } from 'lucide-react';
 
 interface QuickBooksConfig {
   id?: string;

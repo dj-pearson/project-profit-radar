@@ -1,6 +1,6 @@
-# Code Quality Improvements - Build Desk
+# Code Quality Improvements - Brikly
 
-This document outlines the significant code quality, security, and performance improvements made to the BuildDesk platform.
+This document outlines the significant code quality, security, and performance improvements made to the Brikly platform.
 
 ## Summary of Changes
 

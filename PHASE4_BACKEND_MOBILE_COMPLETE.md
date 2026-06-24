@@ -265,8 +265,8 @@ Retry-After: 60
 
 **App Configuration:**
 ```typescript
-appId: 'com.builddesk.app'
-appName: 'BuildDesk'
+appId: 'com.brikly.app'
+appName: 'Brikly'
 webDir: 'dist'
 androidScheme: 'https'
 iosScheme: 'https'
@@ -610,4 +610,4 @@ if (!isOnline) {
 ---
 
 *Generated on February 2, 2025*
-*BuildDesk Phase 4: Backend Services & Mobile Complete*
+*Brikly Phase 4: Backend Services & Mobile Complete*

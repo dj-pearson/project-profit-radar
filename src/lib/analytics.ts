@@ -3,13 +3,13 @@ import { logger } from './logger';
 import { safeStorage } from './safeStorage';
 
 /**
- * Analytics tracking utilities for BuildDesk
+ * Analytics tracking utilities for Brikly
  * Integrates with PostHog (when available) and Supabase for event tracking
  */
 
 // Types
 export interface EventProperties {
-  [key: string]: any;
+  [key: string]: string | number | boolean | null | undefined;
 }
 
 export interface ConversionEvent {
@@ -25,11 +25,19 @@ export interface UserProperties {
   name?: string;
   company?: string;
   plan?: string;
-  [key: string]: any;
+  [key: string]: string | number | boolean | null | undefined;
+}
+
+// PostHog interface for the subset of methods we use
+interface PostHogInstance {
+  init(apiKey: string, options: Record<string, unknown>): void;
+  capture(event: string, properties?: Record<string, unknown>): void;
+  identify(userId: string, properties?: Record<string, unknown>): void;
+  reset(): void;
 }
 
 // Initialize PostHog (lazy loaded)
-let posthog: any = null;
+let posthog: PostHogInstance | null = null;
 
 const initPostHog = async () => {
   if (typeof window === 'undefined') return null;
@@ -74,7 +82,7 @@ const trackInSupabase = async (
     // Get URL parameters for attribution
     const urlParams = new URLSearchParams(window.location.search);
 
-  await (supabase as any).from('user_events').insert({
+  await supabase.from('user_events').insert({
     user_id: user?.id || null,
     anonymous_id: !user ? getAnonymousId() : null,
     event_name: eventName,
@@ -148,7 +156,7 @@ export class Analytics {
 
     // Store user properties
     try {
-      await (supabase as any).from('user_engagement_summary').upsert({
+      await supabase.from('user_engagement_summary').upsert({
         user_id: userId,
         ...properties,
       }, { onConflict: 'user_id' });
@@ -184,7 +192,7 @@ export class Analytics {
     const { data: { user } } = await supabase.auth.getUser();
 
     try {
-      await (supabase as any).from('conversion_events').insert({
+      await supabase.from('conversion_events').insert({
         user_id: user?.id || null,
         anonymous_id: !user ? getAnonymousId() : null,
         event_type: event.event_type,

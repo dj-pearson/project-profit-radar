@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Button } from '@/components/ui/button';
@@ -10,19 +10,7 @@ import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { WarrantyForm } from '@/components/warranty/WarrantyForm';
 import { WarrantyClaimsManager } from '@/components/warranty/WarrantyClaimsManager';
-import { 
-  Shield, 
-  Plus, 
-  Calendar, 
-  AlertTriangle, 
-  CheckCircle, 
-  Clock,
-  Search,
-  Filter,
-  FileText,
-  Users,
-  ArrowLeft
-} from 'lucide-react';
+import { Shield, Plus, AlertTriangle, CheckCircle, Search, Filter, FileText, Users } from 'lucide-react';
 
 interface Warranty {
   id: string;
@@ -174,7 +162,7 @@ const WarrantyManagement = () => {
     <DashboardLayout title="Warranty Management">
       <div className="flex justify-end mb-6">
         <Button onClick={() => setShowForm(true)}>
-          <Plus className="h-4 w-4 mr-2" />
+          <Plus className="h-4 w-4 mr-2" aria-hidden="true" />
           Add Warranty
         </Button>
       </div>
@@ -376,7 +364,7 @@ const WarrantyManagement = () => {
                 </p>
                 {!searchTerm && statusFilter === 'all' && (
                   <Button onClick={() => setShowForm(true)}>
-                    <Plus className="h-4 w-4 mr-2" />
+                    <Plus className="h-4 w-4 mr-2" aria-hidden="true" />
                     Add First Warranty
                   </Button>
                 )}

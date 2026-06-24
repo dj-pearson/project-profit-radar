@@ -1,15 +1,13 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
-import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, PieChart, Pie, Cell } from 'recharts';
+import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, PieChart, Pie } from 'recharts';
 import { 
   Download, 
   Plus, 
@@ -109,7 +107,7 @@ export const CustomReportBuilder: React.FC<CustomReportBuilderProps> = ({
   initialConfig
 }) => {
   const { toast } = useToast();
-  const { userProfile, siteId } = useAuth();
+  const { userProfile } = useAuth();
   
   const [config, setConfig] = useState<ReportConfig>({
     name: '',
@@ -127,7 +125,7 @@ export const CustomReportBuilder: React.FC<CustomReportBuilderProps> = ({
     ...initialConfig
   });
 
-  const [reportData, setReportData] = useState<any[]>([]);
+  const [reportData, setReportData] = useState<Record<string, unknown>[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
   const [previewMode, setPreviewMode] = useState(false);
 
@@ -211,33 +209,28 @@ export const CustomReportBuilder: React.FC<CustomReportBuilderProps> = ({
     }
   };
 
-  const generateRealData = async (config: ReportConfig): Promise<any[]> => {
+  const generateRealData = async (config: ReportConfig): Promise<Record<string, unknown>[]> => {
     try {
       if (!userProfile?.company_id) {
         throw new Error('No company found');
       }
 
-      // Build query based on data source with site isolation
-      if (!siteId) {
-        throw new Error('No site_id available');
-      }
-
       let query;
       switch (config.dataSource) {
         case 'projects':
-          query = supabase.from('projects').select('*').eq('site_id', siteId);
+          query = supabase.from('projects').select('*');
           break;
         case 'job_costs':
-          query = supabase.from('job_costs').select('*').eq('site_id', siteId);
+          query = supabase.from('job_costs').select('*');
           break;
         case 'time_entries':
-          query = supabase.from('time_entries').select('*').eq('site_id', siteId);
+          query = supabase.from('time_entries').select('*');
           break;
         case 'expenses':
-          query = supabase.from('expenses').select('*').eq('site_id', siteId);
+          query = supabase.from('expenses').select('*');
           break;
         case 'invoices':
-          query = supabase.from('invoices').select('*').eq('site_id', siteId);
+          query = supabase.from('invoices').select('*');
           break;
         default:
           throw new Error('Invalid data source');
@@ -277,7 +270,7 @@ export const CustomReportBuilder: React.FC<CustomReportBuilderProps> = ({
   const generateMockData = (config: ReportConfig) => {
     const dataCount = Math.floor(Math.random() * 20) + 10;
     return Array.from({ length: dataCount }, (_, i) => {
-      const item: any = {};
+      const item: Record<string, string | number | boolean> = {};
       config.fields.forEach(field => {
         switch (field.type) {
           case 'string':
@@ -468,8 +461,8 @@ export const CustomReportBuilder: React.FC<CustomReportBuilderProps> = ({
                 <Label htmlFor="dataSource">Data Source</Label>
                 <Select
                   value={config.dataSource}
-                  onValueChange={(value: any) => setConfig(prev => ({ 
-                    ...prev, 
+                  onValueChange={(value: ReportConfig['dataSource']) => setConfig(prev => ({
+                    ...prev,
                     dataSource: value,
                     fields: [],
                     filters: []
@@ -556,7 +549,7 @@ export const CustomReportBuilder: React.FC<CustomReportBuilderProps> = ({
                       </Select>
                       <Select
                         value={filter.operator}
-                        onValueChange={(value: any) => updateFilter(index, { operator: value })}
+                        onValueChange={(value: ReportFilter['operator']) => updateFilter(index, { operator: value })}
                       >
                         <SelectTrigger className="w-32">
                           <SelectValue />
@@ -601,7 +594,7 @@ export const CustomReportBuilder: React.FC<CustomReportBuilderProps> = ({
                       key={value}
                       variant={config.chartType === value ? 'default' : 'outline'}
                       className="flex-col h-16"
-                      onClick={() => setConfig(prev => ({ ...prev, chartType: value as any }))}
+                      onClick={() => setConfig(prev => ({ ...prev, chartType: value as ReportConfig['chartType'] }))}
                     >
                       <Icon className="h-4 w-4 mb-1" />
                       <span className="text-xs">{label}</span>

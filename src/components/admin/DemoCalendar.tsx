@@ -9,13 +9,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
@@ -103,15 +96,15 @@ export const DemoCalendar = ({ onDemoScheduled }: DemoCalendarProps) => {
         .or(`preferred_date.lte.${format(endDate, 'yyyy-MM-dd')},scheduled_date.lte.${format(endDate, 'yyyy-MM-dd')}`)
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        // Table may not exist yet - fail silently
+        setDemoRequests([]);
+        return;
+      }
       setDemoRequests(data || []);
     } catch (error) {
-      console.error('Failed to load demo requests:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to load demo requests.',
-        variant: 'destructive',
-      });
+      // Silently handle - demo_requests table may not exist yet
+      setDemoRequests([]);
     } finally {
       setLoading(false);
     }

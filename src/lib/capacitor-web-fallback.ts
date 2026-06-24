@@ -37,6 +37,25 @@ export const Capacitor = {
   convertFileSrc: (filePath: string) => filePath,
 };
 
+// registerPlugin — used by Capacitor plugin packages (e.g. @capacitor/status-bar)
+// to register their native bridge. On web we return a no-op proxy so any
+// method call resolves to undefined without throwing.
+export function registerPlugin<T = unknown>(_name: string, _options?: unknown): T {
+  const handler: ProxyHandler<Record<string, unknown>> = {
+    get: () => () => Promise.resolve(),
+  };
+  return new Proxy({}, handler) as unknown as T;
+}
+
+export class WebPlugin {
+  addListener() {
+    return Promise.resolve({ remove: () => Promise.resolve() });
+  }
+  removeAllListeners() {
+    return Promise.resolve();
+  }
+}
+
 // Filesystem constants
 export const Directory = {
   Documents: "DOCUMENTS",
@@ -72,8 +91,8 @@ export const App = {
   exitApp: () => Promise.resolve(),
   getInfo: () =>
     Promise.resolve({
-      name: "BuildDesk",
-      id: "com.builddesk.app",
+      name: "Brikly",
+      id: "com.brikly.app",
       build: "1.0.0",
       version: "1.0.0",
     }),
@@ -175,6 +194,96 @@ export const Preferences = {
   keys: () => Promise.resolve({ keys: [] }),
   migrate: () => Promise.resolve(),
   removeOld: () => Promise.resolve(),
+};
+
+// Haptics Plugin
+export const ImpactStyle = {
+  Heavy: "HEAVY",
+  Medium: "MEDIUM",
+  Light: "LIGHT",
+} as const;
+
+export const NotificationType = {
+  SUCCESS: "SUCCESS",
+  WARNING: "WARNING",
+  ERROR: "ERROR",
+} as const;
+
+function webVibrateFallback(pattern: number | number[]) {
+  if (typeof navigator === "undefined") return;
+  const nav = navigator as Navigator & { vibrate?: (p: number | number[]) => boolean };
+  if (typeof nav.vibrate === "function") {
+    try {
+      nav.vibrate(pattern);
+    } catch {
+      // Ignore
+    }
+  }
+}
+
+export const Haptics = {
+  impact: (opts?: { style?: string }) => {
+    const style = opts?.style ?? ImpactStyle.Medium;
+    webVibrateFallback(style === ImpactStyle.Heavy ? 22 : style === ImpactStyle.Light ? 8 : 14);
+    return Promise.resolve();
+  },
+  notification: (opts?: { type?: string }) => {
+    const type = opts?.type ?? NotificationType.SUCCESS;
+    webVibrateFallback(
+      type === NotificationType.ERROR
+        ? [20, 50, 20, 50, 20]
+        : type === NotificationType.WARNING
+        ? [14, 60, 14]
+        : [10, 40, 18],
+    );
+    return Promise.resolve();
+  },
+  vibrate: (opts?: { duration?: number }) => {
+    webVibrateFallback(opts?.duration ?? 20);
+    return Promise.resolve();
+  },
+  selectionStart: () => {
+    webVibrateFallback(6);
+    return Promise.resolve();
+  },
+  selectionChanged: () => {
+    webVibrateFallback(4);
+    return Promise.resolve();
+  },
+  selectionEnd: () => Promise.resolve(),
+};
+
+// Status Bar Plugin (web fallback — real plugin used on native)
+export const Style = {
+  Dark: "DARK",
+  Light: "LIGHT",
+  Default: "DEFAULT",
+} as const;
+
+export const StatusBar = {
+  setStyle: () => Promise.resolve(),
+  setBackgroundColor: () => Promise.resolve(),
+  setOverlaysWebView: () => Promise.resolve(),
+  show: () => Promise.resolve(),
+  hide: () => Promise.resolve(),
+  getInfo: () =>
+    Promise.resolve({
+      visible: true,
+      style: "DEFAULT",
+      color: "#ffffff",
+      overlays: false,
+    }),
+};
+
+// Network Plugin
+export const Network = {
+  getStatus: () =>
+    Promise.resolve({
+      connected: typeof navigator !== "undefined" ? navigator.onLine : true,
+      connectionType: "unknown" as const,
+    }),
+  addListener: () => Promise.resolve({ remove: () => {} }),
+  removeAllListeners: () => Promise.resolve(),
 };
 
 // Push Notifications Plugin

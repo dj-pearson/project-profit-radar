@@ -1,0 +1,52 @@
+name: Lighthouse CI
+
+on:
+  push:
+    branches: [main, enterprise-production-readiness]
+  pull_request:
+    branches: [main]
+
+jobs:
+  lighthouse:
+    name: Lighthouse Audit
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+        env:
+          PUPPETEER_SKIP_DOWNLOAD: true
+
+      - name: Build
+        run: npx vite build
+        env:
+          # Placeholder values so the bundle has non-empty config and
+          # React can boot during the audit. The audit only measures
+          # render performance — no real Supabase calls are made.
+          VITE_SUPABASE_URL: https://api.brikly.net
+          VITE_SUPABASE_PUBLISHABLE_KEY: lighthouse-audit-placeholder
+          VITE_EDGE_FUNCTIONS_URL: https://functions.brikly.net
+
+      - name: Install Lighthouse CI
+        run: npm install -g @lhci/cli@0.15.x
+
+      - name: Run Lighthouse CI
+        run: lhci autorun
+        env:
+          LHCI_GITHUB_APP_TOKEN: ${{ secrets.LHCI_GITHUB_APP_TOKEN }}
+
+      - name: Upload Lighthouse reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: lighthouse-reports
+          path: .lighthouseci/
+          retention-days: 14

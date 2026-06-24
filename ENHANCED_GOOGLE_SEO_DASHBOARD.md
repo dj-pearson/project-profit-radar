@@ -64,7 +64,7 @@ All new SEO pages now properly stored in backend:
 ### Sitemap Generation
 ✅ **All new SEO pages automatically included**
 - Resource guides: `/resources/job-costing-construction-setup-guide`
-- Comparison pages: `/builddesk-vs-coconstruct`
+- Comparison pages: `/brikly-vs-coconstruct`
 - Topic hubs: `/topics/construction-management-basics`
 - Core pages: `/faq`
 
@@ -74,7 +74,7 @@ All new SEO pages now properly stored in backend:
 Allow: /resources/
 Allow: /topics/
 Allow: /faq
-Allow: /builddesk-vs-*
+Allow: /brikly-vs-*
 ```
 
 ### LLMs.txt AI Guidelines

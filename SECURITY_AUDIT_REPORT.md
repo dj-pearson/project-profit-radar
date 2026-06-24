@@ -1,13 +1,13 @@
-# Security Audit Report - BuildDesk Platform
+# Security Audit Report - Brikly Platform
 **Date:** 2025-11-09
 **Audited By:** Claude (Security Audit Agent)
-**Platform Version:** BuildDesk v0.0.0
+**Platform Version:** Brikly v0.0.0
 
 ---
 
 ## Executive Summary
 
-This comprehensive security audit examined authentication, API security, data handling, and dependencies across the BuildDesk construction management platform. The audit identified **8 CRITICAL**, **12 HIGH**, **15 MEDIUM**, and **9 LOW** severity issues requiring immediate attention.
+This comprehensive security audit examined authentication, API security, data handling, and dependencies across the Brikly construction management platform. The audit identified **8 CRITICAL**, **12 HIGH**, **15 MEDIUM**, and **9 LOW** severity issues requiring immediate attention.
 
 **Overall Risk Level: HIGH**
 
@@ -990,8 +990,8 @@ export const validateFileUpload = async (file: File): Promise<{ isValid: boolean
 
 ```typescript
 const ALLOWED_ORIGINS = [
-  'https://build-desk.com',
-  'https://builddesk.pearsonperformance.workers.dev',
+  'https://brikly.net',
+  'https://brikly.pearsonperformance.workers.dev',
   'http://localhost:8080', // Development only
 ];
 

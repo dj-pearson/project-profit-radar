@@ -266,7 +266,7 @@ export const CustomDomain = () => {
                 </Link>
               </Button>
               <Button variant="outline" asChild className="flex-1">
-                <a href="mailto:sales@builddesk.com">Contact Sales</a>
+                <a href="mailto:sales@brikly.net">Contact Sales</a>
               </Button>
             </div>
           </CardContent>
@@ -286,7 +286,7 @@ export const CustomDomain = () => {
             Custom Domain
           </h1>
           <p className="text-muted-foreground mt-2">
-            Configure your custom domain to white-label your BuildDesk experience
+            Configure your custom domain to white-label your Brikly experience
           </p>
         </div>
 
@@ -319,7 +319,7 @@ export const CustomDomain = () => {
           <CardHeader>
             <CardTitle>Domain Configuration</CardTitle>
             <CardDescription>
-              Enter your custom domain to use instead of builddesk.com
+              Enter your custom domain to use instead of brikly.net
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -409,13 +409,13 @@ export const CustomDomain = () => {
                   <div className="flex-1">
                     <p className="text-xs font-semibold text-muted-foreground">Value</p>
                     <p className="font-mono text-sm break-all">
-                      builddesk.pearsonperformance.workers.dev
+                      brikly.pearsonperformance.workers.dev
                     </p>
                   </div>
                   <Button
                     size="sm"
                     variant="ghost"
-                    onClick={() => copyToClipboard('builddesk.pearsonperformance.workers.dev')}
+                    onClick={() => copyToClipboard('brikly.pearsonperformance.workers.dev')}
                   >
                     <Copy className="w-3 h-3" />
                   </Button>
@@ -458,7 +458,7 @@ export const CustomDomain = () => {
             </p>
             <div className="flex gap-2">
               <Button variant="outline" size="sm" asChild>
-                <a href="mailto:support@builddesk.com">Email Support</a>
+                <a href="mailto:support@brikly.net">Email Support</a>
               </Button>
               <Button variant="outline" size="sm" asChild>
                 <Link to="/help">View Documentation</Link>
