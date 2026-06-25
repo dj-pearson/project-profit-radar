@@ -34,6 +34,7 @@ const GeneralLedger = createLazyRoute(() => import('@/pages/GeneralLedger'));
 const CashFlowStatement = createLazyRoute(() => import('@/pages/CashFlowStatement'));
 const BillPayments = createLazyRoute(() => import('@/pages/BillPayments'));
 const FiscalPeriods = createLazyRoute(() => import('@/pages/FiscalPeriods'));
+const WipReport = createLazyRoute(() => import('@/pages/WipReport'));
 
 export const financialRoutes = (
   <>
@@ -70,6 +71,7 @@ export const financialRoutes = (
     <Route path="/finance/profit-loss" element={<RouteGuard><ProfitAndLoss /></RouteGuard>} />
     <Route path="/finance/trial-balance" element={<RouteGuard><TrialBalance /></RouteGuard>} />
     <Route path="/finance/cash-flow" element={<RouteGuard><CashFlowStatement /></RouteGuard>} />
+    <Route path="/finance/wip-report" element={<RouteGuard><WipReport /></RouteGuard>} />
 
     {/* Estimates & Invoices */}
     <Route path="/estimates" element={<RouteGuard><LazyEstimatesHub /></RouteGuard>} />

@@ -15,6 +15,7 @@ import { AccessibleForm, AccessibleFormField } from '@/components/accessibility/
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import VisualScheduler from '@/components/scheduling/VisualScheduler';
+import { CrewScheduleBoard } from '@/components/scheduling/CrewScheduleBoard';
 import { Calendar, Users, Plus, MapPin, Clock, Phone, Trash2 } from 'lucide-react';
 
 interface CrewProject {
@@ -464,6 +465,9 @@ const CrewScheduling = () => {
               </Dialog>
             </div>
           </div>
+
+        {/* Weekly drag-and-drop board (US-106) */}
+        <CrewScheduleBoard />
 
         {/* Main Content */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">

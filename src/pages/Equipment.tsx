@@ -13,6 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Plus, Search, Truck, Wrench, AlertTriangle, CheckCircle, Clock, MapPin, Loader2 } from 'lucide-react';
 import { mobileFilterClasses } from '@/utils/mobileHelpers';
 import { useEquipmentWithMaintenance, useMaintenanceRecords, useEquipmentStats, useCreateEquipment } from '@/hooks/useEquipment';
+import { EquipmentAssignmentsTab } from '@/components/equipment/EquipmentAssignmentsTab';
 import { Skeleton } from '@/components/ui/skeleton';
 import { formatCurrency } from '@/lib/utils';
 
@@ -189,10 +190,14 @@ export default function Equipment() {
 
         {/* Tabs */}
         <Tabs value={selectedTab} onValueChange={setSelectedTab} className="space-y-4" aria-label="Equipment management sections">
-          <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4" aria-label="Equipment categories">
+          <TabsList className="grid w-full grid-cols-2 sm:grid-cols-5" aria-label="Equipment categories">
             <TabsTrigger value="fleet" className="text-xs sm:text-sm">
               <span className="hidden sm:inline">Equipment Fleet</span>
               <span className="sm:hidden">Fleet</span>
+            </TabsTrigger>
+            <TabsTrigger value="assignments" className="text-xs sm:text-sm">
+              <span className="hidden sm:inline">Assignments</span>
+              <span className="sm:hidden">Assign.</span>
             </TabsTrigger>
             <TabsTrigger value="maintenance" className="text-xs sm:text-sm">
               <span className="hidden sm:inline">Maintenance</span>
@@ -314,6 +319,10 @@ export default function Equipment() {
                 />
               );
             })()}
+          </TabsContent>
+
+          <TabsContent value="assignments" className="space-y-4">
+            <EquipmentAssignmentsTab />
           </TabsContent>
 
           <TabsContent value="maintenance" className="space-y-4">

@@ -1,108 +1,23 @@
 import { Task, Project, CriticalPath, ScheduleConflict, PROJECT_TEMPLATES, TemplateType } from '@/types/schedule';
+import { computeSchedule, annotateCriticalPath } from '@/lib/schedule/criticalPath';
 
-// Critical Path Method (CPM) calculation
+// Critical Path Method (CPM) calculation.
+// Delegates to the tested, topologically-ordered engine in
+// src/lib/schedule/criticalPath.ts (forward/backward pass + float/slack).
 export function calculateCriticalPath(tasks: Task[]): CriticalPath {
-  // Create a map for quick task lookup
-  const taskMap = new Map(tasks.map(task => [task.id, task]));
-  
-  // Calculate Early Start (ES) and Early Finish (EF) - Forward Pass
-  const forwardPass = (task: Task, visited = new Set<string>()): { es: number, ef: number } => {
-    if (visited.has(task.id)) {
-      throw new Error(`Circular dependency detected involving task ${task.id}`);
-    }
-    visited.add(task.id);
-    
-    let maxES = 0;
-    
-    // Find the maximum EF of all dependencies
-    for (const depId of task.dependencies) {
-      const depTask = taskMap.get(depId);
-      if (depTask) {
-        const depResult = forwardPass(depTask, new Set(visited));
-        maxES = Math.max(maxES, depResult.ef);
-      }
-    }
-    
-    const es = maxES;
-    const ef = es + task.duration;
-    
-    return { es, ef };
-  };
-  
-  // Calculate forward pass for all tasks
-  const taskSchedule = new Map<string, { es: number, ef: number, ls: number, lf: number }>();
-  let projectFinish = 0;
-  
-  for (const task of tasks) {
-    const { es, ef } = forwardPass(task);
-    taskSchedule.set(task.id, { es, ef, ls: 0, lf: 0 });
-    projectFinish = Math.max(projectFinish, ef);
-  }
-  
-  // Calculate Late Start (LS) and Late Finish (LF) - Backward Pass
-  const backwardPass = (task: Task): { ls: number, lf: number } => {
-    const schedule = taskSchedule.get(task.id)!;
-    
-    // Find tasks that depend on this task
-    const dependents = tasks.filter(t => t.dependencies.includes(task.id));
-    
-    let minLF = projectFinish;
-    if (dependents.length > 0) {
-      minLF = Math.min(...dependents.map(dep => {
-        const depSchedule = taskSchedule.get(dep.id)!;
-        return depSchedule.ls;
-      }));
-    }
-    
-    const lf = minLF;
-    const ls = lf - task.duration;
-    
-    schedule.ls = ls;
-    schedule.lf = lf;
-    
-    return { ls, lf };
-  };
-  
-  // Calculate backward pass for all tasks (in reverse topological order)
-  const processedTasks = new Set<string>();
-  const processTask = (task: Task) => {
-    if (processedTasks.has(task.id)) return;
-    
-    // Process all dependents first
-    const dependents = tasks.filter(t => t.dependencies.includes(task.id));
-    for (const dependent of dependents) {
-      processTask(dependent);
-    }
-    
-    backwardPass(task);
-    processedTasks.add(task.id);
-  };
-  
-  // Find tasks with no dependents (end tasks) and work backwards
-  const endTasks = tasks.filter(task => 
-    !tasks.some(t => t.dependencies.includes(task.id))
-  );
-  
-  for (const endTask of endTasks) {
-    processTask(endTask);
-  }
-  
-  // Find critical path tasks (where ES = LS and EF = LF)
-  const criticalTasks = tasks.filter(task => {
-    const schedule = taskSchedule.get(task.id)!;
-    return schedule.es === schedule.ls && schedule.ef === schedule.lf;
-  });
-  
-  // Calculate project dates
+  const { projectDuration, criticalPath } = computeSchedule(tasks);
+  const criticalIds = new Set(criticalPath);
+  const criticalTasks = tasks.filter((t) => criticalIds.has(t.id));
+
   const startDate = new Date();
   const endDate = new Date(startDate);
-  endDate.setDate(endDate.getDate() + projectFinish);
-  
+  endDate.setDate(endDate.getDate() + projectDuration);
+
   return {
     tasks: criticalTasks,
-    totalDuration: projectFinish,
+    totalDuration: projectDuration,
     startDate,
-    endDate
+    endDate,
   };
 }
 
@@ -157,7 +72,11 @@ export function generateTasksFromTemplate(templateType: TemplateType, projectSta
 }
 
 // Generate sub-tasks for specific phases
-function generateSubTasksForPhase(phase: any, parentTask: Task, startId: number): Task[] {
+function generateSubTasksForPhase(
+  phase: { name: string; description: string; estimatedDuration: number },
+  parentTask: Task,
+  startId: number
+): Task[] {
   const subTasks: Task[] = [];
   const phaseDuration = phase.estimatedDuration;
   const subTaskCount = Math.ceil(phaseDuration / 3); // Roughly 3 days per sub-task
@@ -345,9 +264,11 @@ export function formatDuration(days: number): string {
 
 // Generate sample project data
 export function createSampleProject(templateType: TemplateType, projectName: string, startDate: Date): Project {
-  const tasks = generateTasksFromTemplate(templateType, startDate);
+  const generated = generateTasksFromTemplate(templateType, startDate);
+  // Annotate the critical path so the Gantt highlights it from the start.
+  const tasks = annotateCriticalPath(generated).tasks;
   const endDate = new Date(Math.max(...tasks.map(t => t.endDate.getTime())));
-  
+
   return {
     id: `project-${Date.now()}`,
     name: projectName,
@@ -357,4 +278,4 @@ export function createSampleProject(templateType: TemplateType, projectName: str
     tasks,
     createdAt: new Date()
   };
-} 
+}

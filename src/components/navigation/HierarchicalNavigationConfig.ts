@@ -504,6 +504,12 @@ export const hierarchicalNavigation: NavigationArea[] = [
             icon: ClipboardList,
             roles: ["admin", "accounting", "root_admin"],
           },
+          {
+            title: "WIP / Earned Value",
+            url: "/finance/wip-report",
+            icon: TrendingUp,
+            roles: ["admin", "project_manager", "accounting", "root_admin"],
+          },
         ],
       },
       {

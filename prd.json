@@ -1203,8 +1203,8 @@
         "npm run build completes successfully"
       ],
       "priority": 4,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "COMPLETED. The QuickBooksIntegration panel (rendered in Settings/Integrations via QuickBooksRouting + FinancialHub) already had connection status, prominent last-sync timestamp, Sync Now with a syncing progress state, and connect/disconnect OAuth (quickbooks-connect/-disconnect/-sync edge fns). Gaps filled: (1) pure logic src/lib/integrations/quickbooksSync.ts \u2014 parseRecordsProcessed (object/number/array JSON -> total + per-entity counts), extractErrorMessage (message/error/detail keys, arrays, fallbacks), normalizeStatus, normalizeSyncLog, summarizeSyncHistory (newest-first, success rate, totals, lastError); 17 passing tests. (2) src/components/integrations/QuickBooksSyncHistory.tsx \u2014 replaces the static placeholder in the 'Sync Logs' tab with the real last-20 history table (date, type, status badge, record count, duration), a top-of-list alert for the most recent failure, and per-row Details + Retry (re-invokes quickbooks-sync for that sync_type) with query invalidation. company_id-scoped (RLS); uses existing quickbooks_sync_logs table (no migration). vite build green; new files eslint-clean (5 pre-existing any-types in QuickBooksIntegration.tsx left untouched)."
     },
     {
       "id": "US-071",
@@ -1374,8 +1374,8 @@
         "npm run build completes successfully"
       ],
       "priority": 3,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "COMPLETED. Pure logic src/lib/equipment/utilization.ts: computeEquipmentUtilization (per-equipment day-based utilization over a window via unionDays interval-merge so overlapping assignments aren't double-counted; effective dates prefer actuals over planned; isIdle = no assignment overlapping the trailing 7-day window; isCurrentlyAssigned; daysSinceLastAssignment) + fleet totals; IDLE_THRESHOLD_DAYS=7. 12 passing tests in __tests__/utilization.test.ts. UI src/components/equipment/EquipmentAssignmentsTab.tsx (TanStack Query, company_id-scoped): new 'Assignments' tab on the Equipment page with summary stats (avg utilization / currently assigned / idle / fleet size) and sub-tabs \u2014 Active assignments table with a Return action (sets actual_end_date + assignment_status=completed and frees equipment to status=available), Utilization bars per item (last 30 days), Idle list (7+ days, days-idle), and Timeline (reuses EquipmentGanttChart for per-equipment history). Check Out reuses the existing EquipmentAssignmentForm in a dialog. Wired into src/pages/Equipment.tsx (grid-cols-5 tablist). Uses existing equipment / equipment_assignments / projects tables (no migration). vite build green; new files eslint-clean (2 pre-existing unrelated any-types in Equipment.tsx maintenance/table code left untouched)."
     },
     {
       "id": "US-081",
@@ -1765,8 +1765,8 @@
         "npm run build completes successfully"
       ],
       "priority": 3,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "COMPLETED. The Safety page (/safety, Incidents tab) already had the incident report form (SafetyIncidentForm: date/project/location/severity/description/photos). Gaps filled: pure logic src/lib/safety/incidentStats.ts \u2014 summarizeIncidents (total, open, severity breakdown, type breakdown, days-since-last-incident ignoring future dates, OSHA-recordable/lost-time/days-away counts, trailing 12-month trend with empty months zero-filled) + filterAndSortIncidents (by severity/project/date range, sort by date or severity) + normalizeSeverity (minor/major/critical/other synonyms); 15 passing tests. UI src/components/safety/SafetyIncidentsPanel.tsx (TanStack Query, company_id-scoped): dashboard stat cards (days since last incident, total, open, OSHA recordable), severity-breakdown card, incidents-per-month BarChart (recharts), and a filter/sort toolbar (severity, project, from/to dates, sort) over an incident log table with a detail dialog showing description, immediate actions, root-cause analysis, corrective actions, witnesses, and OSHA/lost-time badges. Wired into Safety.tsx Incidents tab (replaced the static recent-incidents list). Uses existing safety_incidents table (no migration). vite build green; new files eslint-clean."
     },
     {
       "id": "US-104",
@@ -1782,8 +1782,8 @@
         "npm run build completes successfully"
       ],
       "priority": 3,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "COMPLETED. ProjectPunchList (Punch List tab on the project detail page, punch_list_items table + RLS) already had the add/edit form, status workflow (open->in_progress->completed->verified), status/priority filters, and search (title/description/location). Gaps filled: (1) before/after photo upload + display \u2014 wired the reusable ImageUpload (project-documents bucket, punch-list/<projectId> path) into both add and edit dialogs for photo_before_url/photo_after_url (added to FormState/reset/startEdit; round-trips via the existing spread insert/update payloads) and render before/after thumbnails on each item card; (2) completion progress bar \u2014 pure logic src/lib/projects/punchListProgress.ts summarizePunchList (status/priority counts, verifiedPercent, completionPercent) with 6 passing tests, surfaced as a Progress bar showing % verified. vite build green; new lib eslint-clean (11 pre-existing any-types in ProjectPunchList.tsx left untouched)."
     },
     {
       "id": "US-105",
@@ -1817,8 +1817,8 @@
         "npm run build completes successfully"
       ],
       "priority": 3,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "COMPLETED. The CrewScheduling page previously had only a daily-dispatch view. Added the weekly drag-and-drop board. Pure logic src/lib/scheduling/crewBoard.ts: startOfWeek (Monday-based, UTC), getWeekDays, addWeeks, hasTimeOverlap, detectConflicts (same crew member + same day + overlapping time -> set of double-booked assignment ids), buildCrewWeek (crew \u00d7 day grid with per-cell assignments, unassigned-crew list, conflict set; ignores out-of-week rows). 12 passing tests in __tests__/crewBoard.test.ts. UI src/components/scheduling/CrewScheduleBoard.tsx (@hello-pangea/dnd, TanStack Query, company_id-scoped): weekly grid (rows=crew from user_profiles, columns=Mon-Sun), project-colored assignment blocks, drag-and-drop across days/crew members persisted to crew_assignments (crew_member_id + assigned_date) with query invalidation, double-bookings highlighted red with a conflict count badge, an Unassigned-crew sidebar, and prev/next/Today week navigation. Wired into src/pages/CrewScheduling.tsx above the daily dispatch view. Uses existing user_profiles / crew_assignments / projects tables (no migration). vite build green; new files eslint-clean."
     },
     {
       "id": "US-107",
@@ -3634,7 +3634,7 @@
       ],
       "priority": 2,
       "passes": false,
-      "notes": "Source: competitive analysis. Differentiator vs current calendar-only scheduling. Large feature \u2014 may warrant decomposition into sub-stories during planning."
+      "notes": "Source: competitive analysis. Differentiator vs current calendar-only scheduling. Large feature \u2014 may warrant decomposition into sub-stories during planning. | DECOMPOSED: the critical-path + float engine and dependency-cascade rescheduling core is delivered and tested under US-234 (scheduleUtils now delegates to src/lib/schedule/criticalPath.ts; Gantt highlights the critical path and shows per-task slack). US-223 remains open for the DB-backed project Gantt with linkable dependencies, baseline-vs-actual persistence (additive migration), and schedule-slip alerts feeding the project health score."
     },
     {
       "id": "US-224",
@@ -3648,8 +3648,8 @@
         "Figures reconcile with existing job-costing budget-vs-actual data"
       ],
       "priority": 2,
-      "passes": false,
-      "notes": "Source: competitive analysis. High-value for construction accounting; integrates with existing job-costing/cost-code work."
+      "passes": true,
+      "notes": "COMPLETED. Pure logic src/lib/projects/wipReport.ts: computeWipRow/buildWipSchedule (percent-complete = cost/est-cost; earned revenue = %\u00d7contract; over/under billing; EAC = cost-to-date/percent; CPI/SPI from BAC=est-cost and schedule-elapsed planned value), summarizeCostToComplete (per cost-code projected final cost + pro-rata revenue allocation for projected margin), netApprovedChangeOrders. 20 passing tests in __tests__/wipReport.test.ts. UI src/components/financial/WipReport.tsx (company-wide or per-project): summary cards, earned-vs-billed bar chart, WIP schedule table (CPI/SPI/%complete), cost-to-complete-by-cost-code table with project selector, Excel (xlsx) + PDF (jspdf-autotable) export. Page src/pages/WipReport.tsx at /finance/wip-report (financialRoutes) with nav links in HierarchicalNavigationConfig + AppSidebar (admin/project_manager/accounting roles). Reconciles with budget-vs-actual (same job_costs/project_budgets/invoices/change_orders sources); all queries company_id-scoped under RLS. vite build green, lint clean."
     },
     {
       "id": "US-225",
@@ -3785,6 +3785,22 @@
       "priority": 3,
       "passes": false,
       "notes": "Source: competitive analysis. Builds on US-110 financial overview and US-063 widget personalization."
+    },
+    {
+      "id": "US-234",
+      "title": "Critical-path & float engine with dependency-cascade rescheduling (US-223 core)",
+      "description": "Decomposed from US-223 (large feature). Deliver the dependency-driven scheduling core that the existing Gantt UI was missing: a tested Critical Path Method engine (forward/backward pass) that computes per-task early/late start/finish, total float and free float, and flags the critical path; annotate schedule tasks with isOnCriticalPath so the Gantt highlights it; and finish-to-start dependency-cascade rescheduling so moving a task pushes its dependents. Replaces the untested, exponential recursive CPM in scheduleUtils with a topologically-ordered O(V+E) engine that detects cycles gracefully. Remaining US-223 scope (DB-backed project Gantt with linkable dependencies, baseline-vs-actual persistence + migration, slip alerts into the project health score) tracked separately under US-223.",
+      "acceptanceCriteria": [
+        "Critical path is computed via forward/backward pass and per-task total float and free float are available",
+        "Tasks are annotated with isOnCriticalPath and the Gantt visually highlights the critical path",
+        "Per-task slack/float is shown in the Gantt task list",
+        "Moving a task reschedules its dependents per finish-to-start rules (push-only cascade), preserving durations",
+        "Dependency cycles and dangling dependencies are handled without throwing",
+        "Pure logic is unit tested; npm run build completes successfully"
+      ],
+      "priority": 2,
+      "passes": true,
+      "notes": "COMPLETED. Pure engine src/lib/schedule/criticalPath.ts: computeSchedule (Kahn topo-order forward/backward pass -> ES/EF/LS/LF, totalFloat=LS-ES, freeFloat, critical path = zero-float tasks, optional lag, cycle detection via hasCycle instead of throwing), annotateCriticalPath (sets isOnCriticalPath + returns timings), cascadeReschedule (finish-to-start push-only dependent rescheduling, duration-preserving, non-mutating). 18 passing tests in __tests__/criticalPath.test.ts (linear/diamond/parallel/lag/empty/cycle/dangling/cascade). Wired in: scheduleUtils.calculateCriticalPath now delegates to the engine (replacing the exponential recursive version); createSampleProject annotates the critical path; ScheduleBuilder.handleTaskUpdate cascades on date change and re-annotates; GanttChart computes timings via useMemo and shows '<n>d slack' per non-critical task. vite build green, eslint clean on touched files."
     }
   ]
 }
