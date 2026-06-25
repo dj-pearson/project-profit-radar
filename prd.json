@@ -3634,7 +3634,7 @@
       ],
       "priority": 2,
       "passes": false,
-      "notes": "Source: competitive analysis. Differentiator vs current calendar-only scheduling. Large feature \u2014 may warrant decomposition into sub-stories during planning."
+      "notes": "Source: competitive analysis. Differentiator vs current calendar-only scheduling. Large feature \u2014 may warrant decomposition into sub-stories during planning. | DECOMPOSED: the critical-path + float engine and dependency-cascade rescheduling core is delivered and tested under US-234 (scheduleUtils now delegates to src/lib/schedule/criticalPath.ts; Gantt highlights the critical path and shows per-task slack). US-223 remains open for the DB-backed project Gantt with linkable dependencies, baseline-vs-actual persistence (additive migration), and schedule-slip alerts feeding the project health score."
     },
     {
       "id": "US-224",
@@ -3785,6 +3785,22 @@
       "priority": 3,
       "passes": false,
       "notes": "Source: competitive analysis. Builds on US-110 financial overview and US-063 widget personalization."
+    },
+    {
+      "id": "US-234",
+      "title": "Critical-path & float engine with dependency-cascade rescheduling (US-223 core)",
+      "description": "Decomposed from US-223 (large feature). Deliver the dependency-driven scheduling core that the existing Gantt UI was missing: a tested Critical Path Method engine (forward/backward pass) that computes per-task early/late start/finish, total float and free float, and flags the critical path; annotate schedule tasks with isOnCriticalPath so the Gantt highlights it; and finish-to-start dependency-cascade rescheduling so moving a task pushes its dependents. Replaces the untested, exponential recursive CPM in scheduleUtils with a topologically-ordered O(V+E) engine that detects cycles gracefully. Remaining US-223 scope (DB-backed project Gantt with linkable dependencies, baseline-vs-actual persistence + migration, slip alerts into the project health score) tracked separately under US-223.",
+      "acceptanceCriteria": [
+        "Critical path is computed via forward/backward pass and per-task total float and free float are available",
+        "Tasks are annotated with isOnCriticalPath and the Gantt visually highlights the critical path",
+        "Per-task slack/float is shown in the Gantt task list",
+        "Moving a task reschedules its dependents per finish-to-start rules (push-only cascade), preserving durations",
+        "Dependency cycles and dangling dependencies are handled without throwing",
+        "Pure logic is unit tested; npm run build completes successfully"
+      ],
+      "priority": 2,
+      "passes": true,
+      "notes": "COMPLETED. Pure engine src/lib/schedule/criticalPath.ts: computeSchedule (Kahn topo-order forward/backward pass -> ES/EF/LS/LF, totalFloat=LS-ES, freeFloat, critical path = zero-float tasks, optional lag, cycle detection via hasCycle instead of throwing), annotateCriticalPath (sets isOnCriticalPath + returns timings), cascadeReschedule (finish-to-start push-only dependent rescheduling, duration-preserving, non-mutating). 18 passing tests in __tests__/criticalPath.test.ts (linear/diamond/parallel/lag/empty/cycle/dangling/cascade). Wired in: scheduleUtils.calculateCriticalPath now delegates to the engine (replacing the exponential recursive version); createSampleProject annotates the critical path; ScheduleBuilder.handleTaskUpdate cascades on date change and re-annotates; GanttChart computes timings via useMemo and shows '<n>d slack' per non-critical task. vite build green, eslint clean on touched files."
     }
   ]
 }

@@ -12,7 +12,8 @@ import { SEOMetaTags } from "@/components/SEOMetaTags";
 import { SkipLink } from "@/components/accessibility/AccessibilityUtils";
 import GanttChart from "@/components/schedule/GanttChart";
 import { PDFExportDialog } from "@/components/schedule/PDFExportDialog";
-import { createSampleProject, updateTaskDates } from "@/utils/scheduleUtils";
+import { createSampleProject } from "@/utils/scheduleUtils";
+import { annotateCriticalPath, cascadeReschedule } from "@/lib/schedule/criticalPath";
 import { Project, Task, TemplateType } from "@/types/schedule";
 import { 
   Calendar, 
@@ -108,22 +109,24 @@ const ScheduleBuilder = () => {
   // Handle task updates
   const handleTaskUpdate = (taskId: string, updates: Partial<Task>) => {
     if (!currentProject) return;
-    
-    const updatedTasks = currentProject.tasks.map(task => {
-      if (task.id === taskId) {
-        const updatedTask = { ...task, ...updates };
-        if (updates.startDate && !updates.endDate) {
-          // Auto-calculate end date if only start date is provided
-          return updateTaskDates(updatedTask, updates.startDate, currentProject.tasks);
-        }
-        return updatedTask;
-      }
-      return task;
-    });
-    
+
+    let working = currentProject.tasks.map(task =>
+      task.id === taskId ? { ...task, ...updates } : task
+    );
+
+    // Moving a task's start date cascades to its dependents (finish-to-start).
+    if (updates.startDate) {
+      working = cascadeReschedule(working, taskId, updates.startDate);
+    }
+
+    // Recompute the critical path / float after any structural change.
+    const annotated = annotateCriticalPath(working).tasks;
+    const endDate = new Date(Math.max(...annotated.map(t => t.endDate.getTime())));
+
     setCurrentProject({
       ...currentProject,
-      tasks: updatedTasks
+      tasks: annotated,
+      endDate,
     });
   };
 

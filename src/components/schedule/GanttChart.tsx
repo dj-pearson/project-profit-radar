@@ -1,8 +1,9 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Task, Project, ScheduleAnalytics } from "@/types/schedule";
+import { computeSchedule } from "@/lib/schedule/criticalPath";
 import { Clock, AlertCircle, GripVertical, Plus, Settings, Share, Download, Copy, Check } from 'lucide-react';
 
 interface GanttChartProps {
@@ -37,6 +38,9 @@ export const GanttChart: React.FC<GanttChartProps> = ({
   const [linkCopied, setLinkCopied] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
   const ganttRef = useRef<HTMLDivElement>(null);
+
+  // Critical-path timings (per-task float/slack) recomputed when tasks change.
+  const schedule = useMemo(() => computeSchedule(project.tasks), [project.tasks]);
 
   // Calculate date range
   const startDate = new Date(project.startDate);
@@ -358,6 +362,10 @@ export const GanttChart: React.FC<GanttChartProps> = ({
                           <div className="font-medium text-sm truncate">{task.name}</div>
                           <div className="text-xs text-muted-foreground">
                             {task.duration} days • {task.phase}
+                            {(() => {
+                              const slack = schedule.timings.get(task.id)?.totalFloat ?? 0;
+                              return slack > 0 ? ` • ${slack}d slack` : '';
+                            })()}
                           </div>
                         </div>
                         {task.isOnCriticalPath && (

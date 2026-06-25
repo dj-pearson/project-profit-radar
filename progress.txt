@@ -975,3 +975,20 @@ Remaining (fresh breakdown): TS2345=522, TS6133=512 (mostly unused locals now), 
 - Reconciles with existing budget-vs-actual (US-099): identical job_costs / project_budgets / invoices / change_orders sources. All queries `company_id`-scoped and enforced by RLS on those tables. vite build green; eslint clean on all new files.
 
 ---
+
+---
+
+## 2026-06-25 (cont.) - US-234: Critical-path & float engine + dependency-cascade rescheduling (US-223 core) - PASS
+
+- Decomposed from the oversized US-223 (its own notes flagged it for decomposition). Delivered the dependency-driven scheduling core the existing Gantt was missing.
+- Pure engine `src/lib/schedule/criticalPath.ts` (no React/Supabase, unit tested):
+  - `computeSchedule(tasks, lagOf?)`: Kahn topological order (O(V+E)) → forward pass (ES/EF), backward pass (LS/LF), `totalFloat` (LS−ES), `freeFloat` (min successor ES − EF − lag), critical path = zero-float tasks ordered by ES, `projectDuration`. Optional finish-to-start `lag`. Cycles reported via `hasCycle` (returns gracefully) instead of throwing; dangling dependency ids are ignored.
+  - `annotateCriticalPath(tasks)`: returns tasks with `isOnCriticalPath` set plus the full `computation` (so callers can show float); non-mutating.
+  - `cascadeReschedule(tasks, movedId, newStart)`: moves a task and pushes dependents that would now start before their latest predecessor finish (push-only, duration-preserving, non-mutating); leaves tasks with slack in place.
+  - 18 passing tests in `src/lib/schedule/__tests__/criticalPath.test.ts` (linear chain, diamond with non-critical branch + float, parallel independents, lag, empty, cycle detection, dangling deps, cascade push/no-pull/duration-preservation/missing-task).
+- Replaced the untested, exponential recursive CPM previously in `src/utils/scheduleUtils.ts` — `calculateCriticalPath` now delegates to `computeSchedule`; `createSampleProject` annotates the critical path so the Gantt highlights it out of the box.
+- `src/pages/tools/ScheduleBuilder.tsx` `handleTaskUpdate` now cascades dependents on a start-date change (`cascadeReschedule`) and re-annotates the critical path (`annotateCriticalPath`), recomputing project end date.
+- `src/components/schedule/GanttChart.tsx` computes timings via `useMemo(computeSchedule)` and shows "<n>d slack" beside each non-critical task; critical tasks keep their red highlight + Critical badge.
+- US-223 left open (notes updated) for the DB-backed project Gantt with linkable dependencies, baseline-vs-actual persistence (additive migration), and schedule-slip alerts feeding the project health score. vite build green; eslint clean on touched files (2 pre-existing jsx-a11y warnings on untouched drag-handler divs remain).
+
+---
