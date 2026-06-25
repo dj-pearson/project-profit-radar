@@ -3648,8 +3648,8 @@
         "Figures reconcile with existing job-costing budget-vs-actual data"
       ],
       "priority": 2,
-      "passes": false,
-      "notes": "Source: competitive analysis. High-value for construction accounting; integrates with existing job-costing/cost-code work."
+      "passes": true,
+      "notes": "COMPLETED. Pure logic src/lib/projects/wipReport.ts: computeWipRow/buildWipSchedule (percent-complete = cost/est-cost; earned revenue = %\u00d7contract; over/under billing; EAC = cost-to-date/percent; CPI/SPI from BAC=est-cost and schedule-elapsed planned value), summarizeCostToComplete (per cost-code projected final cost + pro-rata revenue allocation for projected margin), netApprovedChangeOrders. 20 passing tests in __tests__/wipReport.test.ts. UI src/components/financial/WipReport.tsx (company-wide or per-project): summary cards, earned-vs-billed bar chart, WIP schedule table (CPI/SPI/%complete), cost-to-complete-by-cost-code table with project selector, Excel (xlsx) + PDF (jspdf-autotable) export. Page src/pages/WipReport.tsx at /finance/wip-report (financialRoutes) with nav links in HierarchicalNavigationConfig + AppSidebar (admin/project_manager/accounting roles). Reconciles with budget-vs-actual (same job_costs/project_budgets/invoices/change_orders sources); all queries company_id-scoped under RLS. vite build green, lint clean."
     },
     {
       "id": "US-225",

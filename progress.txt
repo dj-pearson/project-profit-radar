@@ -960,3 +960,18 @@ Remaining (fresh breakdown): TS2345=522, TS6133=512 (mostly unused locals now), 
 - Pure logic `src/lib/projects/materialCostSummary.ts` (`summarizeMaterialCosts`, `isCommittedStatus`, `isReceivedStatus`) + 5 tests. vite build green.
 
 ---
+
+---
+
+## 2026-06-25 - US-224: WIP / cost-to-complete / earned-value financial reporting - PASS
+
+- Pure logic `src/lib/projects/wipReport.ts` (no React/Supabase, unit tested):
+  - `computeWipRow` / `buildWipSchedule`: per-project WIP schedule — contract (budget + net approved change orders), estimated cost (BAC = Σ project_budgets.budgeted_amount, falls back to projects.total_budget), cost-to-date (Σ job_costs.total_cost), percent complete (cost-based, or manual override), earned revenue (% × contract), billed-to-date (Σ invoices.total_amount), over/under billing, cost-to-complete, EAC (cost-to-date ÷ percent complete), estimated profit + margin, and earned-value CPI (EV/AC) / SPI (EV/PV from schedule-elapsed planned value) / cost & schedule variance. SPI is null when no usable start/end dates.
+  - `summarizeCostToComplete`: per-cost-code forecast — budget vs actual, percent complete, projected final cost, cost-to-complete, variance, plus contract revenue allocated pro-rata by budget so a projected margin per code can be shown.
+  - `netApprovedChangeOrders`: nets approved (status approved/completed/client_approved or client_approved=true) additions and deductions.
+  - 20 passing tests in `src/lib/projects/__tests__/wipReport.test.ts` (overbilled/underbilled cases, cost-overrun CPI<1, SPI from schedule, change-order rollups, empty portfolio, totals reconciliation).
+- UI `src/components/financial/WipReport.tsx` (TanStack Query, company-wide or `projectId`-scoped): summary cards (contract/earned/billed/over/under/est-profit), Earned-vs-Billed bar chart (recharts), WIP schedule table with %complete/CPI/SPI and a reconciled totals footer, and a Cost-to-Complete-by-cost-code table with an all-projects/per-project selector. Export to Excel (xlsx, two sheets) and PDF (jspdf + jspdf-autotable). Empty/error states via `EmptyState`.
+- Page `src/pages/WipReport.tsx` wrapped in `DashboardLayout`; route `/finance/wip-report` (RouteGuard) added to `financialRoutes`. Nav links added under Financial Reports in `HierarchicalNavigationConfig.ts` and `AppSidebar.tsx` (admin / project_manager / accounting / root_admin).
+- Reconciles with existing budget-vs-actual (US-099): identical job_costs / project_budgets / invoices / change_orders sources. All queries `company_id`-scoped and enforced by RLS on those tables. vite build green; eslint clean on all new files.
+
+---

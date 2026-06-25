@@ -372,6 +372,12 @@ const navigationCategories: NavigationCategory[] = [
         roles: ["admin", "project_manager", "accounting", "root_admin"],
       },
       {
+        title: "WIP / Earned Value",
+        url: "/finance/wip-report",
+        icon: TrendingUp,
+        roles: ["admin", "project_manager", "accounting", "root_admin"],
+      },
+      {
         title: "Fiscal Periods",
         url: "/finance/fiscal-periods",
         icon: Calendar,
