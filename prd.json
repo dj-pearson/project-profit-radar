@@ -1374,8 +1374,8 @@
         "npm run build completes successfully"
       ],
       "priority": 3,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "COMPLETED. Pure logic src/lib/equipment/utilization.ts: computeEquipmentUtilization (per-equipment day-based utilization over a window via unionDays interval-merge so overlapping assignments aren't double-counted; effective dates prefer actuals over planned; isIdle = no assignment overlapping the trailing 7-day window; isCurrentlyAssigned; daysSinceLastAssignment) + fleet totals; IDLE_THRESHOLD_DAYS=7. 12 passing tests in __tests__/utilization.test.ts. UI src/components/equipment/EquipmentAssignmentsTab.tsx (TanStack Query, company_id-scoped): new 'Assignments' tab on the Equipment page with summary stats (avg utilization / currently assigned / idle / fleet size) and sub-tabs \u2014 Active assignments table with a Return action (sets actual_end_date + assignment_status=completed and frees equipment to status=available), Utilization bars per item (last 30 days), Idle list (7+ days, days-idle), and Timeline (reuses EquipmentGanttChart for per-equipment history). Check Out reuses the existing EquipmentAssignmentForm in a dialog. Wired into src/pages/Equipment.tsx (grid-cols-5 tablist). Uses existing equipment / equipment_assignments / projects tables (no migration). vite build green; new files eslint-clean (2 pre-existing unrelated any-types in Equipment.tsx maintenance/table code left untouched)."
     },
     {
       "id": "US-081",

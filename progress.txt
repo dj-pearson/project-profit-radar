@@ -992,3 +992,16 @@ Remaining (fresh breakdown): TS2345=522, TS6133=512 (mostly unused locals now), 
 - US-223 left open (notes updated) for the DB-backed project Gantt with linkable dependencies, baseline-vs-actual persistence (additive migration), and schedule-slip alerts feeding the project health score. vite build green; eslint clean on touched files (2 pre-existing jsx-a11y warnings on untouched drag-handler divs remain).
 
 ---
+
+---
+
+## 2026-06-25 (cont.) - US-080: Equipment assignment tracking + utilization dashboard - PASS
+
+- Pure logic `src/lib/equipment/utilization.ts` (no React/Supabase, unit tested):
+  - `computeEquipmentUtilization(equipment, assignments, window)`: per-equipment day-based utilization = assigned days ÷ window days, using `unionDays` (merges overlapping assignment intervals so concurrent assignments aren't double-counted) and effective dates that prefer actual_start/end over planned. Flags `isCurrentlyAssigned` (covers asOf, not returned), `isIdle` (no assignment overlapping the trailing `IDLE_THRESHOLD_DAYS`=7 window), `daysSinceLastAssignment`, and rolls up fleet totals (avg utilization, currently assigned, idle count). Cancelled/void statuses ignored.
+  - 12 passing tests in `src/lib/equipment/__tests__/utilization.test.ts` (full/partial utilization, idle detection, cancelled-ignored, never-assigned, actual-over-planned, idle boundary, totals, sort).
+- UI `src/components/equipment/EquipmentAssignmentsTab.tsx` (TanStack Query, company_id-scoped): summary stat cards + sub-tabs — Active assignments table (equipment ↔ project, dates, qty) with a **Return** action (`useMutation`: sets `actual_end_date`=today + `assignment_status`=completed, then frees equipment to `status`=available, invalidates queries); Utilization bars per item (last 30 days); Idle list (7+ days, with days-idle / "never assigned"); Timeline (reuses `EquipmentGanttChart` for per-equipment history). **Check Out** reuses the existing `EquipmentAssignmentForm` in a dialog.
+- Wired into `src/pages/Equipment.tsx`: new "Assignments" tab (TabsList widened to `sm:grid-cols-5`).
+- Uses existing `equipment` / `equipment_assignments` / `projects` tables — no migration needed. vite build green; new files eslint-clean (two pre-existing unrelated `any` types in Equipment.tsx's maintenance/table-render code were left untouched to avoid scope creep).
+
+---
