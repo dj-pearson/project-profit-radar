@@ -1016,3 +1016,18 @@ Remaining (fresh breakdown): TS2345=522, TS6133=512 (mostly unused locals now), 
 - Wired into `src/components/integrations/QuickBooksIntegration.tsx` (Sync Logs tab). Uses the existing `quickbooks_sync_logs` table — no migration. vite build green; new files eslint-clean (5 pre-existing `any` types in QuickBooksIntegration.tsx — `records_processed as any` and `catch (error: any)` — left untouched to avoid scope creep).
 
 ---
+
+---
+
+## 2026-06-25 (cont.) - US-103: Safety incident reporting + tracking - PASS
+
+- The Safety page (/safety, Incidents tab) already had the incident report form (SafetyIncidentForm — date/project/location/severity/description/photos). Gaps were the filterable list, the investigation detail view, and the analytics dashboard (severity breakdown / days-since / monthly trend).
+- Pure logic `src/lib/safety/incidentStats.ts` (no React/Supabase, unit tested):
+  - `summarizeIncidents(incidents, {asOf, months})`: total, open count, `bySeverity`, `byType`, `daysSinceLastIncident` (ignores future-dated rows), `lastIncidentDate`, OSHA-recordable / lost-time / total-days-away counts, and a trailing 12-month `monthlyTrend` with empty months zero-filled.
+  - `filterAndSortIncidents`: filter by severity / project / inclusive date range; sort by date or severity rank.
+  - `normalizeSeverity`: maps synonyms (near_miss→minor, serious→major, fatal→critical, …) to minor/major/critical/other.
+  - 15 passing tests in `__tests__/incidentStats.test.ts`.
+- UI `src/components/safety/SafetyIncidentsPanel.tsx` (TanStack Query, company_id-scoped): stat cards (days since last incident, total, open, OSHA recordable), a severity-breakdown card, an incidents-per-month `BarChart` (recharts), and a filter/sort toolbar (severity, project, from/to dates, sort field) over an incident-log table with a **detail dialog** (description, immediate actions, root-cause analysis, corrective actions, witnesses, OSHA/lost-time/days-away badges).
+- Wired into `src/pages/Safety.tsx` Incidents tab (replaced the static recent-incidents list). Uses the existing `safety_incidents` table — no migration. vite build green; new files eslint-clean.
+
+---

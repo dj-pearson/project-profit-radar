@@ -11,6 +11,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import SafetyIncidentForm from '@/components/safety/SafetyIncidentForm';
+import { SafetyIncidentsPanel } from '@/components/safety/SafetyIncidentsPanel';
 import SafetyChecklistBuilder from '@/components/safety/SafetyChecklistBuilder';
 import TrainingCertificationManager from '@/components/safety/TrainingCertificationManager';
 import OSHAComplianceManager from '@/components/safety/OSHAComplianceManager';
@@ -402,29 +403,7 @@ const Safety = () => {
                 </div>
               </CardHeader>
               <CardContent>
-                {recentIncidents.length === 0 ? (
-                  <div className="text-center py-8 text-muted-foreground">
-                    <CheckCircle className="mx-auto h-12 w-12 mb-4 text-green-600" aria-hidden="true" />
-                    <p className="text-lg font-medium mb-2">No Recent Incidents</p>
-                    <p>Great job maintaining a safe workplace!</p>
-                  </div>
-                ) : (
-                  <div className="space-y-4">
-                    {recentIncidents.map(incident => (
-                      <div key={incident.id} className="flex items-center justify-between p-4 border rounded-lg" role="article" aria-labelledby={`incident-${incident.id}`}>
-                        <div>
-                          <h3 id={`incident-${incident.id}`} className="font-medium">{incident.incident_type.replace('_', ' ').toUpperCase()}</h3>
-                          <p className="text-sm text-muted-foreground">
-                            {new Date(incident.incident_date).toLocaleDateString()} • Severity: {incident.severity}
-                          </p>
-                        </div>
-                        <Badge variant={incident.status === 'closed' ? 'default' : 'destructive'} aria-label={`Status: ${incident.status}`}>
-                          {incident.status}
-                        </Badge>
-                      </div>
-                    ))}
-                  </div>
-                )}
+                <SafetyIncidentsPanel />
               </CardContent>
             </Card>
           </TabsContent>

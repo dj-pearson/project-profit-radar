@@ -1765,8 +1765,8 @@
         "npm run build completes successfully"
       ],
       "priority": 3,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "COMPLETED. The Safety page (/safety, Incidents tab) already had the incident report form (SafetyIncidentForm: date/project/location/severity/description/photos). Gaps filled: pure logic src/lib/safety/incidentStats.ts \u2014 summarizeIncidents (total, open, severity breakdown, type breakdown, days-since-last-incident ignoring future dates, OSHA-recordable/lost-time/days-away counts, trailing 12-month trend with empty months zero-filled) + filterAndSortIncidents (by severity/project/date range, sort by date or severity) + normalizeSeverity (minor/major/critical/other synonyms); 15 passing tests. UI src/components/safety/SafetyIncidentsPanel.tsx (TanStack Query, company_id-scoped): dashboard stat cards (days since last incident, total, open, OSHA recordable), severity-breakdown card, incidents-per-month BarChart (recharts), and a filter/sort toolbar (severity, project, from/to dates, sort) over an incident log table with a detail dialog showing description, immediate actions, root-cause analysis, corrective actions, witnesses, and OSHA/lost-time badges. Wired into Safety.tsx Incidents tab (replaced the static recent-incidents list). Uses existing safety_incidents table (no migration). vite build green; new files eslint-clean."
     },
     {
       "id": "US-104",
