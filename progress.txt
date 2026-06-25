@@ -1031,3 +1031,14 @@ Remaining (fresh breakdown): TS2345=522, TS6133=512 (mostly unused locals now), 
 - Wired into `src/pages/Safety.tsx` Incidents tab (replaced the static recent-incidents list). Uses the existing `safety_incidents` table — no migration. vite build green; new files eslint-clean.
 
 ---
+
+---
+
+## 2026-06-25 (cont.) - US-106: Crew scheduling board with drag-and-drop assignment - PASS
+
+- The CrewScheduling page had only a daily-dispatch view; added the weekly drag-and-drop board the AC describes.
+- Pure logic `src/lib/scheduling/crewBoard.ts` (no React/Supabase, unit tested): `startOfWeek` (Monday-based, UTC for determinism), `getWeekDays`, `addWeeks`, `hasTimeOverlap`, `detectConflicts` (same crew member + same day + overlapping time → set of double-booked assignment ids), `buildCrewWeek` (crew × day grid with per-cell assignments, unassigned-crew list, and conflict set; out-of-week rows ignored). 12 passing tests in `__tests__/crewBoard.test.ts`.
+- UI `src/components/scheduling/CrewScheduleBoard.tsx` (@hello-pangea/dnd, TanStack Query, company_id-scoped): weekly grid (rows = crew from `user_profiles` with crew roles, columns = Mon–Sun), project-colored assignment blocks, drag-and-drop across days/crew members persisted to `crew_assignments` (`crew_member_id` + `assigned_date`) with query invalidation, double-bookings highlighted red plus a conflict-count badge, an Unassigned-crew sidebar, and prev/next/Today week navigation.
+- Wired into `src/pages/CrewScheduling.tsx` above the existing daily dispatch view. Uses existing `user_profiles` / `crew_assignments` / `projects` tables — no migration. vite build green; new files eslint-clean.
+
+---

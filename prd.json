@@ -1817,8 +1817,8 @@
         "npm run build completes successfully"
       ],
       "priority": 3,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "COMPLETED. The CrewScheduling page previously had only a daily-dispatch view. Added the weekly drag-and-drop board. Pure logic src/lib/scheduling/crewBoard.ts: startOfWeek (Monday-based, UTC), getWeekDays, addWeeks, hasTimeOverlap, detectConflicts (same crew member + same day + overlapping time -> set of double-booked assignment ids), buildCrewWeek (crew \u00d7 day grid with per-cell assignments, unassigned-crew list, conflict set; ignores out-of-week rows). 12 passing tests in __tests__/crewBoard.test.ts. UI src/components/scheduling/CrewScheduleBoard.tsx (@hello-pangea/dnd, TanStack Query, company_id-scoped): weekly grid (rows=crew from user_profiles, columns=Mon-Sun), project-colored assignment blocks, drag-and-drop across days/crew members persisted to crew_assignments (crew_member_id + assigned_date) with query invalidation, double-bookings highlighted red with a conflict count badge, an Unassigned-crew sidebar, and prev/next/Today week navigation. Wired into src/pages/CrewScheduling.tsx above the daily dispatch view. Uses existing user_profiles / crew_assignments / projects tables (no migration). vite build green; new files eslint-clean."
     },
     {
       "id": "US-107",
