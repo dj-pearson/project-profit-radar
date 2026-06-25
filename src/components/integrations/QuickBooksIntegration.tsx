@@ -10,6 +10,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { validateRedirectUrl } from '@/lib/security/urlValidation';
 import { RefreshCw, CheckCircle, AlertCircle, DollarSign, ArrowUpDown } from 'lucide-react';
 import { QuickBooksSync } from './QuickBooksSync';
+import { QuickBooksSyncHistory } from './QuickBooksSyncHistory';
 
 interface QBIntegrationStatus {
   connected: boolean;
@@ -387,27 +388,7 @@ export const QuickBooksIntegration = () => {
           </TabsContent>
 
           <TabsContent value="logs">
-            <Card>
-              <CardHeader>
-                <CardTitle>Sync Activity</CardTitle>
-                <CardDescription>
-                  View recent synchronization activity and any errors
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between p-2 border rounded">
-                    <div className="flex items-center space-x-2">
-                      <CheckCircle className="h-4 w-4 text-green-500" />
-                      <span className="text-sm">Last sync completed successfully</span>
-                    </div>
-                    <span className="text-xs text-muted-foreground">
-                      {status.last_sync ? new Date(status.last_sync).toLocaleString() : 'Never'}
-                    </span>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+            <QuickBooksSyncHistory />
           </TabsContent>
         </Tabs>
       )}

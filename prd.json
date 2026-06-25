@@ -1203,8 +1203,8 @@
         "npm run build completes successfully"
       ],
       "priority": 4,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "COMPLETED. The QuickBooksIntegration panel (rendered in Settings/Integrations via QuickBooksRouting + FinancialHub) already had connection status, prominent last-sync timestamp, Sync Now with a syncing progress state, and connect/disconnect OAuth (quickbooks-connect/-disconnect/-sync edge fns). Gaps filled: (1) pure logic src/lib/integrations/quickbooksSync.ts \u2014 parseRecordsProcessed (object/number/array JSON -> total + per-entity counts), extractErrorMessage (message/error/detail keys, arrays, fallbacks), normalizeStatus, normalizeSyncLog, summarizeSyncHistory (newest-first, success rate, totals, lastError); 17 passing tests. (2) src/components/integrations/QuickBooksSyncHistory.tsx \u2014 replaces the static placeholder in the 'Sync Logs' tab with the real last-20 history table (date, type, status badge, record count, duration), a top-of-list alert for the most recent failure, and per-row Details + Retry (re-invokes quickbooks-sync for that sync_type) with query invalidation. company_id-scoped (RLS); uses existing quickbooks_sync_logs table (no migration). vite build green; new files eslint-clean (5 pre-existing any-types in QuickBooksIntegration.tsx left untouched)."
     },
     {
       "id": "US-071",

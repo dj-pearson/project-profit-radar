@@ -1005,3 +1005,14 @@ Remaining (fresh breakdown): TS2345=522, TS6133=512 (mostly unused locals now), 
 - Uses existing `equipment` / `equipment_assignments` / `projects` tables — no migration needed. vite build green; new files eslint-clean (two pre-existing unrelated `any` types in Equipment.tsx's maintenance/table-render code were left untouched to avoid scope creep).
 
 ---
+
+---
+
+## 2026-06-25 (cont.) - US-070: QuickBooks sync status dashboard + manual sync trigger - PASS
+
+- The existing QuickBooksIntegration panel (Settings/Integrations via QuickBooksRouting + FinancialHub) already covered connection status, prominent last-sync timestamp, "Sync Now" (full/incremental with a syncing state), and connect/disconnect OAuth (quickbooks-connect / -disconnect / -sync edge functions). Two AC gaps remained: the sync history log and per-error retry.
+- Pure logic `src/lib/integrations/quickbooksSync.ts` (no React/Supabase, unit tested): `parseRecordsProcessed` (handles entity-keyed object / bare number / array JSON -> total + per-entity counts), `extractErrorMessage` (prefers message/error/detail keys, joins arrays, falls back to first string), `normalizeStatus`, `normalizeSyncLog`, `summarizeSyncHistory` (sorts newest-first, success/error counts, success rate, total records, surfaces lastError). 17 passing tests in `__tests__/quickbooksSync.test.ts`.
+- `src/components/integrations/QuickBooksSyncHistory.tsx` (TanStack Query, company_id-scoped): replaces the static placeholder in the panel's "Sync Logs" tab with the real **last-20** history table (date, type, status badge, record count, duration), a top-of-list destructive alert for the most recent failure with a Retry action, and per-row **Details** (expandable error message + error count) + **Retry** that re-invokes `quickbooks-sync` for that row's `sync_type` and invalidates the query.
+- Wired into `src/components/integrations/QuickBooksIntegration.tsx` (Sync Logs tab). Uses the existing `quickbooks_sync_logs` table — no migration. vite build green; new files eslint-clean (5 pre-existing `any` types in QuickBooksIntegration.tsx — `records_processed as any` and `catch (error: any)` — left untouched to avoid scope creep).
+
+---
