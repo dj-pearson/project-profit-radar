@@ -1782,8 +1782,8 @@
         "npm run build completes successfully"
       ],
       "priority": 3,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "COMPLETED. ProjectPunchList (Punch List tab on the project detail page, punch_list_items table + RLS) already had the add/edit form, status workflow (open->in_progress->completed->verified), status/priority filters, and search (title/description/location). Gaps filled: (1) before/after photo upload + display \u2014 wired the reusable ImageUpload (project-documents bucket, punch-list/<projectId> path) into both add and edit dialogs for photo_before_url/photo_after_url (added to FormState/reset/startEdit; round-trips via the existing spread insert/update payloads) and render before/after thumbnails on each item card; (2) completion progress bar \u2014 pure logic src/lib/projects/punchListProgress.ts summarizePunchList (status/priority counts, verifiedPercent, completionPercent) with 6 passing tests, surfaced as a Progress bar showing % verified. vite build green; new lib eslint-clean (11 pre-existing any-types in ProjectPunchList.tsx left untouched)."
     },
     {
       "id": "US-105",

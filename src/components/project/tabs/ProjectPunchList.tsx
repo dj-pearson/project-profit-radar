@@ -7,6 +7,9 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Progress } from '@/components/ui/progress';
+import { ImageUpload } from '@/components/ui/image-upload';
+import { summarizePunchList } from '@/lib/projects/punchListProgress';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
@@ -102,6 +105,8 @@ export const ProjectPunchList: React.FC<ProjectPunchListProps> = ({
     target_completion_date: string;
     estimated_cost: string;
     notes: string;
+    photo_before_url: string;
+    photo_after_url: string;
   };
 
   const [formData, setFormData] = useState<FormState>({
@@ -116,7 +121,9 @@ export const ProjectPunchList: React.FC<ProjectPunchListProps> = ({
     assigned_company: '',
     target_completion_date: '',
     estimated_cost: '',
-    notes: ''
+    notes: '',
+    photo_before_url: '',
+    photo_after_url: ''
   });
 
   useEffect(() => {
@@ -196,7 +203,9 @@ export const ProjectPunchList: React.FC<ProjectPunchListProps> = ({
       assigned_company: '',
       target_completion_date: '',
       estimated_cost: '',
-      notes: ''
+      notes: '',
+      photo_before_url: '',
+      photo_after_url: ''
     });
   };
 
@@ -355,7 +364,9 @@ export const ProjectPunchList: React.FC<ProjectPunchListProps> = ({
       assigned_company: item.assigned_company || '',
       target_completion_date: item.target_completion_date || '',
       estimated_cost: item.estimated_cost?.toString() || '',
-      notes: item.notes || ''
+      notes: item.notes || '',
+      photo_before_url: item.photo_before_url || '',
+      photo_after_url: item.photo_after_url || ''
     });
     setEditingItem(item);
   };
@@ -471,6 +482,27 @@ export const ProjectPunchList: React.FC<ProjectPunchListProps> = ({
           </CardContent>
         </Card>
       </div>
+
+      {/* Completion progress */}
+      {(() => {
+        const progress = summarizePunchList(items);
+        return (
+          <Card>
+            <CardContent className="p-4 space-y-2">
+              <div className="flex items-center justify-between text-sm">
+                <span className="font-medium">Completion</span>
+                <span className="text-muted-foreground">
+                  {progress.verified} of {progress.total} verified ({progress.verifiedPercent}%)
+                </span>
+              </div>
+              <Progress value={progress.verifiedPercent} aria-label="Punch list verified completion" />
+              <p className="text-xs text-muted-foreground">
+                {progress.completionPercent}% of items completed, verified, or closed.
+              </p>
+            </CardContent>
+          </Card>
+        );
+      })()}
 
       {/* Punch List Items */}
       <Card>
@@ -640,6 +672,23 @@ export const ProjectPunchList: React.FC<ProjectPunchListProps> = ({
                       />
                     </div>
 
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <ImageUpload
+                        label="Before Photo"
+                        value={formData.photo_before_url}
+                        onChange={(url) => setFormData({...formData, photo_before_url: url})}
+                        bucket="project-documents"
+                        path={`punch-list/${projectId}`}
+                      />
+                      <ImageUpload
+                        label="After Photo"
+                        value={formData.photo_after_url}
+                        onChange={(url) => setFormData({...formData, photo_after_url: url})}
+                        bucket="project-documents"
+                        path={`punch-list/${projectId}`}
+                      />
+                    </div>
+
                     <div className="flex justify-end gap-2">
                       <Button variant="outline" onClick={() => {
                         setShowAddItem(false);
@@ -760,8 +809,8 @@ export const ProjectPunchList: React.FC<ProjectPunchListProps> = ({
                         >
                           <Edit className="h-4 w-4" />
                         </Button>
-                        <Button 
-                          variant="ghost" 
+                        <Button
+                          variant="ghost"
                           size="sm"
                           onClick={() => handleDeleteItem(item.id)}
                           className="text-destructive hover:text-destructive"
@@ -770,6 +819,31 @@ export const ProjectPunchList: React.FC<ProjectPunchListProps> = ({
                         </Button>
                       </div>
                     </div>
+
+                    {(item.photo_before_url || item.photo_after_url) && (
+                      <div className="flex gap-4 mb-4">
+                        {item.photo_before_url && (
+                          <figure className="text-xs text-muted-foreground">
+                            <img
+                              src={item.photo_before_url}
+                              alt={`Before: ${item.title}`}
+                              className="h-24 w-32 object-cover rounded border"
+                            />
+                            <figcaption className="mt-1 text-center">Before</figcaption>
+                          </figure>
+                        )}
+                        {item.photo_after_url && (
+                          <figure className="text-xs text-muted-foreground">
+                            <img
+                              src={item.photo_after_url}
+                              alt={`After: ${item.title}`}
+                              className="h-24 w-32 object-cover rounded border"
+                            />
+                            <figcaption className="mt-1 text-center">After</figcaption>
+                          </figure>
+                        )}
+                      </div>
+                    )}
 
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 text-sm">
                       <div className="flex items-center space-x-2">
@@ -966,6 +1040,23 @@ export const ProjectPunchList: React.FC<ProjectPunchListProps> = ({
                   onChange={(e) => setFormData({...formData, estimated_cost: e.target.value})}
                 />
               </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <ImageUpload
+                label="Before Photo"
+                value={formData.photo_before_url}
+                onChange={(url) => setFormData({...formData, photo_before_url: url})}
+                bucket="project-documents"
+                path={`punch-list/${projectId}`}
+              />
+              <ImageUpload
+                label="After Photo"
+                value={formData.photo_after_url}
+                onChange={(url) => setFormData({...formData, photo_after_url: url})}
+                bucket="project-documents"
+                path={`punch-list/${projectId}`}
+              />
             </div>
 
             <div className="flex justify-end gap-2">

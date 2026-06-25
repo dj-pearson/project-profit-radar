@@ -1042,3 +1042,14 @@ Remaining (fresh breakdown): TS2345=522, TS6133=512 (mostly unused locals now), 
 - Wired into `src/pages/CrewScheduling.tsx` above the existing daily dispatch view. Uses existing `user_profiles` / `crew_assignments` / `projects` tables — no migration. vite build green; new files eslint-clean.
 
 ---
+
+---
+
+## 2026-06-25 (cont.) - US-104: Punch list management for project closeout - PASS
+
+- ProjectPunchList (Punch List tab on the project detail page; `punch_list_items` table + RLS) already had the add/edit form, the status workflow (open → in_progress → completed → verified), status/priority filters, and search (title/description/location). The genuine gaps were photo support and a completion progress bar.
+- Photos: wired the reusable `ImageUpload` (bucket `project-documents`, path `punch-list/<projectId>`) into both the add and edit dialogs for `photo_before_url` / `photo_after_url` — added those to FormState / initial state / resetForm / startEdit so they round-trip through the existing spread insert/update payloads — and render before/after thumbnails on each item card.
+- Progress: pure logic `src/lib/projects/punchListProgress.ts` `summarizePunchList` (counts by status, critical count, `verifiedPercent`, `completionPercent`) with 6 passing tests in `__tests__/punchListProgress.test.ts`; surfaced as a `Progress` bar ("X of N verified (P%)") above the item list.
+- Uses the existing `punch_list_items` table — no migration. vite build green; new lib eslint-clean (11 pre-existing `any` types in ProjectPunchList.tsx — `catch (error: any)`, `value: any` Select handlers, `as any` badge variants — left untouched to avoid scope creep).
+
+---
