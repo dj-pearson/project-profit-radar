@@ -65,12 +65,20 @@ const initDeferredServices = () => {
     initializeRUM();
   });
 
-  // Start Web Vitals reporting
+  // Start Web Vitals reporting (US-207)
+  // Dev: log locally without spamming production analytics.
+  // Prod: emit each metric to PostHog + Supabase for real-user monitoring.
   import("./hooks/useWebVitals").then(({ reportWebVitals }) => {
     reportWebVitals((metric) => {
       if (import.meta.env.DEV) {
         logger.debug(`Web Vitals: ${metric.name}`, { value: metric.value });
+        return;
       }
+      import("./lib/analytics")
+        .then(({ trackWebVital }) => trackWebVital(metric))
+        .catch(() => {
+          /* never let perf telemetry break the app */
+        });
     });
   });
 
