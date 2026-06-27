@@ -1325,3 +1325,36 @@ prd.json: US-085 passes:true (161/234). Verified by GitHub Action (unit-test/bui
 - [x] accessible (focus trap, ARIA labels)
 
 prd.json: US-079 passes:true (162/234). Verified by GitHub Action (unit-test/build).
+
+---
+
+## 2026-06-27 - Session: US-084 Project calendar with event management (P3)
+
+### Fix
+- DB: supabase/migrations/20260627000000_create_project_calendar_events.sql — new
+  project_calendar_events table (idempotent CREATE TABLE IF NOT EXISTS + company_id RLS via
+  get_user_company/get_user_role, updated_at trigger). The existing calendar_events table is
+  reserved for external-sync events (requires integration_id/external_id), so it can't hold
+  app-created events. Added the table to src/integrations/supabase/types.ts.
+- src/hooks/useCalendarEvents.ts: merges 3 sources -> typed CalendarEvent[]: user events
+  (project_calendar_events, editable) + project_milestones + project end-date deadlines
+  (read-only overlays). CRUD (create/update/delete) on the user-events table.
+- src/pages/ProjectCalendar.tsx: month/week/day views (date-fns), prev/next + Today nav,
+  color-coded by type, click-day-to-create, click-event-to-edit/delete dialog, project picker.
+- Route: /project-calendar in operationsRoutes.tsx (existing /calendar = CalendarSync untouched).
+- Test: src/hooks/__tests__/useCalendarEvents.test.ts.
+
+### Acceptance
+- [x] month/week/day view toggles
+- [x] events: milestones, deadlines, crew/meeting (user) shown
+- [x] color-coded by type (milestone=blue, deadline=red, crew=green, meeting=purple)
+- [x] click a day to create
+- [x] click an event to view/edit (user events editable; overlays read-only)
+- [x] prev/next + Today navigation
+
+### Migration note
+This PR adds a production table. CREATE TABLE + RLS in one migration is the "always safe"
+additive path per CLAUDE.md. Migration SQL is applied to Supabase outside CI (not run by the
+PR's GitHub Actions), so it must be applied to the project after merge.
+
+prd.json: US-084 passes:true (163/234). Verified by GitHub Action (unit-test/build).
