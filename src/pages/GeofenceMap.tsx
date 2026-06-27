@@ -61,10 +61,12 @@ export default function GeofenceMap() {
       setGeofences((gfData as Geofence[]) ?? []);
 
       // Crew markers from today's time entries (scoped to company users).
-      const { data: members } = await supabase
+      // Surface query failures (don't silently render an empty "no one on site").
+      const { data: members, error: membersErr } = await supabase
         .from('user_profiles')
         .select('id, first_name, last_name')
         .eq('company_id', companyId);
+      if (membersErr) throw membersErr;
       const nameById = new Map<string, string>();
       (members ?? []).forEach((m) =>
         nameById.set(m.id, `${m.first_name ?? ''} ${m.last_name ?? ''}`.trim() || 'Crew')
@@ -74,11 +76,12 @@ export default function GeofenceMap() {
       if (ids.length) {
         const startOfDay = new Date();
         startOfDay.setHours(0, 0, 0, 0);
-        const { data: entries } = await supabase
+        const { data: entries, error: entriesErr } = await supabase
           .from('time_entries')
           .select('user_id, clock_in_lat, clock_in_lng, clock_in_timestamp, clock_out_lat, clock_out_lng, clock_out_timestamp')
           .in('user_id', ids)
           .gte('clock_in_timestamp', startOfDay.toISOString());
+        if (entriesErr) throw entriesErr;
         markers = buildCrewMarkers(entries ?? [], nameById);
       }
       setCrew(markers);
@@ -222,7 +225,7 @@ export default function GeofenceMap() {
   };
 
   const saveEdit = async () => {
-    if (!selectedId) return;
+    if (!selectedId || !companyId) return;
     const rad = Number(editRadius);
     if (!(rad >= 10 && rad <= 10000)) {
       toast({ title: 'Radius must be 10–10000 m', variant: 'destructive' });
@@ -230,7 +233,11 @@ export default function GeofenceMap() {
     }
     setBusy(true);
     try {
-      const { error } = await supabase.from('geofences').update({ radius_meters: rad }).eq('id', selectedId);
+      const { error } = await supabase
+        .from('geofences')
+        .update({ radius_meters: rad })
+        .eq('id', selectedId)
+        .eq('company_id', companyId);
       if (error) throw error;
       toast({ title: 'Geofence updated' });
       await loadData();
@@ -243,10 +250,14 @@ export default function GeofenceMap() {
   };
 
   const deleteSelected = async () => {
-    if (!selectedId) return;
+    if (!selectedId || !companyId) return;
     setBusy(true);
     try {
-      const { error } = await supabase.from('geofences').update({ is_active: false }).eq('id', selectedId);
+      const { error } = await supabase
+        .from('geofences')
+        .update({ is_active: false })
+        .eq('id', selectedId)
+        .eq('company_id', companyId);
       if (error) throw error;
       toast({ title: 'Geofence removed' });
       setSelectedId(null);

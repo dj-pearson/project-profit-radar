@@ -61,4 +61,21 @@ describe('buildCrewMarkers (US-072)', () => {
     ];
     expect(buildCrewMarkers(entries, names)).toHaveLength(0);
   });
+
+  it('falls back to "Crew" for a user not in the name map', () => {
+    const entries: TimeEntryLite[] = [
+      {
+        user_id: 'unknown',
+        clock_in_lat: 40.1,
+        clock_in_lng: -74.2,
+        clock_in_timestamp: '2026-06-27T13:00:00.000Z',
+        clock_out_lat: null,
+        clock_out_lng: null,
+        clock_out_timestamp: null,
+      },
+    ];
+    const markers = buildCrewMarkers(entries, names);
+    expect(markers).toHaveLength(1);
+    expect(markers[0].label).toContain('Crew');
+  });
 });
