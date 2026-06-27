@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { FormFieldHelp } from '@/components/help/HelpTooltip';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
@@ -569,7 +570,7 @@ const ChangeOrders = () => {
                   </div>
 
                   <div>
-                    <Label htmlFor="title">Title *</Label>
+                    <Label htmlFor="title">Title * <FormFieldHelp content="Short summary of the change (e.g. 'Add bathroom exhaust fan')." /></Label>
                     <Input
                       id="title"
                       placeholder="Brief description of the change"
@@ -579,7 +580,7 @@ const ChangeOrders = () => {
                   </div>
 
                   <div>
-                    <Label htmlFor="description">Description</Label>
+                    <Label htmlFor="description">Description <FormFieldHelp content="Detail the scope change and why it's needed — this is what the client approves." /></Label>
                     <Textarea
                       id="description"
                       placeholder="Detailed description of the change order..."
@@ -590,7 +591,7 @@ const ChangeOrders = () => {
 
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <Label htmlFor="amount">Amount ($) *</Label>
+                      <Label htmlFor="amount">Amount ($) * <FormFieldHelp content="The cost impact of this change. A positive value adds to the contract; use a negative value for a credit." /></Label>
                       <Input
                         id="amount"
                         type="number"
@@ -603,7 +604,7 @@ const ChangeOrders = () => {
                     </div>
                     
                     <div>
-                      <Label htmlFor="reason">Reason</Label>
+                      <Label htmlFor="reason">Reason <FormFieldHelp content="Why the change is needed (client request, field condition, design change) — used for analytics." /></Label>
                       <Select value={newOrder.reason} onValueChange={(value) => setNewOrder({...newOrder, reason: value})}>
                         <SelectTrigger>
                           <SelectValue placeholder="Select reason" />

@@ -1299,3 +1299,29 @@ A mobile dashboard component existed only at a separate /mobile-dashboard route;
 - [x] tap targets >= 44x44px
 
 prd.json: US-085 passes:true (161/234). Verified by GitHub Action (unit-test/build).
+
+---
+
+## 2026-06-27 - Session: US-079 Contextual help tooltips + in-app help launcher (P3)
+
+### Fix
+- src/components/help/HelpLauncher.tsx (new): floating "?" FAB (fixed bottom-right, all pages,
+  print:hidden) opening the existing HelpCenter in a slide-over Sheet (focus trap / ARIA /
+  Escape / click-outside via Radix). Route-aware: maps pathname -> HelpCenter category.
+- src/components/help/HelpCenter.tsx: added optional initialCategory prop (backward compatible)
+  so the launcher preselects the relevant category by route.
+- src/App.tsx: mount HelpLauncher (lazy) in the deferred usability block.
+- Reused the existing-but-unused HelpTooltip/FormFieldHelp primitive; added FormFieldHelp to
+  20 complex form fields across 5 pages (CreateProject, DailyReports, ChangeOrders, PunchList,
+  RFIs — 4 each).
+- Test: src/components/help/__tests__/HelpLauncher.test.tsx.
+
+### Acceptance
+- [x] floating help (?) button on all pages, bottom-right
+- [x] opens HelpCenter in a slide-over (not a new page)
+- [x] help content filtered by current page context (route-based)
+- [x] HelpTooltip on >=20 complex form fields across 5+ pages
+- [x] dismiss via Escape / click outside (Radix Sheet)
+- [x] accessible (focus trap, ARIA labels)
+
+prd.json: US-079 passes:true (162/234). Verified by GitHub Action (unit-test/build).

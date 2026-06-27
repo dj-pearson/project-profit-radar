@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { FormFieldHelp } from '@/components/help/HelpTooltip';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
@@ -407,7 +408,7 @@ const PunchList = () => {
 
 
                   <div>
-                    <Label htmlFor="description">Description *</Label>
+                    <Label htmlFor="description">Description * <FormFieldHelp content="What needs to be fixed or completed. Be specific so the responsible trade knows exactly what to do." /></Label>
                     <Textarea
                       id="description"
                       placeholder="Detailed description of the issue or work needed..."
@@ -419,7 +420,7 @@ const PunchList = () => {
 
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <Label htmlFor="category">Category</Label>
+                      <Label htmlFor="category">Category <FormFieldHelp content="Groups the item (e.g. Electrical, Paint) for filtering and assignment." /></Label>
                       <Select value={newItem.category} onValueChange={(value) => setNewItem({...newItem, category: value})}>
                         <SelectTrigger>
                           <SelectValue placeholder="Select category" />
@@ -435,7 +436,7 @@ const PunchList = () => {
                     </div>
                     
                     <div>
-                      <Label htmlFor="priority">Priority</Label>
+                      <Label htmlFor="priority">Priority <FormFieldHelp content="How urgent the item is. High-priority items surface at the top of the list." /></Label>
                       <Select value={newItem.priority} onValueChange={(value) => setNewItem({...newItem, priority: value})}>
                         <SelectTrigger>
                           <SelectValue placeholder="Select priority" />
@@ -452,7 +453,7 @@ const PunchList = () => {
 
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <Label htmlFor="location">Location</Label>
+                      <Label htmlFor="location">Location <FormFieldHelp content="Where on the site the item is (room, floor, area) so crews can find it quickly." /></Label>
                       <Input
                         id="location"
                         placeholder="Room, floor, area..."

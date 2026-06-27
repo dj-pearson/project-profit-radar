@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { FormFieldHelp } from '@/components/help/HelpTooltip';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
@@ -406,7 +407,7 @@ const DailyReports = () => {
                   </div>
 
                   <div>
-                    <Label htmlFor="work_performed">Work Performed *</Label>
+                    <Label htmlFor="work_performed">Work Performed * <FormFieldHelp content="Describe the work completed today. This becomes the official record for the client and your files." /></Label>
                     <Textarea
                       id="work_performed"
                       placeholder="Describe the work completed today..."
@@ -419,7 +420,7 @@ const DailyReports = () => {
 
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <Label htmlFor="crew_count">Crew Count</Label>
+                      <Label htmlFor="crew_count">Crew Count <FormFieldHelp content="Number of workers on site today. Used for labor tracking and productivity reports." /></Label>
                       <Input
                         id="crew_count"
                         type="number"
@@ -429,7 +430,7 @@ const DailyReports = () => {
                       />
                     </div>
                     <div>
-                      <Label htmlFor="weather_conditions">Weather Conditions</Label>
+                      <Label htmlFor="weather_conditions">Weather Conditions <FormFieldHelp content="On-site conditions. Use Auto-fill to pull current weather, or note any weather-related delays." /></Label>
                       <div className="flex gap-2">
                         <Input
                           id="weather_conditions"
@@ -472,7 +473,7 @@ const DailyReports = () => {
                   </div>
 
                   <div>
-                    <Label htmlFor="materials_delivered">Materials Delivered</Label>
+                    <Label htmlFor="materials_delivered">Materials Delivered <FormFieldHelp content="List materials received on site today, with quantities where relevant." /></Label>
                     <Textarea
                       id="materials_delivered"
                       placeholder="List materials delivered today..."

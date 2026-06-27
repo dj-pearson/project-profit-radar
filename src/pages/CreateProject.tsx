@@ -4,6 +4,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { FormFieldHelp } from '@/components/help/HelpTooltip';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -333,7 +334,7 @@ const CreateProject = () => {
             <CardContent className="space-y-6">
               <div className={quickMode ? "space-y-2" : mobileFilterClasses.container}>
                 <div className="space-y-2">
-                  <Label htmlFor="projectName">Project Name *</Label>
+                  <Label htmlFor="projectName">Project Name * <FormFieldHelp content="The name clients and your team will see. Use something recognizable like the address or client + job type." /></Label>
                   <Input
                     id="projectName"
                     value={projectName}
@@ -345,7 +346,7 @@ const CreateProject = () => {
                 </div>
                 {!quickMode && (
                   <div className="space-y-2">
-                    <Label htmlFor="projectType">Project Type</Label>
+                    <Label htmlFor="projectType">Project Type <FormFieldHelp content="Categorizes the job (e.g. Residential, Commercial) for reporting and templates." /></Label>
                     <Select value={projectType} onValueChange={setProjectType}>
                       <SelectTrigger>
                         <SelectValue placeholder="Select project type" />
@@ -367,7 +368,7 @@ const CreateProject = () => {
               {!quickMode && (
                 <>
                   <div className="space-y-2">
-                    <Label htmlFor="description">Project Description</Label>
+                    <Label htmlFor="description">Project Description <FormFieldHelp content="Optional scope summary of what the project covers. Visible to the team and on reports." /></Label>
                     <Textarea
                       id="description"
                       value={description}
@@ -378,7 +379,7 @@ const CreateProject = () => {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="status">Initial Status</Label>
+                    <Label htmlFor="status">Initial Status <FormFieldHelp content="Where the project starts in its lifecycle. You can change this any time as work progresses." /></Label>
                     <Select value={status} onValueChange={setStatus}>
                       <SelectTrigger>
                         <SelectValue />

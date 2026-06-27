@@ -30,6 +30,7 @@ const SyncQueueIndicator = lazy(() => import("@/components/OfflineIndicator").th
 const NotificationPermission = lazy(() => import("@/components/NotificationPermission").then(m => ({ default: m.NotificationPermission })));
 const ShortcutsHelp = lazy(() => import("@/components/ui/shortcuts-help").then(m => ({ default: m.ShortcutsHelp })));
 const UpdatePrompt = lazy(() => import("@/components/pwa/UpdatePrompt").then(m => ({ default: m.UpdatePrompt })));
+const HelpLauncher = lazy(() => import("@/components/help/HelpLauncher").then(m => ({ default: m.HelpLauncher })));
 const UnifiedSEOSystem = lazy(() => import("@/components/seo/UnifiedSEOSystem").then(m => ({ default: m.UnifiedSEOSystem })));
 const AutoSchemaInjector = lazy(() => import("@/components/seo/AutoSchemaInjector"));
 const CommandPalette = lazy(() => import("@/components/navigation/CommandPalette").then(m => ({ default: m.CommandPalette })));
@@ -82,6 +83,8 @@ const AppContent = () => {
       <Suspense fallback={null}>
         <CommandPalette />
         <KeyboardShortcutsPanel shortcuts={globalShortcuts} />
+        {/* US-079: floating contextual help launcher on every page */}
+        <HelpLauncher />
       </Suspense>
     </>
   );
