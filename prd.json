@@ -1425,8 +1425,8 @@
         "npm run build completes successfully"
       ],
       "priority": 3,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "ClientPortal.tsx gains two tabs (reuses existing rfis/rfi_responses/documents tables - NO migration). Photos tab: src/components/client/ClientPortalGallery.tsx aggregates daily-report photos grouped by date in a thumbnail grid with a click-to-enlarge lightbox. RFIs tab: src/components/client/ClientPortalRFIs.tsx - submission form (subject, description, optional file attachment uploaded to project-documents + registered in documents as document_type=rfi-attachment), inserts into rfis (status=submitted, generated rfi_number); list view with status badges (submitted/in review/answered) showing the contractor response pulled from rfi_responses; in-app notification (toast, localStorage-tracked) when RFIs are newly answered. Contractor responds from the existing project-detail RFIs page (rfi_responses). Test: src/components/client/__tests__/ClientPortalGallery.test.tsx."
     },
     {
       "id": "US-084",

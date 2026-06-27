@@ -1412,3 +1412,28 @@ prd.json: US-081 passes:true (164/234). Verified by GitHub Action (unit-test/bui
 No new DB table (reuses geofences + time_entries). New runtime dependency: leaflet.
 
 prd.json: US-072 passes:true (165/234). Verified by GitHub Action (unit-test/build).
+
+---
+
+## 2026-06-27 - Session: US-083 Client portal gallery + RFI submission (P3)
+
+### Fix (no migration — reuses rfis / rfi_responses / documents)
+- src/components/client/ClientPortalGallery.tsx: project photos from daily reports, grouped by
+  date, thumbnail grid + lightbox.
+- src/components/client/ClientPortalRFIs.tsx: RFI submission (subject/description/optional file
+  attachment -> project-documents + documents row as rfi-attachment), insert into rfis
+  (status=submitted, generated rfi_number); list with status badges; latest response from
+  rfi_responses; in-app toast notification (localStorage-tracked) on newly-answered RFIs.
+- ClientPortal.tsx: added Photos + RFIs tabs.
+- Contractor response uses the existing project-detail RFIs page (rfi_responses).
+- Test: src/components/client/__tests__/ClientPortalGallery.test.tsx.
+
+### Acceptance
+- [x] Photos/Gallery tab from daily reports
+- [x] photos by date, thumbnail grid + lightbox
+- [x] RFI submission form (subject, description, file attachment)
+- [x] RFI list with status (submitted/in review/answered)
+- [x] client notified when answered (in-app toast on new answers)
+- [x] contractor responds from project detail (existing rfi_responses flow)
+
+prd.json: US-083 passes:true (166/234). Verified by GitHub Action (unit-test/build). No migration.
