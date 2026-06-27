@@ -1391,8 +1391,8 @@
         "npm run build completes successfully"
       ],
       "priority": 3,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "New src/components/documents/DocumentPreviewModal.tsx: inline preview - PDFs render in an iframe, images directly, other types offer download; Download/Share/Close actions; Share generates a time-limited Supabase signed URL (24h/7d/30d) copied to clipboard. Wired into DocumentManagement.tsx via a per-row Preview (Eye) action. New /document-templates page (src/pages/DocumentTemplates.tsx, projectRoutes) listing reusable templates with upload, edit metadata, delete, and Clone-to-project (copies the storage file into project-documents + inserts a project document). Templates reuse the existing documents table with document_type=\"template\" (NO new migration). Test: src/components/documents/__tests__/DocumentPreviewModal.test.tsx."
     },
     {
       "id": "US-082",

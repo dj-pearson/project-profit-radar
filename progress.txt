@@ -1358,3 +1358,28 @@ additive path per CLAUDE.md. Migration SQL is applied to Supabase outside CI (no
 PR's GitHub Actions), so it must be applied to the project after merge.
 
 prd.json: US-084 passes:true (163/234). Verified by GitHub Action (unit-test/build).
+
+---
+
+## 2026-06-27 - Session: US-081 Document preview, sharing, templates (P3)
+
+### Fix
+- src/components/documents/DocumentPreviewModal.tsx (new): inline preview — PDF in iframe,
+  images directly, other types -> download prompt. Download/Share/Close. Share = time-limited
+  Supabase signed URL (24h/7d/30d) copied to clipboard. No DB.
+- DocumentManagement.tsx: per-row Preview (Eye) action opens the modal (bucket by context).
+- src/pages/DocumentTemplates.tsx (new, /document-templates route): list reusable templates,
+  upload, edit metadata, delete, Clone-to-project (downloads template blob -> uploads to
+  project-documents -> inserts a project document). Reuses documents table with
+  document_type='template' — NO migration needed.
+- Test: src/components/documents/__tests__/DocumentPreviewModal.test.tsx.
+
+### Acceptance
+- [x] click a document opens inline preview (PDF iframe / images direct)
+- [x] preview modal has download, share, close
+- [x] share link with 24h/7d/30d expiration (signed URL)
+- [x] Document Templates section listing reusable templates
+- [x] Clone Template -> copy for a project
+- [x] templates can be uploaded, edited (metadata), deleted
+
+prd.json: US-081 passes:true (164/234). Verified by GitHub Action (unit-test/build). No migration.

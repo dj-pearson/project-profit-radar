@@ -21,6 +21,7 @@ import {
   LazyChangeOrders,
   LazyPunchList,
   LazyDocumentManagement,
+  LazyDocumentTemplates,
   LazyMaterials,
   LazyMaterialTracking,
   LazyEquipment,
@@ -53,6 +54,7 @@ export const projectRoutes = (
     <Route path="/change-orders" element={<RouteGuard><LazyChangeOrders /></RouteGuard>} />
     <Route path="/punch-list" element={<RouteGuard><LazyPunchList /></RouteGuard>} />
     <Route path="/documents" element={<RouteGuard><LazyDocumentManagement /></RouteGuard>} />
+    <Route path="/document-templates" element={<RouteGuard><LazyDocumentTemplates /></RouteGuard>} />
 
     {/* Materials & Equipment */}
     <Route path="/materials" element={<RouteGuard><LazyMaterials /></RouteGuard>} />
