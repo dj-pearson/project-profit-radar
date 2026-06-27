@@ -1237,8 +1237,8 @@
         "npm run build completes successfully"
       ],
       "priority": 4,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "New /geofence-map page (src/pages/GeofenceMap.tsx, peopleRoutes) using Leaflet + OpenStreetMap (no API key). Renders job-site geofences as circles (geofences table center_lat/center_lng/radius_meters), today crew clock-in/on-site/clock-out points as colored circleMarkers with name+time tooltips (from time_entries via company user_profiles). Map controls: zoom/pan (built-in) + Street/Satellite base-layer toggle (OSM + Esri World Imagery). Geofence management: Add (click map to place center + name/radius -> insert), Edit radius, Delete (soft via is_active=false). Leaflet (vanilla, ~45KB gzip) added to package.json + package-lock.json; circleMarkers avoid the Leaflet marker-icon bundler issue; lands in the lazy page chunk. Pure marker mapping extracted to src/lib/geofence-markers.ts with test src/lib/__tests__/geofence-markers.test.ts."
     },
     {
       "id": "US-073",

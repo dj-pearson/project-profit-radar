@@ -1383,3 +1383,32 @@ prd.json: US-084 passes:true (163/234). Verified by GitHub Action (unit-test/bui
 - [x] templates can be uploaded, edited (metadata), deleted
 
 prd.json: US-081 passes:true (164/234). Verified by GitHub Action (unit-test/build). No migration.
+
+---
+
+## 2026-06-27 - Session: US-072 GPS geofence visualization map (P4)
+
+### Fix
+- Added Leaflet (vanilla) + @types/leaflet to package.json AND package-lock.json (so npm ci
+  stays in sync). OpenStreetMap tiles + Esri World Imagery satellite — no API key.
+- src/pages/GeofenceMap.tsx (new, /geofence-map in peopleRoutes): renders geofences as circles
+  (geofences center_lat/lng/radius_meters), today's crew clock-in/on-site/clock-out as colored
+  circleMarkers with name+time tooltips (time_entries scoped via company user_profiles).
+  Controls: zoom/pan + Street/Satellite base-layer toggle. Management: add (click map to set
+  center + name/radius), edit radius, delete (soft is_active=false). circleMarkers avoid the
+  Leaflet marker-icon bundler pitfall. Leaflet lands in the lazy page chunk (manualChunks
+  returns undefined for it -> not in main bundle).
+- Pure marker mapping extracted to src/lib/geofence-markers.ts; test src/lib/__tests__/geofence-markers.test.ts.
+
+### Acceptance
+- [x] map displays geofence boundaries (circles)
+- [x] crew locations as pins with name labels
+- [x] check-in/out events as markers with timestamps
+- [x] map controls: zoom, pan, layer toggle (satellite/street)
+- [x] geofence management: add/edit/delete
+- [x] Leaflet integrated (free, no paid key)
+
+### Note
+No new DB table (reuses geofences + time_entries). New runtime dependency: leaflet.
+
+prd.json: US-072 passes:true (165/234). Verified by GitHub Action (unit-test/build).
