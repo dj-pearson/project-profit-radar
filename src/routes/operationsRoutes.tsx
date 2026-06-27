@@ -24,6 +24,7 @@ const PublicProcurement = createLazyRoute(() => import('@/pages/PublicProcuremen
 // Operations - Lazy loaded with ErrorBoundary + Suspense
 const ServiceDispatch = createLazyRoute(() => import('@/pages/ServiceDispatch'));
 const CalendarSync = createLazyRoute(() => import('@/pages/CalendarSync'));
+const ProjectCalendar = createLazyRoute(() => import('@/pages/ProjectCalendar'));
 const EquipmentManagement = createLazyRoute(() => import('@/pages/EquipmentManagement'));
 const EquipmentQRLabels = createLazyRoute(() => import('@/pages/EquipmentQRLabels'));
 const AutomatedWorkflows = createLazyRoute(() => import('@/pages/AutomatedWorkflows'));
@@ -52,6 +53,7 @@ export const operationsRoutes = (
     {/* Operations Management */}
     <Route path="/service-dispatch" element={<RouteGuard><ServiceDispatch /></RouteGuard>} />
     <Route path="/calendar" element={<RouteGuard><CalendarSync /></RouteGuard>} />
+    <Route path="/project-calendar" element={<RouteGuard><ProjectCalendar /></RouteGuard>} />
     <Route path="/equipment-management" element={<RouteGuard><EquipmentManagement /></RouteGuard>} />
     <Route path="/equipment-qr-labels" element={<RouteGuard><EquipmentQRLabels /></RouteGuard>} />
     <Route path="/workflows" element={<RouteGuard><AutomatedWorkflows /></RouteGuard>} />

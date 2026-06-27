@@ -1442,8 +1442,8 @@
         "npm run build completes successfully"
       ],
       "priority": 3,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "New /project-calendar route -> src/pages/ProjectCalendar.tsx: month/week/day views with prev/next + Today nav, color-coded events (milestone=blue, deadline=red, crew=green, meeting=purple), click a day to create, click a user event to edit/delete; read-only overlays for project milestones (project_milestones) and project end dates (projects.end_date). New migration supabase/migrations/20260627000000_create_project_calendar_events.sql (idempotent CREATE TABLE + company_id RLS using get_user_company/get_user_role, updated_at trigger) — the existing calendar_events table is reserved for external sync. project_calendar_events added to supabase types.ts. CRUD via new src/hooks/useCalendarEvents.ts (merges the 3 sources). Test: src/hooks/__tests__/useCalendarEvents.test.ts. Note: existing /calendar route (CalendarSync) is unchanged; this is /project-calendar."
     },
     {
       "id": "US-085",
