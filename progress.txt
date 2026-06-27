@@ -1215,3 +1215,28 @@ edge-function response can be captured by HTTP access logs or misconfigured prox
 - [x] New test covers response shape; no other consumers of removed fields
 
 prd.json: US-131 passes:true. Verified by GitHub Action (unit-test/build).
+
+---
+
+## 2026-06-27 - Session: US-220 SW update prompt + hub route/query warm-up (P3)
+
+### Problem
+(1) SW update check ran hourly with no user-facing prompt; the UpdatePrompt component existed
+but was DEAD CODE (never mounted). (2) Route preload covered only the initial ~5 chunks.
+
+### Fix
+- App.tsx: mount UpdatePrompt (deferred PWA Suspense). Applies waiting SW via SKIP_WAITING + reload.
+- main.tsx: SW updateInterval 60min -> 15min.
+- src/utils/hubPrefetch.ts + src/hooks/useHubPrefetch.ts: on hub navigation idle-warm likely-next
+  route chunks AND their TanStack queries (projects on projects-hub/dashboard; invoices on
+  financial-hub) via centralized queryKeys. Best-effort/guarded.
+- Test: src/utils/__tests__/hubPrefetch.test.ts (fake timers).
+
+### Acceptance
+- [x] update prompt appears and applies via skipWaiting on action
+- [x] preload covers active hub's likely-next routes
+- [x] route-to-query prefetch warms data alongside chunk preload
+- [~] measured TTI improvement — expected outcome (not runtime-measurable in CI)
+- [x] cache versioning robust to partial deploys (git-hash SW version + skipWaiting already present)
+
+prd.json: US-220 passes:true. Verified by GitHub Action (unit-test/build).

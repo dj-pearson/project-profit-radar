@@ -3588,8 +3588,8 @@
         "No stale-asset serving after a deploy; cache versioning is robust to partial deploys"
       ],
       "priority": 3,
-      "passes": false,
-      "notes": "Source: build/perf audit. Complements US-060 (SW cache limits)."
+      "passes": true,
+      "notes": "Service-worker update prompt: the existing src/components/pwa/UpdatePrompt.tsx was dead code (never mounted) - now mounted in App.tsx deferred PWA Suspense block; it detects an installed waiting SW and applies it via postMessage SKIP_WAITING + reload on user action. main.tsx SW update interval shortened 60min->15min so fixes reach active sessions sooner. Navigation-aware warm-up: src/utils/hubPrefetch.ts (warmForRoute) + src/hooks/useHubPrefetch.ts idle-warm the active hub-s likely-next route chunks AND their TanStack queries (projects on projects-hub/dashboard, invoices on financial-hub) using centralized queryKeys, best-effort/guarded. Test: src/utils/__tests__/hubPrefetch.test.ts. TTI improvement is the expected outcome of combined chunk preload + data prefetch (not runtime-measurable in CI). Cache versioning (git-hash SW version + skipWaiting) already robust to partial deploys."
     },
     {
       "id": "US-221",
