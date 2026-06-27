@@ -1268,3 +1268,34 @@ prd.json: US-220 passes:true. Verified by GitHub Action (unit-test/build).
 - [x] no flapping (3-retry/15s debounce)
 
 prd.json: US-208 passes:true (160/234). Live alerting needs HEALTH_CHECK_URL repo var (ops).
+
+---
+
+## 2026-06-27 - Session: US-085 Mobile-optimized dashboard (P2)
+
+### Problem
+A mobile dashboard component existed only at a separate /mobile-dashboard route; the main
+/dashboard never switched to a mobile layout at <768px.
+
+### Fix
+- src/components/dashboard/MobileDashboardHome.tsx (new): field-first mobile layout —
+  prominent Clock In/Out (56px), 3 quick actions (New Daily Report / Take Photo / Log Time,
+  88px), horizontally swipeable snap-scroll carousel of recent project cards (name, health
+  dot, completion bar; tap to open), PullToRefresh -> dashboard refetch, MobileBottomNav
+  (Dashboard/Projects/Time/Reports/More). All tap targets >= 44px.
+- src/pages/Dashboard.tsx: render MobileDashboardHome when useIsMobile() && data; desktop
+  layout unchanged (additive early return).
+- Reused PullToRefresh + MobileBottomNav. Used a snap carousel rather than SwipeableListItem
+  (its swipe-to-reveal is delete/archive, wrong semantics for project cards).
+- Test: src/components/dashboard/__tests__/MobileDashboardHome.test.tsx (5 tests).
+
+### Acceptance
+- [x] mobile layout activates at <768px
+- [x] prominent Clock In/Out at top
+- [x] quick actions: New Daily Report, Take Photo, Log Time
+- [x] swipeable project cards (name, status/health, completion)
+- [x] pull-to-refresh refreshes dashboard data
+- [x] bottom nav (Dashboard/Projects/Time/Reports/More)
+- [x] tap targets >= 44x44px
+
+prd.json: US-085 passes:true (161/234). Verified by GitHub Action (unit-test/build).
