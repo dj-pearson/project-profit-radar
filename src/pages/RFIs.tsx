@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { FormFieldHelp } from '@/components/help/HelpTooltip';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
@@ -508,7 +509,7 @@ const RFIs = () => {
                   </div>
 
                   <div>
-                    <Label htmlFor="title">Title *</Label>
+                    <Label htmlFor="title">Title * <FormFieldHelp content="Short summary of the question or clarification you're requesting." /></Label>
                     <Input
                       id="title"
                       placeholder="Brief description of the information request"
@@ -519,7 +520,7 @@ const RFIs = () => {
                   </div>
 
                   <div>
-                    <Label htmlFor="description">Description *</Label>
+                    <Label htmlFor="description">Description * <FormFieldHelp content="Provide full context so the recipient can answer without back-and-forth." /></Label>
                     <Textarea
                       id="description"
                       placeholder="Detailed description of the information being requested..."
@@ -532,7 +533,7 @@ const RFIs = () => {
 
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <Label htmlFor="priority">Priority</Label>
+                      <Label htmlFor="priority">Priority <FormFieldHelp content="How urgent a response is. Affects sorting and reminders." /></Label>
                       <Select value={newRFI.priority} onValueChange={(value) => setNewRFI({...newRFI, priority: value})}>
                         <SelectTrigger>
                           <SelectValue placeholder="Select priority" />
@@ -547,7 +548,7 @@ const RFIs = () => {
                     </div>
                     
                     <div>
-                      <Label htmlFor="due_date">Due Date</Label>
+                      <Label htmlFor="due_date">Due Date <FormFieldHelp content="When you need an answer by. Overdue RFIs are flagged." /></Label>
                       <Input
                         id="due_date"
                         type="date"

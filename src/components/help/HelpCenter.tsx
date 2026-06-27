@@ -24,9 +24,15 @@ interface FAQ {
   category: string;
 }
 
-export const HelpCenter: React.FC = () => {
+interface HelpCenterProps {
+  /** Preselect a category (e.g. derived from the current route) so the most
+   *  relevant articles surface first when opened from the in-app launcher. */
+  initialCategory?: string | null;
+}
+
+export const HelpCenter: React.FC<HelpCenterProps> = ({ initialCategory = null }) => {
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(initialCategory);
 
   const categories = [
     { id: 'getting-started', name: 'Getting Started', icon: <Zap className="h-4 w-4" />, color: 'bg-blue-100 text-blue-700' },
