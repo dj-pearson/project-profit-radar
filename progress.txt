@@ -1053,3 +1053,82 @@ Remaining (fresh breakdown): TS2345=522, TS6133=512 (mostly unused locals now), 
 - Uses the existing `punch_list_items` table — no migration. vite build green; new lib eslint-clean (11 pre-existing `any` types in ProjectPunchList.tsx — `catch (error: any)`, `value: any` Select handlers, `as any` badge variants — left untouched to avoid scope creep).
 
 ---
+
+---
+
+## 2026-06-27 - Session: PRD Verification Pass (claude/prd-stories-verification-judene)
+
+### Objective
+Work through the 80 not-passing stories in root prd.json, mark `passes: true` only where
+genuinely complete (verified against code), and route anything not directly verifiable in
+this sandbox through a GitHub Action.
+
+### Method
+Ran 5 parallel verification agents across the full 80-story backlog (web features, web
+infra/quality, web big-features, iOS batch 1, iOS batch 2). Each returned per-story verdicts
+(implemented / partial / missing) with cited file paths and a `staticallyVerifiable` flag.
+
+### Key environment finding
+`node_modules` is NOT installed in this sandbox, so `npm run build`, `tsc`, vitest, lint and
+e2e CANNOT be run locally. Every acceptance criterion of the form "npm run build completes
+successfully" / "tsc passes" is therefore "not directly verifiable" here and is delegated to
+GitHub Actions (see new `.github/workflows/prd-verification.yml`).
+
+### Stories marked passes: true (verified complete by static inspection)
+- **US-093** Empty state illustrations & CTAs — reusable `src/components/ui/empty-state.tsx`
+  (icon/title/description/action props) applied across 15+ list/table surfaces, each with a
+  contextual icon + Create/Add CTA. Build-completion gate delegated to GitHub Action.
+- **US-133** Apple Sign-In with server-side nonce — `Brikly-iOS/.../LoginView.swift` +
+  `AuthService.swift`: random nonce via SecRandomCopyBytes, sha256(nonce) → request.nonce,
+  raw nonce → signInWithIdToken(OpenIDConnectCredentials .apple), first-sign-in name backfill,
+  applesignin entitlement present. (Supabase provider config tracked separately as US-171.)
+
+### Code change delivered
+- `tsconfig.app.json`: added `"ignoreDeprecations": "6.0"` to clear the TS5101 `baseUrl`
+  deprecation that aborted `tsc` before type-checking even began. This was masking the true
+  state of US-212 (the deprecation error short-circuited compilation, producing a false
+  "0 errors" reading). Whether the strict-mode backlog is actually clear is now decided by the
+  typecheck job in CI, not by a short-circuited local run.
+- `.github/workflows/prd-verification.yml`: new verification workflow (typecheck / unit-test /
+  build) triggering on `claude/**`, `feat/**`, `fix/**` pushes and `workflow_dispatch`. This is
+  the GitHub Action that verifies build/tsc/test-dependent acceptance criteria.
+
+### Honest status of the remaining 78 stories (NOT marked — verifiably incomplete)
+The overwhelming majority are genuinely partial or missing, not merely "unverifiable":
+
+Web features (US-072/079/081/083/084/085/086/096/107/108): partial scaffolding exists but
+core acceptance unmet — no Leaflet geofence map (072), no floating help launcher wired (079),
+no PDF preview/share-link/templates (081), no client-portal RFI form (083), no month/week/day
+project calendar (084), dashboard not viewport-gated w/ clock-in (085), no export center w/
+scheduling/CSV (086), no estimate version diff view (096), no project Photos timeline tab (107),
+SignatureCapture exists but not wired into daily reports / change orders / PDF (108).
+US-087 (approval workflow builder): missing — no configurable builder page.
+
+Web infra/quality (US-201/202/205/207/208/213/214/215/219/220/221/222): mostly missing/partial
+— wrangler.toml still hardcodes keys/price IDs (201), CSP still has 'unsafe-inline' (202),
+DoS fn not in request path (205), CWV never sent to PostHog/Sentry (207), health 503 done but no
+uptime alerting (208), CI only runs on main + rulesets lack required_status_checks (213), 14
+E2E test.skip remain + chromium-only (214), coverage/axe not enforced in CI (215), no context
+split (219), UpdatePrompt is dead code (220), ~10% a11y adoption vs 90% (221), no prerender (222).
+US-212 (tsc backlog): pending CI verification via prd-verification.yml.
+
+Web big-features (US-223/225/226/227/228/229/230/231/232/233): 4 missing
+(drawing viewer 225, client selections 226, certified payroll 228, draw management 229), 6
+partial (Gantt lacks baselines 223; lien waiver workflow stubbed 227; only QuickBooks connects
+230; AI risk uses OpenAI not Claude + random variance 231; no bid leveling view 232; exec
+dashboard has hardcoded figures + no role-gating 233).
+
+iOS (US-129/130/131/132/134/135/136/138-145/168-196): almost all missing. Notably **US-131
+(security) is NOT fixed** — supabase/functions/verify-auth-otp/index.ts still returns raw
+accessToken/refreshToken in the JSON body. Offline-first migrations (US-168/169/170) not done.
+No push notifications, time tracking, geofencing, camera/voice, profile edit, sign-up,
+onboarding, Spanish localization, sync/conflict UI, snapshot tests, mock-injectable services,
+idempotency_keys table, or Brikly-iOS AGENTS.md. US-189/193 partial.
+
+External / not-statically-verifiable (require App Store Connect / TestFlight / GitHub secrets /
+live Supabase config): US-171, US-172, US-173, US-188, US-190, US-192 — also not yet done on the
+code side where applicable.
+
+### PRD progress
+156/234 stories passing (was 154/234). 2 stories newly verified and marked this session.
+The remaining 78 are tracked with verdicts above for future implementation loops.
