@@ -120,8 +120,10 @@ interface VerifyOTPResult {
   reauthenticated?: boolean;
   userId?: string;
   newEmail?: string;
-  accessToken?: string;
-  refreshToken?: string;
+  // SECURITY (US-131): the magic_link flow returns only a short-lived, single-use
+  // token hash — never raw access/refresh JWTs. The client exchanges it via
+  // supabase.auth.verifyOtp({ token_hash, type: 'magiclink' }).
+  tokenHash?: string;
   error?: string;
 }
 

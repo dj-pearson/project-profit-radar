@@ -249,12 +249,17 @@ const handler = async (req: Request): Promise<Response> => {
           );
         }
 
+        // SECURITY (US-131): Never relay long-lived access/refresh JWTs through
+        // the edge-function JSON body — they could be captured by HTTP access
+        // logs or misconfigured proxies. Return only the short-lived, single-use
+        // magic-link token hash. The client completes sign-in via
+        // supabase.auth.verifyOtp({ token_hash, type: 'magiclink' }) (see
+        // src/pages/AuthCallback.tsx), which establishes the session locally
+        // through the SDK so the bearer tokens never transit our response.
         actionResult = {
           verified: true,
           userId: authUser.id,
-          // Return the token properties for frontend to use
-          accessToken: linkData.properties?.access_token,
-          refreshToken: linkData.properties?.refresh_token
+          tokenHash: linkData.properties?.hashed_token
         };
         break;
       }
