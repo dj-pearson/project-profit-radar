@@ -1460,8 +1460,8 @@
         "npm run build completes successfully"
       ],
       "priority": 2,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Dashboard.tsx now renders a mobile-optimized layout when useIsMobile() (<768px) and data is loaded; desktop path unchanged. New src/components/dashboard/MobileDashboardHome.tsx: prominent Clock In/Out button (56px) at top, 3 large quick actions (New Daily Report, Take Photo, Log Time), horizontally swipeable snap-scroll carousel of recent project cards (name + health dot + completion bar, tap to open), PullToRefresh wired to dashboard refetch, and MobileBottomNav (Dashboard/Projects/Time/Reports/More). All tap targets >=44px (clock 56px, quick actions 88px, nav 64px, cards 44px+). Used existing PullToRefresh + MobileBottomNav primitives; used a snap carousel for cards instead of SwipeableListItem (whose swipe-to-reveal is delete/archive semantics, wrong for project cards). Test: src/components/dashboard/__tests__/MobileDashboardHome.test.tsx (5 tests)."
     },
     {
       "id": "US-086",

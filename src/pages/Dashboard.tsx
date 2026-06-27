@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { RoleDashboard } from "@/components/dashboard/RoleDashboard";
+import { MobileDashboardHome } from "@/components/dashboard/MobileDashboardHome";
 import { EmptyDashboard } from "@/components/dashboard/EmptyDashboard";
 import { DashboardSkeleton } from "@/components/dashboard/DashboardSkeleton";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
@@ -7,6 +8,7 @@ import { AccessiblePageWrapper } from "@/components/accessibility/AccessiblePage
 import { OnboardingChecklist } from "@/components/onboarding/OnboardingChecklist";
 import { SubscriptionUsageWidget } from "@/components/subscription/SubscriptionUsageWidget";
 import { useAuth } from "@/contexts/AuthContext";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { useDashboardData } from "@/hooks/useDashboardData";
 import { useCriticalCSS } from "@/utils/criticalCSSExtractor";
 import { useNavigate } from "react-router-dom";
@@ -18,6 +20,7 @@ import { AlertTriangle, RefreshCw } from "lucide-react";
 const Dashboard = () => {
   const { user, userProfile, loading: authLoading } = useAuth();
   const { data, loading: dataLoading, error: dataError, refetch } = useDashboardData();
+  const isMobile = useIsMobile();
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -152,6 +155,22 @@ const Dashboard = () => {
             <OnboardingChecklist />
           </section>
         </DashboardLayout>
+      </AccessiblePageWrapper>
+    );
+  }
+
+  // US-085: mobile-optimized dashboard at viewport < 768px (field-first layout
+  // with prominent Clock In/Out, quick actions, swipeable project cards,
+  // pull-to-refresh and a bottom nav). Desktop layout is unchanged below.
+  if (isMobile && data) {
+    return (
+      <AccessiblePageWrapper pageTitle="Dashboard">
+        <MobileDashboardHome
+          projects={data.projects}
+          onRefresh={async () => {
+            await refetch();
+          }}
+        />
       </AccessiblePageWrapper>
     );
   }
