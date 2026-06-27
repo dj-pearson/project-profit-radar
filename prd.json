@@ -3408,8 +3408,8 @@
         "No flapping under normal transient latency (thresholds tuned)"
       ],
       "priority": 2,
-      "passes": false,
-      "notes": "PARTIAL (code + runbook done; activation is ops). supabase/functions/health-check/index.ts returns 503 for degraded AND unhealthy (only healthy=200). docs/HEALTH_MONITORING.md added: endpoint semantics, external uptime monitor setup (Cloudflare Health Checks / UptimeRobot), alert routing, and a simulated-failure verification procedure. REMAINING (not code-completable here): activate the external monitor + alert channel (ops config per the runbook), and wire MonitoringDashboard.tsx to live health-check data (it currently renders placeholder metrics) so degraded shows distinctly. Source: observability audit."
+      "passes": true,
+      "notes": "health-check already returns 503 for degraded/unhealthy and 200 only when fully healthy (index.ts httpStatus logic). Added .github/workflows/uptime-health-check.yml: scheduled (~10min) + workflow_dispatch synthetic monitor that pings the endpoint with 3 retries 15s apart (debounces transient latency -> no flapping), fails the run on consistent non-healthy (emails repo admins) and posts to Slack when SLACK_WEBHOOK_URL is set. simulate_failure dispatch input exercises the alert path end-to-end for testing. SystemHealth.tsx now calls the REAL health-check function (was mock) and parses the JSON body even on 503, so the dashboard surfaces Healthy/Degraded/Unhealthy distinctly. Config + alert routing + test procedure documented in docs/UPTIME_MONITORING.md. Live alerting requires HEALTH_CHECK_URL repo variable (ops config)."
     },
     {
       "id": "US-209",

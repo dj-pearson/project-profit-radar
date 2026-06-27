@@ -4,6 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useAuth } from '@/contexts/AuthContext';
+import { getEdgeFunctionUrl, supabaseAnonKey } from '@/integrations/supabase/client';
 import { Navigate } from 'react-router-dom';
 import { RefreshCw, CheckCircle, AlertTriangle, XCircle, Activity } from 'lucide-react';
 
@@ -38,20 +39,15 @@ export default function SystemHealth() {
     setLoading(true);
     setError(null);
     try {
-      // Simulate health check response for dashboard display
-      // In production, this would call the health-check edge function
-      const mockHealth: HealthResponse = {
-        status: 'healthy',
-        timestamp: new Date().toISOString(),
-        totalResponseTime: 145,
-        services: {
-          database: { status: 'healthy', responseTime: 42 },
-          auth: { status: 'healthy', responseTime: 38 },
-          storage: { status: 'healthy', responseTime: 65 },
-        },
-        version: '1.0.0',
-      };
-      setHealth(mockHealth);
+      // Call the real health-check edge function. It returns JSON for both the
+      // healthy (HTTP 200) and degraded/unhealthy (HTTP 503) states (US-208), so
+      // we parse the body regardless of status code and surface the real status.
+      const response = await fetch(getEdgeFunctionUrl('health-check'), {
+        method: 'GET',
+        headers: { apikey: supabaseAnonKey },
+      });
+      const data = (await response.json()) as HealthResponse;
+      setHealth(data);
       setLastChecked(new Date());
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to fetch health status');

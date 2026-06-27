@@ -1,0 +1,92 @@
+name: Uptime Health Check
+
+# US-208: external synthetic monitor for the health-check edge function.
+# The function returns HTTP 200 only when fully healthy and 503 for
+# degraded/unhealthy. This job pings it on a schedule, retries to avoid
+# flapping on transient latency, and fails the run (which emails repo admins
+# and optionally posts to Slack) when the service is not healthy.
+
+on:
+  schedule:
+    # Roughly every 10 minutes, off the :00 mark to avoid fleet-wide pileups.
+    - cron: '7,17,27,37,47,57 * * * *'
+  workflow_dispatch:
+    inputs:
+      simulate_failure:
+        description: 'Force the alert path to test routing end-to-end'
+        type: boolean
+        default: false
+
+concurrency:
+  group: uptime-health-check
+  cancel-in-progress: true
+
+jobs:
+  ping:
+    name: Ping health endpoint
+    runs-on: ubuntu-latest
+    env:
+      # Configure these in repo settings to enable monitoring/alerting:
+      #   - Variable HEALTH_CHECK_URL       (Settings → Secrets and variables → Actions → Variables)
+      #   - Secret   HEALTH_CHECK_ANON_KEY  (optional; sent as the `apikey` header)
+      #   - Secret   SLACK_WEBHOOK_URL      (optional; routes alerts to Slack)
+      HEALTH_URL: ${{ vars.HEALTH_CHECK_URL }}
+      ANON_KEY: ${{ secrets.HEALTH_CHECK_ANON_KEY }}
+      SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+      SIMULATE: ${{ inputs.simulate_failure }}
+    steps:
+      - name: Probe health (3 attempts, 15s apart to debounce transient latency)
+        run: |
+          set -uo pipefail
+
+          if [ "${SIMULATE}" = "true" ]; then
+            echo "::warning::Simulated failure requested — exercising the alert path."
+            echo "alert=1" >> "$GITHUB_ENV"
+            echo "detail=simulated failure" >> "$GITHUB_ENV"
+            exit 0
+          fi
+
+          if [ -z "${HEALTH_URL}" ]; then
+            echo "::notice::HEALTH_CHECK_URL is not set — monitoring is inert until you configure it. Skipping."
+            exit 0
+          fi
+
+          attempt=1
+          max=3
+          ok=0
+          code=000
+          status=unknown
+          while [ "$attempt" -le "$max" ]; do
+            code=$(curl -sS --max-time 20 -o /tmp/health.json -w '%{http_code}' \
+              -H "apikey: ${ANON_KEY}" "${HEALTH_URL}" || echo 000)
+            status=$(jq -r '.status // "unknown"' /tmp/health.json 2>/dev/null || echo unknown)
+            echo "attempt ${attempt}/${max}: http=${code} status=${status}"
+            if [ "$code" = "200" ] && [ "$status" = "healthy" ]; then
+              ok=1
+              break
+            fi
+            attempt=$((attempt + 1))
+            [ "$attempt" -le "$max" ] && sleep 15
+          done
+
+          if [ "$ok" -ne 1 ]; then
+            echo "::error::Health check unhealthy after ${max} attempts (http=${code} status=${status})."
+            cat /tmp/health.json 2>/dev/null || true
+            echo "alert=1" >> "$GITHUB_ENV"
+            echo "detail=http=${code} status=${status}" >> "$GITHUB_ENV"
+          else
+            echo "Health check OK."
+          fi
+
+      - name: Route alert to Slack (optional)
+        if: env.alert == '1' && env.SLACK_WEBHOOK_URL != ''
+        run: |
+          curl -sS -X POST -H 'Content-Type: application/json' \
+            -d "{\"text\":\":rotating_light: Brikly health check FAILING (${detail}). Run: ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}\"}" \
+            "${SLACK_WEBHOOK_URL}" || true
+
+      - name: Fail the run on unhealthy (notifies repo admins by email)
+        if: env.alert == '1'
+        run: |
+          echo "Health check alert: ${detail}"
+          exit 1
