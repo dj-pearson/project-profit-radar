@@ -5343,6 +5343,7 @@ export type Database = {
           approval_due_date: string | null
           approval_notes: string | null
           assigned_approvers: string[] | null
+          signature: string | null
           change_order_number: string
           client_approved: boolean | null
           client_approved_date: string | null
@@ -5366,6 +5367,7 @@ export type Database = {
           approval_due_date?: string | null
           approval_notes?: string | null
           assigned_approvers?: string[] | null
+          signature?: string | null
           change_order_number: string
           client_approved?: boolean | null
           client_approved_date?: string | null
@@ -5389,6 +5391,7 @@ export type Database = {
           approval_due_date?: string | null
           approval_notes?: string | null
           assigned_approvers?: string[] | null
+          signature?: string | null
           change_order_number?: string
           client_approved?: boolean | null
           client_approved_date?: string | null
@@ -8700,6 +8703,7 @@ export type Database = {
       daily_reports: {
         Row: {
           client_visitors: string | null
+          signature: string | null
           company_id: string | null
           completion_percentage: number | null
           created_at: string
@@ -8732,6 +8736,7 @@ export type Database = {
         }
         Insert: {
           client_visitors?: string | null
+          signature?: string | null
           company_id?: string | null
           completion_percentage?: number | null
           created_at?: string
@@ -8764,6 +8769,7 @@ export type Database = {
         }
         Update: {
           client_visitors?: string | null
+          signature?: string | null
           company_id?: string | null
           completion_percentage?: number | null
           created_at?: string
