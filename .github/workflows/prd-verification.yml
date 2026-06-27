@@ -1,0 +1,70 @@
+name: PRD Verification
+
+# Verification gate for PRD stories whose acceptance criteria require a real
+# install/build/typecheck/test run (e.g. "npm run build completes successfully",
+# "tsc passes"). These cannot be confirmed in a sandbox without node_modules, so
+# completion of those criteria is delegated to this GitHub Action.
+#
+# Runs automatically on the PRD verification branches and on demand.
+
+on:
+  push:
+    branches:
+      - 'claude/**'
+      - 'feat/**'
+      - 'fix/**'
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  typecheck:
+    name: Type Check (US-212 gate)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 18
+          cache: npm
+      - run: npm ci
+        env:
+          PUPPETEER_SKIP_DOWNLOAD: true
+      - run: npx tsc --noEmit -p tsconfig.app.json
+
+  unit-test:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 18
+          cache: npm
+      - run: npm ci
+        env:
+          PUPPETEER_SKIP_DOWNLOAD: true
+      - run: npm run test:run
+
+  build:
+    name: Build (npm run build acceptance gate)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 18
+          cache: npm
+      - run: npm ci
+        env:
+          PUPPETEER_SKIP_DOWNLOAD: true
+      - run: npm run build
+        env:
+          VITE_APP_VERSION: ${{ github.sha }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: prd-verification-build
+          path: dist/
+          retention-days: 7

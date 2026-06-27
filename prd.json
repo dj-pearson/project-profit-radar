@@ -1595,8 +1595,8 @@
         "npm run build completes successfully"
       ],
       "priority": 3,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "VERIFIED COMPLETE (2026-06-27): Reusable EmptyState component at src/components/ui/empty-state.tsx (icon/title/description/action props) applied across 15+ list/table surfaces (CRMLeads, CRMDashboard, CRMOpportunities, equipment, expenses, financial/WipReport, project/tabs/ProjectCostCodes, safety, mobile, etc.), each with contextual icon + Create/Add CTA. Build-completion criterion verified via GitHub Actions (prd-verification.yml)."
     },
     {
       "id": "US-094",
@@ -2248,8 +2248,8 @@
         "Handles the Apple-only-returns-name-on-first-signin case"
       ],
       "priority": 3,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "VERIFIED COMPLETE (2026-06-27): Apple Sign-In with server-side nonce validation fully wired. Brikly-iOS/Brikly/Views/Auth/LoginView.swift uses SignInWithAppleButton with a cryptographically random nonce (AppleSignInNonce.makeRaw via SecRandomCopyBytes), passes sha256(nonce) to request.nonce and raw nonce to AuthService.signInWithApple, which calls signInWithIdToken with OpenIDConnectCredentials(provider:.apple, nonce:). First-sign-in name/email backfill handled; com.apple.developer.applesignin entitlement present. (Server-side Supabase Apple OIDC provider config is tracked separately as US-171.)"
     },
     {
       "id": "US-134",
