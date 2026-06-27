@@ -2220,8 +2220,8 @@
         "No regression in existing tests; new test covers the response shape"
       ],
       "priority": 2,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Hardened in supabase/functions/verify-auth-otp/index.ts: the magic_link case no longer returns accessToken/refreshToken in the JSON body. It now returns only the single-use hashed_token (tokenHash); the client completes sign-in via supabase.auth.verifyOtp({ token_hash, type: \"magiclink\" }) which the existing src/pages/AuthCallback.tsx already implements, so the session is set locally by the SDK and bearer tokens never transit the response. VerifyOTPResult type updated (accessToken/refreshToken removed, tokenHash added). Regression test: src/lib/security/__tests__/verifyAuthOtpResponseShape.test.ts asserts the response shape. Verified by GitHub Action (unit-test/build)."
     },
     {
       "id": "US-132",

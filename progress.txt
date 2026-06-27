@@ -1192,3 +1192,26 @@ analytics sink, so there was no real-user performance monitoring.
 - [x] Dev still logs vitals locally without spamming production analytics
 
 prd.json: US-207 passes:true. Verified by GitHub Action (unit-test/build).
+
+---
+
+## 2026-06-27 - Session: US-131 Stop returning raw auth tokens in verify-auth-otp (P2 security)
+
+### Problem
+supabase/functions/verify-auth-otp/index.ts magic_link case returned
+{ accessToken, refreshToken } in the JSON body. Long-lived bearer JWTs in an
+edge-function response can be captured by HTTP access logs or misconfigured proxies.
+
+### Fix
+- Edge function magic_link case returns only tokenHash (single-use hashed_token). No raw tokens.
+- src/contexts/AuthContext.tsx: VerifyOTPResult drops accessToken/refreshToken, adds tokenHash.
+- New regression test src/lib/security/__tests__/verifyAuthOtpResponseShape.test.ts.
+- The real magic-link sign-in already completes via src/pages/AuthCallback.tsx using
+  supabase.auth.verifyOtp({ token_hash, type }) (native flow, SDK sets session locally).
+
+### Acceptance
+- [x] verify-auth-otp no longer returns accessToken/refreshToken in JSON body
+- [x] Client magic-link flow still completes (AuthCallback verifyOtp path unchanged)
+- [x] New test covers response shape; no other consumers of removed fields
+
+prd.json: US-131 passes:true. Verified by GitHub Action (unit-test/build).
