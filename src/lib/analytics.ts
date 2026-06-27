@@ -494,6 +494,49 @@ export const trackComparisonCTAClicked = (competitor: string, ctaText: string, p
     ...properties,
   });
 
+// Core Web Vitals (US-207): real-user performance monitoring.
+// Emitted to PostHog (when VITE_POSTHOG_API_KEY is set) AND always persisted to
+// Supabase `user_events`, so field LCP/INP/CLS distributions can be queried by
+// device/connection/page even before PostHog finishes lazy-loading (events are
+// never dropped because the Supabase write is independent of PostHog readiness).
+//
+// Dashboard/query: in PostHog, chart the `web_vital` event broken down by
+// `metric_name`; or in Supabase:
+//   select event_properties->>'metric_name' as metric,
+//          percentile_cont(0.75) within group (order by (event_properties->>'metric_value')::numeric) as p75
+//   from user_events where event_name = 'web_vital' group by 1;
+export interface WebVitalSample {
+  name: string; // CLS | FCP | INP | LCP | TTFB
+  value: number;
+  rating: 'good' | 'needs-improvement' | 'poor';
+  delta: number;
+  id: string;
+}
+
+export const trackWebVital = (metric: WebVitalSample) => {
+  const nav =
+    typeof navigator !== 'undefined'
+      ? (navigator as Navigator & {
+          connection?: { effectiveType?: string };
+          deviceMemory?: number;
+        })
+      : undefined;
+
+  const round = (n: number) => Math.round(n * 1000) / 1000;
+
+  return Analytics.track('web_vital', {
+    metric_name: metric.name,
+    metric_value: round(metric.value),
+    metric_rating: metric.rating,
+    metric_delta: round(metric.delta),
+    metric_id: metric.id,
+    page_path: typeof window !== 'undefined' ? window.location.pathname : undefined,
+    connection_type: nav?.connection?.effectiveType,
+    device_memory: nav?.deviceMemory,
+    viewport_width: typeof window !== 'undefined' ? window.innerWidth : undefined,
+  });
+};
+
 // Initialize on import
 if (typeof window !== 'undefined') {
   Analytics.init();

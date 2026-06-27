@@ -1161,3 +1161,34 @@ So the edit was unnecessary AND turned the typecheck failure into a different (c
 Reverted the tsconfig.app.json change (removed the invalid ignoreDeprecations line). No
 runtime app code was ever touched. US-093 and US-133 remain the only two stories verified
 complete this session (156/234). US-212 stays false, now confirmed by CI rather than guessed.
+
+---
+
+## 2026-06-27 - Session: US-207 Route Core Web Vitals to PostHog/Sentry (P2)
+
+### Problem
+web-vitals was wired (reportWebVitals in main.tsx) but the callback only logged to
+logger.debug in DEV — production CWV (CLS/FCP/INP/LCP/TTFB) were never sent to any
+analytics sink, so there was no real-user performance monitoring.
+
+### Fix
+- Added trackWebVital() to src/lib/analytics.ts. It calls Analytics.track('web_vital', {...})
+  which sends to PostHog (when VITE_POSTHOG_API_KEY is set) AND always persists to
+  Supabase user_events. Dimensions: metric_name/value/rating/delta/id, page_path,
+  connection_type, device_memory, viewport_width.
+- main.tsx: production branch now imports trackWebVital and emits each metric; DEV branch
+  unchanged (local log only). Lazy import keeps it off the critical path; .catch guards.
+- Early-event timing: Analytics.init() already runs eagerly on import, and the Supabase
+  write is independent of PostHog readiness, so the first vitals/pageview are never dropped.
+- Dashboard/query documented in analytics.ts (PostHog web_vital breakdown by metric_name;
+  Supabase p75 SQL over user_events).
+- Test: src/lib/__tests__/webVitals.test.ts.
+
+### Acceptance
+- [x] CWV emitted as PostHog events in prod with useful dimensions
+- [x] PostHog init early / events buffered (Supabase write independent → not lost)
+- [x] A dashboard/query can show LCP/INP/CLS distributions (documented)
+- [x] No measurable main-thread/bundle regression (reuses existing analytics, lazy import)
+- [x] Dev still logs vitals locally without spamming production analytics
+
+prd.json: US-207 passes:true. Verified by GitHub Action (unit-test/build).
