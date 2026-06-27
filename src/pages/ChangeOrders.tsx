@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { SignatureCapture } from '@/components/ui/signature-capture';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { mobileFilterClasses, mobileButtonClasses, mobileTextClasses, mobileCardClasses } from '@/utils/mobileHelpers';
 import { Button } from '@/components/ui/button';
@@ -81,6 +82,8 @@ const ChangeOrders = () => {
   const [approvalDueDate, setApprovalDueDate] = useState<Date>();
   const [selectedApprovers, setSelectedApprovers] = useState<string[]>([]);
   const [editingOrder, setEditingOrder] = useState<ChangeOrder | null>(null);
+  const [approvalTarget, setApprovalTarget] = useState<{ id: string; type: 'internal' | 'client' } | null>(null);
+  const [approvalSignature, setApprovalSignature] = useState<string | null>(null);
   const [isRejectionDialogOpen, setIsRejectionDialogOpen] = useState(false);
   const [rejectionOrderId, setRejectionOrderId] = useState<string>('');
   const [rejectionType, setRejectionType] = useState<'internal' | 'client'>('internal');
@@ -305,10 +308,15 @@ const ChangeOrders = () => {
     }
   };
 
-  const handleApproval = async (orderId: string, approvalType: 'internal' | 'client', approved: boolean) => {
+  const handleApproval = async (
+    orderId: string,
+    approvalType: 'internal' | 'client',
+    approved: boolean,
+    signature?: string | null
+  ) => {
     try {
       const { data, error } = await supabase.functions.invoke('change-orders', {
-        body: { 
+        body: {
           action: 'approve',
           orderId,
           approvalType,
@@ -317,6 +325,15 @@ const ChangeOrders = () => {
       });
 
       if (error) throw error;
+
+      // US-108: persist the approver's signature (company-scoped) when provided.
+      if (approved && signature && userProfile?.company_id) {
+        await supabase
+          .from('change_orders')
+          .update({ signature })
+          .eq('id', orderId)
+          .eq('company_id', userProfile.company_id);
+      }
 
       toast({
         title: "Success",
@@ -466,7 +483,7 @@ const ChangeOrders = () => {
         <div className="flex items-center gap-1">
           {!order.internal_approved && order.status !== 'rejected' && (
             <>
-              <Button size="sm" variant="outline" onClick={() => handleApproval(order.id, 'internal', true)} aria-label={`Approve ${order.title} internally`}>
+              <Button size="sm" variant="outline" onClick={() => { setApprovalSignature(null); setApprovalTarget({ id: order.id, type: 'internal' }); }} aria-label={`Approve ${order.title} internally`}>
                 <CheckCircle className="h-3 w-3" aria-hidden="true" />
               </Button>
               <Button size="sm" variant="outline" onClick={() => handleRejectWithReason(order.id, 'internal')} aria-label={`Reject ${order.title} internally`}>
@@ -769,6 +786,38 @@ const ChangeOrders = () => {
           </CardContent>
         </Card>
       </div>
+
+      {/* US-108: Approval signature dialog */}
+      <Dialog open={!!approvalTarget} onOpenChange={(o) => { if (!o) setApprovalTarget(null); }}>
+        <DialogContent className="max-w-md" aria-describedby="approval-signature-description">
+          <DialogHeader>
+            <DialogTitle>Approve Change Order</DialogTitle>
+            <DialogDescription id="approval-signature-description">
+              Sign below to record your approval. Your signature is stored with the change order.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <SignatureCapture
+              label="Approver Signature"
+              value={approvalSignature}
+              onChange={setApprovalSignature}
+            />
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => setApprovalTarget(null)}>Cancel</Button>
+              <Button
+                onClick={async () => {
+                  if (!approvalTarget) return;
+                  const { id, type } = approvalTarget;
+                  setApprovalTarget(null);
+                  await handleApproval(id, type, true, approvalSignature);
+                }}
+              >
+                Confirm Approval
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Rejection Reason Dialog */}
       <Dialog open={isRejectionDialogOpen} onOpenChange={setIsRejectionDialogOpen}>

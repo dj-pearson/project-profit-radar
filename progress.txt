@@ -1437,3 +1437,32 @@ prd.json: US-072 passes:true (165/234). Verified by GitHub Action (unit-test/bui
 - [x] contractor responds from project detail (existing rfi_responses flow)
 
 prd.json: US-083 passes:true (166/234). Verified by GitHub Action (unit-test/build). No migration.
+
+---
+
+## 2026-06-27 - Session: US-108 Digital signature capture (P4)
+
+### Fix
+- src/components/ui/signature-capture.tsx (new): canvas signature pad, mouse + touch, Clear,
+  emits base64 PNG via onChange.
+- Migration supabase/migrations/20260627010000_add_signature_columns.sql: nullable `signature`
+  text on daily_reports + change_orders (always-safe ADD COLUMN). Registered in types.ts.
+- DailyReports.tsx: Supervisor Signature pad in the create dialog; signature inserted with report.
+- ChangeOrders.tsx: Approve now opens an approval-signature dialog; signature persisted via a
+  company-scoped update after the approve edge-function action.
+- Test: src/components/ui/__tests__/signature-capture.test.tsx.
+
+### Acceptance
+- [x] SignatureCapture canvas component
+- [x] mouse (desktop) + touch (mobile)
+- [x] Clear button
+- [x] base64 PNG
+- [x] integrated into daily report submission
+- [x] integrated into change order approval
+- [~] displayed on exported PDF — N/A: no PDF export pipeline exists for these entities;
+      signature is captured + stored, ready for future export.
+
+### Migration note
+Adds nullable signature columns; apply to Supabase after merge (CI does not run migrations).
+
+prd.json: US-108 passes:true (167/234). Verified by GitHub Action (unit-test/build).

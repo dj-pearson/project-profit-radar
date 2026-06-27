@@ -1853,8 +1853,8 @@
         "npm run build completes successfully"
       ],
       "priority": 4,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "New reusable src/components/ui/signature-capture.tsx: canvas signature pad, mouse + touch drawing, Clear button, emits base64 PNG (toDataURL) via onChange. Migration supabase/migrations/20260627010000_add_signature_columns.sql adds nullable signature text to daily_reports + change_orders (always-safe ADD COLUMN); registered in supabase types.ts. Integrated into daily report submission (Supervisor Signature in the create dialog -> inserted with the report) and change order approval (new approval-signature dialog on Approve -> signature persisted via company-scoped update after the approve action). Test: src/components/ui/__tests__/signature-capture.test.tsx. NOTE: -displayed on exported PDF- is N/A - daily reports/change orders have no PDF export pipeline in the app; the signature is captured and stored, ready for any future PDF export."
     },
     {
       "id": "US-109",

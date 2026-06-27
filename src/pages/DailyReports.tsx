@@ -8,6 +8,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { FormFieldHelp } from '@/components/help/HelpTooltip';
+import { SignatureCapture } from '@/components/ui/signature-capture';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
@@ -71,7 +72,8 @@ const DailyReports = () => {
     materials_delivered: '',
     equipment_used: '',
     delays_issues: '',
-    safety_incidents: ''
+    safety_incidents: '',
+    signature: ''
   });
   
   const [selectedPhotos, setSelectedPhotos] = useState<File[]>([]);
@@ -256,7 +258,8 @@ const DailyReports = () => {
           ...newReport,
           crew_count: Number(newReport.crew_count),
           date: new Date().toISOString().split('T')[0],
-          photos: photoUrls.length > 0 ? photoUrls : null
+          photos: photoUrls.length > 0 ? photoUrls : null,
+          signature: newReport.signature || null
         });
 
       if (error) throw error;
@@ -275,7 +278,8 @@ const DailyReports = () => {
         materials_delivered: '',
         equipment_used: '',
         delays_issues: '',
-        safety_incidents: ''
+        safety_incidents: '',
+        signature: ''
       });
       setSelectedPhotos([]);
 
@@ -510,6 +514,15 @@ const DailyReports = () => {
                       value={newReport.safety_incidents}
                       onChange={(e) => setNewReport({...newReport, safety_incidents: e.target.value})}
                     />
+                    </div>
+
+                    {/* US-108: Supervisor signature */}
+                    <div>
+                      <SignatureCapture
+                        label="Supervisor Signature"
+                        value={newReport.signature}
+                        onChange={(dataUrl) => setNewReport({ ...newReport, signature: dataUrl ?? '' })}
+                      />
                     </div>
 
                     {/* Photo Upload Section */}
