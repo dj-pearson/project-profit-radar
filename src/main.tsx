@@ -89,7 +89,10 @@ const initDeferredServices = () => {
     import("./utils/serviceWorkerManager").then(({ registerServiceWorker }) => {
       registerServiceWorker({
         enabled: true,
-        updateInterval: 60 * 60 * 1000,
+        // US-220: check for a new SW every 15 min (was hourly) so a critical
+        // fix reaches active sessions faster; the UpdatePrompt then lets the
+        // user apply it immediately via skipWaiting.
+        updateInterval: 15 * 60 * 1000,
       }).catch((error) => {
         logger.error('Service worker registration failed', error);
       });

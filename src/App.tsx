@@ -16,6 +16,7 @@ import { preloadHighPriorityRoutes } from "@/utils/lazyRoutes";
 import { AccessibilityProvider } from "@/components/accessibility/AccessibilityProvider";
 import { useGlobalShortcuts } from "@/hooks/useKeyboardShortcuts";
 import { useNavigationShortcuts } from "@/hooks/useNavigationShortcuts";
+import { useHubPrefetch } from "@/hooks/useHubPrefetch";
 import { SharedElementRoot } from "@/components/mobile/SharedElementTransition";
 
 // Import centralized route configuration
@@ -28,6 +29,7 @@ const OfflineIndicator = lazy(() => import("@/components/OfflineIndicator").then
 const SyncQueueIndicator = lazy(() => import("@/components/OfflineIndicator").then(m => ({ default: m.SyncQueueIndicator })));
 const NotificationPermission = lazy(() => import("@/components/NotificationPermission").then(m => ({ default: m.NotificationPermission })));
 const ShortcutsHelp = lazy(() => import("@/components/ui/shortcuts-help").then(m => ({ default: m.ShortcutsHelp })));
+const UpdatePrompt = lazy(() => import("@/components/pwa/UpdatePrompt").then(m => ({ default: m.UpdatePrompt })));
 const UnifiedSEOSystem = lazy(() => import("@/components/seo/UnifiedSEOSystem").then(m => ({ default: m.UnifiedSEOSystem })));
 const AutoSchemaInjector = lazy(() => import("@/components/seo/AutoSchemaInjector"));
 const CommandPalette = lazy(() => import("@/components/navigation/CommandPalette").then(m => ({ default: m.CommandPalette })));
@@ -38,6 +40,8 @@ const AppContent = () => {
   const globalShortcuts = useGlobalShortcuts();
   // Power-user navigation shortcuts: Shift+? overlay, G-chords, context-aware N (US-095).
   useNavigationShortcuts();
+  // US-220: idle-warm likely-next route chunks + their queries on hub navigation.
+  useHubPrefetch();
 
   return (
     <>
@@ -70,6 +74,8 @@ const AppContent = () => {
         <OfflineIndicator />
         <NotificationPermission />
         <ShortcutsHelp />
+        {/* US-220: 'new version available' prompt → applies update via skipWaiting */}
+        <UpdatePrompt />
       </Suspense>
 
       {/* Usability Enhancements - deferred */}
