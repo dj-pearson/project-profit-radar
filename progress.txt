@@ -1132,3 +1132,32 @@ code side where applicable.
 ### PRD progress
 156/234 stories passing (was 154/234). 2 stories newly verified and marked this session.
 The remaining 78 are tracked with verdicts above for future implementation loops.
+
+---
+
+## 2026-06-27 - CORRECTION: US-212 / tsconfig regression reverted
+
+### What happened
+The `ignoreDeprecations: "6.0"` added to tsconfig.app.json earlier this session was based
+on a faulty local signal: this sandbox has no node_modules, so `npx tsc` pulled the LATEST
+global TypeScript (6.x), which emitted the TS5101 `baseUrl` deprecation and suggested
+`ignoreDeprecations "6.0"`. The repo PINS `typescript@^5.9.2`, which:
+  1. does NOT treat `baseUrl` as a hard deprecation error (no TS5101), and
+  2. REJECTS `"6.0"` as an invalid value → `error TS5103: Invalid value for '--ignoreDeprecations'`.
+
+So the edit was unnecessary AND turned the typecheck failure into a different (config) failure.
+
+### Verified via GitHub Action (PRD Verification run 28299610938) + main CI history
+- Build job: SUCCESS — `npm run build` passes (confirms the build-completion acceptance
+  criterion for US-093 and US-133; those `passes: true` markings stand).
+- Type Check job: FAILURE — on pinned TS 5.9.2 the pre-existing `main` CI typecheck also
+  fails (it ran ~39 min before failing on REAL type errors, not a config error). Therefore
+  **US-212 is genuinely incomplete and remains passes: false** — the strict-mode error
+  backlog is NOT burned down.
+- main CI is broadly red anyway: Lint, Unit Tests, and E2E jobs also fail on `main`
+  (corroborates US-213/214/215 and the quality-story backlog being incomplete).
+
+### Action
+Reverted the tsconfig.app.json change (removed the invalid ignoreDeprecations line). No
+runtime app code was ever touched. US-093 and US-133 remain the only two stories verified
+complete this session (156/234). US-212 stays false, now confirmed by CI rather than guessed.
