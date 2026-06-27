@@ -61,6 +61,7 @@ export const LazySubmittals = createLazyRoute(() => import('@/pages/Submittals')
 export const LazyChangeOrders = createLazyRoute(() => import('@/pages/ChangeOrders'));
 export const LazyPunchList = createLazyRoute(() => import('@/pages/PunchList'));
 export const LazyDocumentManagement = createLazyRoute(() => import('@/pages/DocumentManagement'));
+export const LazyDocumentTemplates = createLazyRoute(() => import('@/pages/DocumentTemplates'));
 export const LazyMaterials = createLazyRoute(() => import('@/pages/Materials'));
 export const LazyMaterialTracking = createLazyRoute(() => import('@/pages/MaterialTracking'));
 export const LazyEquipment = createLazyRoute(() => import('@/pages/Equipment'));

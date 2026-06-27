@@ -31,7 +31,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { ResponsiveContainer } from '@/components/layout/ResponsiveContainer';
 import { mobileFilterClasses } from '@/utils/mobileHelpers';
-import { Upload, FileText, Search, Filter, Brain, Database, Download, Trash2, Tag, FolderInput } from 'lucide-react';
+import { Upload, FileText, Search, Filter, Brain, Database, Download, Trash2, Tag, FolderInput, Eye } from 'lucide-react';
+import { DocumentPreviewModal } from '@/components/documents/DocumentPreviewModal';
 
 interface Document {
   id: string;
@@ -111,6 +112,7 @@ const DocumentManagement = () => {
 
   // Delete confirmation state
   const [deleteConfirmDoc, setDeleteConfirmDoc] = useState<Document | null>(null);
+  const [previewDoc, setPreviewDoc] = useState<Document | null>(null);
   
   // Filters
   const [searchTerm, setSearchTerm] = useState('');
@@ -754,6 +756,14 @@ const DocumentManagement = () => {
                   <Button
                     size="sm"
                     variant="outline"
+                    onClick={(e) => { e.stopPropagation(); setPreviewDoc(row); }}
+                    aria-label={`Preview ${row.name}`}
+                  >
+                    <Eye className="h-3 w-3" aria-hidden="true" />
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
                     onClick={(e) => { e.stopPropagation(); downloadDocument(row); }}
                     aria-label={`Download ${row.name}`}
                   >
@@ -911,6 +921,13 @@ const DocumentManagement = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <DocumentPreviewModal
+        open={!!previewDoc}
+        onOpenChange={(o) => { if (!o) setPreviewDoc(null); }}
+        document={previewDoc}
+        bucket={isProjectContext ? 'project-documents' : 'company-documents'}
+      />
     </DashboardLayout>
     </AccessiblePageWrapper>
   );
