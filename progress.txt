@@ -1240,3 +1240,31 @@ but was DEAD CODE (never mounted). (2) Route preload covered only the initial ~5
 - [x] cache versioning robust to partial deploys (git-hash SW version + skipWaiting already present)
 
 prd.json: US-220 passes:true. Verified by GitHub Action (unit-test/build).
+
+---
+
+## 2026-06-27 - Session: US-208 Health check 503 + uptime alerting (P2)
+
+### State
+- 503-for-degraded/unhealthy was already implemented in supabase/functions/health-check
+  (httpStatus = healthy ? 200 : 503). Remaining: an actual monitor + alerting + a dashboard
+  reflecting real status (it used mock data).
+
+### Fix
+- .github/workflows/uptime-health-check.yml: scheduled (~10min) + workflow_dispatch synthetic
+  monitor. Pings health endpoint 3x/15s apart (debounce -> no flapping), fails run on
+  consistent non-healthy (emails repo admins), optional Slack via SLACK_WEBHOOK_URL.
+  simulate_failure input tests the alert path end-to-end on demand.
+- src/pages/admin/SystemHealth.tsx: now calls the REAL health-check function (was mock),
+  parses JSON body even on 503, surfaces Healthy/Degraded/Unhealthy distinctly.
+- docs/UPTIME_MONITORING.md: endpoint contract, config (HEALTH_CHECK_URL var, optional
+  HEALTH_CHECK_ANON_KEY/SLACK_WEBHOOK_URL secrets), alert routing, simulated-failure test.
+
+### Acceptance
+- [x] 503 for degraded/unhealthy, 200 only healthy (pre-existing)
+- [x] scheduled monitor pings + alerts on failure/degradation
+- [x] alert routing documented + testable via simulate_failure dispatch
+- [x] dashboard surfaces degraded distinctly (now wired to real endpoint)
+- [x] no flapping (3-retry/15s debounce)
+
+prd.json: US-208 passes:true (160/234). Live alerting needs HEALTH_CHECK_URL repo var (ops).
