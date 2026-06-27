@@ -1,4 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
+import { logger } from '@/lib/logger';
 import type { EstimateSnapshot } from '@/lib/estimate-versions';
 
 /**
@@ -25,35 +26,50 @@ export async function createEstimateVersion(params: {
   userId?: string | null;
   snapshot: EstimateSnapshot;
 }): Promise<void> {
-  try {
-    const { data: existing } = await supabase
-      .from('estimate_versions')
-      .select('version_number')
-      .eq('estimate_id', params.estimateId)
-      .order('version_number', { ascending: false })
-      .limit(1);
-    const nextVersion = (existing?.[0]?.version_number ?? 0) + 1;
+  // version_number is allocated client-side as max+1. A UNIQUE(estimate_id,
+  // version_number) constraint guards against duplicates; on a concurrent-save
+  // conflict we recompute and retry once before giving up (best-effort).
+  for (let attempt = 0; attempt < 2; attempt++) {
+    try {
+      const { data: existing } = await supabase
+        .from('estimate_versions')
+        .select('version_number')
+        .eq('estimate_id', params.estimateId)
+        .order('version_number', { ascending: false })
+        .limit(1);
+      const nextVersion = (existing?.[0]?.version_number ?? 0) + 1;
 
-    await supabase.from('estimate_versions').insert([
-      {
-        estimate_id: params.estimateId,
-        company_id: params.companyId,
-        version_number: nextVersion,
-        created_by: params.userId ?? null,
-        snapshot: params.snapshot as unknown as Record<string, unknown>,
-      },
-    ]);
-  } catch {
-    /* snapshotting is best-effort */
+      const { error } = await supabase.from('estimate_versions').insert([
+        {
+          estimate_id: params.estimateId,
+          company_id: params.companyId,
+          version_number: nextVersion,
+          created_by: params.userId ?? null,
+          snapshot: params.snapshot as unknown as Record<string, unknown>,
+        },
+      ]);
+      if (!error) return;
+      if (attempt === 1) logger.warn('Estimate version snapshot failed', { error: error.message });
+    } catch (err) {
+      if (attempt === 1) logger.warn('Estimate version snapshot threw', err as Error);
+    }
   }
 }
 
-/** Fetch all versions for an estimate (newest first) with editor display names. */
-export async function fetchEstimateVersions(estimateId: string): Promise<EstimateVersionRow[]> {
+/**
+ * Fetch all versions for an estimate (newest first) with editor display names.
+ * Scoped by companyId for site isolation (in addition to RLS).
+ */
+export async function fetchEstimateVersions(
+  estimateId: string,
+  companyId?: string | null
+): Promise<EstimateVersionRow[]> {
+  if (!companyId) return [];
   const { data, error } = await supabase
     .from('estimate_versions')
     .select('id, version_number, created_at, created_by, snapshot')
     .eq('estimate_id', estimateId)
+    .eq('company_id', companyId)
     .order('version_number', { ascending: false });
   if (error || !data) return [];
 

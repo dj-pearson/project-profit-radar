@@ -43,6 +43,21 @@ describe('diffLineItems (US-096)', () => {
     expect(diffs[0].kind).toBe('unchanged');
   });
 
+  it('keys by stable id so duplicate names do not collapse', () => {
+    const before = [
+      { ...item({ item_name: 'Misc' }), id: 'a' },
+      { ...item({ item_name: 'Misc' }), id: 'b' },
+    ];
+    const after = [
+      { ...item({ item_name: 'Misc', quantity: 9 }), id: 'a' }, // changed
+      { ...item({ item_name: 'Misc' }), id: 'b' }, // unchanged
+    ];
+    const diffs = diffLineItems(before, after);
+    expect(diffs).toHaveLength(2);
+    expect(diffs.filter((d) => d.kind === 'changed')).toHaveLength(1);
+    expect(diffs.filter((d) => d.kind === 'unchanged')).toHaveLength(1);
+  });
+
   it('summarizes diff counts', () => {
     const before = [item({ item_name: 'A' }), item({ item_name: 'B' })];
     const after = [item({ item_name: 'A', quantity: 5 }), item({ item_name: 'C' })];

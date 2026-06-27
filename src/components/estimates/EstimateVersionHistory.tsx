@@ -16,6 +16,7 @@ import { diffLineItems, summarizeDiff, type LineItemChangeKind } from '@/lib/est
 
 interface EstimateVersionHistoryProps {
   estimateId: string;
+  companyId?: string | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
@@ -31,7 +32,7 @@ const ROW_BG: Record<LineItemChangeKind, string> = {
  * US-096: estimate version history panel with read-only view and side-by-side
  * comparison (added=green, removed=red, changed=yellow).
  */
-export function EstimateVersionHistory({ estimateId, open, onOpenChange }: EstimateVersionHistoryProps) {
+export function EstimateVersionHistory({ estimateId, companyId, open, onOpenChange }: EstimateVersionHistoryProps) {
   const [versions, setVersions] = useState<EstimateVersionRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [viewing, setViewing] = useState<EstimateVersionRow | null>(null);
@@ -41,13 +42,14 @@ export function EstimateVersionHistory({ estimateId, open, onOpenChange }: Estim
   useEffect(() => {
     if (!open) return;
     setLoading(true);
+    setVersions([]); // avoid showing a previous estimate's list during refetch
     setViewing(null);
     setSelected([]);
     setComparing(false);
-    fetchEstimateVersions(estimateId)
+    fetchEstimateVersions(estimateId, companyId)
       .then(setVersions)
       .finally(() => setLoading(false));
-  }, [open, estimateId]);
+  }, [open, estimateId, companyId]);
 
   const toggleSelect = (id: string) => {
     setSelected((prev) =>
@@ -72,7 +74,7 @@ export function EstimateVersionHistory({ estimateId, open, onOpenChange }: Estim
       <DialogContent className="max-w-3xl">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <History className="h-5 w-5" /> Estimate Version History
+            <History className="h-5 w-5" aria-hidden="true" /> Estimate Version History
           </DialogTitle>
         </DialogHeader>
 
@@ -141,7 +143,7 @@ export function EstimateVersionHistory({ estimateId, open, onOpenChange }: Estim
                 <div className="flex items-center justify-between">
                   <p className="text-sm text-muted-foreground">Select two versions to compare.</p>
                   <Button size="sm" disabled={selected.length !== 2} onClick={() => setComparing(true)}>
-                    <GitCompare className="mr-1 h-3.5 w-3.5" /> Compare
+                    <GitCompare className="mr-1 h-3.5 w-3.5" aria-hidden="true" /> Compare
                   </Button>
                 </div>
                 <div className="divide-y rounded border">
@@ -159,7 +161,7 @@ export function EstimateVersionHistory({ estimateId, open, onOpenChange }: Estim
                         </span>
                       </div>
                       <Button size="sm" variant="outline" onClick={() => setViewing(v)}>
-                        <Eye className="mr-1 h-3.5 w-3.5" /> View
+                        <Eye className="mr-1 h-3.5 w-3.5" aria-hidden="true" /> View
                       </Button>
                     </div>
                   ))}
@@ -173,9 +175,24 @@ export function EstimateVersionHistory({ estimateId, open, onOpenChange }: Estim
   );
 }
 
-function fmt(item: { quantity?: number | null; unit_cost?: number | null } | null): string {
+function fmt(
+  item:
+    | {
+        quantity?: number | null;
+        unit_cost?: number | null;
+        unit?: string | null;
+        category?: string | null;
+        description?: string | null;
+      }
+    | null
+): string {
   if (!item) return '—';
-  return `${item.quantity ?? 0} × $${item.unit_cost ?? 0}`;
+  const parts = [
+    `${item.quantity ?? 0} ${item.unit ?? ''}`.trim() + ` × $${item.unit_cost ?? 0}`,
+    item.category ? `cat: ${item.category}` : '',
+    item.description ? `“${item.description}”` : '',
+  ].filter(Boolean);
+  return parts.join(' · ');
 }
 
 function SnapshotTable({ items }: { items: { item_name: string; quantity?: number | null; unit_cost?: number | null }[] }) {

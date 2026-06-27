@@ -6,6 +6,8 @@
  */
 
 export interface SnapshotLineItem {
+  /** Stable line-item id (preferred diff key; falls back to name when absent). */
+  id?: string | null;
   item_name: string;
   description?: string | null;
   quantity?: number | null;
@@ -43,7 +45,10 @@ const COMPARED_FIELDS: (keyof SnapshotLineItem)[] = [
   'category',
 ];
 
-const keyOf = (item: SnapshotLineItem) => (item.item_name ?? '').trim().toLowerCase();
+// Prefer a stable id so two line items with the same name don't collapse in the
+// diff; fall back to the normalized name for legacy snapshots without ids.
+const keyOf = (item: SnapshotLineItem) =>
+  item.id ? `id:${item.id}` : `name:${(item.item_name ?? '').trim().toLowerCase()}`;
 
 /**
  * Diff two sets of estimate line items, keyed by item name. Returns one entry

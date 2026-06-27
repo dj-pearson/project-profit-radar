@@ -20,7 +20,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { EstimateTemplatesLibrary } from "./EstimateTemplatesLibrary";
 import { LineItemLibraryBrowser } from "./LineItemLibraryBrowser";
-import { EstimateVersionHistory } from "./EstimateVersionHistory";
+import { EstimateVersionHistory } from "@/components/estimates/EstimateVersionHistory";
 import { createEstimateVersion } from "@/services/estimateVersions";
 import { History } from "lucide-react";
 
@@ -347,6 +347,7 @@ export function EstimateForm({ onSuccess, onCancel, estimateId }: EstimateFormPr
             discount_amount: data.discount_amount,
             notes: data.notes,
             lineItems: lineItems.map((it) => ({
+              id: it.id,
               item_name: it.item_name,
               description: it.description,
               quantity: it.quantity,
@@ -446,13 +447,14 @@ export function EstimateForm({ onSuccess, onCancel, estimateId }: EstimateFormPr
         {estimateId && (
           <div className="flex justify-end">
             <Button type="button" variant="outline" size="sm" onClick={() => setShowVersionHistory(true)}>
-              <History className="mr-1 h-4 w-4" /> Version History
+              <History className="mr-1 h-4 w-4" aria-hidden="true" /> Version History
             </Button>
           </div>
         )}
         {estimateId && (
           <EstimateVersionHistory
             estimateId={estimateId}
+            companyId={companyId}
             open={showVersionHistory}
             onOpenChange={setShowVersionHistory}
           />
