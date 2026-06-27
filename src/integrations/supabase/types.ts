@@ -13167,6 +13167,36 @@ export type Database = {
           },
         ]
       }
+      estimate_versions: {
+        Row: {
+          company_id: string
+          created_at: string
+          created_by: string | null
+          estimate_id: string
+          id: string
+          snapshot: Json
+          version_number: number
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          created_by?: string | null
+          estimate_id: string
+          id?: string
+          snapshot: Json
+          version_number: number
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          created_by?: string | null
+          estimate_id?: string
+          id?: string
+          snapshot?: Json
+          version_number?: number
+        }
+        Relationships: []
+      }
       estimate_line_items: {
         Row: {
           category: string | null
