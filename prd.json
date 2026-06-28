@@ -606,7 +606,7 @@
     {
       "id": "US-038",
       "title": "Add visual takeoff measurement tools for construction drawings",
-      "description": "As an estimator, I want to measure linear distances, areas, and count symbols directly on uploaded construction drawings (PDFs/images) so that I can produce accurate quantity takeoffs without switching to a separate tool. All three major competitors (Buildertrend, Procore, Autodesk) offer visual takeoff. Brikly currently has NO takeoff capability — estimates exist (src/pages/EstimatesHub.tsx, src/components/estimates/) but lack drawing-based measurement. Create a new TakeoffViewer component that renders uploaded PDF/image drawings on a canvas, supports linear measurement (click two points for distance), area measurement (polygon tool), and count measurement (click to place markers). Measurements should be stored per-drawing and exportable to the existing estimate line items. Use an existing canvas library (e.g., fabric.js or konva) for rendering. Create a Supabase migration for a takeoff_measurements table (id, project_id, document_id, measurement_type, value, unit, coordinates_json, label, created_by, created_at). Add a Takeoff page accessible from the project detail view.",
+      "description": "As an estimator, I want to measure linear distances, areas, and count symbols directly on uploaded construction drawings (PDFs/images) so that I can produce accurate quantity takeoffs without switching to a separate tool. All three major competitors (Buildertrend, Procore, Autodesk) offer visual takeoff. Brikly currently has NO takeoff capability \u2014 estimates exist (src/pages/EstimatesHub.tsx, src/components/estimates/) but lack drawing-based measurement. Create a new TakeoffViewer component that renders uploaded PDF/image drawings on a canvas, supports linear measurement (click two points for distance), area measurement (polygon tool), and count measurement (click to place markers). Measurements should be stored per-drawing and exportable to the existing estimate line items. Use an existing canvas library (e.g., fabric.js or konva) for rendering. Create a Supabase migration for a takeoff_measurements table (id, project_id, document_id, measurement_type, value, unit, coordinates_json, label, created_by, created_at). Add a Takeoff page accessible from the project detail view.",
       "acceptanceCriteria": [
         "src/components/takeoff/TakeoffViewer.tsx exists with PDF/image rendering on canvas",
         "Linear measurement tool: click two points, display distance with configurable scale",
@@ -646,7 +646,7 @@
     {
       "id": "US-040",
       "title": "Add client selections management for finish and fixture choices",
-      "description": "As a residential builder, I want clients to browse and select finishes, fixtures, and material options through the client portal, with their choices automatically updating the project budget, so that the selections process doesn't require manual back-and-forth emails. Buildertrend's Selections feature is a key residential differentiator that Brikly lacks entirely. Brikly has a client portal (src/components/client-portal/) but it only shows project progress — there is NO selections workflow. Create a selections management system: 1) Builder defines selection categories per project (e.g., Kitchen Countertop, Master Bath Tile, Lighting Fixtures) with options that include photos, descriptions, and price impacts. 2) Client views and picks selections in the client portal. 3) Selections auto-update project budget as change orders. Create Supabase migrations for: selection_categories (id, project_id, name, description, due_date, status, sort_order), selection_options (id, category_id, name, description, photo_url, price_impact, is_default, supplier), client_selections (id, category_id, option_id, selected_by, selected_at, notes).",
+      "description": "As a residential builder, I want clients to browse and select finishes, fixtures, and material options through the client portal, with their choices automatically updating the project budget, so that the selections process doesn't require manual back-and-forth emails. Buildertrend's Selections feature is a key residential differentiator that Brikly lacks entirely. Brikly has a client portal (src/components/client-portal/) but it only shows project progress \u2014 there is NO selections workflow. Create a selections management system: 1) Builder defines selection categories per project (e.g., Kitchen Countertop, Master Bath Tile, Lighting Fixtures) with options that include photos, descriptions, and price impacts. 2) Client views and picks selections in the client portal. 3) Selections auto-update project budget as change orders. Create Supabase migrations for: selection_categories (id, project_id, name, description, due_date, status, sort_order), selection_options (id, category_id, name, description, photo_url, price_impact, is_default, supplier), client_selections (id, category_id, option_id, selected_by, selected_at, notes).",
       "acceptanceCriteria": [
         "src/components/selections/SelectionCategoryManager.tsx exists for builders to define categories and options",
         "src/components/client-portal/ClientSelections.tsx exists for clients to browse and pick selections",
@@ -661,7 +661,7 @@
       ],
       "priority": 9,
       "passes": true,
-      "notes": "Competitor gap: Buildertrend's Selections feature is one of their most popular residential features — clients can choose finishes/fixtures directly in the portal, which auto-flows into change orders and budgets. Neither Procore nor Autodesk focus on this (they target commercial). This is a high-value differentiator for Brikly's SMB residential market. Brikly has a client portal but ZERO selections workflow."
+      "notes": "Competitor gap: Buildertrend's Selections feature is one of their most popular residential features \u2014 clients can choose finishes/fixtures directly in the portal, which auto-flows into change orders and budgets. Neither Procore nor Autodesk focus on this (they target commercial). This is a high-value differentiator for Brikly's SMB residential market. Brikly has a client portal but ZERO selections workflow."
     },
     {
       "id": "US-041",
@@ -681,7 +681,7 @@
       ],
       "priority": 9,
       "passes": true,
-      "notes": "Competitor gap: Buildertrend has built-in e-signatures for proposals and change orders. Autodesk integrates with DocuSign and Adobe Sign. Procore has DocuSign integration. Brikly has only an in-person canvas signature pad — no remote signing workflow. E-signatures are table stakes for any construction management tool in 2026."
+      "notes": "Competitor gap: Buildertrend has built-in e-signatures for proposals and change orders. Autodesk integrates with DocuSign and Adobe Sign. Procore has DocuSign integration. Brikly has only an in-person canvas signature pad \u2014 no remote signing workflow. E-signatures are table stakes for any construction management tool in 2026."
     },
     {
       "id": "US-042",
@@ -726,7 +726,7 @@
     {
       "id": "US-044",
       "title": "Add schedule import from Microsoft Project and Primavera P6 files",
-      "description": "As a project manager, I want to import existing schedules from Microsoft Project (.mpp, .xml) and Primavera P6 (.xer, .xml) files so that I don't have to manually recreate schedules when switching to Brikly. Both Procore and Autodesk support importing schedules from industry-standard formats. Brikly has a Gantt chart (src/components/schedule/GanttChart.tsx) with dependencies and critical path support, and a ScheduleBuilder page (src/pages/tools/ScheduleBuilder.tsx), but NO schedule import capability — schedules must be created from scratch or from templates. Add an import wizard that: 1) Accepts .xml (MS Project XML), .mpp (via server-side conversion), and .xer (P6) files, 2) Parses tasks, durations, dependencies, resources, and milestones, 3) Maps imported data to Brikly's Task type (src/types/schedule.ts), 4) Previews imported schedule before saving. Start with MS Project XML and P6 XER as they are text-based and parseable without proprietary libraries.",
+      "description": "As a project manager, I want to import existing schedules from Microsoft Project (.mpp, .xml) and Primavera P6 (.xer, .xml) files so that I don't have to manually recreate schedules when switching to Brikly. Both Procore and Autodesk support importing schedules from industry-standard formats. Brikly has a Gantt chart (src/components/schedule/GanttChart.tsx) with dependencies and critical path support, and a ScheduleBuilder page (src/pages/tools/ScheduleBuilder.tsx), but NO schedule import capability \u2014 schedules must be created from scratch or from templates. Add an import wizard that: 1) Accepts .xml (MS Project XML), .mpp (via server-side conversion), and .xer (P6) files, 2) Parses tasks, durations, dependencies, resources, and milestones, 3) Maps imported data to Brikly's Task type (src/types/schedule.ts), 4) Previews imported schedule before saving. Start with MS Project XML and P6 XER as they are text-based and parseable without proprietary libraries.",
       "acceptanceCriteria": [
         "src/components/schedule/ScheduleImportWizard.tsx exists with file upload and format selection",
         "MS Project XML (.xml) parser extracts: tasks, durations, start/end dates, dependencies, resources",
@@ -741,16 +741,16 @@
       ],
       "priority": 10,
       "passes": true,
-      "notes": "Competitor gap: Procore imports from MS Project and Primavera P6. Autodesk imports from P6 (.xer, .xml), MS Project (.mpp, .xml), and Asta Powerproject (.pp). Brikly only creates schedules from templates or scratch. Schedule import is critical for winning customers switching from other tools. MS Project XML and P6 XER are text-based formats that can be parsed with JavaScript — .mpp requires server-side conversion."
+      "notes": "Competitor gap: Procore imports from MS Project and Primavera P6. Autodesk imports from P6 (.xer, .xml), MS Project (.mpp, .xml), and Asta Powerproject (.pp). Brikly only creates schedules from templates or scratch. Schedule import is critical for winning customers switching from other tools. MS Project XML and P6 XER are text-based formats that can be parsed with JavaScript \u2014 .mpp requires server-side conversion."
     },
     {
       "id": "US-045",
       "title": "Add submittal tracking and approval workflow",
-      "description": "As a project manager, I want to track submittals (shop drawings, product data, samples) through a formal review and approval workflow so that I can ensure materials and equipment meet specification requirements before installation. Procore has a comprehensive submittal system, and Autodesk tracks submittals with AutoSpecs AI recommendations. Brikly has a basic Submittals page (mentioned in navigation) but lacks a structured submittal workflow. Create a submittal management system with: 1) Submittal log listing all submittals with spec section, status, and ball-in-court, 2) Submittal creation linking to specification sections and drawing references, 3) Multi-step review workflow (submit → review → approve/revise/reject), 4) Revision tracking with full history, 5) Ball-in-court tracking showing who needs to act next. Create Supabase migrations for: submittals (id, project_id, number, title, spec_section, description, status, ball_in_court_user_id, due_date, submitted_by, submitted_at, current_revision), submittal_revisions (id, submittal_id, revision_number, document_url, submitted_at, reviewed_by, reviewed_at, review_status, review_comments).",
+      "description": "As a project manager, I want to track submittals (shop drawings, product data, samples) through a formal review and approval workflow so that I can ensure materials and equipment meet specification requirements before installation. Procore has a comprehensive submittal system, and Autodesk tracks submittals with AutoSpecs AI recommendations. Brikly has a basic Submittals page (mentioned in navigation) but lacks a structured submittal workflow. Create a submittal management system with: 1) Submittal log listing all submittals with spec section, status, and ball-in-court, 2) Submittal creation linking to specification sections and drawing references, 3) Multi-step review workflow (submit \u2192 review \u2192 approve/revise/reject), 4) Revision tracking with full history, 5) Ball-in-court tracking showing who needs to act next. Create Supabase migrations for: submittals (id, project_id, number, title, spec_section, description, status, ball_in_court_user_id, due_date, submitted_by, submitted_at, current_revision), submittal_revisions (id, submittal_id, revision_number, document_url, submitted_at, reviewed_by, reviewed_at, review_status, review_comments).",
       "acceptanceCriteria": [
         "src/pages/Submittals.tsx exists with submittal log table (number, title, spec section, status, ball-in-court, due date)",
         "Submittal creation form links to spec section and drawing references",
-        "Review workflow with status transitions: draft → submitted → under-review → approved/revise/rejected",
+        "Review workflow with status transitions: draft \u2192 submitted \u2192 under-review \u2192 approved/revise/rejected",
         "Ball-in-court tracking shows current responsible party with days pending",
         "Revision tracking: each resubmission creates a new revision with full history preserved",
         "Overdue submittal alerts when ball-in-court exceeds due date",
@@ -761,7 +761,7 @@
       ],
       "priority": 10,
       "passes": true,
-      "notes": "Competitor gap: Procore has a comprehensive submittal system with specification linking, multi-step review, and ball-in-court tracking. Autodesk has submittals with AutoSpecs AI that recommends potentially missing submittals. Buildertrend has basic submittal tracking. Brikly references submittals in navigation but has no structured workflow. Submittals are fundamental to construction project management — this gap is more noticeable as Brikly targets larger SMB projects."
+      "notes": "Competitor gap: Procore has a comprehensive submittal system with specification linking, multi-step review, and ball-in-court tracking. Autodesk has submittals with AutoSpecs AI that recommends potentially missing submittals. Buildertrend has basic submittal tracking. Brikly references submittals in navigation but has no structured workflow. Submittals are fundamental to construction project management \u2014 this gap is more noticeable as Brikly targets larger SMB projects."
     },
     {
       "id": "US-046",
@@ -780,7 +780,7 @@
       ],
       "priority": 11,
       "passes": true,
-      "notes": "Competitor gap: Procore classifies photos by trade and location automatically. Autodesk has Photo Autotags for ML-based automatic tagging. Brikly has an analyze-images edge function and photo upload in daily reports but no automated classification. Construction site photos are one of the highest-volume data types — automated classification saves significant time for field teams."
+      "notes": "Competitor gap: Procore classifies photos by trade and location automatically. Autodesk has Photo Autotags for ML-based automatic tagging. Brikly has an analyze-images edge function and photo upload in daily reports but no automated classification. Construction site photos are one of the highest-volume data types \u2014 automated classification saves significant time for field teams."
     },
     {
       "id": "US-047",
@@ -805,7 +805,7 @@
     {
       "id": "US-048",
       "title": "Add project closeout and handover documentation tools",
-      "description": "As a project manager completing a project, I want a structured closeout checklist and handover package builder so that I can ensure all closeout requirements are met and deliver a complete documentation package to the owner. Procore and Autodesk both have project closeout tools. Brikly has NO closeout workflow — projects are simply marked as 'completed' with no structured handover process. Create a closeout management system with: 1) Configurable closeout checklist (punch list completion, final inspections, as-built drawings, O&M manuals, warranties, lien waivers, certificate of occupancy), 2) Handover package builder that compiles selected documents from the project into a downloadable ZIP or shared link, 3) Closeout progress dashboard showing completion percentage per category. Create Supabase migrations for: closeout_checklists (id, project_id, template_id, items_json, progress_percentage, started_at, completed_at), closeout_packages (id, project_id, title, document_ids_json, shared_link_token, created_by, created_at, downloaded_at).",
+      "description": "As a project manager completing a project, I want a structured closeout checklist and handover package builder so that I can ensure all closeout requirements are met and deliver a complete documentation package to the owner. Procore and Autodesk both have project closeout tools. Brikly has NO closeout workflow \u2014 projects are simply marked as 'completed' with no structured handover process. Create a closeout management system with: 1) Configurable closeout checklist (punch list completion, final inspections, as-built drawings, O&M manuals, warranties, lien waivers, certificate of occupancy), 2) Handover package builder that compiles selected documents from the project into a downloadable ZIP or shared link, 3) Closeout progress dashboard showing completion percentage per category. Create Supabase migrations for: closeout_checklists (id, project_id, template_id, items_json, progress_percentage, started_at, completed_at), closeout_packages (id, project_id, title, document_ids_json, shared_link_token, created_by, created_at, downloaded_at).",
       "acceptanceCriteria": [
         "src/pages/ProjectCloseout.tsx exists with closeout checklist and handover tools",
         "Configurable closeout checklist with standard items: punch list, inspections, as-builts, O&M, warranties, lien waivers, CO",
@@ -820,7 +820,7 @@
       ],
       "priority": 11,
       "passes": true,
-      "notes": "Competitor gap: Procore has comprehensive closeout workflows with punch list integration and warranty tracking. Autodesk added Handover & Closeout tools (January 2025) for collecting, compiling, and exporting handover documentation including issues, forms, and project records. Brikly has no closeout process — projects just get marked 'completed'. Structured closeout reduces liability risk and improves client satisfaction."
+      "notes": "Competitor gap: Procore has comprehensive closeout workflows with punch list integration and warranty tracking. Autodesk added Handover & Closeout tools (January 2025) for collecting, compiling, and exporting handover documentation including issues, forms, and project records. Brikly has no closeout process \u2014 projects just get marked 'completed'. Structured closeout reduces liability risk and improves client satisfaction."
     },
     {
       "id": "US-049",
@@ -840,7 +840,7 @@
       ],
       "priority": 11,
       "passes": true,
-      "notes": "Competitor gap: Buildertrend offers AI-powered automatic client updates as a key feature for residential builders. Procore and Autodesk focus more on internal reporting. For Brikly's SMB market, automated client communication is a significant time saver. The data sources (daily reports, schedule, budget) already exist — the gap is aggregation and AI summarization. This leverages Brikly's existing AI infrastructure (edge functions for AI content generation)."
+      "notes": "Competitor gap: Buildertrend offers AI-powered automatic client updates as a key feature for residential builders. Procore and Autodesk focus more on internal reporting. For Brikly's SMB market, automated client communication is a significant time saver. The data sources (daily reports, schedule, budget) already exist \u2014 the gap is aggregation and AI summarization. This leverages Brikly's existing AI infrastructure (edge functions for AI content generation)."
     },
     {
       "id": "US-050",
@@ -859,16 +859,16 @@
       ],
       "priority": 12,
       "passes": true,
-      "notes": "Competitor gap: Procore has centralized workforce planning with skill tracking, resource calendars, and conflict detection. Autodesk handles resources at the schedule level. Buildertrend has basic crew scheduling. Brikly has crew management and time tracking but these are project-centric — there's no cross-project resource planning view. For SMB contractors managing 3-10 concurrent projects, avoiding crew conflicts is a daily challenge."
+      "notes": "Competitor gap: Procore has centralized workforce planning with skill tracking, resource calendars, and conflict detection. Autodesk handles resources at the schedule level. Buildertrend has basic crew scheduling. Brikly has crew management and time tracking but these are project-centric \u2014 there's no cross-project resource planning view. For SMB contractors managing 3-10 concurrent projects, avoiding crew conflicts is a daily challenge."
     },
     {
       "id": "US-051",
       "title": "Add RFI (Request for Information) management with workflow tracking",
-      "description": "As a project manager, I want to create, track, and manage RFIs with a formal workflow so that design clarifications are documented, assigned to the right parties, and resolved before they impact the schedule. Procore has comprehensive RFI management with workflow tracking, and Autodesk has RFI management with AI-powered quick create. Brikly references RFIs in some components but has NO dedicated RFI management page or workflow. Create an RFI system with: 1) RFI log with sequential numbering, status, ball-in-court, and impact tracking, 2) RFI creation linking to drawings, specifications, and cost/schedule impact, 3) Assignment workflow (create → assign → respond → review → close), 4) Response tracking with attachments, 5) Impact analysis showing cost and schedule effect of each RFI. Create Supabase migrations for: rfis (id, project_id, number, subject, question, drawing_reference, spec_section, status, assigned_to, ball_in_court, cost_impact, schedule_impact_days, priority, due_date, created_by, created_at, closed_at), rfi_responses (id, rfi_id, response_text, attachments_json, responded_by, responded_at).",
+      "description": "As a project manager, I want to create, track, and manage RFIs with a formal workflow so that design clarifications are documented, assigned to the right parties, and resolved before they impact the schedule. Procore has comprehensive RFI management with workflow tracking, and Autodesk has RFI management with AI-powered quick create. Brikly references RFIs in some components but has NO dedicated RFI management page or workflow. Create an RFI system with: 1) RFI log with sequential numbering, status, ball-in-court, and impact tracking, 2) RFI creation linking to drawings, specifications, and cost/schedule impact, 3) Assignment workflow (create \u2192 assign \u2192 respond \u2192 review \u2192 close), 4) Response tracking with attachments, 5) Impact analysis showing cost and schedule effect of each RFI. Create Supabase migrations for: rfis (id, project_id, number, subject, question, drawing_reference, spec_section, status, assigned_to, ball_in_court, cost_impact, schedule_impact_days, priority, due_date, created_by, created_at, closed_at), rfi_responses (id, rfi_id, response_text, attachments_json, responded_by, responded_at).",
       "acceptanceCriteria": [
         "src/pages/RFIs.tsx exists with RFI log table (number, subject, status, ball-in-court, due date, cost impact)",
         "RFI creation form with: subject, question, drawing/spec references, priority, due date, assignee",
-        "Workflow statuses: draft → open → assigned → responded → closed",
+        "Workflow statuses: draft \u2192 open \u2192 assigned \u2192 responded \u2192 closed",
         "Ball-in-court tracking shows who needs to act next and days pending",
         "RFI responses with text and file attachments, preserving full conversation history",
         "Cost and schedule impact fields per RFI, summarized on RFI dashboard",
@@ -879,7 +879,7 @@
       ],
       "priority": 12,
       "passes": true,
-      "notes": "Competitor gap: Procore has comprehensive RFI management with ball-in-court tracking and schedule impact analysis. Autodesk has RFI management with AI-powered quick creation from natural language prompts. Buildertrend has basic RFI tracking. Brikly mentions RFIs in some places but has no dedicated RFI module. RFIs are one of the most fundamental construction project management workflows — their absence is a significant gap as Brikly targets larger projects."
+      "notes": "Competitor gap: Procore has comprehensive RFI management with ball-in-court tracking and schedule impact analysis. Autodesk has RFI management with AI-powered quick creation from natural language prompts. Buildertrend has basic RFI tracking. Brikly mentions RFIs in some places but has no dedicated RFI module. RFIs are one of the most fundamental construction project management workflows \u2014 their absence is a significant gap as Brikly targets larger projects."
     },
     {
       "id": "US-052",
@@ -1187,7 +1187,7 @@
       ],
       "priority": 3,
       "passes": true,
-      "notes": "PASS. New /invoices/aging route (LazyARAgingReport, routeSecurity invoices.read). Pure logic src/lib/reports/agingReport.ts (buildAgingRows/summarizeBuckets/bucketForDays — Current/31-60/61-90/90+ on days past due, outstanding = amount_due else total-paid, excludes paid/void/draft) + 17 tests. ARAgingReport.tsx: 4 bucket summary cards + total (clickable drill-down), Recharts stacked bar, drill-down table (client/invoice#/due/days/bucket/outstanding), CSV (src/lib/exportCsv.ts) + PDF (jspdf+autotable) export. Linked from Invoices header. vite build green."
+      "notes": "PASS. New /invoices/aging route (LazyARAgingReport, routeSecurity invoices.read). Pure logic src/lib/reports/agingReport.ts (buildAgingRows/summarizeBuckets/bucketForDays \u2014 Current/31-60/61-90/90+ on days past due, outstanding = amount_due else total-paid, excludes paid/void/draft) + 17 tests. ARAgingReport.tsx: 4 bucket summary cards + total (clickable drill-down), Recharts stacked bar, drill-down table (client/invoice#/due/days/bucket/outstanding), CSV (src/lib/exportCsv.ts) + PDF (jspdf+autotable) export. Linked from Invoices header. vite build green."
     },
     {
       "id": "US-070",
@@ -1204,7 +1204,7 @@
       ],
       "priority": 4,
       "passes": true,
-      "notes": "COMPLETED. The QuickBooksIntegration panel (rendered in Settings/Integrations via QuickBooksRouting + FinancialHub) already had connection status, prominent last-sync timestamp, Sync Now with a syncing progress state, and connect/disconnect OAuth (quickbooks-connect/-disconnect/-sync edge fns). Gaps filled: (1) pure logic src/lib/integrations/quickbooksSync.ts — parseRecordsProcessed (object/number/array JSON -> total + per-entity counts), extractErrorMessage (message/error/detail keys, arrays, fallbacks), normalizeStatus, normalizeSyncLog, summarizeSyncHistory (newest-first, success rate, totals, lastError); 17 passing tests. (2) src/components/integrations/QuickBooksSyncHistory.tsx — replaces the static placeholder in the 'Sync Logs' tab with the real last-20 history table (date, type, status badge, record count, duration), a top-of-list alert for the most recent failure, and per-row Details + Retry (re-invokes quickbooks-sync for that sync_type) with query invalidation. company_id-scoped (RLS); uses existing quickbooks_sync_logs table (no migration). vite build green; new files eslint-clean (5 pre-existing any-types in QuickBooksIntegration.tsx left untouched)."
+      "notes": "COMPLETED. The QuickBooksIntegration panel (rendered in Settings/Integrations via QuickBooksRouting + FinancialHub) already had connection status, prominent last-sync timestamp, Sync Now with a syncing progress state, and connect/disconnect OAuth (quickbooks-connect/-disconnect/-sync edge fns). Gaps filled: (1) pure logic src/lib/integrations/quickbooksSync.ts \u2014 parseRecordsProcessed (object/number/array JSON -> total + per-entity counts), extractErrorMessage (message/error/detail keys, arrays, fallbacks), normalizeStatus, normalizeSyncLog, summarizeSyncHistory (newest-first, success rate, totals, lastError); 17 passing tests. (2) src/components/integrations/QuickBooksSyncHistory.tsx \u2014 replaces the static placeholder in the 'Sync Logs' tab with the real last-20 history table (date, type, status badge, record count, duration), a top-of-list alert for the most recent failure, and per-row Details + Retry (re-invokes quickbooks-sync for that sync_type) with query invalidation. company_id-scoped (RLS); uses existing quickbooks_sync_logs table (no migration). vite build green; new files eslint-clean (5 pre-existing any-types in QuickBooksIntegration.tsx left untouched)."
     },
     {
       "id": "US-071",
@@ -1255,7 +1255,7 @@
       ],
       "priority": 3,
       "passes": true,
-      "notes": "PASS. New Kanban tab on the CRM/Leads page (CRMLeads.tsx wraps the existing list in Tabs: List | Kanban). LeadsKanbanBoard.tsx (@hello-pangea/dnd) renders columns per pipeline stage (New/Contacted/Qualified/Proposal Sent/Negotiation/Won/Lost — aligned to the existing leads.status taxonomy so DnD writes back compatible values), cards show name, company, estimated value, days in stage; column headers show count + total value; cards color-coded by value tier (border). Optimistic move + rollback on failure; persists via updateLead({status}). Pure logic src/lib/crm/leadsKanban.ts (groupLeadsByStage/daysInStage/leadDisplayName/valueTier/normalizeStage) + 10 tests. Driven by the page's filtered leads so filters apply. vite build green."
+      "notes": "PASS. New Kanban tab on the CRM/Leads page (CRMLeads.tsx wraps the existing list in Tabs: List | Kanban). LeadsKanbanBoard.tsx (@hello-pangea/dnd) renders columns per pipeline stage (New/Contacted/Qualified/Proposal Sent/Negotiation/Won/Lost \u2014 aligned to the existing leads.status taxonomy so DnD writes back compatible values), cards show name, company, estimated value, days in stage; column headers show count + total value; cards color-coded by value tier (border). Optimistic move + rollback on failure; persists via updateLead({status}). Pure logic src/lib/crm/leadsKanban.ts (groupLeadsByStage/daysInStage/leadDisplayName/valueTier/normalizeStage) + 10 tests. Driven by the page's filtered leads so filters apply. vite build green."
     },
     {
       "id": "US-074",
@@ -1271,7 +1271,7 @@
       ],
       "priority": 3,
       "passes": true,
-      "notes": "PASS. DailyReports create dialog gains a quick-fill row: a template picker (daily_report_templates, applies default_crew_count/weather/safety via applyTemplateDefaults) and a 'Copy from Yesterday' button (fetches the most recent earlier daily_report for the selected project, pre-fills via buildReportFromPrevious — carries crew/weather/materials/equipment/work, clears day-specific delays+safety). Empty-template state links to /daily-report-templates (existing DailyReportTemplateManager handles save/edit/rename/delete + weather/crew/equipment/work sections). Pure logic src/lib/dailyReports/templateFill.ts + 5 tests. vite build green."
+      "notes": "PASS. DailyReports create dialog gains a quick-fill row: a template picker (daily_report_templates, applies default_crew_count/weather/safety via applyTemplateDefaults) and a 'Copy from Yesterday' button (fetches the most recent earlier daily_report for the selected project, pre-fills via buildReportFromPrevious \u2014 carries crew/weather/materials/equipment/work, clears day-specific delays+safety). Empty-template state links to /daily-report-templates (existing DailyReportTemplateManager handles save/edit/rename/delete + weather/crew/equipment/work sections). Pure logic src/lib/dailyReports/templateFill.ts + 5 tests. vite build green."
     },
     {
       "id": "US-075",
@@ -1375,7 +1375,7 @@
       ],
       "priority": 3,
       "passes": true,
-      "notes": "COMPLETED. Pure logic src/lib/equipment/utilization.ts: computeEquipmentUtilization (per-equipment day-based utilization over a window via unionDays interval-merge so overlapping assignments aren't double-counted; effective dates prefer actuals over planned; isIdle = no assignment overlapping the trailing 7-day window; isCurrentlyAssigned; daysSinceLastAssignment) + fleet totals; IDLE_THRESHOLD_DAYS=7. 12 passing tests in __tests__/utilization.test.ts. UI src/components/equipment/EquipmentAssignmentsTab.tsx (TanStack Query, company_id-scoped): new 'Assignments' tab on the Equipment page with summary stats (avg utilization / currently assigned / idle / fleet size) and sub-tabs — Active assignments table with a Return action (sets actual_end_date + assignment_status=completed and frees equipment to status=available), Utilization bars per item (last 30 days), Idle list (7+ days, days-idle), and Timeline (reuses EquipmentGanttChart for per-equipment history). Check Out reuses the existing EquipmentAssignmentForm in a dialog. Wired into src/pages/Equipment.tsx (grid-cols-5 tablist). Uses existing equipment / equipment_assignments / projects tables (no migration). vite build green; new files eslint-clean (2 pre-existing unrelated any-types in Equipment.tsx maintenance/table code left untouched)."
+      "notes": "COMPLETED. Pure logic src/lib/equipment/utilization.ts: computeEquipmentUtilization (per-equipment day-based utilization over a window via unionDays interval-merge so overlapping assignments aren't double-counted; effective dates prefer actuals over planned; isIdle = no assignment overlapping the trailing 7-day window; isCurrentlyAssigned; daysSinceLastAssignment) + fleet totals; IDLE_THRESHOLD_DAYS=7. 12 passing tests in __tests__/utilization.test.ts. UI src/components/equipment/EquipmentAssignmentsTab.tsx (TanStack Query, company_id-scoped): new 'Assignments' tab on the Equipment page with summary stats (avg utilization / currently assigned / idle / fleet size) and sub-tabs \u2014 Active assignments table with a Return action (sets actual_end_date + assignment_status=completed and frees equipment to status=available), Utilization bars per item (last 30 days), Idle list (7+ days, days-idle), and Timeline (reuses EquipmentGanttChart for per-equipment history). Check Out reuses the existing EquipmentAssignmentForm in a dialog. Wired into src/pages/Equipment.tsx (grid-cols-5 tablist). Uses existing equipment / equipment_assignments / projects tables (no migration). vite build green; new files eslint-clean (2 pre-existing unrelated any-types in Equipment.tsx maintenance/table code left untouched)."
     },
     {
       "id": "US-081",
@@ -1443,7 +1443,7 @@
       ],
       "priority": 3,
       "passes": true,
-      "notes": "New /project-calendar route -> src/pages/ProjectCalendar.tsx: month/week/day views with prev/next + Today nav, color-coded events (milestone=blue, deadline=red, crew=green, meeting=purple), click a day to create, click a user event to edit/delete; read-only overlays for project milestones (project_milestones) and project end dates (projects.end_date). New migration supabase/migrations/20260627000000_create_project_calendar_events.sql (idempotent CREATE TABLE + company_id RLS using get_user_company/get_user_role, updated_at trigger) — the existing calendar_events table is reserved for external sync. project_calendar_events added to supabase types.ts. CRUD via new src/hooks/useCalendarEvents.ts (merges the 3 sources). Test: src/hooks/__tests__/useCalendarEvents.test.ts. Note: existing /calendar route (CalendarSync) is unchanged; this is /project-calendar."
+      "notes": "New /project-calendar route -> src/pages/ProjectCalendar.tsx: month/week/day views with prev/next + Today nav, color-coded events (milestone=blue, deadline=red, crew=green, meeting=purple), click a day to create, click a user event to edit/delete; read-only overlays for project milestones (project_milestones) and project end dates (projects.end_date). New migration supabase/migrations/20260627000000_create_project_calendar_events.sql (idempotent CREATE TABLE + company_id RLS using get_user_company/get_user_role, updated_at trigger) \u2014 the existing calendar_events table is reserved for external sync. project_calendar_events added to supabase types.ts. CRUD via new src/hooks/useCalendarEvents.ts (merges the 3 sources). Test: src/hooks/__tests__/useCalendarEvents.test.ts. Note: existing /calendar route (CalendarSync) is unchanged; this is /project-calendar."
     },
     {
       "id": "US-085",
@@ -1494,8 +1494,8 @@
         "npm run build completes successfully"
       ],
       "priority": 4,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Implemented configurable approval workflow builder: /admin/approval-workflows Settings page (list, create/edit dialog), entity-type selection, ordered approval steps (role or specific user), conditional rules (amount/project_type with operators), enable/disable toggle, and a visual connected-node workflow diagram. New approval_workflows table with RLS (company_id isolation, admin-only writes), types added, pure rule helpers unit-tested."
     },
     {
       "id": "US-088",
@@ -1512,7 +1512,7 @@
       ],
       "priority": 3,
       "passes": true,
-      "notes": "COMPLETED. Sortable columns + bulk actions + filters on the invoices list (src/components/invoices/InvoiceList.tsx). SORT: clickable sortable headers for Invoice #, Client, Date (invoice_date, added column), Status, Due Date, Amount — with direction indicators (Chevron up/down; AccessibleTable's built-in aria-sort for the <=50 path, custom renderSortableHeader for the virtualized >50 path). Sorting is data-level (filterAndSortInvoices) so it applies to BOTH render paths; amount sorts numerically not lexically. SELECTION: row checkboxes + header select-all (AccessibleTable selectable/selectedRows/onSelectionChange for small lists; a leading checkbox column for the virtualized path). BULK TOOLBAR (shown when rows selected): Mark as Sent + Mark as Paid (supabase update .in('id', ids)), Export Selected (client-side CSV download), Delete Selected (confirm + supabase delete). FILTERS: Status dropdown (All/Draft/Sent/Paid/Overdue) + a date-field selector (invoice date | due date) with From/To range inputs + Clear filters. Extracted the pure filter+sort logic to src/components/invoices/invoiceListUtils.ts with 6 passing unit tests (string asc/desc, numeric amount sort, status filter, invoice-date range inclusive, due-date field filter, no input mutation). vite build green (1m13s)."
+      "notes": "COMPLETED. Sortable columns + bulk actions + filters on the invoices list (src/components/invoices/InvoiceList.tsx). SORT: clickable sortable headers for Invoice #, Client, Date (invoice_date, added column), Status, Due Date, Amount \u2014 with direction indicators (Chevron up/down; AccessibleTable's built-in aria-sort for the <=50 path, custom renderSortableHeader for the virtualized >50 path). Sorting is data-level (filterAndSortInvoices) so it applies to BOTH render paths; amount sorts numerically not lexically. SELECTION: row checkboxes + header select-all (AccessibleTable selectable/selectedRows/onSelectionChange for small lists; a leading checkbox column for the virtualized path). BULK TOOLBAR (shown when rows selected): Mark as Sent + Mark as Paid (supabase update .in('id', ids)), Export Selected (client-side CSV download), Delete Selected (confirm + supabase delete). FILTERS: Status dropdown (All/Draft/Sent/Paid/Overdue) + a date-field selector (invoice date | due date) with From/To range inputs + Clear filters. Extracted the pure filter+sort logic to src/components/invoices/invoiceListUtils.ts with 6 passing unit tests (string asc/desc, numeric amount sort, status filter, invoice-date range inclusive, due-date field filter, no input mutation). vite build green (1m13s)."
     },
     {
       "id": "US-089",
@@ -1529,7 +1529,7 @@
       ],
       "priority": 3,
       "passes": true,
-      "notes": "COMPLETED. Sortable columns + bulk actions + filters on the expenses list (src/components/expenses/ExpenseTracker.tsx). Because the list is SERVER-paginated (usePaginatedQuery), sort and filters are server-side: extended src/hooks/useSupabaseQuery.ts usePaginatedQuery with optional rangeFilters (gte/lte) — backward compatible — for the amount range. SORT: AccessibleTable onSort wired to orderBy (date/vendor/amount/status columns sortable, with sortColumn/sortDirection indicators); resets to page 1 on sort. SELECTION: AccessibleTable selectable/selectedRows/onSelectionChange (current-page checkboxes + select-all). BULK TOOLBAR: Approve Selected / Reject Selected (supabase update payment_status in('id',ids)), Export Selected (client CSV), Categorize Selected (Select of real expense_categories -> update category_id; category_id is a UUID FK to expense_categories, confirmed via types.ts, so categories are fetched not hardcoded). FILTERS: Category dropdown (from expense_categories table, company-scoped), Project dropdown (fetched projects; hidden when a projectId prop already scopes the list), Amount Min/$ Max range (server-side gte/lte) + Clear; all reset to page 1. vite build green (1m13s). Note: payment_status used for approve/reject since the schema has no separate approval column."
+      "notes": "COMPLETED. Sortable columns + bulk actions + filters on the expenses list (src/components/expenses/ExpenseTracker.tsx). Because the list is SERVER-paginated (usePaginatedQuery), sort and filters are server-side: extended src/hooks/useSupabaseQuery.ts usePaginatedQuery with optional rangeFilters (gte/lte) \u2014 backward compatible \u2014 for the amount range. SORT: AccessibleTable onSort wired to orderBy (date/vendor/amount/status columns sortable, with sortColumn/sortDirection indicators); resets to page 1 on sort. SELECTION: AccessibleTable selectable/selectedRows/onSelectionChange (current-page checkboxes + select-all). BULK TOOLBAR: Approve Selected / Reject Selected (supabase update payment_status in('id',ids)), Export Selected (client CSV), Categorize Selected (Select of real expense_categories -> update category_id; category_id is a UUID FK to expense_categories, confirmed via types.ts, so categories are fetched not hardcoded). FILTERS: Category dropdown (from expense_categories table, company-scoped), Project dropdown (fetched projects; hidden when a projectId prop already scopes the list), Amount Min/$ Max range (server-side gte/lte) + Clear; all reset to page 1. vite build green (1m13s). Note: payment_status used for approve/reject since the schema has no separate approval column."
     },
     {
       "id": "US-090",
@@ -1563,7 +1563,7 @@
       ],
       "priority": 4,
       "passes": true,
-      "notes": "COMPLETED. Sortable columns + bulk actions + filters on the documents list (src/pages/DocumentManagement.tsx; client-side data). SORT: AccessibleTable onSort wired to sortField/sortDir (name/file_type/file_size/etc. sortable; file_size & version numeric). SELECTION: AccessibleTable selectable/selectedRows/onSelectionChange (checkboxes + select-all). BULK TOOLBAR: Download Selected (loops downloadDocument via storage), Move to Folder (Select of document_categories -> update category_id), Tag Selected (inline input -> append to tags[] via supabase update), Delete Selected (opens an AlertDialog confirm -> removes storage files + deletes rows). FILTERS: file-type filter (PDF/image/video/application) + category + search already existed; ADDED a Project filter dropdown (from loaded projects; hidden in project context). Confirmation dialog for bulk delete = AlertDialog. SCHEMA: documents had no tags column, so added an additive migration supabase/migrations/20260613130000_add_documents_tags.sql (ADD COLUMN IF NOT EXISTS tags text[] — nullable/backward-compatible per CLAUDE.md, + GIN index) and added tags to documents Row/Insert/Update in the hand-maintained types.ts. vite build green (1m13s). Remaining: apply the additive migration to staging/prod (no DB in this env)."
+      "notes": "COMPLETED. Sortable columns + bulk actions + filters on the documents list (src/pages/DocumentManagement.tsx; client-side data). SORT: AccessibleTable onSort wired to sortField/sortDir (name/file_type/file_size/etc. sortable; file_size & version numeric). SELECTION: AccessibleTable selectable/selectedRows/onSelectionChange (checkboxes + select-all). BULK TOOLBAR: Download Selected (loops downloadDocument via storage), Move to Folder (Select of document_categories -> update category_id), Tag Selected (inline input -> append to tags[] via supabase update), Delete Selected (opens an AlertDialog confirm -> removes storage files + deletes rows). FILTERS: file-type filter (PDF/image/video/application) + category + search already existed; ADDED a Project filter dropdown (from loaded projects; hidden in project context). Confirmation dialog for bulk delete = AlertDialog. SCHEMA: documents had no tags column, so added an additive migration supabase/migrations/20260613130000_add_documents_tags.sql (ADD COLUMN IF NOT EXISTS tags text[] \u2014 nullable/backward-compatible per CLAUDE.md, + GIN index) and added tags to documents Row/Insert/Update in the hand-maintained types.ts. vite build green (1m13s). Remaining: apply the additive migration to staging/prod (no DB in this env)."
     },
     {
       "id": "US-092",
@@ -1664,7 +1664,7 @@
       ],
       "priority": 3,
       "passes": true,
-      "notes": "PASS. ChangeOrderImpactSummary.tsx added to the project financials section (ProjectContent.tsx, originalContract = project.budget). Cards: original contract, approved changes net (with additions/deductions split), current contract, pending changes (count). Recharts stepAfter line chart of contract amount over time (one point per approved CO in approval-date order). Drill-down header link to /change-orders. Pure logic src/lib/projects/changeOrderImpact.ts (summarizeChangeOrders/buildContractTimeline/isApproved/isPending — approved = client_approved or status approved/completed; pending excludes rejected/cancelled) + 5 tests. vite build green."
+      "notes": "PASS. ChangeOrderImpactSummary.tsx added to the project financials section (ProjectContent.tsx, originalContract = project.budget). Cards: original contract, approved changes net (with additions/deductions split), current contract, pending changes (count). Recharts stepAfter line chart of contract amount over time (one point per approved CO in approval-date order). Drill-down header link to /change-orders. Pure logic src/lib/projects/changeOrderImpact.ts (summarizeChangeOrders/buildContractTimeline/isApproved/isPending \u2014 approved = client_approved or status approved/completed; pending excludes rejected/cancelled) + 5 tests. vite build green."
     },
     {
       "id": "US-098",
@@ -1766,7 +1766,7 @@
       ],
       "priority": 3,
       "passes": true,
-      "notes": "COMPLETED. The Safety page (/safety, Incidents tab) already had the incident report form (SafetyIncidentForm: date/project/location/severity/description/photos). Gaps filled: pure logic src/lib/safety/incidentStats.ts — summarizeIncidents (total, open, severity breakdown, type breakdown, days-since-last-incident ignoring future dates, OSHA-recordable/lost-time/days-away counts, trailing 12-month trend with empty months zero-filled) + filterAndSortIncidents (by severity/project/date range, sort by date or severity) + normalizeSeverity (minor/major/critical/other synonyms); 15 passing tests. UI src/components/safety/SafetyIncidentsPanel.tsx (TanStack Query, company_id-scoped): dashboard stat cards (days since last incident, total, open, OSHA recordable), severity-breakdown card, incidents-per-month BarChart (recharts), and a filter/sort toolbar (severity, project, from/to dates, sort) over an incident log table with a detail dialog showing description, immediate actions, root-cause analysis, corrective actions, witnesses, and OSHA/lost-time badges. Wired into Safety.tsx Incidents tab (replaced the static recent-incidents list). Uses existing safety_incidents table (no migration). vite build green; new files eslint-clean."
+      "notes": "COMPLETED. The Safety page (/safety, Incidents tab) already had the incident report form (SafetyIncidentForm: date/project/location/severity/description/photos). Gaps filled: pure logic src/lib/safety/incidentStats.ts \u2014 summarizeIncidents (total, open, severity breakdown, type breakdown, days-since-last-incident ignoring future dates, OSHA-recordable/lost-time/days-away counts, trailing 12-month trend with empty months zero-filled) + filterAndSortIncidents (by severity/project/date range, sort by date or severity) + normalizeSeverity (minor/major/critical/other synonyms); 15 passing tests. UI src/components/safety/SafetyIncidentsPanel.tsx (TanStack Query, company_id-scoped): dashboard stat cards (days since last incident, total, open, OSHA recordable), severity-breakdown card, incidents-per-month BarChart (recharts), and a filter/sort toolbar (severity, project, from/to dates, sort) over an incident log table with a detail dialog showing description, immediate actions, root-cause analysis, corrective actions, witnesses, and OSHA/lost-time badges. Wired into Safety.tsx Incidents tab (replaced the static recent-incidents list). Uses existing safety_incidents table (no migration). vite build green; new files eslint-clean."
     },
     {
       "id": "US-104",
@@ -1783,7 +1783,7 @@
       ],
       "priority": 3,
       "passes": true,
-      "notes": "COMPLETED. ProjectPunchList (Punch List tab on the project detail page, punch_list_items table + RLS) already had the add/edit form, status workflow (open->in_progress->completed->verified), status/priority filters, and search (title/description/location). Gaps filled: (1) before/after photo upload + display — wired the reusable ImageUpload (project-documents bucket, punch-list/<projectId> path) into both add and edit dialogs for photo_before_url/photo_after_url (added to FormState/reset/startEdit; round-trips via the existing spread insert/update payloads) and render before/after thumbnails on each item card; (2) completion progress bar — pure logic src/lib/projects/punchListProgress.ts summarizePunchList (status/priority counts, verifiedPercent, completionPercent) with 6 passing tests, surfaced as a Progress bar showing % verified. vite build green; new lib eslint-clean (11 pre-existing any-types in ProjectPunchList.tsx left untouched)."
+      "notes": "COMPLETED. ProjectPunchList (Punch List tab on the project detail page, punch_list_items table + RLS) already had the add/edit form, status workflow (open->in_progress->completed->verified), status/priority filters, and search (title/description/location). Gaps filled: (1) before/after photo upload + display \u2014 wired the reusable ImageUpload (project-documents bucket, punch-list/<projectId> path) into both add and edit dialogs for photo_before_url/photo_after_url (added to FormState/reset/startEdit; round-trips via the existing spread insert/update payloads) and render before/after thumbnails on each item card; (2) completion progress bar \u2014 pure logic src/lib/projects/punchListProgress.ts summarizePunchList (status/priority counts, verifiedPercent, completionPercent) with 6 passing tests, surfaced as a Progress bar showing % verified. vite build green; new lib eslint-clean (11 pre-existing any-types in ProjectPunchList.tsx left untouched)."
     },
     {
       "id": "US-105",
@@ -1818,7 +1818,7 @@
       ],
       "priority": 3,
       "passes": true,
-      "notes": "COMPLETED. The CrewScheduling page previously had only a daily-dispatch view. Added the weekly drag-and-drop board. Pure logic src/lib/scheduling/crewBoard.ts: startOfWeek (Monday-based, UTC), getWeekDays, addWeeks, hasTimeOverlap, detectConflicts (same crew member + same day + overlapping time -> set of double-booked assignment ids), buildCrewWeek (crew × day grid with per-cell assignments, unassigned-crew list, conflict set; ignores out-of-week rows). 12 passing tests in __tests__/crewBoard.test.ts. UI src/components/scheduling/CrewScheduleBoard.tsx (@hello-pangea/dnd, TanStack Query, company_id-scoped): weekly grid (rows=crew from user_profiles, columns=Mon-Sun), project-colored assignment blocks, drag-and-drop across days/crew members persisted to crew_assignments (crew_member_id + assigned_date) with query invalidation, double-bookings highlighted red with a conflict count badge, an Unassigned-crew sidebar, and prev/next/Today week navigation. Wired into src/pages/CrewScheduling.tsx above the daily dispatch view. Uses existing user_profiles / crew_assignments / projects tables (no migration). vite build green; new files eslint-clean."
+      "notes": "COMPLETED. The CrewScheduling page previously had only a daily-dispatch view. Added the weekly drag-and-drop board. Pure logic src/lib/scheduling/crewBoard.ts: startOfWeek (Monday-based, UTC), getWeekDays, addWeeks, hasTimeOverlap, detectConflicts (same crew member + same day + overlapping time -> set of double-booked assignment ids), buildCrewWeek (crew \u00d7 day grid with per-cell assignments, unassigned-crew list, conflict set; ignores out-of-week rows). 12 passing tests in __tests__/crewBoard.test.ts. UI src/components/scheduling/CrewScheduleBoard.tsx (@hello-pangea/dnd, TanStack Query, company_id-scoped): weekly grid (rows=crew from user_profiles, columns=Mon-Sun), project-colored assignment blocks, drag-and-drop across days/crew members persisted to crew_assignments (crew_member_id + assigned_date) with query invalidation, double-bookings highlighted red with a conflict count badge, an Unassigned-crew sidebar, and prev/next/Today week navigation. Wired into src/pages/CrewScheduling.tsx above the daily dispatch view. Uses existing user_profiles / crew_assignments / projects tables (no migration). vite build green; new files eslint-clean."
     },
     {
       "id": "US-107",
@@ -1979,19 +1979,19 @@
     {
       "id": "US-116",
       "title": "Add persistent offline / syncing indicator to mobile app shell",
-      "description": "As a field worker with spotty connectivity, I want a clear persistent indicator when I am offline or data is syncing so that I trust what I am seeing. Create src/components/mobile/MobileOfflineIndicator.tsx that listens to navigator.onLine + online/offline events and shows a slim, animated banner just under the status bar: amber 'You are offline — changes will sync when back online' when offline, and a brief blue 'Syncing…' pulse when reconnecting. Animate in/out with framer-motion. Include it in MobileLayout so every mobile screen benefits. Expose a useOnlineStatus hook for reuse.",
+      "description": "As a field worker with spotty connectivity, I want a clear persistent indicator when I am offline or data is syncing so that I trust what I am seeing. Create src/components/mobile/MobileOfflineIndicator.tsx that listens to navigator.onLine + online/offline events and shows a slim, animated banner just under the status bar: amber 'You are offline \u2014 changes will sync when back online' when offline, and a brief blue 'Syncing\u2026' pulse when reconnecting. Animate in/out with framer-motion. Include it in MobileLayout so every mobile screen benefits. Expose a useOnlineStatus hook for reuse.",
       "acceptanceCriteria": [
         "src/components/mobile/MobileOfflineIndicator.tsx exports MobileOfflineIndicator",
         "src/hooks/useOnlineStatus.ts exports useOnlineStatus returning { isOnline, wasOffline }",
         "Banner slides in from the top when offline and slides out on reconnect",
-        "On reconnect, a brief 'Syncing…' state appears for ~1.5s",
+        "On reconnect, a brief 'Syncing\u2026' state appears for ~1.5s",
         "Indicator respects safe-area-top inset and does not cover nav",
         "Mounted inside MobileLayout so all mobile routes include it",
         "npm run build completes successfully"
       ],
       "priority": 2,
       "passes": true,
-      "notes": "COMPLETED. Created src/hooks/useConnectionStatus.ts returning { isOnline, justReconnected, wasOffline } with a ~1.5s reconnect pulse (existing useOnlineStatus kept backwards-compatible with its boolean return). Created src/components/mobile/MobileOfflineIndicator.tsx — framer-motion slide-in banner, amber CloudOff 'You are offline' when offline, blue spinner 'Syncing your changes…' during the reconnect pulse. Mounted inside MobileLayout (mobile viewports only) so every mobile route includes it; respects safe-area via parent layout. npm run build verified."
+      "notes": "COMPLETED. Created src/hooks/useConnectionStatus.ts returning { isOnline, justReconnected, wasOffline } with a ~1.5s reconnect pulse (existing useOnlineStatus kept backwards-compatible with its boolean return). Created src/components/mobile/MobileOfflineIndicator.tsx \u2014 framer-motion slide-in banner, amber CloudOff 'You are offline' when offline, blue spinner 'Syncing your changes\u2026' during the reconnect pulse. Mounted inside MobileLayout (mobile viewports only) so every mobile route includes it; respects safe-area via parent layout. npm run build verified."
     },
     {
       "id": "US-117",
@@ -2056,7 +2056,7 @@
       ],
       "priority": 3,
       "passes": true,
-      "notes": "COMPLETED. Created src/components/mobile/MobileDashboardLayout.tsx exposing a MobileDashboardWidget interface ({id, title, render, description?}) and a reorderable/hideable shell. Uses framer-motion Reorder.Group + Reorder.Item with useDragControls for grip-handle drag. Edit mode toggled from the header (Pencil/Check button) exposes per-widget drag handles and Switch-based visibility toggles with selection haptics. Layout (order + hidden ids) persisted to localStorage under brikly.mobile.dashboard.layout — chose localStorage over a user_profiles.mobile_dashboard_layout column to avoid a DB migration; same restoration behaviour, just device-local. New widgets automatically appended to the stored order so additions show up without clobbering user preferences. Empty-state CTA with 'Choose widgets' button when all widgets hidden. Refactored MobileDashboard renderDashboardView into 7 widgets (welcome, stats, quick actions, schedule, recent reports, financial snapshot, device info) passed to MobileDashboardLayout. Respects prefers-reduced-motion. npm run build verified."
+      "notes": "COMPLETED. Created src/components/mobile/MobileDashboardLayout.tsx exposing a MobileDashboardWidget interface ({id, title, render, description?}) and a reorderable/hideable shell. Uses framer-motion Reorder.Group + Reorder.Item with useDragControls for grip-handle drag. Edit mode toggled from the header (Pencil/Check button) exposes per-widget drag handles and Switch-based visibility toggles with selection haptics. Layout (order + hidden ids) persisted to localStorage under brikly.mobile.dashboard.layout \u2014 chose localStorage over a user_profiles.mobile_dashboard_layout column to avoid a DB migration; same restoration behaviour, just device-local. New widgets automatically appended to the stored order so additions show up without clobbering user preferences. Empty-state CTA with 'Choose widgets' button when all widgets hidden. Refactored MobileDashboard renderDashboardView into 7 widgets (welcome, stats, quick actions, schedule, recent reports, financial snapshot, device info) passed to MobileDashboardLayout. Respects prefers-reduced-motion. npm run build verified."
     },
     {
       "id": "US-121",
@@ -2072,7 +2072,7 @@
       ],
       "priority": 3,
       "passes": true,
-      "notes": "COMPLETED (mostly). Upgraded src/components/mobile/BiometricLoginButton.tsx with a framer-motion status state machine (idle/scanning/success/error). Added a 16x16 rounded icon medallion with border-2 that shifts color by status (muted→primary→green→red), an expanding shimmer ring (absolute border) during scanning using infinite repeat easeOut, CheckCircle2 morph on success, AlertCircle on error. On failure the whole stack plays an 8-keyframe shake animation (x: [0,-8,8,-6,6,-3,3,0]) and fires haptics.error(). On success fires haptics.success(), shows CheckCircle2, and delays onSuccess() by 450ms for a satisfying beat. All animations gated on useReducedMotion(). The first-login onboarding sheet explaining biometric unlock was NOT added — deferred because the existing BiometricSettings page already covers enable-opt-in. Core visual/haptic polish AC satisfied. npm run build verified."
+      "notes": "COMPLETED (mostly). Upgraded src/components/mobile/BiometricLoginButton.tsx with a framer-motion status state machine (idle/scanning/success/error). Added a 16x16 rounded icon medallion with border-2 that shifts color by status (muted\u2192primary\u2192green\u2192red), an expanding shimmer ring (absolute border) during scanning using infinite repeat easeOut, CheckCircle2 morph on success, AlertCircle on error. On failure the whole stack plays an 8-keyframe shake animation (x: [0,-8,8,-6,6,-3,3,0]) and fires haptics.error(). On success fires haptics.success(), shows CheckCircle2, and delays onSuccess() by 450ms for a satisfying beat. All animations gated on useReducedMotion(). The first-login onboarding sheet explaining biometric unlock was NOT added \u2014 deferred because the existing BiometricSettings page already covers enable-opt-in. Core visual/haptic polish AC satisfied. npm run build verified."
     },
     {
       "id": "US-122",
@@ -2087,7 +2087,7 @@
       ],
       "priority": 3,
       "passes": true,
-      "notes": "COMPLETED (scope adjusted). Created src/components/mobile/MobileEmptyState.tsx — premium illustrated empty state with Lucide icon medallion (w-20 spring entrance), title, description, optional primary/secondary CTAs with haptic feedback (impact light + selection), optional footer slot, and role=status/aria-live=polite. Respects prefers-reduced-motion. Extended MobileTable and MobileList with an optional emptyState prop (MobileTableEmptyState interface) so any list using those components now renders the rich empty state with Inbox as the default icon. Directly wired MobileEmptyState into MobileMaterialTracker's deliveries empty state with a Package icon and 'Log delivery' CTA. Note: the '10 screens' acceptance criterion was reduced in scope because MobileTable/MobileList currently only have one direct consumer (MobileShowcase), and the other list managers use bespoke Card layouts. The component is now available as the canonical empty-state primitive; follow-up stories can migrate additional screens (Daily Reports, Equipment, Safety, Time, Tasks, Invoices, Expenses, Documents, Photos, Notifications) without further infra work. npm run build verified."
+      "notes": "COMPLETED (scope adjusted). Created src/components/mobile/MobileEmptyState.tsx \u2014 premium illustrated empty state with Lucide icon medallion (w-20 spring entrance), title, description, optional primary/secondary CTAs with haptic feedback (impact light + selection), optional footer slot, and role=status/aria-live=polite. Respects prefers-reduced-motion. Extended MobileTable and MobileList with an optional emptyState prop (MobileTableEmptyState interface) so any list using those components now renders the rich empty state with Inbox as the default icon. Directly wired MobileEmptyState into MobileMaterialTracker's deliveries empty state with a Package icon and 'Log delivery' CTA. Note: the '10 screens' acceptance criterion was reduced in scope because MobileTable/MobileList currently only have one direct consumer (MobileShowcase), and the other list managers use bespoke Card layouts. The component is now available as the canonical empty-state primitive; follow-up stories can migrate additional screens (Daily Reports, Equipment, Safety, Time, Tasks, Invoices, Expenses, Documents, Photos, Notifications) without further infra work. npm run build verified."
     },
     {
       "id": "US-123",
@@ -2102,7 +2102,7 @@
       ],
       "priority": 3,
       "passes": true,
-      "notes": "COMPLETED (partial). Created src/hooks/useEdgeSwipeBack.ts — iOS-style edge-swipe-to-go-back gesture. Attaches passive touchstart/move/end listeners to document; only activates when the touch starts within the first 24px of the left edge (configurable edgeThreshold). Fires once the horizontal delta reaches 80px (configurable triggerDistance) while vertical drift stays under 60px (maxVerticalDrift) to avoid firing during vertical scrolls. On success it fires haptics.impact('medium') and calls navigate(-1) (or a custom onSwipeBack). Because the listeners are passive and bail out immediately when the touch starts >24px from the edge, they do not interfere with SwipeableListItem or horizontal carousels (which happen mid-screen). Wired the hook into MobileLayout so it is active app-wide on mobile (disabled on desktop via useIsMobile). Swipe-between-bottom-nav-tabs was NOT implemented — deferred to a follow-up because it requires coordinating with every page's scroll containers and would risk interfering with existing horizontal scrollers. Core edge-swipe-back AC satisfied. npm run build verified."
+      "notes": "COMPLETED (partial). Created src/hooks/useEdgeSwipeBack.ts \u2014 iOS-style edge-swipe-to-go-back gesture. Attaches passive touchstart/move/end listeners to document; only activates when the touch starts within the first 24px of the left edge (configurable edgeThreshold). Fires once the horizontal delta reaches 80px (configurable triggerDistance) while vertical drift stays under 60px (maxVerticalDrift) to avoid firing during vertical scrolls. On success it fires haptics.impact('medium') and calls navigate(-1) (or a custom onSwipeBack). Because the listeners are passive and bail out immediately when the touch starts >24px from the edge, they do not interfere with SwipeableListItem or horizontal carousels (which happen mid-screen). Wired the hook into MobileLayout so it is active app-wide on mobile (disabled on desktop via useIsMobile). Swipe-between-bottom-nav-tabs was NOT implemented \u2014 deferred to a follow-up because it requires coordinating with every page's scroll containers and would risk interfering with existing horizontal scrollers. Core edge-swipe-back AC satisfied. npm run build verified."
     },
     {
       "id": "US-124",
@@ -2118,12 +2118,12 @@
       ],
       "priority": 3,
       "passes": true,
-      "notes": "COMPLETED (partial). Created src/components/mobile/MobilePremiumUpsellSheet.tsx built on BottomSheet. Premium gradient hero (primary→indigo→purple), animated Sparkles medallion with spring entrance (reduced-motion aware), optional trial badge, bold title + tagline, prominent price + sub-label row, staggered feature bullets (each with optional Lucide icon, title, description), and a primary CTA button (min-h-52px) that fires haptics.success() on press plus optional secondary ghost link. Exported PremiumFeatureBullet interface for callers. Used Sparkles icon instead of a gold lock medallion (cleaner premium feel; the AC 'animated gold lock icon' intent — aspirational upgrade moment — is met by the gradient hero + sparkles + reveal animation). The 5-feature wiring (AI Estimating, Advanced Reports, Client Portal Branding, Geofencing, Scheduled Exports) and the PostHog tracking were NOT wired in this pass — the reusable primitive is ready and each gated feature screen can import and mount it in a follow-up without further infra work. Blurred-preview image slot can be added later via a children prop if needed. npm run build verified."
+      "notes": "COMPLETED (partial). Created src/components/mobile/MobilePremiumUpsellSheet.tsx built on BottomSheet. Premium gradient hero (primary\u2192indigo\u2192purple), animated Sparkles medallion with spring entrance (reduced-motion aware), optional trial badge, bold title + tagline, prominent price + sub-label row, staggered feature bullets (each with optional Lucide icon, title, description), and a primary CTA button (min-h-52px) that fires haptics.success() on press plus optional secondary ghost link. Exported PremiumFeatureBullet interface for callers. Used Sparkles icon instead of a gold lock medallion (cleaner premium feel; the AC 'animated gold lock icon' intent \u2014 aspirational upgrade moment \u2014 is met by the gradient hero + sparkles + reveal animation). The 5-feature wiring (AI Estimating, Advanced Reports, Client Portal Branding, Geofencing, Scheduled Exports) and the PostHog tracking were NOT wired in this pass \u2014 the reusable primitive is ready and each gated feature screen can import and mount it in a follow-up without further infra work. Blurred-preview image slot can be added later via a children prop if needed. npm run build verified."
     },
     {
       "id": "US-125",
       "title": "Harden Capacitor iOS config: disable WebView debugging in production and tighten allowNavigation wildcards",
-      "description": "As a security engineer, I want the iOS build to refuse remote WebView debugging in production and to disallow navigation to arbitrary Supabase projects so that a compromised device cannot be reverse-engineered via Safari's Web Inspector and so that the WebView is not tricked into navigating to an attacker-controlled Supabase project. capacitor.config.ts line 76 currently sets webContentsDebuggingEnabled: true unconditionally for iOS (the inline comment says 'development builds' but the flag is always on). Line 17 allows '*.supabase.co' — any Supabase project, not just ours. Gate webContentsDebuggingEnabled on process.env.NODE_ENV !== 'production'. Replace '*.supabase.co' with the project-specific host (ilhzuvemiuyfuxfegtlv.supabase.co) while keeping api/app/functions.brikly.net and the OAuth provider hosts.",
+      "description": "As a security engineer, I want the iOS build to refuse remote WebView debugging in production and to disallow navigation to arbitrary Supabase projects so that a compromised device cannot be reverse-engineered via Safari's Web Inspector and so that the WebView is not tricked into navigating to an attacker-controlled Supabase project. capacitor.config.ts line 76 currently sets webContentsDebuggingEnabled: true unconditionally for iOS (the inline comment says 'development builds' but the flag is always on). Line 17 allows '*.supabase.co' \u2014 any Supabase project, not just ours. Gate webContentsDebuggingEnabled on process.env.NODE_ENV !== 'production'. Replace '*.supabase.co' with the project-specific host (ilhzuvemiuyfuxfegtlv.supabase.co) while keeping api/app/functions.brikly.net and the OAuth provider hosts.",
       "acceptanceCriteria": [
         "capacitor.config.ts iOS webContentsDebuggingEnabled evaluates to false when NODE_ENV === 'production'",
         "allowNavigation no longer contains '*.supabase.co'; it contains the exact Supabase project host",
@@ -2132,12 +2132,12 @@
       ],
       "priority": 1,
       "passes": true,
-      "notes": "COMPLETED. capacitor.config.ts: iOS webContentsDebuggingEnabled is gated on NODE_ENV ('!isProduction'), so it is false in production builds; android webContentsDebuggingEnabled is hardcoded false. allowNavigation contains NO '*.supabase.co' wildcard — the project migrated to self-hosted Supabase (api/functions.brikly.net), so the host allowlist is api.brikly.net, app.brikly.net, functions.brikly.net plus OAuth hosts accounts.google.com and appleid.apple.com (this is stricter than the PRD's suggested project-pinned supabase.co host, which no longer applies). limitsNavigationsToAppBoundDomains=true on iOS; Info.plist WKAppBoundDomains (brikly.net, app/api/functions.brikly.net) match the brikly allowNavigation entries. vite build passes."
+      "notes": "COMPLETED. capacitor.config.ts: iOS webContentsDebuggingEnabled is gated on NODE_ENV ('!isProduction'), so it is false in production builds; android webContentsDebuggingEnabled is hardcoded false. allowNavigation contains NO '*.supabase.co' wildcard \u2014 the project migrated to self-hosted Supabase (api/functions.brikly.net), so the host allowlist is api.brikly.net, app.brikly.net, functions.brikly.net plus OAuth hosts accounts.google.com and appleid.apple.com (this is stricter than the PRD's suggested project-pinned supabase.co host, which no longer applies). limitsNavigationsToAppBoundDomains=true on iOS; Info.plist WKAppBoundDomains (brikly.net, app/api/functions.brikly.net) match the brikly allowNavigation entries. vite build passes."
     },
     {
       "id": "US-126",
       "title": "Compress images client-side before uploading to Supabase Storage",
-      "description": "As a field user on cellular, I want the app to shrink photos before upload so that daily report photos don't burn my data plan and don't fail on slow LTE. src/components/ui/image-upload.tsx uploads the raw File to Supabase with no compression — a 5 MB iPhone photo uploads as 5 MB. Add a compressImage utility (src/lib/image-compression.ts) that draws the source into a canvas capped at ~1920px on the long edge and re-encodes as JPEG at quality 0.8 (or WebP where supported). Wire it into image-upload.tsx before the Storage upload call. Skip compression for non-raster types (SVG, GIF) and for files already under a small threshold (e.g., 200KB).",
+      "description": "As a field user on cellular, I want the app to shrink photos before upload so that daily report photos don't burn my data plan and don't fail on slow LTE. src/components/ui/image-upload.tsx uploads the raw File to Supabase with no compression \u2014 a 5 MB iPhone photo uploads as 5 MB. Add a compressImage utility (src/lib/image-compression.ts) that draws the source into a canvas capped at ~1920px on the long edge and re-encodes as JPEG at quality 0.8 (or WebP where supported). Wire it into image-upload.tsx before the Storage upload call. Skip compression for non-raster types (SVG, GIF) and for files already under a small threshold (e.g., 200KB).",
       "acceptanceCriteria": [
         "src/lib/image-compression.ts exports a compressImage(file, options) function",
         "Function caps the longest edge at maxDimension (default 1920) and uses quality 0.8",
@@ -2170,7 +2170,7 @@
     {
       "id": "US-128",
       "title": "Fix Financial Dashboard tab overflow on iPhone SE and other narrow phones",
-      "description": "As a PM on an iPhone SE, I want the Financial Dashboard tab bar to be readable and tappable instead of nine 35-px-wide crushed cells. src/pages/FinancialDashboard.tsx line 67 renders a TabsList as 'grid w-full grid-cols-2 sm:grid-cols-4 lg:grid-cols-9' with text-xs labels — on a 375 px viewport the nine tabs compress below Apple HIG touch-target guidance and the P&L label gets clipped. Switch the mobile layout to a horizontal scroll row (flex, overflow-x-auto, snap-x, shrink-0 triggers with min-h-11) and preserve the grid layout from sm: upward.",
+      "description": "As a PM on an iPhone SE, I want the Financial Dashboard tab bar to be readable and tappable instead of nine 35-px-wide crushed cells. src/pages/FinancialDashboard.tsx line 67 renders a TabsList as 'grid w-full grid-cols-2 sm:grid-cols-4 lg:grid-cols-9' with text-xs labels \u2014 on a 375 px viewport the nine tabs compress below Apple HIG touch-target guidance and the P&L label gets clipped. Switch the mobile layout to a horizontal scroll row (flex, overflow-x-auto, snap-x, shrink-0 triggers with min-h-11) and preserve the grid layout from sm: upward.",
       "acceptanceCriteria": [
         "On viewports <640px the tabs scroll horizontally without overlap and each trigger is >=44px tall",
         "On viewports >=1024px the original 9-column grid layout is preserved",
@@ -2185,7 +2185,7 @@
     {
       "id": "US-129",
       "title": "Resolve dueling iOS builds: pick a single canonical bundle (native Swift vs Expo)",
-      "description": "As a release engineer, I want exactly one iOS project targeting com.brikly.app so that App Store Connect does not reject a duplicate-bundle-id submission. The repo contains BOTH Brikly-iOS/ (native Swift/SwiftUI project) and mobile-app/ (Expo) targeting bundle id com.brikly.app v1.0.0 build 1. Decide which is canonical, delete or archive the other, and update CLAUDE.md + README to point to the single source. The Capacitor-wrapped web app (capacitor.config.ts + ios/) is also present — document which of the three is the shipping iOS surface.",
+      "description": "As a release engineer, I want exactly one iOS project targeting com.brikly.app so that App Store Connect does not reject a duplicate-bundle-id submission. The repo contains BOTH Brikly-iOS/ (native Swift/SwiftUI project) and mobile-app/ (Expo) targeting bundle id com.brikly.app v1.0.0 build 1. Decide which is canonical, delete or archive the other, and update CLAUDE.md + README to point to the single source. The Capacitor-wrapped web app (capacitor.config.ts + ios/) is also present \u2014 document which of the three is the shipping iOS surface.",
       "acceptanceCriteria": [
         "Exactly one directory owns the com.brikly.app bundle id on iOS",
         "The other iOS project is either removed or clearly marked as archived/experimental in its README",
@@ -2226,7 +2226,7 @@
     {
       "id": "US-132",
       "title": "Add MFA challenge step to mobile auth flow",
-      "description": "As an account owner with MFA enabled, I want the mobile app to prompt me for my TOTP/email code after password entry so that my second factor is actually enforced on iOS. The backend supports MFA (mfa_configurations, verify-auth-otp reauthentication) but the mobile auth screen jumps straight to authenticated state after password — MFA is effectively unenforced on native.",
+      "description": "As an account owner with MFA enabled, I want the mobile app to prompt me for my TOTP/email code after password entry so that my second factor is actually enforced on iOS. The backend supports MFA (mfa_configurations, verify-auth-otp reauthentication) but the mobile auth screen jumps straight to authenticated state after password \u2014 MFA is effectively unenforced on native.",
       "acceptanceCriteria": [
         "After a successful password exchange, the app checks supabase.auth.mfa.listFactors()",
         "If a verified factor exists, a TOTP/email challenge screen is presented before granting access",
@@ -2254,7 +2254,7 @@
     {
       "id": "US-134",
       "title": "Virtualize remaining mobile long lists (time entries, CRM contacts, documents, activity feeds)",
-      "description": "As a mobile user with months of history, I want long lists to scroll at 60fps without jank. Projects.tsx uses VirtualizedGrid and InvoiceList uses @tanstack/react-virtual, but time entries, CRM contacts, documents, and activity feeds still render via plain .map() — 500+ rows on an older iPhone freezes the main thread. Audit every list rendering 50+ rows and convert to the existing VirtualizedGrid or useVirtualizer pattern.",
+      "description": "As a mobile user with months of history, I want long lists to scroll at 60fps without jank. Projects.tsx uses VirtualizedGrid and InvoiceList uses @tanstack/react-virtual, but time entries, CRM contacts, documents, and activity feeds still render via plain .map() \u2014 500+ rows on an older iPhone freezes the main thread. Audit every list rendering 50+ rows and convert to the existing VirtualizedGrid or useVirtualizer pattern.",
       "acceptanceCriteria": [
         "Grep audit documents every src/pages/* and src/components/* list rendering 50+ items without virtualization",
         "At least 4 high-traffic lists converted (time entries, crm contacts, documents, notifications)",
@@ -2282,7 +2282,7 @@
     {
       "id": "US-136",
       "title": "Apply iOS glass design system to all mobile feature screens",
-      "description": "As a mobile user, I want every screen in the iOS app to share the new glassmorphic visual language introduced in the core primitives so that the product feels unified and premium. The shared primitives — MobileCard, MobileButton, MobileFAB, MobileDrawer, BottomSheet, MobileActionSheet, EnhancedMobileBottomNav, PullToRefresh, MobileEmptyState, MobileSkeletons, MobileDashboard, MobileDashboardLayout — already use the new `glass`, `glass-thick`, `glass-chrome`, `glass-interactive` utilities, the `ios-page-bg` ambient background, the `ios-*` motion keyframes and the `shadow-ios-*` tokens defined in src/index.css + tailwind.config.ts. Audit every remaining mobile screen/component under src/pages/ (mobile views) and src/components/mobile/* (MobileTimeTracker, MobileDailyReport, MobileSafetyIncidentManager, MobileEquipmentManager, MobileMaterialTracker, MobileTimeClock, MobileFieldInterface, MobileQuickActionsSheet, MobilePremiumUpsellSheet, MobileTable, MobileForm, MobileAction Bar, EnhancedMobileCamera, VoiceNotes, GeofenceManager, MobileTestingEnvironment, AdvancedMobileShowcase, MobileShowcase, etc.) and replace flat `bg-card` / `border` / raw shadows with the glass system. Wrap each feature screen with MobileLayout (ambientBackground=true) and ensure headers/sticky bars use glass-chrome. Keep all existing props and data flows.",
+      "description": "As a mobile user, I want every screen in the iOS app to share the new glassmorphic visual language introduced in the core primitives so that the product feels unified and premium. The shared primitives \u2014 MobileCard, MobileButton, MobileFAB, MobileDrawer, BottomSheet, MobileActionSheet, EnhancedMobileBottomNav, PullToRefresh, MobileEmptyState, MobileSkeletons, MobileDashboard, MobileDashboardLayout \u2014 already use the new `glass`, `glass-thick`, `glass-chrome`, `glass-interactive` utilities, the `ios-page-bg` ambient background, the `ios-*` motion keyframes and the `shadow-ios-*` tokens defined in src/index.css + tailwind.config.ts. Audit every remaining mobile screen/component under src/pages/ (mobile views) and src/components/mobile/* (MobileTimeTracker, MobileDailyReport, MobileSafetyIncidentManager, MobileEquipmentManager, MobileMaterialTracker, MobileTimeClock, MobileFieldInterface, MobileQuickActionsSheet, MobilePremiumUpsellSheet, MobileTable, MobileForm, MobileAction Bar, EnhancedMobileCamera, VoiceNotes, GeofenceManager, MobileTestingEnvironment, AdvancedMobileShowcase, MobileShowcase, etc.) and replace flat `bg-card` / `border` / raw shadows with the glass system. Wrap each feature screen with MobileLayout (ambientBackground=true) and ensure headers/sticky bars use glass-chrome. Keep all existing props and data flows.",
       "acceptanceCriteria": [
         "Every component in src/components/mobile/* that renders a surface uses `glass`, `glass-thin`, `glass-thick` or an existing shadcn Card with updated MobileCard instead of bare `bg-card`",
         "All sticky headers / toolbars on mobile use `glass-chrome` with a 1px specular highlight line",
@@ -2295,12 +2295,12 @@
       ],
       "priority": 1,
       "passes": false,
-      "notes": "IN PROGRESS. Two passes shipped: (1) Foundation (design tokens + 13 core primitives). (2) Next-tier propagation — mobileCardClasses.container upgraded to glass so every feature screen using it inherits glass automatically; MobileTable, MobileList, MobileActionBar upgraded; MobileQuickActionsSheet action grid + search input glassified; MobilePremiumUpsellSheet hero polished; MobileFieldInterface drop zones now glass-thin; semantic-color status cards (red/orange/yellow/blue/green) in MobileTimeTracker, MobileTimeClock, MobileEquipmentManager, MobileSafetyIncidentManager, MobileDailyReport, MobileDailyReportManager, MobileMaterialTracker, BiometricSettings, BiometricLoginButton, GeofenceManager all layered with glass + dark-mode-safe tints; MobileMaterialTracker's sticky header and 2 modal dialogs converted to glass-chrome + ios-scrim. Remaining: MobileForm inputs (tracked in US-137), remaining screens under src/pages/ mobile views."
+      "notes": "IN PROGRESS. Two passes shipped: (1) Foundation (design tokens + 13 core primitives). (2) Next-tier propagation \u2014 mobileCardClasses.container upgraded to glass so every feature screen using it inherits glass automatically; MobileTable, MobileList, MobileActionBar upgraded; MobileQuickActionsSheet action grid + search input glassified; MobilePremiumUpsellSheet hero polished; MobileFieldInterface drop zones now glass-thin; semantic-color status cards (red/orange/yellow/blue/green) in MobileTimeTracker, MobileTimeClock, MobileEquipmentManager, MobileSafetyIncidentManager, MobileDailyReport, MobileDailyReportManager, MobileMaterialTracker, BiometricSettings, BiometricLoginButton, GeofenceManager all layered with glass + dark-mode-safe tints; MobileMaterialTracker's sticky header and 2 modal dialogs converted to glass-chrome + ios-scrim. Remaining: MobileForm inputs (tracked in US-137), remaining screens under src/pages/ mobile views."
     },
     {
       "id": "US-137",
       "title": "Modernize mobile forms with glass inputs, floating labels and validation states",
-      "description": "As a mobile user, I want form inputs that feel native-iOS — soft, blurred backgrounds, animated labels and clear validation — so that data entry on phones feels polished. Today src/components/mobile/MobileForm.tsx uses plain shadcn Input/Select/Textarea with rectangular borders. Build MobileTextField, MobileSelectField, MobileTextArea, MobileSegmentedControl, and MobileToggleRow primitives that: (1) use a `glass-thin` surface with `rounded-xl`, (2) animate a floating label on focus (framer-motion, spring), (3) show error state with a shake + red ring + aria-invalid, (4) include left/right icon slots, (5) have minimum 44px tap target and 16px font to avoid iOS zoom. Keep React Hook Form + Zod integration intact. Migrate MobileSafetyIncidentManager, MobileDailyReport, and MobileTimeTracker forms as references.",
+      "description": "As a mobile user, I want form inputs that feel native-iOS \u2014 soft, blurred backgrounds, animated labels and clear validation \u2014 so that data entry on phones feels polished. Today src/components/mobile/MobileForm.tsx uses plain shadcn Input/Select/Textarea with rectangular borders. Build MobileTextField, MobileSelectField, MobileTextArea, MobileSegmentedControl, and MobileToggleRow primitives that: (1) use a `glass-thin` surface with `rounded-xl`, (2) animate a floating label on focus (framer-motion, spring), (3) show error state with a shake + red ring + aria-invalid, (4) include left/right icon slots, (5) have minimum 44px tap target and 16px font to avoid iOS zoom. Keep React Hook Form + Zod integration intact. Migrate MobileSafetyIncidentManager, MobileDailyReport, and MobileTimeTracker forms as references.",
       "acceptanceCriteria": [
         "src/components/mobile/forms/ contains MobileTextField, MobileSelectField, MobileTextArea, MobileSegmentedControl, MobileToggleRow",
         "All new fields use glass-thin + rounded-xl + 16px base font size",
@@ -2318,7 +2318,7 @@
     {
       "id": "US-138",
       "title": "Shared-element page transitions for mobile navigation",
-      "description": "As a mobile user, I want tapping a card to feel like it expands into the next screen rather than slamming in with a flat slide. Build a SharedElementTransition wrapper over framer-motion's layoutId + AnimatePresence so that a MobileCard (e.g., project card on Projects list) smoothly morphs into the header of the detail screen. Ship for 3 high-traffic flows first: Projects → Project detail, Time entries → Time entry detail, Daily reports → Report detail. Fall back to the existing MobilePageTransition slide+fade for non-matching routes.",
+      "description": "As a mobile user, I want tapping a card to feel like it expands into the next screen rather than slamming in with a flat slide. Build a SharedElementTransition wrapper over framer-motion's layoutId + AnimatePresence so that a MobileCard (e.g., project card on Projects list) smoothly morphs into the header of the detail screen. Ship for 3 high-traffic flows first: Projects \u2192 Project detail, Time entries \u2192 Time entry detail, Daily reports \u2192 Report detail. Fall back to the existing MobilePageTransition slide+fade for non-matching routes.",
       "acceptanceCriteria": [
         "src/components/mobile/SharedElementTransition.tsx exposes a <SharedElement id={...}> component usable on both the source card and destination hero",
         "3 flows migrated (projects, time-entries, daily-reports)",
@@ -2334,23 +2334,23 @@
     {
       "id": "US-139",
       "title": "Native-feel haptic + sound palette for iOS",
-      "description": "As a mobile user, I want subtle, consistent haptic feedback for every important interaction and optional audio cues (off by default). useHaptics exists but is applied inconsistently. Inventory every interactive mobile surface and codify a haptic palette: selection for nav/menu taps, light-impact for buttons/toggles, medium-impact for destructive actions and sheet dismiss, success for async success, warning for validation errors, error for failed network actions. Add a Settings › Accessibility › Haptics toggle wired to user preferences.",
+      "description": "As a mobile user, I want subtle, consistent haptic feedback for every important interaction and optional audio cues (off by default). useHaptics exists but is applied inconsistently. Inventory every interactive mobile surface and codify a haptic palette: selection for nav/menu taps, light-impact for buttons/toggles, medium-impact for destructive actions and sheet dismiss, success for async success, warning for validation errors, error for failed network actions. Add a Settings \u203a Accessibility \u203a Haptics toggle wired to user preferences.",
       "acceptanceCriteria": [
         "src/hooks/useHaptics.ts exposes semantic methods: selection, impactLight, impactMedium, impactHeavy, success, warning, error",
         "Haptic palette documented in docs/MOBILE_HAPTICS_PALETTE.md with 1:1 mapping to UX events",
-        "Settings › Accessibility page adds a Haptics on/off toggle (default on, persisted to user_profiles)",
+        "Settings \u203a Accessibility page adds a Haptics on/off toggle (default on, persisted to user_profiles)",
         "Every mobile primitive (MobileCard, MobileButton, sheets, nav) calls the correct semantic method",
         "Audit utility script scripts/audit-haptics.ts greps for raw haptics.impact() calls and reports locations",
         "Honors system reduce-haptics if detected"
       ],
       "priority": 2,
       "passes": false,
-      "notes": "SEMANTIC API SHIPPED. src/hooks/useHaptics.ts now exposes semantic methods (impactLight, impactMedium, impactHeavy, tap, toggle, destructive, reveal) alongside the original primitives. All native + web fallbacks gate on a global `brikly.a11y.haptics` localStorage key (on/off) — exposed via isHapticsEnabled() and setHapticsEnabled(). Mirrored on the imperative `haptics` helper for non-hook call sites. Remaining: docs/MOBILE_HAPTICS_PALETTE.md, Settings > Accessibility toggle UI, scripts/audit-haptics.ts, and migrating raw haptics.impact() calls to the semantic methods."
+      "notes": "SEMANTIC API SHIPPED. src/hooks/useHaptics.ts now exposes semantic methods (impactLight, impactMedium, impactHeavy, tap, toggle, destructive, reveal) alongside the original primitives. All native + web fallbacks gate on a global `brikly.a11y.haptics` localStorage key (on/off) \u2014 exposed via isHapticsEnabled() and setHapticsEnabled(). Mirrored on the imperative `haptics` helper for non-hook call sites. Remaining: docs/MOBILE_HAPTICS_PALETTE.md, Settings > Accessibility toggle UI, scripts/audit-haptics.ts, and migrating raw haptics.impact() calls to the semantic methods."
     },
     {
       "id": "US-140",
       "title": "iOS native look for alerts, toasts and confirmations",
-      "description": "As a mobile user, I want alerts/toasts that match iOS conventions — centered modal alerts with glass background, stacked action buttons on narrow screens, swipe-to-dismiss toasts, and a dedicated confirmation dialog for destructive actions. Today the app uses sonner for toasts and shadcn Dialog/AlertDialog which look desktop-y on mobile. Wrap sonner with mobile-optimized styling (glass-thick surface, 16px radius, bottom positioning above the nav bar) and build MobileAlert / MobileConfirm components that replace AlertDialog on small screens.",
+      "description": "As a mobile user, I want alerts/toasts that match iOS conventions \u2014 centered modal alerts with glass background, stacked action buttons on narrow screens, swipe-to-dismiss toasts, and a dedicated confirmation dialog for destructive actions. Today the app uses sonner for toasts and shadcn Dialog/AlertDialog which look desktop-y on mobile. Wrap sonner with mobile-optimized styling (glass-thick surface, 16px radius, bottom positioning above the nav bar) and build MobileAlert / MobileConfirm components that replace AlertDialog on small screens.",
       "acceptanceCriteria": [
         "src/components/mobile/MobileAlert.tsx and src/components/mobile/MobileConfirm.tsx shipped",
         "Destructive confirms use red primary button, haptic medium on open, haptic heavy on confirm",
@@ -2361,12 +2361,12 @@
       ],
       "priority": 2,
       "passes": false,
-      "notes": "PRIMITIVES SHIPPED. src/components/mobile/MobileConfirm.tsx provides centered glass-thick modal with focus trap, esc-to-close, ios-scale-in entrance, stacked buttons on narrow screens; destructive intent fires haptics.warning() on open, haptics.impact('heavy') on confirm. MobileAlert is a single-action wrapper. src/components/ui/sonner.tsx upgraded — toasts use glass-thick + rounded-2xl + shadow-ios-3, with safe-area-aware bottom offset (env(safe-area-inset-bottom) + 88px) so they float above MobileBottomNav. Color-tinted ring per variant (success/error/warning/info). Remaining: AlertDialog migration sweep across src/components/mobile/* and axe-core test coverage."
+      "notes": "PRIMITIVES SHIPPED. src/components/mobile/MobileConfirm.tsx provides centered glass-thick modal with focus trap, esc-to-close, ios-scale-in entrance, stacked buttons on narrow screens; destructive intent fires haptics.warning() on open, haptics.impact('heavy') on confirm. MobileAlert is a single-action wrapper. src/components/ui/sonner.tsx upgraded \u2014 toasts use glass-thick + rounded-2xl + shadow-ios-3, with safe-area-aware bottom offset (env(safe-area-inset-bottom) + 88px) so they float above MobileBottomNav. Color-tinted ring per variant (success/error/warning/info). Remaining: AlertDialog migration sweep across src/components/mobile/* and axe-core test coverage."
     },
     {
       "id": "US-141",
       "title": "Glass iOS app icon set and splash screen refresh",
-      "description": "As a user launching Brikly from their iOS home screen, I want the app icon and splash to match the new glass design language. Replace the current flat orange icon with a layered glass treatment — soft gradient core, subtle specular highlight, rounded-squircle mask — generated at all required iOS sizes (20pt, 29pt, 40pt, 58pt, 60pt, 76pt, 80pt, 87pt, 120pt, 152pt, 167pt, 180pt, 1024pt App Store). Update the splash screen (capacitor.config.ts splash) from solid #ffffff to an animated gradient fade that dissolves into the welcome dashboard.",
+      "description": "As a user launching Brikly from their iOS home screen, I want the app icon and splash to match the new glass design language. Replace the current flat orange icon with a layered glass treatment \u2014 soft gradient core, subtle specular highlight, rounded-squircle mask \u2014 generated at all required iOS sizes (20pt, 29pt, 40pt, 58pt, 60pt, 76pt, 80pt, 87pt, 120pt, 152pt, 167pt, 180pt, 1024pt App Store). Update the splash screen (capacitor.config.ts splash) from solid #ffffff to an animated gradient fade that dissolves into the welcome dashboard.",
       "acceptanceCriteria": [
         "ios/App/App/Assets.xcassets/AppIcon.appiconset/ contains all required iOS sizes (verified with `xcrun actool`)",
         "New icon uses glass + gradient + squircle treatment; source SVG + Figma file committed to media/brand/",
@@ -2382,7 +2382,7 @@
     {
       "id": "US-142",
       "title": "Live Activities, Dynamic Island and Home Screen widgets for iOS",
-      "description": "As a field worker, I want to see my active clock-in timer in the Dynamic Island and a Home Screen widget with today's job site — so I don't have to open the app to check my status. Build an iOS Live Activity via ActivityKit for the clock-in timer (showing elapsed time + job name + site GPS distance), and a WidgetKit Home Screen widget showing today's schedule + active project + crew count. Requires a small SwiftUI target in the ios/ folder and a bridge from the Capacitor web layer to post ActivityKit updates.",
+      "description": "As a field worker, I want to see my active clock-in timer in the Dynamic Island and a Home Screen widget with today's job site \u2014 so I don't have to open the app to check my status. Build an iOS Live Activity via ActivityKit for the clock-in timer (showing elapsed time + job name + site GPS distance), and a WidgetKit Home Screen widget showing today's schedule + active project + crew count. Requires a small SwiftUI target in the ios/ folder and a bridge from the Capacitor web layer to post ActivityKit updates.",
       "acceptanceCriteria": [
         "ios/BriklyWidgets/ SwiftUI target added and builds with the main app",
         "Live Activity starts on clock-in, updates elapsed time every 60s, ends on clock-out",
@@ -2399,7 +2399,7 @@
     {
       "id": "US-143",
       "title": "Per-surface light/dark token audit for glass contrast",
-      "description": "As a mobile user in bright sunlight or night mode, I want every glass surface to stay legible — glass can collapse to low contrast against busy ambient backgrounds. Audit every glass surface on all 262+ pages under three ambient backgrounds (warm sunlight, neutral indoor, night) and verify text contrast >= 4.5:1 (WCAG AA). Add a fallback `solid` surface for dense data tables (e.g., FinancialRecords, JobCosting tables) where glass would hurt scannability. Document a decision matrix in docs/MOBILE_GLASS_GUIDELINES.md.",
+      "description": "As a mobile user in bright sunlight or night mode, I want every glass surface to stay legible \u2014 glass can collapse to low contrast against busy ambient backgrounds. Audit every glass surface on all 262+ pages under three ambient backgrounds (warm sunlight, neutral indoor, night) and verify text contrast >= 4.5:1 (WCAG AA). Add a fallback `solid` surface for dense data tables (e.g., FinancialRecords, JobCosting tables) where glass would hurt scannability. Document a decision matrix in docs/MOBILE_GLASS_GUIDELINES.md.",
       "acceptanceCriteria": [
         "docs/MOBILE_GLASS_GUIDELINES.md describes when to use glass vs solid surface",
         "All MobileCard usage sites reviewed; data tables / dense lists switched to surface='solid'",
@@ -2415,12 +2415,12 @@
     {
       "id": "US-144",
       "title": "Performance budget for backdrop-filter usage on older iPhones",
-      "description": "As an iPhone XR / SE user, I want the app to stay smooth even with heavy glass usage — backdrop-filter is GPU-expensive and can tank scrolling below 50fps on 2018-era devices. Add a runtime performance guard: detect device class via Capacitor Device API; on low-end devices (A12 and older), set a CSS class `low-gpu` on <html> that downgrades `.glass` and `.glass-thick` to solid surfaces (retaining colors/borders but dropping backdrop-filter). Add a manual override in Accessibility settings (`Reduce transparency`, mirroring iOS).",
+      "description": "As an iPhone XR / SE user, I want the app to stay smooth even with heavy glass usage \u2014 backdrop-filter is GPU-expensive and can tank scrolling below 50fps on 2018-era devices. Add a runtime performance guard: detect device class via Capacitor Device API; on low-end devices (A12 and older), set a CSS class `low-gpu` on <html> that downgrades `.glass` and `.glass-thick` to solid surfaces (retaining colors/borders but dropping backdrop-filter). Add a manual override in Accessibility settings (`Reduce transparency`, mirroring iOS).",
       "acceptanceCriteria": [
         "src/hooks/useDevicePerformance.ts returns tier: 'high' | 'medium' | 'low'",
         "<html class='low-gpu'> toggled automatically on low-tier devices",
         ".low-gpu .glass / .low-gpu .glass-thick override backdrop-filter: none and use solid card background",
-        "Settings › Accessibility adds 'Reduce transparency' toggle (persisted, overrides auto-detection)",
+        "Settings \u203a Accessibility adds 'Reduce transparency' toggle (persisted, overrides auto-detection)",
         "Scroll FPS measured with Chrome Devtools on an iPhone XR simulator stays >= 55fps on MobileDashboard with reduce-transparency off",
         "No visual regression on high-tier devices"
       ],
@@ -2431,7 +2431,7 @@
     {
       "id": "US-145",
       "title": "iOS gesture polish: swipe actions, edge-swipe-back, and pinch-to-zoom on photos",
-      "description": "As a mobile user, I want native-iOS gestures everywhere — swipe-to-archive/complete on list rows, interactive edge-swipe-back (already stubbed via useEdgeSwipeBack), and pinch-to-zoom on photo viewers. SwipeableListItem exists but is unused. Migrate time entries, daily reports, and notifications lists to SwipeableListItem with 2 revealed actions (archive + complete). Wire useEdgeSwipeBack to actually trigger router.back() with an interactive drag preview. Add pinch-to-zoom + pan to the photo gallery (react-zoom-pan-pinch or custom useGesture).",
+      "description": "As a mobile user, I want native-iOS gestures everywhere \u2014 swipe-to-archive/complete on list rows, interactive edge-swipe-back (already stubbed via useEdgeSwipeBack), and pinch-to-zoom on photo viewers. SwipeableListItem exists but is unused. Migrate time entries, daily reports, and notifications lists to SwipeableListItem with 2 revealed actions (archive + complete). Wire useEdgeSwipeBack to actually trigger router.back() with an interactive drag preview. Add pinch-to-zoom + pan to the photo gallery (react-zoom-pan-pinch or custom useGesture).",
       "acceptanceCriteria": [
         "Time entries, daily reports, notifications lists use SwipeableListItem with haptic medium on reveal",
         "Left-edge swipe on any mobile screen previews and completes a back navigation (cancellable if dropped below 40% threshold)",
@@ -2447,7 +2447,7 @@
     {
       "id": "US-146",
       "title": "Audit Brikly-iOS native app branding for Brikly consistency",
-      "description": "As a brand owner, I want the SwiftUI native iOS app (Brikly-iOS/) to consistently use the Brikly name throughout — bundle ID, display name, splash screen, login UI, privacy strings, and entitlements — with no legacy BuildDesk/ProfitRadar references. The native app exists alongside the Expo (mobile-app/) and Capacitor (ios/) targets but is the production iOS native app.",
+      "description": "As a brand owner, I want the SwiftUI native iOS app (Brikly-iOS/) to consistently use the Brikly name throughout \u2014 bundle ID, display name, splash screen, login UI, privacy strings, and entitlements \u2014 with no legacy BuildDesk/ProfitRadar references. The native app exists alongside the Expo (mobile-app/) and Capacitor (ios/) targets but is the production iOS native app.",
       "acceptanceCriteria": [
         "Bundle ID is com.brikly.app",
         "CFBundleDisplayName is Brikly in Info.plist",
@@ -2469,7 +2469,7 @@
         "Targets AppConfiguration.edgeFunctionsURL (https://functions.brikly.net)",
         "Auth bearer token attached per-invoke from the active Supabase session, falling back to anon key when not signed in",
         "Exposed as SupabaseService.shared.functions",
-        "invoke<T>(_:body:method:as:) decodes JSON responses with snake_case → camelCase conversion and PostgresDateDecoding"
+        "invoke<T>(_:body:method:as:) decodes JSON responses with snake_case \u2192 camelCase conversion and PostgresDateDecoding"
       ],
       "priority": 1,
       "passes": true,
@@ -2512,7 +2512,7 @@
       "acceptanceCriteria": [
         "Forgot Password? button visible below Sign In button",
         "Validates email field is non-empty and contains @ before calling backend",
-        "Calls AuthService.sendPasswordReset → client.auth.resetPasswordForEmail(email)",
+        "Calls AuthService.sendPasswordReset \u2192 client.auth.resetPasswordForEmail(email)",
         "Shows alert on success: 'If an account exists for that email, you'll receive instructions to reset your password shortly.'",
         "Disabled while loading; shows ProgressView during the call",
         "Errors logged via Loggers.auth.error and surfaced in errorMessage"
@@ -2541,7 +2541,7 @@
     {
       "id": "US-152",
       "title": "Strip unused privacy strings and entitlements from Brikly-iOS",
-      "description": "As an iOS app submitter, I want Info.plist privacy descriptions and entitlements to reflect only what the app actually uses — Apple rejects apps that request permissions for unimplemented features. Remove camera, photo library, location (always/background), microphone, contacts, calendars, Face ID, speech recognition usage descriptions and UIBackgroundModes since none had real implementations. Remove aps-environment and com.apple.developer.location.push entitlements.",
+      "description": "As an iOS app submitter, I want Info.plist privacy descriptions and entitlements to reflect only what the app actually uses \u2014 Apple rejects apps that request permissions for unimplemented features. Remove camera, photo library, location (always/background), microphone, contacts, calendars, Face ID, speech recognition usage descriptions and UIBackgroundModes since none had real implementations. Remove aps-environment and com.apple.developer.location.push entitlements.",
       "acceptanceCriteria": [
         "Info.plist contains zero NSCameraUsageDescription / NSPhotoLibraryUsageDescription / NSLocation*UsageDescription / NSMicrophoneUsageDescription / NSContactsUsageDescription / NSCalendarsUsageDescription / NSFaceIDUsageDescription / NSSpeechRecognitionUsageDescription keys",
         "UIBackgroundModes key is removed from Info.plist",
@@ -2588,7 +2588,7 @@
     {
       "id": "US-155",
       "title": "Document upload via PhotosPicker in DocumentListView",
-      "description": "As a field user, I want to upload site photos directly from my iPhone library. Use PhotosUI's PhotosPicker (privacy-preserving — runs in separate process, no permission required) to pick images. DocumentService uploads bytes to Supabase Storage 'documents' bucket and inserts a documents row.",
+      "description": "As a field user, I want to upload site photos directly from my iPhone library. Use PhotosUI's PhotosPicker (privacy-preserving \u2014 runs in separate process, no permission required) to pick images. DocumentService uploads bytes to Supabase Storage 'documents' bucket and inserts a documents row.",
       "acceptanceCriteria": [
         "PhotosPicker plus button in DocumentListView toolbar with .accessibilityLabel('Upload photo')",
         "DocumentService.uploadDocument writes to Storage path '{companyId}/{projectId}/{timestamp}-{filename}' to keep RLS isolatable",
@@ -2635,7 +2635,7 @@
     {
       "id": "US-158",
       "title": "Add Localizable.xcstrings String Catalog scaffold",
-      "description": "As a future i18n engineer, I want a String Catalog file in place so xcodebuild auto-extracts every Text() literal into a translatable catalog — the foundation for shipping non-English locales. Create the empty xcstrings file and wire it through project.pbxproj as a Resources build phase entry.",
+      "description": "As a future i18n engineer, I want a String Catalog file in place so xcodebuild auto-extracts every Text() literal into a translatable catalog \u2014 the foundation for shipping non-English locales. Create the empty xcstrings file and wire it through project.pbxproj as a Resources build phase entry.",
       "acceptanceCriteria": [
         "Brikly-iOS/Brikly/Localizable.xcstrings exists with valid empty stub ({sourceLanguage:'en', strings:{}, version:'1.0'})",
         "PBXFileReference and PBXBuildFile entries in project.pbxproj for the catalog",
@@ -2650,7 +2650,7 @@
     {
       "id": "US-159",
       "title": "Build offline-first infrastructure (SwiftData + SyncEngine)",
-      "description": "As a field user with spotty cellular signal, I want the app to keep working offline — read cached data, capture daily reports/tasks, and have writes replay automatically when connectivity returns. Build a SwiftData-backed cache (OfflineStore) and a SyncEngine actor that drains a PendingMutation queue when NetworkMonitor reports reachable.",
+      "description": "As a field user with spotty cellular signal, I want the app to keep working offline \u2014 read cached data, capture daily reports/tasks, and have writes replay automatically when connectivity returns. Build a SwiftData-backed cache (OfflineStore) and a SyncEngine actor that drains a PendingMutation queue when NetworkMonitor reports reachable.",
       "acceptanceCriteria": [
         "Brikly-iOS/Brikly/Services/OfflineStore.swift defines @Model classes LocalProject, LocalDailyReport, PendingMutation; uses JSON blob payload + index fields pattern so server schema can evolve without forcing SwiftData migrations",
         "OfflineStore is @MainActor singleton owning the ModelContainer; exposes cache/upsert/cached/enqueue/pendingMutations/remove/recordFailure/pendingCount helpers per entity",
@@ -2813,13 +2813,13 @@
     {
       "id": "US-170",
       "title": "Migrate DocumentListViewModel to queued offline uploads",
-      "description": "As a field user taking site photos in low-signal areas, I want photos to queue locally and upload when connectivity returns — including survival across app kills. Use URLSession background configuration so uploads continue even when the app is backgrounded.",
+      "description": "As a field user taking site photos in low-signal areas, I want photos to queue locally and upload when connectivity returns \u2014 including survival across app kills. Use URLSession background configuration so uploads continue even when the app is backgrounded.",
       "acceptanceCriteria": [
         "OfflineStore adds LocalDocument @Model and PendingUpload @Model (for binary uploads, separate from PendingMutation since payload is on disk not in DB)",
         "Photos copied to Library/Caches/PendingUploads/{UUID}.{ext} on pick",
         "PendingUpload row stores localFileURL, contentType, projectId, companyId, attempts, lastError, queuedAt",
         "URLSession with .background(withIdentifier: 'net.brikly.app.uploads') configured so OS resumes uploads after app kill",
-        "On upload success: storage upload completes → insert documents row → delete local file → remove PendingUpload row",
+        "On upload success: storage upload completes \u2192 insert documents row \u2192 delete local file \u2192 remove PendingUpload row",
         "DocumentListViewModel hydrates documents list from cache; new uploads inserted optimistically with 'local-' id",
         "Failed uploads (max 5 attempts) stay queued for manual recovery"
       ],
@@ -2841,7 +2841,7 @@
       ],
       "priority": 1,
       "passes": false,
-      "notes": "Backend config only — no iOS code changes. Required before Apple Sign In works in any TestFlight or App Store build."
+      "notes": "Backend config only \u2014 no iOS code changes. Required before Apple Sign In works in any TestFlight or App Store build."
     },
     {
       "id": "US-172",
@@ -2849,18 +2849,18 @@
       "description": "As a release engineer, I want crash reporting active in production builds. The CrashReporter facade and SDK are wired (US-157, US-167); just need the DSN secret to flip it on.",
       "acceptanceCriteria": [
         "Sentry project created (or existing project's DSN obtained)",
-        "GitHub repo settings → Secrets and variables → Actions → SENTRY_DSN added",
+        "GitHub repo settings \u2192 Secrets and variables \u2192 Actions \u2192 SENTRY_DSN added",
         "Next ios-release.yml run logs 'Sentry DSN injected into Info.plist' (not the disabled message)",
         "TestFlight build: app launch logs 'Sentry crash reporting enabled.' via Loggers.app.info"
       ],
       "priority": 2,
       "passes": false,
-      "notes": "Operations task — no code change. Verifying smoke test deferred to US-192."
+      "notes": "Operations task \u2014 no code change. Verifying smoke test deferred to US-192."
     },
     {
       "id": "US-173",
       "title": "Verify first TestFlight upload end-to-end",
-      "description": "As a release engineer, I want to confirm the full pipeline works: green CI build → IPA → altool upload → App Store Connect processing → TestFlight install → app launches → daily report flow exercised → account deletion submission. This is the smoke test that validates everything from US-146 through US-170.",
+      "description": "As a release engineer, I want to confirm the full pipeline works: green CI build \u2192 IPA \u2192 altool upload \u2192 App Store Connect processing \u2192 TestFlight install \u2192 app launches \u2192 daily report flow exercised \u2192 account deletion submission. This is the smoke test that validates everything from US-146 through US-170.",
       "acceptanceCriteria": [
         "ios-release.yml run completes green on a tagged commit (no continue-on-error masking)",
         "altool upload returns success; build appears in App Store Connect TestFlight tab within 30 minutes",
@@ -2868,7 +2868,7 @@
         "Tester creates a daily report online; row appears server-side",
         "Tester puts device in airplane mode, creates another daily report; sees optimistic row + offline banner",
         "Tester re-enables network; OfflineBanner disappears within seconds; queued report posts successfully",
-        "Tester triggers Settings → Delete Account; data_subject_requests row created server-side; user is signed out and locked out"
+        "Tester triggers Settings \u2192 Delete Account; data_subject_requests row created server-side; user is signed out and locked out"
       ],
       "priority": 1,
       "passes": false,
@@ -2977,7 +2977,7 @@
       "acceptanceCriteria": [
         "Edit Profile row in SettingsView opens a ProfileEditView sheet",
         "Editable fields: first_name, last_name, phone, avatar_url",
-        "Avatar upload via PhotosPicker → Storage 'avatars' bucket; updates user_profiles.avatar_url",
+        "Avatar upload via PhotosPicker \u2192 Storage 'avatars' bucket; updates user_profiles.avatar_url",
         "Save button PATCHes user_profiles via service",
         "AuthViewModel.userProfile updated on save",
         "Validation: name fields trimmed, phone validated against E.164 format (or simple length check)"
@@ -3110,7 +3110,7 @@
       ],
       "priority": 2,
       "passes": false,
-      "notes": "Operations task — no code change. Sequenced before US-190 (App Store submission)."
+      "notes": "Operations task \u2014 no code change. Sequenced before US-190 (App Store submission)."
     },
     {
       "id": "US-189",
@@ -3119,7 +3119,7 @@
       "acceptanceCriteria": [
         "Privacy Practices: Linked to identity = email, name (used for App Functionality only)",
         "User Content = photos (Linked to identity, for App Functionality)",
-        "Diagnostics = Crash Data (when Sentry is on, US-172) — not Linked to identity, not used for tracking",
+        "Diagnostics = Crash Data (when Sentry is on, US-172) \u2014 not Linked to identity, not used for tracking",
         "PrivacyInfo.xcprivacy in the bundle reflects the same: NSPrivacyAccessedAPITypes for UserDefaults, FileTimestamp, SystemBootTime as needed; no NSPrivacyCollectedDataTypePreciseLocation until US-177 ships",
         "NSPrivacyTracking = false"
       ],
@@ -3136,7 +3136,7 @@
         "Build submitted for Beta App Review (first external build requires it)",
         "Tester invitation email sent with TestFlight link",
         "Feedback collected via TestFlight built-in feedback OR Sentry breadcrumbs",
-        "Beta exit criteria: zero critical crashes, daily report flow exercised by ≥3 testers offline, ≥5 testers complete a sign-up + profile edit + daily report cycle"
+        "Beta exit criteria: zero critical crashes, daily report flow exercised by \u22653 testers offline, \u22655 testers complete a sign-up + profile edit + daily report cycle"
       ],
       "priority": 2,
       "passes": false,
@@ -3154,7 +3154,7 @@
       ],
       "priority": 3,
       "passes": false,
-      "notes": "Backend story — no iOS code change beyond setting the header (small follow-up)."
+      "notes": "Backend story \u2014 no iOS code change beyond setting the header (small follow-up)."
     },
     {
       "id": "US-192",
@@ -3179,8 +3179,8 @@
       "acceptanceCriteria": [
         "ios-release.yml's manual signing patch updates BOTH Debug and Release sections in pbxproj (currently uses sed without count)",
         "Verification step greps the patched pbxproj and confirms two non-empty DEVELOPMENT_TEAM lines",
-        "Test build phase (xcodebuild test ... -destination 'platform=iOS Simulator') does NOT require signing — verify destination uses simulator and no provisioning-profile-required flags",
-        "Works on both feature branches (no team) and main (with team) — feature branches use ENABLE_USER_SCRIPT_SANDBOXING auto signing fallback"
+        "Test build phase (xcodebuild test ... -destination 'platform=iOS Simulator') does NOT require signing \u2014 verify destination uses simulator and no provisioning-profile-required flags",
+        "Works on both feature branches (no team) and main (with team) \u2014 feature branches use ENABLE_USER_SCRIPT_SANDBOXING auto signing fallback"
       ],
       "priority": 2,
       "passes": false,
@@ -3274,7 +3274,7 @@
       ],
       "priority": 1,
       "passes": true,
-      "notes": "COMPLETED (code-complete). Server-side entitlement enforcement is now the authoritative gate on the two row-counted limits. Projects: supabase/functions/projects (create) already calls checkEntitlement('projects') and 403s before insert (no direct client project insert exists). Team seats: NEW edge function supabase/functions/invite-team-member authenticates the caller, enforces RBAC (admin/root_admin/project_manager), Zod-validates the body, derives company_id from the AUTHENTICATED caller (never the request body), and calls checkEntitlement('teamMembers') -> 403 with an upgrade message before creating the user. src/pages/TeamManagement.tsx was switched from a client-side supabase.auth.admin.createUser + direct user_profiles insert (which both exposed the service role to the browser AND gated seats only via the bypassable client checkLimit) to supabase.functions.invoke('invite-team-member'). Because creating a usable member requires an auth.users row (FK on user_profiles.id) that only the service role can mint, the edge function is now the only path that can add a seat — a direct client user_profiles insert cannot satisfy the FK, so the limit can't be bypassed. checkEntitlement fails OPEN on enterprise/unknown/complimentary tiers to avoid hard-locking paying/grandfathered accounts; error envelopes include an actionable upgrade message and never leak other tenants' usage. Client checkLimit() retained for UX only. vite build PASS (58.99s). Premium non-counted features remain tier-gated where applicable; the bypassable row-count limits (projects, seats) are the substantive server-side enforcement."
+      "notes": "COMPLETED (code-complete). Server-side entitlement enforcement is now the authoritative gate on the two row-counted limits. Projects: supabase/functions/projects (create) already calls checkEntitlement('projects') and 403s before insert (no direct client project insert exists). Team seats: NEW edge function supabase/functions/invite-team-member authenticates the caller, enforces RBAC (admin/root_admin/project_manager), Zod-validates the body, derives company_id from the AUTHENTICATED caller (never the request body), and calls checkEntitlement('teamMembers') -> 403 with an upgrade message before creating the user. src/pages/TeamManagement.tsx was switched from a client-side supabase.auth.admin.createUser + direct user_profiles insert (which both exposed the service role to the browser AND gated seats only via the bypassable client checkLimit) to supabase.functions.invoke('invite-team-member'). Because creating a usable member requires an auth.users row (FK on user_profiles.id) that only the service role can mint, the edge function is now the only path that can add a seat \u2014 a direct client user_profiles insert cannot satisfy the FK, so the limit can't be bypassed. checkEntitlement fails OPEN on enterprise/unknown/complimentary tiers to avoid hard-locking paying/grandfathered accounts; error envelopes include an actionable upgrade message and never leak other tenants' usage. Client checkLimit() retained for UX only. vite build PASS (58.99s). Premium non-counted features remain tier-gated where applicable; the bypassable row-count limits (projects, seats) are the substantive server-side enforcement."
     },
     {
       "id": "US-200",
@@ -3294,7 +3294,7 @@
     {
       "id": "US-201",
       "title": "Move hardcoded runtime config out of committed wrangler.toml into env injection",
-      "description": "wrangler.toml commits the Supabase anon JWT, Stripe publishable key, and Stripe price IDs (wrangler.toml:9,13-23). These are public-by-design values (not secret keys), so this is NOT a secret leak — but committing them hardcodes environment-specific config into source, makes rotation a code change, and risks a prod build accidentally shipping staging/test IDs. Move these to environment variables / Cloudflare Pages build-time injection (consistent with CLAUDE.md 'secrets only via env'), reference them via import.meta.env / Cloudflare vars, and keep wrangler.toml free of literal keys and price IDs. As routine hygiene (not incident response) rotate the anon key after the change. The service_role key must never appear client-side — confirm it does not.",
+      "description": "wrangler.toml commits the Supabase anon JWT, Stripe publishable key, and Stripe price IDs (wrangler.toml:9,13-23). These are public-by-design values (not secret keys), so this is NOT a secret leak \u2014 but committing them hardcodes environment-specific config into source, makes rotation a code change, and risks a prod build accidentally shipping staging/test IDs. Move these to environment variables / Cloudflare Pages build-time injection (consistent with CLAUDE.md 'secrets only via env'), reference them via import.meta.env / Cloudflare vars, and keep wrangler.toml free of literal keys and price IDs. As routine hygiene (not incident response) rotate the anon key after the change. The service_role key must never appear client-side \u2014 confirm it does not.",
       "acceptanceCriteria": [
         "Supabase anon key, Stripe publishable key, and Stripe price IDs are injected via env/Cloudflare vars, not literal values in wrangler.toml",
         "Build fails fast (clear error) if a required public config var is missing in the target environment",
@@ -3304,7 +3304,7 @@
       ],
       "priority": 2,
       "passes": false,
-      "notes": "Source: web security audit — DOWNGRADED from the agent's 'Critical leaked JWT'. Anon/publishable keys are meant to be public; real issue is config hygiene + rotation friction. US-002 removed hardcoded fallback tokens from src/; this extends that to wrangler.toml."
+      "notes": "Source: web security audit \u2014 DOWNGRADED from the agent's 'Critical leaked JWT'. Anon/publishable keys are meant to be public; real issue is config hygiene + rotation friction. US-002 removed hardcoded fallback tokens from src/; this extends that to wrangler.toml."
     },
     {
       "id": "US-202",
@@ -3319,7 +3319,7 @@
       ],
       "priority": 2,
       "passes": false,
-      "notes": "NOT STARTED — plan refined. public/_headers script-src includes 'unsafe-inline'. index.html has 4 EXECUTABLE inline scripts (lines ~282 Trusted Types policy bootstrap, ~317, ~382, ~387) plus non-executable application/ld+json blocks (not script-src-governed). Removing 'unsafe-inline' requires sha256-hash-pinning the 4 inline scripts in the CSP (the Trusted Types bootstrap MUST remain inline to run before app scripts, so it can't be externalized). RISK: a wrong/stale hash silently blocks the script and breaks the live site (Trusted Types/analytics/OAuth), so this needs real browser verification before shipping — do NOT rush blind. CI already blocks unsafe-eval. Recommended as a focused, browser-verified task. Source: web security audit."
+      "notes": "NOT STARTED \u2014 plan refined. public/_headers script-src includes 'unsafe-inline'. index.html has 4 EXECUTABLE inline scripts (lines ~282 Trusted Types policy bootstrap, ~317, ~382, ~387) plus non-executable application/ld+json blocks (not script-src-governed). Removing 'unsafe-inline' requires sha256-hash-pinning the 4 inline scripts in the CSP (the Trusted Types bootstrap MUST remain inline to run before app scripts, so it can't be externalized). RISK: a wrong/stale hash silently blocks the script and breaks the live site (Trusted Types/analytics/OAuth), so this needs real browser verification before shipping \u2014 do NOT rush blind. CI already blocks unsafe-eval. Recommended as a focused, browser-verified task. Source: web security audit."
     },
     {
       "id": "US-203",
@@ -3349,12 +3349,12 @@
       ],
       "priority": 2,
       "passes": true,
-      "notes": "COMPLETED. src/lib/supabaseStorage.ts: added a persisted 'signed_out' sentinel written to BOTH localStorage and Capacitor Preferences by purgeSupabaseSessionStorage (already called in AuthContext signOut on both success and error paths). seedFromPreferences now checks the sentinel on startup and, if set, scrubs lingering tokens and refuses to re-hydrate a stale session — closing the offline/failed-sign-out re-hijack vector. The sentinel is lifted only when a fresh auth-token session is written (real re-login) via both web and Capacitor setItem. Tests: src/lib/__tests__/supabaseStorage.test.ts (3 cases). NOTE: the audit's 'retry server-side invalidation on reconnect' suggestion is a smaller residual; the local re-hydration vector (the actual risk) is closed. Source: web security audit."
+      "notes": "COMPLETED. src/lib/supabaseStorage.ts: added a persisted 'signed_out' sentinel written to BOTH localStorage and Capacitor Preferences by purgeSupabaseSessionStorage (already called in AuthContext signOut on both success and error paths). seedFromPreferences now checks the sentinel on startup and, if set, scrubs lingering tokens and refuses to re-hydrate a stale session \u2014 closing the offline/failed-sign-out re-hijack vector. The sentinel is lifted only when a fresh auth-token session is written (real re-login) via both web and Capacitor setItem. Tests: src/lib/__tests__/supabaseStorage.test.ts (3 cases). NOTE: the audit's 'retry server-side invalidation on reconnect' suggestion is a smaller residual; the local re-hydration vector (the actual risk) is closed. Source: web security audit."
     },
     {
       "id": "US-205",
       "title": "Wire DoS-protection edge function into the request pipeline",
-      "description": "An admin UI (src/components/admin/DosProtection.tsx) and a dos-protection edge function exist, but the function is never invoked by client requests or middleware — there is no reference to it in src/integrations or a request interceptor, so the feature is currently inert. Either integrate rate-limit enforcement at the edge (Cloudflare Workers rate-limit rules / worker.js) and have abusive patterns logged to the rate-limit-violations table, or remove the dead admin UI. Also add strict input validation to dos-protection itself (its settings field is z.record(z.unknown()), accepting arbitrary keys) and gate it to admins only.",
+      "description": "An admin UI (src/components/admin/DosProtection.tsx) and a dos-protection edge function exist, but the function is never invoked by client requests or middleware \u2014 there is no reference to it in src/integrations or a request interceptor, so the feature is currently inert. Either integrate rate-limit enforcement at the edge (Cloudflare Workers rate-limit rules / worker.js) and have abusive patterns logged to the rate-limit-violations table, or remove the dead admin UI. Also add strict input validation to dos-protection itself (its settings field is z.record(z.unknown()), accepting arbitrary keys) and gate it to admins only.",
       "acceptanceCriteria": [
         "Rate limiting is actually enforced for the web app (Cloudflare rules and/or worker.js), with violations recorded",
         "dos-protection settings input is strictly validated (whitelisted fields) and the function is admin-only",
@@ -3384,7 +3384,7 @@
     {
       "id": "US-207",
       "title": "Route Core Web Vitals real-user metrics to PostHog/Sentry and fix early-event timing",
-      "description": "web-vitals is wired in src/main.tsx (reportWebVitals) but the callback only logs to logger.debug in dev — production CWV (CLS/FCP/INP/LCP/TTFB) are never sent to PostHog or Sentry, so there is no real-user performance monitoring by device/region. Additionally, posthog-js is lazy-loaded on first track() call, so early pageview/web-vitals events may fire before PostHog is ready and be dropped (analytics.ts:42-72, main.tsx:69-75). Send Web Vitals as PostHog events (and/or Sentry performance), and either initialize PostHog early or buffer events until it loads so the first pageview and initial vitals are captured.",
+      "description": "web-vitals is wired in src/main.tsx (reportWebVitals) but the callback only logs to logger.debug in dev \u2014 production CWV (CLS/FCP/INP/LCP/TTFB) are never sent to PostHog or Sentry, so there is no real-user performance monitoring by device/region. Additionally, posthog-js is lazy-loaded on first track() call, so early pageview/web-vitals events may fire before PostHog is ready and be dropped (analytics.ts:42-72, main.tsx:69-75). Send Web Vitals as PostHog events (and/or Sentry performance), and either initialize PostHog early or buffer events until it loads so the first pageview and initial vitals are captured.",
       "acceptanceCriteria": [
         "Core Web Vitals are emitted as PostHog events (and/or Sentry performance) in production with useful dimensions",
         "PostHog is initialized early or events are buffered so the first pageview and initial vitals are not lost",
@@ -3414,7 +3414,7 @@
     {
       "id": "US-209",
       "title": "Fix logger no-op levels, add error-log retry/backoff, and ban console.* in src",
-      "description": "Three logging reliability gaps: (1) src/lib/logger.ts debug()/info() check shouldLog() then do nothing — no console call — so info/debug context is silently lost (logger.ts:108-119). (2) src/services/errorLoggingService.ts flushQueue() posts to Supabase with no retry; during a Supabase blip the whole batch is dropped (errorLoggingService.ts:152-169). (3) ~1,499 raw console.log/warn/error calls remain across src, and 30+ in critical paths (ErrorBoundary.tsx:30, smart-import, admin) bypass Sentry/error_logs. Fix the logger levels, add exponential-backoff retry (or sendBeacon for critical) to the flush, and add an eslint rule banning console.* in src/ with a codemod to route them through the logger.",
+      "description": "Three logging reliability gaps: (1) src/lib/logger.ts debug()/info() check shouldLog() then do nothing \u2014 no console call \u2014 so info/debug context is silently lost (logger.ts:108-119). (2) src/services/errorLoggingService.ts flushQueue() posts to Supabase with no retry; during a Supabase blip the whole batch is dropped (errorLoggingService.ts:152-169). (3) ~1,499 raw console.log/warn/error calls remain across src, and 30+ in critical paths (ErrorBoundary.tsx:30, smart-import, admin) bypass Sentry/error_logs. Fix the logger levels, add exponential-backoff retry (or sendBeacon for critical) to the flush, and add an eslint rule banning console.* in src/ with a codemod to route them through the logger.",
       "acceptanceCriteria": [
         "logger.debug/info actually emit in their intended environments; no silent no-op",
         "errorLoggingService flush retries with backoff (or uses sendBeacon for critical) and does not drop batches on transient failures",
@@ -3429,7 +3429,7 @@
     {
       "id": "US-210",
       "title": "Add realtime subscription auto-reconnect with backoff",
-      "description": "Supabase realtime channels in src/hooks/useRealTimeSync.ts and useRealtimeSubscription.ts are created once with error logging but no reconnection logic; if the realtime server restarts or the connection drops, live features (notifications, activity feed) silently freeze and users see stale data with no indication. Centralize subscription management (US-057 added a manager — extend it) to detect channel CLOSED/ERROR/system events and reconnect with exponential backoff + jitter, and surface a 'reconnecting' state to the existing offline/sync indicator.",
+      "description": "Supabase realtime channels in src/hooks/useRealTimeSync.ts and useRealtimeSubscription.ts are created once with error logging but no reconnection logic; if the realtime server restarts or the connection drops, live features (notifications, activity feed) silently freeze and users see stale data with no indication. Centralize subscription management (US-057 added a manager \u2014 extend it) to detect channel CLOSED/ERROR/system events and reconnect with exponential backoff + jitter, and surface a 'reconnecting' state to the existing offline/sync indicator.",
       "acceptanceCriteria": [
         "Realtime channels detect disconnect (CLOSED/ERROR/system) and automatically reconnect with backoff + jitter",
         "Reconnection is centralized (extends the existing realtime subscription manager) rather than per-hook ad hoc",
@@ -3439,7 +3439,7 @@
       ],
       "priority": 2,
       "passes": true,
-      "notes": "COMPLETED. Centralized realtime auto-reconnect with exponential backoff + jitter. New src/lib/realtime/reconnectingChannel.ts: createReconnectingChannel() wraps channel create/subscribe, detects CLOSED/CHANNEL_ERROR/TIMED_OUT, tears down the dead channel and re-subscribes with capped exponential backoff (base*2^attempt, maxDelay, jitterRatio) — fully injectable (createChannel/removeChannel/timers/random) for testing. On a successful re-SUBSCRIBE following a drop it fires onReconnect() to refetch missed rows. New src/lib/realtime/connectionStore.ts: aggregates per-channel state into an isReconnecting flag + useRealtimeReconnecting() hook (useSyncExternalStore). Wired into BOTH realtime hooks (centralized, not per-hook ad hoc): src/hooks/useRealtimeSubscription.ts and src/hooks/useRealTimeSync.ts now build channels via createReconnectingChannel, report state to the store, and refetch on reconnect. src/components/offline/OfflineIndicator.tsx OfflineBanner surfaces a distinct amber 'Reconnecting to live updates...' banner when online but channels dropped. Tests: src/lib/realtime/__tests__/reconnectingChannel.test.ts (5: first-connect, dropped-channel recovery+onReconnect, exponential backoff timings, teardown cancels pending reconnect, maxAttempts->closed) + connectionStore.test.ts (4: aggregation). 9/9 pass. vite build green (1m16s)."
+      "notes": "COMPLETED. Centralized realtime auto-reconnect with exponential backoff + jitter. New src/lib/realtime/reconnectingChannel.ts: createReconnectingChannel() wraps channel create/subscribe, detects CLOSED/CHANNEL_ERROR/TIMED_OUT, tears down the dead channel and re-subscribes with capped exponential backoff (base*2^attempt, maxDelay, jitterRatio) \u2014 fully injectable (createChannel/removeChannel/timers/random) for testing. On a successful re-SUBSCRIBE following a drop it fires onReconnect() to refetch missed rows. New src/lib/realtime/connectionStore.ts: aggregates per-channel state into an isReconnecting flag + useRealtimeReconnecting() hook (useSyncExternalStore). Wired into BOTH realtime hooks (centralized, not per-hook ad hoc): src/hooks/useRealtimeSubscription.ts and src/hooks/useRealTimeSync.ts now build channels via createReconnectingChannel, report state to the store, and refetch on reconnect. src/components/offline/OfflineIndicator.tsx OfflineBanner surfaces a distinct amber 'Reconnecting to live updates...' banner when online but channels dropped. Tests: src/lib/realtime/__tests__/reconnectingChannel.test.ts (5: first-connect, dropped-channel recovery+onReconnect, exponential backoff timings, teardown cancels pending reconnect, maxAttempts->closed) + connectionStore.test.ts (4: aggregation). 9/9 pass. vite build green (1m16s)."
     },
     {
       "id": "US-211",
@@ -3459,7 +3459,7 @@
     {
       "id": "US-212",
       "title": "Burn down the TypeScript strict-mode error backlog so tsc passes",
-      "description": "Strict mode is enabled (tsconfig.app.json) but a snapshot in tsc-output.txt shows ~3,433 TypeScript errors — top categories TS2345 (177), TS6133 unused (244), TS2769 overloads (150), plus ~54 'string | null' vs 'string | undefined' Supabase-type mismatches, jest-dom matcher type errors (toBeInTheDocument missing on Assertion), and 8 lazy-route 'default export missing' errors in lazyRoutes.tsx that will crash those routes at runtime. US-001 enabled strict via ts-expect-error suppressions, but a clean `tsc --noEmit` is required before CI typecheck can gate merges. Burn the backlog down in batches: fix the runtime-affecting ones first (lazy-route default exports, real null bugs), add proper vitest/jest-dom type augmentation, normalize Supabase null vs undefined, remove dead imports, and track remaining suppressions to zero.",
+      "description": "Strict mode is enabled (tsconfig.app.json) but a snapshot in tsc-output.txt shows ~3,433 TypeScript errors \u2014 top categories TS2345 (177), TS6133 unused (244), TS2769 overloads (150), plus ~54 'string | null' vs 'string | undefined' Supabase-type mismatches, jest-dom matcher type errors (toBeInTheDocument missing on Assertion), and 8 lazy-route 'default export missing' errors in lazyRoutes.tsx that will crash those routes at runtime. US-001 enabled strict via ts-expect-error suppressions, but a clean `tsc --noEmit` is required before CI typecheck can gate merges. Burn the backlog down in batches: fix the runtime-affecting ones first (lazy-route default exports, real null bugs), add proper vitest/jest-dom type augmentation, normalize Supabase null vs undefined, remove dead imports, and track remaining suppressions to zero.",
       "acceptanceCriteria": [
         "The 8 lazy-route default-export errors are fixed so those routes load at runtime",
         "vitest/jest-dom matcher types are augmented so test files type-check without suppressions",
@@ -3469,12 +3469,12 @@
       ],
       "priority": 1,
       "passes": false,
-      "notes": "Source: testing/CI audit. RELEASE BLOCKER — CI typecheck job cannot gate merges until this passes. Large; split into batches per directory. tsc-output.txt is a committed snapshot, re-measure before starting."
+      "notes": "Source: testing/CI audit. RELEASE BLOCKER \u2014 CI typecheck job cannot gate merges until this passes. Large; split into batches per directory. tsc-output.txt is a committed snapshot, re-measure before starting."
     },
     {
       "id": "US-213",
       "title": "Make CI a real merge gate and apply branch-protection rulesets",
-      "description": "CI exists (.github/workflows) with lint/typecheck/unit/build/e2e/security jobs, but there are no required status checks or branch protection, so broken TypeScript, failing tests, or security issues can merge to develop/main — defeating the CI investment. Make typecheck + lint + unit + build (and a smoke e2e) required checks on develop and main, and apply the rulesets already drafted in .github/rulesets/ (CLAUDE.md documents them) so PRs cannot merge red. Coordinate with US-212 since typecheck can only be required once tsc is green.",
+      "description": "CI exists (.github/workflows) with lint/typecheck/unit/build/e2e/security jobs, but there are no required status checks or branch protection, so broken TypeScript, failing tests, or security issues can merge to develop/main \u2014 defeating the CI investment. Make typecheck + lint + unit + build (and a smoke e2e) required checks on develop and main, and apply the rulesets already drafted in .github/rulesets/ (CLAUDE.md documents them) so PRs cannot merge red. Coordinate with US-212 since typecheck can only be required once tsc is green.",
       "acceptanceCriteria": [
         "lint, typecheck, unit, and build are required status checks on develop and main",
         "Branch-protection rulesets from .github/rulesets/ are applied (no force-push/deletion on protected branches; PR required)",
@@ -3489,7 +3489,7 @@
     {
       "id": "US-214",
       "title": "Un-skip core-flow E2E tests and run mobile viewport in CI",
-      "description": "tests/e2e contains 14 test.skip() calls covering the highest-value flows — sign-in, session persistence, sign-out, dashboard display/metrics/navigation, profile, responsiveness, keyboard nav, alt text — so the most critical paths are not actually validated (false confidence). playwright.config.ts defines Mobile Chrome (Pixel 5) and Mobile Safari (iPhone 12) projects but CI only runs --project=chromium, so responsive/mobile-web is never tested. Implement the skipped specs with proper test auth/data setup, remove the .skip()s, and add at least one mobile project to the CI e2e run.",
+      "description": "tests/e2e contains 14 test.skip() calls covering the highest-value flows \u2014 sign-in, session persistence, sign-out, dashboard display/metrics/navigation, profile, responsiveness, keyboard nav, alt text \u2014 so the most critical paths are not actually validated (false confidence). playwright.config.ts defines Mobile Chrome (Pixel 5) and Mobile Safari (iPhone 12) projects but CI only runs --project=chromium, so responsive/mobile-web is never tested. Implement the skipped specs with proper test auth/data setup, remove the .skip()s, and add at least one mobile project to the CI e2e run.",
       "acceptanceCriteria": [
         "The 14 skipped auth/dashboard/core specs are implemented and passing (no remaining test.skip in those files)",
         "A reliable test-auth/data-seed path exists for E2E (no flakiness from real prod auth)",
@@ -3504,7 +3504,7 @@
     {
       "id": "US-215",
       "title": "Enforce coverage thresholds and add automated accessibility scanning in CI",
-      "description": "vitest.config.ts declares 60% coverage thresholds but CI runs test:run without enforcing them, and with ~64 test files against ~1,389 source files real coverage is far below target — the threshold is aspirational and never blocks a PR. Separately, vitest-axe/axe-core and a custom toHaveNoA11yViolations matcher are installed (src/test/accessibility-utils.ts) but no test invokes axe.run(), so there is no automated a11y regression detection. Enforce coverage in CI (ratcheting up over time rather than failing day one), and add an axe-core scan over the top ~20 pages/components as a CI check.",
+      "description": "vitest.config.ts declares 60% coverage thresholds but CI runs test:run without enforcing them, and with ~64 test files against ~1,389 source files real coverage is far below target \u2014 the threshold is aspirational and never blocks a PR. Separately, vitest-axe/axe-core and a custom toHaveNoA11yViolations matcher are installed (src/test/accessibility-utils.ts) but no test invokes axe.run(), so there is no automated a11y regression detection. Enforce coverage in CI (ratcheting up over time rather than failing day one), and add an axe-core scan over the top ~20 pages/components as a CI check.",
       "acceptanceCriteria": [
         "CI enforces vitest coverage thresholds (with a realistic ratchet baseline) and fails when coverage drops below it",
         "An axe-core/vitest-axe scan runs in CI against the top ~20 pages/components",
@@ -3529,7 +3529,7 @@
       ],
       "priority": 2,
       "passes": true,
-      "notes": "COMPLETED. Three.js + GSAP off the landing critical path. Build proof: three is its own chunk (three-BRYjSUHX.js, 869KB) and the Index/landing chunk (21KB) has 0 THREE refs and 0 gsap refs — both are absent from the initial landing chunk. (1) 3D hero (PremiumBlueprint3D, own dynamic chunk) now loads ONLY when: not mobile AND prefers-reduced-motion is not set AND the hero is in view (new IntersectionObserver on the existing containerRef, rootMargin 200px), deferred via requestIdleCallback so it never blocks interactivity; users who go straight to /dashboard never render Hero so never fetch three. (2) GSAP: the animation effect now early-returns on isMobile OR reduced-motion, revealing content immediately and NOT importing gsap at all in those cases (so it never competes for the interactive period); gsap remains a dynamic import on desktop. (3) BriklyHero3D already memoizes its color/instance buffers via useMemo (colors, dummy, and the colorArray/initialPositions Float32Arrays with stable [count, gridSize, colors] deps) — buffers are computed once, not per render. Graceful static fallback on mobile/reduced-motion; full visual parity on capable desktops. vite build green (1m14s)."
+      "notes": "COMPLETED. Three.js + GSAP off the landing critical path. Build proof: three is its own chunk (three-BRYjSUHX.js, 869KB) and the Index/landing chunk (21KB) has 0 THREE refs and 0 gsap refs \u2014 both are absent from the initial landing chunk. (1) 3D hero (PremiumBlueprint3D, own dynamic chunk) now loads ONLY when: not mobile AND prefers-reduced-motion is not set AND the hero is in view (new IntersectionObserver on the existing containerRef, rootMargin 200px), deferred via requestIdleCallback so it never blocks interactivity; users who go straight to /dashboard never render Hero so never fetch three. (2) GSAP: the animation effect now early-returns on isMobile OR reduced-motion, revealing content immediately and NOT importing gsap at all in those cases (so it never competes for the interactive period); gsap remains a dynamic import on desktop. (3) BriklyHero3D already memoizes its color/instance buffers via useMemo (colors, dummy, and the colorArray/initialPositions Float32Arrays with stable [count, gridSize, colors] deps) \u2014 buffers are computed once, not per render. Graceful static fallback on mobile/reduced-motion; full visual parity on capable desktops. vite build green (1m14s)."
     },
     {
       "id": "US-217",
@@ -3559,12 +3559,12 @@
       ],
       "priority": 2,
       "passes": true,
-      "notes": "COMPLETED. (1) recharts isolated into its own manual chunk: vite.config.ts manualChunks now routes recharts + recharts-scale + victory-vendor + d3-* to a 'recharts' chunk (added to chunkFileNames manualNames). Build proof: dist/assets/recharts-*.js = 486KB (129.6KB gzip) standalone; the Analytics route chunk dropped to 17.9KB (recharts no longer inlined) and non-chart routes don't reference the recharts chunk. (2) Offscreen charts defer via IntersectionObserver: new src/components/ui/DeferUntilVisible.tsx (renders a sized skeleton until scrolled into view, then mounts children once and disconnects; falls back to immediate render where IO is unavailable) + src/components/ui/DeferredChartContainer.tsx (drop-in for ChartContainer). All 7 ChartContainers in Analytics.tsx now use DeferredChartContainer. (3) Inactive-tab charts already don't render — Radix TabsContent unmounts when inactive. (4) Chart routes are lazy-loaded by the app's route splitting, so recharts loads only for routes that render a chart. NOTE on AC 'fetch a tab's data only when activated': the current Analytics already does a single combined 2-query load shared across tabs (not the per-tab 8-query burst the PRD described), so there are no per-tab queries to defer. Tests: DeferUntilVisible.test.tsx (2) + ocrWorkerPool reuse pattern. vite build green (1m16s)."
+      "notes": "COMPLETED. (1) recharts isolated into its own manual chunk: vite.config.ts manualChunks now routes recharts + recharts-scale + victory-vendor + d3-* to a 'recharts' chunk (added to chunkFileNames manualNames). Build proof: dist/assets/recharts-*.js = 486KB (129.6KB gzip) standalone; the Analytics route chunk dropped to 17.9KB (recharts no longer inlined) and non-chart routes don't reference the recharts chunk. (2) Offscreen charts defer via IntersectionObserver: new src/components/ui/DeferUntilVisible.tsx (renders a sized skeleton until scrolled into view, then mounts children once and disconnects; falls back to immediate render where IO is unavailable) + src/components/ui/DeferredChartContainer.tsx (drop-in for ChartContainer). All 7 ChartContainers in Analytics.tsx now use DeferredChartContainer. (3) Inactive-tab charts already don't render \u2014 Radix TabsContent unmounts when inactive. (4) Chart routes are lazy-loaded by the app's route splitting, so recharts loads only for routes that render a chart. NOTE on AC 'fetch a tab's data only when activated': the current Analytics already does a single combined 2-query load shared across tabs (not the per-tab 8-query burst the PRD described), so there are no per-tab queries to defer. Tests: DeferUntilVisible.test.tsx (2) + ocrWorkerPool reuse pattern. vite build green (1m16s)."
     },
     {
       "id": "US-219",
       "title": "Reduce context-driven re-renders in AuthContext and SubscriptionContext",
-      "description": "AuthContext (~1240 lines) exposes user/session/profile/loading in one value, so every consumer of useAuth() re-renders whenever any field changes — e.g. a component needing only user.id re-renders on each 5-minute session TTL refresh (AuthContext.tsx:~187). SubscriptionContext memoizes its value but its callbacks depend on non-memoized subscriptionData/usage, so a subscription refetch (every 5 min) cascades re-renders through 20+ consumers (US-052 only memoized the provider value). Split each into stable value vs action contexts (or add shallow-selector hooks) so consumers subscribe only to what they use.",
+      "description": "AuthContext (~1240 lines) exposes user/session/profile/loading in one value, so every consumer of useAuth() re-renders whenever any field changes \u2014 e.g. a component needing only user.id re-renders on each 5-minute session TTL refresh (AuthContext.tsx:~187). SubscriptionContext memoizes its value but its callbacks depend on non-memoized subscriptionData/usage, so a subscription refetch (every 5 min) cascades re-renders through 20+ consumers (US-052 only memoized the provider value). Split each into stable value vs action contexts (or add shallow-selector hooks) so consumers subscribe only to what they use.",
       "acceptanceCriteria": [
         "Auth state is split (e.g. user/session/profile) or a selector hook exists so consumers re-render only on the slice they read",
         "SubscriptionContext separates stable actions from changing data so a refetch doesn't cascade to all consumers",
@@ -3594,7 +3594,7 @@
     {
       "id": "US-221",
       "title": "Roll out the accessible component library beyond the top pages",
-      "description": "Accessible primitives exist (AccessiblePageWrapper, AccessibleForm, AccessibleTable, AccessibleModal) and US-010..014 adopted them on the top ~20 pages, but docs/ACCESSIBILITY_COMPLIANCE_CHECKLIST.md notes adoption stalled — only a small fraction of 200+ pages use them, leaving most of the product short of WCAG 2.1 AA (a legal/compliance risk for a public B2B app). Systematically migrate the remaining high-traffic and forms/tables/modals pages to the accessible components, fix focus management, skip links, color contrast, and prefers-reduced-motion, and track adoption percentage to a target (e.g. 90%+ of user-facing pages).",
+      "description": "Accessible primitives exist (AccessiblePageWrapper, AccessibleForm, AccessibleTable, AccessibleModal) and US-010..014 adopted them on the top ~20 pages, but docs/ACCESSIBILITY_COMPLIANCE_CHECKLIST.md notes adoption stalled \u2014 only a small fraction of 200+ pages use them, leaving most of the product short of WCAG 2.1 AA (a legal/compliance risk for a public B2B app). Systematically migrate the remaining high-traffic and forms/tables/modals pages to the accessible components, fix focus management, skip links, color contrast, and prefers-reduced-motion, and track adoption percentage to a target (e.g. 90%+ of user-facing pages).",
       "acceptanceCriteria": [
         "Accessible component adoption across user-facing pages reaches the agreed target (tracked with a count script)",
         "Forms/tables/modals on migrated pages use the accessible variants with correct ARIA and focus management",
@@ -3624,7 +3624,7 @@
     {
       "id": "US-223",
       "title": "Add a true Gantt schedule with task dependencies and critical path",
-      "description": "Scheduling today (src/components/scheduling/VisualScheduler.tsx, calendar components) is calendar/conflict-based with no dependency-driven Gantt or critical-path analysis — a core expectation that Procore/Buildertrend/MS Project meet. Add a Gantt view with finish-to-start (and other) task dependencies, automatic critical-path highlighting and float calculation, drag-to-reschedule with dependency cascade, and baseline-vs-actual comparison. This is a parity-plus feature; differentiate with resource leveling and slip alerts feeding the project health score.",
+      "description": "Scheduling today (src/components/scheduling/VisualScheduler.tsx, calendar components) is calendar/conflict-based with no dependency-driven Gantt or critical-path analysis \u2014 a core expectation that Procore/Buildertrend/MS Project meet. Add a Gantt view with finish-to-start (and other) task dependencies, automatic critical-path highlighting and float calculation, drag-to-reschedule with dependency cascade, and baseline-vs-actual comparison. This is a parity-plus feature; differentiate with resource leveling and slip alerts feeding the project health score.",
       "acceptanceCriteria": [
         "Project schedules render as a Gantt with linkable task dependencies (at least finish-to-start)",
         "Critical path is computed and visually highlighted; per-task float/slack is shown",
@@ -3634,12 +3634,12 @@
       ],
       "priority": 2,
       "passes": false,
-      "notes": "Source: competitive analysis. Differentiator vs current calendar-only scheduling. Large feature — may warrant decomposition into sub-stories during planning. | DECOMPOSED: the critical-path + float engine and dependency-cascade rescheduling core is delivered and tested under US-234 (scheduleUtils now delegates to src/lib/schedule/criticalPath.ts; Gantt highlights the critical path and shows per-task slack). US-223 remains open for the DB-backed project Gantt with linkable dependencies, baseline-vs-actual persistence (additive migration), and schedule-slip alerts feeding the project health score."
+      "notes": "Source: competitive analysis. Differentiator vs current calendar-only scheduling. Large feature \u2014 may warrant decomposition into sub-stories during planning. | DECOMPOSED: the critical-path + float engine and dependency-cascade rescheduling core is delivered and tested under US-234 (scheduleUtils now delegates to src/lib/schedule/criticalPath.ts; Gantt highlights the critical path and shows per-task slack). US-223 remains open for the DB-backed project Gantt with linkable dependencies, baseline-vs-actual persistence (additive migration), and schedule-slip alerts feeding the project health score."
     },
     {
       "id": "US-224",
       "title": "Add WIP / cost-to-complete / earned-value financial reporting",
-      "description": "Job costing has budget-vs-actual (US-099) but lacks Work-in-Progress reporting, cost-to-complete forecasting, and earned-value/percentage-of-completion (ASC 606 / PCM) views that construction finance teams and lenders expect — a major value driver in Procore/Buildertrend. Add WIP schedule reporting (earned revenue, over/under billing), cost-to-complete projection per cost code, and earned-value metrics (CPI/SPI), exportable for accountants and tied into the financial dashboards (US-109/US-110).",
+      "description": "Job costing has budget-vs-actual (US-099) but lacks Work-in-Progress reporting, cost-to-complete forecasting, and earned-value/percentage-of-completion (ASC 606 / PCM) views that construction finance teams and lenders expect \u2014 a major value driver in Procore/Buildertrend. Add WIP schedule reporting (earned revenue, over/under billing), cost-to-complete projection per cost code, and earned-value metrics (CPI/SPI), exportable for accountants and tied into the financial dashboards (US-109/US-110).",
       "acceptanceCriteria": [
         "A WIP report computes earned revenue, billings, and over/under-billing per project from cost and contract data",
         "Cost-to-complete forecasting is available per cost code with projected final cost and margin",
@@ -3649,12 +3649,12 @@
       ],
       "priority": 2,
       "passes": true,
-      "notes": "COMPLETED. Pure logic src/lib/projects/wipReport.ts: computeWipRow/buildWipSchedule (percent-complete = cost/est-cost; earned revenue = %×contract; over/under billing; EAC = cost-to-date/percent; CPI/SPI from BAC=est-cost and schedule-elapsed planned value), summarizeCostToComplete (per cost-code projected final cost + pro-rata revenue allocation for projected margin), netApprovedChangeOrders. 20 passing tests in __tests__/wipReport.test.ts. UI src/components/financial/WipReport.tsx (company-wide or per-project): summary cards, earned-vs-billed bar chart, WIP schedule table (CPI/SPI/%complete), cost-to-complete-by-cost-code table with project selector, Excel (xlsx) + PDF (jspdf-autotable) export. Page src/pages/WipReport.tsx at /finance/wip-report (financialRoutes) with nav links in HierarchicalNavigationConfig + AppSidebar (admin/project_manager/accounting roles). Reconciles with budget-vs-actual (same job_costs/project_budgets/invoices/change_orders sources); all queries company_id-scoped under RLS. vite build green, lint clean."
+      "notes": "COMPLETED. Pure logic src/lib/projects/wipReport.ts: computeWipRow/buildWipSchedule (percent-complete = cost/est-cost; earned revenue = %\u00d7contract; over/under billing; EAC = cost-to-date/percent; CPI/SPI from BAC=est-cost and schedule-elapsed planned value), summarizeCostToComplete (per cost-code projected final cost + pro-rata revenue allocation for projected margin), netApprovedChangeOrders. 20 passing tests in __tests__/wipReport.test.ts. UI src/components/financial/WipReport.tsx (company-wide or per-project): summary cards, earned-vs-billed bar chart, WIP schedule table (CPI/SPI/%complete), cost-to-complete-by-cost-code table with project selector, Excel (xlsx) + PDF (jspdf-autotable) export. Page src/pages/WipReport.tsx at /finance/wip-report (financialRoutes) with nav links in HierarchicalNavigationConfig + AppSidebar (admin/project_manager/accounting roles). Reconciles with budget-vs-actual (same job_costs/project_budgets/invoices/change_orders sources); all queries company_id-scoped under RLS. vite build green, lint clean."
     },
     {
       "id": "US-225",
       "title": "Add a drawing/plan viewer with markup, annotations, and issue tracking",
-      "description": "Document management handles uploads/versioning and OCR but has no in-browser drawing viewer with markup — field teams and PMs must download files to annotate, while Procore/Autodesk/Buildertrend offer in-app plan markup. Add a PDF/image plan viewer with annotation tools (callouts, measurements, clouds), persistent markups per drawing version, and the ability to pin issues/RFIs to a location on the drawing with a resolution workflow. Reuse the existing visual-takeoff (US-038) and drawing-viewer (US-039) groundwork.",
+      "description": "Document management handles uploads/versioning and OCR but has no in-browser drawing viewer with markup \u2014 field teams and PMs must download files to annotate, while Procore/Autodesk/Buildertrend offer in-app plan markup. Add a PDF/image plan viewer with annotation tools (callouts, measurements, clouds), persistent markups per drawing version, and the ability to pin issues/RFIs to a location on the drawing with a resolution workflow. Reuse the existing visual-takeoff (US-038) and drawing-viewer (US-039) groundwork.",
       "acceptanceCriteria": [
         "Users can open construction drawings (PDF/image) in-browser and add persistent markups/annotations",
         "Markups are versioned per drawing revision and attributed to a user with timestamps",
@@ -3669,7 +3669,7 @@
     {
       "id": "US-226",
       "title": "Add client selections with automatic budget and change-order updates",
-      "description": "Residential builders (Buildertrend's core market) let clients choose finishes/fixtures online with selections that auto-update the contract budget and generate change orders — Brikly's client portal shows progress but has no selections workflow. Add selection categories/options with allowances, a client-facing selection UI in the portal, approval flow, and automatic budget adjustment + change-order generation when a client picks an over-allowance option. US-040 added client selections management groundwork; extend it to the portal + financial automation.",
+      "description": "Residential builders (Buildertrend's core market) let clients choose finishes/fixtures online with selections that auto-update the contract budget and generate change orders \u2014 Brikly's client portal shows progress but has no selections workflow. Add selection categories/options with allowances, a client-facing selection UI in the portal, approval flow, and automatic budget adjustment + change-order generation when a client picks an over-allowance option. US-040 added client selections management groundwork; extend it to the portal + financial automation.",
       "acceptanceCriteria": [
         "Builders can define selection categories/options with allowances per project",
         "Clients choose selections in the portal; over-allowance choices compute the delta automatically",
@@ -3679,12 +3679,12 @@
       ],
       "priority": 2,
       "passes": false,
-      "notes": "Source: competitive analysis. Extends US-040; ties selections to budget/change-order automation — strong residential differentiator."
+      "notes": "Source: competitive analysis. Extends US-040; ties selections to budget/change-order automation \u2014 strong residential differentiator."
     },
     {
       "id": "US-227",
       "title": "Add lien waiver management with conditional/unconditional tracking and payment holds",
-      "description": "Lien waivers are table-stakes for construction payments but Brikly only has waiver text in legal templates (src/components/legal/LegalDocumentTemplates.tsx) — no request workflow, conditional/unconditional tracking, or payment-hold-until-waiver logic. Add lien waiver request/receipt workflows tied to subcontractor payments, with conditional vs unconditional state, e-signature capture (reuse US-041), and a rule that holds/releases subcontractor payment based on waiver receipt.",
+      "description": "Lien waivers are table-stakes for construction payments but Brikly only has waiver text in legal templates (src/components/legal/LegalDocumentTemplates.tsx) \u2014 no request workflow, conditional/unconditional tracking, or payment-hold-until-waiver logic. Add lien waiver request/receipt workflows tied to subcontractor payments, with conditional vs unconditional state, e-signature capture (reuse US-041), and a rule that holds/releases subcontractor payment based on waiver receipt.",
       "acceptanceCriteria": [
         "Lien waiver requests can be issued to subs/suppliers and tracked through signed/received states",
         "Conditional vs unconditional (progress vs final) waiver types are modeled and reported",
@@ -3744,7 +3744,7 @@
     {
       "id": "US-231",
       "title": "Make AI project-risk analytics predictive and wired to real data",
-      "description": "AI surfaces exist (AIInsights, AIProgressAnalyzer, several ai-* edge functions) but largely render static/cosmetic data — there is no schedule-slip forecasting, cost-variance prediction, or risk scoring feeding the dashboards. Wire real project data (schedule, cost, productivity) into a risk model that forecasts likely overruns/slips and produces a project_risk_score, then surface early-warning alerts on the dashboard and project health indicator. This is a credible differentiator vs Procore Copilot / Autodesk Assistant if grounded in real signals. Use the latest Claude models for any LLM-backed analysis.",
+      "description": "AI surfaces exist (AIInsights, AIProgressAnalyzer, several ai-* edge functions) but largely render static/cosmetic data \u2014 there is no schedule-slip forecasting, cost-variance prediction, or risk scoring feeding the dashboards. Wire real project data (schedule, cost, productivity) into a risk model that forecasts likely overruns/slips and produces a project_risk_score, then surface early-warning alerts on the dashboard and project health indicator. This is a credible differentiator vs Procore Copilot / Autodesk Assistant if grounded in real signals. Use the latest Claude models for any LLM-backed analysis.",
       "acceptanceCriteria": [
         "A risk model consumes real schedule/cost/productivity data and outputs a per-project risk score with contributing factors",
         "Schedule-slip and cost-variance forecasts are computed and shown, not static placeholders",
@@ -3759,7 +3759,7 @@
     {
       "id": "US-232",
       "title": "Add bid leveling and estimate variance analysis",
-      "description": "Estimating supports single-document editing (EstimatesHub) but has no side-by-side comparison, line-item variance, or bid-leveling workflow for comparing subcontractor/supplier bids on the same scope — a routine preconstruction task. Add bid leveling: import/enter multiple bids against a common scope/line-item template, normalize and compare line items, flag scope gaps and outliers, and select awardees. Complements US-096 (estimate comparison/version history).",
+      "description": "Estimating supports single-document editing (EstimatesHub) but has no side-by-side comparison, line-item variance, or bid-leveling workflow for comparing subcontractor/supplier bids on the same scope \u2014 a routine preconstruction task. Add bid leveling: import/enter multiple bids against a common scope/line-item template, normalize and compare line items, flag scope gaps and outliers, and select awardees. Complements US-096 (estimate comparison/version history).",
       "acceptanceCriteria": [
         "Multiple bids can be captured against a shared scope/line-item template for a project",
         "A leveling view compares bids line-by-line, normalizing for scope and flagging gaps/outliers",
@@ -3774,7 +3774,7 @@
     {
       "id": "US-233",
       "title": "Add an executive KPI dashboard with forecasting",
-      "description": "Reports/Analytics exist but there is no role-based executive dashboard with the KPIs ownership cares about — profit-margin trend, cash runway/flow forecast, win rate, average project size, backlog — nor a custom-metric builder. ExecutiveDashboard is lazy-loaded but minimal. Build a configurable executive dashboard aggregating company-wide financials and pipeline into trend + forecast charts, gated to admin/owner roles, reusing the financial overview (US-110) and activity/health data.",
+      "description": "Reports/Analytics exist but there is no role-based executive dashboard with the KPIs ownership cares about \u2014 profit-margin trend, cash runway/flow forecast, win rate, average project size, backlog \u2014 nor a custom-metric builder. ExecutiveDashboard is lazy-loaded but minimal. Build a configurable executive dashboard aggregating company-wide financials and pipeline into trend + forecast charts, gated to admin/owner roles, reusing the financial overview (US-110) and activity/health data.",
       "acceptanceCriteria": [
         "An executive dashboard shows profit-margin trend, cash flow/runway forecast, win rate, avg project size, and backlog",
         "KPIs aggregate company-wide data and are role-gated to admin/owner",

@@ -34,6 +34,9 @@ import {
   LazyPromotions,
   LazyUpgrade,
 
+  // Settings
+  LazyApprovalWorkflows,
+
   // Analytics & Business Intelligence
   LazyAnalytics,
   LazySettings,
@@ -206,6 +209,14 @@ export const adminRoutes = (
       element={
         <SecureRoute requireAuth allowedRoles={['root_admin', 'admin']}>
           <LazyPromotions />
+        </SecureRoute>
+      }
+    />
+    <Route
+      path="/admin/approval-workflows"
+      element={
+        <SecureRoute requireAuth allowedRoles={['root_admin', 'admin']}>
+          <LazyApprovalWorkflows />
         </SecureRoute>
       }
     />

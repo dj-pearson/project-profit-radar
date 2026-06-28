@@ -102,6 +102,7 @@ export const LazyPayroll = createLazyRoute(() => import('@/pages/Payroll'));
 export const LazyPerformanceReviews = createLazyRoute(() => import('@/pages/PerformanceReviews'));
 
 // Admin pages
+export const LazyApprovalWorkflows = createLazyRoute(() => import('@/pages/admin/ApprovalWorkflows'));
 export const LazyCompanySettings = createLazyRoute(() => import('@/pages/CompanySettings'));
 export const LazyUserManagement = createLazyRoute(() => import('@/pages/UserManagement'));
 export const LazyIntegrations = createLazyRoute(() => import('@/pages/Integrations'));

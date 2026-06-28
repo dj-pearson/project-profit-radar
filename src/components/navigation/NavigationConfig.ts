@@ -26,6 +26,7 @@ import {
   Zap,
   Smartphone,
   MailX,
+  GitBranch,
   LucideIcon
 } from 'lucide-react';
 
@@ -294,6 +295,7 @@ export const dashboardAreas: DashboardArea[] = [
         label: "Company Management",
         items: [
           { title: "Company Settings", url: "/company-settings", icon: Settings, roles: ["admin", "root_admin"] },
+          { title: "Approval Workflows", url: "/admin/approval-workflows", icon: GitBranch, roles: ["admin", "root_admin"], description: "Configure approval chains for timesheets, change orders, invoices, and expenses" },
           { title: "Custom Domain", url: "/settings/custom-domain", icon: Globe, roles: ["admin", "root_admin"], description: "Configure white-label domain" },
           { title: "Security Settings", url: "/security-settings", icon: Shield, roles: ["admin", "root_admin"] },
           { title: "Companies", url: "/admin/companies", icon: Building2, roles: ["root_admin"], badge: "Root Admin" },
