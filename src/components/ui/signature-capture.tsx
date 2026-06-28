@@ -38,11 +38,16 @@ export function SignatureCapture({
     ctx.lineWidth = 2;
     ctx.lineCap = 'round';
     ctx.strokeStyle = '#111827';
+    // Always clear first so switching signatures doesn't stack, and an external
+    // reset (value -> null) removes stale ink and disables Clear.
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
     if (value) {
       const img = new Image();
       img.onload = () => ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
       img.src = value;
       setHasInk(true);
+    } else {
+      setHasInk(false);
     }
   }, [value]);
 
