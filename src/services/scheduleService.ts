@@ -5,6 +5,7 @@ import {
   parseDate,
   taskEndDate,
   snapshotTasks,
+  buildLagFn,
   type ScheduleTaskRow,
   type ScheduleDependencyRow,
   type BaselineTaskSnapshot,
@@ -138,7 +139,8 @@ export async function rescheduleWithCascade(params: {
     endDate: parseDate(taskEndDate(t)),
   }));
 
-  const updated = cascadeReschedule(dated, movedId, parseDate(newStartDate));
+  // Honor any saved lag on each finish-to-start edge.
+  const updated = cascadeReschedule(dated, movedId, parseDate(newStartDate), buildLagFn(deps));
 
   // Persist only tasks whose start date actually moved.
   const original = new Map(tasks.map((t) => [t.id, t.start_date]));
@@ -147,15 +149,17 @@ export async function rescheduleWithCascade(params: {
     return original.get(t.id) !== newStart;
   });
 
-  await Promise.all(
-    changed.map((t) =>
-      supabase
-        .from('schedule_tasks')
-        .update({ start_date: t.startDate.toISOString().slice(0, 10) })
-        .eq('id', t.id)
-        .eq('company_id', companyId)
-    )
-  );
+  // Apply sequentially and fail fast: a Supabase update resolves with an
+  // { error } instead of throwing, so Promise.all could otherwise hide a
+  // partial cascade write.
+  for (const t of changed) {
+    const { error } = await supabase
+      .from('schedule_tasks')
+      .update({ start_date: t.startDate.toISOString().slice(0, 10) })
+      .eq('id', t.id)
+      .eq('company_id', companyId);
+    if (error) throw new Error(error.message);
+  }
 }
 
 /** Capture the current schedule as the project's baseline (marks prior ones stale). */
@@ -166,25 +170,33 @@ export async function saveBaseline(params: {
   tasks: ScheduleTaskRow[];
 }): Promise<void> {
   const { companyId, projectId, name, tasks } = params;
-  // Demote any existing current baseline first.
+  // Insert the new baseline as current FIRST so a failure can never leave the
+  // project with no current baseline. Then demote the older ones. If the demote
+  // fails, fetchCurrentBaseline still resolves correctly because it returns the
+  // newest current row.
+  const { data: inserted, error } = await supabase
+    .from('schedule_baselines')
+    .insert([
+      {
+        company_id: companyId,
+        project_id: projectId,
+        name,
+        is_current: true,
+        tasks: snapshotTasks(tasks) as unknown as Json,
+      },
+    ])
+    .select('id')
+    .single();
+  if (error) throw new Error(error.message);
+
   const { error: demoteError } = await supabase
     .from('schedule_baselines')
     .update({ is_current: false })
     .eq('company_id', companyId)
     .eq('project_id', projectId)
-    .eq('is_current', true);
+    .eq('is_current', true)
+    .neq('id', inserted.id);
   if (demoteError) throw new Error(demoteError.message);
-
-  const { error } = await supabase.from('schedule_baselines').insert([
-    {
-      company_id: companyId,
-      project_id: projectId,
-      name,
-      is_current: true,
-      tasks: snapshotTasks(tasks) as unknown as Json,
-    },
-  ]);
-  if (error) throw new Error(error.message);
 }
 
 export async function fetchCurrentBaseline(projectId: string, companyId: string): Promise<ScheduleBaseline | null> {

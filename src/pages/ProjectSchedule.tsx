@@ -1,10 +1,11 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { CalendarRange, Plus, Link2, Save, Trash2, GitBranch } from 'lucide-react';
+import { CalendarRange, Plus, Link2, Save, Trash2, GitBranch, AlertTriangle } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { RoleGuard, ROLE_GROUPS } from '@/components/auth/RoleGuard';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
@@ -44,6 +45,7 @@ import {
   parseDate,
   taskEndDate,
   computeScheduleSlipDays,
+  wouldCreateCycle,
   type ScheduleTaskRow,
   type ScheduleDependencyRow,
 } from '@/lib/schedule/scheduleBoard';
@@ -52,6 +54,7 @@ import type { Project as GanttProject, Task as GanttTask, TaskStatus } from '@/t
 interface ProjectOption {
   id: string;
   name: string;
+  status: string | null;
 }
 
 const todayStr = () => new Date().toISOString().slice(0, 10);
@@ -67,6 +70,7 @@ const ProjectSchedule = () => {
   const [deps, setDeps] = useState<ScheduleDependencyRow[]>([]);
   const [baseline, setBaseline] = useState<ScheduleBaseline | null>(null);
   const [loading, setLoading] = useState(false);
+  const [loadError, setLoadError] = useState(false);
   const [busy, setBusy] = useState(false);
 
   const [taskDialog, setTaskDialog] = useState(false);
@@ -78,7 +82,7 @@ const ProjectSchedule = () => {
     if (!companyId) return;
     supabase
       .from('projects')
-      .select('id, name')
+      .select('id, name, status')
       .eq('company_id', companyId)
       .order('created_at', { ascending: false })
       .then(({ data, error }) => {
@@ -95,6 +99,7 @@ const ProjectSchedule = () => {
   const load = useCallback(async () => {
     if (!companyId || !projectId) return;
     setLoading(true);
+    setLoadError(false);
     try {
       const [t, d, b] = await Promise.all([
         fetchScheduleTasks(projectId, companyId),
@@ -106,6 +111,7 @@ const ProjectSchedule = () => {
       setBaseline(b);
     } catch (err) {
       logger.error('Failed to load schedule', err as Error);
+      setLoadError(true);
       toast({ variant: 'destructive', title: 'Error', description: 'Failed to load schedule.' });
     } finally {
       setLoading(false);
@@ -213,6 +219,10 @@ const ProjectSchedule = () => {
       toast({ variant: 'destructive', title: 'Invalid link', description: 'A task cannot depend on itself.' });
       return;
     }
+    if (wouldCreateCycle(deps, linkForm.predecessor, linkForm.successor)) {
+      toast({ variant: 'destructive', title: 'Invalid link', description: 'That dependency would create a cycle.' });
+      return;
+    }
     setBusy(true);
     try {
       await addDependency({
@@ -315,7 +325,7 @@ const ProjectSchedule = () => {
                   </span>
                 )}
                 <ProjectHealthBadge
-                  status="active"
+                  status={projects.find((p) => p.id === projectId)?.status ?? 'active'}
                   scheduleSlipDays={baseline ? slipDays : undefined}
                   end_date={ganttProject.endDate.toISOString()}
                 />
@@ -325,6 +335,15 @@ const ProjectSchedule = () => {
 
           {loading ? (
             <Skeleton className="h-80 w-full" />
+          ) : loadError ? (
+            <Alert variant="destructive">
+              <AlertTriangle className="h-4 w-4" aria-hidden="true" />
+              <AlertTitle>Couldn't load the schedule</AlertTitle>
+              <AlertDescription className="flex flex-col items-start gap-3">
+                <span>Something went wrong while loading this project's schedule. Please try again.</span>
+                <Button size="sm" variant="outline" onClick={load}>Retry</Button>
+              </AlertDescription>
+            </Alert>
           ) : !projectId ? (
             <Card><CardContent className="py-10 text-center text-muted-foreground">Select a project to view its schedule.</CardContent></Card>
           ) : tasks.length === 0 ? (

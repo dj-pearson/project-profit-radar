@@ -9,6 +9,8 @@ import {
   toCpmTasks,
   snapshotTasks,
   computeScheduleSlipDays,
+  buildLagFn,
+  wouldCreateCycle,
   type ScheduleTaskRow,
   type ScheduleDependencyRow,
 } from '@/lib/schedule/scheduleBoard';
@@ -51,6 +53,34 @@ describe('toCpmTasks (US-223)', () => {
     expect(cpm.find((t) => t.id === 'c')?.dependencies).toEqual(['b']);
     expect(cpm.find((t) => t.id === 'a')?.dependencies).toEqual([]);
     expect(cpm.find((t) => t.id === 'b')?.duration).toBe(3);
+  });
+});
+
+describe('buildLagFn (US-223)', () => {
+  it('returns saved lag per edge and 0 for unknown edges', () => {
+    const deps: ScheduleDependencyRow[] = [
+      { id: 'd1', predecessor_id: 'a', successor_id: 'b', lag_days: 3 },
+    ];
+    const lagOf = buildLagFn(deps);
+    expect(lagOf('a', 'b')).toBe(3);
+    expect(lagOf('b', 'c')).toBe(0);
+  });
+});
+
+describe('wouldCreateCycle (US-223)', () => {
+  const deps: ScheduleDependencyRow[] = [
+    { id: 'd1', predecessor_id: 'a', successor_id: 'b', lag_days: 0 },
+    { id: 'd2', predecessor_id: 'b', successor_id: 'c', lag_days: 0 },
+  ];
+  it('flags a self-link', () => {
+    expect(wouldCreateCycle(deps, 'a', 'a')).toBe(true);
+  });
+  it('flags a back-edge that closes a cycle', () => {
+    // a->b->c exists; adding c->a would cycle.
+    expect(wouldCreateCycle(deps, 'c', 'a')).toBe(true);
+  });
+  it('allows an acyclic edge', () => {
+    expect(wouldCreateCycle(deps, 'a', 'c')).toBe(false);
   });
 });
 

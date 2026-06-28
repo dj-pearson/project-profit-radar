@@ -60,6 +60,40 @@ CREATE INDEX IF NOT EXISTS idx_schedule_task_deps_project
 CREATE INDEX IF NOT EXISTS idx_schedule_baselines_current
   ON public.schedule_baselines (company_id, project_id, is_current);
 
+-- Tenant integrity: bind company_id to the referenced project, and keep
+-- dependency edges within a single project+company, at the schema level.
+DO $$
+BEGIN
+  -- projects.id is already the PK (so (id, company_id) is trivially unique);
+  -- this composite key lets child tables reference it in a composite FK.
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint WHERE conname = 'projects_id_company_id_key'
+  ) THEN
+    ALTER TABLE public.projects ADD CONSTRAINT projects_id_company_id_key UNIQUE (id, company_id);
+  END IF;
+END $$;
+
+-- schedule_tasks.company_id must match the project's company.
+ALTER TABLE public.schedule_tasks
+  ADD CONSTRAINT schedule_tasks_project_company_fk
+  FOREIGN KEY (project_id, company_id)
+  REFERENCES public.projects (id, company_id) ON DELETE CASCADE;
+
+-- Composite key so dependency edges can be scoped to (task, company, project).
+ALTER TABLE public.schedule_tasks
+  ADD CONSTRAINT schedule_tasks_id_company_project_key
+  UNIQUE (id, company_id, project_id);
+
+-- Both endpoints of a dependency must live in the same project + company.
+ALTER TABLE public.schedule_task_dependencies
+  ADD CONSTRAINT schedule_task_deps_predecessor_scope_fk
+  FOREIGN KEY (predecessor_id, company_id, project_id)
+  REFERENCES public.schedule_tasks (id, company_id, project_id) ON DELETE CASCADE;
+ALTER TABLE public.schedule_task_dependencies
+  ADD CONSTRAINT schedule_task_deps_successor_scope_fk
+  FOREIGN KEY (successor_id, company_id, project_id)
+  REFERENCES public.schedule_tasks (id, company_id, project_id) ON DELETE CASCADE;
+
 ALTER TABLE public.schedule_tasks ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.schedule_task_dependencies ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.schedule_baselines ENABLE ROW LEVEL SECURITY;

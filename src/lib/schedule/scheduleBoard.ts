@@ -57,8 +57,52 @@ export function taskEndDate(task: Pick<ScheduleTaskRow, 'start_date' | 'duration
 }
 
 /**
+ * Build a lag lookup `(predecessorId, taskId) => lagDays` for the CPM engine.
+ * Lag can't be expressed in the bare CpmTask.dependencies shape, so it is fed
+ * to computeSchedule/cascadeReschedule separately via this function.
+ */
+export function buildLagFn(deps: ScheduleDependencyRow[]): (predId: string, taskId: string) => number {
+  const lagByEdge = new Map<string, number>();
+  for (const dep of deps) {
+    lagByEdge.set(`${dep.predecessor_id}->${dep.successor_id}`, dep.lag_days ?? 0);
+  }
+  return (predId, taskId) => lagByEdge.get(`${predId}->${taskId}`) ?? 0;
+}
+
+/**
+ * Whether adding a finish-to-start edge predecessor -> successor would create a
+ * cycle, i.e. the predecessor is already reachable from the successor along the
+ * existing dependency edges (or it's a self-link).
+ */
+export function wouldCreateCycle(
+  deps: ScheduleDependencyRow[],
+  predecessorId: string,
+  successorId: string
+): boolean {
+  if (predecessorId === successorId) return true;
+  const edges = new Map<string, string[]>();
+  for (const dep of deps) {
+    const list = edges.get(dep.predecessor_id) ?? [];
+    list.push(dep.successor_id);
+    edges.set(dep.predecessor_id, list);
+  }
+  // Can we already reach `predecessorId` starting from `successorId`?
+  const seen = new Set<string>();
+  const stack = [successorId];
+  while (stack.length) {
+    const node = stack.pop()!;
+    if (node === predecessorId) return true;
+    if (seen.has(node)) continue;
+    seen.add(node);
+    for (const next of edges.get(node) ?? []) stack.push(next);
+  }
+  return false;
+}
+
+/**
  * Map persisted tasks + dependencies to the CPM engine's input shape. Each
- * task's `dependencies` are the ids of its predecessors (finish-to-start).
+ * task's `dependencies` are the ids of its predecessors (finish-to-start). Lag
+ * is supplied separately via buildLagFn (the CpmTask shape carries no lag).
  */
 export function toCpmTasks(tasks: ScheduleTaskRow[], deps: ScheduleDependencyRow[]): CpmTask[] {
   const predecessorsByTask = new Map<string, string[]>();
