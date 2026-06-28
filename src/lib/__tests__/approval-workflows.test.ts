@@ -122,6 +122,16 @@ describe('validateWorkflow (US-087)', () => {
     expect(errors).toContain('Add at least one approval step.');
   });
 
+  it('rejects a project_type condition with a non-eq operator', () => {
+    const errors = validateWorkflow({
+      name: 'X',
+      entity_type: 'invoice',
+      steps: [step({ id: 'a', order: 1, approverRole: 'admin' })],
+      conditions: [cond({ id: '1', field: 'project_type', operator: 'gt', value: 'commercial' })],
+    });
+    expect(errors.some((e) => e.includes('project type only supports'))).toBe(true);
+  });
+
   it('flags an unassigned approver and a non-numeric amount', () => {
     const errors = validateWorkflow({
       name: 'X',

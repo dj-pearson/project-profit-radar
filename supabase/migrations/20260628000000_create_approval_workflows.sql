@@ -14,10 +14,12 @@ CREATE TABLE IF NOT EXISTS public.approval_workflows (
   name        text NOT NULL,
   description text,
   entity_type text NOT NULL CHECK (entity_type IN ('timesheet', 'change_order', 'invoice', 'expense')),
-  steps       jsonb NOT NULL DEFAULT '[]'::jsonb,
-  conditions  jsonb NOT NULL DEFAULT '[]'::jsonb,
+  steps       jsonb NOT NULL DEFAULT '[]'::jsonb CHECK (jsonb_typeof(steps) = 'array'),
+  conditions  jsonb NOT NULL DEFAULT '[]'::jsonb CHECK (jsonb_typeof(conditions) = 'array'),
   is_active   boolean NOT NULL DEFAULT true,
-  created_by  uuid REFERENCES auth.users(id) ON DELETE SET NULL,
+  -- Default to the authenticated user and preserve it on update (see trigger
+  -- below) so an admin can't spoof or overwrite the audit author.
+  created_by  uuid DEFAULT auth.uid() REFERENCES auth.users(id) ON DELETE SET NULL,
   created_at  timestamptz NOT NULL DEFAULT now(),
   updated_at  timestamptz NOT NULL DEFAULT now()
 );
@@ -73,3 +75,20 @@ CREATE TRIGGER set_approval_workflows_updated_at
   BEFORE UPDATE ON public.approval_workflows
   FOR EACH ROW
   EXECUTE FUNCTION public.update_updated_at_column();
+
+-- Preserve the original audit author across updates so it can't be overwritten.
+CREATE OR REPLACE FUNCTION public.preserve_approval_workflows_created_by()
+RETURNS trigger
+LANGUAGE plpgsql
+AS $$
+BEGIN
+  NEW.created_by := OLD.created_by;
+  RETURN NEW;
+END;
+$$;
+
+DROP TRIGGER IF EXISTS preserve_approval_workflows_created_by ON public.approval_workflows;
+CREATE TRIGGER preserve_approval_workflows_created_by
+  BEFORE UPDATE ON public.approval_workflows
+  FOR EACH ROW
+  EXECUTE FUNCTION public.preserve_approval_workflows_created_by();

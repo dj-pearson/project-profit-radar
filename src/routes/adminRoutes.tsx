@@ -215,7 +215,7 @@ export const adminRoutes = (
     <Route
       path="/admin/approval-workflows"
       element={
-        <SecureRoute requireAuth allowedRoles={['root_admin', 'admin']}>
+        <SecureRoute requireAuth permissions={['settings.write']} allowedRoles={['root_admin', 'admin']}>
           <LazyApprovalWorkflows />
         </SecureRoute>
       }

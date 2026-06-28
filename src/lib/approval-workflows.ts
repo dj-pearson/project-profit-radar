@@ -176,8 +176,15 @@ export function validateWorkflow(draft: {
     if (c.field === 'amount' && (c.value === '' || Number.isNaN(Number(c.value)))) {
       errors.push(`Condition ${i + 1}: enter a numeric amount.`);
     }
-    if (c.field === 'project_type' && !String(c.value).trim()) {
-      errors.push(`Condition ${i + 1}: enter a project type.`);
+    if (c.field === 'project_type') {
+      // Only `eq` is meaningful for a string field; other operators would make
+      // the workflow impossible to satisfy (see evaluateCondition).
+      if (c.operator !== 'eq') {
+        errors.push(`Condition ${i + 1}: project type only supports "=".`);
+      }
+      if (!String(c.value).trim()) {
+        errors.push(`Condition ${i + 1}: enter a project type.`);
+      }
     }
   });
 

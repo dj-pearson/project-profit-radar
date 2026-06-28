@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Plus, Edit, Trash2, GitBranch, X } from 'lucide-react';
+import { ArrowLeft, Plus, Edit, Trash2, GitBranch, X, AlertTriangle } from 'lucide-react';
 import { RoleGuard, ROLE_GROUPS } from '@/components/auth/RoleGuard';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -25,8 +25,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { supabase } from '@/integrations/supabase/client';
 import type { Json } from '@/integrations/supabase/types';
+import { logger } from '@/lib/logger';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { WorkflowDiagram } from '@/components/settings/WorkflowDiagram';
@@ -106,6 +108,7 @@ const ApprovalWorkflows = () => {
   const [workflows, setWorkflows] = useState<ApprovalWorkflow[]>([]);
   const [users, setUsers] = useState<CompanyUser[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<ApprovalWorkflow | null>(null);
   const [draft, setDraft] = useState<DraftState>(emptyDraft);
@@ -121,6 +124,7 @@ const ApprovalWorkflows = () => {
   const loadWorkflows = async () => {
     if (!companyId) return;
     setLoading(true);
+    setLoadError(false);
     try {
       const { data, error } = await supabase
         .from('approval_workflows')
@@ -130,7 +134,8 @@ const ApprovalWorkflows = () => {
       if (error) throw error;
       setWorkflows((data ?? []).map((r) => toWorkflow(r as Record<string, unknown>)));
     } catch (err) {
-      console.error('Error loading approval workflows:', err);
+      logger.error('Error loading approval workflows', err as Error);
+      setLoadError(true);
       toast({ variant: 'destructive', title: 'Error', description: 'Failed to load approval workflows.' });
     } finally {
       setLoading(false);
@@ -139,10 +144,14 @@ const ApprovalWorkflows = () => {
 
   const loadUsers = async () => {
     if (!companyId) return;
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from('user_profiles')
       .select('id, first_name, last_name')
       .eq('company_id', companyId);
+    if (error) {
+      logger.error('Error loading company users for approval workflows', error);
+      return;
+    }
     setUsers(
       (data ?? []).map((u) => ({
         id: u.id,
@@ -253,17 +262,15 @@ const ApprovalWorkflows = () => {
         if (error) throw error;
         toast({ title: 'Saved', description: 'Workflow updated.' });
       } else {
-        const { data: authData } = await supabase.auth.getUser();
-        const { error } = await supabase
-          .from('approval_workflows')
-          .insert([{ ...payload, created_by: authData.user?.id ?? null }]);
+        // created_by is set server-side (DEFAULT auth.uid()) so it can't be spoofed.
+        const { error } = await supabase.from('approval_workflows').insert([payload]);
         if (error) throw error;
         toast({ title: 'Created', description: 'Workflow created.' });
       }
       setDialogOpen(false);
       loadWorkflows();
     } catch (err) {
-      console.error('Error saving approval workflow:', err);
+      logger.error('Error saving approval workflow', err as Error);
       toast({ variant: 'destructive', title: 'Error', description: (err as Error).message });
     } finally {
       setSaving(false);
@@ -330,6 +337,17 @@ const ApprovalWorkflows = () => {
             <Skeleton className="h-32 w-full" />
             <Skeleton className="h-32 w-full" />
           </div>
+        ) : loadError ? (
+          <Alert variant="destructive">
+            <AlertTriangle className="h-4 w-4" aria-hidden="true" />
+            <AlertTitle>Couldn't load approval workflows</AlertTitle>
+            <AlertDescription className="flex flex-col items-start gap-3">
+              <span>Something went wrong while loading workflows. Please try again.</span>
+              <Button size="sm" variant="outline" onClick={loadWorkflows}>
+                Retry
+              </Button>
+            </AlertDescription>
+          </Alert>
         ) : workflows.length === 0 ? (
           <Card>
             <CardContent className="py-12 text-center text-muted-foreground">
@@ -366,7 +384,12 @@ const ApprovalWorkflows = () => {
                       <Button variant="outline" size="sm" onClick={() => openEdit(wf)}>
                         <Edit className="mr-1 h-3.5 w-3.5" /> Edit
                       </Button>
-                      <Button variant="ghost" size="sm" onClick={() => handleDelete(wf)}>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleDelete(wf)}
+                        aria-label={`Delete workflow ${wf.name}`}
+                      >
                         <Trash2 className="h-3.5 w-3.5 text-destructive" />
                       </Button>
                     </div>
@@ -468,6 +491,7 @@ const ApprovalWorkflows = () => {
                               approverType: v as ApprovalStep['approverType'],
                               approverRole: v === 'role' ? '' : null,
                               approverUserId: v === 'user' ? '' : null,
+                              approverLabel: null,
                             })
                           }
                         >
@@ -480,7 +504,12 @@ const ApprovalWorkflows = () => {
                         {step.approverType === 'role' ? (
                           <Select
                             value={step.approverRole ?? ''}
-                            onValueChange={(v) => updateStep(step.id, { approverRole: v })}
+                            onValueChange={(v) =>
+                              updateStep(step.id, {
+                                approverRole: v,
+                                approverLabel: APPROVER_ROLES.find((r) => r.value === v)?.label ?? v,
+                              })
+                            }
                           >
                             <SelectTrigger className="min-w-[10rem] flex-1"><SelectValue placeholder="Select role" /></SelectTrigger>
                             <SelectContent>
@@ -492,7 +521,12 @@ const ApprovalWorkflows = () => {
                         ) : (
                           <Select
                             value={step.approverUserId ?? ''}
-                            onValueChange={(v) => updateStep(step.id, { approverUserId: v })}
+                            onValueChange={(v) =>
+                              updateStep(step.id, {
+                                approverUserId: v,
+                                approverLabel: users.find((u) => u.id === v)?.name ?? null,
+                              })
+                            }
                           >
                             <SelectTrigger className="min-w-[10rem] flex-1"><SelectValue placeholder="Select user" /></SelectTrigger>
                             <SelectContent>
