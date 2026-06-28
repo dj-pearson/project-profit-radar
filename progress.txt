@@ -1494,3 +1494,41 @@ prd.json: US-108 passes:true (167/234). Verified by GitHub Action (unit-test/bui
 Adds estimate_versions table; apply to Supabase after merge (CI does not run migrations).
 
 prd.json: US-096 passes:true (168/234). Verified by GitHub Action (unit-test/build).
+
+================================================================================
+## Session: US-087 — Configurable approval workflow builder
+Branch: claude/us-087-approval-workflows → PR to main
+
+### What shipped
+- supabase/migrations/20260628000000_create_approval_workflows.sql: approval_workflows
+  table (company_id, name, description, entity_type CHECK, steps jsonb, conditions jsonb,
+  is_active, created_by, timestamps) + RLS (company members read; admin-only insert/update/
+  delete via get_user_company/get_user_role) + updated_at trigger + company/entity index.
+- src/integrations/supabase/types.ts: approval_workflows Row/Insert/Update/Relationships.
+- src/lib/approval-workflows.ts: pure, I/O-free rule helpers — entity/operator/field maps,
+  step ordering (nextStepOrder/sortSteps/renumberSteps), evaluateCondition, workflowApplies
+  (AND semantics), describeCondition/describeStepApprover, validateWorkflow.
+- src/lib/__tests__/approval-workflows.test.ts: unit tests for ordering, condition eval
+  (amount operators + case-insensitive project_type), AND application, descriptions, validation.
+- src/components/settings/WorkflowDiagram.tsx: visual connected-node diagram
+  (Submitted → step nodes → Approved) with arrows.
+- src/pages/admin/ApprovalWorkflows.tsx: /admin/approval-workflows page — list, create/edit
+  dialog (name, description, entity type, enabled), step builder (role or specific user),
+  conditional rule builder (amount/project_type + operator + value), live diagram preview,
+  inline enable/disable toggle, delete. company_id-scoped queries + RoleGuard ADMINS.
+- Wiring: LazyApprovalWorkflows (lazyRoutes), SecureRoute admin route (adminRoutes),
+  "Approval Workflows" nav entry under Company Management (NavigationConfig).
+
+### Acceptance
+- [x] Approval Workflows page in Settings listing configured workflows
+- [x] Create Workflow form: entity type selection, name, and description
+- [x] Add approval steps with approver (role-based or specific user) and order
+- [x] Conditional rules: amount threshold / project type with operators
+- [x] Visual workflow diagram showing steps as connected nodes
+- [x] Enable/disable toggle per workflow
+- [x] npm run build completes successfully (verified via CI)
+
+### Migration note
+Adds approval_workflows table; apply to Supabase after merge (CI does not run migrations).
+
+prd.json: US-087 passes:true (169/234). Verified by GitHub Action (unit-test/build).
