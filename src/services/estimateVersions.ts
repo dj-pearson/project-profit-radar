@@ -28,13 +28,15 @@ export async function createEstimateVersion(params: {
 }): Promise<void> {
   // version_number is allocated client-side as max+1. A UNIQUE(estimate_id,
   // version_number) constraint guards against duplicates; on a concurrent-save
-  // conflict we recompute and retry once before giving up (best-effort).
+  // conflict (Postgres 23505) we recompute and retry once. Any other error is
+  // not retryable, so we log and give up immediately (best-effort).
   for (let attempt = 0; attempt < 2; attempt++) {
     try {
       const { data: existing } = await supabase
         .from('estimate_versions')
         .select('version_number')
         .eq('estimate_id', params.estimateId)
+        .eq('company_id', params.companyId)
         .order('version_number', { ascending: false })
         .limit(1);
       const nextVersion = (existing?.[0]?.version_number ?? 0) + 1;
@@ -49,9 +51,14 @@ export async function createEstimateVersion(params: {
         },
       ]);
       if (!error) return;
-      if (attempt === 1) logger.warn('Estimate version snapshot failed', { error: error.message });
+      // Only a unique-violation is worth retrying; bail on anything else.
+      if (error.code !== '23505' || attempt === 1) {
+        logger.warn('Estimate version snapshot failed', { error: error.message, code: error.code });
+        return;
+      }
     } catch (err) {
-      if (attempt === 1) logger.warn('Estimate version snapshot threw', err as Error);
+      logger.warn('Estimate version snapshot threw', err as Error);
+      return;
     }
   }
 }
@@ -71,7 +78,10 @@ export async function fetchEstimateVersions(
     .eq('estimate_id', estimateId)
     .eq('company_id', companyId)
     .order('version_number', { ascending: false });
-  if (error || !data) return [];
+  // Surface failures so the UI can show an error state instead of conflating a
+  // load error with "no versions yet".
+  if (error) throw new Error(error.message);
+  if (!data) return [];
 
   const rows = data as unknown as EstimateVersionRow[];
 

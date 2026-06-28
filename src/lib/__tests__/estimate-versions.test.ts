@@ -22,12 +22,14 @@ describe('diffLineItems (US-096)', () => {
       // Drywall removed
     ];
     const diffs = diffLineItems(before, after);
-    const byKey = Object.fromEntries(diffs.map((d) => [d.key, d]));
+    const byName = Object.fromEntries(
+      diffs.map((d) => [(d.after ?? d.before)?.item_name?.toLowerCase(), d])
+    );
 
-    expect(byKey['framing'].kind).toBe('changed');
-    expect(byKey['framing'].changedFields).toContain('unit_cost');
-    expect(byKey['paint'].kind).toBe('added');
-    expect(byKey['drywall'].kind).toBe('removed');
+    expect(byName['framing'].kind).toBe('changed');
+    expect(byName['framing'].changedFields).toContain('unit_cost');
+    expect(byName['paint'].kind).toBe('added');
+    expect(byName['drywall'].kind).toBe('removed');
   });
 
   it('treats identical items as unchanged', () => {
@@ -43,19 +45,27 @@ describe('diffLineItems (US-096)', () => {
     expect(diffs[0].kind).toBe('unchanged');
   });
 
-  it('keys by stable id so duplicate names do not collapse', () => {
-    const before = [
-      { ...item({ item_name: 'Misc' }), id: 'a' },
-      { ...item({ item_name: 'Misc' }), id: 'b' },
-    ];
+  it('keys by name + occurrence so duplicate names do not collapse', () => {
+    const before = [item({ item_name: 'Misc' }), item({ item_name: 'Misc' })];
     const after = [
-      { ...item({ item_name: 'Misc', quantity: 9 }), id: 'a' }, // changed
-      { ...item({ item_name: 'Misc' }), id: 'b' }, // unchanged
+      item({ item_name: 'Misc', quantity: 9 }), // changed (first occurrence)
+      item({ item_name: 'Misc' }), // unchanged (second occurrence)
     ];
     const diffs = diffLineItems(before, after);
     expect(diffs).toHaveLength(2);
     expect(diffs.filter((d) => d.kind === 'changed')).toHaveLength(1);
     expect(diffs.filter((d) => d.kind === 'unchanged')).toHaveLength(1);
+  });
+
+  it('ignores ids that churn across saves (delete + re-insert)', () => {
+    // The estimate form deletes and re-inserts line items on every save, so the
+    // same logical item carries a different id in each version. Diffing must not
+    // treat that as remove + add.
+    const before = [{ ...item({ item_name: 'Framing' }), id: 'old-uuid' }];
+    const after = [{ ...item({ item_name: 'Framing' }), id: 'new-uuid' }];
+    const diffs = diffLineItems(before, after);
+    expect(diffs).toHaveLength(1);
+    expect(diffs[0].kind).toBe('unchanged');
   });
 
   it('summarizes diff counts', () => {

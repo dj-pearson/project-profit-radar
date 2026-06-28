@@ -6,7 +6,11 @@
  */
 
 export interface SnapshotLineItem {
-  /** Stable line-item id (preferred diff key; falls back to name when absent). */
+  /**
+   * Persisted line-item id, if any. NOT used as the diff key: the estimate form
+   * deletes and re-inserts all line items on every save, so ids are not stable
+   * across versions. Kept only for reference/back-compat with older snapshots.
+   */
   id?: string | null;
   item_name: string;
   description?: string | null;
@@ -45,22 +49,38 @@ const COMPARED_FIELDS: (keyof SnapshotLineItem)[] = [
   'category',
 ];
 
-// Prefer a stable id so two line items with the same name don't collapse in the
-// diff; fall back to the normalized name for legacy snapshots without ids.
-const keyOf = (item: SnapshotLineItem) =>
-  item.id ? `id:${item.id}` : `name:${(item.item_name ?? '').trim().toLowerCase()}`;
+const normalizedName = (item: SnapshotLineItem) => (item.item_name ?? '').trim().toLowerCase();
 
 /**
- * Diff two sets of estimate line items, keyed by item name. Returns one entry
- * per item across both versions, classified as added / removed / changed /
- * unchanged, with the list of differing fields for changed items.
+ * Build a stable diff key for each item: normalized name plus its occurrence
+ * index among same-named items. Line-item ids are NOT stable across saves (the
+ * form deletes + re-inserts), so name+occurrence is the only key that survives
+ * a version round-trip while still keeping duplicate names from collapsing.
+ */
+const keyedByNameOccurrence = (items: SnapshotLineItem[]): Map<string, SnapshotLineItem> => {
+  const seen = new Map<string, number>();
+  const byKey = new Map<string, SnapshotLineItem>();
+  for (const item of items) {
+    const name = normalizedName(item);
+    const occurrence = seen.get(name) ?? 0;
+    seen.set(name, occurrence + 1);
+    byKey.set(`name:${name}#${occurrence}`, item);
+  }
+  return byKey;
+};
+
+/**
+ * Diff two sets of estimate line items, keyed by item name + occurrence index.
+ * Returns one entry per item across both versions, classified as added /
+ * removed / changed / unchanged, with the list of differing fields for changed
+ * items.
  */
 export function diffLineItems(
   before: SnapshotLineItem[],
   after: SnapshotLineItem[]
 ): LineItemDiff[] {
-  const beforeByKey = new Map(before.map((i) => [keyOf(i), i]));
-  const afterByKey = new Map(after.map((i) => [keyOf(i), i]));
+  const beforeByKey = keyedByNameOccurrence(before);
+  const afterByKey = keyedByNameOccurrence(after);
   const keys = Array.from(new Set([...beforeByKey.keys(), ...afterByKey.keys()]));
 
   return keys.map((key) => {

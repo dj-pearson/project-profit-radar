@@ -35,6 +35,7 @@ const ROW_BG: Record<LineItemChangeKind, string> = {
 export function EstimateVersionHistory({ estimateId, companyId, open, onOpenChange }: EstimateVersionHistoryProps) {
   const [versions, setVersions] = useState<EstimateVersionRow[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
   const [viewing, setViewing] = useState<EstimateVersionRow | null>(null);
   const [selected, setSelected] = useState<string[]>([]);
   const [comparing, setComparing] = useState(false);
@@ -42,12 +43,14 @@ export function EstimateVersionHistory({ estimateId, companyId, open, onOpenChan
   useEffect(() => {
     if (!open) return;
     setLoading(true);
+    setError(false);
     setVersions([]); // avoid showing a previous estimate's list during refetch
     setViewing(null);
     setSelected([]);
     setComparing(false);
     fetchEstimateVersions(estimateId, companyId)
       .then(setVersions)
+      .catch(() => setError(true))
       .finally(() => setLoading(false));
   }, [open, estimateId, companyId]);
 
@@ -83,6 +86,10 @@ export function EstimateVersionHistory({ estimateId, companyId, open, onOpenChan
             <Skeleton className="h-12 w-full" />
             <Skeleton className="h-12 w-full" />
           </div>
+        ) : error ? (
+          <p className="py-6 text-center text-destructive">
+            Couldn't load version history. Please try again.
+          </p>
         ) : viewing ? (
           <div>
             <div className="mb-2 flex items-center justify-between">
