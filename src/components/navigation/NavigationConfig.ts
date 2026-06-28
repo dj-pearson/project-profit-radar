@@ -27,6 +27,7 @@ import {
   Smartphone,
   MailX,
   GitBranch,
+  ListChecks,
   LucideIcon
 } from 'lucide-react';
 
@@ -157,6 +158,7 @@ export const dashboardAreas: DashboardArea[] = [
           { title: "RFIs", url: "/rfis", icon: HelpCircle, roles: ["admin", "project_manager", "field_supervisor", "office_staff", "root_admin"] },
           { title: "Submittals", url: "/submittals", icon: FileText, roles: ["admin", "project_manager", "field_supervisor", "office_staff", "root_admin"] },
           { title: "Change Orders", url: "/change-orders", icon: Wrench, roles: ["admin", "project_manager", "root_admin"] },
+          { title: "Client Selections", url: "/client-selections", icon: ListChecks, roles: ["admin", "project_manager", "root_admin"], description: "Selection categories, allowances, and approvals" },
           { title: "Punch List", url: "/punch-list", icon: CheckSquare, roles: ["admin", "project_manager", "field_supervisor", "office_staff", "root_admin"] }
         ]
       },

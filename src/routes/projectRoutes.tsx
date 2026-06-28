@@ -29,6 +29,7 @@ import {
 
 // Lazy-loaded pages with ErrorBoundary + Suspense
 const DailyReportTemplates = createLazyRoute(() => import('@/pages/DailyReportTemplates'));
+const ClientSelectionsPage = createLazyRoute(() => import('@/pages/ClientSelections'));
 
 export const projectRoutes = (
   <>
@@ -52,6 +53,7 @@ export const projectRoutes = (
     <Route path="/rfis" element={<RouteGuard><LazyRFIs /></RouteGuard>} />
     <Route path="/submittals" element={<RouteGuard><LazySubmittals /></RouteGuard>} />
     <Route path="/change-orders" element={<RouteGuard><LazyChangeOrders /></RouteGuard>} />
+    <Route path="/client-selections" element={<RouteGuard><ClientSelectionsPage /></RouteGuard>} />
     <Route path="/punch-list" element={<RouteGuard><LazyPunchList /></RouteGuard>} />
     <Route path="/documents" element={<RouteGuard><LazyDocumentManagement /></RouteGuard>} />
     <Route path="/document-templates" element={<RouteGuard><LazyDocumentTemplates /></RouteGuard>} />

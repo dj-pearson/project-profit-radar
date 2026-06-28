@@ -3678,8 +3678,8 @@
         "Client portal selection flow is accessible and works on mobile web"
       ],
       "priority": 2,
-      "passes": false,
-      "notes": "Source: competitive analysis. Extends US-040; ties selections to budget/change-order automation \u2014 strong residential differentiator."
+      "passes": true,
+      "notes": "Implemented client selections with budget + change-order automation. New tables selection_categories/selection_options/client_selections (RLS company_id-scoped; builders manage, members read, approval app-enforced). Builder page /client-selections: project picker, category+allowance config, option management, approve/reject pending picks. Client portal Selections tab: pick one option per category, over-allowance delta shown. Approving an over-allowance pick generates a change order (via change-orders edge fn) and bumps project total_budget; approvals/rejections audit-logged (financial). Pure helpers (computeOverAllowanceDelta/summarizeSelections) unit-tested."
     },
     {
       "id": "US-227",
