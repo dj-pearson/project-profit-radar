@@ -625,6 +625,145 @@ export type Database = {
           },
         ]
       }
+      schedule_tasks: {
+        Row: {
+          company_id: string
+          created_at: string
+          created_by: string | null
+          duration_days: number
+          id: string
+          name: string
+          project_id: string
+          sort_order: number
+          start_date: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          created_by?: string | null
+          duration_days?: number
+          id?: string
+          name: string
+          project_id: string
+          sort_order?: number
+          start_date: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          created_by?: string | null
+          duration_days?: number
+          id?: string
+          name?: string
+          project_id?: string
+          sort_order?: number
+          start_date?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "schedule_tasks_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      schedule_task_dependencies: {
+        Row: {
+          company_id: string
+          created_at: string
+          id: string
+          lag_days: number
+          predecessor_id: string
+          project_id: string
+          successor_id: string
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          id?: string
+          lag_days?: number
+          predecessor_id: string
+          project_id: string
+          successor_id: string
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          id?: string
+          lag_days?: number
+          predecessor_id?: string
+          project_id?: string
+          successor_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "schedule_task_dependencies_predecessor_id_fkey"
+            columns: ["predecessor_id"]
+            isOneToOne: false
+            referencedRelation: "schedule_tasks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "schedule_task_dependencies_successor_id_fkey"
+            columns: ["successor_id"]
+            isOneToOne: false
+            referencedRelation: "schedule_tasks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      schedule_baselines: {
+        Row: {
+          company_id: string
+          created_at: string
+          created_by: string | null
+          id: string
+          is_current: boolean
+          name: string
+          project_id: string
+          tasks: Json
+          updated_at: string
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_current?: boolean
+          name: string
+          project_id: string
+          tasks?: Json
+          updated_at?: string
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_current?: boolean
+          name?: string
+          project_id?: string
+          tasks?: Json
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "schedule_baselines_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       affiliate_codes: {
         Row: {
           affiliate_code: string

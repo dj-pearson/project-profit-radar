@@ -28,6 +28,7 @@ import {
   MailX,
   GitBranch,
   ListChecks,
+  CalendarRange,
   LucideIcon
 } from 'lucide-react';
 
@@ -149,6 +150,7 @@ export const dashboardAreas: DashboardArea[] = [
           { title: "All Projects", url: "/projects", icon: Building2, roles: ["admin", "project_manager", "field_supervisor", "office_staff", "accounting", "root_admin"] },
           { title: "Create Project", url: "/create-project", icon: Building2, roles: ["admin", "project_manager", "root_admin"] },
           { title: "Job Costing", url: "/job-costing", icon: DollarSign, roles: ["admin", "project_manager", "accounting", "root_admin"] },
+          { title: "Project Schedule", url: "/project-schedule", icon: CalendarRange, roles: ["admin", "project_manager", "root_admin"], description: "Gantt with dependencies, critical path, and baseline" },
           { title: "Daily Reports", url: "/daily-reports", icon: Clipboard, roles: ["admin", "project_manager", "field_supervisor", "root_admin"] }
         ]
       },

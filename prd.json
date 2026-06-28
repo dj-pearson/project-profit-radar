@@ -3633,8 +3633,8 @@
         "Schedule slips surface to the existing project health indicator"
       ],
       "priority": 2,
-      "passes": false,
-      "notes": "Source: competitive analysis. Differentiator vs current calendar-only scheduling. Large feature \u2014 may warrant decomposition into sub-stories during planning. | DECOMPOSED: the critical-path + float engine and dependency-cascade rescheduling core is delivered and tested under US-234 (scheduleUtils now delegates to src/lib/schedule/criticalPath.ts; Gantt highlights the critical path and shows per-task slack). US-223 remains open for the DB-backed project Gantt with linkable dependencies, baseline-vs-actual persistence (additive migration), and schedule-slip alerts feeding the project health score."
+      "passes": true,
+      "notes": "Source: competitive analysis. Differentiator vs current calendar-only scheduling. Large feature \u2014 may warrant decomposition into sub-stories during planning. | DECOMPOSED: the critical-path + float engine and dependency-cascade rescheduling core is delivered and tested under US-234 (scheduleUtils now delegates to src/lib/schedule/criticalPath.ts; Gantt highlights the critical path and shows per-task slack). US-223 remains open for the DB-backed project Gantt with linkable dependencies, baseline-vs-actual persistence (additive migration), and schedule-slip alerts feeding the project health score. | US-223 COMPLETE: DB-backed project Gantt shipped. New schedule_tasks/schedule_task_dependencies/schedule_baselines tables (company_id RLS, additive). /project-schedule page reuses the US-234 GanttChart (critical-path highlight + float) and CPM engine; supports adding tasks, linking finish-to-start dependencies, drag-to-reschedule with dependency cascade (cascadeReschedule persisted), save baseline + baseline-vs-actual slip. Slip feeds ProjectHealthBadge via additive scheduleSlipDays factor. Pure mapping/slip helpers (scheduleBoard.ts) unit-tested."
     },
     {
       "id": "US-224",

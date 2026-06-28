@@ -11,6 +11,8 @@ interface ProjectHealthProps {
   start_date?: string | null;
   end_date?: string | null;
   status?: string;
+  /** US-223: days the current schedule has slipped past its baseline finish. */
+  scheduleSlipDays?: number;
   className?: string;
 }
 
@@ -57,6 +59,18 @@ function computeHealth(project: ProjectHealthProps): HealthResult {
     } else if (daysRemaining < 7 && (project.completion_percentage ?? 0) < 90) {
       setLevel('at_risk');
       reasons.push(`Only ${daysRemaining} days left with ${project.completion_percentage ?? 0}% complete`);
+    }
+  }
+
+  // Schedule slip vs baseline (US-223): critical-path finish drift.
+  if (project.scheduleSlipDays !== undefined && project.scheduleSlipDays > 0 && project.status !== 'completed') {
+    const slip = project.scheduleSlipDays;
+    if (slip > 14) {
+      setLevel('critical');
+      reasons.push(`${slip} days behind baseline schedule`);
+    } else if (slip > 7) {
+      setLevel('at_risk');
+      reasons.push(`${slip} days behind baseline schedule`);
     }
   }
 
