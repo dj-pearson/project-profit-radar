@@ -1572,3 +1572,42 @@ Branch: claude/us-226-client-selections → PR to main
 Adds 3 tables; apply to Supabase after merge (CI does not run migrations).
 
 prd.json: US-226 passes:true (170/234). Verified by GitHub Action (unit-test/build).
+
+================================================================================
+## Session: US-223 — DB-backed project Gantt with dependencies + critical path
+Branch: claude/us-223-gantt-schedule → PR to main
+(Builds on US-234, which delivered the CPM engine src/lib/schedule/criticalPath.ts
+ and the in-memory GanttChart; this story adds persistence + slip→health.)
+
+### What shipped
+- supabase/migrations/20260628200000_create_schedule_tasks.sql: schedule_tasks
+  (start_date, duration_days, status, sort_order), schedule_task_dependencies
+  (finish-to-start, lag_days, UNIQUE pred+succ, no self-link), schedule_baselines
+  (jsonb task snapshot, is_current). Company_id RLS (members read; builders manage)
+  via a DO-block over the 3 tables; updated_at triggers; created_by DEFAULT auth.uid().
+- src/integrations/supabase/types.ts: 3 new tables (Row/Insert/Update/Relationships).
+- src/lib/schedule/scheduleBoard.ts: pure helpers — date math (addDays/diffDays/
+  taskEndDate), toCpmTasks (DB rows → CPM input), snapshotTasks, computeScheduleSlipDays
+  (max finish drift vs baseline, floors at 0). Unit-tested (__tests__/scheduleBoard.test.ts).
+- src/services/scheduleService.ts: CRUD for tasks + dependencies, rescheduleWithCascade
+  (reuses cascadeReschedule, persists only moved tasks), saveBaseline (snapshots current,
+  demotes prior is_current), fetchCurrentBaseline. company_id-scoped.
+- src/pages/ProjectSchedule.tsx (/project-schedule): project picker; reuses GanttChart
+  (critical path + float) by mapping DB rows to its Project/Task model; add task, link
+  dependency, drag-to-reschedule (cascade), save baseline; summary strip with slip +
+  ProjectHealthBadge; task/dependency list with delete. RoleGuard PROJECT_EDITORS.
+- src/components/projects/ProjectHealthBadge.tsx: additive optional scheduleSlipDays prop;
+  computeHealth flags >7d at-risk / >14d critical "behind baseline schedule".
+- Wiring: /project-schedule route (projectRoutes) + "Project Schedule" nav entry.
+
+### Acceptance
+- [x] Project schedules render as a Gantt with linkable finish-to-start dependencies
+- [x] Critical path computed + highlighted; per-task float/slack shown (GanttChart/CPM engine)
+- [x] Dragging a task reschedules dependents; baseline saved + compared to actuals
+- [x] Schedule data company_id-scoped with RLS, persisted via additive migration
+- [x] Schedule slips surface to the project health indicator (ProjectHealthBadge)
+
+### Migration note
+Adds 3 tables; apply to Supabase after merge (CI does not run migrations).
+
+prd.json: US-223 passes:true (171/234). Verified by GitHub Action (unit-test/build).
