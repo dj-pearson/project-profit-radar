@@ -1532,3 +1532,43 @@ Branch: claude/us-087-approval-workflows → PR to main
 Adds approval_workflows table; apply to Supabase after merge (CI does not run migrations).
 
 prd.json: US-087 passes:true (169/234). Verified by GitHub Action (unit-test/build).
+
+================================================================================
+## Session: US-226 — Client selections with budget + change-order automation
+Branch: claude/us-226-client-selections → PR to main
+
+### What shipped
+- supabase/migrations/20260628100000_create_client_selections.sql: selection_categories
+  (allowance per project), selection_options (price/supplier), client_selections (chosen
+  option per category, delta_amount, change_order_id link, status pending/approved/rejected,
+  UNIQUE(project_id,category_id)). RLS: company members read; builders (admin/pm) manage
+  categories/options; members write their selections; approval app-enforced. updated_at
+  triggers; created_by DEFAULT auth.uid().
+- src/integrations/supabase/types.ts: 3 new tables (Row/Insert/Update/Relationships).
+- src/lib/client-selections.ts: pure helpers — computeOverAllowanceDelta (floors at 0),
+  isOverAllowance, summarizeSelections, SELECTION_STATUS_LABELS + types. Unit-tested
+  (src/lib/__tests__/client-selections.test.ts).
+- src/services/clientSelectionsService.ts: fetchSelectionBoard, category/option CRUD,
+  chooseOption (upsert on project_id+category_id, server-trustable delta), approveSelection
+  (generates change order via change-orders edge fn for the over-allowance delta + bumps
+  project total_budget + audit log), rejectSelection (audit log).
+- src/pages/ClientSelections.tsx: rewrote the US-040 mock into a real builder page —
+  project picker, summary strip, category/option management dialogs, pending-pick
+  approve/reject. RoleGuard PROJECT_EDITORS, DashboardLayout.
+- src/components/client/ClientPortalSelections.tsx: client-facing flow — pick one option
+  per category (radio), allowance + over-allowance delta shown, status badges, approved
+  picks locked. Accessible + responsive.
+- Wiring: ClientPortal.tsx "Selections" tab; /client-selections route (projectRoutes);
+  "Client Selections" nav entry under Project Communication.
+
+### Acceptance
+- [x] Builders define selection categories/options with allowances per project
+- [x] Clients choose selections in the portal; over-allowance choices compute the delta
+- [x] Approved selections update the project budget and generate a change order for the difference
+- [x] Selection + change-order data company_id-scoped with RLS and audit-logged
+- [x] Client portal selection flow accessible and works on mobile web
+
+### Migration note
+Adds 3 tables; apply to Supabase after merge (CI does not run migrations).
+
+prd.json: US-226 passes:true (170/234). Verified by GitHub Action (unit-test/build).

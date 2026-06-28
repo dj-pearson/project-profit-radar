@@ -458,6 +458,173 @@ export type Database = {
           },
         ]
       }
+      selection_categories: {
+        Row: {
+          allowance: number
+          company_id: string
+          created_at: string
+          created_by: string | null
+          description: string | null
+          id: string
+          name: string
+          project_id: string
+          updated_at: string
+        }
+        Insert: {
+          allowance?: number
+          company_id: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          name: string
+          project_id: string
+          updated_at?: string
+        }
+        Update: {
+          allowance?: number
+          company_id?: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          name?: string
+          project_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "selection_categories_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      selection_options: {
+        Row: {
+          category_id: string
+          company_id: string
+          created_at: string
+          created_by: string | null
+          description: string | null
+          id: string
+          image_url: string | null
+          name: string
+          price: number
+          supplier: string | null
+          updated_at: string
+        }
+        Insert: {
+          category_id: string
+          company_id: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          name: string
+          price?: number
+          supplier?: string | null
+          updated_at?: string
+        }
+        Update: {
+          category_id?: string
+          company_id?: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          name?: string
+          price?: number
+          supplier?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "selection_options_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "selection_categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      client_selections: {
+        Row: {
+          approved_at: string | null
+          approved_by: string | null
+          category_id: string
+          change_order_id: string | null
+          company_id: string
+          created_at: string
+          delta_amount: number
+          id: string
+          notes: string | null
+          option_id: string
+          project_id: string
+          selected_by: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
+          category_id: string
+          change_order_id?: string | null
+          company_id: string
+          created_at?: string
+          delta_amount?: number
+          id?: string
+          notes?: string | null
+          option_id: string
+          project_id: string
+          selected_by?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          approved_at?: string | null
+          approved_by?: string | null
+          category_id?: string
+          change_order_id?: string | null
+          company_id?: string
+          created_at?: string
+          delta_amount?: number
+          id?: string
+          notes?: string | null
+          option_id?: string
+          project_id?: string
+          selected_by?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "client_selections_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "selection_categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "client_selections_option_id_fkey"
+            columns: ["option_id"]
+            isOneToOne: false
+            referencedRelation: "selection_options"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "client_selections_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       affiliate_codes: {
         Row: {
           affiliate_code: string

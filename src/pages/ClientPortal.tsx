@@ -12,6 +12,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { ProjectCommunication } from '@/components/communication/ProjectCommunication';
 import { ClientPortalGallery } from '@/components/client/ClientPortalGallery';
 import { ClientPortalRFIs } from '@/components/client/ClientPortalRFIs';
+import { ClientPortalSelections } from '@/components/client/ClientPortalSelections';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Building2, Calendar, DollarSign, FileText, CheckCircle2, Clock, CreditCard, ExternalLink } from 'lucide-react';
 
@@ -374,6 +375,7 @@ const ClientPortal = () => {
                   <TabsList>
                     <TabsTrigger value="progress">Progress Updates</TabsTrigger>
                     <TabsTrigger value="change-orders">Change Orders</TabsTrigger>
+                    <TabsTrigger value="selections">Selections</TabsTrigger>
                     <TabsTrigger value="invoices">Invoices & Payments</TabsTrigger>
                     <TabsTrigger value="photos">Photos</TabsTrigger>
                     <TabsTrigger value="rfis">RFIs</TabsTrigger>
@@ -473,6 +475,16 @@ const ClientPortal = () => {
                         )}
                       </CardContent>
                     </Card>
+                  </TabsContent>
+
+                  <TabsContent value="selections" className="space-y-4">
+                    {selectedProject && userProfile?.company_id && (
+                      <ClientPortalSelections
+                        projectId={selectedProject.id}
+                        companyId={userProfile.company_id}
+                        userId={user?.id}
+                      />
+                    )}
                   </TabsContent>
 
                   <TabsContent value="invoices" className="space-y-4">
