@@ -29,7 +29,8 @@ export function SignatureCapture({
   const drawing = useRef(false);
   const [hasInk, setHasInk] = useState(!!value);
 
-  // Configure the canvas once and draw any prefilled signature.
+  // Configure the canvas and (re)draw the prefilled signature whenever `value`
+  // changes, keeping `hasInk` in sync so Clear reflects a provided signature.
   useEffect(() => {
     const canvas = canvasRef.current;
     const ctx = canvas?.getContext('2d');
@@ -41,9 +42,9 @@ export function SignatureCapture({
       const img = new Image();
       img.onload = () => ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
       img.src = value;
+      setHasInk(true);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [value]);
 
   const point = (e: React.MouseEvent | React.TouchEvent) => {
     const canvas = canvasRef.current!;

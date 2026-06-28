@@ -1466,3 +1466,31 @@ prd.json: US-083 passes:true (166/234). Verified by GitHub Action (unit-test/bui
 Adds nullable signature columns; apply to Supabase after merge (CI does not run migrations).
 
 prd.json: US-108 passes:true (167/234). Verified by GitHub Action (unit-test/build).
+
+---
+
+## 2026-06-27 - Session: US-096 Estimate comparison & version history (P4)
+
+### Fix
+- Migration supabase/migrations/20260627020000_create_estimate_versions.sql: estimate_versions
+  (estimate_id, company_id, version_number, snapshot jsonb, created_by) + company RLS. types.ts updated.
+- src/lib/estimate-versions.ts: pure diffLineItems/summarizeDiff (added/removed/changed/unchanged,
+  keyed by item name, case-insensitive) + test src/lib/__tests__/estimate-versions.test.ts.
+- src/services/estimateVersions.ts: createEstimateVersion (next version #, best-effort) +
+  fetchEstimateVersions (with editor names).
+- EstimateForm: snapshot captured after each save; "Version History" button when editing.
+- src/components/estimates/EstimateVersionHistory.tsx: version list (vN/date/editor), read-only
+  view, and side-by-side compare with color-coded line-item diff.
+
+### Acceptance
+- [x] version number + last modified (+ editor) — in the history panel
+- [x] each significant edit creates a new version (on save)
+- [x] version history panel with date + editor name
+- [x] click a version to view read-only
+- [x] compare two versions
+- [x] comparison highlights added (green) / removed (red) / changed (yellow)
+
+### Migration note
+Adds estimate_versions table; apply to Supabase after merge (CI does not run migrations).
+
+prd.json: US-096 passes:true (168/234). Verified by GitHub Action (unit-test/build).

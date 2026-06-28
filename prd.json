@@ -1646,8 +1646,8 @@
         "npm run build completes successfully"
       ],
       "priority": 4,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Migration supabase/migrations/20260627020000_create_estimate_versions.sql adds estimate_versions (snapshot jsonb + version_number, company RLS); registered in types.ts. On each estimate save (EstimateForm), createEstimateVersion (src/services/estimateVersions.ts) writes an immutable snapshot with the next version number. New EstimateVersionHistory dialog (Version History button when editing): lists versions (vN, date, editor name from user_profiles), view any version read-only, and select two to Compare with a before/after diff color-coded added=green/removed=red/changed=yellow (shows which fields changed). Diff logic is a pure tested helper src/lib/estimate-versions.ts (diffLineItems/summarizeDiff). Test: src/lib/__tests__/estimate-versions.test.ts. Version number + last-modified + editor are surfaced in the history panel."
     },
     {
       "id": "US-097",

@@ -20,6 +20,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { EstimateTemplatesLibrary } from "./EstimateTemplatesLibrary";
 import { LineItemLibraryBrowser } from "./LineItemLibraryBrowser";
+import { EstimateVersionHistory } from "@/components/estimates/EstimateVersionHistory";
+import { createEstimateVersion } from "@/services/estimateVersions";
+import { History } from "lucide-react";
 
 const estimateSchema = z.object({
   title: z.string().min(1, "Title is required"),
@@ -58,6 +61,7 @@ interface EstimateFormProps {
 export function EstimateForm({ onSuccess, onCancel, estimateId }: EstimateFormProps) {
   const { toast } = useToast();
   const [lineItems, setLineItems] = useState<LineItem[]>([]);
+  const [showVersionHistory, setShowVersionHistory] = useState(false);
   const [projects, setProjects] = useState<any[]>([]);
   const [costCodes, setCostCodes] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -328,6 +332,33 @@ export function EstimateForm({ onSuccess, onCancel, estimateId }: EstimateFormPr
         if (lineItemsError) throw lineItemsError;
       }
 
+      // US-096: capture an immutable version snapshot of this save.
+      {
+        const { data: authData } = await supabase.auth.getUser();
+        await createEstimateVersion({
+          estimateId: estimate.id,
+          companyId: estimate.company_id ?? userProfile.company_id,
+          userId: authData.user?.id,
+          snapshot: {
+            title: data.title,
+            status: estimateData.status,
+            markup_percentage: data.markup_percentage,
+            tax_percentage: data.tax_percentage,
+            discount_amount: data.discount_amount,
+            notes: data.notes,
+            lineItems: lineItems.map((it) => ({
+              id: it.id,
+              item_name: it.item_name,
+              description: it.description,
+              quantity: it.quantity,
+              unit: it.unit,
+              unit_cost: it.unit_cost,
+              category: it.category,
+            })),
+          },
+        });
+      }
+
       toast({
         title: isDraft ? "Estimate Saved" : "Estimate Sent",
         description: isDraft
@@ -412,6 +443,23 @@ export function EstimateForm({ onSuccess, onCancel, estimateId }: EstimateFormPr
   return (
     <Form {...form}>
       <form className="space-y-6">
+        {/* US-096: version history (editing an existing estimate) */}
+        {estimateId && (
+          <div className="flex justify-end">
+            <Button type="button" variant="outline" size="sm" onClick={() => setShowVersionHistory(true)}>
+              <History className="mr-1 h-4 w-4" aria-hidden="true" /> Version History
+            </Button>
+          </div>
+        )}
+        {estimateId && (
+          <EstimateVersionHistory
+            estimateId={estimateId}
+            companyId={companyId}
+            open={showVersionHistory}
+            onOpenChange={setShowVersionHistory}
+          />
+        )}
+
         {/* Template Selector */}
         <Card className="bg-gradient-to-r from-primary/5 to-primary/10 border-primary/20">
           <CardContent className="p-4">
