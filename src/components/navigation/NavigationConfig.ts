@@ -189,7 +189,8 @@ export const dashboardAreas: DashboardArea[] = [
         label: "Financial Overview",
         items: [
           { title: "Financial Dashboard", url: "/financial", icon: DollarSign, roles: ["admin", "project_manager", "accounting", "root_admin"] },
-          { title: "Reports & Analytics", url: "/reports", icon: BarChart3, roles: ["admin", "project_manager", "accounting", "root_admin"] }
+          { title: "Reports & Analytics", url: "/reports", icon: BarChart3, roles: ["admin", "project_manager", "accounting", "root_admin"] },
+          { title: "Executive Dashboard", url: "/executive-dashboard", icon: TrendingUp, roles: ROLE_GROUPS.ADMINS, description: "Company-wide KPIs with revenue forecasting" }
         ]
       },
       {

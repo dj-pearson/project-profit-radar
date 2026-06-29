@@ -1650,3 +1650,36 @@ Branch: claude/us-232-bid-leveling → PR to main (complements US-096)
 Adds 4 tables; apply to Supabase after merge (CI does not run migrations).
 
 prd.json: US-232 passes:true (172/234). Verified by GitHub Action (unit-test/build).
+
+================================================================================
+## Session: US-233 — Executive KPI dashboard with forecasting
+Branch: claude/us-233-executive-dashboard → PR to main
+(Builds on US-110 financial overview + US-063 widget personalization)
+
+### What shipped
+- src/lib/executive-kpis.ts: pure, I/O-free KPI + forecasting helpers —
+  aggregateMonthly, linearRegression (OLS), forecastSeries (floored at 0),
+  profitMargin/profitMarginTrend, averageMonthlyBurn, cashRunwayMonths,
+  computeWinRate (accepted / decided estimates), computeAvgProjectSize,
+  computeBacklog, projectValue, average/sum. Unit-tested
+  (src/lib/__tests__/executive-kpis.test.ts).
+- src/services/executiveKpiService.ts: fetchExecutiveData — company_id-scoped
+  parallel fetch of invoices/expenses/estimates (since period) + projects.
+- src/pages/ExecutiveKpiDashboard.tsx (/executive-dashboard): RoleGuard ADMINS,
+  DashboardLayout. KPI cards (profit margin, win rate, avg project size, backlog,
+  cash runway), revenue + 3-month forecast line chart (solid actual / dashed
+  forecast), profit-margin trend chart (recharts via @/components/ui/chart).
+  Period selector (6/12/24 mo). KPI visibility personalization via localStorage
+  (brikly-executive-kpis, US-063 pattern). Loading skeleton + error Alert/Retry.
+- Wiring: /executive-dashboard route (financialRoutes) + "Executive Dashboard"
+  nav entry (ROLE_GROUPS.ADMINS) under the financial group.
+
+### Acceptance
+- [x] Executive dashboard shows profit-margin trend, cash flow/runway forecast,
+      win rate, avg project size, and backlog
+- [x] KPIs aggregate company-wide data, role-gated to admin/owner
+- [x] Forecast curves computed from historical data (linear regression), not hardcoded
+- [x] Users can choose which KPIs appear (localStorage personalization, US-063 pattern)
+- [x] All metrics company_id-scoped; reconcile with financial overview (revenue/cost/margin)
+
+prd.json: US-233 passes:true (173/234). Verified by GitHub Action (unit-test/build).

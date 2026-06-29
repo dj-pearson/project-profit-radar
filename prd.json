@@ -3783,8 +3783,8 @@
         "All metrics are company_id-scoped and reconcile with the financial overview dashboards"
       ],
       "priority": 3,
-      "passes": false,
-      "notes": "Source: competitive analysis. Builds on US-110 financial overview and US-063 widget personalization."
+      "passes": true,
+      "notes": "Implemented executive KPI dashboard with forecasting at /executive-dashboard, role-gated to admins/owner (ROLE_GROUPS.ADMINS). KPIs: profit-margin trend, cash runway, win rate, avg project size, backlog, plus revenue + 3-month linear-regression forecast (computed from historical monthly data, not hardcoded). Company_id-scoped aggregation over invoices/expenses/estimates/projects (reconciles with financial overview revenue/cost). KPI visibility is personalizable (localStorage, US-063 pattern). Pure forecasting/KPI helpers (linearRegression/forecastSeries/profitMarginTrend/cashRunway/winRate/avgSize/backlog) unit-tested."
     },
     {
       "id": "US-234",

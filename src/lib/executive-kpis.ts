@@ -151,3 +151,43 @@ export function average(values: number[]): number {
 export function sum(values: number[]): number {
   return values.reduce((s, v) => s + v, 0);
 }
+
+// ---- KPI derivations from raw rows ----
+
+interface ProjectLike {
+  budget?: number | null;
+  total_budget?: number | null;
+  status?: string | null;
+}
+
+const WON_ESTIMATE = new Set(['accepted']);
+const DECIDED_ESTIMATE = new Set(['sent', 'viewed', 'accepted', 'rejected', 'expired']);
+const BACKLOG_STATUS = new Set(['active', 'planning', 'on_hold']);
+const SIZED_PROJECT_STATUS = new Set(['active', 'completed']);
+
+/** A project's contract value (prefers total_budget, falls back to budget). */
+export function projectValue(p: ProjectLike): number {
+  return p.total_budget ?? p.budget ?? 0;
+}
+
+/** Win rate over decided estimates: accepted / (sent + viewed + accepted + rejected + expired). */
+export function computeWinRate(statuses: (string | null)[]): number {
+  let won = 0;
+  let decided = 0;
+  for (const s of statuses) {
+    if (!s) continue;
+    if (DECIDED_ESTIMATE.has(s)) decided += 1;
+    if (WON_ESTIMATE.has(s)) won += 1;
+  }
+  return decided ? won / decided : 0;
+}
+
+/** Average contract value of active/completed projects. */
+export function computeAvgProjectSize(projects: ProjectLike[]): number {
+  return average(projects.filter((p) => p.status && SIZED_PROJECT_STATUS.has(p.status)).map(projectValue));
+}
+
+/** Backlog = total contract value of in-flight projects (active/planning/on_hold). */
+export function computeBacklog(projects: ProjectLike[]): number {
+  return sum(projects.filter((p) => p.status && BACKLOG_STATUS.has(p.status)).map(projectValue));
+}

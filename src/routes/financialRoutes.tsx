@@ -25,6 +25,7 @@ import {
 const FinanceHub = createLazyRoute(() => import('@/pages/FinanceHub'));
 const PurchaseOrderForm = createLazyRoute(() => import('@/components/purchasing/PurchaseOrderForm'));
 const BidLeveling = createLazyRoute(() => import('@/pages/BidLeveling'));
+const ExecutiveKpiDashboard = createLazyRoute(() => import('@/pages/ExecutiveKpiDashboard'));
 const ChartOfAccounts = createLazyRoute(() => import('@/pages/ChartOfAccounts'));
 const JournalEntries = createLazyRoute(() => import('@/pages/JournalEntries'));
 const BalanceSheet = createLazyRoute(() => import('@/pages/BalanceSheet'));
@@ -83,6 +84,7 @@ export const financialRoutes = (
 
     {/* Reports */}
     <Route path="/reports" element={<RouteGuard><LazyReports /></RouteGuard>} />
+    <Route path="/executive-dashboard" element={<RouteGuard><ExecutiveKpiDashboard /></RouteGuard>} />
 
     {/* Purchasing */}
     <Route path="/purchase-orders" element={<RouteGuard><LazyPurchaseOrders /></RouteGuard>} />

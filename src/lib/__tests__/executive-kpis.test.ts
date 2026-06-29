@@ -15,6 +15,10 @@ import {
   winRate,
   average,
   sum,
+  computeWinRate,
+  computeAvgProjectSize,
+  computeBacklog,
+  projectValue,
   type SeriesPoint,
 } from '@/lib/executive-kpis';
 
@@ -112,5 +116,40 @@ describe('win rate + aggregates (US-233)', () => {
     expect(average([10, 20, 30])).toBe(20);
     expect(average([])).toBe(0);
     expect(sum([1, 2, 3])).toBe(6);
+  });
+});
+
+describe('KPI derivations (US-233)', () => {
+  it('computes win rate over decided estimates', () => {
+    // 2 accepted, 1 rejected, 1 sent (all decided), 1 draft (ignored) → 2/4
+    expect(
+      computeWinRate(['accepted', 'accepted', 'rejected', 'sent', 'draft', null])
+    ).toBeCloseTo(0.5);
+    expect(computeWinRate(['draft', 'draft'])).toBe(0);
+  });
+
+  it('prefers total_budget then budget for project value', () => {
+    expect(projectValue({ total_budget: 200, budget: 100 })).toBe(200);
+    expect(projectValue({ total_budget: null, budget: 100 })).toBe(100);
+    expect(projectValue({})).toBe(0);
+  });
+
+  it('averages size over active/completed only', () => {
+    const projects = [
+      { budget: 100, status: 'active' },
+      { budget: 300, status: 'completed' },
+      { budget: 9999, status: 'cancelled' },
+    ];
+    expect(computeAvgProjectSize(projects)).toBe(200);
+  });
+
+  it('sums backlog over in-flight projects only', () => {
+    const projects = [
+      { budget: 100, status: 'active' },
+      { budget: 200, status: 'planning' },
+      { budget: 50, status: 'on_hold' },
+      { budget: 9999, status: 'completed' },
+    ];
+    expect(computeBacklog(projects)).toBe(350);
   });
 });
