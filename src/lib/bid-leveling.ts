@@ -109,8 +109,14 @@ export function levelBids(
       const li = byBidAndScope.get(`${bid.id}:${scopeItem.id}`);
       const gap = isScopeGap(li);
       const amount = gap ? null : (li!.amount as number);
+      // A $0 median is valid (zero-dollar quotes are allowed), so handle it
+      // explicitly rather than skipping outlier detection when med === 0.
       const isOutlier =
-        !gap && med != null && med > 0 && Math.abs((amount as number) - med) / med > OUTLIER_RATIO;
+        !gap &&
+        med != null &&
+        (med === 0
+          ? (amount as number) !== 0
+          : Math.abs((amount as number) - med) / med > OUTLIER_RATIO);
       return {
         bidId: bid.id,
         amount,

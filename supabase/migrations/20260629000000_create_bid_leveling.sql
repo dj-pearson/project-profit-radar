@@ -42,7 +42,9 @@ CREATE TABLE IF NOT EXISTS public.bid_scope_items (
   updated_at      timestamptz NOT NULL DEFAULT now(),
   CONSTRAINT bid_scope_items_package_company_fk
     FOREIGN KEY (package_id, company_id) REFERENCES public.bid_packages (id, company_id) ON DELETE CASCADE,
-  CONSTRAINT bid_scope_items_id_company_key UNIQUE (id, company_id)
+  -- Composite key so a bid line item can be bound to the same (scope, company,
+  -- package) and can't mix scope from another package.
+  CONSTRAINT bid_scope_items_id_company_package_key UNIQUE (id, company_id, package_id)
 );
 
 -- One bid per vendor/supplier for a package.
@@ -59,14 +61,18 @@ CREATE TABLE IF NOT EXISTS public.bids (
   updated_at  timestamptz NOT NULL DEFAULT now(),
   CONSTRAINT bids_package_company_fk
     FOREIGN KEY (package_id, company_id) REFERENCES public.bid_packages (id, company_id) ON DELETE CASCADE,
-  CONSTRAINT bids_id_company_key UNIQUE (id, company_id)
+  -- Composite key so a bid line item can be bound to the same (bid, company,
+  -- package).
+  CONSTRAINT bids_id_company_package_key UNIQUE (id, company_id, package_id)
 );
 
 -- A vendor's quoted amount for a scope item. A null amount (or included=false)
--- means the bid did not cover that scope line (a scope gap).
+-- means the bid did not cover that scope line (a scope gap). package_id binds the
+-- bid and scope item to the same package via composite FKs.
 CREATE TABLE IF NOT EXISTS public.bid_line_items (
   id            uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   company_id    uuid NOT NULL,
+  package_id    uuid NOT NULL,
   bid_id        uuid NOT NULL,
   scope_item_id uuid NOT NULL,
   amount        numeric,
@@ -74,16 +80,21 @@ CREATE TABLE IF NOT EXISTS public.bid_line_items (
   note          text,
   created_at    timestamptz NOT NULL DEFAULT now(),
   updated_at    timestamptz NOT NULL DEFAULT now(),
-  CONSTRAINT bid_line_items_bid_company_fk
-    FOREIGN KEY (bid_id, company_id) REFERENCES public.bids (id, company_id) ON DELETE CASCADE,
-  CONSTRAINT bid_line_items_scope_company_fk
-    FOREIGN KEY (scope_item_id, company_id) REFERENCES public.bid_scope_items (id, company_id) ON DELETE CASCADE,
+  CONSTRAINT bid_line_items_bid_scope_fk
+    FOREIGN KEY (bid_id, company_id, package_id)
+    REFERENCES public.bids (id, company_id, package_id) ON DELETE CASCADE,
+  CONSTRAINT bid_line_items_scope_scope_fk
+    FOREIGN KEY (scope_item_id, company_id, package_id)
+    REFERENCES public.bid_scope_items (id, company_id, package_id) ON DELETE CASCADE,
   UNIQUE (bid_id, scope_item_id)
 );
 
 CREATE INDEX IF NOT EXISTS idx_bid_packages_project ON public.bid_packages (company_id, project_id);
 CREATE INDEX IF NOT EXISTS idx_bid_scope_items_package ON public.bid_scope_items (company_id, package_id, sort_order);
 CREATE INDEX IF NOT EXISTS idx_bids_package ON public.bids (company_id, package_id);
+-- At most one awarded bid per package (defends against concurrent awards).
+CREATE UNIQUE INDEX IF NOT EXISTS idx_bids_one_award_per_package
+  ON public.bids (company_id, package_id) WHERE is_awarded;
 CREATE INDEX IF NOT EXISTS idx_bid_line_items_bid ON public.bid_line_items (company_id, bid_id);
 
 ALTER TABLE public.bid_packages ENABLE ROW LEVEL SECURITY;
@@ -135,3 +146,29 @@ BEGIN
     $f$, tbl);
   END LOOP;
 END $$;
+
+-- Atomic award: clear any prior award, set the chosen bid, and flip the package
+-- status in a single function (one transaction). SECURITY INVOKER so RLS still
+-- applies; validates the bid belongs to the package + caller's company.
+CREATE OR REPLACE FUNCTION public.award_bid(p_package_id uuid, p_bid_id uuid)
+RETURNS void
+LANGUAGE plpgsql
+AS $$
+DECLARE
+  v_company uuid := get_user_company(auth.uid());
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM public.bids
+    WHERE id = p_bid_id AND package_id = p_package_id AND company_id = v_company
+  ) THEN
+    RAISE EXCEPTION 'Bid % does not belong to package %', p_bid_id, p_package_id;
+  END IF;
+
+  UPDATE public.bids SET is_awarded = false
+    WHERE package_id = p_package_id AND company_id = v_company AND id <> p_bid_id AND is_awarded;
+  UPDATE public.bids SET is_awarded = true
+    WHERE id = p_bid_id AND company_id = v_company;
+  UPDATE public.bid_packages SET status = 'awarded'
+    WHERE id = p_package_id AND company_id = v_company;
+END;
+$$;

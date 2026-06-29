@@ -809,6 +809,13 @@ export type Database = {
             referencedRelation: "projects"
             referencedColumns: ["id", "company_id"]
           },
+          {
+            foreignKeyName: "bid_packages_estimate_id_fkey"
+            columns: ["estimate_id"]
+            isOneToOne: false
+            referencedRelation: "estimates"
+            referencedColumns: ["id"]
+          },
         ]
       }
       bid_scope_items: {
@@ -921,6 +928,7 @@ export type Database = {
           id: string
           included: boolean
           note: string | null
+          package_id: string
           scope_item_id: string
           updated_at: string
         }
@@ -932,6 +940,7 @@ export type Database = {
           id?: string
           included?: boolean
           note?: string | null
+          package_id: string
           scope_item_id: string
           updated_at?: string
         }
@@ -943,23 +952,24 @@ export type Database = {
           id?: string
           included?: boolean
           note?: string | null
+          package_id?: string
           scope_item_id?: string
           updated_at?: string
         }
         Relationships: [
           {
-            foreignKeyName: "bid_line_items_bid_company_fk"
-            columns: ["bid_id", "company_id"]
+            foreignKeyName: "bid_line_items_bid_scope_fk"
+            columns: ["bid_id", "company_id", "package_id"]
             isOneToOne: false
             referencedRelation: "bids"
-            referencedColumns: ["id", "company_id"]
+            referencedColumns: ["id", "company_id", "package_id"]
           },
           {
-            foreignKeyName: "bid_line_items_scope_company_fk"
-            columns: ["scope_item_id", "company_id"]
+            foreignKeyName: "bid_line_items_scope_scope_fk"
+            columns: ["scope_item_id", "company_id", "package_id"]
             isOneToOne: false
             referencedRelation: "bid_scope_items"
-            referencedColumns: ["id", "company_id"]
+            referencedColumns: ["id", "company_id", "package_id"]
           },
         ]
       }
@@ -40025,6 +40035,7 @@ export type Database = {
         Returns: string
       }
       apply_retention_policy: { Args: { p_policy_id: string }; Returns: number }
+      award_bid: { Args: { p_package_id: string; p_bid_id: string }; Returns: undefined }
       auto_populate_daily_report: {
         Args: {
           p_daily_report_id: string

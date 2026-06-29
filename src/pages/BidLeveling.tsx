@@ -240,7 +240,7 @@ const BidLeveling = () => {
     const prev = amountByCell.get(`${bidId}:${scopeItemId}`) ?? null;
     if (prev === amount) return;
     try {
-      await setLineAmount({ companyId, bidId, scopeItemId, amount });
+      await setLineAmount({ companyId, packageId, bidId, scopeItemId, amount });
       await loadLeveling();
     } catch (err) {
       logger.error('Failed to save bid amount', err as Error);

@@ -91,6 +91,13 @@ export async function fetchLevelingData(packageId: string, companyId: string): P
   return { scopeItems: (scopeRes.data ?? []) as BidScopeItem[], bids, lineItems };
 }
 
+/** Guard a financial/quantity value at the service boundary (UI min= is only a hint). */
+function assertNonNegativeFinite(value: number, label: string): void {
+  if (!Number.isFinite(value) || value < 0) {
+    throw new Error(`${label} must be a non-negative number`);
+  }
+}
+
 export async function createScopeItem(params: {
   companyId: string;
   packageId: string;
@@ -100,6 +107,8 @@ export async function createScopeItem(params: {
   estimateAmount: number;
   sortOrder?: number;
 }): Promise<void> {
+  assertNonNegativeFinite(params.quantity, 'Quantity');
+  assertNonNegativeFinite(params.estimateAmount, 'Estimate amount');
   const { error } = await supabase.from('bid_scope_items').insert([
     {
       company_id: params.companyId,
@@ -125,6 +134,18 @@ export async function createBid(params: {
   vendorName: string;
   vendorId?: string | null;
 }): Promise<void> {
+  // If a vendor is linked, verify it belongs to this company (vendor_id is a
+  // single-column FK; this guards against a cross-company vendor reference).
+  if (params.vendorId) {
+    const { data: vendor, error: vendorError } = await supabase
+      .from('vendors')
+      .select('id')
+      .eq('id', params.vendorId)
+      .eq('company_id', params.companyId)
+      .maybeSingle();
+    if (vendorError) throw new Error(vendorError.message);
+    if (!vendor) throw new Error('Selected vendor does not belong to this company');
+  }
   const { error } = await supabase.from('bids').insert([
     {
       company_id: params.companyId,
@@ -144,14 +165,17 @@ export async function deleteBid(id: string, companyId: string): Promise<void> {
 /** Upsert a vendor's quote for a scope line (null amount = scope gap). */
 export async function setLineAmount(params: {
   companyId: string;
+  packageId: string;
   bidId: string;
   scopeItemId: string;
   amount: number | null;
 }): Promise<void> {
+  if (params.amount != null) assertNonNegativeFinite(params.amount, 'Bid amount');
   const { error } = await supabase.from('bid_line_items').upsert(
     [
       {
         company_id: params.companyId,
+        package_id: params.packageId,
         bid_id: params.bidId,
         scope_item_id: params.scopeItemId,
         amount: params.amount,
@@ -177,29 +201,13 @@ export async function awardBid(params: {
 }): Promise<void> {
   const { companyId, packageId, bidId, vendorName, userId } = params;
 
-  // Clear any prior award in this package, then set the chosen one.
-  const { error: clearError } = await supabase
-    .from('bids')
-    .update({ is_awarded: false })
-    .eq('company_id', companyId)
-    .eq('package_id', packageId)
-    .eq('is_awarded', true)
-    .neq('id', bidId);
-  if (clearError) throw new Error(clearError.message);
-
-  const { error: awardError } = await supabase
-    .from('bids')
-    .update({ is_awarded: true })
-    .eq('id', bidId)
-    .eq('company_id', companyId);
-  if (awardError) throw new Error(awardError.message);
-
-  const { error: pkgError } = await supabase
-    .from('bid_packages')
-    .update({ status: 'awarded' })
-    .eq('id', packageId)
-    .eq('company_id', companyId);
-  if (pkgError) throw new Error(pkgError.message);
+  // Single transactional RPC: validates the bid belongs to the package, clears
+  // any prior award, sets the chosen bid, and flips package status — atomically.
+  const { error } = await supabase.rpc('award_bid', {
+    p_package_id: packageId,
+    p_bid_id: bidId,
+  });
+  if (error) throw new Error(error.message);
 
   try {
     await logAuditEvent({

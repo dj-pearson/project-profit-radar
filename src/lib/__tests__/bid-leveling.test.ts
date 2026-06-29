@@ -104,6 +104,18 @@ describe('levelBids (US-232)', () => {
   });
 });
 
+describe('zero-median outlier (US-232)', () => {
+  it('flags a non-zero quote when the median is 0', () => {
+    const scopeItems = [scope({ id: 's1', estimate_amount: 0 })];
+    const bids = [bid({ id: 'b1' }), bid({ id: 'b2' }), bid({ id: 'b3' })];
+    // quotes: 0, 0, 500 → median 0; 500 must still flag.
+    const result = levelBids(scopeItems, bids, [li('b1', 's1', 0), li('b2', 's1', 0), li('b3', 's1', 500)]);
+    const row = result.rows[0];
+    expect(row.cells.find((c) => c.bidId === 'b3')!.isOutlier).toBe(true);
+    expect(row.cells.find((c) => c.bidId === 'b1')!.isOutlier).toBe(false);
+  });
+});
+
 describe('lowestBidId (US-232)', () => {
   it('returns the lowest-total bid, or null for none', () => {
     const scopeItems = [scope({ id: 's1', estimate_amount: 0 })];
