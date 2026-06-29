@@ -32,6 +32,11 @@ export function SignatureCapture({
   // Configure the canvas and (re)draw the prefilled signature whenever `value`
   // changes, keeping `hasInk` in sync so Clear reflects a provided signature.
   useEffect(() => {
+    // Keep `hasInk` in sync with the provided value first — independent of canvas
+    // availability — so Clear reflects a prefilled signature even where a 2D
+    // context isn't available (e.g. jsdom in tests).
+    setHasInk(!!value);
+
     const canvas = canvasRef.current;
     const ctx = canvas?.getContext('2d');
     if (!canvas || !ctx) return;
@@ -39,15 +44,12 @@ export function SignatureCapture({
     ctx.lineCap = 'round';
     ctx.strokeStyle = '#111827';
     // Always clear first so switching signatures doesn't stack, and an external
-    // reset (value -> null) removes stale ink and disables Clear.
+    // reset (value -> null) removes stale ink.
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     if (value) {
       const img = new Image();
       img.onload = () => ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
       img.src = value;
-      setHasInk(true);
-    } else {
-      setHasInk(false);
     }
   }, [value]);
 

@@ -31,7 +31,9 @@ describe('DocumentPreviewModal (US-081)', () => {
     );
     expect(screen.getByRole('button', { name: /share link/i })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /download/i })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /close/i })).toBeInTheDocument();
+    // The footer action carries a distinct accessible name so it isn't ambiguous
+    // with the dialog's built-in close (X) control, which is also named "Close".
+    expect(screen.getByRole('button', { name: /close preview/i })).toBeInTheDocument();
   });
 
   it('renders a PDF in an iframe using a signed URL', async () => {

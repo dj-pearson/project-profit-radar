@@ -177,7 +177,7 @@ export function DocumentPreviewModal({ open, onOpenChange, document, bucket }: D
             <Button variant="outline" onClick={handleDownload} disabled={!document}>
               <Download className="mr-1 h-4 w-4" /> Download
             </Button>
-            <Button onClick={() => onOpenChange(false)}>Close</Button>
+            <Button aria-label="Close preview" onClick={() => onOpenChange(false)}>Close</Button>
           </div>
         </div>
       </DialogContent>
