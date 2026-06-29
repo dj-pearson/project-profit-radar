@@ -103,13 +103,39 @@ export function profitMargin(revenue: number, cost: number): number {
   return (revenue - cost) / revenue;
 }
 
-/** Monthly profit-margin trend (%) from revenue and cost series, by month. */
+/**
+ * Monthly profit-margin trend (%), over the sorted union of revenue and cost
+ * periods so a month with expenses but no invoices still appears (and shows a
+ * negative margin) rather than vanishing from the chart.
+ */
 export function profitMarginTrend(revenue: SeriesPoint[], cost: SeriesPoint[]): SeriesPoint[] {
+  const revenueByMonth = new Map(revenue.map((p) => [p.period, p.value]));
   const costByMonth = new Map(cost.map((p) => [p.period, p.value]));
-  return revenue.map((r) => ({
-    period: r.period,
-    value: Math.round(profitMargin(r.value, costByMonth.get(r.period) ?? 0) * 100),
+  const periods = Array.from(new Set([...revenueByMonth.keys(), ...costByMonth.keys()])).sort((a, b) =>
+    a.localeCompare(b)
+  );
+  return periods.map((period) => ({
+    period,
+    value: Math.round(profitMargin(revenueByMonth.get(period) ?? 0, costByMonth.get(period) ?? 0) * 100),
   }));
+}
+
+/**
+ * Fill a monthly series so every month in [fromPeriod, toPeriod] is present
+ * (missing months get value 0). Needed before regression/forecast/burn so that
+ * adjacent points are genuinely one calendar month apart.
+ */
+export function densifyMonthly(series: SeriesPoint[], fromPeriod: string, toPeriod: string): SeriesPoint[] {
+  if (fromPeriod > toPeriod) return [];
+  const byPeriod = new Map(series.map((p) => [p.period, p.value]));
+  const out: SeriesPoint[] = [];
+  let cur = fromPeriod;
+  // Bounded to avoid any chance of an infinite loop on malformed input.
+  for (let i = 0; i < 600 && cur <= toPeriod; i++) {
+    out.push({ period: cur, value: byPeriod.get(cur) ?? 0 });
+    cur = addMonths(cur, 1);
+  }
+  return out;
 }
 
 /**

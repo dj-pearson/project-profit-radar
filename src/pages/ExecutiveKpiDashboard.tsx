@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   LineChart,
   Line,
@@ -39,6 +39,7 @@ import { logger } from '@/lib/logger';
 import { fetchExecutiveData, type ExecutiveData } from '@/services/executiveKpiService';
 import {
   aggregateMonthly,
+  densifyMonthly,
   profitMarginTrend,
   forecastSeries,
   averageMonthlyBurn,
@@ -96,9 +97,11 @@ const MONTH_OPTIONS = [
   { value: '24', label: 'Last 24 months' },
 ];
 
+/** First day (UTC) of the month `months` before the current month — avoids
+ *  end-of-month setMonth() rollover. */
 function monthsAgoISO(months: number): string {
-  const d = new Date();
-  d.setMonth(d.getMonth() - months);
+  const now = new Date();
+  const d = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - months, 1));
   return d.toISOString().slice(0, 10);
 }
 
@@ -111,18 +114,25 @@ const ExecutiveKpiDashboard = () => {
   const [data, setData] = useState<ExecutiveData | null>(null);
   const [loading, setLoading] = useState(false);
   const [loadError, setLoadError] = useState(false);
+  const requestRef = useRef(0);
 
   const load = useCallback(async () => {
     if (!companyId) return;
+    // Request-id guard: only the latest in-flight fetch may update state, so a
+    // slow earlier response can't overwrite newer KPIs after a period change.
+    const requestId = ++requestRef.current;
     setLoading(true);
     setLoadError(false);
     try {
-      setData(await fetchExecutiveData(companyId, monthsAgoISO(Number(months))));
+      const result = await fetchExecutiveData(companyId, monthsAgoISO(Number(months)));
+      if (requestRef.current !== requestId) return;
+      setData(result);
     } catch (err) {
+      if (requestRef.current !== requestId) return;
       logger.error('Failed to load executive KPI data', err as Error);
       setLoadError(true);
     } finally {
-      setLoading(false);
+      if (requestRef.current === requestId) setLoading(false);
     }
   }, [companyId, months]);
 
@@ -132,15 +142,27 @@ const ExecutiveKpiDashboard = () => {
 
   const kpis = useMemo(() => {
     if (!data) return null;
-    const revenueSeries = aggregateMonthly(
-      data.invoices
-        .filter((i) => i.issue_date)
-        .map((i) => ({ date: i.issue_date as string, amount: i.total_amount ?? 0 }))
+    // Densify over the full selected window so forecasting/burn see evenly
+    // spaced months (quiet months become 0 rather than collapsing the gap).
+    const fromPeriod = monthsAgoISO(Number(months)).slice(0, 7);
+    const toPeriod = new Date().toISOString().slice(0, 7);
+    const revenueSeries = densifyMonthly(
+      aggregateMonthly(
+        data.invoices
+          .filter((i) => i.issue_date)
+          .map((i) => ({ date: i.issue_date as string, amount: i.total_amount ?? 0 }))
+      ),
+      fromPeriod,
+      toPeriod
     );
-    const costSeries = aggregateMonthly(
-      data.expenses
-        .filter((e) => e.expense_date)
-        .map((e) => ({ date: e.expense_date as string, amount: e.amount ?? 0 }))
+    const costSeries = densifyMonthly(
+      aggregateMonthly(
+        data.expenses
+          .filter((e) => e.expense_date)
+          .map((e) => ({ date: e.expense_date as string, amount: e.amount ?? 0 }))
+      ),
+      fromPeriod,
+      toPeriod
     );
     const marginTrend = profitMarginTrend(revenueSeries, costSeries);
     const forecast = forecastSeries(revenueSeries, 3);
@@ -174,7 +196,7 @@ const ExecutiveKpiDashboard = () => {
       runway,
       cashOnHand,
     };
-  }, [data]);
+  }, [data, months]);
 
   const revenueConfig = {
     revenue: { label: 'Revenue', color: 'hsl(var(--chart-1))' },

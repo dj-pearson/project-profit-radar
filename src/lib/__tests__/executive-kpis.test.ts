@@ -5,6 +5,7 @@ import { describe, it, expect } from 'vitest';
 import {
   monthKey,
   aggregateMonthly,
+  densifyMonthly,
   linearRegression,
   forecastSeries,
   addMonths,
@@ -88,6 +89,31 @@ describe('profit margin (US-233)', () => {
       { period: '2026-01', value: 50 },
       { period: '2026-02', value: 50 },
     ]);
+  });
+
+  it('includes expense-only months (negative margin) in the trend', () => {
+    const rev: SeriesPoint[] = [{ period: '2026-01', value: 1000 }];
+    const cost: SeriesPoint[] = [{ period: '2026-01', value: 500 }, { period: '2026-02', value: 800 }];
+    // Feb has cost but no revenue → margin = (0 - 800)/0 guarded to 0 by profitMargin.
+    expect(profitMarginTrend(rev, cost)).toEqual([
+      { period: '2026-01', value: 50 },
+      { period: '2026-02', value: 0 },
+    ]);
+  });
+});
+
+describe('densifyMonthly (US-233)', () => {
+  it('fills missing months with 0 across the window', () => {
+    const sparse: SeriesPoint[] = [{ period: '2026-01', value: 100 }, { period: '2026-04', value: 400 }];
+    expect(densifyMonthly(sparse, '2026-01', '2026-04')).toEqual([
+      { period: '2026-01', value: 100 },
+      { period: '2026-02', value: 0 },
+      { period: '2026-03', value: 0 },
+      { period: '2026-04', value: 400 },
+    ]);
+  });
+  it('returns empty when the range is inverted', () => {
+    expect(densifyMonthly([], '2026-05', '2026-01')).toEqual([]);
   });
 });
 
