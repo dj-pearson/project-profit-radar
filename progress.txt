@@ -1683,3 +1683,56 @@ Branch: claude/us-233-executive-dashboard → PR to main
 - [x] All metrics company_id-scoped; reconcile with financial overview (revenue/cost/margin)
 
 prd.json: US-233 passes:true (173/234). Verified by GitHub Action (unit-test/build).
+
+================================================================================
+US-086 — Add export center with scheduled report delivery (2026-06-29)
+================================================================================
+Branch: claude/us-086-export-center → PR to main. Additive web feature (no
+destructive migration). Story 174/234.
+
+### What shipped
+- src/lib/export-center.ts: pure metadata + schedule logic. REPORT_TEMPLATES (5),
+  EXPORT_FORMATS (pdf/excel/csv), FREQUENCIES (daily/weekly/monthly), TableData
+  shape. nextRunDate(frequency, fromISO) — UTC date math, monthly clamps to
+  end-of-month (e.g. 2026-01-31 → 2026-02-28). parseRecipients (split/dedupe/
+  email-filter), hasInvalidRecipient, validateSchedule.
+- src/lib/__tests__/export-center.test.ts: 9 unit tests (metadata counts,
+  nextRunDate daily/weekly/monthly+clamp, parseRecipients, validateSchedule).
+- src/lib/export-formats.ts: downloadTable(format, baseName, title, table) —
+  CSV via shared exportCsv helpers, Excel via xlsx json_to_sheet, PDF via
+  jspdf + jspdf-autotable.
+- src/services/exportCenterService.ts: fetchReportData over 5 templates
+  (project-summary/financial/time/equipment/aging), all company_id-scoped
+  (time_entries scoped via the company's project_ids since it lacks company_id;
+  aging computes days-overdue + bucket). recordExport/fetchExportHistory,
+  createSchedule (sets next_run_at via nextRunDate)/fetchSchedules/deleteSchedule.
+- supabase/migrations/20260629100000_create_export_center.sql: scheduled_reports
+  + export_history tables, RLS (company members read; admin/pm/root_admin manage
+  schedules + delete history; any member records exports), updated_at trigger.
+- src/integrations/supabase/types.ts: Row/Insert/Update/Relationships for both
+  new tables.
+- src/pages/ExportCenter.tsx (/export-center): RoleGuard PROJECT_EDITORS +
+  DashboardLayout. "Build a report" (template/format/project + date filters,
+  export now), "Schedule email delivery" (name/frequency/start-date/recipients,
+  validateSchedule, list with delete), "Export history" table with re-download.
+  logger.error, destructive toasts on failure, aria-labels on icon buttons.
+- Wiring: /export-center lazy route (financialRoutes) + "Export Center" nav
+  entry (ROLE_GROUPS.PROJECT_EDITORS) under Financial Overview.
+
+### Acceptance
+- [x] Export Center page accessible from Reports/Financial navigation
+- [x] Report template selector with 5 types (Project Summary, Financial, Time,
+      Equipment, Aging)
+- [x] Export format options: PDF, Excel (xlsx), CSV
+- [x] Date range and project filters for scoping report data
+- [x] Schedule delivery form: frequency, recipient emails, start date
+- [x] Export history table showing past exports with re-download links
+- [x] npm run build completes (build is the trusted CI gate)
+
+### Follow-up (out of scope this slice)
+- Recurring-email worker: an edge function / pg_cron job that scans
+  scheduled_reports for due next_run_at rows, renders + emails the report, and
+  advances next_run_at. This slice persists the schedule + computes next_run_at;
+  the delivery worker is a separate story.
+
+prd.json: US-086 passes:true (174/234).
