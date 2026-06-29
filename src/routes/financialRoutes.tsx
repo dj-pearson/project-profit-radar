@@ -24,6 +24,7 @@ import {
 // Enterprise Finance Module - Lazy loaded with ErrorBoundary + Suspense
 const FinanceHub = createLazyRoute(() => import('@/pages/FinanceHub'));
 const PurchaseOrderForm = createLazyRoute(() => import('@/components/purchasing/PurchaseOrderForm'));
+const BidLeveling = createLazyRoute(() => import('@/pages/BidLeveling'));
 const ChartOfAccounts = createLazyRoute(() => import('@/pages/ChartOfAccounts'));
 const JournalEntries = createLazyRoute(() => import('@/pages/JournalEntries'));
 const BalanceSheet = createLazyRoute(() => import('@/pages/BalanceSheet'));
@@ -75,6 +76,7 @@ export const financialRoutes = (
 
     {/* Estimates & Invoices */}
     <Route path="/estimates" element={<RouteGuard><LazyEstimatesHub /></RouteGuard>} />
+    <Route path="/bid-leveling" element={<RouteGuard><BidLeveling /></RouteGuard>} />
     <Route path="/invoices" element={<RouteGuard><LazyInvoices /></RouteGuard>} />
     <Route path="/invoices/aging" element={<RouteGuard><LazyARAgingReport /></RouteGuard>} />
     <Route path="/expenses" element={<RouteGuard><LazyExpenses /></RouteGuard>} />

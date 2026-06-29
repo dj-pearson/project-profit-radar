@@ -764,6 +764,215 @@ export type Database = {
           },
         ]
       }
+      bid_packages: {
+        Row: {
+          company_id: string
+          created_at: string
+          created_by: string | null
+          description: string | null
+          estimate_id: string | null
+          id: string
+          name: string
+          project_id: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          estimate_id?: string | null
+          id?: string
+          name: string
+          project_id: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          estimate_id?: string | null
+          id?: string
+          name?: string
+          project_id?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bid_packages_project_company_fk"
+            columns: ["project_id", "company_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id", "company_id"]
+          },
+          {
+            foreignKeyName: "bid_packages_estimate_id_fkey"
+            columns: ["estimate_id"]
+            isOneToOne: false
+            referencedRelation: "estimates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bid_scope_items: {
+        Row: {
+          company_id: string
+          created_at: string
+          description: string
+          estimate_amount: number
+          id: string
+          package_id: string
+          quantity: number
+          sort_order: number
+          unit: string | null
+          updated_at: string
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          description: string
+          estimate_amount?: number
+          id?: string
+          package_id: string
+          quantity?: number
+          sort_order?: number
+          unit?: string | null
+          updated_at?: string
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          description?: string
+          estimate_amount?: number
+          id?: string
+          package_id?: string
+          quantity?: number
+          sort_order?: number
+          unit?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bid_scope_items_package_company_fk"
+            columns: ["package_id", "company_id"]
+            isOneToOne: false
+            referencedRelation: "bid_packages"
+            referencedColumns: ["id", "company_id"]
+          },
+        ]
+      }
+      bids: {
+        Row: {
+          company_id: string
+          created_at: string
+          created_by: string | null
+          id: string
+          is_awarded: boolean
+          notes: string | null
+          package_id: string
+          updated_at: string
+          vendor_id: string | null
+          vendor_name: string
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_awarded?: boolean
+          notes?: string | null
+          package_id: string
+          updated_at?: string
+          vendor_id?: string | null
+          vendor_name: string
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_awarded?: boolean
+          notes?: string | null
+          package_id?: string
+          updated_at?: string
+          vendor_id?: string | null
+          vendor_name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bids_package_company_fk"
+            columns: ["package_id", "company_id"]
+            isOneToOne: false
+            referencedRelation: "bid_packages"
+            referencedColumns: ["id", "company_id"]
+          },
+          {
+            foreignKeyName: "bids_vendor_id_fkey"
+            columns: ["vendor_id"]
+            isOneToOne: false
+            referencedRelation: "vendors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bid_line_items: {
+        Row: {
+          amount: number | null
+          bid_id: string
+          company_id: string
+          created_at: string
+          id: string
+          included: boolean
+          note: string | null
+          package_id: string
+          scope_item_id: string
+          updated_at: string
+        }
+        Insert: {
+          amount?: number | null
+          bid_id: string
+          company_id: string
+          created_at?: string
+          id?: string
+          included?: boolean
+          note?: string | null
+          package_id: string
+          scope_item_id: string
+          updated_at?: string
+        }
+        Update: {
+          amount?: number | null
+          bid_id?: string
+          company_id?: string
+          created_at?: string
+          id?: string
+          included?: boolean
+          note?: string | null
+          package_id?: string
+          scope_item_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bid_line_items_bid_scope_fk"
+            columns: ["bid_id", "company_id", "package_id"]
+            isOneToOne: false
+            referencedRelation: "bids"
+            referencedColumns: ["id", "company_id", "package_id"]
+          },
+          {
+            foreignKeyName: "bid_line_items_scope_scope_fk"
+            columns: ["scope_item_id", "company_id", "package_id"]
+            isOneToOne: false
+            referencedRelation: "bid_scope_items"
+            referencedColumns: ["id", "company_id", "package_id"]
+          },
+        ]
+      }
       affiliate_codes: {
         Row: {
           affiliate_code: string
@@ -39826,6 +40035,7 @@ export type Database = {
         Returns: string
       }
       apply_retention_policy: { Args: { p_policy_id: string }; Returns: number }
+      award_bid: { Args: { p_package_id: string; p_bid_id: string }; Returns: undefined }
       auto_populate_daily_report: {
         Args: {
           p_daily_report_id: string

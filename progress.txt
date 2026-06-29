@@ -1611,3 +1611,42 @@ Branch: claude/us-223-gantt-schedule → PR to main
 Adds 3 tables; apply to Supabase after merge (CI does not run migrations).
 
 prd.json: US-223 passes:true (171/234). Verified by GitHub Action (unit-test/build).
+
+================================================================================
+## Session: US-232 — Bid leveling + estimate variance analysis
+Branch: claude/us-232-bid-leveling → PR to main (complements US-096)
+
+### What shipped
+- supabase/migrations/20260629000000_create_bid_leveling.sql: bid_packages,
+  bid_scope_items (shared scope template + estimate baseline), bids (vendor link
+  or manual name, is_awarded), bid_line_items (quoted amount per scope line;
+  null/excluded = scope gap). Company_id RLS (members read; builders manage) via
+  DO-block; updated_at triggers; created_by DEFAULT auth.uid(). Composite-FK
+  tenant scoping: company_id bound to project, dependency/line edges kept within
+  one package+company (preempts cross-tenant inserts).
+- src/integrations/supabase/types.ts: 4 new tables (Row/Insert/Update/Relationships).
+- src/lib/bid-leveling.ts: pure helpers — median, isScopeGap, levelBids (matrix
+  with per-cell gap/outlier/lowest flags, per-bid totals, variance vs estimate),
+  lowestBidId. Unit-tested (__tests__/bid-leveling.test.ts).
+- src/services/bidLevelingService.ts: package/scope/bid CRUD, setLineAmount
+  (upsert on bid_id+scope_item_id), fetchLevelingData, awardBid (clears prior
+  award, marks chosen, sets package status, audit-logged). company_id-scoped.
+- src/pages/BidLeveling.tsx (/bid-leveling): project+package picker, scope
+  template management, add bids (vendor dropdown from vendors or manual),
+  editable quote matrix with gap(red)/outlier(yellow)/lowest(green) highlighting,
+  totals + variance vs estimate, award buttons. RoleGuard PROJECT_EDITORS,
+  DashboardLayout, loading + error(Alert/Retry) states.
+- Wiring: /bid-leveling route (financialRoutes) + "Bid Leveling" nav entry under
+  Purchasing (reuses ROLE_GROUPS.PROJECT_EDITORS).
+
+### Acceptance
+- [x] Multiple bids captured against a shared scope/line-item template per project
+- [x] Leveling view compares bids line-by-line, normalizes, flags gaps/outliers
+- [x] Variance from estimate/budget shown per line and in total
+- [x] Awardee selection recorded (on the bid + package; vendor_id links toward PO/subcontract)
+- [x] Bid data company_id-scoped with RLS via additive migration
+
+### Migration note
+Adds 4 tables; apply to Supabase after merge (CI does not run migrations).
+
+prd.json: US-232 passes:true (172/234). Verified by GitHub Action (unit-test/build).

@@ -3768,8 +3768,8 @@
         "Bid data is company_id-scoped with RLS via additive migrations"
       ],
       "priority": 3,
-      "passes": false,
-      "notes": "Source: competitive analysis. Complements US-096; preconstruction differentiator."
+      "passes": true,
+      "notes": "Implemented bid leveling + estimate variance. New tables bid_packages/bid_scope_items/bids/bid_line_items with company_id RLS and composite-FK tenant scoping (bind company_id to project + keep dependency/line edges within one package+company). /bid-leveling page: project+package picker, shared scope template, add bids (vendor from vendors table or manual), editable quote matrix with scope-gap (red)/outlier (yellow)/lowest (green) highlighting, per-line + total variance vs estimate, and awardee selection (recorded on the bid + package status, audit-logged, vendor_id links toward PO/subcontract). Pure levelBids/variance helpers (median, gap/outlier detection, totals) unit-tested."
     },
     {
       "id": "US-233",
