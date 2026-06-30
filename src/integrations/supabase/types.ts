@@ -18956,6 +18956,7 @@ export type Database = {
           created_by: string | null
           holds_payment: boolean
           id: string
+          is_active: boolean
           notes: string | null
           payment_id: string | null
           project_id: string
@@ -18976,6 +18977,7 @@ export type Database = {
           created_by?: string | null
           holds_payment?: boolean
           id?: string
+          is_active?: boolean
           notes?: string | null
           payment_id?: string | null
           project_id: string
@@ -18996,6 +18998,7 @@ export type Database = {
           created_by?: string | null
           holds_payment?: boolean
           id?: string
+          is_active?: boolean
           notes?: string | null
           payment_id?: string | null
           project_id?: string

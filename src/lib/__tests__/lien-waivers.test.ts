@@ -87,7 +87,7 @@ describe('payment-hold rule (US-227)', () => {
 
 describe('validateWaiverRequest (US-227)', () => {
   const ok = {
-    subcontractorId: 'sub-1',
+    contractorId: 'sub-1',
     projectId: 'proj-1',
     type: 'conditional-progress' as const,
     amount: '1000',
@@ -100,7 +100,7 @@ describe('validateWaiverRequest (US-227)', () => {
 
   it('flags each missing/invalid field', () => {
     const errors = validateWaiverRequest({
-      subcontractorId: '',
+      contractorId: '',
       projectId: '',
       type: '',
       amount: '0',

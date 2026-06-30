@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { FileSignature, ShieldCheck, ShieldAlert, Trash2, PenLine, Send, CheckCircle2, History } from 'lucide-react';
+import { FileSignature, ShieldCheck, ShieldAlert, Trash2, PenLine, Send, CheckCircle2, History, AlertCircle } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { RoleGuard, ROLE_GROUPS } from '@/components/auth/RoleGuard';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
@@ -10,6 +10,8 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import {
   Dialog,
@@ -66,6 +68,11 @@ const blankForm = {
 const currency = (n: number) =>
   new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(n || 0);
 
+/**
+ * US-227 Lien Waivers page: request, track, e-sign, and gate subcontractor
+ * payments on lien-waiver receipt. Loads contractors/projects/waivers, computes
+ * per-contractor payment-hold summaries, and drives the request→received flow.
+ */
 const LienWaivers = () => {
   const { userProfile } = useAuth();
   const { toast } = useToast();
@@ -96,6 +103,7 @@ const LienWaivers = () => {
     [projects]
   );
 
+  /** Load contractors, projects, and waivers for the current company. */
   const refresh = useCallback(async () => {
     if (!companyId) return;
     setLoading(true);
@@ -138,6 +146,7 @@ const LienWaivers = () => {
     }));
   }, [waivers]);
 
+  /** Validate and persist a new waiver request. */
   const handleCreate = async () => {
     if (!companyId) return;
     const errors = validateWaiverRequest(form);
@@ -168,10 +177,11 @@ const LienWaivers = () => {
     }
   };
 
-  const advance = async (waiver: LienWaiver, to: 'sent' | 'received', note?: string) => {
+  /** Move a waiver to the next lifecycle status (sent / received). */
+  const advance = async (waiver: LienWaiver, to: 'sent' | 'received') => {
     if (!companyId) return;
     try {
-      await advanceWaiver({ companyId, waiver, to, note });
+      await advanceWaiver({ companyId, waiver, to });
       await refresh();
     } catch (err) {
       logger.error('Failed to advance lien waiver', err as Error);
@@ -179,6 +189,7 @@ const LienWaivers = () => {
     }
   };
 
+  /** Capture the e-signature and mark the waiver signed. */
   const handleSign = async () => {
     if (!companyId || !signTarget) return;
     if (!signature) {
@@ -186,7 +197,7 @@ const LienWaivers = () => {
       return;
     }
     try {
-      await advanceWaiver({ companyId, waiver: signTarget, to: 'signed', signature, signedBy: signedBy || null, note: 'Waiver signed.' });
+      await advanceWaiver({ companyId, waiver: signTarget, to: 'signed', signature, signedBy: signedBy || null });
       setSignTarget(null);
       setSignature(null);
       setSignedBy('');
@@ -197,8 +208,9 @@ const LienWaivers = () => {
     }
   };
 
+  /** Soft-delete a waiver (its audit trail is retained). */
   const handleDelete = async (id: string) => {
-    if (!companyId || !confirm('Delete this lien waiver and its history?')) return;
+    if (!companyId || !confirm('Delete this lien waiver? Its audit history is retained.')) return;
     try {
       await deleteWaiver(id, companyId);
       await refresh();
@@ -208,6 +220,7 @@ const LienWaivers = () => {
     }
   };
 
+  /** Open the audit-trail dialog and load the waiver's status-change history. */
   const openAudit = async (waiver: LienWaiver) => {
     if (!companyId) return;
     setAuditTarget(waiver);
@@ -324,9 +337,20 @@ const LienWaivers = () => {
             </CardHeader>
             <CardContent>
               {error ? (
-                <p className="py-6 text-center text-destructive">{error}</p>
+                <Alert variant="destructive">
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertTitle>Couldn't load lien waivers</AlertTitle>
+                  <AlertDescription className="flex flex-col items-start gap-2">
+                    <span>{error}</span>
+                    <Button size="sm" variant="outline" onClick={() => refresh()}>Retry</Button>
+                  </AlertDescription>
+                </Alert>
               ) : loading ? (
-                <p className="py-6 text-center text-muted-foreground">Loading…</p>
+                <div className="space-y-2">
+                  {Array.from({ length: 4 }).map((_, i) => (
+                    <Skeleton key={i} className="h-10 w-full" />
+                  ))}
+                </div>
               ) : waivers.length === 0 ? (
                 <p className="py-6 text-center text-muted-foreground">No lien waivers yet.</p>
               ) : (
@@ -365,7 +389,7 @@ const LienWaivers = () => {
                             <TableCell className="text-right">
                               <div className="flex justify-end gap-1">
                                 {(w.status === 'requested') && (
-                                  <Button size="icon" variant="ghost" aria-label="Mark sent for signature" onClick={() => advance(w, 'sent', 'Sent for signature.')}>
+                                  <Button size="icon" variant="ghost" aria-label="Mark sent for signature" onClick={() => advance(w, 'sent')}>
                                     <Send className="h-4 w-4" />
                                   </Button>
                                 )}
@@ -375,7 +399,7 @@ const LienWaivers = () => {
                                   </Button>
                                 )}
                                 {(w.status === 'signed') && (
-                                  <Button size="icon" variant="ghost" aria-label="Mark received" onClick={() => advance(w, 'received', 'Waiver received.')}>
+                                  <Button size="icon" variant="ghost" aria-label="Mark received" onClick={() => advance(w, 'received')}>
                                     <CheckCircle2 className="h-4 w-4 text-green-600" />
                                   </Button>
                                 )}

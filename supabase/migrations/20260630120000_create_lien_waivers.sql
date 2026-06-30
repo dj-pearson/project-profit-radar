@@ -24,10 +24,14 @@ CREATE TABLE IF NOT EXISTS public.lien_waivers (
                   'conditional-final', 'unconditional-final')),
   status        text NOT NULL DEFAULT 'requested' CHECK (status IN (
                   'draft', 'requested', 'sent', 'signed', 'received', 'rejected')),
-  amount        numeric(14,2) NOT NULL DEFAULT 0 CHECK (amount >= 0),
+  -- Match the domain rule (validateWaiverRequest rejects <= 0): no zero default.
+  amount        numeric(14,2) NOT NULL CHECK (amount > 0),
   through_date  date NOT NULL,
   -- When true, this waiver gates release of the related contractor payment.
   holds_payment boolean NOT NULL DEFAULT true,
+  -- Soft-delete flag: a user "delete" deactivates the row so its append-only
+  -- audit history (lien_waiver_events) is never erased.
+  is_active     boolean NOT NULL DEFAULT true,
   payment_id    uuid,
   -- Reused e-signature (US-041): base64 PNG data URL captured on signing.
   signature     text,
@@ -52,8 +56,11 @@ CREATE TABLE IF NOT EXISTS public.lien_waiver_events (
   id          uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   company_id  uuid NOT NULL,
   waiver_id   uuid NOT NULL,
-  from_status text,
-  to_status   text NOT NULL,
+  -- Constrain to the same lifecycle states as lien_waivers.status.
+  from_status text CHECK (from_status IS NULL OR from_status IN (
+                'draft', 'requested', 'sent', 'signed', 'received', 'rejected')),
+  to_status   text NOT NULL CHECK (to_status IN (
+                'draft', 'requested', 'sent', 'signed', 'received', 'rejected')),
   note        text,
   created_by  uuid DEFAULT auth.uid() REFERENCES auth.users(id) ON DELETE SET NULL,
   created_at  timestamptz NOT NULL DEFAULT now(),
@@ -90,20 +97,42 @@ CREATE POLICY "Builders can manage lien waivers"
     AND get_user_role(auth.uid()) = ANY (ARRAY['admin'::user_role, 'root_admin'::user_role, 'project_manager'::user_role])
   );
 
--- Audit events: company members read; builders append (append-only — no update/delete policy).
+-- Audit events: company members read. Rows are written only by the trigger
+-- below (no client INSERT/UPDATE/DELETE policy) so the trail is append-only and
+-- cannot be forged or edited from the app.
 CREATE POLICY "Company members can view lien waiver events"
   ON public.lien_waiver_events FOR SELECT TO authenticated
   USING (company_id = get_user_company(auth.uid()));
-
-CREATE POLICY "Builders can record lien waiver events"
-  ON public.lien_waiver_events FOR INSERT TO authenticated
-  WITH CHECK (
-    company_id = get_user_company(auth.uid())
-    AND get_user_role(auth.uid()) = ANY (ARRAY['admin'::user_role, 'root_admin'::user_role, 'project_manager'::user_role])
-  );
 
 -- Keep updated_at fresh on lien_waivers writes.
 DROP TRIGGER IF EXISTS set_lien_waivers_updated_at ON public.lien_waivers;
 CREATE TRIGGER set_lien_waivers_updated_at
   BEFORE UPDATE ON public.lien_waivers
   FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
+
+-- Atomic audit trail: log every waiver creation and status change in the SAME
+-- transaction as the waiver write (no second client round trip that could fail
+-- after the fact). SECURITY DEFINER so the event insert isn't re-checked
+-- against RLS — the triggering write already passed it.
+CREATE OR REPLACE FUNCTION public.log_lien_waiver_event()
+  RETURNS trigger
+  LANGUAGE plpgsql
+  SECURITY DEFINER
+  SET search_path = public
+AS $func$
+BEGIN
+  IF TG_OP = 'INSERT' THEN
+    INSERT INTO public.lien_waiver_events (company_id, waiver_id, from_status, to_status, note, created_by)
+    VALUES (NEW.company_id, NEW.id, NULL, NEW.status, 'Waiver ' || NEW.status || '.', NEW.created_by);
+  ELSIF TG_OP = 'UPDATE' AND NEW.status IS DISTINCT FROM OLD.status THEN
+    INSERT INTO public.lien_waiver_events (company_id, waiver_id, from_status, to_status, note, created_by)
+    VALUES (NEW.company_id, NEW.id, OLD.status, NEW.status, 'Status changed to ' || NEW.status || '.', auth.uid());
+  END IF;
+  RETURN NEW;
+END;
+$func$;
+
+DROP TRIGGER IF EXISTS trg_log_lien_waiver_event ON public.lien_waivers;
+CREATE TRIGGER trg_log_lien_waiver_event
+  AFTER INSERT OR UPDATE OF status ON public.lien_waivers
+  FOR EACH ROW EXECUTE FUNCTION public.log_lien_waiver_event();

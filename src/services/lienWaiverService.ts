@@ -51,20 +51,25 @@ export interface CreateWaiverInput {
   notes?: string;
 }
 
-/** List all waivers for a company, newest first. */
+const WAIVER_COLUMNS =
+  'id, company_id, project_id, contractor_id, waiver_type, status, amount, through_date, holds_payment, payment_id, signature, signed_by, signed_at, received_at, notes, created_at';
+
+/** List a company's active waivers, newest first. */
 export async function fetchWaivers(companyId: string): Promise<LienWaiver[]> {
   const { data, error } = await supabase
     .from('lien_waivers')
-    .select(
-      'id, company_id, project_id, contractor_id, waiver_type, status, amount, through_date, holds_payment, payment_id, signature, signed_by, signed_at, received_at, notes, created_at'
-    )
+    .select(WAIVER_COLUMNS)
     .eq('company_id', companyId)
+    .eq('is_active', true)
     .order('created_at', { ascending: false });
   if (error) throw new Error(error.message);
   return (data ?? []) as LienWaiver[];
 }
 
-/** Create a waiver request and record the opening audit event. */
+/**
+ * Create a waiver request. The opening audit event is written atomically by the
+ * lien_waivers AFTER INSERT trigger (no separate client round trip).
+ */
 export async function createWaiver(input: CreateWaiverInput): Promise<LienWaiver> {
   const { data, error } = await supabase
     .from('lien_waivers')
@@ -81,20 +86,18 @@ export async function createWaiver(input: CreateWaiverInput): Promise<LienWaiver
         status: 'requested',
       },
     ])
-    .select(
-      'id, company_id, project_id, contractor_id, waiver_type, status, amount, through_date, holds_payment, payment_id, signature, signed_by, signed_at, received_at, notes, created_at'
-    )
+    .select(WAIVER_COLUMNS)
     .single();
   if (error) throw new Error(error.message);
-  const waiver = data as LienWaiver;
-  await recordEvent(input.companyId, waiver.id, null, 'requested', 'Waiver requested.');
-  return waiver;
+  return data as LienWaiver;
 }
 
 /**
- * Advance a waiver to a new status, enforcing the allowed-transition rule, and
- * append an audit event. Marking 'signed' captures the e-signature; 'received'
- * stamps received_at (which releases any payment hold).
+ * Advance a waiver to a new status. Enforces the allowed-transition rule and
+ * guards the write with the expected current status so a stale client can't
+ * clobber a row that changed underneath it. Marking 'signed' captures the
+ * e-signature; 'received' stamps received_at (which releases any payment hold).
+ * The status-change audit event is appended atomically by the trigger.
  */
 export async function advanceWaiver(params: {
   companyId: string;
@@ -102,7 +105,6 @@ export async function advanceWaiver(params: {
   to: WaiverStatus;
   signature?: string | null;
   signedBy?: string | null;
-  note?: string;
 }): Promise<void> {
   const { companyId, waiver, to } = params;
   const from = waiver.status as WaiverStatus;
@@ -120,21 +122,28 @@ export async function advanceWaiver(params: {
     patch.received_at = new Date().toISOString();
   }
 
-  const { error } = await supabase
+  // Optimistic-concurrency guard: only update if the row is still in `from`.
+  const { data, error } = await supabase
     .from('lien_waivers')
     .update(patch)
     .eq('id', waiver.id)
-    .eq('company_id', companyId);
+    .eq('company_id', companyId)
+    .eq('status', from)
+    .select('id');
   if (error) throw new Error(error.message);
-
-  await recordEvent(companyId, waiver.id, from, to, params.note);
+  if (!data || data.length === 0) {
+    throw new Error('This waiver was updated by someone else. Refresh and try again.');
+  }
 }
 
-/** Delete a waiver (builder-only via RLS). Cascade removes its audit events. */
+/**
+ * Soft-delete a waiver (builder-only via RLS). Deactivates the row rather than
+ * hard-deleting so its append-only audit trail is retained.
+ */
 export async function deleteWaiver(id: string, companyId: string): Promise<void> {
   const { error } = await supabase
     .from('lien_waivers')
-    .delete()
+    .update({ is_active: false })
     .eq('id', id)
     .eq('company_id', companyId);
   if (error) throw new Error(error.message);
@@ -150,25 +159,4 @@ export async function fetchWaiverEvents(waiverId: string, companyId: string): Pr
     .order('created_at', { ascending: false });
   if (error) throw new Error(error.message);
   return (data ?? []) as LienWaiverEvent[];
-}
-
-async function recordEvent(
-  companyId: string,
-  waiverId: string,
-  from: string | null,
-  to: string,
-  note?: string | null
-): Promise<void> {
-  const { error } = await supabase.from('lien_waiver_events').insert([
-    {
-      company_id: companyId,
-      waiver_id: waiverId,
-      from_status: from,
-      to_status: to,
-      note: note ?? null,
-    },
-  ]);
-  // The audit event is best-effort relative to the state change that already
-  // succeeded; surface it via the thrown error so the caller can log it.
-  if (error) throw new Error(error.message);
 }

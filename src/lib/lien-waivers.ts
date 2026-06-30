@@ -88,14 +88,17 @@ const ALLOWED_TRANSITIONS: Record<WaiverStatus, WaiverStatus[]> = {
   rejected: ['requested'],
 };
 
+/** Look up the metadata for a waiver type id, or undefined if unknown. */
 export function waiverTypeMeta(type: string): WaiverTypeMeta | undefined {
   return WAIVER_TYPES.find((t) => t.id === type);
 }
 
+/** Human-readable label for a waiver type, falling back to the raw id. */
 export function waiverTypeLabel(type: string): string {
   return waiverTypeMeta(type)?.label ?? type;
 }
 
+/** Metadata (label + badge tone) for a status, with a safe fallback for unknown values. */
 export function waiverStatusMeta(status: string): WaiverStatusMeta {
   return WAIVER_STATUSES.find((s) => s.id === status) ?? { id: status as WaiverStatus, label: status, tone: 'outline' };
 }
@@ -141,7 +144,7 @@ export function resolvePaymentHold(waiverStatuses: string[]): PaymentHold {
 }
 
 export interface WaiverRequestForm {
-  subcontractorId: string;
+  contractorId: string;
   projectId: string;
   type: WaiverType | '';
   amount: string | number;
@@ -151,7 +154,7 @@ export interface WaiverRequestForm {
 /** Validate a new waiver request; returns a list of human-readable errors. */
 export function validateWaiverRequest(form: WaiverRequestForm): string[] {
   const errors: string[] = [];
-  if (!form.subcontractorId) errors.push('Select a subcontractor/supplier.');
+  if (!form.contractorId) errors.push('Select a subcontractor/supplier.');
   if (!form.projectId) errors.push('Select a project.');
   if (!form.type) errors.push('Choose a waiver type.');
   const amt = typeof form.amount === 'string' ? Number(form.amount) : form.amount;
