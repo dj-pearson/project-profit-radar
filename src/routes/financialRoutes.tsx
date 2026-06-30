@@ -37,6 +37,7 @@ const CashFlowStatement = createLazyRoute(() => import('@/pages/CashFlowStatemen
 const BillPayments = createLazyRoute(() => import('@/pages/BillPayments'));
 const FiscalPeriods = createLazyRoute(() => import('@/pages/FiscalPeriods'));
 const WipReport = createLazyRoute(() => import('@/pages/WipReport'));
+const ExportCenter = createLazyRoute(() => import('@/pages/ExportCenter'));
 
 export const financialRoutes = (
   <>
@@ -84,6 +85,7 @@ export const financialRoutes = (
 
     {/* Reports */}
     <Route path="/reports" element={<RouteGuard><LazyReports /></RouteGuard>} />
+    <Route path="/export-center" element={<RouteGuard><ExportCenter /></RouteGuard>} />
     <Route path="/executive-dashboard" element={<RouteGuard><ExecutiveKpiDashboard /></RouteGuard>} />
 
     {/* Purchasing */}

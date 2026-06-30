@@ -30,6 +30,7 @@ import {
   ListChecks,
   CalendarRange,
   GitCompare,
+  FileDown,
   LucideIcon
 } from 'lucide-react';
 import { ROLE_GROUPS } from '@/components/auth/RoleGuard';
@@ -190,6 +191,7 @@ export const dashboardAreas: DashboardArea[] = [
         items: [
           { title: "Financial Dashboard", url: "/financial", icon: DollarSign, roles: ["admin", "project_manager", "accounting", "root_admin"] },
           { title: "Reports & Analytics", url: "/reports", icon: BarChart3, roles: ["admin", "project_manager", "accounting", "root_admin"] },
+          { title: "Export Center", url: "/export-center", icon: FileDown, roles: ROLE_GROUPS.PROJECT_EDITORS, description: "Export reports as PDF/Excel/CSV and schedule email delivery" },
           { title: "Executive Dashboard", url: "/executive-dashboard", icon: TrendingUp, roles: ROLE_GROUPS.ADMINS, description: "Company-wide KPIs with revenue forecasting" }
         ]
       },

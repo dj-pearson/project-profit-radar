@@ -973,6 +973,93 @@ export type Database = {
           },
         ]
       }
+      scheduled_reports: {
+        Row: {
+          company_id: string
+          created_at: string
+          created_by: string | null
+          filters: Json
+          format: string
+          frequency: string
+          id: string
+          is_active: boolean
+          name: string
+          next_run_at: string | null
+          recipients: string[]
+          start_date: string
+          template: string
+          updated_at: string
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          created_by?: string | null
+          filters?: Json
+          format?: string
+          frequency: string
+          id?: string
+          is_active?: boolean
+          name: string
+          next_run_at?: string | null
+          recipients?: string[]
+          start_date: string
+          template: string
+          updated_at?: string
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          created_by?: string | null
+          filters?: Json
+          format?: string
+          frequency?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          next_run_at?: string | null
+          recipients?: string[]
+          start_date?: string
+          template?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      export_history: {
+        Row: {
+          company_id: string
+          created_at: string
+          created_by: string | null
+          filters: Json
+          format: string
+          id: string
+          row_count: number
+          status: string
+          template: string
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          created_by?: string | null
+          filters?: Json
+          format: string
+          id?: string
+          row_count?: number
+          status?: string
+          template: string
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          created_by?: string | null
+          filters?: Json
+          format?: string
+          id?: string
+          row_count?: number
+          status?: string
+          template?: string
+        }
+        Relationships: []
+      }
       affiliate_codes: {
         Row: {
           affiliate_code: string

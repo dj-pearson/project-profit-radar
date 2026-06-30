@@ -1477,8 +1477,8 @@
         "npm run build completes successfully"
       ],
       "priority": 4,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Export Center at /export-center (nav under Financial Overview, PROJECT_EDITORS-gated). 5 templates (project-summary/financial/time/equipment/aging), PDF/Excel/CSV via lib/export-formats (jspdf+autotable, xlsx, shared exportCsv), date-range + project filters. Schedule delivery persists to scheduled_reports (frequency/recipients/start_date, next_run_at computed by nextRunDate); export_history records each on-demand export with re-download. company_id-scoped RLS + builder-manage policies. Pure logic (nextRunDate/parseRecipients/validateSchedule) unit-tested in lib/export-center. Recurring-email worker (edge fn/cron that processes due scheduled_reports) is a follow-up — UI + persistence shipped this slice."
     },
     {
       "id": "US-087",
