@@ -31,6 +31,7 @@ import {
   CalendarRange,
   GitCompare,
   FileDown,
+  FileSignature,
   LucideIcon
 } from 'lucide-react';
 import { ROLE_GROUPS } from '@/components/auth/RoleGuard';
@@ -200,7 +201,8 @@ export const dashboardAreas: DashboardArea[] = [
         items: [
           { title: "Purchase Orders", url: "/purchase-orders", icon: FileText, roles: ["admin", "project_manager", "office_staff", "accounting", "root_admin"] },
           { title: "Bid Leveling", url: "/bid-leveling", icon: GitCompare, roles: ROLE_GROUPS.PROJECT_EDITORS, description: "Compare bids against a shared scope with variance and awardee selection" },
-          { title: "Vendors", url: "/vendors", icon: Users, roles: ["admin", "project_manager", "office_staff", "accounting", "root_admin"] }
+          { title: "Vendors", url: "/vendors", icon: Users, roles: ["admin", "project_manager", "office_staff", "accounting", "root_admin"] },
+          { title: "Lien Waivers", url: "/lien-waivers", icon: FileSignature, roles: ROLE_GROUPS.PROJECT_EDITORS, description: "Conditional/unconditional waiver tracking with e-sign and payment holds" }
         ]
       },
       {

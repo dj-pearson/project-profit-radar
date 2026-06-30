@@ -18906,6 +18906,125 @@ export type Database = {
           },
         ]
       }
+      lien_waiver_events: {
+        Row: {
+          company_id: string
+          created_at: string
+          created_by: string | null
+          from_status: string | null
+          id: string
+          note: string | null
+          to_status: string
+          waiver_id: string
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          created_by?: string | null
+          from_status?: string | null
+          id?: string
+          note?: string | null
+          to_status: string
+          waiver_id: string
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          created_by?: string | null
+          from_status?: string | null
+          id?: string
+          note?: string | null
+          to_status?: string
+          waiver_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lien_waiver_events_waiver_company_fk"
+            columns: ["waiver_id", "company_id"]
+            isOneToOne: false
+            referencedRelation: "lien_waivers"
+            referencedColumns: ["id", "company_id"]
+          },
+        ]
+      }
+      lien_waivers: {
+        Row: {
+          amount: number
+          company_id: string
+          contractor_id: string
+          created_at: string
+          created_by: string | null
+          holds_payment: boolean
+          id: string
+          notes: string | null
+          payment_id: string | null
+          project_id: string
+          received_at: string | null
+          signature: string | null
+          signed_at: string | null
+          signed_by: string | null
+          status: string
+          through_date: string
+          updated_at: string
+          waiver_type: string
+        }
+        Insert: {
+          amount?: number
+          company_id: string
+          contractor_id: string
+          created_at?: string
+          created_by?: string | null
+          holds_payment?: boolean
+          id?: string
+          notes?: string | null
+          payment_id?: string | null
+          project_id: string
+          received_at?: string | null
+          signature?: string | null
+          signed_at?: string | null
+          signed_by?: string | null
+          status?: string
+          through_date: string
+          updated_at?: string
+          waiver_type: string
+        }
+        Update: {
+          amount?: number
+          company_id?: string
+          contractor_id?: string
+          created_at?: string
+          created_by?: string | null
+          holds_payment?: boolean
+          id?: string
+          notes?: string | null
+          payment_id?: string | null
+          project_id?: string
+          received_at?: string | null
+          signature?: string | null
+          signed_at?: string | null
+          signed_by?: string | null
+          status?: string
+          through_date?: string
+          updated_at?: string
+          waiver_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lien_waivers_project_company_fk"
+            columns: ["project_id", "company_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id", "company_id"]
+          },
+          {
+            foreignKeyName: "lien_waivers_contractor_company_fk"
+            columns: ["contractor_id", "company_id"]
+            isOneToOne: false
+            referencedRelation: "contractors"
+            referencedColumns: ["id", "company_id"]
+          },
+        ]
+      }
       location_history: {
         Row: {
           accuracy: number | null

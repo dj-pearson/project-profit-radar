@@ -38,6 +38,7 @@ const BillPayments = createLazyRoute(() => import('@/pages/BillPayments'));
 const FiscalPeriods = createLazyRoute(() => import('@/pages/FiscalPeriods'));
 const WipReport = createLazyRoute(() => import('@/pages/WipReport'));
 const ExportCenter = createLazyRoute(() => import('@/pages/ExportCenter'));
+const LienWaivers = createLazyRoute(() => import('@/pages/LienWaivers'));
 
 export const financialRoutes = (
   <>
@@ -93,6 +94,7 @@ export const financialRoutes = (
     <Route path="/purchase-orders/new" element={<RouteGuard><PurchaseOrderForm /></RouteGuard>} />
     <Route path="/purchase-orders/:id/edit" element={<RouteGuard><PurchaseOrderForm /></RouteGuard>} />
     <Route path="/vendors" element={<RouteGuard><LazyVendors /></RouteGuard>} />
+    <Route path="/lien-waivers" element={<RouteGuard><LienWaivers /></RouteGuard>} />
 
     {/* Integrations */}
     <Route path="/quickbooks-routing" element={<LazyQuickBooksRouting />} />

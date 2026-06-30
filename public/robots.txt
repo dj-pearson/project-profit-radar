@@ -1,6 +1,6 @@
 # Brikly Robots.txt
 # https://brikly.net
-# Last Updated: 2026-06-29
+# Last Updated: 2026-06-30
 
 # ===========================================
 # AI SEARCH ENGINE CRAWLERS - ALLOW
