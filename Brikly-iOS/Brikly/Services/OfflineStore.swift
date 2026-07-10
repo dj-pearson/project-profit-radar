@@ -45,6 +45,26 @@ final class LocalProject {
     }
 }
 
+/// Local cache of a task. Stores the full JSON-encoded task as a blob so the
+/// server schema can evolve without a SwiftData migration. Index fields (`id`,
+/// `projectId`, `createdAt`) are extracted for fast query and newest-first sort.
+@Model
+final class LocalTask {
+    @Attribute(.unique) var id: String
+    var projectId: String
+    var createdAt: Date           // used for sort (newest-first)
+    var payload: Data             // JSON-encoded `ProjectTask`
+    var lastSyncedAt: Date
+
+    init(id: String, projectId: String, createdAt: Date, payload: Data, lastSyncedAt: Date = .now) {
+        self.id = id
+        self.projectId = projectId
+        self.createdAt = createdAt
+        self.payload = payload
+        self.lastSyncedAt = lastSyncedAt
+    }
+}
+
 /// A queued write that hasn't been confirmed by the server yet. The
 /// `idempotencyKey` is generated client-side and included in the request so
 /// the backend can deduplicate on retry. `entityType` identifies the table
@@ -103,6 +123,7 @@ final class OfflineStore {
         let schema = Schema([
             LocalDailyReport.self,
             LocalProject.self,
+            LocalTask.self,
             PendingMutation.self,
         ])
         // Local-only — no CloudKit. Construction crews don't expect device-to-device sync;
@@ -234,6 +255,63 @@ final class OfflineStore {
         guard let rows = try? context.fetch(descriptor) else { return [] }
         return rows.compactMap { row in
             try? decoder.decode(Project.self, from: row.payload)
+        }
+    }
+
+    // MARK: Tasks
+
+    /// Replace the cached set for a project with the supplied authoritative server list.
+    func cacheTasks(_ tasks: [ProjectTask], projectId: String) {
+        let existingIds = Set(tasks.map(\.id))
+        let predicate = #Predicate<LocalTask> { $0.projectId == projectId }
+        let descriptor = FetchDescriptor<LocalTask>(predicate: predicate)
+        if let cached = try? context.fetch(descriptor) {
+            for row in cached where !existingIds.contains(row.id) {
+                context.delete(row)
+            }
+        }
+
+        for task in tasks {
+            upsertTask(task)
+        }
+        try? context.save()
+    }
+
+    /// Insert or update a single task in the cache.
+    func upsertTask(_ task: ProjectTask) {
+        let id = task.id
+        let predicate = #Predicate<LocalTask> { $0.id == id }
+        let descriptor = FetchDescriptor<LocalTask>(predicate: predicate)
+        let payload = (try? encoder.encode(task)) ?? Data()
+
+        if let existing = try? context.fetch(descriptor).first {
+            existing.projectId = task.projectId
+            existing.createdAt = task.createdAt
+            existing.payload = payload
+            existing.lastSyncedAt = .now
+        } else {
+            let row = LocalTask(
+                id: task.id,
+                projectId: task.projectId,
+                createdAt: task.createdAt,
+                payload: payload
+            )
+            context.insert(row)
+        }
+        try? context.save()
+    }
+
+    /// Fetch cached tasks for a project, newest-first (by `createdAt`).
+    func cachedTasks(projectId: String) -> [ProjectTask] {
+        let predicate = #Predicate<LocalTask> { $0.projectId == projectId }
+        var descriptor = FetchDescriptor<LocalTask>(
+            predicate: predicate,
+            sortBy: [SortDescriptor(\.createdAt, order: .reverse)]
+        )
+        descriptor.fetchLimit = 500
+        guard let rows = try? context.fetch(descriptor) else { return [] }
+        return rows.compactMap { row in
+            try? decoder.decode(ProjectTask.self, from: row.payload)
         }
     }
 
