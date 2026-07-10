@@ -31,7 +31,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { ResponsiveContainer } from '@/components/layout/ResponsiveContainer';
 import { mobileFilterClasses } from '@/utils/mobileHelpers';
-import { Upload, FileText, Search, Filter, Brain, Database, Download, Trash2, Tag, FolderInput, Eye } from 'lucide-react';
+import { Upload, FileText, Search, Brain, Database, Download, Trash2, Tag, FolderInput, Eye } from 'lucide-react';
 import { DocumentPreviewModal } from '@/components/documents/DocumentPreviewModal';
 
 interface Document {

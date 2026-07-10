@@ -9,7 +9,7 @@ import { ResponsiveContainer } from '@/components/layout/ResponsiveContainer';
 import { MobileBottomNav } from '@/components/mobile/MobileBottomNav';
 import { useIsMobile } from '@/hooks/useMediaQuery';
 import TrialStatusBanner from '@/components/TrialStatusBanner';
-import { Home, Building2, DollarSign, Users, Settings, Menu } from 'lucide-react';
+import { Home, Building2, DollarSign, Users, Settings } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface MobileDashboardLayoutProps {

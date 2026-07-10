@@ -155,3 +155,7 @@ __pycache__/
 # Transient typecheck logs / build cache (US-212 burndown working files)
 tsc-full.txt
 .cache/
+tsgo-out.txt
+tsgo-time.txt
+tsconfig.tsgo.json
+tsgo-out*.txt

@@ -23,7 +23,6 @@ import {
 } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { DatePicker } from '@/components/ui/date-picker';
-import { Select } from '@/components/ui/select';
 
 interface PostComposerProps {
   accounts: any[];

@@ -13,7 +13,7 @@ import { summarizePunchList } from '@/lib/projects/punchListProgress';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
-import { CheckSquare, PlusCircle, ExternalLink, Edit, Trash2, Calendar, User, MapPin, AlertTriangle, CheckCircle, Clock, Play, DollarSign, Search, Filter } from 'lucide-react';
+import { CheckSquare, PlusCircle, ExternalLink, Edit, Trash2, Calendar, User, MapPin, AlertTriangle, CheckCircle, Clock, Play, DollarSign, Search } from 'lucide-react';
 
 interface PunchListItem {
   id: string;

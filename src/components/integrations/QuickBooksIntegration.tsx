@@ -8,7 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { validateRedirectUrl } from '@/lib/security/urlValidation';
-import { RefreshCw, CheckCircle, AlertCircle, DollarSign, ArrowUpDown } from 'lucide-react';
+import { RefreshCw, AlertCircle, DollarSign, ArrowUpDown } from 'lucide-react';
 import { QuickBooksSync } from './QuickBooksSync';
 import { QuickBooksSyncHistory } from './QuickBooksSyncHistory';
 

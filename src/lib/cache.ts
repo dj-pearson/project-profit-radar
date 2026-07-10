@@ -1,4 +1,3 @@
-import { logger } from '@/lib/logger';
 /**
  * Intelligent Caching Layer
  * Supports Redis (production) and in-memory (development) caching

@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Calculator, Plus, Edit, Save, X } from 'lucide-react';
+import { Plus, Edit, Save, X } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 
 interface LaborBurdenRate {

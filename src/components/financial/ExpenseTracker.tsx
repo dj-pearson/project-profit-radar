@@ -10,7 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
-import { Receipt, Plus, Filter, CheckCircle, Clock, AlertCircle } from 'lucide-react';
+import { Receipt, Plus, CheckCircle, Clock, AlertCircle } from 'lucide-react';
 
 interface Expense {
   id: string;

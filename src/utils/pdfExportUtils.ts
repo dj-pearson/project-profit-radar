@@ -1,6 +1,6 @@
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
-import { Project, Task } from '@/types/schedule';
+import { Project } from '@/types/schedule';
 
 interface PDFExportOptions {
   includeGantt?: boolean;

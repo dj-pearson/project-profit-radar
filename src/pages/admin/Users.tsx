@@ -15,7 +15,7 @@ import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { useImpersonation } from '@/hooks/useImpersonation';
-import { Users, Search, Filter, UserCheck, UserX, Building2, Mail, Phone, Eye, UserCog } from 'lucide-react';
+import { Users, Search, UserCheck, UserX, Building2, Mail, Eye, UserCog } from 'lucide-react';
 
 interface UserProfile {
   id: string;

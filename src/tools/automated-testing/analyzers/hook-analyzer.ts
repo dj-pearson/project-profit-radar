@@ -9,7 +9,6 @@
  */
 
 import * as fs from 'fs';
-import * as path from 'path';
 import type { HookAnalysis, HookIssue } from '../types';
 import { Logger } from '../utils/logger';
 import { getFiles } from '../utils/helpers';

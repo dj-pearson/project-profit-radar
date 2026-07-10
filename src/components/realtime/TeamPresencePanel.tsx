@@ -16,7 +16,7 @@ import {
   TabsList,
   TabsTrigger,
 } from '@/components/ui/tabs';
-import { Users, Filter, Search, Settings, Circle, Clock, Minus } from 'lucide-react';
+import { Users, Search, Settings, Circle, Clock, Minus } from 'lucide-react';
 import { useSimplePresence } from '@/hooks/useSimplePresence';
 import { UserPresenceIndicator } from './UserPresenceIndicator';
 

@@ -9,7 +9,7 @@ import {
   MobileSelectField,
   MobileToggleRow,
 } from '@/components/mobile/forms';
-import { AlertTriangle, Camera, MapPin, Send, Phone, FileText, Mic, MicOff, AlertCircle, CheckCircle2, X, Plus, Users } from 'lucide-react';
+import { AlertTriangle, Camera, MapPin, Send, FileText, Mic, MicOff, AlertCircle, CheckCircle2, X, Plus, Users } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { useOfflineSync } from '@/hooks/useOfflineSync';
