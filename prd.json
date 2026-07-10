@@ -3469,7 +3469,7 @@
       ],
       "priority": 1,
       "passes": false,
-      "notes": "Source: testing/CI audit. RELEASE BLOCKER \u2014 CI typecheck job cannot gate merges until this passes. Large; split into batches per directory. tsc-output.txt is a committed snapshot, re-measure before starting."
+      "notes": "IN PROGRESS (release blocker). tsc full run is impractical here (~60min/3GB). TOOLING: use the TS7 native compiler for a ~2min verify loop: tsgo -p tsconfig.tsgo.json (a baseUrl-free mirror of tsconfig.app.json; tsgo count matches tsc within ~1). Binary at ~/.npm/_npx/*/node_modules/@typescript/native-preview-linux-x64/lib/tsgo (npx --yes @typescript/native-preview tsgo). PROGRESS: 2217 -> 2117 errors. Batch 1: removed unused imports (TS6133 import subset), -68. Batch 2: coalesced nullable numerics in arithmetic (TS18047/18048), -32, incl a real divide-by-zero guard. Both verified: no new/syntax errors, no newly-broken files. NEXT SAFE BATCHES: remaining null-safety object guards, unused type decls (TS6196), Supabase Property-does-not-exist clusters (types out of sync), TS2345/2322 per-file. AC lazy-route + jest-dom errors already resolved by prior work. Mark passes=true ONLY when tsc --noEmit is fully green. lazy-route/jest-dom items from the original snapshot are already gone."
     },
     {
       "id": "US-213",
