@@ -68,7 +68,7 @@ export const CashFlowForecasting: React.FC = () => {
 
       const processedData: CashFlowData[] = (data || []).map(item => ({
         ...item,
-        variance: (item.actual_income - item.actual_expenses) - (item.projected_income - item.projected_expenses)
+        variance: ((item.actual_income ?? 0) - (item.actual_expenses ?? 0)) - ((item.projected_income ?? 0) - (item.projected_expenses ?? 0))
       }));
 
       setCashFlowData(processedData);

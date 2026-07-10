@@ -133,6 +133,13 @@ export const saveQRCodeToDatabase = async (
 
     if (qrError) throw qrError;
 
+    if (!qrData) {
+      return {
+        success: false,
+        error: 'Failed to generate QR code',
+      };
+    }
+
     if (!qrData.success) {
       return {
         success: false,

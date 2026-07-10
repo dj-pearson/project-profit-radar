@@ -447,13 +447,13 @@ export const ConversionAnalytics = () => {
               <MetricCard
                 title="Qualified Leads"
                 value={leadMetrics?.qualified_leads.toLocaleString() || '0'}
-                subtitle={`${((leadMetrics?.qualified_leads / (leadMetrics?.total_leads || 1)) * 100).toFixed(1)}% of total`}
+                subtitle={`${(((leadMetrics?.qualified_leads ?? 0) / (leadMetrics?.total_leads || 1)) * 100).toFixed(1)}% of total`}
                 icon={CheckCircle}
               />
               <MetricCard
                 title="Converted Leads"
                 value={leadMetrics?.converted_leads.toLocaleString() || '0'}
-                subtitle={`${((leadMetrics?.converted_leads / (leadMetrics?.total_leads || 1)) * 100).toFixed(1)}% conversion rate`}
+                subtitle={`${(((leadMetrics?.converted_leads ?? 0) / (leadMetrics?.total_leads || 1)) * 100).toFixed(1)}% conversion rate`}
                 icon={Target}
               />
               <MetricCard
@@ -611,13 +611,13 @@ export const ConversionAnalytics = () => {
                   <div className="grid grid-cols-2 gap-4 pt-4">
                     <div className="text-center p-4 bg-gray-50 rounded-lg">
                       <p className="text-2xl font-bold text-construction-orange">
-                        {Math.round((onboardingMetrics?.average_points / 170) * 100 || 0)}%
+                        {Math.round(((onboardingMetrics?.average_points ?? 0) / 170) * 100 || 0)}%
                       </p>
                       <p className="text-sm text-muted-foreground mt-1">Avg Point Progress</p>
                     </div>
                     <div className="text-center p-4 bg-gray-50 rounded-lg">
                       <p className="text-2xl font-bold text-construction-orange">
-                        {Math.round((onboardingMetrics?.average_tasks_completed / 9) * 100 || 0)}%
+                        {Math.round(((onboardingMetrics?.average_tasks_completed ?? 0) / 9) * 100 || 0)}%
                       </p>
                       <p className="text-sm text-muted-foreground mt-1">Avg Task Progress</p>
                     </div>

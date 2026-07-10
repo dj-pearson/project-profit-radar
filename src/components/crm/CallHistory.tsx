@@ -159,7 +159,7 @@ export const CallHistory = ({
                     : "No start time"}
                 </div>
 
-                {call.duration_seconds > 0 && (
+                {(call.duration_seconds ?? 0) > 0 && (
                   <div className="text-sm">
                     Duration: {formatDuration(call.duration_seconds)}
                   </div>
