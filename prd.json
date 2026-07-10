@@ -1478,7 +1478,7 @@
       ],
       "priority": 4,
       "passes": true,
-      "notes": "Export Center at /export-center (nav under Financial Overview, PROJECT_EDITORS-gated). 5 templates (project-summary/financial/time/equipment/aging), PDF/Excel/CSV via lib/export-formats (jspdf+autotable, xlsx, shared exportCsv), date-range + project filters. Schedule delivery persists to scheduled_reports (frequency/recipients/start_date, next_run_at computed by nextRunDate); export_history records each on-demand export with re-download. company_id-scoped RLS + builder-manage policies. Pure logic (nextRunDate/parseRecipients/validateSchedule) unit-tested in lib/export-center. Recurring-email worker (edge fn/cron that processes due scheduled_reports) is a follow-up — UI + persistence shipped this slice."
+      "notes": "Export Center at /export-center (nav under Financial Overview, PROJECT_EDITORS-gated). 5 templates (project-summary/financial/time/equipment/aging), PDF/Excel/CSV via lib/export-formats (jspdf+autotable, xlsx, shared exportCsv), date-range + project filters. Schedule delivery persists to scheduled_reports (frequency/recipients/start_date, next_run_at computed by nextRunDate); export_history records each on-demand export with re-download. company_id-scoped RLS + builder-manage policies. Pure logic (nextRunDate/parseRecipients/validateSchedule) unit-tested in lib/export-center. Recurring-email worker (edge fn/cron that processes due scheduled_reports) is a follow-up \u2014 UI + persistence shipped this slice."
     },
     {
       "id": "US-087",
@@ -2193,8 +2193,8 @@
         "package.json scripts for mobile build/run point to the canonical project"
       ],
       "priority": 1,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "COMPLETED. Canonical iOS app = native Swift Brikly-iOS/ (owns com.brikly.app). Expo mobile-app/ archived: bundle id/Android package suffixed to com.brikly.app.expo, README marked ARCHIVED. Capacitor documented as web-wrapper (not shipping surface). CLAUDE.md > Mobile Strategy section added; README + package.json mobile scripts (ios:open/build/test) point to canonical native project."
     },
     {
       "id": "US-130",

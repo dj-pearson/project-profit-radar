@@ -1,4 +1,17 @@
-# Brikly Mobile App
+# Brikly Mobile App (ARCHIVED — Expo/React Native experiment)
+
+> **⚠️ ARCHIVED / EXPERIMENTAL — NOT the shipping iOS app.**
+>
+> As of the iOS consolidation decision (US-129), the **canonical iOS application is the
+> native Swift/SwiftUI project at [`../Brikly-iOS/`](../Brikly-iOS/)**, which owns the
+> `com.brikly.app` bundle identifier and is the App Store shipping surface. All active
+> mobile development (offline-first sync, glass design system) happens there.
+>
+> This Expo/React Native project is retained for reference and as a possible future
+> cross-platform (Android) exploration only. It **no longer claims `com.brikly.app`**
+> (its bundle id / Android package were suffixed with `.expo` to remove the collision)
+> and must not be submitted to the App Store. Do not build on it without first
+> re-confirming mobile strategy — see `CLAUDE.md > Mobile Strategy`.
 
 Native iOS and Android mobile application built with Expo and React Native.
 
