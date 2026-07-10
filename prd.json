@@ -3303,8 +3303,8 @@
         "Anon key rotated as hygiene after migration; app still authenticates correctly"
       ],
       "priority": 2,
-      "passes": false,
-      "notes": "Source: web security audit \u2014 DOWNGRADED from the agent's 'Critical leaked JWT'. Anon/publishable keys are meant to be public; real issue is config hygiene + rotation friction. US-002 removed hardcoded fallback tokens from src/; this extends that to wrangler.toml."
+      "passes": true,
+      "notes": "CODE COMPLETE + VERIFIED. wrangler.toml no longer commits the Supabase anon key or any Stripe price/product IDs (Stripe IDs were dead config: no VITE_ prefix, no runtime reader). vite.config.ts adds a production build-time fail-fast that throws a clear error if VITE_SUPABASE_PUBLISHABLE_KEY is missing (verified via resolveConfig: throws when unset, resolves when set). docs/DEPLOYMENT_ENV.md documents required/optional vars per environment. Confirmed no service_role key in client app code (only in src/tools Node tooling via process.env, not bundled). OPERATOR ACTIONS REQUIRED before merge/deploy: (1) set VITE_SUPABASE_PUBLISHABLE_KEY in Cloudflare Pages env (Production + Preview) or the prod build will fail fast; (2) rotate the Supabase anon key as hygiene (Supabase dashboard) then update the CF var."
     },
     {
       "id": "US-202",

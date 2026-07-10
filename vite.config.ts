@@ -1,4 +1,4 @@
-import { defineConfig } from "vite";
+import { defineConfig, loadEnv } from "vite";
 import react from "@vitejs/plugin-react";
 import path from "path";
 import { componentTagger } from "lovable-tagger";
@@ -8,7 +8,29 @@ import { sentryVitePlugin } from '@sentry/vite-plugin';
 import { copyFileSync, existsSync, mkdirSync } from 'fs';
 
 // https://vitejs.dev/config/
-export default defineConfig(({ mode }) => ({
+export default defineConfig(({ mode }) => {
+  // Load env for the target mode (Cloudflare Pages injects [vars] as process.env;
+  // local builds read .env files). No prefix filter so we can read any key.
+  const env = loadEnv(mode, process.cwd(), "");
+
+  // Fail the production build FAST if required public runtime config is missing.
+  // These values are injected via the Cloudflare Pages environment (per env),
+  // NOT committed to wrangler.toml. See docs/DEPLOYMENT_ENV.md.
+  if (mode === "production") {
+    const REQUIRED_PUBLIC_VARS = ["VITE_SUPABASE_PUBLISHABLE_KEY"];
+    const missing = REQUIRED_PUBLIC_VARS.filter(
+      (k) => !env[k] || env[k].trim() === ""
+    );
+    if (missing.length > 0) {
+      throw new Error(
+        `[build] Missing required environment variable(s): ${missing.join(", ")}. ` +
+          "Set them in the Cloudflare Pages environment for this deployment " +
+          "(Production and Preview) — see docs/DEPLOYMENT_ENV.md."
+      );
+    }
+  }
+
+  return {
   server: {
     host: "::",
     port: 8080,
@@ -253,4 +275,5 @@ export default defineConfig(({ mode }) => ({
     // Strip console logs in production for better performance
     drop: mode === 'production' ? ['console', 'debugger'] : [],
   },
-}));
+  };
+});
