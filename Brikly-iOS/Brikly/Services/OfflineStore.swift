@@ -65,6 +65,46 @@ final class LocalTask {
     }
 }
 
+/// Local cache of a job cost entry. Index fields (`id`, `projectId`, `date`)
+/// are extracted for fast query and newest-first sort; the full row is stored
+/// as a JSON blob. Job costs are append-only by domain.
+@Model
+final class LocalJobCost {
+    @Attribute(.unique) var id: String
+    var projectId: String
+    var date: String              // yyyy-MM-dd — used for sort
+    var payload: Data             // JSON-encoded `JobCost`
+    var lastSyncedAt: Date
+
+    init(id: String, projectId: String, date: String, payload: Data, lastSyncedAt: Date = .now) {
+        self.id = id
+        self.projectId = projectId
+        self.date = date
+        self.payload = payload
+        self.lastSyncedAt = lastSyncedAt
+    }
+}
+
+/// Local cache of a cost code — read-only reference data. Kept so the job-cost
+/// form can resolve cost-code names offline. Never enqueued (reference data is
+/// server-owned and only ever read on the device).
+@Model
+final class LocalCostCode {
+    @Attribute(.unique) var id: String
+    var companyId: String
+    var code: String              // used for sort
+    var payload: Data             // JSON-encoded `CostCode`
+    var lastSyncedAt: Date
+
+    init(id: String, companyId: String, code: String, payload: Data, lastSyncedAt: Date = .now) {
+        self.id = id
+        self.companyId = companyId
+        self.code = code
+        self.payload = payload
+        self.lastSyncedAt = lastSyncedAt
+    }
+}
+
 /// A queued write that hasn't been confirmed by the server yet. The
 /// `idempotencyKey` is generated client-side and included in the request so
 /// the backend can deduplicate on retry. `entityType` identifies the table
@@ -124,6 +164,8 @@ final class OfflineStore {
             LocalDailyReport.self,
             LocalProject.self,
             LocalTask.self,
+            LocalJobCost.self,
+            LocalCostCode.self,
             PendingMutation.self,
         ])
         // Local-only — no CloudKit. Construction crews don't expect device-to-device sync;
@@ -312,6 +354,118 @@ final class OfflineStore {
         guard let rows = try? context.fetch(descriptor) else { return [] }
         return rows.compactMap { row in
             try? decoder.decode(ProjectTask.self, from: row.payload)
+        }
+    }
+
+    // MARK: Job costs
+
+    /// Replace the cached set for a project with the supplied authoritative server list.
+    func cacheJobCosts(_ costs: [JobCost], projectId: String) {
+        let existingIds = Set(costs.map(\.id))
+        let predicate = #Predicate<LocalJobCost> { $0.projectId == projectId }
+        let descriptor = FetchDescriptor<LocalJobCost>(predicate: predicate)
+        if let cached = try? context.fetch(descriptor) {
+            for row in cached where !existingIds.contains(row.id) {
+                context.delete(row)
+            }
+        }
+
+        for cost in costs {
+            upsertJobCost(cost)
+        }
+        try? context.save()
+    }
+
+    /// Insert or update a single job cost in the cache.
+    func upsertJobCost(_ cost: JobCost) {
+        let id = cost.id
+        let predicate = #Predicate<LocalJobCost> { $0.id == id }
+        let descriptor = FetchDescriptor<LocalJobCost>(predicate: predicate)
+        let payload = (try? encoder.encode(cost)) ?? Data()
+
+        if let existing = try? context.fetch(descriptor).first {
+            existing.projectId = cost.projectId
+            existing.date = cost.date
+            existing.payload = payload
+            existing.lastSyncedAt = .now
+        } else {
+            let row = LocalJobCost(
+                id: cost.id,
+                projectId: cost.projectId,
+                date: cost.date,
+                payload: payload
+            )
+            context.insert(row)
+        }
+        try? context.save()
+    }
+
+    /// Fetch cached job costs for a project, newest-first (by `date`).
+    func cachedJobCosts(projectId: String) -> [JobCost] {
+        let predicate = #Predicate<LocalJobCost> { $0.projectId == projectId }
+        var descriptor = FetchDescriptor<LocalJobCost>(
+            predicate: predicate,
+            sortBy: [SortDescriptor(\.date, order: .reverse)]
+        )
+        descriptor.fetchLimit = 500
+        guard let rows = try? context.fetch(descriptor) else { return [] }
+        return rows.compactMap { row in
+            try? decoder.decode(JobCost.self, from: row.payload)
+        }
+    }
+
+    // MARK: Cost codes (read-only reference data)
+
+    /// Replace the cached cost codes for a company with the authoritative server list.
+    func cacheCostCodes(_ codes: [CostCode], companyId: String) {
+        let existingIds = Set(codes.map(\.id))
+        let predicate = #Predicate<LocalCostCode> { $0.companyId == companyId }
+        let descriptor = FetchDescriptor<LocalCostCode>(predicate: predicate)
+        if let cached = try? context.fetch(descriptor) {
+            for row in cached where !existingIds.contains(row.id) {
+                context.delete(row)
+            }
+        }
+
+        for code in codes {
+            upsertCostCode(code)
+        }
+        try? context.save()
+    }
+
+    func upsertCostCode(_ code: CostCode) {
+        let id = code.id
+        let predicate = #Predicate<LocalCostCode> { $0.id == id }
+        let descriptor = FetchDescriptor<LocalCostCode>(predicate: predicate)
+        let payload = (try? encoder.encode(code)) ?? Data()
+
+        if let existing = try? context.fetch(descriptor).first {
+            existing.companyId = code.companyId
+            existing.code = code.code
+            existing.payload = payload
+            existing.lastSyncedAt = .now
+        } else {
+            let row = LocalCostCode(
+                id: code.id,
+                companyId: code.companyId,
+                code: code.code,
+                payload: payload
+            )
+            context.insert(row)
+        }
+        try? context.save()
+    }
+
+    /// Fetch cached cost codes for a company, sorted by `code` ascending.
+    func cachedCostCodes(companyId: String) -> [CostCode] {
+        let predicate = #Predicate<LocalCostCode> { $0.companyId == companyId }
+        let descriptor = FetchDescriptor<LocalCostCode>(
+            predicate: predicate,
+            sortBy: [SortDescriptor(\.code, order: .forward)]
+        )
+        guard let rows = try? context.fetch(descriptor) else { return [] }
+        return rows.compactMap { row in
+            try? decoder.decode(CostCode.self, from: row.payload)
         }
     }
 

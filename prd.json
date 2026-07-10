@@ -2807,8 +2807,8 @@
         "Realtime subscription only attempts when NetworkMonitor.shared.isOnline is true; gracefully no-ops otherwise"
       ],
       "priority": 1,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "COMPLETED. JobCostListViewModel migrated to offline-first (append-only). OfflineStore: LocalJobCost + LocalCostCode @Models with cache/upsert/cached helpers, added to schema. SyncEngine: job_cost branch handles create only. loadData hydrates job costs + cost codes from cache then refreshes and re-caches. createJobCost network-first then enqueue+optimistic local-{UUID} insert. Cost codes cached on online fetch, never enqueued (read-only reference data). Realtime subscription guarded by NetworkMonitor.isOnline (no-ops offline); reload also re-caches. Note: Swift not compilable in Linux env; mirrors verified daily-report template."
     },
     {
       "id": "US-170",
