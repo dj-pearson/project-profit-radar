@@ -172,7 +172,7 @@ const ExecutiveDashboard: React.FC = () => {
 
       const projectsWithCosts = projects.map(project => {
         const totalCosts = project.job_costs?.reduce((sum, cost) => sum + (cost.total_cost || 0), 0) || 0;
-        const profitMargin = project.budget > 0 ? ((project.budget - totalCosts) / project.budget) * 100 : 0;
+        const profitMargin = (project.budget ?? 0) > 0 ? (((project.budget ?? 0) - totalCosts) / (project.budget ?? 0)) * 100 : 0;
         return { ...project, totalCosts, profitMargin };
       });
 
@@ -283,7 +283,7 @@ const ExecutiveDashboard: React.FC = () => {
     if (projects) {
       const healthData: ProjectHealth[] = projects.map(project => {
         const totalCosts = project.job_costs?.reduce((sum, cost) => sum + (cost.total_cost || 0), 0) || 0;
-        const budgetVariance = project.budget > 0 ? ((totalCosts - project.budget) / project.budget) * 100 : 0;
+        const budgetVariance = (project.budget ?? 0) > 0 ? ((totalCosts - (project.budget ?? 0)) / (project.budget ?? 0)) * 100 : 0;
         
         const scheduleVariance = project.end_date 
           ? Math.ceil((new Date(project.end_date).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24))

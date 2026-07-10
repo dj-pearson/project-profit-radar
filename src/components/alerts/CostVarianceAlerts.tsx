@@ -52,7 +52,7 @@ const CostVarianceAlerts = () => {
           sum + (cost.labor_cost || 0) + (cost.material_cost || 0) + 
           (cost.equipment_cost || 0) + (cost.other_cost || 0), 0) || 0;
 
-        const variance = ((totalCost - project.budget) / project.budget) * 100;
+        const variance = project.budget ? ((totalCost - project.budget) / project.budget) * 100 : 0;
         
         if (variance > 10) { // Alert if over 10% budget
           alertsData.push({

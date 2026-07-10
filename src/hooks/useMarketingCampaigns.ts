@@ -723,8 +723,8 @@ export function useCampaignABTests(campaignId: string, options?: { enabled?: boo
           sent: c.total_sent || 0,
           opened: c.total_opened || 0,
           clicked: c.total_clicked || 0,
-          open_rate: c.total_delivered > 0 ? ((c.total_opened || 0) / c.total_delivered) * 100 : 0,
-          click_rate: c.total_opened > 0 ? ((c.total_clicked || 0) / c.total_opened) * 100 : 0,
+          open_rate: (c.total_delivered ?? 0) > 0 ? ((c.total_opened || 0) / (c.total_delivered ?? 0)) * 100 : 0,
+          click_rate: (c.total_opened ?? 0) > 0 ? ((c.total_clicked || 0) / (c.total_opened ?? 0)) * 100 : 0,
         },
       }));
     },

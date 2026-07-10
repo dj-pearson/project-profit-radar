@@ -129,14 +129,15 @@ class AIConstructionService {
       const completionPercentage = project.completion_percentage || 0;
       
       // Simple prediction based on current progress
-      const predictedFinalCost = Math.round(project.budget * (1 + Math.random() * 0.2 - 0.1)); // ±10% variance
-      const varianceFromBudget = predictedFinalCost - project.budget;
+      const budget = project.budget ?? 0;
+      const predictedFinalCost = Math.round(budget * (1 + Math.random() * 0.2 - 0.1)); // ±10% variance
+      const varianceFromBudget = predictedFinalCost - budget;
 
       // Calculate completion probabilities
       const completionProbability = {
-        onBudget: Math.max(0, 100 - Math.abs((varianceFromBudget / project.budget) * 200)),
-        within5Percent: Math.max(0, 100 - Math.abs((varianceFromBudget / project.budget) * 150)),
-        within10Percent: Math.max(0, 100 - Math.abs((varianceFromBudget / project.budget) * 100))
+        onBudget: Math.max(0, 100 - Math.abs((varianceFromBudget / (budget || 1)) * 200)),
+        within5Percent: Math.max(0, 100 - Math.abs((varianceFromBudget / (budget || 1)) * 150)),
+        within10Percent: Math.max(0, 100 - Math.abs((varianceFromBudget / (budget || 1)) * 100))
       };
 
       const prediction: CostPrediction = {

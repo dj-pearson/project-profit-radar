@@ -211,7 +211,7 @@ export const ConversionAnalytics = () => {
       const topCampaigns = campaigns
         ?.map(c => ({
           campaign: c.campaign_name,
-          open_rate: c.total_sent > 0 ? (c.total_opened / c.total_sent) * 100 : 0,
+          open_rate: (c.total_sent ?? 0) > 0 ? ((c.total_opened ?? 0) / (c.total_sent ?? 0)) * 100 : 0,
         }))
         .sort((a, b) => b.open_rate - a.open_rate)
         .slice(0, 5) || [];
