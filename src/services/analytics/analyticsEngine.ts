@@ -5,7 +5,6 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { cache, QueryCache } from '@/lib/cache';
-import { logger } from '@/lib/logger';
 
 // ============================================================================
 // Types & Interfaces

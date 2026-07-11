@@ -1839,7 +1839,7 @@ export function useCRMGlobalSearch(query: string, options?: { enabled?: boolean 
       // Search opportunities
       const { data: opportunities } = await supabase
         .from('opportunities')
-        .select('id, name, value')
+        .select('id, name, estimated_value')
         .ilike('name', searchPattern)
         .limit(10);
 
@@ -1848,23 +1848,23 @@ export function useCRMGlobalSearch(query: string, options?: { enabled?: boolean 
           type: 'opportunity',
           id: opp.id,
           title: opp.name,
-          subtitle: opp.value ? `$${opp.value.toLocaleString()}` : undefined,
+          subtitle: opp.estimated_value ? `$${opp.estimated_value.toLocaleString()}` : undefined,
         });
       }
 
       // Search deals
       const { data: deals } = await supabase
         .from('deals')
-        .select('id, deal_name, deal_value')
-        .ilike('deal_name', searchPattern)
+        .select('id, name, estimated_value')
+        .ilike('name', searchPattern)
         .limit(10);
 
       for (const deal of deals || []) {
         results.push({
           type: 'deal',
           id: deal.id,
-          title: deal.deal_name,
-          subtitle: deal.deal_value ? `$${deal.deal_value.toLocaleString()}` : undefined,
+          title: deal.name,
+          subtitle: deal.estimated_value ? `$${deal.estimated_value.toLocaleString()}` : undefined,
         });
       }
 
@@ -1899,12 +1899,12 @@ export function useCRMDashboardStats(options?: { enabled?: boolean }) {
         supabase.from('deals').select('*', { count: 'exact', head: true }),
         supabase.from('leads').select('id, created_at').gte('created_at', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()),
         supabase.from('crm_activities').select('id, created_at').gte('created_at', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()),
-        supabase.from('opportunities').select('value').not('value', 'is', null),
-        supabase.from('deals').select('deal_value').not('deal_value', 'is', null),
+        supabase.from('opportunities').select('estimated_value').not('estimated_value', 'is', null),
+        supabase.from('deals').select('estimated_value').not('estimated_value', 'is', null),
       ]);
 
-      const totalOpportunityValue = opportunityValues?.reduce((sum, o) => sum + (o.value || 0), 0) || 0;
-      const totalDealValue = dealValues?.reduce((sum, d) => sum + (d.deal_value || 0), 0) || 0;
+      const totalOpportunityValue = opportunityValues?.reduce((sum, o) => sum + (o.estimated_value || 0), 0) || 0;
+      const totalDealValue = dealValues?.reduce((sum, d) => sum + (d.estimated_value || 0), 0) || 0;
 
       return {
         total_leads: leadCount || 0,

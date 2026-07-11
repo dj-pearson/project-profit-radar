@@ -6,7 +6,7 @@ import { QuickAnswerSnippet, LastUpdated } from "@/components/seo/QuickAnswerSni
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Check, X, Star, DollarSign, Clock, Users, ArrowRight } from "lucide-react";
+import { Check, X, Star, DollarSign, Clock, ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
 import BreadcrumbsNavigation from "@/components/BreadcrumbsNavigation";
 

@@ -2,22 +2,20 @@ name = "brikly"
 compatibility_date = "2024-07-01"
 pages_build_output_dir = "dist"
 
-# Environment variables for build-time injection into Vite bundle
-# These override any variables set in Cloudflare Pages dashboard
+# Non-secret structural build config only.
+#
+# Environment-specific runtime config (the Supabase anon/publishable key and all
+# Stripe price/product IDs) is intentionally NOT committed here. It is injected
+# per environment via the Cloudflare Pages dashboard (Production and Preview),
+# so keys can be rotated and IDs swapped without a source change and so a prod
+# build can never accidentally ship staging/test values.
+#
+# Required per-environment variables are documented in docs/DEPLOYMENT_ENV.md.
+# The production build fails fast (see vite.config.ts) if a required public var
+# is missing, so a misconfigured environment is caught at build time.
+#
+# NOTE: [vars] here would OVERRIDE the Cloudflare dashboard values, so we keep
+# only the stable public endpoints below. Do not add keys or price IDs.
 [vars]
 VITE_SUPABASE_URL = "https://api.brikly.net"
-VITE_SUPABASE_PUBLISHABLE_KEY = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJzdXBhYmFzZSIsImlhdCI6MTc2NjAwNzA2MCwiZXhwIjo0OTIxNjgwNjYwLCJyb2xlIjoiYW5vbiJ9.0ZmnSLWlt3HntC4M7j12YgPt7DwuP23EoZzCDkp9kFk"
 VITE_EDGE_FUNCTIONS_URL = "https://functions.brikly.net"
-
-# Stripe Configuration (LIVE MODE - Production)
-STRIPE_PRICE_STARTER_MONTHLY = "price_1SjCH3EEswwWFq6K0ZkPd6yn"
-STRIPE_PRICE_STARTER_ANNUAL = "price_1SjCH5EEswwWFq6K9mfzwZk7"
-STRIPE_PRICE_PROFESSIONAL_MONTHLY = "price_1SjCH7EEswwWFq6KSDtkAs3H"
-STRIPE_PRICE_PROFESSIONAL_ANNUAL = "price_1SjCH8EEswwWFq6K7GVWgaVJ"
-STRIPE_PRICE_ENTERPRISE_MONTHLY = "price_1SjCHAEEswwWFq6KB1iPFWHp"
-STRIPE_PRICE_ENTERPRISE_ANNUAL = "price_1SjCHCEEswwWFq6KBCpC1lVw"
-
-# Stripe Product IDs (LIVE MODE)
-STRIPE_PRODUCT_STARTER = "prod_TgZPvcaNMyNK8o"
-STRIPE_PRODUCT_PROFESSIONAL = "prod_TgZPtFGrycq2bv"
-STRIPE_PRODUCT_ENTERPRISE = "prod_TgZQQqJsaHwTvp"

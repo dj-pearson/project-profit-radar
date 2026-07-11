@@ -62,21 +62,21 @@ export const JobCostingDashboard: React.FC<JobCostingDashboardProps> = ({ projec
             budgeted: summaryData.labor_budgeted || 0,
             actual: summaryData.labor_actual || 0,
             variance: (summaryData.labor_actual || 0) - (summaryData.labor_budgeted || 0),
-            percentage: summaryData.labor_budgeted ? (summaryData.labor_actual / summaryData.labor_budgeted) * 100 : 0
+            percentage: summaryData.labor_budgeted ? ((summaryData.labor_actual ?? 0) / summaryData.labor_budgeted) * 100 : 0
           },
           {
             category: 'Materials',
             budgeted: summaryData.materials_budgeted || 0,
             actual: summaryData.materials_actual || 0,
             variance: (summaryData.materials_actual || 0) - (summaryData.materials_budgeted || 0),
-            percentage: summaryData.materials_budgeted ? (summaryData.materials_actual / summaryData.materials_budgeted) * 100 : 0
+            percentage: summaryData.materials_budgeted ? ((summaryData.materials_actual ?? 0) / summaryData.materials_budgeted) * 100 : 0
           },
           {
             category: 'Equipment',
             budgeted: summaryData.equipment_budgeted || 0,
             actual: summaryData.equipment_actual || 0,
             variance: (summaryData.equipment_actual || 0) - (summaryData.equipment_budgeted || 0),
-            percentage: summaryData.equipment_budgeted ? (summaryData.equipment_actual / summaryData.equipment_budgeted) * 100 : 0
+            percentage: summaryData.equipment_budgeted ? ((summaryData.equipment_actual ?? 0) / summaryData.equipment_budgeted) * 100 : 0
           }
         ];
         

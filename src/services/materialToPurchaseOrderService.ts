@@ -58,7 +58,7 @@ class MaterialToPurchaseOrderService {
       // 2. Calculate total amount
       const totalAmount = materials.reduce((sum, mat) => {
         const quantity = mat.quantity_needed || mat.quantity_available || 0;
-        return sum + (quantity * mat.unit_cost);
+        return sum + (quantity * (mat.unit_cost ?? 0));
       }, 0);
 
       // 3. Get or create vendor
@@ -140,7 +140,7 @@ class MaterialToPurchaseOrderService {
         quantity: material.quantity_needed || material.quantity_available || 0,
         unit: material.unit,
         unit_price: material.unit_cost,
-        total_price: (material.quantity_needed || material.quantity_available || 0) * material.unit_cost,
+        total_price: (material.quantity_needed || material.quantity_available || 0) * (material.unit_cost ?? 0),
         category: material.category || 'General'
       }));
 

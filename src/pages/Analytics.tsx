@@ -20,7 +20,7 @@ const PerformanceBenchmarking = React.lazy(() => import('@/components/analytics/
 const ResourceOptimization = React.lazy(() => import('@/components/analytics/ResourceOptimization'));
 const WorkflowAutomation = React.lazy(() => import('@/components/analytics/WorkflowAutomation'));
 import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, PieChart, Pie, Area, AreaChart } from 'recharts';
-import { TrendingUp, DollarSign, Building2, Target, Activity, BarChart3, Download, Filter } from 'lucide-react';
+import { TrendingUp, DollarSign, Building2, Target, Activity, BarChart3, Download } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 

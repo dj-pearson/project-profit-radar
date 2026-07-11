@@ -320,7 +320,7 @@ const ProjectDetail = () => {
                     {new Date(project.start_date).toLocaleDateString()} - {project.end_date ? new Date(project.end_date).toLocaleDateString() : 'TBD'}
                   </div>
                 )}
-                {project.budget > 0 && (
+                {(project.budget ?? 0) > 0 && (
                   <div className="flex items-center text-xs font-medium">
                     <DollarSign className="h-3.5 w-3.5 mr-0.5" aria-hidden="true" />
                     <span className="sr-only">Budget: </span>

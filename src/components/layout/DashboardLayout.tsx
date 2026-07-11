@@ -14,7 +14,7 @@ import TrialStatusBanner from '@/components/TrialStatusBanner';
 import { ImpersonationBanner } from '@/components/admin/ImpersonationBanner';
 import { SkipLinks } from '@/components/accessibility/SkipLinks';
 import { AutoBreadcrumb } from '@/components/navigation/AutoBreadcrumb';
-import { Home, Building2, DollarSign, Users, Settings, Search } from 'lucide-react';
+import { Home, Building2, DollarSign, Users, Settings } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { RealtimeNotificationCenter } from '@/components/realtime/RealtimeNotificationCenter';
 import { DashboardSearchTrigger } from '@/components/search/DashboardSearchTrigger';

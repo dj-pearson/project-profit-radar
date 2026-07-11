@@ -17,7 +17,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Label } from '@/components/ui/label';
 import { AccessibleForm, AccessibleFormField, AccessibleTextarea, AccessibleFieldset } from '@/components/accessibility/AccessibleForm';
 import { Users, Search, Plus, Phone, Mail, Building2, Edit, Trash2, Download, Tag, Send, X } from 'lucide-react';
-import { Checkbox } from '@/components/ui/checkbox';
 import { filterAndSortContacts, collectContactTags, type ContactRow } from '@/components/crm/contactListUtils';
 
 interface Contact {

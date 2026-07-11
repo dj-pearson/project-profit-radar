@@ -90,7 +90,7 @@ export function EstimatesTable({ searchTerm, statusFilter, onEstimateChange }: E
       if (searchTerm) {
         filteredData = filteredData.filter((estimate) =>
           estimate.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          estimate.client_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          (estimate.client_name ?? '').toLowerCase().includes(searchTerm.toLowerCase()) ||
           estimate.estimate_number.toLowerCase().includes(searchTerm.toLowerCase())
         );
       }

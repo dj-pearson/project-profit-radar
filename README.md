@@ -70,7 +70,7 @@ src/
 - **Styling**: Tailwind CSS 3.4.11 with shadcn/ui components
 - **State Management**: React Context + TanStack Query 5.56.2
 - **Routing**: React Router DOM 6.26.2
-- **Mobile**: Capacitor 7.4.1 (for native mobile apps)
+- **Mobile**: Native Swift/SwiftUI iOS app in `Brikly-iOS/` (canonical App Store surface, bundle id `com.brikly.app`). Capacitor 7.4.1 provides an optional web-to-native wrapper; the Expo `mobile-app/` is archived. See `CLAUDE.md > Mobile Strategy`.
 
 ### Backend
 - **Database**: Supabase (PostgreSQL)

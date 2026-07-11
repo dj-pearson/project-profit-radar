@@ -26,7 +26,6 @@ import {
   Wrench,
   Calendar,
 } from 'lucide-react';
-import { logger } from '@/lib/logger';
 
 /**
  * Advanced mobile showcase with gesture demos and enhanced navigation

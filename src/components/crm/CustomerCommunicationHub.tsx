@@ -13,7 +13,7 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { MessageSquare, Mail, Phone, Calendar, FileText, Bell, Settings, Send, Plus, Eye, Clock, CheckCircle, AlertCircle } from 'lucide-react';
+import { MessageSquare, Mail, Phone, Calendar, FileText, Bell, Settings, Plus, Eye, Clock, CheckCircle, AlertCircle } from 'lucide-react';
 
 interface CommunicationLogEntry {
   id: string;

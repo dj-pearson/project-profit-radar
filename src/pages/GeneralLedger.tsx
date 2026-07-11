@@ -357,13 +357,13 @@ export default function GeneralLedger() {
                         {monthData.transactions.map((tx: TransactionWithBalance) => (
                           <TableRow key={tx.id}>
                             <TableCell>
-                              {new Date(tx.journal_entry.entry_date).toLocaleDateString()}
+                              {new Date(tx.journal_entry?.entry_date).toLocaleDateString()}
                             </TableCell>
                             <TableCell className="font-mono">
-                              {tx.journal_entry.entry_number}
+                              {tx.journal_entry?.entry_number}
                             </TableCell>
                             <TableCell>
-                              <div>{tx.journal_entry.description}</div>
+                              <div>{tx.journal_entry?.description}</div>
                               {tx.description && (
                                 <div className="text-sm text-muted-foreground">
                                   {tx.description}
@@ -404,13 +404,13 @@ export default function GeneralLedger() {
                     {transactionsWithBalance.map((tx: TransactionWithBalance) => (
                       <TableRow key={tx.id}>
                         <TableCell>
-                          {new Date(tx.journal_entry.entry_date).toLocaleDateString()}
+                          {new Date(tx.journal_entry?.entry_date).toLocaleDateString()}
                         </TableCell>
                         <TableCell className="font-mono">
-                          {tx.journal_entry.entry_number}
+                          {tx.journal_entry?.entry_number}
                         </TableCell>
                         <TableCell>
-                          <div>{tx.journal_entry.description}</div>
+                          <div>{tx.journal_entry?.description}</div>
                           {tx.description && (
                             <div className="text-sm text-muted-foreground">
                               {tx.description}

@@ -345,8 +345,8 @@ const Projects = () => {
 
     // Budget range filter
     const matchesBudget =
-      (!budgetMin || project.budget >= parseFloat(budgetMin)) &&
-      (!budgetMax || project.budget <= parseFloat(budgetMax));
+      (!budgetMin || (project.budget ?? 0) >= parseFloat(budgetMin)) &&
+      (!budgetMax || (project.budget ?? 0) <= parseFloat(budgetMax));
 
     // Date range filters
     const projectStartDate = new Date(project.start_date);

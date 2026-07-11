@@ -2,7 +2,7 @@
  * Tasks Hook
  */
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { taskService, Task, CreateTaskData, UpdateTaskData } from '@/services/taskService';
+import { taskService, CreateTaskData, UpdateTaskData } from '@/services/taskService';
 import { toast } from '@/hooks/use-toast';
 
 export const useTasks = (filters?: {

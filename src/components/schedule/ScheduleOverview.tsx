@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Input } from "@/components/ui/input";
-import { Calendar, DollarSign, TrendingUp, Clock, AlertTriangle, Search, Filter, ArrowRight } from "lucide-react";
+import { Calendar, DollarSign, TrendingUp, Clock, AlertTriangle, Search, ArrowRight } from "lucide-react";
 import { format, parseISO, differenceInDays } from "date-fns";
 import { useNavigate } from "react-router-dom";
 

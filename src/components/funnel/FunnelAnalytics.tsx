@@ -59,8 +59,8 @@ export function FunnelAnalytics({ funnelId }: FunnelAnalyticsProps) {
         step_order: step.step_order,
         step_name: step.name,
         emails_sent: Math.max(0, totalSubscribers - (index * 5)), // Mock decreasing sends
-        emails_opened: Math.floor((Math.max(0, totalSubscribers - (index * 5))) * (step.open_rate / 100)),
-        emails_clicked: Math.floor((Math.max(0, totalSubscribers - (index * 5))) * (step.click_rate / 100)),
+        emails_opened: Math.floor((Math.max(0, totalSubscribers - (index * 5))) * ((step.open_rate ?? 0) / 100)),
+        emails_clicked: Math.floor((Math.max(0, totalSubscribers - (index * 5))) * ((step.click_rate ?? 0) / 100)),
         open_rate: step.open_rate,
         click_rate: step.click_rate,
       }));

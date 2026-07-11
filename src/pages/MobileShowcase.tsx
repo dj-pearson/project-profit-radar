@@ -18,7 +18,7 @@ import {
   MobileButtonGroup
 } from '@/components/mobile';
 import { useIsMobile } from '@/hooks/useMediaQuery';
-import { Building2, DollarSign, TrendingUp, Users, Plus, Edit, Trash, Share, Download, Filter, Search } from 'lucide-react';
+import { Building2, DollarSign, TrendingUp, Users, Plus, Edit, Trash, Share, Download, Filter } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 
 /**

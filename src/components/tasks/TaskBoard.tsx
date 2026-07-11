@@ -4,7 +4,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { Calendar, Plus } from 'lucide-react';
+import { Calendar } from 'lucide-react';
 import {
   groupTasksByStage, statusValueForStage, assigneeInitials, type BoardTask,
 } from '@/lib/tasks/taskBoard';

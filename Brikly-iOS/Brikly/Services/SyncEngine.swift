@@ -108,6 +108,10 @@ final class SyncEngine {
         switch mutation.entityType {
         case "daily_report":
             try await replayDailyReport(mutation)
+        case "task":
+            try await replayTask(mutation)
+        case "job_cost":
+            try await replayJobCost(mutation)
         default:
             throw SyncError.unsupportedEntity(mutation.entityType)
         }
@@ -143,6 +147,66 @@ final class SyncEngine {
                 .value
             if let updated = response.first {
                 store.upsertDailyReport(updated)
+            }
+
+        default:
+            throw SyncError.unsupportedOperation(mutation.operation)
+        }
+    }
+
+    private func replayTask(_ mutation: PendingMutation) async throws {
+        // NewTask and TaskUpdate have explicit snake_case CodingKeys, so a plain
+        // JSONDecoder maps the queued payload correctly.
+        let decoder = JSONDecoder()
+
+        switch mutation.operation {
+        case "create":
+            let body = try decoder.decode(NewTask.self, from: mutation.payload)
+            let response: [ProjectTask] = try await supabase
+                .from("tasks")
+                .insert(body)
+                .select()
+                .execute()
+                .value
+            if let inserted = response.first {
+                store.upsertTask(inserted)
+            }
+
+        case "update":
+            guard let entityId = mutation.entityId else { throw SyncError.missingEntityId }
+            let body = try decoder.decode(TaskUpdate.self, from: mutation.payload)
+            let response: [ProjectTask] = try await supabase
+                .from("tasks")
+                .update(body)
+                .eq("id", value: entityId)
+                .select()
+                .execute()
+                .value
+            if let updated = response.first {
+                store.upsertTask(updated)
+            }
+
+        default:
+            throw SyncError.unsupportedOperation(mutation.operation)
+        }
+    }
+
+    private func replayJobCost(_ mutation: PendingMutation) async throws {
+        // Job costs are append-only by domain, so only `create` is supported.
+        // NewJobCost has explicit snake_case CodingKeys → plain JSONDecoder.
+        let decoder = JSONDecoder()
+
+        switch mutation.operation {
+        case "create":
+            let body = try decoder.decode(NewJobCost.self, from: mutation.payload)
+            let response: [JobCost] = try await supabase
+                .from("job_costs")
+                .insert(body)
+                .select()
+                .execute()
+                .value
+            if let inserted = response.first {
+                store.upsertJobCost(inserted)
             }
 
         default:

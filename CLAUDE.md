@@ -1,6 +1,17 @@
 # Brikly — Construction Management Platform
 
-B2B SaaS for SMB construction. React 19 + TypeScript + Vite, Supabase backend, Cloudflare Pages, Capacitor/Expo mobile, Stripe + QuickBooks integrations.
+B2B SaaS for SMB construction. React 19 + TypeScript + Vite, Supabase backend, Cloudflare Pages, native Swift iOS (`Brikly-iOS/`), Stripe + QuickBooks integrations.
+
+## Mobile Strategy
+
+The **canonical, shipping iOS app is the native Swift/SwiftUI project in `Brikly-iOS/`** — it owns the `com.brikly.app` bundle identifier and is the App Store submission surface. All active mobile work (offline-first SwiftData sync via `OfflineStore`/`SyncEngine`, the iOS glass design system) lives here. Build/run it via `npm run ios:open` / `ios:build` / `ios:test`, or directly in Xcode.
+
+Two other iOS-capable surfaces exist in the repo but are **NOT the shipping iOS app**:
+
+- **`mobile-app/` (Expo / React Native)** — **archived/experimental**. Kept only as a possible future cross-platform (Android) exploration. Its bundle id / Android package were suffixed to `com.brikly.app.expo` to remove the duplicate-bundle-id collision. Do not submit it to the App Store. See `mobile-app/README.md`.
+- **Capacitor (`capacitor.config.ts`)** — wraps the React web build for a native shell; the `ios/` native project is not generated (`npm run cap:init:ios` would create it). Useful for web-to-native experiments but is **not** the current App Store iOS surface. The `build:mobile*` / `cap:*` scripts target this wrapper.
+
+If mobile strategy is ever revisited, update this section first — exactly one directory may own `com.brikly.app`.
 
 ## Key Paths
 
@@ -20,9 +31,10 @@ npm run lint
 npm run test:run               # vitest
 npm run test:coverage
 npm run test:e2e               # playwright (:headed for visible)
-npm run mobile:sync            # capacitor web → native
-npm run mobile:run:{ios,android}
-npm run expo:{start,build:ios,build:android}
+npm run ios:open               # canonical native iOS app (Brikly-iOS) in Xcode
+npm run ios:build              # xcodebuild the native iOS app
+npm run ios:test               # xcodebuild test (iOS Simulator)
+npm run build:mobile:sync      # Capacitor web→native wrapper (not the shipping iOS app)
 ```
 
 ## Conventions

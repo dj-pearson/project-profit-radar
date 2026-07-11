@@ -159,7 +159,7 @@ const EnhancedProjectOverview: React.FC<EnhancedProjectOverviewProps> = ({ proje
       const actualCosts = totalJobCosts + totalContractorPayments;
       
       const changeOrdersValue = (changeOrders || []).reduce((sum, co) => sum + co.amount, 0);
-      const adjustedBudget = projectData.budget + changeOrdersValue;
+      const adjustedBudget = (projectData.budget ?? 0) + changeOrdersValue;
       const remainingBudget = adjustedBudget - actualCosts;
       const profitMargin = adjustedBudget > 0 ? ((adjustedBudget - actualCosts) / adjustedBudget) * 100 : 0;
 
@@ -171,7 +171,7 @@ const EnhancedProjectOverview: React.FC<EnhancedProjectOverviewProps> = ({ proje
       const daysElapsed = Math.ceil((today.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
       const daysRemaining = Math.ceil((endDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
       const expectedProgress = totalDays > 0 ? (daysElapsed / totalDays) * 100 : 0;
-      const scheduleVariance = projectData.completion_percentage - expectedProgress;
+      const scheduleVariance = (projectData.completion_percentage ?? 0) - expectedProgress;
 
       // Task metrics
       const completedTasks = (tasks || []).filter(task => task.status === 'completed').length;

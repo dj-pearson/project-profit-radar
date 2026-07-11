@@ -1,6 +1,20 @@
 import Foundation
 import Observation
 
+/// Offline-first task list. Mirrors `DailyReportListViewModel`:
+///
+/// Read flow:
+///   1. Hydrate from `OfflineStore` immediately so the user sees cached tasks
+///      before the network is touched.
+///   2. Fire a network refresh; on success replace the cache with the
+///      authoritative server list.
+///
+/// Write flow (create / update):
+///   1. Try the network call first when online.
+///   2. On network failure (or if offline), enqueue a `PendingMutation` and
+///      apply an optimistic local row so the UI updates immediately. The
+///      `SyncEngine` drains the queue on reconnect and swaps the `local-` id
+///      for the authoritative server row.
 @Observable
 @MainActor
 final class TaskListViewModel {
@@ -10,6 +24,7 @@ final class TaskListViewModel {
     var selectedStatus: TaskStatus?
 
     private let service = TaskService()
+    private let store = OfflineStore.shared
 
     var filteredTasks: [ProjectTask] {
         guard let status = selectedStatus else { return tasks }
@@ -17,33 +32,116 @@ final class TaskListViewModel {
     }
 
     func loadTasks(projectId: String) async {
-        isLoading = true
+        // 1. Cache hydrate (synchronous, instant).
+        let cached = store.cachedTasks(projectId: projectId)
+        if !cached.isEmpty {
+            tasks = cached
+        }
+
+        // 2. Background refresh from the server.
+        isLoading = tasks.isEmpty   // Only show the spinner if we had nothing to display.
         errorMessage = nil
+
         do {
-            tasks = try await service.fetchTasks(projectId: projectId)
+            let fresh = try await service.fetchTasks(projectId: projectId)
+            tasks = fresh
+            store.cacheTasks(fresh, projectId: projectId)
         } catch {
-            errorMessage = DecodingErrorHelper.handle(error, context: "TaskList")
+            // Network failed — keep showing the cached data and surface a soft
+            // error only if the cache was empty too.
+            if tasks.isEmpty {
+                errorMessage = DecodingErrorHelper.handle(error, context: "TaskList")
+            }
         }
         isLoading = false
     }
 
     func createTask(_ task: NewTask) async {
-        do {
-            let created = try await service.createTask(task)
-            tasks.insert(created, at: 0)
-        } catch {
-            errorMessage = DecodingErrorHelper.handle(error, context: "CreateTask")
+        if NetworkMonitor.shared.isOnline {
+            do {
+                let created = try await service.createTask(task)
+                tasks.insert(created, at: 0)
+                store.upsertTask(created)
+                return
+            } catch {
+                // Fall through to the offline path so the user's input isn't lost.
+                CrashReporter.breadcrumb("createTask network failure → enqueue", category: "sync")
+            }
         }
+
+        // Offline path: enqueue + show optimistic local row with a temporary id.
+        store.enqueue(entityType: "task", operation: "create", body: task)
+        let temp = optimisticTask(from: task)
+        tasks.insert(temp, at: 0)
+        store.upsertTask(temp)
     }
 
     func updateTask(id: String, updates: TaskUpdate) async {
-        do {
-            let updated = try await service.updateTask(id: id, updates: updates)
-            if let index = tasks.firstIndex(where: { $0.id == id }) {
-                tasks[index] = updated
+        if NetworkMonitor.shared.isOnline {
+            do {
+                let updated = try await service.updateTask(id: id, updates: updates)
+                if let index = tasks.firstIndex(where: { $0.id == id }) {
+                    tasks[index] = updated
+                }
+                store.upsertTask(updated)
+                return
+            } catch {
+                CrashReporter.breadcrumb("updateTask network failure → enqueue", category: "sync")
             }
-        } catch {
-            errorMessage = DecodingErrorHelper.handle(error, context: "UpdateTask")
         }
+
+        // Offline path: enqueue + apply optimistic merge to the in-memory copy.
+        store.enqueue(entityType: "task", operation: "update", entityId: id, body: updates)
+        if let index = tasks.firstIndex(where: { $0.id == id }) {
+            let merged = applyUpdates(updates, to: tasks[index])
+            tasks[index] = merged
+            store.upsertTask(merged)
+        }
+    }
+
+    /// Build a placeholder ProjectTask from a NewTask for offline display. The
+    /// real id is assigned server-side; we use a `local-` prefix until the
+    /// SyncEngine swaps it for the authoritative row.
+    private func optimisticTask(from new: NewTask) -> ProjectTask {
+        ProjectTask(
+            id: "local-\(UUID().uuidString)",
+            companyId: new.companyId,
+            projectId: new.projectId,
+            siteId: new.siteId,
+            name: new.name,
+            description: new.description,
+            status: new.status,
+            priority: new.priority,
+            assignedTo: new.assignedTo,
+            dueDate: nil,           // NewTask carries the yyyy-MM-dd string; the synced server row restores the parsed date.
+            startDate: nil,
+            endDate: nil,
+            completionPercentage: new.completionPercentage,
+            estimatedHours: nil,
+            actualHours: nil,
+            durationDays: nil,
+            isCriticalPath: nil,
+            isMilestone: nil,
+            milestoneType: nil,
+            phaseId: nil,
+            dependencies: nil,
+            tags: nil,
+            weatherSensitive: nil,
+            weatherLastCheck: nil,
+            createdBy: nil,
+            createdAt: .now,
+            updatedAt: nil
+        )
+    }
+
+    private func applyUpdates(_ updates: TaskUpdate, to task: ProjectTask) -> ProjectTask {
+        var copy = task
+        if let v = updates.name { copy.name = v }
+        if let v = updates.description { copy.description = v }
+        if let v = updates.status { copy.status = v }
+        if let v = updates.priority { copy.priority = v }
+        if let v = updates.assignedTo { copy.assignedTo = v }
+        if let v = updates.completionPercentage { copy.completionPercentage = v }
+        return copy
     }
 }
