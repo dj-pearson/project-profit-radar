@@ -51,14 +51,16 @@ export const QuickBooksIntegration = () => {
   }, [userProfile?.company_id]);
 
   const loadIntegrationStatus = async () => {
+    const companyId = userProfile?.company_id;
+    if (!companyId) return;
     try {
       setLoading(true);
-      
+
       // Try to load real integration status
       const { data: integrationData, error: integrationError } = await supabase
         .from('quickbooks_integrations')
         .select('*')
-        .eq('company_id', userProfile.company_id)
+        .eq('company_id', companyId)
         .maybeSingle();
 
       if (integrationError || !integrationData) {
@@ -87,7 +89,7 @@ export const QuickBooksIntegration = () => {
         const { data: syncData } = await supabase
           .from('quickbooks_sync_logs')
           .select('*')
-          .eq('company_id', userProfile.company_id)
+          .eq('company_id', companyId)
           .order('created_at', { ascending: false })
           .limit(1);
 

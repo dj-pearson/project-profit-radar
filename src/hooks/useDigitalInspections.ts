@@ -56,11 +56,13 @@ export const useDigitalInspections = (projectId?: string) => {
   // Create inspection
   const createInspection = useMutation({
     mutationFn: async (inspection: any) => {
+      const companyId = userProfile?.company_id;
+      if (!companyId) throw new Error('No company context for inspection');
       const { data, error } = await supabase
         .from('quality_inspections')
         .insert([{
           ...inspection,
-          company_id: userProfile.company_id,
+          company_id: companyId,
         }])
         .select()
         .single();

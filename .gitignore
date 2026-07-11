@@ -159,3 +159,4 @@ tsgo-out.txt
 tsgo-time.txt
 tsconfig.tsgo.json
 tsgo-out*.txt
+tsgo*.txt

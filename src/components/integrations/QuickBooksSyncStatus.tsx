@@ -39,13 +39,15 @@ export const QuickBooksSyncStatus = ({ compact = false }: QuickBooksSyncStatusPr
   }, [userProfile?.company_id]);
 
   const loadStatus = async () => {
+    const companyId = userProfile?.company_id;
+    if (!companyId) return;
     try {
       setLoading(true);
 
       const { data, error } = await supabase
         .from('quickbooks_integrations')
         .select('*')
-        .eq('company_id', userProfile.company_id)
+        .eq('company_id', companyId)
         .maybeSingle();
 
       if (error || !data) {
