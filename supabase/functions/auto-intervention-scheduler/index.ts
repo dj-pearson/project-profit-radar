@@ -4,11 +4,8 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type",
-};
+import { getCorsHeaders, handleCorsPreflightRequest } from "../_shared/secure-cors.ts";
+import { requireSystemOrAdmin } from "../_shared/system-auth.ts";
 
 interface InterventionRule {
   type: string;
@@ -114,8 +111,15 @@ const INTERVENTION_RULES: InterventionRule[] = [
 serve(async (req) => {
   // Handle CORS preflight
   if (req.method === "OPTIONS") {
-    return new Response("ok", { headers: corsHeaders });
+    return handleCorsPreflightRequest(req);
   }
+
+  const corsHeaders = getCorsHeaders(req);
+
+  // SECURITY (US-238): cross-tenant cron scheduler that emails customers —
+  // require an admin JWT or the shared CRON_SECRET before running.
+  const denied = await requireSystemOrAdmin(req);
+  if (denied) return denied;
 
   try {
     // Create Supabase client

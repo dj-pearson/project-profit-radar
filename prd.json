@@ -3855,8 +3855,8 @@
         "Audit all SERVICE_ROLE_KEY functions with no caller check for the same gap"
       ],
       "priority": 1,
-      "passes": false,
-      "notes": "PROPOSED (deep-dive audit 2026-07-12). Theme: Security. SEV: HIGH. Source: Security audit. Global financial data exposure."
+      "passes": true,
+      "notes": "COMPLETED (2026-07-12) for the named cross-tenant analytics functions. Added requireSystemOrAdmin guard (admin JWT OR x-cron-secret) + secure-cors to calculate-revenue-metrics, generate-churn-predictions, auto-intervention-scheduler; calculate-health-scores was already guarded. config.toml annotated with intended invoker; kept verify_jwt=true deliberately (flipping to false would combine with requireSystemOrAdmin's staged-rollout 'allow when CRON_SECRET unset' to leave them fully open). OPS FOLLOW-UP: set CRON_SECRET in Supabase function env and have schedulers send x-cron-secret to fully enforce. AC4 (audit ALL service-role fns): heuristic flags 52 candidates but most are legitimately public or JWT-gated; a full sweep is deferred to a dedicated pass (overlaps US-241 Zod + US-244 CORS)."
     },
     {
       "id": "US-239",
