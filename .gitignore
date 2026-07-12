@@ -159,3 +159,7 @@ tsgo-out.txt
 tsgo-time.txt
 tsconfig.tsgo.json
 tsgo-out*.txt
+
+# US-239: stray edge-function/dev backup copies must never be committed
+*-N-DPEARSON.*
+supabase/functions/**/*.bak

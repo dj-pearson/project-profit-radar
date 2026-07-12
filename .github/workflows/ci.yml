@@ -135,3 +135,6 @@ jobs:
 
       - name: Migration filename guard (US-235)
         run: bash scripts/check-migration-filenames.sh
+
+      - name: No stray edge-function backup copies (US-239)
+        run: bash scripts/check-no-stray-function-copies.sh

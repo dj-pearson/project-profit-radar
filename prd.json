@@ -3869,8 +3869,8 @@
         "test-ai-configuration removed or gated behind a non-production guard"
       ],
       "priority": 1,
-      "passes": false,
-      "notes": "PROPOSED (deep-dive audit 2026-07-12). Theme: Security. SEV: HIGH (billing-critical check-subscription has a stray copy). Source: Security + Edge + Ops audits (merged)."
+      "passes": true,
+      "notes": "COMPLETED (2026-07-12) for dead code + exposure; audit assumption CORRECTED. Deleted 3 genuinely-dead index-N-DPEARSON.ts backups (referenced nowhere in code). verify_jwt=false exposure on enhanced-blog-ai-fixed is ALREADY CLOSED \u2014 it applies requireSystemOrAdmin (in the auth-guard ENFORCED set); no change needed. Added scripts/check-no-stray-function-copies.sh (tested pass+fail), wired to CI, plus .gitignore rules to prevent future backup commits. RECLASSIFIED (not deleted): enhanced-blog-ai-simple is invoked by src/components/admin/BlogAIDebugger.tsx; test-ai-configuration by AIModelManager.tsx; blog-social-webhook by useSocialMediaAutomation.ts; blog_social_webhook by a DB trigger fn. These are WIRED, not dead \u2014 safe consolidation requires removing their callers first (a product decision), so deferred rather than false-deleted."
     },
     {
       "id": "US-240",
