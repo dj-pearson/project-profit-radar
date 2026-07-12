@@ -4527,7 +4527,7 @@
       ],
       "priority": 1,
       "passes": false,
-      "notes": "CRITICAL \u2014 discovered 2026-07-12 during US-261 cruft cleanup. Requires history rewrite (force-push, coordinated) + credential rotation; NOT auto-remediable in this loop. Escalated to the user for immediate action."
+      "notes": "CRITICAL \u2014 discovered 2026-07-12 during US-261 cruft cleanup. Requires history rewrite (force-push, coordinated) + credential rotation; NOT auto-remediable in this loop. Escalated to the user for immediate action. Remediation runbook drafted at docs/RUNBOOK_DB_DUMP_INCIDENT.md (containment + rotation + git filter-repo purge commands for the 3 blob paths + access-review/breach checklist). Ready for the user to execute \u2014 still requires their Supabase/Stripe/GitHub-admin access; not auto-remediable."
     }
   ]
 }
