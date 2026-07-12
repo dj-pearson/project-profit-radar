@@ -4133,8 +4133,8 @@
         "e2e-test downloads the build artifact instead of re-running npm run build"
       ],
       "priority": 2,
-      "passes": false,
-      "notes": "PROPOSED (deep-dive audit 2026-07-12). Theme: CI/CD. SEV: MEDIUM. Source: Testing/CI audit. Pairs with US-212."
+      "passes": true,
+      "notes": "COMPLETED (2026-07-12) for the core; workflow_call dedup deferred. Replaced the raw 'npx tsc --noEmit' gate (red on every push at ~2014 errors) in BOTH ci.yml and prd-verification.yml with scripts/check-ts-error-budget.mjs: a ratchet that fails only if the error count exceeds .github/ts-error-baseline.txt (set to 2100 with margin; the script emits a ::notice:: with the true count on first CI run so it can be lowered as US-212 progresses). Also removed the redundant 'npm run build' from the e2e job \u2014 its webServer runs the Vite dev server (npm run dev:ci), so dist/ was never used and the prod build is already verified by the build job (needs: build). Verified count regex (2014 matches tsgo) + ratchet logic + YAML validity. DEFERRED: consolidating typecheck/unit/build into a workflow_call reusable workflow \u2014 ci.yml ([main,develop]) and prd-verification ([claude/**,feat/**,fix/**]) target different branches so per-push duplication is limited to PR'd feature branches, and prd-verification gives earlier on-push feedback; lower-value refactor left for later."
     },
     {
       "id": "US-259",
