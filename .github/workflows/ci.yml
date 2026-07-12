@@ -144,3 +144,6 @@ jobs:
 
       - name: RLS permissive-policy guard (US-237)
         run: node scripts/check-rls-policies.mjs
+
+      - name: No tracked build/backup/env cruft (US-261)
+        run: bash scripts/check-no-tracked-cruft.sh

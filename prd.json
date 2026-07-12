@@ -4175,8 +4175,8 @@
         "A pre-commit/CI check fails if these reappear tracked"
       ],
       "priority": 2,
-      "passes": false,
-      "notes": "PROPOSED (deep-dive audit 2026-07-12). Theme: Hygiene. SEV: HIGH. Source: Architecture + Testing + Ops audits (merged; includes .env_backup)."
+      "passes": true,
+      "notes": "COMPLETED (2026-07-12). git rm --cached/rm the tracked cruft: tsc-output.txt (957KB), package.json.backup ('builddesk'), backup_*.sql (0-byte), .env_backup (verified PLACEHOLDER values incl a public POSTHOG_HOST \u2014 no real secret, no rotation needed), the .docx, 'e HEAD', 'hell -c git fetch origin', Crash/. De-duped .gitignore (.env_backup x3->1, tsc-output x2->1) and added a hygiene block. Added scripts/check-no-tracked-cruft.sh (tested pass+fail), wired into CI + pre-commit. secret-scan.sh passes. CRITICAL DISCOVERY (see US-286): the *.backup guard pattern surfaced backups/ containing a REAL 20.6MB Postgres cluster dump + 2 gz copies with auth.users/refresh_tokens/sessions/mfa_factors, pgsodium.key, ~24k JWTs, service_role/stripe/secret_key across 538 tables \u2014 untracked here, but still in git HISTORY."
     },
     {
       "id": "US-262",
@@ -4513,6 +4513,21 @@
       "priority": 4,
       "passes": false,
       "notes": "PROPOSED (deep-dive audit 2026-07-12). Theme: Frontend. SEV: LOW. Source: Architecture audit."
+    },
+    {
+      "id": "US-286",
+      "title": "INCIDENT: purge committed production DB dump from git history and rotate exposed secrets",
+      "description": "A real 20.6MB PostgreSQL cluster dump (backups/db_cluster-17-12-2025.backup + two .gz copies) was committed to the repo. It contains auth.users, auth.refresh_tokens, auth.sessions, auth.mfa_factors, pgsodium.key (encryption keys), ~24,000 JWTs, and service_role/stripe/secret_key values across 538 tables \u2014 i.e. full production data and live credentials. US-261 removed it from the working tree, but it remains in git history and must be purged and all exposed secrets rotated. As a security owner, I want the dump purged from history and every credential it exposed rotated so a repo-access holder cannot extract customer data or live tokens.",
+      "acceptanceCriteria": [
+        "Purge backups/*.backup* from all git history (git filter-repo or BFG) on main, develop, and this branch; coordinate the force-push and notify collaborators to re-clone",
+        "Rotate the Supabase service_role key and JWT secret; invalidate all existing auth sessions/refresh tokens (forces re-login)",
+        "Rotate any Stripe keys and other API keys/secrets stored in dumped tables (stripe_keys, ai_model_configurations, etc.) and re-key pgsodium",
+        "Review who had repo access while the dump was present; assess breach-notification obligations for the exposed PII",
+        "Confirm no other DB dump or secret-bearing artifact remains in history (gitleaks --full history scan)"
+      ],
+      "priority": 1,
+      "passes": false,
+      "notes": "CRITICAL \u2014 discovered 2026-07-12 during US-261 cruft cleanup. Requires history rewrite (force-push, coordinated) + credential rotation; NOT auto-remediable in this loop. Escalated to the user for immediate action."
     }
   ]
 }

@@ -135,17 +135,12 @@ scripts/test-backend.js
 scripts/migrate-to-selfhosted.ps1
 FIX_OAUTH_REDIRECT_LOOP.md
 URGENT_OAUTH_FIX.md
-.env_backup
-.env_backup
 COOLIFY_GOTRUE_PERMANENT_FIX.md
 user_roles_rows.csv
 ios_build_logs.txt
 .gitignore
 Untitled
 tsc-errors.txt
-tsc-output.txt
-tsc-output.txt
-.env_backup
 tests/fullGithuboutput.txt
 
 # Python bytecode (from scripts/)
@@ -163,3 +158,13 @@ tsgo-out*.txt
 # US-239: stray edge-function/dev backup copies must never be committed
 *-N-DPEARSON.*
 supabase/functions/**/*.bak
+
+# US-261: repo-hygiene — build artifacts, backups, and stray accident files
+tsc-output.txt
+*.backup
+backup_*.sql
+.env_backup
+*.crash
+Crash/
+/Cloning Motion AI_*.docx
+backups/
