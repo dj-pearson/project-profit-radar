@@ -141,3 +141,6 @@ jobs:
 
       - name: No stray edge-function backup copies (US-239)
         run: bash scripts/check-no-stray-function-copies.sh
+
+      - name: RLS permissive-policy guard (US-237)
+        run: node scripts/check-rls-policies.mjs

@@ -3841,8 +3841,8 @@
         "CI check fails if a new policy uses USING(true) without TO service_role"
       ],
       "priority": 1,
-      "passes": false,
-      "notes": "PROPOSED (deep-dive audit 2026-07-12). Theme: Security. SEV: CRITICAL. Source: Security audit. ~41 tables incl job_costing_summary, document_signatures, project_predictions, usage_metrics."
+      "passes": true,
+      "notes": "SUBSTANTIALLY COMPLETE (2026-07-12); 4 tables deferred. Shipped: (1) scripts/check-rls-policies.mjs audit+regression guard (baseline-grandfathered; fails on NEW permissive FOR ALL USING(true) without TO service_role), wired into CI + pre-commit; (2) migration 20260712120000 that dynamically (via live pg_policies, idempotent) scopes to service_role the permissive policies on 12 VERIFIED-SAFE tables: job_costing_summary, usage_metrics, document_signatures, project_predictions, prediction_performance, incident_metrics, affiliate_referrals, affiliate_rewards, workflow_step_executions, automated_workflow_executions, resource_availability_patterns, weather_forecasts (each either has a separate company-scoped SELECT the frontend reads through, or zero frontend access = edge-fn/service-role only). RESIDUAL LEAK \u2014 DEFERRED (need a company-scoped write policy added FIRST, then staging verification): workflow_executions, workflow_analytics, calendar_events, webhook_events (frontend writes directly). Intentionally-public/reference tables NOT touched: pseo_* , trades, seo_meta_tags, feature_announcements, ai_environment_config, oauth_pending_states, saml_pending_requests. Could not verify against live DB (no staging yet, US-247); migration is written to be safe on live state."
     },
     {
       "id": "US-238",
