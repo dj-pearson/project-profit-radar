@@ -4217,8 +4217,8 @@
         "Updated tsc total reported so US-212 reflects only semantic errors"
       ],
       "priority": 2,
-      "passes": false,
-      "notes": "PROPOSED (deep-dive audit 2026-07-12). Theme: Code Health. SEV: MEDIUM. Source: Architecture + Testing audits (merged). Feeds US-212."
+      "passes": true,
+      "notes": "COMPLETED (2026-07-12) for the TS-hygiene scope; full Prettier reformat deferred. (1) unused-imports/no-unused-imports already enabled as ERROR (auto-fixed by --fix / lint-staged) in prior US-212 work, and ~500 unused imports/types/dead useState already removed. (2) Re-enabled @typescript-eslint/no-unused-vars as WARN (was off) with args:none, varsIgnorePattern ^_, ignoreRestSiblings \u2014 surfaces unused vars without blocking or risky auto-removal. (3) Added Prettier 3 + .prettierrc (singleQuote, printWidth 100) + .prettierignore + npm run format / format:check scripts. DEFERRED: running npm run format across the repo and wiring format:check as a blocking gate \u2014 a whole-repo reformat is a large, noisy diff best done as a dedicated commit to keep history reviewable; the tooling is ready for it."
     },
     {
       "id": "US-265",

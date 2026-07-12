@@ -32,11 +32,19 @@ export default tseslint.config(
         "warn",
         { allowConstantExport: true },
       ],
-      // US-212/US-258: auto-removable unused imports are an error (eslint --fix
-      // strips them); unused vars stay off for now (removing them can change
-      // behavior and needs case-by-case review).
+      // US-212/US-258/US-264: auto-removable unused imports are an error
+      // (eslint --fix strips them). Unused vars are a warning — surfaced but not
+      // blocking, since removing them can change behavior and needs review.
+      // Args and rest-siblings are ignored (intentional signature shape / omit).
       "unused-imports/no-unused-imports": "error",
-      "@typescript-eslint/no-unused-vars": "off",
+      "@typescript-eslint/no-unused-vars": [
+        "warn",
+        {
+          args: "none",
+          varsIgnorePattern: "^_",
+          ignoreRestSiblings: true,
+        },
+      ],
       // US-258: the ~933-`any` backlog is tracked as a warning (not a blocking
       // error) during the strict-mode burndown, so `eslint .` and the
       // pre-commit hook fail only on real errors, not the known backlog.
