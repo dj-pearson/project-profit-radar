@@ -168,3 +168,4 @@ backup_*.sql
 Crash/
 /Cloning Motion AI_*.docx
 backups/
+performance-budget-results.json

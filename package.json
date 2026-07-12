@@ -53,7 +53,7 @@
     "cloudflare:install": "npm install --force && npm run build",
     "build:analyze": "npm run generate-sitemap && vite build --mode production && npx vite-bundle-analyzer dist/stats.html",
     "performance:audit": "node scripts/performance-audit.js",
-    "performance:budget": "node scripts/check-performance-budget.js",
+    "performance:budget": "node scripts/check-bundle-budget.mjs",
     "images:optimize": "node scripts/convert-images-to-webp.js",
     "cache:purge": "node scripts/purge-cloudflare-cache.js",
     "performance:ci": "npm run build && npm run performance:budget && npm run performance:audit",

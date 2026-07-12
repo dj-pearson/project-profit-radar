@@ -4147,8 +4147,8 @@
         "Bundle check runs on develop PRs and fails on regression"
       ],
       "priority": 2,
-      "passes": false,
-      "notes": "PROPOSED (deep-dive audit 2026-07-12). Theme: Performance. SEV: MEDIUM. Source: Testing/CI audit."
+      "passes": true,
+      "notes": "COMPLETED (2026-07-12). Consolidated the two divergent raw-byte scripts (check-bundle-size.js, check-performance-budget.js \u2014 deleted) into one scripts/check-bundle-budget.mjs that measures ACTUAL gzipped bytes via zlib and enforces .github/bundle-budget.json. MEASURED REALITY (via build): total gzipped ~3019KB; entry chunk index-*.js is only ~158KB \u2014 already well under the 800KB CLAUDE.md initial-load goal; largest chunk is a lazy three.js at 234KB. So the old 5.3MB 'budget' was measuring RAW total and was meaningless. Budget set to maxTotalGzipped 3100KB + maxEntryGzipped(largest chunk) 300KB (ratchet; ::notice:: reports actuals to tighten). Repointed performance.yml + npm run performance:budget to the new script; untracked+gitignored the stale performance-budget-results.json; updated scripts/README.md. Verified the script passes against a real build."
     },
     {
       "id": "US-260",

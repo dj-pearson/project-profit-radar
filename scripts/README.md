@@ -11,7 +11,7 @@ This directory contains all automation, maintenance, and tooling scripts for the
 | `ralph/ralph.mjs` | `npm run ralph` | Autonomous AI agent loop |
 | `generate-sitemap.js` | `npm run generate-sitemap` | SEO sitemap generator |
 | `performance-audit.js` | `npm run performance:audit` | Lighthouse performance audit |
-| `check-performance-budget.js` | `npm run performance:budget` | Enforce bundle size budgets |
+| `check-bundle-budget.mjs` | `npm run performance:budget` | Enforce gzipped bundle budget (US-259) |
 | `convert-images-to-webp.js` | `npm run images:optimize` | Convert images to WebP/AVIF |
 | `analyze-bundle.js` | `npm run analyze` | Analyze production bundle sizes |
 | `purge-cloudflare-cache.js` | `npm run cache:purge` | Purge Cloudflare CDN cache |
