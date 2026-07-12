@@ -220,7 +220,6 @@ export const IntegrationManagementHub: React.FC = () => {
     }
   ]);
 
-  const [selectedIntegration, setSelectedIntegration] = useState<string>('');
   const [searchTerm, setSearchTerm] = useState('');
 
   const filteredIntegrations = integrations.filter(integration =>

@@ -58,7 +58,6 @@ export const CommunicationHub: React.FC = () => {
   const [rfis, setRfis] = useState<RFI[]>([]);
   const [meetings, setMeetings] = useState<Meeting[]>([]);
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
-  const [loading, setLoading] = useState(false);
   const { toast } = useToast();
   const { channels, activeChannel, selectChannel } = useAdvancedChat();
 

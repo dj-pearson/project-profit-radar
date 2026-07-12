@@ -8,7 +8,6 @@ import { useTouchGestures } from '@/hooks/useTouchGestures';
 export const TouchGestureDemo = () => {
   const [lastGesture, setLastGesture] = useState<string>('');
   const [gestureCount, setGestureCount] = useState(0);
-  const [isActive, setIsActive] = useState(false);
   const demoAreaRef = useRef<HTMLDivElement>(null);
 
   const { isGesturing } = useTouchGestures(demoAreaRef, {

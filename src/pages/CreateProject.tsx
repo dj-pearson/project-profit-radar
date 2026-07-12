@@ -35,7 +35,6 @@ const CreateProject = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [createLoading, setCreateLoading] = useState(false);
-  const [projectManagers, setProjectManagers] = useState<any[]>([]);
   const [showTemplates, setShowTemplates] = useState(false);
 
   // Quick Mode
@@ -49,7 +48,6 @@ const CreateProject = () => {
   const [description, setDescription] = useState('');
   const [projectType, setProjectType] = useState('');
   const [status, setStatus] = useState('planning');
-  const [projectManagerId, setProjectManagerId] = useState('');
 
   // Client info
   const [clientName, setClientName] = useState('');

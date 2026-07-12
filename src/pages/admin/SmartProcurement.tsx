@@ -39,7 +39,6 @@ interface PurchaseRecommendation {
 
 export function SmartProcurement() {
   const { user } = useAuth();
-  const [loading, setLoading] = useState(false);
   const [forecasts, setForecasts] = useState<MaterialForecast[]>([]);
   const [suppliers, setSuppliers] = useState<SupplierCatalog[]>([]);
   const [recommendations, setRecommendations] = useState<PurchaseRecommendation[]>([]);

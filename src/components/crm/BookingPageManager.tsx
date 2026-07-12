@@ -35,7 +35,6 @@ export function BookingPageManager() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [isCreating, setIsCreating] = useState(false);
-  const [selectedPage, setSelectedPage] = useState<string | null>(null);
 
   const [formData, setFormData] = useState({
     title: "",

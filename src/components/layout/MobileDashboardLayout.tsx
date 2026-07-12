@@ -34,7 +34,6 @@ export const MobileDashboardLayout: React.FC<MobileDashboardLayoutProps> = ({
   const navigate = useNavigate();
   const location = useLocation();
   const isMobile = useIsMobile();
-  const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
 
   const handleSignOut = async () => {
     await signOut();

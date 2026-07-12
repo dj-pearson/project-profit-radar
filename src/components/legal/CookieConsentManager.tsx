@@ -57,7 +57,6 @@ const CookieConsentManager = () => {
   const [showBanner, setShowBanner] = useState(false);
   const [preferencesOpen, setPreferencesOpen] = useState(false);
   const [currentConsent, setCurrentConsent] = useState<Record<string, boolean>>({});
-  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     loadCookieCategories();

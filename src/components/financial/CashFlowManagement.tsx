@@ -50,7 +50,6 @@ interface CashFlowSummary {
 }
 
 export const CashFlowManagement = () => {
-  const [selectedPeriod, setSelectedPeriod] = useState('30');
   const [paymentApplications, setPaymentApplications] = useState<PaymentApplication[]>([]);
   const [retentionReleases, setRetentionReleases] = useState<RetentionRelease[]>([]);
   const [subcontractorPayments, setSubcontractorPayments] = useState<SubcontractorPayment[]>([]);

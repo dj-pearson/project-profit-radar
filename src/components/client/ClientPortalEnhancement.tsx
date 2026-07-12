@@ -58,7 +58,6 @@ export const ClientPortalEnhancement: React.FC = () => {
   const [timeline, setTimeline] = useState<TimelineEvent[]>([]);
   const [changeOrders, setChangeOrders] = useState<ChangeOrder[]>([]);
   const [payments, setPayments] = useState<PaymentItem[]>([]);
-  const [selectedUpdate, setSelectedUpdate] = useState<ProjectUpdate | null>(null);
   const [changeOrderResponse, setChangeOrderResponse] = useState<{[key: string]: {approved: boolean, comments: string}}>({});
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();

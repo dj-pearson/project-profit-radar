@@ -76,8 +76,6 @@ const AutomatedWorkflows = () => {
   const [workflowName, setWorkflowName] = useState('');
   const [workflowDescription, setWorkflowDescription] = useState('');
   const [aiEnabled, setAiEnabled] = useState(true);
-  const [selectedTrigger, setSelectedTrigger] = useState('');
-  const [selectedAction, setSelectedAction] = useState('');
 
   useEffect(() => {
     loadWorkflowData();

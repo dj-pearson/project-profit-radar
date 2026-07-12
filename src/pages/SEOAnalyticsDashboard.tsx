@@ -15,7 +15,6 @@ import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 
 const SEOAnalyticsDashboard: React.FC = () => {
   const [selectedDateRange, setSelectedDateRange] = useState(30);
-  const [selectedEngine, setSelectedEngine] = useState<'google' | 'bing'>('google');
   const queryClient = useQueryClient();
 
   // Fetch analytics summary

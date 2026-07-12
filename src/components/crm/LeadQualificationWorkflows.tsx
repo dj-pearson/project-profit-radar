@@ -46,7 +46,6 @@ interface WorkflowStep {
 
 export const LeadQualificationWorkflows: React.FC = () => {
   const [workflows, setWorkflows] = useState<QualificationWorkflow[]>([]);
-  const [selectedWorkflow, setSelectedWorkflow] = useState<QualificationWorkflow | null>(null);
   const [loading, setLoading] = useState(true);
   const [isCreating, setIsCreating] = useState(false);
   const { user, userProfile } = useAuth();

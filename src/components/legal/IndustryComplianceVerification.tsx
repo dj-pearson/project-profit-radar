@@ -43,7 +43,6 @@ const IndustryComplianceVerification = () => {
   const [detailDialogOpen, setDetailDialogOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterCategory, setFilterCategory] = useState<string>('all');
-  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     loadComplianceRequirements();

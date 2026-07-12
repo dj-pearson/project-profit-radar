@@ -17,7 +17,6 @@ export const EquipmentManagementSystem: React.FC = () => {
   const { data: maintenanceRecords = [], isLoading: maintenanceLoading } = useMaintenanceRecords();
   const { data: stats } = useEquipmentStats();
 
-  const [selectedEquipment, setSelectedEquipment] = useState<string>('');
   const [searchTerm, setSearchTerm] = useState('');
 
   const loading = equipmentLoading || maintenanceLoading;

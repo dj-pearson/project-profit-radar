@@ -39,7 +39,6 @@ interface InvoiceData {
 
 const JobProfitabilityOverview = () => {
   const { userProfile } = useAuth();
-  const [selectedJob, setSelectedJob] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [jobData, setJobData] = useState<JobData[]>([]);
 

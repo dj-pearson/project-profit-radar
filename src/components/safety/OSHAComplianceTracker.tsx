@@ -40,7 +40,6 @@ const OSHAComplianceTracker: React.FC<OSHAComplianceTrackerProps> = ({
 }) => {
   const [requirements, setRequirements] = useState<OSHARequirement[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
   const [filterCategory, setFilterCategory] = useState<string>('all');
   const [filterStatus, setFilterStatus] = useState<string>('all');
 
