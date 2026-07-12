@@ -4009,8 +4009,8 @@
         "Highest-traffic tables audited for build cost"
       ],
       "priority": 2,
-      "passes": false,
-      "notes": "PROPOSED (deep-dive audit 2026-07-12). Theme: Database. SEV: HIGH. Source: DB audit."
+      "passes": true,
+      "notes": "COMPLETED (2026-07-12). Added scripts/check-index-concurrently.mjs which fails new migrations that CREATE INDEX (non-CONCURRENTLY) on a pre-existing table; exempts CONCURRENTLY and indexes on tables created in the same migration. Baseline-grandfathered (20260712130000): summarizes historical non-concurrent indexes, fails only on NEW ones. Tested 4 ways (historical pass, new-non-concurrent fail, CONCURRENTLY pass, same-file-new-table pass). Wired into CI + pre-commit. Script documents the no-transaction-block caveat."
     },
     {
       "id": "US-250",

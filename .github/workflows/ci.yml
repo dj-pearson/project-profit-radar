@@ -150,3 +150,6 @@ jobs:
 
       - name: Migration backward-compat guard (US-250)
         run: node scripts/check-migration-backcompat.mjs
+
+      - name: Index CONCURRENTLY guard (US-249)
+        run: node scripts/check-index-concurrently.mjs
