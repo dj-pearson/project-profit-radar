@@ -38,8 +38,6 @@ export const WarrantyForm: React.FC<WarrantyFormProps> = ({ warranty, projectId,
   const [projects, setProjects] = useState<Project[]>([]);
   const [vendors, setVendors] = useState<Vendor[]>([]);
   const [purchaseOrders, setPurchaseOrders] = useState<PurchaseOrder[]>([]);
-  const [showStartDatePicker, setShowStartDatePicker] = useState(false);
-  const [showInstallDatePicker, setShowInstallDatePicker] = useState(false);
 
   const [formData, setFormData] = useState({
     warranty_type: warranty?.warranty_type || 'material',

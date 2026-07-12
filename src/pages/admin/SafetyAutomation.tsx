@@ -56,7 +56,6 @@ interface Project {
 
 export function SafetyAutomation() {
   const { user } = useAuth();
-  const [loading, setLoading] = useState(false);
   const [projects, setProjects] = useState<Project[]>([]);
   const [selectedProject, setSelectedProject] = useState<string>('');
 

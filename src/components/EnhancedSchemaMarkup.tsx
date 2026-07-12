@@ -4,6 +4,7 @@
  */
 
 import React from 'react';
+import { jsonLdSafe } from '@/lib/security/jsonLd';
 
 interface SchemaMarkupProps {
   type: 'organization' | 'software' | 'article' | 'faq' | 'review' | 'breadcrumb';
@@ -236,7 +237,7 @@ export const EnhancedSchemaMarkup: React.FC<SchemaMarkupProps> = ({ type, data }
   return (
     <script
       type="application/ld+json"
-      dangerouslySetInnerHTML={{ __html: JSON.stringify(schemaData) }}
+      dangerouslySetInnerHTML={{ __html: jsonLdSafe(schemaData) }}
     />
   );
 };

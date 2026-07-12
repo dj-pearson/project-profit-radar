@@ -90,7 +90,6 @@ export const EquipmentMaintenanceTracking: React.FC = () => {
   const [showScheduleForm, setShowScheduleForm] = useState(false);
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const [filterType, setFilterType] = useState<string>('all');
-  const [selectedDate, setSelectedDate] = useState<Date>();
   const { toast } = useToast();
 
   useEffect(() => {

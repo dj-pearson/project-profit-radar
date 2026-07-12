@@ -29,7 +29,6 @@ export const SocialAccountsManager: React.FC<SocialAccountsManagerProps> = ({
 }) => {
   const { toast } = useToast();
   const [isConnecting, setIsConnecting] = useState(false);
-  const [selectedPlatform, setSelectedPlatform] = useState<string>('');
 
   const platformConfig = [
     { 

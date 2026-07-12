@@ -45,7 +45,6 @@ export const SocialMediaManager: React.FC = () => {
   const [accounts, setAccounts] = useState<any[]>([]);
   const [posts, setPosts] = useState<any[]>([]);
   const [templates, setTemplates] = useState<any[]>([]);
-  const [analytics, setAnalytics] = useState<any>({});
 
   useEffect(() => {
     if (userProfile?.company_id) {

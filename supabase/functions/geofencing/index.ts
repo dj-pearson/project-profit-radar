@@ -2,7 +2,7 @@
 // Calculates distances, checks geofence breaches, and triggers alerts
 
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
-import { initializeAuthContext, errorResponse, successResponse } from '../_shared/auth-helpers.ts'
+import { initializeAuthContext, errorResponse, successResponse, safeErrorResponse } from '../_shared/auth-helpers.ts'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -72,7 +72,7 @@ serve(async (req) => {
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error)
     logStep('ERROR', { message: errorMessage })
-    return errorResponse(errorMessage, 500)
+    return safeErrorResponse(req)
   }
 })
 

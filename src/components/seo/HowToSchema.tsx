@@ -1,4 +1,5 @@
 import React from 'react';
+import { jsonLdSafe } from '@/lib/security/jsonLd';
 
 interface HowToStep {
   name: string;
@@ -73,7 +74,7 @@ export const HowToSchema: React.FC<HowToSchemaProps> = ({
     <script
       type="application/ld+json"
       dangerouslySetInnerHTML={{
-        __html: JSON.stringify(schemaData)
+        __html: jsonLdSafe(schemaData)
       }}
     />
   );

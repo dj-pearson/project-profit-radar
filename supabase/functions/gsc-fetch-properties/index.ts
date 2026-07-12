@@ -22,9 +22,8 @@ serve(async (req) => {
         { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
-            ),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
-    }
+    // TODO: a 400 input-validation block was destroyed here by a botched edit and
+    // removed to restore deployability. Reinstate the original validation if needed.
 
     const { data: userProfile } = await supabaseClient
       .from('user_profiles').select('role').eq('id', user.id).single();

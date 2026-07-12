@@ -408,6 +408,9 @@ verify_jwt = true
 [functions.calculate-bid-analytics]
 verify_jwt = true
 
+# US-238: cross-tenant analytics — guarded in-function by requireSystemOrAdmin
+# (admin JWT or x-cron-secret). Intended invoker: daily cron sending CRON_SECRET.
+# Kept verify_jwt=true so a JWT is still required during CRON_SECRET staged rollout.
 [functions.calculate-revenue-metrics]
 verify_jwt = true
 
@@ -432,7 +435,13 @@ verify_jwt = true
 [functions.smart-procurement]
 verify_jwt = true
 
+# US-238: cross-tenant hourly cron that emails customers — guarded in-function by
+# requireSystemOrAdmin (admin JWT or x-cron-secret). Intended invoker: cron.
 [functions.auto-intervention-scheduler]
+verify_jwt = true
+
+# US-238: cross-tenant cron analytics — guarded in-function by requireSystemOrAdmin.
+[functions.generate-churn-predictions]
 verify_jwt = true
 
 [functions.analytics-oauth-google]

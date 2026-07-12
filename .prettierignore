@@ -1,0 +1,9 @@
+dist
+node_modules
+coverage
+package-lock.json
+src/integrations/supabase/types.ts
+supabase/migrations
+scripts/rollback-sql
+*.min.js
+*.report.html

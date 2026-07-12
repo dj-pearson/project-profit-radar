@@ -225,7 +225,7 @@ export class InvoicePDFGenerator {
     this.doc.setFont('helvetica', 'bold');
     this.doc.setTextColor(100, 100, 100);
 
-    let leftY = startY + 7;
+    const leftY = startY + 7;
     this.doc.text('INVOICE DATE:', this.margin + 5, leftY);
     this.doc.text('DUE DATE:', this.margin + 5, leftY + 7);
 
@@ -255,7 +255,7 @@ export class InvoicePDFGenerator {
     this.doc.setFont('helvetica', 'bold');
     this.doc.setTextColor(100, 100, 100);
 
-    let rightY = startY + 7;
+    const rightY = startY + 7;
     this.doc.text('STATUS:', rightX, rightY);
 
     // Status badge

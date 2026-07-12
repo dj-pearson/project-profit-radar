@@ -129,6 +129,19 @@ export function successResponse(data: any, request?: Request): Response {
 }
 
 /**
+ * Return a generic 500 to the client WITHOUT leaking internal/DB error detail
+ * (raw Postgres/Supabase messages disclose schema, column names, constraints).
+ * Callers must log the full error server-side (e.g. via logStep) BEFORE calling
+ * this — the client only ever receives a safe, generic message. (US-242)
+ *
+ * @param request - Optional request for secure CORS header generation
+ * @returns Response object (500)
+ */
+export function safeErrorResponse(request?: Request): Response {
+  return errorResponse('Internal server error', 500, request);
+}
+
+/**
  * Verify user has access to a specific company
  *
  * @param supabase - Authenticated Supabase client

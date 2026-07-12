@@ -1,4 +1,5 @@
 import React from 'react';
+import { jsonLdSafe } from '@/lib/security/jsonLd';
 
 interface VideoSEOProps {
   name: string;
@@ -58,7 +59,7 @@ export const VideoSEOSchema: React.FC<VideoSEOProps> = ({
     <script
       type="application/ld+json"
       dangerouslySetInnerHTML={{
-        __html: JSON.stringify(schemaData)
+        __html: jsonLdSafe(schemaData)
       }}
     />
   );
@@ -126,7 +127,7 @@ export const WebPageSEOSchema: React.FC<WebPageSEOProps> = ({
     <script
       type="application/ld+json"
       dangerouslySetInnerHTML={{
-        __html: JSON.stringify(schemaData)
+        __html: jsonLdSafe(schemaData)
       }}
     />
   );

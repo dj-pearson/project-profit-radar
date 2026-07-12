@@ -201,7 +201,7 @@ const RFIs = () => {
 
       // Fetch responses for these RFIs
       const rfiIds = (rfisData || []).map((r: RawRFIRow) => r.id);
-      let responsesByRfi: Record<string, RFIResponse[]> = {};
+      const responsesByRfi: Record<string, RFIResponse[]> = {};
       if (rfiIds.length > 0) {
         const { data: responsesData } = await untypedFrom('rfi_responses')
           .select('*')

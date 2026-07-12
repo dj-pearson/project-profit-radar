@@ -50,7 +50,6 @@ interface CrewMember {
 
 export function AutoScheduling() {
   const { user } = useAuth();
-  const [loading, setLoading] = useState(false);
   const [generating, setGenerating] = useState(false);
 
   // Form state

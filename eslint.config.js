@@ -3,6 +3,7 @@ import globals from "globals";
 import reactHooks from "eslint-plugin-react-hooks";
 import reactRefresh from "eslint-plugin-react-refresh";
 import jsxA11y from "eslint-plugin-jsx-a11y";
+import unusedImports from "eslint-plugin-unused-imports";
 import tseslint from "typescript-eslint";
 
 export default tseslint.config(
@@ -23,6 +24,7 @@ export default tseslint.config(
       "react-hooks": reactHooks,
       "react-refresh": reactRefresh,
       "jsx-a11y": jsxA11y,
+      "unused-imports": unusedImports,
     },
     rules: {
       ...reactHooks.configs.recommended.rules,
@@ -30,7 +32,24 @@ export default tseslint.config(
         "warn",
         { allowConstantExport: true },
       ],
-      "@typescript-eslint/no-unused-vars": "off",
+      // US-212/US-258/US-264: auto-removable unused imports are an error
+      // (eslint --fix strips them). Unused vars are a warning — surfaced but not
+      // blocking, since removing them can change behavior and needs review.
+      // Args and rest-siblings are ignored (intentional signature shape / omit).
+      "unused-imports/no-unused-imports": "error",
+      "@typescript-eslint/no-unused-vars": [
+        "warn",
+        {
+          args: "none",
+          varsIgnorePattern: "^_",
+          ignoreRestSiblings: true,
+        },
+      ],
+      // US-258: the ~933-`any` backlog is tracked as a warning (not a blocking
+      // error) during the strict-mode burndown, so `eslint .` and the
+      // pre-commit hook fail only on real errors, not the known backlog.
+      // Ratchet back to "error" once the burndown (US-212) is complete.
+      "@typescript-eslint/no-explicit-any": "warn",
       // Base rule for non-app code (tools/, scripts/, mobile-app/, etc.):
       // console is discouraged but only a warning. The app source (src/**) is
       // held to "error" in the dedicated block below.

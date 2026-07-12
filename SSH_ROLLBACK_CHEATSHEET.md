@@ -1,6 +1,6 @@
 # SSH Rollback Cheatsheet - Quick Reference
 
-**Server:** 209.145.59.219  
+**Server:** <REDACTED_SERVER_IP>  
 **Project:** v0os0wg0gw4ko04ww80sgg08
 
 ---
@@ -9,7 +9,7 @@
 
 ```bash
 # 1. Connect
-ssh root@209.145.59.219
+ssh root@<REDACTED_SERVER_IP>
 
 # 2. Find DB container
 DB_CONTAINER=$(docker ps --format '{{.Names}}' | grep "supabase-db.*v0os0wg0gw4ko04ww80sgg08")
@@ -20,7 +20,7 @@ mkdir -p ~/backups && cd ~/backups
 docker exec $DB_CONTAINER pg_dump -U postgres -d postgres --clean > backup_$(date +%Y%m%d_%H%M%S).sql
 
 # 4. Upload rollback file from local machine (new terminal):
-# scp supabase/migrations/ROLLBACK_multi_tenant.sql root@209.145.59.219:~/backups/
+# scp supabase/migrations/ROLLBACK_multi_tenant.sql root@<REDACTED_SERVER_IP>:~/backups/
 
 # 5. Apply migration
 docker exec -i $DB_CONTAINER psql -U postgres -d postgres < ~/backups/ROLLBACK_multi_tenant.sql

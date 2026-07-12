@@ -15,14 +15,6 @@ import { getFiles } from '../utils/helpers';
 // Types
 // ============================================================================
 
-interface RouteMatch {
-  path: string;
-  component?: string;
-  element?: string;
-  lazy?: boolean;
-  children?: RouteMatch[];
-  index?: boolean;
-}
 
 // ============================================================================
 // Route Analyzer

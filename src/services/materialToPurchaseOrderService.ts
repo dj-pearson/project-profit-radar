@@ -271,7 +271,7 @@ class MaterialToPurchaseOrderService {
    */
   async getSuggestedVendors(companyId: string, category?: string): Promise<any[]> {
     try {
-      let query = supabase
+      const query = supabase
         .from('vendors')
         .select('id, name, email, phone')
         .eq('company_id', companyId)

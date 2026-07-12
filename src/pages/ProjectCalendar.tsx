@@ -12,7 +12,6 @@ import {
   subWeeks,
   addDays,
   subDays,
-  isSameDay,
   isSameMonth,
   isToday,
 } from 'date-fns';

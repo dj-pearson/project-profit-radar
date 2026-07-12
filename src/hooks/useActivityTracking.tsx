@@ -91,6 +91,7 @@ export const useActivityTracking = () => {
           }),
         ]);
       } catch (error) {
+      // ignore: non-critical, best-effort
       }
     },
     [user, userProfile]
@@ -155,6 +156,7 @@ export const useActivityTracking = () => {
             details: { status },
           });
         } catch (error) {
+        // ignore: non-critical, best-effort
         }
       }
     },

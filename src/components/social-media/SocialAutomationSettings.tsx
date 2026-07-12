@@ -17,7 +17,6 @@ import { useSocialMediaAutomation } from "@/hooks/useSocialMediaAutomation";
 import {
   ExternalLink,
   Zap,
-  Settings,
   Globe,
   Webhook,
   TestTube,

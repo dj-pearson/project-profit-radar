@@ -1,10 +1,6 @@
 // Workflow Execution Edge Function
-import { initializeAuthContext, errorResponse } from '../_shared/auth-helpers.ts';
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
+import { initializeAuthContext, verifyCompanyAccess, errorResponse } from '../_shared/auth-helpers.ts';
+import { getCorsHeaders, handleCorsPreflightRequest } from '../_shared/secure-cors.ts';
 
 interface WorkflowStep {
   id: string;
@@ -26,13 +22,15 @@ const logStep = (step: string, details?: any) => {
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
+    return handleCorsPreflightRequest(req);
   }
+
+  const corsHeaders = getCorsHeaders(req);
 
   try {
     const authContext = await initializeAuthContext(req);
     if (!authContext) {
-      return errorResponse('Unauthorized', 401);
+      return errorResponse('Unauthorized', 401, req);
     }
 
     const { user, supabase } = authContext;
@@ -42,7 +40,7 @@ Deno.serve(async (req) => {
 
     logStep('Executing workflow', { workflow_id, trigger_data });
 
-    // Get workflow definition
+    // Get workflow definition (RLS-scoped: a cross-company id returns no row).
     const { data: workflow, error: workflowError } = await supabase
       .from('workflow_definitions')
       .select('*, workflow_steps(*)')
@@ -51,6 +49,12 @@ Deno.serve(async (req) => {
 
     if (workflowError || !workflow) {
       throw new Error(`Workflow not found: ${workflowError?.message}`);
+    }
+
+    // SECURITY (US-236): defense-in-depth — explicitly confirm the caller owns
+    // the workflow's company, so a misconfigured RLS policy can't leak it.
+    if (!(await verifyCompanyAccess(supabase, user.id, workflow.company_id))) {
+      return errorResponse('Forbidden: workflow belongs to another company', 403, req);
     }
 
     if (!workflow.is_active) {

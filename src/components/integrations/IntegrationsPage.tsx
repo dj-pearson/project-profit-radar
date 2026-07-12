@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -13,7 +13,6 @@ interface IntegrationsPageProps {
 
 export const IntegrationsPage: React.FC<IntegrationsPageProps> = ({ companyId }) => {
   const { userProfile } = useAuth();
-  const [loading, setLoading] = useState(false);
 
   const integrationCards = [
     {

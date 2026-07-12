@@ -1,0 +1,5 @@
+{
+  "_comment": "US-259: gzipped budget. Ratchet down as chunks split/lazy-load. The initial-load entry chunk (index-*.js) is ~158KB — already under the 800KB CLAUDE.md goal; total is dominated by lazy chunks (three/xlsx/recharts).",
+  "maxTotalGzipped": 3174016,
+  "maxEntryGzipped": 307200
+}

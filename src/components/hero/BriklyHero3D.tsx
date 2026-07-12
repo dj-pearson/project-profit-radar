@@ -8,10 +8,6 @@ import { ArrowRight, MousePointer2, Move } from 'lucide-react';
 import { AmbientParticles } from './BackgroundEffects';
 
 // Interface for shared state
-interface AnimationState {
-  progress: number;
-  setProgress: (p: number) => void;
-}
 
 // Component to display the live cost based on shared progress
 const CostCounter = ({ progress }: { progress: number }) => {

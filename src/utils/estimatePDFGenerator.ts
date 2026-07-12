@@ -260,7 +260,7 @@ export class EstimatePDFGenerator {
     this.doc.setFont('helvetica', 'bold');
     this.doc.setTextColor(100, 100, 100);
 
-    let leftY = startY + 19;
+    const leftY = startY + 19;
     const leftX = this.margin + 10;
     const rightX = this.pageWidth / 2 + 5;
 

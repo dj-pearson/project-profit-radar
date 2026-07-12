@@ -4,7 +4,7 @@
 
 This guide walks you through executing the database rollback on your self-hosted Supabase instance via SSH.
 
-**Server:** 209.145.59.219  
+**Server:** <REDACTED_SERVER_IP>  
 **Supabase Project ID:** v0os0wg0gw4ko04ww80sgg08
 
 ---
@@ -15,9 +15,9 @@ This guide walks you through executing the database rollback on your self-hosted
 
 ```bash
 # Connect to your server
-ssh root@209.145.59.219
+ssh root@<REDACTED_SERVER_IP>
 # Or if using a specific user:
-ssh your_user@209.145.59.219
+ssh your_user@<REDACTED_SERVER_IP>
 ```
 
 ### Step 2: Locate Supabase Containers
@@ -87,10 +87,10 @@ From your **local machine** (new terminal/PowerShell):
 
 ```powershell
 # From your project directory on Windows:
-scp supabase/migrations/ROLLBACK_multi_tenant.sql root@209.145.59.219:~/backups/
+scp supabase/migrations/ROLLBACK_multi_tenant.sql root@<REDACTED_SERVER_IP>:~/backups/
 
 # Or if using a specific user:
-scp supabase/migrations/ROLLBACK_multi_tenant.sql your_user@209.145.59.219:~/backups/
+scp supabase/migrations/ROLLBACK_multi_tenant.sql your_user@<REDACTED_SERVER_IP>:~/backups/
 ```
 
 **Alternative: Copy-paste method**
@@ -226,7 +226,7 @@ echo "Step 3: Checking for rollback migration..."
 if [ ! -f "~/backups/ROLLBACK_multi_tenant.sql" ]; then
   echo "WARNING: ROLLBACK_multi_tenant.sql not found in ~/backups/"
   echo "Please upload it using:"
-  echo "  scp supabase/migrations/ROLLBACK_multi_tenant.sql root@209.145.59.219:~/backups/"
+  echo "  scp supabase/migrations/ROLLBACK_multi_tenant.sql root@<REDACTED_SERVER_IP>:~/backups/"
   echo ""
   read -p "Press Enter after uploading the file..."
 fi
@@ -395,13 +395,13 @@ docker exec -i $DB_CONTAINER psql -U postgres -d postgres -a < ~/backups/ROLLBAC
 
 ```bash
 # Test SSH connection
-ssh -v root@209.145.59.219
+ssh -v root@<REDACTED_SERVER_IP>
 
 # If using key authentication:
-ssh -i ~/.ssh/your_key root@209.145.59.219
+ssh -i ~/.ssh/your_key root@<REDACTED_SERVER_IP>
 
 # If using different port:
-ssh -p 2222 root@209.145.59.219
+ssh -p 2222 root@<REDACTED_SERVER_IP>
 ```
 
 ---
@@ -486,7 +486,7 @@ After successful database rollback:
 
 ```bash
 # Connect to server
-ssh root@209.145.59.219
+ssh root@<REDACTED_SERVER_IP>
 
 # Find database container
 docker ps | grep supabase-db
@@ -528,7 +528,7 @@ Database rollback is complete when:
 **Ready to proceed?**
 
 ```bash
-ssh root@209.145.59.219
+ssh root@<REDACTED_SERVER_IP>
 ```
 
 Then follow the steps above! 🚀
@@ -536,6 +536,6 @@ Then follow the steps above! 🚀
 ---
 
 **Created:** 2025-12-21  
-**Server:** 209.145.59.219  
+**Server:** <REDACTED_SERVER_IP>  
 **Project:** v0os0wg0gw4ko04ww80sgg08  
 **Status:** Ready for execution

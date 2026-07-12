@@ -95,7 +95,6 @@ export default function SubcontractorPaymentWorkflows() {
     }
   ]);
   
-  const [selectedPayment, setSelectedPayment] = useState<SubcontractorPayment | null>(null);
   const [showNewPaymentForm, setShowNewPaymentForm] = useState(false);
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const { toast } = useToast();

@@ -32,15 +32,6 @@ interface DashboardMetric {
   format?: 'currency' | 'percentage' | 'number' | 'text';
 }
 
-interface DrillDownData {
-  category: string;
-  value: number;
-  details?: Array<{
-    name: string;
-    value: number;
-    status?: string;
-  }>;
-}
 
 const COLORS = ['hsl(var(--primary))', 'hsl(var(--secondary))', 'hsl(var(--accent))', 'hsl(var(--muted))'];
 

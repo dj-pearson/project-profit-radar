@@ -5,11 +5,8 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import Stripe from "https://esm.sh/stripe@14.5.0";
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type",
-};
+import { getCorsHeaders, handleCorsPreflightRequest } from "../_shared/secure-cors.ts";
+import { requireSystemOrAdmin } from "../_shared/system-auth.ts";
 
 interface RevenueMetrics {
   periodStart: Date;
@@ -31,8 +28,15 @@ interface RevenueMetrics {
 serve(async (req) => {
   // Handle CORS preflight
   if (req.method === "OPTIONS") {
-    return new Response("ok", { headers: corsHeaders });
+    return handleCorsPreflightRequest(req);
   }
+
+  const corsHeaders = getCorsHeaders(req);
+
+  // SECURITY (US-238): cross-tenant analytics function reading global Stripe
+  // MRR/ARR — require an admin JWT or the shared CRON_SECRET before running.
+  const denied = await requireSystemOrAdmin(req);
+  if (denied) return denied;
 
   try {
     // Create Supabase client

@@ -109,12 +109,10 @@ interface ScheduleConflict {
 
 export const SubcontractorCoordination: React.FC = () => {
   const [subcontractors, setSubcontractors] = useState<Subcontractor[]>([]);
-  const [selectedSubcontractor, setSelectedSubcontractor] = useState<Subcontractor | null>(null);
   const [scheduleConflicts, setScheduleConflicts] = useState<ScheduleConflict[]>([]);
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const [filterTrade, setFilterTrade] = useState<string>('all');
   const [showPortalForm, setShowPortalForm] = useState(false);
-  const [activeTab, setActiveTab] = useState('overview');
   const { toast } = useToast();
 
   useEffect(() => {

@@ -12,6 +12,7 @@
  */
 
 import React from 'react';
+import { jsonLdSafe } from '@/lib/security/jsonLd';
 import { Helmet } from 'react-helmet-async';
 import { useLocation } from 'react-router-dom';
 import { BRIKLY_LOGO_URL } from '@/lib/utils';
@@ -122,7 +123,7 @@ export const PageSEO: React.FC<PageSEOProps> = ({
         <script
           key={index}
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(schemaObj) }}
+          dangerouslySetInnerHTML={{ __html: jsonLdSafe(schemaObj) }}
         />
       ))}
     </Helmet>

@@ -251,10 +251,13 @@ class CacheManager {
   /**
    * Generate cache key from object
    */
-  generateKey(prefix: string, params: Record<string, unknown>): string {
-    const sortedParams = Object.keys(params)
+  generateKey(prefix: string, params: object): string {
+    // Accept any object (incl. interface types without an index signature);
+    // we only read its own enumerable keys, so the cast is safe.
+    const record = params as Record<string, unknown>;
+    const sortedParams = Object.keys(record)
       .sort()
-      .map(key => `${key}:${JSON.stringify(params[key])}`)
+      .map(key => `${key}:${JSON.stringify(record[key])}`)
       .join('|');
 
     return `${prefix}:${sortedParams}`;

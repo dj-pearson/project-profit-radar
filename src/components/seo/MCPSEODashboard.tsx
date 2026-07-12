@@ -63,11 +63,6 @@ interface TopPage {
   pageViews: number;
 }
 
-interface MCPQuery {
-  type: 'analytics' | 'search-console';
-  query: string;
-  parameters?: Record<string, any>;
-}
 
 const MCPSEODashboard: React.FC = () => {
   const [metrics, setMetrics] = useState<SEOMetrics | null>(null);

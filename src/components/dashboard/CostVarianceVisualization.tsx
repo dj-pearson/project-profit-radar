@@ -57,7 +57,6 @@ const COLORS = {
 
 export const CostVarianceVisualization: React.FC = () => {
   const [selectedProject, setSelectedProject] = useState<string>('all');
-  const [timeRange, setTimeRange] = useState('3m');
   const [viewType, setViewType] = useState<'overview' | 'heatmap' | 'trends'>('overview');
 
   const projectData: ProjectCostData[] = useMemo(() => [

@@ -60,7 +60,6 @@ const InsuranceRequirementsTracker = () => {
   const [requirements, setRequirements] = useState<ComplianceRequirement[]>([]);
   const [selectedPolicy, setSelectedPolicy] = useState<InsurancePolicy | null>(null);
   const [detailDialogOpen, setDetailDialogOpen] = useState(false);
-  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     loadInsurancePolicies();

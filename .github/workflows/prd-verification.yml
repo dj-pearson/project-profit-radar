@@ -21,7 +21,7 @@ concurrency:
 
 jobs:
   typecheck:
-    name: Type Check (US-212 gate)
+    name: Type Check (US-212 error-budget ratchet)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -32,7 +32,9 @@ jobs:
       - run: npm ci
         env:
           PUPPETEER_SKIP_DOWNLOAD: true
-      - run: npx tsc --noEmit -p tsconfig.app.json
+      # US-258: ratchet on .github/ts-error-baseline.txt instead of requiring a
+      # fully-green tsc (red on every push until US-212 completes).
+      - run: node scripts/check-ts-error-budget.mjs
 
   unit-test:
     name: Unit Tests

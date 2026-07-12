@@ -15,6 +15,9 @@
     "build": "npm run generate-sitemap && vite build && node scripts/copy-404.js && node scripts/update-sw-version.js",
     "build:dev": "npm run generate-sitemap && vite build --mode development && node scripts/copy-404.js",
     "lint": "eslint .",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "prepare": "husky",
     "test": "vitest",
     "test:ui": "vitest --ui",
     "test:run": "vitest run",
@@ -50,7 +53,7 @@
     "cloudflare:install": "npm install --force && npm run build",
     "build:analyze": "npm run generate-sitemap && vite build --mode production && npx vite-bundle-analyzer dist/stats.html",
     "performance:audit": "node scripts/performance-audit.js",
-    "performance:budget": "node scripts/check-performance-budget.js",
+    "performance:budget": "node scripts/check-bundle-budget.mjs",
     "images:optimize": "node scripts/convert-images-to-webp.js",
     "cache:purge": "node scripts/purge-cloudflare-cache.js",
     "performance:ci": "npm run build && npm run performance:budget && npm run performance:audit",
@@ -205,6 +208,7 @@
     "eslint-plugin-jsx-a11y": "^6.10.2",
     "eslint-plugin-react-hooks": "^5.1.0-rc.0",
     "eslint-plugin-react-refresh": "^0.4.9",
+    "eslint-plugin-unused-imports": "^4.4.1",
     "expo": "~54.0.15",
     "expo-background-fetch": "14.0.7",
     "expo-calendar": "15.0.7",
@@ -226,8 +230,11 @@
     "expo-updates": "29.0.12",
     "globals": "^15.9.0",
     "happy-dom": "^20.0.10",
+    "husky": "^9.1.7",
     "jsdom": "^27.2.0",
+    "lint-staged": "^17.0.8",
     "postcss": "^8.4.47",
+    "prettier": "^3.9.5",
     "rollup-plugin-visualizer": "^5.12.0",
     "sharp": "0.34.4",
     "svgo": "4.0.0",
@@ -241,5 +248,8 @@
   },
   "optionalDependencies": {
     "@rollup/rollup-win32-x64-msvc": "4.45.1"
+  },
+  "lint-staged": {
+    "*.{ts,tsx}": "eslint"
   }
 }

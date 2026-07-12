@@ -44,6 +44,9 @@ export default defineConfig({
     include: [
       'src/**/*.{test,spec}.{ts,tsx}',
       'src/**/__tests__/**/*.{ts,tsx}',
+      // Dependency-free edge-function shared logic (e.g. workflow-auth) that is
+      // safe to run under node/vitest — must NOT import Deno globals or URLs.
+      'supabase/functions/_shared/**/*.{test,spec}.ts',
     ],
 
     // Exclude patterns

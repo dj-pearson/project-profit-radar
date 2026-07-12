@@ -63,7 +63,7 @@ const cancelIdle =
 
 // --- Shared event queue (singleton across hook instances) ---
 
-let eventQueue: SecurityEvent[] = [];
+const eventQueue: SecurityEvent[] = [];
 let flushTimerId: ReturnType<typeof setInterval> | null = null;
 let instanceCount = 0;
 

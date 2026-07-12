@@ -1,6 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import {
-  TASK_STAGES, normalizeTaskStage, statusValueForStage, groupTasksByStage, assigneeInitials,
+import { normalizeTaskStage, statusValueForStage, groupTasksByStage, assigneeInitials,
 } from '../taskBoard';
 
 describe('normalizeTaskStage', () => {

@@ -91,7 +91,6 @@ export const ProjectMaterials: React.FC<ProjectMaterialsProps> = ({
   const [loading, setLoading] = useState(true);
   const [showAddMaterial, setShowAddMaterial] = useState(false);
   const [showAddUsage, setShowAddUsage] = useState(false);
-  const [editingMaterial, setEditingMaterial] = useState<Material | null>(null);
 
   const [newMaterial, setNewMaterial] = useState({
     name: '',

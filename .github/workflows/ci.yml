@@ -2,9 +2,9 @@ name: CI
 
 on:
   push:
-    branches: [main]
+    branches: [main, develop]
   pull_request:
-    branches: [main]
+    branches: [main, develop]
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -37,7 +37,9 @@ jobs:
       - run: npm ci
         env:
           PUPPETEER_SKIP_DOWNLOAD: true
-      - run: npx tsc --noEmit -p tsconfig.app.json
+      # US-258: error-budget ratchet, not a raw `tsc` (which is red until US-212
+      # lands). Fails only on regressions above .github/ts-error-baseline.txt.
+      - run: node scripts/check-ts-error-budget.mjs
 
   unit-test:
     name: Unit Tests
@@ -94,7 +96,9 @@ jobs:
         env:
           PUPPETEER_SKIP_DOWNLOAD: true
       - run: npx playwright install chromium --with-deps
-      - run: npm run build
+      # US-258: no `npm run build` here — the e2e webServer runs the Vite dev
+      # server (npm run dev:ci), so dist/ is unused, and the production build is
+      # already verified by the `build` job (needs: build above).
       - run: npx playwright test --project=chromium
         env:
           CI: true
@@ -116,7 +120,10 @@ jobs:
         run: npm run test:security
 
       - name: Dependency vulnerability audit
-        run: npm run security:audit || true
+        # US-255: blocks on high/critical CVEs. Pre-existing backlog is
+        # suppressed via scripts/audit-allowlist.json (with expiry); new
+        # high/critical advisories fail the job.
+        run: npm run security:audit
 
       - name: Secret scanning
         run: bash scripts/secret-scan.sh
@@ -132,3 +139,21 @@ jobs:
 
       - name: Edge function auth guard (US-198)
         run: node scripts/check-edge-function-auth.mjs
+
+      - name: Migration filename guard (US-235)
+        run: bash scripts/check-migration-filenames.sh
+
+      - name: No stray edge-function backup copies (US-239)
+        run: bash scripts/check-no-stray-function-copies.sh
+
+      - name: RLS permissive-policy guard (US-237)
+        run: node scripts/check-rls-policies.mjs
+
+      - name: No tracked build/backup/env cruft (US-261)
+        run: bash scripts/check-no-tracked-cruft.sh
+
+      - name: Migration backward-compat guard (US-250)
+        run: node scripts/check-migration-backcompat.mjs
+
+      - name: Index CONCURRENTLY guard (US-249)
+        run: node scripts/check-index-concurrently.mjs

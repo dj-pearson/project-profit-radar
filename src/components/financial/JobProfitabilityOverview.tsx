@@ -18,13 +18,6 @@ interface JobData {
   completion_percentage: number;
 }
 
-interface ProjectData {
-  id: string;
-  name: string;
-  budget: number | null;
-  completion_percentage: number | null;
-  status: string | null;
-}
 
 interface JobCostData {
   project_id: string;
@@ -46,7 +39,6 @@ interface InvoiceData {
 
 const JobProfitabilityOverview = () => {
   const { userProfile } = useAuth();
-  const [selectedJob, setSelectedJob] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [jobData, setJobData] = useState<JobData[]>([]);
 

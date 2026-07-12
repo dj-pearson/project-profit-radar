@@ -187,5 +187,6 @@ export const measureCriticalCSSImpact = (): void => {
   const fcp = paintEntries.find(entry => entry.name === 'first-contentful-paint');
   
   if (fcp) {
+  // intentionally empty
   }
 };

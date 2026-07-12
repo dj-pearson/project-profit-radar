@@ -45,16 +45,6 @@ interface Submittal {
   reviewer?: { first_name: string; last_name: string };
 }
 
-interface SubmittalAttachment {
-  id: string;
-  submittal_id: string;
-  file_name: string;
-  file_path: string;
-  file_size: number;
-  file_type: string;
-  uploaded_by: string;
-  created_at: string;
-}
 
 const Submittals = () => {
   const { user, userProfile, loading } = useAuth();

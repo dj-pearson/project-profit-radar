@@ -21,27 +21,7 @@ import { useCashFlowData, useCashFlowActivity } from '@/hooks/useCashFlow';
 import { useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/contexts/AuthContext';
 
-interface CashFlowData {
-  current_cash: number;
-  daily_burn_rate: number;
-  runway_days: number;
-  trend: 'improving' | 'declining' | 'stable';
-  last_30_days_change: number;
-  total_receivables: number;
-  total_payables: number;
-  forecast_30: number;
-  forecast_60: number;
-  forecast_90: number;
-}
 
-interface CashFlowItem {
-  date: string;
-  type: 'inflow' | 'outflow';
-  amount: number;
-  description: string;
-  category: string;
-  status: 'pending' | 'completed';
-}
 
 export const CashFlowRunwayWidget = () => {
   const { userProfile } = useAuth();

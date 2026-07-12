@@ -16,7 +16,6 @@ import { supabase } from '@/integrations/supabase/client';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { PaymentSettings } from '@/components/financial/PaymentSettings';
 import {
-  Settings,
   Palette,
   Users,
   Shield,

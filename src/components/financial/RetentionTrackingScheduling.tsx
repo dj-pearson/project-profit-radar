@@ -42,7 +42,6 @@ interface RetentionSchedule {
 export const RetentionTrackingScheduling: React.FC = () => {
   const [retentionItems, setRetentionItems] = useState<RetentionItem[]>([]);
   const [schedule, setSchedule] = useState<RetentionSchedule | null>(null);
-  const [selectedDate, setSelectedDate] = useState<Date>();
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const [reminderDays, setReminderDays] = useState<number>(30);
   const { toast } = useToast();

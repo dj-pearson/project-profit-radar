@@ -58,6 +58,14 @@ serve(async (req) => {
 
     logStep('User authenticated', { userId: user.id })
 
+    // Resolve the caller's company (used as the tenant scope for isolation).
+    const { data: profile } = await supabase
+      .from('user_profiles')
+      .select('company_id')
+      .eq('id', user.id)
+      .single()
+    const companyId = (profile as { company_id?: string } | null)?.company_id ?? null
+
     const requestData: EstimateRequest = await req.json()
 
     const {
@@ -73,7 +81,7 @@ serve(async (req) => {
     // Step 1: Find similar historical projects (with site isolation)
     const { data: similarProjects, error: similarError } = await supabase
       .rpc('get_similar_projects', {
-        p_  // CRITICAL: Site isolation
+        p_tenant_id: companyId, // CRITICAL: company/tenant isolation
         p_project_type: project_type,
         p_square_footage: square_footage,
         p_location_zip: location_zip
@@ -112,7 +120,7 @@ serve(async (req) => {
     // Step 4: Get win rate for this project type (with site isolation)
     const { data: winRateData } = await supabase
       .rpc('get_win_rate_by_project_type', {
-        p_  // CRITICAL: Site isolation
+        p_tenant_id: companyId, // CRITICAL: company/tenant isolation
         p_project_type: project_type
       })
 

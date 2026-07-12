@@ -22,6 +22,7 @@ class MobileNotificationService {
       const pushPermResult = await PushNotifications.requestPermissions();
 
       if (localPermResult.display === 'granted') {
+      // intentionally empty
       }
 
       if (pushPermResult.receive === 'granted') {

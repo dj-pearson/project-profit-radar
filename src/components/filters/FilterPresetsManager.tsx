@@ -19,7 +19,6 @@ import {
   Star,
   Trash2,
   Share2,
-  Check,
   Filter
 } from 'lucide-react';
 

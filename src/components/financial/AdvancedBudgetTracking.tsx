@@ -65,8 +65,6 @@ interface BudgetRevision {
 export const AdvancedBudgetTracking = () => {
   const { user } = useAuth();
   const [selectedProject, setSelectedProject] = useState('all');
-  const [selectedView, setSelectedView] = useState('summary');
-  const [selectedPeriod, setSelectedPeriod] = useState('current');
   const [loading, setLoading] = useState(true);
   const [budgetSummary, setBudgetSummary] = useState<BudgetSummary | null>(null);
   const [projects, setProjects] = useState<Project[]>([]);

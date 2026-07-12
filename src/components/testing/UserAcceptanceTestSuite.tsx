@@ -55,7 +55,6 @@ const UserAcceptanceTestSuite = () => {
   const [scenarioDialogOpen, setScenarioDialogOpen] = useState(false);
   const [newFeedback, setNewFeedback] = useState('');
   const [newRating, setNewRating] = useState(5);
-  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     loadTestScenarios();

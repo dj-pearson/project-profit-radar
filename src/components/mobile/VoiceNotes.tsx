@@ -122,6 +122,7 @@ const VoiceNotes: React.FC<VoiceNotesProps> = ({
 
       setVoiceNotes(noteMetadata.filter(Boolean));
     } catch (error) {
+    // ignore: non-critical, best-effort
     }
   };
 

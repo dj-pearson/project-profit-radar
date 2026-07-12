@@ -51,7 +51,6 @@ const EmailMarketingIntegration = () => {
   const [campaigns, setCampaigns] = useState<EmailCampaign[]>([]);
   const [emailLists, setEmailLists] = useState<EmailList[]>([]);
   const [templates, setTemplates] = useState<EmailTemplate[]>([]);
-  const [selectedCampaign, setSelectedCampaign] = useState<EmailCampaign | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('campaigns');
 

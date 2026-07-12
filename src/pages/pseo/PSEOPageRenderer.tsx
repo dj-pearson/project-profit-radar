@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { jsonLdSafe } from '@/lib/security/jsonLd';
 import { useParams } from 'react-router-dom';
 import { Helmet } from 'react-helmet';
 import { supabase } from '@/integrations/supabase/client';
@@ -212,7 +213,7 @@ function FAQSection({ faqs }: { faqs: ContractorPainPageSchema['faq'] }) {
     <section className="py-16">
       <div className="container mx-auto px-4 max-w-3xl">
         <h2 className="text-3xl font-bold text-center mb-8">Frequently Asked Questions</h2>
-        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }} />
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLdSafe(faqSchema) }} />
         <Accordion type="single" collapsible className="w-full">
           {faqs.map((faq, i) => (
             <AccordionItem key={i} value={`faq-${i}`}>

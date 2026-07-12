@@ -472,7 +472,7 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
         // sessionStorage is cleared when browser/tab closes, reducing exposure
         try {
           sessionStorage.setItem(`bd.userProfile.${userId}`, JSON.stringify(profile));
-        } catch {}
+        } catch { /* ignore: non-critical, best-effort */ }
         return profile;
       } catch (error) {
         logger.error("Profile fetch exception:", error);
@@ -579,7 +579,7 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
               setLoading(false);
               return;
             }
-          } catch {}
+          } catch { /* ignore: non-critical, best-effort */ }
 
           // Check current profile
           if (userProfile?.id === session.user.id) {

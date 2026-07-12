@@ -5,6 +5,7 @@
  */
 
 import React from 'react';
+import { jsonLdSafe } from '@/lib/security/jsonLd';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { createFAQSchema } from './PageSEO';
@@ -44,7 +45,7 @@ export const GEOOptimizedFAQ: React.FC<GEOOptimizedFAQProps> = ({
       {/* Structured Data */}
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
+        dangerouslySetInnerHTML={{ __html: jsonLdSafe(faqSchema) }}
       />
 
       {/* Visual FAQ Section */}

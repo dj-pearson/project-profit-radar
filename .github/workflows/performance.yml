@@ -2,7 +2,7 @@ name: Performance Budget Check
 
 on:
   push:
-    branches: [main, enterprise-production-readiness]
+    branches: [main, develop]
   pull_request:
     branches: [main]
 
@@ -29,7 +29,7 @@ jobs:
         run: npx vite build
 
       - name: Check bundle size
-        run: node scripts/check-bundle-size.js
+        run: node scripts/check-bundle-budget.mjs
 
       - name: Upload build artifacts
         if: always()
