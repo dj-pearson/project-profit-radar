@@ -4287,8 +4287,8 @@
         "Same pattern applied to invoice/estimate PDF generators"
       ],
       "priority": 3,
-      "passes": false,
-      "notes": "PROPOSED (deep-dive audit 2026-07-12). Theme: Performance. SEV: MEDIUM. Source: Frontend audit."
+      "passes": true,
+      "notes": "ALREADY SATISFIED (2026-07-12) \u2014 audit miss corrected. .github/workflows/uptime-health-check.yml (prior story US-208) already polls the health-check edge function every ~10 min (cron 7,17,27,37,47,57), retries 3x to debounce, and fails the run (emailing repo admins + optional Slack via SLACK_WEBHOOK_URL) when unhealthy. The audit finding that nothing polls it was incorrect. REMAINING is ops-only config: set repo Variable HEALTH_CHECK_URL and optional secrets HEALTH_CHECK_ANON_KEY / SLACK_WEBHOOK_URL in Settings -> Actions."
     },
     {
       "id": "US-270",
