@@ -4260,7 +4260,7 @@
       ],
       "priority": 3,
       "passes": false,
-      "notes": "PROPOSED (deep-dive audit 2026-07-12). Theme: Code Health. SEV: MEDIUM. Source: Architecture audit. Complements US-219."
+      "notes": "PROPOSED (deep-dive audit 2026-07-12). Theme: Code Health. SEV: MEDIUM. Source: Architecture audit. Complements US-219. PARTIAL (2026-07-12): removed the hardcoded production server IP (209.145.59.219) from all tracked docs (SSH_ROLLBACK_CHEATSHEET, START_HERE_ROLLBACK, supabase-edge-functions-ios-integration, AUTH_SETUP_DOCUMENTATION, ROLLBACK_VIA_SSH_GUIDE) and deleted scripts/Untitled (a 14-byte junk file that was just the IP). NOTE: like US-286, the IP remains in git HISTORY \u2014 a full scrub needs history rewrite. The other IPs the audit flagged (104.131.124.203, 159.203.75.235) are in node_modules/socks docs (third-party examples), not ours. DEFERRED: consolidating the ~17 stale self-hosted rollback docs into one authoritative runbook + archiving the rest."
     },
     {
       "id": "US-268",

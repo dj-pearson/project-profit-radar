@@ -82,7 +82,7 @@ I've created a comprehensive package to help you completely revert Brikly from m
 ```bash
 # 1. BACKUP YOUR DATABASE FIRST! (CRITICAL!)
 pg_dump -h YOUR_SUPABASE_HOST -U postgres -d postgres --clean > backup_$(date +%Y%m%d).sql
-pg_dump -h 209.145.59.219 -U postgres -d postgres --clean > backup_$(date +%Y%m%d).sql
+pg_dump -h <REDACTED_SERVER_IP> -U postgres -d postgres --clean > backup_$(date +%Y%m%d).sql
 
 # 2. Run the automated rollback script
 bash scripts/execute-rollback.sh

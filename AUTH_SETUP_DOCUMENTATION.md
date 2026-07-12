@@ -64,7 +64,7 @@
             ▼
 ┌──────────────────────────┐
 │   PostgreSQL Database    │
-│   209.145.59.219:5434    │
+│   <REDACTED_SERVER_IP>:5434    │
 │                          │
 │  - User Auth Data        │
 │  - Profiles              │
@@ -135,7 +135,7 @@ Self-hosted Supabase environment variables:
 
 ```bash
 # PostgreSQL
-POSTGRES_HOST=209.145.59.219
+POSTGRES_HOST=<REDACTED_SERVER_IP>
 POSTGRES_PORT=5434
 POSTGRES_DB=postgres
 POSTGRES_USER=postgres
@@ -201,7 +201,7 @@ STRIPE_WEBHOOK_SECRET=whsec_...
 ```toml
 # Self-hosted Coolify Supabase - use direct DB connection
 # API URL: https://api.tryeatpal.com
-# DB: 209.145.59.219:5434
+# DB: <REDACTED_SERVER_IP>:5434
 
 # Auth Configuration
 [auth]
@@ -231,7 +231,7 @@ verify_jwt = false  # Public endpoint
 ### Key Configuration Points
 
 1. **Database Connection:**
-   - Host: `209.145.59.219`
+   - Host: `<REDACTED_SERVER_IP>`
    - Port: `5434` (NOT default 5432)
    - Direct PostgreSQL connection via pgAdmin or Supabase CLI
 

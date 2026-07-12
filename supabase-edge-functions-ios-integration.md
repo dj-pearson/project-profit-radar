@@ -258,7 +258,7 @@ When adding a new feature that involves data flowing from PostgreSQL to iOS:
 | Shared CORS/auth | `supabase/functions/_shared/` | Same deployment |
 | iOS app code | `ios/Printyx/` | Rebuild in Xcode, deploy via TestFlight |
 | Drizzle schema | `shared/schema.ts` | Affects PostgREST auto-generated API |
-| Database | `209.145.59.219:5433` | Migrations via `npm run db:migrate` |
+| Database | `<REDACTED_SERVER_IP>:5433` | Migrations via `npm run db:migrate` |
 
 ### Key Files
 
