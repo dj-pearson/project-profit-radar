@@ -21,7 +21,6 @@ import {
   AlertCircle,
   BarChart3,
   Mail,
-  Calendar,
   Camera,
   FileText,
   Users,

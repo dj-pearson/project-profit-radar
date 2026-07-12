@@ -206,6 +206,7 @@
     "eslint-plugin-jsx-a11y": "^6.10.2",
     "eslint-plugin-react-hooks": "^5.1.0-rc.0",
     "eslint-plugin-react-refresh": "^0.4.9",
+    "eslint-plugin-unused-imports": "^4.4.1",
     "expo": "~54.0.15",
     "expo-background-fetch": "14.0.7",
     "expo-calendar": "15.0.7",

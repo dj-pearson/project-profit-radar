@@ -21,7 +21,6 @@ import {
 import {
   UserPlus,
   Building,
-  Phone,
   Mail,
   DollarSign,
   Tag,

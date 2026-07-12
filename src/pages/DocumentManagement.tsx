@@ -429,7 +429,7 @@ const DocumentManagement = () => {
   const bulkDownloadDocs = async () => {
     const docs = filteredDocuments.filter((d) => selectedDocIds.has(d.id));
     for (const doc of docs) {
-      // eslint-disable-next-line no-await-in-loop
+       
       await downloadDocument(doc);
     }
   };

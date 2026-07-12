@@ -108,7 +108,7 @@ export const BulkActionsBar = ({
           checked={isAllSelected}
           onCheckedChange={(checked) => {
             handleSelectAll(!!checked);
-            onSelectionChange(!!checked ? items.map(item => item.id) : []);
+            onSelectionChange(checked ? items.map(item => item.id) : []);
           }}
         />
         <span className="text-sm text-muted-foreground">
@@ -127,7 +127,7 @@ export const BulkActionsBar = ({
         checked={isAllSelected}
         onCheckedChange={(checked) => {
           handleSelectAll(!!checked);
-          onSelectionChange(!!checked ? items.map(item => item.id) : []);
+          onSelectionChange(checked ? items.map(item => item.id) : []);
         }}
       />
       

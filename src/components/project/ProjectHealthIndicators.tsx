@@ -338,9 +338,9 @@ export const ProjectHealthIndicators: React.FC<ProjectHealthIndicatorsProps> = (
   const calculateProgressHealth = (project: any) => {
     const completion = project.completion_percentage || 0;
 
-    let score = completion;
+    const score = completion;
     let status: 'excellent' | 'good' | 'warning' | 'critical' = 'good';
-    let trend: 'up' | 'down' | 'stable' = 'up';
+    const trend: 'up' | 'down' | 'stable' = 'up';
     let details = '';
 
     if (completion >= 90) {

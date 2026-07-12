@@ -180,11 +180,11 @@ export class MetricsStorage {
     let flaky = 0;
 
     // Calculate performance averages
-    let loadTimes: number[] = [];
-    let lcpValues: number[] = [];
-    let fcpValues: number[] = [];
-    let clsValues: number[] = [];
-    let ttfbValues: number[] = [];
+    const loadTimes: number[] = [];
+    const lcpValues: number[] = [];
+    const fcpValues: number[] = [];
+    const clsValues: number[] = [];
+    const ttfbValues: number[] = [];
 
     // Coverage tracking
     let totalPages = 0;

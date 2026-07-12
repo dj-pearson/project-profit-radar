@@ -90,7 +90,9 @@ export async function hasPermission(
       };
     }
 
-    // eslint-disable-next-line no-unreachable
+    // Disabled stub: DB-backed permission grants (direct grant / custom role)
+    // are not wired up yet. Kept as a documented extension point.
+    // eslint-disable-next-line no-constant-condition
     if (false) {
       return {
         allowed: true,
