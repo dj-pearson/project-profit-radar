@@ -191,7 +191,7 @@ serve(async (req) => {
         const { data, error } = await supabase
           .from("sso_connections")
           .insert({
-            tenant_id: provider: validation.data.provider,
+            provider: validation.data.provider,
             display_name: validation.data.display_name,
             config: validation.data.config,
             allowed_domains: validation.data.allowed_domains,

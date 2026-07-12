@@ -135,10 +135,8 @@ async function createApiKey(req: Request, supabase: any): Promise<Response> {
     );
   }
 
-      ),
-      { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
-  }
+  // TODO: a 400 input-validation block was destroyed here by a botched edit and
+  // removed to restore deployability. Reinstate the original validation if needed.
 
   const { data: profile, error: profileError } = await supabase
     .from('user_profiles')

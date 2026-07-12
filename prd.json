@@ -4528,6 +4528,20 @@
       "priority": 1,
       "passes": false,
       "notes": "CRITICAL \u2014 discovered 2026-07-12 during US-261 cruft cleanup. Requires history rewrite (force-push, coordinated) + credential rotation; NOT auto-remediable in this loop. Escalated to the user for immediate action. Remediation runbook drafted at docs/RUNBOOK_DB_DUMP_INCIDENT.md (containment + rotation + git filter-repo purge commands for the 3 blob paths + access-review/breach checklist). Ready for the user to execute \u2014 still requires their Supabase/Stripe/GitHub-admin access; not auto-remediable."
+    },
+    {
+      "id": "US-287",
+      "title": "Finish repairing botched-edit edge functions (lost validation + execute-workflow body)",
+      "description": "A batch of edge functions was left with botched-edit damage. Syntax was repaired to restore deployability (ai-estimating, api-management, gsc-fetch-properties, gsc-sync-data, sso-manage), but two kinds of lost logic remain: (1) a 400 input-validation block was destroyed in api-management, gsc-fetch-properties, and gsc-sync-data (marked with TODO comments) and should be reinstated from git history or intent; (2) execute-workflow's execution body is structurally broken (calls an undefined continueExecution; startExecution reads undefined startIndex/execution) so it throws at runtime despite compiling. As a maintainer, I want these functions fully correct, not just deployable.",
+      "acceptanceCriteria": [
+        "Reinstate the destroyed 400 input-validation blocks in api-management, gsc-fetch-properties, gsc-sync-data (recover from git history before the botched edit)",
+        "Repair execute-workflow's execution engine (define continueExecution; fix startExecution's undefined startIndex/execution) or replace it with the working workflow-execution function",
+        "Add a Deno unit/integration test per repaired function where feasible",
+        "Remove the TODO markers once the validations are restored"
+      ],
+      "priority": 2,
+      "passes": false,
+      "notes": "Discovered 2026-07-12. Syntax repairs already committed (ai-estimating 91496f3; api-management/gsc-*/sso-manage this batch). A full eslint parse-error scan of supabase/functions now reports 0 undeployable functions. Remaining work is recovering the destroyed logic, which needs git-history archaeology / product intent."
     }
   ]
 }
