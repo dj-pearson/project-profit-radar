@@ -132,3 +132,6 @@ jobs:
 
       - name: Edge function auth guard (US-198)
         run: node scripts/check-edge-function-auth.mjs
+
+      - name: Migration filename guard (US-235)
+        run: bash scripts/check-migration-filenames.sh

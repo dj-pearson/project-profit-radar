@@ -3813,8 +3813,8 @@
         "`supabase db push --dry-run` no longer lists the ROLLBACK files"
       ],
       "priority": 1,
-      "passes": false,
-      "notes": "PROPOSED (deep-dive audit 2026-07-12). Theme: Database. SEV: CRITICAL. Source: DB audit. One-command production data-loss landmine."
+      "passes": true,
+      "notes": "COMPLETED (2026-07-12). Moved ROLLBACK_multi_tenant.sql + _CLEANUP.sql from supabase/migrations/ to scripts/rollback-sql/ (rollback package preserved; execute-rollback.sh paths updated). migrations/ now contains only 14-digit-timestamped files. Added scripts/check-migration-filenames.sh guard (tested pass+fail) and wired it into ci.yml Security Smoke Tests job."
     },
     {
       "id": "US-236",
