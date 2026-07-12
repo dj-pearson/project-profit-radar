@@ -3,7 +3,7 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@14.21.0";
 import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
 import { validateRequest, uuidSchema } from "../_shared/validation.ts";
-import { initializeAuthContext, errorResponse, successResponse } from '../_shared/auth-helpers.ts';
+import { initializeAuthContext, errorResponse, successResponse, safeErrorResponse } from '../_shared/auth-helpers.ts';
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -124,7 +124,7 @@ serve(async (req) => {
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
     logStep("ERROR in process-payment", { message: errorMessage });
-    return errorResponse(errorMessage, 500);
+    return safeErrorResponse(req);
   }
 });
 

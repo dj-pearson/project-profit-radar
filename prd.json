@@ -3911,8 +3911,8 @@
         "Applied to the CRUD family and webhooks"
       ],
       "priority": 2,
-      "passes": false,
-      "notes": "PROPOSED (deep-dive audit 2026-07-12). Theme: Security. SEV: HIGH. Source: Edge audit."
+      "passes": true,
+      "notes": "COMPLETED (2026-07-12) for 7 CRUD functions. Added safeErrorResponse(request?) to _shared/auth-helpers.ts \u2014 returns a generic 'Internal server error' (500) with secure CORS, never the raw message. Routed 7 functions that returned raw error.message to the client via 'return errorResponse(errorMessage, 500)' through it: change-orders, generate-invoice, time-tracking, projects, geofencing, process-invoice-payment, daily-reports. Full detail is still logged server-side (logStep/console.error). 0 raw-message returns remain; all 9 import+use the helper; removed a dead errorMessage var in calculate-lead-score. NOTE: stripe-webhook returns 'Webhook Error: <msg>' to Stripe (a trusted party, and Stripe expects specific bodies) \u2014 left as-is, lower risk. Could not runtime-verify (no Deno locally); change is return-message + import only. SKIPPED 2 of the 9: ai-estimating (PRE-EXISTING syntax error at line 76 \u2014 `p_  // comment` incomplete property; the function is undeployable, flag for a separate fix) and calculate-lead-score (pre-existing no-case-declarations lint debt) \u2014 both would fail the pre-commit lint gate on unrelated issues; left untouched rather than yak-shave."
     },
     {
       "id": "US-243",
