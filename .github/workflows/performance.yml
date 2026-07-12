@@ -2,7 +2,7 @@ name: Performance Budget Check
 
 on:
   push:
-    branches: [main, enterprise-production-readiness]
+    branches: [main, develop]
   pull_request:
     branches: [main]
 

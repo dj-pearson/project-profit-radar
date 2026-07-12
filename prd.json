@@ -4092,8 +4092,8 @@
         "Audit runs on PRs into develop, not only main"
       ],
       "priority": 1,
-      "passes": false,
-      "notes": "PROPOSED (deep-dive audit 2026-07-12). Theme: CI/CD. SEV: HIGH. Source: Testing/CI audit."
+      "passes": true,
+      "notes": "COMPLETED (2026-07-12). Removed '|| true' from the ci.yml Dependency vulnerability audit step so npm run security:audit (scripts/security-audit.sh, which filters critical/high + supports an expiring allowlist) now blocks the job. Populated scripts/audit-allowlist.json with the 27 pre-existing high/critical packages (expires 2026-09-01, reason references remediation via npm audit fix / dep upgrades / US-274 Expo-RN removal). Verified: audit PASSES now (backlog suppressed) and any NEW high/critical will fail. Real remediation of the 27 is the follow-up."
     },
     {
       "id": "US-256",
@@ -4106,8 +4106,8 @@
         "Branch-trigger config matches the CLAUDE.md branch model"
       ],
       "priority": 1,
-      "passes": false,
-      "notes": "PROPOSED (deep-dive audit 2026-07-12). Theme: CI/CD. SEV: HIGH. Source: Testing/CI audit."
+      "passes": true,
+      "notes": "COMPLETED (2026-07-12). ci.yml now triggers on push+PR for [main, develop] so lint/typecheck/unit/build/e2e/security-smoke run at the integration branch, not only main. Removed the defunct 'enterprise-production-readiness' branch from performance.yml and lighthouse.yml (now [main, develop] push). Verified no workflow references the dead branch."
     },
     {
       "id": "US-257",

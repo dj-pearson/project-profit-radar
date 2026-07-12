@@ -2,9 +2,9 @@ name: CI
 
 on:
   push:
-    branches: [main]
+    branches: [main, develop]
   pull_request:
-    branches: [main]
+    branches: [main, develop]
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -116,7 +116,10 @@ jobs:
         run: npm run test:security
 
       - name: Dependency vulnerability audit
-        run: npm run security:audit || true
+        # US-255: blocks on high/critical CVEs. Pre-existing backlog is
+        # suppressed via scripts/audit-allowlist.json (with expiry); new
+        # high/critical advisories fail the job.
+        run: npm run security:audit
 
       - name: Secret scanning
         run: bash scripts/secret-scan.sh

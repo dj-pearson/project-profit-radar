@@ -1,9 +1,139 @@
 {
   "allowlist": [
     {
-      "id": "EXAMPLE-0000",
-      "reason": "Sample entry - replace or remove. No actual vulnerability.",
-      "expires": "2026-04-01"
+      "id": "@hono/node-server",
+      "reason": "Pre-existing high/critical backlog captured during US-255 audit-gate rollout; remediate via npm audit fix / dependency upgrades / removing the Expo-RN tree (US-274).",
+      "expires": "2026-09-01"
+    },
+    {
+      "id": "@modelcontextprotocol/sdk",
+      "reason": "Pre-existing high/critical backlog captured during US-255 audit-gate rollout; remediate via npm audit fix / dependency upgrades / removing the Expo-RN tree (US-274).",
+      "expires": "2026-09-01"
+    },
+    {
+      "id": "@modelcontextprotocol/server-puppeteer",
+      "reason": "Pre-existing high/critical backlog captured during US-255 audit-gate rollout; remediate via npm audit fix / dependency upgrades / removing the Expo-RN tree (US-274).",
+      "expires": "2026-09-01"
+    },
+    {
+      "id": "@xmldom/xmldom",
+      "reason": "Pre-existing high/critical backlog captured during US-255 audit-gate rollout; remediate via npm audit fix / dependency upgrades / removing the Expo-RN tree (US-274).",
+      "expires": "2026-09-01"
+    },
+    {
+      "id": "basic-ftp",
+      "reason": "Pre-existing high/critical backlog captured during US-255 audit-gate rollout; remediate via npm audit fix / dependency upgrades / removing the Expo-RN tree (US-274).",
+      "expires": "2026-09-01"
+    },
+    {
+      "id": "express-rate-limit",
+      "reason": "Pre-existing high/critical backlog captured during US-255 audit-gate rollout; remediate via npm audit fix / dependency upgrades / removing the Expo-RN tree (US-274).",
+      "expires": "2026-09-01"
+    },
+    {
+      "id": "fast-uri",
+      "reason": "Pre-existing high/critical backlog captured during US-255 audit-gate rollout; remediate via npm audit fix / dependency upgrades / removing the Expo-RN tree (US-274).",
+      "expires": "2026-09-01"
+    },
+    {
+      "id": "flatted",
+      "reason": "Pre-existing high/critical backlog captured during US-255 audit-gate rollout; remediate via npm audit fix / dependency upgrades / removing the Expo-RN tree (US-274).",
+      "expires": "2026-09-01"
+    },
+    {
+      "id": "happy-dom",
+      "reason": "Pre-existing high/critical backlog captured during US-255 audit-gate rollout; remediate via npm audit fix / dependency upgrades / removing the Expo-RN tree (US-274).",
+      "expires": "2026-09-01"
+    },
+    {
+      "id": "hono",
+      "reason": "Pre-existing high/critical backlog captured during US-255 audit-gate rollout; remediate via npm audit fix / dependency upgrades / removing the Expo-RN tree (US-274).",
+      "expires": "2026-09-01"
+    },
+    {
+      "id": "jspdf",
+      "reason": "Pre-existing high/critical backlog captured during US-255 audit-gate rollout; remediate via npm audit fix / dependency upgrades / removing the Expo-RN tree (US-274).",
+      "expires": "2026-09-01"
+    },
+    {
+      "id": "lodash",
+      "reason": "Pre-existing high/critical backlog captured during US-255 audit-gate rollout; remediate via npm audit fix / dependency upgrades / removing the Expo-RN tree (US-274).",
+      "expires": "2026-09-01"
+    },
+    {
+      "id": "lodash-es",
+      "reason": "Pre-existing high/critical backlog captured during US-255 audit-gate rollout; remediate via npm audit fix / dependency upgrades / removing the Expo-RN tree (US-274).",
+      "expires": "2026-09-01"
+    },
+    {
+      "id": "minimatch",
+      "reason": "Pre-existing high/critical backlog captured during US-255 audit-gate rollout; remediate via npm audit fix / dependency upgrades / removing the Expo-RN tree (US-274).",
+      "expires": "2026-09-01"
+    },
+    {
+      "id": "node-forge",
+      "reason": "Pre-existing high/critical backlog captured during US-255 audit-gate rollout; remediate via npm audit fix / dependency upgrades / removing the Expo-RN tree (US-274).",
+      "expires": "2026-09-01"
+    },
+    {
+      "id": "path-to-regexp",
+      "reason": "Pre-existing high/critical backlog captured during US-255 audit-gate rollout; remediate via npm audit fix / dependency upgrades / removing the Expo-RN tree (US-274).",
+      "expires": "2026-09-01"
+    },
+    {
+      "id": "picomatch",
+      "reason": "Pre-existing high/critical backlog captured during US-255 audit-gate rollout; remediate via npm audit fix / dependency upgrades / removing the Expo-RN tree (US-274).",
+      "expires": "2026-09-01"
+    },
+    {
+      "id": "rollup",
+      "reason": "Pre-existing high/critical backlog captured during US-255 audit-gate rollout; remediate via npm audit fix / dependency upgrades / removing the Expo-RN tree (US-274).",
+      "expires": "2026-09-01"
+    },
+    {
+      "id": "shell-quote",
+      "reason": "Pre-existing high/critical backlog captured during US-255 audit-gate rollout; remediate via npm audit fix / dependency upgrades / removing the Expo-RN tree (US-274).",
+      "expires": "2026-09-01"
+    },
+    {
+      "id": "svgo",
+      "reason": "Pre-existing high/critical backlog captured during US-255 audit-gate rollout; remediate via npm audit fix / dependency upgrades / removing the Expo-RN tree (US-274).",
+      "expires": "2026-09-01"
+    },
+    {
+      "id": "tar",
+      "reason": "Pre-existing high/critical backlog captured during US-255 audit-gate rollout; remediate via npm audit fix / dependency upgrades / removing the Expo-RN tree (US-274).",
+      "expires": "2026-09-01"
+    },
+    {
+      "id": "tmp",
+      "reason": "Pre-existing high/critical backlog captured during US-255 audit-gate rollout; remediate via npm audit fix / dependency upgrades / removing the Expo-RN tree (US-274).",
+      "expires": "2026-09-01"
+    },
+    {
+      "id": "undici",
+      "reason": "Pre-existing high/critical backlog captured during US-255 audit-gate rollout; remediate via npm audit fix / dependency upgrades / removing the Expo-RN tree (US-274).",
+      "expires": "2026-09-01"
+    },
+    {
+      "id": "vite",
+      "reason": "Pre-existing high/critical backlog captured during US-255 audit-gate rollout; remediate via npm audit fix / dependency upgrades / removing the Expo-RN tree (US-274).",
+      "expires": "2026-09-01"
+    },
+    {
+      "id": "vitest",
+      "reason": "Pre-existing high/critical backlog captured during US-255 audit-gate rollout; remediate via npm audit fix / dependency upgrades / removing the Expo-RN tree (US-274).",
+      "expires": "2026-09-01"
+    },
+    {
+      "id": "ws",
+      "reason": "Pre-existing high/critical backlog captured during US-255 audit-gate rollout; remediate via npm audit fix / dependency upgrades / removing the Expo-RN tree (US-274).",
+      "expires": "2026-09-01"
+    },
+    {
+      "id": "xlsx",
+      "reason": "Pre-existing high/critical backlog captured during US-255 audit-gate rollout; remediate via npm audit fix / dependency upgrades / removing the Expo-RN tree (US-274).",
+      "expires": "2026-09-01"
     }
   ]
 }
