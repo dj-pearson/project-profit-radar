@@ -1,0 +1,714 @@
+[
+  {
+    "id": "US-235",
+    "title": "Remove ROLLBACK_multi_tenant*.sql from supabase/migrations before it auto-applies",
+    "description": "As a platform engineer, I want the two un-timestamped ROLLBACK_multi_tenant.sql / ROLLBACK_multi_tenant_CLEANUP.sql files removed from supabase/migrations so a routine `supabase db push` cannot drop site_id columns and multi-tenant RLS across 30+ live tables. They sort AFTER every 2026xxxx migration ('R'>'2') so they are one CLI command from a data-loss incident.",
+    "acceptanceCriteria": [
+      "ROLLBACK_multi_tenant.sql and its CLEANUP file no longer exist under supabase/migrations/",
+      "If rollback capability is retained it lives under scripts/ and is never picked up by db push",
+      "CI check fails if any file in supabase/migrations/ lacks a valid ^[0-9]{14}_ timestamp prefix",
+      "`supabase db push --dry-run` no longer lists the ROLLBACK files"
+    ],
+    "priority": 1,
+    "passes": false,
+    "notes": "PROPOSED (deep-dive audit 2026-07-12). Theme: Database. SEV: CRITICAL. Source: DB audit. One-command production data-loss landmine."
+  },
+  {
+    "id": "US-236",
+    "title": "Fix cross-tenant IDOR in execute-workflow / workflow-execution edge functions",
+    "description": "As a tenant, I want workflow execution to verify the caller belongs to the workflow's company_id so an authenticated user of company A cannot trigger company B's automations (emails, task creation, webhooks) by guessing a workflowId. The function builds a SERVICE_ROLE_KEY client and reads workflow_definitions by caller-supplied id with zero identity/company check, so RLS gives no protection.",
+    "acceptanceCriteria": [
+      "execute-workflow and workflow-execution resolve the caller's company_id from the JWT",
+      "Return 403 when target workflow_definitions.company_id != caller company_id",
+      "Replace wildcard CORS with the shared secure-cors helper",
+      "Regression test: a cross-company workflowId returns 403"
+    ],
+    "priority": 1,
+    "passes": false,
+    "notes": "PROPOSED (deep-dive audit 2026-07-12). Theme: Security. SEV: CRITICAL. Source: Security audit. IDOR via service-role, verify_jwt=true is not enough."
+  },
+  {
+    "id": "US-237",
+    "title": "Scope all FOR ALL USING(true) RLS policies to service_role (finish US-197 hardening)",
+    "description": "As a Brikly customer, I want every system/service RLS policy scoped to service_role instead of public/authenticated so a logged-in user of one company cannot read another company's job-costing, document signatures, predictions, usage and behavioral rows. US-197 proved this class of bug is exploitable but patched only 3 of ~40+ tables; ~41 permissive policies remain.",
+    "acceptanceCriteria": [
+      "Scripted audit enumerates all FOR ALL USING(true) policies lacking TO service_role",
+      "Each is scoped TO service_role or replaced with a company_id-scoped USING clause",
+      "Fix ships as append-only migrations following 20260613120000",
+      "CI check fails if a new policy uses USING(true) without TO service_role"
+    ],
+    "priority": 1,
+    "passes": false,
+    "notes": "PROPOSED (deep-dive audit 2026-07-12). Theme: Security. SEV: CRITICAL. Source: Security audit. ~41 tables incl job_costing_summary, document_signatures, project_predictions, usage_metrics."
+  },
+  {
+    "id": "US-238",
+    "title": "Gate cross-tenant analytics/cron edge functions to root_admin or cron secret",
+    "description": "As the business owner, I want internal analytics/cron functions that aggregate across all tenants to reject non-admin callers so a client_portal or field_supervisor user cannot pull global MRR/ARR/churn or trigger expensive Stripe fan-out. calculate-revenue-metrics uses the service role, reads Stripe secret_key, returns company-wide financials, and performs no caller/role check while verify_jwt=true lets any authenticated user invoke it.",
+    "acceptanceCriteria": [
+      "calculate-revenue-metrics, generate-churn-predictions, calculate-health-scores, auto-intervention-scheduler verify caller is root_admin OR present a CRON secret header",
+      "Return 403 for non-privileged callers",
+      "Intended invoker (cron vs admin) documented in config.toml",
+      "Audit all SERVICE_ROLE_KEY functions with no caller check for the same gap"
+    ],
+    "priority": 1,
+    "passes": false,
+    "notes": "PROPOSED (deep-dive audit 2026-07-12). Theme: Security. SEV: HIGH. Source: Security audit. Global financial data exposure."
+  },
+  {
+    "id": "US-239",
+    "title": "Purge duplicate/dead edge functions and close verify_jwt=false exposure",
+    "description": "As a maintainer, I want one canonical implementation per edge function and no publicly-exposed duplicate so enhanced-blog-ai-fixed (verify_jwt=false in config.toml) and stale *-N-DPEARSON.ts copies are not reachable in production. Duplicate blog/webhook variants (enhanced-blog-ai / -fixed / -simple; blog-social-webhook vs blog_social_webhook; test-ai-configuration; index-N-DPEARSON.ts in check-subscription, sitemap-generator, check-renewal-notifications) diverge from the hardened originals and add attack surface.",
+    "acceptanceCriteria": [
+      "Delete index-N-DPEARSON.ts orphans and the -simple/-fixed/underscore duplicates after confirming callers use the canonical name",
+      "enhanced-blog-ai-fixed removed, or set verify_jwt=true with in-function auth",
+      "Remove their config.toml entries and grep frontend for references to removed names",
+      "test-ai-configuration removed or gated behind a non-production guard"
+    ],
+    "priority": 1,
+    "passes": false,
+    "notes": "PROPOSED (deep-dive audit 2026-07-12). Theme: Security. SEV: HIGH (billing-critical check-subscription has a stray copy). Source: Security + Edge + Ops audits (merged)."
+  },
+  {
+    "id": "US-240",
+    "title": "Roll out secure-cors helper across ~140 functions still using wildcard '*'",
+    "description": "As a security owner, I want all edge functions to derive CORS from the shared getCorsHeaders(req) allowlist so only brikly.net/configured origins can invoke them from a browser. ~140 of ~191 functions hardcode Access-Control-Allow-Origin:'*' inline while only ~47 use the whitelist-based _shared/secure-cors.ts the team already built; even _shared/cors.ts still hardcodes '*'.",
+    "acceptanceCriteria": [
+      "No function contains a literal 'Access-Control-Allow-Origin':'*' outside a documented public-webhook allowlist",
+      "All functions import getCorsHeaders/handleCorsPreflightRequest from secure-cors.ts",
+      "Deprecated wildcard _shared/cors.ts removed or repointed",
+      "CI grep guard rejects new wildcard-origin literals"
+    ],
+    "priority": 2,
+    "passes": false,
+    "notes": "PROPOSED (deep-dive audit 2026-07-12). Theme: Security. SEV: HIGH. Source: Security + Edge audits (merged; ~141/145 count)."
+  },
+  {
+    "id": "US-241",
+    "title": "Enforce Zod input validation on mutating edge functions (currently 17 of ~193)",
+    "description": "As a platform maintainer, I want every edge function that accepts a body to validate it with Zod so malformed/malicious payloads are rejected before hitting Postgres. Only 17 of ~193 functions validate; write-capable functions (change-orders, generate-invoice, projects, geofencing, change-subscription, execute-workflow) use req.json() fields raw, contradicting CLAUDE.md Security rule #2.",
+    "acceptanceCriteria": [
+      "Shared validate(body, schema) helper in _shared returns the standard error envelope",
+      "Zod schemas added to the top ~30 mutating functions (financial, project, workflow, scheduling)",
+      "400 with { success:false, error } on validation failure",
+      "Lint/PR checklist requires a schema for any req.json() usage"
+    ],
+    "priority": 2,
+    "passes": false,
+    "notes": "PROPOSED (deep-dive audit 2026-07-12). Theme: Security. SEV: HIGH. Source: Security audit."
+  },
+  {
+    "id": "US-242",
+    "title": "Stop leaking raw DB/internal error messages from edge-function catch blocks",
+    "description": "As a security engineer, I want edge functions to return generic client-safe errors while logging full detail server-side, so internal Postgres/Supabase structure is not disclosed. projects and time-tracking echo raw error.message into 500 responses; stripe-webhook returns 'Webhook Error: <message>' as a raw body.",
+    "acceptanceCriteria": [
+      "Catch blocks log full detail via logStep but return a generic message + error code",
+      "No response body contains raw Postgres/Supabase error strings",
+      "Shared safeError() helper maps internal errors to sanitized client messages",
+      "Applied to the CRUD family and webhooks"
+    ],
+    "priority": 2,
+    "passes": false,
+    "notes": "PROPOSED (deep-dive audit 2026-07-12). Theme: Security. SEV: HIGH. Source: Edge audit."
+  },
+  {
+    "id": "US-243",
+    "title": "Add per-user rate limiting to expensive AI, email, and report edge functions",
+    "description": "As an operator, I want expensive AI-generation, email, and report functions to enforce per-user/company rate limits via the existing _shared/rate-limiter.ts so a compromised token cannot run up LLM/SES bills or spam customers. The limiter exists but only ~18 functions use it; generate-blog-content, enhanced-blog-ai, generate-*-forecast, process-voice-command, voice-to-text, send-email, generate-custom-report, smart-data-analyzer are unprotected. Distinct from US-205 (DoS wiring).",
+    "acceptanceCriteria": [
+      "All AI-generation functions enforce rate limits keyed by user+company",
+      "send-email and other SES-backed senders enforce send limits",
+      "Report generators rate-limited",
+      "429 responses use the standard envelope and are documented for iOS"
+    ],
+    "priority": 2,
+    "passes": false,
+    "notes": "PROPOSED (deep-dive audit 2026-07-12). Theme: Security. SEV: HIGH. Source: Edge audit."
+  },
+  {
+    "id": "US-244",
+    "title": "Write audit-trail rows for critical mutations (only ~3 of 148 write-functions log)",
+    "description": "As a compliance owner, I want every critical action (financial approval, refund, MFA disable, team invite, data deletion) to append an audit_logs row with actor, company_id, action and target for SOC2/dispute evidence. The audit_logs table exists but only 3 functions write to it while 148 perform mutations, contradicting CLAUDE.md Security rule #4.",
+    "acceptanceCriteria": [
+      "Shared writeAuditLog(supabase, {actor, company_id, action, entity, before/after}) helper",
+      "All approval/financial/auth/permission mutation functions instrumented",
+      "Audit rows inserted with service role and immutable to clients",
+      "get-audit-history surfaces the new events"
+    ],
+    "priority": 2,
+    "passes": false,
+    "notes": "PROPOSED (deep-dive audit 2026-07-12). Theme: Security. SEV: MEDIUM. Source: Security audit."
+  },
+  {
+    "id": "US-245",
+    "title": "Escape JSON-LD injected via dangerouslySetInnerHTML to prevent script-breakout XSS",
+    "description": "As a user viewing a pSEO or FAQ page, I want structured-data JSON escaped so DB-sourced content (FAQ answers, testimonials, pSEO fields) cannot inject </script><script> payloads. ~25 components stringify into <script type=application/ld+json> without escaping '<'; PSEOPageRenderer and FAQ schemas render dynamic content, making this a live vector. A safe pattern (safe-html.tsx) already exists unused.",
+    "acceptanceCriteria": [
+      "jsonLdSafe(obj) helper stringifies then replaces '<','>','&' with unicode escapes",
+      "All ld+json dangerouslySetInnerHTML routed through it",
+      "Unit test that a </script> payload in FAQ/testimonial content is neutralized",
+      "Preferred for any schema containing DB-sourced strings"
+    ],
+    "priority": 2,
+    "passes": false,
+    "notes": "PROPOSED (deep-dive audit 2026-07-12). Theme: Security. SEV: MEDIUM. Source: Security audit."
+  },
+  {
+    "id": "US-246",
+    "title": "Implement and verify real database backups (current backup_*.sql are 0 bytes)",
+    "description": "As an operator of a B2B SaaS with live customer Postgres, I want automated, verified backups (Supabase PITR/scheduled dumps) with a tested restore runbook so a bad migration or the ROLLBACK landmine is recoverable. The only backup-named assets are empty placeholders and no backup step exists in any workflow.",
+    "acceptanceCriteria": [
+      "Supabase scheduled backups or PITR enabled for production with documented retention",
+      "Empty backup_*.sql placeholders removed from the repo root",
+      "A restore runbook exists and has been test-restored at least once",
+      "Optional scheduled workflow dumps a logical backup off-Supabase"
+    ],
+    "priority": 1,
+    "passes": false,
+    "notes": "PROPOSED (deep-dive audit 2026-07-12). Theme: Database. SEV: HIGH. Source: DB audit."
+  },
+  {
+    "id": "US-247",
+    "title": "Stand up a staging Supabase project so migrations aren't tested in production",
+    "description": "As a developer, I want a staging Supabase project tied to develop where migrations run before prod so RLS-recursion and comprehensive_fix/final_fix churn is caught pre-production. config.toml has a single project_id and CLAUDE.md marks staging as TODO, so develop and main share one live database.",
+    "acceptanceCriteria": [
+      "A separate staging Supabase project exists and is referenced from config/CI",
+      "develop-branch deploys apply migrations to staging first",
+      "CLAUDE.md staging-TODO note updated to reflect the wired pipeline",
+      "Prod migration application requires staging green"
+    ],
+    "priority": 1,
+    "passes": false,
+    "notes": "PROPOSED (deep-dive audit 2026-07-12). Theme: Database. SEV: HIGH. Source: DB audit."
+  },
+  {
+    "id": "US-248",
+    "title": "Build an auditable migration-to-prod pipeline; retire repair/mark-applied scripts",
+    "description": "As a release manager, I want migrations applied through an auditable CI step (or reviewed runbook) instead of ad-hoc `supabase migration repair` from a laptop, so history stays in sync and we never again need a 180-entry hand-written reconciliation. repair-migrations.ps1 and mark-applied.ps1 prove the remote history diverged badly; ci.yml has no supabase/db steps.",
+    "acceptanceCriteria": [
+      "A CI job or documented reviewed runbook applies pending migrations to staging then prod",
+      "repair-migrations.ps1 / mark-applied.ps1 deleted after history is reconciled and documented",
+      "Migration drift detectable via a `supabase migration list` diff check in CI",
+      "No reliance on migration repair --status for routine deploys"
+    ],
+    "priority": 1,
+    "passes": false,
+    "notes": "PROPOSED (deep-dive audit 2026-07-12). Theme: Database. SEV: HIGH. Source: DB audit."
+  },
+  {
+    "id": "US-249",
+    "title": "Use CREATE INDEX CONCURRENTLY for new indexes on existing tables",
+    "description": "As an SRE, I want new indexes on existing/large tables built CONCURRENTLY (outside transactions) so adding one doesn't take an ACCESS-EXCLUSIVE lock and stall writes on hot tables. 0 of 1892 CREATE INDEX statements use CONCURRENTLY despite CLAUDE.md prescribing it, and they run against the single production project.",
+    "acceptanceCriteria": [
+      "New index migrations on existing tables use CREATE INDEX CONCURRENTLY IF NOT EXISTS, not wrapped in a transaction",
+      "Lint/CI rule flags new non-concurrent CREATE INDEX on pre-existing tables",
+      "Documented exception for inline indexes in a same-migration CREATE TABLE",
+      "Highest-traffic tables audited for build cost"
+    ],
+    "priority": 2,
+    "passes": false,
+    "notes": "PROPOSED (deep-dive audit 2026-07-12). Theme: Database. SEV: HIGH. Source: DB audit."
+  },
+  {
+    "id": "US-250",
+    "title": "Add a migration backward-compatibility linter (SET NOT NULL / DROP in one release)",
+    "description": "As a mobile/API-compat owner, I want tightening/destructive schema changes split across the documented add->backfill->enforce flow so a single migration can't start rejecting writes from iOS clients at MIN_SUPPORTED_IOS_VERSION. Migrations contain 44 SET NOT NULL, 32 DROP COLUMN, 22 DROP TABLE; crm_site_id_migration sets contacts/crm_activities site_id NOT NULL in one step.",
+    "acceptanceCriteria": [
+      "CI/migration-lint flags SET NOT NULL, DROP COLUMN, DROP TABLE, RENAME on pre-existing tables",
+      "Documented add-nullable+dual-write, backfill, enforce-later pattern",
+      "The 44 SET NOT NULL / 32 DROP COLUMN sites audited for still-load-bearing shapes",
+      "crm_site_id-style tightening reviewed against MIN_SUPPORTED client behavior"
+    ],
+    "priority": 2,
+    "passes": false,
+    "notes": "PROPOSED (deep-dive audit 2026-07-12). Theme: Database. SEV: HIGH. Source: DB audit."
+  },
+  {
+    "id": "US-251",
+    "title": "Add error tracking to Supabase edge functions (currently console.log only)",
+    "description": "As an on-call engineer, I want server-side errors from edge functions (billing webhooks, QuickBooks sync, email queue) surfaced in Sentry so a failing subscription update or silent sync error pages someone. Sentry is wired only in the web frontend; 193 functions report errors via console.log/console.error with no aggregation or alerting. US-172 covers iOS Sentry only.",
+    "acceptanceCriteria": [
+      "Shared _shared/observability.ts initializes a Deno-compatible Sentry client gated on EDGE_SENTRY_DSN",
+      "Top-level catches wrapped in stripe-webhook, quickbooks-sync, process-funnel-queue, process-dunning, send-* first",
+      "Events tagged with function name, company_id, request id; tokens/PII scrubbed",
+      "EDGE_SENTRY_DSN documented and set; a crash smoke test asserts events reach Sentry"
+    ],
+    "priority": 2,
+    "passes": false,
+    "notes": "PROPOSED (deep-dive audit 2026-07-12). Theme: Observability. SEV: HIGH. Source: Ops audit."
+  },
+  {
+    "id": "US-252",
+    "title": "Paginate QuickBooks sync and add 429 retry to prevent silent data loss",
+    "description": "As an accounting user at a larger company, I want the QuickBooks import to page through all customers/items/expenses/payments and retry on throttling so my sync isn't silently truncated at the first 100-1000 records or aborted by a 429. quickbooks-sync issues 'SELECT * FROM {entity}' with no STARTPOSITION/MAXRESULTS and no 429 handling.",
+    "acceptanceCriteria": [
+      "fetchQuickBooksData loops STARTPOSITION/MAXRESULTS until a short page returns",
+      "HTTP 429 / QB throttle detected and retried with backoff honoring Retry-After",
+      "quickbooks_sync_logs records total-available vs processed so truncation is visible",
+      "Test with a mocked >1000-record response asserts all pages are fetched"
+    ],
+    "priority": 2,
+    "passes": false,
+    "notes": "PROPOSED (deep-dive audit 2026-07-12). Theme: Integrations. SEV: HIGH. Source: Ops audit."
+  },
+  {
+    "id": "US-253",
+    "title": "Consolidate transactional email onto one provider with delivery monitoring + retry",
+    "description": "As a growth/ops owner, I want transactional email on one monitored provider so a bounce or outage in the trial-conversion funnel or payment-reminder flow is detected and retried, not silently dropped. SES SMTP (denomailer) and Resend both ship; sendEmail() has no retry, no dead-letter, and logs only console.error, and no messageId is persisted.",
+    "acceptanceCriteria": [
+      "One provider chosen and the outlier migrated; decision documented",
+      "Per-send status (provider messageId, success/failure, error) persisted for auditability",
+      "Bounded retry with backoff and a dead-letter/failed state on exhaustion",
+      "Failures emit to the edge-function Sentry hook; send-failure/retry paths tested"
+    ],
+    "priority": 2,
+    "passes": false,
+    "notes": "PROPOSED (deep-dive audit 2026-07-12). Theme: Integrations. SEV: HIGH. Source: Ops audit."
+  },
+  {
+    "id": "US-254",
+    "title": "Add the pre-commit hooks CLAUDE.md already assumes exist",
+    "description": "As a developer, I want the pre-commit safety net CLAUDE.md references (secret scan, edge-function auth guard, security tests) so secrets and broken auth guards are caught before leaving my machine. No .husky/ exists and package.json has no husky/lint-staged, so the CLAUDE.md `--no-verify` prohibition currently bypasses nothing. secret-scan.sh, security-audit.sh and check-edge-function-auth.mjs exist but run nowhere locally.",
+    "acceptanceCriteria": [
+      "husky + lint-staged added; a prepare script installs hooks on npm ci",
+      "pre-commit runs eslint on staged files, secret-scan.sh and check-edge-function-auth.mjs",
+      "pre-commit runs a fast security unit subset",
+      "CLAUDE.md updated so the --no-verify prohibition is truthful"
+    ],
+    "priority": 1,
+    "passes": false,
+    "notes": "PROPOSED (deep-dive audit 2026-07-12). Theme: CI/CD. SEV: HIGH. Source: Testing/CI audit."
+  },
+  {
+    "id": "US-255",
+    "title": "Make the CI dependency audit block on high/critical CVEs (remove || true)",
+    "description": "As a security owner handling Stripe/QuickBooks data, I want the CI dependency audit to actually fail on high/critical CVEs so a vulnerable transitive dep can't ship to brikly.net. ci.yml runs `npm run security:audit || true`, swallowing the result, and no standalone npm audit gate exists.",
+    "acceptanceCriteria": [
+      "security:audit (or npm audit --audit-level=high) fails the job on high/critical advisories",
+      "Documented allowlist for accepted/unfixable advisories",
+      "Audit runs on PRs into develop, not only main"
+    ],
+    "priority": 1,
+    "passes": false,
+    "notes": "PROPOSED (deep-dive audit 2026-07-12). Theme: CI/CD. SEV: HIGH. Source: Testing/CI audit."
+  },
+  {
+    "id": "US-256",
+    "title": "Fix CI trigger scope: run on develop PRs and remove the dead branch reference",
+    "description": "As a release manager, I want CI (lint, unit, e2e, security-smoke, build) to run on PRs into develop and on develop pushes so regressions are caught at the integration branch, not only at main. ci.yml triggers only on main; performance.yml and lighthouse.yml reference a defunct enterprise-production-readiness branch; feature branches get only prd-verification.yml.",
+    "acceptanceCriteria": [
+      "ci.yml triggers on pull_request into develop and main and push to both",
+      "enterprise-production-readiness removed from performance.yml and lighthouse.yml",
+      "Security-smoke, lint and e2e run before merge to develop",
+      "Branch-trigger config matches the CLAUDE.md branch model"
+    ],
+    "priority": 1,
+    "passes": false,
+    "notes": "PROPOSED (deep-dive audit 2026-07-12). Theme: CI/CD. SEV: HIGH. Source: Testing/CI audit."
+  },
+  {
+    "id": "US-257",
+    "title": "Enforce a Lighthouse/Web-Vitals performance budget in CI for marketing routes",
+    "description": "As a growth owner, I want a Lighthouse-CI budget in the pipeline so the public landing page can't regress from the measured LCP 13.9s / FCP 9.6s / TBT 3910ms / ~1MB unused-JS state. CORE-WEB-VITALS-OPTIMIZATION.md sets a 90+/LCP<2.5s target but nothing enforces it. Distinct from US-222 (prerender for crawlers) \u2014 this targets real-user runtime perf.",
+    "acceptanceCriteria": [
+      "@lhci/cli job runs against a preview deploy of / and 2-3 key marketing routes",
+      "Budgets asserted (LCP<2.5s throttled, TBT<300ms, JS transfer cap) and fail the PR check",
+      "A fresh audit recorded as the baseline in CORE-WEB-VITALS-OPTIMIZATION.md",
+      "The ~1MB of unused landing-route JS identified and eliminated"
+    ],
+    "priority": 2,
+    "passes": false,
+    "notes": "PROPOSED (deep-dive audit 2026-07-12). Theme: Performance. SEV: HIGH. Source: Frontend audit."
+  },
+  {
+    "id": "US-258",
+    "title": "Retire or repair the permanently-red tsc gate and de-duplicate CI jobs",
+    "description": "As a developer, I want feature-branch CI to give a meaningful pass/fail so a red X means something. prd-verification.yml's 'Type Check (US-212 gate)' runs full tsc and is red on 100% of pushes given the 2216-error backlog, training everyone to ignore CI, and typecheck+unit+build run three times across ci.yml, prd-verification.yml and performance.yml.",
+    "acceptanceCriteria": [
+      "The tsc gate is scoped to changed files / a baseline count, or marked non-blocking until US-212 lands with a tracking note",
+      "Duplicated typecheck/unit/build consolidated into one reusable workflow (workflow_call)",
+      "e2e-test downloads the build artifact instead of re-running npm run build"
+    ],
+    "priority": 2,
+    "passes": false,
+    "notes": "PROPOSED (deep-dive audit 2026-07-12). Theme: CI/CD. SEV: MEDIUM. Source: Testing/CI audit. Pairs with US-212."
+  },
+  {
+    "id": "US-259",
+    "title": "Reconcile the toothless 5.3MB bundle budget with the 800KB gzipped target",
+    "description": "As a performance owner, I want a single gzipped-KB bundle budget matching the <800KB target that fails CI on regression, so heavy deps (3D/xlsx/recharts/tesseract) don't silently bloat load time. performance-budget-results.json ships a stale 5.3MB ceiling and two scripts (check-bundle-size.js vs check-performance-budget.js) disagree on measurement.",
+    "acceptanceCriteria": [
+      "One bundle-check script measures gzipped size of entry + framework chunks",
+      "An enforceable per-chunk/total gzip budget ratcheted toward the 800KB goal",
+      "performance-budget-results.json gitignored or regenerated in CI",
+      "Bundle check runs on develop PRs and fails on regression"
+    ],
+    "priority": 2,
+    "passes": false,
+    "notes": "PROPOSED (deep-dive audit 2026-07-12). Theme: Performance. SEV: MEDIUM. Source: Testing/CI audit."
+  },
+  {
+    "id": "US-260",
+    "title": "Replace global legacy-peer-deps / npm install --force with targeted overrides",
+    "description": "As a maintainer, I want peer conflicts resolved with explicit overrides rather than silenced globally, so a real React 19 incompatibility doesn't ship broken. .npmrc sets legacy-peer-deps=true and cloudflare:install uses npm install --force, which can pull mismatched trees between local and prod.",
+    "acceptanceCriteria": [
+      "Packages needing overrides enumerated (react-day-picker, react-helmet, etc.)",
+      "Blanket legacy-peer-deps replaced with explicit overrides for only those packages",
+      "cloudflare:install switched from --force to npm ci",
+      "CI install succeeds without global legacy-peer-deps"
+    ],
+    "priority": 3,
+    "passes": false,
+    "notes": "PROPOSED (deep-dive audit 2026-07-12). Theme: CI/CD. SEV: MEDIUM. Source: Testing/CI audit. Depends on the mobile-stack removal item."
+  },
+  {
+    "id": "US-261",
+    "title": "Purge tracked build/debug cruft from the repo root and fix the inert .gitignore",
+    "description": "As a developer or agent navigating Brikly, I want the root free of committed build artifacts, empty backups, secrets backups and shell-accident files so git status is meaningful and the root isn't a 260-file wall. tsc-output.txt (957KB), package.json.backup (still named 'builddesk'), backup_*.sql (0 bytes), .env_backup, a .docx, and files literally named 'e HEAD' and 'hell -c git fetch origin' are all tracked; .gitignore lists some of them but they were committed first so the ignore is inert. A secret scan reconciles the two audits' differing reads of .env_backup (placeholders vs keys).",
+    "acceptanceCriteria": [
+      "git rm --cached tsc-output.txt, package.json.backup, backup_*.sql, .env_backup, 'e HEAD', 'hell -c git fetch origin', the .docx",
+      "Crash/ and one-off diagnostics moved out of the tracked tree or into an archive/ dir",
+      ".gitignore adds *.backup, backup_*.sql, tsc-output.txt and de-dupes the three .env_backup lines; a gitleaks scan confirms no real secret was ever committed (rotate if found)",
+      "A pre-commit/CI check fails if these reappear tracked"
+    ],
+    "priority": 2,
+    "passes": false,
+    "notes": "PROPOSED (deep-dive audit 2026-07-12). Theme: Hygiene. SEV: HIGH. Source: Architecture + Testing + Ops audits (merged; includes .env_backup)."
+  },
+  {
+    "id": "US-262",
+    "title": "Route ad-hoc RLS/SQL fixes through migrations and normalize migration naming",
+    "description": "As an operator, I want all RLS/policy changes in supabase/migrations (append-only) rather than as loose FIX_/HOTFIX_/DIAGNOSE_ scripts run by hand, so prod policy state is reproducible. 24 root .sql files patch policies out-of-band, and rename-migrations.ps1 exists solely to normalize hyphen-vs-underscore migration filenames.",
+    "acceptanceCriteria": [
+      "Still-needed root .sql fixes folded into dated migrations; the rest archived to scripts/sql-archive/ or deleted",
+      "Migration filenames follow one YYYYMMDDHHMMSS_snake_case.sql convention; rename-migrations.ps1 removed after the one-time pass",
+      "Prod policies verified against migration history (schema diff)",
+      "CONTRIBUTING/AGENTS note documents that RLS changes go through migrations only"
+    ],
+    "priority": 3,
+    "passes": false,
+    "notes": "PROPOSED (deep-dive audit 2026-07-12). Theme: Database. SEV: MEDIUM. Source: DB + Security audits (merged). Distinct from root-cruft item (governance vs deletion)."
+  },
+  {
+    "id": "US-263",
+    "title": "Regenerate Supabase types and delete the stray types-N-DPEARSON.ts dump",
+    "description": "As a developer relying on typed Supabase access, I want one freshly-regenerated types file and no accidental sibling so autocomplete/type-checking match the real schema. types-N-DPEARSON.ts (3181 lines) is unreferenced dead code; the canonical types.ts is 41k lines and stale, and 396 TS2339 errors cluster in CRM/invoices/analytics files that read these types.",
+    "acceptanceCriteria": [
+      "types-N-DPEARSON.ts deleted",
+      "types.ts regenerated against current schema via `supabase gen types` and committed",
+      "A db:types npm script added and types.ts documented as generated, never hand-edited",
+      "TS2339 count re-measured to quantify schema-drift-driven errors"
+    ],
+    "priority": 2,
+    "passes": false,
+    "notes": "PROPOSED (deep-dive audit 2026-07-12). Theme: Code Health. SEV: MEDIUM. Source: Architecture audit. Feeds US-212."
+  },
+  {
+    "id": "US-264",
+    "title": "Auto-fix unused imports/vars (512 TS6133) and re-enable no-unused-vars + Prettier",
+    "description": "As a maintainer, I want the ~512 mechanical unused-import/variable errors cleared in one automated sweep and the lint rule turned back on, so the remaining ~1700 semantic errors become the visible US-212 scope and dead imports stop accumulating. eslint.config.js sets @typescript-eslint/no-unused-vars to 'off' across 1356 files; there is no Prettier format check.",
+    "acceptanceCriteria": [
+      "eslint --fix / ts-prune removes dead imports/vars; TS6133 drops to ~0 with tests + build green",
+      "no-unused-vars set to warn (error for new code) with argsIgnorePattern",
+      "Prettier + a format:check script added and wired into the lint job",
+      "Updated tsc total reported so US-212 reflects only semantic errors"
+    ],
+    "priority": 2,
+    "passes": false,
+    "notes": "PROPOSED (deep-dive audit 2026-07-12). Theme: Code Health. SEV: MEDIUM. Source: Architecture + Testing audits (merged). Feeds US-212."
+  },
+  {
+    "id": "US-265",
+    "title": "Consolidate six competing ErrorBoundary implementations into one",
+    "description": "As a developer wrapping a risky subtree, I want one canonical ErrorBoundary (route/feature/critical via props) so error UX is consistent and I'm not choosing among six components. src/ has ErrorBoundary.tsx, ui/ErrorBoundary.tsx, ui/error-boundary.tsx (casing-only duplicate, a case-sensitive-FS hazard), FeatureErrorBoundary, RouteErrorBoundary, CriticalErrorBoundary.",
+    "acceptanceCriteria": [
+      "One canonical ErrorBoundary expresses route/feature/critical via props",
+      "The casing-duplicate pair removed",
+      "The ~20 consumers migrated and redundant files deleted",
+      "The single boundary documented in UI conventions"
+    ],
+    "priority": 3,
+    "passes": false,
+    "notes": "PROPOSED (deep-dive audit 2026-07-12). Theme: Code Health. SEV: MEDIUM. Source: Architecture audit."
+  },
+  {
+    "id": "US-266",
+    "title": "Standardize the data layer: move 40 components off raw supabase.from onto TanStack Query",
+    "description": "As a developer, I want data access to go through TanStack Query hooks so caching, invalidation, retries and loading/error states are uniform. ~40 components/pages call supabase.from directly (only 61 files use useQuery/useMutation), giving no shared cache keys and ad-hoc error handling, against CLAUDE.md's stated pattern.",
+    "acceptanceCriteria": [
+      "The 40 direct-supabase.from components/pages inventoried",
+      "Each moved into a co-located useQuery/useMutation hook with stable query keys",
+      "ESLint restriction discourages supabase.from inside components/pages (allow only in hooks/services)",
+      "Migrated paths use the standard Skeleton/ErrorBoundary"
+    ],
+    "priority": 3,
+    "passes": false,
+    "notes": "PROPOSED (deep-dive audit 2026-07-12). Theme: Code Health. SEV: MEDIUM. Source: Architecture audit."
+  },
+  {
+    "id": "US-267",
+    "title": "Decompose god-files: useCRM (1923 lines), AuthContext (1242), and 1000+ line pages",
+    "description": "As an agent or human editing Brikly, I want the multi-thousand-line hooks/contexts/pages split into focused modules so changes are localized and tsc errors easier to attribute. useCRM.ts bundles dozens of CRM queries in one hook; AuthContext couples auth+session+company+role in 1242 lines (feeding US-219's re-render problem); ~15 files exceed 1000 lines.",
+    "acceptanceCriteria": [
+      "useCRM.ts split into per-entity hooks under src/hooks/crm/",
+      "Non-auth concerns extracted from AuthContext into dedicated hooks/providers",
+      "Each 1000+ line page/component broken into co-located subcomponents",
+      "A soft max-lines lint warning (~500) prevents regrowth"
+    ],
+    "priority": 3,
+    "passes": false,
+    "notes": "PROPOSED (deep-dive audit 2026-07-12). Theme: Code Health. SEV: MEDIUM. Source: Architecture audit. Complements US-219."
+  },
+  {
+    "id": "US-268",
+    "title": "Standardize forms on react-hook-form + Zod (only 12 of 66 form files comply)",
+    "description": "As a user filling out Brikly forms, I want consistent inline validation, error messaging and submit-state handling. 56 of 66 forms use raw useState instead of the mandated RHF+Zod stack, including auth (SignInForm, SignUpForm, PasswordResetFlow) and public lead forms, so validation UX (aria-invalid, error announcements, disabled-while-submitting) is ad hoc or absent.",
+    "acceptanceCriteria": [
+      "Highest-traffic forms migrated first: auth and public lead forms",
+      "Each uses useForm + zodResolver with a shared schema and surfaces errors via aria-invalid + aria-describedby",
+      "Lint rule / PR checklist flags new <form> not using react-hook-form",
+      "Duplicated email/password validation consolidated into src/lib schemas"
+    ],
+    "priority": 3,
+    "passes": false,
+    "notes": "PROPOSED (deep-dive audit 2026-07-12). Theme: Frontend. SEV: MEDIUM. Source: Frontend audit."
+  },
+  {
+    "id": "US-269",
+    "title": "Lazy-load heavy export libraries (xlsx/jspdf) on user action, not route load",
+    "description": "As a user viewing a financial report, I want the page to render fast and only download the ~400KB spreadsheet/PDF engines when I click Export. WipReport and the export/pdf utils import xlsx+jspdf at module top level, so opening the lazy /finance/wip-report route pulls those chunks before any export is requested.",
+    "acceptanceCriteria": [
+      "xlsx/jspdf usage converted to dynamic import() inside the export click handler",
+      "A lightweight loading state shown on the export button while the chunk downloads",
+      "build:analyze confirms the WipReport route chunk no longer statically references xlsx/jspdf",
+      "Same pattern applied to invoice/estimate PDF generators"
+    ],
+    "priority": 3,
+    "passes": false,
+    "notes": "PROPOSED (deep-dive audit 2026-07-12). Theme: Performance. SEV: MEDIUM. Source: Frontend audit."
+  },
+  {
+    "id": "US-270",
+    "title": "Virtualize long web data tables (react-virtual installed but used in 2 files)",
+    "description": "As an accounting/CRM user with thousands of rows, I want long tables to stay responsive so scrolling doesn't jank. @tanstack/react-virtual is installed but imported in only 2 files, while ledger/CRM pages (General Ledger, Trial Balance, Journal Entries, AP, CRM Leads, Timesheets) render every row to the DOM, contributing to high TBT. Web analog to the iOS list-virtualization work.",
+    "acceptanceCriteria": [
+      "Top ~8 unbounded-list pages identified by expected row count",
+      "Their row rendering wrapped with react-virtual / the existing virtualized-grid with sensible overscan",
+      "Keyboard nav and screen-reader table semantics preserved under virtualization",
+      "A benchmark asserts stable render time at 5k rows"
+    ],
+    "priority": 3,
+    "passes": false,
+    "notes": "PROPOSED (deep-dive audit 2026-07-12). Theme: Performance. SEV: MEDIUM. Source: Frontend audit."
+  },
+  {
+    "id": "US-271",
+    "title": "Introduce a web i18n framework (app is hardcoded English-only)",
+    "description": "As a Spanish-speaking field/office user, I want the web app localized to match the Spanish support being added to iOS (US-182). package.json has no i18n dependency and all 1508 src files render literal English, so there is no locale extraction, provider, or message catalog and US-182 has no web counterpart.",
+    "acceptanceCriteria": [
+      "react-i18next or FormatJS added with a provider at app root and a locale detector",
+      "Auth, dashboard and navigation strings extracted into en/es catalogs (parity with US-182 scope)",
+      "A language switcher wired into UserSettings, persisted per user",
+      "A string-externalization convention documented so new components don't hardcode English"
+    ],
+    "priority": 3,
+    "passes": false,
+    "notes": "PROPOSED (deep-dive audit 2026-07-12). Theme: Frontend. SEV: MEDIUM (XL effort). Source: Frontend audit."
+  },
+  {
+    "id": "US-272",
+    "title": "Pin and unify Deno dependency versions across edge functions via an import map",
+    "description": "As a maintainer, I want a single import map pinning supabase-js and std to one version each so behavior is consistent and security patches apply uniformly. No deno.json/import_map exists; @supabase/supabase-js is imported at 5 versions (incl. floating @2), std at 0.168 and 0.190, and duplicated shared modules drift (ai-service vs ai-service-v2, auth-helpers vs auth-helpers-single-tenant).",
+    "acceptanceCriteria": [
+      "supabase/functions/deno.json or import_map.json pins supabase-js and std to one version each",
+      "No function imports the floating @supabase/supabase-js@2 specifier",
+      "ai-service v1/v2 and the dual auth-helpers reconciled or clearly separated",
+      "CI check rejects new unpinned https:// or npm: imports"
+    ],
+    "priority": 3,
+    "passes": false,
+    "notes": "PROPOSED (deep-dive audit 2026-07-12). Theme: Code Health. SEV: MEDIUM. Source: Edge audit."
+  },
+  {
+    "id": "US-273",
+    "title": "Introduce an API/edge-function versioning strategy to protect the iOS contract",
+    "description": "As a mobile platform owner, I want a lightweight API versioning strategy (envelope version field and/or a supported-version header) so when a response shape must change, iOS at MIN_SUPPORTED_IOS_VERSION can detect it and the CLAUDE.md deprecation flow becomes mechanical. The API is unversioned and only ~25/191 functions even emit a conforming envelope.",
+    "acceptanceCriteria": [
+      "The standard envelope carries an API/schema version identifier",
+      "A shared helper stamps the version and an X-Min-Supported-Client header",
+      "A documented policy maps envelope version to MIN_SUPPORTED_IOS_VERSION",
+      "Core client-facing functions (projects, time-tracking, invoices, auth) emit the version"
+    ],
+    "priority": 3,
+    "passes": false,
+    "notes": "PROPOSED (deep-dive audit 2026-07-12). Theme: API. SEV: MEDIUM. Source: Edge audit. Depends on envelope enforcement."
+  },
+  {
+    "id": "US-274",
+    "title": "Enforce the {success,data,error,timestamp} envelope across all edge functions",
+    "description": "As an iOS client developer, I want every edge-function response to use the mandated envelope so the app parses responses uniformly. Adherence is ~14% (25/191 include timestamp); successResponse/errorResponse in _shared/auth-helpers.ts produce the correct shape but only ~27 functions use them, forcing the app to special-case dozens of ad-hoc shapes.",
+    "acceptanceCriteria": [
+      "successResponse/errorResponse (or an equivalent shared responder) used by all JSON-returning functions",
+      "Every JSON response includes success + timestamp; success paths include data, errors include error",
+      "A lint/CI check fails when a new function returns JSON lacking the envelope",
+      "Provider-specific webhook bodies (stripe) explicitly whitelisted"
+    ],
+    "priority": 3,
+    "passes": false,
+    "notes": "PROPOSED (deep-dive audit 2026-07-12). Theme: API. SEV: MEDIUM. Source: Edge audit."
+  },
+  {
+    "id": "US-275",
+    "title": "Decide the tenancy model (company vs company+site) and reconcile site_id thrash",
+    "description": "As an architect, I want one documented tenancy decision and the schema reconciled to match, so we stop shipping alternating add-site_id / rollback-site_id migrations. 34 migrations reference site_id; it was introduced, extended across tables, partially reverted (fix_otp_functions_single_tenant), and has teardown scripts, leaving columns/RLS in a half-migrated state.",
+    "acceptanceCriteria": [
+      "An ADR records the chosen tenancy model and rationale",
+      "site_id columns/policies fully adopted or cleanly deprecated per the multi-release flow",
+      "Dead rollback scripts and half-applied artifacts removed or completed",
+      "Schema docs updated to match the decision"
+    ],
+    "priority": 3,
+    "passes": false,
+    "notes": "PROPOSED (deep-dive audit 2026-07-12). Theme: Database. SEV: MEDIUM. Source: DB audit. Blocks the ROLLBACK-file cleanup decision."
+  },
+  {
+    "id": "US-276",
+    "title": "Consolidate overlapping CRM pipeline schemas (deals vs opportunities, 3 activity tables)",
+    "description": "As a CRM maintainer, I want the redundant deals/opportunities pipeline tables and the three activity tables (lead_activities, deal_activities, crm_activities) consolidated or a canonical one designated, so queries, reporting and RLS aren't split across duplicate schemas. CRM_SCHEMA_ANALYSIS.md already enumerates the overlap.",
+    "acceptanceCriteria": [
+      "Canonical pipeline entity chosen (deals or opportunities) with a migration path for the other",
+      "The three activity tables unified or clearly delineated",
+      "No frontend/service reads both parallel tables for the same concept",
+      "CRM_SCHEMA_ANALYSIS.md updated to reflect the consolidated model"
+    ],
+    "priority": 3,
+    "passes": false,
+    "notes": "PROPOSED (deep-dive audit 2026-07-12). Theme: Database. SEV: MEDIUM. Source: DB audit."
+  },
+  {
+    "id": "US-277",
+    "title": "Add missing foreign-key constraints flagged in DATABASE_SCHEMA_DOCUMENTATION.md",
+    "description": "As a data-integrity owner, I want the missing FK constraints (company_id, project_id, client_id, contact_id references) added where the docs flag their absence, so orphaned rows can't accumulate and cascade behavior is explicit. The schema doc lists this as an unresolved required fix and flags companies as 'referenced but not found'.",
+    "acceptanceCriteria": [
+      "Tables carrying company_id/project_id/client_id audited for a matching FK",
+      "FKs added with appropriate ON DELETE behavior via additive migrations after verifying no orphans",
+      "The 'companies referenced but not found' note resolved",
+      "DATABASE_SCHEMA_DOCUMENTATION.md Required Fixes updated"
+    ],
+    "priority": 3,
+    "passes": false,
+    "notes": "PROPOSED (deep-dive audit 2026-07-12). Theme: Database. SEV: MEDIUM. Source: DB audit."
+  },
+  {
+    "id": "US-278",
+    "title": "Remove dead mobile stacks (Expo/React Native + Capacitor) from the web app",
+    "description": "As a maintainer, I want the archived Expo/React Native and Capacitor stacks removed from the primary web app so npm install/CI stop carrying ~33 unused mobile deps and contributors stop confusing three iOS-capable surfaces for the canonical Brikly-iOS native app. package.json ships ~20 expo-*, react-native, and 13-14 @capacitor packages; vite.config.ts aliases them to stubs.",
+    "acceptanceCriteria": [
+      "expo*/react-native/@capacitor* removed from root package.json (or Capacitor extracted to its own workspace)",
+      "mobile-app/ and cap:init/mobile:archived scripts deleted or moved; capacitor.config.ts git-removed if unused",
+      "The 20 EXPO_*/MOBILE_*/expo-*.md root docs archived or deleted; CLAUDE.md Mobile Strategy updated",
+      "npm run build and lint still pass; package-lock.json shrinks"
+    ],
+    "priority": 3,
+    "passes": false,
+    "notes": "PROPOSED (deep-dive audit 2026-07-12). Theme: Ops. SEV: MEDIUM. Source: Ops + Testing audits (merged)."
+  },
+  {
+    "id": "US-279",
+    "title": "Reconcile contradictory/stale deploy & rollback runbooks and remove a hardcoded IP",
+    "description": "As an engineer doing an emergency rollback, I want one authoritative current runbook so I don't follow a stale SSH/docker single-tenant procedure that contradicts the documented Cloudflare Pages + hosted-Supabase + multi-tenant architecture. 17 rollback docs sprawl at root; SSH_ROLLBACK_CHEATSHEET hardcodes server 209.145.59.219.",
+    "acceptanceCriteria": [
+      "Current topology confirmed; SSH/self-hosted/single-tenant rollback docs marked obsolete",
+      "One docs/RUNBOOK_ROLLBACK.md covers CF Pages rollback, edge-function revert, migration rollback",
+      "The hardcoded server IP and project id removed from committed docs",
+      "Superseded checklists archived and the runbook linked from CLAUDE.md"
+    ],
+    "priority": 3,
+    "passes": false,
+    "notes": "PROPOSED (deep-dive audit 2026-07-12). Theme: Ops. SEV: MEDIUM. Source: Ops audit."
+  },
+  {
+    "id": "US-280",
+    "title": "Wire an uptime monitor + alerting to the existing health-check edge function",
+    "description": "As an on-call engineer, I want an external uptime monitor hitting /health-check on a schedule with alerting so a Supabase database/auth/storage outage pages the team. health-check already probes dependencies and returns 503 on degraded, but nothing polls it and no alert route exists.",
+    "acceptanceCriteria": [
+      "An external uptime check hits the deployed health-check URL on a schedule, or a scheduled function alerts on non-200",
+      "Failures route to a paging channel on-call watches",
+      "Monitor + escalation documented in the deploy runbook",
+      "A synthetic check verifies 503 when a dependency is down"
+    ],
+    "priority": 3,
+    "passes": false,
+    "notes": "PROPOSED (deep-dive audit 2026-07-12). Theme: Observability. SEV: MEDIUM. Source: Ops audit."
+  },
+  {
+    "id": "US-281",
+    "title": "Introduce a lightweight feature-flag / kill-switch mechanism",
+    "description": "As a release owner shipping to live web and App Store users, I want a config-driven kill-switch so a misbehaving integration (QuickBooks sync, a new billing path) can be disabled at runtime without a full redeploy or SSH rollback. No feature-flag system exists; deploy relies entirely on branch promotion.",
+    "acceptanceCriteria": [
+      "A flags table (or config edge function) queried by web + edge functions, scoped by company_id where relevant",
+      "At least one high-risk path (e.g. quickbooks-sync enablement) gated behind a flag as the reference",
+      "An admin UI or documented SQL to flip flags",
+      "Flag lifecycle documented so flags don't become permanent dead branches"
+    ],
+    "priority": 4,
+    "passes": false,
+    "notes": "PROPOSED (deep-dive audit 2026-07-12). Theme: Ops. SEV: LOW. Source: Ops audit."
+  },
+  {
+    "id": "US-282",
+    "title": "Consolidate duplicate/competing dashboard and layout components",
+    "description": "As a developer, I want a single canonical dashboard/layout set so fixes and a11y work aren't applied 2-3 times and dead variants don't ship. 40+ *dashboard*.tsx files include clear duplicates (InteractiveDashboard in two dirs, three MobileDashboard variants, duplicate MobileDashboardLayout and DashboardSkeleton).",
+    "acceptanceCriteria": [
+      "Dashboard/layout variants inventoried as route-referenced vs orphaned",
+      "Unreferenced duplicates deleted or merged",
+      "All imports point at the surviving canonical component",
+      "build:analyze confirms bundle shrinks with no route regression"
+    ],
+    "priority": 4,
+    "passes": false,
+    "notes": "PROPOSED (deep-dive audit 2026-07-12). Theme: Frontend. SEV: LOW. Source: Frontend audit."
+  },
+  {
+    "id": "US-283",
+    "title": "Trim critical-path assets: consolidate fonts, optimize the 192KB logo, add img alt text",
+    "description": "As a first-time visitor on a slow connection, I want the smallest necessary critical-path payload so text and the header logo paint quickly (the audit showed FCP 9.6s). public/fonts ships a 344KB variable font AND four static weights with two competing loaders; BriklyLogo.png is a 192KB PNG in the header on every page; 9 of 14 <img> tags lack alt text.",
+    "acceptanceCriteria": [
+      "One font strategy kept (variable OR specific static weights); unused woff2 removed and index.html preload updated",
+      "FontOptimization.tsx and CriticalResourceLoader.tsx reconciled to a single font loader",
+      "Optimized webp/avif (or inline SVG) logo with explicit width/height to avoid CLS",
+      "alt text added to the 9 <img> elements missing it"
+    ],
+    "priority": 4,
+    "passes": false,
+    "notes": "PROPOSED (deep-dive audit 2026-07-12). Theme: Performance. SEV: LOW. Source: Frontend audit (fonts + logo merged)."
+  },
+  {
+    "id": "US-284",
+    "title": "Replace silent empty catch blocks in UI with user feedback and Sentry capture",
+    "description": "As a user, I want failed operations to give feedback (a sonner toast) and be reported to Sentry so silent failures in auth, activity tracking and voice notes don't leave me stuck. Empty catches discard errors in UnifiedSEOSystem, VoiceNotes, useActivityTracking, AuthContext (x2) and others.",
+    "acceptanceCriteria": [
+      "Flagged catches classified as legitimately-ignorable vs should-surface",
+      "User-affecting failures add a sonner toast and Sentry capture with context",
+      "Intentionally-silent catches carry an explanatory comment",
+      "An eslint no-empty catch rule prevents new silent catches"
+    ],
+    "priority": 4,
+    "passes": false,
+    "notes": "PROPOSED (deep-dive audit 2026-07-12). Theme: Frontend. SEV: LOW. Source: Frontend audit."
+  },
+  {
+    "id": "US-285",
+    "title": "Standardize loading UX on the shared Skeleton component",
+    "description": "As a user, I want consistent skeleton loading states instead of a mix of raw 'Loading...' text and spinners. ~104 files use ad-hoc loading text while only 47 import @/components/ui/skeleton, despite CLAUDE.md mandating Skeleton.",
+    "acceptanceCriteria": [
+      "The ~104 ad-hoc-loading files audited; replaced with Skeleton where a layout placeholder fits",
+      "A small set of reusable skeleton compositions (list, card, table) provided",
+      "PR guidance flags literal 'Loading...' JSX in favor of Skeleton",
+      "Top pages (Projects, CRM, Subcontractors) render skeletons on first paint"
+    ],
+    "priority": 4,
+    "passes": false,
+    "notes": "PROPOSED (deep-dive audit 2026-07-12). Theme: Frontend. SEV: LOW. Source: Architecture audit."
+  }
+]
