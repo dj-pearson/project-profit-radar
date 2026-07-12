@@ -3940,7 +3940,7 @@
       ],
       "priority": 2,
       "passes": false,
-      "notes": "PROPOSED (deep-dive audit 2026-07-12). Theme: Security. SEV: MEDIUM. Source: Security audit."
+      "notes": "BLOCKED on schema verification (assessed 2026-07-12). audit_logs has schema drift: 3 competing CREATE TABLE defs (20250202000012, 20250202000020_final_fix, 20250703164308) and migrations that defensively ADD both company_id AND tenant_id; event_type is NOT NULL. Instrumenting critical mutations with an edge-function insert whose column shape (company_id vs tenant_id, required event_type) is unverified would THROW at runtime on every mutation \u2014 worse than no logging. Needs the live schema confirmed (staging, US-247) before a shared writeAuditLog() helper can be applied safely. Deferred to dedicated schema-informed work."
     },
     {
       "id": "US-245",
