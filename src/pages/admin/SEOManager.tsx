@@ -319,6 +319,7 @@ const SEOManager = () => {
 
       // Log the generated sitemap for manual copying if needed
       if (data) {
+      // intentionally empty
       }
 
       // Save sitemap to public directory (in a real implementation, this would save to your server)

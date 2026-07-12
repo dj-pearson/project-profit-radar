@@ -110,6 +110,7 @@ export function useAuth() {
       }
 
       if (event === 'TOKEN_REFRESHED') {
+      // intentionally empty
       }
     });
 

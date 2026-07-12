@@ -214,6 +214,7 @@ export const UnifiedSEOSystem: React.FC<UnifiedSEOProps> = ({
           });
         }
       } catch (error) {
+      // ignore: non-critical, best-effort
       }
     }
   }, [enableAnalytics, isLoading, location.pathname]);

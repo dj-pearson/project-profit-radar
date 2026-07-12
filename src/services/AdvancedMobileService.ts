@@ -191,6 +191,7 @@ class AdvancedMobileService {
     markups: ARMarkup[]
   ): Promise<void> {
     try {
+    // intentionally empty
     } catch (error: any) {
       console.error('Error processing AR markups:', error);
       throw new Error(`AR markup processing failed: ${error.message}`);

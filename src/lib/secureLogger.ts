@@ -151,6 +151,7 @@ class SecureLogger {
    */
   info(...args: any[]): void {
     if (this.isDevelopment) {
+    // intentionally empty
     }
   }
 
@@ -159,6 +160,7 @@ class SecureLogger {
    */
   debug(...args: any[]): void {
     if (this.isDevelopment) {
+    // intentionally empty
     }
   }
 
@@ -181,6 +183,7 @@ class SecureLogger {
    */
   log(...args: any[]): void {
     if (this.isDevelopment) {
+    // intentionally empty
     }
   }
 
