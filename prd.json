@@ -4204,7 +4204,7 @@
       ],
       "priority": 2,
       "passes": false,
-      "notes": "PROPOSED (deep-dive audit 2026-07-12). Theme: Code Health. SEV: MEDIUM. Source: Architecture audit. Feeds US-212."
+      "notes": "PROPOSED (deep-dive audit 2026-07-12). Theme: Code Health. SEV: MEDIUM. Source: Architecture audit. Feeds US-212. PARTIAL (2026-07-12): deleted the stray dead src/integrations/supabase/types-N-DPEARSON.ts (3181 lines, referenced nowhere in code). Regenerating types.ts is BLOCKED here \u2014 needs SUPABASE_ACCESS_TOKEN + the supabase CLI (neither available in this environment); run `supabase gen types typescript --project-id brikly > src/integrations/supabase/types.ts` locally to finish."
     },
     {
       "id": "US-264",
@@ -4541,7 +4541,7 @@
       ],
       "priority": 2,
       "passes": false,
-      "notes": "Discovered 2026-07-12. Syntax repairs already committed (ai-estimating 91496f3; api-management/gsc-*/sso-manage this batch). A full eslint parse-error scan of supabase/functions now reports 0 undeployable functions. Remaining work is recovering the destroyed logic, which needs git-history archaeology / product intent."
+      "notes": "Discovered 2026-07-12. Syntax repairs already committed (ai-estimating 91496f3; api-management/gsc-*/sso-manage this batch). A full eslint parse-error scan of supabase/functions now reports 0 undeployable functions. Remaining work is recovering the destroyed logic, which needs git-history archaeology / product intent. UPDATE: the destroyed 400-validation blocks are NOT recoverable from git history \u2014 these functions were committed already-botched in PR #145 (only 2 commits exist per file, both post-botch). Reinstating the validations requires reconstructing intent from scratch, not git archaeology."
     }
   ]
 }
