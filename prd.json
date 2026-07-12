@@ -3827,8 +3827,8 @@
         "Regression test: a cross-company workflowId returns 403"
       ],
       "priority": 1,
-      "passes": false,
-      "notes": "PROPOSED (deep-dive audit 2026-07-12). Theme: Security. SEV: CRITICAL. Source: Security audit. IDOR via service-role, verify_jwt=true is not enough."
+      "passes": true,
+      "notes": "COMPLETED (2026-07-12). execute-workflow: added initializeAuthContext + authorizeWorkflowAccess ownership gate (service-role lookups of workflow/execution company_id -> verifyCompanyAccess -> 403) and secure-cors. workflow-execution: secure-cors + defense-in-depth verifyCompanyAccess assertion. New dependency-free _shared/workflow-auth.ts with vitest test (6 cases incl. cross-company 403) now run in CI via vitest include. CAVEAT: execute-workflow's execution BODY has pre-existing structural bugs (continueExecution undefined; startExecution reads undefined startIndex/execution) so it throws at runtime \u2014 flagged for a separate fix; the IDOR is closed at the boundary regardless."
     },
     {
       "id": "US-237",

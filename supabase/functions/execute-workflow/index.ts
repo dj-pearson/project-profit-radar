@@ -1,10 +1,14 @@
 // Execute Workflow Edge Function
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.50.3'
+import { getCorsHeaders, handleCorsPreflightRequest } from '../_shared/secure-cors.ts'
+import { initializeAuthContext, verifyCompanyAccess, errorResponse } from '../_shared/auth-helpers.ts'
+import { authorizeWorkflowAccess } from '../_shared/workflow-auth.ts'
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-}
+// NOTE (US-236): the execution body below (startExecution / continueExecution)
+// has pre-existing structural bugs — continueExecution is referenced but never
+// defined and startExecution reads undefined `startIndex`/`execution` — so it
+// throws at runtime. That defect is tracked separately; this change closes the
+// cross-tenant IDOR at the boundary regardless of the body's state.
 
 interface WorkflowStep {
   name: string
@@ -26,16 +30,45 @@ interface WorkflowExecution {
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders })
+    return handleCorsPreflightRequest(req)
   }
 
+  const corsHeaders = getCorsHeaders(req)
+
   try {
+    // SECURITY (US-236): authenticate the caller and confirm they own the
+    // target workflow/execution before running anything with the service role.
+    const auth = await initializeAuthContext(req)
+    if (!auth) {
+      return errorResponse('Unauthorized', 401, req)
+    }
+
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
 
     const { workflowId, triggerData = {}, executionId } = await req.json()
+
+    const decision = await authorizeWorkflowAccess(
+      { workflowId, executionId },
+      {
+        getWorkflowCompanyId: async (id) => {
+          const { data } = await supabase
+            .from('workflow_definitions').select('company_id').eq('id', id).single()
+          return (data as { company_id?: string } | null)?.company_id ?? null
+        },
+        getExecutionCompanyId: async (id) => {
+          const { data } = await supabase
+            .from('workflow_executions').select('company_id').eq('id', id).single()
+          return (data as { company_id?: string } | null)?.company_id ?? null
+        },
+        verifyAccess: (companyId) => verifyCompanyAccess(auth.supabase, auth.user.id, companyId),
+      },
+    )
+    if (!decision.authorized) {
+      return errorResponse(decision.message ?? 'Forbidden', decision.status, req)
+    }
 
     if (executionId) {
       // Continue existing execution
