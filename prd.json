@@ -3953,8 +3953,8 @@
         "Preferred for any schema containing DB-sourced strings"
       ],
       "priority": 2,
-      "passes": false,
-      "notes": "PROPOSED (deep-dive audit 2026-07-12). Theme: Security. SEV: MEDIUM. Source: Security audit."
+      "passes": true,
+      "notes": "COMPLETED (2026-07-12). Added src/lib/security/jsonLd.ts jsonLdSafe() which escapes < > & and U+2028/U+2029 to \\uXXXX (valid JSON escapes, parsed value unchanged), preventing </script> breakout from DB-sourced JSON-LD (pSEO/FAQ/testimonials). Routed all 12 dangerouslySetInnerHTML ld+json sites through it; 0 raw JSON.stringify __html sites remain. Added jsonLd.test.ts (4 tests pass incl. the </script> breakout case). NOTE: PSEOPageRenderer:380 uses the JSX-children form <script>{JSON.stringify(x)}</script> which React HTML-escapes (XSS-safe but emits invalid JSON-LD) \u2014 left as-is since it is not an XSS vector."
     },
     {
       "id": "US-246",

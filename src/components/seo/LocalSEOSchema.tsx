@@ -1,4 +1,5 @@
 import React from 'react';
+import { jsonLdSafe } from '@/lib/security/jsonLd';
 
 interface LocalBusinessSchemaProps {
   businessName?: string;
@@ -95,7 +96,7 @@ export const LocalBusinessSchema: React.FC<LocalBusinessSchemaProps> = ({
     <script
       type="application/ld+json"
       dangerouslySetInnerHTML={{
-        __html: JSON.stringify(schemaData)
+        __html: jsonLdSafe(schemaData)
       }}
     />
   );
@@ -136,7 +137,7 @@ export const ServiceAreaSchema: React.FC<ServiceAreaSchemaProps> = ({
     <script
       type="application/ld+json"
       dangerouslySetInnerHTML={{
-        __html: JSON.stringify(schemaData)
+        __html: jsonLdSafe(schemaData)
       }}
     />
   );

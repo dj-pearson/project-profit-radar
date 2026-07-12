@@ -1,4 +1,5 @@
 import { Check, Calculator, Loader2, Shield, Lock, Users, TrendingUp } from "lucide-react";
+import { jsonLdSafe } from '@/lib/security/jsonLd';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -331,7 +332,7 @@ const Pricing = () => {
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
-          __html: JSON.stringify({
+          __html: jsonLdSafe({
             "@context": "https://schema.org",
             "@type": "Product",
             "name": "Brikly Construction Management Software",

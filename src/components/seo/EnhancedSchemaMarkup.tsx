@@ -1,4 +1,5 @@
 import { CLAIMS } from '@/config/claims';
+import { jsonLdSafe } from '@/lib/security/jsonLd';
 
 /**
  * Helper that returns a JSON-LD aggregateRating block only when the rating
@@ -19,7 +20,7 @@ export const OrganizationSchema = () => (
   <script
     type="application/ld+json"
     dangerouslySetInnerHTML={{
-      __html: JSON.stringify({
+      __html: jsonLdSafe({
         "@context": "https://schema.org",
         "@type": "Organization",
         "name": "Brikly",
@@ -47,7 +48,7 @@ export const SoftwareSchema = () => (
   <script
     type="application/ld+json"
     dangerouslySetInnerHTML={{
-      __html: JSON.stringify({
+      __html: jsonLdSafe({
         "@context": "https://schema.org",
         "@type": "SoftwareApplication",
         "name": "Brikly",
@@ -71,7 +72,7 @@ export const FAQSchema = ({ questions }: { questions: Array<{ question: string; 
   <script
     type="application/ld+json"
     dangerouslySetInnerHTML={{
-      __html: JSON.stringify({
+      __html: jsonLdSafe({
         "@context": "https://schema.org",
         "@type": "FAQPage",
         "mainEntity": questions.map(q => ({
@@ -103,7 +104,7 @@ export const ArticleSchema = ({
   <script
     type="application/ld+json"
     dangerouslySetInnerHTML={{
-      __html: JSON.stringify({
+      __html: jsonLdSafe({
         "@context": "https://schema.org",
         "@type": "Article",
         "headline": title,
@@ -134,7 +135,7 @@ export const HowToSchema = ({
   <script
     type="application/ld+json"
     dangerouslySetInnerHTML={{
-      __html: JSON.stringify({
+      __html: jsonLdSafe({
         "@context": "https://schema.org",
         "@type": "HowTo",
         "name": name,
@@ -166,7 +167,7 @@ export const ProductSchema = ({
   <script
     type="application/ld+json"
     dangerouslySetInnerHTML={{
-      __html: JSON.stringify({
+      __html: jsonLdSafe({
         "@context": "https://schema.org",
         "@type": "Product",
         "name": name,
@@ -194,7 +195,7 @@ export const ComparisonSchema = ({
   <script
     type="application/ld+json"
     dangerouslySetInnerHTML={{
-      __html: JSON.stringify({
+      __html: jsonLdSafe({
         "@context": "https://schema.org",
         "@type": "ItemList",
         "name": title,

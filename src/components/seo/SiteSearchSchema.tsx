@@ -1,4 +1,5 @@
 import React from 'react';
+import { jsonLdSafe } from '@/lib/security/jsonLd';
 
 interface SiteSearchSchemaProps {
   searchUrl?: string;
@@ -28,7 +29,7 @@ export const SiteSearchSchema: React.FC<SiteSearchSchemaProps> = ({
     <script
       type="application/ld+json"
       dangerouslySetInnerHTML={{
-        __html: JSON.stringify(schemaData)
+        __html: jsonLdSafe(schemaData)
       }}
     />
   );
@@ -57,7 +58,7 @@ export const BreadcrumbSchema: React.FC<BreadcrumbSchemaProps> = ({ items }) => 
     <script
       type="application/ld+json"
       dangerouslySetInnerHTML={{
-        __html: JSON.stringify(schemaData)
+        __html: jsonLdSafe(schemaData)
       }}
     />
   );
@@ -108,7 +109,7 @@ export const ReviewSchema: React.FC<ReviewSchemaProps> = ({
     <script
       type="application/ld+json"
       dangerouslySetInnerHTML={{
-        __html: JSON.stringify(schemaData)
+        __html: jsonLdSafe(schemaData)
       }}
     />
   );

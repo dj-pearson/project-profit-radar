@@ -5,6 +5,7 @@
  */
 
 import React from 'react';
+import { jsonLdSafe } from '@/lib/security/jsonLd';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { CheckCircle, Star, Users, DollarSign } from 'lucide-react';
@@ -118,7 +119,7 @@ export const AISearchOptimization: React.FC<AISearchOptimizationProps> = ({
       {/* Structured FAQ Data for AI Search */}
       <script 
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(getStructuredFAQData()) }}
+        dangerouslySetInnerHTML={{ __html: jsonLdSafe(getStructuredFAQData()) }}
       />
       
       {/* Key Statistics for AI Understanding */}
