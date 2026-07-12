@@ -5,13 +5,6 @@ import { Star } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { logger } from '@/lib/logger';
 
-interface Review {
-  id: string;
-  rating: number;
-  review_text?: string;
-  author_name?: string;
-  created_at: string;
-}
 
 interface AggregateRatingData {
   ratingValue: number;

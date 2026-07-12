@@ -18,13 +18,6 @@ interface JobData {
   completion_percentage: number;
 }
 
-interface ProjectData {
-  id: string;
-  name: string;
-  budget: number | null;
-  completion_percentage: number | null;
-  status: string | null;
-}
 
 interface JobCostData {
   project_id: string;

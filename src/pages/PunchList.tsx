@@ -44,23 +44,7 @@ interface PunchListItem {
   assignee?: { first_name: string; last_name: string };
 }
 
-interface PunchListPhoto {
-  id: string;
-  punch_item_id: string;
-  photo_url: string;
-  caption: string;
-  taken_by: string;
-  created_at: string;
-}
 
-interface PunchListComment {
-  id: string;
-  punch_item_id: string;
-  comment_text: string;
-  commented_by: string;
-  created_at: string;
-  commenter: { first_name: string; last_name: string };
-}
 
 const PunchList = () => {
   const { user, userProfile, loading } = useAuth();

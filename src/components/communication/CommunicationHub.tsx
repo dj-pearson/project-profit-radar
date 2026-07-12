@@ -17,28 +17,7 @@ import { ThreadManager } from "./ThreadManager";
 import { AdvancedChatInterface } from "./AdvancedChatInterface";
 import { useAdvancedChat } from "@/hooks/useAdvancedChat";
 
-interface Message {
-  id: string;
-  sender_name: string;
-  sender_role: string;
-  content: string;
-  timestamp: string;
-  thread_id: string;
-  attachments?: string[];
-  message_type: 'text' | 'system' | 'update';
-}
 
-interface Thread {
-  id: string;
-  title: string;
-  project_name: string;
-  participants: string[];
-  last_message: string;
-  last_message_time: string;
-  unread_count: number;
-  thread_type: 'project' | 'rfi' | 'submittal' | 'general';
-  status: 'active' | 'resolved' | 'closed';
-}
 
 interface RFI {
   id: string;

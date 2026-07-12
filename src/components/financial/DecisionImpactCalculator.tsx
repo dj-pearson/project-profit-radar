@@ -25,13 +25,6 @@ interface ProjectState {
   current_margin: number;
 }
 
-interface DecisionScenario {
-  type: 'change_order' | 'new_hire' | 'equipment' | 'material_change';
-  description: string;
-  cost: number;
-  additional_revenue?: number;
-  time_impact_days?: number;
-}
 
 interface ImpactAnalysis {
   new_margin: number;

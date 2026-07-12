@@ -30,21 +30,6 @@ interface CompanyMetrics {
   currentStage: string;
 }
 
-interface ScalingRecommendation {
-  category: string;
-  title: string;
-  description: string;
-  priority: 'low' | 'medium' | 'high' | 'critical';
-  estimatedImpact: string;
-  timeframe: string;
-  investment: string;
-  actionItems: Array<{
-    action: string;
-    timeframe: string;
-    responsible: string;
-    success_metric: string;
-  }>;
-}
 
 interface ScalingAssessment {
   id: string;

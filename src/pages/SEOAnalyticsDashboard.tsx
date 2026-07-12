@@ -11,32 +11,7 @@ import { toast } from 'sonner';
 import { Eye, MousePointer, Search, Brain, RefreshCw, AlertTriangle, Target, Globe } from 'lucide-react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line } from 'recharts';
 
-interface SEOData {
-  totalImpressions: number;
-  totalClicks: number;
-  averageCTR: string;
-  averagePosition: string;
-  topQueries: Array<{
-    query: string;
-    impressions: number;
-    clicks: number;
-    ctr: string;
-    position: string;
-  }>;
-  topPages: Array<{
-    page: string;
-    impressions: number;
-    clicks: number;
-    ctr: string;
-  }>;
-}
 
-interface AIInsights {
-  insights: string[] | Record<string, unknown>;
-  recommendations: string[] | Record<string, unknown>;
-  actionPlan: string[] | Record<string, unknown>;
-  competitorAnalysis: string[] | Record<string, unknown>;
-}
 
 const SEOAnalyticsDashboard: React.FC = () => {
   const [selectedDateRange, setSelectedDateRange] = useState(30);

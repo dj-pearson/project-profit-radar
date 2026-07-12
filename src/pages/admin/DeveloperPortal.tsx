@@ -28,13 +28,6 @@ interface APIDoc {
   usage_count: number;
 }
 
-interface CodeExample {
-  id: string;
-  doc_id: string;
-  language: string;
-  code: string;
-  description: string;
-}
 
 export function DeveloperPortal() {
   const { user } = useAuth();

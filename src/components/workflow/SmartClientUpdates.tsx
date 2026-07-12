@@ -15,13 +15,6 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Plus, Edit, MessageSquare, FileText, Calendar, Settings, Zap, CheckCircle, AlertTriangle, DollarSign } from 'lucide-react';
 
-interface AutomatedClientUpdate {
-  trigger: 'phase_completion' | 'delay_detected' | 'budget_variance' | 'milestone_reached';
-  template: string;
-  recipients: string[];
-  attachments: 'progress_photos' | 'updated_timeline' | 'budget_summary';
-  delivery_method: 'email' | 'portal_notification' | 'sms';
-}
 
 interface AutomationRule {
   id: string;
