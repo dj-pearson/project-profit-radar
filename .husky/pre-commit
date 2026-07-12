@@ -1,0 +1,21 @@
+# Brikly pre-commit hook (US-254).
+# CLAUDE.md forbids `git commit --no-verify` precisely because it bypasses
+# these checks. Keep them fast so they don't tempt anyone to skip the hook.
+
+# 1. Lint only the staged TS/TSX files (fast; doesn't fail on the wider backlog).
+npx lint-staged || exit 1
+
+# 2. Secret scan — block committing tokens/keys.
+bash scripts/secret-scan.sh || exit 1
+
+# 3. Edge-function auth guard — no verify_jwt=false function loses its guard.
+node scripts/check-edge-function-auth.mjs || exit 1
+
+# 4. Migration hygiene guards (US-235 / US-239).
+bash scripts/check-migration-filenames.sh || exit 1
+bash scripts/check-no-stray-function-copies.sh || exit 1
+
+# NOTE: the security unit suite (npm run test:security) and the dependency
+# audit run in CI (Security Smoke Tests job), not here — they are too slow for
+# every commit, and keeping the hook fast is what stops people reaching for
+# --no-verify (which CLAUDE.md forbids).

@@ -37,6 +37,10 @@ npm run ios:test               # xcodebuild test (iOS Simulator)
 npm run build:mobile:sync      # Capacitor web→native wrapper (not the shipping iOS app)
 ```
 
+### Pre-commit hooks (Husky)
+
+`npm ci` installs Husky (`prepare` script). The `.husky/pre-commit` hook runs, fast, on every commit: `lint-staged` (ESLint on staged `*.{ts,tsx}`), `scripts/secret-scan.sh`, `scripts/check-edge-function-auth.mjs`, and the migration guards (`check-migration-filenames.sh`, `check-no-stray-function-copies.sh`). The slower security unit suite (`test:security`) and the dependency audit run in CI, not the hook. This is what the `--no-verify` prohibition protects — don't bypass it.
+
 ## Conventions
 
 - **Stack patterns**: TanStack Query for data; react-hook-form + Zod for forms; `sonner` toasts; `Skeleton` from `@/components/ui/skeleton` for loading; DOMPurify for output sanitization.

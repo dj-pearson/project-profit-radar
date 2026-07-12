@@ -4079,8 +4079,8 @@
         "CLAUDE.md updated so the --no-verify prohibition is truthful"
       ],
       "priority": 1,
-      "passes": false,
-      "notes": "PROPOSED (deep-dive audit 2026-07-12). Theme: CI/CD. SEV: HIGH. Source: Testing/CI audit."
+      "passes": true,
+      "notes": "COMPLETED (2026-07-12). Added Husky 9 + lint-staged; prepare script installs hooks on npm ci. .husky/pre-commit runs (fast): lint-staged (eslint on staged ts/tsx), secret-scan.sh, check-edge-function-auth.mjs, and the migration guards check-migration-filenames.sh + check-no-stray-function-copies.sh. Dropped test:security/npm-audit from the hook (they hung >2min here and already run in the CI Security job) to keep the hook fast so nobody reaches for --no-verify. Documented in CLAUDE.md. Verified the hook runs in seconds and exits 0."
     },
     {
       "id": "US-255",
