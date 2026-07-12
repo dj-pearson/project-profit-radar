@@ -4023,8 +4023,8 @@
         "crm_site_id-style tightening reviewed against MIN_SUPPORTED client behavior"
       ],
       "priority": 2,
-      "passes": false,
-      "notes": "PROPOSED (deep-dive audit 2026-07-12). Theme: Database. SEV: HIGH. Source: DB audit."
+      "passes": true,
+      "notes": "COMPLETED (2026-07-12). Added scripts/check-migration-backcompat.mjs guarding against single-release tightening/destructive schema changes (SET NOT NULL, DROP COLUMN, DROP TABLE, RENAME COLUMN, RENAME TO) on pre-existing tables; exempts tables CREATEd in the same migration. Baseline-grandfathered (20260712130000): lists 45 historical violations for visibility, fails only on NEW ones. Tested pass (historical), fail (new SET NOT NULL/DROP TABLE), and pass (new table + constraint in same file). Wired into CI + pre-commit."
     },
     {
       "id": "US-251",

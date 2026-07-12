@@ -147,3 +147,6 @@ jobs:
 
       - name: No tracked build/backup/env cruft (US-261)
         run: bash scripts/check-no-tracked-cruft.sh
+
+      - name: Migration backward-compat guard (US-250)
+        run: node scripts/check-migration-backcompat.mjs

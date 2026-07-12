@@ -16,6 +16,7 @@ bash scripts/check-migration-filenames.sh || exit 1
 bash scripts/check-no-stray-function-copies.sh || exit 1
 node scripts/check-rls-policies.mjs || exit 1
 bash scripts/check-no-tracked-cruft.sh || exit 1
+node scripts/check-migration-backcompat.mjs || exit 1
 
 # NOTE: the security unit suite (npm run test:security) and the dependency
 # audit run in CI (Security Smoke Tests job), not here — they are too slow for
