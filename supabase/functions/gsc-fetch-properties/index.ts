@@ -22,9 +22,9 @@ serve(async (req) => {
         { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
-    // TODO: a 400 input-validation block was destroyed here by a botched edit and
-    // removed to restore deployability. Reinstate the original validation if needed.
-
+    // Note: the block a botched edit destroyed here was obsolete site_id multi-tenant
+    // validation, dropped platform-wide in the single-tenant migration (d87d7593).
+    // This endpoint takes no request body, so auth + root_admin role are the guards.
     const { data: userProfile } = await supabaseClient
       .from('user_profiles').select('role').eq('id', user.id).single();
 
@@ -141,7 +141,7 @@ serve(async (req) => {
     }
 
   } catch (error) {
-    return new Response(JSON.stringify({ error: error.message }),
+    return new Response(JSON.stringify({ error: error instanceof Error ? error.message : 'Internal error' }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
   }
 });

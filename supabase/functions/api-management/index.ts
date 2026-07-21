@@ -135,8 +135,13 @@ async function createApiKey(req: Request, supabase: any): Promise<Response> {
     );
   }
 
-  // TODO: a 400 input-validation block was destroyed here by a botched edit and
-  // removed to restore deployability. Reinstate the original validation if needed.
+  // Validate request body: key_name is required and stored on the api_keys row.
+  if (!key_name || typeof key_name !== 'string' || key_name.trim().length === 0) {
+    return new Response(
+      JSON.stringify({ error: 'key_name is required and must be a non-empty string' }),
+      { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
+  }
 
   const { data: profile, error: profileError } = await supabase
     .from('user_profiles')
