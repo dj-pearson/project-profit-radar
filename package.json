@@ -73,6 +73,8 @@
     "lighthouse:full": "npm run build && lhci autorun",
     "generate-sitemap": "node scripts/generate-sitemap.js",
     "db:types": "supabase gen types typescript --project-id brikly > src/integrations/supabase/types.ts",
+    "build:prerender": "npm run build && node scripts/prerender.mjs",
+    "prerender": "node scripts/prerender.mjs",
     "mcp:puppeteer": "npx @modelcontextprotocol/server-puppeteer",
     "mcp:context7": "npx @upstash/context7-mcp",
     "mcp:supabase": "npx -y @supabase/mcp-server-supabase@latest --project-id brikly --access-token \"${SUPABASE_ACCESS_TOKEN}\"",
