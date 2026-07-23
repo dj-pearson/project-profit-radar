@@ -4483,8 +4483,8 @@
         "alt text added to the 9 <img> elements missing it"
       ],
       "priority": 4,
-      "passes": false,
-      "notes": "PROPOSED (deep-dive audit 2026-07-12). Theme: Performance. SEV: LOW. Source: Frontend audit (fonts + logo merged)."
+      "passes": true,
+      "notes": "DONE 2026-07-23. (AC1) Kept the self-hosted STATIC Inter strategy (public/fonts/inter.css: weights 400 + 600, 700 reuses 600) that index.html already preloads; deleted the unused woff2: inter-variable.woff2 (352KB!), inter-regular.woff2 (md5-identical dup of inter-400), inter-semibold.woff2 (identical dup of inter-600) — ~386KB removed from shipped assets. index.html preload (inter-400.woff2) already correct, unchanged. (AC2) Reconciled the competing loaders: FontOptimization.tsx (injected the 352KB 'Inter Variable' @font-face + a body font override) and CriticalResourceLoader.tsx were BOTH orphaned dead code (0 importers, never rendered) — deleted them, leaving index.html+inter.css as the single font path. (AC3) Generated public/BriklyLogo.webp via sharp (191KB PNG -> 63KB webp, 67% smaller); switched the rendered logo (SmartLogo=header/footer, ResponsiveLogo) local source and the resourcePrioritization preload from .png to .webp; the <img> already sets an explicit height (heightValues) for CLS. Kept BriklyLogo.png for schema.org/SEO absolute URLs (crawler-facing, off critical path). (AC4) Already satisfied — the flagged <img> elements all carry alt (verified; eslint jsx-a11y/alt-text=error reports 0 missing). Build verified green; webp + trimmed fonts confirmed in dist/; lint clean on changed files. FOLLOW-UP (not story-named, left in place): CoreWebVitalsOptimizer.tsx (also orphaned; preloads a competing Google-Fonts Inter stylesheet) and utils/fontOptimization.ts (orphaned, dead empty preload loop) are further dead perf code that could be removed in a separate cleanup."
     },
     {
       "id": "US-284",
