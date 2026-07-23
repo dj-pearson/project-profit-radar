@@ -23,6 +23,7 @@ import { logger } from '@/lib/logger';
 - `main.tsx` - Entry point
 - `contexts/AuthContext.tsx` - Authentication state & role checking
 - `integrations/supabase/client.ts` - Supabase client singleton
+- `integrations/supabase/types.ts` - **generated** DB types. Regenerate with `npm run db:types` (needs the Supabase CLI + `SUPABASE_ACCESS_TOKEN`); never hand-edit — edits are overwritten on the next generation.
 - `lib/logger.ts` - Production-safe logger (use instead of console.log)
 - `lib/utils.ts` - Core utilities (cn, formatCurrency)
 
