@@ -86,7 +86,15 @@ function loadNativeHaptics() {
     return Promise.resolve(null);
   }
   if (!nativeHapticsPromise) {
-    nativeHapticsPromise = import('@capacitor/haptics').catch(() => null);
+    // `@capacitor/haptics` is only present in the native Capacitor build — it is
+    // not a dependency of the web/test graph. Using a variable specifier (plus
+    // @vite-ignore) prevents Vite/Rollup import-analysis from trying to resolve a
+    // module that isn't installed here, which would otherwise break the web build
+    // and the Vitest suite. The runtime guard above ensures this line is only
+    // reached on a native platform (where the plugin exists); .catch keeps it
+    // safe if the plugin is somehow absent.
+    const nativeHapticsModule = '@capacitor/haptics';
+    nativeHapticsPromise = import(/* @vite-ignore */ nativeHapticsModule).catch(() => null);
   }
   return nativeHapticsPromise;
 }

@@ -1,10 +1,19 @@
 import { supabase } from '@/integrations/supabase/client';
 import { logger } from './logger';
 import { safeStorage } from './safeStorage';
+import { mayLoadAnalytics, subscribeToConsent } from '@/lib/consent/consentStore';
 
 /**
  * Analytics tracking utilities for Brikly
  * Integrates with PostHog (when available) and Supabase for event tracking
+ *
+ * Consent gating (GDPR/ePrivacy "consent before collection"): the third-party
+ * PostHog tracker — which sets cookies, autocaptures, and records sessions — is
+ * only initialized once the user has granted the `analytics` category via the
+ * cookie banner (or a jurisdiction where GPC is not signalling opt-out). We
+ * subscribe to consent changes so opt-in/opt-out takes effect live, without a
+ * page reload, mirroring the Google Consent Mode v2 gating in index.html.
+ * See `src/lib/consent/consentStore.ts`.
  */
 
 // Types
@@ -34,6 +43,8 @@ interface PostHogInstance {
   capture(event: string, properties?: Record<string, unknown>): void;
   identify(userId: string, properties?: Record<string, unknown>): void;
   reset(): void;
+  opt_in_capturing?(): void;
+  opt_out_capturing?(): void;
 }
 
 // Initialize PostHog (lazy loaded)
@@ -41,6 +52,8 @@ let posthog: PostHogInstance | null = null;
 
 const initPostHog = async () => {
   if (typeof window === 'undefined') return null;
+  // Consent gate: never load the third-party tracker without analytics consent.
+  if (!mayLoadAnalytics()) return null;
   if (posthog) return posthog;
 
   // Only load if API key is available
@@ -123,22 +136,55 @@ const getCategoryFromEvent = (eventName: string): string => {
   return 'other';
 };
 
+/**
+ * Reconcile the PostHog tracker with the current analytics-consent state.
+ * - Consent granted  → initialize (first time) or resume capturing.
+ * - Consent withdrawn → stop capturing (opt-out), without tearing the SDK down.
+ * Called on startup and on every consent change.
+ */
+const applyConsentToPostHog = async (): Promise<void> => {
+  if (mayLoadAnalytics()) {
+    if (!posthog) {
+      await initPostHog();
+    } else {
+      try {
+        posthog.opt_in_capturing?.();
+      } catch {
+        /* posthog SDK not ready — no-op */
+      }
+    }
+  } else if (posthog) {
+    try {
+      posthog.opt_out_capturing?.();
+    } catch {
+      /* posthog SDK not ready — no-op */
+    }
+  }
+};
+
 // Core Analytics Class
 export class Analytics {
   private static initialized = false;
+  private static consentUnsub: (() => void) | null = null;
 
   static async init() {
     if (this.initialized) return;
-    await initPostHog();
     this.initialized = true;
+    // React to later opt-in / opt-out without a page reload.
+    if (typeof window !== 'undefined' && !this.consentUnsub) {
+      this.consentUnsub = subscribeToConsent(() => {
+        void applyConsentToPostHog();
+      });
+    }
+    await applyConsentToPostHog();
   }
 
   /**
    * Track a custom event
    */
   static async track(eventName: string, properties?: EventProperties) {
-    // Track in PostHog if available
-    if (posthog) {
+    // Track in PostHog only when initialized AND analytics consent is active.
+    if (posthog && mayLoadAnalytics()) {
       posthog.capture(eventName, properties);
     }
 
@@ -150,7 +196,7 @@ export class Analytics {
    * Identify a user
    */
   static async identify(userId: string, properties?: UserProperties) {
-    if (posthog) {
+    if (posthog && mayLoadAnalytics()) {
       posthog.identify(userId, properties);
     }
 
@@ -169,7 +215,7 @@ export class Analytics {
    * Track a page view
    */
   static async page(pageName?: string, properties?: EventProperties) {
-    if (posthog) {
+    if (posthog && mayLoadAnalytics()) {
       posthog.capture('$pageview', {
         $current_url: window.location.href,
         page_name: pageName,

@@ -78,6 +78,20 @@ const SUBPROCESSORS: Subprocessor[] = [
     region: 'United States',
     url: 'https://www.intuit.com/privacy/statement/',
   },
+  {
+    name: 'Amazon Web Services, Inc. (Amazon SES)',
+    purpose: 'Transactional and notification email delivery',
+    dataCategories: 'Recipient email addresses, email subject and body content',
+    region: 'United States',
+    url: 'https://aws.amazon.com/privacy/',
+  },
+  {
+    name: 'Twilio Inc.',
+    purpose: 'Outbound voice calling and SMS notifications',
+    dataCategories: 'Phone numbers, call/message metadata and content',
+    region: 'United States; global processing',
+    url: 'https://www.twilio.com/legal/privacy',
+  },
 ];
 
 const Subprocessors = () => (

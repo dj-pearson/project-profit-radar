@@ -21,26 +21,41 @@
 
 ---
 
+## 1a. Remediation applied in this branch (`claude/compliance-audit-docs-accessibility-t9ohdh`)
+
+The following fixes were implemented and verified (full production build passes; the previously-broken page-level a11y tests now load and pass):
+
+- ✅ **P0 — Analytics now consent-gated.** `src/lib/analytics.ts` gates PostHog init and every capture on `mayLoadAnalytics()` and subscribes to consent changes (live opt-in/opt-out, no reload). (§4.1)
+- ✅ **P1 — DSAR links repointed.** Privacy Policy and "Do Not Sell" now point signed-in users to the working `/profile` privacy controls (export/delete), with email as the universal path — no more dead-end at the auth-gated admin console. (§3.3)
+- ✅ **P1 — `/legal/security` created** (`src/pages/legal/Security.tsx`, routed + in footer), resolving the DPA/Subprocessors 404 and adding a responsible-disclosure policy. (§3.4)
+- ✅ **P1 — `/contact` created** (`src/pages/Contact.tsx`, routed + footer link switched from `mailto:` to the page). (§3.4)
+- ✅ **P1 — Twilio and Amazon SES disclosed** in `Subprocessors.tsx`. (§4.4)
+- ✅ **P1 — Skip links fixed.** `SkipLinks` now resolves real landmarks with fallbacks and makes targets focusable; `id="main-navigation"` added to the primary nav; triple-rendered `<SkipLinks>` de-duplicated to the single app-wide instance; the broken document-wide `useFocusTrap` collapsed to the correct scoped implementation. (§5.2)
+- ✅ **P2 — Page-level a11y tests unblocked** (`@capacitor/haptics` optional-import fix in `useHaptics.ts`); Dashboard a11y suite now passes. (§5.3)
+- ✅ **P2 — VPAT right-sized.** Over-claimed criteria (1.3.1, 1.4.3, 2.4.6) downgraded to "Partially Supports"; false ESLint-heading-order and axe/Lighthouse-gating claims corrected. (§5.4)
+
+**Still requires business input (not code):** real registered postal/DMCA address (§3.2); named DPO / EU Art. 27 representative (§3.5); confirming `status.brikly.net` is live (§3.5); resolving the two "coming soon" stubs in the internal GDPR console (§3.5). Broader accessible-component adoption across the 174 legacy dialogs / 36 raw tables (§5.3) and icon-only-button accessible names (§5.5) remain as ongoing work.
+
 ## 2. Priority-ranked remediation roadmap
 
-Ranked by legal exposure × ease of fix. Each item links to its detailed finding below.
+Ranked by legal exposure × ease of fix. Each item links to its detailed finding below. ✅ = fixed in this branch (see §1a).
 
 ### P0 — Urgent (active legal exposure, ship this week)
-1. **Gate PostHog (and web-vitals/Sentry) on consent.** Analytics collects before opt-in — a GDPR/ePrivacy consent-before-collection problem *and* a misrepresentation vs. the app's own opt-in banner and CCPA opt-out toggle. (§4.1)
-2. **Replace the placeholder company & DMCA-agent address** in 6 files. A fake postal address undermines CAN-SPAM, the DMCA designated-agent registration, and state-privacy contact disclosures. (§3.2)
+1. ✅ **Gate PostHog (and web-vitals/Sentry) on consent.** Analytics collects before opt-in — a GDPR/ePrivacy consent-before-collection problem *and* a misrepresentation vs. the app's own opt-in banner and CCPA opt-out toggle. (§4.1) — *PostHog + web-vitals gated; Sentry left as legitimate-interest error monitoring, see §4.1.*
+2. ⏳ **Replace the placeholder company & DMCA-agent address** in 6 files. A fake postal address undermines CAN-SPAM, the DMCA designated-agent registration, and state-privacy contact disclosures. (§3.2) — *needs the real address.*
 
 ### P1 — High (fix within the release)
-3. **Fix the public data-subject-rights path.** Privacy Policy and "Do Not Sell" send consumers to `/gdpr-compliance`, which is behind a `RouteGuard` → `/auth`. Either build a public DSAR request page or repoint those links to the working `PrivacyControls` surface / a `mailto:`. (§3.3)
-4. **Create `/legal/security` (or remove the references).** The DPA and Subprocessors pages contractually point customers to a security page that 404s. (§3.4)
-5. **Disclose Twilio and AWS SES** as subprocessors. (§4.4)
-6. **Fix or remove the dead "Skip to navigation" skip link** (`id="main-navigation"` exists nowhere) and the broken `AccessibilityUtils.useFocusTrap`. (§5.2)
+3. ✅ **Fix the public data-subject-rights path.** Repointed Privacy Policy and "Do Not Sell" to the working `/profile` controls + email intake. (§3.3)
+4. ✅ **Create `/legal/security`.** Added and routed; DPA/Subprocessors links now resolve. (§3.4)
+5. ✅ **Disclose Twilio and AWS SES** as subprocessors. (§4.4)
+6. ✅ **Fix the dead "Skip to navigation" skip link and the broken `AccessibilityUtils.useFocusTrap`.** (§5.2)
 
 ### P2 — Medium (correctness & credibility)
-7. **Add a `/contact` page** — referenced by "Do Not Sell" and the AUP. (§3.4)
-8. **Right-size the VPAT.** Downgrade unverified "Supports" ratings to "Partially Supports" until evidence exists; remove claims of ESLint heading-order enforcement and axe/Lighthouse testing that aren't wired. (§5.4)
-9. **Wire axe-core into the test harness** and fix the `@capacitor/haptics` import so page-level a11y tests run in a clean checkout. (§5.3)
-10. **Name a DPO / EU Art. 27 representative** or remove the "will be assigned" language; resolve the two "coming soon" stubs in the GDPR console; confirm `status.brikly.net` is live before the SLA relies on it. (§3.5)
-11. **De-duplicate `<SkipLinks>`** (rendered up to 3× on authenticated pages) and add accessible-name coverage for icon-only buttons. (§5.2, §5.5)
+7. ✅ **Add a `/contact` page** — referenced by "Do Not Sell" and the AUP. (§3.4)
+8. ✅ **Right-size the VPAT.** Downgraded unverified "Supports" ratings; removed false ESLint/axe/Lighthouse claims. (§5.4)
+9. ✅ **Unblock page-level a11y tests** (`@capacitor/haptics` import). *Wiring axe-core assertions into the suite remains a follow-up.* (§5.3)
+10. ⏳ **Name a DPO / EU Art. 27 representative** or remove the "will be assigned" language; resolve the two "coming soon" stubs in the GDPR console; confirm `status.brikly.net` is live before the SLA relies on it. (§3.5) — *needs business input.*
+11. ◑ **De-duplicate `<SkipLinks>`** ✅ *(done)* and add accessible-name coverage for icon-only buttons *(follow-up)*. (§5.2, §5.5)
 
 ---
 
