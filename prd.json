@@ -4427,8 +4427,8 @@
         "Superseded checklists archived and the runbook linked from CLAUDE.md"
       ],
       "priority": 3,
-      "passes": false,
-      "notes": "PROPOSED (deep-dive audit 2026-07-12). Theme: Ops. SEV: MEDIUM. Source: Ops audit."
+      "passes": true,
+      "notes": "DONE 2026-07-23. Authored docs/RUNBOOK_ROLLBACK.md as the single authoritative rollback runbook for the live stack (CF Pages deployment rollback via wrangler pages deployment rollback / git-revert-main; edge-function revert via supabase functions deploy + dashboard; DB migration rollback via supabase db dump/restore or compensating migration). Classified all 17 root rollback docs (subagent-assisted): marked the 9 obsolete SSH/self-hosted/single-tenant docs with a prominent SUPERSEDED banner pointing to the runbook (SSH_ROLLBACK_CHEATSHEET, ROLLBACK_VIA_SSH_GUIDE, START_HERE_ROLLBACK, QUICK_ROLLBACK_REFERENCE, MULTI_TENANT_ROLLBACK_GUIDE, ROLLBACK_PACKAGE_SUMMARY, FRONTEND_ROLLBACK_CHECKLIST, EDGE_FUNCTIONS_ROLLBACK_SUMMARY, scripts/README_ROLLBACK). Chose banner-in-place over physical archive/ move because these docs are heavily cross-linked (FRONTEND checklist referenced by 7 files) and moving would break relative links. Hardcoded IP 209.145.59.219 was already absent from docs; redacted leaked Supabase project ref v0os0wg0gw4ko04ww80sgg08 -> placeholder in SSH_ROLLBACK_CHEATSHEET, ROLLBACK_VIA_SSH_GUIDE, GOTRUE_SITE_URL_FIX_FINAL. Runbook linked from CLAUDE.md Deploy section. Still-current refs (DEPLOYMENT_CHECKLIST_RLS_FIX, EDGE-FUNCTION-DEPLOYMENT, DEPLOYMENT_GUIDE) linked, not duplicated."
     },
     {
       "id": "US-280",
