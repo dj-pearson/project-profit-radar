@@ -4441,8 +4441,8 @@
         "A synthetic check verifies 503 when a dependency is down"
       ],
       "priority": 3,
-      "passes": false,
-      "notes": "PROPOSED (deep-dive audit 2026-07-12). Theme: Observability. SEV: MEDIUM. Source: Ops audit."
+      "passes": true,
+      "notes": "DONE 2026-07-23. The monitor + alerting core was already built by US-208 (.github/workflows/uptime-health-check.yml): a scheduled (~10 min) GitHub Actions job that pings the deployed health-check URL, retries 3x to debounce, and on non-200 posts to Slack (SLACK_WEBHOOK_URL) AND fails the run (emails repo admins) — satisfying AC1 (external scheduled check) and AC2 (paging/escalation). This story closed the two gaps: AC3 — authored docs/RUNBOOK_MONITORING.md documenting the monitor, required GitHub config (HEALTH_CHECK_URL var, HEALTH_CHECK_ANON_KEY/SLACK_WEBHOOK_URL secrets), the escalation path, and how to run the synthetic tests; linked from CLAUDE.md (Deploy) and docs/RUNBOOK_ROLLBACK.md. AC4 — extracted the health-check function's status->HTTP mapping into a pure supabase/functions/health-check/evaluate.ts (evaluateHealth) and added evaluate.test.ts (Deno test) asserting a degraded OR unhealthy dependency yields 503 and all-healthy yields 200 (plus empty-checks->503); index.ts now calls the shared logic (behavior-identical). VERIFIED HERE: evaluate.ts tsc --strict clean; check-edge-function-auth.mjs + check-no-stray-function-copies.sh both pass. CAVEAT: the Deno test runs in CI / locally via 'deno test' (Deno isn't in this sandbox), but the tested logic is pure and tsc-verified; the workflow's simulate_failure=true input exercises the alert routing end-to-end."
     },
     {
       "id": "US-281",

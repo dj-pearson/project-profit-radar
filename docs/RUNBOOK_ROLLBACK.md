@@ -121,6 +121,9 @@ than duplicated:
 
 ## Superseded docs
 
+> **Detecting an outage in the first place:** see `docs/RUNBOOK_MONITORING.md`
+> for the uptime monitor + alerting that pages on-call when a dependency is down.
+
 The following describe an obsolete architecture (SSH/self-hosted Supabase, or a
 multi-tenant→single-tenant teardown) and must **not** be followed. Each now
 carries a superseded banner pointing back here; they are kept only for
