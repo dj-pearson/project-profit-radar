@@ -37,6 +37,11 @@ export default tseslint.config(
       // blocking, since removing them can change behavior and needs review.
       // Args and rest-siblings are ignored (intentional signature shape / omit).
       "unused-imports/no-unused-imports": "error",
+      // US-284: forbid silent empty catch blocks. A catch that intentionally
+      // ignores an error must carry an explanatory comment (which makes the
+      // block non-empty); user-affecting failures must surface a toast and/or
+      // Sentry capture. `allowEmptyCatch` stays false so `catch {}` is an error.
+      "no-empty": ["error", { allowEmptyCatch: false }],
       "@typescript-eslint/no-unused-vars": [
         "warn",
         {

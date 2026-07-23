@@ -1,3 +1,11 @@
+> ⚠️ **SUPERSEDED — do not follow.** This document describes an obsolete
+> architecture (SSH / self-hosted Supabase, and/or a multi-tenant → single-tenant
+> teardown) that does **not** match Brikly's live stack (Cloudflare Pages +
+> hosted Supabase + multi-tenant). Use **[../docs/RUNBOOK_ROLLBACK.md](../docs/RUNBOOK_ROLLBACK.md)** as the authoritative
+> rollback runbook. Kept for historical context only.
+
+---
+
 # Rollback Scripts
 
 This directory contains scripts to revert Brikly from multi-tenant to single-tenant architecture.

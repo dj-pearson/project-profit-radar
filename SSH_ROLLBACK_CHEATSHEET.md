@@ -1,7 +1,15 @@
+> ⚠️ **SUPERSEDED — do not follow.** This document describes an obsolete
+> architecture (SSH / self-hosted Supabase, and/or a multi-tenant → single-tenant
+> teardown) that does **not** match Brikly's live stack (Cloudflare Pages +
+> hosted Supabase + multi-tenant). Use **[docs/RUNBOOK_ROLLBACK.md](docs/RUNBOOK_ROLLBACK.md)** as the authoritative
+> rollback runbook. Kept for historical context only.
+
+---
+
 # SSH Rollback Cheatsheet - Quick Reference
 
 **Server:** <REDACTED_SERVER_IP>  
-**Project:** v0os0wg0gw4ko04ww80sgg08
+**Project:** <YOUR_SUPABASE_PROJECT_REF>
 
 ---
 
@@ -12,7 +20,7 @@
 ssh root@<REDACTED_SERVER_IP>
 
 # 2. Find DB container
-DB_CONTAINER=$(docker ps --format '{{.Names}}' | grep "supabase-db.*v0os0wg0gw4ko04ww80sgg08")
+DB_CONTAINER=$(docker ps --format '{{.Names}}' | grep "supabase-db.*<YOUR_SUPABASE_PROJECT_REF>")
 echo $DB_CONTAINER
 
 # 3. Backup

@@ -1,3 +1,11 @@
+> ⚠️ **SUPERSEDED — do not follow.** This document describes an obsolete
+> architecture (SSH / self-hosted Supabase, and/or a multi-tenant → single-tenant
+> teardown) that does **not** match Brikly's live stack (Cloudflare Pages +
+> hosted Supabase + multi-tenant). Use **[docs/RUNBOOK_ROLLBACK.md](docs/RUNBOOK_ROLLBACK.md)** as the authoritative
+> rollback runbook. Kept for historical context only.
+
+---
+
 # 🔄 Multi-Tenant Rollback via SSH - Complete Guide
 
 ## Overview
@@ -5,7 +13,7 @@
 This guide walks you through executing the database rollback on your self-hosted Supabase instance via SSH.
 
 **Server:** <REDACTED_SERVER_IP>  
-**Supabase Project ID:** v0os0wg0gw4ko04ww80sgg08
+**Supabase Project ID:** <YOUR_SUPABASE_PROJECT_REF>
 
 ---
 
@@ -29,26 +37,26 @@ Once connected, find your Supabase containers:
 docker ps
 
 # Filter for your Supabase project
-docker ps | grep v0os0wg0gw4ko04ww80sgg08
+docker ps | grep <YOUR_SUPABASE_PROJECT_REF>
 
 # Expected containers:
-# - supabase-db-v0os0wg0gw4ko04ww80sgg08 (PostgreSQL database)
-# - supabase-kong-v0os0wg0gw4ko04ww80sgg08 (API Gateway)
-# - supabase-auth-v0os0wg0gw4ko04ww80sgg08 (Auth service)
-# - supabase-rest-v0os0wg0gw4ko04ww80sgg08 (PostgREST)
-# - supabase-realtime-v0os0wg0gw4ko04ww80sgg08 (Realtime)
-# - supabase-storage-v0os0wg0gw4ko04ww80sgg08 (Storage)
+# - supabase-db-<YOUR_SUPABASE_PROJECT_REF> (PostgreSQL database)
+# - supabase-kong-<YOUR_SUPABASE_PROJECT_REF> (API Gateway)
+# - supabase-auth-<YOUR_SUPABASE_PROJECT_REF> (Auth service)
+# - supabase-rest-<YOUR_SUPABASE_PROJECT_REF> (PostgREST)
+# - supabase-realtime-<YOUR_SUPABASE_PROJECT_REF> (Realtime)
+# - supabase-storage-<YOUR_SUPABASE_PROJECT_REF> (Storage)
 ```
 
 ### Step 3: Identify the Database Container
 
 ```bash
 # Get the exact database container name
-DB_CONTAINER=$(docker ps --format '{{.Names}}' | grep "supabase-db.*v0os0wg0gw4ko04ww80sgg08")
+DB_CONTAINER=$(docker ps --format '{{.Names}}' | grep "supabase-db.*<YOUR_SUPABASE_PROJECT_REF>")
 echo "Database container: $DB_CONTAINER"
 
 # Should output something like:
-# supabase-db-v0os0wg0gw4ko04ww80sgg08
+# supabase-db-<YOUR_SUPABASE_PROJECT_REF>
 ```
 
 ### Step 4: Create Database Backup
@@ -197,7 +205,7 @@ echo ""
 
 # Step 1: Find database container
 echo "Step 1: Finding database container..."
-DB_CONTAINER=$(docker ps --format '{{.Names}}' | grep "supabase-db.*v0os0wg0gw4ko04ww80sgg08")
+DB_CONTAINER=$(docker ps --format '{{.Names}}' | grep "supabase-db.*<YOUR_SUPABASE_PROJECT_REF>")
 if [ -z "$DB_CONTAINER" ]; then
   echo "ERROR: Database container not found!"
   exit 1
@@ -352,7 +360,7 @@ docker ps -a
 docker ps -a | grep -i postgres
 
 # If container is stopped, start it:
-docker start supabase-db-v0os0wg0gw4ko04ww80sgg08
+docker start supabase-db-<YOUR_SUPABASE_PROJECT_REF>
 ```
 
 ### Issue: "Permission denied"
@@ -505,10 +513,10 @@ SELECT COUNT(*) FROM information_schema.columns WHERE column_name = 'site_id';
 
 ### Container Names Pattern
 
-- Database: `supabase-db-v0os0wg0gw4ko04ww80sgg08`
-- Kong: `supabase-kong-v0os0wg0gw4ko04ww80sgg08`
-- Auth: `supabase-auth-v0os0wg0gw4ko04ww80sgg08`
-- Rest: `supabase-rest-v0os0wg0gw4ko04ww80sgg08`
+- Database: `supabase-db-<YOUR_SUPABASE_PROJECT_REF>`
+- Kong: `supabase-kong-<YOUR_SUPABASE_PROJECT_REF>`
+- Auth: `supabase-auth-<YOUR_SUPABASE_PROJECT_REF>`
+- Rest: `supabase-rest-<YOUR_SUPABASE_PROJECT_REF>`
 
 ---
 
@@ -537,5 +545,5 @@ Then follow the steps above! 🚀
 
 **Created:** 2025-12-21  
 **Server:** <REDACTED_SERVER_IP>  
-**Project:** v0os0wg0gw4ko04ww80sgg08  
+**Project:** <YOUR_SUPABASE_PROJECT_REF>  
 **Status:** Ready for execution

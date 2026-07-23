@@ -2,7 +2,7 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { EmptyState } from '@/components/ui/error-boundary';
+import { EmptyState } from '@/components/ui/states';
 import { PipelineKanban } from '@/components/crm/PipelineKanban';
 import {
   Users,

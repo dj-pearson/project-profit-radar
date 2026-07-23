@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { TableSkeleton } from '@/components/ui/skeletons';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -564,7 +565,7 @@ export const LeadManagement = () => {
               </CardHeader>
               <CardContent>
                 {loading ? (
-                  <div className="text-center py-8">Loading...</div>
+                  <TableSkeleton rows={5} />
                 ) : filteredDemos.length === 0 ? (
                   <div className="text-center py-8 text-muted-foreground">
                     No demo requests found
@@ -653,7 +654,7 @@ export const LeadManagement = () => {
               </CardHeader>
               <CardContent>
                 {loading ? (
-                  <div className="text-center py-8">Loading...</div>
+                  <TableSkeleton rows={5} />
                 ) : filteredSalesContacts.length === 0 ? (
                   <div className="text-center py-8 text-muted-foreground">
                     No sales contacts found

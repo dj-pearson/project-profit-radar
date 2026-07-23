@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { captureException } from '@/lib/sentry';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -110,8 +111,12 @@ export function ProjectFinancialDashboard({ projectId }: ProjectFinancialDashboa
           previousProfitMargin: profitMargin * 0.95,
           monthlyCashFlow: months,
         });
-      } catch {
-        // Silently handle - data will show as empty
+      } catch (error) {
+        // Data load failed — the UI shows an empty state (acceptable UX), but
+        // report to Sentry so ops sees the failure instead of it being silent.
+        captureException(error, {
+          context: 'ProjectFinancialDashboard.loadFinancialData',
+        });
       } finally {
         setLoading(false);
       }
