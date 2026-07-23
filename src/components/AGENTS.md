@@ -30,6 +30,29 @@ import { Skeleton } from '@/components/ui/skeleton';
 if (loading) return <Skeleton className="h-48" />;
 ```
 
+## Loading states
+Never render literal `Loading...` text or an ad-hoc spinner. Use the shared
+`Skeleton` primitive (`@/components/ui/skeleton`) or, for common layouts, a
+composition from the canonical set in **`@/components/ui/skeletons`**:
+
+```tsx
+import { Skeleton } from '@/components/ui/skeleton';
+import { TableSkeleton, ListSkeleton, CardSkeleton, DataTablePageSkeleton } from '@/components/ui/skeletons';
+
+if (loading) return <DataTablePageSkeleton />;        // full data page (header + table)
+{loading ? <TableSkeleton rows={5} /> : <Table ... />}  // a table/list section
+{loading ? <Skeleton className="h-4 w-24" /> : <span>{value}</span>}  // a single field
+```
+
+- `@/components/ui/skeletons.tsx` is the **canonical** composition source
+  (Card/Table/TableRow/List/ListItem/StatCard/Dashboard/Form/ProjectCard/
+  PageHeader/DataTablePage/ChartCard). Add new shared compositions here, not in
+  a new `*Skeleton*` file. (`ui/skeleton-loader.tsx` and `ui/loading-skeleton.tsx`
+  still exist for legacy call sites and should be migrated here over time.)
+- **PR guidance:** flag any literal `>Loading...<` JSX in review — replace it
+  with a Skeleton where a layout placeholder fits. A bare full-screen auth/route
+  gate is the one acceptable exception.
+
 ## Error handling
 Use the single canonical error boundary — `ErrorBoundary` from `@/components/ErrorBoundary`.
 Do **not** create bespoke boundary components; pick behaviour with the `level` prop:

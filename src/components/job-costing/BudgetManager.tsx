@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { DataTablePageSkeleton } from '@/components/ui/skeletons';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -320,7 +321,7 @@ export const BudgetManager: React.FC<BudgetManagerProps> = ({ projectId }) => {
   };
 
   if (loading) {
-    return <div className="flex items-center justify-center h-64">Loading...</div>;
+    return <DataTablePageSkeleton />;
   }
 
   return (

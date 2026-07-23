@@ -4511,8 +4511,8 @@
         "Top pages (Projects, CRM, Subcontractors) render skeletons on first paint"
       ],
       "priority": 4,
-      "passes": false,
-      "notes": "PROPOSED (deep-dive audit 2026-07-12). Theme: Frontend. SEV: LOW. Source: Architecture audit."
+      "passes": true,
+      "notes": "DONE 2026-07-23. (AC2) Reusable compositions already existed canonically in src/components/ui/skeletons.tsx (Card/Table/TableRow/List/ListItem/StatCard/Dashboard/Form/ProjectCard/PageHeader/DataTablePage/ChartCard); deleted the ORPHANED duplicate src/components/ui/SkeletonLoaders.tsx (310 lines, 0 importers — dead code duplicating skeletons.tsx). Declared skeletons.tsx the canonical source in src/components/AGENTS.md. (AC3) Added PR guidance to AGENTS.md: never render literal 'Loading...'/ad-hoc spinners; use Skeleton or a skeletons.tsx composition; reviewers flag literal >Loading...< JSX (full-screen auth/route gate is the one acceptable exception). (AC1) Audited the 12 literal 'Loading...' JSX sites; converted the ones where a layout placeholder fits — BudgetManager + LaborTracking (->DataTablePageSkeleton), LeadManagement x2 (->TableSkeleton). The rest are legitimately excepted: full-page auth/route gates (ProtectedRoute, Setup, Index chunk fallback, ConstructionDashboard header) and inline button labels (PostComposer, MobileForm) where a skeleton does not fit. (AC4) Top pages already render skeletons on first paint — verified Projects (ProjectCardSkeleton), Subcontractors (Skeleton), CRMDashboard (KPISkeleton), CRMLeads (TableSkeleton). Build verified green; lint clean on changed files. FOLLOW-UP (noted, out of scope): migrate the remaining legacy skeleton files ui/loading-skeleton.tsx (4 importers) and ui/skeleton-loader.tsx (1) into the canonical skeletons.tsx."
     },
     {
       "id": "US-286",
