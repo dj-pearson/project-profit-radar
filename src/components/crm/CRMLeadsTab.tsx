@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { EmptyState } from '@/components/ui/error-boundary';
+import { EmptyState } from '@/components/ui/states';
 import { LeadEditDialog } from '@/components/crm/LeadEditDialog';
 import { mobileFilterClasses, mobileButtonClasses } from '@/utils/mobileHelpers';
 import {
