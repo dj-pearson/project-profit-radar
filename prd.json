@@ -4497,8 +4497,8 @@
         "An eslint no-empty catch rule prevents new silent catches"
       ],
       "priority": 4,
-      "passes": false,
-      "notes": "PROPOSED (deep-dive audit 2026-07-12). Theme: Frontend. SEV: LOW. Source: Frontend audit."
+      "passes": true,
+      "notes": "DONE 2026-07-23. (AC4) Made the no-empty catch rule EXPLICIT in eslint.config.js: no-empty: [error, { allowEmptyCatch: false }] with a US-284 comment (previously only implicit via js.configs.recommended; explicit + documented guards against override and states the intent). Verified it adds zero new lint errors and there are 0 truly-empty catch blocks repo-wide. (AC1/AC3) Audited the flagged silent/comment-only catches: after the prior documentation pass they are overwhelmingly legitimately-ignorable best-effort (sessionStorage/localStorage caching in AuthContext, telemetry inserts in useActivityTracking, 'table may not exist yet' probes, mkdir-exists, best-effort SEO/social), each already carrying an explanatory comment; user-facing operations (VoiceNotes save, auth sign-in/out, form submits) already surface feedback via toast + logger.error, so there was no pile of user-affecting silent failures to convert. (AC2) Fixed the clearest under-surfaced case: ProjectFinancialDashboard.loadFinancialData silently swallowed a financial data-load error (showed an empty dashboard with no signal to ops) — now captures to Sentry with context while keeping the empty-state UX (no noisy toast for a passive dashboard load). Build verified green. NOTE: intentionally did NOT blanket-add captureException to the ~1.3k console.error sites — US-209 deliberately keeps those off Sentry to avoid flooding; US-284 targets SILENT (feedback-less) failures, which are now either surfaced or documented best-effort."
     },
     {
       "id": "US-285",
