@@ -25,7 +25,6 @@
 
 import React, { useEffect, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
-import { SkipLinks } from './SkipLinks';
 import { cn } from '@/lib/utils';
 
 export interface AccessiblePageWrapperProps {
@@ -118,8 +117,8 @@ export const AccessiblePageWrapper: React.FC<AccessiblePageWrapperProps> = ({
 
   return (
     <div className={cn('min-h-screen flex flex-col', className)}>
-      {/* Skip Links for keyboard navigation */}
-      <SkipLinks />
+      {/* Skip links are rendered once, app-wide, by AccessibilityProvider
+          (first in tab order) — no per-wrapper copy to avoid duplicates. */}
 
       {/* Page change announcer for screen readers */}
       {announcePageChanges && <PageAnnouncer pageTitle={pageTitle} />}

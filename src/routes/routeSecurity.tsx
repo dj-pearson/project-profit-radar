@@ -314,6 +314,9 @@ export const routeSecurityConfig: Record<string, RouteSecurityConfig> = {
   '/legal/*': {
     requireAuth: false,
   },
+  '/security': {
+    requireAuth: false,
+  },
   '/privacy': {
     requireAuth: false,
   },

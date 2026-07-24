@@ -52,7 +52,8 @@ const DoNotSell = () => (
         "Opt Out — Sale/Share";
       </li>
       <li>
-        Self-service Privacy Center: <a href="/gdpr-compliance">/gdpr-compliance</a>;
+        Account privacy controls (for signed-in users):{' '}
+        <a href="/profile">your Account settings</a>;
       </li>
       <li>
         Mail: Brikly, Attn: Privacy, 123 Construction Way, Suite 100, Builder City, BC 12345, USA.

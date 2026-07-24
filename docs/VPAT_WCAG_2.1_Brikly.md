@@ -5,7 +5,7 @@
 **Product Version:** 2.4
 **Report Date:** January 22, 2026
 **Contact:** accessibility@brikly.net
-**Evaluation Methods:** Automated testing (axe-core, Lighthouse, Playwright), manual testing, screen reader testing (NVDA, VoiceOver)
+**Evaluation Methods:** Static analysis via ESLint `jsx-a11y` (enforced in CI and the pre-commit hook), component-level automated tests, and manual review including keyboard-only testing. Note: axe-core and Lighthouse are available in the toolchain but are not yet wired into automated conformance gating across all pages, and screen-reader passes (NVDA, VoiceOver) have covered core flows rather than the full surface. Conformance below is stated conservatively on that basis.
 
 ---
 
@@ -25,7 +25,7 @@ Brikly is committed to providing accessible software that conforms to WCAG 2.1 L
 | **1.2.1 Audio-only and Video-only** | Supports | Not applicable - platform does not include audio-only or video-only content. |
 | **1.2.2 Captions (Prerecorded)** | Supports | Not applicable - platform does not include prerecorded video content. |
 | **1.2.3 Audio Description or Media Alternative** | Supports | Not applicable - platform does not include prerecorded video content. |
-| **1.3.1 Info and Relationships** | Supports | Semantic HTML used throughout. Proper heading hierarchy enforced via ESLint. Forms use proper label associations. Tables have captions and proper headers. ARIA landmarks define page structure. |
+| **1.3.1 Info and Relationships** | Partially Supports | Semantic HTML, ARIA landmarks, and form label associations are used broadly, and the accessible component library provides captioned/headed tables. Heading order is reviewed manually, not enforced by an ESLint rule, and has not been audited across all pages; a large number of legacy views still use non-library tables/dialogs whose relationships are not independently verified. |
 | **1.3.2 Meaningful Sequence** | Supports | DOM order matches visual order. Content reads logically with screen readers. |
 | **1.3.3 Sensory Characteristics** | Supports | Instructions do not rely solely on color, shape, or location. Status indicators include text and icons. |
 | **1.4.1 Use of Color** | Supports | Color is not the only visual means of conveying information. Error states include icons and text. Status indicators use multiple visual cues. |
@@ -36,7 +36,7 @@ Brikly is committed to providing accessible software that conforms to WCAG 2.1 L
 | **2.2.1 Timing Adjustable** | Supports | No time limits imposed on user interactions. Session timeouts provide warning and extension options. |
 | **2.2.2 Pause, Stop, Hide** | Supports | Animations respect `prefers-reduced-motion`. User can enable reduced motion mode. No auto-updating content. |
 | **2.3.1 Three Flashes or Below Threshold** | Supports | No content flashes more than three times per second. |
-| **2.4.1 Bypass Blocks** | Supports | Skip links allow users to bypass repetitive navigation. Skip to main content, navigation, and search. |
+| **2.4.1 Bypass Blocks** | Supports | A skip-links block is rendered first in tab order on every page. "Skip to main content" and "Skip to navigation" resolve to the page's `main` and primary `nav` landmarks; "Skip to search" resolves where a search region is present. |
 | **2.4.2 Page Titled** | Supports | All pages have descriptive, unique titles. Title updates on route changes. |
 | **2.4.3 Focus Order** | Supports | Focus order follows logical reading sequence. Tab order preserved in modals with focus trap. |
 | **2.4.4 Link Purpose (In Context)** | Supports | Link text is descriptive. External links marked with icon and sr-only text "(opens in new window)". |
@@ -62,7 +62,7 @@ Brikly is committed to providing accessible software that conforms to WCAG 2.1 L
 | **1.2.5 Audio Description (Prerecorded)** | Not Applicable | Platform does not include prerecorded video content. |
 | **1.3.4 Orientation** | Supports | Content displays in both portrait and landscape. No orientation restrictions. |
 | **1.3.5 Identify Input Purpose** | Supports | Input fields use appropriate autocomplete attributes where applicable. |
-| **1.4.3 Contrast (Minimum)** | Supports | Text has minimum 4.5:1 contrast ratio. Large text has 3:1 ratio. High contrast mode available for enhanced visibility. Outdoor mode provides maximum contrast. |
+| **1.4.3 Contrast (Minimum)** | Partially Supports | The design system targets a 4.5:1 minimum (3:1 for large text), and a high-contrast mode is available. Contrast has not been verified by automated tooling across the full page surface, so isolated shortfalls may remain; systematic contrast auditing is planned. |
 | **1.4.4 Resize Text** | Supports | Text resizable up to 200% without loss of functionality. Font size settings allow small, large, and extra-large text. |
 | **1.4.5 Images of Text** | Supports | No images of text used. All text rendered as actual text. |
 | **1.4.10 Reflow** | Supports | Content reflows at 320px width without horizontal scrolling. Responsive design adapts to all viewport sizes. |
@@ -70,7 +70,7 @@ Brikly is committed to providing accessible software that conforms to WCAG 2.1 L
 | **1.4.12 Text Spacing** | Supports | Content adapts to user-specified text spacing without loss of functionality. |
 | **1.4.13 Content on Hover or Focus** | Supports | Tooltips dismissible with Escape. Hover content remains visible while pointer over it. |
 | **2.4.5 Multiple Ways** | Supports | Multiple navigation methods: main nav, breadcrumbs, search, site map, direct URLs. |
-| **2.4.6 Headings and Labels** | Supports | Headings are descriptive. Labels clearly indicate purpose. Heading order enforced via ESLint. |
+| **2.4.6 Headings and Labels** | Partially Supports | Headings and labels are descriptive where present. Heading order is reviewed manually rather than enforced by an ESLint rule and has not been audited across all pages. |
 | **2.4.7 Focus Visible** | Supports | Focus indicator visible on all interactive elements. Enhanced focus mode available with custom ring styles. |
 | **3.1.2 Language of Parts** | Supports | Not applicable - content is in English only. Language attribute would be used if multilingual content added. |
 | **3.2.3 Consistent Navigation** | Supports | Navigation consistent across pages. Same structure and order maintained. |
@@ -128,10 +128,11 @@ Brikly is committed to providing accessible software that conforms to WCAG 2.1 L
 ## Testing Methodology
 
 ### Automated Testing
-- **axe-core**: WCAG 2.1 AA rule set
-- **ESLint jsx-a11y**: 27 accessibility rules enforced
-- **Lighthouse**: Accessibility audits in CI/CD
-- **Playwright**: Automated accessibility tester with 10 rule checks
+- **ESLint `jsx-a11y`**: 31 accessibility rules configured; runs in CI and the pre-commit hook (`alt-text` is an error). This is the enforced, gating check today.
+- **axe-core / `vitest-axe`**: available in the test harness (`src/test/accessibility-utils.ts`); integration into the automated suite is being expanded and is not yet a conformance gate across all pages.
+- **Component-level a11y tests**: role/attribute assertions for the accessible component library (e.g. modal, form, skip links).
+- **Lighthouse**: run ad hoc via the `lighthouse` script; not currently a CI gate.
+- **Playwright**: end-to-end harness available; accessibility coverage is being expanded.
 
 ### Manual Testing
 - **Keyboard Navigation**: All features tested keyboard-only

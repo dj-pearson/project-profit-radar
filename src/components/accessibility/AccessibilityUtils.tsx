@@ -28,42 +28,15 @@ export const VisuallyHidden: React.FC<{ children: React.ReactNode }> = ({ childr
   return <span className="sr-only">{children}</span>;
 };
 
-// Focus trap for modals and dialogs
-export const useFocusTrap = (isActive: boolean) => {
-  React.useEffect(() => {
-    if (!isActive) return;
-
-    const focusableElements = document.querySelectorAll(
-      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
-    );
-    
-    const firstElement = focusableElements[0] as HTMLElement;
-    const lastElement = focusableElements[focusableElements.length - 1] as HTMLElement;
-
-    const handleTabKey = (e: KeyboardEvent) => {
-      if (e.key !== 'Tab') return;
-
-      if (e.shiftKey) {
-        if (document.activeElement === firstElement) {
-          lastElement?.focus();
-          e.preventDefault();
-        }
-      } else {
-        if (document.activeElement === lastElement) {
-          firstElement?.focus();
-          e.preventDefault();
-        }
-      }
-    };
-
-    document.addEventListener('keydown', handleTabKey);
-    firstElement?.focus();
-
-    return () => {
-      document.removeEventListener('keydown', handleTabKey);
-    };
-  }, [isActive]);
-};
+// Focus trap for modals and dialogs.
+//
+// The canonical implementation lives in `@/hooks/useAccessibilityHelpers` and
+// is scoped to a container ref (it traps focus *within the modal*). It is
+// re-exported here so the two same-named hooks cannot diverge. The previous
+// version defined here was broken: it queried focusable elements across the
+// entire document rather than a scoped container, so any consumer got a
+// non-functional trap. Use the ref this returns on your modal container.
+export { useFocusTrap } from '@/hooks/useAccessibilityHelpers';
 
 // Announce changes to screen readers
 export const useAnnouncement = () => {
