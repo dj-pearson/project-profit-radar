@@ -1736,3 +1736,52 @@ destructive migration). Story 174/234.
   the delivery worker is a separate story.
 
 prd.json: US-086 passes:true (174/234).
+
+================================================================================
+US-227 — Lien waiver management with conditional/unconditional tracking + holds (2026-06-30)
+================================================================================
+Branch: claude/us-227-lien-waivers → PR to main. Additive web feature (new
+tables + RLS; additive UNIQUE on contractors). Story 175/234.
+
+### What shipped
+- src/lib/lien-waivers.ts: pure domain logic. The 4 canonical waiver types
+  (conditional/unconditional × progress/final) with metadata; the
+  draft→requested→sent→signed→received lifecycle (+rejected) enforced by
+  canTransition; payment-hold rule resolvePaymentHold (a payment is held until
+  every payment-gating waiver is received; empty list = held); validateWaiverRequest.
+- src/lib/__tests__/lien-waivers.test.ts: 13 unit tests (type/status metadata,
+  lifecycle transitions incl. terminal/illegal, payment-hold incl. outstanding
+  count, request validation).
+- supabase/migrations/20260630120000_create_lien_waivers.sql: lien_waivers +
+  lien_waiver_events (append-only audit) tables. Composite-FK tenant scoping —
+  project_id/contractor_id bound to company_id via UNIQUE(id,company_id); adds
+  contractors_id_company_id_key (additive, id already unique). RLS: company
+  members read; builders (admin/pm/root_admin) manage waivers + append events
+  (no update/delete on events = append-only). updated_at trigger.
+- src/integrations/supabase/types.ts: Row/Insert/Update/Relationships for both
+  new tables (inserted alphabetically between leads and location_history).
+- src/services/lienWaiverService.ts: fetchWaivers/createWaiver (records opening
+  event)/advanceWaiver (enforces canTransition; 'signed' captures e-signature +
+  signed_by/at, 'received' stamps received_at → releases hold; appends audit
+  event)/deleteWaiver/fetchWaiverEvents. All company_id-scoped.
+- src/pages/LienWaivers.tsx (/lien-waivers): RoleGuard PROJECT_EDITORS +
+  DashboardLayout. Payment-hold summary grouped by contractor; request form
+  (contractor/project/type/amount/through-date/holds-payment/notes); waivers
+  table with status badges, hold indicator, and per-status actions (send → sign
+  → receive), audit-trail dialog, delete. Signature dialog reuses SignatureCapture
+  (US-041). logger.error + destructive toasts, aria-labels on icon buttons.
+- Wiring: /lien-waivers lazy route (financialRoutes) + "Lien Waivers" nav entry
+  (ROLE_GROUPS.PROJECT_EDITORS) under Purchasing.
+
+### Acceptance
+- [x] Waiver requests issued to subs/suppliers, tracked through signed/received
+- [x] Conditional vs unconditional (progress vs final) types modeled + reported
+- [x] Subcontractor payment release gated on waiver receipt (resolvePaymentHold)
+- [x] E-signature (reuses US-041 SignatureCapture) stored with audit trail
+- [x] All waiver data company_id-scoped with RLS via additive migrations
+
+### Verification
+- npm run build ✓
+- npx vitest run src/lib/__tests__/lien-waivers.test.ts --pool=threads ✓ (13/13)
+
+prd.json: US-227 passes:true (175/234).

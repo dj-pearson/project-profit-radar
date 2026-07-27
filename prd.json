@@ -3693,8 +3693,8 @@
         "All waiver data is company_id-scoped with RLS via additive migrations"
       ],
       "priority": 3,
-      "passes": false,
-      "notes": "Source: competitive analysis. Reuses US-041 e-signature and subcontractor management (US-082)."
+      "passes": true,
+      "notes": "Lien Waivers at /lien-waivers (nav under Purchasing, PROJECT_EDITORS-gated). lien_waivers table models the 4 canonical types (conditional/unconditional × progress/final) with a requested→sent→signed→received→(rejected) lifecycle enforced by canTransition. Payment-hold rule (resolvePaymentHold): a sub's payment is held until every payment-gating waiver is received; per-contractor hold panel surfaces released/held. E-signature reuses the shared SignatureCapture (US-041), stored as base64 PNG on the waiver. Append-only lien_waiver_events audit trail records every status change. Composite-FK tenant scoping (project_id/contractor_id bound to company_id via UNIQUE(id,company_id); added contractors_id_company_id_key). company_id-scoped RLS + builder-manage policies. Pure domain logic unit-tested (lib/lien-waivers, 13 tests). Source: competitive analysis. Reuses US-041 e-signature and subcontractor management (US-082)."
     },
     {
       "id": "US-228",
