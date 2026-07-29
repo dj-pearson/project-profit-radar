@@ -64,9 +64,9 @@ npm run build:mobile:sync      # Capacitor web→native wrapper (not the shippin
 
 Cloudflare Pages, build cmd `npm ci && npm run build` → `dist/`. Node 18+, npm 10.9.2. Domains: `brikly.net`, `brikly.pearsonperformance.workers.dev`. Cloudflare env: `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `STRIPE_PUBLISHABLE_KEY`. Edge-fn secrets in Supabase dashboard.
 
-**Rollback:** `docs/RUNBOOK_ROLLBACK.md` is the single authoritative rollback runbook (CF Pages deployment, edge-function revert, DB migration). Ignore the older root-level `*ROLLBACK*` docs — they assume an obsolete SSH/self-hosted/single-tenant stack and are banner-marked as superseded.
+**Rollback:** the single authoritative procedure is [`docs/RUNBOOK_ROLLBACK.md`](docs/RUNBOOK_ROLLBACK.md) (web CF Pages, edge functions, migrations, iOS). The old root-level SSH/single-tenant rollback checklists are obsolete and archived under `docs/archive/rollback/` — do not follow them.
 
-**Monitoring:** `docs/RUNBOOK_MONITORING.md` covers the uptime monitor — the `health-check` edge function (503 on any degraded dependency) polled by `.github/workflows/uptime-health-check.yml` with Slack + email escalation. Set `HEALTH_CHECK_URL`/`SLACK_WEBHOOK_URL` in Actions settings to enable.
+**Monitoring:** `docs/RUNBOOK_MONITORING.md` covers the uptime monitor / alerting path for the `health-check` edge function. Set `HEALTH_CHECK_URL` and `SLACK_WEBHOOK_URL` in GitHub Actions to enable the scheduled check and escalation.
 
 ## Critical Rules
 
@@ -233,25 +233,3 @@ Accessibility coverage low (see `docs/ACCESSIBILITY_COMPLIANCE_CHECKLIST.md`); t
 ---
 
 *For deep reference: `docs/`, per-directory `AGENTS.md`.*
-
-<!-- SELVEDGE:START -->
-## Pearson Media — shared context
-
-*Managed from the vault. Edit `14 - Resources/Shared CLAUDE Block.md` in the vault; direct edits between these markers are overwritten once a sync exists. Everything outside them is yours and is never touched.*
-
-**The memory vault.** Portfolio-wide memory lives in the **Hermes** vault at `<your-home>\Documents\Hermes` (`C:\Users\dpearson\Documents\Hermes` on this machine; remote: https://github.com/dj-pearson/Hermes). It holds the profile, the map of all ten projects, and cross-project knowledge. Read `VAULT-INDEX.md` there when a task needs context beyond this repo. This repo's own `CLAUDE.md`, `~/.claude` memory, and skills remain authoritative for work inside it — the vault supplements them, never replaces them.
-
-**Name the project.** Pearson Media runs ten projects on a shared stack. Never say "the app," "the repo," or "production" without naming which one. A right answer about the wrong project is a wrong answer.
-
-**The shared stack.** React + TypeScript + Vite, Tailwind, shadcn/ui, self-hosted Supabase, Cloudflare Pages, Coolify on Contabo, Stripe. A problem solved in one repo is usually already solved for this one — check the vault before solving it twice.
-
-**Secrets are references, never values.** Never write a password, key, or token value into a note, summary, commit, or setup doc; name where it's stored instead. Loose credential files exist under your `Documents` folder (`C:\Users\dpearson\Documents` on this machine) — never read one into a document.
-
-**Never delete what Claude Code relies on.** Repo `CLAUDE.md` files, `~/.claude/projects/*/memory/`, `.claude/skills/`, settings. Copy from them freely; removing or stubbing them is Dj's call alone.
-
-**Evidence only.** Verify state from the actual file or command before claiming anything is done or in place. If unsure, say so and go find out.
-
-**UI has a craft floor.** Every model trained on the same SaaS templates, so the *default* frontend output is a recognizable handful of tells — and Tailwind + shadcn/ui puts each of them one autocomplete away. Treat the following as the category's defaults rather than as bans: the brief's own words can earn any of them, but reaching for one on a free axis means you were not deciding. Refuse **purple/blue gradients and gradient text** (emphasis comes from weight and size); **Inter or a system default as the type *choice***; a colored **`border-left`/`border-right` above 1px** on cards, list items, callouts or alerts — the single most recognizable tell; grids of **same-size icon-tile + heading + text cards** as the page structure, and **cards nested in cards**; a **1px border under a wide soft shadow** (declare elevation once — border *or* shadow); **gray text on colored surfaces** (tint secondary text from the surface hue or the foreground); **bounce/elastic easing**; **monospace as a costume** for "technical" rather than for code, data or measurement; and a **tracked uppercase eyebrow over every section**. Keep body measure at 65–75ch, tracking no tighter than -0.04em, and card radii at 12–16px.
-
-**Check UI, don't just intend it.** `npx impeccable detect <path>` runs 60 deterministic anti-pattern rules with no install, no API key and no LLM — it works from any repo, so there is no excuse for asserting a UI is clean. Use the `/impeccable` skill (`audit`, `critique`, `polish`, `colorize`, `typeset`) for the judgement calls it cannot make. Source: [Impeccable](https://github.com/pbakaus/impeccable), Apache 2.0.
-<!-- SELVEDGE:END -->

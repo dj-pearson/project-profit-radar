@@ -1,136 +1,129 @@
-# Runbook — Rollback (authoritative)
+# Rollback Runbook — Brikly
 
-**This is the single source of truth for rolling back Brikly in production.**
-It supersedes the ~17 sprawling `*_ROLLBACK_*` / `ROLLBACK_*` docs at the repo
-root, most of which describe an **obsolete** architecture (SSH into a
-self-hosted server, Supabase-in-Docker/Coolify, or a single-tenant teardown).
-Those are banner-marked and listed under [Superseded docs](#superseded-docs).
+**Status:** Authoritative. This is the single current rollback procedure. It supersedes the
+SSH/self-hosted/single-tenant rollback docs now archived under
+[`docs/archive/rollback/`](./archive/rollback/) (kept for historical reference only — **do not follow them**).
 
-## Current architecture (what you are actually rolling back)
-
-| Surface | Reality | Rollback lever |
-|---------|---------|----------------|
-| **Frontend** | Cloudflare Pages. `main` → production (`brikly.net`); PR branches → preview URLs. Built with `npm ci && npm run build` → `dist/`. | Re-point Pages to a previous deployment, or revert `main` (CI redeploys). |
-| **Edge functions** | Hosted Supabase (managed). Deployed with `supabase functions deploy`. **No version pinning** — rollback = redeploy the known-good source. | Redeploy the previous `supabase/functions/<name>/index.ts`. |
-| **Database** | Hosted Supabase Postgres. Migrations in `supabase/migrations/*` are **append-only** and applied against the project tied to `main`. | Restore a pre-change backup, or apply a **new** compensating migration. Never rewrite a merged migration. |
-| **Multi-tenancy** | Multi-tenant via `site_id` / `sites`. Do **not** follow any "revert to single-tenant" guide. | N/A — tenancy is not a rollback target. |
-
-There is **no SSH box and no self-hosted/Docker Supabase.** Any doc that tells
-you to `ssh root@<ip>` or `docker exec ... supabase-db` is obsolete — stop and
-use this runbook instead.
+> **Why the old docs are wrong:** they describe SSH-ing into a self-hosted Docker/Supabase box
+> and rolling back a `site_id` multi-tenant migration. Brikly's production topology is **Cloudflare
+> Pages + hosted Supabase + `company_id`-scoped multi-tenancy**. There is no application server to SSH
+> into, and the `site_id` rollback they describe is not part of the current schema.
 
 ---
 
-## (a) Roll back a Cloudflare Pages (frontend) deployment
+## Current production topology
 
-**Fastest — restore the previous deployment (no rebuild):**
+| Surface        | Where it runs                                              | Rollback lever                                    |
+|----------------|-----------------------------------------------------------|---------------------------------------------------|
+| Web app        | Cloudflare Pages, `main` → `brikly.net`                    | CF Pages deployment rollback / `git revert` on `main` |
+| Edge functions | Supabase hosted (project `brikly`), `supabase/functions/` | Redeploy a previous version via `supabase functions deploy` |
+| Database       | Supabase Postgres (project `brikly`)                       | Forward-only compensating migration (never rewrite history) |
+| iOS app        | App Store (`com.brikly.app`), manual `ios-release.yml`     | Cannot un-ship; halt phased release / expedite a fix build |
 
-```bash
-wrangler pages deployment list --project-name brikly
-wrangler pages deployment rollback           # promotes the prior deployment to production
-```
-
-**Redeploy from a known-good commit (when a rebuild is needed):**
-
-```bash
-git checkout main
-git revert --no-edit <bad-commit>      # or: git reset --hard <good-commit> on a hotfix branch → PR
-# CI rebuilds and republishes on push to main; or build + publish manually:
-npm ci && npm run build
-wrangler pages deploy dist --project-name brikly
-```
-
-Reverting `main` via a `hotfix/*` PR is the branch-safe path (see
-`CLAUDE.md` → Branching & Release; never force-push or push straight to `main`).
-
-## (b) Revert / redeploy a Supabase edge function
-
-Edge functions are not version-pinned, so "rollback" = redeploy the corrected
-source (restore the previous `index.ts` from git, then deploy).
-
-```bash
-# restore the good version of the source first, e.g.
-git checkout <good-commit> -- supabase/functions/<name>/index.ts
-
-# deploy a single function (preferred) or all of them
-supabase functions deploy <name> --project-ref <YOUR_PRODUCTION_REF>
-supabase functions deploy        --project-ref <YOUR_PRODUCTION_REF>   # all
-
-# verify
-supabase functions list
-supabase functions logs <name>
-```
-
-Dashboard alternative: Supabase Dashboard → Edge Functions → select the
-function → redeploy by pasting the good `supabase/functions/<name>/index.ts`;
-set secrets under Settings → Edge Functions. Smoke-test with
-`supabase.functions.invoke('<name>', { body: { ... } })`.
-
-Optional local check before redeploying:
-
-```bash
-supabase start
-supabase functions serve <name> --no-verify-jwt
-```
-
-## (c) Roll back a database migration
-
-Migrations are **append-only history** — you never edit or delete a merged
-migration. Roll back by restoring a backup or by shipping a new compensating
-migration.
-
-**Always snapshot before a risky migration:**
-
-```bash
-# Supabase Dashboard: Database → Backups → Create Backup, or:
-supabase db dump -f backup_before_<change>_$(date +%Y%m%d).sql
-```
-
-**Restore the snapshot (full rollback):**
-
-```bash
-supabase db restore backup_before_<change>_YYYYMMDD.sql
-```
-
-**Or revert just the offending change with a new forward migration** — the
-preferred path once other clients may depend on nearby rows (see the
-Backward-Compatibility deprecation flow in `CLAUDE.md`). Example, reverting a
-policy:
-
-```sql
-DROP POLICY "Public can view active sites" ON sites;
-CREATE POLICY "Users can view active sites"
-  ON sites FOR SELECT
-  USING (is_active = TRUE);
-```
-
-Forward application in this stack: `supabase db push` (after `supabase link`),
-verify with `supabase db diff`. A single migration file can be applied directly
-with `psql "<production_connection_string>" -f supabase/migrations/<file>.sql`.
+Tenancy is by `company_id` (see the Roles / RLS sections of `CLAUDE.md`). Any doc that filters by
+`site_id` or removes a `sites` table is describing an abandoned design.
 
 ---
 
-## Still-current reference docs
+## 1. Web (Cloudflare Pages)
 
-These remain accurate for the current stack and are linked from here rather
-than duplicated:
+Production is whatever commit is live on `main`. Two ways back:
 
-- `DEPLOYMENT_CHECKLIST_RLS_FIX.md` — worked example of DB migration deploy **and** rollback (backup → restore → verify).
-- `EDGE-FUNCTION-DEPLOYMENT.md` — deploying/debugging an edge function via the Supabase Dashboard.
-- `DEPLOYMENT_GUIDE.md` — forward-deploy commands (migrations, edge functions, Pages).
+### A. Instant: roll back to a previous CF Pages deployment (no rebuild)
 
-## Superseded docs
+Fastest option — reactivates an already-built deployment.
 
-> **Detecting an outage in the first place:** see `docs/RUNBOOK_MONITORING.md`
-> for the uptime monitor + alerting that pages on-call when a dependency is down.
+- **Dashboard:** Cloudflare → Pages → the Brikly project → **Deployments** → pick the last known-good
+  deployment → **Rollback to this deployment**.
+- **CLI (`wrangler`):**
+  ```bash
+  wrangler pages deployment list                     # find the last good deployment id
+  wrangler pages deployment rollback <deployment-id> # or omit id to pick the previous one
+  ```
 
-The following describe an obsolete architecture (SSH/self-hosted Supabase, or a
-multi-tenant→single-tenant teardown) and must **not** be followed. Each now
-carries a superseded banner pointing back here; they are kept only for
-historical context:
+### B. Durable: revert the offending commit on `main`
 
-`SSH_ROLLBACK_CHEATSHEET.md`, `ROLLBACK_VIA_SSH_GUIDE.md`,
-`START_HERE_ROLLBACK.md`, `QUICK_ROLLBACK_REFERENCE.md`,
-`MULTI_TENANT_ROLLBACK_GUIDE.md`, `ROLLBACK_PACKAGE_SUMMARY.md`,
-`FRONTEND_ROLLBACK_CHECKLIST.md`, `EDGE_FUNCTIONS_ROLLBACK_SUMMARY.md`,
-`scripts/README_ROLLBACK.md`.
+Rollback A is a pointer flip; the next push to `main` re-deploys the bad commit unless you also fix
+source. Follow the branch rules in `CLAUDE.md` — **never force-push or commit directly to `main`**:
+
+```bash
+git checkout main && git pull
+git revert <bad-sha>            # creates a new commit; opens a PR path, not a history rewrite
+# open PR → main; merge triggers a fresh CF Pages production build
+```
+
+For a range: `git revert --no-commit <old>..<new>` then commit once. Tag the resulting `main` state.
+
+> Plan for ~24h of mixed browser clients after any deploy (see "Backward Compatibility" in `CLAUDE.md`).
+
+---
+
+## 2. Edge functions (Supabase)
+
+Edge functions deploy independently of the web build. To revert one:
+
+```bash
+# Redeploy the previous known-good source for a single function
+git checkout <good-sha> -- supabase/functions/<name>
+supabase functions deploy <name> --project-ref brikly
+git checkout HEAD -- supabase/functions/<name>   # restore working tree if this was a spot-check
+```
+
+Or revert the commit that touched the function (§1.B) and redeploy from the reverted source. Prefer
+reverting one function over a blanket redeploy so you don't ship unrelated in-flight changes.
+
+**Auth/CORS note:** every function must keep its auth guard and scoped CORS (`scripts/check-edge-function-auth.mjs`
+enforces this). A rollback that reintroduces `verify_jwt=false` on a guarded function will fail the pre-commit guard — that's intended.
+
+---
+
+## 3. Database migrations
+
+Migrations are **append-only history** (`CLAUDE.md` → Backward Compatibility). You do **not** rewrite,
+delete, or re-order a migration that has merged to `main`.
+
+To undo a schema change, ship a **new compensating migration** forward:
+
+```bash
+# new file: supabase/migrations/<14-digit-timestamp>_revert_<thing>.sql
+# It must itself be backward-compatible: additive/loosening only.
+# e.g. to undo an accidental ADD COLUMN, DROP it only if NO deployed client reads it yet
+# (single-release DROP is forbidden if a MIN_SUPPORTED_* client still reads the column —
+#  see the multi-release deprecation flow in CLAUDE.md).
+```
+
+Never `SET NOT NULL`, `DROP COLUMN`, narrow a type, or tighten an RLS policy in the compensating
+migration unless the destructive-change rules in `CLAUDE.md` are satisfied. Restoring from a full DB
+dump is a last resort and requires the on-call DBA + a maintenance window; hosted Supabase PITR/backups
+are the recovery path, not a committed `.sql` dump.
+
+---
+
+## 4. iOS app
+
+An App Store build **cannot be recalled**. Options, in order:
+
+1. **Phased release:** if the release is still in phased rollout, pause it in App Store Connect.
+2. **Server-side mitigation:** disable the broken path via an edge-function change or feature flag so
+   older builds degrade gracefully (respect `MIN_SUPPORTED_IOS_VERSION` — additive changes only).
+3. **Expedited fix build:** run `.github/workflows/ios-release.yml` from a `hotfix/*` branch with a bumped
+   build number and request expedited review.
+
+Native rollbacks ride the release train — see the Branching & Release section of `CLAUDE.md`.
+
+---
+
+## Severity → action quick reference
+
+| Situation                                   | First move                                              |
+|---------------------------------------------|---------------------------------------------------------|
+| Web prod broken by last deploy              | §1.A CF Pages deployment rollback (instant)             |
+| Bad code needs to stay out                  | §1.B `git revert` on `main` via PR                      |
+| One edge function misbehaving               | §2 redeploy previous version of that function           |
+| Bad migration shipped                       | §3 forward compensating migration (never rewrite)       |
+| iOS build broken in the wild                | §4 pause phased release + server-side mitigation        |
+| Data corruption / needs point-in-time       | Page on-call DBA; Supabase PITR, not a committed dump   |
+
+---
+
+*Owner: platform on-call. Update this file (not the archived ones) whenever the deploy topology changes.*

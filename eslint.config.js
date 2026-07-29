@@ -64,6 +64,10 @@ export default tseslint.config(
           "allow": ["error"]
         }
       ],
+      // US-284: no silent/empty blocks. A catch that genuinely wants to ignore
+      // an error must carry an explanatory comment (comment-only blocks are
+      // allowed by no-empty), otherwise surface it via toast + Sentry capture.
+      "no-empty": ["error", { "allowEmptyCatch": false }],
       // Accessibility rules (WCAG 2.1 AA compliance)
       "jsx-a11y/alt-text": "error",
       "jsx-a11y/anchor-has-content": "error",
