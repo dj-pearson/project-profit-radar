@@ -4497,8 +4497,8 @@
         "An eslint no-empty catch rule prevents new silent catches"
       ],
       "priority": 4,
-      "passes": false,
-      "notes": "PROPOSED (deep-dive audit 2026-07-12). Theme: Frontend. SEV: LOW. Source: Frontend audit."
+      "passes": true,
+      "notes": "COMPLETED (2026-07-28). AC1/AC3: silent best-effort catches (SEO analytics, activity tracking, VoiceNotes metadata load, directory-exists) carry explanatory // ignore comments distinguishing them from surfaced errors. AC2: user-affecting VoiceNotes failures (start/save recording, save metadata, play, transcribe, upload, delete) now console.error + sonner toast + captureException(error,{feature,action}) via src/lib/sentry. AC4: added no-empty rule ['error',{allowEmptyCatch:false}] to eslint.config.js (comment-only catches still pass); verified 0 new lint errors across src."
     },
     {
       "id": "US-285",

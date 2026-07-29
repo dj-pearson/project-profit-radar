@@ -12,6 +12,7 @@ import { Mic, Play, Pause, Square, Upload, Trash2, MessageSquareText, Clock, Tag
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { captureException } from '@/lib/sentry';
 
 interface VoiceNote {
   id: string;
@@ -189,6 +190,7 @@ const VoiceNotes: React.FC<VoiceNotesProps> = ({
 
     } catch (error) {
       console.error('Error starting recording:', error);
+      captureException(error instanceof Error ? error : new Error(String(error)), { feature: 'VoiceNotes', action: 'startRecording' });
       toast({
         title: "Recording Error",
         description: "Failed to start voice recording",
@@ -266,6 +268,7 @@ const VoiceNotes: React.FC<VoiceNotesProps> = ({
 
     } catch (error) {
       console.error('Error saving recording:', error);
+      captureException(error instanceof Error ? error : new Error(String(error)), { feature: 'VoiceNotes', action: 'saveRecording' });
       toast({
         title: "Save Error",
         description: "Failed to save voice recording",
@@ -329,6 +332,7 @@ const VoiceNotes: React.FC<VoiceNotesProps> = ({
 
     } catch (error) {
       console.error('Error saving note metadata:', error);
+      captureException(error instanceof Error ? error : new Error(String(error)), { feature: 'VoiceNotes', action: 'saveNoteMetadata' });
       toast({
         title: "Save Error",
         description: "Failed to save voice note metadata",
@@ -384,6 +388,7 @@ const VoiceNotes: React.FC<VoiceNotesProps> = ({
 
     } catch (error) {
       console.error('Error playing voice note:', error);
+      captureException(error instanceof Error ? error : new Error(String(error)), { feature: 'VoiceNotes', action: 'playVoiceNote' });
       toast({
         title: "Playback Error",
         description: "Failed to play voice note",
@@ -432,6 +437,7 @@ const VoiceNotes: React.FC<VoiceNotesProps> = ({
 
     } catch (error) {
       console.error('Error transcribing voice note:', error);
+      captureException(error instanceof Error ? error : new Error(String(error)), { feature: 'VoiceNotes', action: 'transcribeVoiceNote' });
       toast({
         title: "Transcription Error",
         description: "Failed to transcribe voice note",
@@ -515,6 +521,7 @@ const VoiceNotes: React.FC<VoiceNotesProps> = ({
 
     } catch (error) {
       console.error('Error uploading voice note:', error);
+      captureException(error instanceof Error ? error : new Error(String(error)), { feature: 'VoiceNotes', action: 'uploadVoiceNote' });
       toast({
         title: "Upload Error",
         description: "Failed to upload voice note",
@@ -552,6 +559,7 @@ const VoiceNotes: React.FC<VoiceNotesProps> = ({
 
     } catch (error) {
       console.error('Error deleting voice note:', error);
+      captureException(error instanceof Error ? error : new Error(String(error)), { feature: 'VoiceNotes', action: 'deleteVoiceNote' });
       toast({
         title: "Delete Error",
         description: "Failed to delete voice note",
