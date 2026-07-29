@@ -6,8 +6,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { LoadingState } from '@/components/ui/loading-spinner';
-import { ErrorBoundary } from '@/components/ErrorBoundary';
-import { ErrorState, EmptyState } from '@/components/ui/error-boundary';
+import ErrorBoundary from '@/components/ErrorBoundary';
+import { ErrorState, EmptyState } from '@/components/ui/states';
 import { useLoadingState } from '@/hooks/useLoadingState';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -736,7 +736,7 @@ const CRMLeads = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <ErrorBoundary variant="inline">
+                <ErrorBoundary>
                   {leadsLoading ? (
                     <LoadingState message="Loading leads..." />
                   ) : leadsError ? (

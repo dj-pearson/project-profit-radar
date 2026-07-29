@@ -12,7 +12,6 @@ import { useIsMobile } from '@/hooks/useMediaQuery';
 import { useImpersonation } from '@/hooks/useImpersonation';
 import TrialStatusBanner from '@/components/TrialStatusBanner';
 import { ImpersonationBanner } from '@/components/admin/ImpersonationBanner';
-import { SkipLinks } from '@/components/accessibility/SkipLinks';
 import { AutoBreadcrumb } from '@/components/navigation/AutoBreadcrumb';
 import { Home, Building2, DollarSign, Users, Settings } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -63,9 +62,9 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
 
   return (
     <SidebarProvider>
-      {/* Skip Links for keyboard navigation (suppressed when outer AccessiblePageWrapper provides them) */}
-      {!hasAccessibleWrapper && <SkipLinks />}
-
+      {/* Skip links are rendered once, app-wide, by AccessibilityProvider
+          (first in tab order). No per-layout copy — that produced duplicate
+          "Skip to main content" links on authenticated pages. */}
       <ImpersonationBanner />
       <div className={cn(
         "min-h-screen bg-background flex w-full",

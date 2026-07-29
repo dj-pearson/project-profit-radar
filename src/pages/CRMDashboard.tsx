@@ -9,8 +9,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { KPICard } from '@/components/dashboard/KPICard';
 import { LoadingState } from '@/components/ui/loading-spinner';
-import { ErrorBoundary } from '@/components/ErrorBoundary';
-import { ErrorState, EmptyState } from '@/components/ui/error-boundary';
+import ErrorBoundary from '@/components/ErrorBoundary';
+import { ErrorState, EmptyState } from '@/components/ui/states';
 import { KPISkeleton } from '@/components/ui/skeleton-loader';
 import { ResponsiveGrid } from '@/components/layout/ResponsiveContainer';
 import { useLoadingState } from '@/hooks/useLoadingState';
@@ -212,7 +212,7 @@ const CRMDashboard = () => {
   return (
     <AccessiblePageWrapper pageTitle="CRM Dashboard">
     <DashboardLayout title="CRM Dashboard" hasAccessibleWrapper>
-      <ErrorBoundary variant="inline">
+      <ErrorBoundary>
         {crmLoading ? (
           <ResponsiveGrid cols={{ default: 1, sm: 2, lg: 4 }} className="mb-8">
             {Array.from({ length: 8 }).map((_, i) => <KPISkeleton key={i} />)}

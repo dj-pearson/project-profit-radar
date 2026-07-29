@@ -1,11 +1,11 @@
 /**
  * Centralized Route Configuration
  * Exports all application routes in organized groups.
- * Feature sections wrapped in <ErrorBoundary variant="feature"> via layout routes.
+ * Feature sections wrapped in a feature-level ErrorBoundary via layout routes.
  */
 
 import { Route, Outlet } from 'react-router-dom';
-import { ErrorBoundary } from '@/components/ErrorBoundary';
+import ErrorBoundary from '@/components/ErrorBoundary';
 import { appRoutes } from './appRoutes';
 import { marketingRoutes } from './marketingRoutes';
 import { projectRoutes } from './projectRoutes';
@@ -14,9 +14,9 @@ import { peopleRoutes } from './peopleRoutes';
 import { operationsRoutes } from './operationsRoutes';
 import { adminRoutes } from './adminRoutes';
 
-/** Layout wrapper that adds a feature-variant ErrorBoundary around child routes */
+/** Layout wrapper that adds a feature-level ErrorBoundary around child routes */
 const FeatureBoundaryLayout = ({ featureName }: { featureName: string }) => (
-  <ErrorBoundary variant="feature" featureName={featureName}>
+  <ErrorBoundary level="feature" featureName={featureName}>
     <Outlet />
   </ErrorBoundary>
 );
@@ -41,7 +41,7 @@ export const notFoundRoute = (
 /**
  * All Application Routes
  * Organized by functional area for better maintainability.
- * Feature sections wrapped in <ErrorBoundary variant="feature"> via layout routes.
+ * Feature sections wrapped in a feature-level ErrorBoundary via layout routes.
  */
 export const allRoutes = (
   <>

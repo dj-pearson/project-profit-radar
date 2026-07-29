@@ -46,7 +46,7 @@ const Header = () => {
           />
 
           {/* Desktop Navigation */}
-          <nav id="navigation" className="hidden lg:flex items-center space-x-6 xl:space-x-8">
+          <nav id="main-navigation" aria-label="Primary" className="hidden lg:flex items-center space-x-6 xl:space-x-8">
             {navItems.map((item) =>
               item.isSection ? (
                 <a

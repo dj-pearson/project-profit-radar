@@ -1,42 +1,45 @@
+/**
+ * Canonical Error Boundary
+ *
+ * The single React error boundary for the app. Express the desired behaviour
+ * via the `level` prop instead of reaching for a bespoke boundary component:
+ *
+ *   - `component` (default) — wrap a small risky subtree. Compact card, retry.
+ *   - `feature`             — wrap a major feature area (Financial, CRM, ...).
+ *                             Pass `featureName` (and optionally `icon` /
+ *                             `description`) for a domain-specific fallback.
+ *   - `route`               — wrap lazy-loaded route components. Detects chunk
+ *                             load failures (common after a deploy) and offers
+ *                             a hard reload.
+ *   - `critical`            — wrap the whole app shell. Full-screen fallback.
+ *
+ * See `src/components/AGENTS.md` (Error handling) for usage guidance.
+ */
+
 import React, { Component, ErrorInfo, ReactNode } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { AlertTriangle, RefreshCw, Home, WifiOff, LucideIcon } from 'lucide-react';
 import { logError } from '@/services/errorLoggingService';
 import { captureException } from '@/lib/sentry';
 
-/**
- * Canonical error boundary for the whole app (US-265).
- *
- * A single class expresses every error-UX shape via the `variant` prop, so we
- * no longer maintain 4+ near-duplicate boundary components:
- *
- * - `route`    — wraps lazy-loaded routes; detects chunk-load failures and
- *                offers reload / go-home. (was RouteErrorBoundary)
- * - `feature`  — wraps a feature section so one area's failure doesn't take down
- *                the page; shows `featureName`. (was FeatureErrorBoundary)
- * - `critical` — full-screen fallback for app-shell-level failures.
- *                (was CriticalErrorBoundary)
- * - `inline`   — compact Alert for small subtrees. (was ui/error-boundary)
- * - `default`  — centered card. (was ErrorBoundary / ui/ErrorBoundary)
- *
- * A custom `fallback` (element or `(error) => ReactNode`) overrides the variant UI.
- */
-export type ErrorBoundaryVariant = 'default' | 'route' | 'feature' | 'critical' | 'inline';
+export type ErrorBoundaryLevel = 'component' | 'feature' | 'route' | 'critical';
 
 interface Props {
   children: ReactNode;
-  /** Selects the built-in fallback UI. Defaults to `default`. */
-  variant?: ErrorBoundaryVariant;
-  /** Custom fallback: a React element (receives an injected `error` prop) or a render function. */
+  /** Controls the fallback UI and logging severity. Defaults to `component`. */
+  level?: ErrorBoundaryLevel;
+  /**
+   * Custom fallback. Can be a React element (the caught `error` is injected as
+   * a prop when it is a valid element), a render function, or a plain node.
+   */
   fallback?: ReactNode | ((error?: Error) => ReactNode);
   onError?: (error: Error, errorInfo: ErrorInfo) => void;
-  /** `feature` variant: name of the feature area, e.g. "Financial Dashboard". */
+  /** Feature area label, used by the `feature`-level fallback. */
   featureName?: string;
-  /** `feature` variant: icon shown in the fallback. */
+  /** Icon shown in the `feature`-level fallback header. */
   icon?: LucideIcon;
-  /** `feature` variant: custom user-facing description. */
+  /** Custom description text shown in the fallback body. */
   description?: string;
 }
 
@@ -47,21 +50,20 @@ interface State {
   isChunkError: boolean;
 }
 
-const SEVERITY_BY_VARIANT: Record<ErrorBoundaryVariant, 'critical' | 'high'> = {
-  critical: 'critical',
-  route: 'high',
+const SEVERITY_BY_LEVEL: Record<ErrorBoundaryLevel, 'high' | 'critical'> = {
+  component: 'high',
   feature: 'high',
-  inline: 'high',
-  default: 'high',
+  route: 'high',
+  critical: 'critical',
 };
 
-function isChunkLoadError(error: Error): boolean {
+function detectChunkError(error: Error): boolean {
   return (
+    error.name === 'ChunkLoadError' ||
     error.message.includes('Failed to fetch dynamically imported module') ||
     error.message.includes('Loading chunk') ||
     error.message.includes('Loading CSS chunk') ||
-    error.message.includes('Unable to preload CSS') ||
-    error.name === 'ChunkLoadError'
+    error.message.includes('Unable to preload CSS')
   );
 }
 
@@ -74,28 +76,30 @@ export class ErrorBoundary extends Component<Props, State> {
   };
 
   public static getDerivedStateFromError(error: Error): Partial<State> {
-    return { hasError: true, error, isChunkError: isChunkLoadError(error) };
+    return { hasError: true, error, isChunkError: detectChunkError(error) };
   }
 
   public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    const variant = this.props.variant ?? 'default';
-    console.error(`Error caught by ${variant} boundary:`, error, errorInfo);
+    const { level = 'component', featureName, onError } = this.props;
+    const componentStack = errorInfo.componentStack || undefined;
+
+    console.error(`Error caught by ErrorBoundary (${level}):`, error, errorInfo);
     this.setState({ errorInfo });
 
     logError({
       error,
       errorType: 'render',
-      severity: SEVERITY_BY_VARIANT[variant],
-      componentStack: errorInfo.componentStack || undefined,
+      severity: SEVERITY_BY_LEVEL[level],
+      componentStack,
     });
     captureException(error, {
-      componentStack: errorInfo.componentStack || undefined,
-      boundary: `ErrorBoundary:${variant}`,
-      featureName: this.props.featureName,
-      isChunkError: this.state.isChunkError,
+      componentStack,
+      boundary: `ErrorBoundary:${level}`,
+      ...(featureName ? { featureName } : {}),
+      ...(this.state.isChunkError ? { isChunkError: true } : {}),
     });
 
-    this.props.onError?.(error, errorInfo);
+    onError?.(error, errorInfo);
   }
 
   private handleRetry = () => {
@@ -111,15 +115,17 @@ export class ErrorBoundary extends Component<Props, State> {
   };
 
   private renderFallback() {
-    const { fallback, variant = 'default', featureName, icon, description } = this.props;
+    const { fallback, level = 'component', featureName, icon, description } = this.props;
     const { error, errorInfo, isChunkError } = this.state;
 
-    // Custom fallback wins.
-    if (fallback) {
-      if (typeof fallback === 'function') return fallback(error ?? undefined);
+    // Caller-provided fallback takes precedence.
+    if (fallback !== undefined) {
+      if (typeof fallback === 'function') {
+        return fallback(error || undefined);
+      }
       if (React.isValidElement(fallback)) {
         return React.cloneElement(fallback as React.ReactElement<{ error?: Error }>, {
-          error: error ?? undefined,
+          error: error || undefined,
         });
       }
       return fallback;
@@ -127,36 +133,28 @@ export class ErrorBoundary extends Component<Props, State> {
 
     const isDev = import.meta.env.DEV;
 
-    if (variant === 'route') {
-      const Icon = isChunkError ? WifiOff : AlertTriangle;
+    // Chunk-load failures (typically after a deploy) — surfaced at any level.
+    if (isChunkError) {
       return (
         <div className="min-h-[60vh] flex items-center justify-center p-4">
           <Card className="max-w-md w-full">
             <CardHeader>
               <div className="flex items-center gap-3">
-                <div className={`p-2 rounded-lg ${isChunkError ? 'bg-amber-100 dark:bg-amber-900/30' : 'bg-red-100 dark:bg-red-900/30'}`}>
-                  <Icon className={`h-5 w-5 ${isChunkError ? 'text-amber-600 dark:text-amber-400' : 'text-red-600 dark:text-red-400'}`} />
+                <div className="p-2 bg-amber-100 rounded-lg dark:bg-amber-900/30">
+                  <WifiOff className="h-5 w-5 text-amber-600 dark:text-amber-400" />
                 </div>
-                <CardTitle className="text-lg">
-                  {isChunkError ? 'Page failed to load' : 'Something went wrong'}
-                </CardTitle>
+                <CardTitle className="text-lg">Page failed to load</CardTitle>
               </div>
             </CardHeader>
             <CardContent className="space-y-4">
               <p className="text-sm text-muted-foreground">
-                {isChunkError
-                  ? "This page couldn't be loaded. This usually happens after an update or due to a network issue."
-                  : 'An unexpected error occurred while loading this page.'}
+                This page couldn't be loaded. This usually happens after an update or due to a
+                network issue.
               </p>
-              {isDev && error && (
-                <div className="bg-muted p-3 rounded-md">
-                  <p className="text-xs font-mono text-destructive break-all">{error.message}</p>
-                </div>
-              )}
               <div className="flex flex-wrap gap-2">
-                <Button onClick={isChunkError ? this.handleReload : this.handleRetry} variant="default" size="sm">
+                <Button onClick={this.handleReload} variant="default" size="sm">
                   <RefreshCw className="h-4 w-4 mr-2" />
-                  {isChunkError ? 'Reload App' : 'Try Again'}
+                  Reload App
                 </Button>
                 <Button onClick={this.handleGoHome} variant="outline" size="sm">
                   <Home className="h-4 w-4 mr-2" />
@@ -169,43 +167,7 @@ export class ErrorBoundary extends Component<Props, State> {
       );
     }
 
-    if (variant === 'feature') {
-      const Icon = icon || AlertTriangle;
-      const desc =
-        description ||
-        `Something went wrong loading ${featureName ?? 'this section'}. Please try again or contact support if the problem persists.`;
-      return (
-        <Card className="w-full max-w-lg mx-auto mt-8">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-destructive">
-              <Icon className="h-5 w-5" />
-              {featureName ? `${featureName} Error` : 'Error'}
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <p className="text-sm text-muted-foreground">{desc}</p>
-            {isDev && error && (
-              <pre className="text-xs bg-muted p-3 rounded overflow-auto max-h-32">{error.message}</pre>
-            )}
-            <div className="flex gap-2">
-              <Button variant="outline" size="sm" onClick={this.handleRetry}>
-                <RefreshCw className="mr-2 h-4 w-4" />
-                Retry
-              </Button>
-              <Button variant="ghost" size="sm" onClick={this.handleGoHome}>
-                <Home className="mr-2 h-4 w-4" />
-                Dashboard
-              </Button>
-              <Button variant="link" size="sm" asChild>
-                <a href="mailto:support@brikly.net">Contact Support</a>
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      );
-    }
-
-    if (variant === 'critical') {
+    if (level === 'critical') {
       return (
         <div className="min-h-screen flex items-center justify-center p-4">
           <Card className="w-full max-w-lg">
@@ -217,7 +179,8 @@ export class ErrorBoundary extends Component<Props, State> {
             </CardHeader>
             <CardContent className="space-y-4">
               <p className="text-muted-foreground">
-                A critical error occurred that prevented the application from functioning properly.
+                {description ||
+                  'A critical error occurred that prevented the application from functioning properly.'}
               </p>
               {error && (
                 <div className="bg-muted p-3 rounded-md">
@@ -239,86 +202,107 @@ export class ErrorBoundary extends Component<Props, State> {
       );
     }
 
-    if (variant === 'inline') {
+    if (level === 'feature') {
+      const Icon = icon || AlertTriangle;
+      const featureDescription =
+        description ||
+        `Something went wrong loading ${featureName || 'this section'}. Please try again or contact support if the problem persists.`;
+
       return (
-        <div className="min-h-[400px] flex items-center justify-center p-6">
-          <div className="max-w-md w-full">
-            <Alert variant="destructive">
-              <AlertTriangle className="h-4 w-4" />
-              <AlertTitle>Something went wrong</AlertTitle>
-              <AlertDescription className="mt-2 space-y-3">
-                <p>An error occurred while rendering this component.</p>
-                {isDev && error && (
-                  <details className="text-xs">
-                    <summary className="cursor-pointer">Error details</summary>
-                    <pre className="mt-2 whitespace-pre-wrap break-words">{error.toString()}</pre>
-                  </details>
-                )}
-                <Button variant="outline" size="sm" onClick={this.handleRetry} className="flex items-center gap-2">
-                  <RefreshCw className="h-4 w-4" />
-                  Try Again
-                </Button>
-              </AlertDescription>
-            </Alert>
-          </div>
-        </div>
+        <Card className="w-full max-w-lg mx-auto mt-8">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-destructive">
+              <Icon className="h-5 w-5" />
+              {featureName ? `${featureName} Error` : 'Something went wrong'}
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <p className="text-sm text-muted-foreground">{featureDescription}</p>
+            {isDev && error && (
+              <pre className="text-xs bg-muted p-3 rounded overflow-auto max-h-32">
+                {error.message}
+              </pre>
+            )}
+            <div className="flex gap-2">
+              <Button variant="outline" size="sm" onClick={this.handleRetry}>
+                <RefreshCw className="mr-2 h-4 w-4" />
+                Retry
+              </Button>
+              <Button variant="ghost" size="sm" onClick={this.handleGoHome}>
+                <Home className="mr-2 h-4 w-4" />
+                Dashboard
+              </Button>
+              <Button variant="link" size="sm" asChild>
+                <a href="mailto:support@brikly.net">Contact Support</a>
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
       );
     }
 
-    // default
+    // `route` and `component` levels share a compact fallback.
     return (
-      <Card className="w-full max-w-md mx-auto mt-8">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-destructive">
-            <AlertTriangle className="h-5 w-5" />
-            Something went wrong
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <p className="text-sm text-muted-foreground">
-            We encountered an unexpected error. Please try refreshing the page.
-          </p>
-          {error && (
-            <div className="bg-muted p-3 rounded-md text-sm font-mono">{error.message}</div>
-          )}
-          {isDev && errorInfo?.componentStack && (
-            <details className="text-xs">
-              <summary className="cursor-pointer">Component stack</summary>
-              <pre className="mt-2 whitespace-pre-wrap break-words max-h-48 overflow-auto">
-                {errorInfo.componentStack}
-              </pre>
-            </details>
-          )}
-          <div className="flex flex-wrap gap-2">
-            <Button onClick={this.handleRetry} variant="default" size="sm">
-              <RefreshCw className="h-4 w-4 mr-2" />
-              Try Again
-            </Button>
-            <Button onClick={this.handleReload} variant="outline" size="sm">
-              <RefreshCw className="h-4 w-4 mr-2" />
-              Refresh Page
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
+      <div className="min-h-[60vh] flex items-center justify-center p-4">
+        <Card className="max-w-md w-full">
+          <CardHeader>
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-red-100 rounded-lg dark:bg-red-900/30">
+                <AlertTriangle className="h-5 w-5 text-red-600 dark:text-red-400" />
+              </div>
+              <CardTitle className="text-lg">Something went wrong</CardTitle>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <p className="text-sm text-muted-foreground">
+              {description || 'An unexpected error occurred while loading this content.'}
+            </p>
+            {isDev && error && (
+              <div className="bg-muted p-3 rounded-md">
+                <p className="text-xs font-mono text-destructive break-all">{error.message}</p>
+              </div>
+            )}
+            {isDev && errorInfo?.componentStack && (
+              <details className="text-xs">
+                <summary className="cursor-pointer">Component stack</summary>
+                <pre className="mt-2 whitespace-pre-wrap break-words max-h-48 overflow-auto">
+                  {errorInfo.componentStack}
+                </pre>
+              </details>
+            )}
+            <div className="flex flex-wrap gap-2">
+              <Button onClick={this.handleRetry} variant="default" size="sm">
+                <RefreshCw className="h-4 w-4 mr-2" />
+                Try Again
+              </Button>
+              <Button onClick={this.handleGoHome} variant="outline" size="sm">
+                <Home className="h-4 w-4 mr-2" />
+                Go to Dashboard
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
     );
   }
 
   public render() {
-    if (this.state.hasError) return this.renderFallback();
+    if (this.state.hasError) {
+      return this.renderFallback();
+    }
     return this.props.children;
   }
 }
 
-/** HOC for wrapping a component in the canonical ErrorBoundary. */
+/** HOC that wraps a component in the canonical error boundary. */
 export function withErrorBoundary<P extends object>(
-  Wrapped: React.ComponentType<P>,
-  boundaryProps?: Omit<Props, 'children'>,
+  WrappedComponent: React.ComponentType<P>,
+  boundaryProps?: Omit<Props, 'children'>
 ) {
   return function WithErrorBoundaryComponent(props: P) {
     return (
       <ErrorBoundary {...boundaryProps}>
-        <Wrapped {...props} />
+        <WrappedComponent {...props} />
       </ErrorBoundary>
     );
   };

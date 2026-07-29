@@ -78,7 +78,7 @@ const ResponsiveLogo = ({
       isMobile && mobileRemoteUrl
         ? mobileRemoteUrl
         : BRIKLY_LOGO_URL,
-    local: isMobile && mobileLocalUrl ? mobileLocalUrl : "/BriklyLogo.png",
+    local: isMobile && mobileLocalUrl ? mobileLocalUrl : "/BriklyLogo.webp",
   };
 
   // Force text mode if requested
@@ -228,7 +228,7 @@ export const useResponsiveLogoStatus = () => {
     device: isMobile ? "mobile" : "desktop",
     sources: {
       remote: BRIKLY_LOGO_URL,
-      local: "/BriklyLogo.png",
+      local: "/BriklyLogo.webp",
     },
   });
 
@@ -236,7 +236,7 @@ export const useResponsiveLogoStatus = () => {
     const checkImages = async () => {
       const sources = {
         remote: BRIKLY_LOGO_URL,
-        local: "/BriklyLogo.png",
+        local: "/BriklyLogo.webp",
       };
 
       try {

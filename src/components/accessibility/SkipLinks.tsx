@@ -1,30 +1,34 @@
 import React from 'react';
 import { Button } from "@/components/ui/button";
 
+/**
+ * Resolve a skip-link target: try the explicit id first, then fall back to
+ * generic landmark selectors so the link works across every layout (dashboard,
+ * marketing, legal) even where the id was never set. The element is made
+ * programmatically focusable (tabIndex -1) before focusing so landmarks like
+ * <nav>/<main> that aren't natively focusable still receive focus — otherwise
+ * the "skip" link moves the viewport but not keyboard focus (a WCAG 2.4.1 fail).
+ */
+const focusTarget = (id: string, fallbackSelector: string) => {
+  const target =
+    document.getElementById(id) ??
+    document.querySelector<HTMLElement>(fallbackSelector);
+  if (!target) return;
+  if (!target.hasAttribute('tabindex')) {
+    target.setAttribute('tabindex', '-1');
+  }
+  target.focus();
+  target.scrollIntoView({ behavior: 'smooth' });
+};
+
 export const SkipLinks: React.FC = () => {
-  const skipToContent = () => {
-    const mainContent = document.getElementById('main-content');
-    if (mainContent) {
-      mainContent.focus();
-      mainContent.scrollIntoView({ behavior: 'smooth' });
-    }
-  };
+  const skipToContent = () => focusTarget('main-content', 'main, [role="main"]');
 
-  const skipToNavigation = () => {
-    const navigation = document.getElementById('main-navigation');
-    if (navigation) {
-      navigation.focus();
-      navigation.scrollIntoView({ behavior: 'smooth' });
-    }
-  };
+  const skipToNavigation = () =>
+    focusTarget('main-navigation', 'nav[aria-label], [role="navigation"], nav');
 
-  const skipToSearch = () => {
-    const search = document.getElementById('search');
-    if (search) {
-      search.focus();
-      search.scrollIntoView({ behavior: 'smooth' });
-    }
-  };
+  const skipToSearch = () =>
+    focusTarget('search', '[role="search"] input, input[type="search"], [role="search"]');
 
   return (
     <div className="sr-only focus-within:not-sr-only">

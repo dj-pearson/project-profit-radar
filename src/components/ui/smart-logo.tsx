@@ -58,7 +58,7 @@ const SmartLogo = ({
     remote: useTenantLogo
       ? tenant.branding.logo_url!
       : BRIKLY_LOGO_URL,
-    local: "/BriklyLogo.png",
+    local: "/BriklyLogo.webp",
   };
 
   // Get tenant display name for text fallback

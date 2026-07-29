@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.3";
+import { evaluateHealth } from "./evaluate.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -77,17 +78,13 @@ serve(async (req) => {
     };
   }
 
-  const allHealthy = Object.values(checks).every((c) => c.status === "healthy");
-  const anyUnhealthy = Object.values(checks).some((c) => c.status === "unhealthy");
-
-  const overallStatus = allHealthy ? "healthy" : anyUnhealthy ? "unhealthy" : "degraded";
-  const totalResponseTime = Date.now() - startTime;
-
   // Only a fully healthy service returns 200. Both "degraded" (a dependency
   // returned an error) and "unhealthy" (a dependency threw) return 503 so that
   // uptime monitors and load balancers actually alert on partial outages
-  // instead of treating a degraded service as fully up.
-  const httpStatus = overallStatus === "healthy" ? 200 : 503;
+  // instead of treating a degraded service as fully up. (Logic lives in
+  // ./evaluate.ts so it can be unit-tested — see evaluate.test.ts.)
+  const { overallStatus, httpStatus } = evaluateHealth(checks);
+  const totalResponseTime = Date.now() - startTime;
 
   return new Response(
     JSON.stringify({

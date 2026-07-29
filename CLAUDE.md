@@ -66,6 +66,8 @@ Cloudflare Pages, build cmd `npm ci && npm run build` → `dist/`. Node 18+, npm
 
 **Rollback:** the single authoritative procedure is [`docs/RUNBOOK_ROLLBACK.md`](docs/RUNBOOK_ROLLBACK.md) (web CF Pages, edge functions, migrations, iOS). The old root-level SSH/single-tenant rollback checklists are obsolete and archived under `docs/archive/rollback/` — do not follow them.
 
+**Monitoring:** `docs/RUNBOOK_MONITORING.md` covers the uptime monitor / alerting path for the `health-check` edge function. Set `HEALTH_CHECK_URL` and `SLACK_WEBHOOK_URL` in GitHub Actions to enable the scheduled check and escalation.
+
 ## Critical Rules
 
 ### Branch first, code second

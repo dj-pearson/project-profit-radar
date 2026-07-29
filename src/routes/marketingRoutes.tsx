@@ -103,6 +103,8 @@ const AIDisclosure = createLazyRoute(() => import('@/pages/legal/AIDisclosure'))
 const CookiePolicy = createLazyRoute(() => import('@/pages/legal/CookiePolicy'));
 const DoNotSell = createLazyRoute(() => import('@/pages/legal/DoNotSell'));
 const EmailPreferences = createLazyRoute(() => import('@/pages/legal/EmailPreferences'));
+const Security = createLazyRoute(() => import('@/pages/legal/Security'));
+const Contact = createLazyRoute(() => import('@/pages/Contact'));
 
 export const marketingRoutes = (
   <>
@@ -213,5 +215,10 @@ export const marketingRoutes = (
     <Route path="/your-privacy-choices" element={<DoNotSell />} />
     <Route path="/email-preferences" element={<EmailPreferences />} />
     <Route path="/unsubscribe" element={<EmailPreferences />} />
+    <Route path="/legal/security" element={<Security />} />
+    <Route path="/security" element={<Security />} />
+
+    {/* Contact / imprint — public */}
+    <Route path="/contact" element={<Contact />} />
   </>
 );

@@ -222,8 +222,9 @@ const PrivacyPolicy = () => (
       </li>
     </ul>
     <p>
-      <strong>How to exercise your rights:</strong> use our self-service{' '}
-      <a href="/gdpr-compliance">Privacy Center</a>, email{' '}
+      <strong>How to exercise your rights:</strong> if you have a Brikly account, use the
+      self-service privacy controls in your{' '}
+      <a href="/profile">Account settings</a> to export or delete your data; anyone can also email{' '}
       <a href="mailto:privacy@brikly.net">privacy@brikly.net</a>, or write to the address in
       Section 12. We will verify your identity using account credentials or government-issued ID
       where appropriate. You may use an authorized agent (the agent must provide written proof of

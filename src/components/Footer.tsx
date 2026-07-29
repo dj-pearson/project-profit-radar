@@ -18,7 +18,7 @@ const Footer = () => {
     { name: "Solutions", href: "/solutions" },
     { name: "FAQ", href: "/faq" },
     { name: "Blog", href: "/blog" },
-    { name: "Contact", href: "mailto:support@brikly.net" },
+    { name: "Contact", href: "/contact" },
   ];
 
   const productLinks = [
@@ -47,6 +47,7 @@ const Footer = () => {
     { name: "AI Disclosure", href: "/ai-disclosure" },
     { name: "DPA", href: "/dpa" },
     { name: "Subprocessors", href: "/subprocessors" },
+    { name: "Security", href: "/legal/security" },
     { name: "SLA", href: "/sla" },
     { name: "Accessibility", href: "/accessibility-statement" },
   ];
