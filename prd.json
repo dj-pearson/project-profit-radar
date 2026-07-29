@@ -4427,8 +4427,8 @@
         "Superseded checklists archived and the runbook linked from CLAUDE.md"
       ],
       "priority": 3,
-      "passes": false,
-      "notes": "PROPOSED (deep-dive audit 2026-07-12). Theme: Ops. SEV: MEDIUM. Source: Ops audit."
+      "passes": true,
+      "notes": "COMPLETED (2026-07-28). Created authoritative docs/RUNBOOK_ROLLBACK.md (CF Pages deployment rollback + git revert, edge-function redeploy, forward-only compensating migrations, iOS phased-release halt, severity matrix). Archived 8 stale SSH/single-tenant/multi-tenant rollback docs into docs/archive/rollback/ with an OBSOLETE README pointer. Scrubbed hardcoded project id v0os0wg0gw4ko04ww80sgg08 -> <REDACTED_PROJECT_ID> across 3 docs (server IP was already redacted under US-267). Added deprecation banner to scripts/README_ROLLBACK.md. Linked the runbook from CLAUDE.md Deploy section."
     },
     {
       "id": "US-280",

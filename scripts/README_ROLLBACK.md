@@ -1,5 +1,10 @@
 # Rollback Scripts
 
+> ⚠️ **OBSOLETE.** These scripts revert the abandoned `site_id` multi-tenant migration on a self-hosted
+> box — not Brikly's current Cloudflare Pages + hosted-Supabase + `company_id` topology. **Do not run
+> them.** The authoritative rollback procedure is [`docs/RUNBOOK_ROLLBACK.md`](../docs/RUNBOOK_ROLLBACK.md);
+> the old checklists are archived under `docs/archive/rollback/`.
+
 This directory contains scripts to revert Brikly from multi-tenant to single-tenant architecture.
 
 ## Available Scripts

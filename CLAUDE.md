@@ -64,6 +64,8 @@ npm run build:mobile:sync      # Capacitor web→native wrapper (not the shippin
 
 Cloudflare Pages, build cmd `npm ci && npm run build` → `dist/`. Node 18+, npm 10.9.2. Domains: `brikly.net`, `brikly.pearsonperformance.workers.dev`. Cloudflare env: `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `STRIPE_PUBLISHABLE_KEY`. Edge-fn secrets in Supabase dashboard.
 
+**Rollback:** the single authoritative procedure is [`docs/RUNBOOK_ROLLBACK.md`](docs/RUNBOOK_ROLLBACK.md) (web CF Pages, edge functions, migrations, iOS). The old root-level SSH/single-tenant rollback checklists are obsolete and archived under `docs/archive/rollback/` — do not follow them.
+
 ## Critical Rules
 
 ### Branch first, code second
