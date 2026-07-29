@@ -6,7 +6,8 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { LoadingState } from '@/components/ui/loading-spinner';
-import { ErrorBoundary, ErrorState } from '@/components/ui/error-boundary';
+import { ErrorBoundary } from '@/components/ErrorBoundary';
+import { ErrorState } from '@/components/ui/error-boundary';
 import { AccessibleTable, type TableColumn } from '@/components/accessibility/AccessibleTable';
 import { AccessibleModal } from '@/components/accessibility/AccessibleModal';
 import { useLoadingState } from '@/hooks/useLoadingState';
@@ -509,7 +510,7 @@ const CRMContacts = () => {
             </AccessibleModal>
 
             {/* Contacts Table */}
-            <ErrorBoundary>
+            <ErrorBoundary variant="inline">
               {contactsError ? (
                 <ErrorState
                   error={contactsError}

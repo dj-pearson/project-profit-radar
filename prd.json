@@ -4231,8 +4231,8 @@
         "The single boundary documented in UI conventions"
       ],
       "priority": 3,
-      "passes": false,
-      "notes": "PROPOSED (deep-dive audit 2026-07-12). Theme: Code Health. SEV: MEDIUM. Source: Architecture audit."
+      "passes": true,
+      "notes": "COMPLETED (2026-07-28). Canonical src/components/ErrorBoundary.tsx now expresses variant='default'|'route'|'feature'|'critical'|'inline' (plus featureName/icon/description, chunk-load detection, custom fallback element/fn, withErrorBoundary HOC); all variants log to errorLoggingService + Sentry with a boundary:variant tag. Deleted the 4 redundant files: ui/ErrorBoundary.tsx (dead code, 0 consumers), RouteErrorBoundary.tsx, FeatureErrorBoundary.tsx, CriticalErrorBoundary.tsx. Migrated consumers: lazyRoutes.tsx (route), App.tsx (critical), routes/index.tsx (feature), CRMContacts/CRMOpportunities/CRMLeads/CRMDashboard (inline). ui/error-boundary.tsx stripped of its duplicate class -> now exports only ErrorState/EmptyState helpers and re-exports the canonical boundary for back-compat. Documented in src/components/AGENTS.md. Verified: 0 eslint errors on touched files, tsc green. Also fixed an empty .catch() in lazyRoutes to satisfy the US-284 no-empty rule."
     },
     {
       "id": "US-266",

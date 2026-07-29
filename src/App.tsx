@@ -10,7 +10,7 @@ import { SubscriptionProvider } from "@/contexts/SubscriptionContext";
 import { PlatformProvider } from "@/contexts/PlatformContext";
 import { Toaster } from "@/components/ui/toaster";
 import { ContextMenuProvider } from '@/components/ui/context-menu-provider';
-import CriticalErrorBoundary from "@/components/CriticalErrorBoundary";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { DashboardSkeleton } from "@/components/ui/loading-skeleton";
 import { preloadHighPriorityRoutes } from "@/utils/lazyRoutes";
 import { AccessibilityProvider } from "@/components/accessibility/AccessibilityProvider";
@@ -104,7 +104,7 @@ const UIProviders = ({ children }: { children: ReactNode }) => (
 );
 
 const AppProviders = ({ children }: { children: ReactNode }) => (
-  <CriticalErrorBoundary>
+  <ErrorBoundary variant="critical">
     <QueryClientProvider client={queryClient}>
       <TenantProvider>
         <AuthProvider>
@@ -118,7 +118,7 @@ const AppProviders = ({ children }: { children: ReactNode }) => (
         </AuthProvider>
       </TenantProvider>
     </QueryClientProvider>
-  </CriticalErrorBoundary>
+  </ErrorBoundary>
 );
 
 const App = () => {

@@ -1,92 +1,17 @@
-import React, { Component, ErrorInfo, ReactNode } from "react";
+import React from "react";
 import { AlertTriangle, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { cn } from "@/lib/utils";
-import { captureException } from "@/lib/sentry";
 
-interface Props {
-  children: ReactNode;
-  fallback?: ReactNode;
-  onError?: (error: Error, errorInfo: ErrorInfo) => void;
-}
+// US-265: the ErrorBoundary implementation is now canonical in
+// `@/components/ErrorBoundary`. Use `<ErrorBoundary variant="inline">` for the
+// compact Alert look this file used to render. Re-exported here for backward
+// compatibility so existing `from '@/components/ui/error-boundary'` imports work.
+export { ErrorBoundary, withErrorBoundary } from "@/components/ErrorBoundary";
+export type { ErrorBoundaryVariant } from "@/components/ErrorBoundary";
 
-interface State {
-  hasError: boolean;
-  error?: Error;
-  errorInfo?: ErrorInfo;
-}
-
-export class ErrorBoundary extends Component<Props, State> {
-  public state: State = {
-    hasError: false
-  };
-
-  public static getDerivedStateFromError(error: Error): State {
-    return { hasError: true, error };
-  }
-
-  public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    console.error('ErrorBoundary caught an error:', error, errorInfo);
-
-    // Send error to Sentry with component stack
-    captureException(error, {
-      errorInfo,
-      componentStack: errorInfo.componentStack,
-    });
-
-    // Store error info in state for display
-    this.setState({ errorInfo });
-
-    // Call custom error handler if provided
-    this.props.onError?.(error, errorInfo);
-  }
-
-  private handleRetry = () => {
-    this.setState({ hasError: false, error: undefined });
-  };
-
-  public render() {
-    if (this.state.hasError) {
-      if (this.props.fallback) {
-        return this.props.fallback;
-      }
-
-      return (
-        <div className="min-h-[400px] flex items-center justify-center p-6">
-          <div className="max-w-md w-full">
-            <Alert variant="destructive">
-              <AlertTriangle className="h-4 w-4" />
-              <AlertTitle>Something went wrong</AlertTitle>
-              <AlertDescription className="mt-2 space-y-3">
-                <p>An error occurred while rendering this component.</p>
-                {import.meta.env.DEV && this.state.error && (
-                  <details className="text-xs">
-                    <summary className="cursor-pointer">Error details</summary>
-                    <pre className="mt-2 whitespace-pre-wrap break-words">
-                      {this.state.error.toString()}
-                    </pre>
-                  </details>
-                )}
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  onClick={this.handleRetry}
-                  className="flex items-center gap-2"
-                >
-                  <RefreshCw className="h-4 w-4" />
-                  Try Again
-                </Button>
-              </AlertDescription>
-            </Alert>
-          </div>
-        </div>
-      );
-    }
-
-    return this.props.children;
-  }
-}
+// This module now owns the small state-feedback helpers (ErrorState / EmptyState).
 
 // Hook-based error state component
 export const ErrorState: React.FC<{

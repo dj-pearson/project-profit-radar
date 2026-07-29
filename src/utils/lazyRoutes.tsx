@@ -1,6 +1,6 @@
 import React, { lazy, Suspense } from 'react';
 import { LoadingState } from '@/components/ui/loading-spinner';
-import { RouteErrorBoundary } from '@/components/RouteErrorBoundary';
+import { ErrorBoundary } from '@/components/ErrorBoundary';
 
 /**
  * Common loading component for all lazy routes
@@ -22,11 +22,11 @@ export const createLazyRoute = (importFn: () => Promise<{ default: React.Compone
   const LazyComponent = lazy(importFn);
 
   const WrappedRoute = (props: Record<string, unknown>) => (
-    <RouteErrorBoundary>
+    <ErrorBoundary variant="route">
       <Suspense fallback={<RouteLoadingFallback />}>
         <LazyComponent {...props} />
       </Suspense>
-    </RouteErrorBoundary>
+    </ErrorBoundary>
   );
 
   return WrappedRoute;
@@ -306,7 +306,9 @@ export const preloadHighPriorityRoutes = () => {
 
     preloadImports.forEach((importFn, index) => {
       setTimeout(() => {
-        importFn().catch(() => {});
+        importFn().catch(() => {
+          // ignore: best-effort route preload, real load errors surface on navigation
+        });
       }, index * 200);
     });
   };

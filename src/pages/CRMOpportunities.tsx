@@ -8,7 +8,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { LoadingState } from '@/components/ui/loading-spinner';
-import { ErrorBoundary, ErrorState, EmptyState } from '@/components/ui/error-boundary';
+import { ErrorBoundary } from '@/components/ErrorBoundary';
+import { ErrorState, EmptyState } from '@/components/ui/error-boundary';
 import { ResponsiveGrid } from '@/components/layout/ResponsiveContainer';
 import { useLoadingState } from '@/hooks/useLoadingState';
 import { supabase } from '@/integrations/supabase/client';
@@ -625,7 +626,7 @@ const CRMOpportunities = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <ErrorBoundary>
+                <ErrorBoundary variant="inline">
                   {opportunitiesLoading ? (
                     <LoadingState message="Loading opportunities..." />
                   ) : opportunitiesError ? (
