@@ -1881,3 +1881,68 @@ TS7006 implicit-any params (42 left across ~12 files — fix with a row type per
 query as above), TS6133 unused locals (357), TS7053 implicit index (10).
 
 prd.json: US-212 stays passes:false. Green tsc is the bar; 2120 to go.
+
+================================================================================
+US-212 — TypeScript strict-mode backlog, batch 10 (2026-08-01)
+================================================================================
+Branch: claude/review-open-prd-stories-zs8xxd. Implicit-any pass, done with row
+types rather than `(x: any)`.
+
+### Files taken to zero
+- src/components/crm/PerformanceMetrics.tsx      33 -> 0
+- src/components/crm/TeamPerformanceTracking.tsx 26 -> 0
+- src/components/analytics/AnalyticsDashboard.tsx 7 -> 0
+- src/pages/EmailMarketing.tsx                    7 -> 0
+- src/components/crm/RevenueForecasting.tsx       5 -> 0
+
+### The pattern
+`useState([])` infers `never[]`. That one declaration poisons everything
+downstream: the setter rejects the real array (TS2345), and every property read
+in the JSX becomes "Property 'x' does not exist on type 'never'" (TS2339). The
+implicit-any callback params (TS7006) come from the same place — the query was
+escaped with `as any`, so `.filter(l => ...)` has no contextual type.
+
+Fixing one file is therefore: declare a row type per Supabase select, declare
+the derived view-model types, type the useState hooks, and the 20-30 errors go
+together. AnalyticsDashboard needed a single line — `useState<any>(null)`
+became the `AnalyticsDashboard` type the engine already exports (aliased on
+import, since the component shares that name).
+
+Also folded in while there, all null-safety rather than cosmetics:
+- shared `inMonth(iso, month)` helper replacing four copies of the same
+  getMonth/getFullYear comparison
+- `hasStatus`/`PIPELINE_STATUSES` so `string | null` statuses stop being passed
+  to `Array<string>.includes`
+- `leads?.filter(...).length * X || 0` → an explicit `?? 0` before the multiply
+  (the old form quietly produced NaN before the `|| 0` caught it)
+- dropped a genuinely unused `previousMonth` and `totalBudget`
+
+### Real bug fixed
+PerformanceMetrics selected `'status, created_at'` but computed both revenue and
+pipeline from `l.estimated_budget` — a column it never selected. Monthly Revenue
+and Pipeline Value rendered $0K for every company. Added the column.
+
+### Finding: the generated Supabase types are stale
+src/integrations/supabase/types.ts still describes `leads` with the
+pre-migration `site_id` and no `company_id`, while five call sites filter or
+insert on `company_id` (PerformanceMetrics, RevenueForecasting,
+QuickLeadCapture, EnhancedPipelineKanban, EstimateTracking).
+REMAINING_SITE_ID_REFERENCES.md confirms the repo is migrating site_id ->
+company_id, so the *queries* are right and the checked-in types are behind.
+
+This is the root of the ~97 SelectQueryError + ~70 missing-column cluster an
+earlier batch flagged as "real column-name bugs". It is one command — the
+US-263 `npm run db:types` against prod, committed — and it should delete a large
+slice of the remaining backlog. Worth doing before more per-file work.
+
+Until then those queries keep a documented `supabase as any` on the *builder*
+only, never on the result, so the row shape stays checked.
+
+### Verification
+- tsgo: 2120 -> 2042 (-78). TS7006 42 -> 9. Zero regressions in the per-file
+  diff against the session baseline; five files fully cleared.
+- npx eslint on all touched files: 0 errors (15 warnings, all pre-existing
+  `no-explicit-any` / `exhaustive-deps` plus the one documented builder cast).
+- vite build: clean.
+
+prd.json: US-212 stays passes:false. 2042 to go.

@@ -32,7 +32,12 @@ import {
   RefreshCw,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { analyticsEngine, type AnalyticsFilters } from '@/services/analytics/analyticsEngine';
+import {
+  analyticsEngine,
+  type AnalyticsFilters,
+  // Aliased: this file's own component is also called AnalyticsDashboard.
+  type AnalyticsDashboard as AnalyticsDashboardData,
+} from '@/services/analytics/analyticsEngine';
 import { DashboardSkeleton } from '@/components/ui/skeletons';
 
 interface AnalyticsDashboardProps {
@@ -49,7 +54,7 @@ const COLORS = {
 };
 
 export function AnalyticsDashboard({ companyId, className }: AnalyticsDashboardProps) {
-  const [dashboard, setDashboard] = useState<any>(null);
+  const [dashboard, setDashboard] = useState<AnalyticsDashboardData | null>(null);
   const [loading, setLoading] = useState(true);
   const [dateRange, setDateRange] = useState<'30d' | '90d' | '6m' | '1y'>('90d');
 

@@ -6,6 +6,35 @@ import { TrendingUp, TrendingDown, DollarSign, Target } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 
+/** Columns this component selects from `leads`. */
+type LeadRow = { status: string | null; created_at: string };
+
+/** Columns this component selects from `projects`. */
+type ProjectRow = {
+  budget: number | null;
+  status: string | null;
+  created_at: string;
+  completion_percentage: number | null;
+};
+
+type RevenuePoint = {
+  month: string;
+  actual: number | null;
+  forecast: number;
+  pipeline: number;
+};
+
+/** Lead statuses that count as open pipeline. */
+const PIPELINE_STATUSES = ['qualified', 'proposal', 'negotiation'] as const;
+
+const inMonth = (isoDate: string, month: Date) => {
+  const date = new Date(isoDate);
+  return (
+    date.getMonth() === month.getMonth() &&
+    date.getFullYear() === month.getFullYear()
+  );
+};
+
 const chartConfig = {
   actual: {
     label: "Actual Revenue",
@@ -23,7 +52,7 @@ const chartConfig = {
 
 export const RevenueForecasting = () => {
   const { userProfile } = useAuth();
-  const [revenueData, setRevenueData] = useState([]);
+  const [revenueData, setRevenueData] = useState<RevenuePoint[]>([]);
   const [metrics, setMetrics] = useState({
     totalPipeline: 0,
     avgDealSize: 0,
@@ -41,45 +70,49 @@ export const RevenueForecasting = () => {
 
     try {
       // Get pipeline data from leads
-      const { data: leads } = await supabase
+      // `leads.company_id` is missing from the generated types (they still
+      // carry the pre-migration `site_id`), so the builder is cast before the
+      // filter. The filter itself is load-bearing tenant isolation — do not
+      // drop it. Regenerating types (npm run db:types) is the real fix.
+      const { data: leads } = (await (supabase as any)
         .from('leads')
         .select('status, created_at')
-        .eq('company_id', userProfile.company_id) as any;
+        .eq('company_id', userProfile.company_id)) as { data: LeadRow[] | null };
 
       // Get completed projects for actual revenue
-      const { data: projects } = await supabase
+      const { data: projects } = (await supabase
         .from('projects')
         .select('budget, status, created_at, completion_percentage')
         .eq('company_id', userProfile.company_id)
-        .eq('status', 'completed');
+        .eq('status', 'completed')) as unknown as { data: ProjectRow[] | null };
 
       // Calculate metrics
-      const pipelineValue = leads?.filter(l => ['qualified', 'proposal', 'negotiation'].includes(l.status)).length * 50000 || 0;
-      
       const avgDeal = 50000; // Average deal size estimate
 
-      const totalBudget = projects?.reduce((sum, p) => sum + (p.budget || 0), 0) || 0;
-      const conversionRate = leads?.length > 0 ? (projects?.length || 0) / leads.length * 100 : 0;
+      const openLeads =
+        leads?.filter(
+          l => l.status !== null && PIPELINE_STATUSES.includes(l.status as typeof PIPELINE_STATUSES[number])
+        ).length ?? 0;
+      const pipelineValue = openLeads * avgDeal;
+
+      const conversionRate =
+        leads && leads.length > 0 ? ((projects?.length ?? 0) / leads.length) * 100 : 0;
 
       // Generate monthly data
-      const monthlyData = [];
+      const monthlyData: RevenuePoint[] = [];
       const currentDate = new Date();
       
       for (let i = 5; i >= 0; i--) {
         const date = new Date(currentDate.getFullYear(), currentDate.getMonth() - i, 1);
         const monthName = date.toLocaleDateString('en-US', { month: 'short' });
         
-        const monthRevenue = projects?.filter(p => {
-          const projectDate = new Date(p.created_at);
-          return projectDate.getMonth() === date.getMonth() && 
-                 projectDate.getFullYear() === date.getFullYear();
-        }).reduce((sum, p) => sum + (p.budget || 0), 0) || 0;
+        const monthRevenue =
+          projects
+            ?.filter(p => inMonth(p.created_at, date))
+            .reduce((sum, p) => sum + (p.budget || 0), 0) ?? 0;
 
-        const monthPipeline = leads?.filter(l => {
-          const leadDate = new Date(l.created_at);
-          return leadDate.getMonth() === date.getMonth() && 
-                 leadDate.getFullYear() === date.getFullYear();
-        }).length * avgDeal || 0;
+        const monthPipeline =
+          (leads?.filter(l => inMonth(l.created_at, date)).length ?? 0) * avgDeal;
 
         monthlyData.push({
           month: monthName,

@@ -2,9 +2,64 @@ import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, ResponsiveContainer, ComposedChart, Bar } from "recharts";
-import { TrendingUp, TrendingDown, Activity, Users, Target, Clock } from "lucide-react";
+import { TrendingUp, TrendingDown, Activity, Users, Target, Clock, type LucideIcon } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+
+/** Columns this component selects from `leads`. */
+type LeadRow = {
+  status: string | null;
+  created_at: string;
+  estimated_budget: number | null;
+};
+
+/** Columns this component selects from `lead_activities`. */
+type ActivityRow = { created_at: string };
+
+type MonthlyPoint = {
+  month: string;
+  revenue: number;
+  deals: number;
+  leads: number;
+  conversion: number;
+  activities: number;
+};
+
+type Kpi = {
+  title: string;
+  value: string;
+  change: string;
+  trend: 'up' | 'down';
+  icon: LucideIcon;
+  target: string;
+};
+
+type GoalProgress = {
+  metric: string;
+  current: number;
+  target: number;
+  percentage: number;
+};
+
+/** Statuses that count as open pipeline. */
+const PIPELINE_STATUSES = ['qualified', 'proposal', 'negotiation'] as const;
+
+const EMPTY_MONTH: MonthlyPoint = {
+  month: '',
+  revenue: 0,
+  deals: 0,
+  leads: 0,
+  conversion: 0,
+  activities: 0,
+};
+
+const inMonth = (isoDate: string, month: Date) => {
+  const date = new Date(isoDate);
+  return (
+    date.getMonth() === month.getMonth() &&
+    date.getFullYear() === month.getFullYear()
+  );
+};
 
 const chartConfig = {
   revenue: {
@@ -27,9 +82,9 @@ const chartConfig = {
 
 export const PerformanceMetrics = () => {
   const { userProfile } = useAuth();
-  const [performanceData, setPerformanceData] = useState([]);
-  const [kpis, setKpis] = useState([]);
-  const [goalProgress, setGoalProgress] = useState([]);
+  const [performanceData, setPerformanceData] = useState<MonthlyPoint[]>([]);
+  const [kpis, setKpis] = useState<Kpi[]>([]);
+  const [goalProgress, setGoalProgress] = useState<GoalProgress[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -40,37 +95,29 @@ export const PerformanceMetrics = () => {
     if (!userProfile?.company_id) return;
 
     try {
-      // Get leads data
-      const { data: leads } = await (supabase as any)
+      // Get leads data. estimated_budget must stay in the select — revenue and
+      // pipeline below are computed from it.
+      const { data: leads } = (await (supabase as any)
         .from('leads')
-        .select('status, created_at')
-        .eq('company_id', userProfile.company_id) as any;
+        .select('status, created_at, estimated_budget')
+        .eq('company_id', userProfile.company_id)) as { data: LeadRow[] | null };
 
       // Get activities data
-      const { data: activities } = await (supabase as any)
+      const { data: activities } = (await (supabase as any)
         .from('lead_activities')
         .select('created_at')
-        .eq('company_id', userProfile.company_id);
+        .eq('company_id', userProfile.company_id)) as { data: ActivityRow[] | null };
 
       // Generate monthly performance data
-      const monthlyData = [];
+      const monthlyData: MonthlyPoint[] = [];
       const currentDate = new Date();
-      
+
       for (let i = 5; i >= 0; i--) {
         const date = new Date(currentDate.getFullYear(), currentDate.getMonth() - i, 1);
         const monthName = date.toLocaleDateString('en-US', { month: 'short' });
-        
-        const monthLeads = leads?.filter(l => {
-          const leadDate = new Date(l.created_at);
-          return leadDate.getMonth() === date.getMonth() && 
-                 leadDate.getFullYear() === date.getFullYear();
-        }) || [];
 
-        const monthActivities = activities?.filter(a => {
-          const activityDate = new Date(a.created_at);
-          return activityDate.getMonth() === date.getMonth() && 
-                 activityDate.getFullYear() === date.getFullYear();
-        }) || [];
+        const monthLeads = leads?.filter(l => inMonth(l.created_at, date)) || [];
+        const monthActivities = activities?.filter(a => inMonth(a.created_at, date)) || [];
 
         const closedDeals = monthLeads.filter(l => l.status === 'closed_won');
         const revenue = closedDeals.reduce((sum, l) => sum + (l.estimated_budget || 0), 0);
@@ -87,19 +134,20 @@ export const PerformanceMetrics = () => {
       }
 
       // Calculate current metrics
-      const currentMonth = monthlyData[monthlyData.length - 1] || {};
-      const previousMonth = monthlyData[monthlyData.length - 2] || {};
-      
-      const totalPipeline = leads?.filter(l => ['qualified', 'proposal', 'negotiation'].includes(l.status))
-        .reduce((sum, l) => sum + (l.estimated_budget || 0), 0) || 0;
+      const currentMonth = monthlyData[monthlyData.length - 1] ?? EMPTY_MONTH;
+
+      const totalPipeline =
+        leads
+          ?.filter(l => l.status !== null && PIPELINE_STATUSES.includes(l.status as typeof PIPELINE_STATUSES[number]))
+          .reduce((sum, l) => sum + (l.estimated_budget || 0), 0) || 0;
 
       const avgSalesCycle = 28; // Mock value - would need date tracking in real implementation
-      const activitiesPerDay = (currentMonth.activities || 0) / 30;
+      const activitiesPerDay = currentMonth.activities / 30;
 
-      const kpiData = [
+      const kpiData: Kpi[] = [
         {
           title: "Monthly Revenue",
-          value: `$${((currentMonth.revenue || 0) / 1000).toFixed(0)}K`,
+          value: `$${(currentMonth.revenue / 1000).toFixed(0)}K`,
           change: "+11.3%",
           trend: "up",
           icon: TrendingUp,
@@ -107,7 +155,7 @@ export const PerformanceMetrics = () => {
         },
         {
           title: "Deals Closed",
-          value: (currentMonth.deals || 0).toString(),
+          value: currentMonth.deals.toString(),
           change: "+9.4%",
           trend: "up",
           icon: Target,
@@ -115,7 +163,7 @@ export const PerformanceMetrics = () => {
         },
         {
           title: "Lead Conversion",
-          value: `${(currentMonth.conversion || 0).toFixed(1)}%`,
+          value: `${currentMonth.conversion.toFixed(1)}%`,
           change: "+2.4%",
           trend: "up",
           icon: Users,
@@ -148,30 +196,30 @@ export const PerformanceMetrics = () => {
       ];
 
       // Calculate goal progress
-      const progressData = [
-        { 
-          metric: "Revenue Goal", 
-          current: currentMonth.revenue || 0, 
-          target: 180000, 
-          percentage: ((currentMonth.revenue || 0) / 180000) * 100 
+      const progressData: GoalProgress[] = [
+        {
+          metric: "Revenue Goal",
+          current: currentMonth.revenue,
+          target: 180000,
+          percentage: (currentMonth.revenue / 180000) * 100
         },
-        { 
-          metric: "Deals Goal", 
-          current: currentMonth.deals || 0, 
-          target: 42, 
-          percentage: ((currentMonth.deals || 0) / 42) * 100 
+        {
+          metric: "Deals Goal",
+          current: currentMonth.deals,
+          target: 42,
+          percentage: (currentMonth.deals / 42) * 100
         },
-        { 
-          metric: "Lead Gen Goal", 
-          current: currentMonth.leads || 0, 
-          target: 220, 
-          percentage: ((currentMonth.leads || 0) / 220) * 100 
+        {
+          metric: "Lead Gen Goal",
+          current: currentMonth.leads,
+          target: 220,
+          percentage: (currentMonth.leads / 220) * 100
         },
-        { 
-          metric: "Conversion Goal", 
-          current: currentMonth.conversion || 0, 
-          target: 20, 
-          percentage: ((currentMonth.conversion || 0) / 20) * 100 
+        {
+          metric: "Conversion Goal",
+          current: currentMonth.conversion,
+          target: 20,
+          percentage: (currentMonth.conversion / 20) * 100
         },
       ];
 
