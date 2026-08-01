@@ -1736,3 +1736,81 @@ destructive migration). Story 174/234.
   the delivery worker is a separate story.
 
 prd.json: US-086 passes:true (174/234).
+
+================================================================================
+US-143 — Per-surface light/dark token audit for glass contrast (2026-08-01)
+================================================================================
+Branch: claude/review-open-prd-stories-zs8xxd. Additive: one new lib module, one
+new test, one extracted helper module, one new design token. No migrations.
+
+### What shipped
+- src/lib/glass-contrast.ts: pure colour maths for translucent surfaces —
+  hslTripletToRgb (parses the Tailwind `H S% L%` custom-property format),
+  parseRgbaLiteral, compositeOver/compositeStack (source-over alpha blend),
+  relativeLuminance + contrastRatio (WCAG 2.1), rgbToLab + deltaE76 (CIE76),
+  simulateColorVision (deuteranopia/protanopia/tritanopia matrices).
+- src/test/glass-contrast.test.ts: 82 assertions. Reads the REAL tokens out of
+  src/index.css (comments stripped first, `:root` and `.dark` blocks merged in
+  source order like the cascade) and the `.ios-page-bg` radial-gradient stop
+  alphas, then asserts every
+  `glass intensity x ambient background x theme` surface:
+    * --foreground and --muted-foreground >= 4.5:1 (18 surfaces)
+    * decorative icons >= 3:1 on the weakest surface
+    * --primary-on-glass >= 4.5:1 on all 18
+    * busy-media extremes DO break glass (proves the solid rule isn't taste)
+      and the solid card survives them
+    * low-gpu fallback is >= 0.95 opaque and passes AA
+    * deuteranopia/protanopia: CTA fill vs every surface, primary vs
+      destructive, accent vs every surface — all by CIE76 dE >= 10
+  Mutation-checked: setting --muted-foreground to 62% L fails 12 assertions.
+- src/components/mobile/mobileTableSurface.ts: resolveTableSurface('auto', n)
+  -> 'solid' at >= DENSE_COLUMN_THRESHOLD (5) visible columns, else 'glass'.
+  Split out of MobileTable.tsx so that file only exports components (Fast
+  Refresh) and so the audit can import the rule without pulling in JSX.
+- MobileTable now takes `surface?: 'auto' | 'glass' | 'solid'` (default 'auto');
+  MobileList takes the same prop (rows are caller-rendered so density can't be
+  inferred — defaults to glass); MobileScrollTable is always solid.
+  mobilePrimary row dividers switch to border-border on solid.
+- src/index.css + tailwind.config.ts: new --primary-on-glass token
+  (light `24 100% 28%`, dark `24 100% 58%`) exposed as `text-primary-on-glass`.
+
+### Findings
+- --primary as TEXT on light glass is only 4.34-4.79:1 (and the orange/white
+  pair converges further for red-green-deficient viewers). It is a FILL colour.
+  Hence --primary-on-glass + guideline rule 6. bg-primary CTAs are unchanged.
+- Button labels: white on --primary is 4.79:1 light / 3.56:1 dark; white on
+  --destructive is 3.60:1 light / 9.58:1 dark. All clear AA-large, only light
+  primary clears AA-normal. Test locks the AA-large floor; retuning the brand
+  hues is a design decision, deliberately out of scope here.
+- METHOD: WCAG contrast is a luminance metric and dichromats keep near-normal
+  luminance perception, so running a contrast ratio over CVD-simulated colours
+  measures the simulation matrix, not a real barrier. The colour-blind suite
+  asserts dE distinguishability instead. (First draft did it the wrong way and
+  produced 4 bogus failures.)
+
+### Acceptance
+- [x] AC1 docs/MOBILE_GLASS_GUIDELINES.md describes glass vs solid
+- [x] AC2 all 39 mobileCardClasses.container/containerThin sites + every
+      MobileCard usage reviewed. None wrap a data table (filter panels, action
+      bars, stat tiles, settings rows), so no page-level change was warranted;
+      the dense surfaces are the MobileTable family and they now pick solid
+      themselves. Audit recorded in the doc's new Audit log section.
+- [x] AC3 automated contrast test validates text over glass in both themes
+- [ ] AC4 Lighthouse mobile >= 95 on 10 spot-checked screens — needs a deployed
+      preview + authenticated session, not producible from a unit test
+- [ ] AC5 axe-core report attached to the PR — same blocker as AC4
+- [x] AC6 colour-blind simulator check (deuteranopia, protanopia)
+
+### Verification
+- npx vitest run src/test/glass-contrast.test.ts -> 82 passed
+- npx eslint on all touched files -> 0 errors (6 pre-existing warnings in
+  MobileTable.tsx: no-explicit-any / jsx-a11y, untouched by this change)
+- npm run build -> built in 1m15s (needs VITE_SUPABASE_PUBLISHABLE_KEY set)
+
+prd.json: US-143 stays passes:false — AC4/AC5 are runtime artifacts that need a
+preview deploy. Notes updated with exactly what remains.
+
+Incidental: tailwind.config.ts switched `require("tailwindcss-animate")` to an
+ESM import. Pre-existing @typescript-eslint/no-require-imports error that only
+surfaced once this change staged the file, and the pre-commit hook (correctly)
+refuses to let it through. Verified with a full vite build.

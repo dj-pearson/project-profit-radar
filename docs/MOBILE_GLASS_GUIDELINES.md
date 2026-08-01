@@ -39,9 +39,35 @@ is busy. These rules keep text readable.
    on focus and `ring-2 ring-destructive/70` on error — ring contrast is
    verified against all three ambient backgrounds.
 
+6. **Orange copy on glass**: use `text-primary-on-glass`, never `text-primary`.
+   `--primary` is a *fill* colour — as text it only reaches 4.34:1 over the
+   coolest light glass tint, and the two hues sit close together for
+   red-green-deficient viewers. `--primary-on-glass` is the darkened
+   (light) / lightened (dark) variant that clears AA on every glass surface.
+   `bg-primary` fills are unaffected — keep using those for CTAs.
+
 **Contrast failures usually mean the glass layer is too thin.** When in
 doubt, upgrade from `glass-thin` to `glass`, or from `glass` to a solid
 `bg-card` variant.
+
+### The audit is automated
+
+`src/test/glass-contrast.test.ts` reads the real token values out of
+`src/index.css` and asserts every
+`glass intensity × ambient background × theme` combination — 82 assertions
+covering body text, muted text, decorative icons, the accent token, the
+low-GPU fallback, and deuteranopia/protanopia distinguishability. Change a
+token to something inaccessible and the suite fails; you do not need to
+re-audit screens by hand.
+
+Colour maths lives in `src/lib/glass-contrast.ts` (compositing, WCAG
+luminance, CIE76 ΔE, CVD simulation) if you need it in another test.
+
+**Method note:** WCAG contrast is a luminance metric and dichromats keep
+near-normal luminance perception, so the colour-blind checks assert ΔE
+*distinguishability* rather than running contrast ratios over simulated
+colours — a ratio computed on a simulation matrix measures the matrix, not
+the barrier.
 
 ---
 
@@ -67,6 +93,17 @@ For these cases:
 // Shared utility class
 <div className={mobileCardClasses.containerSolid}>...</div>
 ```
+
+### Tables decide for themselves
+
+`MobileTable` takes `surface="auto" | "glass" | "solid"` and defaults to
+`auto`, which resolves to **solid at 5+ visible columns** and glass below
+that — the density rule above, applied mechanically
+(`src/components/mobile/mobileTableSurface.ts`). Pass an explicit value to
+override. `MobileList` renders its own rows so it can't infer density —
+pass `surface="solid"` for dense numeric lists. `MobileScrollTable` is
+always solid: a 600px-wide scrolling grid of values is the densest surface
+in the app.
 
 ---
 
@@ -172,7 +209,33 @@ Before merging a new mobile screen PR, verify:
 
 ---
 
-**Last updated**: 2026-04-18
+## Audit log
+
+**2026-08-01 — surface audit (US-143).** All 39 `mobileCardClasses.container`
+/ `containerThin` call sites plus every `MobileCard` usage were reviewed
+against the density rule. None of them wrap a data table: they are filter
+panels, action bars, stat tiles and settings rows, so all correctly stay on
+glass. The only genuinely dense surfaces in the mobile system are the
+`MobileTable` / `MobileList` / `MobileScrollTable` family, which now resolve
+to solid as described above. Result: no page-level changes were needed; the
+rule is enforced in the component layer instead of per screen.
+
+Findings that came out of the same pass:
+
+- `--primary` as *text* on light glass measures 4.34–4.79:1 → added
+  `--primary-on-glass` (rule 6 above).
+- `--primary` / `--destructive` button labels clear AA-large but only
+  `--primary` in light mode clears AA-normal. Button labels must stay at
+  button weight/size. Retuning the brand hues is a design decision and is
+  not part of this story.
+
+Still open on this story: the Lighthouse-mobile ≥95 spot check and the
+axe-core report are CI/runtime artifacts, not unit-testable — they need a
+run against a deployed preview.
+
+---
+
+**Last updated**: 2026-08-01
 **Owner**: Mobile / UI system
 **Related PRDs**: US-136 (propagation), US-137 (forms), US-140 (alerts),
 US-143 (this doc), US-144 (perf guard).
