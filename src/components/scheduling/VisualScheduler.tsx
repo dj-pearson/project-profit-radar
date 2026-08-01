@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -43,7 +42,6 @@ interface Conflict {
 }
 
 const VisualScheduler: React.FC<VisualSchedulerProps> = ({ selectedDate, onAssignmentChange, companyId }) => {
-  const { userProfile } = useAuth();
   const [resources, setResources] = useState<Resource[]>([]);
   const [scheduleItems, setScheduleItems] = useState<ScheduleItem[]>([]);
   const [conflicts, setConflicts] = useState<Conflict[]>([]);

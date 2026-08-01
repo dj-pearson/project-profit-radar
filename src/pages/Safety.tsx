@@ -53,7 +53,7 @@ const Safety = () => {
   const [loading, setLoading] = useState(true);
   const [showIncidentDialog, setShowIncidentDialog] = useState(false);
   const [showChecklistDialog, setShowChecklistDialog] = useState(false);
-  const { user, userProfile } = useAuth();
+  const { user } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
 

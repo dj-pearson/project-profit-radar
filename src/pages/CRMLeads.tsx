@@ -69,7 +69,7 @@ interface Lead {
 }
 
 const CRMLeads = () => {
-  const { user, userProfile, signOut, loading } = useAuth();
+  const { user, userProfile, loading } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useToast();

@@ -85,6 +85,15 @@ export function useScreenReaderAnnouncement() {
 }
 
 /**
+ * Announce-only convenience wrapper around `useScreenReaderAnnouncement`, for
+ * callers that push messages into the global live region and don't render their
+ * own `<LiveRegion />`.
+ */
+export function useAnnounce() {
+  return useScreenReaderAnnouncement().announce;
+}
+
+/**
  * Hook for detecting user's motion preferences
  */
 export function useReducedMotion(): boolean {

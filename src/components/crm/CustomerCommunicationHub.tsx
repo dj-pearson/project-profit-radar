@@ -49,7 +49,7 @@ interface NotificationRule {
 }
 
 export const CustomerCommunicationHub = () => {
-  const { user, userProfile } = useAuth();
+  const { userProfile } = useAuth();
   const [activeTab, setActiveTab] = useState('timeline');
   const [communicationLog, setCommunicationLog] = useState<CommunicationLogEntry[]>([]);
   const [templates, setTemplates] = useState<CommunicationTemplate[]>([]);

@@ -4,9 +4,46 @@ import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar } from "recharts";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { Trophy, Target, Clock, DollarSign, Star } from "lucide-react";
+import { Trophy, Target, Clock, DollarSign, Star, type LucideIcon } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+
+type TeamMemberPerformance = {
+  name: string;
+  deals: number;
+  revenue: number;
+  activities: number;
+  conversion: number;
+  id: string;
+};
+
+type LeaderboardEntry = {
+  rank: number;
+  name: string;
+  avatar: string;
+  deals: number;
+  revenue: number;
+  conversion: number;
+  badge: 'gold' | 'silver' | 'bronze' | 'none';
+};
+
+/**
+ * A right-rail insight section. `progress` is present only on goal rows, so it
+ * is optional on the shared item shape rather than a union the JSX has to
+ * narrow.
+ */
+type InsightSection = {
+  title: string;
+  items: Array<{ text: string; status: string; progress?: number }>;
+};
+
+type PerformanceMetric = {
+  title: string;
+  value: string;
+  subtitle: string;
+  icon: LucideIcon;
+  color: string;
+};
 
 const chartConfig = {
   deals: {
@@ -25,9 +62,9 @@ const chartConfig = {
 
 export const TeamPerformanceTracking = () => {
   const { userProfile } = useAuth();
-  const [teamData, setTeamData] = useState([]);
-  const [performanceMetrics, setPerformanceMetrics] = useState([]);
-  const [leaderboard, setLeaderboard] = useState([]);
+  const [teamData, setTeamData] = useState<TeamMemberPerformance[]>([]);
+  const [performanceMetrics, setPerformanceMetrics] = useState<PerformanceMetric[]>([]);
+  const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -46,8 +83,8 @@ export const TeamPerformanceTracking = () => {
         .in('role', ['admin', 'project_manager', 'office_staff']);
 
       // Get leads and activities for each team member
-      const teamPerformance = await Promise.all(
-        (teamMembers || []).map(async (member) => {
+      const teamPerformance: TeamMemberPerformance[] = await Promise.all(
+        (teamMembers || []).map(async (member): Promise<TeamMemberPerformance> => {
           const { data: leads } = await supabase
             .from('leads')
             .select('status')
@@ -58,7 +95,8 @@ export const TeamPerformanceTracking = () => {
 
           const closedDeals = leads?.filter(l => l.status === 'closed_won').length || 0;
           const totalRevenue = closedDeals * 50000; // Estimate based on average deal size
-          const conversionRate = leads?.length > 0 ? (closedDeals / leads.length) * 100 : 0;
+          const conversionRate =
+            leads && leads.length > 0 ? (closedDeals / leads.length) * 100 : 0;
 
           return {
             name: `${member.first_name} ${member.last_name}`,
@@ -75,7 +113,7 @@ export const TeamPerformanceTracking = () => {
       const sortedTeam = teamPerformance.sort((a, b) => b.revenue - a.revenue);
       
       // Create leaderboard with badges
-      const leaderboardData = sortedTeam.map((member, index) => ({
+      const leaderboardData: LeaderboardEntry[] = sortedTeam.map((member, index) => ({
         rank: index + 1,
         name: member.name,
         avatar: "/placeholder.svg",
@@ -92,7 +130,7 @@ export const TeamPerformanceTracking = () => {
       const teamConversion = teamPerformance.reduce((sum, m) => sum + m.conversion, 0) / 
         teamPerformance.length || 0;
 
-      const metrics = [
+      const metrics: PerformanceMetric[] = [
         {
           title: "Top Performer",
           value: topPerformer.name,
@@ -291,7 +329,7 @@ export const TeamPerformanceTracking = () => {
                   { text: "Mike: Best presentation score", status: "success" },
                 ],
               },
-            ].map((section) => (
+            ].map((section: InsightSection) => (
               <div key={section.title}>
                 <h4 className="font-semibold mb-3">{section.title}</h4>
                 <div className="space-y-2">

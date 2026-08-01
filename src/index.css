@@ -29,6 +29,14 @@ All colors MUST be HSL.
     --accent: 24 100% 38%;
     --accent-foreground: 0 0% 100%;
 
+    /*
+     * Accent colour for TEXT and ICONS drawn on a glass surface (US-143).
+     * `--primary` at 38% L only reaches ~4.34:1 over the light glass tints and
+     * ~2.6:1 under a deuteranopia simulation, so it is a fill colour, not a
+     * text colour. Use `text-primary-on-glass` for orange copy on glass.
+     */
+    --primary-on-glass: 24 100% 28%;
+
     /* Construction-themed colors */
     --construction-orange: 24 100% 38%;
     --construction-orange-light: 24 100% 48%;
@@ -92,6 +100,10 @@ All colors MUST be HSL.
 
     --accent: 24 100% 45%;
     --accent-foreground: 0 0% 100%;
+
+    /* See the light-mode note above. Dark glass is much darker than the tint,
+     * so the accent has to move up rather than down to clear AA. */
+    --primary-on-glass: 24 100% 58%;
 
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 210 40% 98%;

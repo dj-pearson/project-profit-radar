@@ -38,7 +38,7 @@ export async function checkLoginAttempt(email: string): Promise<LoginAttemptResu
     const normalizedEmail = email.toLowerCase().trim();
 
     // First, try to get user by email to check their security status
-    const { data: userData, error: userError } = await supabase
+    const { data: userData } = await supabase
       .from('user_profiles')
       .select('id')
       .eq('email', normalizedEmail)
@@ -51,7 +51,7 @@ export async function checkLoginAttempt(email: string): Promise<LoginAttemptResu
     }
 
     // Check user_security table for lockout status
-    const { data: securityData, error: securityError } = await supabase
+    const { data: securityData } = await supabase
       .from('user_security')
       .select('failed_login_attempts, last_failed_attempt, account_locked_until')
       .eq('user_id', userData.id)

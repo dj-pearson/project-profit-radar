@@ -1736,3 +1736,284 @@ destructive migration). Story 174/234.
   the delivery worker is a separate story.
 
 prd.json: US-086 passes:true (174/234).
+
+================================================================================
+US-143 — Per-surface light/dark token audit for glass contrast (2026-08-01)
+================================================================================
+Branch: claude/review-open-prd-stories-zs8xxd. Additive: one new lib module, one
+new test, one extracted helper module, one new design token. No migrations.
+
+### What shipped
+- src/lib/glass-contrast.ts: pure colour maths for translucent surfaces —
+  hslTripletToRgb (parses the Tailwind `H S% L%` custom-property format),
+  parseRgbaLiteral, compositeOver/compositeStack (source-over alpha blend),
+  relativeLuminance + contrastRatio (WCAG 2.1), rgbToLab + deltaE76 (CIE76),
+  simulateColorVision (deuteranopia/protanopia/tritanopia matrices).
+- src/test/glass-contrast.test.ts: 82 assertions. Reads the REAL tokens out of
+  src/index.css (comments stripped first, `:root` and `.dark` blocks merged in
+  source order like the cascade) and the `.ios-page-bg` radial-gradient stop
+  alphas, then asserts every
+  `glass intensity x ambient background x theme` surface:
+    * --foreground and --muted-foreground >= 4.5:1 (18 surfaces)
+    * decorative icons >= 3:1 on the weakest surface
+    * --primary-on-glass >= 4.5:1 on all 18
+    * busy-media extremes DO break glass (proves the solid rule isn't taste)
+      and the solid card survives them
+    * low-gpu fallback is >= 0.95 opaque and passes AA
+    * deuteranopia/protanopia: CTA fill vs every surface, primary vs
+      destructive, accent vs every surface — all by CIE76 dE >= 10
+  Mutation-checked: setting --muted-foreground to 62% L fails 12 assertions.
+- src/components/mobile/mobileTableSurface.ts: resolveTableSurface('auto', n)
+  -> 'solid' at >= DENSE_COLUMN_THRESHOLD (5) visible columns, else 'glass'.
+  Split out of MobileTable.tsx so that file only exports components (Fast
+  Refresh) and so the audit can import the rule without pulling in JSX.
+- MobileTable now takes `surface?: 'auto' | 'glass' | 'solid'` (default 'auto');
+  MobileList takes the same prop (rows are caller-rendered so density can't be
+  inferred — defaults to glass); MobileScrollTable is always solid.
+  mobilePrimary row dividers switch to border-border on solid.
+- src/index.css + tailwind.config.ts: new --primary-on-glass token
+  (light `24 100% 28%`, dark `24 100% 58%`) exposed as `text-primary-on-glass`.
+
+### Findings
+- --primary as TEXT on light glass is only 4.34-4.79:1 (and the orange/white
+  pair converges further for red-green-deficient viewers). It is a FILL colour.
+  Hence --primary-on-glass + guideline rule 6. bg-primary CTAs are unchanged.
+- Button labels: white on --primary is 4.79:1 light / 3.56:1 dark; white on
+  --destructive is 3.60:1 light / 9.58:1 dark. All clear AA-large, only light
+  primary clears AA-normal. Test locks the AA-large floor; retuning the brand
+  hues is a design decision, deliberately out of scope here.
+- METHOD: WCAG contrast is a luminance metric and dichromats keep near-normal
+  luminance perception, so running a contrast ratio over CVD-simulated colours
+  measures the simulation matrix, not a real barrier. The colour-blind suite
+  asserts dE distinguishability instead. (First draft did it the wrong way and
+  produced 4 bogus failures.)
+
+### Acceptance
+- [x] AC1 docs/MOBILE_GLASS_GUIDELINES.md describes glass vs solid
+- [x] AC2 all 39 mobileCardClasses.container/containerThin sites + every
+      MobileCard usage reviewed. None wrap a data table (filter panels, action
+      bars, stat tiles, settings rows), so no page-level change was warranted;
+      the dense surfaces are the MobileTable family and they now pick solid
+      themselves. Audit recorded in the doc's new Audit log section.
+- [x] AC3 automated contrast test validates text over glass in both themes
+- [ ] AC4 Lighthouse mobile >= 95 on 10 spot-checked screens — needs a deployed
+      preview + authenticated session, not producible from a unit test
+- [ ] AC5 axe-core report attached to the PR — same blocker as AC4
+- [x] AC6 colour-blind simulator check (deuteranopia, protanopia)
+
+### Verification
+- npx vitest run src/test/glass-contrast.test.ts -> 82 passed
+- npx eslint on all touched files -> 0 errors (6 pre-existing warnings in
+  MobileTable.tsx: no-explicit-any / jsx-a11y, untouched by this change)
+- npm run build -> built in 1m15s (needs VITE_SUPABASE_PUBLISHABLE_KEY set)
+
+prd.json: US-143 stays passes:false — AC4/AC5 are runtime artifacts that need a
+preview deploy. Notes updated with exactly what remains.
+
+Incidental: tailwind.config.ts switched `require("tailwindcss-animate")` to an
+ESM import. Pre-existing @typescript-eslint/no-require-imports error that only
+surfaced once this change staged the file, and the pre-commit hook (correctly)
+refuses to let it through. Verified with a full vite build.
+
+================================================================================
+US-212 — TypeScript strict-mode backlog, batch 9 (2026-08-01)
+================================================================================
+Branch: claude/review-open-prd-stories-zs8xxd. Runtime-bug pass: this batch went
+after the error classes that are genuine broken references, not type noise.
+
+### Tooling note (recreate each session)
+tsconfig.tsgo.json is gitignored, so recreate it as a baseUrl-free mirror of
+tsconfig.app.json. Run the binary directly:
+  ~/.npm/_npx/*/node_modules/@typescript/native-preview-linux-x64/lib/tsgo \
+    -p tsconfig.tsgo.json
+~2.5 min per run. Do NOT use `npx @typescript/native-preview tsgo -p ...` — npx
+passes `tsgo` as a source file and you get TS5042.
+
+Re-baselined at 2159 (the notes' 2014 was a different tsgo config / pre-merge).
+
+### Fixed
+- CashFlowManagementGuide.tsx:453 rendered <BarChart3 /> with no import;
+  FinancialIntelligenceGuide.tsx:54 referenced Calculator with no import. Both
+  are ReferenceErrors at render, not type noise. Added the lucide imports.
+- src/components/seo/index.ts re-exported five names that do not exist:
+  * EnhancedSchemaMarkup — that component is at '@/components/EnhancedSchemaMarkup';
+    seo/EnhancedSchemaMarkup only ships the individual schema components.
+  * LocalSEOSchema, SEOCompatibilityLayer, MCPSEODashboard, MCPSetupWizard —
+    all default exports, re-exported as if named.
+  Barrel corrected (and the real named exports surfaced: LocalBusinessSchema,
+  ServiceAreaSchema, EnhancedSEOMetaTags). Safe: nothing imports from the
+  barrel — every consumer deep-imports the module.
+- useAnnounce added to useAccessibilityHelpers.tsx as an announce-only wrapper
+  over useScreenReaderAnnouncement. ComponentShowcase was already calling it.
+- PerformanceMetrics exported from automated-testing/types.ts as
+  PerformanceResult['webVitals'] — that flat lcp/fcp/cls/ttfb shape is exactly
+  what metrics-storage reads off test.data.
+- trustedTypes.ts: local TrustedScriptURL interface + a Window.trustedTypes
+  global declaration. Trusted Types is not in the TS DOM lib and
+  @types/trusted-types is not a dependency. 3 errors -> 0.
+- LeadConversionAnalytics.tsx taken to zero (26 -> 0): replaced the `as any` on
+  the leads query with a LeadRow type, typed the four useState<never[]> hooks,
+  and made the status filters null-safe via a hasStatus() helper. This is the
+  pattern for the remaining TS7006 files — a row type per query, not `(x: any)`.
+
+### Verification
+- tsgo: 2159 -> 2120 (-39). Per-file diff of the two error sets: ZERO
+  regressions, zero newly-erroring files, 8 files fully cleared.
+- npx eslint on all touched files: 0 errors (1 pre-existing
+  react-hooks/exhaustive-deps warning in LeadConversionAnalytics).
+- npm run test:security: 13 failed / 1087 passed — byte-identical to a stashed
+  clean tree, so unchanged by this batch (pre-existing, tracked separately).
+- vite build: clean.
+
+### Finding for dedicated work
+src/components/mobile/GeofenceManager.tsx (14 errors) is written against a
+useGeofencing API that does not exist. It destructures regions, addRegion,
+removeRegion, updateRegion, startMonitoring, stopMonitoring, getActiveRegions,
+requestPermissions, getCurrentLocation; the hook actually returns
+currentLocation, isTracking, permissionStatus, addGeofence, removeGeofence,
+getCurrentGeofences and friends. The missing `GeofenceRegion` type is a
+symptom, not the bug. Other consumers (MobileTimeClock, AutoClockInManager,
+useAutoClockInOut) use the real API, so this is a component rewrite — same
+bucket as the CRM deals drift.
+
+### Next safe batches
+TS7006 implicit-any params (42 left across ~12 files — fix with a row type per
+query as above), TS6133 unused locals (357), TS7053 implicit index (10).
+
+prd.json: US-212 stays passes:false. Green tsc is the bar; 2120 to go.
+
+================================================================================
+US-212 — TypeScript strict-mode backlog, batch 10 (2026-08-01)
+================================================================================
+Branch: claude/review-open-prd-stories-zs8xxd. Implicit-any pass, done with row
+types rather than `(x: any)`.
+
+### Files taken to zero
+- src/components/crm/PerformanceMetrics.tsx      33 -> 0
+- src/components/crm/TeamPerformanceTracking.tsx 26 -> 0
+- src/components/analytics/AnalyticsDashboard.tsx 7 -> 0
+- src/pages/EmailMarketing.tsx                    7 -> 0
+- src/components/crm/RevenueForecasting.tsx       5 -> 0
+
+### The pattern
+`useState([])` infers `never[]`. That one declaration poisons everything
+downstream: the setter rejects the real array (TS2345), and every property read
+in the JSX becomes "Property 'x' does not exist on type 'never'" (TS2339). The
+implicit-any callback params (TS7006) come from the same place — the query was
+escaped with `as any`, so `.filter(l => ...)` has no contextual type.
+
+Fixing one file is therefore: declare a row type per Supabase select, declare
+the derived view-model types, type the useState hooks, and the 20-30 errors go
+together. AnalyticsDashboard needed a single line — `useState<any>(null)`
+became the `AnalyticsDashboard` type the engine already exports (aliased on
+import, since the component shares that name).
+
+Also folded in while there, all null-safety rather than cosmetics:
+- shared `inMonth(iso, month)` helper replacing four copies of the same
+  getMonth/getFullYear comparison
+- `hasStatus`/`PIPELINE_STATUSES` so `string | null` statuses stop being passed
+  to `Array<string>.includes`
+- `leads?.filter(...).length * X || 0` → an explicit `?? 0` before the multiply
+  (the old form quietly produced NaN before the `|| 0` caught it)
+- dropped a genuinely unused `previousMonth` and `totalBudget`
+
+### Real bug fixed
+PerformanceMetrics selected `'status, created_at'` but computed both revenue and
+pipeline from `l.estimated_budget` — a column it never selected. Monthly Revenue
+and Pipeline Value rendered $0K for every company. Added the column.
+
+### Finding: the generated Supabase types are stale
+src/integrations/supabase/types.ts still describes `leads` with the
+pre-migration `site_id` and no `company_id`, while five call sites filter or
+insert on `company_id` (PerformanceMetrics, RevenueForecasting,
+QuickLeadCapture, EnhancedPipelineKanban, EstimateTracking).
+REMAINING_SITE_ID_REFERENCES.md confirms the repo is migrating site_id ->
+company_id, so the *queries* are right and the checked-in types are behind.
+
+This is the root of the ~97 SelectQueryError + ~70 missing-column cluster an
+earlier batch flagged as "real column-name bugs". It is one command — the
+US-263 `npm run db:types` against prod, committed — and it should delete a large
+slice of the remaining backlog. Worth doing before more per-file work.
+
+Until then those queries keep a documented `supabase as any` on the *builder*
+only, never on the result, so the row shape stays checked.
+
+### Verification
+- tsgo: 2120 -> 2042 (-78). TS7006 42 -> 9. Zero regressions in the per-file
+  diff against the session baseline; five files fully cleared.
+- npx eslint on all touched files: 0 errors (15 warnings, all pre-existing
+  `no-explicit-any` / `exhaustive-deps` plus the one documented builder cast).
+- vite build: clean.
+
+prd.json: US-212 stays passes:false. 2042 to go.
+
+================================================================================
+US-212 — TypeScript strict-mode backlog, batch 11 (2026-08-01)
+================================================================================
+Branch: claude/review-open-prd-stories-zs8xxd. Unused-binding sweep — the first
+script-driven batch, so the scope was deliberately narrow.
+
+### What the script did (and refused to do)
+Only single-line `const/let {…} = rhs` destructures were rewritten, and only to
+drop bindings TS itself reported as unread. Skipped, by design:
+- rest elements and defaults inside the pattern
+- nested braces
+- a right-hand side that continues onto the next line (would have produced
+  `render(;` — caught in the dry run before applying)
+That left 218 of the 355 TS6133s untouched: multi-line destructures and plain
+`const x = …` where the RHS may carry side effects. Those need per-site
+judgement, not a regex.
+
+When a destructure emptied out entirely:
+- a pure context/subscription hook with nothing consumed (`useAuth()`,
+  `useToast()`) was deleted outright — safe because the call is unconditional,
+  so hook order stays consistent across renders
+- anything else was kept as a bare statement so its effects survive, e.g.
+  `const { container } = render(<X />)` -> `render(<X />);`
+
+`eslint --fix` then swept the imports the removals had orphaned.
+
+104 files, 114 insertions, 172 deletions.
+
+### Deliberately not swept
+Three sites bound an unused `error`. Two are Supabase queries — MFASetupDialog's
+company-MFA-policy lookup and Upgrade's trial-info lookup. Supabase *returns*
+query errors rather than throwing, so the surrounding try/catch never sees them:
+deleting the binding would have quietly cemented a silent failure. Both now
+check `error` and log before returning, per the US-284 rule. The third
+(SecureRoute's `usePermission`) is an ordinary hook return and was tidied.
+
+### Pre-existing lint errors fixed to get past the hook
+Staging these files surfaced three errors that predate this work (each confirmed
+by stashing and re-linting):
+- SupportTicketsEnhanced named a plain click handler `useSuggestedResponse`, so
+  react-hooks/rules-of-hooks read it as a hook called inside a callback.
+  Renamed to `applySuggestedResponse`.
+- MobileExpenseCapture escaped `/` and `-` inside two character classes.
+- EnhancedProjectOverview asserted non-null on an optional chain
+  (`project?.completion_percentage!`). Now `?? 0` — identical behaviour, since
+  `undefined - 10` is NaN and every comparison against NaN was already false.
+
+### Verification
+- tsgo: 2042 -> 1906 (-136). TS6133 355 -> 219. 42 files fully cleared. Zero
+  regressions and zero newly-erroring files in the per-file diff against the
+  pre-batch snapshot.
+- vite build: clean.
+- eslint over all 104 changed files: 0 errors.
+
+### Environment finding — the full test suite cannot run here
+`npx vitest run` over the whole suite never finishes in this sandbox. Several
+tests make real outbound requests — ECONNREFUSED on 127.0.0.1:3000, plus
+happy-dom BrowserFrameNavigator TLS fetches — and hang past any timeout;
+excluding the obvious offender just moves the stall. Scoped runs are fine.
+
+This batch was verified with `src/components/__tests__` + `src/lib/security`:
+13 failed / 1186 passed. The security suite alone is 13 failed / 1087 passed, so
+the 99 component tests added zero new failures and the 13 are the known
+pre-existing security ones.
+
+Worth its own story: mock those fetches or mark the tests integration-only.
+Right now nobody can run the suite locally, which is also why the 13 failures
+have gone untracked for so long.
+
+prd.json: US-212 stays passes:false. 1906 to go.

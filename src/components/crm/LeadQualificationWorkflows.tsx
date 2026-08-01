@@ -48,7 +48,7 @@ export const LeadQualificationWorkflows: React.FC = () => {
   const [workflows, setWorkflows] = useState<QualificationWorkflow[]>([]);
   const [loading, setLoading] = useState(true);
   const [isCreating, setIsCreating] = useState(false);
-  const { user, userProfile } = useAuth();
+  const { userProfile } = useAuth();
   const { toast } = useToast();
 
   const [newWorkflow, setNewWorkflow] = useState({
@@ -114,7 +114,7 @@ export const LeadQualificationWorkflows: React.FC = () => {
         disqualifying_factors: ['no_budget', 'no_authority']
       };
 
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from('lead_qualification_workflows')
         .insert({
           workflow_name: newWorkflow.workflow_name,

@@ -199,7 +199,7 @@ const ChangeOrders = () => {
     }
 
     try {
-      const { data, error } = await supabase.functions.invoke('change-orders', {
+      const { error } = await supabase.functions.invoke('change-orders', {
         body: { 
           action: 'create',
           ...newOrder,
@@ -266,7 +266,7 @@ const ChangeOrders = () => {
     }
 
     try {
-      const { data, error } = await supabase.functions.invoke('change-orders', {
+      const { error } = await supabase.functions.invoke('change-orders', {
         body: { 
           action: 'update',
           orderId: editingOrder.id,
@@ -315,7 +315,7 @@ const ChangeOrders = () => {
     signature?: string | null
   ) => {
     try {
-      const { data, error } = await supabase.functions.invoke('change-orders', {
+      const { error } = await supabase.functions.invoke('change-orders', {
         body: {
           action: 'approve',
           orderId,
@@ -369,7 +369,7 @@ const ChangeOrders = () => {
     }
 
     try {
-      const { data, error } = await supabase.functions.invoke('change-orders', {
+      const { error } = await supabase.functions.invoke('change-orders', {
         body: { 
           action: 'approve',
           orderId: rejectionOrderId,

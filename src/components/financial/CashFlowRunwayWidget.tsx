@@ -29,7 +29,7 @@ export const CashFlowRunwayWidget = () => {
   const companyId = userProfile?.company_id;
 
   // Fetch real data from database
-  const { data: cashFlowData, isLoading: dataLoading, error: dataError } = useCashFlowData();
+  const { data: cashFlowData, isLoading: dataLoading } = useCashFlowData();
   const { data: recentActivity, isLoading: activityLoading } = useCashFlowActivity();
 
   const loading = dataLoading || activityLoading;

@@ -119,7 +119,7 @@ export const DocumentVersions: React.FC<DocumentVersionsProps> = ({
       const checksum = await generateFileChecksum(selectedFile);
 
       // Create new version using the database function
-      const { data, error } = await supabase.rpc('create_document_version', {
+      const { error } = await supabase.rpc('create_document_version', {
         p_document_id: documentId,
         p_file_path: filePath,
         p_file_size: selectedFile.size,

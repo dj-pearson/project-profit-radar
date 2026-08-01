@@ -14,7 +14,6 @@ import {
 import { Label } from '@/components/ui/label';
 import { Building2, Users, Settings, TrendingUp, AlertCircle, CheckCircle, Plus, Edit, Search, Crown, Globe, Copy, RefreshCw } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 
@@ -42,7 +41,6 @@ interface TenantStats {
 }
 
 export const TenantManagement = () => {
-  const { user } = useAuth();
   const { toast } = useToast();
 
   const [loading, setLoading] = useState(true);

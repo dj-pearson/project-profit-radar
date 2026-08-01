@@ -220,7 +220,7 @@ const CrewScheduling = () => {
     }
 
     try {
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from('crew_assignments')
         .insert([{
           company_id: userProfile?.company_id,

@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -41,7 +40,6 @@ interface OptimizationRecommendation {
 }
 
 const DatabaseOptimization = () => {
-  const { userProfile } = useAuth();
   const [indexes, setIndexes] = useState<DatabaseIndex[]>([]);
   const [queries, setQueries] = useState<QueryPerformance[]>([]);
   const [recommendations, setRecommendations] = useState<OptimizationRecommendation[]>([]);

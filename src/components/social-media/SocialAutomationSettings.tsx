@@ -35,7 +35,7 @@ const AVAILABLE_PLATFORMS = [
 ];
 
 const SocialAutomationSettings: React.FC = () => {
-  const { settings, loading, loadSettings, saveSettings, triggerAutomation } =
+  const { settings, loading, loadSettings, saveSettings } =
     useSocialMediaAutomation();
   const { toast } = useToast();
   const [formData, setFormData] = useState({

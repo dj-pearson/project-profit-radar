@@ -145,7 +145,7 @@ const SupportTicketsEnhanced = () => {
   const analyzeTicket = async (ticket: SupportTicket) => {
     setAnalyzingTicket(true);
     try {
-      const { data, error } = await supabase.functions.invoke("analyze-support-ticket", {
+      const { error } = await supabase.functions.invoke("analyze-support-ticket", {
         body: { ticketId: ticket.id },
       });
 
@@ -231,7 +231,7 @@ const SupportTicketsEnhanced = () => {
     }
   };
 
-  const useSuggestedResponse = (content: string) => {
+  const applySuggestedResponse = (content: string) => {
     setResponseMessage(content);
     toast({
       title: "Suggestion Applied",
@@ -493,7 +493,7 @@ const SupportTicketsEnhanced = () => {
                                                 <Button
                                                   size="sm"
                                                   variant="outline"
-                                                  onClick={() => useSuggestedResponse(suggestion.suggested_content!)}
+                                                  onClick={() => applySuggestedResponse(suggestion.suggested_content!)}
                                                 >
                                                   <Copy className="h-3 w-3 mr-1" />
                                                   Use This

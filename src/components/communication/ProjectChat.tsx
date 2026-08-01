@@ -214,7 +214,7 @@ export const ProjectChat: React.FC<ProjectChatProps> = ({ channel, userProfile }
         const fileName = `${Date.now()}-${file.name}`;
         const filePath = `chat-attachments/${channel.id}/${fileName}`;
 
-        const { data: uploadData, error: uploadError } = await supabase.storage
+        const { error: uploadError } = await supabase.storage
           .from('project-files')
           .upload(filePath, file);
 

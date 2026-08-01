@@ -28,7 +28,7 @@ const Invoices: React.FC = () => {
   const [statusFilter, setStatusFilter] = usePersistedState<string>('invoices-status-filter', 'all');
   const [invoices, setInvoices] = useState([]);
   const [loading, setLoading] = useState(true);
-  const { user, userProfile } = useAuth();
+  const { userProfile } = useAuth();
   const { toast } = useToast();
 
   useEffect(() => {

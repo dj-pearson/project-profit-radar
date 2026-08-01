@@ -7,7 +7,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Calendar, Clock, User, Building, MessageSquare, Paperclip, CheckSquare, Timer, Activity } from 'lucide-react';
 import { format } from 'date-fns';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/contexts/AuthContext';
 import { TaskComments } from './TaskComments';
 import { TaskAttachments } from './TaskAttachments';
 import { TaskSubtasks } from './TaskSubtasks';
@@ -61,7 +60,6 @@ export const TaskDetailView: React.FC<TaskDetailViewProps> = ({
   onClose,
   onTaskUpdated
 }) => {
-  const { userProfile } = useAuth();
   const [taskData, setTaskData] = useState<Task | null>(null);
 
   useEffect(() => {

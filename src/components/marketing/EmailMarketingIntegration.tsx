@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -47,7 +46,6 @@ interface EmailTemplate {
 }
 
 const EmailMarketingIntegration = () => {
-  const { userProfile } = useAuth();
   const [campaigns, setCampaigns] = useState<EmailCampaign[]>([]);
   const [emailLists, setEmailLists] = useState<EmailList[]>([]);
   const [templates, setTemplates] = useState<EmailTemplate[]>([]);

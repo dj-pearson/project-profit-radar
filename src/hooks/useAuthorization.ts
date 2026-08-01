@@ -553,7 +553,7 @@ interface UseRoleLevelResult {
  * }
  */
 export function useRoleLevel(): UseRoleLevelResult {
-  const { role, roleLevel } = useSecurityContext();
+  const { roleLevel } = useSecurityContext();
 
   const meetsMinLevel = useCallback(
     (minLevel: number) => roleLevel >= minLevel,

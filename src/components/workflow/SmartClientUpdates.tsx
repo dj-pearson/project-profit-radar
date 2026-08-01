@@ -146,7 +146,7 @@ export const SmartClientUpdates: React.FC = () => {
     if (!userProfile?.company_id) return;
 
     try {
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from('automation_rules')
         .insert({
           ...ruleForm,
@@ -179,7 +179,7 @@ export const SmartClientUpdates: React.FC = () => {
     if (!userProfile?.company_id) return;
 
     try {
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from('communication_templates')
         .insert({
           name: templateForm.name,

@@ -209,7 +209,7 @@ export const useAdvancedChat = () => {
       const fileExt = file.name.split('.').pop();
       const fileName = `${userProfile.company_id}/${channelId}/${Date.now()}.${fileExt}`;
 
-      const { data: uploadData, error: uploadError } = await supabase.storage
+      const { error: uploadError } = await supabase.storage
         .from('chat-files')
         .upload(fileName, file);
 

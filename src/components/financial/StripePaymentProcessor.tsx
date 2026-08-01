@@ -31,7 +31,7 @@ export const StripePaymentProcessor = ({
   const [paymentMethod, setPaymentMethod] = useState<'stripe_checkout' | 'payment_intent'>('stripe_checkout');
   const [isProcessing, setIsProcessing] = useState(false);
   const [customAmount, setCustomAmount] = useState(amount);
-  const { user, userProfile } = useAuth();
+  const { user } = useAuth();
   const { toast } = useToast();
 
   const handleStripeCheckout = async () => {

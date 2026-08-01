@@ -150,7 +150,7 @@ const RefundWorkflow: React.FC = () => {
   const handleApprove = async (refundId: string) => {
     setProcessing(true);
     try {
-      const { data, error } = await supabase.functions.invoke('process-refund', {
+      const { error } = await supabase.functions.invoke('process-refund', {
         body: { action: 'approve', refund_id: refundId }
       });
 
@@ -176,7 +176,7 @@ const RefundWorkflow: React.FC = () => {
   const handleReject = async (refundId: string) => {
     setProcessing(true);
     try {
-      const { data, error } = await supabase.functions.invoke('process-refund', {
+      const { error } = await supabase.functions.invoke('process-refund', {
         body: { action: 'reject', refund_id: refundId }
       });
 

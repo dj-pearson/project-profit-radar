@@ -60,7 +60,7 @@ export const QuickBooksSync = () => {
     try {
       setLoading(true);
       // In real implementation, would load from a quickbooks_config table
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from('companies')
         .select('*')
         .eq('id', userProfile.company_id)

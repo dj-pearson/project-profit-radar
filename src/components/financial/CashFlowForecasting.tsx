@@ -111,7 +111,7 @@ export const CashFlowForecasting: React.FC = () => {
       // - Project timelines and expected payments
       // - Seasonal trends
       
-      const { data, error } = await supabase.functions.invoke('generate-cash-flow-forecast', {
+      const { error } = await supabase.functions.invoke('generate-cash-flow-forecast', {
         body: {
           company_id: userProfile?.company_id,
           forecast_period: selectedPeriod

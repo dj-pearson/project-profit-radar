@@ -142,7 +142,7 @@ const FileStorageManager = () => {
         });
       }, 200);
 
-      const { data, error } = await supabase.storage
+      const { error } = await supabase.storage
         .from(selectedBucket)
         .upload(fileName, file);
 

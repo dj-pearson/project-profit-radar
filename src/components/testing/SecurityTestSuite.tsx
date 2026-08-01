@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -48,7 +47,6 @@ interface VulnerabilityReport {
 }
 
 const SecurityTestSuite = () => {
-  const { userProfile } = useAuth();
   const [securityTests, setSecurityTests] = useState<SecurityTest[]>([]);
   const [vulnerabilityReports, setVulnerabilityReports] = useState<VulnerabilityReport[]>([]);
   const [selectedTest, setSelectedTest] = useState<SecurityTest | null>(null);

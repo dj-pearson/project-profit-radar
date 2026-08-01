@@ -126,7 +126,7 @@ const UnifiedSEODashboard = () => {
     try {
       setChecking(true);
       
-      const { data, error } = await supabase.functions.invoke('google-analytics-api', {
+      const { error } = await supabase.functions.invoke('google-analytics-api', {
         body: { action: 'get-metrics', dateRange: { startDate: '7daysAgo', endDate: 'today' } }
       });
 
@@ -149,7 +149,7 @@ const UnifiedSEODashboard = () => {
   const loadSEOData = async () => {
     try {
       // Load SEO configuration
-      const { data: configData, error: configError } = await supabase
+      const { data: configData } = await supabase
         .from('seo_configurations')
         .select('*')
         .limit(1)
@@ -160,7 +160,7 @@ const UnifiedSEODashboard = () => {
       }
 
       // Load meta tags
-      const { data: metaData, error: metaError } = await supabase
+      const { data: metaData } = await supabase
         .from('seo_meta_tags')
         .select('*')
         .order('page_path');
@@ -174,7 +174,7 @@ const UnifiedSEODashboard = () => {
   };
 
   // Fetch analytics data
-  const { data: analyticsData, isLoading: analyticsLoading, error: analyticsError } = useQuery({
+  const { data: analyticsData } = useQuery({
     queryKey: ['unified-seo-analytics'],
     queryFn: async () => {
       const { data, error } = await supabase.functions.invoke('seo-analytics', {
@@ -245,14 +245,14 @@ const UnifiedSEODashboard = () => {
       setIsGenerating(true);
       
       // Generate dynamic sitemap
-      const { data, error } = await supabase.functions.invoke('sitemap-generator', {
+      const { error } = await supabase.functions.invoke('sitemap-generator', {
         body: {},
       });
 
       if (error) throw error;
 
       // Also generate static file-based sitemap
-      const { data: fileData, error: fileError } = await supabase.functions.invoke('generate-sitemap-file', {
+      const { error: fileError } = await supabase.functions.invoke('generate-sitemap-file', {
         body: {},
       });
 

@@ -169,7 +169,7 @@ export const useRealtimeChat = (channelId?: string) => {
       const fileName = `${Date.now()}.${fileExt}`;
       const filePath = `chat/${userProfile.company_id}/${activeChannel.id}/${fileName}`;
 
-      const { data: uploadData, error: uploadError } = await supabase.storage
+      const { error: uploadError } = await supabase.storage
         .from('documents')
         .upload(filePath, file);
 

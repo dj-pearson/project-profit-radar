@@ -15,6 +15,17 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { Plus, Search, Mail, Send, Users, Eye, MousePointer, Calendar, Edit } from 'lucide-react';
 
+/** The `email_campaigns` fields the analytics block reads. */
+type CampaignStats = {
+  status: string | null;
+  total_sent: number | null;
+  total_opened: number | null;
+  total_clicked: number | null;
+};
+
+/** The `email_lists` fields the analytics block reads. */
+type ListStats = { subscriber_count: number | null };
+
 export default function EmailMarketing() {
   const { userProfile } = useAuth();
   const [searchTerm, setSearchTerm] = useState("");
@@ -79,16 +90,25 @@ export default function EmailMarketing() {
       setTemplates(templateData || []);
       setLists(listData || []);
 
-      // Calculate analytics
-      const totalCampaigns = campaignData?.length || 0;
-      const totalSubscribers = listData?.reduce((sum, list) => sum + (list.subscriber_count || 0), 0) || 0;
-      
-      const sentCampaigns = campaignData?.filter(c => c.status === 'sent') || [];
-      const avgOpenRate = sentCampaigns.length > 0 
-        ? sentCampaigns.reduce((sum, c) => sum + (c.total_opened / Math.max(c.total_sent, 1) * 100), 0) / sentCampaigns.length
+      // Calculate analytics. The rows come back from an `as any` client, so the
+      // fields this block reads are named explicitly rather than inferred.
+      const campaignStats = (campaignData ?? []) as CampaignStats[];
+      const listStats = (listData ?? []) as ListStats[];
+
+      const totalCampaigns = campaignStats.length;
+      const totalSubscribers = listStats.reduce(
+        (sum, list) => sum + (list.subscriber_count ?? 0),
+        0
+      );
+
+      const sentCampaigns = campaignStats.filter(c => c.status === 'sent');
+      const rate = (part: number | null, whole: number | null) =>
+        ((part ?? 0) / Math.max(whole ?? 0, 1)) * 100;
+      const avgOpenRate = sentCampaigns.length > 0
+        ? sentCampaigns.reduce((sum, c) => sum + rate(c.total_opened, c.total_sent), 0) / sentCampaigns.length
         : 0;
-      const avgClickRate = sentCampaigns.length > 0 
-        ? sentCampaigns.reduce((sum, c) => sum + (c.total_clicked / Math.max(c.total_sent, 1) * 100), 0) / sentCampaigns.length
+      const avgClickRate = sentCampaigns.length > 0
+        ? sentCampaigns.reduce((sum, c) => sum + rate(c.total_clicked, c.total_sent), 0) / sentCampaigns.length
         : 0;
 
       setAnalytics({

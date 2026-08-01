@@ -56,7 +56,7 @@ const ResetPassword = () => {
       // Check if this is a password recovery link
       if (type === 'recovery' && accessToken && refreshToken) {
         try {
-          const { data, error } = await supabase.auth.setSession({
+          const { error } = await supabase.auth.setSession({
             access_token: accessToken,
             refresh_token: refreshToken,
           });

@@ -16,6 +16,39 @@ import DOMPurify from 'dompurify';
  * @see https://developer.mozilla.org/en-US/docs/Web/API/Trusted_Types_API
  */
 
+/**
+ * Minimal structural stand-in for the Trusted Types `TrustedScriptURL`.
+ *
+ * The Trusted Types API is not in TypeScript's DOM lib and the project does not
+ * depend on @types/trusted-types, so the branded shape is declared here. It is
+ * only ever produced by `policy.createScriptURL()` at runtime — nothing
+ * constructs one directly — so the structural approximation is enough to keep
+ * the signature honest instead of widening the return type to `any`.
+ */
+export interface TrustedScriptURL {
+  toString(): string;
+}
+
+/** The subset of the Trusted Types factory this module uses. */
+interface TrustedTypePolicyFactory {
+  createPolicy(
+    name: string,
+    rules: {
+      createHTML?: (input: string) => string;
+      createScriptURL?: (input: string) => string;
+    }
+  ): {
+    createHTML(input: string): string;
+    createScriptURL(input: string): TrustedScriptURL;
+  };
+}
+
+declare global {
+  interface Window {
+    trustedTypes?: TrustedTypePolicyFactory;
+  }
+}
+
 /** Origins permitted to load scripts from */
 export const ALLOWED_SCRIPT_ORIGINS: readonly string[] = [
   'https://cdn.brikly.net',

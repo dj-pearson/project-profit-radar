@@ -8,7 +8,6 @@ import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from '@/hooks/use-toast';
-import { useAuth } from '@/contexts/AuthContext';
 import { 
   Zap, 
   Brain, 
@@ -66,7 +65,6 @@ interface AIInsight {
 }
 
 const AutomatedWorkflows = () => {
-  const { userProfile } = useAuth();
   const [workflows, setWorkflows] = useState<AutomatedWorkflow[]>([]);
   const [insights, setInsights] = useState<AIInsight[]>([]);
   const [loading, setLoading] = useState(true);

@@ -3,7 +3,6 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '@/contexts/AuthContext';
 import { integrationService } from '@/services/IntegrationService';
 import { toast } from '@/hooks/use-toast';
 import { Building2, DollarSign, FileText, Calendar, Zap, ExternalLink, Plus, Link, Calculator } from 'lucide-react';
@@ -45,7 +44,6 @@ export const ContextualActions: React.FC<ContextualActionsProps> = ({
   className = ''
 }) => {
   const navigate = useNavigate();
-  const { userProfile } = useAuth();
   const [actions, setActions] = useState<ContextualAction[]>([]);
   const [loading, setLoading] = useState(false);
   const [showCreateProjectDialog, setShowCreateProjectDialog] = useState(false);

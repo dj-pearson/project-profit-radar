@@ -29,7 +29,7 @@ export const ProjectCommunication: React.FC<ProjectCommunicationProps> = ({
   projectId, 
   userType 
 }) => {
-  const { user, userProfile } = useAuth();
+  const { user } = useAuth();
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState('');
   const [uploading, setUploading] = useState(false);

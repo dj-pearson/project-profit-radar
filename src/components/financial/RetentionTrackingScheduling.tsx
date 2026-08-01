@@ -8,7 +8,6 @@ import { Progress } from '@/components/ui/progress';
 import { DollarSign, Clock, AlertTriangle, CheckCircle, Bell } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { format, differenceInDays } from 'date-fns';
-import { useAuth } from '@/contexts/AuthContext';
 
 interface RetentionItem {
   id: string;
@@ -45,7 +44,6 @@ export const RetentionTrackingScheduling: React.FC = () => {
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const [reminderDays, setReminderDays] = useState<number>(30);
   const { toast } = useToast();
-  const { userProfile } = useAuth();
 
   useEffect(() => {
     loadRetentionData();

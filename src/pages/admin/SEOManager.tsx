@@ -309,7 +309,7 @@ const SEOManager = () => {
       if (error) throw error;
 
       // Also generate using the file-based sitemap generator
-      const { data: fileData, error: fileError } = await supabase.functions.invoke('generate-sitemap-file', {
+      const { error: fileError } = await supabase.functions.invoke('generate-sitemap-file', {
         body: {},
       });
 

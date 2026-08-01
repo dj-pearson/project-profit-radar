@@ -13,7 +13,6 @@ import MCPSEODashboard from "@/components/seo/MCPSEODashboard";
 import MCPSetupWizard from "@/components/seo/MCPSetupWizard";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 
 const MCPSEOAnalytics: React.FC = () => {
@@ -21,7 +20,6 @@ const MCPSEOAnalytics: React.FC = () => {
   const [mcpConfigured, setMcpConfigured] = useState(false);
   const [showSetup, setShowSetup] = useState(false);
   const [checking, setChecking] = useState(true);
-  const { toast } = useToast();
 
   useEffect(() => {
     checkAPICredentials();
@@ -32,7 +30,7 @@ const MCPSEOAnalytics: React.FC = () => {
       setChecking(true);
       
       // Try to test the APIs directly to see if credentials are configured
-      const { data, error } = await supabase.functions.invoke('google-analytics-api', {
+      const { error } = await supabase.functions.invoke('google-analytics-api', {
         body: { action: 'get-metrics', dateRange: { startDate: '7daysAgo', endDate: 'today' } }
       });
 

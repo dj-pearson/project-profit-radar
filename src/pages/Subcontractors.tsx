@@ -1,7 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { AccessiblePageWrapper } from '@/components/accessibility/AccessiblePageWrapper';
-import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -389,7 +388,6 @@ const EMPTY_FORM: SubcontractorFormData = {
 // --- Main Component ---
 
 const Subcontractors: React.FC = () => {
-  const { user } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
 

@@ -6,7 +6,6 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { Users, MessageCircle, Activity, Send, Eye, Edit3, Clock } from 'lucide-react';
 
@@ -60,7 +59,6 @@ export const RealTimeCollaboration = ({
   const [newMessage, setNewMessage] = useState('');
   const [isConnected, setIsConnected] = useState(false);
   const { user, userProfile } = useAuth();
-  const { toast } = useToast();
 
   // Initialize real-time connections
   useEffect(() => {

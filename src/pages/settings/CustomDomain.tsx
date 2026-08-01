@@ -34,8 +34,8 @@ interface TenantData {
 }
 
 export const CustomDomain = () => {
-  const { user, userProfile } = useAuth();
-  const { tenant: currentTenant, resolveTenant } = useTenant();
+  const { userProfile } = useAuth();
+  const { resolveTenant } = useTenant();
   const { toast } = useToast();
 
   const [loading, setLoading] = useState(true);

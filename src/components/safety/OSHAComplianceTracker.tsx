@@ -161,7 +161,7 @@ const OSHAComplianceTracker: React.FC<OSHAComplianceTrackerProps> = ({
 
   const createCustomRequirement = async () => {
     try {
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from('osha_requirements')
         .insert({
           title: 'Custom Safety Requirement',

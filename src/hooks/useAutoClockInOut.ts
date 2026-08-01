@@ -74,7 +74,7 @@ export const useAutoClockInOut = (options: UseAutoClockInOutOptions = {}): UseAu
     maximumAge: 5000
   });
 
-  const { currentLocation, isTracking, addGeofence, removeGeofence } = geofencingState;
+  const { currentLocation, addGeofence } = geofencingState;
 
   // Load geofences from database
   const loadGeofences = useCallback(async () => {

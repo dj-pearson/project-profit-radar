@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -44,7 +43,6 @@ interface TestSuite {
 }
 
 const EndToEndTestSuite = () => {
-  const { userProfile } = useAuth();
   const [testSuites, setTestSuites] = useState<TestSuite[]>([]);
   const [selectedTest, setSelectedTest] = useState<TestCase | null>(null);
   const [testDialogOpen, setTestDialogOpen] = useState(false);

@@ -67,7 +67,7 @@ export function SaveAsTemplateDialog({
         use_count: 0
       };
 
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from('project_templates')
         .insert([templateData])
         .select()

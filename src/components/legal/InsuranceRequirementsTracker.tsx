@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -55,7 +54,6 @@ interface ComplianceRequirement {
 }
 
 const InsuranceRequirementsTracker = () => {
-  const { userProfile } = useAuth();
   const [policies, setPolicies] = useState<InsurancePolicy[]>([]);
   const [requirements, setRequirements] = useState<ComplianceRequirement[]>([]);
   const [selectedPolicy, setSelectedPolicy] = useState<InsurancePolicy | null>(null);

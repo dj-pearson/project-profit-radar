@@ -54,7 +54,7 @@ export const PostQueueActions: React.FC<PostQueueActionsProps> = ({
   const handleRegeneratePost = async () => {
     setIsGenerating(true);
     try {
-      const { data, error } = await supabase.functions.invoke('social-content-generator', {
+      const { error } = await supabase.functions.invoke('social-content-generator', {
         body: { 
           company_id: queueItem.company_id,
           template_category: "random",

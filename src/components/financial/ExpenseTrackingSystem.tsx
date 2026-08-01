@@ -134,7 +134,7 @@ export const ExpenseTrackingSystem: React.FC<ExpenseTrackingProps> = ({
         const fileExt = newExpense.receipt_file.name.split('.').pop();
         const fileName = `${Date.now()}.${fileExt}`;
         
-        const { data: uploadData, error: uploadError } = await supabase.storage
+        const { error: uploadError } = await supabase.storage
           .from('expense-receipts')
           .upload(fileName, newExpense.receipt_file);
 

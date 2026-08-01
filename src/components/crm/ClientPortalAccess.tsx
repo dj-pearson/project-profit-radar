@@ -34,7 +34,7 @@ interface Project {
 }
 
 export const ClientPortalAccess = () => {
-  const { user, userProfile } = useAuth();
+  const { userProfile } = useAuth();
   const [portalAccess, setPortalAccess] = useState<ClientPortalAccess[]>([]);
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);

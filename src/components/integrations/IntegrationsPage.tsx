@@ -3,7 +3,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { useAuth } from '@/contexts/AuthContext';
 import { QuickBooksIntegration } from '../integrations/QuickBooksIntegration';
 import { Database, RefreshCw, FileText, DollarSign } from 'lucide-react';
 
@@ -12,7 +11,6 @@ interface IntegrationsPageProps {
 }
 
 export const IntegrationsPage: React.FC<IntegrationsPageProps> = ({ companyId }) => {
-  const { userProfile } = useAuth();
 
   const integrationCards = [
     {
