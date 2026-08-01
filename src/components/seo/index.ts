@@ -32,21 +32,23 @@ export type { GEOContentWrapperProps, GEOSectionProps, GEOStatisticProps, GEOSou
 
 // Schema Components
 export { SaaSProductSchema } from './SaaSProductSchema';
-export { EnhancedSchemaMarkup, FAQSchema, OrganizationSchema, SoftwareSchema, ArticleSchema } from './EnhancedSchemaMarkup';
+// ./EnhancedSchemaMarkup ships the individual schema components; the combined
+// `EnhancedSchemaMarkup` component lives at '@/components/EnhancedSchemaMarkup'.
+export { FAQSchema, OrganizationSchema, SoftwareSchema, ArticleSchema } from './EnhancedSchemaMarkup';
 export { AggregateRatingSchema } from './AggregateRatingSchema';
-export { LocalSEOSchema } from './LocalSEOSchema';
+export { default as LocalSEOSchema, LocalBusinessSchema, ServiceAreaSchema } from './LocalSEOSchema';
 export { VideoSEOSchema } from './VideoSEOSchema';
 export { SiteSearchSchema } from './SiteSearchSchema';
 export { HowToSchema } from './HowToSchema';
 
 // SEO Utility Components
 export { QuickAnswerSnippet, LastUpdated } from './QuickAnswerSnippet';
-export { SEOCompatibilityLayer } from './SEOCompatibilityLayer';
+export { default as SEOCompatibilityLayer, EnhancedSEOMetaTags } from './SEOCompatibilityLayer';
 export { DynamicSEOOptimizer } from './DynamicSEOOptimizer';
 
 // SEO Dashboard Components (Admin)
-export { MCPSEODashboard } from './MCPSEODashboard';
-export { MCPSetupWizard } from './MCPSetupWizard';
+export { default as MCPSEODashboard } from './MCPSEODashboard';
+export { default as MCPSetupWizard } from './MCPSetupWizard';
 export { SEOAnalyticsDashboard } from './SEOAnalyticsDashboard';
 
 // Re-export configuration

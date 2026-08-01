@@ -473,6 +473,13 @@ export interface AccessibilityViolation {
 // Performance Types
 // ============================================================================
 
+/**
+ * Flat Core Web Vitals bag as recorded on a `performance` test result's `data`
+ * field — the same shape as `PerformanceResult['webVitals']`, hoisted so
+ * consumers reading `test.data` can name it.
+ */
+export type PerformanceMetrics = PerformanceResult['webVitals'];
+
 export interface PerformanceResult {
   /** Page URL */
   url: string;

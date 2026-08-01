@@ -1814,3 +1814,70 @@ Incidental: tailwind.config.ts switched `require("tailwindcss-animate")` to an
 ESM import. Pre-existing @typescript-eslint/no-require-imports error that only
 surfaced once this change staged the file, and the pre-commit hook (correctly)
 refuses to let it through. Verified with a full vite build.
+
+================================================================================
+US-212 — TypeScript strict-mode backlog, batch 9 (2026-08-01)
+================================================================================
+Branch: claude/review-open-prd-stories-zs8xxd. Runtime-bug pass: this batch went
+after the error classes that are genuine broken references, not type noise.
+
+### Tooling note (recreate each session)
+tsconfig.tsgo.json is gitignored, so recreate it as a baseUrl-free mirror of
+tsconfig.app.json. Run the binary directly:
+  ~/.npm/_npx/*/node_modules/@typescript/native-preview-linux-x64/lib/tsgo \
+    -p tsconfig.tsgo.json
+~2.5 min per run. Do NOT use `npx @typescript/native-preview tsgo -p ...` — npx
+passes `tsgo` as a source file and you get TS5042.
+
+Re-baselined at 2159 (the notes' 2014 was a different tsgo config / pre-merge).
+
+### Fixed
+- CashFlowManagementGuide.tsx:453 rendered <BarChart3 /> with no import;
+  FinancialIntelligenceGuide.tsx:54 referenced Calculator with no import. Both
+  are ReferenceErrors at render, not type noise. Added the lucide imports.
+- src/components/seo/index.ts re-exported five names that do not exist:
+  * EnhancedSchemaMarkup — that component is at '@/components/EnhancedSchemaMarkup';
+    seo/EnhancedSchemaMarkup only ships the individual schema components.
+  * LocalSEOSchema, SEOCompatibilityLayer, MCPSEODashboard, MCPSetupWizard —
+    all default exports, re-exported as if named.
+  Barrel corrected (and the real named exports surfaced: LocalBusinessSchema,
+  ServiceAreaSchema, EnhancedSEOMetaTags). Safe: nothing imports from the
+  barrel — every consumer deep-imports the module.
+- useAnnounce added to useAccessibilityHelpers.tsx as an announce-only wrapper
+  over useScreenReaderAnnouncement. ComponentShowcase was already calling it.
+- PerformanceMetrics exported from automated-testing/types.ts as
+  PerformanceResult['webVitals'] — that flat lcp/fcp/cls/ttfb shape is exactly
+  what metrics-storage reads off test.data.
+- trustedTypes.ts: local TrustedScriptURL interface + a Window.trustedTypes
+  global declaration. Trusted Types is not in the TS DOM lib and
+  @types/trusted-types is not a dependency. 3 errors -> 0.
+- LeadConversionAnalytics.tsx taken to zero (26 -> 0): replaced the `as any` on
+  the leads query with a LeadRow type, typed the four useState<never[]> hooks,
+  and made the status filters null-safe via a hasStatus() helper. This is the
+  pattern for the remaining TS7006 files — a row type per query, not `(x: any)`.
+
+### Verification
+- tsgo: 2159 -> 2120 (-39). Per-file diff of the two error sets: ZERO
+  regressions, zero newly-erroring files, 8 files fully cleared.
+- npx eslint on all touched files: 0 errors (1 pre-existing
+  react-hooks/exhaustive-deps warning in LeadConversionAnalytics).
+- npm run test:security: 13 failed / 1087 passed — byte-identical to a stashed
+  clean tree, so unchanged by this batch (pre-existing, tracked separately).
+- vite build: clean.
+
+### Finding for dedicated work
+src/components/mobile/GeofenceManager.tsx (14 errors) is written against a
+useGeofencing API that does not exist. It destructures regions, addRegion,
+removeRegion, updateRegion, startMonitoring, stopMonitoring, getActiveRegions,
+requestPermissions, getCurrentLocation; the hook actually returns
+currentLocation, isTracking, permissionStatus, addGeofence, removeGeofence,
+getCurrentGeofences and friends. The missing `GeofenceRegion` type is a
+symptom, not the bug. Other consumers (MobileTimeClock, AutoClockInManager,
+useAutoClockInOut) use the real API, so this is a component rewrite — same
+bucket as the CRM deals drift.
+
+### Next safe batches
+TS7006 implicit-any params (42 left across ~12 files — fix with a row type per
+query as above), TS6133 unused locals (357), TS7053 implicit index (10).
+
+prd.json: US-212 stays passes:false. Green tsc is the bar; 2120 to go.

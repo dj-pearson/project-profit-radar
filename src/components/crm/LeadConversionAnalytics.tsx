@@ -2,9 +2,35 @@ import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
-import { Users, UserCheck, Clock, Target } from "lucide-react";
+import { Users, UserCheck, Clock, Target, type LucideIcon } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+
+/** Columns this component selects from `leads`. */
+type LeadRow = {
+  status: string | null;
+  lead_source: string | null;
+  created_at: string;
+  estimated_budget: number | null;
+};
+
+type MonthlyPoint = { month: string; leads: number; qualified: number; converted: number };
+type SourceSlice = { name: string; value: number; color: string };
+type FunnelStage = { name: string; value: number; fill: string };
+type ConversionMetric = {
+  title: string;
+  value: string;
+  change: string;
+  icon: LucideIcon;
+};
+
+/** Lead statuses that count as qualified, in funnel order. */
+const QUALIFIED_STATUSES = ['qualified', 'proposal', 'negotiation', 'closed_won'] as const;
+const PROPOSAL_STATUSES = ['proposal', 'negotiation', 'closed_won'] as const;
+const NEGOTIATION_STATUSES = ['negotiation', 'closed_won'] as const;
+
+const hasStatus = (lead: LeadRow, statuses: readonly string[]) =>
+  lead.status !== null && statuses.includes(lead.status);
 
 const chartConfig = {
   leads: {
@@ -23,10 +49,10 @@ const chartConfig = {
 
 export const LeadConversionAnalytics = () => {
   const { userProfile } = useAuth();
-  const [conversionData, setConversionData] = useState([]);
-  const [sourceData, setSourceData] = useState([]);
-  const [funnelData, setFunnelData] = useState([]);
-  const [conversionMetrics, setConversionMetrics] = useState([]);
+  const [conversionData, setConversionData] = useState<MonthlyPoint[]>([]);
+  const [sourceData, setSourceData] = useState<SourceSlice[]>([]);
+  const [funnelData, setFunnelData] = useState<FunnelStage[]>([]);
+  const [conversionMetrics, setConversionMetrics] = useState<ConversionMetric[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -38,12 +64,14 @@ export const LeadConversionAnalytics = () => {
 
     try {
       // Get all leads for the company
-      const { data: leads } = await supabase
+      const { data: leads } = (await supabase
         .from('leads')
-        .select('status, lead_source, created_at, estimated_budget') as any;
+        .select('status, lead_source, created_at, estimated_budget')) as unknown as {
+        data: LeadRow[] | null;
+      };
 
       // Generate monthly conversion data
-      const monthlyData = [];
+      const monthlyData: MonthlyPoint[] = [];
       const currentDate = new Date();
       
       for (let i = 5; i >= 0; i--) {
@@ -56,7 +84,7 @@ export const LeadConversionAnalytics = () => {
                  leadDate.getFullYear() === date.getFullYear();
         }) || [];
 
-        const qualified = monthLeads.filter(l => ['qualified', 'proposal', 'negotiation', 'closed_won'].includes(l.status)).length;
+        const qualified = monthLeads.filter(l => hasStatus(l, QUALIFIED_STATUSES)).length;
         const converted = monthLeads.filter(l => l.status === 'closed_won').length;
 
         monthlyData.push({
@@ -68,13 +96,13 @@ export const LeadConversionAnalytics = () => {
       }
 
       // Calculate lead sources
-      const sourceCounts = {};
+      const sourceCounts: Record<string, number> = {};
       leads?.forEach(lead => {
         const source = lead.lead_source || 'Other';
         sourceCounts[source] = (sourceCounts[source] || 0) + 1;
       });
 
-      const sourceChartData = Object.entries(sourceCounts).map(([name, value], index) => ({
+      const sourceChartData: SourceSlice[] = Object.entries(sourceCounts).map(([name, value], index) => ({
         name,
         value,
         color: `hsl(var(--chart-${(index % 5) + 1}))`
@@ -82,12 +110,12 @@ export const LeadConversionAnalytics = () => {
 
       // Calculate funnel data
       const totalLeads = leads?.length || 0;
-      const qualifiedLeads = leads?.filter(l => ['qualified', 'proposal', 'negotiation', 'closed_won'].includes(l.status)).length || 0;
-      const proposalLeads = leads?.filter(l => ['proposal', 'negotiation', 'closed_won'].includes(l.status)).length || 0;
-      const negotiationLeads = leads?.filter(l => ['negotiation', 'closed_won'].includes(l.status)).length || 0;
+      const qualifiedLeads = leads?.filter(l => hasStatus(l, QUALIFIED_STATUSES)).length || 0;
+      const proposalLeads = leads?.filter(l => hasStatus(l, PROPOSAL_STATUSES)).length || 0;
+      const negotiationLeads = leads?.filter(l => hasStatus(l, NEGOTIATION_STATUSES)).length || 0;
       const closedWonLeads = leads?.filter(l => l.status === 'closed_won').length || 0;
 
-      const funnelChartData = [
+      const funnelChartData: FunnelStage[] = [
         { name: "Leads", value: totalLeads, fill: "hsl(var(--chart-1))" },
         { name: "Qualified", value: qualifiedLeads, fill: "hsl(var(--chart-2))" },
         { name: "Proposal", value: proposalLeads, fill: "hsl(var(--chart-3))" },
@@ -100,7 +128,7 @@ export const LeadConversionAnalytics = () => {
       const qualificationRate = totalLeads > 0 ? (qualifiedLeads / totalLeads) * 100 : 0;
       const currentMonthLeads = monthlyData[monthlyData.length - 1]?.leads || 0;
 
-      const metrics = [
+      const metrics: ConversionMetric[] = [
         {
           title: "Lead-to-Customer",
           value: `${conversionRate.toFixed(1)}%`,

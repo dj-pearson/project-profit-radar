@@ -4,7 +4,7 @@ import { PageSEO, createArticleSchema, createFAQSchema } from "@/components/seo/
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { DollarSign, TrendingUp, AlertTriangle, BarChart3, Clock, CheckCircle, ArrowRight, BookOpen } from "lucide-react";
+import { Calculator, DollarSign, TrendingUp, AlertTriangle, BarChart3, Clock, CheckCircle, ArrowRight, BookOpen } from "lucide-react";
 import { Link } from "react-router-dom";
 import BreadcrumbsNavigation from "@/components/BreadcrumbsNavigation";
 import { GEOOptimizedFAQ } from "@/components/seo/GEOOptimizedFAQ";
