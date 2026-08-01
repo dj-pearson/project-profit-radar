@@ -53,7 +53,7 @@ export const MobileDashboard: React.FC = () => {
     timeout: 10000
   });
 
-  const { deviceInfo, capabilities, isNative, isMobile } = useDeviceInfo();
+  const { deviceInfo, capabilities, isNative } = useDeviceInfo();
 
   const quickActions: QuickAction[] = [
     {

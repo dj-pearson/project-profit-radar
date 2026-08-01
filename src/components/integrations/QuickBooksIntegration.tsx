@@ -194,7 +194,7 @@ export const QuickBooksIntegration = () => {
     try {
       setSyncing(true);
 
-      const { data, error } = await supabase.functions.invoke('quickbooks-sync', {
+      const { error } = await supabase.functions.invoke('quickbooks-sync', {
         body: { 
           company_id: userProfile?.company_id,
           sync_type: syncType

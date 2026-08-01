@@ -6,7 +6,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Progress } from '@/components/ui/progress';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/contexts/AuthContext';
 import { toast } from '@/hooks/use-toast';
 import {
   DollarSign,
@@ -56,7 +55,6 @@ const ProjectProfitLoss: React.FC<ProjectPLProps> = ({
   projectName, 
   projectBudget 
 }) => {
-  const { userProfile } = useAuth();
   const [financials, setFinancials] = useState<ProjectFinancials | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);

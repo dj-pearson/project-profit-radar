@@ -22,7 +22,7 @@ const TIER_LIMITS: Record<string, UsageLimits> = {
 
 const UsageDashboard: React.FC = () => {
   const { userProfile } = useAuth();
-  const { getCurrentPeriodUsage, loading } = useUsageTracking();
+  const { getCurrentPeriodUsage } = useUsageTracking();
   const [usageData, setUsageData] = useState<Record<string, number>>({});
   const [refreshing, setRefreshing] = useState(false);
 

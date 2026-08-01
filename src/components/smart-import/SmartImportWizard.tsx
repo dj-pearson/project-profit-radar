@@ -127,7 +127,7 @@ export const SmartImportWizard: React.FC<SmartImportWizardProps> = ({
         if (sessionError) throw sessionError;
 
         // Call smart analyzer
-        const { data: analysisResult, error: analysisError } = await supabase.functions.invoke('smart-data-analyzer', {
+        const { error: analysisError } = await supabase.functions.invoke('smart-data-analyzer', {
           body: {
             sessionId: sessionData.id,
             csvData: fileContent,

@@ -62,7 +62,7 @@ export const AuthDebugComponent: React.FC = () => {
       }
 
       // 5. Test blog posts access
-      const { data: blogData, error: blogError } = await supabase
+      const { error: blogError } = await supabase
         .from('blog_posts')
         .select('count')
         .limit(1);

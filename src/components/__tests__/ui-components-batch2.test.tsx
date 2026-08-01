@@ -27,7 +27,7 @@ describe('Skeleton', () => {
   });
 
   it('passes through additional HTML attributes', () => {
-    const { container } = render(<Skeleton data-testid="skel" />);
+    render(<Skeleton data-testid="skel" />);
     expect(screen.getByTestId('skel')).toBeInTheDocument();
   });
 });

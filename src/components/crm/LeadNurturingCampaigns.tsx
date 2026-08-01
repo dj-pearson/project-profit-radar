@@ -144,7 +144,7 @@ export const LeadNurturingCampaigns: React.FC = () => {
   const createCampaign = async () => {
     try {
       setIsCreating(true);
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from('lead_nurturing_campaigns')
         .insert([{
           ...newCampaign,

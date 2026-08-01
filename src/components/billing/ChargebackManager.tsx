@@ -143,7 +143,7 @@ const ChargebackManager: React.FC = () => {
 
     setSubmitting(true);
     try {
-      const { data, error } = await supabase.functions.invoke('handle-chargeback', {
+      const { error } = await supabase.functions.invoke('handle-chargeback', {
         body: {
           action: 'submit_evidence',
           chargeback_id: selectedChargeback.id,
@@ -182,7 +182,7 @@ const ChargebackManager: React.FC = () => {
 
   const handleAcceptChargeback = async (chargebackId: string) => {
     try {
-      const { data, error } = await supabase.functions.invoke('handle-chargeback', {
+      const { error } = await supabase.functions.invoke('handle-chargeback', {
         body: { action: 'accept', chargeback_id: chargebackId }
       });
 

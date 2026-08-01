@@ -14,13 +14,11 @@ import { Progress } from '@/components/ui/progress';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import EquipmentGanttChart from '@/components/equipment/EquipmentGanttChart';
 import EquipmentEditForm from '@/components/equipment/EquipmentEditForm';
-import { useToast } from '@/hooks/use-toast';
 import { useEquipmentWithMaintenance, useUpdateEquipment } from '@/hooks/useEquipment';
 
 export default function EquipmentManagement() {
   const { user, userProfile, loading: authLoading } = useAuth();
   const navigate = useNavigate();
-  const { toast } = useToast();
   const { data: equipment = [], isLoading: equipmentLoading, refetch } = useEquipmentWithMaintenance();
   const updateEquipment = useUpdateEquipment();
   const [selectedEquipment, setSelectedEquipment] = useState<string | null>(null);

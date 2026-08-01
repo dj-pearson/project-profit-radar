@@ -209,7 +209,7 @@ export function RiskPrediction() {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) throw new Error('No session');
 
-      const { data: invokeData, error: invokeError } = await supabase.functions.invoke(
+      const { error: invokeError } = await supabase.functions.invoke(
         'risk-prediction',
         {
           body: {

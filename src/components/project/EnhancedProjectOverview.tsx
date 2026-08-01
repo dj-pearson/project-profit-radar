@@ -5,7 +5,6 @@ import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/contexts/AuthContext';
 import { toast } from '@/hooks/use-toast';
 import { DollarSign, Calendar, Users, AlertTriangle, Clock, CheckCircle, Wrench, FileText, BarChart3 } from 'lucide-react';
 
@@ -58,7 +57,6 @@ interface EnhancedProjectOverviewProps {
 }
 
 const EnhancedProjectOverview: React.FC<EnhancedProjectOverviewProps> = ({ projectId }) => {
-  const { userProfile } = useAuth();
   const [project, setProject] = useState<ProjectData | null>(null);
   const [metrics, setMetrics] = useState<ProjectMetrics | null>(null);
   const [loading, setLoading] = useState(true);
@@ -115,21 +113,21 @@ const EnhancedProjectOverview: React.FC<EnhancedProjectOverviewProps> = ({ proje
       if (tasksError) throw tasksError;
 
       // Load RFIs
-      const { data: rfis, error: rfisError } = await supabase
+      const { data: rfis } = await supabase
         .from('rfis')
         .select('*')
         .eq('project_id', projectId)
         .eq('status', 'submitted');
 
       // Load submittals
-      const { data: submittals, error: submittalsError } = await supabase
+      const { data: submittals } = await supabase
         .from('submittals')
         .select('*')
         .eq('project_id', projectId)
         .in('status', ['submitted', 'under_review']);
 
       // Load punch list items
-      const { data: punchItems, error: punchError } = await supabase
+      const { data: punchItems } = await supabase
         .from('punch_list_items')
         .select('*')
         .eq('project_id', projectId)
@@ -301,7 +299,7 @@ const EnhancedProjectOverview: React.FC<EnhancedProjectOverviewProps> = ({ proje
       ? (metrics.performance.tasks_completed / metrics.performance.tasks_total) * 100 
       : 0;
     
-    if (taskCompletionRate < project?.completion_percentage! - 10) score -= 20;
+    if (taskCompletionRate < (project?.completion_percentage ?? 0) - 10) score -= 20;
     if (metrics.performance.open_rfis > 10) score -= 5;
     if (metrics.performance.punch_list_items > 20) score -= 5;
     

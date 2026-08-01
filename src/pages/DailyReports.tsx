@@ -252,7 +252,7 @@ const DailyReports = () => {
         }
       }
 
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from('daily_reports')
         .insert({
           ...newReport,

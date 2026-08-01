@@ -7,7 +7,6 @@ import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { toast } from '@/hooks/use-toast';
 import { projectService, ProjectWithRelations } from '@/services/projectService';
 import { ContextualActions } from '@/components/navigation/ContextualActions';
-import { usePlatform } from '@/contexts/PlatformContext';
 import { AIProjectInsights } from '@/components/ai/AIProjectInsights';
 import { ProjectSubSidebar } from '@/components/project/ProjectSubSidebar';
 import { ProjectContent } from '@/components/project/ProjectContent';
@@ -44,7 +43,6 @@ const ProjectDetail = () => {
   const { recordItem } = useRecentItems();
   const navigate = useNavigate();
   const location = useLocation();
-  const { setNavigationContext } = usePlatform();
   const isMobile = useIsMobile();
 
   const [project, setProject] = useState<ProjectWithRelations | null>(null);

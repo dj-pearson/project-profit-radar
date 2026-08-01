@@ -54,7 +54,7 @@ interface ScalingMilestone {
 }
 
 export const ScalingGuidanceDashboard: React.FC = () => {
-  const { user, userProfile } = useAuth();
+  const { userProfile } = useAuth();
   const { toast } = useToast();
   const [assessments, setAssessments] = useState<ScalingAssessment[]>([]);
   const [milestones, setMilestones] = useState<ScalingMilestone[]>([]);
@@ -129,7 +129,7 @@ export const ScalingGuidanceDashboard: React.FC = () => {
 
     setLoading(true);
     try {
-      const { data, error } = await supabase.functions.invoke('generate-scaling-plan', {
+      const { error } = await supabase.functions.invoke('generate-scaling-plan', {
         body: {
           company_id: userProfile.company_id,
           current_metrics: metrics

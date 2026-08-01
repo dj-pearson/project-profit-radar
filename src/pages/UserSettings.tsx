@@ -153,7 +153,7 @@ const availableShortcuts = [
 const UserSettings = () => {
   const { userProfile } = useAuth();
   const { toast } = useToast();
-  const { accessibility, updateAccessibility } = useTheme();
+  const { updateAccessibility } = useTheme();
   const [preferences, setPreferences] = useState<UserPreferences>(defaultPreferences);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);

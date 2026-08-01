@@ -15,7 +15,6 @@ import { Search, FileText, Building2, Users, DollarSign, Clock, X, ArrowRight } 
 import { cn } from '@/lib/utils';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/contexts/AuthContext';
 
 interface SearchResult {
   id: string;
@@ -43,7 +42,6 @@ export const DashboardSearchTrigger: React.FC = () => {
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [recentSearches, setRecentSearches] = useState<string[]>([]);
   const navigate = useNavigate();
-  const { userProfile } = useAuth();
 
   // Load recent searches
   useEffect(() => {

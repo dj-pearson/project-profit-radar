@@ -84,7 +84,7 @@ export const APIKeyManager: React.FC = () => {
       setLoading(true);
 
       // Generate a new API key
-      const { data: generatedKey, error: keyError } = await supabase
+      const { error: keyError } = await supabase
         .rpc('generate_api_key');
 
       if (keyError) throw keyError;

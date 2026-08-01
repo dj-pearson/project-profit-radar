@@ -58,8 +58,8 @@ export function SecureRoute({
   const location = useLocation();
   const params = useParams();
   const { user, loading: authLoading } = useAuth();
-  const { userId, role, companyId, isLoaded, isLoading } = useSecurityContext();
-  const { roleLevel, meetsMinLevel, isAtLeast } = useRoleLevel();
+  const { userId, role, isLoaded, isLoading } = useSecurityContext();
+  const { roleLevel, meetsMinLevel } = useRoleLevel();
 
   // Get resource ID from URL params if ownership check is configured
   const resourceId = ownershipCheck?.resourceIdParam
@@ -273,7 +273,7 @@ export function SecurePermission({
 }: SecurePermissionProps) {
   const location = useLocation();
   const { userId } = useSecurityContext();
-  const { hasPermission, isLoading, error } = usePermission(permission);
+  const { hasPermission, isLoading } = usePermission(permission);
 
   if (isLoading) {
     if (showLoading) {
@@ -332,7 +332,7 @@ export function SecurePermissions({
   fallback,
 }: SecurePermissionsProps) {
   const location = useLocation();
-  const { userId, role, permissions: userPermissions, isLoaded } = useSecurityContext();
+  const { userId, permissions: userPermissions, isLoaded } = useSecurityContext();
 
   if (!isLoaded) {
     if (showLoading) {

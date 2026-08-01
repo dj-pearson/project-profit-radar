@@ -22,7 +22,7 @@ export const MFASetupDialog: React.FC<MFASetupDialogProps> = ({
   isRequired = false
 }) => {
   const { user, userProfile } = useAuth();
-  const { userSecurity, enable2FA, generateTOTPSecret } = useSecurity();
+  const { enable2FA, generateTOTPSecret } = useSecurity();
   const [step, setStep] = useState<'intro' | 'setup' | 'verify' | 'success'>('intro');
   const [secret, setSecret] = useState('');
   const [qrCodeUrl, setQrCodeUrl] = useState('');
@@ -42,6 +42,13 @@ export const MFASetupDialog: React.FC<MFASetupDialogProps> = ({
           .select('security_policies')
           .eq('company_id', userProfile.company_id)
           .single();
+
+        // Supabase returns query errors rather than throwing, so the catch
+        // below never sees them (US-284: no silent failures).
+        if (error) {
+          console.error('Error checking company MFA policy:', error);
+          return;
+        }
 
         if (data?.security_policies && typeof data.security_policies === 'object') {
           const securityPolicies = data.security_policies as { require_2fa?: boolean };

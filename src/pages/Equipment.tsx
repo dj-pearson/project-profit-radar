@@ -30,7 +30,7 @@ export default function Equipment() {
   });
 
   // Fetch real data from database
-  const { data: equipment, isLoading: equipmentLoading, error: equipmentError } = useEquipmentWithMaintenance();
+  const { data: equipment, isLoading: equipmentLoading } = useEquipmentWithMaintenance();
   const { data: maintenanceRecords, isLoading: maintenanceLoading } = useMaintenanceRecords();
   const { data: stats, isLoading: statsLoading } = useEquipmentStats();
   const createEquipment = useCreateEquipment();

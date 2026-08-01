@@ -10,7 +10,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { MessageSquare, Calendar as CalendarIcon, FileText, Users, CheckCircle, Plus, Paperclip, Video, Settings } from 'lucide-react';
-import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { ThreadManager } from "./ThreadManager";
@@ -52,14 +51,13 @@ interface Meeting {
 }
 
 export const CommunicationHub: React.FC = () => {
-  const { userProfile } = useAuth();
   const [activeTab, setActiveTab] = useState('messages');
   const [selectedThread, setSelectedThread] = useState<any>(null);
   const [rfis, setRfis] = useState<RFI[]>([]);
   const [meetings, setMeetings] = useState<Meeting[]>([]);
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
   const { toast } = useToast();
-  const { channels, activeChannel, selectChannel } = useAdvancedChat();
+  const { selectChannel } = useAdvancedChat();
 
   useEffect(() => {
     // Load initial data if needed

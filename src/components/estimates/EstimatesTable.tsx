@@ -139,7 +139,7 @@ export function EstimatesTable({ searchTerm, statusFilter, onEstimateChange }: E
       }
 
       // Create a copy of the estimate
-      const { data: newEstimate, error } = await supabase
+      const { error } = await supabase
         .from("estimates")
         .insert({
           company_id: userProfile.company_id,

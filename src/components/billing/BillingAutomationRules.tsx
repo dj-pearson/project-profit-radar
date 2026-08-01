@@ -193,7 +193,7 @@ const BillingAutomationRules: React.FC = () => {
 
   const handleDeleteRule = async (ruleId: string) => {
     try {
-      const { data, error } = await supabase.functions.invoke('billing-automation', {
+      const { error } = await supabase.functions.invoke('billing-automation', {
         body: { action: 'delete_rule', rule_id: ruleId }
       });
 
@@ -216,7 +216,7 @@ const BillingAutomationRules: React.FC = () => {
 
   const handleToggleRule = async (rule: AutomationRule) => {
     try {
-      const { data, error } = await supabase.functions.invoke('billing-automation', {
+      const { error } = await supabase.functions.invoke('billing-automation', {
         body: {
           action: 'update_rule',
           rule_id: rule.id,

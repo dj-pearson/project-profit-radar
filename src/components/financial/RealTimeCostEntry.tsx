@@ -73,7 +73,7 @@ export const RealTimeCostEntry: React.FC<RealTimeCostEntryProps> = ({
       const fileName = `${Date.now()}-${photo.name}`;
       const filePath = `cost-entries/${projectId}/${fileName}`;
       
-      const { data, error } = await supabase.storage
+      const { error } = await supabase.storage
         .from('project-files')
         .upload(filePath, photo);
       
@@ -146,7 +146,7 @@ export const RealTimeCostEntry: React.FC<RealTimeCostEntryProps> = ({
       }
 
       // Create job cost entry
-      const { data: costEntry, error: costError } = await supabase
+      const { error: costError } = await supabase
         .from('job_costs')
         .insert(costData)
         .select()

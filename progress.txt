@@ -1946,3 +1946,74 @@ only, never on the result, so the row shape stays checked.
 - vite build: clean.
 
 prd.json: US-212 stays passes:false. 2042 to go.
+
+================================================================================
+US-212 — TypeScript strict-mode backlog, batch 11 (2026-08-01)
+================================================================================
+Branch: claude/review-open-prd-stories-zs8xxd. Unused-binding sweep — the first
+script-driven batch, so the scope was deliberately narrow.
+
+### What the script did (and refused to do)
+Only single-line `const/let {…} = rhs` destructures were rewritten, and only to
+drop bindings TS itself reported as unread. Skipped, by design:
+- rest elements and defaults inside the pattern
+- nested braces
+- a right-hand side that continues onto the next line (would have produced
+  `render(;` — caught in the dry run before applying)
+That left 218 of the 355 TS6133s untouched: multi-line destructures and plain
+`const x = …` where the RHS may carry side effects. Those need per-site
+judgement, not a regex.
+
+When a destructure emptied out entirely:
+- a pure context/subscription hook with nothing consumed (`useAuth()`,
+  `useToast()`) was deleted outright — safe because the call is unconditional,
+  so hook order stays consistent across renders
+- anything else was kept as a bare statement so its effects survive, e.g.
+  `const { container } = render(<X />)` -> `render(<X />);`
+
+`eslint --fix` then swept the imports the removals had orphaned.
+
+104 files, 114 insertions, 172 deletions.
+
+### Deliberately not swept
+Three sites bound an unused `error`. Two are Supabase queries — MFASetupDialog's
+company-MFA-policy lookup and Upgrade's trial-info lookup. Supabase *returns*
+query errors rather than throwing, so the surrounding try/catch never sees them:
+deleting the binding would have quietly cemented a silent failure. Both now
+check `error` and log before returning, per the US-284 rule. The third
+(SecureRoute's `usePermission`) is an ordinary hook return and was tidied.
+
+### Pre-existing lint errors fixed to get past the hook
+Staging these files surfaced three errors that predate this work (each confirmed
+by stashing and re-linting):
+- SupportTicketsEnhanced named a plain click handler `useSuggestedResponse`, so
+  react-hooks/rules-of-hooks read it as a hook called inside a callback.
+  Renamed to `applySuggestedResponse`.
+- MobileExpenseCapture escaped `/` and `-` inside two character classes.
+- EnhancedProjectOverview asserted non-null on an optional chain
+  (`project?.completion_percentage!`). Now `?? 0` — identical behaviour, since
+  `undefined - 10` is NaN and every comparison against NaN was already false.
+
+### Verification
+- tsgo: 2042 -> 1906 (-136). TS6133 355 -> 219. 42 files fully cleared. Zero
+  regressions and zero newly-erroring files in the per-file diff against the
+  pre-batch snapshot.
+- vite build: clean.
+- eslint over all 104 changed files: 0 errors.
+
+### Environment finding — the full test suite cannot run here
+`npx vitest run` over the whole suite never finishes in this sandbox. Several
+tests make real outbound requests — ECONNREFUSED on 127.0.0.1:3000, plus
+happy-dom BrowserFrameNavigator TLS fetches — and hang past any timeout;
+excluding the obvious offender just moves the stall. Scoped runs are fine.
+
+This batch was verified with `src/components/__tests__` + `src/lib/security`:
+13 failed / 1186 passed. The security suite alone is 13 failed / 1087 passed, so
+the 99 component tests added zero new failures and the 13 are the known
+pre-existing security ones.
+
+Worth its own story: mock those fetches or mark the tests integration-only.
+Right now nobody can run the suite locally, which is also why the 13 failures
+have gone untracked for so long.
+
+prd.json: US-212 stays passes:false. 1906 to go.

@@ -3,7 +3,6 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useSupabaseQuery } from '@/hooks/useSupabaseQuery';
 import { useInsertMutation, useUpdateMutation } from '@/hooks/useSupabaseMutation';
-import { useFinancialSettings } from '@/hooks/useFinancialSettings';
 import { useGPSLocation } from '@/hooks/useGPSLocation';
 import { useRealtimeSubscription } from '@/hooks/useRealtimeSubscription';
 import { useToast } from '@/hooks/use-toast';
@@ -44,7 +43,6 @@ interface Project {
 export const TimeTrackingDashboard = () => {
   const { user } = useAuth();
   const { toast } = useToast();
-  const { settings: financialSettings } = useFinancialSettings();
   const { getCurrentLocation, isLoading: locationLoading } = useGPSLocation();
   const [showLocationDialog, setShowLocationDialog] = React.useState(false);
   const [locationData, setLocationData] = React.useState<{

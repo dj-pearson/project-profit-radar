@@ -464,7 +464,7 @@ const VoiceNotes: React.FC<VoiceNotesProps> = ({
       ], { type: 'audio/webm' });
 
       // Upload to Supabase Storage
-      const { data: uploadData, error: uploadError } = await supabase.storage
+      const { error: uploadError } = await supabase.storage
         .from('project-documents')
         .upload(`voice-notes/${note.filename}`, audioBlob, {
           contentType: 'audio/webm',

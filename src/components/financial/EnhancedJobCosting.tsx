@@ -63,7 +63,7 @@ interface ProjectCosts {
 }
 
 export const EnhancedJobCosting: React.FC<{ projectId?: string }> = ({ projectId }) => {
-  const { user, userProfile } = useAuth();
+  const { userProfile } = useAuth();
   const { toast } = useToast();
   const [costCodes, setCostCodes] = useState<CostCode[]>([]);
   const [laborRates, setLaborRates] = useState<LaborRate[]>([]);

@@ -164,7 +164,7 @@ const FailedPaymentRecovery: React.FC = () => {
 
   const handlePauseDunning = async (subscriberId: string) => {
     try {
-      const { data, error } = await supabase.functions.invoke('failed-payment-recovery', {
+      const { error } = await supabase.functions.invoke('failed-payment-recovery', {
         body: { action: 'pause_dunning', subscriber_id: subscriberId }
       });
 
@@ -187,7 +187,7 @@ const FailedPaymentRecovery: React.FC = () => {
 
   const handleResumeDunning = async (subscriberId: string) => {
     try {
-      const { data, error } = await supabase.functions.invoke('failed-payment-recovery', {
+      const { error } = await supabase.functions.invoke('failed-payment-recovery', {
         body: { action: 'resume_dunning', subscriber_id: subscriberId }
       });
 
@@ -213,7 +213,7 @@ const FailedPaymentRecovery: React.FC = () => {
 
     setSavingSettings(true);
     try {
-      const { data, error } = await supabase.functions.invoke('failed-payment-recovery', {
+      const { error } = await supabase.functions.invoke('failed-payment-recovery', {
         body: { action: 'update_settings', settings }
       });
 

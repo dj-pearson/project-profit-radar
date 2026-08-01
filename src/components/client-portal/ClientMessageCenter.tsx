@@ -36,7 +36,7 @@ interface ClientMessageCenterProps {
 }
 
 export const ClientMessageCenter: React.FC<ClientMessageCenterProps> = ({ projectId }) => {
-  const { user, userProfile } = useAuth();
+  const { user } = useAuth();
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState('');
   const [messageCategory, setMessageCategory] = useState<Message['category']>('general');

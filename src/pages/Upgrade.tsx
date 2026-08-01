@@ -16,7 +16,7 @@ const Upgrade = () => {
   const { toast } = useToast();
   const { userProfile } = useAuth();
   const navigate = useNavigate();
-  const { promotions, getPromotionForPlan, calculateDiscountedPrice, getDiscountAmount } = usePromotions('upgrade');
+  const { getPromotionForPlan, calculateDiscountedPrice, getDiscountAmount } = usePromotions('upgrade');
 
   const plans = [
     {
@@ -85,6 +85,13 @@ const Upgrade = () => {
         .select('trial_end_date, subscription_status, subscription_tier')
         .eq('id', userProfile?.company_id)
         .single();
+
+      // Supabase returns query errors rather than throwing, so the catch below
+      // never sees them (US-284: no silent failures).
+      if (error) {
+        console.error('Error loading trial info:', error);
+        return;
+      }
 
       if (data) {
         setTrialInfo(data);

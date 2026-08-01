@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -36,7 +35,6 @@ interface ComplianceAudit {
 }
 
 const IndustryComplianceVerification = () => {
-  const { userProfile } = useAuth();
   const [requirements, setRequirements] = useState<ComplianceRequirement[]>([]);
   const [audits, setAudits] = useState<ComplianceAudit[]>([]);
   const [selectedRequirement, setSelectedRequirement] = useState<ComplianceRequirement | null>(null);

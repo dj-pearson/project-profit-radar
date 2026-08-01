@@ -191,10 +191,10 @@ export const MobileExpenseCapture: React.FC<MobileExpenseCaptureProps> = ({
     }
 
     // Extract date (MM/DD/YYYY or similar)
-    const dateMatch = text.match(/(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4})/);
+    const dateMatch = text.match(/(\d{1,2}[/-]\d{1,2}[/-]\d{2,4})/);
     if (dateMatch) {
       try {
-        const dateParts = dateMatch[1].split(/[\/\-]/);
+        const dateParts = dateMatch[1].split(/[/-]/);
         if (dateParts.length === 3) {
           const month = dateParts[0].padStart(2, '0');
           const day = dateParts[1].padStart(2, '0');
@@ -233,7 +233,7 @@ export const MobileExpenseCapture: React.FC<MobileExpenseCaptureProps> = ({
       // Upload receipt image if available
       if (receiptImage) {
         const fileName = `${user?.id}/${Date.now()}_receipt.jpg`;
-        const { data: uploadData, error: uploadError } = await supabase.storage
+        const { error: uploadError } = await supabase.storage
           .from('receipts')
           .upload(fileName, Buffer.from(receiptImage, 'base64'), {
             contentType: 'image/jpeg'

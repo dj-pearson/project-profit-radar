@@ -37,7 +37,7 @@ interface Project {
 }
 
 export const ProjectStatusUpdates = () => {
-  const { user, userProfile } = useAuth();
+  const { userProfile } = useAuth();
   const [updates, setUpdates] = useState<ProjectStatusUpdate[]>([]);
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);

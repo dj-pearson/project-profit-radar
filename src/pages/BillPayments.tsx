@@ -96,7 +96,7 @@ export default function BillPayments() {
   const [selectedVendorId, setSelectedVendorId] = useState<string>('');
 
   // Fetch open bills
-  const { data: bills, isLoading: billsLoading } = useBills(companyId, {
+  const { data: bills } = useBills(companyId, {
     status: 'open',
   });
 

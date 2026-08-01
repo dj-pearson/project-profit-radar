@@ -58,7 +58,7 @@ interface UnroutedTransaction {
 }
 
 const QuickBooksRouting = () => {
-  const { user, userProfile, signOut, loading } = useAuth();
+  const { user, userProfile, loading } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
   

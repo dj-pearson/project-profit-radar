@@ -86,7 +86,7 @@ export const TaskCard: React.FC<TaskCardProps> = ({
     onUpdate({ ...task, status: newStatus });
 
     try {
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from('tasks')
         .update({ status: newStatus })
         .eq('id', task.id)

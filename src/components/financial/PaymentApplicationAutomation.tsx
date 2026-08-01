@@ -7,7 +7,6 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { FileText, CheckCircle, Clock, AlertCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { useAuth } from '@/contexts/AuthContext';
 
 interface PaymentApplication {
   id: string;
@@ -75,7 +74,6 @@ export const PaymentApplicationAutomation: React.FC = () => {
   ]);
   
   const { toast } = useToast();
-  const { userProfile } = useAuth();
 
   useEffect(() => {
     loadPaymentApplications();

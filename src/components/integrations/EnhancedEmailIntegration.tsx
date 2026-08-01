@@ -7,7 +7,6 @@ import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from '@/hooks/use-toast';
-import { useAuth } from '@/contexts/AuthContext';
 import { Mail, Settings, Plus, Calendar, Zap, Target, TrendingUp, Eye, Edit } from 'lucide-react';
 
 interface EmailProvider {
@@ -54,7 +53,6 @@ interface EmailTemplate {
 }
 
 const EnhancedEmailIntegration = () => {
-  const { userProfile } = useAuth();
   const [providers, setProviders] = useState<EmailProvider[]>([]);
   const [automations, setAutomations] = useState<EmailAutomation[]>([]);
   const [templates, setTemplates] = useState<EmailTemplate[]>([]);
