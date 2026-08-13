@@ -368,4 +368,11 @@ const handler = async (req: Request): Promise<Response> => {
   }
 };
 
-serve(handler);
+// The self-hosted router (edge-functions-template/server.ts) imports this module and
+// calls the default export. Binding a port here would fight it for :8000 and crash the
+// server, so only serve() when this file is the entry module (Supabase's edge runtime).
+export default handler;
+
+if (import.meta.main) {
+  serve(handler);
+}

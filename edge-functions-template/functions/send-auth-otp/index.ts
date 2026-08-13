@@ -55,6 +55,20 @@ const EXPIRATION_TIMES: Record<AuthEmailType, number> = {
 const RATE_LIMIT_WINDOW = 60 * 60 * 1000; // 1 hour
 const MAX_REQUESTS_PER_WINDOW = 5;
 
+// GoTrue's admin API has no getUserByEmail; look the user up through listUsers().
+// Same shape as the helper in verify-auth-otp/index.ts, returned as { data: { user } }
+// so existing `authUser?.user` call sites are unchanged.
+async function getAuthUserByEmail(supabaseAdmin: any, email: string) {
+  const { data, error } = await supabaseAdmin.auth.admin.listUsers({ perPage: 1000 });
+  if (error) {
+    return { data: { user: null }, error };
+  }
+  const user = data?.users?.find(
+    (u: any) => u.email?.toLowerCase() === email.toLowerCase()
+  );
+  return { data: { user: user ?? null }, error: null };
+}
+
 const handler = async (req: Request): Promise<Response> => {
   const corsHeaders = getCorsHeaders(req);
 
@@ -141,7 +155,7 @@ const handler = async (req: Request): Promise<Response> => {
       // Check if user exists in auth.users (for reset password, user should exist)
       // For signup, we'll just proceed
       if (type === 'reset_password') {
-        const { data: authUser } = await supabaseAdmin.auth.admin.getUserByEmail(email);
+        const { data: authUser } = await getAuthUserByEmail(supabaseAdmin, email);
         if (!authUser?.user) {
           // Don't reveal if email exists - just pretend we sent it
           console.log(`[SendAuthOTP] No user found for reset_password: ${email}`);
@@ -251,4 +265,11 @@ const handler = async (req: Request): Promise<Response> => {
   }
 };
 
-serve(handler);
+// The self-hosted router (edge-functions-template/server.ts) imports this module and
+// calls the default export. Binding a port here would fight it for :8000 and crash the
+// server, so only serve() when this file is the entry module (Supabase's edge runtime).
+export default handler;
+
+if (import.meta.main) {
+  serve(handler);
+}
