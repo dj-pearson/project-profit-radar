@@ -4542,6 +4542,123 @@
       "priority": 2,
       "passes": false,
       "notes": "Discovered 2026-07-12. Syntax repairs already committed (ai-estimating 91496f3; api-management/gsc-*/sso-manage this batch). A full eslint parse-error scan of supabase/functions now reports 0 undeployable functions. Remaining work is recovering the destroyed logic, which needs git-history archaeology / product intent. UPDATE: the destroyed 400-validation blocks are NOT recoverable from git history \u2014 these functions were committed already-botched in PR #145 (only 2 commits exist per file, both post-botch). Reinstating the validations requires reconstructing intent from scratch, not git archaeology."
+    },
+    {
+      "id": "US-288",
+      "title": "Remove fabricated testimonials, invented client logos, and unsubstantiated stats from marketing surfaces",
+      "description": "As the company, I want every customer endorsement and performance statistic we publish to be real and substantiated, so that we are not exposed under FTC Act Section 5 and the FTC Endorsement Guides (16 C.F.R. Part 255). src/components/TestimonialsSection.tsx renders six invented customers on the public homepage (src/pages/Index.tsx:153): 'Mike Rodriguez / Rodriguez Custom Homes', 'Sarah Chen / Metro Build Group', 'David Thompson / Thompson Construction LLC', 'Jennifer Walsh / Atlantic Builders', 'Tom Martinez / Martinez Remodeling', 'Lisa Chang / Chang & Associates Construction'. Each carries a 'Verified User' badge (the verified prop defaults to true at line 30) and a specific financial outcome ($47K overrun caught, 8% to 13% margin improvement, 18 hrs/mo saved). The section also emits JSON-LD with aggregateRating ratingValue 4.9 / reviewCount 500 plus a Review node per fabricated quote, and renders the visible claims '4.9/5 Average Rating', '500+ Contractors', 'Average ROI payback period: Less than 30 days', and 'Join 500+ contractors saving an average of $78K/year'. ClientLogosSection in the same file lists six named client companies with logo paths. src/templates/emails/trialSequence.ts:293 (day12Testimonials) sends the same invented quotes ('David M., Commercial GC, Phoenix AZ', 'Sarah K., Residential Builder, Austin TX', 'Mike R., Plumbing Contractor, Denver CO') plus 'Average rating from 500+ contractors' to every trial user. This is the same class of defect already remediated in src/components/SocialProof.tsx, which was rewritten to read from the src/config/claims.ts registry and whose header comment documents why the fabricated version was illegal. TestimonialsSection was missed in that pass. Apply the established claims.ts pattern here: gate every numeric and endorsement claim on a verified flag that defaults to false, and delete the fabricated content rather than editing the numbers.",
+      "acceptanceCriteria": [
+        "No invented person name, company name, or quote remains in src/components/TestimonialsSection.tsx or src/templates/emails/trialSequence.ts",
+        "The JSON-LD aggregateRating and review nodes are omitted entirely unless CLAIMS.aggregateRating.verified is true, matching the rule stated in the src/config/claims.ts header",
+        "Visible claims '4.9/5 Average Rating', '500+ Contractors', 'Less than 30 days' ROI payback, and '$78K/year' are removed or gated on a verified CLAIMS entry",
+        "ClientLogosSection renders no client company unless written permission is on file; absent that, the section is removed or replaced with non-attributive copy",
+        "day12Testimonials either sends no endorsement content or is removed from the trial sequence, and any '500+ contractors' copy in trialSequence.ts is removed",
+        "The 'Verified User' badge cannot render for an endorsement lacking a recorded permission source (change the verified prop default to false)",
+        "A repo-wide grep for the six invented surnames (Rodriguez, Chen, Thompson, Walsh, Martinez, Chang) returns no marketing-copy hits",
+        "npm run lint and npm run test:run pass"
+      ],
+      "priority": 1,
+      "passes": false,
+      "notes": "Discovered 2026-08-17 during a website-liability audit. Highest-urgency item of that audit: the content is live on the public homepage and the fabricated aggregateRating is indexable structured data, so exposure accrues daily while it remains published. Precedent and pattern to copy: src/components/SocialProof.tsx and src/config/claims.ts."
+    },
+    {
+      "id": "US-289",
+      "title": "Make the project-documents, company-documents, and project-communications storage buckets private",
+      "description": "As a customer, I want files I upload to be reachable only by people authorized in my workspace, so that construction documents, job-site photos, and chat attachments are not world-readable. Three buckets are created with public = true and no later migration changes them: 'project-documents' and 'company-documents' in supabase/migrations/20250703014008_1f893e3a-f54d-4e83-babd-adfa0e563cf3.sql:2, and 'project-communications' in supabase/migrations/20250706130335_e51e1aa7-9824-4987-9968-3b4109db6123.sql:2. Supabase does not apply storage.objects RLS to reads through the /storage/v1/object/public/ path, so the storage policies written directly beneath those INSERT statements do not restrict reads at all. The application depends on that behavior: src/components/workflow/InspectionConductDialog.tsx:122, src/components/communication/ProjectChat.tsx:225, and src/components/communication/ProjectCommunication.tsx:167 call getPublicUrl() and persist the resulting permanent unauthenticated URL in the database. src/components/documents/DocumentPreviewModal.tsx:70 already uses createSignedUrl with a one-hour expiry and is the pattern to standardize on. This also contradicts Privacy Policy section 9 (src/pages/PrivacyPolicy.tsx:256), which tells customers that multi-tenant isolation is enforced by Postgres Row-Level Security. Because previously issued public URLs are persistent state held by shipped iOS builds and by rows already in the database, follow the multi-release deprecation flow in CLAUDE.md rather than flipping the flag in one migration.",
+      "acceptanceCriteria": [
+        "A shared signed-URL helper exists (for example src/lib/storage/signedUrl.ts) with a unit test, and is used by every reader of the three buckets",
+        "All getPublicUrl() call sites for these three buckets are migrated to the signed-URL helper: InspectionConductDialog.tsx, ProjectChat.tsx, ProjectCommunication.tsx, and any others found by a repo-wide grep",
+        "Writers stop persisting permanent public URLs; they store the storage path and resolve a signed URL at read time",
+        "A backfill migration converts already-stored public URLs in the database to storage paths",
+        "Storage RLS policies on storage.objects are verified to scope reads by company_id for all three buckets",
+        "The public-to-private flip is a separate, final migration gated on the reader migration having shipped to web and to clients at MIN_SUPPORTED_IOS_VERSION, per the CLAUDE.md backward-compatibility flow",
+        "A regression test or scripted check asserts that no bucket carrying customer content is created or left with public = true",
+        "npm run lint and npm run test:run pass"
+      ],
+      "priority": 1,
+      "passes": false,
+      "notes": "Discovered 2026-08-17 during a website-liability audit. Staged deliberately: flipping public to false in a single migration breaks every stored URL held by shipped iOS builds and by existing database rows, which CLAUDE.md classifies as a forbidden single-release change to persistent state. Sequence the work as reader-migration first, backfill second, flip last. The 'site-assets' and 'blog-images' buckets are intentionally public and are out of scope."
+    },
+    {
+      "id": "US-290",
+      "title": "Delete uploaded files during DSAR fulfillment and account deletion",
+      "description": "As a data subject, I want the files I uploaded to actually be erased when my deletion request is fulfilled, so that the erasure we confirm in writing is real. supabase/functions/data-subject-delete/index.ts records the request and locks the account, and supabase/functions/process-dsar-fulfillment/index.ts fulfills it by calling admin.auth.admin.deleteUser() and relying on foreign-key cascade to clear dependent tables. Neither function contains a single Supabase Storage call. Deleting an auth user does not cascade into storage objects, and removing a storage.objects row is not the same as removing the stored file, so every photo, receipt, drawing, signature, and chat attachment survives fulfillment. Combined with US-289 those files remain retrievable without authentication by anyone holding the URL. The written promises this breaks are Privacy Policy section 5 (Customer Content 'is deleted from production systems' and rolled out of backups within 90 days), Privacy Policy section 6 (the Delete right), and the confirmation message returned to the user at data-subject-delete/index.ts:157. GDPR Article 17 and CCPA 1798.105 both attach to the erasure we told the user we performed.",
+      "acceptanceCriteria": [
+        "process-dsar-fulfillment enumerates and removes the subject's objects from every bucket holding customer content (documents, templates, signatures, call-recordings, email-attachments, project-documents, company-documents, project-communications)",
+        "Storage deletion runs before the auth user is deleted, so ownership and company scoping can still be resolved",
+        "Storage deletion failures are recorded on the data_subject_requests row and counted toward the existing retry budget rather than silently swallowed, and the request is not marked completed while objects remain",
+        "Objects covered by a documented statutory retention exception are enumerated explicitly and reflected in the completion note, not left to a blanket assumption",
+        "The completion note written to data_subject_requests states how many objects were removed",
+        "A test covers the fulfillment path and asserts storage removal is attempted for each in-scope bucket",
+        "Privacy Policy section 5 retention language matches what the job actually does"
+      ],
+      "priority": 1,
+      "passes": false,
+      "notes": "Discovered 2026-08-17 during a website-liability audit. This is the 'promised deletion, did not delete' fact pattern. Verified by grepping both functions for storage/bucket/remove( and finding zero hits. Depends on nothing, but its impact compounds with US-289: until the buckets are private, files that survive fulfillment stay publicly fetchable."
+    },
+    {
+      "id": "US-291",
+      "title": "Correct the subprocessor list, AI disclosure, and privacy contact address to match what the code actually does",
+      "description": "As a customer relying on our published disclosures, I want the subprocessor list to name every third party that actually receives data, so that the list is accurate rather than merely present. src/pages/legal/Subprocessors.tsx contains two affirmative misstatements and one omission. First, it names Anthropic as the AI provider and src/pages/legal/AIDisclosure.tsx:88 says inputs go to a provider 'currently Anthropic', but eleven edge functions call api.openai.com, including document-classifier (customer documents) and voice-to-text (recorded audio). Second, it lists Amazon Web Services (Amazon SES) for email delivery, but nine edge functions send through Resend. Third, Google Analytics 4 (property G-LNDT7H4SJR, loaded at index.html:288) appears nowhere on the list. Separately, Privacy Policy section 12 (src/pages/PrivacyPolicy.tsx:289) gives the mailing address as '123 Construction Way, Suite 100, Builder City, BC 12345, USA', which is placeholder text standing in for the postal contact that CCPA and GDPR require for rights requests. GDPR Article 28(2) and the CCPA service-provider terms both make the accuracy of this list a contractual and regulatory obligation, and the 14-day change-notification promise at Subprocessors.tsx:118 depends on it being current.",
+      "acceptanceCriteria": [
+        "OpenAI is listed as a subprocessor with its actual purpose and data categories (document classification, voice transcription, analytics generation, content generation), or the OpenAI code paths are removed if the intent was Anthropic-only",
+        "AIDisclosure.tsx no longer states that Anthropic is the only AI provider",
+        "Resend is listed for transactional email; the Amazon SES entry is corrected or removed to match what is deployed",
+        "Google LLC's entry covers Google Analytics 4 web analytics, not only the optional Calendar and OAuth integrations",
+        "Privacy Policy section 12 carries a real postal address, or the postal line is removed in favor of a contact channel we actually monitor",
+        "A repo-wide vendor sweep is recorded in the story notes confirming no other undisclosed third-party data recipient remains (SendGrid and Mailgun references were also found and must be confirmed dead or disclosed)",
+        "A scripted check or documented review step keeps the subprocessor list in sync when a new outbound vendor is added",
+        "npm run lint passes"
+      ],
+      "priority": 1,
+      "passes": false,
+      "notes": "Discovered 2026-08-17 during a website-liability audit. Counts verified by grep: 11 edge functions matching api.openai.com, 9 matching Resend. SendGrid (21 hits) and Mailgun (4 hits) also appear in src and must be confirmed dead code or added. The underlying legal pages are otherwise strong; this story is about accuracy, not drafting."
+    },
+    {
+      "id": "US-292",
+      "title": "Give subscribers an in-app cancellation path and confirm the Stripe portal permits cancellation",
+      "description": "As a subscriber, I want cancelling to be about as easy as subscribing was, so that we comply with the FTC negative-option rule and state automatic-renewal laws such as the California ARL. Signing up is fully self-serve on the web. Cancelling has no in-app control at all: the only route is supabase.functions.invoke('customer-portal'), called from src/components/SubscriptionManager.tsx:84, src/components/payments/PaymentDashboard.tsx:20, and src/components/PaymentFailureAlert.tsx:83. In SubscriptionManager the button that reaches it is at line 380 and its supporting copy at line 388 describes the destination as a place to 'manage your payment methods', which does not tell a subscriber that cancellation lives there. supabase/functions/customer-portal/index.ts:58 creates the portal session with no flow_data, so it cannot deep-link to the cancellation flow, and whether cancellation is available at all depends on the Stripe Dashboard billing-portal configuration, which is not in this repository and must be checked directly.",
+      "acceptanceCriteria": [
+        "The Stripe Dashboard billing-portal configuration is verified to have subscription cancellation enabled, and the finding is recorded in this story's notes",
+        "A cancellation entry point exists in subscription settings that is labelled as cancellation, not as payment-method management",
+        "customer-portal accepts an optional flow type and passes flow_data so the cancellation link lands directly on the cancel flow",
+        "Copy at SubscriptionManager.tsx:388 states that subscription cancellation is available through the portal",
+        "The cancellation path is reachable in the same number of steps or fewer than the signup path, and that comparison is written into the story notes",
+        "npm run lint and npm run test:run pass"
+      ],
+      "priority": 2,
+      "passes": false,
+      "notes": "Discovered 2026-08-17 during a website-liability audit. Cannot be fully closed from the repository: the decisive fact (does the Stripe billing portal allow cancellation) lives in the Stripe Dashboard and needs Dj to confirm. Related finding that needs no work: trials do not auto-charge (no trial_period_days in create-stripe-checkout, and convert-trial-to-paid requires an authenticated user to pick a tier), so negative-option billing at trial end is not occurring and ROSCA exposure on the trial itself is low. Day-11 and day-13 trial reminders exist in src/templates/emails/trialSequence.ts."
+    },
+    {
+      "id": "US-293",
+      "title": "Label AI-assisted output consistently to match the AI Disclosure",
+      "description": "As a user, I want to be able to tell which content a machine produced, so that the labeling commitment we publish is true across the product. src/pages/legal/AIDisclosure.tsx:61 states that content generated or materially assisted by AI 'is labeled within the Service (for example, with a \"Generated by AI\" badge)'. No such badge component exists. What exists is ad-hoc descriptive copy on some surfaces (src/pages/admin/AIEstimating.tsx:350, src/components/analytics/RiskAssessment.tsx:330, src/components/admin/BlogAutoGeneration.tsx:1082, src/pages/SEOAnalyticsDashboard.tsx:430) and nothing on others. Either build the badge and apply it to every AI Feature enumerated in AIDisclosure section 1 (AI Estimating, AI Insights and Project Assistant, Image and Document Analysis, Quality Control and Safety Insights, Marketing/Blog Generation), or narrow the disclosure to describe the labeling we actually perform.",
+      "acceptanceCriteria": [
+        "A single reusable AI-output badge component exists in src/components/ui/ with a test",
+        "The badge is applied on every surface listed in AI Disclosure section 1, or AIDisclosure section 2 is rewritten to describe actual behavior",
+        "The badge carries an accessible label rather than conveying its meaning by color or icon alone",
+        "A short note in the AI Disclosure or an internal doc records which surfaces are labeled, so the claim stays checkable",
+        "npm run lint and npm run test:run pass"
+      ],
+      "priority": 3,
+      "passes": false,
+      "notes": "Discovered 2026-08-17 during a website-liability audit. Lower urgency than US-288 through US-291: this is an overstated commitment rather than an active misrepresentation or a data exposure. Closing it by narrowing the disclosure is an acceptable outcome and is cheaper than building the badge everywhere."
+    },
+    {
+      "id": "US-294",
+      "title": "Add crisis-resource handling to free-text AI surfaces",
+      "description": "As a field worker typing into the product, I want a response that points to real help if I express distress, so that an AI assistant does not answer a disclosure of self-harm with a construction-scheduling reply. A repo-wide search for crisis, 988, hotline, helpline, and suicide returns no safety handling anywhere, and no moderation layer exists on any AI path. Brikly ships an open-ended AI Project Assistant, voice-to-text capture, and free-text daily report and safety incident fields, and construction has among the highest suicide rates of any United States industry, so the input surface and the population coincide. This is a low-probability, high-severity gap rather than a routine compliance item: the realistic exposure is a single bad interaction, and the mitigation is cheap.",
+      "acceptanceCriteria": [
+        "System prompts for user-facing AI chat surfaces instruct the model to respond to expressions of self-harm or crisis with an empathetic acknowledgment and region-appropriate crisis resources, and to not continue the task-oriented response",
+        "Crisis resources are held in one place in the codebase so they can be updated without touching prompts",
+        "The behavior is covered by a test or a documented manual check with a sample input",
+        "Nothing about this handling is logged in a way that creates a new sensitive-data record; confirm the interaction is not written to analytics or audit tables",
+        "The Acceptable Use Policy or AI Disclosure notes that AI features are not a substitute for emergency or mental-health services"
+      ],
+      "priority": 3,
+      "passes": false,
+      "notes": "Discovered 2026-08-17 during a website-liability audit. Not a typical B2B SaaS litigation vector, and included because the mitigation costs little relative to the severity of the case it prevents. Check the privacy consequence in the fourth criterion carefully: capturing a distress disclosure into an audit trail would create sensitive personal information we do not currently hold."
     }
   ]
 }
