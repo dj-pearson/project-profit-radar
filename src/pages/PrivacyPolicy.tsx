@@ -176,6 +176,14 @@ const PrivacyPolicy = () => (
       and rolled out of backups within 90 days, unless the customer requests immediate deletion or
       law requires longer retention.
     </p>
+    <p>
+      When we fulfill an individual deletion request, we erase the files that person uploaded
+      along with their account. Files they uploaded into a shared workspace are Customer Content
+      belonging to their organization: while other people remain in that workspace we retain
+      those files and the request to erase them is made by the workspace administrator (see
+      Section 6). When the departing person is the last member of a workspace, their uploaded
+      files are erased with the account.
+    </p>
 
     <h2>6. Your Privacy Rights</h2>
     <p>
