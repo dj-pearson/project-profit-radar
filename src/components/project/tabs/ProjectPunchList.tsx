@@ -678,14 +678,14 @@ export const ProjectPunchList: React.FC<ProjectPunchListProps> = ({
                         value={formData.photo_before_url}
                         onChange={(url) => setFormData({...formData, photo_before_url: url})}
                         bucket="project-documents"
-                        path={`punch-list/${projectId}`}
+                        path={`${projectId}/punch-list`}
                       />
                       <ImageUpload
                         label="After Photo"
                         value={formData.photo_after_url}
                         onChange={(url) => setFormData({...formData, photo_after_url: url})}
                         bucket="project-documents"
-                        path={`punch-list/${projectId}`}
+                        path={`${projectId}/punch-list`}
                       />
                     </div>
 
@@ -1048,14 +1048,14 @@ export const ProjectPunchList: React.FC<ProjectPunchListProps> = ({
                 value={formData.photo_before_url}
                 onChange={(url) => setFormData({...formData, photo_before_url: url})}
                 bucket="project-documents"
-                path={`punch-list/${projectId}`}
+                path={`${projectId}/punch-list`}
               />
               <ImageUpload
                 label="After Photo"
                 value={formData.photo_after_url}
                 onChange={(url) => setFormData({...formData, photo_after_url: url})}
                 bucket="project-documents"
-                path={`punch-list/${projectId}`}
+                path={`${projectId}/punch-list`}
               />
             </div>
 

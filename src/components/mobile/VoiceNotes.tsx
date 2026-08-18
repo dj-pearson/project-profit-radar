@@ -474,7 +474,13 @@ const VoiceNotes: React.FC<VoiceNotesProps> = ({
       if (uploadError) throw uploadError;
 
       // Persist the storage path, not a permanent public URL (US-289).
-      const storagePath = `voice-notes/${note.filename}`;
+      // <projectId>/<category>/... so the project-documents SELECT policy
+      // matches on the first segment (US-289). Falls back to the legacy
+      // shape only when no project is selected; the documents-table branch
+      // of the supplementary policy covers that case.
+      const storagePath = note.projectId
+        ? `${note.projectId}/voice-notes/${note.filename}`
+        : `voice-notes/${note.filename}`;
 
       // Save to database
       const { error: dbError } = await supabase

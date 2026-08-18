@@ -86,3 +86,47 @@ describe('no permanent public URLs are persisted', () => {
     expect(offenders, 'getPublicUrl used on a private bucket').toEqual([]);
   });
 });
+
+describe('project-documents path convention', () => {
+  /**
+   * The original storage policy authorises project-documents objects by
+   * matching the FIRST path segment against a project id. Most writers did not
+   * follow that, and it went unnoticed because a public bucket never consults
+   * a policy. New uploads must use <projectId>/<category>/... so the policy
+   * matches directly.
+   */
+  const PROJECT_FIRST = [
+    ['src/pages/DailyReports.tsx', '${newReport.project_id}/daily-reports/'],
+    ['src/components/project/tabs/ProjectPunchList.tsx', '${projectId}/punch-list'],
+    ['src/components/workflow/InspectionConductDialog.tsx', '${inspection.project_id}/inspections/'],
+    ['src/components/mobile/VoiceNotes.tsx', '${note.projectId}/voice-notes/'],
+  ] as const;
+
+  it.each(PROJECT_FIRST)('%s writes a project-first path', (file, fragment) => {
+    expect(readFileSync(file, 'utf8')).toContain(fragment);
+  });
+
+  it('keeps a supplementary read policy for the shapes that cannot be project-first', () => {
+    const migration = readdirSync(MIGRATIONS_DIR)
+      .filter((f) => f.includes('project_documents_read_policies'))
+      .map((f) => readFileSync(join(MIGRATIONS_DIR, f), 'utf8'))
+      .join('\n');
+
+    expect(migration, 'supplementary policy migration missing').toBeTruthy();
+    // task-attachments resolves through tasks; voice notes through documents.
+    expect(migration).toContain('task-attachments');
+    expect(migration).toContain('public.documents');
+    // Every branch has to be company-scoped, never a bare bucket_id check.
+    expect(migration).toContain('get_user_company');
+  });
+
+  it('flips the three buckets private only after the policy migration', () => {
+    const files = readdirSync(MIGRATIONS_DIR).filter((f) => f.endsWith('.sql')).sort();
+    const policyAt = files.findIndex((f) => f.includes('project_documents_read_policies'));
+    const flipAt = files.findIndex((f) => f.includes('make_customer_buckets_private'));
+    expect(policyAt, 'policy migration missing').toBeGreaterThan(-1);
+    expect(flipAt, 'flip migration missing').toBeGreaterThan(-1);
+    expect(flipAt, 'flip must run after the read policies exist').toBeGreaterThan(policyAt);
+  });
+});
+
