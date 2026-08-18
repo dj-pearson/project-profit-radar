@@ -54,10 +54,53 @@ serve(async (req) => {
 
     const origin = req.headers.get("origin") || "https://brikly.net";
 
-    // Create customer portal session
+    // Optional deep-link target. The FTC negative-option rule and the state
+    // automatic-renewal laws (California ARL and its equivalents) require
+    // cancelling to be about as easy as subscribing was. Signup here is fully
+    // self-serve, so landing a subscriber on the portal's billing overview and
+    // expecting them to hunt for cancellation does not clear that bar.
+    // flow: "cancel" drops them directly on the cancellation flow.
+    let flow: string | null = null;
+    try {
+      const body = await req.json();
+      if (body && typeof body.flow === "string") flow = body.flow;
+    } catch {
+      // No body is the normal case for the plain "manage billing" entry point.
+    }
+
+    // Resolve the subscription from Stripe rather than from a local column:
+    // stripe_subscription_id lives on `companies` while this function reads
+    // `subscribers`, and Stripe is the authority either way. If the lookup
+    // fails we fall back to the plain portal rather than erroring, so the
+    // cancel button always lands somewhere useful.
+    let cancelSubscriptionId: string | null = null;
+    if (flow === "cancel") {
+      try {
+        const subs = await stripe.subscriptions.list({
+          customer: subscriber.stripe_customer_id,
+          status: "active",
+          limit: 1,
+        });
+        cancelSubscriptionId = subs.data[0]?.id ?? null;
+        logStep("Resolved subscription for cancel flow", { cancelSubscriptionId });
+      } catch (err) {
+        logStep("Could not resolve subscription; falling back to plain portal", {
+          error: err instanceof Error ? err.message : String(err),
+        });
+      }
+    }
+
     const portalSession = await stripe.billingPortal.sessions.create({
       customer: subscriber.stripe_customer_id,
       return_url: `${origin}/dashboard`,
+      ...(cancelSubscriptionId
+        ? {
+            flow_data: {
+              type: "subscription_cancel" as const,
+              subscription_cancel: { subscription: cancelSubscriptionId },
+            },
+          }
+        : {}),
     });
 
     logStep("Customer portal session created", {

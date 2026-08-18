@@ -79,9 +79,15 @@ const SubscriptionManager = () => {
     }
   };
 
-  const openCustomerPortal = async () => {
+  // `flow` deep-links the Stripe portal. 'cancel' lands the subscriber
+  // directly on the cancellation flow: the FTC negative-option rule and the
+  // state automatic-renewal laws require cancelling to be about as easy as
+  // subscribing, and signup here is fully self-serve (US-292).
+  const openCustomerPortal = async (flow?: 'cancel') => {
     try {
-      const { data, error } = await supabase.functions.invoke('customer-portal');
+      const { data, error } = await supabase.functions.invoke('customer-portal', {
+        body: flow ? { flow } : {},
+      });
       if (error) throw error;
       
       if (data?.url) {
@@ -377,16 +383,24 @@ const SubscriptionManager = () => {
 
                     <div className="pt-4 border-t">
                       <Button 
-                        onClick={openCustomerPortal}
+                        onClick={() => openCustomerPortal()}
                         className="w-full sm:w-auto"
                         disabled={!subscriptionData?.stripe_customer_id}
                       >
                         <CreditCard className="h-4 w-4 mr-2" />
                         Manage Billing & Payment Methods
                       </Button>
+                      <Button
+                        variant="outline"
+                        onClick={() => openCustomerPortal('cancel')}
+                        className="w-full sm:w-auto sm:ml-2 mt-2 sm:mt-0"
+                        disabled={!subscriptionData?.stripe_customer_id}
+                      >
+                        Cancel Subscription
+                      </Button>
                       <p className="text-xs text-muted-foreground mt-2">
-                        You'll be redirected to our secure billing portal to manage your payment methods, 
-                        view invoices, and update billing information.
+                        You'll be redirected to our secure billing portal, where you can update
+                        payment methods, view invoices, and cancel your subscription.
                       </p>
                     </div>
                   </div>
