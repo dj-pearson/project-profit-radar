@@ -10,6 +10,21 @@ import { Link } from 'react-router-dom';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Calculator, TrendingUp, CheckCircle, ArrowRight, PieChart, BarChart3 } from 'lucide-react';
 
+/**
+ * Illustrative improvement rates used by the calculator.
+ *
+ * These are assumptions, not measurements: Brikly does not collect customer
+ * overrun, delay, or administrative-time data, so there is nothing to average.
+ * They are named here so the figure the calculator shows can be traced to what
+ * produced it, and so the on-page disclosure can quote them rather than
+ * describing the output vaguely as "based on industry benchmarks" (US-295).
+ */
+const ROI_ASSUMPTIONS = {
+  overrunReduction: 0.7,
+  delayReduction: 0.6,
+  adminEfficiency: 0.5,
+} as const;
+
 const ROICalculator = () => {
   const [formData, setFormData] = useState({
     companySize: '',
@@ -42,10 +57,13 @@ const ROICalculator = () => {
     const delayLoss = (projectValue * projectsYear * delayPercent) / 100 * 0.5; // Assume 50% of delay value as loss
     const adminCost = adminHours * 52 * hourlyRate;
     
-    // Calculate potential savings with Brikly
-    const overrunReduction = 0.7; // 70% reduction
-    const delayReduction = 0.6; // 60% reduction
-    const adminEfficiency = 0.5; // 50% time savings
+    // Modelling assumptions, not measured outcomes. Brikly does not collect
+    // customer overrun, delay, or admin-time data, so these are illustrative
+    // improvement rates and the page says so (US-295). Change them here and
+    // the on-page disclosure below stays in sync via ROI_ASSUMPTIONS.
+    const overrunReduction = ROI_ASSUMPTIONS.overrunReduction;
+    const delayReduction = ROI_ASSUMPTIONS.delayReduction;
+    const adminEfficiency = ROI_ASSUMPTIONS.adminEfficiency;
     
     const savedOverruns = overrunLoss * overrunReduction;
     const savedDelays = delayLoss * delayReduction;
@@ -146,7 +164,7 @@ const ROICalculator = () => {
                 Construction Management Software ROI: What to Expect
               </h3>
               <p className="text-gray-700 mb-4">
-                According to industry research, construction companies using professional project management software see an average ROI of 300-500% within the first year. Our ROI calculator helps you estimate your specific savings based on your company size, project volume, and current inefficiencies.
+                This calculator estimates what your current overruns, delays, and administrative hours are costing you, then models what a share of that would be worth if recovered. It is a model built from the numbers you enter, not a measurement of what Brikly customers achieved.
               </p>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
                 <div className="bg-white p-4 rounded-lg">
@@ -458,7 +476,7 @@ const ROICalculator = () => {
                     How do construction companies calculate ROI for project management software?
                   </h3>
                   <p className="text-gray-700">
-                    Construction ROI is calculated by measuring the cost savings from reduced budget overruns, eliminated project delays, and improved administrative efficiency against the annual software cost. Most contractors see 300-500% ROI within 12 months.
+                    Construction ROI is calculated by measuring the cost savings from reduced budget overruns, eliminated project delays, and improved administrative efficiency against the annual software cost. What that comes to depends entirely on your current overrun and delay rates.
                   </p>
                 </div>
                 <div>
@@ -492,7 +510,7 @@ const ROICalculator = () => {
                     How accurate are construction ROI calculator results?
                   </h3>
                   <p className="text-gray-700">
-                    Our ROI calculator uses industry benchmarks and real data from construction companies. Results are estimates based on typical savings percentages, with actual results varying by implementation and usage.
+                    This calculator models a 70% reduction in overrun losses, a 60% reduction in delay losses, and a 50% reduction in administrative time. Those are illustrative assumptions chosen to show the shape of the saving, not measured results from Brikly customers, and your own outcome depends entirely on your current process and how consistently the software is used.
                   </p>
                 </div>
                 <div>

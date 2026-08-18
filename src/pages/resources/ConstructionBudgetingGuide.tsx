@@ -198,8 +198,8 @@ const ConstructionBudgetingGuide = () => {
                   <li>Historical project data for better future estimates</li>
                 </ul>
                 <p>
-                  Contractors using digital budgeting tools report 40% fewer cost overruns and 18% improved profit margins 
-                  compared to those relying on spreadsheets alone.
+                  Digital budgeting tools surface an overrun while the job is still running, which a
+                  spreadsheet reconciled at month-end cannot do.
                 </p>
               </div>
             </section>

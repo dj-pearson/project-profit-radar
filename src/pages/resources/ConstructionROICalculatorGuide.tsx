@@ -574,7 +574,7 @@ const ConstructionROICalculatorGuide = () => {
                             Professional proposals with real-time cost data help you bid accurately and win more work.
                           </p>
                           <div className="font-mono text-xs text-gray-700">
-                            Conservative estimate: 2% higher win rate on bids
+                            Model your own win-rate change; do not assume one
                           </div>
                         </div>
                       </div>

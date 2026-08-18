@@ -332,7 +332,7 @@ const ProcoreVsBriklyComparison = () => {
                   </div>
                   <div>
                     <div className="text-sm text-muted-foreground">Outcome:</div>
-                    <div className="font-semibold text-blue-700">25% increase in field productivity</div>
+                    <div className="font-semibold text-blue-700">Less time lost to paperwork in the field</div>
                   </div>
                 </div>
               </CardContent>

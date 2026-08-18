@@ -108,3 +108,77 @@ describe('no fabricated endorsements in shipped source', () => {
     expect(offenders, 'hardcoded aggregateRating found').toEqual([]);
   });
 });
+
+describe('no unsubstantiated outcome claims on marketing surfaces', () => {
+  const files = marketingFiles('src');
+
+  /**
+   * Claims we may keep because a named third party is credited inline, and the
+   * reader can go check them. CFMA is the Construction Financial Management
+   * Association.
+   */
+  const ATTRIBUTED = /CFMA|Construction Financial Management Association|BLS|Bureau of Labor/;
+
+  /**
+   * Files that legitimately contain percentages which are not marketing
+   * claims: in-app dashboards showing a customer's own numbers, and the ROI
+   * calculator whose assumptions are named and disclosed on the page.
+   */
+  const NOT_MARKETING = [
+    'ROICalculator',
+    'AIQualityControl',
+    'TeamPerformanceTracking',
+    'ProjectProfitLoss',
+    'SocialMediaScheduler',
+    'CaseStudiesSection',
+    'RealTimeBudgeting',
+    'JobCosting',
+    'RealCostDelayedJobCosting',
+    'FinancialIntelligenceGuide',
+    // Internal prediction model, not marketing copy.
+    'costPrediction',
+  ];
+
+  it('asserts no outcome percentage without an inline source', () => {
+    // Pricing comparisons against a competitor ("60% lower cost than Procore")
+    // are verifiable arithmetic from published pricing and are out of scope --
+    // this guard is about performance outcomes we would have to have measured.
+    const PRICING = /%\s+(lower|less|cheaper)\s+(cost|price|pricing)/i;
+    const OUTCOME = /\b\d{1,3}(-\d{1,3})?%\s+(fewer|faster|more|higher|better|reduction|improvement|increase)\b/i;
+    const offenders: string[] = [];
+
+    for (const file of files) {
+      if (NOT_MARKETING.some((n) => file.includes(n))) continue;
+      const src = readFileSync(file, 'utf8');
+      for (const line of src.split('\n')) {
+        const t = line.trimStart();
+        if (t.startsWith('*') || t.startsWith('//')) continue;
+        if (OUTCOME.test(line) && !ATTRIBUTED.test(line) && !PRICING.test(line)) {
+          offenders.push(`${file}: ${line.trim().slice(0, 90)}`);
+        }
+      }
+    }
+
+    expect(offenders, 'unsubstantiated outcome claim').toEqual([]);
+  });
+
+  it('makes no "most contractors see N% ROI" style return promise', () => {
+    // A rubric explaining how to read the ROI you just calculated ("200-300%
+    // ROI: good investment") is legitimate. Telling the reader what they will
+    // get is the claim that needs substantiation.
+    const PROMISE = /(most contractors|customers|contractors|you can)[^.]{0,60}\b(see|expect|achieve|deliver|typically)\b[^.]{0,40}\d{2,3}(-\d{2,3})?%\s*ROI/i;
+    const offenders = files.filter((f) => PROMISE.test(readFileSync(f, 'utf8')));
+    expect(offenders, 'unsubstantiated ROI promise').toEqual([]);
+  });
+
+  it('does not claim customer telemetry Brikly has never collected', () => {
+    const PHRASES = [/Brikly users report/i, /Brikly customers typically save/i];
+    const offenders: string[] = [];
+    for (const file of files) {
+      const src = readFileSync(file, 'utf8');
+      if (PHRASES.some((p) => p.test(src))) offenders.push(file);
+    }
+    expect(offenders, 'claims measured customer outcomes').toEqual([]);
+  });
+});
+

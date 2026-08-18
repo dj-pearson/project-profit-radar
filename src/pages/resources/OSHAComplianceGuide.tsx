@@ -165,8 +165,8 @@ const OSHAComplianceGuide = () => {
                 </p>
                 <p className="text-muted-foreground mb-6">
                   Beyond the moral imperative, non-compliance carries severe business consequences: OSHA fines, increased 
-                  insurance costs, project delays, reputation damage, and potential criminal liability. Conversely, 
-                  companies with strong safety programs see 40% fewer injuries and 15% lower insurance premiums.
+                  insurance costs, project delays, reputation damage, and potential criminal liability. Conversely, a documented safety program is what insurers and general contractors
+                  look for when setting premiums and awarding work.
                 </p>
               </div>
             </section>
@@ -273,8 +273,8 @@ const OSHAComplianceGuide = () => {
                   <li>Integration with project management for safety milestone tracking</li>
                 </ul>
                 <p>
-                  Contractors using digital safety systems report 65% fewer OSHA violations and 40% reduction 
-                  in safety-related project delays compared to paper-based approaches.
+                  Digital safety systems make violations easier to catch before an inspection and keep the
+                  documentation retrievable when one happens, which paper-based approaches rarely do.
                 </p>
               </div>
             </section>

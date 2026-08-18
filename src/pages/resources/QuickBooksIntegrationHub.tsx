@@ -39,7 +39,7 @@ const QuickBooksIntegrationHub = () => {
     "Contractors save 8-12 hours weekly on bookkeeping tasks",
     "Real-time job costing improves profit margins by 15-20%",
     "Automated invoice syncing reduces billing errors by 90%",
-    "Integrated expense tracking catches 95% more deductible expenses"
+    "Integrated expense tracking catches deductible expenses that loose receipts miss"
   ];
 
   return (

@@ -239,7 +239,7 @@ const SafetyAndOSHACompliance = () => {
                 <div>
                   <h4 className="font-semibold mb-3 text-green-800">Time Savings</h4>
                   <ul className="space-y-2 text-sm">
-                    <li>• 60% faster form completion</li>
+                    <li>• Faster form completion than paper</li>
                     <li>• Automated OSHA log updates</li>
                     <li>• Instant report generation</li>
                     <li>• Eliminate manual transcription</li>

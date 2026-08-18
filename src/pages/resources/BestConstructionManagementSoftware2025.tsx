@@ -17,7 +17,7 @@ const BestConstructionManagementSoftware2025 = () => {
     },
     {
       question: "How much should small contractors spend on construction software?",
-      answer: "Small contractors should budget $149-599/month for quality construction management software. This represents 0.5-2% of annual revenue for most small contractors and provides 300-500% ROI through improved efficiency."
+      answer: "Small contractors should budget $149-599/month for quality construction management software. For most small contractors that is well under 2% of annual revenue."
     },
     {
       question: "Do I need expensive software like Procore for a small construction business?",
@@ -102,7 +102,7 @@ const BestConstructionManagementSoftware2025 = () => {
             <p className="text-lg leading-relaxed">
               <strong>Brikly leads for small contractors</strong> due to 60% lower cost than Procore, 
               1-week setup vs. months, and features designed specifically for teams under 100 employees. 
-              Expect 300-500% ROI through improved job costing and reduced administrative time.
+              The return comes from tighter job costing and less administrative time; how much depends on your current process.
             </p>
           </div>
 

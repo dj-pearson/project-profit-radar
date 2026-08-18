@@ -26,7 +26,7 @@ const JobCostingSoftwareDetailed = () => {
     },
     {
       question: "What's the ROI of using construction job costing software?",
-      answer: "Most contractors see 15-25% improvement in project profitability within 6 months of implementing job costing software. Brikly customers typically save $50,000+ annually through better cost control, reduced waste, and improved project margins."
+      answer: "Job costing improves profitability by showing you where a job is losing money while you can still act on it, instead of at closeout. How much that is worth depends on your margins and how far into a job problems currently go unnoticed. We do not publish an average savings figure because we do not measure our customers' financial outcomes."
     },
     {
       question: "How accurate is real-time job costing?",

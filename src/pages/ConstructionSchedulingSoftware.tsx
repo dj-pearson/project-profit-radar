@@ -22,7 +22,7 @@ const ConstructionSchedulingSoftware = () => {
     },
     {
       question: "What's the ROI of construction scheduling software?",
-      answer: "Most contractors see 20-30% reduction in project delays and 15-25% improvement in on-time completion rates. Brikly customers typically save $75,000+ annually through better scheduling, reduced delays, and improved resource utilization."
+      answer: "Scheduling software reduces delays by making dependencies and crew conflicts visible before they bite, rather than after a trade shows up to a site that is not ready. The size of the gain depends on how many concurrent projects you run and how you coordinate today. We do not publish an average figure because we do not measure our customers' schedule performance."
     },
     {
       question: "Can construction scheduling software integrate with other tools?",

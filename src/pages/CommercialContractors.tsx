@@ -71,7 +71,7 @@ const CommercialContractors = () => {
     <>
       <PageSEO
         title="Commercial Construction Management Software - Multi-Trade Coordination | Brikly"
-        description="Commercial construction software for contractors managing $500K-$20M+ projects. Multi-phase scheduling, subcontractor coordination, compliance tracking. $350/month vs $500+/user enterprise platforms. 25% faster project delivery, 18% better cost control."
+        description="Commercial construction software for contractors managing $500K-$20M+ projects. Multi-phase scheduling, subcontractor coordination, compliance tracking. $350/month vs $500+/user enterprise platforms."
         keywords={[
           'commercial construction software',
           'commercial contractor management',
