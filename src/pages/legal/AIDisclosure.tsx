@@ -63,6 +63,17 @@ const AIDisclosure = () => (
       posted (e.g., FTC endorsement guides).
     </p>
 
+    <h2>2a. AI Features Are Not Emergency or Health Services</h2>
+    <p>
+      AI Features are built for construction work and nothing else. They are not a medical,
+      mental-health, crisis, or emergency service, and must not be relied on as one. If you or
+      someone else is in danger, contact your local emergency number. In the United States you
+      can call or text 988 to reach the Suicide &amp; Crisis Lifeline, free and confidential,
+      24 hours a day. Where the Service detects that a voice command expresses personal
+      distress, it stops processing it as a work instruction and shows these resources instead;
+      it does not record what was said.
+    </p>
+
     <h2>3. Limitations &amp; Your Responsibility</h2>
     <p>
       AI Features can produce outputs that are inaccurate, incomplete, biased, or out of date. They

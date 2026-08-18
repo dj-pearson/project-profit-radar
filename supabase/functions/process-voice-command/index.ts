@@ -145,6 +145,11 @@ async function analyzeCommand(transcript: string): Promise<{
    - request_materials: Requesting materials, supplies, or deliveries
    - log_time: Logging work hours or time entries
    - schedule_inspection: Scheduling inspections or appointments
+   - personal_crisis: The speaker expresses thoughts of suicide, self-harm, or
+     that they are in personal crisis. This takes priority over every other
+     intent: if an utterance contains such an expression, classify it as
+     personal_crisis even when it also contains work content. Return empty
+     entities for this intent and do not paraphrase or quote what was said.
 
 2. Entities: Extract relevant details like:
    - task_name: Name of task or work phase
@@ -169,7 +174,8 @@ Respond with valid JSON only. Be flexible with construction terminology and abbr
 Examples:
 - "Mark framing 80% complete" → {"intent": "update_progress", "entities": {"phase": "framing", "completion_percentage": 80}, "confidence": 0.9}
 - "Report safety issue in area 3" → {"intent": "report_issue", "entities": {"issue_description": "safety issue", "location": "area 3", "severity": "medium"}, "confidence": 0.85}
-- "Order 50 sheets of drywall for tomorrow" → {"intent": "request_materials", "entities": {"material_name": "drywall", "quantity": 50, "delivery_date": "tomorrow"}, "confidence": 0.9}`;
+- "Order 50 sheets of drywall for tomorrow" → {"intent": "request_materials", "entities": {"material_name": "drywall", "quantity": 50, "delivery_date": "tomorrow"}, "confidence": 0.9}
+- "I finished the drywall but honestly I don't want to be here anymore, I've been thinking about ending it" → {"intent": "personal_crisis", "entities": {}, "confidence": 0.9}`;
 
   const response = await fetch("https://api.anthropic.com/v1/messages", {
     method: "POST",
