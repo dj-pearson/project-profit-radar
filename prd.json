@@ -4659,6 +4659,23 @@
       "priority": 3,
       "passes": false,
       "notes": "Discovered 2026-08-17 during a website-liability audit. Not a typical B2B SaaS litigation vector, and included because the mitigation costs little relative to the severity of the case it prevents. Check the privacy consequence in the fourth criterion carefully: capturing a distress disclosure into an audit trail would create sensitive personal information we do not currently hold."
+    },
+    {
+      "id": "US-295",
+      "title": "Substantiate or remove the performance-outcome claims across the marketing site",
+      "description": "As the company, I want every numeric outcome we advertise to be backed by evidence we can produce on request, so that we meet the FTC's substantiation requirement for objective advertising claims. US-288 removed the fabricated endorsements and the invented aggregate ratings; this story covers the ~64 performance-outcome claims that remain across roughly 33 files. They fall into three groups that need different handling. (1) Claims framed as measurements of Brikly's own customers, which are the most exposed because no such telemetry exists: src/pages/OSHAComplianceSoftware.tsx:52 states 'Brikly users report 68% fewer safety incidents and 15-25% lower workers compensation insurance premiums', and src/pages/ConstructionManagementSoftware.tsx:52 states contractors see '23% profit margin improvement, 40% reduction in administrative time, 78% fewer project delays, and 96% better budget accuracy' with 'Brikly pays for itself in 2-3 months'. Both sit in FAQ answers that feed structured data and the GEO/AI-search surfaces, so they are indexed and quotable. (2) Product-outcome claims stated flatly on feature and vertical pages: '12% higher profit margins' (features/JobCosting.tsx, features/RealTimeBudgeting.tsx, resources/FinancialIntelligenceGuide.tsx, resources/RealCostDelayedJobCosting.tsx), '45% fewer delays' (ElectricalContractorSoftware.tsx), '40% faster emergency response' (PlumbingContractorSoftware.tsx), '25% faster project delivery' and '18% better cost control' (CommercialContractors.tsx), '60% better customer satisfaction' (ResidentialContractors.tsx), '60% faster form completion' (topics/SafetyAndOSHACompliance.tsx, resources/OSHASafetyLogsPlaybook.tsx). (3) Industry-research figures that may be legitimately citable to a published source rather than to Brikly, which appear mostly in the resources/ guides. Group 3 is defensible with a visible citation; groups 1 and 2 need real data or removal. Note that pricing-comparison arithmetic ('50% less than Procore') is a different kind of claim, verifiable from published competitor pricing, and is out of scope here.",
+      "acceptanceCriteria": [
+        "Every outcome claim is triaged into one of three buckets: substantiated by Brikly data, attributable to a published third-party source, or removed",
+        "Claims kept as Brikly measurements are added to src/config/claims.ts with verified: true, a lastVerifiedAt date, and a source pointing at the evidence, and are read from the registry rather than hardcoded",
+        "Claims kept as industry research carry a visible inline citation naming the source and year, at the point the figure appears",
+        "Claims that cannot be substantiated are removed rather than softened, since a vaguer version of an unsupported claim is still an unsupported claim",
+        "The FAQ answers in OSHAComplianceSoftware.tsx and ConstructionManagementSoftware.tsx are corrected first, because they assert customer telemetry that does not exist and are indexed as structured data",
+        "The guard test in src/config/__tests__/claims.test.ts is extended to fail on a hardcoded outcome percentage in a marketing surface that is not registry-backed or citation-backed",
+        "npm run lint and npm run test:run pass"
+      ],
+      "priority": 2,
+      "passes": false,
+      "notes": "Discovered 2026-08-17 during the website-liability audit; split out of US-288 on 2026-08-18 because the remedy differs per claim and needs Dj's input on which figures have real data behind them. Inventory: 64 matches of the outcome-claim pattern across 33 files under src/pages and src/components. Lower priority than US-288 only because those claims were attributed to named fake people, which is the sharper FTC exposure; the group-1 claims here are arguably as bad and should not sit indefinitely."
     }
   ]
 }
