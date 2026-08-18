@@ -242,13 +242,8 @@ const DailyReports = () => {
             continue;
           }
 
-          const { data: urlData } = supabase.storage
-            .from('project-documents')
-            .getPublicUrl(filePath);
-
-          if (urlData?.publicUrl) {
-            photoUrls.push(urlData.publicUrl);
-          }
+          // Persist the storage path, not a permanent public URL (US-289).
+          photoUrls.push(filePath);
         }
       }
 

@@ -16,6 +16,9 @@ import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { Send, Upload, File, Download, Clock, Check, CheckCheck, HelpCircle, AlertCircle, CheckCircle2, MessageSquare } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { StorageImage } from '@/lib/storage/StorageImage';
+import { Skeleton } from '@/components/ui/skeleton';
+import { openStorageObject } from '@/lib/storage/signedUrl';
 
 interface Message {
   id: string;
@@ -180,10 +183,7 @@ export const ClientMessageCenter: React.FC<ClientMessageCenterProps> = ({ projec
 
       if (uploadError) throw uploadError;
 
-      const { data: urlData } = supabase.storage
-        .from('project-communications')
-        .getPublicUrl(filePath);
-
+      // Persist the storage path, not a permanent public URL (US-289).
       const messageType = file.type.startsWith('image/') ? 'image' : 'file';
 
       const { error: messageError } = await supabase
@@ -193,7 +193,7 @@ export const ClientMessageCenter: React.FC<ClientMessageCenterProps> = ({ projec
           sender_id: user.id,
           sender_type: 'client',
           message_text: file.name,
-          attachments: [urlData.publicUrl],
+          attachments: [filePath],
           message_type: messageType,
           category: messageCategory,
           priority: messagePriority
@@ -308,11 +308,12 @@ export const ClientMessageCenter: React.FC<ClientMessageCenterProps> = ({ projec
           {message.message_type === 'image' && message.attachments && (
             <div className="space-y-2">
               <div className="text-sm">{message.message_text}</div>
-              <img
-                src={message.attachments[0]}
+              <StorageImage
+                bucket="project-communications"
+                stored={message.attachments[0]}
                 alt="Shared image"
-                className="max-w-full h-auto rounded cursor-pointer"
-                onClick={() => window.open(message.attachments?.[0], '_blank')}
+                className="max-w-full h-auto rounded"
+                fallback={<Skeleton className="h-40 w-full rounded" />}
               />
             </div>
           )}
@@ -324,7 +325,7 @@ export const ClientMessageCenter: React.FC<ClientMessageCenterProps> = ({ projec
               <Button
                 size="sm"
                 variant="ghost"
-                onClick={() => window.open(message.attachments?.[0], '_blank')}
+                onClick={() => { void openStorageObject('project-communications', message.attachments?.[0]); }}
                 className="h-6 w-6 p-0"
               >
                 <Download className="h-3 w-3" />

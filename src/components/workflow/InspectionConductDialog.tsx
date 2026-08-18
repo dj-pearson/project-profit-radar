@@ -119,8 +119,9 @@ const InspectionConductDialog: React.FC<InspectionConductDialogProps> = ({ open,
       const path = `inspections/${inspection.id}/photos/${Date.now()}-${file.name}`;
       const { error } = await supabase.storage.from('project-documents').upload(path, file);
       if (error) throw error;
-      const { data } = supabase.storage.from('project-documents').getPublicUrl(path);
-      url = data.publicUrl;
+      // Store the storage path (US-289). Readers resolve it through
+      // resolveStorageUrl; the data-URL fallback below stays as-is.
+      url = path;
     } catch (e) {
       url = await fileToDataUrl(file);
     }

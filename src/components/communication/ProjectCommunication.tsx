@@ -7,6 +7,9 @@ import { Separator } from '@/components/ui/separator';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { Send, Upload, File, Download, Clock, Check, CheckCheck } from 'lucide-react';
+import { openStorageObject } from '@/lib/storage/signedUrl';
+import { StorageImage } from '@/lib/storage/StorageImage';
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface Message {
   id: string;
@@ -161,11 +164,8 @@ export const ProjectCommunication: React.FC<ProjectCommunicationProps> = ({
 
       if (uploadError) throw uploadError;
 
-      // Get public URL
-      const { data: urlData } = supabase.storage
-        .from('project-communications')
-        .getPublicUrl(filePath);
-
+      // Persist the storage path, not a permanent public URL (US-289).
+      // Readers resolve it through resolveStorageUrl at display time.
       const messageType = file.type.startsWith('image/') ? 'image' : 'file';
 
       const { error: messageError } = await supabase
@@ -175,7 +175,7 @@ export const ProjectCommunication: React.FC<ProjectCommunicationProps> = ({
           sender_id: user.id,
           sender_type: userType,
           message_text: file.name,
-          attachments: [urlData.publicUrl],
+          attachments: [filePath],
           message_type: messageType
         });
 
@@ -239,11 +239,12 @@ export const ProjectCommunication: React.FC<ProjectCommunicationProps> = ({
           {message.message_type === 'image' && message.attachments && (
             <div className="space-y-2">
               <div className="text-sm">{message.message_text}</div>
-              <img 
-                src={message.attachments[0]} 
-                alt="Shared image" 
-                className="max-w-full h-auto rounded cursor-pointer"
-                onClick={() => window.open(message.attachments?.[0], '_blank')}
+              <StorageImage
+                bucket="project-communications"
+                stored={message.attachments[0]}
+                alt="Shared image"
+                className="max-w-full h-auto rounded"
+                fallback={<Skeleton className="h-40 w-full rounded" />}
               />
             </div>
           )}
@@ -255,7 +256,7 @@ export const ProjectCommunication: React.FC<ProjectCommunicationProps> = ({
               <Button
                 size="sm"
                 variant="ghost"
-                onClick={() => window.open(message.attachments?.[0], '_blank')}
+                onClick={() => { void openStorageObject('project-communications', message.attachments?.[0]); }}
                 className="h-6 w-6 p-0"
               >
                 <Download className="h-3 w-3" />

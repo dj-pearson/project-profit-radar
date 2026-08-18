@@ -16,7 +16,8 @@ interface Message {
   user_id: string;
   channel_id: string;
   message_type: string;
-  attachments?: { name: string; type: string; size: number; url: string }[];
+  // bucket/path since US-289; `url` remains for rows written before that.
+  attachments?: { name: string; type: string; size: number; bucket?: string; path?: string; url?: string }[];
   mentions?: string[];
   reply_to_message_id?: string;
   user_profiles?: {
@@ -220,15 +221,14 @@ export const ProjectChat: React.FC<ProjectChatProps> = ({ channel, userProfile }
 
         if (uploadError) throw uploadError;
 
-        const { data: { publicUrl } } = supabase.storage
-          .from('project-files')
-          .getPublicUrl(filePath);
-
+        // Store the storage path rather than a permanent public URL
+        // (US-289); readers sign it at display time.
         attachments.push({
           name: file.name,
           type: file.type,
           size: file.size,
-          url: publicUrl
+          bucket: 'project-files',
+          path: filePath,
         });
       }
 
@@ -319,7 +319,7 @@ export const ProjectChat: React.FC<ProjectChatProps> = ({ channel, userProfile }
           }`}>
             {message.message_type === 'file' && message.attachments && message.attachments.length > 0 && (
               <div className="space-y-2 mb-2">
-                {message.attachments.map((file: { name: string; type: string; size: number; url: string }, index: number) => (
+                {message.attachments.map((file: { name: string; type: string; size: number; bucket?: string; path?: string; url?: string }, index: number) => (
                   <div key={index} className="flex items-center gap-2 p-2 bg-background/50 rounded">
                     <FileText className="h-4 w-4" />
                     <span className="text-sm truncate">{file.name}</span>

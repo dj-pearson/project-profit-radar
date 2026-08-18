@@ -473,10 +473,8 @@ const VoiceNotes: React.FC<VoiceNotesProps> = ({
 
       if (uploadError) throw uploadError;
 
-      // Get public URL
-      const { data: urlData } = supabase.storage
-        .from('project-documents')
-        .getPublicUrl(`voice-notes/${note.filename}`);
+      // Persist the storage path, not a permanent public URL (US-289).
+      const storagePath = `voice-notes/${note.filename}`;
 
       // Save to database
       const { error: dbError } = await supabase
@@ -486,7 +484,7 @@ const VoiceNotes: React.FC<VoiceNotesProps> = ({
           project_id: note.projectId,
           name: note.title,
           description: `${note.description}\nDuration: ${Math.floor(note.duration / 60)}:${(note.duration % 60).toString().padStart(2, '0')}\nTags: ${note.tags.join(', ')}\n${note.transcription ? `Transcription: ${note.transcription}` : ''}`,
-          file_path: urlData.publicUrl,
+          file_path: storagePath,
           file_type: 'audio/webm',
           uploaded_by: user?.id,
           ai_classification: {

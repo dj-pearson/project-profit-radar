@@ -82,11 +82,8 @@ export const RealTimeCostEntry: React.FC<RealTimeCostEntryProps> = ({
         continue;
       }
       
-      const { data: { publicUrl } } = supabase.storage
-        .from('project-files')
-        .getPublicUrl(filePath);
-      
-      uploadedUrls.push(publicUrl);
+      // Persist the storage path, not a permanent public URL (US-289).
+      uploadedUrls.push(filePath);
     }
     
     return uploadedUrls;

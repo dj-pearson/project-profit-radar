@@ -7,6 +7,8 @@ import { Upload, X, Image as ImageIcon, ExternalLink } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { compressImage } from '@/lib/image-compression';
+import { isAbsoluteUrl, parseStorageUrl } from '@/lib/storage/signedUrl';
+import { useStorageUrl } from '@/lib/storage/useStorageUrl';
 
 interface ImageUploadProps {
   value: string;
@@ -81,12 +83,10 @@ export const ImageUpload = ({
 
       if (error) throw error;
 
-      // Get public URL
-      const { data: { publicUrl } } = supabase.storage
-        .from(bucket)
-        .getPublicUrl(data.path);
-
-      onChange(publicUrl);
+      // Persist the storage path, not a permanent public URL (US-289).
+      // The preview below resolves it through resolveStorageUrl, which signs
+      // private buckets and keeps public URLs for marketing asset buckets.
+      onChange(data.path);
       
       toast({
         title: "Success",
@@ -105,24 +105,26 @@ export const ImageUpload = ({
     }
   };
 
+  // Signed URLs expire, so the preview is resolved at render time rather
+  // than stored. Handles both a path and a legacy absolute URL.
+  const { url: previewUrl } = useStorageUrl(bucket, value);
+
   const handleUrlChange = (url: string) => {
     onChange(url);
   };
 
   const handleRemove = async () => {
-    if (value && value.includes(bucket)) {
-      try {
-        // Extract file path from URL
-        const url = new URL(value);
-        const pathParts = url.pathname.split('/');
-        const filePath = pathParts.slice(pathParts.indexOf(bucket) + 1).join('/');
-
-        // Remove from storage
-        await supabase.storage
-          .from(bucket)
-          .remove([filePath]);
-      } catch (error) {
-        console.error('Error removing file:', error);
+    if (value) {
+      // `value` is a storage path for anything uploaded since US-289, and a
+      // full public URL for rows written before it. parseStorageUrl recovers
+      // the path from the legacy form.
+      const parsed = isAbsoluteUrl(value) ? parseStorageUrl(value) : { bucket, path: value };
+      if (parsed) {
+        try {
+          await supabase.storage.from(parsed.bucket).remove([parsed.path]);
+        } catch (error) {
+          console.error('Error removing file:', error);
+        }
       }
     }
     onChange('');
@@ -185,7 +187,7 @@ export const ImageUpload = ({
               <div className="relative w-16 h-16 border rounded-lg overflow-hidden bg-muted">
                 {value ? (
                   <img 
-                    src={value} 
+                    src={previewUrl ?? undefined} 
                     alt="Preview" 
                     className="w-full h-full object-cover"
                     onError={(e) => {
