@@ -289,12 +289,17 @@ const PrivacyPolicy = () => (
     </p>
 
     <h2>12. Contact &amp; Data Protection Officer</h2>
+    {/*
+      The postal line previously read "123 Construction Way, Suite 100, Builder City,
+      BC 12345, USA" - placeholder text standing in for the contact address that
+      CCPA/CPRA and GDPR expect for rights requests. A fabricated address is worse
+      than none, so it has been removed. Restore it with Brikly Inc.'s real
+      registered address; do not substitute another placeholder.
+    */}
     <address className="not-italic bg-muted p-4 rounded-md">
       <strong>Brikly Inc. — Privacy Team</strong>
       <br />
       Email: <a href="mailto:privacy@brikly.net">privacy@brikly.net</a>
-      <br />
-      Mail: 123 Construction Way, Suite 100, Builder City, BC 12345, USA
     </address>
     <p>
       For EEA / UK matters you may contact our designated representative at the same email

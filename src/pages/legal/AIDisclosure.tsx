@@ -87,8 +87,9 @@ const AIDisclosure = () => (
     <p>
       When you invoke an AI Feature, the inputs you provide (text, file content, or selected fields)
       may be transmitted to a third-party AI provider listed in our{' '}
-      <a href="/subprocessors">Subprocessors</a> page (currently Anthropic). We have contracts with
-      these providers that:
+      <a href="/subprocessors">Subprocessors</a> page (currently Anthropic and OpenAI; which
+      provider handles a given feature is listed there). We have contracts with these providers
+      that:
     </p>
     <ul>
       <li>Limit use of customer inputs and outputs to providing the requested service;</li>

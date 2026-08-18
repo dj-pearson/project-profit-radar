@@ -5,6 +5,7 @@ import { Link } from "react-router-dom";
 import SmartLogo from "@/components/ui/smart-logo";
 import { toast } from "sonner";
 import { OPEN_PREFERENCES_EVENT } from "@/lib/consent/consentStore";
+import { CONTACT, hasPostalAddress, postalAddressLines } from '@/config/companyContact';
 
 const Footer = () => {
   const [email, setEmail] = useState("");
@@ -119,16 +120,25 @@ const Footer = () => {
                   <Mail className="h-4 w-4" />
                   support@brikly.net
                 </div>
-                {/* Physical mailing address — required for CAN-SPAM and many
-                    state privacy-law disclosures. */}
-                <address className="not-italic flex items-start gap-2 text-white/80">
-                  <MapPin className="h-4 w-4 mt-0.5 flex-shrink-0" />
-                  <span>
-                    Brikly Inc.<br />
-                    123 Construction Way, Suite 100<br />
-                    Builder City, BC 12345, USA
-                  </span>
-                </address>
+                {/* Physical mailing address. Rendered only when a real one is
+                    configured in src/config/companyContact.ts - the previous
+                    hardcoded value was placeholder text, and a fabricated
+                    address defeats the CAN-SPAM and privacy-law purpose it was
+                    supposed to serve. */}
+                {hasPostalAddress() && (
+                  <address className="not-italic flex items-start gap-2 text-white/80">
+                    <MapPin className="h-4 w-4 mt-0.5 flex-shrink-0" />
+                    <span>
+                      {CONTACT.legalName}
+                      {postalAddressLines().map((line) => (
+                        <span key={line}>
+                          <br />
+                          {line}
+                        </span>
+                      ))}
+                    </span>
+                  </address>
+                )}
               </div>
 
               {/* Newsletter Signup */}

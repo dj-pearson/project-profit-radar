@@ -1,3 +1,4 @@
+import { CONTACT, hasPostalAddress, postalAddressLines } from '@/config/companyContact';
 /**
  * Base Email Template
  * Provides consistent styling and layout for all emails
@@ -159,10 +160,20 @@ export const baseEmailTemplate = ({
               <p style="margin: 0 0 16px; color: #6B7280; font-size: 14px; line-height: 1.5;">
                 ${footerText}
               </p>
+              <!--
+                CAN-SPAM (15 U.S.C. 7704(a)(5)) requires a VALID physical postal
+                address in commercial email. The address hardcoded here was
+                placeholder text ("123 Construction Way, Suite 100, Builder
+                City, BC 12345"), which is a violation rather than compliance,
+                so it was removed. Set POSTAL_ADDRESS in
+                src/config/companyContact.ts to Brikly Inc.'s real registered
+                address and it renders again here automatically. Commercial
+                (marketing) email should not be sent until that is set.
+              -->
               <p style="margin: 0 0 12px; color: #6B7280; font-size: 12px; line-height: 1.5;">
-                <strong>Brikly Inc.</strong><br />
-                123 Construction Way, Suite 100<br />
-                Builder City, BC 12345, USA
+                <strong>${CONTACT.legalName}</strong>${
+                  hasPostalAddress() ? `<br />${postalAddressLines().join('<br />')}` : ''
+                }
               </p>
               <p style="margin: 0 0 8px; color: #9CA3AF; font-size: 12px;">
                 You're receiving this email because you have an account with Brikly or signed up for product updates. Questions? Reply to this email or visit our <a href="https://brikly.net/support" style="color: #F97316;">Help Center</a>.

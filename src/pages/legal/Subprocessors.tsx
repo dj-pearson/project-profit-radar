@@ -58,9 +58,20 @@ const SUBPROCESSORS: Subprocessor[] = [
     url: 'https://www.anthropic.com/legal/privacy',
   },
   {
+    name: 'OpenAI, L.L.C.',
+    purpose:
+      'AI features (document classification, voice transcription, predictive analytics, resource and timeline optimization, content generation)',
+    dataCategories:
+      'User-submitted prompts and content where the user invokes AI features, including uploaded document text and recorded audio submitted for transcription',
+    region: 'United States',
+    url: 'https://openai.com/policies/privacy-policy',
+  },
+  {
     name: 'Google LLC',
-    purpose: 'Optional Google Calendar and Google OAuth integrations',
-    dataCategories: 'Calendar events, basic profile data (only if user enables integration)',
+    purpose:
+      'Website analytics (Google Analytics 4) on our marketing site, subject to your cookie choices; optional Google Calendar and Google OAuth integrations',
+    dataCategories:
+      'Marketing-site page views, pseudonymous analytics identifiers and IP-derived approximate location (only where analytics cookies are consented to); calendar events and basic profile data (only if user enables the integration)',
     region: 'United States; global',
     url: 'https://policies.google.com/privacy',
   },
@@ -84,6 +95,21 @@ const SUBPROCESSORS: Subprocessor[] = [
     dataCategories: 'Recipient email addresses, email subject and body content',
     region: 'United States',
     url: 'https://aws.amazon.com/privacy/',
+  },
+  {
+    name: 'Resend, Inc.',
+    purpose:
+      'Transactional and lifecycle email delivery (notifications, payment and renewal reminders, safety alerts, trial and funnel sequences)',
+    dataCategories: 'Recipient email addresses, email subject and body content',
+    region: 'United States',
+    url: 'https://resend.com/legal/privacy-policy',
+  },
+  {
+    name: 'Twilio Inc. (SendGrid)',
+    purpose: 'Email delivery for SEO and reporting notifications',
+    dataCategories: 'Recipient email addresses, email subject and body content',
+    region: 'United States',
+    url: 'https://www.twilio.com/legal/privacy',
   },
   {
     name: 'Twilio Inc.',

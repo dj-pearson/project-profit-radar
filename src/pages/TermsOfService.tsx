@@ -336,7 +336,6 @@ const TermsOfService = () => (
       <br />
       Support: <a href="mailto:support@brikly.net">support@brikly.net</a>
       <br />
-      Mail: 123 Construction Way, Suite 100, Builder City, BC 12345, USA
     </address>
   </LegalPageLayout>
 );

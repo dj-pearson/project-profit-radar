@@ -56,7 +56,7 @@ const DoNotSell = () => (
         <a href="/profile">your Account settings</a>;
       </li>
       <li>
-        Mail: Brikly, Attn: Privacy, 123 Construction Way, Suite 100, Builder City, BC 12345, USA.
+        Email: privacy@brikly.net, with "Do Not Sell or Share" in the subject line.
       </li>
     </ul>
     <p>

@@ -67,7 +67,7 @@ const DMCAPolicy = () => (
       <br />
       Email: <a href="mailto:dmca@brikly.net">dmca@brikly.net</a>
       <br />
-      Mail: Brikly, Attn: DMCA Agent, 123 Construction Way, Suite 100, Builder City, BC 12345, USA
+      DMCA notices are received at the email address above. A designated agent must also be registered with the U.S. Copyright Office for safe-harbor purposes.
     </address>
     <p>
       Brikly's Designated Copyright Agent is registered with the United States Copyright Office.
