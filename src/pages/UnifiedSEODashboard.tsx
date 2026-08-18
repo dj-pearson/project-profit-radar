@@ -325,11 +325,6 @@ const UnifiedSEODashboard = () => {
             "@type": "ImageObject",
             "url": config.default_og_image
           }
-        },
-        "aggregateRating": {
-          "@type": "AggregateRating",
-          "ratingValue": "4.8",
-          "reviewCount": "247"
         }
       };
 

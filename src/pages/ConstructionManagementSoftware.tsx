@@ -190,7 +190,7 @@ const ConstructionManagementSoftware = () => {
                 Ready to Transform Your Construction Management?
               </h2>
               <p className="text-lg mb-6 opacity-90">
-                Join 500+ contractors who have streamlined their operations and increased profitability with Brikly.
+                Streamline your operations and keep every project profitable with Brikly.
               </p>
               <Link to="/auth">
                 <Button size="lg" variant="secondary">

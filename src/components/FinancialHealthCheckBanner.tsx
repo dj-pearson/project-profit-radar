@@ -52,7 +52,7 @@ const FinancialHealthCheckBanner = () => {
               </Link>
             </Button>
             <p className="text-white/80 text-xs text-center mt-2">
-              No credit card • 500+ contractors assessed
+              No credit card required
             </p>
           </div>
         </div>

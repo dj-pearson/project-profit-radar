@@ -312,7 +312,7 @@ const ConstructionSchedulingSoftwareGuide = () => {
             Stop Project Delays Today
           </h2>
           <p className="text-muted-foreground mb-6 max-w-2xl mx-auto">
-            Join 300+ contractors using Brikly scheduling to finish projects on time. 
+            Use Brikly scheduling to finish projects on time. 
             Real-time updates, resource optimization, and mobile access included.
           </p>
           <Button asChild size="lg">

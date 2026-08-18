@@ -245,7 +245,7 @@ const ProcoreAlternativeDetailed = () => {
             Ready to Switch from Procore?
           </h2>
           <p className="text-muted-foreground mb-6 max-w-2xl mx-auto">
-            Join 500+ small contractors who switched to Brikly and saved 
+            Switch to Brikly and save 
             thousands annually while improving their project management.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">

@@ -9,7 +9,7 @@ const FinancialHealthCheckPage = () => {
     <div className="min-h-screen bg-background">
       <PageSEO
         title="Free Financial Intelligence Health Check for Contractors | Brikly"
-        description="Take our 2-minute assessment to discover what financial blindness is costing your construction business. Get personalized report showing hidden costs, time waste, and ROI projections. 500+ contractors improved margins by 4%+ after identifying their financial gaps."
+        description="Take our 2-minute assessment to discover what financial blindness is costing your construction business. Get personalized report showing hidden costs, time waste, and ROI projections. Identify the financial gaps costing you margin."
         keywords={[
           'contractor financial assessment',
           'construction profit calculator',
@@ -104,7 +104,7 @@ const FinancialHealthCheckPage = () => {
         <section className="container mx-auto px-4 mt-16">
           <div className="max-w-3xl mx-auto bg-white p-8 rounded-xl shadow-lg text-center">
             <h3 className="text-xl font-bold text-construction-dark mb-4">
-              Join 500+ Contractors Who Discovered Their Hidden Costs
+              Find Out What Your Hidden Costs Are
             </h3>
             <div className="grid md:grid-cols-3 gap-6">
               <div>

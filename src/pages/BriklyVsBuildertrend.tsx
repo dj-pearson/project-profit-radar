@@ -161,14 +161,6 @@ const BriklyVsBuildertrend = () => {
                   <div className="text-sm text-muted-foreground">Setup time</div>
                 </div>
               </div>
-              <div className="flex items-center gap-2">
-                <div className="flex">
-                  {[...Array(5)].map((_, i) => (
-                    <Star key={i} className="h-4 w-4 text-yellow-400 fill-current" />
-                  ))}
-                </div>
-                <span className="text-sm">4.8/5.0 (500+ reviews)</span>
-              </div>
             </CardContent>
           </Card>
 
@@ -394,7 +386,7 @@ const BriklyVsBuildertrend = () => {
             Ready to Make the Switch to Brikly?
           </h2>
           <p className="text-muted-foreground mb-6 max-w-2xl mx-auto">
-            Join 300+ contractors who switched from Buildertrend to Brikly and saved 
+            Switch from Buildertrend to Brikly and save 
             thousands annually while improving their project management efficiency.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">

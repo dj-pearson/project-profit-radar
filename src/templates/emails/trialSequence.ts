@@ -90,7 +90,7 @@ export const day1GettingStarted = (data: TrialEmailData): string => {
       </ul>
 
       <div style="background: #FEF3C7; border-left: 4px solid #F97316; padding: 16px; margin: 24px 0; border-radius: 4px;">
-        <p style="margin: 0; color: #92400E;"><strong>💡 Success Story:</strong> "I created my first project in Brikly on Monday. By Friday, I had caught a $3,000 cost overrun before it became a problem." - Mike R., General Contractor</p>
+        <p style="margin: 0; color: #92400E;">Set up a project with its real budget and cost codes. That is what makes the daily cost report meaningful in week one.</p>
       </div>
 
       <p>You have <strong>${data.daysRemaining} days left</strong> in your trial. Let's make them count!</p>
@@ -161,67 +161,49 @@ export const day3TimeTracking = (data: TrialEmailData): string => {
 /**
  * Day 7: Case Study - Social Proof
  */
-export const day7CaseStudy = (data: TrialEmailData): string => {
+/**
+ * Day 7: Mid-trial checklist.
+ *
+ * NOTE: this email previously presented a fabricated case study for "ABC
+ * Construction" (a 25-employee commercial contractor with $5M revenue),
+ * including an invented customer quote and invented outcomes: a 12% margin
+ * increase, $180,000 additional first-year profit, and 5 hours/week saved.
+ * No such customer or measurement existed. Publishing invented outcomes is an
+ * FTC Act Section 5 problem whether it appears on a web page or in email, so
+ * the case study was replaced with the setup checklist it was wrapped around.
+ *
+ * To publish a real case study here, add it to CLAIMS.caseStudies in
+ * src/config/claims.ts, which enforces the permission and evidence
+ * requirement in one place.
+ */
+export const day7MidTrialChecklist = (data: TrialEmailData): string => {
   return baseEmailTemplate({
-    previewText: `How ABC Construction increased profit margins by 12% with Brikly`,
-    headline: `How contractors are increasing profits by 12%`,
-    subheadline: `Real results from real construction companies`,
+    previewText: `You are halfway through your Brikly trial - here is the setup checklist`,
+    headline: `Halfway through your trial`,
+    subheadline: `Four things worth setting up before it ends`,
     bodyContent: `
       <p>Hi ${data.firstName},</p>
 
-      <p>You're halfway through your trial, so I wanted to share what's possible with Brikly.</p>
+      <p>You are halfway through your trial. Contractors who get a clear read on Brikly by the end usually have these four things in place:</p>
 
-      <div style="background: linear-gradient(135deg, #FEF3C7 0%, #FFFFFF 100%); padding: 24px; border-radius: 12px; margin: 24px 0; border: 2px solid #F97316;">
-        <h3 style="margin: 0 0 8px; color: #1F2937; font-size: 22px;">📊 ABC Construction</h3>
-        <p style="margin: 0 0 16px; color: #F97316; font-weight: 600;">Commercial Contractor • 25 employees • $5M annual revenue</p>
-
-        <p style="margin: 0; color: #4B5563;"><strong>The Problem:</strong><br>
-        "We were constantly going over budget. By the time we realized a job was underwater, it was too late to fix it. We were flying blind."</p>
-
-        <p style="margin: 16px 0 0; color: #4B5563;"><strong>The Solution:</strong><br>
-        ABC implemented Brikly's real-time job costing and daily reporting. Within 30 days, they could see:</p>
-        <ul style="margin: 8px 0; padding-left: 20px; color: #4B5563;">
-          <li>Actual costs vs budget on every job, updated daily</li>
-          <li>Which crews were most efficient</li>
-          <li>Where materials were being wasted</li>
-          <li>Change orders that needed immediate attention</li>
-        </ul>
-
-        <p style="margin: 16px 0 0; color: #4B5563;"><strong>The Results:</strong></p>
-        <div style="display: table; width: 100%; margin: 12px 0;">
-          <div style="display: table-row;">
-            <div style="display: table-cell; padding: 8px; background: #DCFCE7; font-weight: 600; color: #166534; border-radius: 4px;">12% increase in profit margins</div>
-          </div>
-        </div>
-        <div style="display: table; width: 100%; margin: 12px 0;">
-          <div style="display: table-row;">
-            <div style="display: table-cell; padding: 8px; background: #DBEAFE; font-weight: 600; color: #1E40AF; border-radius: 4px;">$180,000 additional profit in Year 1</div>
-          </div>
-        </div>
-        <div style="display: table; width: 100%; margin: 12px 0;">
-          <div style="display: table-row;">
-            <div style="display: table-cell; padding: 8px; background: #FEF3C7; font-weight: 600; color: #92400E; border-radius: 4px;">5 hours/week saved on admin</div>
-          </div>
-        </div>
-      </div>
-
-      <p><strong>Want similar results?</strong> Here's what ABC did in their first 30 days:</p>
       <ol style="margin: 16px 0; padding-left: 20px;">
-        <li style="margin-bottom: 8px;">Set up 3 active projects in Brikly</li>
-        <li style="margin-bottom: 8px;">Connected QuickBooks for automatic sync</li>
-        <li style="margin-bottom: 8px;">Trained all crew leads on mobile time tracking</li>
-        <li style="margin-bottom: 8px;">Started reviewing daily cost reports every morning</li>
+        <li style="margin-bottom: 8px;">Set up at least 3 active projects, so job costing has something real to compare</li>
+        <li style="margin-bottom: 8px;">Connect QuickBooks so costs sync automatically instead of by hand</li>
+        <li style="margin-bottom: 8px;">Get your crew leads onto mobile time tracking</li>
+        <li style="margin-bottom: 8px;">Check the daily cost report each morning for a week</li>
       </ol>
 
-      <p>You have <strong>${data.daysRemaining} days left</strong> to see if Brikly can do the same for ${data.companyName || 'your company'}.</p>
+      <p>That last one is the point of the whole thing: seeing actual cost against budget while a job is still running, rather than at closeout.</p>
 
-      <p>Want help setting up like ABC did? Reply to this email and I'll personally walk you through it.</p>
+      <p>You have <strong>${data.daysRemaining} days left</strong> to see how that works for ${data.companyName || 'your company'}.</p>
+
+      <p>Want help getting any of this set up? Reply to this email and we will walk you through it.</p>
 
       <p>Cheers,<br>
       <strong>The Brikly Team</strong></p>
     `,
-    ctaText: 'See Full Case Study',
-    ctaUrl: `${data.dashboardUrl}/case-studies`,
+    ctaText: 'Open Your Dashboard',
+    ctaUrl: data.dashboardUrl,
     unsubscribeUrl: data.unsubscribeUrl,
   });
 };
@@ -290,52 +272,42 @@ export const day11TrialExpiring = (data: TrialEmailData): string => {
 /**
  * Day 12: Testimonials & Urgency
  */
-export const day12Testimonials = (data: TrialEmailData): string => {
+/**
+ * Day 12: What you get on a paid plan.
+ *
+ * NOTE: this email previously carried three fabricated endorsements
+ * ("David M., Commercial GC, Phoenix AZ", "Sarah K., Residential Builder,
+ * Austin TX", "Mike R., Plumbing Contractor, Denver CO") and a "4.8 average
+ * rating from 500+ contractors" band, none of which had any underlying
+ * customers or reviews. Sending invented endorsements to every trial user is
+ * an FTC Endorsement Guide (16 C.F.R. Part 255) violation, so the
+ * endorsements were removed and the email now describes the plan itself.
+ *
+ * To reintroduce endorsements here, source them from CLAIMS.testimonials in
+ * src/config/claims.ts so the permission requirement is enforced in one place.
+ */
+export const day12WhatYouGet = (data: TrialEmailData): string => {
   return baseEmailTemplate({
-    previewText: `Join 500+ contractors who switched to Brikly - Trial ends in ${data.daysRemaining} days`,
-    headline: `Why contractors choose Brikly`,
-    subheadline: `Don't just take our word for it`,
+    previewText: `What you get on a paid Brikly plan - trial ends in ${data.daysRemaining} days`,
+    headline: `What you get on a paid plan`,
+    subheadline: `Everything unlocked, no per-user pricing`,
     bodyContent: `
       <p>Hey ${data.firstName},</p>
 
-      <p>Your trial ends in <strong>${data.daysRemaining} days</strong>. Before you decide, hear from contractors who made the switch:</p>
+      <p>Your trial ends in <strong>${data.daysRemaining} days</strong>. Here is what a paid plan includes:</p>
 
-      <div style="background: #F9FAFB; padding: 20px; border-left: 4px solid #F97316; margin: 24px 0; border-radius: 4px;">
-        <p style="margin: 0 0 8px; color: #1F2937; font-weight: 600;">"Brikly paid for itself in the first week."</p>
-        <p style="margin: 0; color: #6B7280; font-size: 14px;">We caught a $12,000 cost overrun that would have killed our margin. The real-time job costing is a game-changer.</p>
-        <p style="margin: 12px 0 0; color: #9CA3AF; font-size: 14px;">— David M., Commercial GC, Phoenix AZ</p>
-      </div>
-
-      <div style="background: #F9FAFB; padding: 20px; border-left: 4px solid #F97316; margin: 24px 0; border-radius: 4px;">
-        <p style="margin: 0 0 8px; color: #1F2937; font-weight: 600;">"Finally, software built FOR contractors, not against us."</p>
-        <p style="margin: 0; color: #6B7280; font-size: 14px;">Other software felt like it was designed by people who never set foot on a job site. Brikly just works the way we work.</p>
-        <p style="margin: 12px 0 0; color: #9CA3AF; font-size: 14px;">— Sarah K., Residential Builder, Austin TX</p>
-      </div>
-
-      <div style="background: #F9FAFB; padding: 20px; border-left: 4px solid #F97316; margin: 24px 0; border-radius: 4px;">
-        <p style="margin: 0 0 8px; color: #1F2937; font-weight: 600;">"My crews actually USE it. That's huge."</p>
-        <p style="margin: 0; color: #6B7280; font-size: 14px;">I've tried 3 other systems. The guys hated them and went back to paper. With Brikly's mobile app, everyone's on board.</p>
-        <p style="margin: 12px 0 0; color: #9CA3AF; font-size: 14px;">— Mike R., Plumbing Contractor, Denver CO</p>
-      </div>
-
-      <div style="background: #DCFCE7; padding: 24px; border-radius: 8px; margin: 24px 0; text-align: center;">
-        <p style="margin: 0; color: #166534; font-size: 24px; font-weight: 700;">4.8 ⭐⭐⭐⭐⭐</p>
-        <p style="margin: 8px 0 0; color: #166534;">Average rating from 500+ contractors</p>
-      </div>
-
-      <p><strong>What you get when you upgrade:</strong></p>
       <ul style="margin: 16px 0; padding-left: 20px;">
         <li style="margin-bottom: 8px;">All features unlocked permanently</li>
         <li style="margin-bottom: 8px;">Unlimited projects and users</li>
-        <li style="margin-bottom: 8px;">Priority support (< 2 hour response)</li>
+        <li style="margin-bottom: 8px;">Priority support</li>
         <li style="margin-bottom: 8px;">QuickBooks integration</li>
-        <li style="margin-bottom: 8px;">Mobile apps for iOS & Android</li>
-        <li style="margin-bottom: 8px;">Automatic backups & security</li>
+        <li style="margin-bottom: 8px;">Mobile apps for iOS and Android</li>
+        <li style="margin-bottom: 8px;">Automatic backups and security</li>
       </ul>
 
-      <p>Have questions before upgrading? Reply to this email - I'm happy to help!</p>
+      <p>Everything you entered during the trial stays exactly where it is when you upgrade.</p>
 
-      <p>With <strong>${data.daysRemaining} days left</strong>, now's the time to make your decision.</p>
+      <p>Have questions before upgrading? Reply to this email and we will help.</p>
 
       <p>Thanks for trying Brikly,<br>
       <strong>The Brikly Team</strong></p>
@@ -487,9 +459,9 @@ export const trialSequenceEmails = {
   day0: welcomeEmail,
   day1: day1GettingStarted,
   day3: day3TimeTracking,
-  day7: day7CaseStudy,
+  day7: day7MidTrialChecklist,
   day11: day11TrialExpiring,
-  day12: day12Testimonials,
+  day12: day12WhatYouGet,
   day13: day13LastChance,
   day15: day15GracePeriod,
 };

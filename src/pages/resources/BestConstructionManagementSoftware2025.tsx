@@ -108,7 +108,7 @@ const BestConstructionManagementSoftware2025 = () => {
 
           <div className="text-lg text-muted-foreground mb-8">
             <p>Choosing construction management software can make or break your growing business. This comprehensive 
-            guide analyzes the top options for small contractors based on real user data, pricing, and ROI outcomes from 500+ small construction businesses.</p>
+            guide analyzes the top options for small contractors on published pricing and feature coverage.</p>
           </div>
         </div>
 
@@ -298,7 +298,7 @@ const BestConstructionManagementSoftware2025 = () => {
             Ready to Try the #1 Software for Small Contractors?
           </h2>
           <p className="text-muted-foreground mb-6 max-w-2xl mx-auto">
-            Join 500+ small contractors using Brikly to improve margins, reduce delays, 
+            Use Brikly to improve margins, reduce delays, 
             and simplify project management. 14-day free trial, no credit card required.
           </p>
           <Button asChild size="lg">

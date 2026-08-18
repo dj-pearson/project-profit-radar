@@ -27,7 +27,6 @@ import {
   Home,
   Wrench,
   ChevronRight,
-  Star,
   Share
 } from 'lucide-react';
 
@@ -182,27 +181,6 @@ const ScheduleBuilder = () => {
     }
   };
 
-  const testimonials = [
-    {
-      name: "Mike R.",
-      company: "Small Construction Co.",
-      savings: "Several hours saved per project",
-      quote: "This tool significantly reduced my scheduling time. The templates work well for residential projects."
-    },
-    {
-      name: "Sarah C.",
-      company: "Regional Renovation",
-      savings: "Better project visibility",
-      quote: "The critical path visualization helps identify potential bottlenecks before they become problems."
-    },
-    {
-      name: "Tom W.",
-      company: "Commercial Contractor",
-      savings: "Professional presentations", 
-      quote: "Clients appreciate the professional PDF schedules. It helps differentiate us from competitors."
-    }
-  ];
-
   const handleStartBuilding = () => {
     if (selectedTemplate && projectName && startDate) {
       const project = createSampleProject(
@@ -356,25 +334,6 @@ const ScheduleBuilder = () => {
               </div>
             </div>
 
-            <div className="grid md:grid-cols-3 gap-6">
-              {testimonials.map((testimonial, index) => (
-                <Card key={index} className="border-l-4 border-l-construction-orange">
-                  <CardContent className="pt-6">
-                    <div className="flex items-center mb-2">
-                      {[...Array(5)].map((_, i) => (
-                        <Star key={i} className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                      ))}
-                    </div>
-                    <p className="text-sm italic mb-4">"{testimonial.quote}"</p>
-                    <div className="text-sm">
-                      <p className="font-semibold">{testimonial.name}</p>
-                      <p className="text-muted-foreground">{testimonial.company}</p>
-                      <p className="text-construction-orange font-medium">{testimonial.savings}</p>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
           </ResponsiveContainer>
         </section>
 
