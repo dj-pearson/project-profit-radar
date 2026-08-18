@@ -231,7 +231,9 @@ const DailyReports = () => {
             continue;
           }
           const fileName = generateSecureFilename(photo.name);
-          const filePath = `daily-reports/${newReport.project_id}/${fileName}`;
+          // <projectId>/<category>/... so the project-documents SELECT
+          // policy matches on the first segment (US-289).
+          const filePath = `${newReport.project_id}/daily-reports/${fileName}`;
 
           const { error: uploadError } = await supabase.storage
             .from('project-documents')
@@ -242,13 +244,8 @@ const DailyReports = () => {
             continue;
           }
 
-          const { data: urlData } = supabase.storage
-            .from('project-documents')
-            .getPublicUrl(filePath);
-
-          if (urlData?.publicUrl) {
-            photoUrls.push(urlData.publicUrl);
-          }
+          // Persist the storage path, not a permanent public URL (US-289).
+          photoUrls.push(filePath);
         }
       }
 

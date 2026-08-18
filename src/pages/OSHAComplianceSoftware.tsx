@@ -49,7 +49,7 @@ const OSHAComplianceSoftware = () => {
     },
     {
       question: "Can OSHA compliance software reduce workplace injuries?",
-      answer: "Yes, OSHA compliance software reduces workplace injuries by 60-70% through proactive safety monitoring, automated training reminders, incident trend analysis, and real-time hazard reporting. Brikly users report 68% fewer safety incidents and 15-25% lower workers' compensation insurance premiums.",
+      answer: "It helps you run the practices that reduce incidents: logging hazards as they are found, keeping training current, spotting repeat issues across projects, and having the documentation ready when OSHA asks. Whether injuries fall depends on how consistently your crews use it, and we do not publish an injury-reduction figure because we do not measure our customers' incident rates.",
       category: "ROI"
     }
   ];

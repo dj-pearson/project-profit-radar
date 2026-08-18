@@ -85,41 +85,10 @@ const ProcoreAlternativeDetailed = () => {
     }
   ];
 
-  // Customer testimonials
-  const testimonials = [
-    {
-      name: "Mike Rodriguez",
-      company: "Rodriguez Construction",
-      role: "Owner",
-      location: "Austin, TX",
-      quote: "We switched from Procore to Brikly and saved $2,700 per month while getting better functionality. The mobile app actually works for our field crews, and setup took 2 days instead of 6 months.",
-      savings: "$32,400/year",
-      projectSize: "$500K-$2M projects"
-    },
-    {
-      name: "Sarah Chen",
-      company: "Pacific Coast Builders",
-      role: "Project Manager", 
-      location: "San Diego, CA",
-      quote: "Procore was overkill for our 15-person company. Brikly gives us everything we need without the complexity. Our team actually uses it now because it's so much easier.",
-      savings: "$28,800/year",
-      projectSize: "$200K-$1.5M projects"
-    },
-    {
-      name: "David Thompson",
-      company: "Thompson Commercial Construction",
-      role: "Operations Manager",
-      location: "Denver, CO", 
-      quote: "The QuickBooks integration alone made the switch worth it. No more double data entry, and our job costing is finally accurate. Should have switched years ago.",
-      savings: "$25,200/year",
-      projectSize: "$1M-$5M projects"
-    }
-  ];
-
   // Create schemas for SEO
   const articleSchema = createArticleSchema(
-    "Procore Alternative: Why 500+ Contractors Choose Brikly in 2025",
-    "Comprehensive comparison of Brikly vs Procore for construction management, including pricing, features, and customer testimonials from contractors who switched.",
+    "Procore Alternative: How Brikly Compares for Small Contractors",
+    "Side-by-side comparison of Brikly and Procore for construction management: pricing, features, implementation time, and mobile support.",
     "2025-01-12",
     "2025-11-07"
   );
@@ -134,7 +103,7 @@ const ProcoreAlternativeDetailed = () => {
       {/* Enhanced SEO with PageSEO Component */}
       <PageSEO
         title="Procore Alternative for Small Contractors - Save 50% | Brikly"
-        description="Why 500+ contractors switched from Procore to Brikly. Save $32K/year, implement in days not months, and get better mobile apps. $350/month vs Procore's $500+/user. Compare features, pricing, and see customer testimonials."
+        description="Brikly compared with Procore for small contractors: flat $350/month against Procore's per-user pricing, faster setup, and mobile access for field crews."
         keywords={[
           'procore alternative',
           'procore alternative for small contractors',
@@ -164,7 +133,7 @@ const ProcoreAlternativeDetailed = () => {
               Procore Alternative
             </Badge>
             <h1 className="text-4xl md:text-5xl font-bold text-construction-dark mb-6">
-              Why 500+ Contractors Choose Brikly Over Procore in 2025
+              Why Small Contractors Choose Brikly Over Procore
             </h1>
             <p className="text-xl text-muted-foreground mb-8 leading-relaxed">
               Save 60% on costs, implement 10x faster, and get better mobile functionality designed specifically for small-medium contractors. Join the contractors who switched from Procore to Brikly.
@@ -174,7 +143,7 @@ const ProcoreAlternativeDetailed = () => {
             <div className="flex flex-wrap justify-center items-center gap-8 mb-8">
               <div className="flex items-center space-x-2">
                 <Users className="h-5 w-5 text-construction-blue" />
-                <span className="font-semibold">500+ Contractors</span>
+                <span className="font-semibold">Built for small contractors</span>
               </div>
               <div className="flex items-center space-x-2">
                 <Star className="h-5 w-5 text-yellow-500" />
@@ -409,41 +378,6 @@ const ProcoreAlternativeDetailed = () => {
             </div>
           </div>
 
-          {/* Customer Success Stories */}
-          <div className="max-w-5xl mx-auto mb-16">
-            <h2 className="text-3xl font-bold text-construction-dark text-center mb-8">
-              Real Contractors, Real Results
-            </h2>
-            <div className="grid lg:grid-cols-3 gap-8">
-              {testimonials.map((testimonial, index) => (
-                <Card key={index} className="h-full">
-                  <CardHeader>
-                    <div className="flex items-start justify-between">
-                      <div>
-                        <CardTitle className="text-lg">{testimonial.name}</CardTitle>
-                        <CardDescription>{testimonial.role}</CardDescription>
-                        <p className="text-sm font-medium text-construction-blue">{testimonial.company}</p>
-                        <p className="text-xs text-muted-foreground">{testimonial.location}</p>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-sm font-bold text-green-600">{testimonial.savings}</p>
-                        <p className="text-xs text-muted-foreground">Annual Savings</p>
-                      </div>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <blockquote className="text-sm italic text-gray-700 mb-4">
-                      "{testimonial.quote}"
-                    </blockquote>
-                    <div className="text-xs text-muted-foreground">
-                      <p><strong>Project Size:</strong> {testimonial.projectSize}</p>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          </div>
-
           {/* Migration Process */}
           <div className="max-w-4xl mx-auto mb-16">
             <h2 className="text-3xl font-bold text-construction-dark text-center mb-8">
@@ -572,7 +506,7 @@ const ProcoreAlternativeDetailed = () => {
                   Ready to Make the Switch?
                 </h2>
                 <p className="text-lg text-muted-foreground mb-6">
-                  Join 500+ contractors who've already switched from Procore to Brikly. 
+                  Switch from Procore to Brikly. 
                   Start your free trial today and see the difference.
                 </p>
                 

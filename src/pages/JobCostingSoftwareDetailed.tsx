@@ -26,7 +26,7 @@ const JobCostingSoftwareDetailed = () => {
     },
     {
       question: "What's the ROI of using construction job costing software?",
-      answer: "Most contractors see 15-25% improvement in project profitability within 6 months of implementing job costing software. Brikly customers typically save $50,000+ annually through better cost control, reduced waste, and improved project margins."
+      answer: "Job costing improves profitability by showing you where a job is losing money while you can still act on it, instead of at closeout. How much that is worth depends on your margins and how far into a job problems currently go unnoticed. We do not publish an average savings figure because we do not measure our customers' financial outcomes."
     },
     {
       question: "How accurate is real-time job costing?",
@@ -107,47 +107,6 @@ const JobCostingSoftwareDetailed = () => {
   );
 
   // Customer success stories
-  const successStories = [
-    {
-      company: "Heritage Construction",
-      owner: "Tom Bradley",
-      location: "Nashville, TN",
-      projectSize: "$2M-$5M",
-      improvement: "Increased profit margins from 6% to 14%",
-      savings: "$180,000 annually",
-      quote: "Brikly's job costing showed us exactly where we were losing money. We identified $15K in waste per project and our margins improved dramatically.",
-      beforeAfter: {
-        before: { margin: 6, visibility: "Monthly estimates" },
-        after: { margin: 14, visibility: "Real-time tracking" }
-      }
-    },
-    {
-      company: "Precision Contractors",
-      owner: "Maria Santos",
-      location: "Phoenix, AZ",
-      projectSize: "$500K-$2M",
-      improvement: "Reduced cost overruns by 75%",
-      savings: "$125,000 annually",
-      quote: "The real-time alerts prevented three major cost overruns in our first month. The software paid for itself immediately.",
-      beforeAfter: {
-        before: { margin: 9, visibility: "End-of-project reporting" },
-        after: { margin: 15, visibility: "Daily cost updates" }
-      }
-    },
-    {
-      company: "Metro Commercial Building",
-      owner: "James Wilson",
-      location: "Atlanta, GA",
-      projectSize: "$1M-$8M",
-      improvement: "Improved project profitability by 85%",
-      savings: "$250,000 annually",
-      quote: "We can now track profitability by phase and make adjustments before it's too late. Game-changing visibility into our costs.",
-      beforeAfter: {
-        before: { margin: 7, visibility: "Quarterly reviews" },
-        after: { margin: 13, visibility: "Hourly cost tracking" }
-      }
-    }
-  ];
 
   // Create schemas for SEO
   const articleSchema = createArticleSchema(
@@ -433,53 +392,6 @@ const JobCostingSoftwareDetailed = () => {
                 </div>
               </CardContent>
             </Card>
-          </div>
-
-          {/* Customer Success Stories */}
-          <div className="max-w-5xl mx-auto mb-16">
-            <h2 className="text-3xl font-bold text-construction-dark text-center mb-8">
-              Real Results from Real Contractors
-            </h2>
-            <div className="grid lg:grid-cols-3 gap-8">
-              {successStories.map((story, index) => (
-                <Card key={index} className="h-full">
-                  <CardHeader>
-                    <div className="flex justify-between items-start mb-4">
-                      <div>
-                        <CardTitle className="text-lg">{story.company}</CardTitle>
-                        <CardDescription>{story.owner}</CardDescription>
-                        <p className="text-sm text-muted-foreground">{story.location}</p>
-                      </div>
-                      <Badge variant="secondary" className="text-xs">
-                        {story.projectSize}
-                      </Badge>
-                    </div>
-                    <div className="space-y-2">
-                      <div className="flex justify-between text-sm">
-                        <span>Before:</span>
-                        <span className="text-red-600">{story.beforeAfter.before.margin}% margin</span>
-                      </div>
-                      <div className="flex justify-between text-sm">
-                        <span>After:</span>
-                        <span className="text-green-600">{story.beforeAfter.after.margin}% margin</span>
-                      </div>
-                      <div className="text-center">
-                        <p className="text-lg font-bold text-construction-blue">{story.savings}</p>
-                        <p className="text-xs text-muted-foreground">in savings</p>
-                      </div>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <blockquote className="text-sm italic text-gray-700 mb-4">
-                      "{story.quote}"
-                    </blockquote>
-                    <div className="text-xs text-muted-foreground">
-                      <p><strong>Improvement:</strong> {story.improvement}</p>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
           </div>
 
           {/* Brikly Job Costing Features */}

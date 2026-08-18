@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ShoppingCart, TrendingUp, DollarSign, Package, CheckCircle2, AlertTriangle } from 'lucide-react';
+import { AIGeneratedBadge } from '@/components/ui/ai-generated-badge';
 
 interface MaterialForecast {
   id: string;
@@ -229,9 +230,12 @@ export function SmartProcurement() {
         <TabsContent value="recommendations" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle>AI-Generated Purchase Recommendations</CardTitle>
+              <CardTitle className="flex items-center gap-2">
+                Purchase Recommendations
+                <AIGeneratedBadge />
+              </CardTitle>
               <CardDescription>
-                Optimized purchasing decisions based on forecasts and supplier data
+                Purchasing suggestions based on forecasts and supplier data. Review before ordering.
               </CardDescription>
             </CardHeader>
             <CardContent>

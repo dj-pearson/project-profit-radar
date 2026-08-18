@@ -48,7 +48,7 @@ const ResidentialContractors = () => {
     <>
       <PageSEO
         title="Residential Construction Software - Custom Home Builders & Remodelers | Brikly"
-        description="Construction management software for residential contractors, custom home builders, and remodelers. Client portals, selections tracking, warranty management. $350/month. 60% better customer satisfaction. See features."
+        description="Construction management software for residential contractors, custom home builders, and remodelers. Client portals, selections tracking, warranty management. $350/month. See features."
         keywords={[
           'residential construction software',
           'custom home builder software',

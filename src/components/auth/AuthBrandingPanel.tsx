@@ -78,7 +78,7 @@ const AuthBrandingPanel = () => {
               ))}
             </div>
             <p className="text-sm text-slate-400">
-              Trusted by <span className="text-white font-medium">500+</span> construction companies
+              Built for construction companies
             </p>
           </div>
           <div className="flex items-center gap-4 text-xs text-slate-500">

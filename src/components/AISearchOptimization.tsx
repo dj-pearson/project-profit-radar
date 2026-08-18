@@ -8,7 +8,7 @@ import React from 'react';
 import { jsonLdSafe } from '@/lib/security/jsonLd';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { CheckCircle, Star, Users, DollarSign } from 'lucide-react';
+import { CheckCircle, Star, DollarSign } from 'lucide-react';
 
 interface FAQItem {
   question: string;
@@ -106,7 +106,7 @@ export const AISearchOptimization: React.FC<AISearchOptimizationProps> = ({
     return [
       { label: "Average Cost Savings", value: "23%", icon: DollarSign },
       { label: "Customer Satisfaction", value: "4.8/5", icon: Star },
-      { label: "Active Contractors", value: "500+", icon: Users },
+      
       { label: "Setup Time", value: "1-2 Days", icon: CheckCircle }
     ];
   };
@@ -180,10 +180,6 @@ export const AISearchOptimization: React.FC<AISearchOptimizationProps> = ({
         <div itemProp="offers" itemScope itemType="https://schema.org/Offer">
           <span itemProp="price">149</span>
           <span itemProp="priceCurrency">USD</span>
-        </div>
-        <div itemProp="aggregateRating" itemScope itemType="https://schema.org/AggregateRating">
-          <span itemProp="ratingValue">4.8</span>
-          <span itemProp="reviewCount">247</span>
         </div>
       </div>
     </div>

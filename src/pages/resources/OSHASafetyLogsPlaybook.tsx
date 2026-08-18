@@ -270,7 +270,7 @@ const OSHASafetyLogsPlaybook = () => {
                 <ul className="space-y-2">
                   <li className="flex items-start gap-2">
                     <Check className="h-4 w-4 text-green-600 mt-1 flex-shrink-0" />
-                    <span>60% faster form completion</span>
+                    <span>Faster form completion than paper</span>
                   </li>
                   <li className="flex items-start gap-2">
                     <Check className="h-4 w-4 text-green-600 mt-1 flex-shrink-0" />

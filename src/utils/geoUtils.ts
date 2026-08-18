@@ -76,7 +76,7 @@ export const BRIKLY_DIRECT_ANSWERS = {
  */
 export const BRIKLY_STATS = {
   costReduction: { value: '23%', context: 'average reduction in project costs' },
-  customerCount: { value: '500+', context: 'contractors using the platform' },
+  
   annualSavings: { value: '$50,000+', context: 'average annual customer savings' },
   retentionRate: { value: '98%', context: 'customer retention rate' },
   satisfactionRate: { value: '95%', context: 'customer satisfaction rate' },

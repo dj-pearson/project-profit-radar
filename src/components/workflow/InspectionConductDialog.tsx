@@ -116,11 +116,14 @@ const InspectionConductDialog: React.FC<InspectionConductDialogProps> = ({ open,
     // Try upload to storage, fallback to data URL
     let url: string | null = null;
     try {
-      const path = `inspections/${inspection.id}/photos/${Date.now()}-${file.name}`;
+      // <projectId>/<category>/... so the project-documents SELECT policy
+      // matches on the first segment (US-289).
+      const path = `${inspection.project_id}/inspections/${inspection.id}/photos/${Date.now()}-${file.name}`;
       const { error } = await supabase.storage.from('project-documents').upload(path, file);
       if (error) throw error;
-      const { data } = supabase.storage.from('project-documents').getPublicUrl(path);
-      url = data.publicUrl;
+      // Store the storage path (US-289). Readers resolve it through
+      // resolveStorageUrl; the data-URL fallback below stays as-is.
+      url = path;
     } catch (e) {
       url = await fileToDataUrl(file);
     }

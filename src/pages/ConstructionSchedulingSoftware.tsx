@@ -22,7 +22,7 @@ const ConstructionSchedulingSoftware = () => {
     },
     {
       question: "What's the ROI of construction scheduling software?",
-      answer: "Most contractors see 20-30% reduction in project delays and 15-25% improvement in on-time completion rates. Brikly customers typically save $75,000+ annually through better scheduling, reduced delays, and improved resource utilization."
+      answer: "Scheduling software reduces delays by making dependencies and crew conflicts visible before they bite, rather than after a trade shows up to a site that is not ready. The size of the gain depends on how many concurrent projects you run and how you coordinate today. We do not publish an average figure because we do not measure our customers' schedule performance."
     },
     {
       question: "Can construction scheduling software integrate with other tools?",
@@ -111,47 +111,6 @@ const ConstructionSchedulingSoftware = () => {
   ];
 
   // Customer success stories
-  const successStories = [
-    {
-      company: "Apex Construction Group",
-      owner: "Robert Kim",
-      location: "Seattle, WA",
-      projectSize: "$1M-$5M",
-      improvement: "Reduced delays by 85%",
-      savings: "$180,000 annually",
-      quote: "Brikly's scheduling prevented four major delays in our first quarter. The weather integration alone saved us $40K by proactively adjusting our outdoor work.",
-      metrics: {
-        onTimeCompletion: { before: 60, after: 95 },
-        averageDelay: { before: "3.2 weeks", after: "0.5 weeks" }
-      }
-    },
-    {
-      company: "Mountain View Builders",
-      owner: "Lisa Chen",
-      location: "Denver, CO", 
-      projectSize: "$500K-$3M",
-      improvement: "Improved resource utilization by 40%",
-      savings: "$125,000 annually",
-      quote: "The resource conflict detection is incredible. We went from constant crew scheduling headaches to smooth operations. Our teams are never sitting idle anymore.",
-      metrics: {
-        onTimeCompletion: { before: 65, after: 88 },
-        averageDelay: { before: "2.8 weeks", after: "0.8 weeks" }
-      }
-    },
-    {
-      company: "Sterling Commercial Construction",
-      owner: "Michael Torres",
-      location: "Austin, TX",
-      projectSize: "$2M-$10M",
-      improvement: "Increased project capacity by 25%",
-      savings: "$300,000 annually",
-      quote: "Better scheduling allowed us to take on 25% more projects with the same team. The critical path analysis helps us focus on what really matters for on-time completion.",
-      metrics: {
-        onTimeCompletion: { before: 58, after: 92 },
-        averageDelay: { before: "4.1 weeks", after: "0.6 weeks" }
-      }
-    }
-  ];
 
   // Scheduling best practices
   const bestPractices = [
@@ -415,55 +374,6 @@ const ConstructionSchedulingSoftware = () => {
                   </Card>
                 );
               })}
-            </div>
-          </div>
-
-          {/* Customer Success Stories */}
-          <div className="max-w-5xl mx-auto mb-16">
-            <h2 className="text-3xl font-bold text-construction-dark text-center mb-8">
-              Real Results from Better Scheduling
-            </h2>
-            <div className="grid lg:grid-cols-3 gap-8">
-              {successStories.map((story, index) => (
-                <Card key={index} className="h-full">
-                  <CardHeader>
-                    <div className="flex justify-between items-start mb-4">
-                      <div>
-                        <CardTitle className="text-lg">{story.company}</CardTitle>
-                        <CardDescription>{story.owner}</CardDescription>
-                        <p className="text-sm text-muted-foreground">{story.location}</p>
-                      </div>
-                      <Badge variant="secondary" className="text-xs">
-                        {story.projectSize}
-                      </Badge>
-                    </div>
-                    <div className="grid grid-cols-2 gap-4 text-center mb-4">
-                      <div className="bg-red-50 p-2 rounded">
-                        <p className="text-xs text-muted-foreground">Before</p>
-                        <p className="text-sm font-bold text-red-600">{story.metrics.onTimeCompletion.before}% on-time</p>
-                        <p className="text-xs text-red-500">{story.metrics.averageDelay.before} avg delay</p>
-                      </div>
-                      <div className="bg-green-50 p-2 rounded">
-                        <p className="text-xs text-muted-foreground">After</p>
-                        <p className="text-sm font-bold text-green-600">{story.metrics.onTimeCompletion.after}% on-time</p>
-                        <p className="text-xs text-green-500">{story.metrics.averageDelay.after} avg delay</p>
-                      </div>
-                    </div>
-                    <div className="text-center mb-4">
-                      <p className="text-lg font-bold text-construction-blue">{story.savings}</p>
-                      <p className="text-xs text-muted-foreground">in savings</p>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <blockquote className="text-sm italic text-gray-700 mb-4">
-                      "{story.quote}"
-                    </blockquote>
-                    <div className="text-xs text-muted-foreground">
-                      <p><strong>Key Improvement:</strong> {story.improvement}</p>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
             </div>
           </div>
 

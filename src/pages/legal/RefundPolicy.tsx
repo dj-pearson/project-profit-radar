@@ -139,7 +139,7 @@ const RefundPolicy = () => (
     <h2>9. Contact</h2>
     <p>
       Billing questions: <a href="mailto:billing@brikly.net">billing@brikly.net</a>. Mailing
-      address: Brikly, 123 Construction Way, Suite 100, Builder City, BC 12345, USA.
+      address: see the contact details on our Privacy Policy page.
     </p>
   </LegalPageLayout>
 );

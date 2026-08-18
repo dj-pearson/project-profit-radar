@@ -174,13 +174,6 @@ export const createSoftwareApplicationSchema = (additionalProps?: object) => ({
       "billingIncrement": 1
     }
   },
-  "aggregateRating": {
-    "@type": "AggregateRating",
-    "ratingValue": "4.8",
-    "reviewCount": "247",
-    "bestRating": "5",
-    "worstRating": "1"
-  },
   "featureList": [
     "Real-time job costing",
     "Mobile crew tracking",

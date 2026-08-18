@@ -244,7 +244,7 @@ export const ExitIntentModal = ({
             <div className="flex items-center justify-center gap-6 text-xs text-muted-foreground">
               <span>✓ No credit card required</span>
               <span>✓ Cancel anytime</span>
-              <span>✓ Used by 500+ contractors</span>
+              <span>✓ Built for small and mid-size contractors</span>
             </div>
           </div>
         </div>

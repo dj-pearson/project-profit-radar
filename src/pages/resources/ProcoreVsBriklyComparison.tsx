@@ -93,7 +93,7 @@ const ProcoreVsBriklyComparison = () => {
     <div className="min-h-screen bg-background">
       <SEOMetaTags
         title="Procore vs Brikly: Which is Better for Small GC Teams? | 2025 Comparison"
-        description="Honest comparison of Procore and Brikly for small contractors. Features, pricing, setup time, and ease of use compared. See why 500+ contractors choose Brikly."
+        description="Honest comparison of Procore and Brikly for small contractors. Features, pricing, setup time, and ease of use compared. See which fits a small contractor better."
         keywords={[
           'procore vs brikly',
           'procore alternative small contractors',
@@ -160,14 +160,6 @@ const ProcoreVsBriklyComparison = () => {
                     <div className="text-2xl font-bold text-green-700">1-2 weeks</div>
                     <div className="text-sm text-muted-foreground">Live and productive</div>
                   </div>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="flex">
-                    {[...Array(5)].map((_, i) => (
-                      <Star key={i} className="h-4 w-4 text-yellow-400 fill-current" />
-                    ))}
-                  </div>
-                  <span className="text-sm">4.8/5.0 (500+ small contractors)</span>
                 </div>
               </CardContent>
             </Card>
@@ -340,7 +332,7 @@ const ProcoreVsBriklyComparison = () => {
                   </div>
                   <div>
                     <div className="text-sm text-muted-foreground">Outcome:</div>
-                    <div className="font-semibold text-blue-700">25% increase in field productivity</div>
+                    <div className="font-semibold text-blue-700">Less time lost to paperwork in the field</div>
                   </div>
                 </div>
               </CardContent>

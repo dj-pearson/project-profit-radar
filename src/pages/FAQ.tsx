@@ -71,7 +71,7 @@ const FAQ = () => {
         },
         {
           question: "Do you offer discounts for annual payment?",
-          answer: "Yes. Save 20% with annual billing. Most small contractors see 300-500% ROI in the first year, making the investment easy to justify."
+          answer: "Yes. Annual billing saves 20% against paying monthly."
         }
       ]
     },

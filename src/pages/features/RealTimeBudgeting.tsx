@@ -254,7 +254,7 @@ const RealTimeBudgetingPage = () => {
                       </li>
                       <li className="flex items-start">
                         <span className="text-destructive mr-2 font-bold">✗</span>
-                        <span>8-12% lower profit margins</span>
+                        <span>8-12% lower profit margins (CFMA research)</span>
                       </li>
                     </ul>
                   </div>
@@ -279,7 +279,7 @@ const RealTimeBudgetingPage = () => {
                       </li>
                       <li className="flex items-start">
                         <span className="text-construction-orange mr-2 font-bold">✓</span>
-                        <span>8-12% higher profit margins</span>
+                        <span>8-12% higher profit margins (CFMA research)</span>
                       </li>
                     </ul>
                   </div>

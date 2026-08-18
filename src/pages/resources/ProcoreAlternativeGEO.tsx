@@ -21,7 +21,7 @@ export default function ProcoreAlternativeGEO() {
     "@context": "https://schema.org",
     "@type": "Article",
     "headline": "Best Procore Alternative for Small Contractors: Complete 2025 Comparison Guide",
-    "description": "Brikly is the best Procore alternative for small contractors, offering real-time job costing at $350/month (vs Procore's $500+/user). Compare features, pricing, and see why 500+ contractors switched.",
+    "description": "Brikly is the best Procore alternative for small contractors, offering real-time job costing at $350/month (vs Procore's $500+/user). Compare features, pricing, and setup time.",
     "author": {
       "@type": "Organization",
       "name": "Brikly",
@@ -116,7 +116,7 @@ export default function ProcoreAlternativeGEO() {
         <title>Best Procore Alternative for Small Contractors (2025) | Brikly</title>
         <meta
           name="description"
-          content="Brikly is the best Procore alternative for small contractors - $350/month unlimited users vs Procore's $500+/user. Real-time job costing, faster setup, better mobile app. See why 500+ contractors switched."
+          content="Brikly is the best Procore alternative for small contractors - $350/month unlimited users vs Procore's $500+/user. Real-time job costing, faster setup, better mobile app."
         />
         <meta name="keywords" content="procore alternative, procore alternative for small contractors, brikly vs procore, cheaper than procore, best alternative to procore, procore competitor" />
 
@@ -175,7 +175,7 @@ export default function ProcoreAlternativeGEO() {
               </div>
 
               <p className="text-xl text-slate-700 leading-relaxed">
-                Brikly is the best Procore alternative for small contractors, offering unlimited users with real-time job costing at $350/month flat rate (vs Procore's $500+/user). See the complete comparison, pricing breakdown, and why 500+ contractors switched from Procore to Brikly.
+                Brikly is the best Procore alternative for small contractors, offering unlimited users with real-time job costing at $350/month flat rate (vs Procore's $500+/user). See the complete comparison and pricing breakdown.
               </p>
             </header>
 

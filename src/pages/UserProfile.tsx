@@ -17,6 +17,7 @@ import { useTheme } from '@/contexts/ThemeContext';
 import { useToast } from '@/hooks/use-toast';
 import { User, Bell, Shield, Palette, Camera, Save, Lock, Smartphone, ShieldCheck } from 'lucide-react';
 import PrivacyControls from '@/components/legal/PrivacyControls';
+import { useStorageUrl } from '@/lib/storage/useStorageUrl';
 
 interface ProfileData {
   first_name: string;
@@ -115,6 +116,10 @@ const UserProfile = () => {
     }
   };
 
+  // Avatars live in a private bucket, so the signed URL is minted at render
+  // time. Handles both a stored path and a legacy public URL (US-289).
+  const { url: avatarUrl } = useStorageUrl('avatars', profile.avatar_url);
+
   const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !user) return;
@@ -129,16 +134,16 @@ const UserProfile = () => {
 
       if (uploadError) throw uploadError;
 
-      const { data: urlData } = supabase.storage.from('avatars').getPublicUrl(path);
-
+      // Persist the storage path, not a permanent public URL (US-289).
+      // Avatars are personal data and the bucket is not world-readable.
       const { error: updateError } = await supabase
         .from('user_profiles')
-        .update({ avatar_url: urlData.publicUrl })
+        .update({ avatar_url: path })
         .eq('user_id', user.id);
 
       if (updateError) throw updateError;
 
-      setProfile(prev => ({ ...prev, avatar_url: urlData.publicUrl }));
+      setProfile(prev => ({ ...prev, avatar_url: path }));
       toast({ title: 'Avatar updated', description: 'Your profile photo has been updated.' });
     } catch {
       toast({ variant: 'destructive', title: 'Upload failed', description: 'Could not upload avatar.' });
@@ -187,7 +192,7 @@ const UserProfile = () => {
           <div className="flex items-center gap-6">
             <div className="relative">
               <Avatar className="h-24 w-24">
-                <AvatarImage src={profile.avatar_url} alt={`${profile.first_name} ${profile.last_name}`} />
+                <AvatarImage src={avatarUrl ?? undefined} alt={`${profile.first_name} ${profile.last_name}`} />
                 <AvatarFallback className="text-2xl">{initials}</AvatarFallback>
               </Avatar>
               <Button

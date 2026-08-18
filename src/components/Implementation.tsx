@@ -137,7 +137,7 @@ const Implementation = () => {
               Implementation Success Rate
             </h3>
             <p className="text-muted-foreground">
-              Track record from 500+ successful implementations
+              Based on how the platform is designed to be rolled out
             </p>
           </div>
           

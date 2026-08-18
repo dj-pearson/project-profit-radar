@@ -58,6 +58,9 @@ export const TaskAttachments: React.FC<TaskAttachmentsProps> = ({ taskId }) => {
         // Upload file to Supabase storage
         const fileExt = file.name.split('.').pop();
         const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
+        // Kept as task-attachments/<taskId>/... : this component only has a
+        // taskId, and the supplementary project-documents policy resolves
+        // the task to its project for authorisation (US-289).
         const filePath = `task-attachments/${taskId}/${fileName}`;
 
         const { error: uploadError } = await supabase.storage

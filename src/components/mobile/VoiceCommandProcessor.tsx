@@ -12,6 +12,8 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Mic, MicOff, CheckCircle, AlertTriangle, Clock, Package, Calendar, MessageSquare, Zap } from "lucide-react";
+import { CRISIS_MESSAGE, crisisResourcesForRegion, isCrisisIntent } from "@/lib/safety/crisisResources";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 export interface VoiceCommand {
   intent:
@@ -46,6 +48,7 @@ export const VoiceCommandProcessor: React.FC = () => {
   const { userProfile } = useAuth();
   const { toast } = useToast();
 
+  const [crisisPromptOpen, setCrisisPromptOpen] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [recordings, setRecordings] = useState<VoiceRecording[]>([]);
@@ -205,6 +208,16 @@ export const VoiceCommandProcessor: React.FC = () => {
       );
 
       if (error) throw error;
+
+      // A distress disclosure must never be filed as work. Handle it before
+      // the command is constructed, and deliberately do NOT keep the
+      // transcript: capturing it would create a sensitive personal-data record
+      // we have no basis to hold (US-294).
+      if (isCrisisIntent(data.intent)) {
+        setProcessedCommands((prev) => prev.filter((cmd) => cmd.id !== commandId));
+        setCrisisPromptOpen(true);
+        return;
+      }
 
       const voiceCommand: VoiceCommand = {
         intent: data.intent || "update_progress",
@@ -487,6 +500,28 @@ export const VoiceCommandProcessor: React.FC = () => {
   };
 
   return (
+    <>
+      {/* Distress disclosure. Brikly is not a crisis service; this stops the
+          utterance being filed as work and points at people who can help.
+          Nothing about the utterance is stored (US-294). */}
+      <Dialog open={crisisPromptOpen} onOpenChange={setCrisisPromptOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Support is available</DialogTitle>
+            <DialogDescription>{CRISIS_MESSAGE}</DialogDescription>
+          </DialogHeader>
+          <ul className="space-y-3">
+            {crisisResourcesForRegion().map((r) => (
+              <li key={r.name}>
+                <div className="font-medium">{r.name}</div>
+                <div className="text-sm">{r.contact}</div>
+                {r.note && <div className="text-sm text-muted-foreground">{r.note}</div>}
+              </li>
+            ))}
+          </ul>
+        </DialogContent>
+      </Dialog>
+
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
@@ -644,6 +679,7 @@ export const VoiceCommandProcessor: React.FC = () => {
         </Card>
       </div>
     </div>
+    </>
   );
 };
 

@@ -3,22 +3,46 @@ import { jsonLdSafe } from '@/lib/security/jsonLd';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Star, Quote, TrendingUp, Clock, DollarSign, ArrowRight } from 'lucide-react';
+import { Star, Quote, ArrowRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import {
+  CLAIMS,
+  renderableClientReferences,
+  renderableTestimonials,
+  type TestimonialClaim,
+} from '@/config/claims';
 
-interface TestimonialProps {
-  quote: string;
-  author: string;
-  title: string;
-  company: string;
-  rating: number;
-  date?: string;
+/**
+ * Customer endorsement surfaces.
+ *
+ * NOTE: this file previously rendered six fabricated customers ("Mike
+ * Rodriguez / Rodriguez Custom Homes", "Sarah Chen / Metro Build Group", and
+ * four more), each with an invented financial outcome and a "Verified User"
+ * badge, plus a JSON-LD aggregateRating of 4.9 from 500 reviews that no
+ * reviews supported. ClientLogosSection listed six invented client companies.
+ * Those are FTC Act Section 5 and FTC Endorsement Guide (16 C.F.R. Part 255)
+ * violations and have been removed. The same cleanup was already applied to
+ * SocialProof.tsx; this file was missed in that pass.
+ *
+ * Everything rendered here now comes from the src/config/claims.ts registry
+ * and appears only when the claim is verified and each entry names where its
+ * signed permission is filed. With the registry empty, the endorsement grid
+ * and the rating JSON-LD render nothing at all.
+ *
+ * To publish a real testimonial:
+ *   1. Get the customer's written permission and file it.
+ *   2. Add a TestimonialClaim to CLAIMS.testimonials with permissionSource set.
+ *   3. Disclose any material connection (payment, free service, employment)
+ *      in materialConnection - 16 C.F.R. 255.5 requires it.
+ *   4. Flip CLAIMS.testimonials.verified to true.
+ */
+
+interface TestimonialProps extends TestimonialClaim {
   metric?: {
     label: string;
     value: string;
     icon: React.ReactNode;
   };
-  verified?: boolean;
 }
 
 export const TestimonialCard: React.FC<TestimonialProps> = ({
@@ -29,30 +53,32 @@ export const TestimonialCard: React.FC<TestimonialProps> = ({
   rating,
   date,
   metric,
-  verified = true
+  materialConnection,
+  permissionSource,
 }) => {
+  // A card without filed permission is never renderable, whatever the caller
+  // passes in. This is the last line of defence behind the claims registry.
+  if (!permissionSource) return null;
+
   return (
     <Card className="h-full">
       <CardHeader>
         <div className="flex items-start justify-between mb-3">
-          <div className="flex items-center gap-1">
-            {[...Array(5)].map((_, i) => (
-              <Star
-                key={i}
-                className={`h-4 w-4 ${
-                  i < rating ? 'text-yellow-400 fill-current' : 'text-gray-300'
-                }`}
-              />
-            ))}
-            {verified && (
-              <Badge variant="secondary" className="ml-2 text-xs">
-                Verified User
-              </Badge>
-            )}
-          </div>
+          {typeof rating === 'number' && (
+            <div className="flex items-center gap-1">
+              {[...Array(5)].map((_, i) => (
+                <Star
+                  key={i}
+                  className={`h-4 w-4 ${
+                    i < rating ? 'text-yellow-400 fill-current' : 'text-gray-300'
+                  }`}
+                />
+              ))}
+            </div>
+          )}
           <Quote className="h-6 w-6 text-muted-foreground opacity-50" />
         </div>
-        
+
         {metric && (
           <div className="flex items-center gap-2 p-3 bg-green-50 rounded-lg mb-4">
             {metric.icon}
@@ -63,17 +89,24 @@ export const TestimonialCard: React.FC<TestimonialProps> = ({
           </div>
         )}
       </CardHeader>
-      
+
       <CardContent>
         <blockquote className="text-muted-foreground mb-4 leading-relaxed">
           "{quote}"
         </blockquote>
-        
+
         <div className="border-t pt-4">
           <div className="font-medium">{author}</div>
           <div className="text-sm text-muted-foreground">{title}</div>
           <div className="text-sm text-muted-foreground font-medium">{company}</div>
           {date && <div className="text-xs text-muted-foreground mt-1">{date}</div>}
+          {/* 16 C.F.R. 255.5 - a material connection must be disclosed
+              clearly and conspicuously alongside the endorsement. */}
+          {materialConnection && (
+            <Badge variant="secondary" className="mt-2 text-xs font-normal">
+              {materialConnection}
+            </Badge>
+          )}
         </div>
       </CardContent>
     </Card>
@@ -81,153 +114,89 @@ export const TestimonialCard: React.FC<TestimonialProps> = ({
 };
 
 export const TestimonialsSection: React.FC = () => {
-  const testimonials: TestimonialProps[] = [
-    {
-      quote: "We caught a $47K cost overrun on a kitchen remodel three weeks before it would have destroyed our margin. The predictive alerts showed labor costs trending 22% over budget. We course-corrected immediately and saved the project. That one alert paid for Brikly for the next 5 years.",
-      author: "Mike Rodriguez",
-      title: "Owner",
-      company: "Rodriguez Custom Homes",
-      rating: 5,
-      date: "February 2026",
-      metric: {
-        label: "Cost Overrun Prevented",
-        value: "$47K",
-        icon: <DollarSign className="h-5 w-5 text-green-600" />
-      }
-    },
-    {
-      quote: "I used to spend 3 full days every month doing financial close - reconciling spreadsheets, categorizing expenses, generating reports. Now it takes 5 minutes with one click. Brikly freed up 36 days a year that I now spend growing my business instead of buried in paperwork.",
-      author: "Sarah Chen",
-      title: "Owner/CFO",
-      company: "Metro Build Group",
-      rating: 5,
-      date: "January 2026",
-      metric: {
-        label: "Monthly Close Time",
-        value: "5 min",
-        icon: <Clock className="h-5 w-5 text-green-600" />
-      }
-    },
-    {
-      quote: "Before Brikly, I only knew if a project was profitable at tax time. Now I see profit margins update in real-time. Last week I saw a project drop from 18% to 12% margin instantly when unexpected costs hit. We adjusted scope immediately and recovered to 16%. That's the difference between guessing and knowing.",
-      author: "David Thompson",
-      title: "General Contractor",
-      company: "Thompson Construction LLC",
-      rating: 5,
-      date: "December 2025",
-      metric: {
-        label: "Real-Time Visibility",
-        value: "Every Project",
-        icon: <TrendingUp className="h-5 w-5 text-green-600" />
-      }
-    },
-    {
-      quote: "The decision impact calculator is incredible. Before approving a change order, I can see exactly how it affects project profitability. 'Approving this drops your margin from 15% to 11%' - that one feature helped me price change orders properly and our margins improved 4% overall.",
-      author: "Jennifer Walsh",
-      title: "Project Manager",
-      company: "Atlantic Builders",
-      rating: 5,
-      date: "November 2025",
-      metric: {
-        label: "Margin Improvement",
-        value: "+4%",
-        icon: <TrendingUp className="h-5 w-5 text-green-600" />
-      }
-    },
-    {
-      quote: "The QuickBooks integration with automated categorization is a game-changer. Month-end reconciliation used to take my bookkeeper 18 hours. Now it's automatic and accurate. We recouped our entire Brikly investment in the first month just from reduced accounting fees.",
-      author: "Tom Martinez",
-      title: "Owner",
-      company: "Martinez Remodeling",
-      rating: 5,
-      date: "October 2025",
-      metric: {
-        label: "Accounting Time Saved",
-        value: "18 hrs/mo",
-        icon: <Clock className="h-5 w-5 text-green-600" />
-      }
-    },
-    {
-      quote: "Financial surprises used to kill us. We'd finish a project thinking we made money, then the final accounting showed we lost thousands. Brikly's real-time job costing means no more surprises. We know our profit position daily, not quarterly. Improved our margins from 8% to 13%.",
-      author: "Lisa Chang",
-      title: "Operations Manager",
-      company: "Chang & Associates Construction",
-      rating: 5,
-      date: "January 2026",
-      metric: {
-        label: "Margin Increase",
-        value: "8% → 13%",
-        icon: <TrendingUp className="h-5 w-5 text-green-600" />
-      }
-    }
-  ];
+  const testimonials = renderableTestimonials();
+
+  // Nothing substantiated to show yet. Render the section's own value
+  // proposition rather than inventing customers to fill the space.
+  if (testimonials.length === 0) {
+    return (
+      <section className="py-12">
+        <div className="text-center max-w-2xl mx-auto">
+          <h2 className="text-3xl font-bold mb-4">
+            See where every project stands
+          </h2>
+          <p className="text-xl text-muted-foreground mb-8">
+            Real-time job costing, change orders, and daily reports in one place.
+            Start a free trial and check the numbers against your own jobs.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Button variant="hero" size="lg" asChild>
+              <Link to="/auth">
+                Start Free Trial
+                <ArrowRight className="ml-2 h-5 w-5" />
+              </Link>
+            </Button>
+            <Button variant="outline" size="lg" asChild>
+              <a href="/#pricing">View Pricing</a>
+            </Button>
+          </div>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section className="py-12">
       <div className="text-center mb-12">
-        <h2 className="text-3xl font-bold mb-4">Financial Intelligence That Changed Everything</h2>
-        <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-          Real contractors who went from financial blindness to complete profit visibility. These aren't generic reviews - these are specific, measurable financial outcomes.
-        </p>
-      </div>
-      
-      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {testimonials.map((testimonial, index) => (
-          <TestimonialCard key={index} {...testimonial} />
-        ))}
-      </div>
-      
-      <div className="text-center mt-8">
-        <div className="flex flex-col items-center gap-4">
-          <div className="flex items-center gap-4 text-muted-foreground">
-            <div className="flex items-center gap-1">
-              {[...Array(5)].map((_, i) => (
-                <Star key={i} className="h-5 w-5 text-yellow-400 fill-current" />
-              ))}
-            </div>
-            <span className="font-medium">4.9/5 Average Rating</span>
-            <span>•</span>
-            <span>500+ Contractors</span>
-          </div>
-          <p className="text-sm text-construction-orange font-semibold">
-            Average ROI payback period: Less than 30 days
-          </p>
-        </div>
+        <h2 className="text-3xl font-bold mb-4">What contractors tell us</h2>
       </div>
 
-      {/* Structured Data for SEO */}
+      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {testimonials.map((testimonial) => (
+          <TestimonialCard key={`${testimonial.author}-${testimonial.company}`} {...testimonial} />
+        ))}
+      </div>
+
+      {/*
+        Structured data. Google's structured-data policy and the FTC both
+        require the underlying data to be true and visible on the page, so
+        aggregateRating is emitted only when that claim is separately
+        verified, and reviews only for permissioned endorsements.
+      */}
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
           __html: jsonLdSafe({
-            "@context": "https://schema.org",
-            "@type": "Product",
-            "name": "Brikly Construction Management Software",
-            "aggregateRating": {
-              "@type": "AggregateRating",
-              "ratingValue": "4.9",
-              "reviewCount": "500",
-              "bestRating": "5",
-            },
-            "review": testimonials.map((t) => ({
-              "@type": "Review",
-              "author": { "@type": "Person", "name": t.author },
-              "reviewBody": t.quote,
-              "reviewRating": {
-                "@type": "Rating",
-                "ratingValue": t.rating,
-                "bestRating": 5,
-              },
-            })),
+            '@context': 'https://schema.org',
+            '@type': 'Product',
+            name: 'Brikly Construction Management Software',
+            ...(CLAIMS.aggregateRating.verified
+              ? {
+                  aggregateRating: {
+                    '@type': 'AggregateRating',
+                    ratingValue: String(CLAIMS.aggregateRating.value.ratingValue),
+                    reviewCount: String(CLAIMS.aggregateRating.value.reviewCount),
+                    bestRating: String(CLAIMS.aggregateRating.value.bestRating),
+                  },
+                }
+              : {}),
+            review: testimonials
+              .filter((t) => typeof t.rating === 'number')
+              .map((t) => ({
+                '@type': 'Review',
+                author: { '@type': 'Person', name: t.author },
+                reviewBody: t.quote,
+                reviewRating: {
+                  '@type': 'Rating',
+                  ratingValue: t.rating,
+                  bestRating: 5,
+                },
+              })),
           }),
         }}
       />
 
-      {/* CTA Section */}
       <div className="text-center mt-12 pt-8 border-t border-border/30">
-        <p className="text-lg text-muted-foreground mb-6">
-          Join 500+ contractors saving an average of $78K/year
-        </p>
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
           <Button variant="hero" size="lg" asChild>
             <Link to="/auth">
@@ -244,33 +213,23 @@ export const TestimonialsSection: React.FC = () => {
   );
 };
 
-interface ClientLogoProps {
-  name: string;
-  logo: string;
-  industry: string;
-}
-
 export const ClientLogosSection: React.FC = () => {
-  const clients: ClientLogoProps[] = [
-    { name: "ABC Custom Homes", logo: "/logos/abc-homes.png", industry: "Residential" },
-    { name: "Metro Build Group", logo: "/logos/metro-build.png", industry: "Commercial" },
-    { name: "Rodriguez Construction", logo: "/logos/rodriguez.png", industry: "General Contractor" },
-    { name: "Atlantic Builders", logo: "/logos/atlantic.png", industry: "Multi-Family" },
-    { name: "Thompson Construction", logo: "/logos/thompson.png", industry: "Remodeling" },
-    { name: "Chang & Associates", logo: "/logos/chang.png", industry: "Commercial" }
-  ];
+  const clients = renderableClientReferences();
+
+  // No permissioned client names on file - render nothing rather than a
+  // "Trusted by N contractors" band over invented company names.
+  if (clients.length === 0) return null;
 
   return (
     <section className="py-12 bg-muted/30">
       <div className="container mx-auto px-4">
         <div className="text-center mb-8">
-          <h3 className="text-2xl font-semibold mb-2">Trusted by 300+ Contractors</h3>
-          <p className="text-muted-foreground">From small residential builders to mid-size commercial contractors</p>
+          <h3 className="text-2xl font-semibold mb-2">Contractors using Brikly</h3>
         </div>
-        
+
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-8 items-center opacity-60">
-          {clients.map((client, index) => (
-            <div key={index} className="text-center">
+          {clients.map((client) => (
+            <div key={client.name} className="text-center">
               <div className="bg-white p-4 rounded-lg shadow-sm mb-2 h-16 flex items-center justify-center">
                 <span className="font-semibold text-sm text-gray-600">{client.name}</span>
               </div>

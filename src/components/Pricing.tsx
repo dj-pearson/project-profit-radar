@@ -96,7 +96,7 @@ const Pricing = () => {
         <div className="text-center mb-16">
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-secondary/50 border border-border/50 mb-4">
             <Users className="h-4 w-4 text-construction-orange" />
-            <span className="text-sm font-medium text-muted-foreground">Trusted by 500+ Contractors</span>
+            <span className="text-sm font-medium text-muted-foreground">Built for small and mid-size contractors</span>
           </div>
           <h2 className="text-3xl lg:text-4xl font-bold text-construction-dark mb-4">
             Investment in Financial Intelligence, Not Just Software

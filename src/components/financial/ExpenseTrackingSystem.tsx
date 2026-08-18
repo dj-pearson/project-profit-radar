@@ -140,11 +140,8 @@ export const ExpenseTrackingSystem: React.FC<ExpenseTrackingProps> = ({
 
         if (uploadError) throw uploadError;
         
-        const { data: { publicUrl } } = supabase.storage
-          .from('expense-receipts')
-          .getPublicUrl(fileName);
-        
-        receiptUrl = publicUrl;
+        // Persist the storage path, not a permanent public URL (US-289).
+        receiptUrl = fileName;
       }
 
       const { error } = await (supabase.from as unknown as (table: string) => ReturnType<typeof supabase.from>)('project_expenses')

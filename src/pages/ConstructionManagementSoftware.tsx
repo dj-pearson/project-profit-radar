@@ -49,7 +49,7 @@ const ConstructionManagementSoftware = () => {
     },
     {
       question: "Is construction management software worth it?",
-      answer: "Yes, construction management software typically delivers 300-500% ROI within the first year. Contractors see 23% profit margin improvement, 40% reduction in administrative time, 78% fewer project delays, and 96% better budget accuracy. Brikly pays for itself in 2-3 months through improved efficiency and cost control.",
+      answer: "It depends on what you are doing today. The gain comes from seeing cost against budget while a job is still running rather than at closeout, from cutting duplicate data entry between the field and the office, and from catching change orders before they are absorbed. Brikly is $350/month flat with unlimited users, so the comparison is against what your current process costs in rework and unbilled time.",
       category: "ROI"
     },
     {
@@ -83,7 +83,7 @@ const ConstructionManagementSoftware = () => {
     <>
       <PageSEO
         title="Construction Management Software - All-in-One Platform for Contractors | Brikly"
-        description="Complete construction management software for contractors. Project scheduling, real-time job costing, mobile crew tracking, QuickBooks sync. $350/month unlimited users vs $500+/user competitors. 23% profit improvement, 40% less admin time, 78% fewer delays. Free trial."
+        description="Complete construction management software for contractors. Project scheduling, real-time job costing, mobile crew tracking, QuickBooks sync. $350/month unlimited users vs $500+/user competitors. Free trial."
         keywords={[
           'construction management software',
           'construction project management',
@@ -190,7 +190,7 @@ const ConstructionManagementSoftware = () => {
                 Ready to Transform Your Construction Management?
               </h2>
               <p className="text-lg mb-6 opacity-90">
-                Join 500+ contractors who have streamlined their operations and increased profitability with Brikly.
+                Streamline your operations and keep every project profitable with Brikly.
               </p>
               <Link to="/auth">
                 <Button size="lg" variant="secondary">

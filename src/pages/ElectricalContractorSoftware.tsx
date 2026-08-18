@@ -71,7 +71,7 @@ const ElectricalContractorSoftware = () => {
     <>
       <PageSEO
         title="Electrical Contractor Software - Job Costing, Code Compliance & License Tracking | Brikly"
-        description="Electrical contractor management software for residential, commercial, and industrial electricians. Track wire/material costs, manage electrician licenses, NEC code compliance, electrical project scheduling. $350/month vs $500+ competitors. 45% fewer delays. Free trial."
+        description="Electrical contractor management software for residential, commercial, and industrial electricians. Track wire/material costs, manage electrician licenses, NEC code compliance, electrical project scheduling. $350/month vs $500+ competitors. Free trial."
         keywords={[
           'electrical contractor software',
           'electrical business management',

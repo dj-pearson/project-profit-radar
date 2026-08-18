@@ -109,7 +109,7 @@ const ConstructionManagementSoftwarePage = () => {
                   </div>
                   <h3 className="font-semibold text-construction-dark mb-2">Reduce Project Delays</h3>
                   <p className="text-sm text-muted-foreground">
-                    Complete projects 15% faster with better planning, communication, and resource management.
+                    Finish projects sooner with better planning, communication, and resource management.
                   </p>
                 </div>
                 <div className="text-center">

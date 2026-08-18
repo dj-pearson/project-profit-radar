@@ -473,10 +473,14 @@ const VoiceNotes: React.FC<VoiceNotesProps> = ({
 
       if (uploadError) throw uploadError;
 
-      // Get public URL
-      const { data: urlData } = supabase.storage
-        .from('project-documents')
-        .getPublicUrl(`voice-notes/${note.filename}`);
+      // Persist the storage path, not a permanent public URL (US-289).
+      // <projectId>/<category>/... so the project-documents SELECT policy
+      // matches on the first segment (US-289). Falls back to the legacy
+      // shape only when no project is selected; the documents-table branch
+      // of the supplementary policy covers that case.
+      const storagePath = note.projectId
+        ? `${note.projectId}/voice-notes/${note.filename}`
+        : `voice-notes/${note.filename}`;
 
       // Save to database
       const { error: dbError } = await supabase
@@ -486,7 +490,7 @@ const VoiceNotes: React.FC<VoiceNotesProps> = ({
           project_id: note.projectId,
           name: note.title,
           description: `${note.description}\nDuration: ${Math.floor(note.duration / 60)}:${(note.duration % 60).toString().padStart(2, '0')}\nTags: ${note.tags.join(', ')}\n${note.transcription ? `Transcription: ${note.transcription}` : ''}`,
-          file_path: urlData.publicUrl,
+          file_path: storagePath,
           file_type: 'audio/webm',
           uploaded_by: user?.id,
           ai_classification: {

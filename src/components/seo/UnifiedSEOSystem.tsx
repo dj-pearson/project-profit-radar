@@ -325,7 +325,7 @@ async function generateEnterpriseEnhancements(
 
   // Enhanced descriptions for better conversion
   const descriptionEnhancements: Record<string, string> = {
-    '/': 'Stop losing money on construction projects. Brikly delivers real-time job costing, mobile field management, and OSHA compliance. Join 500+ contractors saving $50K+ annually.',
+    '/': 'Stop losing money on construction projects. Brikly delivers real-time job costing, mobile field management, and OSHA compliance. Built for small and mid-size contractors.',
     '/pricing': 'Transparent construction management software pricing starting at $149/month. No setup fees, free 14-day trial, and migration assistance included.',
     '/features': 'Complete construction management features including job costing, scheduling, document management, OSHA compliance, and QuickBooks integration.'
   };
@@ -418,11 +418,6 @@ function generateEnhancedSchema(pathname: string, config: any): any {
         price: '149',
         priceCurrency: 'USD',
         priceValidUntil: '2025-12-31'
-      },
-      aggregateRating: {
-        '@type': 'AggregateRating',
-        ratingValue: '4.8',
-        reviewCount: '247'
       }
     };
   }

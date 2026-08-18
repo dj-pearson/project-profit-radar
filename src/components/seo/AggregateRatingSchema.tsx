@@ -73,6 +73,7 @@ interface AggregateRatingSchemaProps {
  * // With static rating data
  * <AggregateRatingSchema
  *   staticRating={{ ratingValue: 4.8, reviewCount: 247, bestRating: 5, worstRating: 1 }}
+ *   // only with substantiation on file - see src/config/claims.ts
  *   showVisual
  * />
  */

@@ -241,11 +241,8 @@ export const MobileExpenseCapture: React.FC<MobileExpenseCaptureProps> = ({
 
         if (uploadError) throw uploadError;
 
-        const { data: { publicUrl } } = supabase.storage
-          .from('receipts')
-          .getPublicUrl(fileName);
-
-        receiptUrl = publicUrl;
+        // Persist the storage path, not a permanent public URL (US-289).
+        receiptUrl = fileName;
       }
 
       // Create expense record

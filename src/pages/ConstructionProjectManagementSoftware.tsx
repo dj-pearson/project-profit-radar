@@ -154,53 +154,6 @@ const ConstructionProjectManagementSoftware = () => {
   ];
 
   // Customer success stories
-  const successStories = [
-    {
-      company: "Pacific Northwest Construction",
-      owner: "David Rodriguez",
-      location: "Portland, OR",
-      projectSize: "$2M-$8M",
-      improvement: "Reduced project delays by 78%",
-      savings: "$420,000 annually",
-      quote: "Brikly transformed how we manage projects. The integrated scheduling and budget tracking caught three potential overruns early, saving us over $150K on a single project.",
-      metrics: {
-        onTimeCompletion: { before: 58, after: 94 },
-        budgetAccuracy: { before: 72, after: 96 },
-        adminTime: { before: "25 hours/week", after: "8 hours/week" }
-      },
-      keyFeatures: ["Integrated scheduling", "Real-time budget alerts", "Mobile progress tracking"]
-    },
-    {
-      company: "Sunrise Commercial Builders",
-      owner: "Jennifer Park",
-      location: "Phoenix, AZ",
-      projectSize: "$1M-$5M",
-      improvement: "Increased project capacity by 40%",
-      savings: "$280,000 annually",
-      quote: "The efficiency gains from Brikly allowed us to take on 40% more projects with the same team. Our clients love the transparency and real-time updates.",
-      metrics: {
-        onTimeCompletion: { before: 65, after: 91 },
-        budgetAccuracy: { before: 69, after: 93 },
-        adminTime: { before: "30 hours/week", after: "12 hours/week" }
-      },
-      keyFeatures: ["Client portal", "Automated reporting", "Document management"]
-    },
-    {
-      company: "Heritage Construction Group",
-      owner: "Mark Thompson",
-      location: "Charlotte, NC",
-      projectSize: "$500K-$3M",
-      improvement: "Improved profit margins by 32%",
-      savings: "$195,000 annually",
-      quote: "Brikly's cost tracking and change order management helped us identify profit leaks we didn't even know existed. Our margins improved dramatically.",
-      metrics: {
-        onTimeCompletion: { before: 72, after: 89 },
-        budgetAccuracy: { before: 74, after: 95 },
-        adminTime: { before: "22 hours/week", after: "7 hours/week" }
-      },
-      keyFeatures: ["Cost analysis", "Change order tracking", "Profitability reports"]
-    }
-  ];
 
   // Implementation best practices
   const implementationSteps = [
@@ -610,60 +563,6 @@ const ConstructionProjectManagementSoftware = () => {
               Calculate Your ROI
             </h2>
             <ROICalculator />
-          </div>
-
-          {/* Customer Success Stories */}
-          <div className="max-w-5xl mx-auto mb-16">
-            <h2 className="text-3xl font-bold text-construction-dark text-center mb-8">
-              Real Results from Construction Project Management Software
-            </h2>
-            <div className="grid lg:grid-cols-3 gap-8">
-              {successStories.map((story, index) => (
-                <Card key={index} className="h-full">
-                  <CardHeader>
-                    <div className="flex justify-between items-start mb-4">
-                      <div>
-                        <CardTitle className="text-lg">{story.company}</CardTitle>
-                        <CardDescription>{story.owner}</CardDescription>
-                        <p className="text-sm text-muted-foreground">{story.location}</p>
-                      </div>
-                      <Badge variant="secondary" className="text-xs">
-                        {story.projectSize}
-                      </Badge>
-                    </div>
-                    
-                    {/* Metrics Grid */}
-                    <div className="grid grid-cols-2 gap-2 text-center mb-4">
-                      <div className="bg-red-50 p-2 rounded text-xs">
-                        <p className="text-muted-foreground">Before</p>
-                        <p className="font-bold text-red-600">{story.metrics.onTimeCompletion.before}% on-time</p>
-                        <p className="font-bold text-red-600">{story.metrics.budgetAccuracy.before}% on-budget</p>
-                      </div>
-                      <div className="bg-green-50 p-2 rounded text-xs">
-                        <p className="text-muted-foreground">After</p>
-                        <p className="font-bold text-green-600">{story.metrics.onTimeCompletion.after}% on-time</p>
-                        <p className="font-bold text-green-600">{story.metrics.budgetAccuracy.after}% on-budget</p>
-                      </div>
-                    </div>
-                    
-                    <div className="text-center mb-4">
-                      <p className="text-lg font-bold text-construction-blue">{story.savings}</p>
-                      <p className="text-xs text-muted-foreground">in savings</p>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <blockquote className="text-sm italic text-gray-700 mb-4">
-                      "{story.quote}"
-                    </blockquote>
-                    <div className="text-xs text-muted-foreground space-y-1">
-                      <p><strong>Key Improvement:</strong> {story.improvement}</p>
-                      <p><strong>Admin Time:</strong> {story.metrics.adminTime.before} → {story.metrics.adminTime.after}</p>
-                      <p><strong>Top Features:</strong> {story.keyFeatures.join(", ")}</p>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
           </div>
 
           {/* Implementation Guide */}

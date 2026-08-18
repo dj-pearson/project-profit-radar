@@ -215,12 +215,9 @@ export const useAdvancedChat = () => {
 
       if (uploadError) throw uploadError;
 
-      const { data: urlData } = supabase.storage
-        .from('chat-files')
-        .getPublicUrl(fileName);
-
+      // Persist the storage path, not a permanent public URL (US-289).
       return {
-        url: urlData.publicUrl,
+        url: fileName,
         name: file.name,
         size: file.size
       };

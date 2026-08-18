@@ -251,7 +251,7 @@ const ConstructionSchedulingSoftwareGuide = () => {
                 </div>
                 <div>
                   <h4 className="font-semibold mb-2">After 4 months:</h4>
-                  <p className="text-muted-foreground"><strong>85% on-time completion</strong>, 30% better resource utilization</p>
+                  <p className="text-muted-foreground">Schedule conflicts caught before a trade mobilises, not after</p>
                 </div>
               </div>
             </CardContent>
@@ -312,7 +312,7 @@ const ConstructionSchedulingSoftwareGuide = () => {
             Stop Project Delays Today
           </h2>
           <p className="text-muted-foreground mb-6 max-w-2xl mx-auto">
-            Join 300+ contractors using Brikly scheduling to finish projects on time. 
+            Use Brikly scheduling to finish projects on time. 
             Real-time updates, resource optimization, and mobile access included.
           </p>
           <Button asChild size="lg">

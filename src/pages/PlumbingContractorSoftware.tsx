@@ -71,7 +71,7 @@ const PlumbingContractorSoftware = () => {
     <>
       <PageSEO
         title="Plumbing Contractor Software - Service Call Dispatch & Job Costing | Brikly"
-        description="Plumbing contractor management software for service calls, emergency dispatch, and installations. GPS technician tracking, job costing, plumber license management, customer service history. $350/month vs $500+ competitors. 40% faster emergency response. Free trial."
+        description="Plumbing contractor management software for service calls, emergency dispatch, and installations. GPS technician tracking, job costing, plumber license management, customer service history. $350/month vs $500+ competitors. Free trial."
         keywords={[
           'plumbing contractor software',
           'plumbing business management',

@@ -84,8 +84,6 @@ export const SOFTWARE_INFO = {
   price: '350',
   priceCurrency: 'USD',
   billingPeriod: 'P1M',
-  ratingValue: '4.8',
-  reviewCount: '247',
   features: [
     'Real-time job costing',
     'Mobile crew tracking',

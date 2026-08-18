@@ -97,40 +97,6 @@ const BuildertrendAlternativeDetailed = () => {
     }
   ];
 
-  // Customer testimonials from contractors who switched
-  const testimonials = [
-    {
-      name: "Carlos Martinez",
-      company: "Martinez General Contracting",
-      role: "Owner",
-      location: "Phoenix, AZ",
-      quote: "Buildertrend was great when we only did residential, but as we moved into commercial work, we needed better job costing and multi-trade coordination. Brikly handles our $2M commercial projects with ease.",
-      savings: "$1,800/month",
-      projectTypes: "Commercial & Residential",
-      teamSize: "25 employees"
-    },
-    {
-      name: "Jennifer Walsh",
-      company: "Walsh Construction Services",
-      role: "Project Manager",
-      location: "Denver, CO",
-      quote: "The QuickBooks integration alone made the switch worth it. No more double data entry between Buildertrend and our accounting. Brikly syncs everything automatically and our job costing is finally accurate.",
-      savings: "$2,200/month",
-      projectTypes: "Multi-family & Commercial",
-      teamSize: "18 employees"
-    },
-    {
-      name: "Mark Thompson",
-      company: "Thompson Multi-Trade Construction",
-      role: "Operations Manager",
-      location: "Tampa, FL",
-      quote: "We manage plumbing, HVAC, and electrical crews on the same projects. Buildertrend couldn't handle the complexity, but Brikly was built for this. Our project coordination improved dramatically.",
-      savings: "$1,500/month",
-      projectTypes: "Commercial Multi-Trade",
-      teamSize: "35 employees"
-    }
-  ];
-
   // Brikly advantages specifically vs Buildertrend
   const advantages = [
     {
@@ -408,42 +374,6 @@ const BuildertrendAlternativeDetailed = () => {
                   </ul>
                 </CardContent>
               </Card>
-            </div>
-          </div>
-
-          {/* Customer Success Stories */}
-          <div className="max-w-5xl mx-auto mb-16">
-            <h2 className="text-3xl font-bold text-construction-dark text-center mb-8">
-              Contractors Who Made the Switch
-            </h2>
-            <div className="grid lg:grid-cols-3 gap-8">
-              {testimonials.map((testimonial, index) => (
-                <Card key={index} className="h-full">
-                  <CardHeader>
-                    <div className="flex items-start justify-between mb-4">
-                      <div>
-                        <CardTitle className="text-lg">{testimonial.name}</CardTitle>
-                        <CardDescription>{testimonial.role}</CardDescription>
-                        <p className="text-sm font-medium text-construction-blue">{testimonial.company}</p>
-                        <p className="text-xs text-muted-foreground">{testimonial.location}</p>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-sm font-bold text-green-600">{testimonial.savings}</p>
-                        <p className="text-xs text-muted-foreground">Monthly Savings</p>
-                      </div>
-                    </div>
-                    <div className="flex gap-2 flex-wrap">
-                      <Badge variant="outline" className="text-xs">{testimonial.projectTypes}</Badge>
-                      <Badge variant="outline" className="text-xs">{testimonial.teamSize}</Badge>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <blockquote className="text-sm italic text-gray-700">
-                      "{testimonial.quote}"
-                    </blockquote>
-                  </CardContent>
-                </Card>
-              ))}
             </div>
           </div>
 

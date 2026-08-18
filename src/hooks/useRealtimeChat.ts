@@ -175,11 +175,7 @@ export const useRealtimeChat = (channelId?: string) => {
 
       if (uploadError) throw uploadError;
 
-      // Get public URL
-      const { data: { publicUrl } } = supabase.storage
-        .from('documents')
-        .getPublicUrl(filePath);
-
+      // Persist the storage path, not a permanent public URL (US-289).
       // Create message with file
       const { error } = await supabase
         .from('chat_messages')
@@ -189,7 +185,7 @@ export const useRealtimeChat = (channelId?: string) => {
           company_id: userProfile.company_id,
           message_type: file.type.startsWith('image/') ? 'image' : 'file',
           content: file.name,
-          file_url: publicUrl,
+          file_url: filePath,
           file_name: file.name,
           file_size: file.size
         });

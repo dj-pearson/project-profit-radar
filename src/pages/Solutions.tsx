@@ -22,7 +22,6 @@ const Solutions = () => {
         "Permit tracking",
         "Subcontractor coordination"
       ],
-      caseStudy: "ABC Custom Homes reduced project delays by 30% and improved client satisfaction scores by 40%.",
       slug: "residential-contractors"
     },
     {
@@ -36,7 +35,6 @@ const Solutions = () => {
         "Budget vs actual reporting",
         "Team collaboration tools"
       ],
-      caseStudy: "Metro Build Group improved profit margins by 18% using real-time job costing.",
       slug: "commercial-contractors"
     },
     {
@@ -50,7 +48,6 @@ const Solutions = () => {
         "Service call management",
         "Equipment tracking"
       ],
-      caseStudy: "Elite Electric increased crew utilization by 25% with better scheduling tools.",
       slug: "specialty-contractors"
     },
     {
@@ -64,7 +61,6 @@ const Solutions = () => {
         "Safety compliance",
         "Document management"
       ],
-      caseStudy: "Reliable Construction reduced administrative time by 40% and improved cash flow.",
       slug: "small-general-contractors"
     }
   ];
@@ -134,11 +130,6 @@ const Solutions = () => {
                   </ul>
                 </div>
                 
-                <div className="bg-primary/5 rounded-lg p-4 mb-6">
-                  <h5 className="font-medium text-sm mb-2">Success Story:</h5>
-                  <p className="text-sm text-muted-foreground italic">"{solution.caseStudy}"</p>
-                </div>
-
                 <div className="mt-auto">
                   <Button asChild className="w-full">
                     <Link to={`/solutions/${solution.slug}`}>

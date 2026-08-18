@@ -411,11 +411,6 @@ class EnterpriseSeOService {
           price: '149',
           priceCurrency: 'USD',
           priceValidUntil: '2025-12-31'
-        },
-        aggregateRating: {
-          '@type': 'AggregateRating',
-          ratingValue: '4.8',
-          reviewCount: '247'
         }
       };
     }

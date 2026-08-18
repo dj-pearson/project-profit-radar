@@ -61,8 +61,6 @@ export class EstimatePDFGenerator {
     this.estimate = estimate;
     this.companyInfo = {
       name: 'Brikly',
-      address: '123 Construction Way, Builder City, ST 12345',
-      phone: '(555) 123-4567',
       email: 'estimates@brikly.net',
       website: 'www.brikly.net',
       license: 'License #123456',
