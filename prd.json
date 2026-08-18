@@ -4642,8 +4642,8 @@
         "npm run lint and npm run test:run pass"
       ],
       "priority": 3,
-      "passes": false,
-      "notes": "Discovered 2026-08-17 during a website-liability audit. Lower urgency than US-288 through US-291: this is an overstated commitment rather than an active misrepresentation or a data exposure. Closing it by narrowing the disclosure is an acceptable outcome and is cheaper than building the badge everywhere."
+      "passes": true,
+      "notes": "COMPLETED 2026-08-18. Closed by doing both halves rather than only the cheap one. Built src/components/ui/ai-generated-badge.tsx as the single reusable badge the AI Disclosure points at: the meaning is carried by its text rather than by the icon or colour so it survives a screen reader and a monochrome display, the icon is aria-hidden, and the title attribute carries the review instruction. Applied it to the three surfaces that present AI output for review or action - AI estimate history, risk-mitigation recommendations, and procurement recommendations - and reworded each surrounding description to tell the user to review the output before acting on it, which the old ad-hoc 'AI-generated X' prose did not. Then narrowed AI Disclosure section 2, which had claimed AI content 'is labeled within the Service' as a blanket fact: it now names which surfaces carry the badge, says plainly that others describe AI involvement in their own wording instead, and states the coverage is still being extended. That is the honest reading and it removes the overstatement without pretending the rollout is finished. Remaining surfaces that still use prose rather than the badge: KeywordManager, BlogAutoGeneration, SEOAnalyticsDashboard, AIInsights, AutomatedWorkflows, MCPSEODashboard - all internal or admin views, none customer-facing, and the disclosure no longer claims otherwise. Verified: 4/4 badge tests, 103 passing across the badge, claims, safety and storage suites; eslint 0 errors."
     },
     {
       "id": "US-294",

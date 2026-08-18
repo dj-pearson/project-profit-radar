@@ -19,6 +19,7 @@ import {
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
+import { AIGeneratedBadge } from '@/components/ui/ai-generated-badge';
 
 interface RiskMetrics {
   overallRiskScore: number;
@@ -326,8 +327,11 @@ const RiskAssessment = () => {
       {/* Recommendations */}
       <Card>
         <CardHeader>
-          <CardTitle>Risk Mitigation Recommendations</CardTitle>
-          <CardDescription>AI-generated action items to reduce risk exposure</CardDescription>
+          <CardTitle className="flex items-center gap-2">
+            Risk Mitigation Recommendations
+            <AIGeneratedBadge />
+          </CardTitle>
+          <CardDescription>Action items to reduce risk exposure. Review before acting on them.</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">

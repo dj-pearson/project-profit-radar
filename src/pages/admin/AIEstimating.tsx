@@ -11,6 +11,7 @@ import { supabase, getEdgeFunctionUrl } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { Brain, FileText, Target, CheckCircle, Clock, Sparkles } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { AIGeneratedBadge } from '@/components/ui/ai-generated-badge';
 
 interface AIEstimate {
   id: string;
@@ -345,9 +346,12 @@ export function AIEstimating() {
           <TabsContent value="history" className="space-y-4">
             <Card>
               <CardHeader>
-                <CardTitle>Estimate History</CardTitle>
+                <CardTitle className="flex items-center gap-2">
+                  Estimate History
+                  <AIGeneratedBadge label="AI estimates" />
+                </CardTitle>
                 <CardDescription>
-                  View all AI-generated estimates
+                  Every estimate here was drafted by AI. Review before sending to a client.
                 </CardDescription>
               </CardHeader>
               <CardContent>
