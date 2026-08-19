@@ -3926,7 +3926,7 @@
       ],
       "priority": 2,
       "passes": false,
-      "notes": "PROPOSED (deep-dive audit 2026-07-12). Theme: Security. SEV: HIGH. Source: Edge audit."
+      "notes": "BLOCKER CLEARED (2026-08-19), story still open. _shared/rate-limiter.ts had never limited anything: it counted rows in rate_limit_violations but only inserted one after the limit was exceeded, so the count stayed at zero for all 19 call sites. checkRateLimit() now delegates to a consume_rate_limit() RPC over a new rate_limit_attempts table (migration 20260819000000_rate_limit_attempts.sql) that counts and records atomically, with an optional failClosed flag. Signature unchanged, so every existing call site is fixed without edits and adding per-user limits to the AI, email and report functions is now a matter of picking identifiers and budgets rather than building the mechanism. Detail in IOS-004's notes."
     },
     {
       "id": "US-244",

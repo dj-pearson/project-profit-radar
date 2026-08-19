@@ -16,6 +16,7 @@ import { getCorsHeaders, handleCorsPreflightRequest } from '../_shared/secure-co
 import { sendEmail, getSiteEmailConfig } from '../_shared/ses-email-service.ts';
 import { generateAuthEmail, generateOTPCode } from '../_shared/auth-email-templates.ts';
 import { validatePasswordStrength } from '../_shared/password-policy.ts';
+import { checkRateLimit, getClientIP, hashIdentifier, rateLimitResponse, RATE_LIMITS } from '../_shared/rate-limiter.ts';
 
 // Validation schemas
 const requestResetSchema = z.object({
@@ -226,6 +227,26 @@ async function handleVerifyReset(
   const { email, otpCode, newPassword } = validation.data;
 
   console.log(`[ResetPasswordOTP] Verify reset for ${email}`);
+
+  // Brute-force guard on the reset code: 5 attempts / 15 min. Scoped to the
+  // account so rotating IPs does not buy more guesses at a 6-digit code, and
+  // again to the caller so one host cannot sweep many accounts. Keyed on a
+  // hash so the attempts table never holds an address. Fails closed -- an
+  // unlimited retry budget on a password reset is the whole attack.
+  const clientIP = getClientIP(req);
+  const emailRl = await checkRateLimit(supabaseAdmin, {
+    identifier: `reset-password-otp:email:${await hashIdentifier(email)}`,
+    endpoint: 'reset-password-otp:verify',
+    ...RATE_LIMITS.OTP_VERIFY,
+  });
+  if (!emailRl.allowed) return rateLimitResponse(emailRl, corsHeaders);
+
+  const ipRl = await checkRateLimit(supabaseAdmin, {
+    identifier: clientIP,
+    endpoint: 'reset-password-otp:verify:ip',
+    ...RATE_LIMITS.OTP_VERIFY,
+  });
+  if (!ipRl.allowed) return rateLimitResponse(ipRl, corsHeaders);
 
   // SECURITY: Server-side password policy enforcement
   const passwordCheck = validatePasswordStrength(newPassword);

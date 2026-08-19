@@ -32,6 +32,15 @@ export interface RateLimitConfig {
   maxRequests: number;
   /** Time window in minutes */
   windowMinutes: number;
+  /**
+   * Deny the request when the limiter itself cannot reach the database.
+   *
+   * Defaults to false (fail open) because for most endpoints a database
+   * outage should degrade throughput, not availability. Set it on anything
+   * where an unlimited retry budget is the attack -- OTP and password
+   * verification above all.
+   */
+  failClosed?: boolean;
 }
 
 export interface RateLimitResult {
@@ -46,8 +55,17 @@ export interface RateLimitResult {
 }
 
 /**
- * Check if a request should be rate limited
- * Security: Prevents abuse by limiting requests per time window
+ * Check if a request should be rate limited, and record the attempt.
+ *
+ * Delegates counting to the consume_rate_limit() RPC so the read and the write
+ * happen in one round trip against public.rate_limit_attempts.
+ *
+ * The previous implementation counted rows in rate_limit_violations but only
+ * inserted one after the limit was already exceeded. Nothing ever incremented
+ * the count, so `allowed` was unconditionally true and no caller was limited.
+ *
+ * Requires a service-role client: rate_limit_attempts has RLS on with no
+ * policies, and EXECUTE on the RPC is granted to service_role only.
  */
 export async function checkRateLimit(
   supabaseClient: any,
@@ -58,76 +76,64 @@ export async function checkRateLimit(
     endpoint,
     maxRequests,
     windowMinutes,
+    failClosed = false,
   } = config;
 
-  const now = new Date();
-  const windowStart = new Date(now.getTime() - windowMinutes * 60 * 1000);
+  const onError = (): RateLimitResult => ({
+    allowed: !failClosed,
+    requestCount: 0,
+    retryAfter: failClosed ? windowMinutes * 60 : 0,
+    limit: maxRequests,
+  });
 
   try {
-    // Count requests in current time window
-    const { data: violations, error } = await supabaseClient
-      .from('rate_limit_violations')
-      .select('*')
-      .eq('ip_address', identifier)
-      .eq('endpoint', endpoint)
-      .gte('created_at', windowStart.toISOString());
+    const { data, error } = await supabaseClient.rpc('consume_rate_limit', {
+      p_identifier: identifier,
+      p_endpoint: endpoint,
+      p_max_requests: maxRequests,
+      p_window_minutes: windowMinutes,
+    });
 
-    if (error && error.code !== 'PGRST116') {
-      console.error('[RateLimit] Database error:', error);
-      // Fail open (allow request) if database is unavailable
-      return {
-        allowed: true,
-        requestCount: 0,
-        retryAfter: 0,
-        limit: maxRequests,
-      };
+    if (error || !data) {
+      console.error('[RateLimit] consume_rate_limit failed:', error);
+      return onError();
     }
 
-    const requestCount = violations?.length || 0;
-    const allowed = requestCount < maxRequests;
+    const result: RateLimitResult = {
+      allowed: data.allowed === true,
+      requestCount: Number(data.request_count ?? 0),
+      retryAfter: Number(data.retry_after ?? 0),
+      limit: Number(data.limit ?? maxRequests),
+    };
 
-    // Calculate retry time
-    let retryAfter = 0;
-    if (!allowed && violations && violations.length > 0) {
-      const oldestViolation = violations.reduce((oldest: any, current: any) => {
-        return new Date(current.created_at) < new Date(oldest.created_at) ? current : oldest;
-      });
-      const resetTime = new Date(oldestViolation.created_at).getTime() + windowMinutes * 60 * 1000;
-      retryAfter = Math.ceil((resetTime - now.getTime()) / 1000);
-    }
-
-    // Log violation if rate limit exceeded
-    if (!allowed) {
-      await supabaseClient.from('rate_limit_violations').insert({
-        ip_address: identifier,
-        endpoint,
-        requests_made: requestCount + 1,
-        limit_value: maxRequests,
-        window_minutes: windowMinutes,
-        created_at: now.toISOString(),
-      });
-
+    if (!result.allowed) {
       console.warn(
-        `[RateLimit] Limit exceeded for ${identifier} on ${endpoint}: ${requestCount}/${maxRequests} requests`
+        `[RateLimit] Limit exceeded for ${endpoint}: ${result.requestCount}/${result.limit} requests`
       );
     }
 
-    return {
-      allowed,
-      requestCount,
-      retryAfter: retryAfter > 0 ? retryAfter : 0,
-      limit: maxRequests,
-    };
+    return result;
   } catch (error) {
     console.error('[RateLimit] Unexpected error:', error);
-    // Fail open on unexpected errors
-    return {
-      allowed: true,
-      requestCount: 0,
-      retryAfter: 0,
-      limit: maxRequests,
-    };
+    return onError();
   }
+}
+
+/**
+ * Derive a non-reversible rate-limit key from user-supplied input.
+ *
+ * Rate limiting on an email or user id is what makes a limit survive an
+ * attacker rotating IPs, but the raw value must not be persisted -- the
+ * attempts table would otherwise become a list of addresses that tried to
+ * reset a password. Callers should namespace the result, e.g.
+ * `email:${await hashIdentifier(email)}`.
+ */
+export async function hashIdentifier(value: string): Promise<string> {
+  const bytes = new TextEncoder().encode(value.trim().toLowerCase());
+  const digest = await crypto.subtle.digest('SHA-256', bytes);
+  return Array.from(new Uint8Array(digest))
+    .map((b) => b.toString(16).padStart(2, '0'))
+    .join('');
 }
 
 /** Preset rate limit configurations by endpoint type */
@@ -140,6 +146,12 @@ export const RATE_LIMITS = {
   GENERAL: { maxRequests: 100, windowMinutes: 1 },
   /** Webhook endpoints: 200 requests per minute (server-to-server) */
   WEBHOOK: { maxRequests: 200, windowMinutes: 1 },
+  /**
+   * OTP / password-reset code verification: 5 attempts per 15 minutes.
+   * A 6-digit code is only as strong as the number of guesses allowed, so
+   * this is applied per email as well as per IP, and fails closed.
+   */
+  OTP_VERIFY: { maxRequests: 5, windowMinutes: 15, failClosed: true },
 } as const;
 
 /**

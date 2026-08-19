@@ -134,8 +134,8 @@
         "npm run build passes"
       ],
       "priority": 2,
-      "passes": false,
-      "notes": "This overlaps with IOS-004 in the iOS PRD but targets different endpoints and adds per-email limiting"
+      "passes": true,
+      "notes": "COMPLETE (2026-08-19) - same work as scripts/ralph-ios/prd.json IOS-004, done once and closing both. Per-account and per-IP OTP_VERIFY limits (5 per 15 min, fail closed) now guard verify-auth-otp and reset-password-otp's handleVerifyReset, returning 429 with Retry-After. The identifier is a SHA-256 hash of the email rather than the raw address so the attempts table holds no PII. This also required repairing _shared/rate-limiter.ts, which counted its own violation rows but only wrote one after the limit was already exceeded - so the count never left zero and no endpoint had ever been limited. Full detail and the deploy caveat are in IOS-004's notes."
     },
     {
       "id": "MS-009",

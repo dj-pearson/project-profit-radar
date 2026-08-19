@@ -14,7 +14,7 @@ import { serve } from 'https://deno.land/std@0.190.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.49.1';
 import { z } from 'https://deno.land/x/zod@v3.22.4/mod.ts';
 import { getCorsHeaders } from '../_shared/secure-cors.ts';
-import { checkRateLimit, getClientIP, rateLimitResponse, RATE_LIMITS } from '../_shared/rate-limiter.ts';
+import { checkRateLimit, getClientIP, hashIdentifier, rateLimitResponse, RATE_LIMITS } from '../_shared/rate-limiter.ts';
 import { validatePasswordStrength } from '../_shared/password-policy.ts';
 
 // Helper function to get user by email (works with all Supabase client versions)
@@ -86,12 +86,27 @@ const handler = async (req: Request): Promise<Response> => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     );
 
-    // Rate limit: 10 req/min per IP for auth endpoints
+    // Rate limit: 10 req/min per IP for auth endpoints.
     const clientIP = getClientIP(req);
     const rlResult = await checkRateLimit(supabaseAdmin, {
       identifier: clientIP, endpoint: 'verify-auth-otp', ...RATE_LIMITS.AUTH
     });
     if (!rlResult.allowed) return rateLimitResponse(rlResult, corsHeaders);
+
+    // Brute-force guard on the code itself: 5 attempts / 15 min, scoped to the
+    // account rather than the caller, so rotating IPs does not buy more guesses.
+    // Keyed on a hash so the attempts table never holds an address.
+    const emailKey = `verify-auth-otp:email:${await hashIdentifier(email)}`;
+    const otpRl = await checkRateLimit(supabaseAdmin, {
+      identifier: emailKey, endpoint: 'verify-auth-otp:code', ...RATE_LIMITS.OTP_VERIFY
+    });
+    if (!otpRl.allowed) return rateLimitResponse(otpRl, corsHeaders);
+
+    // And per IP, so one host cannot walk the code space across many accounts.
+    const ipOtpRl = await checkRateLimit(supabaseAdmin, {
+      identifier: clientIP, endpoint: 'verify-auth-otp:code:ip', ...RATE_LIMITS.OTP_VERIFY
+    });
+    if (!ipOtpRl.allowed) return rateLimitResponse(ipOtpRl, corsHeaders);
 
     // Verify OTP code using database function
     const { data: verifyResult, error: verifyError } = await supabaseAdmin.rpc('verify_otp_code', {
