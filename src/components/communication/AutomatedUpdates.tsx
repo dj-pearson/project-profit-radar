@@ -53,7 +53,7 @@ export const AutomatedUpdates: React.FC<AutomatedUpdatesProps> = ({
 }) => {
   const [automationRules, setAutomationRules] = useState<AutomationRule[]>([]);
   const [templates, setTemplates] = useState<UpdateTemplate[]>([]);
-  const [selectedRule, setSelectedRule] = useState<AutomationRule | null>(null);
+  const [, setSelectedRule] = useState<AutomationRule | null>(null);
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [loading, setLoading] = useState(true);
 

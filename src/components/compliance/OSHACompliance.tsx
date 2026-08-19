@@ -48,7 +48,7 @@ export const OSHACompliance = () => {
   const [inspections, setInspections] = useState<SafetyInspection[]>([]);
   const [trainings, setTrainings] = useState<SafetyTraining[]>([]);
   const [incidents, setIncidents] = useState<IncidentReport[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [, setLoading] = useState(false);
 
   useEffect(() => {
     loadComplianceData();

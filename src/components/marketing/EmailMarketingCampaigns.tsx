@@ -65,7 +65,7 @@ const emailTemplates = [
 
 export const EmailMarketingCampaigns = () => {
   const [campaigns, setCampaigns] = useState<EmailCampaign[]>(mockCampaigns);
-  const [isCreating, setIsCreating] = useState(false);
+  const [, setIsCreating] = useState(false);
   const [newCampaign, setNewCampaign] = useState({
     name: "",
     subject: "",

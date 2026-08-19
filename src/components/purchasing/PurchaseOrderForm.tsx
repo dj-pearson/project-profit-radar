@@ -56,7 +56,7 @@ const PurchaseOrderForm = () => {
   const [loading, setLoading] = useState(false);
   const [vendors, setVendors] = useState<Vendor[]>([]);
   const [projects, setProjects] = useState<Project[]>([]);
-  const [costCodes, setCostCodes] = useState<CostCode[]>([]);
+  const [, setCostCodes] = useState<CostCode[]>([]);
   
   const [formData, setFormData] = useState({
     vendor_id: '',

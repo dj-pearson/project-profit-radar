@@ -30,7 +30,7 @@ interface GeofenceArea {
 export const EnhancedGPSTracker = () => {
   const [isTracking, setIsTracking] = useState(false);
   const [currentLocation, setCurrentLocation] = useState<LocationData | null>(null);
-  const [locationHistory, setLocationHistory] = useState<LocationData[]>([]);
+  const [, setLocationHistory] = useState<LocationData[]>([]);
   const [geofences, setGeofences] = useState<GeofenceArea[]>([]);
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   const [batteryLevel, setBatteryLevel] = useState<number | null>(null);

@@ -40,7 +40,7 @@ const CreateProject = () => {
   // Quick Mode
   const [quickMode, setQuickMode] = useState(true);
   const [recentClients, setRecentClients] = useState<Array<{ name: string; email?: string }>>([]);
-  const [recentProjectTypes, setRecentProjectTypes] = useState<string[]>([]);
+  const [, setRecentProjectTypes] = useState<string[]>([]);
   const [clientComboOpen, setClientComboOpen] = useState(false);
 
   // Project basic info

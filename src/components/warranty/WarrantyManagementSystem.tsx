@@ -71,7 +71,7 @@ interface ServiceCall {
 }
 
 export const WarrantyManagementSystem: React.FC = () => {
-  const [warranties, setWarranties] = useState<Warranty[]>([
+  const [warranties] = useState<Warranty[]>([
     {
       id: '1',
       projectId: 'proj-001',
@@ -135,7 +135,7 @@ export const WarrantyManagementSystem: React.FC = () => {
     }
   ]);
 
-  const [claims, setClaims] = useState<WarrantyClaim[]>([
+  const [claims] = useState<WarrantyClaim[]>([
     {
       id: '1',
       warrantyId: '1',

@@ -74,7 +74,7 @@ export const AdvancedChatInterface: React.FC<AdvancedChatInterfaceProps> = ({
   const [isRecording, setIsRecording] = useState(false);
   const [playingVoiceId, setPlayingVoiceId] = useState<string | null>(null);
   const [replyingTo, setReplyingTo] = useState<ChatMessage | null>(null);
-  const [editingMessage, setEditingMessage] = useState<string | null>(null);
+  const [, setEditingMessage] = useState<string | null>(null);
   const [showSearch, setShowSearch] = useState(false);
   
   const fileInputRef = useRef<HTMLInputElement>(null);

@@ -69,7 +69,7 @@ export const QualityControlWorkflows: React.FC = () => {
   const [inspections, setInspections] = useState<QualityInspection[]>([]);
   const [selectedInspection, setSelectedInspection] = useState<QualityInspection | null>(null);
   const [loading, setLoading] = useState(false);
-  const [isCreating, setIsCreating] = useState(false);
+  const [, setIsCreating] = useState(false);
   const { toast } = useToast();
 
   // Mock data for demonstration

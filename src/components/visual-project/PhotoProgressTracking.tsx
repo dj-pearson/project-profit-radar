@@ -28,7 +28,7 @@ interface PhotoProgressTrackingProps {
 }
 
 export const PhotoProgressTracking: React.FC<PhotoProgressTrackingProps> = ({ projectId }) => {
-  const [photos, setPhotos] = useState<ProgressPhoto[]>([
+  const [photos] = useState<ProgressPhoto[]>([
     {
       id: '1',
       imageUrl: '/placeholder.svg',

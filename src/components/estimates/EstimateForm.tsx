@@ -63,7 +63,7 @@ export function EstimateForm({ onSuccess, onCancel, estimateId }: EstimateFormPr
   const [lineItems, setLineItems] = useState<LineItem[]>([]);
   const [showVersionHistory, setShowVersionHistory] = useState(false);
   const [projects, setProjects] = useState<any[]>([]);
-  const [costCodes, setCostCodes] = useState<any[]>([]);
+  const [, setCostCodes] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [generatingPDF, setGeneratingPDF] = useState(false);
   const [createdEstimate, setCreatedEstimate] = useState<any>(null);

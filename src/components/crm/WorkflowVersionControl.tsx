@@ -33,7 +33,7 @@ export function WorkflowVersionControl({
   onRestore,
 }: WorkflowVersionControlProps) {
   const [versions, setVersions] = useState<WorkflowVersion[]>([]);
-  const [selectedVersion, setSelectedVersion] = useState<WorkflowVersion | null>(null);
+  const [, setSelectedVersion] = useState<WorkflowVersion | null>(null);
   const [loading, setLoading] = useState(false);
   const [compareMode, setCompareMode] = useState(false);
 

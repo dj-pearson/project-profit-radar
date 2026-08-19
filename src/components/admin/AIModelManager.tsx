@@ -79,7 +79,7 @@ interface TestResult {
 const AIModelManager = () => {
   const { userProfile } = useAuth();
   const [models, setModels] = useState<AIModel[]>([]);
-  const [envConfigs, setEnvConfigs] = useState<AIEnvConfig[]>([]);
+  const [, setEnvConfigs] = useState<AIEnvConfig[]>([]);
   const [, setLoading] = useState(true);
   const [editingModel, setEditingModel] = useState<AIModel | null>(null);
   const [isNewModel, setIsNewModel] = useState(false);

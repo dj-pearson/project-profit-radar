@@ -90,7 +90,7 @@ const CRMLeads = () => {
     decision_maker: false
   });
   const [selectedLead, setSelectedLead] = useState<string | null>(null);
-  const [editingLead, setEditingLead] = useState<Lead | null>(null);
+  const [, setEditingLead] = useState<Lead | null>(null);
   
   const { 
     data: leads, 

@@ -53,7 +53,7 @@ export function AIEstimating() {
   const { toast } = useToast();
 
   const [estimates, setEstimates] = useState<AIEstimate[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [, setLoading] = useState(false);
   const [generating, setGenerating] = useState(false);
 
   // Form state

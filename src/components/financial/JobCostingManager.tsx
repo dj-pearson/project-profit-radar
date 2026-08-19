@@ -44,7 +44,7 @@ interface ChangeOrder {
 }
 
 export const JobCostingManager: React.FC = () => {
-  const [jobCosts, setJobCosts] = useState<JobCost[]>([
+  const [jobCosts] = useState<JobCost[]>([
     {
       id: '1',
       projectId: 'proj-1',
@@ -78,7 +78,7 @@ export const JobCostingManager: React.FC = () => {
     }
   ]);
 
-  const [changeOrders, setChangeOrders] = useState<ChangeOrder[]>([
+  const [changeOrders] = useState<ChangeOrder[]>([
     {
       id: '1',
       projectId: 'proj-1',
@@ -91,7 +91,7 @@ export const JobCostingManager: React.FC = () => {
     }
   ]);
 
-  const [selectedProject, setSelectedProject] = useState<string>('proj-1');
+  const [selectedProject] = useState<string>('proj-1');
 
   const currentJob = jobCosts.find(job => job.projectId === selectedProject);
   const projectChangeOrders = changeOrders.filter(co => co.projectId === selectedProject);

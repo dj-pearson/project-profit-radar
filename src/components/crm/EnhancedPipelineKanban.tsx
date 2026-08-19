@@ -44,7 +44,7 @@ export const EnhancedPipelineKanban: React.FC<EnhancedPipelineKanbanProps> = ({
   const { userProfile } = useAuth();
   const { toast } = useToast();
   const [leads, setLeads] = useState<Lead[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [, setLoading] = useState(true);
   const [draggedLead, setDraggedLead] = useState<Lead | null>(null);
 
   const stages: PipelineStage[] = [

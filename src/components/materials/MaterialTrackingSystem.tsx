@@ -56,7 +56,7 @@ interface MaterialUsage {
 }
 
 export const MaterialTrackingSystem: React.FC = () => {
-  const [materials, setMaterials] = useState<Material[]>([
+  const [materials] = useState<Material[]>([
     {
       id: '1',
       name: '2x4 Lumber - 8ft',
@@ -104,7 +104,7 @@ export const MaterialTrackingSystem: React.FC = () => {
     }
   ]);
 
-  const [orders, setOrders] = useState<MaterialOrder[]>([
+  const [orders] = useState<MaterialOrder[]>([
     {
       id: '1',
       orderId: 'PO-2024-001',
@@ -126,7 +126,7 @@ export const MaterialTrackingSystem: React.FC = () => {
     }
   ]);
 
-  const [usageRecords, setUsageRecords] = useState<MaterialUsage[]>([
+  const [usageRecords] = useState<MaterialUsage[]>([
     {
       id: '1',
       materialId: '1',

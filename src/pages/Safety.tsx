@@ -48,7 +48,7 @@ const Safety = () => {
     expiringCertifications: 0,
     upcomingDeadlines: 0
   });
-  const [recentIncidents, setRecentIncidents] = useState<RecentIncident[]>([]);
+  const [, setRecentIncidents] = useState<RecentIncident[]>([]);
   const [checklists, setChecklists] = useState<SafetyChecklist[]>([]);
   const [loading, setLoading] = useState(true);
   const [showIncidentDialog, setShowIncidentDialog] = useState(false);

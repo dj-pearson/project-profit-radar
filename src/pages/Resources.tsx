@@ -24,7 +24,7 @@ interface BlogPost {
 
 const Resources = () => {
   const [blogPosts, setBlogPosts] = useState<BlogPost[]>([]);
-  const [loadingPosts, setLoadingPosts] = useState(true);
+  const [, setLoadingPosts] = useState(true);
 
   useEffect(() => {
     const fetchBlogPosts = async () => {

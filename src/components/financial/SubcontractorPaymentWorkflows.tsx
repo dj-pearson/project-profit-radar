@@ -95,7 +95,7 @@ export default function SubcontractorPaymentWorkflows() {
     }
   ]);
   
-  const [showNewPaymentForm, setShowNewPaymentForm] = useState(false);
+  const [, setShowNewPaymentForm] = useState(false);
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const { toast } = useToast();
   const { userProfile } = useAuth();

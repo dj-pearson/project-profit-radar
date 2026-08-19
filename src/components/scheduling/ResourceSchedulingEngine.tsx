@@ -31,7 +31,7 @@ interface ScheduleItem {
 }
 
 export const ResourceSchedulingEngine: React.FC = () => {
-  const [resources, setResources] = useState<Resource[]>([
+  const [resources] = useState<Resource[]>([
     {
       id: '1',
       name: 'Construction Crew A',
@@ -51,7 +51,7 @@ export const ResourceSchedulingEngine: React.FC = () => {
     }
   ]);
 
-  const [schedule, setSchedule] = useState<ScheduleItem[]>([
+  const [schedule] = useState<ScheduleItem[]>([
     {
       id: '1',
       projectId: 'proj-1',

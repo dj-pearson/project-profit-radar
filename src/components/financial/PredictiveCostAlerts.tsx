@@ -57,7 +57,7 @@ export const PredictiveCostAlerts = () => {
   const [alerts, setAlerts] = useState<CostAlert[]>([]);
   const [stats, setStats] = useState<AlertStats | null>(null);
   const [loading, setLoading] = useState(true);
-  const [selectedAlert, setSelectedAlert] = useState<CostAlert | null>(null);
+  const [, setSelectedAlert] = useState<CostAlert | null>(null);
 
   useEffect(() => {
     loadAlerts();

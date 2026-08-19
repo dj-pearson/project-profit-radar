@@ -23,7 +23,7 @@ export function SwipeableListItem({
   const [touchStart, setTouchStart] = useState(0);
   const [touchEnd, setTouchEnd] = useState(0);
   const [offset, setOffset] = useState(0);
-  const [isRevealed, setIsRevealed] = useState(false);
+  const [, setIsRevealed] = useState(false);
 
   const minSwipeDistance = 50;
   const actionWidth = 80;

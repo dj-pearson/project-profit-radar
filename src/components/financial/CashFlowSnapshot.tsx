@@ -8,7 +8,7 @@ import { TrendingUp, TrendingDown, Wallet } from 'lucide-react';
 
 const CashFlowSnapshot = () => {
   const { userProfile } = useAuth();
-  const [loading, setLoading] = useState(true);
+  const [, setLoading] = useState(true);
   const [cashFlowData, setCashFlowData] = useState({
     currentBalance: 0,
     accountsReceivable: 0,

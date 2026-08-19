@@ -84,10 +84,10 @@ interface ScheduledAssignment {
 export const EquipmentMaintenanceTracking: React.FC = () => {
   const { userProfile } = useAuth();
   const [equipment, setEquipment] = useState<Equipment[]>([]);
-  const [assignments, setAssignments] = useState<ScheduledAssignment[]>([]);
-  const [selectedEquipment, setSelectedEquipment] = useState<Equipment | null>(null);
-  const [showMaintenanceForm, setShowMaintenanceForm] = useState(false);
-  const [showScheduleForm, setShowScheduleForm] = useState(false);
+  const [, setAssignments] = useState<ScheduledAssignment[]>([]);
+  const [, setSelectedEquipment] = useState<Equipment | null>(null);
+  const [, setShowMaintenanceForm] = useState(false);
+  const [, setShowScheduleForm] = useState(false);
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const [filterType, setFilterType] = useState<string>('all');
   const { toast } = useToast();

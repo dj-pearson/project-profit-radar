@@ -40,7 +40,7 @@ interface StockMovement {
 }
 
 export const InventoryManagementSystem: React.FC = () => {
-  const [inventory, setInventory] = useState<InventoryItem[]>([
+  const [inventory] = useState<InventoryItem[]>([
     {
       id: '1',
       name: '2x4 Lumber - 8ft',
@@ -97,7 +97,7 @@ export const InventoryManagementSystem: React.FC = () => {
     }
   ]);
 
-  const [movements, setMovements] = useState<StockMovement[]>([
+  const [movements] = useState<StockMovement[]>([
     {
       id: '1',
       itemId: '1',

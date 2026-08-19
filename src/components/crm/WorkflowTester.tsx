@@ -68,7 +68,7 @@ export function WorkflowTester({ workflowId, nodes, edges }: WorkflowTesterProps
   const [testSteps, setTestSteps] = useState<TestStep[]>([]);
   const [currentStep, setCurrentStep] = useState(0);
   const [isRunning, setIsRunning] = useState(false);
-  const [testMode, setTestMode] = useState<'full' | 'step'>('full');
+  const [, setTestMode] = useState<'full' | 'step'>('full');
 
   const initializeTest = () => {
     try {

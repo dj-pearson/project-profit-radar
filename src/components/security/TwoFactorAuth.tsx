@@ -17,7 +17,7 @@ export const TwoFactorAuth: React.FC<TwoFactorAuthProps> = ({ onClose }) => {
   const { userSecurity, enable2FA, disable2FA, generateTOTPSecret } = useSecurity();
   const [step, setStep] = useState<'status' | 'setup' | 'verify'>('status');
   const [secret, setSecret] = useState('');
-  const [qrCodeUrl, setQrCodeUrl] = useState('');
+  const [, setQrCodeUrl] = useState('');
   const [verificationCode, setVerificationCode] = useState('');
   const [backupCodes, setBackupCodes] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);

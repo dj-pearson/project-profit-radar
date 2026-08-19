@@ -112,7 +112,7 @@ export const SubcontractorCoordination: React.FC = () => {
   const [scheduleConflicts, setScheduleConflicts] = useState<ScheduleConflict[]>([]);
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const [filterTrade, setFilterTrade] = useState<string>('all');
-  const [showPortalForm, setShowPortalForm] = useState(false);
+  const [, setShowPortalForm] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {

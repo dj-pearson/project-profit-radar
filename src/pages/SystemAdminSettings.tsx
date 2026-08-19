@@ -86,7 +86,7 @@ export default function SystemAdminSettings() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [user, setUser] = useState<User | null>(null);
-  const [profile, setProfile] = useState<UserProfileRole | null>(null);
+  const [, setProfile] = useState<UserProfileRole | null>(null);
   const [settings, setSettings] = useState<SystemSettings>({
     email_templates: {},
     form_templates: {},

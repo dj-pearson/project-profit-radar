@@ -50,7 +50,7 @@ export function FilterPresetsManager({
 }: FilterPresetsManagerProps) {
   const { toast } = useToast();
   const [presets, setPresets] = useState<FilterPreset[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [, setLoading] = useState(false);
   const [showSaveDialog, setShowSaveDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [selectedPreset, setSelectedPreset] = useState<FilterPreset | null>(null);

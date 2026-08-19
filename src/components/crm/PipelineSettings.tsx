@@ -72,8 +72,8 @@ interface LeadRoutingRule {
 
 export const PipelineSettings: React.FC = () => {
   const [stages, setStages] = useState<PipelineStage[]>([]);
-  const [templates, setTemplates] = useState<PipelineTemplate[]>([]);
-  const [routingRules, setRoutingRules] = useState<LeadRoutingRule[]>([]);
+  const [, setTemplates] = useState<PipelineTemplate[]>([]);
+  const [, setRoutingRules] = useState<LeadRoutingRule[]>([]);
   const [loading, setLoading] = useState(true);
   const [editingStage, setEditingStage] = useState<PipelineStage | null>(null);
   const [showNewStageDialog, setShowNewStageDialog] = useState(false);

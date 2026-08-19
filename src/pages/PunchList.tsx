@@ -57,7 +57,7 @@ const PunchList = () => {
   const [loadingItems, setLoadingItems] = useState(true);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const [selectedItem, setSelectedItem] = useState<PunchListItem | null>(null);
+  const [, setSelectedItem] = useState<PunchListItem | null>(null);
   const [editingItem, setEditingItem] = useState<PunchListItem | null>(null);
   const [isCommentDialogOpen, setIsCommentDialogOpen] = useState(false);
   const [commentText, setCommentText] = useState('');

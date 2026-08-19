@@ -60,7 +60,7 @@ export const SocialMediaScheduler = () => {
     scheduledDate: new Date(),
     scheduledTime: "09:00"
   });
-  const [isCreating, setIsCreating] = useState(false);
+  const [, setIsCreating] = useState(false);
 
   const handleCreatePost = () => {
     const post: SocialPost = {

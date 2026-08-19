@@ -83,7 +83,7 @@ const stepTypes = [
 
 export const LeadNurturingWorkflows = () => {
   const [workflows, setWorkflows] = useState<LeadWorkflow[]>(mockWorkflows);
-  const [isCreating, setIsCreating] = useState(false);
+  const [, setIsCreating] = useState(false);
   const [newWorkflow, setNewWorkflow] = useState({
     name: "",
     description: "",

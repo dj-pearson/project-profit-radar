@@ -41,7 +41,7 @@ export function DeveloperPortal() {
   const [playgroundBody, setPlaygroundBody] = useState('');
   const [playgroundResponse, setPlaygroundResponse] = useState('');
   const [copiedCode, setCopiedCode] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [, setLoading] = useState(true);
 
   // Fetch API documentation
   useEffect(() => {

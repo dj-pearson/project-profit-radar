@@ -9,6 +9,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useSecurity } from '@/hooks/useSecurity';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import QRCode from 'qrcode';
 
 interface MFASetupDialogProps {
   isOpen: boolean;
@@ -25,7 +26,8 @@ export const MFASetupDialog: React.FC<MFASetupDialogProps> = ({
   const { enable2FA, generateTOTPSecret } = useSecurity();
   const [step, setStep] = useState<'intro' | 'setup' | 'verify' | 'success'>('intro');
   const [secret, setSecret] = useState('');
-  const [qrCodeUrl, setQrCodeUrl] = useState('');
+  const [otpAuthUrl, setOtpAuthUrl] = useState('');
+  const [qrCodeDataUrl, setQrCodeDataUrl] = useState('');
   const [verificationCode, setVerificationCode] = useState('');
   const [backupCodes, setBackupCodes] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
@@ -64,6 +66,29 @@ export const MFASetupDialog: React.FC<MFASetupDialogProps> = ({
     checkCompanyMFAPolicy();
   }, [userProfile?.company_id]);
 
+  // The dialog told users to scan a QR code while rendering a placeholder, so
+  // enrolment only ever worked via the manual-entry key. Render the real thing
+  // from the otpauth:// URL we already build.
+  useEffect(() => {
+    if (!otpAuthUrl) {
+      setQrCodeDataUrl('');
+      return;
+    }
+    let cancelled = false;
+    QRCode.toDataURL(otpAuthUrl, { width: 192, margin: 1, errorCorrectionLevel: 'M' })
+      .then((dataUrl) => {
+        if (!cancelled) setQrCodeDataUrl(dataUrl);
+      })
+      .catch((error) => {
+        // Not fatal: the manual-entry key below still completes enrolment.
+        console.error('Failed to render MFA QR code:', error);
+        if (!cancelled) setQrCodeDataUrl('');
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [otpAuthUrl]);
+
   const startSetup = () => {
     const newSecret = generateTOTPSecret();
     setSecret(newSecret);
@@ -72,7 +97,7 @@ export const MFASetupDialog: React.FC<MFASetupDialogProps> = ({
     const appName = 'Brikly';
     const userEmail = user?.email || 'user@example.com';
     const qrUrl = `otpauth://totp/${encodeURIComponent(appName)}:${encodeURIComponent(userEmail)}?secret=${newSecret}&issuer=${encodeURIComponent(appName)}`;
-    setQrCodeUrl(qrUrl);
+    setOtpAuthUrl(qrUrl);
 
     setStep('setup');
   };
@@ -222,8 +247,20 @@ export const MFASetupDialog: React.FC<MFASetupDialogProps> = ({
       >
         <div className="space-y-6">
           <div className="text-center">
-            <div className="w-48 h-48 mx-auto bg-muted rounded-lg flex items-center justify-center">
-              <p className="text-sm text-muted-foreground">QR Code would appear here</p>
+            <div className="w-48 h-48 mx-auto bg-background rounded-lg flex items-center justify-center overflow-hidden border">
+              {qrCodeDataUrl ? (
+                <img
+                  src={qrCodeDataUrl}
+                  alt="QR code for two-factor authentication setup. If you cannot scan it, use the manual entry key below."
+                  className="w-full h-full"
+                  width={192}
+                  height={192}
+                />
+              ) : (
+                <p className="text-sm text-muted-foreground px-4 text-center">
+                  Could not render the QR code. Use the manual entry key below.
+                </p>
+              )}
             </div>
             <p className="text-sm text-muted-foreground mt-2">
               Scan with your authenticator app

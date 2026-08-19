@@ -88,7 +88,7 @@ export const AccessibleForm: React.FC<AccessibleFormProps> = ({
   const formRef = useRef<HTMLFormElement>(null);
   const [formId] = useState(generateId);
   const [errors, setErrors] = useState<Record<string, string | undefined>>(initialErrors);
-  const [fields, setFields] = useState<Set<string>>(new Set());
+  const [, setFields] = useState<Set<string>>(new Set());
   const [announcement, setAnnouncement] = useState<string>('');
 
   const registerField = useCallback((name: string) => {

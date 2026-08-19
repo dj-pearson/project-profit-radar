@@ -33,8 +33,8 @@ export const DashboardTile = ({
   dragHandleProps,
   isDragging 
 }: DashboardTileProps) => {
-  const [isResizing, setIsResizing] = useState(false);
-  const [resizeDirection, setResizeDirection] = useState<string>('');
+  const [, setIsResizing] = useState(false);
+  const [, setResizeDirection] = useState<string>('');
   const cardRef = useRef<HTMLDivElement>(null);
   const startPos = useRef({ x: 0, y: 0, width: 0, height: 0 });
 

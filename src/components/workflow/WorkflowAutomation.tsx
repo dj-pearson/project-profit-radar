@@ -96,8 +96,8 @@ export const WorkflowAutomation: React.FC = () => {
     }
   ]);
 
-  const [selectedWorkflow, setSelectedWorkflow] = useState<string>('');
-  const [isCreating, setIsCreating] = useState(false);
+  const [, setSelectedWorkflow] = useState<string>('');
+  const [, setIsCreating] = useState(false);
 
   const toggleWorkflow = (workflowId: string) => {
     setWorkflows(prev => prev.map(w => 

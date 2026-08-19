@@ -51,7 +51,7 @@ export const VoiceCommandProcessor: React.FC = () => {
   const [crisisPromptOpen, setCrisisPromptOpen] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [recordings, setRecordings] = useState<VoiceRecording[]>([]);
+  const [, setRecordings] = useState<VoiceRecording[]>([]);
   const [processedCommands, setProcessedCommands] = useState<
     ProcessedCommand[]
   >([]);

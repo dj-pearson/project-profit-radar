@@ -34,8 +34,8 @@ export const ProjectGanttChart: React.FC<ProjectGanttChartProps> = ({
   const [viewEnd, setViewEnd] = useState(new Date(selectedYear, 11, 31));
   const [draggedProject, setDraggedProject] = useState<string | null>(null);
   const [isDragging, setIsDragging] = useState(false);
-  const [dragMode, setDragMode] = useState<'move' | 'resize-start' | 'resize-end'>('move');
-  const [dragStartX, setDragStartX] = useState(0);
+  const [, setDragMode] = useState<'move' | 'resize-start' | 'resize-end'>('move');
+  const [, setDragStartX] = useState(0);
   const [tempProjectDates, setTempProjectDates] = useState<{[key: string]: {start: Date, end: Date}}>({});
   const chartRef = useRef<HTMLDivElement>(null);
 

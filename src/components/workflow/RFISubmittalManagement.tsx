@@ -53,7 +53,7 @@ export const RFISubmittalManagement: React.FC = () => {
   const [rfis, setRfis] = useState<RFI[]>([]);
   const [submittals, setSubmittals] = useState<Submittal[]>([]);
   const [projects, setProjects] = useState<any[]>([]);
-  const [teamMembers, setTeamMembers] = useState<any[]>([]);
+  const [, setTeamMembers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [rfiDialogOpen, setRfiDialogOpen] = useState(false);
   const [submittalDialogOpen, setSubmittalDialogOpen] = useState(false);
