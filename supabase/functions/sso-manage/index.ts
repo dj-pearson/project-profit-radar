@@ -8,6 +8,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
 import { validateRequest, createErrorResponse, sanitizeError } from "../_shared/validation.ts";
+import { getCorsHeaders, handleCorsPreflightRequest } from '../_shared/secure-cors.ts';
 import {
   initializeAuthContext,
   errorResponse,
@@ -15,10 +16,6 @@ import {
   isAdmin,
 } from "../_shared/auth-helpers.ts";
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
 
 // SAML Configuration Schema
 const SAMLConfigSchema = z.object({
@@ -85,8 +82,9 @@ const ListSSOSchema = z.object({
 });
 
 serve(async (req) => {
+  const corsHeaders = getCorsHeaders(req);
   if (req.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders });
+    return handleCorsPreflightRequest(req);
   }
 
   try {

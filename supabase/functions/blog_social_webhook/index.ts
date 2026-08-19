@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.3";
 
+import { getCorsHeaders, handleCorsPreflightRequest } from '../_shared/secure-cors.ts';
 interface SocialPlatformContent {
   platform: string;
   content: string;
@@ -26,12 +27,6 @@ interface StorageAsset {
   url: string;
 }
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type, x-webhook-signature",
-  "Access-Control-Allow-Methods": "POST, OPTIONS",
-};
 
 const logStep = (step: string, data?: any) => {
   console.log(`[Blog Social Webhook] ${step}:`, data || "");
@@ -129,8 +124,9 @@ async function selectRandomInstagramMedia(
 }
 
 serve(async (req) => {
+  const corsHeaders = getCorsHeaders(req);
   if (req.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders });
+    return handleCorsPreflightRequest(req);
   }
 
   if (req.method !== "POST") {

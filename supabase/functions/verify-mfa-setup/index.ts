@@ -4,10 +4,7 @@ import { TOTP } from "https://deno.land/x/otpauth@v9.2.4/dist/otpauth.esm.js";
 import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
 import { validateRequest, uuidSchema, createErrorResponse } from "../_shared/validation.ts";
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
+import { getCorsHeaders, handleCorsPreflightRequest } from '../_shared/secure-cors.ts';
 
 // SECURITY: Input validation schema
 const VerifyMFASchema = z.object({
@@ -26,8 +23,9 @@ function generateBackupCodes(count: number = 8): string[] {
 }
 
 serve(async (req) => {
+  const corsHeaders = getCorsHeaders(req);
   if (req.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders });
+    return handleCorsPreflightRequest(req);
   }
 
   try {

@@ -1,12 +1,8 @@
 // QuickBooks Sync Edge Function
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-import { initializeAuthContext, errorResponse, successResponse } from '../_shared/auth-helpers.ts';
+import { initializeAuthContext, errorResponse } from '../_shared/auth-helpers.ts';
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-  'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-}
+import { getCorsHeaders, handleCorsPreflightRequest } from '../_shared/secure-cors.ts';
 
 interface QuickBooksAPIResponse {
   QueryResponse?: {
@@ -93,8 +89,9 @@ async function ensureValidToken(supabaseClient: any, integration: any): Promise<
 }
 
 serve(async (req) => {
+  const corsHeaders = getCorsHeaders(req);
   if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders })
+    return handleCorsPreflightRequest(req)
   }
 
   try {
@@ -124,7 +121,7 @@ serve(async (req) => {
     }
 
     const startTime = Date.now()
-    let recordsProcessed = {
+    const recordsProcessed = {
       invoices: 0,
       customers: 0,
       items: 0,

@@ -2,10 +2,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { initializeAuthContext, errorResponse } from '../_shared/auth-helpers.ts';
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
+import { getCorsHeaders, handleCorsPreflightRequest } from '../_shared/secure-cors.ts';
 
 interface UsageTrackingRequest {
   metric_type: string;
@@ -20,8 +17,9 @@ const logStep = (step: string, details?: any) => {
 };
 
 serve(async (req) => {
+  const corsHeaders = getCorsHeaders(req);
   if (req.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders });
+    return handleCorsPreflightRequest(req);
   }
 
   try {
@@ -50,7 +48,7 @@ serve(async (req) => {
 
     // Determine the target company_id and user_id
     let targetCompanyId = company_id;
-    let targetUserId = user_id || user.id;
+    const targetUserId = user_id || user.id;
 
     if (!targetCompanyId) {
       // Get user's company from profile

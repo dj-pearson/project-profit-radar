@@ -1,11 +1,7 @@
 // Calculate Lead Score Edge Function
 import { initializeAuthContext, errorResponse, successResponse } from '../_shared/auth-helpers.ts';
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-  'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-}
+import { getCorsHeaders, handleCorsPreflightRequest } from '../_shared/secure-cors.ts';
 
 interface ScoringRule {
   id: string;
@@ -33,9 +29,10 @@ interface Lead {
 }
 
 Deno.serve(async (req) => {
+  const corsHeaders = getCorsHeaders(req);
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
+    return handleCorsPreflightRequest(req);
   }
 
   try {
@@ -97,17 +94,19 @@ Deno.serve(async (req) => {
           }
           break;
         
-        case 'greater_than':
-          const numValue = parseFloat(fieldValue);
-          const conditionNum = parseFloat(rule.condition_value);
-          ruleApplies = !isNaN(numValue) && !isNaN(conditionNum) && numValue > conditionNum;
-          break;
+        case 'greater_than': {
+            const numValue = parseFloat(fieldValue);
+            const conditionNum = parseFloat(rule.condition_value);
+            ruleApplies = !isNaN(numValue) && !isNaN(conditionNum) && numValue > conditionNum;
+            break;
+        }
         
-        case 'less_than':
-          const numValueLt = parseFloat(fieldValue);
-          const conditionNumLt = parseFloat(rule.condition_value);
-          ruleApplies = !isNaN(numValueLt) && !isNaN(conditionNumLt) && numValueLt < conditionNumLt;
-          break;
+        case 'less_than': {
+            const numValueLt = parseFloat(fieldValue);
+            const conditionNumLt = parseFloat(rule.condition_value);
+            ruleApplies = !isNaN(numValueLt) && !isNaN(conditionNumLt) && numValueLt < conditionNumLt;
+            break;
+        }
         
         case 'contains':
           ruleApplies = fieldValue && typeof fieldValue === 'string' && 
@@ -118,13 +117,14 @@ Deno.serve(async (req) => {
           ruleApplies = fieldValue && fieldValue !== '' && fieldValue !== null;
           break;
         
-        case 'in_range':
-          // Expect condition_value to be like "min,max"
-          const [min, max] = rule.condition_value.split(',').map((v: string) => parseFloat(v.trim()));
-          const rangeValue = parseFloat(fieldValue);
-          ruleApplies = !isNaN(rangeValue) && !isNaN(min) && !isNaN(max) && 
-                       rangeValue >= min && rangeValue <= max;
-          break;
+        case 'in_range': {
+            // Expect condition_value to be like "min,max"
+            const [min, max] = rule.condition_value.split(',').map((v: string) => parseFloat(v.trim()));
+            const rangeValue = parseFloat(fieldValue);
+            ruleApplies = !isNaN(rangeValue) && !isNaN(min) && !isNaN(max) && 
+                         rangeValue >= min && rangeValue <= max;
+            break;
+        }
       }
 
       if (ruleApplies) {

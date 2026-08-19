@@ -5,14 +5,12 @@ import { aiService } from "../_shared/ai-service.ts";
 import { initializeAuthContext, errorResponse } from "../_shared/auth-helpers.ts";
 import { checkRateLimit, rateLimitResponse, RATE_LIMITS } from "../_shared/rate-limiter.ts";
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
+import { getCorsHeaders, handleCorsPreflightRequest } from '../_shared/secure-cors.ts';
 
 serve(async (req) => {
+  const corsHeaders = getCorsHeaders(req);
   if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
+    return handleCorsPreflightRequest(req);
   }
 
   try {
@@ -50,29 +48,30 @@ serve(async (req) => {
         result = await aiService.generateBlogContent(prompt, model_alias);
         break;
       
-      case 'social':
-        const socialSystemPrompt = system_prompt || `You are a social media expert specializing in construction industry content. 
-        Create engaging social media posts that are professional, informative, and include relevant hashtags.
+      case 'social': {
+          const socialSystemPrompt = system_prompt || `You are a social media expert specializing in construction industry content. 
+          Create engaging social media posts that are professional, informative, and include relevant hashtags.
         
-        Return JSON array with this format:
-        [
-          { "platform": "linkedin", "content": "Professional post with hashtags" },
-          { "platform": "twitter", "content": "Concise tweet under 280 chars" },
-          { "platform": "facebook", "content": "Engaging Facebook post" }
-        ]`;
+          Return JSON array with this format:
+          [
+            { "platform": "linkedin", "content": "Professional post with hashtags" },
+            { "platform": "twitter", "content": "Concise tweet under 280 chars" },
+            { "platform": "facebook", "content": "Engaging Facebook post" }
+          ]`;
         
-        const socialResponse = await aiService.generateSimpleContent(
-          prompt, 
-          socialSystemPrompt, 
-          model_alias || 'claude-haiku'
-        );
+          const socialResponse = await aiService.generateSimpleContent(
+            prompt, 
+            socialSystemPrompt, 
+            model_alias || 'claude-haiku'
+          );
         
-        try {
-          result = JSON.parse(socialResponse);
-        } catch {
-          result = { content: socialResponse };
+          try {
+            result = JSON.parse(socialResponse);
+          } catch {
+            result = { content: socialResponse };
+          }
+          break;
         }
-        break;
       
       default:
         result = await aiService.generateSimpleContent(prompt, system_prompt, model_alias);

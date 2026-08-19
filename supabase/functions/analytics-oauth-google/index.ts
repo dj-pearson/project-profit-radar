@@ -4,6 +4,7 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { initializeAuthContext, errorResponse } from '../_shared/auth-helpers.ts';
 
+import { getCorsHeaders, handleCorsPreflightRequest } from '../_shared/secure-cors.ts';
 const GOOGLE_CLIENT_ID = Deno.env.get('GOOGLE_OAUTH_CLIENT_ID') || '';
 const GOOGLE_CLIENT_SECRET = Deno.env.get('GOOGLE_OAUTH_CLIENT_SECRET') || '';
 const GOOGLE_REDIRECT_URI = Deno.env.get('GOOGLE_OAUTH_REDIRECT_URI') || 'https://your-domain.com/api/oauth/google/callback';
@@ -19,15 +20,12 @@ const SCOPES = [
   'https://www.googleapis.com/auth/userinfo.profile'
 ].join(' ');
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
 
 serve(async (req) => {
+  const corsHeaders = getCorsHeaders(req);
   // Handle CORS
   if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders });
+    return handleCorsPreflightRequest(req);
   }
 
   try {

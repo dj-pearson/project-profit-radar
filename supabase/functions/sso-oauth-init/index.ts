@@ -12,10 +12,7 @@ import { validateRequest, createErrorResponse, sanitizeError } from "../_shared/
 import { encode as base64Encode } from "https://deno.land/std@0.190.0/encoding/base64.ts";
 import { checkRateLimit, getClientIP, rateLimitResponse, RATE_LIMITS } from "../_shared/rate-limiter.ts";
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
+import { getCorsHeaders, handleCorsPreflightRequest } from '../_shared/secure-cors.ts';
 
 // OAuth provider configurations
 const OAUTH_PROVIDERS: Record<
@@ -69,8 +66,9 @@ async function generatePKCE(): Promise<{ codeVerifier: string; codeChallenge: st
 }
 
 serve(async (req) => {
+  const corsHeaders = getCorsHeaders(req);
   if (req.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders });
+    return handleCorsPreflightRequest(req);
   }
 
   try {

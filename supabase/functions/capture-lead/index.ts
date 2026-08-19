@@ -4,11 +4,7 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.3";
 import { checkRateLimit, getClientIP } from "../_shared/rate-limiter.ts";
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-site-key",
-  "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
-};
+import { getCorsHeaders, handleCorsPreflightRequest } from '../_shared/secure-cors.ts';
 
 // Default site key for Brikly
 const DEFAULT_SITE_KEY = 'brikly';
@@ -49,6 +45,7 @@ const sanitizeString = (input: string | undefined, maxLength: number = 255): str
   let sanitized = input.trim().substring(0, maxLength);
 
   // Remove null bytes and other control characters
+  // eslint-disable-next-line no-control-regex -- stripping control characters is the point of this line
   sanitized = sanitized.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '');
 
   // Remove or escape potentially dangerous SQL/HTML characters
@@ -78,13 +75,14 @@ const isValidEmail = (email: string): boolean => {
 const sanitizePhone = (phone: string | undefined): string | null => {
   if (!phone || typeof phone !== 'string') return null;
   // Allow only digits, spaces, dashes, parentheses, plus sign
-  const cleaned = phone.replace(/[^0-9\s\-\(\)\+]/g, '').trim();
+  const cleaned = phone.replace(/[^0-9\s\-()+]/g, '').trim();
   return cleaned.length > 0 && cleaned.length <= 20 ? cleaned : null;
 };
 
 serve(async (req) => {
+  const corsHeaders = getCorsHeaders(req);
   if (req.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders });
+    return handleCorsPreflightRequest(req);
   }
 
   try {

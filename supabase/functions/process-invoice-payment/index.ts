@@ -5,11 +5,7 @@ import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
 import { validateRequest, uuidSchema } from "../_shared/validation.ts";
 import { initializeAuthContext, errorResponse, successResponse, safeErrorResponse } from '../_shared/auth-helpers.ts';
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-  "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
-};
+import { getCorsHeaders, handleCorsPreflightRequest } from '../_shared/secure-cors.ts';
 
 // SECURITY: Input validation schema
 const PaymentRequestSchema = z.object({
@@ -27,8 +23,9 @@ const logStep = (step: string, details?: any) => {
 };
 
 serve(async (req) => {
+  const corsHeaders = getCorsHeaders(req);
   if (req.method === "OPTIONS") {
-    return new Response(null, { status: 204, headers: corsHeaders });
+    return handleCorsPreflightRequest(req);
   }
 
   try {

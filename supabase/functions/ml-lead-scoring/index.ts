@@ -10,11 +10,7 @@
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.50.3';
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-  'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-};
+import { getCorsHeaders, handleCorsPreflightRequest } from '../_shared/secure-cors.ts';
 
 const logStep = (step: string, details?: Record<string, unknown>) => {
   const detailsStr = details ? ` - ${JSON.stringify(details)}` : '';
@@ -148,8 +144,9 @@ interface LeadActivity {
 }
 
 Deno.serve(async (req) => {
+  const corsHeaders = getCorsHeaders(req);
   if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
+    return handleCorsPreflightRequest(req);
   }
 
   try {
@@ -574,7 +571,7 @@ function calculateMLScore(lead: Lead, activities: LeadActivity[]): LeadScore {
   // CALCULATE CONFIDENCE
   // ============================================================================
   let confidenceFactors = 0;
-  let totalFactors = 6;
+  const totalFactors = 6;
 
   if (lead.company_name) confidenceFactors++;
   if (lead.estimated_budget) confidenceFactors++;
@@ -656,7 +653,7 @@ function calculateMLScore(lead: Lead, activities: LeadActivity[]): LeadScore {
 
 function calculateEstimatedDealSize(lead: Lead): number {
   // Estimate based on company size and industry
-  let baseSize = 10000;
+  const baseSize = 10000;
 
   const sizeMultipliers: Record<string, number> = {
     'enterprise': 10,

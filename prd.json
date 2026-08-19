@@ -3884,7 +3884,7 @@
       ],
       "priority": 2,
       "passes": false,
-      "notes": "PROPOSED (deep-dive audit 2026-07-12). Theme: Security. SEV: HIGH. Source: Security + Edge audits (merged; ~141/145 count)."
+      "notes": "IN PROGRESS (2026-08-19). Wildcard-CORS edge functions went 94 -> 30 in one sweep; functions on secure-cors went 52 -> 163. The deprecated _shared/cors.ts no longer hardcodes '*' - it is now a shim re-exporting secure-cors, which satisfies the 'removed or repointed' criterion (repointed, so the edge-functions-template copy that still imports it does not break). The 30 stragglers all pass corsHeaders into module-level helpers and need per-file signature changes; enumerated in scripts/ralph-ios/prd.json IOS-003."
     },
     {
       "id": "US-241",

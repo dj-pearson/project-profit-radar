@@ -10,10 +10,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.3";
 import { decode as base64Decode } from "https://deno.land/std@0.190.0/encoding/base64.ts";
 import { DOMParser } from "https://deno.land/x/deno_dom@v0.1.45/deno-dom-wasm.ts";
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
+import { getCorsHeaders, handleCorsPreflightRequest } from '../_shared/secure-cors.ts';
 
 interface SAMLAssertion {
   email: string;
@@ -135,8 +132,9 @@ async function validateSignature(
 }
 
 serve(async (req) => {
+  const corsHeaders = getCorsHeaders(req);
   if (req.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders });
+    return handleCorsPreflightRequest(req);
   }
 
   // SAML responses come as POST with form data
