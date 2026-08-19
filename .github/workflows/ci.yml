@@ -108,6 +108,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          # The US-248 append-only guard diffs migrations against the base branch.
+          fetch-depth: 0
       - uses: actions/setup-node@v4
         with:
           node-version: 18
@@ -142,6 +145,11 @@ jobs:
 
       - name: Migration filename guard (US-235)
         run: bash scripts/check-migration-filenames.sh
+
+      - name: Migration append-only guard (US-248)
+        run: node scripts/check-migration-drift.mjs
+        env:
+          MIGRATION_BASE_REF: origin/${{ github.base_ref || 'main' }}
 
       - name: No stray edge-function backup copies (US-239)
         run: bash scripts/check-no-stray-function-copies.sh

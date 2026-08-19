@@ -3982,7 +3982,7 @@
       ],
       "priority": 1,
       "passes": false,
-      "notes": "PROPOSED (deep-dive audit 2026-07-12). Theme: Database. SEV: HIGH. Source: DB audit."
+      "notes": "PROPOSED (deep-dive audit 2026-07-12). Theme: Database. SEV: HIGH. Source: DB audit. UNBLOCKED ON THE CI SIDE (2026-08-19): .github/workflows/db-migrate.yml and docs/RUNBOOK_MIGRATIONS.md (US-248) already model staging as the first hop - the workflow takes a staging|production target, reads SUPABASE_STAGING_DB_URL, and refuses a production apply without a successful run on the same commit. What remains is genuinely human: create the staging Supabase project and set SUPABASE_STAGING_DB_URL plus SUPABASE_ACCESS_TOKEN as repository secrets, then add a required reviewer to the 'production-database' GitHub Environment. Until then the drift job skips staging with a 'not configured' notice."
     },
     {
       "id": "US-248",
@@ -3995,8 +3995,8 @@
         "No reliance on migration repair --status for routine deploys"
       ],
       "priority": 1,
-      "passes": false,
-      "notes": "PROPOSED (deep-dive audit 2026-07-12). Theme: Database. SEV: HIGH. Source: DB audit."
+      "passes": true,
+      "notes": "COMPLETE (2026-08-19), with one dependency called out below. AC1 (auditable apply path): .github/workflows/db-migrate.yml. workflow_dispatch with target staging|production and a dry_run default of true; every run prints the pending list and the post-apply state into the run summary, which is the audit record. Production applies run in the 'production-database' GitHub Environment so a required reviewer approves each one, and a guard step refuses production unless a db-migrate run has already succeeded on the same commit - staging first is enforced, not just documented. A concurrency group prevents two applies racing the same project. The workflow also runs on PRs touching supabase/migrations and on a weekday cron, so drift surfaces on its own rather than at the moment someone needs to ship. AC2 (retire the scripts): repair-migrations.ps1 (193 versions marked reverted), mark-applied.ps1 (345 marked applied) and rename-migrations.ps1 (bulk in-place renames, which for merged files is the append-only violation the new guard blocks) are all deleted. Their timestamp lists remain in git history for forensics. What they were and why they existed is documented in docs/RUNBOOK_MIGRATIONS.md rather than left as runnable footguns. AC3 (drift detectable in CI): two halves. scripts/check-migration-drift.mjs needs no secrets and no DB and runs in ci.yml's security job plus db-migrate's integrity job - it fails on any merged migration that was modified or deleted, and on duplicate timestamp prefixes. Verified against the real tree: reports 397 local / 396 merged / 1 new, exits 1 with a specific message on a tampered file and on a deleted one, exits 0 when clean. The security job now checks out with fetch-depth: 0 since the check diffs against the base branch. The remote half runs `supabase migration list` per project in db-migrate's drift job and fails when the remote history holds a version with no local file. AC4 (no repair --status in routine deploys): the apply path is `supabase db push --include-all`. migration repair appears nowhere in the workflow; the runbook classes it as a deliberate reviewed reconciliation and explicitly forbids using it to turn a red pipeline green. DEPENDENCY: US-247. No staging project exists, so SUPABASE_STAGING_DB_URL is unset. The drift job reports 'not configured' and skips rather than failing, so this merges safely ahead of US-247, but until that secret is set the staging step cannot run and a production apply is still effectively a first run. The runbook says so in its own Open dependencies section. IMMEDIATE USE: 20260819000000_rate_limit_attempts.sql (the IOS-004 rate-limiter fix) is the first migration that should go through this path."
     },
     {
       "id": "US-249",
