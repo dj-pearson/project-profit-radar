@@ -1,0 +1,176 @@
+name: Database Backup
+
+# US-246: a scheduled logical backup held somewhere other than Supabase.
+#
+# Before this, the only backup-named assets in the repo were a stray cluster
+# dump someone committed by hand. There was no backup tooling, no schedule and
+# no tested restore -- so a bad migration or an accidental DROP had no recovery
+# path beyond whatever the Supabase plan happened to retain.
+#
+# This does NOT replace Supabase's own backups. It is the off-Supabase copy, so
+# a compromised or deleted Supabase project is still recoverable. Turn on PITR
+# or scheduled backups in the Supabase dashboard as well -- see
+# docs/RUNBOOK_BACKUP_RESTORE.md.
+#
+# The dump is uploaded as a workflow artifact, encrypted with a passphrase, and
+# never written to the repository. A database dump is not a repo artifact.
+#
+# Required repository secrets:
+#   SUPABASE_PROD_DB_URL   -- production Postgres connection string
+#   BACKUP_ENCRYPTION_KEY  -- passphrase for the age/gpg symmetric encryption
+#
+# Optional, for off-GitHub retention:
+#   BACKUP_S3_BUCKET, BACKUP_S3_ACCESS_KEY_ID, BACKUP_S3_SECRET_ACCESS_KEY,
+#   BACKUP_S3_ENDPOINT (set for Cloudflare R2 / Backblaze / any S3-compatible)
+
+on:
+  schedule:
+    # 02:23 UTC daily. Off the hour so it does not queue behind everyone else's
+    # midnight jobs.
+    - cron: '23 2 * * *'
+  workflow_dispatch:
+    inputs:
+      schema_only:
+        description: Dump schema only (no row data)
+        required: false
+        default: false
+        type: boolean
+
+concurrency:
+  group: db-backup
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  backup:
+    name: Dump and archive
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check configuration
+        id: cfg
+        env:
+          DB_URL: ${{ secrets.SUPABASE_PROD_DB_URL }}
+          ENC_KEY: ${{ secrets.BACKUP_ENCRYPTION_KEY }}
+        run: |
+          missing=""
+          [ -z "$DB_URL" ] && missing="$missing SUPABASE_PROD_DB_URL"
+          [ -z "$ENC_KEY" ] && missing="$missing BACKUP_ENCRYPTION_KEY"
+          if [ -n "$missing" ]; then
+            echo "::error::Backups are not configured. Missing secrets:$missing"
+            echo "See docs/RUNBOOK_BACKUP_RESTORE.md." >> "$GITHUB_STEP_SUMMARY"
+            exit 1
+          fi
+          echo "ok=true" >> "$GITHUB_OUTPUT"
+
+      - name: Install postgresql-client
+        run: |
+          sudo apt-get update -qq
+          # Match the server's major version so pg_dump does not refuse the connection.
+          sudo apt-get install -y --no-install-recommends postgresql-client-16
+          pg_dump --version
+          gpg --version | head -1
+
+      - name: Dump
+        id: dump
+        env:
+          PGCONN: ${{ secrets.SUPABASE_PROD_DB_URL }}
+        run: |
+          set -euo pipefail
+          stamp="$(date -u +%Y%m%dT%H%M%SZ)"
+          echo "stamp=$stamp" >> "$GITHUB_OUTPUT"
+          args="--no-owner --no-privileges --format=custom"
+          if [ "${{ github.event.inputs.schema_only }}" = "true" ]; then
+            args="$args --schema-only"
+          fi
+          # Application schemas only. auth/storage/pgsodium hold Supabase's own
+          # keys and session material -- excluded deliberately, since a dump
+          # carrying them is what turned a backup into an incident (US-286).
+          # Restoring auth state is Supabase's job via PITR, not ours.
+          pg_dump $args --schema=public --schema=extensions \
+            --file="brikly-$stamp.dump" "$PGCONN"
+          ls -lh "brikly-$stamp.dump"
+
+      - name: Verify the dump is readable and non-trivial
+        env:
+          STAMP: ${{ steps.dump.outputs.stamp }}
+        run: |
+          set -euo pipefail
+          f="brikly-$STAMP.dump"
+          bytes=$(stat -c%s "$f")
+          # The whole point of this story: backup_*.sql placeholders were 0
+          # bytes and nobody noticed. A dump that cannot be listed, or that is
+          # implausibly small, fails the run rather than being archived.
+          if [ "$bytes" -lt 100000 ]; then
+            echo "::error::Dump is only ${bytes} bytes -- implausible for this database."
+            exit 1
+          fi
+          tables=$(pg_restore --list "$f" | grep -c 'TABLE DATA' || true)
+          echo "Dump: ${bytes} bytes, ${tables} tables with data."
+          if [ "${{ github.event.inputs.schema_only }}" != "true" ] && [ "$tables" -lt 50 ]; then
+            echo "::error::Only ${tables} tables carry data -- expected far more."
+            exit 1
+          fi
+          {
+            echo "### Backup $STAMP"
+            echo
+            echo "- size: ${bytes} bytes"
+            echo "- tables with data: ${tables}"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Encrypt
+        env:
+          ENC_KEY: ${{ secrets.BACKUP_ENCRYPTION_KEY }}
+          STAMP: ${{ steps.dump.outputs.stamp }}
+        run: |
+          set -euo pipefail
+          # Symmetric AES-256 with the passphrase on a file descriptor, so it
+          # never appears in the process list or the run log.
+          printf '%s' "$ENC_KEY" | gpg --batch --yes --quiet \
+            --passphrase-fd 0 --pinentry-mode loopback \
+            --cipher-algo AES256 --symmetric \
+            --output "brikly-$STAMP.dump.gpg" "brikly-$STAMP.dump"
+          # The plaintext dump must not outlive this step.
+          shred -u "brikly-$STAMP.dump"
+          ls -lh "brikly-$STAMP.dump.gpg"
+
+      - name: Upload encrypted artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: db-backup-${{ steps.dump.outputs.stamp }}
+          path: brikly-*.dump.gpg
+          retention-days: 30
+          if-no-files-found: error
+
+      - name: Is object storage configured?
+        id: s3
+        env:
+          BUCKET: ${{ secrets.BACKUP_S3_BUCKET }}
+        run: |
+          if [ -n "$BUCKET" ]; then echo "configured=true" >> "$GITHUB_OUTPUT";
+          else echo "configured=false" >> "$GITHUB_OUTPUT";
+            echo "::notice::BACKUP_S3_BUCKET unset -- the only copy is the 30-day GitHub artifact.";
+          fi
+
+      - name: Copy to off-GitHub object storage
+        if: steps.s3.outputs.configured == 'true'
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.BACKUP_S3_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.BACKUP_S3_SECRET_ACCESS_KEY }}
+          BUCKET: ${{ secrets.BACKUP_S3_BUCKET }}
+          ENDPOINT: ${{ secrets.BACKUP_S3_ENDPOINT }}
+          STAMP: ${{ steps.dump.outputs.stamp }}
+        run: |
+          set -euo pipefail
+          extra=""
+          [ -n "${ENDPOINT:-}" ] && extra="--endpoint-url $ENDPOINT"
+          aws s3 cp $extra "brikly-$STAMP.dump.gpg" "s3://$BUCKET/brikly-$STAMP.dump.gpg"
+
+      - name: Report failure
+        if: failure()
+        run: |
+          echo "::error::Nightly backup failed. An unnoticed failing backup is the same as no backup -- see docs/RUNBOOK_BACKUP_RESTORE.md."

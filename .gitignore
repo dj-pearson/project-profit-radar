@@ -169,3 +169,15 @@ Crash/
 /Cloning Motion AI_*.docx
 backups/
 performance-budget-results.json
+
+# US-246: a database dump is never a repo artifact. The patterns above missed
+# `backup/db_cluster-11-12-2025@04-13-16.backup.gz` — compressed, and under the
+# singular `backup/` rather than `backups/` — so it sat tracked. Cover the
+# compressed and dump variants, and both directory spellings.
+*.backup.gz
+*.dump
+*.dump.gz
+*.sql.gz
+db_cluster-*
+backup/
+pg_dump*.gz
