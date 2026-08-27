@@ -4,7 +4,12 @@ on:
   push:
     branches: [main, develop]
   pull_request:
-    branches: [main, develop]
+    # The branches filter matches the BASE branch. release/** is here because
+    # US-213 makes CI a required check on that ruleset, and a required check
+    # that never runs blocks every merge into the branch. hotfix/** takes
+    # direct commits by design (CLAUDE.md), so its gate is the PR into main,
+    # which is already covered by the main entry.
+    branches: [main, develop, 'release/**']
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -157,6 +162,9 @@ jobs:
 
       - name: Silent-write guard
         run: node scripts/check-silent-writes.mjs
+
+      - name: Ruleset/workflow consistency guard (US-213)
+        run: node scripts/check-ruleset-consistency.mjs
 
       - name: Migration filename guard (US-235)
         run: bash scripts/check-migration-filenames.sh
