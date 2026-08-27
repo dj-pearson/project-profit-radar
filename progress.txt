@@ -3403,3 +3403,52 @@ at runtime via Deno.env and must not reach the web bundle. Documented in
 env.example. Until it is set, captureException is a no-op; handlers still log to
 the platform's own logs, they just do not aggregate or alert. Then throw
 deliberately in one function and confirm the event lands (AC4).
+
+================================================================================
+2026-08-27 — US-212: the error backlog contains real bugs, not just noise
+================================================================================
+
+1854 TypeScript errors is easy to treat as one undifferentiated pile of type
+noise to be suppressed. Mining the *small* classes instead of the big ones found
+five calls that have never executed.
+
+### PostgrestBuilder has then() but not catch()
+    await supabase.rpc('increment_lead_score', { ... }).catch(() => {});
+
+`PostgrestBuilder implements PromiseLike` — `then()` and nothing else. So
+`.catch` is undefined, calling it throws a TypeError, and it throws **before the
+request is sent**, because the builder only issues its request when `then()` is
+called.
+
+Five such calls, none of which has ever reached the database:
+
+  increment_line_item_use_count   LineItemLibraryBrowser
+  increment_session_calculations  calculatorAnalytics
+  increment_lead_score x3         calculatorAnalytics
+
+`increment_line_item_use_count` is defined in the migrations, so that is a
+working feature the `.catch` was silently preventing.
+
+### A distinction worth not flattening
+A sixth site chained `.then().catch()`. That one **worked at runtime** — `then()`
+returns a real Promise — it just could not typecheck, because `then()` is
+declared as returning `PromiseLike`. Same error code, completely different
+consequence. Reporting both as "five bugs" would have been wrong.
+
+### What it exposed — US-303
+`increment_lead_score` and `increment_session_calculations` are not defined in
+any migration. Their "Silently handle if lead scoring not available" comments
+were honest about the risk. Now the calls are actually attempted and log when the
+RPC is missing, which is how this surfaced at all.
+
+Checked against the migration SQL rather than the generated types, because
+types.ts is stale (US-263) and its absence would prove nothing. Note they could
+still exist in the live database if someone created them by hand — which is
+precisely what US-248 exists to stop.
+
+### The lesson for the rest of US-212
+Do not assume the backlog is noise. TS2551 ("did you mean...?") is 16 errors and
+contained a live bug class. TS2554 (wrong argument count) and TS2532 (possibly
+undefined) are worth the same treatment before anyone reaches for a bulk
+suppression. The big classes — TS2345/2322/2339, about 1367 of the 1847 — really
+are mostly Supabase type drift and want US-263 first.
