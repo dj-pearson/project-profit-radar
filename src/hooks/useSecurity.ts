@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from '@/hooks/use-toast';
+import { secureRecoveryCode, secureTotpSecret } from '@/lib/security/secureRandom';
 
 interface UserSecurity {
   id: string;
@@ -192,22 +193,16 @@ export const useSecurity = () => {
     }
   };
 
-  const generateBackupCodes = (): string[] => {
-    const codes = [];
-    for (let i = 0; i < 10; i++) {
-      codes.push(Math.random().toString(36).substring(2, 10).toUpperCase());
-    }
-    return codes;
-  };
+  // Both of these used Math.random(), which is not a CSPRNG - V8 implements it
+  // as xorshift128+ and its state is recoverable from a few outputs (US-296).
+  // Note these are client-side generators: the live MFA path in
+  // components/security/MFASetup.tsx gets its backup codes from the
+  // verify-mfa-setup edge function, which is where they belong, because a code
+  // the server has never seen authenticates nothing.
+  const generateBackupCodes = (): string[] =>
+    Array.from({ length: 10 }, () => secureRecoveryCode());
 
-  const generateTOTPSecret = (): string => {
-    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
-    let secret = '';
-    for (let i = 0; i < 32; i++) {
-      secret += chars.charAt(Math.floor(Math.random() * chars.length));
-    }
-    return secret;
-  };
+  const generateTOTPSecret = (): string => secureTotpSecret(32);
 
   return {
     userSecurity,

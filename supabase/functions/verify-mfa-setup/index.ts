@@ -12,13 +12,38 @@ const VerifyMFASchema = z.object({
   verification_code: z.string().length(6, 'Code must be exactly 6 digits').regex(/^\d{6}$/, 'Code must contain only digits')
 });
 
+/**
+ * MFA backup codes.
+ *
+ * These bypass the second factor by design, so a predictable one defeats MFA
+ * outright. This used Math.random().toString(36) - Deno runs V8, whose
+ * Math.random is xorshift128+, and its internal state is recoverable from a
+ * small number of consecutive outputs. Eight codes drawn in a row from that
+ * sequence are related to one another (US-296).
+ *
+ * crypto.getRandomValues, and rejection sampling so the alphabet stays
+ * unbiased. The alphabet omits 0 O 1 I L: a user reads these off a screen and
+ * types them back weeks later.
+ */
+const BACKUP_ALPHABET = "ABCDEFGHJKMNPQRSTUVWXYZ23456789";
+
 function generateBackupCodes(count: number = 8): string[] {
+  const perCode = 8;
+  const max = Math.floor(256 / BACKUP_ALPHABET.length) * BACKUP_ALPHABET.length;
   const codes: string[] = [];
-  for (let i = 0; i < count; i++) {
-    // Generate 8-character alphanumeric codes
-    const code = Math.random().toString(36).substring(2, 10).toUpperCase();
-    codes.push(code);
+
+  while (codes.length < count) {
+    let code = "";
+    while (code.length < perCode) {
+      const buf = new Uint8Array(perCode * 2);
+      crypto.getRandomValues(buf);
+      for (let i = 0; i < buf.length && code.length < perCode; i++) {
+        if (buf[i] < max) code += BACKUP_ALPHABET[buf[i] % BACKUP_ALPHABET.length];
+      }
+    }
+    codes.push(`${code.slice(0, 4)}-${code.slice(4)}`);
   }
+
   return codes;
 }
 

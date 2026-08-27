@@ -4237,3 +4237,47 @@ so that is the same duplicate shape again, a third time.
 AC2 is not done. This guard sidesteps the 295-module detector by matching
 specifier tails instead of resolving them, but that figure still should not be
 quoted until the detector follows `React.lazy`.
+
+## US-296 — the guard found the real bug, not the stubs
+
+Deleted `MFASetupDialog.tsx` and `TwoFactorAuth.tsx`. Both unreferenced, both
+rendering the literal string "QR Code would appear here", both minting ten
+`Math.random()` backup codes and presenting them as recovery codes. Those codes
+were never sent to the server, so they authenticated nothing — a user told to
+store them safely had recovery codes that were pure fiction.
+
+Then the guard I wrote for AC2 found the thing that actually matters.
+
+    supabase/functions/verify-mfa-setup/index.ts:19
+      const code = Math.random().toString(36).substring(2, 10).toUpperCase();
+
+That is the edge function issuing the **real** MFA backup codes — the ones I'd
+just described as "coming from the server, which is where they belong". Deno runs
+V8; V8's `Math.random` is xorshift128+, and its internal state is recoverable
+from a handful of consecutive outputs. Eight codes drawn in a row are related to
+one another. MFA backup codes bypass the second factor by design, so predictable
+ones defeat MFA outright.
+
+Second live find: `ClientPortalAccess.tsx:94` built
+`client_portal_access.access_token` — a bearer token granting a client access to
+a project portal — the same way. And `WebhookManagement.tsx:171` built the
+webhook **signing secret** on a live admin page; that secret is the only thing
+separating a real delivery from a forged one.
+
+`src/lib/security/secureRandom.ts` draws from `crypto.getRandomValues` and
+rejection-samples so a non-power-of-two alphabet stays unbiased. Ten tests — and
+one of them caught me: I'd excluded `0 O 1 I` from the readable alphabet and left
+`L` in, and the test asserting no mistypeable characters went red on my own code.
+
+The guard carries six exemptions, each with a written reason — analytics and RUM
+session ids, a calculator run id, an error correlation id. `session_id`
+deliberately still matches the pattern: requiring a written exemption is safer
+than loosening it and missing a real session token.
+
+### A chain of dead code
+Deleting the two stubs left `src/hooks/useSecurity.ts` with no importers at all —
+they were its only two. It joins the US-302 baseline. Dead code holding dead code
+up, and the guard is what noticed.
+
+AC3 and AC4 — the 46 unread `useState` values and ~18 unwired handlers — are
+untouched.

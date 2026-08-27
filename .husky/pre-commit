@@ -51,6 +51,10 @@ node scripts/check-sanitizer-test-env.mjs || exit 1
 #     nobody audits, and it gets adopted on the strength of its name.
 node scripts/check-unreferenced-security-modules.mjs || exit 1
 
+# 3m. Insecure random (US-296) — Math.random() is xorshift128+, so anything it
+#     builds that grants access is predictable.
+node scripts/check-insecure-random.mjs || exit 1
+
 # 4. Migration hygiene + RLS guards (US-235 / US-239 / US-237).
 bash scripts/check-migration-filenames.sh || exit 1
 bash scripts/check-no-stray-function-copies.sh || exit 1

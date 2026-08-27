@@ -12,6 +12,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { Key, Mail, Calendar, Users, Lock, Unlock, Plus, Eye, Copy, Trash2 } from 'lucide-react';
+import { secureSecret } from '@/lib/security/secureRandom';
 
 interface ClientPortalAccess {
   id: string;
@@ -91,7 +92,11 @@ export const ClientPortalAccess = () => {
   };
 
   const generateAccessToken = () => {
-    return 'portal_' + Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+    // This is a bearer token: whoever holds it reaches the client portal for
+    // this project. It was two Math.random().toString(36) calls - V8 implements
+    // Math.random as xorshift128+, whose state is recoverable from a handful of
+    // outputs, so the tokens were guessable from each other (US-296).
+    return `portal_${secureSecret(24)}`;
   };
 
   const createPortalAccess = async () => {

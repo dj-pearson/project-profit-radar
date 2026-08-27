@@ -178,6 +178,9 @@ jobs:
       - name: Unreferenced security-module guard (US-302)
         run: node scripts/check-unreferenced-security-modules.mjs
 
+      - name: Insecure-random guard (US-296)
+        run: node scripts/check-insecure-random.mjs
+
       - name: Migration filename guard (US-235)
         run: bash scripts/check-migration-filenames.sh
 
