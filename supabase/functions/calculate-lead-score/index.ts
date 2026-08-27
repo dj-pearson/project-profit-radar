@@ -164,12 +164,22 @@ Deno.serve(async (req) => {
       leadQuality = 'marketing_qualified';
     }
 
-    // Update lead quality if it has changed
+    // Update lead quality if it has changed. The error was discarded and
+    // supabase-js returns it rather than throwing, so the response below could
+    // report a lead promoted to sales_qualified while the row still said
+    // marketing_qualified - and routing, alerts and the pipeline view all read
+    // the row (US-300).
     if (lead.lead_quality !== leadQuality) {
-      await supabaseClient
+      const { error: qualityError } = await supabaseClient
         .from('leads')
         .update({ lead_quality: leadQuality })
         .eq('id', leadId);
+
+      if (qualityError) {
+        throw new Error(
+          `Lead ${leadId} scored ${totalScore} (${leadQuality}) but the new quality was NOT stored: ${qualityError.message}`,
+        );
+      }
     }
 
     console.log(`Calculated score for lead ${leadId}: ${totalScore} points`);

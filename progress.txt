@@ -5743,3 +5743,43 @@ Tightened to a regex over the whole claim statement, then re-mutated.
 
 8 new cases (45 total in that file), all mutation-checked. Full suite: 129 files,
 2839 passing, 2 skipped. Remaining backlog 88, all edge functions.
+
+---
+
+## US-300, fifth edge batch: auth state and lead attribution, 88 -> 73
+
+**sso-oauth-callback.** The `oauth_pending_states` row is the single-use CSRF
+token for the callback, and deleting it is what makes it single-use. That delete
+discarded its error, so a failed delete quietly left a live state usable until
+`expires_at`. It fails closed now - redirect to `error=state_not_consumed` plus
+an `oauth_state_not_consumed` security log. The user retries the sign-in; nothing
+is lost.
+
+The `user_sessions` insert in the same function only logs, and that is a
+decision rather than an oversight. Authentication has already succeeded by then,
+so refusing would lock out a legitimate user without invalidating anything. What
+the marker says is the actual cost: an unrecorded session does not appear in the
+admin session list, so revocation has nothing to act on.
+
+**capture-lead, handle-demo-request, handle-sales-contact.** All three store the
+lead with a checked write, then drop the errors on `lead_activities`,
+`conversion_events` and `user_attribution`. So the lead exists, the customer gets
+their confirmation, and a real conversion never appears in the funnel - the
+campaign that produced it gets no credit and the numbers a marketing decision
+rests on are quietly short. These report rather than fail: refusing the request
+would lose the lead itself, which is worse than losing its attribution.
+
+**crm-email-automation** is the webhook-delivery shape again. The `email_queue`
+insert *is* the next step of the drip sequence, and
+`logStep('Scheduled campaign email')` ran whether or not it worked - a log
+announcing a step that was never queued, for a contact enrolled in a campaign
+that would never send anything. It throws now, above the log.
+
+**calculate-lead-score** answered the promoted `lead_quality` from a local
+variable while the `leads` row kept the old one. Routing, alerts and the pipeline
+view all read the row, so a lead promoted to `sales_qualified` in the response
+stayed `marketing_qualified` everywhere that matters.
+
+8 new cases (53 total), four mutation-checked - including one that moves the
+throw below the log line to prove the ordering assertion bites. Full suite: 129
+files, 2847 passing, 2 skipped. Remaining backlog 73, all edge functions.

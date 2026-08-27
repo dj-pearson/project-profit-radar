@@ -243,8 +243,9 @@ Deno.serve(async (req) => {
       logStep('Failed to update lead score', { error: updateError.message });
     }
 
-    // Log scoring activity
-    await supabase.from('crm_activities').insert({
+    // Log scoring activity. The score itself is stored above; this is the CRM
+    // timeline entry, and its error was discarded (US-300).
+    const { error: activityError } = await supabase.from('crm_activities').insert({
       company_id: userProfile.company_id,
       lead_id: lead_id,
       activity_type: 'scoring',
@@ -252,6 +253,13 @@ Deno.serve(async (req) => {
       outcome: 'completed',
       activity_date: new Date().toISOString(),
     });
+
+    if (activityError) {
+      logStep('Score stored but the scoring activity was not recorded', {
+        lead_id,
+        error: activityError.message,
+      });
+    }
 
     logStep('Score calculated', {
       lead_id,

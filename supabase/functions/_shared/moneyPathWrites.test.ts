@@ -399,3 +399,76 @@ describe('the fourth edge batch: queues that resend when their bookkeeping is lo
     expect(src).toMatch(/const \{ error: markFailedError \} = await supabaseClient/);
   });
 });
+
+describe('the fifth edge batch: single-use auth state and the marketing record of a lead', () => {
+  it('sso-oauth-callback refuses the sign-in when it cannot consume the state', () => {
+    // The oauth_pending_states row is the single-use CSRF token for the
+    // callback. Deleting it is what stops the same state being presented again
+    // before expires_at, and the delete discarded its error.
+    const src = code(F('sso-oauth-callback'));
+    expect(src).toMatch(
+      /const \{ error: stateDeleteError \} = await supabaseClient\s*\n\s*\.from\("oauth_pending_states"\)\s*\n\s*\.delete\(\)\s*\n\s*\.eq\("state", state\);/,
+    );
+    expect(src).toContain('error=state_not_consumed');
+    expect(src).toContain('oauth_state_not_consumed');
+  });
+
+  it('and says so when a session it cannot revoke was created', () => {
+    // An unrecorded session does not appear in the admin session list, so
+    // revocation has nothing to act on. Logged rather than failed: auth has
+    // already succeeded by then.
+    const src = code(F('sso-oauth-callback'));
+    expect(src).toMatch(/const \{ error: sessionRecordError \} = await supabaseClient/);
+    expect(src).toContain('SIGNED IN but the session was not recorded');
+    expect(src).toMatch(/const \{ error: expiredDeleteError \} = await supabaseClient/);
+  });
+
+  it('capture-lead reports a conversion that never reached the funnel', () => {
+    const src = code(F('capture-lead'));
+    expect(src).toMatch(/const \{ error: activityError \} = await supabaseClient/);
+    expect(src).toMatch(/const \{ error: conversionError \} = await supabaseClient/);
+    expect(src).toMatch(/const \{ error: attributionError \} = await supabaseClient/);
+    expect(src).toContain('First-touch attribution LOST for a new lead');
+  });
+
+  it('handle-demo-request and handle-sales-contact do the same', () => {
+    for (const fn of ['handle-demo-request', 'handle-sales-contact']) {
+      const src = code(F(fn));
+      expect(src, `${fn} activity`).toMatch(/const \{ error: activityError \} = await supabaseClient/);
+      expect(src, `${fn} conversion`).toMatch(/const \{ error: conversionError \} = await supabaseClient/);
+      expect(src, `${fn} marker`).toContain('but the conversion event was not recorded');
+    }
+  });
+
+  it('crm-email-automation does not log a campaign step it failed to queue', () => {
+    // The insert is the next step of the drip sequence; the logStep below it
+    // announced the scheduling regardless.
+    const src = code(F('crm-email-automation'));
+    expect(src).toMatch(/const \{ error: queueStepError \} = await supabase/);
+    const throwIndex = src.indexOf('so the sequence stops here');
+    const logIndex = src.indexOf("logStep('Scheduled campaign email'");
+    expect(throwIndex).toBeGreaterThan(-1);
+    expect(logIndex).toBeGreaterThan(throwIndex);
+  });
+
+  it('and keeps the CRM timeline entry a rep reads before following up', () => {
+    const src = code(F('crm-email-automation'));
+    expect(src).toMatch(/const \{ error: activityError \} = await supabase/);
+    expect(src).toContain('QUEUED but not shown on the CRM timeline');
+    expect(src).toMatch(/const \{ error: completedError \} = await supabase/);
+  });
+
+  it('calculate-lead-score will not report a promotion the row did not get', () => {
+    // It answered the new quality from a local variable while the leads row
+    // kept the old one, and routing and alerts read the row.
+    const src = code(F('calculate-lead-score'));
+    expect(src).toMatch(/const \{ error: qualityError \} = await supabaseClient/);
+    expect(src).toContain('but the new quality was NOT stored');
+  });
+
+  it('ml-lead-scoring records its scoring activity or says it did not', () => {
+    const src = code(F('ml-lead-scoring'));
+    expect(src).toMatch(/const \{ error: activityError \} = await supabase\.from\('crm_activities'\)/);
+    expect(src).toContain('the scoring activity was not recorded');
+  });
+});

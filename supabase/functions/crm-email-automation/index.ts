@@ -318,8 +318,12 @@ async function processAutomation(
     return { success: false, error: queueError.message };
   }
 
-  // Log the automation activity
-  await supabase
+  // Log the automation activity. The email is already queued - that write is
+  // checked above - so this is the CRM timeline entry, not the action. Its
+  // error was discarded and supabase-js returns it rather than throwing, so a
+  // rep looking at the lead saw no sign an automated email had gone out and
+  // could follow up on top of it (US-300).
+  const { error: activityError } = await supabase
     .from('crm_activities')
     .insert({
       company_id: companyId,
@@ -330,6 +334,13 @@ async function processAutomation(
       outcome: 'queued',
       activity_date: new Date().toISOString(),
     });
+
+  if (activityError) {
+    logStep('Automated email QUEUED but not shown on the CRM timeline', {
+      recipientEmail,
+      error: activityError.message,
+    });
+  }
 
   logStep('Email queued successfully', {
     email: recipientEmail,
@@ -526,14 +537,24 @@ async function scheduleNextCampaignEmail(
   const currentStep = (enrollment.current_step as number) || 0;
 
   if (currentStep >= steps.length) {
-    // Campaign completed
-    await supabase
+    // Campaign completed. A dropped error left the enrollment 'active' with
+    // every step already sent, so it stayed on the active-enrolment counts for
+    // good (US-300).
+    const { error: completedError } = await supabase
       .from('campaign_enrollments')
       .update({
         status: 'completed',
         completed_at: new Date().toISOString()
       })
       .eq('id', enrollment.id as string);
+
+    if (completedError) {
+      logStep('Enrollment finished its sequence but was not marked completed', {
+        enrollmentId: enrollment.id,
+        error: completedError.message,
+      });
+    }
+
     return;
   }
 
@@ -544,8 +565,11 @@ async function scheduleNextCampaignEmail(
   // Prepare variables
   const variables = prepareEntityVariables(entity);
 
-  // Queue the email
-  await supabase
+  // Queue the email. This row IS the next step of the drip campaign: with its
+  // error discarded, a failed insert left the contact enrolled in a sequence
+  // that would never send anything, and the logStep below announced the
+  // scheduling anyway (US-300).
+  const { error: queueStepError } = await supabase
     .from('email_queue')
     .insert({
       company_id: companyId,
@@ -567,6 +591,12 @@ async function scheduleNextCampaignEmail(
         campaign_name: campaign.campaign_name,
       }
     });
+
+  if (queueStepError) {
+    throw new Error(
+      `Step ${currentStep} of "${campaign.campaign_name}" was NOT queued for ${enrollment.recipient_email}, so the sequence stops here: ${queueStepError.message}`,
+    );
+  }
 
   logStep('Scheduled campaign email', {
     campaign: campaign.campaign_name,

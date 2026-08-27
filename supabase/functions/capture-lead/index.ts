@@ -242,7 +242,13 @@ serve(async (req) => {
                         interestType === 'newsletter' ? 'newsletter_signup' :
                         'lead_captured';
 
-    await supabaseClient
+    // The lead is already stored - that write throws. These three are the
+    // marketing record of it, and their errors were discarded; supabase-js
+    // returns them rather than throwing, so a lost row meant a real conversion
+    // simply never appeared in the funnel and the campaign that produced it got
+    // no credit. Reported rather than failed: refusing the request would lose
+    // the lead itself, which is worse (US-300).
+    const { error: activityError } = await supabaseClient
       .from('lead_activities')
       .insert({
         lead_id: leadId,
@@ -256,8 +262,12 @@ serve(async (req) => {
         user_agent: req.headers.get('user-agent')
       });
 
+    if (activityError) {
+      logStep("Lead CAPTURED but the activity was not recorded", { leadId, error: activityError.message });
+    }
+
     // Track conversion event
-    await supabaseClient
+    const { error: conversionError } = await supabaseClient
       .from('conversion_events')
       .insert({
         event_type: 'lead_captured',
@@ -275,9 +285,13 @@ serve(async (req) => {
         }
       });
 
+    if (conversionError) {
+      logStep("Lead CAPTURED but the conversion event was not recorded", { leadId, error: conversionError.message });
+    }
+
     // Store attribution if new lead
     if (isNewLead && (utm_source || utm_medium || utm_campaign)) {
-      await supabaseClient
+      const { error: attributionError } = await supabaseClient
         .from('user_attribution')
         .insert({
           // Note: We'll need to link this later when user signs up
@@ -291,6 +305,15 @@ serve(async (req) => {
           first_touch_at: new Date().toISOString()
         })
         .select();
+
+      if (attributionError) {
+        logStep("First-touch attribution LOST for a new lead", {
+          leadId,
+          utm_source,
+          utm_campaign,
+          error: attributionError.message,
+        });
+      }
     }
 
     // TODO: Send welcome/confirmation email

@@ -220,7 +220,18 @@ serve(async (req) => {
     // Check expiration
     if (new Date(storedState.expires_at) < new Date()) {
       console.error("[OAuth] State expired");
-      await supabaseClient.from("oauth_pending_states").delete().eq("state", state);
+      // Housekeeping only - the expiry check above is what rejects the
+      // callback, so a failed delete leaves a dead row rather than a usable
+      // one. Read rather than discarded, so it is a decision (US-300).
+      const { error: expiredDeleteError } = await supabaseClient
+        .from("oauth_pending_states")
+        .delete()
+        .eq("state", state);
+
+      if (expiredDeleteError) {
+        console.error("[OAuth] Expired state row not deleted:", expiredDeleteError.message);
+      }
+
       return Response.redirect(`${siteUrl}/auth?error=state_expired`);
     }
 
@@ -384,8 +395,27 @@ serve(async (req) => {
       }
     }
 
-    // Clean up used state
-    await supabaseClient.from("oauth_pending_states").delete().eq("state", state);
+    // Consume the state. This row is the single-use CSRF token for the
+    // callback: deleting it is what stops the same state being presented
+    // again before expires_at. Its error was discarded and supabase-js returns
+    // it rather than throwing, so a failed delete silently left a live state
+    // behind. Fail closed - the user can retry the sign-in (US-300).
+    const { error: stateDeleteError } = await supabaseClient
+      .from("oauth_pending_states")
+      .delete()
+      .eq("state", state);
+
+    if (stateDeleteError) {
+      console.error("[OAuth] Could not consume state, refusing sign-in:", stateDeleteError.message);
+      await writeSecurityLog(supabaseClient, {
+        user_id: userId,
+        event_type: "oauth_state_not_consumed",
+        ip_address: req.headers.get("cf-connecting-ip") || req.headers.get("x-forwarded-for"),
+        user_agent: req.headers.get("user-agent"),
+        details: { connection_id: ssoConnection.id, reason: stateDeleteError.message },
+      });
+      return Response.redirect(`${siteUrl}/auth?error=state_not_consumed`);
+    }
 
     // Create session via magic link
     // Security: Validate return URL to prevent open redirect attacks
@@ -405,17 +435,31 @@ serve(async (req) => {
       return Response.redirect(`${siteUrl}/auth?error=session_creation_failed`);
     }
 
-    // Create session record
-    await supabaseClient.from("user_sessions").insert({
-      user_id: userId,
-      tenant_id: ssoConnection.tenant_id,
-      session_token: crypto.randomUUID(),
-      auth_method: "sso",
-      sso_connection_id: ssoConnection.id,
-      device_type: "web",
-      ip_address: req.headers.get("cf-connecting-ip") || req.headers.get("x-forwarded-for"),
-      user_agent: req.headers.get("user-agent"),
-    });
+    // Create session record. This row is what an admin sees in the active
+    // session list and what session revocation acts on, so an unrecorded
+    // session cannot be revoked. Its error was discarded (US-300). Logged
+    // rather than failed: authentication has already succeeded by this point,
+    // and refusing here would lock out a legitimate user without invalidating
+    // anything.
+    const { error: sessionRecordError } = await supabaseClient
+      .from("user_sessions")
+      .insert({
+        user_id: userId,
+        tenant_id: ssoConnection.tenant_id,
+        session_token: crypto.randomUUID(),
+        auth_method: "sso",
+        sso_connection_id: ssoConnection.id,
+        device_type: "web",
+        ip_address: req.headers.get("cf-connecting-ip") || req.headers.get("x-forwarded-for"),
+        user_agent: req.headers.get("user-agent"),
+      });
+
+    if (sessionRecordError) {
+      console.error(
+        `[OAuth] User ${userId} SIGNED IN but the session was not recorded, so it cannot be revoked:`,
+        sessionRecordError.message,
+      );
+    }
 
     // Log successful authentication
     await writeSecurityLog(supabaseClient, {
