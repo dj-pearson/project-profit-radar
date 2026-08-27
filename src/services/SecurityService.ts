@@ -169,19 +169,25 @@ class SecurityService {
     }
   }
 
-  async checkRateLimit(identifier: string, action: string): Promise<{ allowed: boolean; remainingAttempts?: number }> {
-    try {
-      // Mock rate limiting
-      const mockResult = {
-        allowed: true,
-        remainingAttempts: 5
-      };
-
-      return mockResult;
-    } catch (error: any) {
-      logger.error('Error checking rate limit:', error);
-      return { allowed: true };
-    }
+  /**
+   * NOT IMPLEMENTED. This used to return `{ allowed: true, remainingAttempts: 5 }`
+   * unconditionally, and its catch also returned `{ allowed: true }` — so a
+   * caller asking "may this proceed?" always got yes, and would have believed
+   * rate limiting was in force while nothing was being limited.
+   *
+   * Nothing calls it today. It throws rather than returning a permissive answer
+   * so that the moment someone does wire it up they find out in development,
+   * instead of shipping a control that does nothing.
+   *
+   * Real rate limiting lives server-side in
+   * supabase/functions/_shared/rate-limiter.ts, which is where it belongs — a
+   * browser-side limiter is advisory at best, since the caller controls it.
+   */
+  async checkRateLimit(_identifier: string, _action: string): Promise<{ allowed: boolean; remainingAttempts?: number }> {
+    throw new Error(
+      'SecurityService.checkRateLimit is not implemented. Use the server-side limiter in ' +
+      'supabase/functions/_shared/rate-limiter.ts; a client-side check cannot be trusted.',
+    );
   }
 
   async resolveSecurityAlert(alertId: string): Promise<boolean> {

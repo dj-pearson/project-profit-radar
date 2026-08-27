@@ -1,3 +1,9 @@
+// NOTE: this module is not currently imported anywhere. The route guard the app
+// actually uses is RouteGuard in src/components/ProtectedRoute.tsx, wired up in
+// src/routes/appRoutes.tsx. Two guards with the same name is a hazard on its own
+// — this one sits under auth/, which reads as the more canonical location — so
+// see US-302 for consolidating them. Until then it must at least fail CLOSED.
+
 import { Navigate, Outlet } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { PageLoading } from '@/components/loading/LoadingSpinner';
@@ -37,7 +43,11 @@ export function RoleProtectedRoute({ allowedRoles }: RoleProtectedRouteProps) {
     return <Navigate to="/auth" replace />;
   }
 
-  if (role && !allowedRoles.includes(role)) {
+  // Fail closed. This used to read `if (role && !allowedRoles.includes(role))`,
+  // which skipped the check entirely when role was null or undefined — a signed-in
+  // user whose profile had not loaded, or who had no role at all, passed every
+  // role gate.
+  if (!role || !allowedRoles.includes(role)) {
     return <Navigate to="/unauthorized" replace />;
   }
 
@@ -64,7 +74,9 @@ export function RequirePermission({
     return null;
   }
 
-  if (!user || (role && !allowedRoles.includes(role))) {
+  // Fail closed, same reasoning as RoleProtectedRoute above: a missing role must
+  // not satisfy a role requirement.
+  if (!user || !role || !allowedRoles.includes(role)) {
     return <>{fallback}</>;
   }
 
