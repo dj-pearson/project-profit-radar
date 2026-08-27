@@ -4738,7 +4738,22 @@
       ],
       "priority": 3,
       "passes": false,
-      "notes": "FOUND 2026-08-27 while finishing US-244. Not urgent - nothing is broken that was ever working - but it is a security feature that reports success and does nothing, which is worse than an absent one. Related: the same swallow-everything pattern is what hid the usage_metrics and workflow_step_executions write failures in the US-237 follow-up. Worth a broader look at `catch {}` around Supabase writes."
+      "notes": "FOUND 2026-08-27 while finishing US-244. Not urgent - nothing is broken that was ever working - but it is a security feature that reports success and does nothing, which is worse than an absent one. Related: the same swallow-everything pattern is what hid the usage_metrics and workflow_step_executions write failures in the US-237 follow-up. Worth a broader look at `catch {}` around Supabase writes. || Superseded in scope by US-300, which covers the whole class (330 sites) and carries the guard. This story remains the specific decision about whether browser-originated security events are worth collecting at all."
+    },
+    {
+      "id": "US-300",
+      "title": "Burn down the 330 Supabase writes whose error is never read",
+      "description": "As a maintainer, I want every Supabase write to read its error, because supabase-js RETURNS errors rather than throwing them - so an unread error is a write that may never have happened, and a surrounding try/catch does not help. An AST sweep of src/ and supabase/functions/ finds 330 writes (insert/update/upsert/delete) whose result is discarded entirely or destructured without `error`: 258 in edge functions, 72 in the web app. This is not theoretical. The same shape has now cost something three separate times: OfflineDataManager cleared a field worker's queued time entries, expenses, inspections and tasks after a failed insert and told them 'Sync Complete' (fixed); track-usage, usage-billing and workflow-execution wrote to tables their client had no RLS write path for and reported success (fixed under US-237); and useSecurityMonitor has never recorded a single security event (US-299). Triage by consequence rather than sweeping alphabetically. The writes worth doing first touch money (invoices, invoice_line_items, proration_history, collection_items, subscribers), payroll (time_entries), compliance evidence (data_subject_requests, osha_compliance_log) and identity (companies, user_profiles). A UI progress marker losing a write matters much less. Fixing one means reading the error and doing something with it. Deciding it is safe to ignore is a legitimate outcome - destructure it and say why in a comment, so the next reader knows it was a decision rather than an oversight.",
+      "acceptanceCriteria": [
+        "scripts/check-silent-writes.mjs BASELINE is reduced as sites are fixed, and never raised",
+        "Every write touching money, payroll, compliance evidence or identity reads its error",
+        "Writes whose error is deliberately ignored destructure it and carry a comment saying why",
+        "No user-facing success message is shown for an operation whose write failed",
+        "A queue or cache is cleared only after the write it depends on succeeded"
+      ],
+      "priority": 2,
+      "passes": false,
+      "notes": "FILED 2026-08-27 after fixing the OfflineDataManager data loss. Guard is scripts/check-silent-writes.mjs (pre-commit + CI, baseline 330, shrink-only). THE SUBTLETY WORTH REMEMBERING: `catch {}` is usually NOT what hides these. supabase-js resolves rather than rejects, so the error never reaches a catch at all - it sits unread in the returned object. Searching for empty catch blocks finds the wrong thing; the guard checks the destructuring instead. THE DANGEROUS SHAPE specifically is a write followed by an irreversible local action - clearing a queue, marking something synced, incrementing a counter, showing a success toast. That is what turns a failed write into data loss rather than a no-op."
     }
   ]
 }

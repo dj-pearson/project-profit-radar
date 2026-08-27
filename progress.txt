@@ -2814,3 +2814,63 @@ Same pattern hid the usage_metrics and workflow_step_executions failures in the
 US-237 follow-up. **`catch {}` around a Supabase write is worth a sweep of its
 own** — Supabase returns errors rather than throwing, so the catch usually is not
 even the thing hiding it; the discarded `error` field is.
+
+================================================================================
+2026-08-27 — the silent-write class, and the offline data loss it was causing
+================================================================================
+
+Chased the discarded-error pattern I flagged last tick. It is worse than a code
+smell: it has now cost something three separate times, and one of those is
+active data loss affecting real users.
+
+### The bug — OfflineDataManager destroyed queued field data
+    await supabase.from('time_entries').insert(pendingTimeEntries);
+    localStorage.removeItem('pending_time_entries');
+    synced += pendingTimeEntries.length;
+
+**supabase-js returns errors rather than throwing them.** So the surrounding
+try/catch never fired, the removeItem ran unconditionally, the counter went up,
+and the user got a "Sync Complete" toast. An RLS denial, a constraint violation
+or a validation failure permanently destroyed the field worker's queued time
+entries, expenses, quality inspections and tasks.
+
+Time entries are payroll. This is the most consequential thing found in this
+session — worse than any of the security findings, because it is silent, active
+and affects the exact workflow the mobile app exists for.
+
+Each queue now clears only after its insert returns without an error, keeps its
+rows for the next attempt otherwise, and the toast names what did not save.
+`pendingUploads` reflects what is still queued instead of resetting to zero.
+
+`pending_locations` was worse still: no destination table at all. The code
+cleared the queue under a "Mock sync - in production would sync to actual table"
+comment, so queued locations were thrown away on every single sync. Now kept and
+logged.
+
+### The subtlety that makes this hard to find
+`catch {}` is usually **not** what hides these. supabase-js resolves rather than
+rejects, so the error never reaches a catch — it sits unread in the returned
+object. Grepping for empty catch blocks finds the wrong thing. The guard checks
+the destructuring instead: a write whose result is discarded, or destructured
+without `error`.
+
+### The dangerous shape, specifically
+A write followed by an **irreversible local action**: clearing a queue, marking
+something synced, incrementing a counter, showing a success toast. That is what
+turns a failed write from a no-op into data loss. A write whose failure just
+means "nothing happened" is a bug; a write whose failure means "and now the only
+copy is gone" is an incident.
+
+### Scale, and the guard
+330 writes across the repo discard their error — 258 in edge functions, 72 in
+the web app. scripts/check-silent-writes.mjs is the ratchet: pre-commit and CI,
+shrink-only. Filed as US-300, to be triaged by consequence (money, payroll,
+compliance evidence, identity) rather than swept alphabetically.
+
+Deliberately ignoring an error is a legitimate outcome — destructure it and say
+why in a comment, so the next reader knows it was a decision.
+
+### Prior appearances of the same pattern
+- track-usage / usage-billing / workflow-execution wrote to tables their client
+  had no RLS write path for, and reported success (US-237 follow-up).
+- useSecurityMonitor has never recorded a single security event (US-299).
