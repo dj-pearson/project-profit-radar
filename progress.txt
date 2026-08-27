@@ -2688,3 +2688,66 @@ seo_meta_tags (needs \d against production), ai_environment_config (needs a
 decision on the owning role), and eight tables with zero references anywhere —
 trades and the seven pseo_* — which should be scoped for defence in depth or
 dropped if the pSEO work is not proceeding.
+
+================================================================================
+2026-08-27 — US-244 audit trail: unblocking by not assuming the schema
+================================================================================
+
+### Why it was blocked, and why that was the wrong conclusion
+The 2026-07-12 assessment was right about the risk. audit_logs genuinely has
+three incompatible definitions:
+
+  20250202000012  tenant_id,  event_type NOT NULL, action NOT NULL, resource_type NOT NULL
+  20250703164308  company_id, action_type NOT NULL, resource_type NOT NULL
+                  — no event_type column, no action column
+  20250202000020  a bare table plus defensive ADD COLUMN for company_id and tenant_id
+
+There is no column set valid under both of the first two: one requires
+event_type, the other does not have it. An insert with the wrong shape throws on
+every mutation it is meant to be recording, which is worse than no logging.
+
+But that only rules out a **fixed** payload. It does not rule out a writer that
+finds the shape at runtime.
+
+### The writer
+_shared/audit-log.ts tries an ordered list of candidate payloads, caches the
+first that works for the lifetime of the isolate (so the cost is one rejected
+insert per cold start), and **never throws**. A row that cannot be written is
+reported with console.error and the caller carries on.
+
+That last property is the whole design. Audit logging must not be able to break
+the operation it audits — which is precisely the failure mode the original block
+was worried about. Once the writer cannot throw, shipping without the live
+schema stops being a gamble.
+
+### Six critical mutations instrumented
+Chosen as the ones a dispute, a SOC2 review or an incident post-mortem actually
+asks about, rather than "all 148 write functions":
+
+  process-refund       refund approved            money out, approver named
+  handle-chargeback    chargeback accepted        dispute forfeited, money gone
+  store-stripe-keys    credentials replaced       where the money moves
+  api-management       API key minted             new credential + its grants
+  invite-team-member   member invited             access granted at a chosen role
+  disable-mfa          MFA disabled               security downgraded
+
+Two details worth keeping:
+- No key material is ever logged. The API key row records only the prefix, which
+  is what the UI shows anyway.
+- disable-mfa records actor and subject separately, because an admin can disable
+  someone else's MFA and that is the interesting case.
+
+The chargeback row is written *before* the Stripe call, so the intent is on
+record even if closing the dispute then fails.
+
+### The guard
+scripts/check-audit-coverage.mjs tracks twelve critical functions, fails if an
+instrumented one loses its audit call, and prints the six still to do
+(data-subject-delete, process-dsar-fulfillment, create-root-admin,
+change-subscription, manage-complimentary-subscription, process-invoice-payment).
+In pre-commit and CI.
+
+### Still worth doing with a database
+Confirm which audit_logs shape production actually has and collapse the
+candidate list to one. The adaptive writer is a way to ship safely without that
+answer — not a substitute for having it. Same bucket as US-298.
