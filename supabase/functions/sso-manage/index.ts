@@ -16,6 +16,7 @@ import {
 } from "../_shared/auth-helpers.ts";
 import { getCorsHeaders } from '../_shared/secure-cors.ts';
 import { createServiceClient } from '../_shared/service-client.ts';
+import { writeSecurityLog } from '../_shared/security-log.ts';
 
 // SAML Configuration Schema
 const SAMLConfigSchema = z.object({
@@ -207,7 +208,7 @@ serve(async (req) => {
         }
 
         // Log the action
-        await createServiceClient().from("security_logs").insert({
+        await writeSecurityLog(createServiceClient(), {
           user_id: user.id,
           event_type: "sso_connection_created",
           ip_address: req.headers.get("cf-connecting-ip") || req.headers.get("x-forwarded-for"),
@@ -276,7 +277,7 @@ serve(async (req) => {
         }
 
         // Log the action
-        await createServiceClient().from("security_logs").insert({
+        await writeSecurityLog(createServiceClient(), {
           user_id: user.id,
           event_type: "sso_connection_updated",
           ip_address: req.headers.get("cf-connecting-ip") || req.headers.get("x-forwarded-for"),
@@ -311,7 +312,7 @@ serve(async (req) => {
         }
 
         // Log the action
-        await createServiceClient().from("security_logs").insert({
+        await writeSecurityLog(createServiceClient(), {
           user_id: user.id,
           event_type: "sso_connection_deleted",
           ip_address: req.headers.get("cf-connecting-ip") || req.headers.get("x-forwarded-for"),

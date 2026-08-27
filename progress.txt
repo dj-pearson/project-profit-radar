@@ -4052,3 +4052,41 @@ counter lives in the very field whose write was unchecked.
 
 BASELINE 256 → 242. 41 web-app and 201 edge sites remain; `security_logs` is the
 largest single group left at 19.
+
+### security_logs — 19 sites, and two guards that nearly lost them
+The largest remaining group. Nineteen identical raw inserts across nine edge
+functions, error discarded every time — failed MFA attempts, SSO logins, MFA
+being disabled for another user. The auth events an incident is reconstructed
+from.
+
+`_shared/security-log.ts` instead of nineteen bespoke edits. It reads the error
+and logs under the greppable marker `SECURITY_LOG_WRITE_FAILED`, and never
+throws: refusing a login because its audit row could not be written turns a
+logging outage into an auth outage, which is worse. Seven unit tests, including
+both never-throws paths — a returned error, and an insert that rejects outright.
+
+All 19 converted by an AST-balanced rewrite, then every file re-parsed to
+confirm.
+
+**Two guard problems fell out of the refactor.**
+
+Moving a write behind a helper *hides it* from `check-rls-write-paths.mjs`,
+which scans for `.from('<table>')`. The conversion would have quietly removed 19
+sites from the guard's view — a refactor that improves the code and silently
+weakens the check on it. The guard now also follows a set of known
+service-client helpers and checks their first argument, so the check moves with
+the write. Mutation-tested by pointing one call at a user-JWT client.
+
+That change then immediately false-positived on `process-dsar-fulfillment`,
+whose client is `createClient(SUPABASE_URL, SERVICE_ROLE)` — the key in a module
+constant, so `SERVICE_ROLE_KEY` never appears inside the `createClient` call.
+The same two-pass AST fix I'd already applied to `check-rate-limit-coverage.mjs`
+for exactly the same reason. Worth noticing that I wrote the same bug twice in
+one session.
+
+The `securityDefinerScoping` test that pinned the old shape went stale and
+failed, which is what it's for. Retargeted: it now asserts the helper is used and
+no raw insert remains, and leaves the client question to the guard that is
+mutation-tested for it.
+
+BASELINE 242 → 223. 41 web-app and 182 edge sites remain.

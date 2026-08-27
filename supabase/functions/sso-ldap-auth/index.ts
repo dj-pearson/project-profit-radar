@@ -10,6 +10,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.3";
 import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
 import { validateRequest, createErrorResponse, sanitizeError } from "../_shared/validation.ts";
 import { getCorsHeaders } from '../_shared/secure-cors.ts';
+import { writeSecurityLog } from '../_shared/security-log.ts';
 
 // Input validation schema
 const LDAPAuthSchema = z.object({
@@ -193,7 +194,7 @@ serve(async (req) => {
 
     if (!authResult.success || !authResult.user) {
       // Log failed authentication
-      await supabaseClient.from("security_logs").insert({
+      await writeSecurityLog(supabaseClient, {
         event_type: "ldap_auth_failed",
         ip_address: req.headers.get("cf-connecting-ip") || req.headers.get("x-forwarded-for"),
         user_agent: req.headers.get("user-agent"),
@@ -305,7 +306,7 @@ serve(async (req) => {
     });
 
     // Log successful authentication
-    await supabaseClient.from("security_logs").insert({
+    await writeSecurityLog(supabaseClient, {
       user_id: userId,
       event_type: isNewUser ? "ldap_user_created" : "ldap_auth_success",
       ip_address: req.headers.get("cf-connecting-ip") || req.headers.get("x-forwarded-for"),

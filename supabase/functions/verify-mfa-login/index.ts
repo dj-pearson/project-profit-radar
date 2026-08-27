@@ -11,7 +11,8 @@ import { TOTP } from "https://deno.land/x/otpauth@v9.2.4/dist/otpauth.esm.js";
 import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
 import { validateRequest, createErrorResponse, sanitizeError } from "../_shared/validation.ts";
 import { getCorsHeaders, handleCorsPreflightRequest } from "../_shared/secure-cors.ts";
-import { checkRateLimit, getClientIP, rateLimitResponse, RATE_LIMITS } from "../_shared/rate-limiter.ts";
+import { checkRateLimit, getClientIP, rateLimitResponse } from "../_shared/rate-limiter.ts";
+import { writeSecurityLog } from "../_shared/security-log.ts";
 
 // Input validation schema
 const VerifyMFALoginSchema = z.object({
@@ -172,7 +173,7 @@ serve(async (req) => {
 
         if (!isValid) {
           // Log failed attempt
-          await supabaseClient.from("security_logs").insert({
+          await writeSecurityLog(supabaseClient, {
             user_id: userId,
             event_type: "mfa_login_failed",
             ip_address: req.headers.get("cf-connecting-ip") || req.headers.get("x-forwarded-for"),
@@ -221,7 +222,7 @@ serve(async (req) => {
           .eq("is_enabled", true);
 
         // Log successful MFA verification
-        await supabaseClient.from("security_logs").insert({
+        await writeSecurityLog(supabaseClient, {
           user_id: userId,
           event_type: "mfa_login_success",
           ip_address: req.headers.get("cf-connecting-ip") || req.headers.get("x-forwarded-for"),
@@ -275,7 +276,7 @@ serve(async (req) => {
 
         if (codeIndex === -1) {
           // Log failed attempt
-          await supabaseClient.from("security_logs").insert({
+          await writeSecurityLog(supabaseClient, {
             user_id: userId,
             event_type: "mfa_backup_code_failed",
             ip_address: req.headers.get("cf-connecting-ip") || req.headers.get("x-forwarded-for"),
@@ -302,7 +303,7 @@ serve(async (req) => {
           .eq("user_id", userId);
 
         // Log successful backup code use
-        await supabaseClient.from("security_logs").insert({
+        await writeSecurityLog(supabaseClient, {
           user_id: userId,
           event_type: "mfa_backup_code_used",
           ip_address: req.headers.get("cf-connecting-ip") || req.headers.get("x-forwarded-for"),

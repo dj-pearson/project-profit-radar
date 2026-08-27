@@ -61,6 +61,17 @@ const SERVICE_ROLE_ONLY = [
 ];
 
 const WRITES = ['insert', 'update', 'upsert', 'delete'];
+
+// Helpers in _shared/ that write a service-role-only table on the caller's
+// behalf. Moving a write behind a helper hides it from the .from('<table>')
+// scan above, so the check moves with it: the helper's FIRST argument is the
+// client, and it has to be a service-role one. Without this, converting 19
+// security_logs inserts to writeSecurityLog() would have quietly removed them
+// from this guard's view.
+const SERVICE_CLIENT_HELPERS = new Map([
+  ['writeSecurityLog', 'security_logs'],
+  ['writeAuditLog', 'audit_logs'],
+]);
 const hits = [];
 
 // _shared/ is scanned too. It was skipped originally, and that blind spot is
@@ -87,18 +98,41 @@ for (const d of targets) {
   const p = d.path;
   if (!existsSync(p)) continue;
   const text = readFileSync(p, 'utf8');
-  if (!SERVICE_ROLE_ONLY.some((t) => text.includes(`'${t}'`) || text.includes(`"${t}"`))) continue;
+  const mentionsTable = SERVICE_ROLE_ONLY.some(
+    (t) => text.includes(`'${t}'`) || text.includes(`"${t}"`),
+  );
+  const callsHelper = [...SERVICE_CLIENT_HELPERS.keys()].some((h) => text.includes(`${h}(`));
+  if (!mentionsTable && !callsHelper) continue;
   const sf = ts.createSourceFile(p, text, ts.ScriptTarget.ES2022, true, ts.ScriptKind.TS);
   const lineOf = (n) => sf.getLineAndCharacterOfPosition(n.getStart()).line + 1;
 
   const service = new Set();
   const userJwt = new Set();
+
+  // First pass: variables holding the service-role key. It is usually read
+  // once into a module constant (const SERVICE_ROLE = Deno.env.get(...)), so
+  // looking for SERVICE_ROLE_KEY inside the createClient call itself misses
+  // it and reports a correct call site as a user-JWT one.
+  const serviceKeyVars = new Set();
+  const collectKeys = (n) => {
+    if (ts.isVariableDeclaration(n) && n.initializer && ts.isIdentifier(n.name)
+        && /SERVICE_ROLE_KEY/.test(n.initializer.getText(sf))) {
+      serviceKeyVars.add(n.name.text);
+    }
+    n.forEachChild(collectKeys);
+  };
+  sf.forEachChild(collectKeys);
+
+  const usesServiceKey = (t) =>
+    /SERVICE_ROLE_KEY/.test(t) ||
+    [...serviceKeyVars].some((v) => new RegExp(`\\b${v}\\b`).test(t));
+
   const classify = (n) => {
     if (ts.isVariableDeclaration(n) && n.initializer && ts.isIdentifier(n.name)) {
       const t = n.initializer.getText(sf);
       if (/createServiceClient\s*\(/.test(t)) service.add(n.name.text);
       else if (/createClient\s*\(/.test(t)) {
-        (/SERVICE_ROLE_KEY/.test(t) ? service : userJwt).add(n.name.text);
+        (usesServiceKey(t) ? service : userJwt).add(n.name.text);
       }
     }
     if (ts.isVariableDeclaration(n) && n.initializer && ts.isObjectBindingPattern(n.name)
@@ -114,6 +148,24 @@ for (const d of targets) {
   sf.forEachChild(classify);
 
   const walk = (n) => {
+    // A helper call that takes the client as its first argument.
+    if (ts.isCallExpression(n) && ts.isIdentifier(n.expression)
+        && SERVICE_CLIENT_HELPERS.has(n.expression.text) && !d.shared) {
+      const table = SERVICE_CLIENT_HELPERS.get(n.expression.text);
+      const arg = n.arguments[0];
+      const inline = arg && ts.isCallExpression(arg) && ts.isIdentifier(arg.expression)
+        && arg.expression.text === 'createServiceClient';
+      const named = arg && ts.isIdentifier(arg) && service.has(arg.text);
+      if (arg && !inline && !named) {
+        hits.push({
+          fn: d.name, shared: false, table, op: n.expression.text, line: lineOf(n),
+          client: ts.isIdentifier(arg) && userJwt.has(arg.text)
+            ? `${arg.getText(sf)} (user JWT)`
+            : `${arg.getText(sf).slice(0, 40)} (unrecognised)`,
+        });
+      }
+    }
+
     if (ts.isCallExpression(n) && ts.isPropertyAccessExpression(n.expression)
         && WRITES.includes(n.expression.name.text)) {
       let cur = n.expression.expression, table = null, rootName = null, inlineService = false;

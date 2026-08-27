@@ -8,6 +8,7 @@ import { initializeAuthContext, errorResponse } from '../_shared/auth-helpers.ts
 import { createServiceClient } from '../_shared/service-client.ts';
 import { getCorsHeaders, handleCorsPreflightRequest } from "../_shared/secure-cors.ts";
 import { checkRateLimit, rateLimitResponse } from "../_shared/rate-limiter.ts";
+import { writeSecurityLog } from "../_shared/security-log.ts";
 
 // SECURITY: Input validation schema
 const SetupMFASchema = z.object({
@@ -91,7 +92,7 @@ serve(async (req) => {
     // Log security event. security_logs is service-role-only (US-306 follow-up):
     // a client that can write its own security log can forge the record of its
     // own behaviour. The caller is already authenticated above.
-    await createServiceClient().from("security_logs").insert({
+    await writeSecurityLog(createServiceClient(), {
       user_id: user_id,
       event_type: "mfa_setup_initiated",
       ip_address: req.headers.get("cf-connecting-ip") || req.headers.get("x-forwarded-for"),

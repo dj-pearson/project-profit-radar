@@ -171,21 +171,37 @@ describe('system tables deny client writes (US-306 follow-up)', () => {
   });
 });
 
-describe('security_logs is written with the service role (US-306 follow-up)', () => {
-  // These four writes used a user-JWT client. Once the restrictive policy
-  // lands, that client has no write path, and supabase-js returns errors
-  // rather than throwing - so MFA and SSO event logging would have gone
-  // silently missing.
+describe('security_logs is written through the shared helper (US-306, US-300)', () => {
+  // These writes used a user-JWT client, which the 20260827090000 restrictive
+  // policy refuses; they were then moved behind writeSecurityLog, which reads
+  // the error the raw inserts discarded. Whether the client is a service-role
+  // one is checked by scripts/check-rls-write-paths.mjs, which follows the
+  // helper's first argument and is mutation-tested - that check moved with the
+  // write rather than being lost to the refactor.
   const SITES = [
     'supabase/functions/setup-mfa/index.ts',
     'supabase/functions/sso-manage/index.ts',
+    'supabase/functions/verify-mfa-login/index.ts',
+    'supabase/functions/sso-oauth-callback/index.ts',
   ];
 
-  it.each(SITES)('%s writes security_logs through createServiceClient', (file) => {
+  it.each(SITES)('%s logs through writeSecurityLog', (file) => {
     const src = readFileSync(file, 'utf8');
-    const writes = src.match(/\.from\("security_logs"\)/g) ?? [];
-    expect(writes.length).toBeGreaterThan(0);
-    const viaService = src.match(/createServiceClient\(\)\.from\("security_logs"\)/g) ?? [];
-    expect(viaService.length).toBe(writes.length);
+    expect(src).toContain('writeSecurityLog(');
+    expect(src).toContain("_shared/security-log.ts");
+  });
+
+  it.each(SITES)('%s has no raw security_logs insert left', (file) => {
+    const src = readFileSync(file, 'utf8');
+    // A raw insert bypasses the helper, so it neither reads its error nor
+    // gets its client checked.
+    expect(src).not.toMatch(/\.from\(\s*["']security_logs["']\s*\)/);
+  });
+
+  it('the helper never throws, so a logging fault cannot take auth down', () => {
+    const helper = readFileSync('supabase/functions/_shared/security-log.ts', 'utf8');
+    expect(helper).toContain('SECURITY_LOG_WRITE_FAILED');
+    // Every path is inside the try, and no path rethrows.
+    expect(helper).not.toMatch(/^\s*throw /m);
   });
 });

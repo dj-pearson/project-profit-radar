@@ -4,6 +4,7 @@ import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
 import { getCorsHeaders, handleCorsPreflightRequest } from "../_shared/secure-cors.ts";
 import { checkRateLimit, getClientIP, rateLimitResponse } from "../_shared/rate-limiter.ts";
 import { writeAuditLog } from '../_shared/audit-log.ts';
+import { writeSecurityLog } from '../_shared/security-log.ts';
 
 // SECURITY: Input validation schema
 const DisableMFARequestSchema = z.object({
@@ -132,7 +133,7 @@ serve(async (req) => {
     });
 
     // Log security event
-    await supabaseClient.from("security_logs").insert({
+    await writeSecurityLog(supabaseClient, {
       user_id: user_id,
       event_type: "mfa_disabled",
       ip_address: req.headers.get("cf-connecting-ip") || req.headers.get("x-forwarded-for"),

@@ -10,6 +10,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.3";
 import { decode as base64Decode } from "https://deno.land/std@0.190.0/encoding/base64.ts";
 import { DOMParser } from "https://deno.land/x/deno_dom@v0.1.45/deno-dom-wasm.ts";
 import { getCorsHeaders } from '../_shared/secure-cors.ts';
+import { writeSecurityLog } from '../_shared/security-log.ts';
 
 interface SAMLAssertion {
   email: string;
@@ -211,7 +212,7 @@ serve(async (req) => {
 
     if (!isValidSignature) {
       console.error("[SAML] Invalid signature");
-      await supabaseClient.from("security_logs").insert({
+      await writeSecurityLog(supabaseClient, {
         event_type: "saml_auth_failed",
         ip_address: req.headers.get("cf-connecting-ip") || req.headers.get("x-forwarded-for"),
         user_agent: req.headers.get("user-agent"),
@@ -303,7 +304,7 @@ serve(async (req) => {
     });
 
     // Log successful authentication
-    await supabaseClient.from("security_logs").insert({
+    await writeSecurityLog(supabaseClient, {
       user_id: userId,
       event_type: isNewUser ? "saml_user_created" : "saml_auth_success",
       ip_address: req.headers.get("cf-connecting-ip") || req.headers.get("x-forwarded-for"),

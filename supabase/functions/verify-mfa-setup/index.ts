@@ -4,6 +4,7 @@ import { TOTP } from "https://deno.land/x/otpauth@v9.2.4/dist/otpauth.esm.js";
 import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
 import { validateRequest, uuidSchema, createErrorResponse } from "../_shared/validation.ts";
 import { getCorsHeaders } from '../_shared/secure-cors.ts';
+import { writeSecurityLog } from '../_shared/security-log.ts';
 
 // SECURITY: Input validation schema
 const VerifyMFASchema = z.object({
@@ -95,7 +96,7 @@ serve(async (req) => {
     
     if (!isValid) {
       // Log failed verification attempt
-      await supabaseClient.from("security_logs").insert({
+      await writeSecurityLog(supabaseClient, {
         user_id: user_id,
         event_type: "mfa_verification_failed",
         ip_address: req.headers.get("cf-connecting-ip") || req.headers.get("x-forwarded-for"),
@@ -128,7 +129,7 @@ serve(async (req) => {
     }
 
     // Log successful MFA enablement
-    await supabaseClient.from("security_logs").insert({
+    await writeSecurityLog(supabaseClient, {
       user_id: user_id,
       event_type: "mfa_enabled",
       ip_address: req.headers.get("cf-connecting-ip") || req.headers.get("x-forwarded-for"),

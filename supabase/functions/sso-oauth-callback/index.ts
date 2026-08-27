@@ -8,6 +8,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.3";
 import { getCorsHeaders } from '../_shared/secure-cors.ts';
+import { writeSecurityLog } from '../_shared/security-log.ts';
 
 // OAuth provider token endpoints
 const OAUTH_PROVIDERS: Record<
@@ -302,7 +303,7 @@ serve(async (req) => {
       const emailDomain = userInfo.email.split("@")[1];
       if (!ssoConnection.allowed_domains.includes(emailDomain)) {
         console.error("[OAuth] Domain not allowed:", emailDomain);
-        await supabaseClient.from("security_logs").insert({
+        await writeSecurityLog(supabaseClient, {
           event_type: "oauth_domain_rejected",
           ip_address: req.headers.get("cf-connecting-ip") || req.headers.get("x-forwarded-for"),
           user_agent: req.headers.get("user-agent"),
@@ -407,7 +408,7 @@ serve(async (req) => {
     });
 
     // Log successful authentication
-    await supabaseClient.from("security_logs").insert({
+    await writeSecurityLog(supabaseClient, {
       user_id: userId,
       event_type: isNewUser ? "oauth_user_created" : "oauth_auth_success",
       ip_address: req.headers.get("cf-connecting-ip") || req.headers.get("x-forwarded-for"),
