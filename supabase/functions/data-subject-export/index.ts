@@ -160,10 +160,17 @@ serve(async (req) => {
     data_subject_requests: dsarRows,
   };
 
-  // Log the request in the audit table. Failure here is non-fatal — the
-  // user still gets their data — but we log loudly so privacy ops notices.
-  try {
-    await supabase.from("data_subject_requests").insert({
+  // Log the request in the audit table. Failure here is non-fatal - the
+  // user still gets their data - but we log loudly so privacy ops notices.
+  //
+  // Except it did not. supabase-js RESOLVES with { error } rather than
+  // rejecting, so this catch never fired and the error sat unread: the DSAR
+  // audit row could fail to write and nothing said so, which is precisely the
+  // outcome the comment above promises it prevents. The GDPR obligation this
+  // row evidences does not care that the export succeeded (US-300).
+  const { error: auditError } = await supabase
+    .from("data_subject_requests")
+    .insert({
       user_id: user.id,
       email: user.email,
       request_type: "access",
@@ -173,8 +180,12 @@ serve(async (req) => {
       notes: `Self-service export; ${Object.values(payload).filter(Array.isArray).reduce((a, b) => a + (b as unknown[]).length, 0)} rows returned.`,
       completed_at: new Date().toISOString(),
     });
-  } catch (err) {
-    console.error("[DSAR export] failed to write audit row", err);
+
+  if (auditError) {
+    console.error(
+      `[DSAR export] EXPORT DELIVERED BUT NOT LOGGED for user ${user.id} - there is no record of this access request:`,
+      auditError.message,
+    );
   }
 
   return successResponse(

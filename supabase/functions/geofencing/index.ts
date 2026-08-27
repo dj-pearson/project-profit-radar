@@ -264,13 +264,21 @@ async function processGPSEntry(supabase: any, params: {
       { lat: entry.clock_out_lat, lng: entry.clock_out_lng }
     )
 
-    // Update entry with calculated distance
-    await supabase
+    // Update entry with calculated distance. This feeds mileage on a time
+    // entry, so a lost write is a worker not paid for travel they made, and the
+    // error was discarded (US-300).
+    const { error: distanceError } = await supabase
       .from('gps_time_entries')
       .update({
         distance_traveled_meters: travelDistance
       })
       .eq('id', entry_id);
+
+    if (distanceError) {
+      throw new Error(
+        `Clock-out for entry ${entry_id} was recorded but its travel distance was NOT stored: ${distanceError.message}`,
+      );
+    }
   }
 
   // Check geofence compliance if project is specified

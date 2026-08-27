@@ -136,12 +136,24 @@ export default async (req: Request) => {
           successCount++;
         } else {
           failCount++;
-          // Remove stale subscriptions (410 Gone)
+          // Remove stale subscriptions (410 Gone).
+          // 410 means the browser has thrown the subscription away for good.
+          // Deleting the row is what stops us pushing to it, and the error was
+          // discarded - supabase-js returns it rather than throwing - so a
+          // failed delete meant every future notification kept trying a dead
+          // endpoint and counting itself as a failure (US-300).
           if (response.status === 410) {
-            await serviceClient
+            const { error: pruneError } = await serviceClient
               .from('push_subscriptions')
               .delete()
               .eq('id', sub.id);
+
+            if (pruneError) {
+              logStep("Dead subscription could not be removed, it will be retried forever", {
+                subscriptionId: sub.id,
+                error: pruneError.message,
+              });
+            }
           }
         }
       } catch (err) {

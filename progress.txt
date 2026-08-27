@@ -5936,3 +5936,48 @@ nurture sequence.
 
 9 new cases (74 total), six mutation-checked. Full suite: 129 files, 2868
 passing, 2 skipped. TS budget unchanged at 646. Remaining backlog 41.
+
+---
+
+## US-300, ninth edge batch: OAuth state, dedup guards, 41 -> 29
+
+The best finding of the sweep so far, because the code documented the bug and
+everyone believed it. **data-subject-export** wrapped its GDPR access-request
+audit insert in a try/catch under this comment:
+
+> Failure here is non-fatal - the user still gets their data - but we log loudly
+> so privacy ops notices.
+
+supabase-js resolves with `{ error }` rather than rejecting, so that catch could
+never fire and the error sat unread. The audit row could fail to write and
+nothing would say so - precisely the outcome the comment promises it prevents.
+
+The general lesson: anywhere a comment explains why a catch around a Supabase
+write is acceptable, the catch is probably dead. The reassurance in the comment
+is what stops anyone checking.
+
+**Two OAuth-state writes now fail closed.** `gsc-oauth-init` and
+`quickbooks-connect` each store the `oauth_state` row their callback verifies
+against. With the error dropped, the user was sent off to Google or Intuit,
+authorised there, and came back to a rejection with nothing to explain it. Both
+refuse before the redirect now.
+
+**Two more dedup guards recovered.** `send-renewal-notification` inserts into
+`renewal_notifications`, and that table is read back at the top of the *same
+loop* as the "already sent" check - so a lost insert re-emailed the same customer
+on every run until their subscription ended. `send-push-notification`'s
+410-Gone delete is what stops us pushing at a subscription the browser has
+already discarded; without it, every future notification retries a dead endpoint
+and counts itself a failure.
+
+**gsc-sync-data** joins `run-scheduled-audit` and `social-post-scheduler` in the
+`next_*_at` family - a lost stamp leaves the property permanently due, here
+burning Search Console API quota re-fetching data already held.
+
+**optimize-resources** counted conflicts from its in-memory array while the
+`resource_conflicts` insert could fail, so a run could report "7 conflicts
+detected" with an empty table and nothing to resolve on the scheduling screen.
+**geofencing** lost `distance_traveled_meters`, which is mileage on a time entry.
+
+9 new cases (83 total), all nine mutation-checked. Full suite: 129 files, 2877
+passing, 2 skipped. TS budget unchanged at 646. Remaining backlog 29.

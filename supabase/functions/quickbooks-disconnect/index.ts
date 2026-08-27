@@ -91,8 +91,10 @@ serve(async (req) => {
       throw new Error('Failed to disconnect: ' + updateError.message)
     }
 
-    // Log the disconnection
-    await supabaseClient
+    // Log the disconnection. The disconnect itself is checked above, so this
+    // is the audit entry rather than the action; its error was discarded
+    // (US-300).
+    const { error: disconnectLogError } = await supabaseClient
       .from('quickbooks_sync_logs')
       .insert({
         company_id: company_id,
@@ -102,6 +104,13 @@ serve(async (req) => {
         records_processed: {},
         created_at: new Date().toISOString(),
       })
+
+    if (disconnectLogError) {
+      console.error(
+        `[QUICKBOOKS-DISCONNECT] Company ${company_id} DISCONNECTED but the event was not logged:`,
+        disconnectLogError.message,
+      )
+    }
 
     console.log(`QuickBooks disconnected for company ${company_id}`)
 

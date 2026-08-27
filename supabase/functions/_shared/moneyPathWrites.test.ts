@@ -682,3 +682,83 @@ describe('the eighth edge batch: two defaults, a stuck spinner, and a fake compr
     expect(src).toMatch(/const \{ error: preferencesError \} = await supabaseClient/);
   });
 });
+
+describe('the ninth edge batch: OAuth state, dedup guards, and a comment that was wrong', () => {
+  it('data-subject-export actually logs loudly, as its own comment promised', () => {
+    // The comment said "we log loudly so privacy ops notices" over a try/catch
+    // that could never fire: supabase-js resolves with { error } rather than
+    // rejecting. So the GDPR access-request audit row could fail to write and
+    // nothing said so - exactly the outcome the comment claims to prevent.
+    const src = code(F('data-subject-export'));
+    expect(src).toMatch(/const \{ error: auditError \} = await supabase/);
+    expect(src).toContain('EXPORT DELIVERED BUT NOT LOGGED');
+    // The dead try/catch around the insert is gone.
+    expect(src).not.toMatch(/try \{\s*\n\s*await supabase\.from\("data_subject_requests"\)/);
+  });
+
+  it('send-push-notification says when a dead subscription could not be pruned', () => {
+    // A 410 means the browser discarded the subscription for good. Deleting the
+    // row is what stops us pushing at it forever.
+    const src = code(F('send-push-notification'));
+    expect(src).toMatch(/const \{ error: pruneError \} = await serviceClient/);
+    expect(src).toContain('it will be retried forever');
+  });
+
+  it('geofencing does not lose the travel distance a worker is paid for', () => {
+    const src = code(F('geofencing'));
+    expect(src).toMatch(/const \{ error: distanceError \} = await supabase/);
+    expect(src).toContain('travel distance was NOT stored');
+  });
+
+  it('optimize-resources does not report conflicts the table never received', () => {
+    // The response counts the in-memory array, so a run could report
+    // "7 conflicts detected" with an empty resource_conflicts table and nothing
+    // to resolve on the scheduling screen.
+    const src = code(F('optimize-resources'));
+    expect(src).toMatch(/const \{ error: conflictError \} = await supabaseClient/);
+    expect(src).toContain('will not appear on the scheduling screen');
+    expect(src).toMatch(/const \{ error: runUpdateError \} = await supabaseClient/);
+    expect(src).toMatch(/const \{ error: metricsError \} = await supabaseClient/);
+  });
+
+  it('gsc-oauth-init and quickbooks-connect fail before redirecting, not after', () => {
+    // Each stores an oauth_state row the callback verifies against. With the
+    // error dropped, the user was sent to the provider, granted access, and
+    // came back to a rejection with no explanation.
+    for (const fn of ['gsc-oauth-init', 'quickbooks-connect']) {
+      const src = code(F(fn));
+      expect(src, `${fn} must read its state write`).toMatch(
+        /const \{ error: stateError \} = await supabaseClient/,
+      );
+      expect(src, `${fn} must refuse to start`).toContain('was not started:');
+    }
+  });
+
+  it('gsc-fetch-properties stores the token it just refreshed', () => {
+    const src = code(F('gsc-fetch-properties'));
+    expect(src).toMatch(/const \{ error: tokenError \} = await supabaseClient/);
+    expect(src).toContain('every later call would refresh again');
+  });
+
+  it('gsc-sync-data does not burn Search Console quota re-syncing the same property', () => {
+    const src = code(F('gsc-sync-data'));
+    expect(src).toMatch(/const \{ error: syncStampError \} = await supabaseClient/);
+    expect(src).toContain('would re-sync every pass');
+  });
+
+  it('send-renewal-notification keeps the row that stops it emailing twice', () => {
+    // renewal_notifications is read back at the top of the same loop as the
+    // "already sent" check, so a lost insert re-sends the same renewal email on
+    // every run until the subscription ends.
+    const src = code(F('send-renewal-notification'));
+    expect(src).toMatch(/const \{ error: notificationRecordError \} = await supabaseClient/);
+    expect(src).toContain('SENT BUT NOT RECORDED');
+    expect(src).toContain('this renewal email will be sent again');
+  });
+
+  it('quickbooks-disconnect records the disconnection', () => {
+    const src = code(F('quickbooks-disconnect'));
+    expect(src).toMatch(/const \{ error: disconnectLogError \} = await supabaseClient/);
+    expect(src).toContain('DISCONNECTED but the event was not logged');
+  });
+});

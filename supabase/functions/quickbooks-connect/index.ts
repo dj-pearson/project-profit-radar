@@ -30,8 +30,13 @@ serve(async (req) => {
     // Generate state parameter for security
     const state = crypto.randomUUID()
 
-    // Store the connection attempt with site isolation
-    await supabaseClient
+    // Store the connection attempt with site isolation.
+    // quickbooks-callback compares what Intuit returns against this oauth_state
+    // row, so without it there is nothing to verify against. The error was
+    // discarded and supabase-js returns it rather than throwing, so the user
+    // was sent to Intuit, authorised there, and came back to a rejection with
+    // no explanation. Fail before the redirect instead (US-300).
+    const { error: stateError } = await supabaseClient
       .from('quickbooks_integrations')
       .upsert({  // CRITICAL: Site isolation
         company_id,
@@ -40,6 +45,12 @@ serve(async (req) => {
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       })
+
+    if (stateError) {
+      throw new Error(
+        `Could not store the OAuth state, so the QuickBooks connection was not started: ${stateError.message}`,
+      )
+    }
 
     // Build QuickBooks OAuth URL
     const scope = 'com.intuit.quickbooks.accounting'

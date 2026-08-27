@@ -184,7 +184,11 @@ serve(async (req) => {
       }
     }
 
-        await supabaseClient
+    // next_sync_at is the property's own scheduling stamp. Its error was
+    // discarded, so a lost write left it in the past and the property was
+    // re-synced on every pass, burning Search Console API quota on data
+    // already held (US-300).
+    const { error: syncStampError } = await supabaseClient
       .from('gsc_properties')
       .update({
         last_sync_at: new Date().toISOString(),
@@ -195,6 +199,12 @@ serve(async (req) => {
         })(),
       })
       .eq('id', property_id);
+
+    if (syncStampError) {
+      throw new Error(
+        `Property ${property_id} was synced but next_sync_at was NOT advanced, so it stays due and would re-sync every pass: ${syncStampError.message}`,
+      );
+    }
 
     return new Response(JSON.stringify({
       success: true,
