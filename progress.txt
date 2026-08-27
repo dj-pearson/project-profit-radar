@@ -3600,3 +3600,26 @@ same failure with a worse blast radius — a commit message asserting a security
 fix that isn't in its own diff, a story closed on it, and a red test carried as
 proof it was green. Reading the output is not a formality. Neither is checking
 that the diff contains the file the message says it contains.
+
+### Correction, and the one writer that really was broken
+I reported two broken `company-documents` writers. Only one was.
+`DocumentManagement.tsx:256` reads `${folderName}/${fileName}`, and I called it
+broken without resolving `folderName` — which is
+`isProjectContext ? projectId : userProfile?.company_id`, so each branch already
+matches its own bucket's policy. Reading the template literal instead of the
+variable is the same class of mistake as reading a commit subject instead of its
+diff, which is what this whole thread is about.
+
+`DocumentVersions.tsx:106` was genuinely broken: `${user?.id}/${fileName}` into
+`company-documents`, which no policy matches. Now
+`${companyId}/versions/${documentId}/${fileName}`, and it throws rather than
+uploading when the profile carries no company — an object nothing can read is
+worse than a refused upload. The test asserts the convention for all three
+writers positively; mutation-tested 3/3.
+
+Still blocking the flip: objects already stored under `${user.id}/` by the old
+path stay unreadable once the bucket is private. A migration cannot move them —
+a storage copy is an API call, not SQL — so it needs a supplementary SELECT
+policy resolving company through `document_versions.file_path`, the same shape
+as `20260818015000`. Plus the `project_communication_participants` question, and
+the flip migration itself.

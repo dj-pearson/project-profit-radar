@@ -136,44 +136,32 @@ describe('project-documents path convention', () => {
 });
 
 /**
- * What still blocks the US-289 flip.
+ * company-documents path convention (US-289).
  *
- * A private bucket consults storage.objects policies; a public one never does.
- * So a SELECT policy on a public bucket has never run, and its path assumption
- * has never been tested against what the app actually writes. That mismatch was
- * found and fixed for project-documents. company-documents has the same
- * mismatch and it is still open: its SELECT policy (migration 20250703014008)
- * requires the first path segment to be the caller's company id, and two of the
- * three writers do not produce that shape.
- *
- * These tests assert the blocker is still present. When someone fixes a writer
- * they go red, which is the signal that the flip is closer to unblocked - not a
- * regression. Fix the writer, update the list, and when it is empty write
- * supabase/migrations/<ts>_make_customer_buckets_private.sql.
+ * A SELECT policy on a public bucket has never run - Supabase does not consult
+ * policies on the public read path - so its path assumption has never been
+ * tested against what the app writes. That mismatch was found and fixed for
+ * project-documents; company-documents had it too. Its policy (migration
+ * 20250703014008) requires the first path segment to be the caller's company
+ * id, and DocumentVersions uploaded under the user id instead, which no policy
+ * matches. These guards keep every writer company-scoped so the flip does not
+ * turn a silent access gap into a silent outage.
  */
-describe('US-289 flip blockers: company-documents path shapes', () => {
-  /** file -> the non-company-scoped first path segment it uploads under. */
-  const BROKEN_WRITERS = [
-    ['src/components/documents/DocumentVersions.tsx', '`${user?.id}/${fileName}`'],
-    ['src/pages/DocumentManagement.tsx', '`${folderName}/${fileName}`'],
+describe('company-documents path convention', () => {
+  const COMPANY_FIRST = [
+    ['src/pages/DocumentTemplates.tsx', '`${companyId}/templates/'],
+    ['src/components/documents/DocumentVersions.tsx', '`${companyId}/versions/'],
   ] as const;
 
-  it.each(BROKEN_WRITERS)(
-    '%s still writes a non-company-scoped path, so the flip would break its reads',
-    (file, fragment) => {
-      expect(
-        readFileSync(file, 'utf8'),
-        `${file} no longer writes ${fragment}. If it now writes ` +
-          '`${companyId}/...` the blocker is cleared - remove it from ' +
-          'BROKEN_WRITERS, and if the list is empty the US-289 flip can ship.',
-      ).toContain(fragment);
-    },
-  );
+  it.each(COMPANY_FIRST)('%s writes a company-first path', (file, fragment) => {
+    expect(readFileSync(file, 'utf8')).toContain(fragment);
+  });
 
-  it('keeps the one writer that is already company-scoped that way', () => {
-    expect(readFileSync('src/pages/DocumentTemplates.tsx', 'utf8')).toContain(
-      '`${companyId}/templates/',
-    );
+  it('DocumentManagement picks the folder segment from the bucket it uploads to', () => {
+    const src = readFileSync('src/pages/DocumentManagement.tsx', 'utf8');
+    // One upload serves both buckets: project id for project-documents,
+    // company id for company-documents. Both match their bucket's policy.
+    expect(src).toContain("isProjectContext ? 'project-documents' : 'company-documents'");
+    expect(src).toContain('isProjectContext ? projectId : userProfile?.company_id');
   });
 });
-
