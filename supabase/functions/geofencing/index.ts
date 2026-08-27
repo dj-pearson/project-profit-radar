@@ -207,7 +207,12 @@ async function checkGeofenceBreach(supabase: any, params: {
       { lat: geofence.center_lat, lng: geofence.center_lng }
     )
 
-    await supabase
+    // The response below tells the caller a breach was detected and recorded.
+    // supabase-js returns the error rather than throwing, so this insert
+    // failing was invisible, and geofence_breach_alerts is not created by any
+    // migration (US-311). Log loudly rather than fail the request: the breach
+    // is still real and the caller still needs to be told about it.
+    const { error: alertError } = await supabase
       .from('geofence_breach_alerts')
       .insert({
         geofence_id,
@@ -217,8 +222,13 @@ async function checkGeofenceBreach(supabase: any, params: {
         breach_timestamp: new Date().toISOString()
       })
 
+    if (alertError) {
+      console.error('[geofencing] breach detected but the alert row was not stored', alertError.message)
+    }
+
     return successResponse({
       breach_detected: true,
+      alert_recorded: !alertError,
       geofence_name: geofence.name,
       distance_from_center: distance,
       distance_from_boundary: distance - geofence.radius_meters
@@ -281,7 +291,7 @@ async function processGPSEntry(supabase: any, params: {
 
         if (!isInGeofence) {
           // Create breach alert
-          await supabase
+          const { error: alertError } = await supabase
             .from('geofence_breach_alerts')
             .insert({
               geofence_id: geofence.id,
@@ -289,6 +299,13 @@ async function processGPSEntry(supabase: any, params: {
               breach_type: 'clock_in_outside',
               breach_timestamp: entry.clock_in_time
             })
+
+          if (alertError) {
+            console.error(
+              '[geofencing] clock-in outside geofence but the alert row was not stored',
+              alertError.message,
+            )
+          }
         }
       }
     }

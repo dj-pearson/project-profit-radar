@@ -196,6 +196,9 @@ jobs:
       - name: Deno import-pinning guard (US-272)
         run: node scripts/check-deno-imports.mjs
 
+      - name: Table-definition guard (US-311)
+        run: node scripts/check-table-definitions.mjs
+
       - name: Migration filename guard (US-235)
         run: bash scripts/check-migration-filenames.sh
 

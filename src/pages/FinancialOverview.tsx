@@ -77,12 +77,41 @@ const FinancialOverview = () => {
           .eq('company_id', userProfile.company_id),
       ]);
 
+      // supabase-js returns the error rather than throwing it, so the catch
+      // below never fired and `res.data || []` turned a failed read into an
+      // empty list. Total revenue is summed from `payments`, which no migration
+      // creates (US-311), so a failed read here rendered as revenue of zero
+      // rather than as a failure.
+      const failed = [
+        ['invoices', invRes.error],
+        ['expenses', expRes.error],
+        ['payments', payRes.error],
+        ['projects', projRes.error],
+      ].filter(([, error]) => error) as Array<[string, { message: string }]>;
+
+      if (failed.length > 0) {
+        throw new Error(failed.map(([t, e]) => `${t}: ${e.message}`).join('; '));
+      }
+
       setInvoices(invRes.data || []);
       setExpenses(expRes.data || []);
       setPayments(payRes.data || []);
       setProjects(projRes.data || []);
-    } catch {
-      toast({ variant: 'destructive', title: 'Error', description: 'Failed to load financial data' });
+    } catch (error) {
+      // Clear the previous period's figures rather than leaving them on screen
+      // under a new period label.
+      setInvoices([]);
+      setExpenses([]);
+      setPayments([]);
+      setProjects([]);
+      toast({
+        variant: 'destructive',
+        title: 'Financial data not loaded',
+        description:
+          error instanceof Error
+            ? `Figures are not shown because a query failed - ${error.message}`
+            : 'Failed to load financial data',
+      });
     } finally {
       setLoading(false);
     }

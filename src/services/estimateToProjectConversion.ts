@@ -32,6 +32,12 @@ export interface ConversionResult {
   success: boolean;
   projectId?: string;
   error?: string;
+  /**
+   * False when the project was created but the estimate's notes could not be
+   * copied onto it. The conversion still succeeded; the caller may want to say
+   * so rather than implying everything came across.
+   */
+  notesCarriedOver?: boolean;
 }
 
 class EstimateToProjectConversionService {
@@ -120,19 +126,30 @@ class EstimateToProjectConversionService {
       }
 
       // 7. Create initial project notes from estimate notes
+      let notesCarriedOver = true;
       if (estimate.notes) {
-        await supabase
+        const { error: notesError } = await supabase
           .from('project_notes')
           .insert({
             project_id: newProject.id,
             note: `Estimate Notes: ${estimate.notes}`,
             created_by: (await supabase.auth.getUser()).data.user?.id
           });
+
+        if (notesError) {
+          // The project itself exists, so this is not a failed conversion. The
+          // estimate's notes did not come across, though, and the caller was
+          // being told the conversion was complete. project_notes is not
+          // created by any migration (US-311).
+          console.error('Estimate notes were not carried onto the project:', notesError.message);
+          notesCarriedOver = false;
+        }
       }
 
       return {
         success: true,
-        projectId: newProject.id
+        projectId: newProject.id,
+        notesCarriedOver
       };
 
     } catch (error: any) {

@@ -93,12 +93,18 @@ export const DashboardSearchTrigger: React.FC = () => {
           }));
         }
 
-        // Search contacts
-        const { data: contacts } = await supabase
+        // Search contacts. crm_contacts is not created by any migration
+        // (US-311), so this read can fail outright; without reading the error
+        // the search just quietly returns no contacts and looks like a miss.
+        const { data: contacts, error: contactsError } = await supabase
           .from('crm_contacts')
           .select('id, first_name, last_name, company, email')
           .or(`first_name.ilike.${searchTerm},last_name.ilike.${searchTerm},company.ilike.${searchTerm},email.ilike.${searchTerm}`)
           .limit(5);
+
+        if (contactsError) {
+          console.error('Contact search unavailable:', contactsError.message);
+        }
 
         if (contacts) {
           contacts.forEach(c => searchResults.push({

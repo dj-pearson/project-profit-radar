@@ -139,7 +139,11 @@ serve(async (req) => {
     });
 
     if (!sendResult.success && sendResult.skipped === 'opted_out') {
-      await supabaseClient.from("intervention_logs").insert({
+      // This row is the consent evidence: it records that a send was suppressed
+      // because the recipient opted out. supabase-js returns the error rather
+      // than throwing, so losing it was invisible, and intervention_logs is not
+      // created by any migration (US-311).
+      const { error: suppressionLogError } = await supabaseClient.from("intervention_logs").insert({
         user_id: userId,
         prediction_id: predictionId,
         intervention_type: "email",
@@ -147,6 +151,14 @@ serve(async (req) => {
         status: "skipped_opt_out",
         sent_at: new Date().toISOString(),
       });
+
+      if (suppressionLogError) {
+        console.error(
+          "[send-intervention-email] suppression not logged; consent evidence missing",
+          suppressionLogError.message,
+        );
+      }
+
       return new Response(
         JSON.stringify({
           success: true,
@@ -165,7 +177,7 @@ serve(async (req) => {
     }
 
     // Log successful intervention in database
-    await supabaseClient.from("intervention_logs").insert({
+    const { error: logError } = await supabaseClient.from("intervention_logs").insert({
       user_id: userId,
       prediction_id: predictionId,
       intervention_type: "email",
@@ -173,6 +185,12 @@ serve(async (req) => {
       status: "sent",
       sent_at: new Date().toISOString(),
     });
+
+    if (logError) {
+      // The email did go out, so this is not a failure of the request. It does
+      // mean the send is unrecorded, which matters for send-frequency caps.
+      console.error("[send-intervention-email] email sent but not logged", logError.message);
+    }
 
     return new Response(
       JSON.stringify({

@@ -146,34 +146,37 @@ export const FeatureTour: React.FC<FeatureTourProps> = ({
   const markTourAsCompleted = async () => {
     if (!user?.id) return;
 
-    try {
-      await supabase
-        .from('user_tour_progress')
-        .upsert({
-          user_id: user.id,
-          tour_id: tour.id,
-          completed: true,
-          completed_at: new Date().toISOString()
-        });
-    } catch (error) {
-      console.error('Error marking tour as completed:', error);
+    // supabase-js returns the error rather than throwing it, so this try/catch
+    // never fired and a finished tour was never recorded: it reappears on the
+    // next visit. user_tour_progress is not created by any migration (US-311).
+    const { error } = await supabase
+      .from('user_tour_progress')
+      .upsert({
+        user_id: user.id,
+        tour_id: tour.id,
+        completed: true,
+        completed_at: new Date().toISOString()
+      });
+
+    if (error) {
+      console.error('Error marking tour as completed:', error.message);
     }
   };
 
   const markTourAsSkipped = async () => {
     if (!user?.id) return;
 
-    try {
-      await supabase
-        .from('user_tour_progress')
-        .upsert({
-          user_id: user.id,
-          tour_id: tour.id,
-          skipped: true,
-          skipped_at: new Date().toISOString()
-        });
-    } catch (error) {
-      console.error('Error marking tour as skipped:', error);
+    const { error } = await supabase
+      .from('user_tour_progress')
+      .upsert({
+        user_id: user.id,
+        tour_id: tour.id,
+        skipped: true,
+        skipped_at: new Date().toISOString()
+      });
+
+    if (error) {
+      console.error('Error marking tour as skipped:', error.message);
     }
   };
 

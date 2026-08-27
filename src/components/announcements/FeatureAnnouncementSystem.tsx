@@ -274,7 +274,13 @@ const FeatureAnnouncementSystem = () => {
         .select('*')
         .single();
 
-      if (!error && data) {
+      if (error) {
+        // The popup closes either way, but the dismissal is not stored, so this
+        // announcement comes back on the next load. user_announcements is not
+        // created by any migration (US-311), which is the same reason the read
+        // above already degrades with a warning.
+        logger.warn('Announcement dismissal was not saved and will reappear:', error.message);
+      } else if (data) {
         setUserAnnouncements(prev => [...prev, data as unknown as UserAnnouncement]);
       }
 

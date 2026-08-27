@@ -5074,3 +5074,69 @@ unnecessary escapes in a phone character class, removed after checking both
 patterns produce identical output across six sample numbers; the fourth is a
 control-character strip where `no-control-regex` is a false positive, so it
 carries a disable with the reason above it rather than a rewritten regex.
+
+---
+
+## US-311: thirteen tables the app uses that no migration creates
+
+Generalising the US-303 guard from RPCs to tables found thirteen: `payments`,
+`stripe_keys`, `crm_contacts`, `incident_reports`, `safety_trainings`,
+`lead_scores`, `workflow_steps`, `geofence_breach_alerts`, `intervention_logs`,
+`project_notes`, `user_announcements`, `user_tour_progress`, `reviews`.
+
+Either they exist in production because someone typed CREATE TABLE into the SQL
+editor, in which case nothing here describes their columns and nothing says
+whether RLS is on, or they do not exist and those features have never worked.
+The app cannot tell you which, and neither can I from this side.
+
+What makes it invisible is the same thing that has been behind most of this
+week's findings. supabase-js returns `{ data: null, error }` rather than
+throwing, so a `try`/`catch` around the query never fires and `res.data || []`
+turns a failed read into an empty list. The screen renders "no payments", "no
+incidents", "no results" - exactly what a company with none would see.
+
+`crm_contacts` has a tell that someone already knew. `20251128000002` wraps its
+own ALTER in `IF EXISTS (SELECT 1 FROM information_schema.tables WHERE
+table_name = 'crm_contacts')`.
+
+The one that worries me most is `stripe_keys`: read by
+`calculate-revenue-metrics` for a Stripe **secret key**, written by
+`store-stripe-keys`. A table holding live payment credentials with no migration
+also has no RLS policy anyone can review.
+
+The guard took two corrections, both of which I have made before. It flagged
+`generated_content` and `seo_page_configs`, which are inside `/* */` blocks
+under a `TODO: create this table first` note - a developer doing the right
+thing. And it flagged `avatars` and `receipts`, which are storage buckets, not
+tables; excluding them needed matching across a newline, because the usual form
+is `await supabase.storage` with `.from('avatars')` on the next line, and my
+line-by-line check could not see it.
+
+Nine call sites now read the error they were dropping. The two that matter most:
+
+- Both financial screens sum `payments` into a revenue figure. They now check
+  all four reads and throw, so the Sentry report and the toast that were
+  *already written* finally fire. The project dashboard renders a named failure
+  instead of `return null`, which had made a failed load and a project with no
+  financial records look identical. The overview clears the previous period's
+  figures rather than leaving them on screen under a new label.
+- The OSHA screen reads all three safety queries and shows a destructive alert
+  saying the counts are not a safety record. Zero incidents because a query
+  failed is the worst possible way for that screen to fail.
+
+Also: `geofencing` now answers `alert_recorded` alongside `breach_detected`, and
+logs when a detected breach was not stored. `send-intervention-email` reads both
+log writes, the opt-out one being consent evidence. `estimateToProjectConversion`
+returns `notesCarriedOver` instead of implying the estimate's notes came across.
+`FeatureTour` dropped a `try`/`catch` that could never fire around a call that
+does not throw, which is why a finished tour was never recorded and reappeared
+on every visit. Silent-write backlog ratcheted 206 to 199.
+
+AC5 is open and I cannot close it from here. For each of the thirteen, someone
+has to check production. If the table is there, write the migration to match
+what is actually there - not a guess. A `CREATE TABLE IF NOT EXISTS` with the
+wrong shape no-ops in production and creates a wrong-shaped table everywhere
+else, which is worse than the current state.
+
+17 cases in `src/lib/__tests__/undefinedTables.test.ts`, mutation-tested four
+ways. Full suite: 123 files, 2717 passing, 2 skipped.

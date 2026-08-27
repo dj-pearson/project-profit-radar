@@ -75,6 +75,10 @@ node scripts/check-rpc-definitions.mjs || exit 1
 #     and two specifiers for one package load two copies with two sets of classes.
 node scripts/check-deno-imports.mjs || exit 1
 
+# 3s. Table definitions (US-311) — a table no migration creates comes back as
+#     `{ data: null, error }`, and `res.data || []` renders that as "nothing here".
+node scripts/check-table-definitions.mjs || exit 1
+
 # 4. Migration hygiene + RLS guards (US-235 / US-239 / US-237).
 bash scripts/check-migration-filenames.sh || exit 1
 bash scripts/check-no-stray-function-copies.sh || exit 1
