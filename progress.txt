@@ -4526,3 +4526,44 @@ gateway signature check, not authentication. Treating it as the latter is
 exactly how this function looked covered.
 
 Backlog 128 → 126.
+
+### Generalising the verify_jwt finding
+Rather than fix one more function by hand, I swept every edge function for
+handler-level caller verification. 46 have none. Most are anonymous by design —
+signup and OTP, OAuth and SAML callbacks, lead capture, health-check.
+
+Two were not, and both were reachable on the anon key alone:
+
+`webhook-trigger` took `tenant_id` from the body with a service-role client and
+read *and fired* every `webhook_endpoint` for that tenant. Enumerate any
+customer's webhook URLs, then post arbitrary data into their downstream systems.
+
+`send-usage-alert` took `companyId` the same way and read every admin email
+address for that company before emailing them. Harvest admin addresses per
+company, and send them Brikly-branded mail.
+
+Neither had a live caller. Nothing invokes `webhook-trigger` at all, and
+`send-usage-alert`'s only invocation is **commented out** in `track-usage`. Dead
+code, still deployed, still answering.
+
+Both now require `requireInternalCaller`: service-role bearer or `CRON_SECRET`
+header, and it **never fails open** when neither is configured — a misconfigured
+internal endpoint should be unreachable, not public. It answers 404 rather than
+403 so the endpoint isn't confirmed to exist. Seven tests, including the
+anon-key case that `verify_jwt` would have waved through.
+
+### The sentence that hid all of it
+`check-edge-function-auth.mjs` opened with:
+
+> Supabase enforces a valid JWT for functions with verify_jwt = true (the
+> default).
+
+True, and load-bearing in the wrong direction. It reads as "those are covered",
+which is why the guard only ever looked at the 33 `verify_jwt = false` functions
+and this class went unexamined. Corrected in place to say what `verify_jwt`
+actually is — a signature check the anon key satisfies — and to name the guard
+that covers the gap.
+
+`check-unauthenticated-edge-functions.mjs` is that guard: 27 public-by-design,
+16 grandfathered and still needing the public / internal / user-auth decision.
+Mutation-tested with a new unauthenticated function.

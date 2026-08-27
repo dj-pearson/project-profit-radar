@@ -55,6 +55,10 @@ node scripts/check-unreferenced-security-modules.mjs || exit 1
 #     builds that grants access is predictable.
 node scripts/check-insecure-random.mjs || exit 1
 
+# 3n. Unauthenticated edge functions (US-241) — verify_jwt=true is a signature
+#     check, not authentication; the anon key satisfies it.
+node scripts/check-unauthenticated-edge-functions.mjs || exit 1
+
 # 4. Migration hygiene + RLS guards (US-235 / US-239 / US-237).
 bash scripts/check-migration-filenames.sh || exit 1
 bash scripts/check-no-stray-function-copies.sh || exit 1

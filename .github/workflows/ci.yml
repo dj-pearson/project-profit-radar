@@ -181,6 +181,9 @@ jobs:
       - name: Insecure-random guard (US-296)
         run: node scripts/check-insecure-random.mjs
 
+      - name: Unauthenticated edge-function guard (US-241)
+        run: node scripts/check-unauthenticated-edge-functions.mjs
+
       - name: Migration filename guard (US-235)
         run: bash scripts/check-migration-filenames.sh
 

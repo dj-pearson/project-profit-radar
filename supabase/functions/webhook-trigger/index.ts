@@ -4,6 +4,7 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3'
 import { getCorsHeaders } from '../_shared/secure-cors.ts';
+import { requireInternalCaller } from '../_shared/internal-only.ts';
 
 serve(async (req) => {
   const corsHeaders = getCorsHeaders(req);
@@ -11,6 +12,14 @@ serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
   }
+
+  // Internal-only. Nothing in the app invokes this; it had no caller
+  // verification at all, and being absent from supabase/config.toml gave it
+  // verify_jwt = true - which only checks that a validly-signed project JWT is
+  // present, and the publishable anon key is one. Anyone who had loaded the app
+  // could call it (US-241).
+  const denied = requireInternalCaller(req);
+  if (denied) return denied;
 
   try {
     const supabaseClient = createClient(
