@@ -21,6 +21,10 @@ node scripts/check-edge-input-validation.mjs || exit 1
 #     unreviewed privilege/tenancy column set from request input.
 node scripts/check-edge-privilege-writes.mjs || exit 1
 
+# 3e. RLS write-path guard (US-237) — service_role-only tables must be written
+#     with a service-role client, not a user-JWT one.
+node scripts/check-rls-write-paths.mjs || exit 1
+
 # 4. Migration hygiene + RLS guards (US-235 / US-239 / US-237).
 bash scripts/check-migration-filenames.sh || exit 1
 bash scripts/check-no-stray-function-copies.sh || exit 1

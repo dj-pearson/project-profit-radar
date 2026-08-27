@@ -149,6 +149,9 @@ jobs:
       - name: Edge-function privilege-write guard (US-297)
         run: node scripts/check-edge-privilege-writes.mjs
 
+      - name: RLS write-path guard (US-237)
+        run: node scripts/check-rls-write-paths.mjs
+
       - name: Migration filename guard (US-235)
         run: bash scripts/check-migration-filenames.sh
 

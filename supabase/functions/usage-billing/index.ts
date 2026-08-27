@@ -3,6 +3,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.3";
 import { initializeAuthContext, errorResponse } from '../_shared/auth-helpers.ts';
+import { createServiceClient } from '../_shared/service-client.ts';
 import { getCorsHeaders } from '../_shared/secure-cors.ts';
 
 const logStep = (step: string, details?: Record<string, unknown>) => {
@@ -175,13 +176,21 @@ async function recordUsage(
 }
 
 async function updateUsageMetrics(
-  supabase: ReturnType<typeof createClient>,
+  _supabase: ReturnType<typeof createClient>,
   companyId: string,
   metricName: string,
   metricValue: number,
   periodStart: Date,
   periodEnd: Date
 ): Promise<void> {
+  // usage_metrics has a company-scoped SELECT policy and the permissive
+  // "System can manage usage metrics" FOR ALL USING (true) that US-237's
+  // migration scopes to service_role — after which a user-JWT client has no
+  // write path here at all. These writes discarded their errors, so that would
+  // have shown up as usage quietly not being recorded rather than as a failure.
+  // companyId is already derived from the caller's own profile upstream.
+  const supabase = createServiceClient();
+
   // Check for existing metric
   const { data: existing } = await supabase
     .from('usage_metrics')
@@ -194,16 +203,19 @@ async function updateUsageMetrics(
 
   if (existing) {
     // Update existing
-    await supabase
+    const { error } = await supabase
       .from('usage_metrics')
       .update({
         metric_value: existing.metric_value + metricValue,
         recorded_at: new Date().toISOString()
       })
       .eq('id', existing.id);
+    if (error) {
+      logStep('Failed to update usage metric', { companyId, metricName, error: error.message });
+    }
   } else {
     // Create new
-    await supabase
+    const { error } = await supabase
       .from('usage_metrics')
       .insert({
         company_id: companyId,
@@ -212,6 +224,9 @@ async function updateUsageMetrics(
         billing_period_start: periodStart.toISOString(),
         billing_period_end: periodEnd.toISOString()
       });
+    if (error) {
+      logStep('Failed to create usage metric', { companyId, metricName, error: error.message });
+    }
   }
 }
 

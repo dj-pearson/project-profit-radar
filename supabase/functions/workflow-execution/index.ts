@@ -1,5 +1,6 @@
 // Workflow Execution Edge Function
 import { initializeAuthContext, verifyCompanyAccess, errorResponse } from '../_shared/auth-helpers.ts';
+import { createServiceClient } from '../_shared/service-client.ts';
 import { getCorsHeaders, handleCorsPreflightRequest } from '../_shared/secure-cors.ts';
 
 interface WorkflowStep {
@@ -35,6 +36,15 @@ Deno.serve(async (req) => {
 
     const { user, supabase } = authContext;
     logStep("User authenticated", { userId: user.id });
+
+    // workflow_step_executions has a company-scoped SELECT policy and the
+    // permissive "System can manage workflow step executions" FOR ALL USING
+    // (true) that US-237's migration scopes to service_role — after which the
+    // user-JWT client has no write path to it. Both inserts below discarded
+    // their errors, so the step history would just have stopped being written.
+    // The workflow itself is fetched RLS-scoped below, so a cross-company
+    // workflow_id returns no row and never reaches these writes.
+    const stepClient = createServiceClient();
 
     const { workflow_id, trigger_data } = await req.json() as WorkflowExecution;
 
@@ -100,7 +110,7 @@ Deno.serve(async (req) => {
             stepOutput = await executeAction(step, executionContext, supabase);
             break;
           
-          case 'condition':
+          case 'condition': {
             const conditionResult = evaluateConditions(step, executionContext);
             stepOutput = { passed: conditionResult, branch: conditionResult ? 'true' : 'false' };
             executionContext.last_condition_result = conditionResult;
@@ -116,19 +126,21 @@ Deno.serve(async (req) => {
               console.log('Condition failed, branching to false path');
             }
             break;
+          }
           
-          case 'delay':
+          case 'delay': {
             const delayMs = step.config.delay_seconds * 1000;
             await new Promise(resolve => setTimeout(resolve, delayMs));
             stepOutput = { delayed_ms: delayMs };
             break;
+          }
           
           default:
             stepOutput = { skipped: true };
         }
 
         // Record step execution
-        await supabase.from('workflow_step_executions').insert({
+        const { error: stepInsertError } = await stepClient.from('workflow_step_executions').insert({
           execution_id: execution.id,
           step_id: step.id,
           status: stepStatus,
@@ -137,6 +149,9 @@ Deno.serve(async (req) => {
           started_at: new Date(stepStartTime).toISOString(),
           completed_at: new Date().toISOString(),
         });
+        if (stepInsertError) {
+          logStep('Failed to record step execution', { stepId: step.id, error: stepInsertError.message });
+        }
 
         stepResults.push({ step_id: step.id, status: stepStatus, output: stepOutput });
 
@@ -150,7 +165,7 @@ Deno.serve(async (req) => {
         stepStatus = 'failed';
         errorMessage = stepError.message;
 
-        await supabase.from('workflow_step_executions').insert({
+        const { error: failedStepError } = await stepClient.from('workflow_step_executions').insert({
           execution_id: execution.id,
           step_id: step.id,
           status: stepStatus,
@@ -158,6 +173,9 @@ Deno.serve(async (req) => {
           started_at: new Date(stepStartTime).toISOString(),
           completed_at: new Date().toISOString(),
         });
+        if (failedStepError) {
+          logStep('Failed to record failed step execution', { stepId: step.id, error: failedStepError.message });
+        }
 
         stepResults.push({ step_id: step.id, status: stepStatus, error: errorMessage });
         break; // Stop execution on error
