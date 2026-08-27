@@ -2233,3 +2233,83 @@ a `let` declared 40 lines above its single assignment.
 scripts/check-cors-wildcards.mjs now reports a backlog of 0. REMAINING is kept
 as an empty set rather than deleted, so a new wildcard still fails CI instead of
 needing the guard re-armed.
+
+================================================================================
+2026-08-27 — US-241 input validation: helper, guard, and the first six schemas
+================================================================================
+
+### The decision that shaped this: report mode, not enforce
+CLAUDE.md's Security rule 2 says validate every input with Zod. Its Backward
+Compatibility section says tightening an input schema is a never-in-one-release
+change. Adding validation where there was none is exactly that tightening — an
+iOS client at MIN_SUPPORTED_IOS_VERSION that sends a shape the new schema
+rejects starts getting 400s and cannot update its way out. There is no staging
+Supabase project to discover that on (US-247 is still open), and nobody knows
+what shapes real traffic actually sends.
+
+So _shared/validate-body.ts has two modes, switched by INPUT_VALIDATION_MODE on
+the Supabase project:
+
+  report (default) — parse, and on failure log
+                     `[input-validation] <fn> would reject: <field paths>`
+                     and hand the handler the RAW body. Behaviour unchanged.
+  enforce          — parse, and on failure return 400 with the standard
+                     { success:false, error, timestamp } envelope.
+
+A body that is not JSON at all is rejected in both modes. That is a malformed
+request, not a schema tightening, and the handler could not have used it either.
+
+**The flip is an ops action, not a code change.** Ship schemas, watch the
+`[input-validation]` lines for a full release cycle, fix the schemas that
+legitimate clients trip, then set INPUT_VALIDATION_MODE=enforce.
+
+### Schemas added (6 of ~30)
+The ones the security audit named: change-orders (discriminated union over
+list/create/update/approve/reject), geofencing (union over its five actions —
+transcribed straight from the TS param types each handler already declares,
+which document the contract exactly), change-subscription, generate-invoice,
+execute-workflow, projects.
+
+One typing note: a discriminated-union schema makes `parsed.data` a union, and
+destructuring `const { action } = body` narrows the *variable*, not `body`. So
+`body.project_id` inside `if (action === 'create')` would not compile. The
+handlers keep a `Record<string, any>` cast with a comment saying why — the
+schema is the runtime contract, and edge functions are not in tsconfig's
+`include` (which is `["src"]`) so they were never typechecked by the repo's own
+tooling anyway.
+
+### Security finding: mass assignment in `projects`
+Both handlers spread the raw body straight into the DB:
+
+    const projectData = { ...body, company_id, created_by, ... }
+    ...
+    .update(body)
+
+Every writable column on `projects` was therefore settable by the caller —
+including `id`, `created_by`, `created_at`, `company_id`, `site_id`, `tenant_id`.
+
+The cross-tenant move is blocked, and it is worth writing down why so nobody
+"fixes" it wrong later: `projects_update` in 20260128000001_defense_in_depth_rls.sql
+declares a USING clause and no WITH CHECK, and Postgres applies the USING
+expression to the new row when WITH CHECK is absent. `initializeAuthContext`
+builds its client with the ANON key plus the caller's Authorization header, so
+RLS genuinely applies. A caller cannot move a project to another company.
+
+What was not blocked: rewriting `created_by`, `created_at` or `id` inside your
+own company. Both paths now go through an explicit column allowlist derived
+from the generated types. That allowlist is applied **unconditionally**, not
+staged behind INPUT_VALIDATION_MODE — dropping a column a client should never
+have been writing is not the kind of narrowing that breaks an older client.
+
+Worth a sweep of its own: other functions that spread a request body into a
+Supabase write.
+
+### The guard, and a bug in its first draft
+scripts/check-edge-input-validation.mjs, wired into .husky/pre-commit and CI.
+
+First version counted "functions calling req.json() that also have a schema" —
+which reads zero after conversion, because a converted function stops calling
+req.json() at all (validateBody reads it). Converted functions silently vanished
+from both numerator and denominator. Now it counts anything that takes a JSON
+body (reads it raw OR calls the helper) and splits on whether a schema is
+involved. 23 validated, 133 backlog, of 156.
