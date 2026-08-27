@@ -2,6 +2,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { initializeAuthContext, errorResponse } from '../_shared/auth-helpers.ts';
 import { getCorsHeaders } from '../_shared/secure-cors.ts';
+import { fetchQuickBooksData } from '../_shared/quickbooks-paging.ts';
 
 interface QuickBooksAPIResponse {
   QueryResponse?: {
@@ -127,6 +128,11 @@ serve(async (req) => {
       expenses: 0,
       payments: 0
     }
+    // What QuickBooks actually handed us, per entity, so a truncated import is
+    // visible in the log rather than looking like a small account (US-252).
+    const recordsFetched: Record<string, number> = {}
+    const truncatedEntities: string[] = []
+    let throttleRetries = 0
     let errorsCount = 0
     const errors: string[] = []
 
@@ -155,8 +161,11 @@ serve(async (req) => {
 
       // Sync Customers from QuickBooks to our system
       try {
-        const customers = await fetchQuickBooksData(baseUrl, integration.realm_id, accessToken, 'Customer')
-        for (const customer of customers) {
+        const fetched = await fetchQuickBooksData(baseUrl, integration.realm_id, accessToken, 'Customer')
+        recordsFetched.customers = fetched.rows.length
+        throttleRetries += fetched.throttleRetries
+        if (fetched.truncated) truncatedEntities.push('Customer')
+        for (const customer of fetched.rows) {
           await syncCustomer(supabaseClient, company_id, customer)
           recordsProcessed.customers++
         }
@@ -169,8 +178,11 @@ serve(async (req) => {
 
       // Sync Items from QuickBooks to our system
       try {
-        const items = await fetchQuickBooksData(baseUrl, integration.realm_id, accessToken, 'Item')
-        for (const item of items) {
+        const fetched = await fetchQuickBooksData(baseUrl, integration.realm_id, accessToken, 'Item')
+        recordsFetched.items = fetched.rows.length
+        throttleRetries += fetched.throttleRetries
+        if (fetched.truncated) truncatedEntities.push('Item')
+        for (const item of fetched.rows) {
           await syncItem(supabaseClient, company_id, item)
           recordsProcessed.items++
         }
@@ -183,8 +195,11 @@ serve(async (req) => {
 
       // Sync Expenses (Purchases) from QuickBooks to our system
       try {
-        const purchases = await fetchQuickBooksData(baseUrl, integration.realm_id, accessToken, 'Purchase')
-        for (const purchase of purchases) {
+        const fetched = await fetchQuickBooksData(baseUrl, integration.realm_id, accessToken, 'Purchase')
+        recordsFetched.expenses = fetched.rows.length
+        throttleRetries += fetched.throttleRetries
+        if (fetched.truncated) truncatedEntities.push('Purchase')
+        for (const purchase of fetched.rows) {
           await syncExpense(supabaseClient, company_id, purchase)
           recordsProcessed.expenses++
         }
@@ -197,8 +212,11 @@ serve(async (req) => {
 
       // Sync Payments from QuickBooks to our system
       try {
-        const payments = await fetchQuickBooksData(baseUrl, integration.realm_id, accessToken, 'Payment')
-        for (const payment of payments) {
+        const fetched = await fetchQuickBooksData(baseUrl, integration.realm_id, accessToken, 'Payment')
+        recordsFetched.payments = fetched.rows.length
+        throttleRetries += fetched.throttleRetries
+        if (fetched.truncated) truncatedEntities.push('Payment')
+        for (const payment of fetched.rows) {
           await syncPayment(supabaseClient, company_id, payment)
           recordsProcessed.payments++
         }
@@ -232,6 +250,12 @@ serve(async (req) => {
           status: errorsCount > 0 ? 'completed_with_errors' : 'completed',
           completed_at: new Date().toISOString(),
           records_processed: recordsProcessed,
+          // records_fetched vs records_processed is what makes a silently
+          // truncated import visible: equal counts mean everything QuickBooks
+          // returned was written, a gap means rows were dropped on our side.
+          records_fetched: recordsFetched,
+          truncated_entities: truncatedEntities.length > 0 ? truncatedEntities : null,
+          throttle_retries: throttleRetries,
           errors_count: errorsCount,
           duration_seconds: duration,
           error_details: errors.length > 0 ? errors : null
@@ -289,27 +313,6 @@ serve(async (req) => {
     )
   }
 })
-
-async function fetchQuickBooksData(baseUrl: string, realmId: string, accessToken: string, entityType: string): Promise<any[]> {
-  const response = await fetch(
-    `${baseUrl}/v3/company/${realmId}/query?query=SELECT * FROM ${entityType}&minorversion=65`,
-    {
-      headers: {
-        'Authorization': `Bearer ${accessToken}`,
-        'Accept': 'application/json'
-      }
-    }
-  )
-
-  if (!response.ok) {
-    const errorText = await response.text()
-    console.error(`QuickBooks API error for ${entityType}:`, errorText)
-    throw new Error(`QuickBooks API error: ${response.status} - ${response.statusText}`)
-  }
-
-  const data: QuickBooksAPIResponse = await response.json()
-  return data.QueryResponse?.[entityType] || []
-}
 
 async function syncCustomer(supabaseClient: any, companyId: string, qbCustomer: any) {
   // Sync customer data to our system
