@@ -159,8 +159,12 @@ serve(async (req) => {
       throw new Error('Failed to save connection. Please try again.')
     }
 
-    // Log the successful connection
-    await supabaseClient
+    // Log the successful connection. The error was discarded and supabase-js
+    // returns it rather than throwing, so a lost write left the connection
+    // history with no record of when this company connected. The tokens are
+    // already stored and the connection is real, so this is logged rather than
+    // failed (US-300).
+    const { error: connectionLogError } = await supabaseClient
       .from('quickbooks_sync_logs')
       .insert({
         company_id: company_id,
@@ -170,6 +174,13 @@ serve(async (req) => {
         records_processed: {},
         created_at: now.toISOString(),
       })
+
+    if (connectionLogError) {
+      console.error(
+        `[QUICKBOOKS-CALLBACK] Company ${company_id} CONNECTED but the event was not logged:`,
+        connectionLogError.message,
+      )
+    }
 
     console.log(`QuickBooks connected successfully for company ${company_id}`)
 

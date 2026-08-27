@@ -5639,3 +5639,63 @@ quietly defeating exactly that. They throw into the caller's per-entity catch no
 
 22 cases in `supabase/functions/_shared/moneyPathWrites.test.ts`, mutation-tested
 three ways on this batch. Full suite: 129 files, 2816 passing, 2 skipped.
+
+---
+
+## US-300, third edge batch: bookkeeping writes, 130 -> 107
+
+Twenty-three writes across seven functions. The theme this time is bookkeeping:
+writes nothing reads back until the moment they matter, which is why losing them
+stayed invisible.
+
+**webhook-delivery.** `updateEndpointStats` maintains the `failure_count` that
+its own auto-disable reads - `>= 10 consecutive failures` flips `is_active` to
+false. That update discarded its error, so the count never climbed and a dead
+customer endpoint was retried forever. The log line was worse than the write: it
+printed "Auto-disabled endpoint after 10 failures" *before* the update, so the
+logs recorded a disable that had not happened and never would. The log now runs
+after the write, guarded on `updates.is_active === false`.
+
+`updateDeliveryRecord` is the other half. That row is a delivery's only record of
+having been attempted; losing the write leaves it in its previous state, so a
+webhook we already sent is queued again and the customer's endpoint receives it
+twice. Both helpers throw now, and the caller catches per-delivery so one bad
+bookkeeping write does not abandon the rest of the batch - the failure lands on
+the result as `bookkeeping_error` instead of being swallowed.
+
+**api-management** maintains the same `failure_count` from the sending side, plus
+the `webhook_delivery_logs` rows that are the only answer to "did you call our
+endpoint?". The success and failure branches were two separate discarded awaits
+inside an if/else; they are one destructured result now, so neither can be
+dropped independently.
+
+**analytics-oauth-google.** Press Disconnect, get told it worked, and your Google
+access token and refresh token are still sitting in
+`analytics_platform_connections`. That one throws.
+
+**execute-workflow and workflow-execution** both stranded runs at `running`.
+workflow-execution is the sharper case: it answers `status: finalStatus` from a
+local variable while the row it failed to update still says `running`, so the API
+response and the table disagree permanently and nothing ever reconciles them.
+In execute-workflow the completion write throws; the two failure-path writes log
+loudly instead, because the original error is the more useful one to propagate
+and the catch block is a natural retry of the same update.
+
+**twilio-calling.** The `transcribe` case was not a dropped error, it was a lie.
+It wrote `transcription_status: "completed"` with the body "Transcription feature
+coming soon" and answered `success: true`, with no way to tell those rows from
+real transcriptions afterwards. It writes `failed` now - already a value of the
+existing check constraint, so no migration - and the response says no
+speech-to-text service is configured. The recording callback throws too: Twilio
+retries a callback that does not get a 2xx, and returning 200 on a failed write
+orphaned the recording permanently.
+
+Technique note, because it cost real time: exact-string edits kept failing on
+indentation. Rewriting by line range in Python, computing the indent from the
+file itself, is what worked.
+
+17 new cases in `supabase/functions/_shared/moneyPathWrites.test.ts` (37 total),
+three mutation-tested. Full suite: 129 files, 2831 passing, 2 skipped.
+
+Remaining backlog is 107, all in edge functions. Biggest clusters:
+process-funnel-queue (9), enhanced-blog-ai (5), process-behavioral-triggers (5).

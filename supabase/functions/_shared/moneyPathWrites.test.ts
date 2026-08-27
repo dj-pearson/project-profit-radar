@@ -195,3 +195,117 @@ describe('the second edge batch: email, referrals and accounting sync', () => {
     expect(src).toContain('leave no record');
   });
 });
+
+describe('the third edge batch: oauth tokens, telephony and workflows', () => {
+  it('analytics-oauth-google does not tell a user their Google tokens were cleared when they were not', () => {
+    // Press Disconnect, be told it worked, and have a live access token and
+    // refresh token still sitting in analytics_platform_connections.
+    const src = code(F('analytics-oauth-google'));
+    expect(src).toMatch(/const \{ error: disconnectError \} = await supabaseClient/);
+    expect(src).toContain('stored Google tokens were NOT cleared');
+  });
+
+  it('and stores a refreshed access token or says the refresh did not stick', () => {
+    const src = code(F('analytics-oauth-google'));
+    expect(src).toMatch(/const \{ error: refreshError \} = await supabaseClient/);
+  });
+
+  it('webhook-delivery keeps the failure count that drives its own auto-disable', () => {
+    // failure_count >= 10 is what disables a dead endpoint. A dropped error
+    // meant the count never climbed and the endpoint was hammered forever.
+    const src = code(F('webhook-delivery'));
+    expect(src).toMatch(/const \{ error: statsError \} = await supabaseClient/);
+    expect(src).toContain('did not advance toward the auto-disable threshold');
+  });
+
+  it('and only logs the auto-disable after the write that performs it', () => {
+    // The log line used to run before the update, announcing a disable that
+    // had not happened.
+    const src = code(F('webhook-delivery'));
+    const logIndex = src.indexOf('Auto-disabled endpoint after 10 failures');
+    const guardIndex = src.indexOf('statsError');
+    expect(logIndex).toBeGreaterThan(-1);
+    expect(guardIndex).toBeGreaterThan(-1);
+    expect(logIndex).toBeGreaterThan(guardIndex);
+    expect(src).toContain('if (updates.is_active === false)');
+  });
+
+  it('and does not re-send a webhook whose delivery was already recorded', () => {
+    const src = code(F('webhook-delivery'));
+    expect(src).toMatch(/const \{ error: deliveryError \} = await supabaseClient/);
+    expect(src).toContain('so it may be re-sent');
+  });
+
+  it('and one failed bookkeeping write does not abandon the rest of the batch', () => {
+    const src = code(F('webhook-delivery'));
+    expect(src).toContain('bookkeepingError');
+    expect(src).toContain('deliveryResult.bookkeeping_error');
+  });
+
+  it('api-management keeps the delivery log that proves a webhook was sent', () => {
+    const src = code(F('api-management'));
+    expect(src).toMatch(/const \{ error: logError \} = await supabase/);
+    expect(src).toContain('was DELIVERED but not logged');
+    expect(src).toMatch(/const \{ error: failureLogError \} = await supabase/);
+  });
+
+  it('and its success/failure tracking reads its error on both branches', () => {
+    // The two branches were separate discarded awaits inside an if/else; they
+    // are now one destructured result so neither can be dropped.
+    const src = code(F('api-management'));
+    expect(src).toMatch(/const \{ error: trackingError \} = response\.ok/);
+    expect(src).toContain('auto-disable will not advance');
+  });
+
+  it('twilio-calling does not strand a call at its old status after Twilio reports it ended', () => {
+    const src = code(F('twilio-calling'));
+    expect(src).toMatch(/const \{ error: statusUpdateError \} = await supabaseClient/);
+    expect(src).toContain('was fetched from Twilio but NOT stored');
+  });
+
+  it('and lets Twilio retry the recording callback instead of orphaning the recording', () => {
+    const src = code(F('twilio-calling'));
+    expect(src).toMatch(/const \{ error: recordingError \} = await supabaseClient/);
+    expect(src).toContain('could not be attached to call');
+  });
+
+  it('and stops claiming a transcription that no service produced', () => {
+    // It wrote transcription_status "completed" with the body "Transcription
+    // feature coming soon" and answered success: true.
+    const src = code(F('twilio-calling'));
+    expect(src).not.toContain('Transcription feature coming soon');
+    expect(src).not.toContain('Transcription initiated');
+    expect(src).toContain('no speech-to-text service is configured');
+    expect(src).toMatch(/transcription_status: "failed"/);
+  });
+
+  it('execute-workflow does not leave a finished run reading as running', () => {
+    const src = code(F('execute-workflow'));
+    expect(src).toMatch(/const \{ error: completeError \} = await supabase/);
+    expect(src).toContain('could NOT be marked completed');
+  });
+
+  it('and reports when a failed run could not be marked failed', () => {
+    const src = code(F('execute-workflow'));
+    expect(src).toMatch(/const \{ error: markFailedError \} = await supabase/);
+    expect(src).toContain("is STRANDED at 'running'");
+    expect(src).toMatch(/const \{ error: failUpdateError \} = await supabase/);
+    expect(src).toMatch(/const \{ error: progressError \} = await supabase/);
+    expect(src).toMatch(/const \{ error: stepUpdateError \} = await supabase/);
+  });
+
+  it('workflow-execution does not let its response disagree with the stored status', () => {
+    // It answered `status: finalStatus` from a variable while the row it
+    // failed to update still said 'running'.
+    const src = code(F('workflow-execution'));
+    expect(src).toMatch(/const \{ error: executionUpdateError \} = await supabase/);
+    expect(src).toContain('but that was NOT recorded');
+    expect(src).toMatch(/const \{ error: lastExecutedError \} = await supabase/);
+  });
+
+  it('quickbooks-callback records that a company connected', () => {
+    const src = code(F('quickbooks-callback'));
+    expect(src).toMatch(/const \{ error: connectionLogError \} = await supabaseClient/);
+    expect(src).toContain('CONNECTED but the event was not logged');
+  });
+});

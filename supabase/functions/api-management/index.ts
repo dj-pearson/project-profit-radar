@@ -313,7 +313,11 @@ async function triggerWebhook(corsHeaders: Record<string, string>, req: Request,
     // Log webhook delivery
     const deliveryStatus = response.ok ? 'success' : 'failed';
     
-    await supabase
+    // The error was discarded here and supabase-js returns it rather than
+    // throwing, so a lost write left the delivery log with no trace of a
+    // webhook that really was sent - the only audit trail a customer has when
+    // they ask whether we called their endpoint (US-300).
+    const { error: logError } = await supabase
       .from('webhook_delivery_logs')
       .insert({
         webhook_endpoint_id: webhook.id,
@@ -326,23 +330,38 @@ async function triggerWebhook(corsHeaders: Record<string, string>, req: Request,
         error_message: deliveryStatus === 'failed' ? `HTTP ${response.status}: ${responseText}` : null
       });
 
-    // Update webhook success/failure tracking
-    if (response.ok) {
-      await supabase
+    if (logError) {
+      console.error(
+        `[API-MANAGEMENT] Webhook ${webhook.id} was DELIVERED but not logged:`,
+        logError.message,
+      );
+    }
+
+    // Update webhook success/failure tracking.
+    // failure_count drives the auto-disable in webhook-delivery, so a dropped
+    // error here means a dead endpoint is retried forever, or a recovered one
+    // keeps a stale failure count (US-300).
+    const { error: trackingError } = response.ok
+      ? await supabase
         .from('webhook_endpoints')
         .update({
           last_success_at: new Date().toISOString(),
           failure_count: 0
         })
-        .eq('id', webhook.id);
-    } else {
-      await supabase
+        .eq('id', webhook.id)
+      : await supabase
         .from('webhook_endpoints')
         .update({
           last_failure_at: new Date().toISOString(),
           failure_count: webhook.failure_count + 1
         })
         .eq('id', webhook.id);
+
+    if (trackingError) {
+      console.error(
+        `[API-MANAGEMENT] Webhook ${webhook.id} failure tracking NOT updated, auto-disable will not advance:`,
+        trackingError.message,
+      );
     }
 
     return new Response(
@@ -358,8 +377,9 @@ async function triggerWebhook(corsHeaders: Record<string, string>, req: Request,
   } catch (error) {
     console.error('Webhook delivery error:', error);
     
-    // Log failed delivery
-    await supabase
+    // Log failed delivery. Error read rather than dropped: this is the only
+    // record that the attempt happened at all (US-300).
+    const { error: failureLogError } = await supabase
       .from('webhook_delivery_logs')
       .insert({
         webhook_endpoint_id: webhook.id,
@@ -368,6 +388,13 @@ async function triggerWebhook(corsHeaders: Record<string, string>, req: Request,
         delivery_status: 'failed',
         error_message: error instanceof Error ? error.message : 'Unknown error'
       });
+
+    if (failureLogError) {
+      console.error(
+        `[API-MANAGEMENT] Failed webhook ${webhook.id} could not be logged:`,
+        failureLogError.message,
+      );
+    }
 
     return new Response(
       JSON.stringify({ error: 'Webhook delivery failed', details: error instanceof Error ? error.message : 'Unknown error' }),

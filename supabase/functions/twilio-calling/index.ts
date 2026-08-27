@@ -120,8 +120,11 @@ serve(async (req) => {
 
         const statusData = await statusResponse.json();
 
-        // Update call log
-        await supabaseClient
+        // Update call log. The error was discarded and supabase-js returns it
+        // rather than throwing, so a lost write left the call stuck at its old
+        // status with no duration - the row the billing and activity views
+        // read (US-300).
+        const { error: statusUpdateError } = await supabaseClient
           .from("call_logs")
           .update({
             status: statusData.status,
@@ -130,6 +133,12 @@ serve(async (req) => {
               statusData.status === "completed" ? new Date().toISOString() : null,
           })
           .eq("call_sid", callSid);
+
+        if (statusUpdateError) {
+          throw new Error(
+            `Call ${callSid} status was fetched from Twilio but NOT stored: ${statusUpdateError.message}`,
+          );
+        }
 
         result = { success: true, status: statusData };
         break;
@@ -144,7 +153,10 @@ serve(async (req) => {
         const recordingDuration = formData.get("RecordingDuration")?.toString();
 
         if (callSid && recordingSid && recordingUrl) {
-          await supabaseClient
+          // Twilio retries this callback when it does not get a 2xx, so
+          // failing loudly is what gets the recording attached. Dropping the
+          // error returned 200 and orphaned the recording permanently (US-300).
+          const { error: recordingError } = await supabaseClient
             .from("call_logs")
             .update({
               recording_sid: recordingSid,
@@ -153,6 +165,12 @@ serve(async (req) => {
               transcription_status: "pending",
             })
             .eq("call_sid", callSid);
+
+          if (recordingError) {
+            throw new Error(
+              `Recording ${recordingSid} could not be attached to call ${callSid}: ${recordingError.message}`,
+            );
+          }
         }
 
         result = { success: true };
@@ -186,23 +204,32 @@ serve(async (req) => {
         // Transcribe a recording (placeholder for future AI integration)
         const { callLogId } = params;
 
-        // Update status to processing
-        await supabaseClient
-          .from("call_logs")
-          .update({ transcription_status: "processing" })
-          .eq("id", callLogId);
-
-        // TODO: Integrate with speech-to-text service (Deepgram, AssemblyAI, etc.)
-        // For now, mark as completed with placeholder
-        await supabaseClient
+        // No speech-to-text service is wired up. This used to write
+        // transcription_status "completed" with the body "Transcription
+        // feature coming soon" and answer success: true, so the UI showed a
+        // finished transcription that had never been produced, and there was
+        // no way to tell those rows from real ones later. Mark it failed - an
+        // existing value of the transcription_status check constraint - and
+        // say so in the response (US-300).
+        const { error: transcribeError } = await supabaseClient
           .from("call_logs")
           .update({
-            transcription_status: "completed",
-            transcription: "Transcription feature coming soon",
+            transcription_status: "failed",
+            transcription: null,
           })
           .eq("id", callLogId);
 
-        result = { success: true, message: "Transcription initiated" };
+        if (transcribeError) {
+          throw new Error(
+            `Call ${callLogId} could not be marked untranscribed: ${transcribeError.message}`,
+          );
+        }
+
+        result = {
+          success: false,
+          message:
+            "Transcription is not available: no speech-to-text service is configured.",
+        };
         break;
       }
 

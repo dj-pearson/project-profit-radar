@@ -182,9 +182,12 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Update execution record
+    // Update execution record. The error was discarded and supabase-js returns
+    // it rather than throwing, so a lost write left a finished run reading as
+    // 'running' with no output, while the response below reported its real
+    // status - the two disagreed permanently (US-300).
     const finalStatus = stepResults.some(r => r.status === 'failed') ? 'failed' : 'completed';
-    await supabase
+    const { error: executionUpdateError } = await supabase
       .from('workflow_executions')
       .update({
         status: finalStatus,
@@ -193,11 +196,26 @@ Deno.serve(async (req) => {
       })
       .eq('id', execution.id);
 
-    // Update workflow last_executed_at
-    await supabase
+    if (executionUpdateError) {
+      throw new Error(
+        `Workflow execution ${execution.id} finished as ${finalStatus} but that was NOT recorded: ${executionUpdateError.message}`,
+      );
+    }
+
+    // Update workflow last_executed_at. Only the "when did this last run"
+    // stamp, so a failure is logged rather than failing a run that already
+    // succeeded (US-300).
+    const { error: lastExecutedError } = await supabase
       .from('workflow_definitions')
       .update({ last_executed_at: new Date().toISOString() })
       .eq('id', workflow_id);
+
+    if (lastExecutedError) {
+      console.error(
+        `[WORKFLOW-EXECUTION] last_executed_at not updated for workflow ${workflow_id}:`,
+        lastExecutedError.message,
+      );
+    }
 
     console.log('Workflow execution completed:', finalStatus);
 
