@@ -5318,3 +5318,51 @@ anything offline.
 
 10 cases in `src/lib/__tests__/communicationHubStubs.test.ts`, mutation-tested
 four ways. Full suite: 126 files, 2749 passing, 2 skipped.
+
+---
+
+## US-314: a quarter of the component surface is imported by nothing
+
+I went looking for `OfflineManager.saveToOfflineStorage`, one of the unwired
+handlers from the AC4 list, and found something larger: the component it lives
+in is imported by nothing. Nor is `OfflineCapabilities`. Nor are two more
+offline components sitting beside them. Wiring a handler on a screen no route
+reaches is not a fix.
+
+Generalising the check gave the real number. **237 files under
+`src/components` and `src/pages`, 86,913 lines, imported by no other module.**
+Roughly a quarter of the component surface. Vite tree-shakes them out of the
+bundle, so nothing breaks, nothing warns, and no test fails. They sit in the
+tree looking exactly like features, and they get read that way:
+
+- `src/pages/DrawingViewer.tsx` makes US-225 ("add a drawing/plan viewer") look
+  half-built. It is a static mock - a hardcoded tool list and six hardcoded
+  layers with invented item counts, no canvas, no file loading, no persistence.
+  That is now written into US-225 so nobody treats it as a head start.
+- `src/components/AppSidebar.tsx` is 982 lines of navigation nothing renders.
+  `DashboardLayout` mounts `navigation/SimplifiedSidebar`.
+- `src/pages/AdminHub.tsx`, `FinancialHub.tsx` and `OperationsHub.tsx` are
+  duplicates of the ones under `src/pages/hubs/` that the routes actually load.
+  The two AdminHubs differ by 301 diff lines. That is US-282, with names.
+
+I checked the measurement before trusting it. Routed pages have to read as
+imported, and they do - the guard counts `createLazyRoute(() => import('@/pages/X'))`.
+Mutation-testing it by dropping `import()` from the pattern took the count from
+233 to 514, which is a good measure of how much of this app is reached lazily.
+
+The baseline is a count, not 237 written reasons - that would be a document
+nobody maintains. It fails in **both** directions: adding an unimported
+component fails, and so does deleting one without lowering the number. US-212's
+ceiling taught that lesson at a cost of 1191 permitted errors.
+
+Deleted the four dead offline components (1,171 lines). The live path -
+`useOfflineSync` with nine importers, `offline/OfflineIndicator` mounted by App -
+is untouched. 237 to 233; TypeScript errors 663 to 656.
+
+One real wiring fix fell out. `SyncQueueIndicator` was lazily imported at
+`src/App.tsx:29` and never rendered, so a user with actions queued while offline
+had no sign of them and no way to retry. It returns `null` when the queue is
+empty and sync is idle, which is exactly why nobody noticed. It renders now.
+
+14 cases in `src/lib/__tests__/unreferencedComponents.test.ts`, mutation-tested
+four ways.

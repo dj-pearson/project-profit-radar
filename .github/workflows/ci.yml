@@ -202,6 +202,9 @@ jobs:
       - name: Dead-link guard (US-312)
         run: node scripts/check-dead-links.mjs
 
+      - name: Unreferenced-component guard (US-314)
+        run: node scripts/check-unreferenced-components.mjs
+
       - name: Migration filename guard (US-235)
         run: bash scripts/check-migration-filenames.sh
 

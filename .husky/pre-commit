@@ -83,6 +83,10 @@ node scripts/check-table-definitions.mjs || exit 1
 #     route answers into the 404 page, silently.
 node scripts/check-dead-links.mjs || exit 1
 
+# 3u. Unreferenced components (US-314) — Vite drops a component nothing imports,
+#     so it fails nowhere and sits in the tree looking like a feature.
+node scripts/check-unreferenced-components.mjs || exit 1
+
 # 4. Migration hygiene + RLS guards (US-235 / US-239 / US-237).
 bash scripts/check-migration-filenames.sh || exit 1
 bash scripts/check-no-stray-function-copies.sh || exit 1
