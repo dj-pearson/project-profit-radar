@@ -124,3 +124,68 @@ describe('audit_logs denies client writes (US-306)', () => {
     expect(migration).toContain('FOR ALL');
   });
 });
+
+/**
+ * The same open-write shape on ten more system tables (US-306 follow-up).
+ *
+ * Two of these are not just record-keeping. rate_limit_state carried an open
+ * INSERT and an open UPDATE, so a client could reset the counter throttling it,
+ * which is the whole of US-243's ceiling. affiliate_codes carried the same
+ * pair, so a caller could mint a referral code or change its commission.
+ */
+describe('system tables deny client writes (US-306 follow-up)', () => {
+  const migration = readdirSync(MIGRATIONS_DIR)
+    .filter((f) => f.includes('restrict_client_writes_to_system_tables'))
+    .map((f) => readFileSync(join(MIGRATIONS_DIR, f), 'utf8'))
+    .join('\n');
+
+  const TABLES = [
+    'data_access_logs',
+    'document_access_logs',
+    'sensitive_data_access_log',
+    'security_logs',
+    'security_metrics',
+    'api_request_logs',
+    'ddos_detection_logs',
+    'rate_limit_state',
+    'affiliate_codes',
+  ];
+
+  it('exists', () => {
+    expect(migration, 'system-table write-restriction migration missing').toBeTruthy();
+  });
+
+  it.each(TABLES)('covers %s', (table) => {
+    expect(migration).toContain(`'${table}'`);
+  });
+
+  it('is RESTRICTIVE and denies writes without touching reads', () => {
+    expect(migration).toContain('AS RESTRICTIVE');
+    expect(migration).toContain('WITH CHECK (false)');
+    expect(migration).toContain('USING (true)');
+    expect(migration).toContain('TO authenticated, anon');
+  });
+
+  it('skips a table that does not exist rather than failing the migration', () => {
+    expect(migration).toContain("to_regclass('public.' || t) IS NULL");
+  });
+});
+
+describe('security_logs is written with the service role (US-306 follow-up)', () => {
+  // These four writes used a user-JWT client. Once the restrictive policy
+  // lands, that client has no write path, and supabase-js returns errors
+  // rather than throwing - so MFA and SSO event logging would have gone
+  // silently missing.
+  const SITES = [
+    'supabase/functions/setup-mfa/index.ts',
+    'supabase/functions/sso-manage/index.ts',
+  ];
+
+  it.each(SITES)('%s writes security_logs through createServiceClient', (file) => {
+    const src = readFileSync(file, 'utf8');
+    const writes = src.match(/\.from\("security_logs"\)/g) ?? [];
+    expect(writes.length).toBeGreaterThan(0);
+    const viaService = src.match(/createServiceClient\(\)\.from\("security_logs"\)/g) ?? [];
+    expect(viaService.length).toBe(writes.length);
+  });
+});

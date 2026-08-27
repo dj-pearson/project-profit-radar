@@ -3740,3 +3740,77 @@ being rejected. What survives is that `useSecurityMonitor` is imported only by
 its own test, so nothing has ever reached the trail from a browser anyway — and
 the rows it builds carry no `company_id`, which is its own tell. With US-306 in
 place the hook cannot be wired up as written.
+
+### The rest of the class — 68 open policies
+`audit_logs` was not one bad policy, it was one instance. Scanning the
+migration history for permissive policies with `WITH CHECK (true)` or a
+non-`FOR ALL` `USING (true)`, no `TO` clause, and not `AS RESTRICTIVE`, turns up
+68.
+
+Ten of them are written by nothing in `src/` — verified by matching
+insert/upsert/update/delete against every `from('<table>')` call in the repo,
+not by reading names — and carry real weight:
+
+    data_access_logs           who read what PII
+    document_access_logs       who opened which document
+    sensitive_data_access_log  the field-level-encryption trail
+    security_logs              MFA and SSO events
+    security_metrics           aggregate posture
+    api_request_logs           API traffic
+    ddos_detection_logs        attack detection
+    rate_limit_state           the counters themselves
+    rate_limit_violations      who tripped them
+    affiliate_codes            referral codes and commission
+
+Two of those are not record-keeping. `rate_limit_state` had an open INSERT *and*
+an open UPDATE — a client could reset the counter throttling it, which is the
+entirety of what US-243 built. `affiliate_codes` had the same pair: mint a
+referral code, or change the commission on one.
+
+`20260827090000` denies client writes on all ten, same restrictive technique.
+
+Doing it surfaced four edge writes to `security_logs` still on a user-JWT
+client — one in `setup-mfa`, three in `sso-manage`. Under the new policy those
+would have gone silently missing, because supabase-js returns errors rather than
+throwing and the call sites discard them. Converted to `createServiceClient()`.
+
+`check-rls-write-paths.mjs` had its own blind spot: it only recognised a service
+client held in a variable, so the inline `createServiceClient().from(...)` form
+the repo uses everywhere read as "unrecognised". A guard that flags the correct
+convention pushes the next author to work around it. Fixed, mutation-tested.
+
+`check-rls-policies.mjs` now detects the `WITH CHECK (true)` shape, with its own
+baseline so the historical backlog is listed rather than failing the build.
+
+58 remain. Most of the SELECT ones are deliberate, and several INSERT ones are
+genuine public-write endpoints — lead capture, demo requests, unsubscribe,
+calculator sessions — which must not be closed blindly. The ones still needing
+triage each have a live client write to convert first: `security_events`
+(`dosProtection` logs its own events), `security_alerts` (the monitoring
+dashboard resolves them), `ai_lead_scores`, `task_activity_logs`,
+`conversion_events`, `knowledge_base_views`, and the three `companies`-creation
+policies.
+
+Unrelated, spotted in passing: `EnhancedLeadIntelligence.tsx:143` upserts
+`company_id: 'your-company-id'` — a literal placeholder, with the comment "This
+should come from user context" sitting next to it.
+
+### Two corrections in the same change
+`rate_limit_violations` was in the first draft of the deny list. It had to come
+out. `_shared/rate-limiter.ts` writes it with whatever client `checkRateLimit`
+is handed, and most callers pass a user-JWT one. Denying it would have stopped
+violations being recorded — and since `checkRateLimit` computes `allowed` by
+counting those rows, the limit would have stopped tripping at all. A silent loss
+of rate limiting, not of logging.
+
+`check-rls-write-paths.mjs` reported zero violations while that was true,
+because it only scanned `supabase/functions/*/index.ts` and skipped `_shared/`
+entirely. It now scans `_shared` too, and reports caller-supplied clients
+separately — as sites to audit by hand, not failures, because a helper taking
+the client as a parameter can't be classified where it's defined. Verified by
+putting the table back in the watch list and confirming the guard names
+`rate-limiter.ts` line 101.
+
+The second correction was smaller: `setup-mfa` had an unused `getClientIP`
+import, pre-existing, which only surfaced because lint-staged lints the files
+you touch. Removed.
