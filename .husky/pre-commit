@@ -43,6 +43,10 @@ node scripts/check-csp-hashes.mjs || exit 1
 # 3j. Rate-limit coverage (US-243) — functions that spend money per call keep a ceiling.
 node scripts/check-rate-limit-coverage.mjs || exit 1
 
+# 3k. Sanitizer test-env guard — happy-dom breaks DOMPurify, so a sanitization
+#     test that doesn't declare jsdom proves nothing.
+node scripts/check-sanitizer-test-env.mjs || exit 1
+
 # 4. Migration hygiene + RLS guards (US-235 / US-239 / US-237).
 bash scripts/check-migration-filenames.sh || exit 1
 bash scripts/check-no-stray-function-copies.sh || exit 1

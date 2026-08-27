@@ -3452,3 +3452,81 @@ contained a live bug class. TS2554 (wrong argument count) and TS2532 (possibly
 undefined) are worth the same treatment before anyone reaches for a bulk
 suppression. The big classes — TS2345/2322/2339, about 1367 of the 1847 — really
 are mostly Supabase type drift and want US-263 first.
+
+## US-304 — the XSS test suite was testing nothing
+
+A single failing test after d8fae33: `useSanitizedForm > XSS Prevention >
+prevents script injection in HTML fields`, asserting the output does not contain
+`<script>`. It did contain `<script>`. I had not touched `useSanitizedForm.ts`
+in fifteen commits, so the reflex answer was "pre-existing, not mine". That was
+true and completely beside the point.
+
+### The lead was already in the file
+`stripHtml` in `src/lib/security/sanitize.ts` carries this:
+
+    // Safety net: in some environments DOMPurify with an empty allowlist
+    // still leaves inline tags in the output. Strip any that remain.
+
+Someone hit this before, wrote a regex post-pass for `stripHtml`, and stopped.
+`sanitizeHtml` — the one that has to keep tags, so a regex cannot rescue it —
+was left with the bug.
+
+### Root cause, reproduced in six lines
+happy-dom does not implement the DOM spec's NodeIterator pre-removing steps.
+Remove the node the iterator is sitting on and iteration ends, instead of the
+reference moving to the next node.
+
+    doc.body.innerHTML = '<i>1</i><i>2</i><i>3</i><i>4</i>';
+    const it = doc.createNodeIterator(doc.body, NodeFilter.SHOW_ELEMENT);
+    while ((n = it.nextNode())) { visit(n); if (n.textContent === '2') n.remove(); }
+
+    happy-dom  visited: BODY I1 I2
+    jsdom      visited: BODY I1 I2 I3 I4
+
+DOMPurify sanitizes by walking the tree with `createNodeIterator` and removing
+as it goes. So under happy-dom it stops sanitizing at the first node it strips:
+
+    'Hello<script>evil()</script><b>W</b>'
+      happy-dom => '<script>evil()</script><b>W</b>'
+      jsdom     => 'Hello<b>W</b>'
+
+Note which half survived. The payload stayed; the innocent text was dropped.
+
+### What that cost
+Six test files, 616 assertions, across `xssPayloads`, `securityRegression`,
+`trustedTypes` and both `sanitize` suites. None of them were testing the
+sanitizer. Some passed anyway — whether a given assertion held depended on
+where in the payload the first removal happened to land, which is why exactly
+one test was red and the rest looked fine. And US-213 has just made `Unit Tests`
+a required merge check, so that one red test would have blocked every merge.
+
+### The fix, and two things I deliberately did not do
+Per-file `@vitest-environment jsdom` on the six files, plus
+`scripts/check-sanitizer-test-env.mjs`, which computes the DOMPurify taint set
+as a fixpoint over the `src/` import graph and requires the docblock on any test
+that reaches it. The taint analysis found three files my hand-picked list had
+missed, and one exemption I could justify in writing (`sqlInjection.test.ts` —
+`sanitizeSqlInput` is three string replaces and never touches the DOM). It found
+one file I had wrongly added the docblock to, which I removed.
+
+**Not** switching the suite default to jsdom. A full-suite jsdom run was still
+going at 30 minutes against roughly 4 under happy-dom; the six files that need
+it finish in 4.3s. The guard prints an explanatory message and exits 0 if the
+default is ever switched, so it cannot outlive its reason.
+
+**Not** adding a regex element-allowlist post-pass to `sanitizeHtml`. A regex
+post-pass is exactly what let this sit undiagnosed for however long — it made
+`stripHtml` look fixed. The sanitizer is correct against a spec-compliant DOM;
+the environment was wrong, so fix the environment.
+
+### Mutation-tested, as usual
+Stripped the docblock from each of the six in turn: caught six of six. Then
+`vitest run` on the six under jsdom: 616 passed, 4.28s, including the test that
+started this.
+
+### Left open
+`src/lib/validations` exports a *second* function named `sanitizeHtml`, regex
+based, which strips everything between `<` and `>` — its own test asserts
+`sanitizeHtml('1 < 2 > 0') === '1  0'`. Two exported functions with the same
+name and different semantics, one of which quietly mangles arithmetic. Not in
+scope here; worth a story.

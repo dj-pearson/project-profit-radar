@@ -172,6 +172,9 @@ jobs:
       - name: Rate-limit coverage guard (US-243)
         run: node scripts/check-rate-limit-coverage.mjs
 
+      - name: Sanitizer test-env guard (US-304)
+        run: node scripts/check-sanitizer-test-env.mjs
+
       - name: Migration filename guard (US-235)
         run: bash scripts/check-migration-filenames.sh
 
