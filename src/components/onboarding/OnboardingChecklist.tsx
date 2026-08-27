@@ -274,20 +274,24 @@ export const OnboardingChecklist = () => {
   const dismissChecklist = async () => {
     if (!user) return;
 
-    try {
-      await (supabase as any)
-        .from('onboarding_progress')
-        .upsert({
-          user_id: user.id,
-          tasks_completed: progress.tasks_completed,
-          total_points: progress.total_points,
-          dismissed: true,
-        }, { onConflict: 'user_id' });
+    // supabase-js returns the error rather than throwing it, so this catch never
+    // fired and the checklist hid itself whether or not the dismissal saved -
+    // then reappeared on the next load (US-300).
+    const { error } = await (supabase as any)
+      .from('onboarding_progress')
+      .upsert({
+        user_id: user.id,
+        tasks_completed: progress.tasks_completed,
+        total_points: progress.total_points,
+        dismissed: true,
+      }, { onConflict: 'user_id' });
 
-      setIsDismissed(true);
-    } catch (error) {
-      console.error('Failed to dismiss checklist:', error);
+    if (error) {
+      console.error('Failed to dismiss checklist:', error.message);
+      return;
     }
+
+    setIsDismissed(true);
   };
 
   // Auto-detect task completion (only after progress is loaded)

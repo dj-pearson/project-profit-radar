@@ -329,7 +329,10 @@ class DosProtectionService {
    */
   private async logSecurityEvent(ipAddress: string, eventType: string, metadata: any): Promise<void> {
     try {
-      await supabase
+      // The error was dropped and supabase-js returns it rather than throwing,
+      // so the catch never fired. A DoS event that is not recorded is missing
+      // from the attack statistics this class exists to produce (US-300).
+      const { error: logError } = await supabase
         .from('security_events')
         .insert({
           event_type: eventType,
@@ -338,6 +341,10 @@ class DosProtectionService {
           ip_address: ipAddress,
           metadata
         });
+
+      if (logError) {
+        console.error('Failed to log security event:', logError.message);
+      }
     } catch (error) {
       console.error('Failed to log security event:', error);
     }

@@ -36,7 +36,9 @@ export const useBehavioralTriggers = () => {
 
     try {
       // Track the event in user_events table first (for analytics)
-      await (supabase as any)
+      // Best-effort, but the error was dropped and supabase-js returns it
+      // rather than throwing, so the catch never saw a failed write (US-300).
+      const { error: eventError } = await (supabase as any)
         .from('user_events')
         .insert({
           user_id: user.id,
@@ -44,6 +46,10 @@ export const useBehavioralTriggers = () => {
           event_category: 'engagement',
           event_properties: eventData,
         });
+
+      if (eventError) {
+        console.error('Behavioral trigger event not recorded:', eventError.message);
+      }
 
       // Call the behavioral trigger processor
       const triggerPromise = supabase.functions.invoke('process-behavioral-triggers', {

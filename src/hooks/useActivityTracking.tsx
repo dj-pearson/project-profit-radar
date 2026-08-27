@@ -33,7 +33,10 @@ export const useActivityTracking = () => {
       if (!user || !userProfile) return;
 
       try {
-        await supabase.from('user_activity_timeline').insert({
+        // Best-effort by design, but the error was dropped and supabase-js
+        // returns it rather than throwing, so the catch never saw a failed
+        // write and the activity timeline lost rows silently (US-300).
+        const { error: timelineError } = await supabase.from('user_activity_timeline').insert({
           user_id: user.id,
           company_id: userProfile.company_id,
           action_type: event.actionType,
@@ -43,6 +46,10 @@ export const useActivityTracking = () => {
           user_agent: navigator.userAgent,
           duration_ms: event.duration,
         });
+
+        if (timelineError) {
+          console.error('Activity timeline write failed:', timelineError.message);
+        }
       } catch (error) {
         // Silently fail - don't break app if tracking fails
       }
@@ -147,7 +154,7 @@ export const useActivityTracking = () => {
       // Also log to performance_metrics
       if (user && userProfile) {
         try {
-          await supabase.from('performance_metrics').insert({
+          const { error: metricError } = await supabase.from('performance_metrics').insert({
             user_id: user.id,
             company_id: userProfile.company_id,
             metric_type: 'api_call',
@@ -155,6 +162,10 @@ export const useActivityTracking = () => {
             duration_ms: durationMs,
             details: { status },
           });
+
+          if (metricError) {
+            console.error('Performance metric write failed:', metricError.message);
+          }
         } catch (error) {
         // ignore: non-critical, best-effort
         }

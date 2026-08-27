@@ -144,14 +144,21 @@ export const PostComposer: React.FC<PostComposerProps> = ({
       if (error) throw error;
 
       // Create post results for each platform
+      // One row per platform. The error was dropped and supabase-js returns it
+      // rather than throwing, so "Post scheduled successfully" appeared even
+      // when a platform had no result row and would never be posted to (US-300).
       for (const platform of postData.selectedPlatforms) {
-        await supabase
+        const { error: resultError } = await supabase
           .from('social_media_post_results')
           .insert({
             post_id: post.id,
             platform: platform as any,
             status: isDraft ? 'draft' : (postData.scheduledFor ? 'scheduled' : 'published')
           });
+
+        if (resultError) {
+          throw new Error(`The post was saved but ${platform} was not queued: ${resultError.message}`);
+        }
       }
 
       toast({

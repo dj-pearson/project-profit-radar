@@ -246,11 +246,18 @@ export const getOrGenerateQRCode = async (
       if (!qrCodeImage) {
         qrCodeImage = await generateEquipmentQRCode(equipment);
 
-        // Update database with image
-        await supabase
+        // Update database with image. The error was dropped, so a failure here
+        // returned success with an image that was never stored, and the next
+        // call regenerated it (US-300). Not fatal: the caller still gets a
+        // usable code, so this logs rather than throwing.
+        const { error: imageError } = await supabase
           .from('equipment_qr_codes')
           .update({ qr_code_image: qrCodeImage })
           .eq('id', existingQR.id);
+
+        if (imageError) {
+          console.error('QR image was generated but not stored:', imageError.message);
+        }
       }
 
       return {

@@ -5471,3 +5471,67 @@ question with two named files.
 
 31 cases in `src/lib/__tests__/unreferencedComponents.test.ts`, mutation-tested
 three ways on this batch.
+
+---
+
+## US-300: the web half of the silent-write backlog is zero
+
+Twenty-eight writes in `src/` discarded their result. supabase-js returns the
+error rather than throwing it, so the `try`/`catch` around each one was dead
+code. All 28 now read it; the 171 remaining are edge functions. Baseline 199 to
+171.
+
+The shape was identical every time, and invisible every time: the UI updates its
+own state, or shows its success toast, on the strength of having *called* the
+database rather than on what the database said.
+
+The one that could lose data:
+
+```js
+// Reassign related records to primary contact
+await supabase.from('crm_activities')
+  .update({ contact_id: primaryId }).in('contact_id', secondaryIds);
+
+// Delete secondary contacts
+const { error: deleteError } = await supabase.from('contacts')
+  .delete().in('id', secondaryIds);
+```
+
+A failed reassignment fell straight through to the delete and took the
+activities with it - history attached to contacts that no longer exist. It now
+throws before the delete, which leaves the secondary contacts in place and is
+recoverable.
+
+The rest, in order of how much they lied:
+
+- **TaskTemplatesDialog** removed the row from local state whether or not the
+  delete landed, so the template vanished from the list and came back on reload.
+  Both deletes.
+- **TaskDetailView** read only `data` on Mark Complete and Reopen. A failed
+  update left it null, so the button did nothing and said nothing.
+- **ClickToCall** used `.then(() => toast('Call Notes Saved'))`, which resolves
+  with `{ data, error }` regardless - and the state reset immediately after
+  clears the notes either way.
+- **useCRM opportunity conversion** creates the deal, then dropped the error on
+  closing the opportunity, leaving both open and the pipeline counting the same
+  work twice.
+- **PostComposer** writes one result row per platform, errors dropped, so "Post
+  scheduled successfully" appeared even when a platform was never queued.
+- **RFIs** closed the RFI under a "Response added successfully" toast.
+- **AIModelManager** cleared the previous default under a Success toast, so two
+  models could be default at once.
+- **OnboardingChecklist** hid itself before the dismissal saved, so it came back.
+- **useAdvancedChat** and **useRealtimeChat** both dropped the error on adding
+  the creator as a member of the channel they had just made.
+
+The best-effort writes - analytics, activity timeline, behavioural triggers, the
+presence heartbeat, the DoS security-event log, QR image storage, import session
+status, chat read markers - keep their fire-and-forget behaviour and log rather
+than throw. Best-effort is a reason not to fail the user's action. It is not a
+reason to be unable to tell a table that rejects every write from one that
+accepts them. `dosProtection`'s `security_events` insert is the sharpest of
+those: an unrecorded DoS event is missing from the attack statistics that class
+exists to produce.
+
+14 cases in `src/lib/__tests__/webSilentWrites.test.ts`, mutation-tested three
+ways. Full suite: 128 files, 2794 passing, 2 skipped.

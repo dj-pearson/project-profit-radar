@@ -766,7 +766,10 @@ export function useCreateABTestVariant() {
 
       // Enable A/B testing on base campaign if not already
       if (!baseCampaign.ab_test_enabled) {
-        await supabase
+        // The variant below is created regardless. If this fails, the base
+        // campaign is not marked as an A/B test and the split never happens,
+        // while a variant sits beside it. The error was dropped (US-300).
+        const { error: enableError } = await supabase
           .from('email_campaigns')
           .update({
             ab_test_enabled: true,
@@ -774,6 +777,8 @@ export function useCreateABTestVariant() {
             ab_test_traffic_percentage: 100 - trafficPercentage,
           })
           .eq('id', baseCampaignId);
+
+        if (enableError) throw enableError;
       }
 
       // Create variant

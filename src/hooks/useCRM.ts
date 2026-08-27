@@ -1596,11 +1596,23 @@ export function useMergeContacts() {
 
       if (updateError) throw updateError;
 
-      // Reassign related records to primary contact
-      await supabase
+      // Reassign related records to primary contact.
+      //
+      // This error was dropped, and supabase-js returns it rather than throwing,
+      // so a failed reassignment fell straight through to the delete below and
+      // took the activities with it: history attached to contacts that no longer
+      // exist. Throwing here leaves the secondary contacts in place, which is
+      // recoverable; deleting them is not (US-300).
+      const { error: reassignError } = await supabase
         .from('crm_activities')
         .update({ contact_id: primaryId })
         .in('contact_id', secondaryIds);
+
+      if (reassignError) {
+        throw new Error(
+          `Activities could not be moved to the surviving contact, so nothing was merged: ${reassignError.message}`,
+        );
+      }
 
       // Delete secondary contacts
       const { error: deleteError } = await supabase
@@ -1710,14 +1722,23 @@ export function useConvertOpportunityToDeal() {
 
       if (createError) throw createError;
 
-      // Update opportunity status
-      await supabase
+      // Update opportunity status. The deal already exists at this point, so a
+      // failure here leaves the opportunity open alongside it and the pipeline
+      // counts the same work twice. The error was dropped (US-300); say which
+      // half succeeded rather than reporting a clean conversion.
+      const { error: stageError } = await supabase
         .from('opportunities')
         .update({
           stage: 'closed_won',
           updated_at: new Date().toISOString(),
         })
         .eq('id', opportunityId);
+
+      if (stageError) {
+        throw new Error(
+          `The deal was created, but the opportunity is still open and will be counted twice: ${stageError.message}`,
+        );
+      }
 
       return deal;
     },

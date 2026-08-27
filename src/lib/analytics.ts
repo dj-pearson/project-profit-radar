@@ -95,7 +95,10 @@ const trackInSupabase = async (
     // Get URL parameters for attribution
     const urlParams = new URLSearchParams(window.location.search);
 
-  await supabase.from('user_events').insert({
+  // Best-effort by design, but the error was dropped and supabase-js returns it
+  // rather than throwing, so the catch below never saw a failed write and the
+  // analytics gap was invisible (US-300).
+  const { error: eventError } = await supabase.from('user_events').insert({
     user_id: user?.id || null,
     anonymous_id: !user ? getAnonymousId() : null,
     event_name: eventName,
@@ -111,6 +114,10 @@ const trackInSupabase = async (
     utm_content: urlParams.get('utm_content'),
     utm_term: urlParams.get('utm_term'),
   });
+
+  if (eventError) {
+    logger.error('Supabase tracking error', new Error(eventError.message), { eventName });
+  }
   } catch (error) {
     logger.error('Supabase tracking error', error as Error, { eventName });
   }
@@ -202,10 +209,14 @@ export class Analytics {
 
     // Store user properties
     try {
-      await supabase.from('user_engagement_summary').upsert({
+      const { error: propsError } = await supabase.from('user_engagement_summary').upsert({
         user_id: userId,
         ...properties,
       }, { onConflict: 'user_id' });
+
+      if (propsError) {
+        logger.error('Failed to update user properties', new Error(propsError.message), { userId });
+      }
     } catch (error) {
       logger.error('Failed to update user properties', error as Error, { userId });
     }
@@ -238,7 +249,7 @@ export class Analytics {
     const { data: { user } } = await supabase.auth.getUser();
 
     try {
-      await supabase.from('conversion_events').insert({
+      const { error: conversionError } = await supabase.from('conversion_events').insert({
         user_id: user?.id || null,
         anonymous_id: !user ? getAnonymousId() : null,
         event_type: event.event_type,
@@ -254,6 +265,13 @@ export class Analytics {
         utm_term: urlParams.get('utm_term'),
         event_metadata: event.event_metadata,
       });
+
+      if (conversionError) {
+        logger.error('Conversion tracking error', new Error(conversionError.message), {
+          eventType: event.event_type,
+          funnelName: event.funnel_name,
+        });
+      }
     } catch (error) {
       logger.error('Conversion tracking error', error as Error, {
         eventType: event.event_type,

@@ -183,11 +183,17 @@ export const useAdvancedChat = () => {
 
       if (error) throw error;
 
-      // Update channel last activity
-      await supabase
+      // Update channel last activity. The message is already sent, so a failure
+      // here only leaves the channel sorted stale - log rather than tell the
+      // user their message failed. The error was dropped entirely (US-300).
+      const { error: activityError } = await supabase
         .from('chat_channels')
         .update({ last_activity_at: new Date().toISOString() })
         .eq('id', channelId);
+
+      if (activityError) {
+        console.error('Channel activity timestamp not updated:', activityError.message);
+      }
 
       return data;
     } catch (error) {
@@ -261,8 +267,10 @@ export const useAdvancedChat = () => {
 
       if (error) throw error;
 
-      // Add creator as member
-      await supabase
+      // Add creator as member. This error was dropped, so a failure left the
+      // creator outside the channel they had just made, with no sign of it
+      // (US-300).
+      const { error: memberError } = await supabase
         .from('chat_channel_members')
         .insert([{
           channel_id: data.id,
@@ -271,6 +279,10 @@ export const useAdvancedChat = () => {
           role: 'admin',
           joined_at: new Date().toISOString()
         }]);
+
+      if (memberError) {
+        throw new Error(`The channel was created but you were not added to it: ${memberError.message}`);
+      }
 
       await loadChannels();
       return data;

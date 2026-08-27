@@ -96,7 +96,7 @@ for (const p of files) {
   sf.forEachChild(walk);
 }
 
-const BASELINE = 199;
+const BASELINE = 171;
 const edge = hits.filter((h) => !h.file.startsWith('src/')).length;
 
 console.log('Silent-write guard');
