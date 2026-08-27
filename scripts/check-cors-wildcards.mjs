@@ -42,18 +42,16 @@ const PUBLIC = new Set([
   'process-referral-signup', // referral attribution from partner sites
 ]);
 
-// Not yet converted. Shrink this list; never add to it.
+// Not yet converted. Each of these calls corsHeaders from module-scope helper
+// functions, so the fix is to thread it in as a parameter rather than the
+// one-line handler edit the rest took. Shrink this list; never add to it.
 const REMAINING = new Set([
   'api-management', 'billing-automation', 'bing-search-api', 'bing-webmaster-api',
-  'blog-ai-automation', 'calculate-proration', 'check-mobile-first', 'crawl-site',
-  'enhanced-blog-ai', 'failed-payment-recovery', 'google-analytics-api',
-  'google-search-console-api', 'handle-chargeback', 'monitor-performance-budget',
-  'oauth-proxy', 'process-refund', 'projects', 'quickbooks-route-transactions',
-  'send-booking-confirmation', 'send-payment-reminder', 'send-safety-notification',
-  'send-support-notification', 'seo-analytics', 'seo-audit',
-  'seo-backend-integration', 'smart-data-analyzer', 'smart-procurement',
-  'social-content-generator', 'social-post-scheduler', 'test-ai-configuration',
-  'time-tracking', 'usage-billing', 'validate-structured-data',
+  'blog-ai-automation', 'calculate-proration', 'enhanced-blog-ai',
+  'failed-payment-recovery', 'google-analytics-api', 'google-search-console-api',
+  'handle-chargeback', 'process-refund', 'quickbooks-route-transactions',
+  'send-payment-reminder', 'seo-analytics', 'seo-backend-integration',
+  'smart-procurement', 'usage-billing',
 ]);
 const BASELINE = REMAINING.size;
 

@@ -10,13 +10,10 @@
 
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { AIServiceV2 } from "../_shared/ai-service-v2.ts";
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
+import { getCorsHeaders } from '../_shared/secure-cors.ts';
 
 export default async function handler(req: Request): Promise<Response> {
+  const corsHeaders = getCorsHeaders(req);
   // Handle CORS
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
