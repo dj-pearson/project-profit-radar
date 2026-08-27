@@ -2523,3 +2523,87 @@ clients and are subject to exactly the same policies as the browser. Worth
 remembering for the 4 tables US-237 deferred (workflow_executions,
 workflow_analytics, calendar_events, webhook_events) — check the edge functions
 before scoping those too.
+
+================================================================================
+2026-08-27 — US-237 deferred four, and two blind spots in my own guard
+================================================================================
+
+Set out to check the four tables US-237 deferred. Ended up rewriting the guard
+I shipped yesterday, because it was wrong in two ways that each hid real
+findings.
+
+### Blind spot 1 — shorthand properties
+check-edge-privilege-writes.mjs matched `company_id: someBodyVar` as a
+PropertyAssignment. It never looked at ShorthandPropertyAssignment, so
+
+    .insert({ company_id, title, ... })
+
+was invisible. That is exactly how sync-calendar wrote a body-supplied
+company_id into calendar_events without the guard noticing.
+
+### Blind spot 2 — one hop of destructuring
+The taint set grew from a direct `req.json()` read, including a destructure of
+it. But
+
+    const body = await req.json();
+    const { integration_id, company_id } = body;
+
+destructures from a *variable* that is tainted, not from the call. The trail
+died one hop in. Ten more sites appeared once that was fixed.
+
+Taint propagation is now a single fixpoint over: a body read, a destructure of
+one, a destructure of an already-tainted variable, a plain alias, a cast, and a
+property read. Each form carries a comment naming the finding it hid, so nobody
+"simplifies" one away.
+
+**Lesson: a guard that reports zero is not evidence until you have tried to make
+it lie.** I marked US-297 done on a clean run of a checker with two holes in it.
+
+### Three real cross-tenant writes found
+- **crm-email-automation** never identified its caller *at all*. Service-role
+  client, companyId straight from the body. verify_jwt is on, so the caller is
+  authenticated — but authentication is not authorisation. Any authenticated
+  user could drive CRM automation for any company: enrol their contacts in
+  campaigns, queue email against them, write crm_activities rows.
+- **blog_social_webhook** — same shape. It already fetches the blog post, which
+  carries the authoritative company_id, so that is what it uses now.
+- **sync-calendar** — body company_id upserted into calendar_events, one of the
+  four still carrying FOR ALL USING (true), so RLS was not scoping it.
+
+### The four deferred tables: restrictive policies, not scoping
+The migration header said these were deferred because the frontend writes them
+directly. Checking: only workflow_executions actually has a frontend write
+(WorkflowExecutionService.cancelExecution). The other three are read-only from
+src/, and iOS touches none of the four.
+
+Scoping the permissive policies would still be a tightening — it removes the
+only write path those flows have — which CLAUDE.md rules out in one release.
+So 20260827023111 adds **RESTRICTIVE** policies instead. Restrictive policies
+are AND'd with the permissive ones rather than OR'd, which means:
+
+  * a same-company write still passes, so nothing legitimate breaks and there
+    is no mixed-client window to wait out;
+  * a cross-company write is denied whatever the permissive policy says;
+  * granted TO authenticated, anon only, so service_role is unaffected whether
+    or not it carries BYPASSRLS on a given deployment;
+  * root_admin keeps cross-company access, matching each table's SELECT policy.
+
+This is a better tool than I had been reaching for. Where the goal is "remove
+access nobody legitimately has" rather than "change what legitimate clients may
+do", a restrictive policy does it in one release with no rollout window.
+
+### A live hole it closes
+WorkflowExecutionService.cancelExecution filters only by execution id:
+
+    .from('workflow_executions').update({ status: 'cancelled' })
+    .eq('id', executionId).eq('status', 'running')
+
+With FOR ALL USING (true) OR'd in, any authenticated user could cancel any
+company's running workflow. Client-side scoping would have been cosmetic — an
+attacker calls PostgREST directly — so the fix belongs in the policy, and that
+is where it went.
+
+### If the deferred four are ever scoped
+Add them to SERVICE_ROLE_ONLY in scripts/check-rls-write-paths.mjs first and run
+it: workflow-execution and sync-calendar write them with a user-JWT client
+today. That note is in the script itself.
