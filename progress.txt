@@ -5366,3 +5366,53 @@ empty and sync is idle, which is exactly why nobody noticed. It renders now.
 
 14 cases in `src/lib/__tests__/unreferencedComponents.test.ts`, mutation-tested
 four ways.
+
+---
+
+## US-314 second batch, and a mirror of US-312 falls out
+
+Seven more deleted, 233 down to 227.
+
+Five of them are `src/pages/AdminHub.tsx` and its four siblings - 30-line
+duplicates of the pages under `src/pages/hubs/` that `lazyRoutes` actually
+loads. The two AdminHubs differ by 301 diff lines.
+
+`src/components/AppSidebar.tsx` is the sixth: 981 lines of hardcoded navigation,
+superseded by `navigation/SimplifiedSidebar`, which `DashboardLayout` mounts and
+which reads its entries from `NavigationConfig` instead of hardcoding them.
+
+The seventh was not on the list. Deleting the five duplicate hubs made
+`src/components/hub/HubPageLayout.tsx` an orphan, because they were its only
+importers. Worth writing down: the orphan set is not static. Removing dead code
+exposes more of it, so the count can go **up** after a deletion, and the
+difference has to be diffed rather than assumed. `HubNavigationSection`, in the
+same directory, is still used by the live hubs and stays.
+
+Before deleting the sidebar I checked what it could reach against what the live
+one can. It hardcoded 86 paths; the shared config carries 120; ten are in the old
+sidebar and not in the config:
+
+    /ai-quality-control      /schedule-builder      /trade-handoff
+    /material-orchestration  /schedule-management   /upgrade
+    /payment-center          /smart-client-updates  /workflow-management
+                                                    /workflow-testing
+
+All ten are routed and render real pages. Deleting the file would have removed
+the last place those paths were written down, so they are now US-315.
+
+That story is the mirror of US-312. US-312 found links pointing at paths no route
+answers; this is routes no link points at. Both are invisible for the same
+reason - react-router does not care, and nothing in the build checks either
+direction. Roughly 46 of 256 static routes have no inbound link, and a third of
+those are legitimately entered from outside the app: OAuth and payment callbacks,
+legal pages reached from search, `/unsubscribe` from an email. `/timesheets`,
+`/subcontractors` and `/financial-overview` are in the remainder, and those are
+core features.
+
+I have not built the guard for it. Without a carefully written exempt list it
+would be noise, and a noisy guard gets disabled - so the exempt list is AC4 of
+that story and has to come first. Filing the measurement without the gate is the
+honest half.
+
+25 cases in `src/lib/__tests__/unreferencedComponents.test.ts`, mutation-tested
+three ways on this batch. Full suite: 127 files, 2774 passing, 2 skipped.

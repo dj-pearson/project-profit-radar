@@ -90,3 +90,53 @@ describe('the guard', () => {
     expect(src).toMatch(/orphans\.length < BASELINE[\s\S]*?process\.exit\(1\)/);
   });
 });
+
+describe('the duplicate hub pages and the superseded sidebar', () => {
+  const DELETED = [
+    'src/pages/AdminHub.tsx',
+    'src/pages/FinancialHub.tsx',
+    'src/pages/OperationsHub.tsx',
+    'src/pages/PeopleHub.tsx',
+    'src/pages/ProjectsHub.tsx',
+    'src/components/AppSidebar.tsx',
+    'src/components/hub/HubPageLayout.tsx',
+  ];
+
+  it.each(DELETED)('%s is gone', (file) => {
+    expect(existsSync(file)).toBe(false);
+  });
+
+  it('left the hub pages the routes actually load', () => {
+    for (const hub of ['AdminHub', 'FinancialHub', 'OperationsHub', 'PeopleHub', 'ProjectsHub']) {
+      expect(existsSync(`src/pages/hubs/${hub}.tsx`), `hubs/${hub} is missing`).toBe(true);
+      expect(readFileSync('src/utils/lazyRoutes.tsx', 'utf8')).toContain(`import('@/pages/hubs/${hub}')`);
+    }
+  });
+
+  it('left the sidebar DashboardLayout mounts', () => {
+    expect(existsSync('src/components/navigation/SimplifiedSidebar.tsx')).toBe(true);
+    expect(readFileSync('src/components/layout/DashboardLayout.tsx', 'utf8')).toContain('<SimplifiedSidebar />');
+  });
+
+  it('left HubNavigationSection, which the live hubs still use', () => {
+    // HubPageLayout went because the five duplicates were its only importers.
+    // Its neighbour did not: deleting dead code exposes more of it, and the
+    // difference has to be checked rather than assumed.
+    expect(existsSync('src/components/hub/HubNavigationSection.tsx')).toBe(true);
+    expect(readFileSync('src/pages/hubs/PeopleHub.tsx', 'utf8')).toContain('HubNavigationSection');
+  });
+
+  it('recorded the ten paths the old sidebar was the last place to name', () => {
+    // Deleting a hardcoded sidebar removes the only written record of what it
+    // could reach. All ten are routed and render real pages (US-315).
+    const prd = JSON.parse(readFileSync('prd.json', 'utf8')) as {
+      userStories: Array<{ id: string; notes?: string; description?: string }>;
+    };
+    const story = prd.userStories.find((s) => s.id === 'US-315');
+    expect(story, 'US-315 was not filed').toBeDefined();
+    const text = `${story!.description ?? ''}${story!.notes ?? ''}`;
+    for (const path of ['/material-orchestration', '/payment-center', '/trade-handoff', '/workflow-testing']) {
+      expect(text, `${path} is not recorded anywhere`).toContain(path);
+    }
+  });
+});
