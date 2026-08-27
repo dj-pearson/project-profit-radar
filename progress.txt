@@ -2162,3 +2162,74 @@ body (ai-content-generator's 'social', calculate-lead-score's 'greater_than',
 ### Before this deploys
 Run a real `deno check` over supabase/functions somewhere with network access.
 The static verification here is good but it is not a type checker.
+
+================================================================================
+2026-08-27 — US-240 finished: 137 -> 10 wildcard functions, all 10 by design
+================================================================================
+
+### The tokenizer was wrong, and that mattered
+Last session's file analysis used a hand-rolled tokenizer to blank strings and
+comments before counting braces. It does not understand regex literals, so a
+`/"/g` inside a handler put it into string mode and desynced the paren count
+from there on. Six functions were reported as "corsHeaders used outside the
+handler" when every reference was inside it, and five more as "unterminated
+serve() call".
+
+Redone on the TypeScript compiler API, which is already in node_modules:
+
+  import ts from '/home/user/project-profit-radar/node_modules/typescript/lib/typescript.js';
+  const sf = ts.createSourceFile(p, text, ts.ScriptTarget.ES2022, true, ts.ScriptKind.TS);
+
+Note it has to be imported by absolute path from a script outside the repo, and
+`ts.isImportDeclaration(st)` rather than a hardcoded SyntaxKind number — 272 is
+not ImportDeclaration in 5.9, and getting that wrong silently anchored an
+inserted import at offset 0, splicing it into the first line's comment.
+
+Do not hand-roll a JS tokenizer in this repo again. The compiler is right there.
+
+### Three shapes, three transforms
+1. **94 functions** (last session) — inline `serve(async (req) => {`. One-line
+   edit: delete the module-scope const, insert `const corsHeaders =
+   getCorsHeaders(req);` as the first statement.
+2. **15 functions** — either a named/default handler passed to serve() by
+   reference (send-booking-confirmation, send-safety-notification,
+   send-support-notification, oauth-proxy, test-ai-configuration,
+   social-post-scheduler, social-content-generator), or one of the tokenizer
+   false negatives. Same edit, anchored on the handler function. projects and
+   time-tracking only had an inline wildcard object in their OPTIONS branch and
+   now call handleCorsPreflightRequest(req).
+3. **18 functions** — built responses in module-scope helpers, so corsHeaders
+   was not in scope. Each such helper now takes it as a **leading** parameter.
+   Leading, not trailing: several helpers end in an optional parameter, and TS
+   rejects a required parameter after an optional one. A fixpoint pass caught
+   helpers that only call other threaded helpers (api-management's testWebhook,
+   process-refund's approveRefund/processRefund).
+
+### Verification, given no compiler
+Still no Deno here and deno.land is 403 through the agent proxy, so edge
+functions cannot be typechecked or run. Three AST passes stood in:
+  - no wildcard literal left; every relative import resolves on disk
+  - every `corsHeaders` use resolves to an enclosing parameter or a local
+    declaration that precedes it
+  - every reference to a threaded helper is a call whose first argument is
+    corsHeaders, so no arity is left inconsistent
+plus `node_modules/.bin/esbuild --format=esm <file>` on every changed file and
+eslint at 0 errors. **Run a real `deno check` before deploying.**
+
+### One behaviour change worth knowing
+oauth-proxy advertised `Access-Control-Allow-Methods: GET, POST, OPTIONS` and
+social-post-scheduler `POST, OPTIONS`. Both now advertise the shared
+`GET, POST, PUT, DELETE, OPTIONS`. That only widens the preflight answer — each
+function still handles exactly the methods it always did — but it is a real
+difference in what the browser is told.
+
+### Pre-existing lint errors fixed to get past the hook
+18 across the two batches, all confirmed against HEAD before touching them:
+nine prefer-const, four unused imports, braces around four switch cases that
+declared consts in the case body, and process-refund's stripeRefund, which was
+a `let` declared 40 lines above its single assignment.
+
+### The guard
+scripts/check-cors-wildcards.mjs now reports a backlog of 0. REMAINING is kept
+as an empty set rather than deleted, so a new wildcard still fails CI instead of
+needing the guard re-armed.
