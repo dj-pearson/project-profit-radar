@@ -2607,3 +2607,84 @@ is where it went.
 Add them to SERVICE_ROLE_ONLY in scripts/check-rls-write-paths.mjs first and run
 it: workflow-execution and sync-calendar write them with a user-JWT client
 today. That note is in the script itself.
+
+================================================================================
+2026-08-27 — US-237: the SSO pending-state tables were public
+================================================================================
+
+### The find
+saml_pending_requests and oauth_pending_states were created like this:
+
+    CREATE POLICY "Service role manages OAuth states"
+      ON oauth_pending_states FOR ALL
+      USING (true)
+      WITH CHECK (true);
+
+The name says service role. There is no TO clause, so the policy is granted to
+PUBLIC — on a Supabase project that means anon and authenticated, both reachable
+with the publishable key that ships in the web bundle.
+
+oauth_pending_states stores `state` and, for PKCE flows, `code_verifier`. The
+verifier is the secret that binds an authorization code to the client that
+started the flow; sso-oauth-callback reads it back and sends it with the token
+exchange:
+
+    if (storedState.code_verifier) {
+      tokenParams.set("code_verifier", storedState.code_verifier);
+
+So SELECT access defeats PKCE for any authorization code an attacker observes.
+Read access to `state` defeats the CSRF check. Write access lets them seed a row
+with a return_url of their choosing.
+
+**A policy whose name says one thing and whose grant says another is the worst
+kind, because every reader after the author assumes the name is true.** US-237's
+own deferral note called these "auth-flow data" whose public reads might be load
+bearing — reasoning from the name rather than the grant.
+
+They are not load bearing: nothing under src/, Brikly-iOS/ or mobile-app/
+references either table, and all three functions that do (sso-oauth-init,
+sso-saml-init, sso-oauth-callback) build a SERVICE_ROLE_KEY client. So scoping
+to service_role is a tightening with nothing on the other side of it.
+Migration 20260827030000. Both tables added to check-rls-write-paths.mjs.
+
+### feature_announcements
+Restrictive company scope (20260827031000). Its publish path is
+
+    .update({ status: 'published', ... }).eq('id', id)
+
+filtered only by id, so with FOR ALL USING (true) OR'd in, any authenticated
+user could publish another company's announcement.
+
+### seo_meta_tags — deliberately NOT fixed, and why that matters
+It has the same exposure: any authenticated user can rewrite any site's SEO
+metadata. The obvious fix is a restrictive site_id scope. I wrote it, then threw
+it away.
+
+Its two writers — src/utils/seoBackendSync.ts (upsert) and
+src/pages/admin/SEOManager.tsx (insert) — never set site_id, while the generated
+types declare it required on Insert. So either a default or trigger populates
+it, or those writes already fail, or types.ts is stale (US-263). Cannot tell
+from the repo.
+
+**A restrictive WITH CHECK denies a row whose tenancy column is NULL**, because
+`NULL = x` evaluates to NULL, not true. If site_id lands NULL, that policy stops
+SEO management working entirely. Shipping it would have been the same mistake
+US-237 made with its "verified safe" list: a plausible inference presented as a
+verified fact. Filed as US-298 instead.
+
+### The pattern, now that it has been used four times
+- Table has a tenancy column AND legitimate same-tenant client writes
+  → `AS RESTRICTIVE ... TO authenticated, anon`. AND'd rather than OR'd, so
+  same-tenant writes keep working, cross-tenant is denied, and there is no
+  mixed-client window. Shippable in one release despite CLAUDE.md's rule against
+  tightening RLS, because it removes only access nobody legitimately had.
+- No client touches the table at all
+  → scope the permissive policy to service_role. Simpler, equally safe.
+- Either way: check what the writers actually send first. NULL tenancy is the
+  trap.
+
+### What is left (US-298)
+seo_meta_tags (needs \d against production), ai_environment_config (needs a
+decision on the owning role), and eight tables with zero references anywhere —
+trades and the seven pseo_* — which should be scoped for defence in depth or
+dropped if the pSEO work is not proceeding.
