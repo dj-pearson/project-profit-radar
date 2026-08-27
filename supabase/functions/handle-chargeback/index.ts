@@ -4,11 +4,9 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@14.21.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.3";
 import { initializeAuthContext, errorResponse } from '../_shared/auth-helpers.ts';
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
+import { getCorsHeaders } from '../_shared/secure-cors.ts';
+import { writeAuditLog } from '../_shared/audit-log.ts';
+import { createServiceClient } from '../_shared/service-client.ts';
 
 const logStep = (step: string, details?: Record<string, unknown>) => {
   const detailsStr = details ? ` - ${JSON.stringify(details)}` : '';
@@ -41,6 +39,7 @@ interface ChargebackEvidence {
 }
 
 serve(async (req) => {
+  const corsHeaders = getCorsHeaders(req);
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
   }
@@ -74,25 +73,25 @@ serve(async (req) => {
 
     switch (action) {
       case 'create':
-        return await createChargeback(supabaseClient, companyId, body);
+        return await createChargeback(corsHeaders, supabaseClient, companyId, body);
 
       case 'update':
-        return await updateChargeback(supabaseClient, companyId, body);
+        return await updateChargeback(corsHeaders, supabaseClient, companyId, body);
 
       case 'submit_evidence':
-        return await submitEvidence(supabaseClient, companyId, body);
+        return await submitEvidence(corsHeaders, supabaseClient, companyId, body);
 
       case 'accept':
-        return await acceptChargeback(supabaseClient, companyId, body.chargeback_id);
+        return await acceptChargeback(corsHeaders, supabaseClient, companyId, user.id, body.chargeback_id);
 
       case 'list':
-        return await listChargebacks(supabaseClient, companyId);
+        return await listChargebacks(corsHeaders, supabaseClient, companyId);
 
       case 'get':
-        return await getChargeback(supabaseClient, companyId, body.chargeback_id);
+        return await getChargeback(corsHeaders, supabaseClient, companyId, body.chargeback_id);
 
       case 'sync':
-        return await syncChargebacksFromStripe(supabaseClient, companyId);
+        return await syncChargebacksFromStripe(corsHeaders, supabaseClient, companyId);
 
       default:
         return errorResponse('Invalid action. Use: create, update, submit_evidence, accept, list, get, sync', 400);
@@ -109,7 +108,7 @@ serve(async (req) => {
 });
 
 async function createChargeback(
-  supabase: ReturnType<typeof createClient>,
+  corsHeaders: Record<string, string>, supabase: ReturnType<typeof createClient>,
   companyId: string,
   body: ChargebackRequest
 ) {
@@ -155,13 +154,16 @@ async function createChargeback(
 
   // Update invoice if linked
   if (invoice_id) {
-    await supabase
+    const { error: updateInvoicesError } = await supabase
       .from('invoices')
       .update({
         status: 'disputed',
         disputed_at: new Date().toISOString()
       })
       .eq('id', invoice_id);
+    if (updateInvoicesError) {
+      throw new Error(`Failed to update invoices: ${updateInvoicesError.message}`);
+    }
   }
 
   return new Response(
@@ -171,7 +173,7 @@ async function createChargeback(
 }
 
 async function updateChargeback(
-  supabase: ReturnType<typeof createClient>,
+  corsHeaders: Record<string, string>, supabase: ReturnType<typeof createClient>,
   companyId: string,
   body: ChargebackRequest
 ) {
@@ -213,7 +215,7 @@ async function updateChargeback(
 }
 
 async function submitEvidence(
-  supabase: ReturnType<typeof createClient>,
+  corsHeaders: Record<string, string>, supabase: ReturnType<typeof createClient>,
   companyId: string,
   body: ChargebackRequest
 ) {
@@ -297,8 +299,9 @@ async function submitEvidence(
 }
 
 async function acceptChargeback(
-  supabase: ReturnType<typeof createClient>,
+  corsHeaders: Record<string, string>, supabase: ReturnType<typeof createClient>,
   companyId: string,
+  userId: string,
   chargebackId?: string
 ) {
   if (!chargebackId) {
@@ -315,6 +318,21 @@ async function acceptChargeback(
   if (fetchError || !chargeback) {
     return errorResponse('Chargeback not found', 404);
   }
+
+  // Audit trail (US-244): accepting a chargeback forfeits the dispute, so the
+  // money is gone and someone chose that. Recorded before the Stripe call, so
+  // the intent is on record even if closing the dispute then fails.
+  await writeAuditLog(createServiceClient(), {
+    actorUserId: userId,
+    companyId,
+    action: 'chargeback.accepted',
+    entityType: 'chargeback',
+    entityId: chargebackId,
+    before: { status: chargeback.status },
+    after: { status: 'accepted', amount: chargeback.amount },
+    description: `Accepted chargeback of ${chargeback.amount}, forfeiting the dispute`,
+    riskLevel: 'critical',
+  });
 
   const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
 
@@ -362,12 +380,15 @@ async function acceptChargeback(
 
   // Update linked invoice
   if (chargeback.invoice_id) {
-    await supabase
+    const { error: updateInvoicesError } = await supabase
       .from('invoices')
       .update({
         status: 'chargeback_lost'
       })
       .eq('id', chargeback.invoice_id);
+    if (updateInvoicesError) {
+      throw new Error(`Failed to update invoices: ${updateInvoicesError.message}`);
+    }
   }
 
   return new Response(
@@ -381,7 +402,7 @@ async function acceptChargeback(
 }
 
 async function listChargebacks(
-  supabase: ReturnType<typeof createClient>,
+  corsHeaders: Record<string, string>, supabase: ReturnType<typeof createClient>,
   companyId: string
 ) {
   const { data: chargebacks, error } = await supabase
@@ -418,7 +439,7 @@ async function listChargebacks(
 }
 
 async function getChargeback(
-  supabase: ReturnType<typeof createClient>,
+  corsHeaders: Record<string, string>, supabase: ReturnType<typeof createClient>,
   companyId: string,
   chargebackId?: string
 ) {
@@ -449,7 +470,7 @@ async function getChargeback(
 }
 
 async function syncChargebacksFromStripe(
-  supabase: ReturnType<typeof createClient>,
+  corsHeaders: Record<string, string>, supabase: ReturnType<typeof createClient>,
   companyId: string
 ) {
   const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
@@ -496,7 +517,7 @@ async function syncChargebacksFromStripe(
 
       if (existing) {
         // Update existing
-        await supabase
+        const { error: updateChargebacksError } = await supabase
           .from('chargebacks')
           .update({
             status: mapStripeStatus(dispute.status),
@@ -507,9 +528,12 @@ async function syncChargebacksFromStripe(
               : null
           })
           .eq('id', existing.id);
+        if (updateChargebacksError) {
+          throw new Error(`Failed to update chargebacks: ${updateChargebacksError.message}`);
+        }
       } else {
         // Create new
-        await supabase
+        const { error: insertChargebacksError } = await supabase
           .from('chargebacks')
           .insert({
             company_id: companyId,
@@ -526,6 +550,9 @@ async function syncChargebacksFromStripe(
             fee_amount: 15.00,
             net_impact: (dispute.amount / 100) + 15.00
           });
+        if (insertChargebacksError) {
+          throw new Error(`Failed to insert chargebacks: ${insertChargebacksError.message}`);
+        }
         synced++;
       }
     }

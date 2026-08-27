@@ -47,15 +47,6 @@ export const ProjectStatusWidget = () => {
     }
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'active': return 'default';
-      case 'in_progress': return 'secondary';
-      case 'completed': return 'secondary';
-      default: return 'outline';
-    }
-  };
-
   if (loading) {
     return <div className="text-sm text-muted-foreground">Loading projects...</div>;
   }

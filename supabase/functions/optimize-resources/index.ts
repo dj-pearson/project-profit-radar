@@ -2,11 +2,7 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { initializeAuthContext, errorResponse } from '../_shared/auth-helpers.ts';
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
+import { getCorsHeaders } from '../_shared/secure-cors.ts';
 
 const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
 
@@ -16,6 +12,7 @@ const logStep = (step: string, details?: any) => {
 };
 
 serve(async (req) => {
+  const corsHeaders = getCorsHeaders(req);
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
@@ -231,7 +228,11 @@ Focus on maximizing efficiency while minimizing conflicts and costs.
 
     await Promise.all(assignmentPromises);
 
-        await supabaseClient
+    // The run row is how anyone knows this finished and what it concluded. Its
+    // error was discarded and supabase-js returns it rather than throwing, so a
+    // lost write left the run stuck at whatever status it started with, with
+    // none of its results (US-300).
+    const { error: runUpdateError } = await supabaseClient
       .from('resource_optimization_runs')
       .update({
         status: 'completed',
@@ -246,8 +247,14 @@ Focus on maximizing efficiency while minimizing conflicts and costs.
       })
       .eq('id', optimizationRun.id);
 
+    if (runUpdateError) {
+      throw new Error(
+        `Optimization run ${optimizationRun.id} completed but its results were NOT stored: ${runUpdateError.message}`,
+      );
+    }
+
     // Store metrics
-    await supabaseClient.from('resource_optimization_metrics').insert({
+    const { error: metricsError } = await supabaseClient.from('resource_optimization_metrics').insert({
       company_id,
       optimization_run_id: optimizationRun.id,
       total_resources: teams.length + equipment.length,
@@ -256,6 +263,13 @@ Focus on maximizing efficiency while minimizing conflicts and costs.
       conflicts_resolved: optimizationData.summary?.conflicts_resolved || 0,
       projects_impacted: new Set(optimizationData.optimizations?.map((o: any) => o.projectId) || []).size
     });
+
+    if (metricsError) {
+      console.error(
+        `[OPTIMIZE-RESOURCES] Run ${optimizationRun.id} finished but its metrics were not recorded:`,
+        metricsError.message,
+      );
+    }
 
     logStep("Optimization completed successfully");
 
@@ -338,8 +352,20 @@ async function detectResourceConflicts(assignments: any[], equipment: any[], sup
 
           conflicts.push(conflict);
 
-          // Store in database
-          await supabaseClient.from('resource_conflicts').insert(conflict);
+          // Store in database. The in-memory `conflicts` array is what the
+          // response counts, so with the error discarded a run could report
+          // "7 conflicts detected" while the conflicts table stayed empty and
+          // the scheduling screen showed nothing to resolve (US-300).
+          const { error: conflictError } = await supabaseClient
+            .from('resource_conflicts')
+            .insert(conflict);
+
+          if (conflictError) {
+            console.error(
+              '[OPTIMIZE-RESOURCES] Detected conflict was not stored, so it will not appear on the scheduling screen:',
+              conflictError.message,
+            );
+          }
         }
       }
     }

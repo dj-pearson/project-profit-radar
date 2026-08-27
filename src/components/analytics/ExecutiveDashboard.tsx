@@ -338,19 +338,6 @@ const ExecutiveDashboard: React.FC = () => {
     }
   };
 
-  const _getStatusColor = (status: ProjectHealth['status']) => {
-    switch (status) {
-      case 'healthy':
-        return 'text-green-600';
-      case 'warning':
-        return 'text-yellow-600';
-      case 'critical':
-        return 'text-red-600';
-      default:
-        return 'text-muted-foreground';
-    }
-  };
-
   const getStatusIcon = (status: ProjectHealth['status']) => {
     switch (status) {
       case 'healthy':

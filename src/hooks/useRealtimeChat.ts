@@ -108,12 +108,18 @@ export const useRealtimeChat = (channelId?: string) => {
       if (error) throw error;
       setMessages(data as any || []);
 
-      // Mark messages as read
-      await supabase
+      // Mark messages as read. The messages are already loaded, so a failure
+      // here only leaves the unread badge wrong - log rather than tell the user
+      // the channel failed to load. The error was dropped (US-300).
+      const { error: readError } = await supabase
         .from('chat_channel_members')
         .update({ last_read_at: new Date().toISOString() })
         .eq('channel_id', channelId)
         .eq('user_id', userProfile.id);
+
+      if (readError) {
+        console.error('Read marker not updated, unread count will be stale:', readError.message);
+      }
 
     } catch (error) {
       console.error('Error loading messages:', error);
@@ -224,8 +230,9 @@ export const useRealtimeChat = (channelId?: string) => {
 
       if (error) throw error;
 
-      // Add creator as admin member
-      await supabase
+      // Add creator as admin member. Dropped error, same as useAdvancedChat:
+      // a failure left the creator outside their own channel (US-300).
+      const { error: memberError } = await supabase
         .from('chat_channel_members')
         .insert({
           channel_id: data.id,
@@ -233,6 +240,10 @@ export const useRealtimeChat = (channelId?: string) => {
           company_id: userProfile.company_id,
           role: 'admin'
         });
+
+      if (memberError) {
+        throw new Error(`The channel was created but you were not added to it: ${memberError.message}`);
+      }
 
       await loadChannels();
       return data;

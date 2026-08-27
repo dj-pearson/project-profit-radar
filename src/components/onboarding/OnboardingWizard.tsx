@@ -48,7 +48,7 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ onComplete }
   const [companyName, setCompanyName] = useState('');
   const [companyType, setCompanyType] = useState('');
   const [companySize, setCompanySize] = useState('');
-  const [industry, setIndustry] = useState('construction');
+  const [industry] = useState('construction');
 
   // First project
   const [createProject, setCreateProject] = useState(true);
@@ -58,8 +58,8 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ onComplete }
   const [projectClientName, setProjectClientName] = useState('');
 
   // Team invitations
-  const [inviteTeam, setInviteTeam] = useState(false);
-  const [teamEmails, setTeamEmails] = useState('');
+  const [inviteTeam] = useState(false);
+  const [teamEmails] = useState('');
 
   const totalSteps = 4;
 

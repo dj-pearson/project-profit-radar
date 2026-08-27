@@ -62,7 +62,7 @@ export default function SystemHealth() {
     return () => clearInterval(interval);
   }, []);
 
-  if (!user) return <Navigate to="/login" replace />;
+  if (!user) return <Navigate to="/auth" replace />;
 
   return (
     <div className="container mx-auto p-6 space-y-6">

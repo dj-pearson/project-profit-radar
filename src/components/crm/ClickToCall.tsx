@@ -143,13 +143,25 @@ export const ClickToCall: React.FC<ClickToCallProps> = ({
     setIsInCall(false);
     setIsOpen(false);
 
-    // Save notes if any
+    // Save notes if any.
+    //
+    // `.then(() => toast("saved"))` resolves with { data, error } whether or not
+    // the write succeeded, so the confirmation appeared even when the notes were
+    // lost - and the state reset below clears them either way (US-300).
     if (notes && callLogId) {
-      supabase
+      void supabase
         .from("call_logs")
         .update({ notes })
         .eq("id", callLogId)
-        .then(() => {
+        .then(({ error }) => {
+          if (error) {
+            toast({
+              title: "Call notes not saved",
+              description: error.message,
+              variant: "destructive",
+            });
+            return;
+          }
           toast({
             title: "Call Notes Saved",
             description: "Your call notes have been saved successfully",

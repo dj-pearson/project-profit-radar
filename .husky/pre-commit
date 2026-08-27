@@ -11,6 +11,86 @@ bash scripts/secret-scan.sh || exit 1
 # 3. Edge-function auth guard — no verify_jwt=false function loses its guard.
 node scripts/check-edge-function-auth.mjs || exit 1
 
+# 3b. Wildcard-CORS guard (US-240) — no new 'Access-Control-Allow-Origin: *'.
+node scripts/check-cors-wildcards.mjs || exit 1
+
+# 3c. Input-validation guard (US-241) — no new unvalidated req.json() body.
+node scripts/check-edge-input-validation.mjs || exit 1
+
+# 3d. Privilege-write guard (US-297) — no body spread into a write, and no
+#     unreviewed privilege/tenancy column set from request input.
+node scripts/check-edge-privilege-writes.mjs || exit 1
+
+# 3e. RLS write-path guard (US-237) — service_role-only tables must be written
+#     with a service-role client, not a user-JWT one.
+node scripts/check-rls-write-paths.mjs || exit 1
+
+# 3f. Audit-trail coverage (US-244) — critical mutations keep logging.
+node scripts/check-audit-coverage.mjs || exit 1
+
+# 3g. Silent-write guard — supabase-js returns errors rather than throwing, so
+#     an unread error is a write that may never have happened.
+node scripts/check-silent-writes.mjs || exit 1
+
+# 3h. Ruleset/workflow consistency (US-213) — a required check that names no job,
+#     or a protected branch CI never runs on, blocks every merge into it.
+node scripts/check-ruleset-consistency.mjs || exit 1
+
+# 3i. CSP inline-script hashes (US-202) — editing an inline script invalidates
+#     its hash and the browser silently stops running it.
+node scripts/check-csp-hashes.mjs || exit 1
+
+# 3j. Rate-limit coverage (US-243) — functions that spend money per call keep a ceiling.
+node scripts/check-rate-limit-coverage.mjs || exit 1
+
+# 3k. Sanitizer test-env guard — happy-dom breaks DOMPurify, so a sanitization
+#     test that doesn't declare jsdom proves nothing.
+node scripts/check-sanitizer-test-env.mjs || exit 1
+
+# 3l. Unreferenced security-named modules (US-302) — code nobody calls is code
+#     nobody audits, and it gets adopted on the strength of its name.
+node scripts/check-unreferenced-security-modules.mjs || exit 1
+
+# 3m. Insecure random (US-296) — Math.random() is xorshift128+, so anything it
+#     builds that grants access is predictable.
+node scripts/check-insecure-random.mjs || exit 1
+
+# 3n. Unauthenticated edge functions (US-241) — verify_jwt=true is a signature
+#     check, not authentication; the anon key satisfies it.
+node scripts/check-unauthenticated-edge-functions.mjs || exit 1
+
+# 3o. Fake success (US-309) — a success message the user acts on has to mean the
+#     thing happened.
+node scripts/check-fake-success.mjs || exit 1
+
+# 3p. No migration repair in a deploy path (US-248) — repair edits history to
+#     match your assertion; a deploy should change the DB to match the repo.
+bash scripts/check-no-migration-repair.sh || exit 1
+
+# 3q. RPC definitions (US-303) — a supabase.rpc() naming a function no migration
+#     creates fails as an unread error the types cannot see.
+node scripts/check-rpc-definitions.mjs || exit 1
+
+# 3q2. supabase.raw() (US-300) — supabase-js v2 has no `raw`, so the call throws
+#      a TypeError before the write is built. Found twice; guarded now.
+node scripts/check-supabase-raw.mjs || exit 1
+
+# 3r. Deno import pinning (US-272) — a floating specifier resolves at cold start,
+#     and two specifiers for one package load two copies with two sets of classes.
+node scripts/check-deno-imports.mjs || exit 1
+
+# 3s. Table definitions (US-311) — a table no migration creates comes back as
+#     `{ data: null, error }`, and `res.data || []` renders that as "nothing here".
+node scripts/check-table-definitions.mjs || exit 1
+
+# 3t. Dead links (US-312) — react-router's catch-all turns a link to a path no
+#     route answers into the 404 page, silently.
+node scripts/check-dead-links.mjs || exit 1
+
+# 3u. Unreferenced components (US-314) — Vite drops a component nothing imports,
+#     so it fails nowhere and sits in the tree looking like a feature.
+node scripts/check-unreferenced-components.mjs || exit 1
+
 # 4. Migration hygiene + RLS guards (US-235 / US-239 / US-237).
 bash scripts/check-migration-filenames.sh || exit 1
 bash scripts/check-no-stray-function-copies.sh || exit 1

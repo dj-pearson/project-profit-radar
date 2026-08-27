@@ -1,12 +1,10 @@
 // Smart Data Analyzer Edge Function
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { initializeAuthContext, errorResponse } from '../_shared/auth-helpers.ts';
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
+import { getCorsHeaders } from '../_shared/secure-cors.ts';
+import { enforceRateLimit, RATE_LIMITS } from '../_shared/rate-limiter.ts';
+import { createServiceClient } from '../_shared/service-client.ts';
 
 const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
 
@@ -74,6 +72,7 @@ const logStep = (step: string, details?: any) => {
 };
 
 serve(async (req) => {
+  const corsHeaders = getCorsHeaders(req);
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
@@ -85,6 +84,16 @@ serve(async (req) => {
     }
 
     const { user, supabase } = authContext;
+
+    // Rate limit per user (US-243). These endpoints spend money on every call —
+    // LLM tokens here — so a compromised token running them in a loop is a
+    // billing incident, not just load. Keyed by user id rather than IP: an IP
+    // limit is shared across a customer's whole office and a stolen token walks
+    // around it by changing address.
+    const limited = await enforceRateLimit(
+      createServiceClient(), user.id, 'smart-data-analyzer', RATE_LIMITS.AI, corsHeaders,
+    );
+    if (limited) return limited;
     logStep("User authenticated", { userId: user.id });
 
     const { sessionId, csvData, fileName } = await req.json();
@@ -222,7 +231,10 @@ Always respond with valid JSON only - no markdown, no explanations outside JSON.
           .filter((val: any) => val !== null && val !== '')
           .slice(0, 5);
 
-        await supabase
+        // These rows are the mapping the import wizard offers the user on the
+        // next screen, so a lost insert means a field they were shown a
+        // suggestion for arrives unmapped. The error was discarded (US-300).
+        const { error: suggestionError } = await supabase
           .from('import_field_suggestions')
           .insert({  // CRITICAL: Site isolation
             import_session_id: sessionId,
@@ -231,6 +243,13 @@ Always respond with valid JSON only - no markdown, no explanations outside JSON.
             confidence_score: mapping.confidence,
             data_sample: sampleData
           });
+
+        if (suggestionError) {
+          console.error(
+            `[SMART-DATA-ANALYZER] Field suggestion for "${mapping.sourceField}" was not stored:`,
+            suggestionError.message,
+          );
+        }
       }
     }
 

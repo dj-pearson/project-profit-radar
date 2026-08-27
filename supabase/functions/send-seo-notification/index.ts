@@ -1,15 +1,19 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.3";
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
+import { getCorsHeaders } from '../_shared/secure-cors.ts';
+import { requireInternalCaller } from '../_shared/internal-only.ts';
 
 serve(async (req) => {
+  const corsHeaders = getCorsHeaders(req);
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
 
   try {
+    // Internal only: invoked by run-scheduled-audit with a service-role client.
+    // verify_jwt = true is a signature check the publishable anon key
+    // satisfies, not authentication (US-241).
+    const denied = requireInternalCaller(req);
+    if (denied) return denied;
+
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
@@ -183,8 +187,10 @@ serve(async (req) => {
       }
     }
 
-    // Log notification
-    await supabaseClient
+    // Log notification. The notifications have already gone out by here, so
+    // this row is the record that they did - and its error was discarded
+    // (US-300).
+    const { error: logError } = await supabaseClient
       .from('seo_monitoring_log')
       .insert({
         log_type: 'notification',
@@ -193,6 +199,13 @@ serve(async (req) => {
         details: { ...data, notification_results: results },
         related_url: data.url || null,
       });
+
+    if (logError) {
+      console.error(
+        '[SEO-NOTIFICATION] Notifications were SENT but not logged:',
+        logError.message,
+      );
+    }
 
     return new Response(JSON.stringify({
       success: results.email_sent || results.slack_sent || results.webhook_sent,

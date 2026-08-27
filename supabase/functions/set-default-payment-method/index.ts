@@ -1,8 +1,14 @@
 // Set Default Payment Method Edge Function
 // Updates the default payment method on the Stripe customer
-import Stripe from "npm:stripe@14";
+import Stripe from "https://esm.sh/stripe@14.21.0";
 import { initializeAuthContext, errorResponse, successResponse } from '../_shared/auth-helpers.ts';
 import { getCorsHeaders } from '../_shared/secure-cors.ts';
+import { validateBody } from '../_shared/validate-body.ts';
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
+
+const SetDefaultPaymentMethodSchema = z.object({
+  payment_method_id: z.string().min(3).max(255).regex(/^pm_[A-Za-z0-9]+$/, 'must be a Stripe payment method id'),
+});
 
 const logStep = (step: string, details?: any) => {
   const detailsStr = details ? ` - ${JSON.stringify(details)}` : '';
@@ -28,11 +34,11 @@ export default async (req: Request) => {
     }
 
     const { user, supabase } = authContext;
-    const { payment_method_id } = await req.json();
-
-    if (!payment_method_id) {
-      return errorResponse('payment_method_id is required', 400, req);
-    }
+    const parsed = await validateBody(req, SetDefaultPaymentMethodSchema, {
+      name: 'set-default-payment-method',
+    });
+    if (!parsed.ok) return parsed.response;
+    const { payment_method_id } = parsed.data;
 
     logStep("Setting default payment method", { payment_method_id });
 

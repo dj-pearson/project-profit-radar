@@ -92,11 +92,16 @@ export const AccessibleForm: React.FC<AccessibleFormProps> = ({
   const [announcement, setAnnouncement] = useState<string>('');
 
   const registerField = useCallback((name: string) => {
-    setFields(prev => new Set([...prev, name]));
+    // Return prev unchanged when the field is already registered. Building a
+    // new Set unconditionally re-renders every consumer of the context on each
+    // registration, which is wasted work at best and, next to an effect that
+    // compares object identity, fuel for a render loop.
+    setFields(prev => (prev.has(name) ? prev : new Set([...prev, name])));
   }, []);
 
   const unregisterField = useCallback((name: string) => {
     setFields(prev => {
+      if (!prev.has(name)) return prev;
       const next = new Set(prev);
       next.delete(name);
       return next;
@@ -124,10 +129,25 @@ export const AccessibleForm: React.FC<AccessibleFormProps> = ({
     onSubmit?.(event);
   }, [errors, focusFirstError, onSubmit]);
 
-  // Update errors when initialErrors change
+  // Sync errors when the caller's initialErrors CONTENT changes.
+  //
+  // This used to depend on `initialErrors` itself. That prop has a default of
+  // `{}`, so every caller who omits it hands the component a fresh object on
+  // every render: the dependency compares unequal, the effect runs, setErrors
+  // stores a new object, that re-renders, the default produces another fresh
+  // `{}`, and round it goes. AccessibleForm.a11y.test.tsx hung on this
+  // indefinitely and took a vitest worker to 4.7 GB with it.
+  //
+  // Comparing serialized content rather than identity is what breaks the loop;
+  // the ref stops the initial mount from re-setting state useState already
+  // seeded.
+  const initialErrorsKey = JSON.stringify(initialErrors ?? {});
+  const lastInitialErrorsKey = useRef(initialErrorsKey);
   useEffect(() => {
+    if (lastInitialErrorsKey.current === initialErrorsKey) return;
+    lastInitialErrorsKey.current = initialErrorsKey;
     setErrors(initialErrors);
-  }, [initialErrors]);
+  }, [initialErrors, initialErrorsKey]);
 
   return (
     <FormContext.Provider value={{ formId, errors, setErrors, registerField, unregisterField }}>

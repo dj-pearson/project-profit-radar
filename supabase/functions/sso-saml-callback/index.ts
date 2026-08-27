@@ -9,11 +9,8 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.3";
 import { decode as base64Decode } from "https://deno.land/std@0.190.0/encoding/base64.ts";
 import { DOMParser } from "https://deno.land/x/deno_dom@v0.1.45/deno-dom-wasm.ts";
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
+import { getCorsHeaders } from '../_shared/secure-cors.ts';
+import { writeSecurityLog } from '../_shared/security-log.ts';
 
 interface SAMLAssertion {
   email: string;
@@ -135,6 +132,7 @@ async function validateSignature(
 }
 
 serve(async (req) => {
+  const corsHeaders = getCorsHeaders(req);
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
@@ -214,7 +212,7 @@ serve(async (req) => {
 
     if (!isValidSignature) {
       console.error("[SAML] Invalid signature");
-      await supabaseClient.from("security_logs").insert({
+      await writeSecurityLog(supabaseClient, {
         event_type: "saml_auth_failed",
         ip_address: req.headers.get("cf-connecting-ip") || req.headers.get("x-forwarded-for"),
         user_agent: req.headers.get("user-agent"),
@@ -265,8 +263,13 @@ serve(async (req) => {
       userId = newUser.user.id;
       isNewUser = true;
 
-      // Create user profile
-      await supabaseClient.from("user_profiles").insert({
+      // The auth user exists by this point. Without a profile row the user
+      // signs in with no company_id and no role, so get_user_company() returns
+      // null and every RLS policy denies them: logged in, seeing nothing, with
+      // no error anywhere. Delete the orphaned auth user and fail the login
+      // rather than stranding them. supabase-js returns this error rather than
+      // throwing it (US-300).
+      const { error: profileError } = await supabaseClient.from("user_profiles").insert({
         id: userId,
         email: assertion.email,
         first_name: assertion.firstName || "",
@@ -274,6 +277,13 @@ serve(async (req) => {
         role: matchedConnection.default_role || "office_staff",
         is_active: true,
       });
+      if (profileError) {
+        console.error("[SAML] Failed to create user profile:", profileError);
+        await supabaseClient.auth.admin.deleteUser(userId);
+        return Response.redirect(
+          `${Deno.env.get("SITE_URL") || "https://brikly.net"}/auth?error=user_creation_failed`
+        );
+      }
     }
 
     // Create session token
@@ -293,8 +303,13 @@ serve(async (req) => {
       );
     }
 
-    // Create session record
-    await supabaseClient.from("user_sessions").insert({
+    // Create session record. This row is what an admin sees in the active
+    // session list and what session revocation acts on, so an unrecorded
+    // session cannot be revoked. Its error was discarded and supabase-js
+    // returns it rather than throwing (US-300). Logged rather than failed, as
+    // in sso-oauth-callback: authentication has already succeeded here, and
+    // refusing would lock out a legitimate user without invalidating anything.
+    const { error: sessionRecordError } = await supabaseClient.from("user_sessions").insert({
       user_id: userId,
       tenant_id: matchedConnection.tenant_id,
       session_token: crypto.randomUUID(),
@@ -305,8 +320,15 @@ serve(async (req) => {
       user_agent: req.headers.get("user-agent"),
     });
 
+    if (sessionRecordError) {
+      console.error(
+        `[SAML] User ${userId} SIGNED IN but the session was not recorded, so it cannot be revoked:`,
+        sessionRecordError.message,
+      );
+    }
+
     // Log successful authentication
-    await supabaseClient.from("security_logs").insert({
+    await writeSecurityLog(supabaseClient, {
       user_id: userId,
       event_type: isNewUser ? "saml_user_created" : "saml_auth_success",
       ip_address: req.headers.get("cf-connecting-ip") || req.headers.get("x-forwarded-for"),

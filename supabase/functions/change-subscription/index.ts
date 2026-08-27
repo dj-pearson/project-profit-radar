@@ -2,11 +2,11 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@14.21.0";
 import { initializeAuthContext, errorResponse } from '../_shared/auth-helpers.ts';
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
+import { getCorsHeaders } from '../_shared/secure-cors.ts';
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
+import { validateBody } from '../_shared/validate-body.ts';
+import { writeAuditLog } from '../_shared/audit-log.ts';
+import { createServiceClient } from '../_shared/service-client.ts';
 
 interface SubscriptionChangeRequest {
   new_tier: 'starter' | 'professional' | 'enterprise';
@@ -14,12 +14,19 @@ interface SubscriptionChangeRequest {
   proration_behavior?: 'create_prorations' | 'none' | 'always_invoice';
 }
 
+const SubscriptionChangeSchema = z.object({
+  new_tier: z.enum(['starter', 'professional', 'enterprise']),
+  new_billing_period: z.enum(['monthly', 'annual']).optional(),
+  proration_behavior: z.enum(['create_prorations', 'none', 'always_invoice']).optional(),
+});
+
 const logStep = (step: string, details?: any) => {
   const detailsStr = details ? ` - ${JSON.stringify(details)}` : '';
   console.log(`[SUBSCRIPTION-CHANGE] ${step}${detailsStr}`);
 };
 
 serve(async (req) => {
+  const corsHeaders = getCorsHeaders(req);
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
@@ -36,7 +43,9 @@ serve(async (req) => {
     if (!user?.email) throw new Error("User not authenticated");
     logStep("User authenticated", { userId: user.id });
 
-    const changeRequest: SubscriptionChangeRequest = await req.json();
+    const parsed = await validateBody(req, SubscriptionChangeSchema, { name: 'change-subscription' });
+    if (!parsed.ok) return parsed.response;
+    const changeRequest = parsed.data as SubscriptionChangeRequest;
     logStep("Change request received", {
       newTier: changeRequest.new_tier,
       newBilling: changeRequest.new_billing_period
@@ -173,8 +182,13 @@ serve(async (req) => {
       status: updatedSubscription.status 
     });
 
-    // Update Supabase subscriber record with site isolation
-    await supabaseClient
+    // Update Supabase subscriber record with site isolation.
+    //
+    // Stripe has already been changed by this point, so a lost write bills the
+    // customer on the new tier while the app entitles them to the old one -
+    // silently, and in whichever direction the change went. supabase-js
+    // returns this error rather than throwing it (US-300).
+    const { error: subscriberError } = await supabaseClient
       .from('subscribers')
       .update({
         subscription_tier: changeRequest.new_tier,
@@ -184,6 +198,32 @@ serve(async (req) => {
       })
         // CRITICAL: Site isolation
       .eq('user_id', user.id);
+
+    if (subscriberError) {
+      logStep("SUBSCRIBER RECORD NOT UPDATED AFTER STRIPE CHANGE", {
+        subscriptionId: updatedSubscription.id,
+        userId: user.id,
+        newTier: changeRequest.new_tier,
+        error: subscriberError.message,
+      });
+      throw new Error(
+        `Your plan changed in Stripe but your account was not updated (${subscriberError.message}). ` +
+          `Contact support before making further changes.`,
+      );
+    }
+
+    // Audit trail (US-244): what the customer pays changed, and Stripe was
+    // already told. Recorded after the mirror write so both sides agree.
+    await writeAuditLog(createServiceClient(), {
+      actorUserId: user.id,
+      action: 'subscription.changed',
+      entityType: 'subscriber',
+      entityId: subscriber?.id ?? user.id,
+      before: { subscription_tier: subscriber.subscription_tier },
+      after: { subscription_tier: changeRequest.new_tier, billing_period: newBillingPeriod },
+      description: `Subscription changed from ${subscriber.subscription_tier} to ${changeRequest.new_tier}`,
+      riskLevel: 'high',
+    });
 
     logStep("Supabase record updated");
 

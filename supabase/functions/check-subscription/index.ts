@@ -1,7 +1,7 @@
 // Check Subscription Edge Function
 // SECURITY: Uses secure CORS whitelist
-import Stripe from "npm:stripe@14";
-import { createClient } from "npm:@supabase/supabase-js@2";
+import Stripe from "https://esm.sh/stripe@14.21.0";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.3";
 import { initializeAuthContext, errorResponse } from '../_shared/auth-helpers.ts';
 import { getCorsHeaders } from '../_shared/secure-cors.ts';
 
@@ -62,7 +62,7 @@ export default async (req: Request) => {
       if (isExpired) {
         logStep("Complimentary subscription expired, checking regular subscription");
         // Complimentary expired, remove complimentary status and check regular subscription
-        await supabaseClient
+        const { error: updateSubscribersError } = await supabaseClient
           .from('subscribers')
           .update({
             is_complimentary: false,
@@ -74,13 +74,23 @@ export default async (req: Request) => {
             updated_at: new Date().toISOString()
           })
           .eq('id', existingSubscriber.id);
+        if (updateSubscribersError) {
+          console.error(`[subscribers] update failed`, updateSubscribersError);
+        }
 
-        // Update history
-        await supabaseClient
+        // Update history. Best-effort - the subscriber record above is what
+        // gates access - but a discarded error leaves a complimentary grant
+        // showing as active in the history long after it expired, which is what
+        // anyone auditing comped accounts reads (US-300).
+        const { error: historyError } = await supabaseClient
           .from('complimentary_subscription_history')
           .update({ status: 'expired' })
           .eq('subscriber_id', existingSubscriber.id)
           .eq('status', 'active');
+
+        if (historyError) {
+          logStep('Complimentary history not marked expired', { error: historyError.message });
+        }
       } else {
         // Active complimentary subscription
         const tier = existingSubscriber.subscription_tier || 'professional';
@@ -108,7 +118,7 @@ export default async (req: Request) => {
     
     if (customers.data.length === 0) {
       logStep("No customer found, updating unsubscribed state");
-      await supabaseClient.from("subscribers").upsert({
+      const { error: upsertSubscribersError } = await supabaseClient.from("subscribers").upsert({
         email: user.email,
         user_id: user.id,
         stripe_customer_id: null,
@@ -119,6 +129,9 @@ export default async (req: Request) => {
       }, {
         onConflict: 'email'
       });
+      if (upsertSubscribersError) {
+        console.error(`[subscribers] upsert failed`, upsertSubscribersError);
+      }
       return new Response(JSON.stringify({ subscribed: false }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 200,
@@ -169,7 +182,7 @@ export default async (req: Request) => {
       logStep("No active subscription found");
     }
 
-    await supabaseClient.from("subscribers").upsert({
+    const { error: upsertSubscribersError } = await supabaseClient.from("subscribers").upsert({
       email: user.email,
       user_id: user.id,
       stripe_customer_id: customerId,
@@ -181,6 +194,9 @@ export default async (req: Request) => {
     }, {
       onConflict: 'email'
     });
+    if (upsertSubscribersError) {
+      console.error(`[subscribers] upsert failed`, upsertSubscribersError);
+    }
 
     logStep("Updated database with subscription info", { subscribed: hasActiveSub, subscriptionTier });
     return new Response(JSON.stringify({

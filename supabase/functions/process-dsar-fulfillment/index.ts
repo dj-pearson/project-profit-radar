@@ -44,10 +44,11 @@
 //   readable denial_reason so the privacy team can investigate.
 
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { createClient } from "npm:@supabase/supabase-js@2";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.3";
 import { getCorsHeaders } from "../_shared/secure-cors.ts";
 import { requireSystemOrAdmin } from "../_shared/system-auth.ts";
 import { isInErasureScope } from "../_shared/storage-buckets.ts";
+import { writeAuditLog } from "../_shared/audit-log.ts";
 
 const SERVICE_ROLE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
@@ -119,6 +120,12 @@ serve(async (req) => {
   let fulfilled = 0;
   let denied = 0;
   let flagged = 0;
+  // US-300: these are statutory requests on a 30-day clock, and every status
+  // write below is a supabase-js call that RETURNS its error rather than
+  // throwing. An unwritten status leaves the request pending, so the next run
+  // picks it up again and the counts reported here describe work that did not
+  // happen. Surfaced rather than dropped.
+  let bookkeeping_failures = 0;
 
   for (const row of rows) {
     try {
@@ -155,11 +162,27 @@ serve(async (req) => {
         }
         // Also purge any optional soft-delete markers or remaining rows
         // that were intentionally orphan-safe.
-        await admin
+        // NOT .catch(() => undefined). PostgrestBuilder implements PromiseLike:
+        // it has then() and no catch(), so calling .catch() threw a TypeError
+        // BEFORE the request was ever sent. That threw out of this block after
+        // admin.auth.admin.deleteUser had already succeeded, so every erasure
+        // landed in the outer catch, accumulated a retry note, and after
+        // MAX_RETRIES was auto-DENIED - a GDPR erasure recorded as denied on an
+        // account that had in fact been deleted. This preference row has also
+        // never been purged. (US-300; same bug class as US-303.)
+        const { error: prefsError } = await admin
           .from("email_preferences")
           .delete()
-          .eq("user_id", row.user_id)
-          .catch(() => undefined);
+          .eq("user_id", row.user_id);
+        if (prefsError) {
+          // Not fatal - the auth user is gone and cascades have run. Record it
+          // on the request rather than failing an erasure that did happen.
+          bookkeeping_failures += 1;
+          console.error(
+            `[dsar-fulfill] ${row.id} email_preferences not purged for deleted user`,
+            prefsError,
+          );
+        }
         await markCompleted(
           admin,
           row.id,
@@ -169,6 +192,25 @@ serve(async (req) => {
               : "") +
             ". Retained records (tax, payroll, audit) preserved per Privacy Policy §5.",
         );
+        // Audit trail (US-244): the erasure actually happened. This runs from
+        // cron or an admin, so there may be no session user — the row records
+        // the subject and what was removed versus retained, which is what a
+        // regulator asks to see.
+        await writeAuditLog(admin, {
+          actorUserId: null,
+          companyId: row.company_id,
+          action: 'data_subject.erasure_fulfilled',
+          entityType: 'dsar_request',
+          entityId: row.id,
+          after: {
+            subject_user_id: row.user_id,
+            files_erased: erasure.removed,
+            files_retained: erasure.retained,
+          },
+          description: 'Account deleted and stored files erased after the 30-day grace period',
+          riskLevel: 'critical',
+        });
+
         fulfilled += 1;
         continue;
       }
@@ -183,14 +225,19 @@ serve(async (req) => {
 
       // Access / portability / correction / restrict / object all require a
       // human reviewer — flag for the privacy team.
-      await admin
+      const { error: flagError } = await admin
         .from("data_subject_requests")
         .update({
           status: "in_progress",
           notes: `${row.notes ?? ""}\n[cron ${new Date().toISOString()}] Auto-flagged for privacy-team review (no automated fulfillment path).`,
         })
         .eq("id", row.id);
-      flagged += 1;
+      if (flagError) {
+        bookkeeping_failures += 1;
+        console.error(`[dsar-fulfill] ${row.id} could not be flagged for review`, flagError);
+      } else {
+        flagged += 1;
+      }
     } catch (err) {
       console.error(`[dsar-fulfill] failed to process ${row.id}`, err);
       const newNotes = `${row.notes ?? ""}\n[cron ${new Date().toISOString()}] failure: ${
@@ -201,7 +248,7 @@ serve(async (req) => {
       // batch budget.
       const retryCount = (newNotes.match(/\[cron /g) ?? []).length;
       if (retryCount >= MAX_RETRIES) {
-        await admin
+        const { error: denyError } = await admin
           .from("data_subject_requests")
           .update({
             status: "denied",
@@ -209,12 +256,28 @@ serve(async (req) => {
             notes: newNotes,
           })
           .eq("id", row.id);
-        denied += 1;
+        if (denyError) {
+          bookkeeping_failures += 1;
+          console.error(`[dsar-fulfill] ${row.id} could not be auto-denied`, denyError);
+        } else {
+          denied += 1;
+        }
       } else {
-        await admin
+        // The retry counter lives in these very notes - retryCount above is
+        // derived by counting "[cron " markers in them. So a note that is not
+        // written means the counter never advances, MAX_RETRIES is never
+        // reached, and the request is retried on every run forever.
+        const { error: noteError } = await admin
           .from("data_subject_requests")
           .update({ notes: newNotes })
           .eq("id", row.id);
+        if (noteError) {
+          bookkeeping_failures += 1;
+          console.error(
+            `[dsar-fulfill] ${row.id} retry note not written; its retry counter will not advance`,
+            noteError,
+          );
+        }
       }
     }
   }
@@ -225,6 +288,7 @@ serve(async (req) => {
       fulfilled,
       denied,
       flagged_for_review: flagged,
+      bookkeeping_failures,
     }),
     { status: 200, headers: { "Content-Type": "application/json" } },
   );
@@ -235,7 +299,11 @@ async function markCompleted(
   id: string,
   note: string,
 ) {
-  await admin
+  // Throws on failure so the caller counts it rather than reporting a request
+  // as fulfilled when its status never changed. For a deletion that matters
+  // twice over: the data is already purged, and a request left pending is
+  // re-processed on the next run.
+  const { error } = await admin
     .from("data_subject_requests")
     .update({
       status: "completed",
@@ -243,6 +311,9 @@ async function markCompleted(
       notes: note,
     })
     .eq("id", id);
+  if (error) {
+    throw new Error(`could not mark request ${id} completed: ${error.message}`);
+  }
 }
 
 /**

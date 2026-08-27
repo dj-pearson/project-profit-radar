@@ -318,13 +318,21 @@ export const SmartImportWizard: React.FC<SmartImportWizardProps> = ({
 
       // Update import session status
       if (session.id && !session.id.includes('-')) {
-        await supabase
+        // The records are already imported at this point, so a failure here is
+        // not a failed import - it leaves the session row saying "in progress"
+        // forever. The error was dropped (US-300); log rather than throw so the
+        // success message below still reflects what actually happened.
+        const { error: sessionError } = await supabase
           .from('import_sessions')
           .update({
             status: result.success ? 'completed' : 'completed_with_errors',
             total_records: result.inserted + result.updated + result.skipped,
           })
           .eq('id', session.id);
+
+        if (sessionError) {
+          console.error('Import finished but the session was not marked complete:', sessionError.message);
+        }
       }
 
       setUploadProgress(100);

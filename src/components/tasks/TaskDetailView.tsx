@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Calendar, Clock, User, Building, MessageSquare, Paperclip, CheckSquare, Timer, Activity } from 'lucide-react';
 import { format } from 'date-fns';
 import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 import { TaskComments } from './TaskComments';
 import { TaskAttachments } from './TaskAttachments';
 import { TaskSubtasks } from './TaskSubtasks';
@@ -234,16 +235,22 @@ export const TaskDetailView: React.FC<TaskDetailViewProps> = ({
                     <Button
                       className="w-full"
                       onClick={async () => {
-                        const { data } = await supabase
+                        // supabase-js returns the error rather than throwing it, and
+                        // this read only `data`. A failed update left `data` null, so
+                        // the button did nothing and said nothing (US-300).
+                        const { data, error } = await supabase
                           .from('tasks')
                           .update({ status: 'completed' })
                           .eq('id', taskData.id)
                           .select()
                           .single();
                         
-                        if (data) {
-                          handleTaskUpdate({ ...taskData, status: 'completed' });
+                        if (error || !data) {
+                          toast.error(`Could not complete this task${error ? `: ${error.message}` : '.'}`);
+                          return;
                         }
+                        
+                        handleTaskUpdate({ ...taskData, status: 'completed' });
                       }}
                     >
                       Mark Complete
@@ -255,16 +262,22 @@ export const TaskDetailView: React.FC<TaskDetailViewProps> = ({
                       variant="outline"
                       className="w-full"
                       onClick={async () => {
-                        const { data } = await supabase
+                        // supabase-js returns the error rather than throwing it, and
+                        // this read only `data`. A failed update left `data` null, so
+                        // the button did nothing and said nothing (US-300).
+                        const { data, error } = await supabase
                           .from('tasks')
                           .update({ status: 'todo' })
                           .eq('id', taskData.id)
                           .select()
                           .single();
                         
-                        if (data) {
-                          handleTaskUpdate({ ...taskData, status: 'todo' });
+                        if (error || !data) {
+                          toast.error(`Could not reopen this task${error ? `: ${error.message}` : '.'}`);
+                          return;
                         }
+                        
+                        handleTaskUpdate({ ...taskData, status: 'todo' });
                       }}
                     >
                       Reopen Task

@@ -1,5 +1,5 @@
 // Version: 2.0.2 - Export handler for self-hosted Supabase
-import { createClient } from "npm:@supabase/supabase-js@2";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.3";
 import { aiService } from "../_shared/ai-service.ts";
 import { getCorsHeaders } from "../_shared/secure-cors.ts";
 import { requireSystemOrAdmin } from "../_shared/system-auth.ts";
@@ -27,7 +27,7 @@ export default async (req: Request) => {
     // Handle both payload formats
     let finalTopic = topic;
     let finalCompanyId = company_id || customSettings?.company_id;
-    let finalQueueId = queue_id || customSettings?.queue_id;
+    const finalQueueId = queue_id || customSettings?.queue_id;
 
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',

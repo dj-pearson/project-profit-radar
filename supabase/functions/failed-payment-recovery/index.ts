@@ -4,11 +4,7 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@14.21.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.3";
 import { initializeAuthContext, errorResponse } from '../_shared/auth-helpers.ts';
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
+import { getCorsHeaders } from '../_shared/secure-cors.ts';
 
 const logStep = (step: string, details?: Record<string, unknown>) => {
   const detailsStr = details ? ` - ${JSON.stringify(details)}` : '';
@@ -39,6 +35,7 @@ interface RecoverySettings {
 }
 
 serve(async (req) => {
+  const corsHeaders = getCorsHeaders(req);
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
   }
@@ -75,28 +72,28 @@ serve(async (req) => {
 
     switch (action) {
       case 'process_failures':
-        return await processAllFailures(supabaseClient);
+        return await processAllFailures(corsHeaders, supabaseClient);
 
       case 'retry_payment':
-        return await retryPayment(supabaseClient, body.failure_id!);
+        return await retryPayment(corsHeaders, supabaseClient, body.failure_id!);
 
       case 'send_dunning_email':
-        return await sendDunningEmail(supabaseClient, body.failure_id!);
+        return await sendDunningEmail(corsHeaders, supabaseClient, body.failure_id!);
 
       case 'get_settings':
-        return await getSettings(supabaseClient, targetCompanyId!);
+        return await getSettings(corsHeaders, supabaseClient, targetCompanyId!);
 
       case 'update_settings':
-        return await updateSettings(supabaseClient, targetCompanyId!, body.settings!);
+        return await updateSettings(corsHeaders, supabaseClient, targetCompanyId!, body.settings!);
 
       case 'get_dashboard':
-        return await getDashboard(supabaseClient, targetCompanyId!);
+        return await getDashboard(corsHeaders, supabaseClient, targetCompanyId!);
 
       case 'pause_dunning':
-        return await pauseDunning(supabaseClient, body.subscriber_id!);
+        return await pauseDunning(corsHeaders, supabaseClient, body.subscriber_id!);
 
       case 'resume_dunning':
-        return await resumeDunning(supabaseClient, body.subscriber_id!);
+        return await resumeDunning(corsHeaders, supabaseClient, body.subscriber_id!);
 
       default:
         return errorResponse('Invalid action', 400);
@@ -112,7 +109,7 @@ serve(async (req) => {
   }
 });
 
-async function processAllFailures(supabase: ReturnType<typeof createClient>) {
+async function processAllFailures(corsHeaders: Record<string, string>, supabase: ReturnType<typeof createClient>) {
   // Get all active payment failures that need processing
   const now = new Date();
 
@@ -145,8 +142,10 @@ async function processAllFailures(supabase: ReturnType<typeof createClient>) {
 
     // Check max retries
     if (failure.attempt_count >= (failure.max_retries || 3)) {
-      // Suspend the account
-      await supabase
+      // Suspend the account. The error was discarded, so a failure left the
+      // account unsuspended and still in dunning, and the run reported a
+      // suspension that never happened (US-300).
+      const { error: suspendError } = await supabase
         .from('payment_failures')
         .update({
           dunning_status: 'suspended',
@@ -154,14 +153,21 @@ async function processAllFailures(supabase: ReturnType<typeof createClient>) {
         })
         .eq('id', failure.id);
 
+      if (suspendError) {
+        throw new Error(`Account not suspended after max retries: ${suspendError.message}`);
+      }
+
       // Update subscriber status
       if (failure.subscriber_id) {
-        await supabase
+        const { error: updateSubscribersError } = await supabase
           .from('subscribers')
           .update({
             subscribed: false
           })
           .eq('id', failure.subscriber_id);
+        if (updateSubscribersError) {
+          console.error(`[subscribers] update failed`, updateSubscribersError);
+        }
       }
 
       suspended++;
@@ -182,7 +188,10 @@ async function processAllFailures(supabase: ReturnType<typeof createClient>) {
       const nextRetry = new Date();
       nextRetry.setHours(nextRetry.getHours() + nextRetryHours);
 
-      await supabase
+      // Advancing the attempt counter is what makes the dunning schedule move.
+      // The error was discarded, so a failure left the counter where it was and
+      // the same retry - and the same email - repeated on every run (US-300).
+      const { error: advanceError } = await supabase
         .from('payment_failures')
         .update({
           attempt_count: failure.attempt_count + 1,
@@ -190,6 +199,10 @@ async function processAllFailures(supabase: ReturnType<typeof createClient>) {
           last_retry_at: now.toISOString()
         })
         .eq('id', failure.id);
+
+      if (advanceError) {
+        throw new Error(`Dunning attempt not advanced, this retry will repeat: ${advanceError.message}`);
+      }
     }
   }
 
@@ -231,8 +244,10 @@ async function attemptPaymentRetry(
     const invoice = await stripe.invoices.pay(invoiceId);
 
     if (invoice.paid) {
-      // Success! Mark failure as resolved
-      await supabase
+      // Success! Mark failure as resolved. The error was discarded, so a
+      // customer who had just paid could stay in dunning, keep receiving dunning
+      // email, and eventually be suspended (US-300).
+      const { error: resolveError } = await supabase
         .from('payment_failures')
         .update({
           dunning_status: 'resolved',
@@ -240,15 +255,24 @@ async function attemptPaymentRetry(
         })
         .eq('id', failure.id);
 
+      if (resolveError) {
+        throw new Error(
+          `Invoice ${invoiceId} was paid but the failure is still open in dunning: ${resolveError.message}`,
+        );
+      }
+
       // Update subscriber status
       const subscriber = failure.subscriber as Record<string, unknown>;
       if (subscriber?.id) {
-        await supabase
+        const { error: updateSubscribersError } = await supabase
           .from('subscribers')
           .update({
             subscribed: true
           })
           .eq('id', subscriber.id);
+        if (updateSubscribersError) {
+          console.error(`[subscribers] update failed`, updateSubscribersError);
+        }
       }
 
       logStep('Payment recovered', { failureId: failure.id, invoiceId });
@@ -348,7 +372,7 @@ Please update your payment method to continue your subscription.
 }
 
 async function retryPayment(
-  supabase: ReturnType<typeof createClient>,
+  corsHeaders: Record<string, string>, supabase: ReturnType<typeof createClient>,
   failureId: string
 ) {
   const { data: failure, error } = await supabase
@@ -379,7 +403,7 @@ async function retryPayment(
 }
 
 async function sendDunningEmail(
-  supabase: ReturnType<typeof createClient>,
+  corsHeaders: Record<string, string>, supabase: ReturnType<typeof createClient>,
   failureId: string
 ) {
   const { data: failure, error } = await supabase
@@ -410,7 +434,7 @@ async function sendDunningEmail(
 }
 
 async function getSettings(
-  supabase: ReturnType<typeof createClient>,
+  corsHeaders: Record<string, string>, supabase: ReturnType<typeof createClient>,
   companyId: string
 ) {
   const { data: settings, error } = await supabase
@@ -433,7 +457,7 @@ async function getSettings(
 }
 
 async function updateSettings(
-  supabase: ReturnType<typeof createClient>,
+  corsHeaders: Record<string, string>, supabase: ReturnType<typeof createClient>,
   companyId: string,
   settings: RecoverySettings
 ) {
@@ -463,7 +487,7 @@ async function updateSettings(
 }
 
 async function getDashboard(
-  supabase: ReturnType<typeof createClient>,
+  corsHeaders: Record<string, string>, supabase: ReturnType<typeof createClient>,
   companyId: string
 ) {
   // Get company's subscribers with failures
@@ -522,7 +546,7 @@ async function getDashboard(
 }
 
 async function pauseDunning(
-  supabase: ReturnType<typeof createClient>,
+  corsHeaders: Record<string, string>, supabase: ReturnType<typeof createClient>,
   subscriberId: string
 ) {
   const { error } = await supabase
@@ -548,7 +572,7 @@ async function pauseDunning(
 }
 
 async function resumeDunning(
-  supabase: ReturnType<typeof createClient>,
+  corsHeaders: Record<string, string>, supabase: ReturnType<typeof createClient>,
   subscriberId: string
 ) {
   const nextRetry = new Date();

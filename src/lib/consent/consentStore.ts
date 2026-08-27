@@ -268,7 +268,7 @@ const writeConsentAudit = (record: PersistedConsent): void => {
       const {
         data: { user },
       } = await client.auth.getUser().catch(() => ({ data: { user: null } }));
-      await client.from('consent_ledger').insert({
+      const { error } = await client.from('consent_ledger').insert({
         user_id: user?.id ?? null,
         session_id: getOrCreateSessionId(),
         consent_state: record.state,
@@ -277,6 +277,17 @@ const writeConsentAudit = (record: PersistedConsent): void => {
         user_agent:
           typeof navigator !== 'undefined' ? navigator.userAgent.slice(0, 512) : null,
       });
+      // The comment above says errors are logged. They were not: supabase-js
+      // returns its error rather than throwing, so the catch below never saw a
+      // rejected insert and logger.debug never ran (US-300). Worth watching for
+      // one shape in particular - an authenticated session whose getUser()
+      // fell into the .catch above inserts user_id: null, which satisfies
+      // neither policy on this table (users_insert_own_consent requires
+      // user_id = auth.uid(), anon_insert_session_consent applies to the anon
+      // role) and is rejected.
+      if (error) {
+        logger.warn('[consent] ledger write rejected; localStorage record stands', error);
+      }
     } catch (err) {
       // Swallow. Client-side record in localStorage is still authoritative
       // for the user's session; privacy team can rebuild the audit from

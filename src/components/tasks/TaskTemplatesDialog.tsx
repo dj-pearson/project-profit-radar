@@ -10,6 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Plus, Edit, Trash2, Copy } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
 
 interface TaskTemplatesDialogProps {
@@ -196,35 +197,42 @@ export const TaskTemplatesDialog: React.FC<TaskTemplatesDialogProps> = ({
   const deleteProjectTemplate = async (id: string) => {
     if (!confirm('Are you sure? This will delete all associated task templates.')) return;
 
-    try {
-      await supabase
-        .from('project_templates')
-        .delete()
-        .eq('id', id);
+    // supabase-js returns the error rather than throwing it, so this catch never
+    // fired: a delete that failed still removed the row from local state, and
+    // the template came back on the next load (US-300).
+    const { error } = await supabase
+      .from('project_templates')
+      .delete()
+      .eq('id', id);
 
-      setProjectTemplates(prev => prev.filter(t => t.id !== id));
-      if (selectedTemplate === id) {
-        setSelectedTemplate('');
-        setTaskTemplates([]);
-      }
-    } catch (error) {
-      console.error('Error deleting template:', error);
+    if (error) {
+      console.error('Error deleting template:', error.message);
+      toast.error(`This template was not deleted: ${error.message}`);
+      return;
+    }
+
+    setProjectTemplates(prev => prev.filter(t => t.id !== id));
+    if (selectedTemplate === id) {
+      setSelectedTemplate('');
+      setTaskTemplates([]);
     }
   };
 
   const deleteTaskTemplate = async (id: string) => {
     if (!confirm('Are you sure you want to delete this task template?')) return;
 
-    try {
-      await supabase
-        .from('task_templates')
-        .delete()
-        .eq('id', id);
+    const { error } = await supabase
+      .from('task_templates')
+      .delete()
+      .eq('id', id);
 
-      setTaskTemplates(prev => prev.filter(t => t.id !== id));
-    } catch (error) {
-      console.error('Error deleting task template:', error);
+    if (error) {
+      console.error('Error deleting task template:', error.message);
+      toast.error(`This task template was not deleted: ${error.message}`);
+      return;
     }
+
+    setTaskTemplates(prev => prev.filter(t => t.id !== id));
   };
 
   const deployTemplate = async (templateId: string) => {

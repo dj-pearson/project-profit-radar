@@ -2,7 +2,10 @@ import { useState, useEffect } from 'react';
 import { motion, useReducedMotion, type Variants } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Fingerprint, FaceIcon, Shield, AlertCircle, CheckCircle2 } from 'lucide-react';
+// ScanFace, not FaceIcon: lucide-react has never exported FaceIcon, so this
+// import resolved to undefined and rendering it threw "Element type is
+// invalid" — the Face ID branch of this component could not render at all.
+import { Fingerprint, ScanFace, Shield, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { useBiometricAuth } from '@/hooks/useBiometricAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
@@ -132,7 +135,7 @@ export const BiometricLoginButton = ({
 
   const getIcon = () => {
     if (biometricType === 'Face ID') {
-      return <FaceIcon className="h-5 w-5" />;
+      return <ScanFace className="h-5 w-5" />;
     } else if (biometricType === 'Fingerprint') {
       return <Fingerprint className="h-5 w-5" />;
     }
@@ -207,7 +210,7 @@ export const BiometricLoginButton = ({
           ) : (
             <div className="h-8 w-8 flex items-center justify-center">
               {biometricType === 'Face ID' ? (
-                <FaceIcon className="h-8 w-8" />
+                <ScanFace className="h-8 w-8" />
               ) : biometricType === 'Fingerprint' ? (
                 <Fingerprint className="h-8 w-8" />
               ) : (

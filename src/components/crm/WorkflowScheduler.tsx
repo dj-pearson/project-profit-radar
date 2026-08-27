@@ -50,7 +50,7 @@ const cronPresets = [
 export function WorkflowScheduler({ workflowId, onSave }: WorkflowSchedulerProps) {
   const [schedules, setSchedules] = useState<Schedule[]>([]);
   const [editingSchedule, setEditingSchedule] = useState<Schedule | null>(null);
-  const [scheduleType, setScheduleType] = useState<'once' | 'recurring' | 'cron'>('recurring');
+  const [scheduleType] = useState<'once' | 'recurring' | 'cron'>('recurring');
 
   const calculateNextRun = (schedule: Partial<Schedule>): Date => {
     const now = new Date();

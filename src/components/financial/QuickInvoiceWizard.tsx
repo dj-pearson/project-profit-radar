@@ -240,17 +240,6 @@ export const QuickInvoiceWizard: React.FC<QuickInvoiceWizardProps> = ({
     return (step / 3) * 100;
   };
 
-  const getPaymentTermsLabel = (value: string) => {
-    const terms: Record<string, string> = {
-      'due_on_receipt': 'Due on Receipt',
-      'net_15': 'Net 15',
-      'net_30': 'Net 30',
-      'net_60': 'Net 60',
-      'net_90': 'Net 90'
-    };
-    return terms[value] || value;
-  };
-
   return (
     <div className="max-w-4xl mx-auto">
       {/* Header */}

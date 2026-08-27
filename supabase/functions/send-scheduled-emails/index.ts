@@ -93,11 +93,21 @@ serve(async (req) => {
             .single();
 
         if (unsubscribed) {
-          // Mark as cancelled
-          await supabaseClient
+          // Mark as cancelled. The error was discarded, so a failure left the
+          // row pending and this unsubscribed address was queued again on the
+          // next run - which is the one outcome an unsubscribe exists to
+          // prevent (US-300). Throwing lands it in the catch below, which marks
+          // the row failed after two attempts rather than leaving it to resend.
+          const { error: cancelError } = await supabaseClient
             .from('email_queue')
             .update({ status: 'cancelled' })
             .eq('id', queuedEmail.id);
+
+          if (cancelError) {
+            throw new Error(
+              `Unsubscribed recipient still queued: ${cancelError.message}`,
+            );
+          }
 
           logStep("User unsubscribed, skipping", { email: queuedEmail.recipient_email });
           continue;
@@ -112,10 +122,18 @@ serve(async (req) => {
 
         // Skip if user disabled trial nurture emails
         if (preferences && !preferences.trial_nurture) {
-          await supabaseClient
+          // Same as the unsubscribe branch: a discarded error left the row
+          // pending and the opted-out user was queued again (US-300).
+          const { error: cancelError } = await supabaseClient
             .from('email_queue')
             .update({ status: 'cancelled' })
             .eq('id', queuedEmail.id);
+
+          if (cancelError) {
+            throw new Error(
+              `Opted-out recipient still queued: ${cancelError.message}`,
+            );
+          }
 
           logStep("User disabled trial emails, skipping", { userId: queuedEmail.user_id });
           continue;
@@ -141,7 +159,11 @@ serve(async (req) => {
 
           if (sendResult.success) {
             // Create email send record
-            const { data: emailSend } = await supabaseClient
+            // The error was discarded and emailSend.id is read below, so a
+            // failed insert threw a TypeError into the catch - which marked the
+            // queue row pending and retried, sending the email a second time
+            // (US-300).
+            const { data: emailSend, error: sendRecordError } = await supabaseClient
               .from('email_sends')
               .insert({
                 campaign_id: queuedEmail.campaign_id,
@@ -157,8 +179,36 @@ serve(async (req) => {
               .select()
               .single();
 
-          // Update queue status
-          await supabaseClient
+          if (sendRecordError || !emailSend) {
+            // The email HAS gone out. Marking the queue row sent matters more
+            // than the send record, so do that first and report the gap.
+            const { error: markSentError } = await supabaseClient
+              .from('email_queue')
+              .update({
+                status: 'sent',
+                attempts: queuedEmail.attempts + 1,
+                last_attempt_at: new Date().toISOString(),
+              })
+              .eq('id', queuedEmail.id);
+
+            logStep("SENT BUT NOT RECORDED", {
+              email: queuedEmail.recipient_email,
+              error: sendRecordError?.message,
+              queueMarked: !markSentError,
+            });
+
+            sentCount++;
+            results.push({
+              email: queuedEmail.recipient_email,
+              campaign: queuedEmail.email_campaigns.campaign_name,
+              status: 'sent',
+            });
+            continue;
+          }
+
+          // Update queue status. This is what stops the same email being sent
+          // again on the next run; the error was discarded (US-300).
+          const { error: queueError } = await supabaseClient
             .from('email_queue')
             .update({
               status: 'sent',
@@ -167,6 +217,13 @@ serve(async (req) => {
               last_attempt_at: new Date().toISOString(),
             })
             .eq('id', queuedEmail.id);
+
+          if (queueError) {
+            logStep("SENT BUT STILL QUEUED - this recipient will be emailed again", {
+              email: queuedEmail.recipient_email,
+              error: queueError.message,
+            });
+          }
 
           sentCount++;
           results.push({
@@ -192,8 +249,10 @@ serve(async (req) => {
           error: errorMessage,
         });
 
-        // Update queue with error
-        await supabaseClient
+        // Update queue with error. A discarded error here left the attempt
+        // count where it was, so a permanently failing address was retried
+        // forever instead of giving up after two tries (US-300).
+        const { error: retryError } = await supabaseClient
           .from('email_queue')
           .update({
             status: queuedEmail.attempts >= 2 ? 'failed' : 'pending',
@@ -202,8 +261,16 @@ serve(async (req) => {
           })
           .eq('id', queuedEmail.id);
 
-          // Create failed email send record
-          await supabaseClient
+        if (retryError) {
+          logStep("Retry state not recorded, this email may retry indefinitely", {
+            email: queuedEmail.recipient_email,
+            error: retryError.message,
+          });
+        }
+
+          // Create failed email send record. Best-effort reporting, but the
+          // error was discarded (US-300).
+          const { error: failRecordError } = await supabaseClient
             .from('email_sends')
             .insert({
               campaign_id: queuedEmail.campaign_id,
@@ -214,6 +281,10 @@ serve(async (req) => {
               error_message: errorMessage,
               retry_count: queuedEmail.attempts + 1,
             });
+
+          if (failRecordError) {
+            logStep('Failure not recorded in email_sends', { error: failRecordError.message });
+          }
 
           results.push({
             email: queuedEmail.recipient_email,

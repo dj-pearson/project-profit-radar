@@ -3,11 +3,8 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.3";
 import { TOTP } from "https://deno.land/x/otpauth@v9.2.4/dist/otpauth.esm.js";
 import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
 import { validateRequest, uuidSchema, createErrorResponse } from "../_shared/validation.ts";
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
+import { getCorsHeaders } from '../_shared/secure-cors.ts';
+import { writeSecurityLog } from '../_shared/security-log.ts';
 
 // SECURITY: Input validation schema
 const VerifyMFASchema = z.object({
@@ -15,17 +12,43 @@ const VerifyMFASchema = z.object({
   verification_code: z.string().length(6, 'Code must be exactly 6 digits').regex(/^\d{6}$/, 'Code must contain only digits')
 });
 
+/**
+ * MFA backup codes.
+ *
+ * These bypass the second factor by design, so a predictable one defeats MFA
+ * outright. This used Math.random().toString(36) - Deno runs V8, whose
+ * Math.random is xorshift128+, and its internal state is recoverable from a
+ * small number of consecutive outputs. Eight codes drawn in a row from that
+ * sequence are related to one another (US-296).
+ *
+ * crypto.getRandomValues, and rejection sampling so the alphabet stays
+ * unbiased. The alphabet omits 0 O 1 I L: a user reads these off a screen and
+ * types them back weeks later.
+ */
+const BACKUP_ALPHABET = "ABCDEFGHJKMNPQRSTUVWXYZ23456789";
+
 function generateBackupCodes(count: number = 8): string[] {
+  const perCode = 8;
+  const max = Math.floor(256 / BACKUP_ALPHABET.length) * BACKUP_ALPHABET.length;
   const codes: string[] = [];
-  for (let i = 0; i < count; i++) {
-    // Generate 8-character alphanumeric codes
-    const code = Math.random().toString(36).substring(2, 10).toUpperCase();
-    codes.push(code);
+
+  while (codes.length < count) {
+    let code = "";
+    while (code.length < perCode) {
+      const buf = new Uint8Array(perCode * 2);
+      crypto.getRandomValues(buf);
+      for (let i = 0; i < buf.length && code.length < perCode; i++) {
+        if (buf[i] < max) code += BACKUP_ALPHABET[buf[i] % BACKUP_ALPHABET.length];
+      }
+    }
+    codes.push(`${code.slice(0, 4)}-${code.slice(4)}`);
   }
+
   return codes;
 }
 
 serve(async (req) => {
+  const corsHeaders = getCorsHeaders(req);
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
@@ -98,7 +121,7 @@ serve(async (req) => {
     
     if (!isValid) {
       // Log failed verification attempt
-      await supabaseClient.from("security_logs").insert({
+      await writeSecurityLog(supabaseClient, {
         user_id: user_id,
         event_type: "mfa_verification_failed",
         ip_address: req.headers.get("cf-connecting-ip") || req.headers.get("x-forwarded-for"),
@@ -131,7 +154,7 @@ serve(async (req) => {
     }
 
     // Log successful MFA enablement
-    await supabaseClient.from("security_logs").insert({
+    await writeSecurityLog(supabaseClient, {
       user_id: user_id,
       event_type: "mfa_enabled",
       ip_address: req.headers.get("cf-connecting-ip") || req.headers.get("x-forwarded-for"),

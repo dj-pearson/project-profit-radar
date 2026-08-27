@@ -193,7 +193,12 @@ serve(async (req) => {
         continue;
       }
 
-            await supabaseClient
+      // This row IS the "already sent" guard - it is read back at the top of
+      // this loop to skip subscribers who have had this notification. Its error
+      // was discarded and supabase-js returns it rather than throwing, so a
+      // lost insert meant the same renewal email went to the same customer on
+      // every run until their subscription ended (US-300).
+      const { error: notificationRecordError } = await supabaseClient
         .from('renewal_notifications')
         .insert({
           subscriber_id: subscriber.id,
@@ -201,10 +206,21 @@ serve(async (req) => {
           subscription_end_date: subscriber.subscription_end
         });
 
-            await supabaseClient
+      if (notificationRecordError) {
+        logStep("SENT BUT NOT RECORDED - this renewal email will be sent again", {
+          subscriberId: subscriber.id,
+          type: notificationType,
+          error: notificationRecordError.message,
+        });
+      }
+
+            const { error: updateSubscribersError } = await supabaseClient
         .from('subscribers')
         .update({ renewal_notification_sent_at: new Date().toISOString() })
         .eq('id', subscriber.id);
+            if (updateSubscribersError) {
+              console.error(`[subscribers] update failed`, updateSubscribersError);
+            }
 
       notificationsSent++;
       logStep("Notification sent", { 

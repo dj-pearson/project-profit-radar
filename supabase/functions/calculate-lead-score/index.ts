@@ -1,11 +1,6 @@
 // Calculate Lead Score Edge Function
 import { initializeAuthContext, errorResponse, successResponse } from '../_shared/auth-helpers.ts';
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-  'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-}
+import { getCorsHeaders } from '../_shared/secure-cors.ts';
 
 interface ScoringRule {
   id: string;
@@ -33,6 +28,7 @@ interface Lead {
 }
 
 Deno.serve(async (req) => {
+  const corsHeaders = getCorsHeaders(req);
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -97,17 +93,19 @@ Deno.serve(async (req) => {
           }
           break;
         
-        case 'greater_than':
+        case 'greater_than': {
           const numValue = parseFloat(fieldValue);
           const conditionNum = parseFloat(rule.condition_value);
           ruleApplies = !isNaN(numValue) && !isNaN(conditionNum) && numValue > conditionNum;
           break;
+        }
         
-        case 'less_than':
+        case 'less_than': {
           const numValueLt = parseFloat(fieldValue);
           const conditionNumLt = parseFloat(rule.condition_value);
           ruleApplies = !isNaN(numValueLt) && !isNaN(conditionNumLt) && numValueLt < conditionNumLt;
           break;
+        }
         
         case 'contains':
           ruleApplies = fieldValue && typeof fieldValue === 'string' && 
@@ -118,13 +116,14 @@ Deno.serve(async (req) => {
           ruleApplies = fieldValue && fieldValue !== '' && fieldValue !== null;
           break;
         
-        case 'in_range':
+        case 'in_range': {
           // Expect condition_value to be like "min,max"
           const [min, max] = rule.condition_value.split(',').map((v: string) => parseFloat(v.trim()));
           const rangeValue = parseFloat(fieldValue);
           ruleApplies = !isNaN(rangeValue) && !isNaN(min) && !isNaN(max) && 
                        rangeValue >= min && rangeValue <= max;
           break;
+        }
       }
 
       if (ruleApplies) {
@@ -165,12 +164,22 @@ Deno.serve(async (req) => {
       leadQuality = 'marketing_qualified';
     }
 
-    // Update lead quality if it has changed
+    // Update lead quality if it has changed. The error was discarded and
+    // supabase-js returns it rather than throwing, so the response below could
+    // report a lead promoted to sales_qualified while the row still said
+    // marketing_qualified - and routing, alerts and the pipeline view all read
+    // the row (US-300).
     if (lead.lead_quality !== leadQuality) {
-      await supabaseClient
+      const { error: qualityError } = await supabaseClient
         .from('leads')
         .update({ lead_quality: leadQuality })
         .eq('id', leadId);
+
+      if (qualityError) {
+        throw new Error(
+          `Lead ${leadId} scored ${totalScore} (${leadQuality}) but the new quality was NOT stored: ${qualityError.message}`,
+        );
+      }
     }
 
     console.log(`Calculated score for lead ${leadId}: ${totalScore} points`);

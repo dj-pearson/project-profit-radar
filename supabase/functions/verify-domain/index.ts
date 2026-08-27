@@ -1,10 +1,6 @@
-import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
+import { serve } from 'https://deno.land/std@0.190.0/http/server.ts';
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.50.3';
+import { getCorsHeaders } from '../_shared/secure-cors.ts';
 
 interface VerifyDomainRequest {
   tenant_id: string;
@@ -66,6 +62,7 @@ async function verifyDNS(domain: string): Promise<{ verified: boolean; message: 
 }
 
 serve(async (req) => {
+  const corsHeaders = getCorsHeaders(req);
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
@@ -134,14 +131,23 @@ serve(async (req) => {
         );
       }
 
-      // Record audit log
-      await supabase.from('audit_logs').insert({
+      // Record audit log. Domain verification is what lets a tenant claim an
+      // email domain for SSO, so this row is the evidence of who verified what
+      // and when. Its error was discarded (US-300).
+      const { error: auditError } = await supabase.from('audit_logs').insert({
         tenant_id,
         action: 'domain_verified',
         resource_type: 'tenant',
         resource_id: tenant_id,
         details: { domain, verified: true },
       });
+
+      if (auditError) {
+        console.error(
+          `[VERIFY-DOMAIN] Domain ${domain} was VERIFIED for tenant ${tenant_id} but not audited:`,
+          auditError.message,
+        );
+      }
     }
 
     return new Response(

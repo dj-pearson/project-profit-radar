@@ -132,7 +132,7 @@ export function SecureRoute({
       if (UnauthorizedComponent) {
         return <UnauthorizedComponent />;
       }
-      return <Navigate to="/unauthorized" replace />;
+      return <Navigate to="/unauthorized" state={{ from: location.pathname }} replace />;
     }
   }
 
@@ -152,7 +152,7 @@ export function SecureRoute({
       if (UnauthorizedComponent) {
         return <UnauthorizedComponent />;
       }
-      return <Navigate to="/unauthorized" replace />;
+      return <Navigate to="/unauthorized" state={{ from: location.pathname }} replace />;
     }
   }
 
@@ -239,7 +239,7 @@ export function SecureRoute({
       if (UnauthorizedComponent) {
         return <UnauthorizedComponent />;
       }
-      return <Navigate to="/unauthorized" replace />;
+      return <Navigate to="/unauthorized" state={{ from: location.pathname }} replace />;
     }
   }
 

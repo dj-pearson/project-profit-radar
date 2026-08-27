@@ -1,12 +1,9 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.3";
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
+import { getCorsHeaders } from '../_shared/secure-cors.ts';
 
 serve(async (req) => {
+  const corsHeaders = getCorsHeaders(req);
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
 
   try {
@@ -81,7 +78,7 @@ serve(async (req) => {
     let jsSizeKb = 0;
     let cssSizeKb = 0;
     let imageSizeKb = 0;
-    let fontSizeKb = 0;
+    const fontSizeKb = 0;
     let totalRequests = 1; // HTML itself
 
     // Helper to fetch resource size
@@ -202,9 +199,19 @@ serve(async (req) => {
         severity: v.severity,
       }));
 
-      await supabaseClient
+      // These rows ARE the violation record - the response reports the
+      // violations from memory, so with the error discarded a budget breach
+      // could be reported and never persisted for anyone to act on (US-300).
+      const { error: violationsError } = await supabaseClient
         .from('seo_performance_budget_violations')
         .insert(violationRecords);
+
+      if (violationsError) {
+        console.error(
+          '[PERFORMANCE-BUDGET] Violations were detected but NOT stored:',
+          violationsError.message,
+        );
+      }
     }
 
     const analysisResult = {

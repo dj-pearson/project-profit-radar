@@ -4,7 +4,9 @@
   "enforcement": "active",
   "conditions": {
     "ref_name": {
-      "include": ["refs/heads/develop"],
+      "include": [
+        "refs/heads/develop"
+      ],
       "exclude": []
     }
   },
@@ -16,8 +18,12 @@
     }
   ],
   "rules": [
-    { "type": "deletion" },
-    { "type": "non_fast_forward" },
+    {
+      "type": "deletion"
+    },
+    {
+      "type": "non_fast_forward"
+    },
     {
       "type": "pull_request",
       "parameters": {
@@ -26,7 +32,39 @@
         "require_code_owner_review": false,
         "require_last_push_approval": false,
         "required_review_thread_resolution": false,
-        "allowed_merge_methods": ["merge", "squash"]
+        "allowed_merge_methods": [
+          "merge",
+          "squash"
+        ]
+      }
+    },
+    {
+      "type": "required_status_checks",
+      "parameters": {
+        "strict_required_status_checks_policy": false,
+        "do_not_enforce_on_create": false,
+        "required_status_checks": [
+          {
+            "context": "Lint",
+            "integration_id": 15368
+          },
+          {
+            "context": "Type Check",
+            "integration_id": 15368
+          },
+          {
+            "context": "Unit Tests",
+            "integration_id": 15368
+          },
+          {
+            "context": "Build",
+            "integration_id": 15368
+          },
+          {
+            "context": "Security Smoke Tests",
+            "integration_id": 15368
+          }
+        ]
       }
     }
   ]

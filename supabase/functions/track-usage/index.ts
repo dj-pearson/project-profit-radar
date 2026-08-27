@@ -1,11 +1,8 @@
 // Track Usage Edge Function
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { initializeAuthContext, errorResponse } from '../_shared/auth-helpers.ts';
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
+import { createServiceClient } from '../_shared/service-client.ts';
+import { getCorsHeaders } from '../_shared/secure-cors.ts';
 
 interface UsageTrackingRequest {
   metric_type: string;
@@ -20,6 +17,7 @@ const logStep = (step: string, details?: any) => {
 };
 
 serve(async (req) => {
+  const corsHeaders = getCorsHeaders(req);
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
@@ -48,29 +46,47 @@ serve(async (req) => {
     const billingPeriodStart = new Date(now.getFullYear(), now.getMonth(), 1);
     const billingPeriodEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0);
 
-    // Determine the target company_id and user_id
-    let targetCompanyId = company_id;
-    let targetUserId = user_id || user.id;
+    // SECURITY: company_id and user_id used to be taken from the body when
+    // present, and usage_metrics carries a "System can manage usage metrics"
+    // FOR ALL USING (true) policy (see the US-237 backlog), so RLS does not
+    // scope writes to the caller's company. Any authenticated user could
+    // therefore book usage against any company — and usage_metrics feeds
+    // usage-billing/generate-usage-invoice. Both are now derived from the
+    // caller's own profile; the body fields are only logged when they disagree.
+    const { data: profile } = await supabaseClient
+      .from("user_profiles")
+      .select("company_id")
+      .eq("id", user.id)
+      .single();
 
-    if (!targetCompanyId) {
-      // Get user's company from profile
-      const { data: profile } = await supabaseClient
-        .from("user_profiles")
-        .select("company_id")
-        .eq("id", user.id)
-        .single();
-
-      if (profile?.company_id) {
-        targetCompanyId = profile.company_id;
-      }
-    }
+    const targetCompanyId = profile?.company_id;
+    const targetUserId = user.id;
 
     if (!targetCompanyId) {
       throw new Error("Could not determine company_id for usage tracking");
     }
 
+    // usage_metrics has exactly two policies: a company-scoped SELECT, and the
+    // permissive "System can manage usage metrics" FOR ALL USING (true).
+    // US-237's migration 20260712120000 scopes that second one to service_role
+    // — after which a user-JWT client has NO write path to this table at all,
+    // and both writes below discarded their error, so the failure would have
+    // been silent and usage simply stopped recording. The caller is already
+    // authorised above (company comes from their own profile), so the metric
+    // write runs on the service role and works either side of that migration.
+    const serviceClient = createServiceClient();
+
+    if (company_id && company_id !== targetCompanyId) {
+      logStep("Ignoring caller-supplied company_id", {
+        claimed: company_id, actual: targetCompanyId, userId: user.id
+      });
+    }
+    if (user_id && user_id !== targetUserId) {
+      logStep("Ignoring caller-supplied user_id", { claimed: user_id, actual: targetUserId });
+    }
+
     // Check if usage record exists for this period
-    const { data: existingUsage } = await supabaseClient
+    const { data: existingUsage } = await serviceClient
       .from("usage_metrics")
       .select("*")
       .eq("company_id", targetCompanyId)
@@ -84,7 +100,7 @@ serve(async (req) => {
       // Update existing record
       const newValue = parseFloat(existingUsage.metric_value) + metric_value;
 
-      await supabaseClient
+      const { error: updateError } = await serviceClient
         .from("usage_metrics")
         .update({
           metric_value: newValue,
@@ -92,10 +108,15 @@ serve(async (req) => {
         })
         .eq("id", existingUsage.id);
 
+      if (updateError) {
+        logStep("Failed to update usage record", { id: existingUsage.id, error: updateError.message });
+        throw new Error(`Failed to record usage: ${updateError.message}`);
+      }
+
       logStep("Updated existing usage record", { id: existingUsage.id, newValue });
     } else {
       // Create new record
-      const { data: newUsage } = await supabaseClient
+      const { data: newUsage, error: insertError } = await serviceClient
         .from("usage_metrics")
         .insert({
           company_id: targetCompanyId,
@@ -108,11 +129,16 @@ serve(async (req) => {
         .select()
         .single();
 
+      if (insertError) {
+        logStep("Failed to create usage record", { error: insertError.message });
+        throw new Error(`Failed to record usage: ${insertError.message}`);
+      }
+
       logStep("Created new usage record", { id: newUsage?.id });
     }
 
     // Check for usage alerts/limits
-    await checkUsageAlerts(targetCompanyId, metric_type, supabaseClient);
+    await checkUsageAlerts(targetCompanyId, metric_type, serviceClient);
 
     return new Response(JSON.stringify({ success: true }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },

@@ -219,20 +219,17 @@ export function useCreateJournalEntry() {
         throw new Error(validation.errors.join('; '));
       }
 
-      // Generate entry number
-      const { data: seqData, error: seqError } = await supabase
-        .rpc('nextval', { sequence_name: 'journal_entry_number_seq' });
-
-      if (seqError) throw seqError;
-
-      const entryNumber = `JE-${String(seqData).padStart(6, '0')}`;
-
-      // Create journal entry header with site isolation
+      // entry_number is assigned by the set_journal_entry_number trigger
+      // (US-310). This used to be `rpc('nextval', { sequence_name: ... })`,
+      // which is pg_catalog.nextval(regclass): wrong schema for PostgREST to
+      // expose and wrong argument shape, so it could never resolve and the
+      // `throw seqError` on the next line meant no journal entry has ever been
+      // created. Assigning in a BEFORE INSERT trigger is also atomic with the
+      // insert, which a client-side read of the sequence is not.
       const { data: headerData, error: headerError } = await supabase
         .from('journal_entries')
         .insert({
           company_id: entry.companyId,
-          entry_number: entryNumber,
           entry_date: entry.entryDate,
           description: entry.description,
           memo: entry.memo,
@@ -262,8 +259,20 @@ export function useCreateJournalEntry() {
         .insert(lines);
 
       if (linesError) {
-        // Rollback: delete the header
-        await supabase.from('journal_entries').delete().eq('id', headerData.id);
+        // Rollback: delete the header. Read the rollback's own error - a
+        // failed rollback leaves a journal entry header with no lines, which
+        // is an unbalanced entry sitting in the ledger, and supabase-js
+        // returns that error rather than throwing it.
+        const { error: rollbackError } = await supabase
+          .from('journal_entries')
+          .delete()
+          .eq('id', headerData.id);
+        if (rollbackError) {
+          throw new Error(
+            `Journal entry lines failed (${linesError.message}) and the header could not be rolled back ` +
+              `(${rollbackError.message}). Entry ${headerData.id} is in the ledger with no lines and must be removed by hand.`,
+          );
+        }
         throw linesError;
       }
 
@@ -376,13 +385,8 @@ export function useCreateBill() {
       memo?: string;
       projectId?: string;
     }) => {
-            // Generate bill number
-      const { data: seqData, error: seqError } = await supabase
-        .rpc('nextval', { sequence_name: 'bill_number_seq' });
-
-      if (seqError) throw seqError;
-
-      const billNumber = `BILL-${String(seqData).padStart(6, '0')}`;
+      // bill_number is assigned by the set_bill_number trigger (US-310); see
+      // the journal entry mutation above for why the nextval RPC could not work.
 
       // Calculate totals
       const subtotal = bill.lineItems.reduce((sum, item) => sum + item.amount, 0);
@@ -392,7 +396,6 @@ export function useCreateBill() {
         .from('bills')
         .insert({
           company_id: bill.companyId,
-          bill_number: billNumber,
           vendor_id: bill.vendorId,
           vendor_ref_number: bill.vendorRefNumber,
           bill_date: bill.billDate,
@@ -427,8 +430,18 @@ export function useCreateBill() {
         .insert(lineItems);
 
       if (linesError) {
-        // Rollback
-        await supabase.from('bills').delete().eq('id', billData.id);
+        // Rollback. As above: a failed rollback leaves a bill with no line
+        // items, which will not reconcile against anything.
+        const { error: rollbackError } = await supabase
+          .from('bills')
+          .delete()
+          .eq('id', billData.id);
+        if (rollbackError) {
+          throw new Error(
+            `Bill line items failed (${linesError.message}) and the bill could not be rolled back ` +
+              `(${rollbackError.message}). Bill ${billData.id} exists with no line items and must be removed by hand.`,
+          );
+        }
         throw linesError;
       }
 

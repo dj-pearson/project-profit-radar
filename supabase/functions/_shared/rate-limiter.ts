@@ -1,7 +1,11 @@
 /**
  * Rate Limiting Middleware for Supabase Edge Functions
  *
- * Security: Protects public endpoints from abuse, brute force, and DoS attacks
+ * Security: Protects public endpoints from abuse, brute force, and DoS attacks.
+ * Backed by the consume_rate_limit RPC over rate_limit_state, which increments
+ * and decides atomically. Pass a SERVICE-ROLE client: rate_limit_state is
+ * service-role-only (US-306) and EXECUTE on the function is granted to
+ * service_role alone, so one caller cannot burn another caller's quota.
  *
  * Usage:
  * ```typescript
@@ -53,80 +57,54 @@ export async function checkRateLimit(
   supabaseClient: any,
   config: RateLimitConfig
 ): Promise<RateLimitResult> {
-  const {
-    identifier,
-    endpoint,
-    maxRequests,
-    windowMinutes,
-  } = config;
-
-  const now = new Date();
-  const windowStart = new Date(now.getTime() - windowMinutes * 60 * 1000);
+  const { identifier, endpoint, maxRequests, windowMinutes } = config;
 
   try {
-    // Count requests in current time window
-    const { data: violations, error } = await supabaseClient
-      .from('rate_limit_violations')
-      .select('*')
-      .eq('ip_address', identifier)
-      .eq('endpoint', endpoint)
-      .gte('created_at', windowStart.toISOString());
+    // US-307: this used to count rows in rate_limit_violations and insert one
+    // only when the request was already over the limit, so from an empty table
+    // the count was 0, every request passed, and no row was ever written. It
+    // could not bootstrap, and no limit in the system had ever blocked
+    // anything. consume_rate_limit increments the counter in rate_limit_state
+    // and returns the decision in one atomic step - the increment has to
+    // happen inside the same lock as the read, or two concurrent requests both
+    // read the same count and both pass.
+    const { data, error } = await supabaseClient.rpc('consume_rate_limit', {
+      p_identifier: identifier,
+      p_endpoint: endpoint,
+      p_max_requests: maxRequests,
+      p_window_minutes: windowMinutes,
+    });
 
-    if (error && error.code !== 'PGRST116') {
-      console.error('[RateLimit] Database error:', error);
-      // Fail open (allow request) if database is unavailable
-      return {
-        allowed: true,
-        requestCount: 0,
-        retryAfter: 0,
-        limit: maxRequests,
-      };
+    if (error) {
+      // Fail open, deliberately: a limiter that 500s when the database is
+      // unreachable takes the endpoint down with it. Logged loudly because the
+      // previous version failed open silently and nobody noticed for a year.
+      console.error('[RateLimit] consume_rate_limit failed, allowing request:', error);
+      return { allowed: true, requestCount: 0, retryAfter: 0, limit: maxRequests };
     }
 
-    const requestCount = violations?.length || 0;
-    const allowed = requestCount < maxRequests;
-
-    // Calculate retry time
-    let retryAfter = 0;
-    if (!allowed && violations && violations.length > 0) {
-      const oldestViolation = violations.reduce((oldest: any, current: any) => {
-        return new Date(current.created_at) < new Date(oldest.created_at) ? current : oldest;
-      });
-      const resetTime = new Date(oldestViolation.created_at).getTime() + windowMinutes * 60 * 1000;
-      retryAfter = Math.ceil((resetTime - now.getTime()) / 1000);
+    // The function RETURNS TABLE, so PostgREST hands back an array of one row.
+    const row = Array.isArray(data) ? data[0] : data;
+    if (!row) {
+      console.error('[RateLimit] consume_rate_limit returned no row, allowing request');
+      return { allowed: true, requestCount: 0, retryAfter: 0, limit: maxRequests };
     }
 
-    // Log violation if rate limit exceeded
-    if (!allowed) {
-      await supabaseClient.from('rate_limit_violations').insert({
-        ip_address: identifier,
-        endpoint,
-        requests_made: requestCount + 1,
-        limit_value: maxRequests,
-        window_minutes: windowMinutes,
-        created_at: now.toISOString(),
-      });
-
+    if (!row.allowed) {
       console.warn(
-        `[RateLimit] Limit exceeded for ${identifier} on ${endpoint}: ${requestCount}/${maxRequests} requests`
+        `[RateLimit] Limit exceeded for ${identifier} on ${endpoint}: ${row.request_count}/${maxRequests} requests`
       );
     }
 
     return {
-      allowed,
-      requestCount,
-      retryAfter: retryAfter > 0 ? retryAfter : 0,
+      allowed: Boolean(row.allowed),
+      requestCount: Number(row.request_count) || 0,
+      retryAfter: Math.max(0, Number(row.retry_after) || 0),
       limit: maxRequests,
     };
-  } catch (error) {
-    console.error('[RateLimit] Unexpected error:', error);
-    // Fail open on unexpected errors
-    return {
-      allowed: true,
-      requestCount: 0,
-      retryAfter: 0,
-      limit: maxRequests,
-    };
+  } catch (err) {
+    console.error('[RateLimit] Unexpected error, allowing request:', err);
+    return { allowed: true, requestCount: 0, retryAfter: 0, limit: maxRequests };
   }
 }
 
@@ -151,7 +129,12 @@ export function rateLimitResponse(
 ): Response {
   return new Response(
     JSON.stringify({
+      // CLAUDE.md's API response shape. success and timestamp were added
+      // alongside the existing fields rather than replacing them (US-243), so a
+      // client already reading error/retryAfter keeps working.
+      success: false,
       error: 'Rate limit exceeded',
+      timestamp: new Date().toISOString(),
       retryAfter: result.retryAfter,
       limit: result.limit,
       requestCount: result.requestCount,
@@ -191,4 +174,40 @@ export function getClientIP(req: Request): string {
 
   // Fallback to unknown
   return 'unknown';
+}
+
+/**
+ * Enforce a rate limit for one caller and return a 429 if they are over it.
+ *
+ *   const limited = await enforceRateLimit(serviceClient, user.id, 'voice-to-text', RATE_LIMITS.AI, corsHeaders);
+ *   if (limited) return limited;
+ *
+ * Pass a SERVICE-ROLE client. rate_limit_violations is not the caller's to read
+ * or write, and using their JWT would make the limit depend on RLS — which is
+ * the wrong thing for a limit to depend on.
+ *
+ * Prefer a user id as the identifier over an IP. An IP limit is shared by
+ * everyone behind one corporate NAT, and a compromised token sidesteps it by
+ * moving address. Fall back to IP only where there is no authenticated user.
+ *
+ * Note checkRateLimit() returns allowed when it cannot reach the database, so a
+ * limiter outage never blocks legitimate traffic. That trade is deliberate: for
+ * a cost control, failing open beats taking the product down. It does mean a
+ * database outage removes the ceiling, which is why the expensive calls behind
+ * these limits should also have provider-side spend caps.
+ */
+export async function enforceRateLimit(
+  // deno-lint-ignore no-explicit-any
+  serviceClient: any,
+  identifier: string,
+  endpoint: string,
+  preset: { maxRequests: number; windowMinutes: number },
+  corsHeaders: Record<string, string> = {},
+): Promise<Response | null> {
+  const result = await checkRateLimit(serviceClient, {
+    identifier,
+    endpoint,
+    ...preset,
+  });
+  return result.allowed ? null : rateLimitResponse(result, corsHeaders);
 }

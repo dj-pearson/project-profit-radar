@@ -1,8 +1,9 @@
 // Google Analytics & Search Console OAuth Flow
 // Handles OAuth 2.0 authentication for Google platforms
 
-import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
+import { serve } from 'https://deno.land/std@0.190.0/http/server.ts';
 import { initializeAuthContext, errorResponse } from '../_shared/auth-helpers.ts';
+import { getCorsHeaders } from '../_shared/secure-cors.ts';
 
 const GOOGLE_CLIENT_ID = Deno.env.get('GOOGLE_OAUTH_CLIENT_ID') || '';
 const GOOGLE_CLIENT_SECRET = Deno.env.get('GOOGLE_OAUTH_CLIENT_SECRET') || '';
@@ -19,12 +20,8 @@ const SCOPES = [
   'https://www.googleapis.com/auth/userinfo.profile'
 ].join(' ');
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
-
 serve(async (req) => {
+  const corsHeaders = getCorsHeaders(req);
   // Handle CORS
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
@@ -181,7 +178,10 @@ serve(async (req) => {
         if (propertiesData.accountSummaries) {
           for (const account of propertiesData.accountSummaries) {
             for (const propertySummary of account.propertySummaries || []) {
-              await supabaseClient.from('ga4_properties').upsert({  // CRITICAL: Site isolation
+              // Discarded before, while the response reported the connection as set
+              // up: a failure left the account connected with no properties to
+              // select from (US-300).
+              const { error: ga4Error } = await supabaseClient.from('ga4_properties').upsert({  // CRITICAL: Site isolation
                 connection_id: connection.id,
                 company_id: userProfile.company_id,
                 property_id: propertySummary.property.split('/').pop(),
@@ -190,6 +190,10 @@ serve(async (req) => {
                 parent_account_name: account.displayName,
                 is_primary: false,
               });
+
+              if (ga4Error) {
+                console.error('[analytics-oauth-google] GA4 property not stored:', ga4Error.message);
+              }
             }
           }
         }
@@ -210,7 +214,8 @@ serve(async (req) => {
         if (sitesData.siteEntry) {
           for (const site of sitesData.siteEntry) {
             // Update connection with property info
-            await supabaseClient
+            // Discarded before (US-300).
+            const { error: propertyError } = await supabaseClient
               .from('analytics_platform_connections')
               .update({
                 property_id: site.siteUrl,
@@ -219,8 +224,12 @@ serve(async (req) => {
               })
               .eq('id', connection.id);
 
+            if (propertyError) {
+              console.error('[analytics-oauth-google] connection property not set:', propertyError.message);
+            }
+
             // Also create in gsc_properties if exists with site isolation
-            await supabaseClient.from('gsc_properties').upsert({  // CRITICAL: Site isolation
+            const { error: gscError } = await supabaseClient.from('gsc_properties').upsert({  // CRITICAL: Site isolation
               company_id: userProfile.company_id,
               credentials_id: connection.id,
               property_url: site.siteUrl,
@@ -232,6 +241,10 @@ serve(async (req) => {
               auto_sync_enabled: true,
               sync_frequency_hours: 24,
             }).select();
+
+            if (gscError) {
+              console.error('[analytics-oauth-google] GSC property not stored:', gscError.message);
+            }
           }
         }
       }
@@ -291,7 +304,11 @@ serve(async (req) => {
       const expiresAt = new Date(Date.now() + tokens.expires_in * 1000).toISOString();
 
       // Update connection with site isolation
-      await supabaseClient
+      // This persists a freshly refreshed access token. The error was
+      // discarded, so a failure meant the new token was never stored while
+      // the response said the connection was refreshed, and the next call
+      // used the expired one (US-300).
+      const { error: refreshError } = await supabaseClient
         .from('analytics_platform_connections')
         .update({
           access_token_encrypted: tokens.access_token,
@@ -300,6 +317,10 @@ serve(async (req) => {
         })
           // CRITICAL: Site isolation
         .eq('id', connection_id);
+
+      if (refreshError) {
+        throw new Error(`Refreshed Google token was not saved: ${refreshError.message}`);
+      }
 
       return new Response(
         JSON.stringify({
@@ -338,7 +359,12 @@ serve(async (req) => {
       }
 
       // Update connection status with site isolation
-      await supabaseClient
+      // This is the disconnect: it clears the stored Google tokens. The
+      // error was discarded, so a user could press Disconnect, be told it
+      // worked, and have their access and refresh tokens still sitting in
+      // the table (US-300). Fail loudly rather than report a revocation
+      // that did not happen.
+      const { error: disconnectError } = await supabaseClient
         .from('analytics_platform_connections')
         .update({
           is_connected: false,
@@ -349,6 +375,12 @@ serve(async (req) => {
         })
           // CRITICAL: Site isolation
         .eq('id', connection_id);
+
+      if (disconnectError) {
+        throw new Error(
+          `Disconnect failed and the stored Google tokens were NOT cleared: ${disconnectError.message}`,
+        );
+      }
 
       return new Response(
         JSON.stringify({

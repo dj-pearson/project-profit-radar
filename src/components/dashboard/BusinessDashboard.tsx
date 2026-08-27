@@ -62,10 +62,10 @@ export const BusinessDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [projects, setProjects] = useState<Project[]>([]);
   const [deadlineItems, setDeadlineItems] = useState<DeadlineItem[]>([]);
-  const [clientResponses, setClientResponses] = useState<ClientResponseItem[]>(
+  const [clientResponses] = useState<ClientResponseItem[]>(
     []
   );
-  const [responseSort, setResponseSort] = useState<
+  const [responseSort] = useState<
     "days" | "project" | "client"
   >("days");
   const [metrics, setMetrics] = useState<DashboardMetrics>({

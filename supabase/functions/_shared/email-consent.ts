@@ -20,7 +20,7 @@
 //   import { canSendEmail } from '../_shared/email-consent.ts';
 //   if (!(await canSendEmail(supabase, user.email, 'marketing'))) return;
 
-import { SupabaseClient } from 'npm:@supabase/supabase-js@2';
+import { SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2.50.3';
 
 export type EmailKind =
   | 'transactional'
@@ -80,11 +80,20 @@ export async function honorUnsubscribe(
   client: SupabaseClient,
   userId: string,
 ): Promise<void> {
-  await client.from('email_preferences').upsert({
+  // CAN-SPAM requires an unsubscribe to be honoured within 10 business days,
+  // so a write that silently did not happen means the user keeps receiving
+  // mail after being told they would not. supabase-js returns this error
+  // rather than throwing it (US-300), so it has to be read and raised - the
+  // caller must not confirm an unsubscribe that was not recorded.
+  const { error } = await client.from('email_preferences').upsert({
     user_id: userId,
     product_updates: false,
     marketing: false,
     newsletter: false,
     updated_at: new Date().toISOString(),
   });
+
+  if (error) {
+    throw new Error(`Unsubscribe not recorded for ${userId}: ${error.message}`);
+  }
 }

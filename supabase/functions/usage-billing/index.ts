@@ -3,11 +3,8 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.3";
 import { initializeAuthContext, errorResponse } from '../_shared/auth-helpers.ts';
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
+import { createServiceClient } from '../_shared/service-client.ts';
+import { getCorsHeaders } from '../_shared/secure-cors.ts';
 
 const logStep = (step: string, details?: Record<string, unknown>) => {
   const detailsStr = details ? ` - ${JSON.stringify(details)}` : '';
@@ -55,6 +52,7 @@ const USAGE_PRICING = {
 };
 
 serve(async (req) => {
+  const corsHeaders = getCorsHeaders(req);
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
   }
@@ -97,22 +95,22 @@ serve(async (req) => {
 
     switch (action) {
       case 'record':
-        return await recordUsage(supabaseClient, companyId, body);
+        return await recordUsage(corsHeaders, supabaseClient, companyId, body);
 
       case 'get_usage':
-        return await getUsage(supabaseClient, companyId, body);
+        return await getUsage(corsHeaders, supabaseClient, companyId, body);
 
       case 'get_summary':
-        return await getUsageSummary(supabaseClient, companyId, tier, body);
+        return await getUsageSummary(corsHeaders, supabaseClient, companyId, tier, body);
 
       case 'calculate_bill':
-        return await calculateUsageBill(supabaseClient, companyId, tier, body);
+        return await calculateUsageBill(corsHeaders, supabaseClient, companyId, tier, body);
 
       case 'generate_invoice':
-        return await generateUsageInvoice(supabaseClient, companyId, tier, body);
+        return await generateUsageInvoice(corsHeaders, supabaseClient, companyId, tier, body);
 
       case 'get_limits':
-        return await getLimits(tier);
+        return await getLimits(corsHeaders, tier);
 
       default:
         return errorResponse('Invalid action. Use: record, get_usage, get_summary, calculate_bill, generate_invoice, get_limits', 400);
@@ -129,7 +127,7 @@ serve(async (req) => {
 });
 
 async function recordUsage(
-  supabase: ReturnType<typeof createClient>,
+  corsHeaders: Record<string, string>, supabase: ReturnType<typeof createClient>,
   companyId: string,
   body: UsageRequest
 ): Promise<Response> {
@@ -178,13 +176,21 @@ async function recordUsage(
 }
 
 async function updateUsageMetrics(
-  supabase: ReturnType<typeof createClient>,
+  _supabase: ReturnType<typeof createClient>,
   companyId: string,
   metricName: string,
   metricValue: number,
   periodStart: Date,
   periodEnd: Date
 ): Promise<void> {
+  // usage_metrics has a company-scoped SELECT policy and the permissive
+  // "System can manage usage metrics" FOR ALL USING (true) that US-237's
+  // migration scopes to service_role — after which a user-JWT client has no
+  // write path here at all. These writes discarded their errors, so that would
+  // have shown up as usage quietly not being recorded rather than as a failure.
+  // companyId is already derived from the caller's own profile upstream.
+  const supabase = createServiceClient();
+
   // Check for existing metric
   const { data: existing } = await supabase
     .from('usage_metrics')
@@ -197,16 +203,19 @@ async function updateUsageMetrics(
 
   if (existing) {
     // Update existing
-    await supabase
+    const { error } = await supabase
       .from('usage_metrics')
       .update({
         metric_value: existing.metric_value + metricValue,
         recorded_at: new Date().toISOString()
       })
       .eq('id', existing.id);
+    if (error) {
+      logStep('Failed to update usage metric', { companyId, metricName, error: error.message });
+    }
   } else {
     // Create new
-    await supabase
+    const { error } = await supabase
       .from('usage_metrics')
       .insert({
         company_id: companyId,
@@ -215,11 +224,14 @@ async function updateUsageMetrics(
         billing_period_start: periodStart.toISOString(),
         billing_period_end: periodEnd.toISOString()
       });
+    if (error) {
+      logStep('Failed to create usage metric', { companyId, metricName, error: error.message });
+    }
   }
 }
 
 async function getUsage(
-  supabase: ReturnType<typeof createClient>,
+  corsHeaders: Record<string, string>, supabase: ReturnType<typeof createClient>,
   companyId: string,
   body: UsageRequest
 ): Promise<Response> {
@@ -277,7 +289,7 @@ async function getUsage(
 }
 
 async function getUsageSummary(
-  supabase: ReturnType<typeof createClient>,
+  corsHeaders: Record<string, string>, supabase: ReturnType<typeof createClient>,
   companyId: string,
   tier: keyof typeof TIER_LIMITS,
   body: UsageRequest
@@ -369,12 +381,12 @@ async function getUsageSummary(
 }
 
 async function calculateUsageBill(
-  supabase: ReturnType<typeof createClient>,
+  corsHeaders: Record<string, string>, supabase: ReturnType<typeof createClient>,
   companyId: string,
   tier: keyof typeof TIER_LIMITS,
   body: UsageRequest
 ): Promise<Response> {
-  const summaryResponse = await getUsageSummary(supabase, companyId, tier, body);
+  const summaryResponse = await getUsageSummary(corsHeaders, supabase, companyId, tier, body);
   const summaryData = await summaryResponse.json();
 
   if (!summaryData.success) {
@@ -464,12 +476,12 @@ async function calculateUsageBill(
 }
 
 async function generateUsageInvoice(
-  supabase: ReturnType<typeof createClient>,
+  corsHeaders: Record<string, string>, supabase: ReturnType<typeof createClient>,
   companyId: string,
   tier: keyof typeof TIER_LIMITS,
   body: UsageRequest
 ): Promise<Response> {
-  const billResponse = await calculateUsageBill(supabase, companyId, tier, body);
+  const billResponse = await calculateUsageBill(corsHeaders, supabase, companyId, tier, body);
   const billData = await billResponse.json();
 
   if (!billData.success) {
@@ -514,14 +526,20 @@ async function generateUsageInvoice(
   }));
 
   if (lineItems.length > 0) {
-    await supabase.from('invoice_line_items').insert(lineItems);
+    const { error: insertInvoiceLineItemsError } = await supabase.from('invoice_line_items').insert(lineItems);
+    if (insertInvoiceLineItemsError) {
+      throw new Error(`Failed to insert invoice_line_items: ${insertInvoiceLineItemsError.message}`);
+    }
   }
 
   // Mark usage records as billed
   const periodStart = new Date(bill.billing_period.start);
   const periodEnd = new Date(bill.billing_period.end);
 
-  await supabase
+  // This is what stops the same usage being billed twice. The invoice already
+  // exists in Stripe at this point, so a discarded error here left the records
+  // billed=false and the next run invoiced them again (US-300).
+  const { error: markBilledError } = await supabase
     .from('usage_billing_records')
     .update({
       billed: true,
@@ -532,6 +550,12 @@ async function generateUsageInvoice(
     .gte('billing_period_start', periodStart.toISOString())
     .lte('billing_period_end', periodEnd.toISOString())
     .eq('billed', false);
+
+  if (markBilledError) {
+    throw new Error(
+      `Invoice ${invoice.id} was raised but the usage records are still unbilled and will be invoiced again: ${markBilledError.message}`,
+    );
+  }
 
   logStep('Usage invoice generated', { invoiceId: invoice.id, total: bill.total });
 
@@ -546,7 +570,7 @@ async function generateUsageInvoice(
   );
 }
 
-async function getLimits(tier: keyof typeof TIER_LIMITS): Promise<Response> {
+async function getLimits(corsHeaders: Record<string, string>, tier: keyof typeof TIER_LIMITS): Promise<Response> {
   const limits = TIER_LIMITS[tier];
   const pricing = USAGE_PRICING;
 

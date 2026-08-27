@@ -75,17 +75,6 @@ export const DuplicateResolutionDialog: React.FC<DuplicateResolutionDialogProps>
     onResolve(resolvedDuplicates);
   };
 
-  const getResolutionIcon = (resolution: DuplicateResolution) => {
-    switch (resolution) {
-      case 'merge':
-        return <Merge className="h-4 w-4" />;
-      case 'create_new':
-        return <Plus className="h-4 w-4" />;
-      case 'skip':
-        return <SkipForward className="h-4 w-4" />;
-    }
-  };
-
   const resolvedCount = resolutions.size;
   const allResolved = resolvedCount === duplicates.length;
 

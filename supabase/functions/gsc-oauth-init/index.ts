@@ -1,12 +1,9 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.3";
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
+import { getCorsHeaders } from '../_shared/secure-cors.ts';
 
 serve(async (req) => {
+  const corsHeaders = getCorsHeaders(req);
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
 
   try {
@@ -43,8 +40,13 @@ serve(async (req) => {
     // Generate state token for security
     const state = crypto.randomUUID();
 
-    // Store state in database for verification
-    await supabaseClient
+    // Store state in database for verification.
+    // The callback compares what Google returns against this row, so if the
+    // upsert fails there is nothing to verify against. The error was discarded
+    // and supabase-js returns it rather than throwing, so the user was sent to
+    // Google, granted access, and came back to a failure with no explanation.
+    // Fail before the redirect instead (US-300).
+    const { error: stateError } = await supabaseClient
       .from('gsc_oauth_credentials')
       .upsert({
         company_id: null,
@@ -55,6 +57,12 @@ serve(async (req) => {
       }, {
         onConflict: 'user_id',
       });
+
+    if (stateError) {
+      throw new Error(
+        `Could not store the OAuth state, so the Google connection was not started: ${stateError.message}`,
+      );
+    }
 
     // Build OAuth URL
     const scopes = [

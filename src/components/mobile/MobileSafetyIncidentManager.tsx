@@ -79,7 +79,7 @@ const MobileSafetyIncidentManager: React.FC<MobileSafetyIncidentManagerProps> = 
   const { user, userProfile } = useAuth();
   const { isOnline, saveOfflineData } = useOfflineSync();
   const { position, getCurrentPosition } = useGeolocation();
-  const [isRecording, setIsRecording] = useState(false);
+  const [isRecording] = useState(false);
 
   useEffect(() => {
     getCurrentPosition();

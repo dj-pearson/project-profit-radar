@@ -73,6 +73,13 @@ const AppContent = () => {
       <Suspense fallback={null}>
         <PWAInstallPrompt />
         <OfflineIndicator />
+        {/*
+          SyncQueueIndicator was lazily imported on line 29 and never rendered
+          (US-296), so a user with actions queued while offline had no sign of
+          them and no way to retry. It returns null when the queue is empty and
+          sync is idle, which is why the omission was invisible.
+        */}
+        <SyncQueueIndicator />
         <NotificationPermission />
         <ShortcutsHelp />
         {/* US-220: 'new version available' prompt → applies update via skipWaiting */}

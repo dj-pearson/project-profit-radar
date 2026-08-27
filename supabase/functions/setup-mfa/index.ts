@@ -5,8 +5,10 @@ import QRCode from "https://esm.sh/qrcode@1.5.4";
 import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
 import { validateRequest, sanitizeError, createErrorResponse } from "../_shared/validation.ts";
 import { initializeAuthContext, errorResponse } from '../_shared/auth-helpers.ts';
+import { createServiceClient } from '../_shared/service-client.ts';
 import { getCorsHeaders, handleCorsPreflightRequest } from "../_shared/secure-cors.ts";
-import { checkRateLimit, getClientIP, rateLimitResponse } from "../_shared/rate-limiter.ts";
+import { checkRateLimit, rateLimitResponse } from "../_shared/rate-limiter.ts";
+import { writeSecurityLog } from "../_shared/security-log.ts";
 
 // SECURITY: Input validation schema
 const SetupMFASchema = z.object({
@@ -29,7 +31,10 @@ serve(async (req) => {
     const { user, supabase: supabaseClient } = authContext;
 
     // Rate limit: 3 MFA setup attempts per hour per user (prevents secret regeneration abuse)
-    const rateLimitResult = await checkRateLimit(supabaseClient, {
+    // US-307: the limiter writes rate_limit_state through consume_rate_limit,
+    // which is granted to service_role only. A user-JWT client here means the
+    // RPC is refused and the limit silently never applies.
+    const rateLimitResult = await checkRateLimit(createServiceClient(), {
       identifier: user.id,
       endpoint: 'setup-mfa',
       maxRequests: 3,
@@ -84,8 +89,10 @@ serve(async (req) => {
       throw new Error("Failed to initialize MFA setup");
     }
 
-    // Log security event
-    await supabaseClient.from("security_logs").insert({
+    // Log security event. security_logs is service-role-only (US-306 follow-up):
+    // a client that can write its own security log can forge the record of its
+    // own behaviour. The caller is already authenticated above.
+    await writeSecurityLog(createServiceClient(), {
       user_id: user_id,
       event_type: "mfa_setup_initiated",
       ip_address: req.headers.get("cf-connecting-ip") || req.headers.get("x-forwarded-for"),

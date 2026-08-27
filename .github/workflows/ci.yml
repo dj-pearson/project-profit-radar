@@ -4,7 +4,12 @@ on:
   push:
     branches: [main, develop]
   pull_request:
-    branches: [main, develop]
+    # The branches filter matches the BASE branch. release/** is here because
+    # US-213 makes CI a required check on that ruleset, and a required check
+    # that never runs blocks every merge into the branch. hotfix/** takes
+    # direct commits by design (CLAUDE.md), so its gate is the PR into main,
+    # which is already covered by the main entry.
+    branches: [main, develop, 'release/**']
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -139,6 +144,69 @@ jobs:
 
       - name: Edge function auth guard (US-198)
         run: node scripts/check-edge-function-auth.mjs
+
+      - name: Wildcard-CORS guard (US-240)
+        run: node scripts/check-cors-wildcards.mjs
+
+      - name: Edge-function input-validation guard (US-241)
+        run: node scripts/check-edge-input-validation.mjs
+
+      - name: Edge-function privilege-write guard (US-297)
+        run: node scripts/check-edge-privilege-writes.mjs
+
+      - name: RLS write-path guard (US-237)
+        run: node scripts/check-rls-write-paths.mjs
+
+      - name: Audit-trail coverage guard (US-244)
+        run: node scripts/check-audit-coverage.mjs
+
+      - name: Silent-write guard
+        run: node scripts/check-silent-writes.mjs
+
+      - name: Ruleset/workflow consistency guard (US-213)
+        run: node scripts/check-ruleset-consistency.mjs
+
+      - name: CSP inline-script hash guard (US-202)
+        run: node scripts/check-csp-hashes.mjs
+
+      - name: Rate-limit coverage guard (US-243)
+        run: node scripts/check-rate-limit-coverage.mjs
+
+      - name: Sanitizer test-env guard (US-304)
+        run: node scripts/check-sanitizer-test-env.mjs
+
+      - name: Unreferenced security-module guard (US-302)
+        run: node scripts/check-unreferenced-security-modules.mjs
+
+      - name: Insecure-random guard (US-296)
+        run: node scripts/check-insecure-random.mjs
+
+      - name: Unauthenticated edge-function guard (US-241)
+        run: node scripts/check-unauthenticated-edge-functions.mjs
+
+      - name: Fake-success guard (US-309)
+        run: node scripts/check-fake-success.mjs
+
+      - name: No migration-repair in a deploy path (US-248)
+        run: bash scripts/check-no-migration-repair.sh
+
+      - name: RPC-definition guard (US-303)
+        run: node scripts/check-rpc-definitions.mjs
+
+      - name: supabase.raw() guard (US-300)
+        run: node scripts/check-supabase-raw.mjs
+
+      - name: Deno import-pinning guard (US-272)
+        run: node scripts/check-deno-imports.mjs
+
+      - name: Table-definition guard (US-311)
+        run: node scripts/check-table-definitions.mjs
+
+      - name: Dead-link guard (US-312)
+        run: node scripts/check-dead-links.mjs
+
+      - name: Unreferenced-component guard (US-314)
+        run: node scripts/check-unreferenced-components.mjs
 
       - name: Migration filename guard (US-235)
         run: bash scripts/check-migration-filenames.sh

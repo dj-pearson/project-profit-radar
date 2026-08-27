@@ -1,13 +1,9 @@
 // Webhook Delivery Worker Edge Function
 // Delivers webhook events to registered endpoints with retry logic
 
-import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3'
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-}
+import { serve } from 'https://deno.land/std@0.190.0/http/server.ts'
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.50.3'
+import { getCorsHeaders } from '../_shared/secure-cors.ts';
 
 interface WebhookEndpoint {
   id: string
@@ -32,6 +28,7 @@ interface WebhookDelivery {
 }
 
 serve(async (req) => {
+  const corsHeaders = getCorsHeaders(req);
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
@@ -111,11 +108,23 @@ serve(async (req) => {
       const deliveryResult = await deliverWebhook(delivery, endpoint)
       results.push(deliveryResult)
 
-      // Update delivery record
-      await updateDeliveryRecord(supabaseClient, delivery.id, deliveryResult)
+      // Both helpers now throw when their write fails rather than dropping the
+      // error. Caught here so one failed bookkeeping write does not abandon the
+      // rest of the batch, but reported on the result instead of swallowed:
+      // the delivery happened, its record did not (US-300).
+      try {
+        // Update delivery record
+        await updateDeliveryRecord(supabaseClient, delivery.id, deliveryResult)
 
-      // Update endpoint statistics
-      await updateEndpointStats(supabaseClient, endpoint.id, deliveryResult.success)
+        // Update endpoint statistics
+        await updateEndpointStats(supabaseClient, endpoint.id, deliveryResult.success)
+      } catch (bookkeepingError) {
+        const message = bookkeepingError instanceof Error
+          ? bookkeepingError.message
+          : String(bookkeepingError)
+        console.error('[WEBHOOK-DELIVERY] Bookkeeping write failed:', message)
+        deliveryResult.bookkeeping_error = message
+      }
     }
 
     return new Response(
@@ -177,6 +186,9 @@ async function deliverWebhook(
   response_body: string
   error_message: string | null
   delivery_time_ms: number
+  // Set by the caller when the delivery happened but recording it did not.
+  // Optional and additive, so existing readers of this shape are unaffected.
+  bookkeeping_error?: string
 }> {
   const startTime = Date.now()
 
@@ -281,7 +293,12 @@ async function updateDeliveryRecord(
     status = 'failed_permanent'
   }
 
-  await supabaseClient
+  // The error was discarded and supabase-js returns it rather than throwing.
+  // This row is the delivery's only record of having been attempted: a lost
+  // write leaves it in its previous state, so a delivered webhook is queued
+  // and re-sent to the customer's endpoint, and a permanently-failed one
+  // retries forever (US-300).
+  const { error: deliveryError } = await supabaseClient
     .from('webhook_deliveries')
     .update({
       status,
@@ -294,6 +311,12 @@ async function updateDeliveryRecord(
       delivered_at: result.success ? new Date().toISOString() : null
     })
     .eq('id', deliveryId);
+
+  if (deliveryError) {
+    throw new Error(
+      `Delivery ${deliveryId} was attempted but its outcome (${status}) was NOT recorded, so it may be re-sent: ${deliveryError.message}`,
+    );
+  }
 }
 
 // Update endpoint statistics
@@ -324,12 +347,26 @@ async function updateEndpointStats(
     // Auto-disable endpoint after 10 consecutive failures
     if (updates.failure_count >= 10) {
       updates.is_active = false
-      console.log(`[WEBHOOK-DELIVERY] Auto-disabled endpoint after 10 failures: ${endpointId}`)
     }
   }
 
-  await supabaseClient
+  // failure_count is what drives the auto-disable above, and the error here was
+  // discarded. A lost write means the count never climbs, so an endpoint that
+  // has been failing for days is never disabled and keeps being hammered
+  // (US-300). The disable was also logged before the write, claiming an
+  // outcome that had not happened yet.
+  const { error: statsError } = await supabaseClient
     .from('webhook_endpoints')
     .update(updates)
     .eq('id', endpointId);
+
+  if (statsError) {
+    throw new Error(
+      `Endpoint ${endpointId} stats were NOT updated, so its failure count did not advance toward the auto-disable threshold: ${statsError.message}`,
+    );
+  }
+
+  if (updates.is_active === false) {
+    console.log(`[WEBHOOK-DELIVERY] Auto-disabled endpoint after 10 failures: ${endpointId}`)
+  }
 }

@@ -91,10 +91,13 @@ export function ProjectEstimates({ projectId }: ProjectEstimatesProps) {
       if (fetchError) throw fetchError;
 
       // Mark all versions as not current
-      await supabase
+      const { error: updateEstimatesError } = await supabase
         .from("estimates")
         .update({ is_current_version: false })
         .eq("project_id", projectId);
+      if (updateEstimatesError) {
+        throw new Error(`Failed to update estimates: ${updateEstimatesError.message}`);
+      }
 
       // Create new version
       const newVersion = parentEstimate.version_number + 1;
@@ -125,9 +128,12 @@ export function ProjectEstimates({ projectId }: ProjectEstimatesProps) {
           estimate_id: newEstimate.id,
         }));
 
-        await supabase
+        const { error: insertEstimateLineItemsError } = await supabase
           .from("estimate_line_items")
           .insert(lineItemsData);
+        if (insertEstimateLineItemsError) {
+          throw new Error(`Failed to insert estimate_line_items: ${insertEstimateLineItemsError.message}`);
+        }
       }
 
       toast({

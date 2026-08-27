@@ -1,8 +1,19 @@
 // Send Push Notification Edge Function
 // Sends a web push notification to a specific user via their registered push subscription
-import { createClient } from "npm:@supabase/supabase-js@2";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.3";
 import { initializeAuthContext, errorResponse, successResponse } from '../_shared/auth-helpers.ts';
 import { getCorsHeaders } from '../_shared/secure-cors.ts';
+import { validateBody } from '../_shared/validate-body.ts';
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
+
+const PushNotificationSchema = z.object({
+  user_id: z.string().uuid(),
+  title: z.string().min(1).max(200),
+  body: z.string().max(1000).optional(),
+  icon: z.string().url().max(2000).optional(),
+  badge: z.string().url().max(2000).optional(),
+  data: z.record(z.unknown()).optional(),
+});
 
 const logStep = (step: string, details?: any) => {
   const detailsStr = details ? ` - ${JSON.stringify(details)}` : '';
@@ -24,12 +35,11 @@ export default async (req: Request) => {
       return errorResponse('Unauthorized', 401, req);
     }
 
-    const body = await req.json();
-    const { user_id, title, body: notifBody, icon, badge, data } = body;
-
-    if (!user_id || !title) {
-      return errorResponse('user_id and title are required', 400, req);
-    }
+    const parsed = await validateBody(req, PushNotificationSchema, {
+      name: 'send-push-notification',
+    });
+    if (!parsed.ok) return parsed.response;
+    const { user_id, title, body: notifBody, icon, badge, data } = parsed.data;
 
     logStep("Preparing notification", { user_id, title });
 
@@ -39,6 +49,39 @@ export default async (req: Request) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
       { auth: { persistSession: false } }
     );
+
+    // The caller is authenticated, but nothing checked WHO they were allowed to
+    // notify. With a service-role client and a body-supplied user_id, any
+    // signed-in user could push an arbitrary title, body, icon and data payload
+    // to any other user in the product - a phishing message delivered through
+    // Brikly's own notification channel, on the lock screen, with Brikly's icon.
+    //
+    // Scope it to the caller's own company. Notifying a colleague is the
+    // legitimate use; notifying a stranger is not.
+    const { user: caller } = authContext;
+    const { data: profiles, error: profileError } = await serviceClient
+      .from('user_profiles')
+      .select('id, company_id')
+      .in('id', [caller.id, user_id]);
+
+    if (profileError) {
+      logStep("Could not resolve profiles for authorisation", { error: profileError.message });
+      return errorResponse('Unable to verify recipient', 500, req);
+    }
+
+    const callerProfile = profiles?.find((p) => p.id === caller.id);
+    const targetProfile = profiles?.find((p) => p.id === user_id);
+
+    if (!callerProfile?.company_id || !targetProfile?.company_id
+        || callerProfile.company_id !== targetProfile.company_id) {
+      logStep("Cross-company notification attempt", {
+        callerId: caller.id,
+        targetId: user_id,
+      });
+      // Same shape as "no subscriptions" so this cannot be used to probe which
+      // user ids exist or which company they belong to.
+      return successResponse({ sent: false, reason: 'No push subscriptions registered' }, req);
+    }
 
     // Get the user's push subscriptions
     const { data: subscriptions, error: subError } = await serviceClient
@@ -93,12 +136,24 @@ export default async (req: Request) => {
           successCount++;
         } else {
           failCount++;
-          // Remove stale subscriptions (410 Gone)
+          // Remove stale subscriptions (410 Gone).
+          // 410 means the browser has thrown the subscription away for good.
+          // Deleting the row is what stops us pushing to it, and the error was
+          // discarded - supabase-js returns it rather than throwing - so a
+          // failed delete meant every future notification kept trying a dead
+          // endpoint and counting itself as a failure (US-300).
           if (response.status === 410) {
-            await serviceClient
+            const { error: pruneError } = await serviceClient
               .from('push_subscriptions')
               .delete()
               .eq('id', sub.id);
+
+            if (pruneError) {
+              logStep("Dead subscription could not be removed, it will be retried forever", {
+                subscriptionId: sub.id,
+                error: pruneError.message,
+              });
+            }
           }
         }
       } catch (err) {

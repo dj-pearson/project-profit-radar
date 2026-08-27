@@ -1,4 +1,16 @@
-import { createClient } from "npm:@supabase/supabase-js@2";
+/**
+ * AI Service (database-driven).
+ *
+ * Reads model configuration from the ai_model_configurations table, which is
+ * what the admin UI writes to. Used by blog-ai, enhanced-blog-ai-fixed,
+ * ai-content-generator and blog-social-integration.
+ *
+ * _shared/ai-service-env.ts is the other one: same job, configuration read from
+ * Coolify team shared variables instead. It was called ai-service-v2 until
+ * US-272, which read as a successor to this file and is not (see its header).
+ */
+
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.3";
 
 interface AIModelConfig {
   id: string
@@ -697,7 +709,7 @@ Guidelines:
    */
   private generateExcerpt(content: string): string {
     // Remove markdown formatting
-    let text = content
+    const text = content
       .replace(/^#+\s+.+$/gm, '') // Remove headings
       .replace(/\*\*([^*]+)\*\*/g, '$1') // Remove bold
       .replace(/\*([^*]+)\*/g, '$1') // Remove italic

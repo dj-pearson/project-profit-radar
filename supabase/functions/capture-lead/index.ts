@@ -48,7 +48,10 @@ const sanitizeString = (input: string | undefined, maxLength: number = 255): str
   // Trim and limit length
   let sanitized = input.trim().substring(0, maxLength);
 
-  // Remove null bytes and other control characters
+  // Remove null bytes and other control characters. no-control-regex exists to
+  // catch a control character typed into a pattern by accident; matching them
+  // on purpose is the whole job of this line.
+  // eslint-disable-next-line no-control-regex
   sanitized = sanitized.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '');
 
   // Remove or escape potentially dangerous SQL/HTML characters
@@ -78,7 +81,7 @@ const isValidEmail = (email: string): boolean => {
 const sanitizePhone = (phone: string | undefined): string | null => {
   if (!phone || typeof phone !== 'string') return null;
   // Allow only digits, spaces, dashes, parentheses, plus sign
-  const cleaned = phone.replace(/[^0-9\s\-\(\)\+]/g, '').trim();
+  const cleaned = phone.replace(/[^0-9\s\-()+]/g, '').trim();
   return cleaned.length > 0 && cleaned.length <= 20 ? cleaned : null;
 };
 
@@ -239,7 +242,13 @@ serve(async (req) => {
                         interestType === 'newsletter' ? 'newsletter_signup' :
                         'lead_captured';
 
-    await supabaseClient
+    // The lead is already stored - that write throws. These three are the
+    // marketing record of it, and their errors were discarded; supabase-js
+    // returns them rather than throwing, so a lost row meant a real conversion
+    // simply never appeared in the funnel and the campaign that produced it got
+    // no credit. Reported rather than failed: refusing the request would lose
+    // the lead itself, which is worse (US-300).
+    const { error: activityError } = await supabaseClient
       .from('lead_activities')
       .insert({
         lead_id: leadId,
@@ -253,8 +262,12 @@ serve(async (req) => {
         user_agent: req.headers.get('user-agent')
       });
 
+    if (activityError) {
+      logStep("Lead CAPTURED but the activity was not recorded", { leadId, error: activityError.message });
+    }
+
     // Track conversion event
-    await supabaseClient
+    const { error: conversionError } = await supabaseClient
       .from('conversion_events')
       .insert({
         event_type: 'lead_captured',
@@ -272,9 +285,13 @@ serve(async (req) => {
         }
       });
 
+    if (conversionError) {
+      logStep("Lead CAPTURED but the conversion event was not recorded", { leadId, error: conversionError.message });
+    }
+
     // Store attribution if new lead
     if (isNewLead && (utm_source || utm_medium || utm_campaign)) {
-      await supabaseClient
+      const { error: attributionError } = await supabaseClient
         .from('user_attribution')
         .insert({
           // Note: We'll need to link this later when user signs up
@@ -288,6 +305,15 @@ serve(async (req) => {
           first_touch_at: new Date().toISOString()
         })
         .select();
+
+      if (attributionError) {
+        logStep("First-touch attribution LOST for a new lead", {
+          leadId,
+          utm_source,
+          utm_campaign,
+          error: attributionError.message,
+        });
+      }
     }
 
     // TODO: Send welcome/confirmation email

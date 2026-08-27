@@ -1,15 +1,11 @@
 // AI-powered ticket analyzer
 // Categorizes tickets, suggests responses, and identifies relevant KB articles
 
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.3";
 import { checkRateLimit, getClientIP, rateLimitResponse, RATE_LIMITS } from "../_shared/rate-limiter.ts";
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type",
-};
+import { getCorsHeaders } from '../_shared/secure-cors.ts';
+import { requireInternalCaller } from '../_shared/internal-only.ts';
 
 // Categories for ticket classification
 const TICKET_CATEGORIES = [
@@ -41,11 +37,18 @@ const SENTIMENT_KEYWORDS = {
 };
 
 serve(async (req) => {
+  const corsHeaders = getCorsHeaders(req);
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
   }
 
   try {
+    // Internal only: no caller anywhere in the repo.
+    // verify_jwt = true is a signature check the publishable anon key
+    // satisfies, not authentication (US-241).
+    const denied = requireInternalCaller(req);
+    if (denied) return denied;
+
     const { ticketId } = await req.json();
 
     if (!ticketId) {
@@ -502,9 +505,15 @@ async function saveAnalysisResults(
   suggestions: any[],
   kbArticles: any[]
 ) {
-  // Save each suggestion
+  // Save each suggestion. The errors were discarded and supabase-js returns
+  // them rather than throwing, so the handler answered `success: true` with the
+  // suggestions inline while none of them reached the database - and the agent
+  // who opens the ticket later reads the database, not that response (US-300).
+  // Collected rather than thrown per iteration, so one bad row does not hide
+  // how many others also failed.
+  const failed: string[] = [];
   for (const suggestion of suggestions) {
-    await supabase.from("support_suggestions").insert({
+    const { error: suggestionError } = await supabase.from("support_suggestions").insert({
       ticket_id: ticketId,
       suggestion_type: suggestion.suggestion_type,
       confidence_score: suggestion.confidence_score,
@@ -513,20 +522,42 @@ async function saveAnalysisResults(
       suggested_content: suggestion.suggested_content,
       kb_article_id: suggestion.kb_article_id,
     });
+
+    if (suggestionError) {
+      failed.push(`${suggestion.suggestion_type}: ${suggestionError.message}`);
+    }
   }
 
-  // Update ticket with suggested category and priority
-  await supabase
+  // Update ticket with suggested category and priority. These drive routing and
+  // the SLA clock, so a lost write leaves the ticket in the wrong queue while
+  // the response reports the new category (US-300).
+  const { error: ticketUpdateError } = await supabase
     .from("support_tickets")
     .update({
       category: analysis.category,
       priority: analysis.priority,
     })
     .eq("id", ticketId);
+
+  if (ticketUpdateError) {
+    throw new Error(
+      `Ticket ${ticketId} was analyzed but its category and priority were NOT applied, so it stays in the old queue: ${ticketUpdateError.message}`,
+    );
+  }
+
+  if (failed.length > 0) {
+    throw new Error(
+      `Ticket ${ticketId}: ${failed.length} of ${suggestions.length} suggestion(s) were not saved - ${failed.join('; ')}`,
+    );
+  }
 }
 
 async function saveTicketContext(supabase: any, ticketId: string, context: any) {
-  await supabase.from("support_ticket_context").upsert({
+  // Context enrichment for the agent view. Its error was discarded (US-300);
+  // reported rather than thrown, because the analysis and the ticket update
+  // have already landed by the time this runs and losing the context is worth
+  // less than losing those.
+  const { error: contextError } = await supabase.from("support_ticket_context").upsert({
     ticket_id: ticketId,
     user_id: context.userId,
     company_id: context.companyId,
@@ -538,4 +569,11 @@ async function saveTicketContext(supabase: any, ticketId: string, context: any) 
   }, {
     onConflict: 'ticket_id'
   });
+
+  if (contextError) {
+    console.error(
+      `[ANALYZE-TICKET] Context for ticket ${ticketId} was not saved:`,
+      contextError.message,
+    );
+  }
 }

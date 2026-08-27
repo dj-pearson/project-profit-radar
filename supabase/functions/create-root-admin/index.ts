@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.3";
 import { getCorsHeaders, handleCorsPreflightRequest } from '../_shared/secure-cors.ts';
+import { writeAuditLog } from '../_shared/audit-log.ts';
 
 serve(async (req) => {
   // Use secure CORS (whitelist-based)
@@ -85,6 +86,19 @@ serve(async (req) => {
       } else {
         console.log("Root admin profile updated successfully");
       }
+
+      // Audit trail (US-244): a platform superuser now exists. This endpoint is
+      // gated by ADMIN_CREATION_SECRET rather than a session, so there is no
+      // actor user to name — the row records that the secret was used.
+      await writeAuditLog(supabaseAdmin, {
+        actorUserId: null,
+        action: 'root_admin.created',
+        entityType: 'user_profile',
+        entityId: authData.user.id,
+        after: { role: 'root_admin', email: adminEmail },
+        description: 'Root admin created via ADMIN_CREATION_SECRET',
+        riskLevel: 'critical',
+      });
     }
 
     return new Response(

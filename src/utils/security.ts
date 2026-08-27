@@ -1,11 +1,22 @@
-import DOMPurify from 'dompurify';
-
+/**
+ * The two validators ResetPassword.tsx uses. Nothing else.
+ *
+ * This file used to be a parallel security module: a third sanitizeHtml
+ * (regex/DOMPurify, alongside the DOMPurify one in lib/security/sanitize.ts and
+ * the regex one in lib/validations), a second checkRateLimit that counted in
+ * localStorage and was defeated by clearing it, a duplicate set of CSRF helpers
+ * next to the real src/lib/security/csrfProtection.ts, duplicate file-upload
+ * validation, an unreferenced logCSPViolation, and addSecurityHeaders(), which
+ * injected a second Content-Security-Policy (US-301).
+ *
+ * Every one of those was unreferenced. That is the hazard, not the duplication:
+ * a module whose exports read as protection gets adopted on the strength of its
+ * name, and nobody audits code nobody calls. The localStorage rate limiter
+ * returning true is the shape US-302 AC4 is about.
+ *
+ * They are deleted. Reach for src/lib/security/ - it is the one with tests.
+ */
 // Input validation utilities
-export const validateEmail = (email: string): boolean => {
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  return emailRegex.test(email);
-};
-
 export const validatePassword = (password: string): { isValid: boolean; errors: string[] } => {
   const errors: string[] = [];
   
@@ -25,7 +36,7 @@ export const validatePassword = (password: string): { isValid: boolean; errors: 
     errors.push('Password must contain at least one number');
   }
   
-  if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)) {
+  if (!/[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/.test(password)) {
     errors.push('Password must contain at least one special character');
   }
   
@@ -35,262 +46,9 @@ export const validatePassword = (password: string): { isValid: boolean; errors: 
   };
 };
 
-export const validatePhoneNumber = (phone: string): boolean => {
-  const phoneRegex = /^\+?[\d\s\-\(\)]{10,}$/;
-  return phoneRegex.test(phone);
-};
-
-export const validateCompanyName = (name: string): boolean => {
-  return name.trim().length >= 2 && name.trim().length <= 100;
-};
-
-export const validateProjectName = (name: string): boolean => {
-  return name.trim().length >= 2 && name.trim().length <= 100;
-};
-
-export const validateBudget = (budget: string): boolean => {
-  const budgetNum = parseFloat(budget);
-  return !isNaN(budgetNum) && budgetNum >= 0 && budgetNum <= 10000000;
-};
-
-// Sanitization utilities
-export const sanitizeInput = (input: string): string => {
-  return DOMPurify.sanitize(input, { ALLOWED_TAGS: [] });
-};
-
-export const sanitizeHtml = (html: string): string => {
-  return DOMPurify.sanitize(html, {
-    ALLOWED_TAGS: ['p', 'br', 'strong', 'em', 'ul', 'ol', 'li', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6'],
-    ALLOWED_ATTR: [], // SECURITY: Removed 'class' to prevent CSS-based attacks
-    ALLOW_DATA_ATTR: false,
-    ALLOW_UNKNOWN_PROTOCOLS: false,
-    SAFE_FOR_TEMPLATES: true,
-  });
-};
-
-// CSRF token utilities
-export const generateCSRFToken = (): string => {
-  const array = new Uint8Array(32);
-  crypto.getRandomValues(array);
-  return Array.from(array, byte => byte.toString(16).padStart(2, '0')).join('');
-};
-
-export const setCSRFToken = (token: string): void => {
-  sessionStorage.setItem('csrf_token', token);
-};
-
-export const getCSRFToken = (): string | null => {
-  return sessionStorage.getItem('csrf_token');
-};
-
-export const validateCSRFToken = (token: string): boolean => {
-  const storedToken = getCSRFToken();
-  return storedToken === token && token.length === 64;
-};
-
-// Security headers utilities
-export const addSecurityHeaders = (): void => {
-  // Set CSP via meta tag (since we can't set HTTP headers in frontend)
-  const existingCSP = document.querySelector('meta[http-equiv="Content-Security-Policy"]');
-  if (!existingCSP) {
-    const cspMeta = document.createElement('meta');
-    cspMeta.httpEquiv = 'Content-Security-Policy';
-
-    // SECURITY: Improved CSP - removed unsafe-inline and unsafe-eval
-    // Note: Some third-party libraries may require relaxed policies
-    // Use nonces or hashes for inline scripts in production
-    const isDevelopment = import.meta.env.DEV;
-
-    cspMeta.content = `
-      default-src 'self';
-      script-src 'self' ${isDevelopment ? "'unsafe-inline' 'unsafe-eval'" : ''} https://api.ipify.org https://*.posthog.com;
-      style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
-      font-src 'self' https://fonts.gstatic.com;
-      img-src 'self' data: https: blob:;
-      connect-src 'self' https://api.ipify.org https://*.supabase.co https://*.brikly.net https://*.posthog.com;
-      frame-ancestors 'none';
-      base-uri 'self';
-      form-action 'self';
-      object-src 'none';
-      upgrade-insecure-requests;
-    `.replace(/\s+/g, ' ').trim();
-    document.head.appendChild(cspMeta);
-  }
-
-  // Add other security headers via meta tags where possible
-  const securityMetas = [
-    { name: 'referrer', content: 'strict-origin-when-cross-origin' },
-    { httpEquiv: 'X-Content-Type-Options', content: 'nosniff' },
-    { httpEquiv: 'X-XSS-Protection', content: '1; mode=block' },
-    { httpEquiv: 'X-Frame-Options', content: 'DENY' },
-    { httpEquiv: 'Permissions-Policy', content: 'geolocation=(), microphone=(), camera=()' }
-  ];
-
-  securityMetas.forEach(meta => {
-    const existing = document.querySelector(`meta[${meta.httpEquiv ? 'http-equiv' : 'name'}="${meta.httpEquiv || meta.name}"]`);
-    if (!existing) {
-      const metaElement = document.createElement('meta');
-      if (meta.httpEquiv) {
-        metaElement.httpEquiv = meta.httpEquiv;
-      } else {
-        metaElement.name = meta.name;
-      }
-      metaElement.content = meta.content;
-      document.head.appendChild(metaElement);
-    }
-  });
-};
-
-// Rate limiting utilities (client-side basic implementation)
-interface RateLimitRecord {
-  count: number;
-  lastReset: number;
-}
-
-const rateLimitStore = new Map<string, RateLimitRecord>();
-
-export const checkRateLimit = (key: string, maxRequests: number = 10, windowMs: number = 60000): boolean => {
-  const now = Date.now();
-  const record = rateLimitStore.get(key);
-
-  if (!record || now - record.lastReset > windowMs) {
-    rateLimitStore.set(key, { count: 1, lastReset: now });
-    return true;
-  }
-
-  if (record.count >= maxRequests) {
-    return false;
-  }
-
-  record.count++;
-  return true;
-};
-
-// File upload validation with magic number verification
-export const validateFileUpload = async (file: File): Promise<{ isValid: boolean; errors: string[] }> => {
-  const errors: string[] = [];
-  const maxSizeInMB = 10;
-
-  // Magic numbers (file signatures) for content validation
-  const magicNumbers: { [key: string]: number[] } = {
-    'image/jpeg': [0xFF, 0xD8, 0xFF],
-    'image/png': [0x89, 0x50, 0x4E, 0x47],
-    'image/gif': [0x47, 0x49, 0x46],
-    'application/pdf': [0x25, 0x50, 0x44, 0x46],
-    'application/zip': [0x50, 0x4B, 0x03, 0x04], // Also used by .docx, .xlsx
-  };
-
-  const allowedTypes = [
-    'image/jpeg',
-    'image/png',
-    'image/gif',
-    'application/pdf',
-    'application/msword',
-    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-    'application/vnd.ms-excel',
-    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-    'text/plain'
-  ];
-
-  // Size check
-  if (file.size > maxSizeInMB * 1024 * 1024) {
-    errors.push(`File size must be less than ${maxSizeInMB}MB`);
-  }
-
-  // MIME type check
-  if (!allowedTypes.includes(file.type)) {
-    errors.push('File type not allowed');
-  }
-
-  // Filename validation - prevent malicious characters
-  if (/[<>:"/\\|?*\x00-\x1f]/.test(file.name)) {
-    errors.push('Filename contains invalid characters');
-  }
-
-  // SECURITY: Magic number validation to prevent disguised malicious files
-  try {
-    const buffer = await file.slice(0, 8).arrayBuffer();
-    const bytes = new Uint8Array(buffer);
-
-    // Map Office Open XML formats to zip signature
-    let mimeTypeToCheck = file.type;
-    if (file.type.includes('officedocument')) {
-      mimeTypeToCheck = 'application/zip';
-    }
-
-    const expectedMagicNumbers = magicNumbers[mimeTypeToCheck];
-    if (expectedMagicNumbers) {
-      const matches = expectedMagicNumbers.every((byte, index) => bytes[index] === byte);
-      if (!matches) {
-        errors.push('File content does not match declared type. Possible file type mismatch or corruption.');
-      }
-    }
-    // Text files and some types don't have magic numbers, so we skip validation
-  } catch (error) {
-    errors.push('Failed to validate file content');
-    console.error('File content validation error:', error);
-  }
-
-  return {
-    isValid: errors.length === 0,
-    errors
-  };
-};
-
-// Synchronous version for backward compatibility (without magic number check)
-export const validateFileUploadSync = (file: File): { isValid: boolean; errors: string[] } => {
-  const errors: string[] = [];
-  const maxSizeInMB = 10;
-  const allowedTypes = [
-    'image/jpeg',
-    'image/png',
-    'image/gif',
-    'application/pdf',
-    'application/msword',
-    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-    'application/vnd.ms-excel',
-    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-    'text/plain'
-  ];
-
-  if (file.size > maxSizeInMB * 1024 * 1024) {
-    errors.push(`File size must be less than ${maxSizeInMB}MB`);
-  }
-
-  if (!allowedTypes.includes(file.type)) {
-    errors.push('File type not allowed');
-  }
-
-  if (/[<>:"/\\|?*\x00-\x1f]/.test(file.name)) {
-    errors.push('Filename contains invalid characters');
-  }
-
-  return {
-    isValid: errors.length === 0,
-    errors
-  };
-};
-
-// Log CSP violations
-export const logCSPViolation = async (violation: any): Promise<void> => {
-  try {
-    await fetch('/api/csp-violation', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        document_uri: violation['document-uri'],
-        blocked_uri: violation['blocked-uri'],
-        violated_directive: violation['violated-directive'],
-        original_policy: violation['original-policy'],
-        user_agent: navigator.userAgent,
-        source_file: violation['source-file'],
-        line_number: violation['line-number'],
-        column_number: violation['column-number']
-      })
-    });
-  } catch (error) {
-    console.error('Failed to log CSP violation:', error);
-  }
-};
+// Delegates rather than reimplementing. The version this replaces was a bare
+// DOMPurify call with an empty allowlist, which strips tags but does nothing
+// about URL-encoded or entity-encoded payloads; lib/security's does both, plus
+// a defence-in-depth pass over known-executable patterns, and it is the one
+// covered by the XSS suite.
+export { sanitizeInput } from '@/lib/security/sanitize';

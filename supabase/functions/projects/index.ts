@@ -1,6 +1,44 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { initializeAuthContext, errorResponse, successResponse, safeErrorResponse } from '../_shared/auth-helpers.ts';
+import { handleCorsPreflightRequest } from '../_shared/secure-cors.ts';
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
+import { validateBody } from '../_shared/validate-body.ts';
+import { WRITABLE_PROJECT_COLUMNS, pickAllowed } from '../_shared/writable-columns.ts';
 import { checkEntitlement } from '../_shared/entitlements.ts';
+
+/**
+ * The write path used to spread the raw body into insert()/update(), so any
+ * writable column was settable — including id, created_by and created_at. RLS
+ * blocks the cross-tenant case (projects_update declares no WITH CHECK, so
+ * Postgres applies its USING clause to the new row too), but nothing stopped a
+ * caller rewriting provenance columns inside their own company. The allowlist
+ * lives in _shared/writable-columns.ts because api-management writes the same
+ * table from the third-party API.
+ */
+const ProjectWriteSchema = z.object({
+  name: z.string().min(1).max(500).optional(),
+  description: z.string().max(20000).optional().nullable(),
+  status: z.string().max(50).optional().nullable(),
+  project_type: z.string().max(100).optional().nullable(),
+  client_name: z.string().max(500).optional().nullable(),
+  client_email: z.string().email().max(255).optional().nullable(),
+  site_address: z.string().max(1000).optional().nullable(),
+  site_latitude: z.number().optional().nullable(),
+  site_longitude: z.number().optional().nullable(),
+  geofence_radius_meters: z.number().optional().nullable(),
+  start_date: z.string().optional().nullable(),
+  end_date: z.string().optional().nullable(),
+  budget: z.number().optional().nullable(),
+  total_budget: z.number().optional().nullable(),
+  profit_margin: z.number().optional().nullable(),
+  estimated_hours: z.number().optional().nullable(),
+  actual_hours: z.number().optional().nullable(),
+  completion_percentage: z.number().optional().nullable(),
+  project_manager_id: z.string().uuid().optional().nullable(),
+  opportunity_id: z.string().uuid().optional().nullable(),
+  permit_numbers: z.array(z.string()).optional().nullable(),
+  created_from: z.string().max(100).optional().nullable(),
+}).passthrough();
 
 const logStep = (step: string, details?: any) => {
   console.log(`[PROJECTS] ${step}${details ? ` - ${JSON.stringify(details)}` : ''}`);
@@ -8,14 +46,7 @@ const logStep = (step: string, details?: any) => {
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
-    return new Response(null, { 
-      status: 204,
-      headers: {
-        'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-        'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-      }
-    });
+    return handleCorsPreflightRequest(req);
   }
 
   try {
@@ -94,7 +125,9 @@ serve(async (req) => {
 
       case "POST":
         if (path === "create") {
-          const body = await req.json();
+          const parsed = await validateBody(req, ProjectWriteSchema, { name: 'projects:create' });
+          if (!parsed.ok) return parsed.response;
+          const body = parsed.data as Record<string, unknown>;
           logStep("Creating project", body);
 
           // Verify user can create projects
@@ -121,7 +154,7 @@ serve(async (req) => {
           }
 
           const projectData = {
-            ...body,
+            ...pickAllowed(body, WRITABLE_PROJECT_COLUMNS),
             company_id: userProfile.company_id,
             created_by: user.id,
             project_manager_id: body.project_manager_id || user.id
@@ -144,7 +177,9 @@ serve(async (req) => {
       case "PUT":
         if (path?.length === 36) { // UUID length
           const projectId = path;
-          const body = await req.json();
+          const parsed = await validateBody(req, ProjectWriteSchema, { name: 'projects:update' });
+          if (!parsed.ok) return parsed.response;
+          const body = parsed.data as Record<string, unknown>;
           logStep("Updating project", { projectId, body });
 
           // Verify user can update this project
@@ -154,7 +189,7 @@ serve(async (req) => {
 
           const { data: updatedProject, error: updateError } = await supabase
             .from('projects')
-            .update(body)
+            .update(pickAllowed(body, WRITABLE_PROJECT_COLUMNS))
             .eq('id', projectId)
             .eq('company_id', userProfile.company_id)
             .select()

@@ -39,8 +39,8 @@ export function MobileDashboardHome({ projects, onRefresh }: MobileDashboardHome
   const navigate = useNavigate();
 
   const quickActions = [
-    { label: 'New Daily Report', icon: FileText, onClick: () => navigate('/daily-reports/create') },
-    { label: 'Take Photo', icon: Camera, onClick: () => navigate('/daily-reports/create') },
+    { label: 'New Daily Report', icon: FileText, onClick: () => navigate('/daily-reports') },
+    { label: 'Take Photo', icon: Camera, onClick: () => navigate('/daily-reports') },
     { label: 'Log Time', icon: Clock, onClick: () => navigate('/time-tracking') },
   ];
 

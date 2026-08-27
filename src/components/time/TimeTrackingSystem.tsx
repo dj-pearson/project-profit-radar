@@ -56,7 +56,7 @@ interface Employee {
 }
 
 export const TimeTrackingSystem: React.FC = () => {
-  const [timeEntries, setTimeEntries] = useState<TimeEntry[]>([
+  const [timeEntries] = useState<TimeEntry[]>([
     {
       id: '1',
       employeeId: 'emp-001',
@@ -95,7 +95,7 @@ export const TimeTrackingSystem: React.FC = () => {
     }
   ]);
 
-  const [attendance, setAttendance] = useState<Attendance[]>([
+  const [attendance] = useState<Attendance[]>([
     {
       id: '1',
       employeeId: 'emp-001',

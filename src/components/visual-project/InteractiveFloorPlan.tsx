@@ -224,10 +224,18 @@ export const InteractiveFloorPlan: React.FC<InteractiveFloorPlanProps> = ({ proj
       assignedTo: issueData.assignedTo
     };
 
+    // This said "Issue added to floor plan" over a setIssues call and nothing
+    // else. No floor plan or floor-plan-issue table exists in
+    // supabase/migrations, so the pin lives in component state and is gone on
+    // refresh - including safety issues pinned to a site plan. The component is
+    // live-routed (appRoutes -> VisualProjectManagementPage), so the message
+    // has to say what actually happened (US-309).
     setIssues(prev => [...prev, newIssue]);
     setNewIssuePosition(null);
     setIsAddingIssue(false);
-    toast.success("Issue added to floor plan");
+    toast.success("Issue pinned", {
+      description: 'Not saved - floor plan issues have no storage yet and are lost when you leave this screen.',
+    });
   };
 
   const getIssueTypeIcon = (type: FloorPlanIssue['type']) => {
@@ -265,9 +273,14 @@ export const InteractiveFloorPlan: React.FC<InteractiveFloorPlanProps> = ({ proj
     if (file) {
       const reader = new FileReader();
       reader.onload = (e) => {
+        // "uploaded successfully" for a FileReader that produced a data URL in
+        // memory. Nothing reached storage, and there is no bucket or table
+        // behind this (US-309).
         const imageUrl = e.target?.result as string;
         setFloorPlanImage(imageUrl);
-        toast.success("Floor plan uploaded successfully");
+        toast.success("Floor plan loaded", {
+          description: 'Shown in this session only - it is not uploaded or saved anywhere yet.',
+        });
       };
       reader.readAsDataURL(file);
     }
@@ -285,7 +298,8 @@ export const InteractiveFloorPlan: React.FC<InteractiveFloorPlanProps> = ({ proj
                 Interactive Floor Plan
               </CardTitle>
               <CardDescription>
-                Pin issues and track progress directly on your floor plans
+                Pin issues and track progress directly on your floor plans. Nothing on this screen
+                is saved yet - the plan and its pins are held in this browser session only.
               </CardDescription>
             </div>
             

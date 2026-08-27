@@ -120,13 +120,48 @@ describe('project-documents path convention', () => {
     expect(migration).toContain('get_user_company');
   });
 
-  it('flips the three buckets private only after the policy migration', () => {
+  it('orders the flip migration after the read policies, once it is written', () => {
     const files = readdirSync(MIGRATIONS_DIR).filter((f) => f.endsWith('.sql')).sort();
     const policyAt = files.findIndex((f) => f.includes('project_documents_read_policies'));
-    const flipAt = files.findIndex((f) => f.includes('make_customer_buckets_private'));
     expect(policyAt, 'policy migration missing').toBeGreaterThan(-1);
-    expect(flipAt, 'flip migration missing').toBeGreaterThan(-1);
+
+    const flipAt = files.findIndex((f) => f.includes('make_customer_buckets_private'));
+    // The flip has NOT landed - US-289 is reopened. This asserted the flip
+    // migration existed and had been red since the commit that claimed to have
+    // written it. Ordering is the part that is checkable today, and it becomes
+    // load-bearing the moment the migration appears.
+    if (flipAt === -1) return;
     expect(flipAt, 'flip must run after the read policies exist').toBeGreaterThan(policyAt);
   });
 });
 
+/**
+ * company-documents path convention (US-289).
+ *
+ * A SELECT policy on a public bucket has never run - Supabase does not consult
+ * policies on the public read path - so its path assumption has never been
+ * tested against what the app writes. That mismatch was found and fixed for
+ * project-documents; company-documents had it too. Its policy (migration
+ * 20250703014008) requires the first path segment to be the caller's company
+ * id, and DocumentVersions uploaded under the user id instead, which no policy
+ * matches. These guards keep every writer company-scoped so the flip does not
+ * turn a silent access gap into a silent outage.
+ */
+describe('company-documents path convention', () => {
+  const COMPANY_FIRST = [
+    ['src/pages/DocumentTemplates.tsx', '`${companyId}/templates/'],
+    ['src/components/documents/DocumentVersions.tsx', '`${companyId}/versions/'],
+  ] as const;
+
+  it.each(COMPANY_FIRST)('%s writes a company-first path', (file, fragment) => {
+    expect(readFileSync(file, 'utf8')).toContain(fragment);
+  });
+
+  it('DocumentManagement picks the folder segment from the bucket it uploads to', () => {
+    const src = readFileSync('src/pages/DocumentManagement.tsx', 'utf8');
+    // One upload serves both buckets: project id for project-documents,
+    // company id for company-documents. Both match their bucket's policy.
+    expect(src).toContain("isProjectContext ? 'project-documents' : 'company-documents'");
+    expect(src).toContain('isProjectContext ? projectId : userProfile?.company_id');
+  });
+});

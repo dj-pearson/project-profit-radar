@@ -10,12 +10,7 @@
  */
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.50.3';
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-  'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-};
+import { getCorsHeaders } from '../_shared/secure-cors.ts';
 
 const logStep = (step: string, details?: Record<string, unknown>) => {
   const detailsStr = details ? ` - ${JSON.stringify(details)}` : '';
@@ -92,15 +87,23 @@ interface ProcessingResult {
     height?: number;
   }[];
   thumbnail?: string;
+  /** How many versions were queued for real processing. Additive (US-300). */
+  versionsQueued?: number;
   savings?: {
     originalSize: number;
     processedSize: number;
     percentage: number;
+    /**
+     * Present while nothing has actually been compressed. Additive, and kept in
+     * step with ProcessingResult in src/hooks/useImageProcessor.ts (US-300).
+     */
+    note?: string;
   };
   error?: string;
 }
 
 Deno.serve(async (req) => {
+  const corsHeaders = getCorsHeaders(req);
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
@@ -205,17 +208,32 @@ Deno.serve(async (req) => {
       }
     );
 
-    // Update document record if provided
+    // Update document record if provided.
+    //
+    // Two things were wrong here. The error was discarded, and supabase-js
+    // returns it rather than throwing, so the document could keep its old
+    // thumbnail while the response reported a new one. And the status written
+    // was 'completed', which is not true: nothing in this function resizes or
+    // transcodes anything. See processImage below - the "responsive sizes" are
+    // the original blob re-uploaded under a .webp name, and the real work is
+    // handed to image_processing_queue. 'pending' is what that queue row means
+    // (US-300).
     if (documentId && result.success) {
-      await supabase
+      const { error: documentError } = await supabase
         .from('documents')
         .update({
           thumbnail_url: result.thumbnail,
           transcoded_versions: JSON.stringify(result.processed),
-          transcoding_status: 'completed',
+          transcoding_status: 'pending',
           updated_at: new Date().toISOString(),
         })
         .eq('id', documentId);
+
+      if (documentError) {
+        throw new Error(
+          `Document ${documentId} was processed but its record was NOT updated, so it still points at the old versions: ${documentError.message}`,
+        );
+      }
     }
 
     logStep('Processing complete', {
@@ -371,8 +389,16 @@ async function processImage(
     }
 
     // Store processing manifest for later actual processing
-    // (In production, trigger async processing job)
-    await supabase
+    // (In production, trigger async processing job).
+    //
+    // The `.then(() => {}).catch(() => {})` here discarded the result outright.
+    // The catch was dead code either way - postgrest resolves with { error }
+    // rather than rejecting - and the comment justifying it ("Queue table might
+    // not exist") is wrong: image_processing_queue is created by migration
+    // 20251209000004. This row is the ONLY handoff to the job that does the
+    // real resizing, so losing it means the versions are never produced
+    // (US-300).
+    const { error: queueError } = await supabase
       .from('image_processing_queue')
       .upsert({
         company_id: options.companyId,
@@ -383,16 +409,19 @@ async function processImage(
         created_at: new Date().toISOString(),
       }, {
         onConflict: 'original_path,bucket',
-      })
-      .then(() => {})
-      .catch(() => {
-        // Queue table might not exist, that's ok
       });
 
-    // Calculate savings (estimated for now)
-    const estimatedWebPSize = Math.round(imageBlob.size * 0.65); // ~35% savings typical
-    const savingsPercentage = Math.round((1 - estimatedWebPSize / imageBlob.size) * 100);
+    if (queueError) {
+      throw new Error(
+        `Processing manifest for ${originalPath} was not queued, so no version of this image will ever be produced: ${queueError.message}`,
+      );
+    }
 
+    // `savings` used to be `imageBlob.size * 0.65` with the comment "~35%
+    // savings typical" - a constant dressed up as a measurement, reported to
+    // the caller as if this function had compressed anything. It has not: every
+    // "version" above is the original blob re-uploaded under a different name.
+    // Report the real numbers and say the versions are queued (US-300).
     return {
       success: true,
       original: {
@@ -402,10 +431,12 @@ async function processImage(
       },
       processed,
       thumbnail: thumbnailUrl,
+      versionsQueued: processingManifest.requestedVersions.length,
       savings: {
         originalSize: imageBlob.size,
-        processedSize: estimatedWebPSize,
-        percentage: savingsPercentage,
+        processedSize: imageBlob.size,
+        percentage: 0,
+        note: 'No compression has happened yet. The requested versions are queued in image_processing_queue.',
       },
     };
 

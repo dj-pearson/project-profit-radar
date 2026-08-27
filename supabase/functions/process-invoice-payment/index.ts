@@ -4,12 +4,9 @@ import Stripe from "https://esm.sh/stripe@14.21.0";
 import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
 import { validateRequest, uuidSchema } from "../_shared/validation.ts";
 import { initializeAuthContext, errorResponse, successResponse, safeErrorResponse } from '../_shared/auth-helpers.ts';
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-  "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
-};
+import { getCorsHeaders } from '../_shared/secure-cors.ts';
+import { writeAuditLog } from '../_shared/audit-log.ts';
+import { createServiceClient } from '../_shared/service-client.ts';
 
 // SECURITY: Input validation schema
 const PaymentRequestSchema = z.object({
@@ -27,6 +24,7 @@ const logStep = (step: string, details?: any) => {
 };
 
 serve(async (req) => {
+  const corsHeaders = getCorsHeaders(req);
   if (req.method === "OPTIONS") {
     return new Response(null, { status: 204, headers: corsHeaders });
   }
@@ -116,6 +114,19 @@ serve(async (req) => {
         // Default to Stripe checkout
         result = await createStripeCheckout(stripe, invoice, req);
     }
+
+    // Audit trail (US-244): money arriving against an invoice, especially the
+    // manual path where a person asserts a payment happened.
+    await writeAuditLog(createServiceClient(), {
+      actorUserId: user.id,
+      companyId: invoice.company_id,
+      action: 'invoice_payment.processed',
+      entityType: 'invoice',
+      entityId: invoice.id,
+      after: { method: paymentData.payment_method, success: result.success },
+      description: `Payment recorded on invoice ${invoice.invoice_number ?? invoice.id} via ${paymentData.payment_method}`,
+      riskLevel: 'critical',
+    });
 
     logStep("Payment processed", { method: paymentData.payment_method, success: result.success });
 

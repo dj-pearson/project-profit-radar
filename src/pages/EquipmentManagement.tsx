@@ -39,26 +39,6 @@ export default function EquipmentManagement() {
     }
   }, [user, userProfile, loading, navigate]);
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'available': return 'bg-green-500';
-      case 'assigned': return 'bg-blue-500';
-      case 'maintenance': return 'bg-yellow-500';
-      case 'out_of_service': return 'bg-red-500';
-      default: return 'bg-gray-500';
-    }
-  };
-
-  const getStatusText = (status: string) => {
-    switch (status) {
-      case 'available': return 'Available';
-      case 'assigned': return 'Assigned';
-      case 'maintenance': return 'Maintenance';
-      case 'out_of_service': return 'Out of Service';
-      default: return 'Unknown';
-    }
-  };
-
   const getStatusBadge = (status: string) => {
     const statusConfig = {
       available: { variant: "default" as const, label: "Available", icon: CheckCircle },

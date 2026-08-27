@@ -7,6 +7,7 @@ import { Plus, Calendar } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { format } from 'date-fns';
+import { toast } from 'sonner';
 import { logger } from '@/lib/logger';
 
 interface Todo {
@@ -64,13 +65,23 @@ export const TodoWidget = () => {
 
   const toggleTodo = async (id: string, completed: boolean) => {
     try {
-      await supabase
+      // Update local state only after the write is known to have landed.
+      // supabase-js returns its error rather than throwing, so the catch below
+      // never saw a rejected update and the checkbox moved anyway - until the
+      // next refresh put it back (US-300).
+      const { error } = await supabase
         .from('tasks')
         .update({ status: completed ? 'completed' : 'in_progress' })
         .eq('id', id);
 
-      setTodos(prev => 
-        prev.map(todo => 
+      if (error) {
+        console.error('Error updating todo:', error);
+        toast.error("Couldn't update that task. It has been left as it was.");
+        return;
+      }
+
+      setTodos(prev =>
+        prev.map(todo =>
           todo.id === id ? { ...todo, completed } : todo
         )
       );
@@ -95,7 +106,7 @@ export const TodoWidget = () => {
         return;
       }
 
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from('tasks')
         .insert({
           name: newTodo,
@@ -107,14 +118,20 @@ export const TodoWidget = () => {
         .select()
         .single();
 
-      if (data) {
-        setTodos(prev => [...prev, {
-          id: data.id,
-          title: data.name,
-          completed: false
-        }]);
-        setNewTodo('');
+      if (error || !data) {
+        // Without this the insert failed silently and the input simply did
+        // nothing, with no indication why.
+        console.error('Error adding todo:', error);
+        toast.error("Couldn't add that task.");
+        return;
       }
+
+      setTodos(prev => [...prev, {
+        id: data.id,
+        title: data.name,
+        completed: false
+      }]);
+      setNewTodo('');
     } catch (error) {
       console.error('Error adding todo:', error);
     }

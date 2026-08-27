@@ -1,10 +1,6 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
+import { serve } from "https://deno.land/std@0.190.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.50.3'
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-}
+import { getCorsHeaders } from '../_shared/secure-cors.ts';
 
 interface BingWebmasterRequest {
   action: 'get-performance' | 'get-pages' | 'get-keywords' | 'get-crawl-errors' | 'get-backlinks'
@@ -18,6 +14,7 @@ interface BingWebmasterRequest {
 }
 
 serve(async (req) => {
+  const corsHeaders = getCorsHeaders(req);
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders })
@@ -101,19 +98,19 @@ serve(async (req) => {
     // Process the request based on action
     switch (requestData.action) {
       case 'get-performance':
-        return await getBingPerformanceData(bingApiKey, bingSiteUrl, requestData)
+        return await getBingPerformanceData(corsHeaders, bingApiKey, bingSiteUrl, requestData)
 
       case 'get-pages':
-        return await getBingPages(bingApiKey, bingSiteUrl, requestData)
+        return await getBingPages(corsHeaders, bingApiKey, bingSiteUrl, requestData)
 
       case 'get-keywords':
-        return await getBingKeywords(bingApiKey, bingSiteUrl, requestData)
+        return await getBingKeywords(corsHeaders, bingApiKey, bingSiteUrl, requestData)
 
       case 'get-crawl-errors':
-        return await getBingCrawlErrors(bingApiKey, bingSiteUrl, requestData)
+        return await getBingCrawlErrors(corsHeaders, bingApiKey, bingSiteUrl, requestData)
 
       case 'get-backlinks':
-        return await getBingBacklinks(bingApiKey, bingSiteUrl, requestData)
+        return await getBingBacklinks(corsHeaders, bingApiKey, bingSiteUrl, requestData)
 
       default:
         return new Response(
@@ -139,7 +136,7 @@ serve(async (req) => {
   }
 })
 
-async function getBingPerformanceData(apiKey: string, siteUrl: string, request: BingWebmasterRequest) {
+async function getBingPerformanceData(corsHeaders: Record<string, string>, apiKey: string, siteUrl: string, request: BingWebmasterRequest) {
   console.log('Fetching Bing performance data...')
   const { dateRange = { startDate: '30daysAgo', endDate: 'today' } } = request
   
@@ -186,7 +183,7 @@ async function getBingPerformanceData(apiKey: string, siteUrl: string, request: 
   }
 }
 
-async function getBingPages(apiKey: string, siteUrl: string, request: BingWebmasterRequest) {
+async function getBingPages(corsHeaders: Record<string, string>, apiKey: string, siteUrl: string, request: BingWebmasterRequest) {
   console.log('Fetching Bing top pages...')
   const cleanSiteUrl = siteUrl.replace('sc-domain:', '').replace('https://', '').replace('http://', '')
   
@@ -230,7 +227,7 @@ async function getBingPages(apiKey: string, siteUrl: string, request: BingWebmas
   }
 }
 
-async function getBingKeywords(apiKey: string, siteUrl: string, request: BingWebmasterRequest) {
+async function getBingKeywords(corsHeaders: Record<string, string>, apiKey: string, siteUrl: string, request: BingWebmasterRequest) {
   console.log('Fetching Bing keywords...')
   const cleanSiteUrl = siteUrl.replace('sc-domain:', '').replace('https://', '').replace('http://', '')
   
@@ -274,7 +271,7 @@ async function getBingKeywords(apiKey: string, siteUrl: string, request: BingWeb
   }
 }
 
-async function getBingCrawlErrors(apiKey: string, siteUrl: string, request: BingWebmasterRequest) {
+async function getBingCrawlErrors(corsHeaders: Record<string, string>, apiKey: string, siteUrl: string, request: BingWebmasterRequest) {
   console.log('Fetching Bing crawl errors...')
   const cleanSiteUrl = siteUrl.replace('sc-domain:', '').replace('https://', '').replace('http://', '')
   
@@ -317,7 +314,7 @@ async function getBingCrawlErrors(apiKey: string, siteUrl: string, request: Bing
   }
 }
 
-async function getBingBacklinks(apiKey: string, siteUrl: string, request: BingWebmasterRequest) {
+async function getBingBacklinks(corsHeaders: Record<string, string>, apiKey: string, siteUrl: string, request: BingWebmasterRequest) {
   console.log('Fetching Bing backlinks...')
   const cleanSiteUrl = siteUrl.replace('sc-domain:', '').replace('https://', '').replace('http://', '')
   

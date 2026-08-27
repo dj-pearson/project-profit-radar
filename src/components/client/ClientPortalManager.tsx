@@ -46,7 +46,7 @@ interface ProjectInfo {
 }
 
 export const ClientPortalManager: React.FC = () => {
-  const [selectedProject, setSelectedProject] = useState<string>('proj-1');
+  const [selectedProject] = useState<string>('proj-1');
   const [newMessage, setNewMessage] = useState('');
   const [activeTab, setActiveTab] = useState('overview');
 

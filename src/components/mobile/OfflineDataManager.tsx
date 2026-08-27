@@ -240,61 +240,72 @@ export const OfflineDataManager = () => {
       setSyncProgress(0);
 
       let synced = 0;
+      let failed = 0;
       const totalPending = syncStatus.pendingUploads;
+      const failures: string[] = [];
 
-      // Sync pending time entries
-      const pendingTimeEntries = JSON.parse(localStorage.getItem('pending_time_entries') || '[]');
-      if (pendingTimeEntries.length > 0) {
-        await supabase.from('time_entries').insert(pendingTimeEntries);
-        localStorage.removeItem('pending_time_entries');
-        synced += pendingTimeEntries.length;
-        setSyncProgress((synced / totalPending) * 100);
-      }
+      // Supabase RETURNS errors rather than throwing them, so the surrounding
+      // try/catch never saw a rejected insert. Every queue below used to clear
+      // its localStorage key unconditionally straight after the await, which
+      // meant an RLS denial, a constraint violation or a validation failure
+      // destroyed the field worker's queued rows and still reported success.
+      // Only clear a queue once its rows are actually in the database.
+      const flushQueue = async (
+        storageKey: string,
+        table: 'time_entries' | 'expenses' | 'quality_inspections' | 'tasks',
+        label: string,
+      ) => {
+        const pending = JSON.parse(localStorage.getItem(storageKey) || '[]');
+        if (!pending.length) return;
 
-      // Sync pending expenses
-      const pendingExpenses = JSON.parse(localStorage.getItem('pending_expenses') || '[]');
-      if (pendingExpenses.length > 0) {
-        await supabase.from('expenses').insert(pendingExpenses);
-        localStorage.removeItem('pending_expenses');
-        synced += pendingExpenses.length;
-        setSyncProgress((synced / totalPending) * 100);
-      }
+        const { error } = await supabase.from(table).insert(pending);
 
-      // Sync pending locations
+        if (error) {
+          // Leave the queue in place so the next sync retries it.
+          console.error(`[offline-sync] ${table} insert failed, keeping ${pending.length} queued`, error);
+          failed += pending.length;
+          failures.push(`${pending.length} ${label}`);
+        } else {
+          localStorage.removeItem(storageKey);
+          synced += pending.length;
+        }
+
+        if (totalPending > 0) {
+          setSyncProgress(Math.min(100, ((synced + failed) / totalPending) * 100));
+        }
+      };
+
+      await flushQueue('pending_time_entries', 'time_entries', 'time entries');
+      await flushQueue('pending_expenses', 'expenses', 'expenses');
+      await flushQueue('pending_inspections', 'quality_inspections', 'inspections');
+      await flushQueue('pending_tasks', 'tasks', 'tasks');
+
+      // pending_locations has no destination table — the original code cleared
+      // the queue with a "Mock sync - in production would sync to actual table"
+      // comment, so queued locations were being thrown away every sync. They
+      // are now left in place rather than silently discarded; see US-300.
       const pendingLocations = JSON.parse(localStorage.getItem('pending_locations') || '[]');
       if (pendingLocations.length > 0) {
-        // Mock sync - in production would sync to actual table
-        localStorage.removeItem('pending_locations');
-        synced += pendingLocations.length;
-        setSyncProgress((synced / totalPending) * 100);
-      }
-
-      // Sync pending inspections
-      const pendingInspections = JSON.parse(localStorage.getItem('pending_inspections') || '[]');
-      if (pendingInspections.length > 0) {
-        await supabase.from('quality_inspections').insert(pendingInspections);
-        localStorage.removeItem('pending_inspections');
-        synced += pendingInspections.length;
-        setSyncProgress((synced / totalPending) * 100);
-      }
-
-      // Sync pending tasks
-      const pendingTasks = JSON.parse(localStorage.getItem('pending_tasks') || '[]');
-      if (pendingTasks.length > 0) {
-        await supabase.from('tasks').insert(pendingTasks);
-        localStorage.removeItem('pending_tasks');
-        synced += pendingTasks.length;
-        setSyncProgress(100);
+        console.error(`[offline-sync] ${pendingLocations.length} queued location(s) have no sync target; keeping them queued`);
       }
 
       localStorage.setItem('lastSync', new Date().toISOString());
-      
+
       setSyncStatus(prev => ({
         ...prev,
         lastSync: new Date(),
-        pendingUploads: 0,
+        pendingUploads: failed + pendingLocations.length,
         syncInProgress: false
       }));
+
+      if (failed > 0) {
+        toast({
+          title: "Sync Incomplete",
+          description: `Synced ${synced} item(s). ${failures.join(', ')} could not be saved and are still queued.`,
+          variant: "destructive",
+        });
+        return;
+      }
 
       toast({
         title: "Sync Complete",
@@ -340,14 +351,6 @@ export const OfflineDataManager = () => {
       title: "Cache Cleared",
       description: "All offline data has been removed",
     });
-  };
-
-  const formatBytes = (bytes: number) => {
-    if (bytes === 0) return '0 B';
-    const k = 1024;
-    const sizes = ['B', 'KB', 'MB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
   };
 
   return (

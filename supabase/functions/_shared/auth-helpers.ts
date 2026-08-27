@@ -10,7 +10,7 @@
  * const { user, supabase } = authContext;
  */
 
-import { createClient, SupabaseClient } from 'npm:@supabase/supabase-js@2';
+import { createClient, SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2.50.3';
 import { getCorsHeaders } from './secure-cors.ts';
 
 // Default secure CORS headers (fallback when request not available)

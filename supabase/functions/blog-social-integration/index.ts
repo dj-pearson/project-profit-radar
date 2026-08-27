@@ -1,14 +1,11 @@
 // Blog Social Integration Edge Function
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { initializeAuthContext, errorResponse } from '../_shared/auth-helpers.ts';
 import { aiService } from "../_shared/ai-service.ts";
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
+import { getCorsHeaders } from '../_shared/secure-cors.ts';
 
 serve(async (req) => {
+  const corsHeaders = getCorsHeaders(req);
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
@@ -29,15 +26,31 @@ serve(async (req) => {
     // Generate social media posts using AI service
     const socialContent = await generateSocialContent(blogContent);
 
-    // Save to database with site isolation
+    // Save to database with site isolation. Storing the drafts is the point of
+    // this function - the response returns the generated content inline, so
+    // with the error discarded it read as a success while the drafts the user
+    // would go on to publish were never created (US-300).
+    const draftFailures: string[] = [];
     for (const post of socialContent) {
-      await supabase.from('social_media_posts').insert({  // CRITICAL: Site isolation
-        company_id: companyId,
-        platform: post.platform,
-        content: post.content,
-        status: 'draft',
-        created_at: new Date().toISOString()
-      });
+      const { error: draftError } = await supabase
+        .from('social_media_posts')
+        .insert({  // CRITICAL: Site isolation
+          company_id: companyId,
+          platform: post.platform,
+          content: post.content,
+          status: 'draft',
+          created_at: new Date().toISOString()
+        });
+
+      if (draftError) {
+        draftFailures.push(`${post.platform}: ${draftError.message}`);
+      }
+    }
+
+    if (draftFailures.length > 0) {
+      throw new Error(
+        `${draftFailures.length} of ${socialContent.length} social draft(s) were not saved - ${draftFailures.join('; ')}`,
+      );
     }
 
     return new Response(JSON.stringify({

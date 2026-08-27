@@ -1,17 +1,14 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.3";
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-  "Access-Control-Allow-Methods": "POST, OPTIONS",
-};
+import { getCorsHeaders } from '../_shared/secure-cors.ts';
+import { initializeAuthContext, errorResponse } from '../_shared/auth-helpers.ts';
 
 const logStep = (step: string, data?: any) => {
   console.log(`[Social Webhook Deployer] ${step}:`, data || "");
 };
 
 serve(async (req) => {
+  const corsHeaders = getCorsHeaders(req);
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
@@ -21,6 +18,14 @@ serve(async (req) => {
   const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
   try {
+    // Authenticate the caller: invoked from src/components/social-media/PostQueueActions.tsx.
+    // verify_jwt = true is a signature check the publishable anon key
+    // satisfies, not authentication (US-241).
+    const authContext = await initializeAuthContext(req);
+    if (!authContext) {
+      return errorResponse('Unauthorized', 401, req);
+    }
+
     logStep("Social webhook deployer started");
 
     const { queueId, forceRedeploy } = await req.json();

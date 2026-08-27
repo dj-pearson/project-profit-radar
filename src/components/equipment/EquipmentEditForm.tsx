@@ -42,13 +42,18 @@ const EquipmentEditForm: React.FC<EquipmentEditFormProps> = ({
     setLoading(true);
 
     try {
-      // In a real app, this would update the database
-      // For now, we'll just simulate the update
+      // NOT PERSISTED. This sleeps and returns; no row is written. The form is
+      // live - EquipmentManagement.tsx renders it at line 373 - so a user edits
+      // a piece of equipment, is told it saved, and the change is gone on
+      // reload. Saying so is the smallest honest change; wiring it to the
+      // equipment table is a separate piece of work.
       await new Promise(resolve => setTimeout(resolve, 500));
-      
+
       toast({
-        title: "Success",
-        description: "Equipment updated successfully"
+        title: "Not saved",
+        description:
+          "Equipment editing is not implemented yet - your changes were not written and will be lost on reload.",
+        variant: "destructive"
       });
       
       onSuccess(formData);

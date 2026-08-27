@@ -25,6 +25,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
+import { secureSecret } from '@/lib/security/secureRandom';
 
 interface WebhookEndpoint {
   id: string;
@@ -167,8 +168,13 @@ export const WebhookManagement = () => {
     }
 
     try {
-      // Generate a webhook secret (in production, use proper cryptographic random)
-      const secret = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+      // This secret is what verifies a delivery actually came from Brikly, so
+      // it has to come from a CSPRNG. It used to be two Math.random()
+      // .toString(36) calls - V8 implements Math.random as xorshift128+, whose
+      // state is recoverable from a handful of outputs, so the signing secret
+      // was predictable to anyone who could observe or brute-force a little of
+      // the sequence (US-296).
+      const secret = secureSecret(32);
 
       const { error } = await supabase
         .from('webhook_endpoints')

@@ -1,13 +1,12 @@
 // Generate Blog Content Edge Function
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { initializeAuthContext, errorResponse } from '../_shared/auth-helpers.ts';
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
+import { getCorsHeaders } from '../_shared/secure-cors.ts';
+import { enforceRateLimit, RATE_LIMITS } from '../_shared/rate-limiter.ts';
+import { createServiceClient } from '../_shared/service-client.ts';
 
 serve(async (req) => {
+  const corsHeaders = getCorsHeaders(req);
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
 
   try {
@@ -17,6 +16,16 @@ serve(async (req) => {
     }
 
     const { user, supabase: supabaseClient } = authContext;
+
+    // Rate limit per user (US-243). These endpoints spend money on every call —
+    // LLM tokens here — so a compromised token running them in a loop is a
+    // billing incident, not just load. Keyed by user id rather than IP: an IP
+    // limit is shared across a customer's whole office and a stolen token walks
+    // around it by changing address.
+    const limited = await enforceRateLimit(
+      createServiceClient(), user.id, 'generate-blog-content', RATE_LIMITS.AI, corsHeaders,
+    );
+    if (limited) return limited;
     console.log("[GENERATE-BLOG-CONTENT] User authenticated", { userId: user.id });
 
     // Check for root_admin role with site isolation
@@ -179,17 +188,33 @@ ${secondary_keywords.length > 0 ? `
       created_by: user.id,
     };
 
-    const { data: saved } = await supabaseClient
+    // The insert's error was discarded and supabase-js returns it rather than
+    // throwing. The `saved || <data>` fallback below then hid the consequence
+    // perfectly: when the insert failed, `saved` was null and the response fell
+    // back to the in-memory object, so the caller received what looked like a
+    // stored analysis record while the table it is supposed to live in stayed
+    // empty (US-300). The computed analysis is still returned - one caller uses
+    // it inline - but `stored` now says whether it was persisted.
+    const { data: saved, error: saveError } = await supabaseClient
       .from('seo_content_optimization')
       .insert(contentData)
       .select()
       .single();
+
+    if (saveError) {
+      console.error(
+        '[GENERATE-BLOG-CONTENT] Analysis completed but was NOT stored:',
+        saveError.message,
+      );
+    }
 
     return new Response(JSON.stringify({
       success: true,
       content: {
         ...contentData,
         id: saved?.id,
+        stored: !saveError,
+        storage_error: saveError?.message ?? null,
         keyword_occurrences: keywordOccurrences,
         keyword_density: ((keywordOccurrences / wordCount) * 100).toFixed(2),
       },

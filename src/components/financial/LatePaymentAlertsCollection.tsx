@@ -142,13 +142,16 @@ export default function LatePaymentAlertsCollection() {
       });
 
       // Update the item's last contact date
-      await supabase
+      const { error: updateCollectionItemsError } = await supabase
         .from('collection_items')
         .update({ 
           last_contact_date: new Date().toISOString().split('T')[0],
           notes: `${item.notes || ''}\nReminder sent via ${reminderMethod}: ${new Date().toLocaleDateString()}`
         })
         .eq('id', itemId);
+      if (updateCollectionItemsError) {
+        throw new Error(`Failed to update collection_items: ${updateCollectionItemsError.message}`);
+      }
 
       setShowReminderForm(false);
       setSelectedItem(null);
@@ -165,12 +168,15 @@ export default function LatePaymentAlertsCollection() {
 
   const scheduleFollowUp = async (itemId: string, followUpDate: Date) => {
     try {
-      await supabase
+      const { error: updateCollectionItemsError } = await supabase
         .from('collection_items')
         .update({ 
           next_action_date: followUpDate.toISOString().split('T')[0]
         })
         .eq('id', itemId);
+      if (updateCollectionItemsError) {
+        throw new Error(`Failed to update collection_items: ${updateCollectionItemsError.message}`);
+      }
 
       toast({
         title: "Follow-up Scheduled",
@@ -196,7 +202,7 @@ export default function LatePaymentAlertsCollection() {
       const newBalance = Math.max(0, item.currentBalance - amount);
       const newStatus = newBalance === 0 ? 'collected' : item.status;
 
-      await supabase
+      const { error: updateCollectionItemsError } = await supabase
         .from('collection_items')
         .update({ 
           current_balance: newBalance,
@@ -204,6 +210,9 @@ export default function LatePaymentAlertsCollection() {
           notes: `${item.notes || ''}\nPayment received: $${amount} on ${new Date().toLocaleDateString()}`
         })
         .eq('id', itemId);
+      if (updateCollectionItemsError) {
+        throw new Error(`Failed to update collection_items: ${updateCollectionItemsError.message}`);
+      }
 
       toast({
         title: "Payment Recorded",

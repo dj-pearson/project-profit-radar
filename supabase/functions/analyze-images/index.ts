@@ -1,15 +1,12 @@
 // Analyze Images Edge Function
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.3";
 import { initializeAuthContext, errorResponse } from '../_shared/auth-helpers.ts';
 import { checkRateLimit, rateLimitResponse, RATE_LIMITS } from '../_shared/rate-limiter.ts';
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
+import { getCorsHeaders } from '../_shared/secure-cors.ts';
 
 serve(async (req) => {
+  const corsHeaders = getCorsHeaders(req);
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
 
   try {
@@ -71,12 +68,26 @@ serve(async (req) => {
       }
     }
 
+    // Storing the analysis is the point of this function, and the error was
+    // discarded - supabase-js returns it rather than throwing - so the response
+    // reported a completed image audit while seo_image_analysis stayed empty
+    // (US-300).
+    let imagesStoreError: string | null = null;
     if (images.length > 0) {
-      await supabaseClient.from('seo_image_analysis').insert(images);
+      const { error: storeError } = await supabaseClient
+        .from('seo_image_analysis')
+        .insert(images);
+
+      if (storeError) {
+        imagesStoreError = storeError.message;
+        console.error('[ANALYZE-IMAGES] Image analysis was NOT stored:', storeError.message);
+      }
     }
 
     return new Response(JSON.stringify({
       success: true,
+      stored: imagesStoreError === null,
+      storage_error: imagesStoreError,
       summary: {
         total_images: images.length,
         images_with_alt: images.filter(i => i.has_alt_text).length,

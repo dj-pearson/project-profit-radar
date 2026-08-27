@@ -186,8 +186,17 @@ export const MobileMaterialTracker: React.FC = () => {
         created_at: new Date().toISOString()
       };
 
-      // Here you would upload photos and save to Supabase
-      // For now, just add to local state
+      // NOT PERSISTED. There is no material_deliveries table - the only
+      // delivery-shaped table in the schema is delivery_plans, which is a
+      // different thing - so this record lives in component state and is gone
+      // the moment the screen unmounts. The photos are object URLs, which do
+      // not survive a reload either.
+      //
+      // This screen is live: MobileDashboard renders it at line 430. A field
+      // worker on site confirms a delivery, sees a success toast, and has
+      // recorded nothing. The toast below says so now rather than claiming
+      // otherwise; wiring it to a real table needs a schema decision that is
+      // not this change's to make.
       const newDeliveryRecord: MaterialDelivery = {
         id: Date.now().toString(),
         project_id: 'current-project', // Replace with actual project
@@ -197,7 +206,9 @@ export const MobileMaterialTracker: React.FC = () => {
       setDeliveries(prev => [newDeliveryRecord, ...prev]);
       resetNewDeliveryForm();
       setShowNewDelivery(false);
-      toast.success('Delivery confirmed successfully');
+      toast.warning('Recorded on this device only - not yet saved to the project', {
+        description: 'Material delivery storage is not implemented; this will be lost when you leave the screen.',
+      });
     } catch (error) {
       console.error('Error submitting delivery:', error);
       toast.error('Failed to submit delivery');
@@ -223,10 +234,13 @@ export const MobileMaterialTracker: React.FC = () => {
         created_at: new Date().toISOString()
       };
 
+      // Same as confirmDelivery above: local state only, nothing written.
       setIssues(prev => [issueData, ...prev]);
       resetIssueForm();
       setShowIssueForm(false);
-      toast.success('Issue reported successfully');
+      toast.warning('Recorded on this device only - not yet reported', {
+        description: 'Delivery issue reporting is not implemented; this will be lost when you leave the screen.',
+      });
     } catch (error) {
       console.error('Error submitting issue:', error);
       toast.error('Failed to report issue');

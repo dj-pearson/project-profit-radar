@@ -40,7 +40,7 @@ export const DocumentVersions: React.FC<DocumentVersionsProps> = ({
   documentName,
   onNewVersion
 }) => {
-  const { user } = useAuth();
+  const { userProfile } = useAuth();
   const [versions, setVersions] = useState<DocumentVersion[]>([]);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
@@ -103,7 +103,16 @@ export const DocumentVersions: React.FC<DocumentVersionsProps> = ({
       const fileExt = selectedFile.name.split('.').pop();
       const fileName = `${Date.now()}-v${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
       const bucketName = 'company-documents'; // Assuming company context
-      const filePath = `${user?.id}/${fileName}`;
+      // US-289: company-documents' SELECT policy authorises on the first path
+      // segment being the caller's company id. Uploading under the user id
+      // produced objects no policy matches, which nothing noticed because a
+      // public bucket never consults one. Company-scope the path so these
+      // versions stay readable once the bucket goes private.
+      const companyId = userProfile?.company_id;
+      if (!companyId) {
+        throw new Error('No company on your profile; cannot store a document version.');
+      }
+      const filePath = `${companyId}/versions/${documentId}/${fileName}`;
 
       // Upload to storage
       const { error: uploadError } = await supabase.storage

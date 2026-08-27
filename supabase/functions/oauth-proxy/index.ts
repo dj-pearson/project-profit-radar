@@ -10,13 +10,8 @@
  * 5. Redirects to frontend /auth/callback with token
  */
 
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.0';
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-  'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-};
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.50.3';
+import { getCorsHeaders } from '../_shared/secure-cors.ts';
 
 // Configuration from environment variables
 const FRONTEND_URL = Deno.env.get('FRONTEND_URL') || 'https://brikly.net';
@@ -30,6 +25,7 @@ const APPLE_CLIENT_SECRET = Deno.env.get('APPLE_CLIENT_SECRET') || '';
 
 // Export handler for edge-functions-server
 export default async function handler(req: Request): Promise<Response> {
+  const corsHeaders = getCorsHeaders(req);
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
   }

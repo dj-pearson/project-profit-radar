@@ -192,7 +192,7 @@ const CustomerSupportChat = () => {
       };
 
       // Create initial message
-      await supabase
+      const { error: insertSupportMessagesError } = await supabase
         .from('support_messages')
         .insert({
           ticket_id: ticket.id,
@@ -201,6 +201,9 @@ const CustomerSupportChat = () => {
           sender_email: customerEmail,
           content: `Hello, I need help with: ${newTicketSubject}`
         });
+      if (insertSupportMessagesError) {
+        throw new Error(`Failed to insert support_messages: ${insertSupportMessagesError.message}`);
+      }
 
       // Send email notification
       try {

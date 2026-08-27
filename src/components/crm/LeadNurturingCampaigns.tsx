@@ -11,6 +11,7 @@ import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/contexts/AuthContext';
 import { Mail, Plus, Play, Pause, Clock, CheckCircle, AlertCircle } from 'lucide-react';
 
 interface NurturingCampaign {
@@ -64,6 +65,7 @@ export const LeadNurturingCampaigns: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [isCreating, setIsCreating] = useState(false);
   const { toast } = useToast();
+  const { userProfile } = useAuth();
 
   const [newCampaign, setNewCampaign] = useState({
     campaign_name: '',
@@ -144,11 +146,24 @@ export const LeadNurturingCampaigns: React.FC = () => {
   const createCampaign = async () => {
     try {
       setIsCreating(true);
+      // lead_nurturing_campaigns.company_id is `UUID NOT NULL` (migration
+      // 20250726012428). This passed the literal string 'your-company-id',
+      // which fails the uuid cast, so creating a campaign has never once
+      // succeeded - it threw "invalid input syntax for type uuid" every time.
+      if (!userProfile?.company_id) {
+        toast({
+          title: "Can't create the campaign",
+          description: 'No company on your profile.',
+          variant: 'destructive',
+        });
+        return;
+      }
+
       const { error } = await supabase
         .from('lead_nurturing_campaigns')
         .insert([{
           ...newCampaign,
-          company_id: 'your-company-id' // This should come from user context
+          company_id: userProfile.company_id
         }])
         .select()
         .single();
@@ -195,10 +210,13 @@ export const LeadNurturingCampaigns: React.FC = () => {
       if (error) throw error;
 
       // Update campaign total steps
-      await supabase
+      const { error: updateLeadNurturingCampaignsError } = await supabase
         .from('lead_nurturing_campaigns')
         .update({ total_steps: stepNumber })
         .eq('id', campaignId);
+      if (updateLeadNurturingCampaignsError) {
+        throw new Error(`Failed to update lead_nurturing_campaigns: ${updateLeadNurturingCampaignsError.message}`);
+      }
 
       toast({
         title: "Step added",

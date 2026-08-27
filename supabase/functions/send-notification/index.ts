@@ -2,6 +2,7 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { Resend } from "https://esm.sh/resend@2.0.0";
 import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
 import { getCorsHeaders, handleCorsPreflightRequest } from '../_shared/secure-cors.ts';
+import { initializeAuthContext, errorResponse } from '../_shared/auth-helpers.ts';
 
 const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 
@@ -40,6 +41,24 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
+    // Authenticate the caller.
+    //
+    // This handler validated its body carefully and never asked who was
+    // calling. It sends through Resend as "Brikly <...>" to a body-supplied
+    // address, and being absent from supabase/config.toml gave it
+    // verify_jwt = true - which only means a validly-signed project JWT is
+    // present, and the publishable anon key is one, and it ships in the client
+    // bundle. So it was an open mail relay on Brikly's Resend account and
+    // sending reputation: arbitrary recipient, arbitrary body, Brikly's name on
+    // it (US-241).
+    //
+    // Zod did not help here, and could not: every field was well-formed. The
+    // missing check was who, not what.
+    const authContext = await initializeAuthContext(req);
+    if (!authContext) {
+      return errorResponse('Unauthorized', 401, req);
+    }
+
     const rawBody = await req.json();
 
     // Validate input

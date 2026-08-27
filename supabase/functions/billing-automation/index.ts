@@ -3,11 +3,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.3";
 import { initializeAuthContext, errorResponse } from '../_shared/auth-helpers.ts';
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
+import { getCorsHeaders } from '../_shared/secure-cors.ts';
 
 const logStep = (step: string, details?: Record<string, unknown>) => {
   const detailsStr = details ? ` - ${JSON.stringify(details)}` : '';
@@ -60,6 +56,7 @@ interface ScheduleConfig {
 }
 
 serve(async (req) => {
+  const corsHeaders = getCorsHeaders(req);
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
   }
@@ -98,30 +95,30 @@ serve(async (req) => {
     switch (action) {
       case 'create_rule':
         if (!companyId) return errorResponse('Unauthorized', 401);
-        return await createRule(supabaseClient, companyId, body.rule!);
+        return await createRule(corsHeaders, supabaseClient, companyId, body.rule!);
 
       case 'update_rule':
         if (!companyId) return errorResponse('Unauthorized', 401);
-        return await updateRule(supabaseClient, companyId, body.rule_id!, body.rule!);
+        return await updateRule(corsHeaders, supabaseClient, companyId, body.rule_id!, body.rule!);
 
       case 'delete_rule':
         if (!companyId) return errorResponse('Unauthorized', 401);
-        return await deleteRule(supabaseClient, companyId, body.rule_id!);
+        return await deleteRule(corsHeaders, supabaseClient, companyId, body.rule_id!);
 
       case 'list_rules':
         if (!companyId) return errorResponse('Unauthorized', 401);
-        return await listRules(supabaseClient, companyId);
+        return await listRules(corsHeaders, supabaseClient, companyId);
 
       case 'execute_rule':
         if (!companyId) return errorResponse('Unauthorized', 401);
-        return await executeRule(supabaseClient, companyId, body.rule_id!);
+        return await executeRule(corsHeaders, supabaseClient, companyId, body.rule_id!);
 
       case 'run_scheduled':
-        return await runScheduledRules(supabaseClient);
+        return await runScheduledRules(corsHeaders, supabaseClient);
 
       case 'get_logs':
         if (!companyId) return errorResponse('Unauthorized', 401);
-        return await getExecutionLogs(supabaseClient, companyId, body.rule_id);
+        return await getExecutionLogs(corsHeaders, supabaseClient, companyId, body.rule_id);
 
       default:
         return errorResponse('Invalid action', 400);
@@ -138,7 +135,7 @@ serve(async (req) => {
 });
 
 async function createRule(
-  supabase: ReturnType<typeof createClient>,
+  corsHeaders: Record<string, string>, supabase: ReturnType<typeof createClient>,
   companyId: string,
   rule: AutomationRule
 ): Promise<Response> {
@@ -186,7 +183,7 @@ async function createRule(
 }
 
 async function updateRule(
-  supabase: ReturnType<typeof createClient>,
+  corsHeaders: Record<string, string>, supabase: ReturnType<typeof createClient>,
   companyId: string,
   ruleId: string,
   rule: Partial<AutomationRule>
@@ -230,7 +227,7 @@ async function updateRule(
 }
 
 async function deleteRule(
-  supabase: ReturnType<typeof createClient>,
+  corsHeaders: Record<string, string>, supabase: ReturnType<typeof createClient>,
   companyId: string,
   ruleId: string
 ): Promise<Response> {
@@ -258,7 +255,7 @@ async function deleteRule(
 }
 
 async function listRules(
-  supabase: ReturnType<typeof createClient>,
+  corsHeaders: Record<string, string>, supabase: ReturnType<typeof createClient>,
   companyId: string
 ): Promise<Response> {
   const { data: rules, error } = await supabase
@@ -298,7 +295,7 @@ async function listRules(
 }
 
 async function executeRule(
-  supabase: ReturnType<typeof createClient>,
+  corsHeaders: Record<string, string>, supabase: ReturnType<typeof createClient>,
   companyId: string,
   ruleId: string
 ): Promise<Response> {
@@ -319,8 +316,10 @@ async function executeRule(
 
   const result = await executeRuleActions(supabase, companyId, rule);
 
-  // Update run count and last run time
-  await supabase
+  // Update run count and last run time. next_run_at is what stops this rule
+  // firing again immediately; the error was discarded, so a failure left the
+  // rule due and it re-ran its actions on every pass (US-300).
+  const { error: runCountError } = await supabase
     .from('billing_automation_rules')
     .update({
       run_count: (rule.run_count || 0) + 1,
@@ -329,8 +328,16 @@ async function executeRule(
     })
     .eq('id', ruleId);
 
-  // Log execution
-  await supabase
+  if (runCountError) {
+    throw new Error(
+      `Rule ${ruleId} ran but its schedule was not advanced, so it will run again: ${runCountError.message}`,
+    );
+  }
+
+  // Log execution. Best-effort - the rule has already run - but the error was
+  // discarded, so a missing activity entry looked like a rule that never fired
+  // (US-300).
+  const { error: feedError } = await supabase
     .from('activity_feed')
     .insert({
       company_id: companyId,
@@ -343,6 +350,10 @@ async function executeRule(
       user_id: '00000000-0000-0000-0000-000000000000' // System user
     });
 
+  if (feedError) {
+    console.error('[billing-automation] execution not logged to the activity feed:', feedError.message);
+  }
+
   return new Response(
     JSON.stringify({
       success: result.success,
@@ -353,7 +364,7 @@ async function executeRule(
   );
 }
 
-async function runScheduledRules(supabase: ReturnType<typeof createClient>): Promise<Response> {
+async function runScheduledRules(corsHeaders: Record<string, string>, supabase: ReturnType<typeof createClient>): Promise<Response> {
   const now = new Date().toISOString();
 
   // Get all rules that are due to run
@@ -376,8 +387,9 @@ async function runScheduledRules(supabase: ReturnType<typeof createClient>): Pro
     try {
       await executeRuleActions(supabase, rule.tenant_id, rule);
 
-      // Update run count and schedule next run
-      await supabase
+      // Update run count and schedule next run. Same as the single-rule path: a
+      // discarded error left the rule due and it re-ran every pass (US-300).
+      const { error: scheduleError } = await supabase
         .from('billing_automation_rules')
         .update({
           run_count: (rule.run_count || 0) + 1,
@@ -385,6 +397,12 @@ async function runScheduledRules(supabase: ReturnType<typeof createClient>): Pro
           next_run_at: rule.schedule ? calculateNextRunTime(rule.schedule) : null
         })
         .eq('id', rule.id);
+
+      if (scheduleError) {
+        throw new Error(
+          `Rule ${rule.id} ran but its schedule was not advanced, so it will run again: ${scheduleError.message}`,
+        );
+      }
 
       executed++;
     } catch (err) {
@@ -512,13 +530,16 @@ async function executeLateFeee(
     const fee = feeFixed > 0 ? feeFixed : (invoice.total_amount * feePercentage / 100);
 
     // Add late fee to invoice
-    await supabase
+    const { error: updateInvoicesError } = await supabase
       .from('invoices')
       .update({
         late_fee: fee,
         total_amount: invoice.total_amount + fee
       })
       .eq('id', invoice.id);
+    if (updateInvoicesError) {
+      throw new Error(`Failed to update invoices: ${updateInvoicesError.message}`);
+    }
 
     feesApplied++;
   }
@@ -550,13 +571,16 @@ async function executeDiscountApplication(
   for (const invoice of invoices || []) {
     const discount = invoice.total_amount * discountPercentage / 100;
 
-    await supabase
+    const { error: updateInvoicesError } = await supabase
       .from('invoices')
       .update({
         discount_amount: discount,
         total_amount: invoice.total_amount - discount
       })
       .eq('id', invoice.id);
+    if (updateInvoicesError) {
+      throw new Error(`Failed to update invoices: ${updateInvoicesError.message}`);
+    }
 
     discountsApplied++;
   }
@@ -590,7 +614,7 @@ async function executeUsageBilling(
 }
 
 async function getExecutionLogs(
-  supabase: ReturnType<typeof createClient>,
+  corsHeaders: Record<string, string>, supabase: ReturnType<typeof createClient>,
   companyId: string,
   ruleId?: string
 ): Promise<Response> {
@@ -625,7 +649,7 @@ function calculateNextRunTime(schedule: ScheduleConfig): string {
   const now = new Date();
 
   switch (schedule.frequency) {
-    case 'daily':
+    case 'daily': {
       const [hours, minutes] = (schedule.time || '09:00').split(':').map(Number);
       const nextDaily = new Date(now);
       nextDaily.setHours(hours, minutes, 0, 0);
@@ -633,8 +657,9 @@ function calculateNextRunTime(schedule: ScheduleConfig): string {
         nextDaily.setDate(nextDaily.getDate() + 1);
       }
       return nextDaily.toISOString();
+    }
 
-    case 'weekly':
+    case 'weekly': {
       const nextWeekly = new Date(now);
       const targetDay = schedule.day_of_week || 1; // Monday
       const daysUntil = (targetDay - now.getDay() + 7) % 7 || 7;
@@ -644,8 +669,9 @@ function calculateNextRunTime(schedule: ScheduleConfig): string {
         nextWeekly.setHours(h, m, 0, 0);
       }
       return nextWeekly.toISOString();
+    }
 
-    case 'monthly':
+    case 'monthly': {
       const nextMonthly = new Date(now);
       nextMonthly.setDate(schedule.day_of_month || 1);
       if (nextMonthly <= now) {
@@ -656,6 +682,7 @@ function calculateNextRunTime(schedule: ScheduleConfig): string {
         nextMonthly.setHours(h, m, 0, 0);
       }
       return nextMonthly.toISOString();
+    }
 
     case 'once':
     default:

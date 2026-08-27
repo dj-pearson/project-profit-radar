@@ -7,11 +7,8 @@
  */
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.50.3';
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
+import { initializeAuthContext, errorResponse } from '../_shared/auth-helpers.ts';
+import { getCorsHeaders } from '../_shared/secure-cors.ts';
 
 const logStep = (step: string, details?: Record<string, unknown>) => {
   const detailsStr = details ? ` - ${JSON.stringify(details)}` : '';
@@ -56,18 +53,49 @@ interface EmailConfig {
 }
 
 Deno.serve(async (req) => {
+  const corsHeaders = getCorsHeaders(req);
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
+    // SECURITY: this function did not identify its caller at all. It runs on
+    // the service role, so RLS is off, and companyId came straight from the
+    // body — meaning any authenticated user could drive CRM automation for any
+    // company: enrol their contacts in campaigns, queue email against them, and
+    // write crm_activities rows. verify_jwt is on, so a caller is authenticated,
+    // but authentication is not authorisation. The company now comes from the
+    // caller's own profile.
+    const authContext = await initializeAuthContext(req);
+    if (!authContext) {
+      return errorResponse('Unauthorized', 401, req);
+    }
+    const { user, supabase: userClient } = authContext;
+
+    const { data: callerProfile } = await userClient
+      .from('user_profiles')
+      .select('company_id')
+      .eq('id', user.id)
+      .single();
+
+    if (!callerProfile?.company_id) {
+      return errorResponse('Could not resolve the caller company', 403, req);
+    }
+
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
     const body = await req.json() as AutomationRequest;
-    const { trigger, entityType, entityId, companyId, metadata } = body;
+    const { trigger, entityType, entityId, metadata } = body;
+    const companyId = callerProfile.company_id;
+
+    if (body.companyId && body.companyId !== companyId) {
+      logStep('Ignoring caller-supplied companyId', {
+        claimed: body.companyId, actual: companyId, userId: user.id
+      });
+    }
 
     logStep('Processing automation request', { trigger, entityType, entityId });
 
@@ -290,8 +318,12 @@ async function processAutomation(
     return { success: false, error: queueError.message };
   }
 
-  // Log the automation activity
-  await supabase
+  // Log the automation activity. The email is already queued - that write is
+  // checked above - so this is the CRM timeline entry, not the action. Its
+  // error was discarded and supabase-js returns it rather than throwing, so a
+  // rep looking at the lead saw no sign an automated email had gone out and
+  // could follow up on top of it (US-300).
+  const { error: activityError } = await supabase
     .from('crm_activities')
     .insert({
       company_id: companyId,
@@ -302,6 +334,13 @@ async function processAutomation(
       outcome: 'queued',
       activity_date: new Date().toISOString(),
     });
+
+  if (activityError) {
+    logStep('Automated email QUEUED but not shown on the CRM timeline', {
+      recipientEmail,
+      error: activityError.message,
+    });
+  }
 
   logStep('Email queued successfully', {
     email: recipientEmail,
@@ -498,14 +537,24 @@ async function scheduleNextCampaignEmail(
   const currentStep = (enrollment.current_step as number) || 0;
 
   if (currentStep >= steps.length) {
-    // Campaign completed
-    await supabase
+    // Campaign completed. A dropped error left the enrollment 'active' with
+    // every step already sent, so it stayed on the active-enrolment counts for
+    // good (US-300).
+    const { error: completedError } = await supabase
       .from('campaign_enrollments')
       .update({
         status: 'completed',
         completed_at: new Date().toISOString()
       })
       .eq('id', enrollment.id as string);
+
+    if (completedError) {
+      logStep('Enrollment finished its sequence but was not marked completed', {
+        enrollmentId: enrollment.id,
+        error: completedError.message,
+      });
+    }
+
     return;
   }
 
@@ -516,8 +565,11 @@ async function scheduleNextCampaignEmail(
   // Prepare variables
   const variables = prepareEntityVariables(entity);
 
-  // Queue the email
-  await supabase
+  // Queue the email. This row IS the next step of the drip campaign: with its
+  // error discarded, a failed insert left the contact enrolled in a sequence
+  // that would never send anything, and the logStep below announced the
+  // scheduling anyway (US-300).
+  const { error: queueStepError } = await supabase
     .from('email_queue')
     .insert({
       company_id: companyId,
@@ -539,6 +591,12 @@ async function scheduleNextCampaignEmail(
         campaign_name: campaign.campaign_name,
       }
     });
+
+  if (queueStepError) {
+    throw new Error(
+      `Step ${currentStep} of "${campaign.campaign_name}" was NOT queued for ${enrollment.recipient_email}, so the sequence stops here: ${queueStepError.message}`,
+    );
+  }
 
   logStep('Scheduled campaign email', {
     campaign: campaign.campaign_name,

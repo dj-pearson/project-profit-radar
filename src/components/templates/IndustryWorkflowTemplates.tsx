@@ -142,13 +142,16 @@ export function IndustryWorkflowTemplates() {
     }
   };
 
-  const useTemplate = async (template: WorkflowTemplate) => {
+  const applyTemplate = async (template: WorkflowTemplate) => {
     try {
       // Update usage count
-      await supabase
+      const { error: updateWorkflowTemplatesError } = await supabase
         .from('workflow_templates')
         .update({ usage_count: template.usage_count + 1 })
         .eq('id', template.id);
+      if (updateWorkflowTemplatesError) {
+        throw new Error(`Failed to update workflow_templates: ${updateWorkflowTemplatesError.message}`);
+      }
 
       toast({
         title: "Template Selected",
@@ -247,7 +250,7 @@ export function IndustryWorkflowTemplates() {
                 key={template.id}
                 template={template}
                 onView={setSelectedTemplate}
-                onUse={useTemplate}
+                onUse={applyTemplate}
                 getComplexityColor={getComplexityColor}
                 getIndustryIcon={getIndustryIcon}
               />
@@ -263,7 +266,7 @@ export function IndustryWorkflowTemplates() {
                   key={template.id}
                   template={template}
                   onView={setSelectedTemplate}
-                  onUse={useTemplate}
+                  onUse={applyTemplate}
                   getComplexityColor={getComplexityColor}
                   getIndustryIcon={getIndustryIcon}
                 />
@@ -279,7 +282,7 @@ export function IndustryWorkflowTemplates() {
           template={selectedTemplate}
           open={!!selectedTemplate}
           onOpenChange={() => setSelectedTemplate(null)}
-          onUse={() => useTemplate(selectedTemplate)}
+          onUse={() => applyTemplate(selectedTemplate)}
         />
       )}
     </div>

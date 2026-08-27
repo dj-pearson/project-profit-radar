@@ -192,10 +192,15 @@ export const useTimesheetApproval = () => {
             const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Not authenticated');
 
+      // Parameter names must match the SQL signature exactly: PostgREST resolves
+      // an RPC by named arguments, so p_-prefixed keys matched no function and
+      // this returned PGRST202 every time. bulk_approve_timesheets is declared
+      // (timesheet_ids, approver_id, notes) in
+      // 20251110000001_timesheet_approval_system.sql.
       const { data, error } = await supabase.rpc('bulk_approve_timesheets', {
-        p_timesheet_ids: ids,
-        p_approver_id: user.id,
-        p_notes: notes || null,
+        timesheet_ids: ids,
+        approver_id: user.id,
+        notes: notes || null,
       });
 
       if (error) throw error;
@@ -225,9 +230,12 @@ export const useTimesheetApproval = () => {
             const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Not authenticated');
 
+      // Same mismatch as the approve path above — note rejection_reason was
+      // already correct, which is what a half-finished rename looks like.
+      // Declared (timesheet_ids, rejector_id, rejection_reason).
       const { data, error } = await supabase.rpc('bulk_reject_timesheets', {
-        p_timesheet_ids: ids,
-        p_rejector_id: user.id,
+        timesheet_ids: ids,
+        rejector_id: user.id,
         rejection_reason: reason,
       });
 

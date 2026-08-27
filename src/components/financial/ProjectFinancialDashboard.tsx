@@ -36,6 +36,7 @@ export function ProjectFinancialDashboard({ projectId }: ProjectFinancialDashboa
   const { userProfile } = useAuth();
   const [data, setData] = useState<FinancialData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!userProfile?.company_id || !projectId) return;
@@ -43,6 +44,7 @@ export function ProjectFinancialDashboard({ projectId }: ProjectFinancialDashboa
     const loadFinancialData = async () => {
       try {
         setLoading(true);
+        setLoadError(null);
 
         const [invoicesRes, expensesRes, paymentsRes, projectRes] = await Promise.all([
           supabase
@@ -67,6 +69,25 @@ export function ProjectFinancialDashboard({ projectId }: ProjectFinancialDashboa
             .eq('company_id', userProfile.company_id)
             .single(),
         ]);
+
+        // supabase-js returns the error rather than throwing it, so the catch
+        // below never fired and `res.data || []` turned a failed read into an
+        // empty list: the dashboard rendered a project that had been billed
+        // nothing, collected nothing and spent nothing. `payments` in
+        // particular is not created by any migration (US-311), so that read
+        // fails outright wherever the table was never made by hand.
+        const failed = [
+          ['invoices', invoicesRes.error],
+          ['expenses', expensesRes.error],
+          ['payments', paymentsRes.error],
+          ['projects', projectRes.error],
+        ].filter(([, error]) => error) as Array<[string, { message: string }]>;
+
+        if (failed.length > 0) {
+          throw new Error(
+            `Could not load project financials: ${failed.map(([t, e]) => `${t} (${e.message})`).join('; ')}`,
+          );
+        }
 
         const invoices = invoicesRes.data || [];
         const expenses = expensesRes.data || [];
@@ -112,8 +133,10 @@ export function ProjectFinancialDashboard({ projectId }: ProjectFinancialDashboa
           monthlyCashFlow: months,
         });
       } catch (error) {
-        // Data load failed — the UI shows an empty state (acceptable UX), but
-        // report to Sentry so ops sees the failure instead of it being silent.
+        // Reached now that the reads above surface their errors. A financial
+        // dashboard showing zeros because a query failed is worse than one
+        // showing nothing, so the empty state stands and ops gets told.
+        setLoadError(error instanceof Error ? error.message : 'Could not load project financials.');
         captureException(error, {
           context: 'ProjectFinancialDashboard.loadFinancialData',
         });
@@ -138,6 +161,25 @@ export function ProjectFinancialDashboard({ projectId }: ProjectFinancialDashboa
           <Card><CardContent className="pt-4"><Skeleton className="h-[250px]" /></CardContent></Card>
         </div>
       </div>
+    );
+  }
+
+  if (loadError) {
+    // Previously this returned null, so a failed load and a project with no
+    // financial records looked identical: a blank space. Say which it is.
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Project financials unavailable</CardTitle>
+        </CardHeader>
+        <CardContent className="text-sm text-muted-foreground">
+          <p>{loadError}</p>
+          <p className="mt-2">
+            No figures are shown rather than showing zeros, because a zero here would read as
+            "nothing billed and nothing collected".
+          </p>
+        </CardContent>
+      </Card>
     );
   }
 

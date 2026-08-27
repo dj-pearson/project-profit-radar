@@ -1,7 +1,7 @@
 // Generate Churn Predictions Edge Function
 // Runs as cron job - processes all sites
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.3";
 
 import { getCorsHeaders, handleCorsPreflightRequest } from "../_shared/secure-cors.ts";
 import { requireSystemOrAdmin } from "../_shared/system-auth.ts";
@@ -124,17 +124,26 @@ serve(async (req) => {
           model_version: "rule-based-v1.0",
         };
 
-        if (existingPrediction) {
-          // Update existing prediction
-          await supabaseClient
+        // predictionsGenerated is incremented below regardless of whether
+        // either write worked, and supabase-js returns the error rather than
+        // throwing it, so the run could report "37 predictions generated"
+        // having stored none - and a churn prediction nobody stores is a
+        // customer nobody calls (US-300).
+        const { error: predictionError } = existingPrediction
+          ? await supabaseClient
             .from("churn_predictions")
             .update(predictionData)
-            .eq("id", existingPrediction.id);
-        } else {
-          // Insert new prediction
-          await supabaseClient
+            .eq("id", existingPrediction.id)
+          : await supabaseClient
             .from("churn_predictions")
             .insert(predictionData);
+
+        if (predictionError) {
+          logStep("Prediction not stored", {
+            user_id: predictionData.user_id,
+            error: predictionError.message,
+          });
+          continue;
         }
 
         predictionsGenerated++;

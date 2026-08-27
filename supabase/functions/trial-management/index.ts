@@ -81,13 +81,16 @@ serve(async (req) => {
 
           if (today <= gracePeriodEnd) {
             // Still in grace period
-            await supabaseClient
+            const { error: updateCompaniesError } = await supabaseClient
               .from("companies")
               .update({
                 subscription_status: "grace_period",
                 updated_at: new Date().toISOString()
               })
               .eq("id", company.id);
+            if (updateCompaniesError) {
+              console.error(`[companies] update failed`, updateCompaniesError);
+            }
 
             // Send grace period email
             await sendGracePeriodEmail(resend, admin, company, gracePeriodEnd);
@@ -96,13 +99,16 @@ serve(async (req) => {
             logStep("Activated grace period", { companyId: company.id });
           } else {
             // Grace period expired - suspend account
-            await supabaseClient
+            const { error: updateCompaniesError } = await supabaseClient
               .from("companies")
               .update({
                 subscription_status: "suspended",
                 updated_at: new Date().toISOString()
               })
               .eq("id", company.id);
+            if (updateCompaniesError) {
+              console.error(`[companies] update failed`, updateCompaniesError);
+            }
 
             await sendTrialExpiredEmail(resend, admin, company);
             results.expired_trials++;

@@ -36,6 +36,8 @@ interface PunchListItem {
   assigned_to?: string;
   date_identified: string;
   date_completed?: string;
+  date_verified?: string;
+  notes?: string;
   created_at: string;
   updated_at: string;
   company_id: string;
@@ -195,8 +197,36 @@ const PunchList = () => {
   }, [newItem, userProfile?.company_id, user?.id, loadData]);
 
   const handleStatusUpdate = useCallback(async (itemId: string, newStatus: string) => {
+    // This said "Status updated successfully" and wrote nothing at all. The
+    // loadData() below then re-read the row and the badge snapped back to where
+    // it started, on a page real users reach at /punch-list - so an item marked
+    // complete at handover stayed open (US-309). Everything it needs already
+    // exists: status is a real column whose check constraint lists exactly the
+    // values the buttons pass, alongside date_completed/completed_by and
+    // date_verified/verified_by. handleEditItem below writes the same table.
     try {
-      // In a real implementation, this would update the item status
+      const nowIso = new Date().toISOString();
+      const today = nowIso.slice(0, 10);
+      const updates: Record<string, unknown> = {
+        status: newStatus,
+        updated_at: nowIso,
+      };
+
+      if (newStatus === 'completed') {
+        updates.date_completed = today;
+        updates.completed_by = user?.id ?? null;
+      } else if (newStatus === 'verified') {
+        updates.date_verified = today;
+        updates.verified_by = user?.id ?? null;
+      }
+
+      const { error } = await supabase
+        .from('punch_list_items')
+        .update(updates)
+        .eq('id', itemId);
+
+      if (error) throw error;
+
       toast({
         title: "Success",
         description: "Status updated successfully"
@@ -207,11 +237,11 @@ const PunchList = () => {
       console.error('Error updating status:', error);
       toast({
         variant: "destructive",
-        title: "Error",
-        description: "Failed to update status"
+        title: "Status not updated",
+        description: error instanceof Error ? error.message : "Failed to update status"
       });
     }
-  }, [loadData]);
+  }, [loadData, user?.id]);
 
   const handleEditItem = useCallback(async () => {
     if (!editingItem || !editingItem.id) return;
@@ -260,8 +290,29 @@ const PunchList = () => {
       return;
     }
 
+    if (!selectedItem?.id) return;
+
+    // This said "Comment added successfully", wrote nothing, and cleared the
+    // box - so the comment was simply gone (US-309). There is no comments table
+    // for punch list items, only the item's own `notes` column, so the comment
+    // is appended there as a dated entry and the notes are rendered on the card
+    // below. Without that render it would be a write nobody could read, which
+    // is its own kind of dishonest.
     try {
-      // In a real implementation, this would add the comment
+      const stamp = new Date().toLocaleString();
+      const author = userProfile
+        ? `${userProfile.first_name ?? ''} ${userProfile.last_name ?? ''}`.trim() || 'Unknown'
+        : 'Unknown';
+      const entry = `[${stamp}] ${author}: ${commentText.trim()}`;
+      const nextNotes = selectedItem.notes ? `${selectedItem.notes}\n${entry}` : entry;
+
+      const { error } = await supabase
+        .from('punch_list_items')
+        .update({ notes: nextNotes, updated_at: new Date().toISOString() })
+        .eq('id', selectedItem.id);
+
+      if (error) throw error;
+
       toast({
         title: "Success",
         description: "Comment added successfully"
@@ -270,17 +321,17 @@ const PunchList = () => {
       setIsCommentDialogOpen(false);
       setCommentText('');
       setSelectedItem(null);
-      
+
       loadData();
     } catch (error: unknown) {
       console.error('Error adding comment:', error);
       toast({
         variant: "destructive",
-        title: "Error",
-        description: "Failed to add comment"
+        title: "Comment not added",
+        description: error instanceof Error ? error.message : "Failed to add comment"
       });
     }
-  }, [commentText, loadData]);
+  }, [commentText, loadData, selectedItem, userProfile]);
 
   const getStatusBadge = useCallback((status: string) => {
     switch (status) {
@@ -563,6 +614,13 @@ const PunchList = () => {
                       <h4 className="font-medium mb-2">Description</h4>
                       <p className="text-sm text-muted-foreground">{item.description}</p>
                     </div>
+
+                    {item.notes && (
+                      <div>
+                        <h4 className="font-medium mb-2">Comments</h4>
+                        <p className="text-sm text-muted-foreground whitespace-pre-line">{item.notes}</p>
+                      </div>
+                    )}
                     
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                       <div>

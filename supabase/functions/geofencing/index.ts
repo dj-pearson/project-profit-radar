@@ -1,14 +1,11 @@
 // Geofencing Calculation Service Edge Function
 // Calculates distances, checks geofence breaches, and triggers alerts
 
-import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
+import { serve } from 'https://deno.land/std@0.190.0/http/server.ts'
 import { initializeAuthContext, errorResponse, successResponse, safeErrorResponse } from '../_shared/auth-helpers.ts'
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-  'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-}
+import { getCorsHeaders } from '../_shared/secure-cors.ts';
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
+import { validateBody } from '../_shared/validate-body.ts';
 
 interface Point {
   lat: number
@@ -27,11 +24,42 @@ interface Geofence {
   is_active: boolean
 }
 
+const point = z.object({ lat: z.number(), lng: z.number() });
+
+/** Mirrors the params each action's handler already declares. */
+const GeofencingRequestSchema = z.discriminatedUnion('action', [
+  z.object({
+    action: z.literal('check_location'),
+    lat: z.number(), lng: z.number(),
+    user_id: z.string().uuid().optional(),
+    project_id: z.string().uuid().optional(),
+  }),
+  z.object({
+    action: z.literal('calculate_distance'),
+    point1: point, point2: point,
+  }),
+  z.object({
+    action: z.literal('check_geofence_breach'),
+    entry_id: z.string().uuid(), geofence_id: z.string().uuid(),
+    lat: z.number(), lng: z.number(),
+  }),
+  z.object({
+    action: z.literal('process_gps_entry'),
+    entry_id: z.string().uuid(), user_id: z.string().uuid(),
+    project_id: z.string().uuid().optional(),
+  }),
+  z.object({
+    action: z.literal('calculate_travel_distance'),
+    locations: z.array(point),
+  }),
+]);
+
 const logStep = (step: string, details?: any) => {
   console.log(`[GEOFENCING] ${step}${details ? ` - ${JSON.stringify(details)}` : ''}`)
 }
 
 serve(async (req) => {
+  const corsHeaders = getCorsHeaders(req);
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { status: 204, headers: corsHeaders })
@@ -47,7 +75,9 @@ serve(async (req) => {
     const { user, supabase } = authContext
     logStep('User authenticated', { userId: user.id })
 
-    const { action, ...params } = await req.json()
+    const parsed = await validateBody(req, GeofencingRequestSchema, { name: 'geofencing' })
+    if (!parsed.ok) return parsed.response
+    const { action, ...params } = parsed.data as Record<string, any>
 
     switch (action) {
       case 'check_location':
@@ -177,7 +207,12 @@ async function checkGeofenceBreach(supabase: any, params: {
       { lat: geofence.center_lat, lng: geofence.center_lng }
     )
 
-    await supabase
+    // The response below tells the caller a breach was detected and recorded.
+    // supabase-js returns the error rather than throwing, so this insert
+    // failing was invisible, and geofence_breach_alerts is not created by any
+    // migration (US-311). Log loudly rather than fail the request: the breach
+    // is still real and the caller still needs to be told about it.
+    const { error: alertError } = await supabase
       .from('geofence_breach_alerts')
       .insert({
         geofence_id,
@@ -187,8 +222,13 @@ async function checkGeofenceBreach(supabase: any, params: {
         breach_timestamp: new Date().toISOString()
       })
 
+    if (alertError) {
+      console.error('[geofencing] breach detected but the alert row was not stored', alertError.message)
+    }
+
     return successResponse({
       breach_detected: true,
+      alert_recorded: !alertError,
       geofence_name: geofence.name,
       distance_from_center: distance,
       distance_from_boundary: distance - geofence.radius_meters
@@ -224,13 +264,21 @@ async function processGPSEntry(supabase: any, params: {
       { lat: entry.clock_out_lat, lng: entry.clock_out_lng }
     )
 
-    // Update entry with calculated distance
-    await supabase
+    // Update entry with calculated distance. This feeds mileage on a time
+    // entry, so a lost write is a worker not paid for travel they made, and the
+    // error was discarded (US-300).
+    const { error: distanceError } = await supabase
       .from('gps_time_entries')
       .update({
         distance_traveled_meters: travelDistance
       })
       .eq('id', entry_id);
+
+    if (distanceError) {
+      throw new Error(
+        `Clock-out for entry ${entry_id} was recorded but its travel distance was NOT stored: ${distanceError.message}`,
+      );
+    }
   }
 
   // Check geofence compliance if project is specified
@@ -251,7 +299,7 @@ async function processGPSEntry(supabase: any, params: {
 
         if (!isInGeofence) {
           // Create breach alert
-          await supabase
+          const { error: alertError } = await supabase
             .from('geofence_breach_alerts')
             .insert({
               geofence_id: geofence.id,
@@ -259,6 +307,13 @@ async function processGPSEntry(supabase: any, params: {
               breach_type: 'clock_in_outside',
               breach_timestamp: entry.clock_in_time
             })
+
+          if (alertError) {
+            console.error(
+              '[geofencing] clock-in outside geofence but the alert row was not stored',
+              alertError.message,
+            )
+          }
         }
       }
     }

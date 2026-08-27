@@ -1,124 +1,28 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Calendar } from "@/components/ui/calendar";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { MessageSquare, Calendar as CalendarIcon, FileText, Users, CheckCircle, Plus, Paperclip, Video, Settings } from 'lucide-react';
-import { useToast } from "@/hooks/use-toast";
-import { format } from "date-fns";
+import { MessageSquare, Calendar as CalendarIcon, FileText, Settings } from 'lucide-react';
 import { ThreadManager } from "./ThreadManager";
 import { AdvancedChatInterface } from "./AdvancedChatInterface";
 import { useAdvancedChat } from "@/hooks/useAdvancedChat";
 
 
 
-interface RFI {
-  id: string;
-  number: string;
-  title: string;
-  description: string;
-  project_name: string;
-  requested_by: string;
-  assigned_to: string;
-  due_date: string;
-  status: 'open' | 'in_review' | 'answered' | 'closed';
-  priority: 'low' | 'medium' | 'high' | 'urgent';
-  created_at: string;
-  response?: string;
-  attachments: string[];
-}
-
-interface Meeting {
-  id: string;
-  title: string;
-  description: string;
-  project_name: string;
-  date: string;
-  time: string;
-  duration: number;
-  attendees: string[];
-  location: string;
-  meeting_type: 'kickoff' | 'progress' | 'safety' | 'coordination' | 'client';
-  status: 'scheduled' | 'in_progress' | 'completed' | 'cancelled';
-  notes?: string;
-  action_items?: {item: string, assigned_to: string, due_date: string}[];
-}
-
 export const CommunicationHub: React.FC = () => {
   const [activeTab, setActiveTab] = useState('messages');
   const [selectedThread, setSelectedThread] = useState<any>(null);
-  const [rfis, setRfis] = useState<RFI[]>([]);
-  const [meetings, setMeetings] = useState<Meeting[]>([]);
-  const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
-  const { toast } = useToast();
   const { selectChannel } = useAdvancedChat();
-
-  useEffect(() => {
-    // Load initial data if needed
-  }, []);
-
-  // Legacy function - now handled by useAdvancedChat hook
-  const loadCommunicationData = async () => {
-    // This function is no longer needed as data loading is handled by the hook
-  };
-
-  // Legacy function - now handled by AdvancedChatInterface
-  const loadMessages = async (threadId: string) => {
-    // This function is no longer needed
-  };
-
-  // Legacy function - now handled by AdvancedChatInterface
-  const sendMessage = async () => {
-    // This function is no longer needed
-  };
-
-  const createRFI = async (rfiData: Partial<RFI>) => {
-    toast({
-      title: "Not implemented",
-      description: "Connect RFI tables to enable this action.",
-      variant: "destructive",
-    });
-  };
-
-  const scheduleMeeting = async (meetingData: Partial<Meeting>) => {
-    toast({
-      title: "Not implemented",
-      description: "Connect meeting tables to enable scheduling.",
-      variant: "destructive",
-    });
-  };
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'completed': case 'answered': case 'resolved': return 'default';
-      case 'in_progress': case 'in_review': case 'scheduled': return 'secondary';
-      case 'urgent': case 'high': case 'overdue': return 'destructive';
-      default: return 'outline';
-    }
-  };
-
-  const getPriorityColor = (priority: string) => {
-    switch (priority) {
-      case 'urgent': return 'destructive';
-      case 'high': return 'secondary';
-      case 'medium': return 'outline';
-      case 'low': return 'default';
-      default: return 'outline';
-    }
-  };
 
   return (
     <div className="min-h-screen bg-background">
       <div className="container mx-auto p-6">
         <div className="mb-8">
           <h1 className="text-3xl font-bold mb-2">Communication Hub</h1>
-          <p className="text-muted-foreground">Unified messaging, RFI management, and meeting coordination for all project stakeholders.</p>
+          <p className="text-muted-foreground">
+            Project messaging and automated updates. RFI tracking and meeting scheduling are not
+            built yet; those tabs say so rather than showing an empty list (US-296).
+          </p>
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
@@ -177,312 +81,53 @@ export const CommunicationHub: React.FC = () => {
           </TabsContent>
 
           <TabsContent value="rfis" className="space-y-6">
+            {/*
+              This tab used to render a Create RFI dialog whose submit button had
+              no onClick, over a list backed by `useState<RFI[]>([])` with no
+              setter - permanently empty. The project and assignee options were
+              hardcoded names ("Commercial Office Build", "David Brown
+              (Architect)"). Someone could fill the form in, press Create RFI,
+              and have nothing at all happen, on a screen that otherwise looked
+              finished (US-296).
+
+              No RFI table exists in supabase/migrations, so there is nothing to
+              wire the form to. Saying so is the honest state until the feature
+              is built.
+            */}
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center justify-between">
-                  Request for Information (RFI) Management
-                  <Dialog>
-                    <DialogTrigger asChild>
-                      <Button>
-                        <Plus className="h-4 w-4 mr-2" />
-                        Create RFI
-                      </Button>
-                    </DialogTrigger>
-                    <DialogContent className="max-w-2xl">
-                      <DialogHeader>
-                        <DialogTitle>Create New RFI</DialogTitle>
-                      </DialogHeader>
-                      <div className="space-y-4">
-                        <Input placeholder="RFI Title" />
-                        <Textarea placeholder="Description and details..." rows={4} />
-                        <Select>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select Project" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="project1">Commercial Office Build</SelectItem>
-                            <SelectItem value="project2">Residential Build - Smith House</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <div className="grid grid-cols-2 gap-4">
-                          <Select>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Assign To" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="architect">David Brown (Architect)</SelectItem>
-                              <SelectItem value="engineer">Alex Chen (Engineer)</SelectItem>
-                            </SelectContent>
-                          </Select>
-                          <Select>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Priority" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="low">Low</SelectItem>
-                              <SelectItem value="medium">Medium</SelectItem>
-                              <SelectItem value="high">High</SelectItem>
-                              <SelectItem value="urgent">Urgent</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
-                        <Button className="w-full">Create RFI</Button>
-                      </div>
-                    </DialogContent>
-                  </Dialog>
-                </CardTitle>
+                <CardTitle>Request for Information (RFI) Management</CardTitle>
+                <CardDescription>Not available yet.</CardDescription>
               </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {rfis.map((rfi) => (
-                    <Card key={rfi.id}>
-                      <CardContent className="p-4">
-                        <div className="flex items-start justify-between mb-3">
-                          <div>
-                            <h3 className="font-semibold text-lg">{rfi.title}</h3>
-                            <p className="text-sm text-muted-foreground">
-                              {rfi.number} • {rfi.project_name}
-                            </p>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <Badge variant={getStatusColor(rfi.status)}>
-                              {rfi.status.replace('_', ' ')}
-                            </Badge>
-                            <Badge variant={getPriorityColor(rfi.priority)}>
-                              {rfi.priority}
-                            </Badge>
-                          </div>
-                        </div>
-                        
-                        <p className="text-sm mb-3">{rfi.description}</p>
-                        
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-3">
-                          <div className="space-y-1">
-                            <p className="text-xs text-muted-foreground">Requested By</p>
-                            <p className="text-sm font-medium">{rfi.requested_by}</p>
-                          </div>
-                          <div className="space-y-1">
-                            <p className="text-xs text-muted-foreground">Assigned To</p>
-                            <p className="text-sm font-medium">{rfi.assigned_to}</p>
-                          </div>
-                          <div className="space-y-1">
-                            <p className="text-xs text-muted-foreground">Due Date</p>
-                            <p className="text-sm font-medium">{format(new Date(rfi.due_date), 'MMM d, yyyy')}</p>
-                          </div>
-                          <div className="space-y-1">
-                            <p className="text-xs text-muted-foreground">Created</p>
-                            <p className="text-sm font-medium">{format(new Date(rfi.created_at), 'MMM d, yyyy')}</p>
-                          </div>
-                        </div>
-                        
-                        {rfi.response && (
-                          <div className="bg-muted p-3 rounded-lg mb-3">
-                            <p className="text-sm font-medium mb-1">Response:</p>
-                            <p className="text-sm">{rfi.response}</p>
-                          </div>
-                        )}
-                        
-                        {rfi.attachments.length > 0 && (
-                          <div className="mb-3">
-                            <p className="text-sm font-medium mb-2">Attachments:</p>
-                            <div className="flex flex-wrap gap-2">
-                              {rfi.attachments.map((attachment, index) => (
-                                <Badge key={index} variant="outline" className="text-xs">
-                                  <Paperclip className="h-3 w-3 mr-1" />
-                                  {attachment}
-                                </Badge>
-                              ))}
-                            </div>
-                          </div>
-                        )}
-                        
-                        <div className="flex items-center gap-2">
-                          {rfi.status === 'open' && (
-                            <Button size="sm">
-                              <CheckCircle className="h-4 w-4 mr-2" />
-                              Respond
-                            </Button>
-                          )}
-                          <Button variant="outline" size="sm">
-                            <MessageSquare className="h-4 w-4 mr-2" />
-                            Discuss
-                          </Button>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
+              <CardContent className="text-sm text-muted-foreground space-y-2">
+                <p>
+                  RFI tracking is not built. There is no RFI storage behind this tab, so nothing
+                  entered here could be saved or sent.
+                </p>
+                <p>
+                  Use the Messages tab to raise a question with the project team in the meantime.
+                </p>
               </CardContent>
             </Card>
           </TabsContent>
 
           <TabsContent value="meetings" className="space-y-6">
+            {/* Same as the RFI tab: a Schedule Meeting dialog with no onClick over
+                a permanently empty list. No meeting storage exists (US-296). */}
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center justify-between">
-                  Meeting Scheduling & Notes
-                  <Dialog>
-                    <DialogTrigger asChild>
-                      <Button>
-                        <Plus className="h-4 w-4 mr-2" />
-                        Schedule Meeting
-                      </Button>
-                    </DialogTrigger>
-                    <DialogContent className="max-w-2xl">
-                      <DialogHeader>
-                        <DialogTitle>Schedule New Meeting</DialogTitle>
-                      </DialogHeader>
-                      <div className="space-y-4">
-                        <Input placeholder="Meeting Title" />
-                        <Textarea placeholder="Meeting description..." rows={3} />
-                        <Select>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select Project" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="project1">Commercial Office Build</SelectItem>
-                            <SelectItem value="project2">Residential Build - Smith House</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <div className="grid grid-cols-2 gap-4">
-                          <Popover>
-                            <PopoverTrigger asChild>
-                              <Button variant="outline" className="justify-start">
-                                <CalendarIcon className="h-4 w-4 mr-2" />
-                                {selectedDate ? format(selectedDate, 'MMM d, yyyy') : 'Select date'}
-                              </Button>
-                            </PopoverTrigger>
-                            <PopoverContent className="w-auto p-0" align="start">
-                              <Calendar
-                                mode="single"
-                                selected={selectedDate}
-                                onSelect={setSelectedDate}
-                                initialFocus
-                              />
-                            </PopoverContent>
-                          </Popover>
-                          <Input type="time" defaultValue="09:00" />
-                        </div>
-                        <div className="grid grid-cols-2 gap-4">
-                          <Input placeholder="Duration (minutes)" type="number" defaultValue="60" />
-                          <Select>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Meeting Type" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="kickoff">Kickoff</SelectItem>
-                              <SelectItem value="progress">Progress</SelectItem>
-                              <SelectItem value="safety">Safety</SelectItem>
-                              <SelectItem value="coordination">Coordination</SelectItem>
-                              <SelectItem value="client">Client</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
-                        <Input placeholder="Location" />
-                        <Textarea placeholder="Attendees (one per line)..." rows={3} />
-                        <Button className="w-full">Schedule Meeting</Button>
-                      </div>
-                    </DialogContent>
-                  </Dialog>
-                </CardTitle>
+                <CardTitle>Meeting Coordination</CardTitle>
+                <CardDescription>Not available yet.</CardDescription>
               </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {meetings.map((meeting) => (
-                    <Card key={meeting.id}>
-                      <CardContent className="p-4">
-                        <div className="flex items-start justify-between mb-3">
-                          <div>
-                            <h3 className="font-semibold text-lg">{meeting.title}</h3>
-                            <p className="text-sm text-muted-foreground">{meeting.project_name}</p>
-                          </div>
-                          <Badge variant={getStatusColor(meeting.status)}>
-                            {meeting.status.replace('_', ' ')}
-                          </Badge>
-                        </div>
-                        
-                        <p className="text-sm mb-3">{meeting.description}</p>
-                        
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-3">
-                          <div className="space-y-1">
-                            <p className="text-xs text-muted-foreground">Date & Time</p>
-                            <p className="text-sm font-medium">
-                              {format(new Date(meeting.date), 'MMM d, yyyy')} at {meeting.time}
-                            </p>
-                          </div>
-                          <div className="space-y-1">
-                            <p className="text-xs text-muted-foreground">Duration</p>
-                            <p className="text-sm font-medium">{meeting.duration} minutes</p>
-                          </div>
-                          <div className="space-y-1">
-                            <p className="text-xs text-muted-foreground">Location</p>
-                            <p className="text-sm font-medium">{meeting.location}</p>
-                          </div>
-                          <div className="space-y-1">
-                            <p className="text-xs text-muted-foreground">Type</p>
-                            <Badge variant="outline">{meeting.meeting_type}</Badge>
-                          </div>
-                        </div>
-                        
-                        <div className="mb-3">
-                          <p className="text-sm font-medium mb-2">Attendees:</p>
-                          <div className="flex flex-wrap gap-1">
-                            {meeting.attendees.map((attendee, index) => (
-                              <Badge key={index} variant="outline" className="text-xs">
-                                <Users className="h-3 w-3 mr-1" />
-                                {attendee}
-                              </Badge>
-                            ))}
-                          </div>
-                        </div>
-                        
-                        {meeting.notes && (
-                          <div className="bg-muted p-3 rounded-lg mb-3">
-                            <p className="text-sm font-medium mb-1">Meeting Notes:</p>
-                            <p className="text-sm">{meeting.notes}</p>
-                          </div>
-                        )}
-                        
-                        {meeting.action_items && meeting.action_items.length > 0 && (
-                          <div className="mb-3">
-                            <p className="text-sm font-medium mb-2">Action Items:</p>
-                            <div className="space-y-2">
-                              {meeting.action_items.map((item, index) => (
-                                <div key={index} className="flex items-center justify-between p-2 bg-muted rounded">
-                                  <span className="text-sm">{item.item}</span>
-                                  <div className="text-xs text-muted-foreground">
-                                    {item.assigned_to} • Due: {format(new Date(item.due_date), 'MMM d')}
-                                  </div>
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                        )}
-                        
-                        <div className="flex items-center gap-2">
-                          {meeting.status === 'scheduled' && (
-                            <>
-                              <Button size="sm">
-                                <Video className="h-4 w-4 mr-2" />
-                                Join Meeting
-                              </Button>
-                              <Button variant="outline" size="sm">
-                                <FileText className="h-4 w-4 mr-2" />
-                                Add Notes
-                              </Button>
-                            </>
-                          )}
-                          {meeting.status === 'completed' && (
-                            <Button variant="outline" size="sm">
-                              <FileText className="h-4 w-4 mr-2" />
-                              View Notes
-                            </Button>
-                          )}
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
+              <CardContent className="text-sm text-muted-foreground space-y-2">
+                <p>
+                  Meeting scheduling is not built. There is no meeting storage behind this tab, so
+                  nothing scheduled here would reach anyone.
+                </p>
+                <p>
+                  The project calendar at <span className="font-medium">/calendar</span> is the
+                  working surface for dates.
+                </p>
               </CardContent>
             </Card>
           </TabsContent>

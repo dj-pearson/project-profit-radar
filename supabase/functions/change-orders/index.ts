@@ -1,17 +1,64 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { initializeAuthContext, errorResponse, successResponse, safeErrorResponse } from '../_shared/auth-helpers.ts';
+import { getCorsHeaders } from '../_shared/secure-cors.ts';
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
+import { validateBody } from '../_shared/validate-body.ts';
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-  "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
-};
+const uuid = z.string().uuid();
+
+/**
+ * The POST body is a discriminated union on `action`. Fields are typed as the
+ * handler already uses them: `amount` reaches a numeric column, approvers are
+ * user ids, and the free-text fields go through Supabase parameter binding.
+ */
+const ChangeOrderRequestSchema = z.discriminatedUnion('action', [
+  z.object({
+    action: z.literal('list'),
+    project_id: uuid.optional(),
+  }),
+  z.object({
+    action: z.literal('create'),
+    project_id: uuid,
+    title: z.string().min(1).max(500),
+    description: z.string().max(10000).optional().nullable(),
+    amount: z.number(),
+    reason: z.string().max(10000).optional().nullable(),
+    assigned_approvers: z.array(uuid).optional(),
+    approval_due_date: z.string().optional().nullable(),
+    approval_notes: z.string().max(10000).optional().nullable(),
+  }),
+  z.object({
+    action: z.literal('update'),
+    orderId: uuid,
+    title: z.string().min(1).max(500).optional(),
+    description: z.string().max(10000).optional().nullable(),
+    amount: z.number().optional(),
+    reason: z.string().max(10000).optional().nullable(),
+    assigned_approvers: z.array(uuid).optional(),
+    approval_due_date: z.string().optional().nullable(),
+    approval_notes: z.string().max(10000).optional().nullable(),
+  }),
+  z.object({
+    action: z.literal('approve'),
+    orderId: uuid,
+    approvalType: z.string().max(100).optional(),
+    approved: z.boolean().optional(),
+    rejectionReason: z.string().max(10000).optional().nullable(),
+  }),
+  z.object({
+    action: z.literal('reject'),
+    orderId: uuid,
+    rejectionReason: z.string().max(10000).optional().nullable(),
+    rejectedBy: uuid.optional(),
+  }),
+]);
 
 const logStep = (step: string, details?: any) => {
   console.log(`[CHANGE-ORDERS] ${step}${details ? ` - ${JSON.stringify(details)}` : ''}`);
 };
 
 serve(async (req) => {
+  const corsHeaders = getCorsHeaders(req);
   if (req.method === "OPTIONS") {
     return new Response(null, { status: 204, headers: corsHeaders });
   }
@@ -79,7 +126,13 @@ serve(async (req) => {
     }
 
     if (method === "POST") {
-      const body = await req.json();
+      const parsed = await validateBody(req, ChangeOrderRequestSchema, { name: 'change-orders' });
+      if (!parsed.ok) return parsed.response;
+      // Kept loose on purpose: the handler branches on a destructured `action`,
+      // which narrows the variable but not `body`, and in report mode `data` is
+      // the raw body anyway. The schema is the runtime contract; this cast only
+      // keeps the existing property reads compiling.
+      const body = parsed.data as Record<string, any>;
       const { action } = body;
 
       if (action === "list") {

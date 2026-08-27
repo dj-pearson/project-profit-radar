@@ -3,6 +3,8 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.3";
 import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
 import { getCorsHeaders, handleCorsPreflightRequest } from "../_shared/secure-cors.ts";
 import { checkRateLimit, getClientIP, rateLimitResponse } from "../_shared/rate-limiter.ts";
+import { writeAuditLog } from '../_shared/audit-log.ts';
+import { writeSecurityLog } from '../_shared/security-log.ts';
 
 // SECURITY: Input validation schema
 const DisableMFARequestSchema = z.object({
@@ -116,8 +118,22 @@ serve(async (req) => {
       return createSafeErrorResponse(500, "Failed to update MFA settings", corsHeaders);
     }
 
+    // Audit trail (US-244): disabling MFA is a security downgrade, and when an
+    // admin does it for someone else the actor and the subject differ.
+    await writeAuditLog(supabaseClient, {
+      actorUserId: userData.user.id,
+      action: 'mfa.disabled',
+      entityType: 'user_security',
+      entityId: user_id,
+      after: { two_factor_enabled: false },
+      description: userData.user.id === user_id
+        ? 'User disabled their own MFA'
+        : 'Admin disabled MFA for another user',
+      riskLevel: 'high',
+    });
+
     // Log security event
-    await supabaseClient.from("security_logs").insert({
+    await writeSecurityLog(supabaseClient, {
       user_id: user_id,
       event_type: "mfa_disabled",
       ip_address: req.headers.get("cf-connecting-ip") || req.headers.get("x-forwarded-for"),

@@ -10,12 +10,14 @@
  */
 
 import { serve } from 'https://deno.land/std@0.190.0/http/server.ts';
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.50.3';
 import { z } from 'https://deno.land/x/zod@v3.22.4/mod.ts';
 import { getCorsHeaders, handleCorsPreflightRequest } from '../_shared/secure-cors.ts';
 import { sendEmail, getSiteEmailConfig } from '../_shared/ses-email-service.ts';
 import { generateAuthEmail, generateOTPCode } from '../_shared/auth-email-templates.ts';
 import { validatePasswordStrength } from '../_shared/password-policy.ts';
+import { enforceRateLimit, RATE_LIMITS, getClientIP } from '../_shared/rate-limiter.ts';
+import { createServiceClient } from '../_shared/service-client.ts';
 
 // Validation schemas
 const requestResetSchema = z.object({
@@ -47,6 +49,15 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
+    // Rate limit per IP (US-243). There is already a per-email throttle further
+    // down, which stops one address being bombed; this stops one source spraying
+    // across many addresses, which the per-email check cannot see.
+    const resetLimited = await enforceRateLimit(
+      createServiceClient(), `ip:${getClientIP(req)}`, 'reset-password-otp',
+      RATE_LIMITS.AUTH, corsHeaders,
+    );
+    if (resetLimited) return resetLimited;
+
     const rawBody = await req.json();
     const action = rawBody.action || 'request';
 
@@ -183,11 +194,18 @@ async function handleRequestReset(
 
   if (!emailResult.success) {
     console.error('[ResetPasswordOTP] Email send failed:', emailResult.error);
-    // Mark OTP as used since email failed
-    await supabaseAdmin
+    // Mark OTP as used since email failed. An unrecorded invalidation leaves
+    // an undelivered password-reset code verifiable (US-300).
+    const { error: invalidateError } = await supabaseAdmin
       .from('auth_otp_codes')
       .update({ is_used: true, metadata: { email_failed: true } })
       .eq('id', otpId);
+    if (invalidateError) {
+      console.error(
+        '[ResetPasswordOTP] OTP STILL VALID: could not invalidate an undelivered code',
+        { otpId, error: invalidateError.message },
+      );
+    }
 
     return new Response(
       JSON.stringify({ error: 'Failed to send verification email. Please try again.' }),

@@ -215,14 +215,6 @@ const CRMContacts = () => {
     }
   };
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric'
-    });
-  };
-
   const filteredContacts = filterAndSortContacts((contacts || []) as ContactRow[], {
     searchTerm,
     typeFilter,

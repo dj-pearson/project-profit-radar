@@ -388,12 +388,20 @@ const RFIs = () => {
 
       if (insertErr) throw insertErr;
 
-      // Optionally close the RFI if marked final
+      // Close the RFI if this response was marked final. The error was dropped,
+      // so "Response added successfully" appeared whether or not the RFI closed,
+      // and it stayed open in the list (US-300).
       if (isFinalResponse) {
-        await supabase
+        const { error: closeError } = await supabase
           .from('rfis')
           .update({ status: 'closed', response_date: new Date().toISOString() })
           .eq('id', selectedRFI.id);
+
+        if (closeError) {
+          throw new Error(
+            `The response was saved but the RFI could not be closed: ${closeError.message}`,
+          );
+        }
       }
 
       toast({

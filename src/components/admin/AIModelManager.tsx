@@ -233,11 +233,17 @@ const AIModelManager = () => {
     try {
       // If setting as default, remove default from others of same task_type
       if (formData.is_default) {
-        await supabase
+        // Clearing the previous default has to succeed before the new one is
+        // written, or two models are default at once. The error was dropped and
+        // supabase-js returns it rather than throwing, so the save reported
+        // Success either way (US-300).
+        const { error: clearError } = await supabase
           .from('ai_model_configurations')
           .update({ is_default: false })
           .eq('provider', formData.provider)
           .eq('task_type', formData.task_type);
+
+        if (clearError) throw clearError;
       }
 
       if (isNewModel) {
@@ -322,13 +328,17 @@ const AIModelManager = () => {
           .single();
 
         if (latestModel && latestModel.model_name !== alias.points_to_model) {
-          await supabase
+          // "Model aliases updated successfully" fired whether or not any alias
+          // moved, because this error was dropped (US-300).
+          const { error: aliasError } = await supabase
             .from('ai_model_configurations')
             .update({
               points_to_model: latestModel.model_name,
               last_updated: new Date().toISOString()
             })
             .eq('id', alias.id);
+
+          if (aliasError) throw aliasError;
         }
       }
 

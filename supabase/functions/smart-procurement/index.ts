@@ -1,11 +1,7 @@
 // Smart Procurement Edge Function
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
+import { serve } from "https://deno.land/std@0.190.0/http/server.ts"
 import { initializeAuthContext, errorResponse } from '../_shared/auth-helpers.ts'
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-}
+import { getCorsHeaders } from '../_shared/secure-cors.ts';
 
 interface MaterialUsage {
   material_name: string
@@ -17,6 +13,7 @@ interface MaterialUsage {
 }
 
 serve(async (req) => {
+  const corsHeaders = getCorsHeaders(req);
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
   }
@@ -41,11 +38,11 @@ serve(async (req) => {
 
     switch (action) {
       case 'forecast_materials':
-        return await forecastMaterials(supabaseClient, tenant_id, project_id)
+        return await forecastMaterials(corsHeaders, supabaseClient, tenant_id, project_id)
       case 'optimize_suppliers':
-        return await optimizeSuppliers(supabaseClient, tenant_id)
+        return await optimizeSuppliers(corsHeaders, supabaseClient, tenant_id)
       case 'generate_recommendations':
-        return await generateRecommendations(supabaseClient, tenant_id, project_id)
+        return await generateRecommendations(corsHeaders, supabaseClient, tenant_id, project_id)
       default:
         return new Response(
           JSON.stringify({ error: 'Invalid action. Use: forecast_materials, optimize_suppliers, generate_recommendations' }),
@@ -62,11 +59,11 @@ serve(async (req) => {
   }
 })
 
-async function forecastMaterials(supabase: any, tenant_id: string, project_id?: string) {
+async function forecastMaterials(corsHeaders: Record<string, string>, supabase: any, tenant_id: string, project_id?: string) {
   console.log('[SMART-PROCUREMENT] Forecasting materials', { tenant_id, project_id })
 
   // Get historical material usage from projects
-  let query = supabase
+  const query = supabase
     .from('projects')
     .select('id, name, materials_used:financial_records(material_name, quantity, unit, created_at)')
     .eq('tenant_id', tenant_id)
@@ -151,7 +148,7 @@ async function forecastMaterials(supabase: any, tenant_id: string, project_id?: 
   )
 }
 
-async function optimizeSuppliers(supabase: any, tenant_id: string) {
+async function optimizeSuppliers(corsHeaders: Record<string, string>, supabase: any, tenant_id: string) {
   console.log('[SMART-PROCUREMENT] Optimizing suppliers', { tenant_id })
 
   // Get all suppliers
@@ -196,7 +193,7 @@ async function optimizeSuppliers(supabase: any, tenant_id: string) {
   )
 }
 
-async function generateRecommendations(supabase: any, tenant_id: string, project_id?: string) {
+async function generateRecommendations(corsHeaders: Record<string, string>, supabase: any, tenant_id: string, project_id?: string) {
   console.log('[SMART-PROCUREMENT] Generating purchase recommendations', { tenant_id, project_id })
 
   // Get active forecasts

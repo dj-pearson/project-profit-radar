@@ -2,11 +2,19 @@
 /**
  * Edge-function auth guard (US-198).
  *
- * Supabase enforces a valid JWT for functions with verify_jwt = true (the
- * default). Functions set to verify_jwt = false in supabase/config.toml bypass
- * that platform check, so each must either be genuinely public (and verify its
- * own caller — e.g. a Stripe signature) or apply its own auth guard
+ * Functions set to verify_jwt = false in supabase/config.toml bypass Supabase's
+ * platform JWT check entirely, so each must either be genuinely public (and
+ * verify its own caller — e.g. a Stripe signature) or apply its own auth guard
  * (initializeAuthContext / withAuth / requireSystemOrAdmin).
+ *
+ * NOTE, and this is a correction to what this file used to say: verify_jwt =
+ * true is NOT a substitute for the handler verifying its own caller. It checks
+ * that a validly-SIGNED project JWT is present — and the publishable anon key
+ * is one, and it ships in the client bundle. So a verify_jwt = true function
+ * with no auth of its own is reachable by anyone who has ever loaded the app.
+ * That blind spot is covered by check-unauthenticated-edge-functions.mjs
+ * (US-241); this script deliberately stays scoped to the verify_jwt = false
+ * set.
  *
  * This script:
  *   - parses config.toml for verify_jwt = false functions,

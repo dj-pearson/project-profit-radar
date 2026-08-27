@@ -151,26 +151,38 @@ export const UserPresence: React.FC = () => {
     // Update presence periodically
     const presenceInterval = setInterval(() => {
       if (myStatus !== 'offline') {
-        supabase
+        // Deliberately not awaited - this runs on a 30s timer. The result was
+        // discarded entirely though, so a presence table that rejected every
+        // write looked identical to one that accepted them (US-300).
+        void supabase
           .from('user_presence')
           .upsert({
             user_id: userProfile.id,
             company_id: userProfile.company_id,
             status: myStatus,
             last_seen_at: new Date().toISOString()
+          })
+          .then(({ error }) => {
+            if (error) console.error('Presence heartbeat failed:', error.message);
           });
       }
     }, 30000); // Update every 30 seconds
 
     // Set offline when user leaves
     const handleBeforeUnload = () => {
-      supabase
+      // beforeunload cannot wait for a promise, so this stays fire-and-forget.
+      // Reading the error still costs nothing and is the difference between a
+      // stale "online" marker with an explanation and one without (US-300).
+      void supabase
         .from('user_presence')
         .upsert({
           user_id: userProfile.id,
           company_id: userProfile.company_id,
           status: 'offline',
           last_seen_at: new Date().toISOString()
+        })
+        .then(({ error }) => {
+          if (error) console.error('Offline marker not written:', error.message);
         });
     };
 

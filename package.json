@@ -72,7 +72,7 @@
     "lighthouse:assert": "lhci assert",
     "lighthouse:full": "npm run build && lhci autorun",
     "generate-sitemap": "node scripts/generate-sitemap.js",
-    "db:types": "supabase gen types typescript --project-id brikly > src/integrations/supabase/types.ts",
+    "db:types": "node scripts/gen-supabase-types.mjs",
     "build:prerender": "npm run build && node scripts/prerender.mjs",
     "prerender": "node scripts/prerender.mjs",
     "mcp:puppeteer": "npx @modelcontextprotocol/server-puppeteer",

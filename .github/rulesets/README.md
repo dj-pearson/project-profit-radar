@@ -23,39 +23,54 @@ All four rulesets:
 - `required_approving_review_count: 0` on `main`, `develop`, `release/*`. **GitHub will not let an author approve their own PR**, so requiring even 1 approval deadlocks a solo workflow. PR is still required — you just self-merge once CI is green. This is the intentional trade-off for solo dev: enforce *process* (PR + checks), not *peer review* (impossible solo).
 - When a second human reviewer joins, bump `required_approving_review_count` to `1` in `main.json`, `develop.json`, `release.json` and re-apply. Consider also flipping `require_code_owner_review: true` on `main.json`.
 
-## Status checks — intentionally NOT set yet
+## Status checks — required on main, develop and release/*
 
-We do **not** include `required_status_checks` in any ruleset right now. Here's why and how to add them later.
+`main.json`, `develop.json` and `release.json` each require these five, locked to
+GitHub Actions via `integration_id: 15368` so another app cannot post a
+same-named green check:
 
-**Why not now:** required check names that don't exist on a PR block all merges. The CI workflow today (`.github/workflows/ci.yml`) runs `lint`, `typecheck`, `unit-test`, `build`, `e2e-test`, `security`. But:
+| Context | Job | What it gates |
+|---|---|---|
+| `Lint` | `lint` | eslint over the repo |
+| `Type Check` | `typecheck` | the TS error-budget ratchet, not raw `tsc` — see below |
+| `Unit Tests` | `unit-test` | `npm run test:run` |
+| `Build` | `build` | the production Vite build |
+| `Security Smoke Tests` | `security` | the security unit suite, the dependency audit, the secret scan, and all twelve `scripts/check-*` guards |
 
-1. CI currently only triggers on `push: branches: [main]` and `pull_request: branches: [main]`. PRs into `develop` / `release/*` / `hotfix/*` won't run CI yet → required check would be "expected" forever → no merge possible.
-2. Required check names must match exactly. Adding them before CI is verified on every protected target is a footgun.
+`Security Smoke Tests` is required because every repo guard lives in that job —
+CORS scoping, edge input validation, privilege writes, RLS write paths, audit
+coverage, silent writes, migration hygiene. Leaving it optional would make all
+of them decorative.
 
-**How to add them once CI runs on PRs to all protected branches:**
+`hotfix.json` deliberately has **no** required checks: CLAUDE.md allows direct
+commits to a hotfix branch, and the real gate is the PR into `main`, which
+carries the full set.
 
-1. Update `.github/workflows/ci.yml` so `on.pull_request.branches` includes `main`, `develop`, `release/**`, `hotfix/**` (and same for `on.push` if you want post-merge runs).
-2. Open one PR per protected branch and confirm the check names that show up. The names you'll see are the job `name:` fields: `Lint`, `Type Check`, `Unit Tests`, `Build`, `E2E Tests`, `Security Smoke Tests`.
-3. Add a `required_status_checks` rule to the appropriate JSON files. Use `integration_id: 15368` (GitHub Actions) so the source app is locked. Example for `main.json`:
+**`Type Check` is safe to require even though `tsc` is red.** The job runs
+`scripts/check-ts-error-budget.mjs` (US-258), which compares the error count
+against `.github/ts-error-baseline.txt` and fails only on a regression. US-213's
+original note that this had to wait for US-212 is out of date — the ratchet
+removed that dependency.
 
-   ```json
-   {
-     "type": "required_status_checks",
-     "parameters": {
-       "strict_required_status_checks_policy": true,
-       "required_status_checks": [
-         { "context": "Lint",            "integration_id": 15368 },
-         { "context": "Type Check",      "integration_id": 15368 },
-         { "context": "Unit Tests",      "integration_id": 15368 },
-         { "context": "Build",           "integration_id": 15368 },
-         { "context": "E2E Tests",       "integration_id": 15368 },
-         { "context": "Security Smoke Tests", "integration_id": 15368 }
-       ]
-     }
-   }
-   ```
+**`strict_required_status_checks_policy`** is `true` on `main` and `release/*`
+(a PR must be up to date with the base before merging) and `false` on `develop`,
+so routine integration work is not forced to re-run on every unrelated merge.
 
-4. Re-apply via the apply loop below. Watch the next PR; if a name is wrong, fix it immediately — required-check misnames brick merges.
+### The trigger prerequisite
+
+A required check that never runs blocks every merge into that branch, forever.
+`on.pull_request.branches` in `ci.yml` filters on the **base** branch, so it
+must list every branch carrying a required check. It currently lists `main`,
+`develop` and `release/**` — matching the three rulesets above. **If you add
+required checks to another ruleset, add its pattern to that filter in the same
+change.**
+
+### Verifying the gate actually works (US-213 AC3)
+
+After applying, open a throwaway PR into `develop` with a deliberate lint error
+and confirm GitHub reports the merge as blocked. A ruleset that is applied but
+not verified is not a gate — the failure mode is a misnamed context sitting in
+"Expected" forever, which looks similar to "pending" at a glance.
 
 ## Applying the rulesets (apply loop)
 

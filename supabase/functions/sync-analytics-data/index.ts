@@ -1,6 +1,6 @@
 // Sync Analytics Data Edge Function
 // Triggers data synchronization for a connected analytics platform
-import { createClient } from "npm:@supabase/supabase-js@2";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.3";
 import { initializeAuthContext, errorResponse, successResponse } from '../_shared/auth-helpers.ts';
 import { getCorsHeaders } from '../_shared/secure-cors.ts';
 
@@ -50,8 +50,10 @@ export default async (req: Request) => {
       return errorResponse('Analytics connection not found', 404, req);
     }
 
-    // Update connection status to syncing
-    await serviceClient
+    // Update connection status to syncing. The error was discarded and
+    // supabase-js returns it rather than throwing, so the UI could show the
+    // connection idle throughout a sync that was actually running (US-300).
+    const { error: syncingError } = await serviceClient
       .from('analytics_platform_connections')
       .update({
         sync_status: 'syncing',
@@ -59,8 +61,13 @@ export default async (req: Request) => {
       })
       .eq('id', connection_id);
 
+    if (syncingError) {
+      logStep("Could not mark connection as syncing", { connection_id, error: syncingError.message });
+    }
+
     // Delegate to platform-specific sync functions
     let syncResult = { records_synced: 0, status: 'success' };
+    let syncErrorMessage: string | null = null;
 
     try {
       if (platform === 'google_analytics') {
@@ -91,18 +98,30 @@ export default async (req: Request) => {
       }
     } catch (syncError) {
       logStep("Sync error for platform", { platform, error: syncError.message });
+      // Stored below instead of the fixed string 'Sync failed', which told
+      // whoever read the row nothing about why.
+      syncErrorMessage = syncError.message || 'Sync failed';
       syncResult = { records_synced: 0, status: 'failed' };
     }
 
-    // Update connection with sync results
-    await serviceClient
+    // Update connection with sync results. This is the write that takes the
+    // connection back out of 'syncing'. Its error was discarded, so a lost
+    // write stranded the connection mid-sync: a permanent spinner in the UI,
+    // for a sync that had already finished (US-300).
+    const { error: syncResultError } = await serviceClient
       .from('analytics_platform_connections')
       .update({
         sync_status: syncResult.status === 'success' ? 'synced' : 'error',
         last_sync_completed_at: new Date().toISOString(),
-        last_sync_error: syncResult.status === 'failed' ? 'Sync failed' : null,
+        last_sync_error: syncErrorMessage,
       })
       .eq('id', connection_id);
+
+    if (syncResultError) {
+      throw new Error(
+        `Sync of connection ${connection_id} finished as ${syncResult.status} but the connection is STUCK at 'syncing': ${syncResultError.message}`,
+      );
+    }
 
     logStep("Sync completed", syncResult);
     return successResponse(syncResult, req);

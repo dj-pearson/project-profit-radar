@@ -59,7 +59,7 @@ const UpgradePrompt: React.FC<UpgradePromptProps> = ({
 
   const handleUpgrade = () => {
     onClose();
-    navigate('/subscription');
+    navigate('/subscription-settings');
   };
 
   const tierInfo = TIER_FEATURES[requiredTier as keyof typeof TIER_FEATURES];

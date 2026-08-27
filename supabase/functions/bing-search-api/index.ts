@@ -1,10 +1,6 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
+import { serve } from "https://deno.land/std@0.190.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.50.3'
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-}
+import { getCorsHeaders } from '../_shared/secure-cors.ts';
 
 interface BingSearchRequest {
   action: 'search-analytics' | 'site-info' | 'search-trends'
@@ -14,6 +10,7 @@ interface BingSearchRequest {
 }
 
 serve(async (req) => {
+  const corsHeaders = getCorsHeaders(req);
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders })
@@ -88,13 +85,13 @@ serve(async (req) => {
     // Process the request based on action
     switch (requestData.action) {
       case 'search-analytics':
-        return await getBingSearchAnalytics(bingSearchApiKey, siteUrl, requestData)
+        return await getBingSearchAnalytics(corsHeaders, bingSearchApiKey, siteUrl, requestData)
 
       case 'site-info':
-        return await getBingSiteInfo(bingSearchApiKey, siteUrl, requestData)
+        return await getBingSiteInfo(corsHeaders, bingSearchApiKey, siteUrl, requestData)
 
       case 'search-trends':
-        return await getBingSearchTrends(bingSearchApiKey, siteUrl, requestData)
+        return await getBingSearchTrends(corsHeaders, bingSearchApiKey, siteUrl, requestData)
 
       default:
         return new Response(
@@ -120,7 +117,7 @@ serve(async (req) => {
   }
 })
 
-async function getBingSearchAnalytics(apiKey: string, siteUrl: string, request: BingSearchRequest) {
+async function getBingSearchAnalytics(corsHeaders: Record<string, string>, apiKey: string, siteUrl: string, request: BingSearchRequest) {
   console.log('Fetching Bing search analytics...')
   
   try {
@@ -169,7 +166,7 @@ async function getBingSearchAnalytics(apiKey: string, siteUrl: string, request: 
   }
 }
 
-async function getBingSiteInfo(apiKey: string, siteUrl: string, request: BingSearchRequest) {
+async function getBingSiteInfo(corsHeaders: Record<string, string>, apiKey: string, siteUrl: string, request: BingSearchRequest) {
   console.log('Fetching Bing site info...')
   
   try {
@@ -213,7 +210,7 @@ async function getBingSiteInfo(apiKey: string, siteUrl: string, request: BingSea
   }
 }
 
-async function getBingSearchTrends(apiKey: string, siteUrl: string, request: BingSearchRequest) {
+async function getBingSearchTrends(corsHeaders: Record<string, string>, apiKey: string, siteUrl: string, request: BingSearchRequest) {
   console.log('Fetching Bing search trends...')
   
   try {

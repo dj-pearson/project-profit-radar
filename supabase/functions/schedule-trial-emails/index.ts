@@ -98,8 +98,14 @@ serve(async (req) => {
         continue;
       }
 
-      // Create campaign
-      await supabaseClient
+      // Create campaign. The error was discarded and supabase-js returns it
+      // rather than throwing, and the consequence surfaced somewhere else
+      // entirely: the "Get campaign ID" lookup below then finds nothing, logs
+      // "Campaign not found" and skips that email. So a failed insert quietly
+      // dropped one step out of a trial user's nurture sequence, and the only
+      // trace read like a configuration problem rather than a write that
+      // failed (US-300).
+      const { error: campaignError } = await supabaseClient
         .from('email_campaigns')
         .insert({
           campaign_name: campaignName,
@@ -116,6 +122,13 @@ serve(async (req) => {
           sequence_order: schedule.day,
           is_active: true,
         });
+
+      if (campaignError) {
+        logStep("Campaign was NOT created, so this email will be skipped below", {
+          campaignName,
+          error: campaignError.message,
+        });
+      }
     }
 
     // Now schedule individual emails for this user
@@ -179,8 +192,11 @@ serve(async (req) => {
       });
     }
 
-    // Create user email preferences
-    await supabaseClient
+    // Create user email preferences. This row is what the sender checks before
+    // every send and what an unsubscribe writes to, so a user without one is a
+    // user whose preferences cannot be honoured. Its error was discarded
+    // (US-300).
+    const { error: preferencesError } = await supabaseClient
       .from('email_preferences')
       .upsert({
         user_id: userId,
@@ -190,6 +206,12 @@ serve(async (req) => {
         billing_notifications: true,
         email_frequency: 'normal',
       }, { onConflict: 'user_id' });
+
+    if (preferencesError) {
+      throw new Error(
+        `${emailsScheduled.length} email(s) were queued for ${userId} but their email preferences row was NOT created: ${preferencesError.message}`,
+      );
+    }
 
     logStep("Email scheduling complete", {
       userId,

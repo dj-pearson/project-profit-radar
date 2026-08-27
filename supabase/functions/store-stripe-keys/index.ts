@@ -3,6 +3,21 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.3";
 import { getCorsHeaders } from '../_shared/secure-cors.ts';
+import { writeAuditLog } from '../_shared/audit-log.ts';
+import { validateBody } from '../_shared/validate-body.ts';
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
+
+/**
+ * The secret_key is encrypted and stored, so a non-string here would be
+ * stringified into the ciphertext and only surface when a charge fails.
+ * Authorisation is separate and already correct below: the handler checks the
+ * caller's own profile company matches company_id and requires admin.
+ */
+const StoreStripeKeysSchema = z.object({
+  company_id: z.string().uuid(),
+  secret_key: z.string().min(10).max(255).regex(/^(sk|rk)_(test|live)_[A-Za-z0-9]+$/, 'must be a Stripe secret or restricted key'),
+  webhook_secret: z.string().min(10).max(255).regex(/^whsec_[A-Za-z0-9+/=]+$/, 'must be a Stripe webhook signing secret').optional().nullable(),
+});
 
 const logStep = (step: string, details?: any) => {
   const detailsStr = details ? ` - ${JSON.stringify(details)}` : '';
@@ -83,10 +98,11 @@ serve(async (req) => {
 
     logStep("User authenticated", { userId: user.id });
 
-    const { company_id, secret_key, webhook_secret } = await req.json();
-    if (!company_id || !secret_key) {
-      throw new Error("company_id and secret_key are required");
-    }
+    const parsed = await validateBody(req, StoreStripeKeysSchema, {
+      name: 'store-stripe-keys',
+    });
+    if (!parsed.ok) return parsed.response;
+    const { company_id, secret_key, webhook_secret } = parsed.data;
 
     // SECURITY: Verify user has access to this company
     const { data: userProfile } = await supabaseClient
@@ -123,6 +139,19 @@ serve(async (req) => {
       .eq('company_id', company_id);
 
     if (updateError) throw updateError;
+
+    // Audit trail (US-244): replacing a company's Stripe credentials changes
+    // where its money moves. Only the fact is recorded, never the key material.
+    await writeAuditLog(supabaseClient, {
+      actorUserId: user.id,
+      companyId: company_id,
+      action: 'stripe_keys.stored',
+      entityType: 'company_payment_settings',
+      entityId: company_id,
+      after: { has_secret_key: true, has_webhook_secret: !!webhook_secret },
+      description: 'Stripe API credentials replaced',
+      riskLevel: 'critical',
+    });
 
     logStep("Keys stored successfully", { company_id });
 

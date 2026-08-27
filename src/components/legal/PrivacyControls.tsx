@@ -90,18 +90,31 @@ const PrivacyControls: React.FC = () => {
       }
 
       // Fallback: log a request row so the privacy team fulfills manually.
-      // Best-effort — if the table doesn't exist yet, we still confirm to the
-      // user so they know we received the request.
-      try {
-        await supabase.from('data_subject_requests').insert({
+      // This runs only because the edge function already failed, so it is the
+      // only record that the request was ever made. The try/catch it replaces
+      // never fired: supabase-js RETURNS its error rather than throwing, so a
+      // rejected insert fell straight through to the confirmation below and
+      // the user was told their statutory request was logged when nothing had
+      // been written (US-300).
+      const { error: fallbackError } = await supabase
+        .from('data_subject_requests')
+        .insert({
           user_id: user.id,
           email: user.email,
           request_type: 'access',
           status: 'pending',
           source: 'self_service',
         });
-      } catch {
-        /* noop — table may not exist yet; email follow-up still applies */
+
+      if (fallbackError) {
+        console.error('[privacy] access request could not be logged', fallbackError);
+        toast({
+          title: "We couldn't log your request",
+          description:
+            'Please email privacy@brikly.net from this address so we can start the 30-day clock. Nothing was recorded.',
+          variant: 'destructive',
+        });
+        return;
       }
 
       toast({
@@ -141,17 +154,28 @@ const PrivacyControls: React.FC = () => {
       });
 
       if (error) {
-        // Fallback: log a deletion request for manual fulfillment.
-        try {
-          await supabase.from('data_subject_requests').insert({
+        // Fallback: log a deletion request for manual fulfillment. Same as the
+        // export path - this is the only record the request happened, and the
+        // catch it replaces never fired.
+        const { error: fallbackError } = await supabase
+          .from('data_subject_requests')
+          .insert({
             user_id: user.id,
             email: user.email,
             request_type: 'deletion',
             status: 'pending',
             source: 'self_service',
           });
-        } catch {
-          /* noop */
+
+        if (fallbackError) {
+          console.error('[privacy] deletion request could not be logged', fallbackError);
+          toast({
+            title: "We couldn't log your deletion request",
+            description:
+              'Please email privacy@brikly.net from this address. Your account has NOT been scheduled for deletion.',
+            variant: 'destructive',
+          });
+          return;
         }
       }
 

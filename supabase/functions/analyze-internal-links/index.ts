@@ -1,13 +1,10 @@
 // Analyze Internal Links Edge Function
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { initializeAuthContext, errorResponse } from '../_shared/auth-helpers.ts';
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
+import { getCorsHeaders } from '../_shared/secure-cors.ts';
 
 serve(async (req) => {
+  const corsHeaders = getCorsHeaders(req);
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
 
   try {
@@ -131,7 +128,14 @@ serve(async (req) => {
       analysisData.recommendations.push('Increase internal linking to more pages');
     }
 
-    const { data: saved } = await supabaseClient
+    // The insert's error was discarded and supabase-js returns it rather than
+    // throwing. The `saved || <data>` fallback below then hid the consequence
+    // perfectly: when the insert failed, `saved` was null and the response fell
+    // back to the in-memory object, so the caller received what looked like a
+    // stored analysis record while the table it is supposed to live in stayed
+    // empty (US-300). The computed analysis is still returned - one caller uses
+    // it inline - but `stored` now says whether it was persisted.
+    const { data: saved, error: saveError } = await supabaseClient
       .from('seo_link_analysis')
       .insert({  // CRITICAL: Site isolation
         url,
@@ -145,9 +149,18 @@ serve(async (req) => {
       .select()
       .single();
 
+    if (saveError) {
+      console.error(
+        '[ANALYZE-INTERNAL-LINKS] Analysis completed but was NOT stored:',
+        saveError.message,
+      );
+    }
+
     return new Response(JSON.stringify({
       success: true,
       internal_link_analysis: saved || analysisData,
+      stored: !saveError,
+      storage_error: saveError?.message ?? null,
       links: internalLinks
     }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 });
 

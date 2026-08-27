@@ -131,7 +131,7 @@ const ProgressBillingManager: React.FC = () => {
       if (error) throw error;
 
       // Create line item
-      await supabase
+      const { error: insertInvoiceLineItemsError } = await supabase
         .from('invoice_line_items')
         .insert({
           invoice_id: data.id,
@@ -140,6 +140,9 @@ const ProgressBillingManager: React.FC = () => {
           unit_price: billing.currentAmountDue,
           total_price: billing.currentAmountDue
         } as any);
+      if (insertInvoiceLineItemsError) {
+        throw new Error(`Failed to insert invoice_line_items: ${insertInvoiceLineItemsError.message}`);
+      }
 
       toast({
         title: "Progress Invoice Created",

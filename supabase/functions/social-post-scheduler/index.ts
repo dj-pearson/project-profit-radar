@@ -1,22 +1,24 @@
-import { createClient } from "npm:@supabase/supabase-js@2";
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type",
-  "Access-Control-Allow-Methods": "POST, OPTIONS",
-};
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.3";
+import { getCorsHeaders } from '../_shared/secure-cors.ts';
+import { requireInternalCaller } from '../_shared/internal-only.ts';
 
 const logStep = (step: string, data?: any) => {
   console.log(`[Social Post Scheduler] ${step}:`, data || "");
 };
 
 export default async (req: Request) => {
+  const corsHeaders = getCorsHeaders(req);
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
+    // Internal only: no caller anywhere in the repo.
+    // verify_jwt = true is a signature check the publishable anon key
+    // satisfies, not authentication (US-241).
+    const denied = requireInternalCaller(req);
+    if (denied) return denied;
+
     logStep("Social post scheduler started");
 
     // Parse request body for manual trigger parameters
@@ -197,8 +199,10 @@ export default async (req: Request) => {
             generatorError
           );
 
-          // Update queue entry with error
-          await supabaseClient
+          // Update queue entry with error. Its own error was discarded, so a
+          // failed post could stay queued with no failure recorded anywhere
+          // (US-300).
+          const { error: markFailedError } = await supabaseClient
             .from("automated_social_posts_queue")
             .update({
               status: "failed",
@@ -207,17 +211,33 @@ export default async (req: Request) => {
             })
             .eq("id", queueEntry.id);
 
+          if (markFailedError) {
+            logStep(
+              `Queue entry ${queueEntry.id} failed but could not be marked failed`,
+              markFailedError.message
+            );
+          }
+
           continue;
         }
 
-        // Update content library usage
-        await supabaseClient
+        // Update content library usage. usage_count and last_used_at are what
+        // rotate the library, and the error was discarded; a lost write means
+        // the next run picks the same item and posts it again (US-300).
+        const { error: usageError } = await supabaseClient
           .from("automated_social_content_library")
           .update({
             usage_count: selectedContent.usage_count + 1,
             last_used_at: new Date().toISOString(),
           })
           .eq("id", selectedContent.id);
+
+        if (usageError) {
+          logStep(
+            `Content ${selectedContent.id} was posted but its usage was not recorded, so it may be posted again`,
+            usageError.message
+          );
+        }
 
         // Update config with next post time (only for scheduled posts, not manual triggers)
         let nextPostTime = null;
@@ -226,13 +246,24 @@ export default async (req: Request) => {
           nextPostTime = new Date();
           nextPostTime.setHours(nextPostTime.getHours() + intervalHours);
 
-          await supabaseClient
+          // next_post_at is the selection filter at the top of this function -
+          // configs are picked with `next_post_at < now()`. The error was
+          // discarded, so a lost write left the config permanently due and the
+          // scheduler posted to the customer's public social accounts on every
+          // tick (US-300).
+          const { error: nextPostError } = await supabaseClient
             .from("automated_social_posts_config")
             .update({
               next_post_at: nextPostTime.toISOString(),
               updated_at: new Date().toISOString(),
             })
             .eq("id", config.id);
+
+          if (nextPostError) {
+            throw new Error(
+              `Config ${config.id} posted but next_post_at was NOT advanced, so it stays due and would post again on every tick: ${nextPostError.message}`,
+            );
+          }
         }
 
         results.push({

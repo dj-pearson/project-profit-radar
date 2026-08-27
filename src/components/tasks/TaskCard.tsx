@@ -7,6 +7,7 @@ import { MoreHorizontal, Calendar, Clock, User, Building, Edit, Trash2 } from 'l
 import { supabase } from '@/integrations/supabase/client';
 import { format } from 'date-fns';
 import { EditTaskDialog } from './EditTaskDialog';
+import { toast } from 'sonner';
 
 interface Task {
   id: string;
@@ -69,10 +70,20 @@ export const TaskCard: React.FC<TaskCardProps> = ({
     if (!confirm('Are you sure you want to delete this task?')) return;
 
     try {
-      await supabase
+      // onDelete removes the card from the list, so it must not run on a
+      // delete that did not happen - the task would vanish and come back on
+      // the next refresh. supabase-js returns this error rather than throwing
+      // it, so the catch below never saw it (US-300).
+      const { error } = await supabase
         .from('tasks')
         .delete()
         .eq('id', task.id);
+
+      if (error) {
+        console.error('Error deleting task:', error);
+        toast.error("Couldn't delete that task.");
+        return;
+      }
 
       onDelete(task.id);
     } catch (error) {

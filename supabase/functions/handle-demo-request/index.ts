@@ -160,8 +160,13 @@ serve(async (req) => {
 
     logStep("Created demo request", { demoRequestId: demoRequest.id });
 
-    // Track activity
-    await supabaseClient
+    // Track activity.
+    // marketing record of it, and their errors were discarded; supabase-js
+    // returns them rather than throwing, so a lost row meant a real conversion
+    // simply never appeared in the funnel and the campaign that produced it got
+    // no credit. Reported rather than failed: refusing the request would lose
+    // the lead itself, which is worse (US-300).
+    const { error: activityError } = await supabaseClient
       .from('lead_activities')
       .insert({
         lead_id: leadId,
@@ -174,8 +179,15 @@ serve(async (req) => {
         }
       });
 
+    if (activityError) {
+      logStep("Demo request STORED but the activity was not recorded", {
+        leadId,
+        error: activityError.message,
+      });
+    }
+
     // Track conversion event
-    await supabaseClient
+    const { error: conversionError } = await supabaseClient
       .from('conversion_events')
       .insert({
         event_type: 'demo_requested',
@@ -190,6 +202,13 @@ serve(async (req) => {
           company_size: companySize
         }
       });
+
+    if (conversionError) {
+      logStep("Demo request STORED but the conversion event was not recorded", {
+        leadId,
+        error: conversionError.message,
+      });
+    }
 
     // TODO: Send notification to sales team
     // TODO: Send confirmation email to requester

@@ -13,7 +13,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { AlertTriangle, Bug, Copy, Check, Download, RefreshCw, Search, Monitor, Smartphone, Tablet, Globe, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
+import { AlertTriangle, Bug, Copy, Check, Download, RefreshCw, Search, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
@@ -379,15 +379,6 @@ ${e.metadata ? JSON.stringify(e.metadata, null, 2) : 'N/A'}`;
       custom: 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200',
     };
     return <Badge variant="outline" className={colorMap[type] || ''}>{type.replace(/_/g, ' ')}</Badge>;
-  };
-
-  const getDeviceIcon = (deviceType: string | null) => {
-    switch (deviceType) {
-      case 'mobile': return <Smartphone className="h-3 w-3" />;
-      case 'tablet': return <Tablet className="h-3 w-3" />;
-      case 'desktop': return <Monitor className="h-3 w-3" />;
-      default: return <Globe className="h-3 w-3" />;
-    }
   };
 
   const relativeTime = (dateStr: string | null) => {

@@ -5,6 +5,7 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@14.21.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.3";
 import { checkRateLimit, getClientIP, rateLimitResponse, RATE_LIMITS } from "../_shared/rate-limiter.ts";
+import { captureException } from '../_shared/observability.ts';
 
 // Webhook endpoints from Stripe don't need CORS (server-to-server)
 // But we keep minimal headers for potential health checks
@@ -92,7 +93,7 @@ serve(async (req) => {
     // existing row here — the previous code reset processed=false on every
     // delivery, defeating idempotency. Insert only when new.
     if (!existingEvent) {
-      await supabaseClient
+      const { error: recordError } = await supabaseClient
         .from("webhook_events")
         .insert({
           stripe_event_id: event.id,
@@ -101,19 +102,55 @@ serve(async (req) => {
           processed: false,
           processing_attempts: 0,
         });
+
+      // This row IS the idempotency guard. supabase-js returns the error rather
+      // than throwing, and it was discarded, so a failed insert let the handler
+      // run anyway - and a Stripe redelivery of the same event would find no
+      // row, process it a second time, and move money twice (US-300).
+      //
+      // 23505 is a unique violation, which means a concurrent delivery of this
+      // same event won the race and the guard is doing its job: carry on.
+      // Anything else means we cannot promise to process this event once, so
+      // refuse it. Stripe retries for up to three days, and a delayed charge is
+      // recoverable in a way that a duplicate one is not.
+      if (recordError && recordError.code !== "23505") {
+        logStep("Could not record the event, refusing to process it", {
+          id: event.id,
+          error: recordError.message,
+        });
+        return new Response(
+          JSON.stringify({
+            received: false,
+            error: "Event could not be recorded for idempotency; retry expected",
+          }),
+          { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 500 },
+        );
+      }
     }
 
     try {
       await processWebhookEvent(event, supabaseClient, stripe);
 
-      // Mark as processed
-      await supabaseClient
+      // Mark as processed. The work above has already happened, so a failure
+      // here is not a reason to make Stripe retry - that would guarantee the
+      // double-processing this row exists to prevent. It does leave the row
+      // saying processed=false, so a later redelivery would run the handler
+      // again: that is a real inconsistency and it was silent before (US-300).
+      const { error: markError } = await supabaseClient
         .from("webhook_events")
         .update({
           processed: true,
           processed_at: new Date().toISOString()
         })
         .eq("stripe_event_id", event.id);
+
+      if (markError) {
+        logStep("PROCESSED BUT NOT RECORDED - a redelivery of this event would run again", {
+          id: event.id,
+          type: event.type,
+          error: markError.message,
+        });
+      }
 
       logStep("Event processed successfully", { type: event.type });
       return new Response(JSON.stringify({ received: true }), {
@@ -127,7 +164,7 @@ serve(async (req) => {
 
       // Increment the real attempt counter (was hardcoded to 1) so repeated
       // failures are visible and retry behaviour can be reasoned about.
-      await supabaseClient
+      const { error: attemptError } = await supabaseClient
         .from("webhook_events")
         .update({
           processing_attempts: priorAttempts + 1,
@@ -135,12 +172,21 @@ serve(async (req) => {
         })
         .eq("stripe_event_id", event.id);
 
+      if (attemptError) {
+        logStep("Attempt counter not updated, retry history will be wrong", {
+          id: event.id,
+          error: attemptError.message,
+        });
+      }
+
       throw error;
     }
 
   } catch (error) {
     const errorObj = error as Error;
     logStep("Webhook error", { error: errorObj.message });
+    // A webhook that starts failing at 3am has to page someone (US-251).
+    await captureException(errorObj, { fn: 'stripe-webhook' });
     return new Response(JSON.stringify({ error: errorObj.message }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 500,
@@ -220,7 +266,7 @@ async function handleSubscriptionChange(subscription: Stripe.Subscription, supab
     const subscriptionEnd = new Date(subscription.current_period_end * 1000).toISOString();
 
     // Update subscriber
-    await supabaseClient
+    const { error: updateSubscribersError } = await supabaseClient
       .from("subscribers")
       .update({
         subscribed: isActive,
@@ -230,6 +276,9 @@ async function handleSubscriptionChange(subscription: Stripe.Subscription, supab
         updated_at: new Date().toISOString()
       })
       .eq("stripe_customer_id", subscription.customer);
+    if (updateSubscribersError) {
+      throw new Error(`Failed to update subscribers: ${updateSubscribersError.message}`);
+    }
 
     logStep("Updated subscriber record", {
       customerId: subscription.customer,
@@ -251,7 +300,7 @@ async function handleSubscriptionChange(subscription: Stripe.Subscription, supab
           (subscription.status === "past_due" ? "grace_period" :
           (subscription.status === "canceled" ? "suspended" : "pending"));
 
-        await supabaseClient
+        const { error: updateCompaniesError } = await supabaseClient
           .from("companies")
           .update({
             subscription_tier: subscriptionTier,
@@ -261,6 +310,9 @@ async function handleSubscriptionChange(subscription: Stripe.Subscription, supab
             updated_at: new Date().toISOString()
           })
           .eq("id", userProfile.company_id);
+        if (updateCompaniesError) {
+          throw new Error(`Failed to update companies: ${updateCompaniesError.message}`);
+        }
 
         logStep("Updated company subscription status", {
           companyId: userProfile.company_id,
@@ -281,7 +333,7 @@ async function handleSubscriptionCancellation(subscription: Stripe.Subscription,
     .single();
 
   // Update subscriber
-  await supabaseClient
+  const { error: updateSubscribersError } = await supabaseClient
     .from("subscribers")
     .update({
       subscribed: false,
@@ -290,6 +342,9 @@ async function handleSubscriptionCancellation(subscription: Stripe.Subscription,
       updated_at: new Date().toISOString()
     })
     .eq("stripe_customer_id", subscription.customer);
+  if (updateSubscribersError) {
+    throw new Error(`Failed to update subscribers: ${updateSubscribersError.message}`);
+  }
 
   logStep("Subscription cancelled", { customerId: subscription.customer });
 
@@ -302,13 +357,16 @@ async function handleSubscriptionCancellation(subscription: Stripe.Subscription,
       .single();
 
     if (userProfile?.company_id) {
-      await supabaseClient
+      const { error: updateCompaniesError } = await supabaseClient
         .from("companies")
         .update({
           subscription_status: "suspended",
           updated_at: new Date().toISOString()
         })
         .eq("id", userProfile.company_id);
+      if (updateCompaniesError) {
+        throw new Error(`Failed to update companies: ${updateCompaniesError.message}`);
+      }
 
       logStep("Updated company to suspended", { companyId: userProfile.company_id });
     }
@@ -339,7 +397,11 @@ async function handlePaymentFailure(invoice: Stripe.Invoice, supabaseClient: any
       const nextRetry = new Date();
       nextRetry.setHours(nextRetry.getHours() + 24); // Retry in 24 hours
 
-      await supabaseClient
+      // Throw rather than swallow, matching the handlers above: Stripe retries
+      // a webhook that returns an error, and that retry is the only thing that
+      // stops Stripe and the database diverging permanently. supabase-js
+      // returns this error rather than throwing it (US-300).
+      const { error: insertFailureError } = await supabaseClient
         .from("payment_failures")
         .insert({
           subscriber_id: subscriber.id,
@@ -349,13 +411,17 @@ async function handlePaymentFailure(invoice: Stripe.Invoice, supabaseClient: any
           next_retry_at: nextRetry.toISOString(),
           dunning_status: "active"
         });
+
+      if (insertFailureError) {
+        throw new Error(`Failed to record payment failure: ${insertFailureError.message}`);
+      }
     } else {
       // Update existing failure
       const newAttemptCount = existingFailure.attempt_count + 1;
       const nextRetry = new Date();
       nextRetry.setDate(nextRetry.getDate() + newAttemptCount); // Exponential backoff
 
-      await supabaseClient
+      const { error: updateFailureError } = await supabaseClient
         .from("payment_failures")
         .update({
           attempt_count: newAttemptCount,
@@ -364,6 +430,10 @@ async function handlePaymentFailure(invoice: Stripe.Invoice, supabaseClient: any
           failure_reason: invoice.last_finalization_error?.message || "Payment failed"
         })
         .eq("id", existingFailure.id);
+
+      if (updateFailureError) {
+        throw new Error(`Failed to update payment failure: ${updateFailureError.message}`);
+      }
     }
   }
 }
@@ -379,8 +449,10 @@ async function handlePaymentSuccess(invoice: Stripe.Invoice, supabaseClient: any
     .single();
 
   if (subscriber) {
-    // Resolve any payment failures
-    await supabaseClient
+    // Resolve any payment failures. This is the one that costs money if it is
+    // lost: the customer has paid, and an unresolved row keeps process-dunning
+    // retrying the charge on every run.
+    const { error: resolveFailuresError } = await supabaseClient
       .from("payment_failures")
       .update({
         dunning_status: "resolved",
@@ -388,6 +460,12 @@ async function handlePaymentSuccess(invoice: Stripe.Invoice, supabaseClient: any
       })
       .eq("subscriber_id", subscriber.id)
       .is("resolved_at", null);
+
+    if (resolveFailuresError) {
+      throw new Error(
+        `Failed to resolve payment failures after successful payment: ${resolveFailuresError.message}`,
+      );
+    }
   }
 }
 
@@ -408,13 +486,16 @@ async function handleChargeRefunded(charge: Stripe.Charge, supabaseClient: any) 
     .single();
 
   if (refund) {
-    await supabaseClient
+    const { error: updateRefundsError } = await supabaseClient
       .from("refunds")
       .update({
         status: "succeeded",
         updated_at: new Date().toISOString()
       })
       .eq("id", refund.id);
+    if (updateRefundsError) {
+      throw new Error(`Failed to update refunds: ${updateRefundsError.message}`);
+    }
 
     logStep("Updated refund record", { refundId: refund.id });
   }
@@ -438,7 +519,7 @@ async function handleRefundEvent(refund: Stripe.Refund, supabaseClient: any) {
       'canceled': 'canceled'
     };
 
-    await supabaseClient
+    const { error: updateRefundsError } = await supabaseClient
       .from("refunds")
       .update({
         status: statusMap[refund.status] || refund.status,
@@ -446,6 +527,9 @@ async function handleRefundEvent(refund: Stripe.Refund, supabaseClient: any) {
         updated_at: new Date().toISOString()
       })
       .eq("id", existingRefund.id);
+    if (updateRefundsError) {
+      throw new Error(`Failed to update refunds: ${updateRefundsError.message}`);
+    }
 
     logStep("Updated refund from webhook", { refundId: existingRefund.id, status: refund.status });
   }
@@ -464,7 +548,7 @@ async function handleDisputeCreated(dispute: Stripe.Dispute, supabaseClient: any
 
   if (!existing) {
     // Create new chargeback record
-    await supabaseClient
+    const { error: insertChargebacksError } = await supabaseClient
       .from("chargebacks")
       .insert({
         stripe_dispute_id: dispute.id,
@@ -480,6 +564,9 @@ async function handleDisputeCreated(dispute: Stripe.Dispute, supabaseClient: any
         fee_amount: 15.00,
         net_impact: (dispute.amount / 100) + 15.00
       });
+    if (insertChargebacksError) {
+      throw new Error(`Failed to insert chargebacks: ${insertChargebacksError.message}`);
+    }
 
     logStep("Created chargeback record", { disputeId: dispute.id });
   }
@@ -499,7 +586,7 @@ async function handleDisputeUpdated(dispute: Stripe.Dispute, supabaseClient: any
     'lost': 'lost'
   };
 
-  await supabaseClient
+  const { error: updateChargebacksError } = await supabaseClient
     .from("chargebacks")
     .update({
       status: statusMap[dispute.status] || dispute.status,
@@ -509,6 +596,9 @@ async function handleDisputeUpdated(dispute: Stripe.Dispute, supabaseClient: any
       updated_at: new Date().toISOString()
     })
     .eq("stripe_dispute_id", dispute.id);
+  if (updateChargebacksError) {
+    throw new Error(`Failed to update chargebacks: ${updateChargebacksError.message}`);
+  }
 }
 
 async function handleDisputeClosed(dispute: Stripe.Dispute, supabaseClient: any) {
@@ -517,7 +607,7 @@ async function handleDisputeClosed(dispute: Stripe.Dispute, supabaseClient: any)
   const isWon = dispute.status === 'won';
   const isLost = dispute.status === 'lost';
 
-  await supabaseClient
+  const { error: updateChargebacksError } = await supabaseClient
     .from("chargebacks")
     .update({
       status: dispute.status,
@@ -526,6 +616,9 @@ async function handleDisputeClosed(dispute: Stripe.Dispute, supabaseClient: any)
       updated_at: new Date().toISOString()
     })
     .eq("stripe_dispute_id", dispute.id);
+  if (updateChargebacksError) {
+    throw new Error(`Failed to update chargebacks: ${updateChargebacksError.message}`);
+  }
 
   // If lost, record the chargeback fee
   if (isLost) {
@@ -536,7 +629,10 @@ async function handleDisputeClosed(dispute: Stripe.Dispute, supabaseClient: any)
       .single();
 
     if (chargeback?.company_id) {
-      await supabaseClient
+      // A chargeback fee that is not recorded is money the company owes and is
+      // never billed for. The error was discarded (US-300); throwing puts the
+      // event back in Stripe's retry queue, and the update above is idempotent.
+      const { error: feeError } = await supabaseClient
         .from("chargeback_fees")
         .insert({
           company_id: chargeback.company_id,
@@ -544,6 +640,12 @@ async function handleDisputeClosed(dispute: Stripe.Dispute, supabaseClient: any)
           fee_type: 'chargeback_loss',
           status: 'applied'
         });
+
+      if (feeError) {
+        throw new Error(
+          `Dispute lost but the chargeback fee was not recorded: ${feeError.message}`,
+        );
+      }
     }
   }
 

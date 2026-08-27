@@ -1,3 +1,15 @@
+/**
+ * @vitest-environment jsdom
+ *
+ * This file must run under jsdom, not the suite default (happy-dom).
+ * happy-dom's NodeIterator does not implement the DOM spec's pre-removing
+ * steps, so removing the current node ends the iteration. DOMPurify walks the
+ * tree with createNodeIterator and removes as it goes, which means under
+ * happy-dom it stops scanning at the first node it strips and leaves the rest
+ * of the document -- <script> included -- in the output. Every assertion in
+ * here about a payload being removed is meaningless under happy-dom. See the
+ * guard in scripts/check-sanitizer-test-env.mjs.
+ */
 import { describe, it, expect, vi } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
 import {

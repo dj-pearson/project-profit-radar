@@ -1,13 +1,22 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.3";
 import { checkRateLimit, getClientIP, rateLimitResponse, RATE_LIMITS } from "../_shared/rate-limiter.ts";
+import { getCorsHeaders } from '../_shared/secure-cors.ts';
+import { WRITABLE_PROJECT_COLUMNS, pickAllowed } from '../_shared/writable-columns.ts';
+import { writeAuditLog } from '../_shared/audit-log.ts';
 // Using built-in crypto API instead
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-api-key',
-  'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-};
+// The complete set of grants an API key can carry. validateApiRequest() checks
+// membership of this list, so anything outside it is dead weight on the key.
+const API_PERMISSIONS = new Set([
+  'projects:read', 'projects:write',
+  'estimates:read',
+  'invoices:read',
+]);
+
+// Per-key hourly ceiling, enforced by api-auth. Callers may request less.
+const DEFAULT_API_RATE_LIMIT_PER_HOUR = 1000;
+const MAX_API_RATE_LIMIT_PER_HOUR = 10000;
 
 interface ApiKeyValidation {
   isValid: boolean;
@@ -17,6 +26,7 @@ interface ApiKeyValidation {
 }
 
 serve(async (req) => {
+  const corsHeaders = getCorsHeaders(req);
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
@@ -39,19 +49,19 @@ serve(async (req) => {
 
     // Handle different API management endpoints
     if (pathname === '/api-management/validate-key') {
-      return await validateApiKey(req, supabase);
+      return await validateApiKey(corsHeaders, req, supabase);
     } else if (pathname === '/api-management/create-key') {
-      return await createApiKey(req, supabase);
+      return await createApiKey(corsHeaders, req, supabase);
     } else if (pathname === '/api-management/webhook/trigger') {
-      return await triggerWebhook(req, supabase);
+      return await triggerWebhook(corsHeaders, req, supabase);
     } else if (pathname === '/api-management/webhook/test') {
-      return await testWebhook(req, supabase);
+      return await testWebhook(corsHeaders, req, supabase);
     } else if (pathname === '/api-management/api/projects') {
-      return await handleProjectsApi(req, supabase);
+      return await handleProjectsApi(corsHeaders, req, supabase);
     } else if (pathname === '/api-management/api/estimates') {
-      return await handleEstimatesApi(req, supabase);
+      return await handleEstimatesApi(corsHeaders, req, supabase);
     } else if (pathname === '/api-management/api/invoices') {
-      return await handleInvoicesApi(req, supabase);
+      return await handleInvoicesApi(corsHeaders, req, supabase);
     } else {
       return new Response(
         JSON.stringify({ error: 'Endpoint not found' }),
@@ -68,7 +78,7 @@ serve(async (req) => {
   }
 });
 
-async function validateApiKey(req: Request, supabase: any): Promise<Response> {
+async function validateApiKey(corsHeaders: Record<string, string>, req: Request, supabase: any): Promise<Response> {
   const apiKey = req.headers.get('x-api-key');
 
   if (!apiKey) {
@@ -112,7 +122,7 @@ async function validateApiKey(req: Request, supabase: any): Promise<Response> {
   );
 }
 
-async function createApiKey(req: Request, supabase: any): Promise<Response> {
+async function createApiKey(corsHeaders: Record<string, string>, req: Request, supabase: any): Promise<Response> {
   const { key_name, permissions, expires_at, rate_limit_per_hour } = await req.json();
   const authHeader = req.headers.get('Authorization');
 
@@ -142,6 +152,28 @@ async function createApiKey(req: Request, supabase: any): Promise<Response> {
       { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
+
+  // permissions reaches validateApiRequest() as the API key's grant. An unknown
+  // string there matches nothing, so a typo silently mints a key that can do
+  // less than its owner thinks — reject it instead of storing it.
+  const grants = Array.isArray(permissions) ? permissions : [];
+  const unknown = grants.filter((g: unknown) => !API_PERMISSIONS.has(g as string));
+  if (unknown.length) {
+    return new Response(
+      JSON.stringify({
+        error: `Unknown permission(s): ${unknown.join(', ')}. Valid: ${[...API_PERMISSIONS].join(', ')}`
+      }),
+      { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
+  }
+
+  // api-auth enforces rate_limit_per_hour as the per-key ceiling, and this
+  // value was stored verbatim — so an admin could mint a key with no practical
+  // limit and use the platform as hard as they liked. Clamp it.
+  const requestedRate = Number(rate_limit_per_hour);
+  const rateLimit = Number.isFinite(requestedRate) && requestedRate > 0
+    ? Math.min(Math.floor(requestedRate), MAX_API_RATE_LIMIT_PER_HOUR)
+    : DEFAULT_API_RATE_LIMIT_PER_HOUR;
 
   const { data: profile, error: profileError } = await supabase
     .from('user_profiles')
@@ -177,13 +209,29 @@ async function createApiKey(req: Request, supabase: any): Promise<Response> {
       key_name,
       api_key_hash: keyHash,
       api_key_prefix: keyPrefix,
-      permissions: permissions || [],
+      permissions: grants,
       expires_at: expires_at || null,
-      rate_limit_per_hour: rate_limit_per_hour || 1000,
+      rate_limit_per_hour: rateLimit,
       created_by: userData.user.id
     })
     .select()
     .single();
+
+  // Audit trail (US-244): a new API key is a new credential against the
+  // company's data, so record who minted it and what it can do. The key itself
+  // is never logged — only its prefix, which is what the UI shows.
+  if (!storeError) {
+    await writeAuditLog(supabase, {
+      actorUserId: userData.user.id,
+      companyId: profile.company_id,
+      action: 'api_key.created',
+      entityType: 'api_key',
+      entityId: keyRecord?.id,
+      after: { key_name, key_prefix: keyPrefix, permissions: grants, rate_limit_per_hour: rateLimit },
+      description: `Created API key "${key_name}" with grants: ${grants.join(', ') || 'none'}`,
+      riskLevel: 'high',
+    });
+  }
 
   if (storeError) {
     return new Response(
@@ -210,7 +258,7 @@ async function createApiKey(req: Request, supabase: any): Promise<Response> {
   );
 }
 
-async function triggerWebhook(req: Request, supabase: any): Promise<Response> {
+async function triggerWebhook(corsHeaders: Record<string, string>, req: Request, supabase: any): Promise<Response> {
   const { webhook_id, event_type, payload } = await req.json();
   
   const { data: webhook, error: webhookError } = await supabase
@@ -265,7 +313,11 @@ async function triggerWebhook(req: Request, supabase: any): Promise<Response> {
     // Log webhook delivery
     const deliveryStatus = response.ok ? 'success' : 'failed';
     
-    await supabase
+    // The error was discarded here and supabase-js returns it rather than
+    // throwing, so a lost write left the delivery log with no trace of a
+    // webhook that really was sent - the only audit trail a customer has when
+    // they ask whether we called their endpoint (US-300).
+    const { error: logError } = await supabase
       .from('webhook_delivery_logs')
       .insert({
         webhook_endpoint_id: webhook.id,
@@ -278,23 +330,38 @@ async function triggerWebhook(req: Request, supabase: any): Promise<Response> {
         error_message: deliveryStatus === 'failed' ? `HTTP ${response.status}: ${responseText}` : null
       });
 
-    // Update webhook success/failure tracking
-    if (response.ok) {
-      await supabase
+    if (logError) {
+      console.error(
+        `[API-MANAGEMENT] Webhook ${webhook.id} was DELIVERED but not logged:`,
+        logError.message,
+      );
+    }
+
+    // Update webhook success/failure tracking.
+    // failure_count drives the auto-disable in webhook-delivery, so a dropped
+    // error here means a dead endpoint is retried forever, or a recovered one
+    // keeps a stale failure count (US-300).
+    const { error: trackingError } = response.ok
+      ? await supabase
         .from('webhook_endpoints')
         .update({
           last_success_at: new Date().toISOString(),
           failure_count: 0
         })
-        .eq('id', webhook.id);
-    } else {
-      await supabase
+        .eq('id', webhook.id)
+      : await supabase
         .from('webhook_endpoints')
         .update({
           last_failure_at: new Date().toISOString(),
           failure_count: webhook.failure_count + 1
         })
         .eq('id', webhook.id);
+
+    if (trackingError) {
+      console.error(
+        `[API-MANAGEMENT] Webhook ${webhook.id} failure tracking NOT updated, auto-disable will not advance:`,
+        trackingError.message,
+      );
     }
 
     return new Response(
@@ -310,8 +377,9 @@ async function triggerWebhook(req: Request, supabase: any): Promise<Response> {
   } catch (error) {
     console.error('Webhook delivery error:', error);
     
-    // Log failed delivery
-    await supabase
+    // Log failed delivery. Error read rather than dropped: this is the only
+    // record that the attempt happened at all (US-300).
+    const { error: failureLogError } = await supabase
       .from('webhook_delivery_logs')
       .insert({
         webhook_endpoint_id: webhook.id,
@@ -321,6 +389,13 @@ async function triggerWebhook(req: Request, supabase: any): Promise<Response> {
         error_message: error instanceof Error ? error.message : 'Unknown error'
       });
 
+    if (failureLogError) {
+      console.error(
+        `[API-MANAGEMENT] Failed webhook ${webhook.id} could not be logged:`,
+        failureLogError.message,
+      );
+    }
+
     return new Response(
       JSON.stringify({ error: 'Webhook delivery failed', details: error instanceof Error ? error.message : 'Unknown error' }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -328,11 +403,11 @@ async function triggerWebhook(req: Request, supabase: any): Promise<Response> {
   }
 }
 
-async function testWebhook(req: Request, supabase: any): Promise<Response> {
+async function testWebhook(corsHeaders: Record<string, string>, req: Request, supabase: any): Promise<Response> {
   const { webhook_id } = await req.json();
   
   return await triggerWebhook(
-    new Request(req.url, {
+    corsHeaders, new Request(req.url, {
       method: 'POST',
       headers: req.headers,
       body: JSON.stringify({
@@ -348,8 +423,8 @@ async function testWebhook(req: Request, supabase: any): Promise<Response> {
   );
 }
 
-async function handleProjectsApi(req: Request, supabase: any): Promise<Response> {
-  const validation = await validateApiRequest(req, supabase, 'projects:read');
+async function handleProjectsApi(corsHeaders: Record<string, string>, req: Request, supabase: any): Promise<Response> {
+  const validation = await validateApiRequest(corsHeaders, req, supabase, 'projects:read');
   if (!validation.isValid) {
     return validation.response!;
   }
@@ -375,18 +450,37 @@ async function handleProjectsApi(req: Request, supabase: any): Promise<Response>
     }
 
     if (method === 'POST') {
-      const hasWritePermission = await validateApiRequest(req, supabase, 'projects:write');
+      const hasWritePermission = await validateApiRequest(corsHeaders, req, supabase, 'projects:write');
       if (!hasWritePermission.isValid) {
         return hasWritePermission.response!;
       }
 
       const projectData = await req.json();
 
+      // This handler runs on the SERVICE ROLE key, so RLS is not a backstop:
+      // whatever the body carries reaches Postgres. Spreading it let an API-key
+      // holder set id, created_by, created_at and — worse — site_id and
+      // tenant_id, which are tenancy columns. Allowlist the caller-settable
+      // columns and derive the tenancy ones from the key's own company.
+      const { data: company, error: companyError } = await supabase
+        .from('companies')
+        .select('site_id')
+        .eq('id', validation.company_id)
+        .single();
+
+      if (companyError || !company) {
+        return new Response(
+          JSON.stringify({ error: 'Could not resolve company for this API key' }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
       const { data: newProject, error } = await supabase
         .from('projects')
         .insert({
-          ...projectData,
-          company_id: validation.company_id
+          ...pickAllowed(projectData, WRITABLE_PROJECT_COLUMNS),
+          company_id: validation.company_id,
+          site_id: company.site_id
         })
         .select()
         .single();
@@ -417,8 +511,8 @@ async function handleProjectsApi(req: Request, supabase: any): Promise<Response>
   }
 }
 
-async function handleEstimatesApi(req: Request, supabase: any): Promise<Response> {
-  const validation = await validateApiRequest(req, supabase, 'estimates:read');
+async function handleEstimatesApi(corsHeaders: Record<string, string>, req: Request, supabase: any): Promise<Response> {
+  const validation = await validateApiRequest(corsHeaders, req, supabase, 'estimates:read');
   if (!validation.isValid) {
     return validation.response!;
   }
@@ -449,8 +543,8 @@ async function handleEstimatesApi(req: Request, supabase: any): Promise<Response
   }
 }
 
-async function handleInvoicesApi(req: Request, supabase: any): Promise<Response> {
-  const validation = await validateApiRequest(req, supabase, 'invoices:read');
+async function handleInvoicesApi(corsHeaders: Record<string, string>, req: Request, supabase: any): Promise<Response> {
+  const validation = await validateApiRequest(corsHeaders, req, supabase, 'invoices:read');
   if (!validation.isValid) {
     return validation.response!;
   }
@@ -481,7 +575,7 @@ async function handleInvoicesApi(req: Request, supabase: any): Promise<Response>
   }
 }
 
-async function validateApiRequest(req: Request, supabase: any, permission: string): Promise<{
+async function validateApiRequest(corsHeaders: Record<string, string>, req: Request, supabase: any, permission: string): Promise<{
   isValid: boolean;
   company_id?: string;
   keyHash?: string;

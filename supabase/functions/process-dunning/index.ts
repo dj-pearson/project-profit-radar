@@ -5,6 +5,7 @@ import Stripe from "https://esm.sh/stripe@14.21.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.3";
 import { getCorsHeaders } from "../_shared/secure-cors.ts";
 import { requireSystemOrAdmin } from "../_shared/system-auth.ts";
+import { captureException } from '../_shared/observability.ts';
 
 const logStep = (step: string, details?: any) => {
   const detailsStr = details ? ` - ${JSON.stringify(details)}` : '';
@@ -61,7 +62,29 @@ serve(async (req) => {
       processed: 0,
       successful_retries: 0,
       failed_retries: 0,
-      suspended_accounts: 0
+      suspended_accounts: 0,
+      // US-300: every write below is a supabase-js call, which RETURNS its
+      // error rather than throwing, so the surrounding try/catch never saw a
+      // rejected update. A payment_failures row that does not get marked
+      // resolved after Stripe took the money is retried on the next run and
+      // the customer is charged twice, so these are counted and surfaced
+      // rather than dropped.
+      bookkeeping_failures: 0
+    };
+
+    /** Record a payment_failures write that did not land. */
+    const noteWriteFailure = (
+      what: string,
+      failureId: string,
+      // deno-lint-ignore no-explicit-any
+      error: any,
+    ) => {
+      results.bookkeeping_failures++;
+      logStep("PAYMENT BOOKKEEPING WRITE FAILED", {
+        what,
+        failureId,
+        error: error?.message ?? String(error),
+      });
     };
 
     for (const failure of failuresToRetry || []) {
@@ -80,14 +103,18 @@ serve(async (req) => {
           try {
             await stripe.invoices.pay(failure.stripe_invoice_id);
 
-            // Payment successful - mark as resolved
-            await supabaseClient
+            // Payment successful - mark as resolved. If this does not land,
+            // the row stays open and the next run charges the customer again.
+            const { error: resolveError } = await supabaseClient
               .from("payment_failures")
               .update({
                 dunning_status: "resolved",
                 resolved_at: new Date().toISOString()
               })
               .eq("id", failure.id);
+            if (resolveError) {
+              noteWriteFailure("mark resolved after successful retry", failure.id, resolveError);
+            }
 
             results.successful_retries++;
             logStep("Payment retry successful", { failureId: failure.id });
@@ -113,7 +140,7 @@ serve(async (req) => {
               dunningStatus = "suspended";
 
               // Update subscriber status
-              await supabaseClient
+              const { error: updateSubscribersError } = await supabaseClient
                 .from("subscribers")
                 .update({
                   subscribed: false,
@@ -121,6 +148,9 @@ serve(async (req) => {
                   updated_at: new Date().toISOString()
                 })
                 .eq("id", failure.subscriber_id);
+              if (updateSubscribersError) {
+                console.error(`[subscribers] update failed`, updateSubscribersError);
+              }
 
               results.suspended_accounts++;
               logStep("Account suspended due to payment failures", {
@@ -131,7 +161,10 @@ serve(async (req) => {
 
             const paymentMsg = paymentError instanceof Error ? paymentError.message : String(paymentError);
 
-            await supabaseClient
+            // If this does not land the attempt counter never advances: the
+            // account is never suspended, next_retry_at stays in the past, and
+            // every subsequent run retries immediately.
+            const { error: attemptError } = await supabaseClient
               .from("payment_failures")
               .update({
                 attempt_count: newAttemptCount,
@@ -140,6 +173,9 @@ serve(async (req) => {
                 failure_reason: `Retry ${newAttemptCount} failed: ${paymentMsg}`
               })
               .eq("id", failure.id);
+            if (attemptError) {
+              noteWriteFailure("record failed retry attempt", failure.id, attemptError);
+            }
 
             results.failed_retries++;
 
@@ -148,14 +184,19 @@ serve(async (req) => {
             await sendDunningNotification(failure, notificationType, supabaseClient);
           }
         } else if (invoice.status === 'paid') {
-          // Invoice was already paid - mark as resolved
-          await supabaseClient
+          // Invoice was already paid - mark as resolved. Same as above: an
+          // unmarked row is retried, and Stripe is asked to pay an invoice
+          // that is already settled.
+          const { error: paidError } = await supabaseClient
             .from("payment_failures")
             .update({
               dunning_status: "resolved",
               resolved_at: new Date().toISOString()
             })
             .eq("id", failure.id);
+          if (paidError) {
+            noteWriteFailure("mark resolved for already-paid invoice", failure.id, paidError);
+          }
 
           results.successful_retries++;
           logStep("Invoice already paid", { failureId: failure.id });
@@ -171,12 +212,15 @@ serve(async (req) => {
         });
 
         // Mark processing attempt
-        await supabaseClient
+        const { error: noteError } = await supabaseClient
           .from("payment_failures")
           .update({
             failure_reason: `Processing error: ${errorMessage}`
           })
           .eq("id", failure.id);
+        if (noteError) {
+          noteWriteFailure("record processing error", failure.id, noteError);
+        }
       }
     }
 
@@ -193,6 +237,9 @@ serve(async (req) => {
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
     logStep("ERROR in process-dunning", { message: errorMessage });
+    // Cron-driven: nobody is watching the response, so the only way this
+    // surfaces is if it reports itself (US-251).
+    await captureException(error, { fn: 'process-dunning' });
     return new Response(JSON.stringify({ error: errorMessage }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 500,

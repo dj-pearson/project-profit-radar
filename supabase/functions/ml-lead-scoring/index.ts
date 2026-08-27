@@ -9,12 +9,7 @@
  */
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.50.3';
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-  'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-};
+import { getCorsHeaders } from '../_shared/secure-cors.ts';
 
 const logStep = (step: string, details?: Record<string, unknown>) => {
   const detailsStr = details ? ` - ${JSON.stringify(details)}` : '';
@@ -148,6 +143,7 @@ interface LeadActivity {
 }
 
 Deno.serve(async (req) => {
+  const corsHeaders = getCorsHeaders(req);
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
@@ -247,8 +243,9 @@ Deno.serve(async (req) => {
       logStep('Failed to update lead score', { error: updateError.message });
     }
 
-    // Log scoring activity
-    await supabase.from('crm_activities').insert({
+    // Log scoring activity. The score itself is stored above; this is the CRM
+    // timeline entry, and its error was discarded (US-300).
+    const { error: activityError } = await supabase.from('crm_activities').insert({
       company_id: userProfile.company_id,
       lead_id: lead_id,
       activity_type: 'scoring',
@@ -256,6 +253,13 @@ Deno.serve(async (req) => {
       outcome: 'completed',
       activity_date: new Date().toISOString(),
     });
+
+    if (activityError) {
+      logStep('Score stored but the scoring activity was not recorded', {
+        lead_id,
+        error: activityError.message,
+      });
+    }
 
     logStep('Score calculated', {
       lead_id,
@@ -574,7 +578,7 @@ function calculateMLScore(lead: Lead, activities: LeadActivity[]): LeadScore {
   // CALCULATE CONFIDENCE
   // ============================================================================
   let confidenceFactors = 0;
-  let totalFactors = 6;
+  const totalFactors = 6;
 
   if (lead.company_name) confidenceFactors++;
   if (lead.estimated_budget) confidenceFactors++;
@@ -656,7 +660,7 @@ function calculateMLScore(lead: Lead, activities: LeadActivity[]): LeadScore {
 
 function calculateEstimatedDealSize(lead: Lead): number {
   // Estimate based on company size and industry
-  let baseSize = 10000;
+  const baseSize = 10000;
 
   const sizeMultipliers: Record<string, number> = {
     'enterprise': 10,

@@ -3,11 +3,21 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.50.3'
 import { getCorsHeaders, handleCorsPreflightRequest } from '../_shared/secure-cors.ts'
 import { initializeAuthContext, verifyCompanyAccess, errorResponse } from '../_shared/auth-helpers.ts'
 import { authorizeWorkflowAccess } from '../_shared/workflow-auth.ts'
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts"
+import { validateBody } from '../_shared/validate-body.ts'
 
 // SECURITY (US-236): the caller is authenticated and confirmed to own the target
 // workflow/execution before anything runs with the service role (see handler below).
 // The execution engine (startExecution / continueExecution / executeSteps and the
 // per-step executors) was restored in US-287 after a botched edit truncated it.
+
+const ExecuteWorkflowSchema = z.object({
+  workflowId: z.string().uuid().optional(),
+  triggerData: z.record(z.unknown()).optional(),
+  executionId: z.string().uuid().optional(),
+}).refine((v) => v.workflowId || v.executionId, {
+  message: 'either workflowId or executionId is required',
+});
 
 interface WorkflowStep {
   name: string
@@ -47,7 +57,9 @@ Deno.serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
 
-    const { workflowId, triggerData = {}, executionId } = await req.json()
+    const parsed = await validateBody(req, ExecuteWorkflowSchema, { name: 'execute-workflow' })
+    if (!parsed.ok) return parsed.response
+    const { workflowId, triggerData = {}, executionId } = parsed.data as Record<string, any>
 
     const decision = await authorizeWorkflowAccess(
       { workflowId, executionId },
@@ -174,8 +186,10 @@ async function executeSteps(supabase: any, execution: any, steps: WorkflowStep[]
       // Execute the step
       const result = await executeStep(supabase, step, execution, stepExecution)
 
-      // Update step execution
-      await supabase
+      // Update step execution. The error was discarded and supabase-js returns
+      // it rather than throwing, so a lost write left the step row stuck at
+      // 'running' with no output long after the step had finished (US-300).
+      const { error: stepUpdateError } = await supabase
         .from('workflow_step_executions')
         .update({
           status: result.success ? 'completed' : 'failed',
@@ -185,9 +199,19 @@ async function executeSteps(supabase: any, execution: any, steps: WorkflowStep[]
         })
         .eq('id', stepExecution.id)
 
+      if (stepUpdateError) {
+        console.error(
+          `[EXECUTE-WORKFLOW] Step ${i} of execution ${execution.id} RAN but its outcome was not recorded:`,
+          stepUpdateError.message,
+        )
+      }
+
       if (!result.success) {
-        // Mark execution as failed
-        await supabase
+        // Mark execution as failed. A dropped error here stranded the
+        // execution at 'running' forever with no error_message, so a workflow
+        // that had already failed looked like one still in progress (US-300).
+        // The throw below reaches the catch, which retries this same update.
+        const { error: failUpdateError } = await supabase
           .from('workflow_executions')
           .update({
             status: 'failed',
@@ -204,12 +228,21 @@ async function executeSteps(supabase: any, execution: any, steps: WorkflowStep[]
             ]
           })
           .eq('id', execution.id)
-        
+
+        if (failUpdateError) {
+          console.error(
+            `[EXECUTE-WORKFLOW] Execution ${execution.id} FAILED but was not marked failed:`,
+            failUpdateError.message,
+          )
+        }
+
         throw new Error(result.success ? 'Unknown error' : ((result as { error?: string }).error || 'Unknown error'));
       }
 
-      // Update execution progress
-      await supabase
+      // Update execution progress. A dropped error froze completed_steps, so
+      // the progress bar sat at the same step while the workflow ran on
+      // (US-300).
+      const { error: progressError } = await supabase
         .from('workflow_executions')
         .update({
           completed_steps: i + 1,
@@ -226,6 +259,13 @@ async function executeSteps(supabase: any, execution: any, steps: WorkflowStep[]
         })
         .eq('id', execution.id)
 
+      if (progressError) {
+        console.error(
+          `[EXECUTE-WORKFLOW] Progress for execution ${execution.id} step ${i} was not recorded:`,
+          progressError.message,
+        )
+      }
+
       execution.completed_steps = i + 1
       execution.execution_log.push({
         timestamp: new Date().toISOString(),
@@ -236,22 +276,35 @@ async function executeSteps(supabase: any, execution: any, steps: WorkflowStep[]
 
     } catch (error) {
       console.error(`Error executing step ${i}:`, error)
-      
-        await supabase
-          .from('workflow_executions')
-          .update({
-            status: 'failed',
-            error_message: error instanceof Error ? error.message : 'Unknown error',
-            completed_at: new Date().toISOString()
-          })
-          .eq('id', execution.id)
-      
+
+      // This is the last chance to record the failure. Its error was dropped,
+      // so an execution could fail and still read as 'running' for good
+      // (US-300). Logged rather than thrown: the original error below is the
+      // more useful one to propagate.
+      const { error: markFailedError } = await supabase
+        .from('workflow_executions')
+        .update({
+          status: 'failed',
+          error_message: error instanceof Error ? error.message : 'Unknown error',
+          completed_at: new Date().toISOString()
+        })
+        .eq('id', execution.id)
+
+      if (markFailedError) {
+        console.error(
+          `[EXECUTE-WORKFLOW] Execution ${execution.id} is STRANDED at 'running' - could not mark it failed:`,
+          markFailedError.message,
+        )
+      }
+
       throw error
     }
   }
 
-  // Mark execution as completed
-  await supabase
+  // Mark execution as completed. A dropped error here left a finished
+  // workflow sitting at 'running' forever, which is also what the scheduler
+  // uses to decide a run is still in flight (US-300).
+  const { error: completeError } = await supabase
     .from('workflow_executions')
     .update({
       status: 'completed',
@@ -267,6 +320,12 @@ async function executeSteps(supabase: any, execution: any, steps: WorkflowStep[]
       ]
     })
     .eq('id', execution.id)
+
+  if (completeError) {
+    throw new Error(
+      `Workflow execution ${execution.id} finished but could NOT be marked completed, so it still reads as running: ${completeError.message}`,
+    )
+  }
 }
 
 async function executeStep(supabase: any, step: WorkflowStep, execution: any, stepExecution: any) {

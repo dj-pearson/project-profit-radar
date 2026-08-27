@@ -1,5 +1,7 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.3";
+import { getCorsHeaders } from '../_shared/secure-cors.ts';
+import { requireInternalCaller } from '../_shared/internal-only.ts';
 
 interface SocialPlatformContent {
   platform: string;
@@ -25,13 +27,6 @@ interface StorageAsset {
   name: string;
   url: string;
 }
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type, x-webhook-signature",
-  "Access-Control-Allow-Methods": "POST, OPTIONS",
-};
 
 const logStep = (step: string, data?: any) => {
   console.log(`[Blog Social Webhook] ${step}:`, data || "");
@@ -129,6 +124,7 @@ async function selectRandomInstagramMedia(
 }
 
 serve(async (req) => {
+  const corsHeaders = getCorsHeaders(req);
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
@@ -141,6 +137,12 @@ serve(async (req) => {
   }
 
   try {
+    // Internal only: invoked by enhanced-blog-ai-fixed with a service-role
+    // client. verify_jwt = true is a signature check the publishable anon key
+    // satisfies, not authentication (US-241).
+    const denied = requireInternalCaller(req);
+    if (denied) return denied;
+
     logStep("Blog social webhook received");
 
     const supabaseClient = createClient(
@@ -171,13 +173,25 @@ serve(async (req) => {
       throw new Error("Blog post not found");
     }
 
+    // SECURITY: this runs on the service role, so RLS is off and a body-supplied
+    // company_id would let any authenticated caller create social posts and read
+    // automation settings for another company. The blog post row carries the
+    // authoritative company, so use that and ignore the body's.
+    const companyId = blogPost.company_id;
+    if (!companyId) {
+      throw new Error("Blog post has no company");
+    }
+    if (company_id && company_id !== companyId) {
+      logStep("Ignoring caller-supplied company_id", { claimed: company_id, actual: companyId });
+    }
+
     logStep("Processing blog post", { title: blogPost.title });
 
     // Get company's social media settings
     const { data: socialSettings, error: settingsError } = await supabaseClient
       .from("social_media_automation_settings")
       .select("*")
-      .eq("company_id", company_id)
+      .eq("company_id", companyId)
       .eq("is_active", true)
       .single();
 
@@ -208,7 +222,7 @@ serve(async (req) => {
       const { data: socialPost, error: postError } = await supabaseClient
         .from("social_media_posts")
         .insert({
-          company_id,
+          company_id: companyId,
           title: `${blogPost.title} - ${platformContent.platform}`,
           content: platformContent.content,
           content_type: "text",

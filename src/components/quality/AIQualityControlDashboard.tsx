@@ -24,7 +24,7 @@ export const AIQualityControlDashboard: React.FC<AIQualityControlDashboardProps>
   projectId 
 }) => {
   const [loading, setLoading] = useState(true);
-  const [metrics, setMetrics] = useState<QualityMetrics>({
+  const [metrics] = useState<QualityMetrics>({
     overall_quality_score: 87.5,
     total_inspections: 42,
     critical_defects: 3,

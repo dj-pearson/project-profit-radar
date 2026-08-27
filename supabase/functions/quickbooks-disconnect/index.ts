@@ -3,15 +3,12 @@
  *
  * Revokes OAuth tokens and disconnects QuickBooks integration.
  */
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
+import { serve } from "https://deno.land/std@0.190.0/http/server.ts"
 import { initializeAuthContext, errorResponse } from '../_shared/auth-helpers.ts';
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-}
+import { getCorsHeaders } from '../_shared/secure-cors.ts';
 
 serve(async (req) => {
+  const corsHeaders = getCorsHeaders(req);
   // Handle CORS preflight
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
@@ -94,8 +91,10 @@ serve(async (req) => {
       throw new Error('Failed to disconnect: ' + updateError.message)
     }
 
-    // Log the disconnection
-    await supabaseClient
+    // Log the disconnection. The disconnect itself is checked above, so this
+    // is the audit entry rather than the action; its error was discarded
+    // (US-300).
+    const { error: disconnectLogError } = await supabaseClient
       .from('quickbooks_sync_logs')
       .insert({
         company_id: company_id,
@@ -105,6 +104,13 @@ serve(async (req) => {
         records_processed: {},
         created_at: new Date().toISOString(),
       })
+
+    if (disconnectLogError) {
+      console.error(
+        `[QUICKBOOKS-DISCONNECT] Company ${company_id} DISCONNECTED but the event was not logged:`,
+        disconnectLogError.message,
+      )
+    }
 
     console.log(`QuickBooks disconnected for company ${company_id}`)
 

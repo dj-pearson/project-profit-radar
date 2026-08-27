@@ -1,13 +1,10 @@
 // Validate Structured Data Edge Function
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { initializeAuthContext, errorResponse } from '../_shared/auth-helpers.ts';
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
+import { getCorsHeaders } from '../_shared/secure-cors.ts';
 
 serve(async (req) => {
+  const corsHeaders = getCorsHeaders(req);
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
 
   try {
@@ -76,12 +73,25 @@ serve(async (req) => {
       }
     }
 
+    // Same as analyze-images: storing the result is the point, and the error
+    // was discarded, so a validation run reported its schemas while
+    // seo_structured_data stayed empty (US-300).
+    let schemasStoreError: string | null = null;
     if (schemas.length > 0) {
-      await supabaseClient.from('seo_structured_data').insert(schemas);
+      const { error: storeError } = await supabaseClient
+        .from('seo_structured_data')
+        .insert(schemas);
+
+      if (storeError) {
+        schemasStoreError = storeError.message;
+        console.error('[VALIDATE-STRUCTURED-DATA] Schemas were NOT stored:', storeError.message);
+      }
     }
 
     return new Response(JSON.stringify({
       success: true,
+      stored: schemasStoreError === null,
+      storage_error: schemasStoreError,
       summary: {
         total_schemas: schemas.length,
         valid_schemas: schemas.filter(s => s.is_valid).length,

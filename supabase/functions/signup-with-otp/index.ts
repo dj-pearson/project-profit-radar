@@ -12,12 +12,14 @@
  */
 
 import { serve } from 'https://deno.land/std@0.190.0/http/server.ts';
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.50.3';
 import { z } from 'https://deno.land/x/zod@v3.22.4/mod.ts';
 import { getCorsHeaders } from '../_shared/secure-cors.ts';
 import { sendEmail, getSiteEmailConfig } from '../_shared/ses-email-service.ts';
 import { generateAuthEmail, generateOTPCode } from '../_shared/auth-email-templates.ts';
 import { isDisposableEmail } from '../_shared/disposable-email.ts';
+import { enforceRateLimit, RATE_LIMITS, getClientIP } from '../_shared/rate-limiter.ts';
+import { createServiceClient } from '../_shared/service-client.ts';
 
 // Validation schema
 const signupSchema = z.object({
@@ -53,6 +55,15 @@ const handler = async (req: Request): Promise<Response> => {
   console.log('[SignupWithOTP] Processing POST request');
 
   try {
+    // Rate limit per IP (US-243). Unauthenticated and it sends mail, so without
+    // a ceiling it is an open relay for bombing an address or burning SES quota.
+    // There is no user to key on before signup, so IP is the only handle here.
+    const signupLimited = await enforceRateLimit(
+      createServiceClient(), `ip:${getClientIP(req)}`, 'signup-with-otp',
+      RATE_LIMITS.AUTH, corsHeaders,
+    );
+    if (signupLimited) return signupLimited;
+
     // Parse and validate request
     console.log('[SignupWithOTP] Parsing request body...');
     const rawBody = await req.json();
@@ -198,11 +209,18 @@ const handler = async (req: Request): Promise<Response> => {
 
     if (!emailResult.success) {
       console.error('[SignupWithOTP] Email send failed:', emailResult.error);
-      // Mark OTP as used since email failed
-      await supabaseAdmin
+      // Mark OTP as used since email failed. An unrecorded invalidation
+      // leaves an undelivered code verifiable (US-300).
+      const { error: invalidateError } = await supabaseAdmin
         .from('auth_otp_codes')
         .update({ is_used: true, metadata: { email_failed: true } })
         .eq('id', otpId);
+      if (invalidateError) {
+        console.error(
+          '[SignupWithOTP] OTP STILL VALID: could not invalidate an undelivered code',
+          { otpId, error: invalidateError.message },
+        );
+      }
 
       // Clean up the user
       await supabaseAdmin.auth.admin.deleteUser(newUser.user.id);

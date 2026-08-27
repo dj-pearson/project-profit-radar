@@ -133,7 +133,11 @@ export function ClientPortalRFIs({ projectId, companyId, userId }: ClientPortalR
         const path = `${projectId}/rfi/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
         const { error: upErr } = await supabase.storage.from('project-documents').upload(path, file);
         if (upErr) throw upErr;
-        await supabase.from('documents').insert([
+        // The file is in the bucket by this point. Without the registry row it
+        // is invisible to the app - orphaned storage, and an RFI that claims an
+        // attachment nobody can open. supabase-js returns this error rather
+        // than throwing it (US-300).
+        const { error: docErr } = await supabase.from('documents').insert([
           {
             name: file.name,
             description: `Attachment for ${rfiNumber}`,
@@ -147,6 +151,15 @@ export function ClientPortalRFIs({ projectId, companyId, userId }: ClientPortalR
             is_current_version: true,
           },
         ]);
+        if (docErr) {
+          // Take the file back out rather than leaving it orphaned in the
+          // bucket, then fail loudly instead of submitting an RFI whose
+          // attachment does not exist as far as the app is concerned.
+          await supabase.storage.from('project-documents').remove([path]);
+          throw new Error(
+            `The attachment could not be registered (${docErr.message}). Nothing was submitted - please try again.`,
+          );
+        }
       }
 
       const { error } = await supabase.from('rfis').insert([

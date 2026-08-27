@@ -1,5 +1,6 @@
 // Workflow Execution Edge Function
 import { initializeAuthContext, verifyCompanyAccess, errorResponse } from '../_shared/auth-helpers.ts';
+import { createServiceClient } from '../_shared/service-client.ts';
 import { getCorsHeaders, handleCorsPreflightRequest } from '../_shared/secure-cors.ts';
 
 interface WorkflowStep {
@@ -35,6 +36,15 @@ Deno.serve(async (req) => {
 
     const { user, supabase } = authContext;
     logStep("User authenticated", { userId: user.id });
+
+    // workflow_step_executions has a company-scoped SELECT policy and the
+    // permissive "System can manage workflow step executions" FOR ALL USING
+    // (true) that US-237's migration scopes to service_role — after which the
+    // user-JWT client has no write path to it. Both inserts below discarded
+    // their errors, so the step history would just have stopped being written.
+    // The workflow itself is fetched RLS-scoped below, so a cross-company
+    // workflow_id returns no row and never reaches these writes.
+    const stepClient = createServiceClient();
 
     const { workflow_id, trigger_data } = await req.json() as WorkflowExecution;
 
@@ -100,7 +110,7 @@ Deno.serve(async (req) => {
             stepOutput = await executeAction(step, executionContext, supabase);
             break;
           
-          case 'condition':
+          case 'condition': {
             const conditionResult = evaluateConditions(step, executionContext);
             stepOutput = { passed: conditionResult, branch: conditionResult ? 'true' : 'false' };
             executionContext.last_condition_result = conditionResult;
@@ -116,19 +126,21 @@ Deno.serve(async (req) => {
               console.log('Condition failed, branching to false path');
             }
             break;
+          }
           
-          case 'delay':
+          case 'delay': {
             const delayMs = step.config.delay_seconds * 1000;
             await new Promise(resolve => setTimeout(resolve, delayMs));
             stepOutput = { delayed_ms: delayMs };
             break;
+          }
           
           default:
             stepOutput = { skipped: true };
         }
 
         // Record step execution
-        await supabase.from('workflow_step_executions').insert({
+        const { error: stepInsertError } = await stepClient.from('workflow_step_executions').insert({
           execution_id: execution.id,
           step_id: step.id,
           status: stepStatus,
@@ -137,6 +149,9 @@ Deno.serve(async (req) => {
           started_at: new Date(stepStartTime).toISOString(),
           completed_at: new Date().toISOString(),
         });
+        if (stepInsertError) {
+          logStep('Failed to record step execution', { stepId: step.id, error: stepInsertError.message });
+        }
 
         stepResults.push({ step_id: step.id, status: stepStatus, output: stepOutput });
 
@@ -150,7 +165,7 @@ Deno.serve(async (req) => {
         stepStatus = 'failed';
         errorMessage = stepError.message;
 
-        await supabase.from('workflow_step_executions').insert({
+        const { error: failedStepError } = await stepClient.from('workflow_step_executions').insert({
           execution_id: execution.id,
           step_id: step.id,
           status: stepStatus,
@@ -158,15 +173,21 @@ Deno.serve(async (req) => {
           started_at: new Date(stepStartTime).toISOString(),
           completed_at: new Date().toISOString(),
         });
+        if (failedStepError) {
+          logStep('Failed to record failed step execution', { stepId: step.id, error: failedStepError.message });
+        }
 
         stepResults.push({ step_id: step.id, status: stepStatus, error: errorMessage });
         break; // Stop execution on error
       }
     }
 
-    // Update execution record
+    // Update execution record. The error was discarded and supabase-js returns
+    // it rather than throwing, so a lost write left a finished run reading as
+    // 'running' with no output, while the response below reported its real
+    // status - the two disagreed permanently (US-300).
     const finalStatus = stepResults.some(r => r.status === 'failed') ? 'failed' : 'completed';
-    await supabase
+    const { error: executionUpdateError } = await supabase
       .from('workflow_executions')
       .update({
         status: finalStatus,
@@ -175,11 +196,26 @@ Deno.serve(async (req) => {
       })
       .eq('id', execution.id);
 
-    // Update workflow last_executed_at
-    await supabase
+    if (executionUpdateError) {
+      throw new Error(
+        `Workflow execution ${execution.id} finished as ${finalStatus} but that was NOT recorded: ${executionUpdateError.message}`,
+      );
+    }
+
+    // Update workflow last_executed_at. Only the "when did this last run"
+    // stamp, so a failure is logged rather than failing a run that already
+    // succeeded (US-300).
+    const { error: lastExecutedError } = await supabase
       .from('workflow_definitions')
       .update({ last_executed_at: new Date().toISOString() })
       .eq('id', workflow_id);
+
+    if (lastExecutedError) {
+      console.error(
+        `[WORKFLOW-EXECUTION] last_executed_at not updated for workflow ${workflow_id}:`,
+        lastExecutedError.message,
+      );
+    }
 
     console.log('Workflow execution completed:', finalStatus);
 

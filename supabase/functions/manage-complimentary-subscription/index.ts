@@ -1,10 +1,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.3";
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
+import { getCorsHeaders } from '../_shared/secure-cors.ts';
+import { writeAuditLog } from '../_shared/audit-log.ts';
 
 interface ComplimentaryRequest {
   action: 'grant' | 'revoke';
@@ -21,6 +18,7 @@ const logStep = (step: string, details?: any) => {
 };
 
 serve(async (req) => {
+  const corsHeaders = getCorsHeaders(req);
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
@@ -78,7 +76,7 @@ serve(async (req) => {
         .single();
 
       if (existingSubscriber) {
-        await supabaseClient
+        const { error: updateSubscribersError } = await supabaseClient
           .from('subscribers')
           .update({
             subscribed: true,
@@ -92,8 +90,11 @@ serve(async (req) => {
             updated_at: new Date().toISOString()
           })
           .eq('id', existingSubscriber.id);
+        if (updateSubscribersError) {
+          throw new Error(`Failed to update subscribers: ${updateSubscribersError.message}`);
+        }
       } else {
-        await supabaseClient
+        const { error: insertSubscribersError } = await supabaseClient
           .from('subscribers')
           .insert({
             user_id: targetUser.id,
@@ -107,6 +108,9 @@ serve(async (req) => {
             complimentary_expires_at: expiresAt,
             complimentary_reason: request.reason
           });
+        if (insertSubscribersError) {
+          throw new Error(`Failed to insert subscribers: ${insertSubscribersError.message}`);
+        }
       }
 
       const { data: subscriber } = await supabaseClient
@@ -119,7 +123,10 @@ serve(async (req) => {
         throw new Error('Subscriber record not found after grant operation');
       }
 
-      await supabaseClient
+      // This row records who gave away paid product, to whom and why. The
+      // error was discarded, so a grant could take effect with no history entry
+      // behind it (US-300).
+      const { error: historyError } = await supabaseClient
         .from('complimentary_subscription_history')
         .insert({
           subscriber_id: subscriber.id,
@@ -129,6 +136,24 @@ serve(async (req) => {
           complimentary_type: type,
           status: 'active'
         });
+
+      if (historyError) {
+        throw new Error(
+          `The complimentary subscription was granted but not recorded in history: ${historyError.message}`,
+        );
+      }
+
+      // Audit trail (US-244): giving away paid product. Names the admin who
+      // did it, who received it, and when it lapses.
+      await writeAuditLog(supabaseClient, {
+        actorUserId: adminUser.id,
+        action: 'complimentary_subscription.granted',
+        entityType: 'subscriber',
+        entityId: subscriber.id,
+        after: { tier, complimentary_type: type, expires_at: expiresAt, reason: request.reason },
+        description: `Granted complimentary ${tier} to ${request.user_email}`,
+        riskLevel: 'high',
+      });
 
       logStep("Complimentary subscription granted", { 
         targetUser: request.user_email, 
@@ -158,7 +183,7 @@ serve(async (req) => {
         throw new Error("Subscriber not found");
       }
 
-      await supabaseClient
+      const { error: updateSubscribersError } = await supabaseClient
         .from('subscribers')
         .update({
           subscribed: false,
@@ -171,8 +196,14 @@ serve(async (req) => {
           updated_at: new Date().toISOString()
         })
         .eq('id', subscriber.id);
+      if (updateSubscribersError) {
+        throw new Error(`Failed to update subscribers: ${updateSubscribersError.message}`);
+      }
 
-      await supabaseClient
+      // Closing the history row records who revoked the grant. The error was
+      // discarded, so a revoked subscription could still read as an active
+      // complimentary grant in the history (US-300).
+      const { error: revokeHistoryError } = await supabaseClient
         .from('complimentary_subscription_history')
         .update({
           status: 'revoked',
@@ -182,6 +213,22 @@ serve(async (req) => {
         })
         .eq('subscriber_id', subscriber.id)
         .eq('status', 'active');
+
+      if (revokeHistoryError) {
+        throw new Error(
+          `The complimentary subscription was revoked but the history still shows it active: ${revokeHistoryError.message}`,
+        );
+      }
+
+      await writeAuditLog(supabaseClient, {
+        actorUserId: adminUser.id,
+        action: 'complimentary_subscription.revoked',
+        entityType: 'subscriber',
+        entityId: subscriber.id,
+        after: { subscribed: false, is_complimentary: false },
+        description: `Revoked complimentary subscription for ${request.user_email}`,
+        riskLevel: 'high',
+      });
 
       logStep("Complimentary subscription revoked", { targetUser: request.user_email });
 

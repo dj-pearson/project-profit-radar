@@ -305,11 +305,21 @@ export function EstimateForm({ onSuccess, onCancel, estimateId }: EstimateFormPr
 
       // Handle line items
       if (estimateId) {
-        // Delete existing line items
-        await supabase
+        // Delete existing line items. The insert below runs regardless, so a
+        // silently failed delete leaves the old rows in place alongside the new
+        // ones and the estimate total doubles - on a document the customer
+        // sees. supabase-js returns this error rather than throwing it, so it
+        // has to be read (US-300).
+        const { error: deleteError } = await supabase
           .from("estimate_line_items")
           .delete()
           .eq("estimate_id", estimateId);
+        if (deleteError) {
+          throw new Error(
+            `Could not clear the previous line items (${deleteError.message}). ` +
+              `Nothing was saved - saving now would duplicate every line and double the total.`,
+          );
+        }
       }
 
       // Insert new line items

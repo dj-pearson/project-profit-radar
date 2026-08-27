@@ -71,7 +71,13 @@ const AdminSettings = () => {
     if (userProfile?.role === 'root_admin') {
       loadSettings();
     }
-  }, [user, userProfile, loading, navigate]);
+    // Depend on the identifying primitives, not the objects. AuthContext
+    // memoises its value today, so this is stable in production - but the
+    // effect navigates and toasts, and an effect with side effects that keys
+    // on object identity re-fires for free whenever a caller hands it a fresh
+    // reference. Settings.a11y.test.tsx did exactly that and hung forever.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id, userProfile?.role, loading, navigate]);
 
   const loadSettings = async () => {
     try {
@@ -94,13 +100,17 @@ const AdminSettings = () => {
     try {
       setSaving(true);
       
-      // In a real implementation, these would be saved to a settings table
-      // For now, we'll just simulate a save
+      // NOT PERSISTED. There is no settings table behind this screen; the
+      // sleep below is the whole of the "save". Every toggle on this page -
+      // including the security ones - reverts on reload, and the success toast
+      // said otherwise.
       await new Promise(resolve => setTimeout(resolve, 1000));
-      
+
       toast({
-        title: "Success",
-        description: "Settings saved successfully"
+        variant: "destructive",
+        title: "Not saved",
+        description:
+          "System settings storage is not implemented yet - these values were not written and will revert on reload."
       });
     } catch (error: any) {
       console.error('Error saving settings:', error);

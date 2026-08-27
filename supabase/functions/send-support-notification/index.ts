@@ -1,14 +1,9 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { Resend } from "https://esm.sh/resend@2.0.0";
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.50.3';
+import { getCorsHeaders } from '../_shared/secure-cors.ts';
+import { initializeAuthContext, errorResponse } from '../_shared/auth-helpers.ts';
 
 const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type",
-};
 
 interface SupportNotificationRequest {
   ticketId: string;
@@ -22,12 +17,23 @@ interface SupportNotificationRequest {
 }
 
 const handler = async (req: Request): Promise<Response> => {
+  const corsHeaders = getCorsHeaders(req);
   // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
+
+    // Authenticate the caller. This sends through Resend as Brikly to
+    // support@brikly.net AND to a body-supplied customerEmail, and had no auth
+    // of its own: verify_jwt = true only means a validly-signed project JWT is
+    // present, and the anon key is one (US-241).
+    const authContext = await initializeAuthContext(req);
+    if (!authContext) {
+      return errorResponse('Unauthorized', 401, req);
+    }
+
     const {
       ticketId,
       ticketNumber,

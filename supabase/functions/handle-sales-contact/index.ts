@@ -165,8 +165,14 @@ serve(async (req) => {
 
     logStep("Created sales contact request", { salesContactId: salesContact.id });
 
-    // Track activity
-    await supabaseClient
+    // Track activity.
+    // The sales contact is already stored - that write throws. These two are
+    // the marketing record of it, and their errors were discarded; supabase-js
+    // returns them rather than throwing, so a lost row meant a real conversion
+    // never appeared in the funnel and the campaign that produced it got no
+    // credit. Reported rather than failed: refusing the request would lose the
+    // enquiry itself, which is worse (US-300).
+    const { error: activityError } = await supabaseClient
       .from('lead_activities')
       .insert({
         lead_id: leadId,
@@ -179,8 +185,15 @@ serve(async (req) => {
         }
       });
 
+    if (activityError) {
+      logStep("Sales contact STORED but the activity was not recorded", {
+        leadId,
+        error: activityError.message,
+      });
+    }
+
     // Track conversion event
-    await supabaseClient
+    const { error: conversionError } = await supabaseClient
       .from('conversion_events')
       .insert({
         event_type: 'sales_contact_requested',
@@ -196,6 +209,14 @@ serve(async (req) => {
           lead_score: leadScore
         }
       });
+
+    if (conversionError) {
+      logStep("Sales contact STORED but the conversion event was not recorded", {
+        leadId,
+        lead_score: leadScore,
+        error: conversionError.message,
+      });
+    }
 
     // TODO: Send notification to sales team (Slack, email, etc.)
     // TODO: Send confirmation email to requester

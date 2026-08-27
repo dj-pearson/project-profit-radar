@@ -1,12 +1,9 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.3";
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
+import { getCorsHeaders } from '../_shared/secure-cors.ts';
 
 serve(async (req) => {
+  const corsHeaders = getCorsHeaders(req);
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
 
   try {
@@ -79,13 +76,23 @@ serve(async (req) => {
       const expiresAt = new Date();
       expiresAt.setSeconds(expiresAt.getSeconds() + newTokens.expires_in);
 
-      await supabaseClient
+      // The error was discarded and supabase-js returns it rather than
+      // throwing, so a failed write meant the freshly refreshed token was never
+      // stored: this call carried on with the in-memory one and the next call
+      // read the expired token back and refreshed again, every time (US-300).
+      const { error: tokenError } = await supabaseClient
         .from('gsc_oauth_credentials')
         .update({
           access_token: accessToken,
           token_expires_at: expiresAt.toISOString(),
         })
         .eq('id', credentials.id);
+
+      if (tokenError) {
+        throw new Error(
+          `Google access token was refreshed but NOT stored, so every later call would refresh again: ${tokenError.message}`,
+        );
+      }
     }
 
     // Fetch properties from GSC API

@@ -4,11 +4,7 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@14.21.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.3";
 import { initializeAuthContext, errorResponse } from '../_shared/auth-helpers.ts';
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
+import { getCorsHeaders } from '../_shared/secure-cors.ts';
 
 const logStep = (step: string, details?: Record<string, unknown>) => {
   const detailsStr = details ? ` - ${JSON.stringify(details)}` : '';
@@ -51,6 +47,7 @@ interface ProrationResult {
 }
 
 serve(async (req) => {
+  const corsHeaders = getCorsHeaders(req);
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
   }
@@ -103,13 +100,13 @@ serve(async (req) => {
     switch (action) {
       case 'calculate':
       case 'preview_change':
-        return await calculateProration(supabaseClient, company, subscriber, body);
+        return await calculateProration(corsHeaders, supabaseClient, company, subscriber, body);
 
       case 'apply_change':
-        return await applyProration(supabaseClient, company, subscriber, body);
+        return await applyProration(corsHeaders, supabaseClient, company, subscriber, body);
 
       case 'get_history':
-        return await getProrationHistory(supabaseClient, companyId);
+        return await getProrationHistory(corsHeaders, supabaseClient, companyId);
 
       default:
         return errorResponse('Invalid action. Use: calculate, preview_change, apply_change, get_history', 400);
@@ -126,7 +123,7 @@ serve(async (req) => {
 });
 
 async function calculateProration(
-  supabase: ReturnType<typeof createClient>,
+  corsHeaders: Record<string, string>, supabase: ReturnType<typeof createClient>,
   company: Record<string, unknown>,
   subscriber: Record<string, unknown> | null,
   body: ProrationRequest
@@ -221,7 +218,7 @@ async function calculateProration(
 }
 
 async function applyProration(
-  supabase: ReturnType<typeof createClient>,
+  corsHeaders: Record<string, string>, supabase: ReturnType<typeof createClient>,
   company: Record<string, unknown>,
   subscriber: Record<string, unknown> | null,
   body: ProrationRequest
@@ -238,7 +235,7 @@ async function applyProration(
   const newPeriod = new_period || currentPeriod;
 
   // Calculate proration first
-  const prorationResponse = await calculateProration(supabase, company, subscriber, body);
+  const prorationResponse = await calculateProration(corsHeaders, supabase, company, subscriber, body);
   const prorationData = await prorationResponse.json();
 
   if (!prorationData.success) {
@@ -310,32 +307,41 @@ async function applyProration(
 
         // Update proration record with Stripe info
         if (prorationRecord) {
-          await supabase
+          const { error: updateProrationHistoryError } = await supabase
             .from('proration_history')
             .update({
               status: 'applied',
               applied_at: new Date().toISOString()
             })
             .eq('id', prorationRecord.id);
+          if (updateProrationHistoryError) {
+            throw new Error(`Failed to update proration_history: ${updateProrationHistoryError.message}`);
+          }
         }
 
         // Update company subscription tier
-        await supabase
+        const { error: updateCompaniesError } = await supabase
           .from('companies')
           .update({
             subscription_tier: new_tier
           })
           .eq('id', company.id);
+        if (updateCompaniesError) {
+          throw new Error(`Failed to update companies: ${updateCompaniesError.message}`);
+        }
 
         // Update subscriber
         if (subscriber?.id) {
-          await supabase
+          const { error: updateSubscribersError } = await supabase
             .from('subscribers')
             .update({
               subscription_tier: new_tier,
               billing_period: newPeriod
             })
             .eq('id', subscriber.id);
+          if (updateSubscribersError) {
+            throw new Error(`Failed to update subscribers: ${updateSubscribersError.message}`);
+          }
         }
 
         return new Response(
@@ -357,12 +363,15 @@ async function applyProration(
 
       // Update proration record as failed
       if (prorationRecord) {
-        await supabase
+        const { error: updateProrationHistoryError } = await supabase
           .from('proration_history')
           .update({
             status: 'failed'
           })
           .eq('id', prorationRecord.id);
+        if (updateProrationHistoryError) {
+          throw new Error(`Failed to update proration_history: ${updateProrationHistoryError.message}`);
+        }
       }
 
       return errorResponse(`Stripe error: ${error.message}`, 500);
@@ -370,31 +379,40 @@ async function applyProration(
   }
 
   // Manual update without Stripe
-  await supabase
+  const { error: updateCompaniesError } = await supabase
     .from('companies')
     .update({
       subscription_tier: new_tier
     })
     .eq('id', company.id);
+  if (updateCompaniesError) {
+    throw new Error(`Failed to update companies: ${updateCompaniesError.message}`);
+  }
 
   if (subscriber?.id) {
-    await supabase
+    const { error: updateSubscribersError } = await supabase
       .from('subscribers')
       .update({
         subscription_tier: new_tier,
         billing_period: newPeriod
       })
       .eq('id', subscriber.id);
+    if (updateSubscribersError) {
+      throw new Error(`Failed to update subscribers: ${updateSubscribersError.message}`);
+    }
   }
 
   if (prorationRecord) {
-    await supabase
+    const { error: updateProrationHistoryError } = await supabase
       .from('proration_history')
       .update({
         status: 'applied',
         applied_at: new Date().toISOString()
       })
       .eq('id', prorationRecord.id);
+    if (updateProrationHistoryError) {
+      throw new Error(`Failed to update proration_history: ${updateProrationHistoryError.message}`);
+    }
   }
 
   return new Response(
@@ -408,7 +426,7 @@ async function applyProration(
 }
 
 async function getProrationHistory(
-  supabase: ReturnType<typeof createClient>,
+  corsHeaders: Record<string, string>, supabase: ReturnType<typeof createClient>,
   companyId: string
 ): Promise<Response> {
   const { data: history, error } = await supabase

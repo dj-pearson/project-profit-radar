@@ -11,11 +11,8 @@ import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
 import { validateRequest, createErrorResponse, sanitizeError } from "../_shared/validation.ts";
 import { encode as base64Encode } from "https://deno.land/std@0.190.0/encoding/base64.ts";
 import { checkRateLimit, getClientIP, rateLimitResponse, RATE_LIMITS } from "../_shared/rate-limiter.ts";
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
+import { getCorsHeaders } from '../_shared/secure-cors.ts';
+import { writeSecurityLog } from '../_shared/security-log.ts';
 
 // OAuth provider configurations
 const OAUTH_PROVIDERS: Record<
@@ -69,6 +66,7 @@ async function generatePKCE(): Promise<{ codeVerifier: string; codeChallenge: st
 }
 
 serve(async (req) => {
+  const corsHeaders = getCorsHeaders(req);
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
@@ -209,7 +207,7 @@ serve(async (req) => {
     const redirectUrl = `${authorizeUrl}?${authParams.toString()}`;
 
     // Log OAuth initiation
-    await supabaseClient.from("security_logs").insert({
+    await writeSecurityLog(supabaseClient, {
       event_type: "oauth_auth_initiated",
       ip_address: req.headers.get("cf-connecting-ip") || req.headers.get("x-forwarded-for"),
       user_agent: req.headers.get("user-agent"),

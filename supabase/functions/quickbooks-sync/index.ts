@@ -1,12 +1,9 @@
 // QuickBooks Sync Edge Function
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-import { initializeAuthContext, errorResponse, successResponse } from '../_shared/auth-helpers.ts';
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-  'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-}
+import { serve } from "https://deno.land/std@0.190.0/http/server.ts"
+import { initializeAuthContext, errorResponse } from '../_shared/auth-helpers.ts';
+import { getCorsHeaders } from '../_shared/secure-cors.ts';
+import { fetchQuickBooksData } from '../_shared/quickbooks-paging.ts';
+import { captureException } from '../_shared/observability.ts';
 
 interface QuickBooksAPIResponse {
   QueryResponse?: {
@@ -76,8 +73,12 @@ async function ensureValidToken(supabaseClient: any, integration: any): Promise<
     ? new Date(now.getTime() + (tokens.x_refresh_token_expires_in * 1000))
     : new Date(integration.refresh_token_expires_at) // Keep existing if not provided
 
-  // Update tokens in database
-  await supabaseClient
+  // Update tokens in database. Intuit rotates the refresh token on every
+  // exchange and invalidates the old one, so failing to persist these breaks the
+  // integration on the next run and the user has to reconnect by hand. The error
+  // was discarded, so this run carried on with the in-memory token and looked
+  // fine (US-300).
+  const { error: tokenError } = await supabaseClient
     .from('quickbooks_integrations')
     .update({
       access_token: tokens.access_token,
@@ -88,11 +89,18 @@ async function ensureValidToken(supabaseClient: any, integration: any): Promise<
     })
     .eq('id', integration.id)
 
+  if (tokenError) {
+    throw new Error(
+      `Refreshed QuickBooks tokens were not saved; the next sync would use an invalidated refresh token: ${tokenError.message}`,
+    )
+  }
+
   console.log('Token refreshed successfully')
   return tokens.access_token
 }
 
 serve(async (req) => {
+  const corsHeaders = getCorsHeaders(req);
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
   }
@@ -124,13 +132,18 @@ serve(async (req) => {
     }
 
     const startTime = Date.now()
-    let recordsProcessed = {
+    const recordsProcessed = {
       invoices: 0,
       customers: 0,
       items: 0,
       expenses: 0,
       payments: 0
     }
+    // What QuickBooks actually handed us, per entity, so a truncated import is
+    // visible in the log rather than looking like a small account (US-252).
+    const recordsFetched: Record<string, number> = {}
+    const truncatedEntities: string[] = []
+    let throttleRetries = 0
     let errorsCount = 0
     const errors: string[] = []
 
@@ -139,7 +152,10 @@ serve(async (req) => {
       const accessToken = await ensureValidToken(supabaseClient, integration)
 
       // Create sync log entry
-      const { data: syncLog } = await supabaseClient
+      // A missing sync log means the run has no record at all: syncLogId below
+      // is undefined and every later update silently matches nothing. The error
+      // was discarded (US-300).
+      const { data: syncLog, error: syncLogError } = await supabaseClient
         .from('quickbooks_sync_logs')
         .insert({
           company_id,
@@ -150,7 +166,13 @@ serve(async (req) => {
         .select()
         .single()
 
-      const syncLogId = syncLog?.id
+      if (syncLogError || !syncLog) {
+        throw new Error(
+          `Could not open a sync log, so this run would leave no record: ${syncLogError?.message ?? 'no row returned'}`,
+        )
+      }
+
+      const syncLogId = syncLog.id
 
       // Determine base URL based on environment
       const baseUrl = Deno.env.get('QUICKBOOKS_ENVIRONMENT') === 'production'
@@ -159,8 +181,11 @@ serve(async (req) => {
 
       // Sync Customers from QuickBooks to our system
       try {
-        const customers = await fetchQuickBooksData(baseUrl, integration.realm_id, accessToken, 'Customer')
-        for (const customer of customers) {
+        const fetched = await fetchQuickBooksData(baseUrl, integration.realm_id, accessToken, 'Customer')
+        recordsFetched.customers = fetched.rows.length
+        throttleRetries += fetched.throttleRetries
+        if (fetched.truncated) truncatedEntities.push('Customer')
+        for (const customer of fetched.rows) {
           await syncCustomer(supabaseClient, company_id, customer)
           recordsProcessed.customers++
         }
@@ -173,8 +198,11 @@ serve(async (req) => {
 
       // Sync Items from QuickBooks to our system
       try {
-        const items = await fetchQuickBooksData(baseUrl, integration.realm_id, accessToken, 'Item')
-        for (const item of items) {
+        const fetched = await fetchQuickBooksData(baseUrl, integration.realm_id, accessToken, 'Item')
+        recordsFetched.items = fetched.rows.length
+        throttleRetries += fetched.throttleRetries
+        if (fetched.truncated) truncatedEntities.push('Item')
+        for (const item of fetched.rows) {
           await syncItem(supabaseClient, company_id, item)
           recordsProcessed.items++
         }
@@ -187,8 +215,11 @@ serve(async (req) => {
 
       // Sync Expenses (Purchases) from QuickBooks to our system
       try {
-        const purchases = await fetchQuickBooksData(baseUrl, integration.realm_id, accessToken, 'Purchase')
-        for (const purchase of purchases) {
+        const fetched = await fetchQuickBooksData(baseUrl, integration.realm_id, accessToken, 'Purchase')
+        recordsFetched.expenses = fetched.rows.length
+        throttleRetries += fetched.throttleRetries
+        if (fetched.truncated) truncatedEntities.push('Purchase')
+        for (const purchase of fetched.rows) {
           await syncExpense(supabaseClient, company_id, purchase)
           recordsProcessed.expenses++
         }
@@ -201,8 +232,11 @@ serve(async (req) => {
 
       // Sync Payments from QuickBooks to our system
       try {
-        const payments = await fetchQuickBooksData(baseUrl, integration.realm_id, accessToken, 'Payment')
-        for (const payment of payments) {
+        const fetched = await fetchQuickBooksData(baseUrl, integration.realm_id, accessToken, 'Payment')
+        recordsFetched.payments = fetched.rows.length
+        throttleRetries += fetched.throttleRetries
+        if (fetched.truncated) truncatedEntities.push('Payment')
+        for (const payment of fetched.rows) {
           await syncPayment(supabaseClient, company_id, payment)
           recordsProcessed.payments++
         }
@@ -229,21 +263,35 @@ serve(async (req) => {
 
       const duration = Math.round((Date.now() - startTime) / 1000)
 
-      // Update sync log
-      await supabaseClient
+      // Update sync log. This row is the record of what the sync actually did;
+      // the error was discarded, so a run could finish with its log stuck on
+      // 'running' forever (US-300).
+      const { error: logCompleteError } = await supabaseClient
         .from('quickbooks_sync_logs')
         .update({
           status: errorsCount > 0 ? 'completed_with_errors' : 'completed',
           completed_at: new Date().toISOString(),
           records_processed: recordsProcessed,
+          // records_fetched vs records_processed is what makes a silently
+          // truncated import visible: equal counts mean everything QuickBooks
+          // returned was written, a gap means rows were dropped on our side.
+          records_fetched: recordsFetched,
+          truncated_entities: truncatedEntities.length > 0 ? truncatedEntities : null,
+          throttle_retries: throttleRetries,
           errors_count: errorsCount,
           duration_seconds: duration,
           error_details: errors.length > 0 ? errors : null
         })
         .eq('id', syncLogId)
 
-      // Update integration status
-      await supabaseClient
+      if (logCompleteError) {
+        console.error('[quickbooks-sync] sync log not closed:', logCompleteError.message)
+      }
+
+      // Update integration status. last_sync_at is what the UI shows and what
+      // the next incremental sync reads to pick its window, so a discarded error
+      // here made the integration look like it had never run (US-300).
+      const { error: statusError } = await supabaseClient
         .from('quickbooks_integrations')
         .update({
           last_sync_at: new Date().toISOString(),
@@ -251,6 +299,10 @@ serve(async (req) => {
           last_error_message: errors.length > 0 ? errors[0] : null
         })
         .eq('id', integration.id)
+
+      if (statusError) {
+        console.error('[quickbooks-sync] integration status not updated:', statusError.message)
+      }
 
       return new Response(
         JSON.stringify({ 
@@ -270,7 +322,7 @@ serve(async (req) => {
       
       // Update integration with error
       const syncErrorMessage = syncError instanceof Error ? syncError.message : String(syncError);
-      await supabaseClient
+      const { error: errorStatusError } = await supabaseClient
         .from('quickbooks_integrations')
         .update({
           last_sync_status: 'error',
@@ -278,12 +330,22 @@ serve(async (req) => {
         })
         .eq('id', integration.id)
 
+      // Recording the failure is the only way the user finds out the sync broke.
+      // Discarded before (US-300); logged rather than thrown, so the original
+      // error below is what surfaces.
+      if (errorStatusError) {
+        console.error('[quickbooks-sync] failure not recorded on the integration:', errorStatusError.message)
+      }
+
       throw syncError
     }
 
   } catch (error) {
     console.error('Error in quickbooks-sync:', error)
     const errorMessage = error instanceof Error ? error.message : String(error);
+    // A sync that stops working is invisible until someone notices missing
+    // data, which is exactly the failure US-252 was about (US-251).
+    await captureException(error, { fn: 'quickbooks-sync' });
     return new Response(
       JSON.stringify({ error: errorMessage }),
       {
@@ -293,27 +355,6 @@ serve(async (req) => {
     )
   }
 })
-
-async function fetchQuickBooksData(baseUrl: string, realmId: string, accessToken: string, entityType: string): Promise<any[]> {
-  const response = await fetch(
-    `${baseUrl}/v3/company/${realmId}/query?query=SELECT * FROM ${entityType}&minorversion=65`,
-    {
-      headers: {
-        'Authorization': `Bearer ${accessToken}`,
-        'Accept': 'application/json'
-      }
-    }
-  )
-
-  if (!response.ok) {
-    const errorText = await response.text()
-    console.error(`QuickBooks API error for ${entityType}:`, errorText)
-    throw new Error(`QuickBooks API error: ${response.status} - ${response.statusText}`)
-  }
-
-  const data: QuickBooksAPIResponse = await response.json()
-  return data.QueryResponse?.[entityType] || []
-}
 
 async function syncCustomer(supabaseClient: any, companyId: string, qbCustomer: any) {
   // Sync customer data to our system
@@ -328,9 +369,18 @@ async function syncCustomer(supabaseClient: any, companyId: string, qbCustomer: 
     last_synced_at: new Date().toISOString()
   }
 
-  await supabaseClient
+  // recordsProcessed is incremented by the caller for every row this is
+  // called with, so a discarded error here reported an import that wrote
+  // nothing - the silent truncation records_fetched vs records_processed
+  // exists to expose (US-300). Throwing lands in the caller's per-entity
+  // catch, which records the failure against that entity.
+  const { error } = await supabaseClient
     .from('quickbooks_customers')
     .upsert(customerData, { onConflict: 'qb_customer_id,company_id' })
+
+  if (error) {
+    throw new Error(`quickbooks_customers upsert failed: ${error.message}`)
+  }
 }
 
 async function syncItem(supabaseClient: any, companyId: string, qbItem: any) {
@@ -346,9 +396,13 @@ async function syncItem(supabaseClient: any, companyId: string, qbItem: any) {
     last_synced_at: new Date().toISOString()
   }
 
-  await supabaseClient
+  const { error } = await supabaseClient
     .from('quickbooks_items')
     .upsert(itemData, { onConflict: 'qb_item_id,company_id' })
+
+  if (error) {
+    throw new Error(`quickbooks_items upsert failed: ${error.message}`)
+  }
 }
 
 async function getLocalInvoicesForSync(supabaseClient: any, companyId: string, syncType: string) {
@@ -387,9 +441,13 @@ async function syncExpense(supabaseClient: any, companyId: string, qbPurchase: a
     last_synced_at: new Date().toISOString()
   }
 
-  await supabaseClient
+  const { error } = await supabaseClient
     .from('quickbooks_expenses')
     .upsert(expenseData, { onConflict: 'qb_expense_id,company_id' })
+
+  if (error) {
+    throw new Error(`quickbooks_expenses upsert failed: ${error.message}`)
+  }
 }
 
 async function syncPayment(supabaseClient: any, companyId: string, qbPayment: any) {
@@ -408,9 +466,13 @@ async function syncPayment(supabaseClient: any, companyId: string, qbPayment: an
     last_synced_at: new Date().toISOString()
   }
 
-  await supabaseClient
+  const { error } = await supabaseClient
     .from('quickbooks_payments')
     .upsert(paymentData, { onConflict: 'qb_payment_id,company_id' })
+
+  if (error) {
+    throw new Error(`quickbooks_payments upsert failed: ${error.message}`)
+  }
 }
 
 /**
@@ -497,14 +559,17 @@ async function syncInvoiceToQuickBooks(supabaseClient: any, baseUrl: string, rea
 
   // Update local invoice with QuickBooks ID
   if (qbInvoice?.Id) {
-    await supabaseClient
+    const { error: updateInvoicesError } = await supabaseClient
       .from('invoices')
       .update({
         qb_invoice_id: qbInvoice.Id,
         qb_sync_token: qbInvoice.SyncToken,
         last_synced_to_qb: new Date().toISOString()
       })
-      .eq('id', invoice.id)
+      .eq('id', invoice.id);
+    if (updateInvoicesError) {
+      console.error(`[invoices] update failed`, updateInvoicesError);
+    }
   }
 
   return qbInvoice

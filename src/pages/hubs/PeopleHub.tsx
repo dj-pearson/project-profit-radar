@@ -188,21 +188,4 @@ const PeopleHub = () => {
   );
 };
 
-// Helper function to get descriptions for items
-const getItemDescription = (title: string): string => {
-  const descriptions: { [key: string]: string } = {
-    "Team Management": "Manage team members and roles",
-    "Crew Scheduling": "Schedule crews and assign work",
-    "Time Tracking": "Track work hours and attendance",
-    "CRM Dashboard": "Customer relationship overview",
-    Leads: "Manage sales leads and prospects",
-    Contacts: "Manage customer and vendor contacts",
-    Opportunities: "Track sales opportunities and pipeline",
-    "Email Marketing": "Send marketing emails and campaigns",
-    Support: "Customer support and help desk",
-  };
-
-  return descriptions[title] || "Access this feature";
-};
-
 export default PeopleHub;

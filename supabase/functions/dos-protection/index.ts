@@ -258,8 +258,11 @@ async function blockIP(supabase: any, ipAddress: string, reason: string) {
 
   if (error) throw error;
 
-  // Log the blocking action
-  await supabase
+  // Log the blocking action. The block itself is checked above, so this is the
+  // security audit trail rather than the action - and its error was discarded,
+  // supabase-js returns it rather than throwing, so an IP could be blocked with
+  // no record of who blocked it or why (US-300).
+  const { error: blockLogError } = await supabase
     .from('security_events')
     .insert({
       event_type: 'ip_blocked',
@@ -267,6 +270,13 @@ async function blockIP(supabase: any, ipAddress: string, reason: string) {
       description: `IP ${ipAddress} blocked: ${reason}`,
       metadata: { ip_address: ipAddress, reason },
     });
+
+  if (blockLogError) {
+    console.error(
+      `[DOS-PROTECTION] IP ${ipAddress} was BLOCKED but the event was not recorded:`,
+      blockLogError.message,
+    );
+  }
 
   return new Response(
     JSON.stringify({ success: true }),
@@ -286,8 +296,9 @@ async function unblockIP(supabase: any, ipAddress: string) {
 
   if (error) throw error;
 
-  // Log the unblocking action
-  await supabase
+  // Log the unblocking action. Same as blockIP: the audit trail for a security
+  // decision, with its error discarded (US-300).
+  const { error: unblockLogError } = await supabase
     .from('security_events')
     .insert({
       event_type: 'ip_unblocked',
@@ -295,6 +306,13 @@ async function unblockIP(supabase: any, ipAddress: string) {
       description: `IP ${ipAddress} unblocked`,
       metadata: { ip_address: ipAddress },
     });
+
+  if (unblockLogError) {
+    console.error(
+      `[DOS-PROTECTION] IP ${ipAddress} was UNBLOCKED but the event was not recorded:`,
+      unblockLogError.message,
+    );
+  }
 
   return new Response(
     JSON.stringify({ success: true }),

@@ -1,12 +1,9 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.3";
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
+import { getCorsHeaders } from '../_shared/secure-cors.ts';
 
 serve(async (req) => {
+  const corsHeaders = getCorsHeaders(req);
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
 
   try {
@@ -187,7 +184,11 @@ serve(async (req) => {
       }
     }
 
-        await supabaseClient
+    // next_sync_at is the property's own scheduling stamp. Its error was
+    // discarded, so a lost write left it in the past and the property was
+    // re-synced on every pass, burning Search Console API quota on data
+    // already held (US-300).
+    const { error: syncStampError } = await supabaseClient
       .from('gsc_properties')
       .update({
         last_sync_at: new Date().toISOString(),
@@ -198,6 +199,12 @@ serve(async (req) => {
         })(),
       })
       .eq('id', property_id);
+
+    if (syncStampError) {
+      throw new Error(
+        `Property ${property_id} was synced but next_sync_at was NOT advanced, so it stays due and would re-sync every pass: ${syncStampError.message}`,
+      );
+    }
 
     return new Response(JSON.stringify({
       success: true,

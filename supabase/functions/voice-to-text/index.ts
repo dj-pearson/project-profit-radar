@@ -1,10 +1,9 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts"
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-}
+import { serve } from "https://deno.land/std@0.190.0/http/server.ts"
+import { getCorsHeaders } from '../_shared/secure-cors.ts';
+import { enforceRateLimit, RATE_LIMITS, getClientIP } from '../_shared/rate-limiter.ts';
+import { createServiceClient } from '../_shared/service-client.ts';
+import { initializeAuthContext } from '../_shared/auth-helpers.ts';
 
 // Process base64 in chunks to prevent memory issues
 function processBase64Chunks(base64String: string, chunkSize = 32768) {
@@ -37,12 +36,27 @@ function processBase64Chunks(base64String: string, chunkSize = 32768) {
 }
 
 serve(async (req) => {
+  const corsHeaders = getCorsHeaders(req);
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
   }
 
   try {
+    // Rate limit per caller (US-243). Whisper is billed per request, so an
+    // unbounded loop here is a spend incident. verify_jwt is on, so a valid JWT
+    // is present; resolve the user from it rather than trusting anything in the
+    // body, and fall back to IP for any service-key caller that has no user.
+    const rlAuth = await initializeAuthContext(req);
+    const limited = await enforceRateLimit(
+      createServiceClient(),
+      rlAuth?.user?.id ?? `ip:${getClientIP(req)}`,
+      'voice-to-text',
+      RATE_LIMITS.AI,
+      corsHeaders,
+    );
+    if (limited) return limited;
+
     console.log('Voice-to-text request received');
     
     const { audio } = await req.json()

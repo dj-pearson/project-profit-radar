@@ -48,6 +48,7 @@ export const OSHACompliance = () => {
   const [inspections, setInspections] = useState<SafetyInspection[]>([]);
   const [trainings, setTrainings] = useState<SafetyTraining[]>([]);
   const [incidents, setIncidents] = useState<IncidentReport[]>([]);
+  const [loadErrors, setLoadErrors] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -60,29 +61,47 @@ export const OSHACompliance = () => {
     try {
       setLoading(true);
 
-      const { data: inspectionsData } = await supabase
+      setLoadErrors([]);
+
+      const { data: inspectionsData, error: inspectionsError } = await supabase
         .from('safety_inspections' as any)
         .select('*')
         .eq('company_id', userProfile.company_id)
         .order('inspection_date', { ascending: false });
 
-      const { data: trainingsData } = await supabase
+      const { data: trainingsData, error: trainingsError } = await supabase
         .from('safety_trainings' as any)
         .select('*')
         .eq('company_id', userProfile.company_id)
         .order('completion_date', { ascending: false });
 
-      const { data: incidentsData } = await supabase
+      const { data: incidentsData, error: incidentsError } = await supabase
         .from('incident_reports' as any)
         .select('*')
         .eq('company_id', userProfile.company_id)
         .order('incident_date', { ascending: false });
+
+      // These errors were dropped, and supabase-js returns them rather than
+      // throwing, so the catch below never saw them either. An OSHA screen that
+      // shows zero incidents because the query failed reads as a clean safety
+      // record. safety_trainings and incident_reports are not created by any
+      // migration (US-311), so this is the expected outcome wherever they were
+      // never made by hand.
+      const failures: string[] = [];
+      if (inspectionsError) failures.push(`Inspections: ${inspectionsError.message}`);
+      if (trainingsError) failures.push(`Training records: ${trainingsError.message}`);
+      if (incidentsError) failures.push(`Incident reports: ${incidentsError.message}`);
+      if (failures.length > 0) {
+        console.error('Error loading compliance data:', failures.join('; '));
+      }
+      setLoadErrors(failures);
 
       setInspections(((inspectionsData as unknown) as SafetyInspection[]) || []);
       setTrainings(((trainingsData as unknown) as SafetyTraining[]) || []);
       setIncidents(((incidentsData as unknown) as IncidentReport[]) || []);
     } catch (error) {
       console.error('Error loading compliance data:', error);
+      setLoadErrors([error instanceof Error ? error.message : 'Could not load compliance data.']);
       setInspections([]);
       setTrainings([]);
       setIncidents([]);
@@ -101,6 +120,22 @@ export const OSHACompliance = () => {
 
     return (
       <div className="space-y-6">
+        {loadErrors.length > 0 && (
+          <Alert variant="destructive">
+            <AlertTriangle className="h-4 w-4" />
+            <AlertDescription>
+              <p className="font-medium">
+                Compliance data is incomplete. The counts below are not a safety record.
+              </p>
+              <ul className="mt-2 list-disc pl-5 text-sm">
+                {loadErrors.map((message) => (
+                  <li key={message}>{message}</li>
+                ))}
+              </ul>
+            </AlertDescription>
+          </Alert>
+        )}
+
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <Card>
             <CardContent className="p-4">
