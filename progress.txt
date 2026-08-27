@@ -2458,3 +2458,68 @@ Note it is deliberately strict about spreads: `...(cond && { k: v })` trips it
 even though that idiom is safe. Use pickAllowed() from _shared/writable-columns.ts
 rather than teaching the guard to recognise conditional spreads — one obvious
 way to write it is worth more than a cleverer checker.
+
+================================================================================
+2026-08-27 — US-237 follow-up: the scoped tables had no user-JWT write path
+================================================================================
+
+### First, a correction to yesterday's US-297 write-up
+I recorded that usage_metrics' `FOR ALL USING (true)` policy meant RLS was not
+scoping track-usage's write, making it a live cross-tenant hole. That was too
+strong. US-237's migration 20260712120000 scopes exactly that policy to
+service_role. Whether the permissive version is still live in production is not
+knowable from this repo — there is no DB access here and US-248 (an auditable
+migration-to-prod pipeline) is still open. The cross-tenant write was possible
+only if that migration has not been applied. The handler fix stands either way,
+since it should never have trusted the body.
+
+Chasing that down turned up something worse.
+
+### The finding: the "verified safe" analysis only checked the frontend
+20260712120000's header says the 12 tables it scopes are safe because the
+frontend either does not touch them or only reads them through a separate
+company-scoped SELECT policy. True of the frontend. Nobody checked the edge
+functions that build their client from `initializeAuthContext()` — which is a
+user-JWT client, not a service-role one.
+
+Three of them write scoped tables that way:
+
+  track-usage         usage_metrics               insert + update
+  usage-billing       usage_metrics               insert + update
+  workflow-execution  workflow_step_executions    insert x2
+
+Those tables end up with a company-scoped SELECT policy and nothing else, so
+after the migration a user-JWT client has **no write policy at all**.
+
+And every one of those six call sites discarded the error — `await supabase
+.from(...).update(...)` with nothing destructured, or `const { data } = ...`
+without `error`. Supabase returns errors rather than throwing, so the handler
+carries on and returns `{ success: true }`. The failure mode is silent: usage
+simply stops being billed, workflow step history simply stops being recorded.
+
+So either 20260712120000 is not applied in production, or those three have been
+quietly failing since it was. Nothing in the repo distinguishes the two.
+
+### The fix
+All three authorise the caller in the handler — company_id from the caller's own
+profile, and workflow-execution fetches the workflow RLS-scoped first so a
+cross-company id never reaches the write — then write with
+`createServiceClient()` from _shared/service-client.ts. The helper carries the
+rule in its doc comment: service role means RLS is off for that query, so the
+handler owns authorisation. The discarded errors are surfaced.
+
+### The guard
+scripts/check-rls-write-paths.mjs fails when any of the 12 scoped tables is
+written with anything but a service-role client. In pre-commit and CI.
+
+**If more tables get scoped later, add them to SERVICE_ROLE_ONLY in that script
+and run it before shipping the migration.** That check is precisely what the
+original "verified safe" pass was missing, and it is cheap.
+
+### The general lesson
+"The frontend doesn't write this table" is not the same as "nothing with a user
+JWT writes this table." Edge functions using initializeAuthContext() are user-JWT
+clients and are subject to exactly the same policies as the browser. Worth
+remembering for the 4 tables US-237 deferred (workflow_executions,
+workflow_analytics, calendar_events, webhook_events) — check the edge functions
+before scoping those too.
