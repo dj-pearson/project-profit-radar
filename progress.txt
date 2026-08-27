@@ -4593,3 +4593,36 @@ All four now call `initializeAuthContext`. Baseline 16 → 12.
 Of the twelve left, `blog-ai-automation`, `seo-backend-integration` and
 `trigger-expo-build` have no caller anywhere in the repo, so internal-only is
 probably right for them.
+
+### Finishing the triage, and getting it wrong first
+The guard baseline is empty now: every edge function verifies its caller, inside
+its handler. Split by what actually invokes each — five browser-invoked got
+`initializeAuthContext`, two invoked by another edge function with a service-role
+client got `requireInternalCaller` (both verified to pass that bearer before I
+required it), five with no caller anywhere got `requireInternalCaller`.
+
+**I added two of them in the wrong place.** Applying the checks by script, the
+ones for `social-content-generator` and `blog_social_webhook` landed inside
+helper functions — `getRecentFormats`, `getInstagramMediaFromStorage` — rather
+than the handlers. They compiled, because `req` was in scope through the
+closure. And the guard, which matched on name only, reported both as covered.
+
+A check that runs in the wrong function is worse than none, because it reads as
+done. I caught it by verifying separately that each guard call sits after the
+handler declaration — not by trusting the guard I had just written.
+
+So the guard enforces that itself now, on the AST: locate the handler passed to
+`serve()` / `Deno.serve()` / assigned to a handler variable, and require the
+guard call lexically inside it.
+
+That immediately flagged five more. Four were my own detector missing
+`Deno.serve` — a `PropertyAccessExpression`, not a bare identifier. The fifth,
+`api-management`, was genuine delegation: every route function validates a
+hashed API key through `validateApiRequest`, and only `createApiKey` uses
+`auth.getUser`. Both are real caller verification; my pattern just didn't know
+the first one.
+
+The delegation exemption is a `DELEGATES` map that names the delegate and
+requires it to contain the check — deliberately **not** a blanket "one level of
+delegation is fine" rule, because that rule would have accepted the two real
+misplacements this whole check exists for.

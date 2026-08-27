@@ -1,5 +1,6 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { getCorsHeaders } from '../_shared/secure-cors.ts';
+import { requireInternalCaller } from '../_shared/internal-only.ts';
 
 const logStep = (step: string, data?: any) => {
   console.log(`[Social Post Scheduler] ${step}:`, data || "");
@@ -12,6 +13,12 @@ export default async (req: Request) => {
   }
 
   try {
+    // Internal only: no caller anywhere in the repo.
+    // verify_jwt = true is a signature check the publishable anon key
+    // satisfies, not authentication (US-241).
+    const denied = requireInternalCaller(req);
+    if (denied) return denied;
+
     logStep("Social post scheduler started");
 
     // Parse request body for manual trigger parameters

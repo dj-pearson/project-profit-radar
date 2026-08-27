@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.3";
 import { getCorsHeaders } from '../_shared/secure-cors.ts';
+import { requireInternalCaller } from '../_shared/internal-only.ts';
 
 interface SocialPlatformContent {
   platform: string;
@@ -136,6 +137,12 @@ serve(async (req) => {
   }
 
   try {
+    // Internal only: invoked by enhanced-blog-ai-fixed with a service-role
+    // client. verify_jwt = true is a signature check the publishable anon key
+    // satisfies, not authentication (US-241).
+    const denied = requireInternalCaller(req);
+    if (denied) return denied;
+
     logStep("Blog social webhook received");
 
     const supabaseClient = createClient(

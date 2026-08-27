@@ -1,12 +1,19 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.3";
 import { getCorsHeaders } from '../_shared/secure-cors.ts';
+import { requireInternalCaller } from '../_shared/internal-only.ts';
 
 serve(async (req) => {
   const corsHeaders = getCorsHeaders(req);
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
 
   try {
+    // Internal only: invoked by run-scheduled-audit with a service-role client.
+    // verify_jwt = true is a signature check the publishable anon key
+    // satisfies, not authentication (US-241).
+    const denied = requireInternalCaller(req);
+    if (denied) return denied;
+
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',

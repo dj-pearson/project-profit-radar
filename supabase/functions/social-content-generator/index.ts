@@ -1,6 +1,7 @@
 // Self-hosted Supabase: Export handler instead of serve()
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { getCorsHeaders } from '../_shared/secure-cors.ts';
+import { initializeAuthContext, errorResponse } from '../_shared/auth-helpers.ts';
 
 const logStep = (step: string, data?: any) => {
   console.log(`[Social Content Generator] ${step}:`, data || "");
@@ -1078,6 +1079,15 @@ export default async (req: Request) => {
   }
 
   try {
+    // Authenticate the caller: invoked from
+    // src/components/social-media/PostQueueActions.tsx. verify_jwt = true is a
+    // signature check the publishable anon key satisfies, not authentication
+    // (US-241).
+    const authContext = await initializeAuthContext(req);
+    if (!authContext) {
+      return errorResponse('Unauthorized', 401, req);
+    }
+
     logStep("Social content generator received request");
 
     const supabaseClient = createClient(

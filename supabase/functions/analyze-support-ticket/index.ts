@@ -5,6 +5,7 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { checkRateLimit, getClientIP, rateLimitResponse, RATE_LIMITS } from "../_shared/rate-limiter.ts";
 import { getCorsHeaders } from '../_shared/secure-cors.ts';
+import { requireInternalCaller } from '../_shared/internal-only.ts';
 
 // Categories for ticket classification
 const TICKET_CATEGORIES = [
@@ -42,6 +43,12 @@ serve(async (req) => {
   }
 
   try {
+    // Internal only: no caller anywhere in the repo.
+    // verify_jwt = true is a signature check the publishable anon key
+    // satisfies, not authentication (US-241).
+    const denied = requireInternalCaller(req);
+    if (denied) return denied;
+
     const { ticketId } = await req.json();
 
     if (!ticketId) {

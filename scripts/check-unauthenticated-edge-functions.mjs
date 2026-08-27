@@ -30,6 +30,7 @@
  * requireSystemOrAdmin / requireInternalCaller, an explicit auth.getUser(token),
  * or a webhook-signature check.
  */
+import ts from 'typescript';
 import { readFileSync, readdirSync, existsSync } from 'node:fs';
 import { join, dirname, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -38,7 +39,7 @@ const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const FN = join(root, 'supabase', 'functions');
 
 const VERIFIES_CALLER =
-  /initializeAuthContext|withAuth|requireSystemOrAdmin|requireInternalCaller|requireAuth|auth\s*\.\s*getUser\s*\(|constructEvent|verifyStripeSignature|validateWebhookSignature|verifyWebhookSignature/;
+  /initializeAuthContext|withAuth|requireSystemOrAdmin|requireInternalCaller|requireAuth|auth\s*\.\s*getUser\s*\(|constructEvent|verifyStripeSignature|validateWebhookSignature|verifyWebhookSignature|validateApiRequest|validateApiKey/;
 
 /**
  * Functions that are anonymous BY DESIGN - a visitor with no account has to be
@@ -61,21 +62,108 @@ const PUBLIC_BY_DESIGN = new Set([
  * decision: public by design, internal-only, or user-authenticated. This list
  * must only ever shrink.
  */
-const BASELINE = new Set([
-  'analyze-support-ticket', 'blog-ai-automation', 'blog_social_webhook',
-  'create-missing-content', 'enhanced-blog-ai-simple',
-  'send-seo-notification',
-  'seo-backend-integration', 'seo-file-generator',
-  'social-content-generator', 'social-post-scheduler', 'social-webhook-deployer',
-  'trigger-expo-build',
+/**
+ * Handlers that verify the caller inside a function they delegate to, rather
+ * than in the handler body. Named explicitly, and the named function must
+ * actually contain the check - a blanket "one level of delegation is fine" rule
+ * would have accepted the two real misplacements this check was written for
+ * (a guard sitting in social-content-generator's getRecentFormats, which the
+ * handler reaches only conditionally and deep in generation logic).
+ */
+const DELEGATES = new Map([
+  // Every route function validates the caller's hashed API key through
+  // validateApiRequest (createApiKey uses auth.getUser instead, since it issues
+  // keys rather than consuming one). The dispatch handler itself does no
+  // checking, which is correct for this shape.
+  ['api-management', 'handleProjectsApi'],
 ]);
 
+const BASELINE = new Set([
+  // Empty: every edge function now verifies its caller, inside its handler.
+  // Adding a name here should be a deliberate, argued exception.
+]);
+
+/**
+ * A guard call has to be IN the request handler, not merely somewhere in the
+ * file. Adding these by script, I put two of them inside helper functions
+ * (social-content-generator's getRecentFormats, blog_social_webhook's
+ * getInstagramMediaFromStorage) - they compiled, because `req` was in scope
+ * through the closure, and a name-only scan reported both as covered. A check
+ * that runs in the wrong function is worse than none, because it reads as done.
+ *
+ * So: find the handler passed to serve() / assigned to `handler` / default
+ * exported, and require the guard call to be lexically inside it.
+ */
+function verifiesCallerInHandler(text, file) {
+  if (!VERIFIES_CALLER.test(text)) return false;
+  const sf = ts.createSourceFile(file, text, ts.ScriptTarget.ES2022, true, ts.ScriptKind.TS);
+
+  const handlers = [];
+  const findHandlers = (n) => {
+    // serve(async (req) => { ... })
+    const isServe = ts.isCallExpression(n) && (
+      (ts.isIdentifier(n.expression) && n.expression.text === 'serve') ||
+      (ts.isPropertyAccessExpression(n.expression) && n.expression.name.text === 'serve')
+    );
+    if (isServe) {
+      const arg = n.arguments[0];
+      if (arg && (ts.isArrowFunction(arg) || ts.isFunctionExpression(arg))) handlers.push(arg);
+      else if (arg && ts.isIdentifier(arg)) handlers.push({ __name: arg.text });
+    }
+    // const handler = async (req) => { ... }   /   export default async (req) => {}
+    if (ts.isVariableDeclaration(n) && n.initializer && ts.isIdentifier(n.name)
+        && (ts.isArrowFunction(n.initializer) || ts.isFunctionExpression(n.initializer))) {
+      handlers.push({ __named: n.name.text, node: n.initializer });
+    }
+    if (ts.isExportAssignment(n) && n.expression
+        && (ts.isArrowFunction(n.expression) || ts.isFunctionExpression(n.expression))) {
+      handlers.push(n.expression);
+    }
+    n.forEachChild(findHandlers);
+  };
+  sf.forEachChild(findHandlers);
+
+  // Resolve `serve(handlerName)` to the declaration of that name.
+  const named = new Map(handlers.filter((h) => h.__named).map((h) => [h.__named, h.node]));
+  const nodes = [];
+  for (const h of handlers) {
+    if (h.__name) { if (named.has(h.__name)) nodes.push(named.get(h.__name)); }
+    else if (h.__named) { /* only counted when serve() names it, or nothing does */ }
+    else nodes.push(h);
+  }
+  if (nodes.length === 0) nodes.push(...named.values());
+  if (nodes.length === 0) return VERIFIES_CALLER.test(text); // shape we do not model
+
+  if (nodes.some((fn) => VERIFIES_CALLER.test(fn.getText(sf)))) return true;
+
+  // Delegation, only where it is declared and only to the named function.
+  const fnName = file.split('/').slice(-2)[0];
+  const delegate = DELEGATES.get(fnName);
+  if (!delegate) return false;
+  if (!nodes.some((fn) => new RegExp(`\\b${delegate}\\s*\\(`).test(fn.getText(sf)))) return false;
+
+  let ok = false;
+  const findDelegate = (n) => {
+    if (ok) return;
+    const isDecl =
+      (ts.isFunctionDeclaration(n) && n.name?.text === delegate) ||
+      (ts.isVariableDeclaration(n) && ts.isIdentifier(n.name) && n.name.text === delegate);
+    if (isDecl && VERIFIES_CALLER.test(n.getText(sf))) ok = true;
+    n.forEachChild(findDelegate);
+  };
+  sf.forEachChild(findDelegate);
+  return ok;
+}
+
 const unverified = [];
+const misplaced = [];
 for (const d of readdirSync(FN, { withFileTypes: true })) {
   if (!d.isDirectory() || d.name === '_shared') continue;
   const p = join(FN, d.name, 'index.ts');
   if (!existsSync(p)) continue;
-  if (VERIFIES_CALLER.test(readFileSync(p, 'utf8'))) continue;
+  const text = readFileSync(p, 'utf8');
+  if (verifiesCallerInHandler(text, p)) continue;
+  if (VERIFIES_CALLER.test(text)) misplaced.push(d.name);
   if (PUBLIC_BY_DESIGN.has(d.name)) continue;
   unverified.push(d.name);
 }
@@ -87,6 +175,11 @@ console.log('Unauthenticated edge-function guard (US-241)');
 console.log(`  verify no caller:        ${unverified.length}`);
 console.log(`  public by design:        ${PUBLIC_BY_DESIGN.size}`);
 console.log(`  grandfathered:           ${BASELINE.size}`);
+if (misplaced.length) {
+  console.error('\n\u2716 Guard call present but NOT inside the request handler:');
+  for (const m of misplaced) console.error(`    ${m}`);
+  console.error('  A check that runs in the wrong function reads as done and is not.');
+}
 for (const f of unverified.filter((x) => BASELINE.has(x))) console.log(`    ${f}`);
 
 if (fixed.length) {

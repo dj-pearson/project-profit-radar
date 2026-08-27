@@ -3,6 +3,7 @@ import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.3";
 import { getCorsHeaders } from '../_shared/secure-cors.ts';
+import { requireInternalCaller } from '../_shared/internal-only.ts';
 
 const logStep = (step: string, details?: any) => {
   console.log(`[BLOG-AI-AUTOMATION] ${step}${details ? ` - ${JSON.stringify(details)}` : ''}`);
@@ -25,6 +26,12 @@ serve(async (req) => {
   }
 
   try {
+    // Internal only: no caller anywhere in the repo.
+    // verify_jwt = true is a signature check the publishable anon key
+    // satisfies, not authentication (US-241).
+    const denied = requireInternalCaller(req);
+    if (denied) return denied;
+
     logStep("Blog AI Automation Function started", { method: req.method });
 
     // Create Supabase client with service role key
