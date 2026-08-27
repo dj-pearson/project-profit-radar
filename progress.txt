@@ -4339,3 +4339,45 @@ PEM blocks, and every other blob over 2 MB is marketing video.
 
 AC1-AC4 still need Dj: force-push on protected branches and credential rotation
 are not mine to do.
+
+## US-263 — db:types could destroy the file it was regenerating
+
+The script was:
+
+    supabase gen types typescript --project-id brikly > src/integrations/supabase/types.ts
+
+Shell redirection truncates the target **before** the command runs. Any failure
+— no network, expired token, wrong project id, CLI not installed — left a
+41,282-line types file at zero bytes and the app uncompilable. The failure mode
+was strictly worse than not running it.
+
+`scripts/gen-supabase-types.mjs` generates to a temp file, checks it, and only
+then moves it into place. The checks matter because the CLI can exit 0 having
+printed an auth error or an empty schema, and either replacing 41k lines looks
+exactly like success until the build falls over. Verified three failure paths
+leave `types.ts` byte-identical: CLI absent, CLI exiting 0 with an auth error,
+CLI exiting 0 with a two-table schema.
+
+### AC4, measured
+`npx tsc --noEmit -p tsconfig.app.json`: **1842** errors total, against the 1860
+baseline. TS2339 is **341**, not the 396 this story recorded — that gap is
+US-212 work already landed, not drift resolving itself.
+
+    src/components  133
+    src/hooks        84
+    src/services     64
+    src/pages        55
+    src/lib           5
+
+Across 57 files. 42 of them contain a `from(…)` or `.rpc(…)`; 15 do not. Those
+42 hold **250** of the 341. The other **91** are in files that never touch
+Supabase and so cannot be schema drift — they belong to US-212, not here.
+
+90 of the 341 name `never`, `SelectQueryError`, `GenericStringError` or
+`ParserError` as the type the property is missing from. That is the signature of
+a query whose generated row type collapsed to `never`, which is what stale types
+produce, so it is the highest-confidence subset.
+
+So: ~250 plausibly schema-drift-driven, ~90 near-certain, ≥91 definitely not.
+The spread between 250 and 90 is the honest uncertainty. Re-run this exact
+breakdown after AC2 regenerates the types and see how many actually clear.
