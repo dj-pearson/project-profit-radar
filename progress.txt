@@ -2017,3 +2017,78 @@ Right now nobody can run the suite locally, which is also why the 13 failures
 have gone untracked for so long.
 
 prd.json: US-212 stays passes:false. 1906 to go.
+
+================================================================================
+2026-08-27 — US-212 TS strict-mode burn-down, batches 4 and 5
+================================================================================
+
+Container was fresh, so the tooling had to be rebuilt first. Two things that
+cost time and are worth writing down:
+
+- `npx --yes @typescript/native-preview tsgo -p tsconfig.tsgo.json` does NOT
+  work. The package's bin is already `tsgo`, so npx passes the literal string
+  "tsgo" as a source file and you get `TS5042: Option 'project' cannot be mixed
+  with source files`. Install once via npx, then call the binary directly at
+  ~/.npm/_npx/*/node_modules/@typescript/native-preview-linux-x64/lib/tsgo.
+- `npm run build` aborts in vite.config.ts unless VITE_SUPABASE_URL and
+  VITE_SUPABASE_PUBLISHABLE_KEY are set. Placeholders are enough for a
+  typecheck-grade build.
+- tsconfig.tsgo.json is gitignored, so recreate it each session (mirror of
+  tsconfig.app.json minus baseUrl).
+
+Session baseline: 1912 errors (notes said 1906; the 6 are from PRs merged since).
+
+### Batch 4 — 41 unused useState setters
+`const [x, setX] = useState(v)` where nothing in the file ever calls `setX`.
+The state was already a constant, so dropping the binding to `const [x] =
+useState(v)` is behaviour-identical. Mechanical, 26 files, zero judgement.
+
+1912 -> 1871. No file ended with a higher count.
+
+### Batch 5 — 18 unreferenced pure helpers
+getStatusColor / getStatusText / getTypeIcon / getScoreColor / formatBytes /
+formatDate / getPaymentTermsLabel / getResolutionIcon / getDeviceIcon /
+getItemDescription / calculateTotalCost / getWaiverStatusBadgeVariant and two
+intermediate consts (`percentage`, `boxWidth`). All pure, all unreferenced.
+
+Removal orphaned four lucide imports in ErrorLogs and one in
+BillingAutomationRules, plus two lead-in comments; all cleaned. 1871 -> 1854.
+
+Total this session: 1912 -> 1854 (-58). Zero files worse than baseline.
+eslint over every changed file: 0 errors. Production build: clean.
+
+### Deliberately NOT swept — filed as US-296
+The remaining TS6133s are not lint noise, they are evidence:
+
+- 46 useState *values* that are written but never read. Deleting them means
+  deleting the setter calls too, and several are `loading` flags set around a
+  fetch with no spinner rendered anywhere. That's a missing loading state, not
+  a dead variable.
+- ~18 async handlers defined but bound to no control — CommunicationHub's
+  sendMessage/createRFI/scheduleMeeting, SubcontractorPaymentWorkflows'
+  uploadLienWaiver/approveLienWaiver, SubcontractorCoordination's
+  verifyInsurance, QualityControlWorkflows' handleSaveInspection, SupportTickets'
+  assignTicket. Each is a feature shell whose UI was never wired. The unused
+  binding is the only thing left pointing at that.
+
+### Security finding while reading those files
+src/components/auth/MFASetupDialog.tsx and src/components/security/TwoFactorAuth.tsx
+are both unreferenced anywhere in src/, tests/ or Brikly-iOS/. Both compute an
+otpauth:// URL and then render the literal string "QR Code would appear here"
+instead of it. MFASetupDialog also mints ten "backup codes" client-side with
+Math.random() and presents them as recovery codes — codes that authenticate
+nothing. The live enrolment path is SecuritySettings -> SecurityDashboard ->
+security/MFASetup.tsx, which renders a real QR from the `qrcode` package, so no
+user hits the stubs today. They should still go: they are one import away from
+shipping.
+
+Both files are still on the branch. Deleting them was blocked by the sandbox
+classifier in this session — needs the user, or a session with delete
+permission. Tracked as US-296.
+
+### Next batch
+Before hand-fixing any more TS2345/TS2322/TS2339, do US-263 (regenerate the
+Supabase types). A large share of that 1367-error bulk is generated-type drift —
+"not assignable to type 'never'", "Property 'x' does not exist on type 'never'" —
+and regeneration should clear it in one shot. Hand-fixing them first is wasted
+work.
