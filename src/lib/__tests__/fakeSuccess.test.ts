@@ -39,7 +39,7 @@ describe('the guard itself had a false-positive class', () => {
     // Stated in the guard so nobody reads 43 -> 27 as 16 repairs.
     const guard = readFileSync(GUARD, 'utf8');
     expect(guard).toContain('not a stand-in for work');
-    expect(guard).toMatch(/^const BASELINE = 25;$/m);
+    expect(guard).toMatch(/^const BASELINE = 22;$/m);
   });
 
   it('still fires on a real stand-in', () => {
@@ -136,5 +136,80 @@ describe('EnvironmentalPermitting: fabricated regulatory records on a live route
     expect(src).toContain('Permit not updated');
     expect(src).toContain('Assessment not updated');
     expect(src).toContain('Monitoring data not updated');
+  });
+});
+
+describe('the guard had a second false-positive class: prose in a string', () => {
+  it('does not scan user-facing string literals for stand-in wording', () => {
+    // ProjectSchedule was flagged by its own correct error toast,
+    // 'That dependency would create a cycle.' - in a handler that goes on to
+    // await addDependency. A stand-in for work lives in code or in a comment
+    // where the work should be, never inside a quoted message.
+    const guard = readFileSync(GUARD, 'utf8');
+    expect(guard).toContain('function withoutStringLiterals');
+    expect(guard).toContain('PRETENDS.test(withoutStringLiterals(body))');
+  });
+
+  it('but still scans comments, which is where most real ones live', () => {
+    const guard = readFileSync(GUARD, 'utf8');
+    expect(guard).toContain('Comments are');
+    expect(guard).toContain('deliberately kept');
+  });
+});
+
+describe('QuickBooksRouting: four fake successes on the money path', () => {
+  const SRC = 'src/pages/QuickBooksRouting.tsx';
+
+  it('stops reporting a hardcoded routing count for work that never ran', () => {
+    // It waited three seconds on a setTimeout and announced "Successfully
+    // routed 12 transactions using 5 rules" - two invented numbers about the
+    // customer's accounting data.
+    const src = code(SRC);
+    expect(src).not.toContain('Successfully routed 12 transactions using 5 rules');
+    expect(src).not.toMatch(/setTimeout\(\(\) => \{[\s\S]{0,200}Auto-routing Complete/);
+    expect(src).toContain("action: 'process_batch'");
+    expect(src).toContain('results.auto_assigned_count');
+  });
+
+  it('creates the routing rule it says it created', () => {
+    const src = code(SRC);
+    expect(src).toMatch(/const \{ error: ruleError \} = await supabase/);
+    expect(src).toContain("from('quickbooks_routing_rules' as any)");
+    expect(src).toContain('Rule not created');
+  });
+
+  it('routes a transaction through the edge function that does the work', () => {
+    // quickbooks-route-transactions has had a manual_assign action all along;
+    // the page simply never called it.
+    const src = code(SRC);
+    const calls = src.match(/action: 'manual_assign'/g) ?? [];
+    expect(calls.length, 'single and bulk assignment both go through it').toBe(2);
+    expect(src).toContain('Transaction not routed');
+  });
+
+  it('and bulk assignment counts what it actually assigned', () => {
+    const src = code(SRC);
+    expect(src).toContain('Assigned ${assigned} transactions to project.');
+    expect(src).toContain('Assigned ${assigned} of ${selectedTransactions.length}');
+    expect(src).not.toContain('Assigned ${selectedTransactions.length} transactions to project.');
+  });
+});
+
+describe('InteractiveFloorPlan: safety pins that evaporate on refresh', () => {
+  const SRC = 'src/components/visual-project/InteractiveFloorPlan.tsx';
+
+  it('does not claim a floor plan was uploaded when a FileReader read it', () => {
+    // No floor plan bucket or table exists in supabase/migrations, and the
+    // component is live-routed via appRoutes -> VisualProjectManagementPage.
+    const src = code(SRC);
+    expect(src).not.toContain('Floor plan uploaded successfully');
+    expect(src).toContain('not uploaded or saved anywhere yet');
+  });
+
+  it('and does not claim a pinned issue was added to anything durable', () => {
+    const src = code(SRC);
+    expect(src).not.toContain('"Issue added to floor plan"');
+    expect(src).toContain('lost when you leave this screen');
+    expect(src).toContain('held in this browser session only');
   });
 });

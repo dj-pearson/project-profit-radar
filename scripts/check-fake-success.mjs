@@ -84,7 +84,7 @@ const PRETENDS =
  * ratchets: it may fall as screens are fixed and must never rise, and the
  * triage itself lives on US-309 where it can be read.
  */
-const BASELINE = 25;
+const BASELINE = 22;
 
 const files = [];
 const walk = (d) => {
@@ -95,6 +95,28 @@ const walk = (d) => {
   }
 };
 walk(SRC);
+
+/**
+ * A stand-in for work lives in code or in a comment where the work should be:
+ *   // Mock data for now - replace with actual Supabase query
+ *   // Implementation would create rule in database
+ *   setTimeout(() => resolve(), 3000)
+ *
+ * It does not live inside a user-facing string. Two false positives came from
+ * scanning those: the JSX attribute `placeholder="Search invoices..."`, and
+ * ProjectSchedule's entirely correct destructive toast
+ * `'That dependency would create a cycle.'` - a function that goes on to call
+ * addDependency and await a real write. Blanking string and template literals
+ * before the PRETENDS test removes that whole class, and costs nothing: no
+ * genuine stand-in has ever been found inside a quoted string. Comments are
+ * deliberately kept, because that is where most real ones are (US-309).
+ */
+function withoutStringLiterals(body) {
+  return body
+    .replace(/`(?:[^`\\]|\\.)*`/g, '``')
+    .replace(/'(?:[^'\\\n]|\\.)*'/g, "''")
+    .replace(/"(?:[^"\\\n]|\\.)*"/g, '""');
+}
 
 const flagged = new Set();
 for (const f of files) {
@@ -107,7 +129,7 @@ for (const f of files) {
       const body = n.body ? n.body.getText(sf) : '';
       const announces = ANNOUNCES_SUCCESS.test(body) && !NEGATED.test(body);
       if (body.length > MIN_BODY && announces
-          && !PERFORMS_WRITE.test(body) && PRETENDS.test(body)) {
+          && !PERFORMS_WRITE.test(body) && PRETENDS.test(withoutStringLiterals(body))) {
         flagged.add(relative(root, f).split('\\').join('/'));
       }
     }

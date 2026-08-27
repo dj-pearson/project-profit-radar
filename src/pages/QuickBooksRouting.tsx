@@ -59,6 +59,7 @@ interface UnroutedTransaction {
 
 const QuickBooksRouting = () => {
   const { user, userProfile, loading } = useAuth();
+  const [autoRoutingRunning, setAutoRoutingRunning] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
   
@@ -186,7 +187,34 @@ const QuickBooksRouting = () => {
       return;
     }
 
-    // Implementation would create rule in database
+    // Said "Routing rule created successfully!" and wrote nothing. The rule
+    // never existed, so nothing it was meant to match was ever routed - on a
+    // live route, against the customer's accounting data (US-309).
+    const { error: ruleError } = await supabase
+      .from('quickbooks_routing_rules' as any)
+      .insert({
+        company_id: userProfile!.company_id,
+        name: newRule.name,
+        description: newRule.description ?? null,
+        field_type: newRule.field_type,
+        field_name: newRule.field_name ?? newRule.field_type,
+        match_type: newRule.match_type,
+        match_value: newRule.match_value,
+        project_id: newRule.project_id ?? null,
+        priority: newRule.priority ?? 1,
+        is_active: newRule.is_active ?? true,
+        created_by: user?.id ?? null,
+      });
+
+    if (ruleError) {
+      toast({
+        title: "Rule not created",
+        description: ruleError.message,
+        variant: "destructive"
+      });
+      return;
+    }
+
     toast({
       title: "Success",
       description: "Routing rule created successfully!",
@@ -203,8 +231,28 @@ const QuickBooksRouting = () => {
   };
 
   const routeTransactionToProject = async (transactionId: string, projectId: string) => {
+    // Said the transaction had been routed and did nothing. The
+    // quickbooks-route-transactions edge function has done this work all along
+    // - its manual_assign action sets assigned_project_id, stamps assigned_by
+    // and assigned_at, and writes the routing history row (US-309).
     try {
-      // Implementation would update transaction with project assignment
+      const { data, error } = await supabase.functions.invoke('quickbooks-route-transactions', {
+        body: {
+          action: 'manual_assign',
+          company_id: userProfile?.company_id,
+          transaction_id: transactionId,
+          manual_assignment: {
+            project_id: projectId,
+            assigned_by: user?.id ?? null,
+          },
+        },
+      });
+
+      if (error) throw new Error(error.message);
+      if (data && data.success === false) {
+        throw new Error(data.error || 'Transaction was not routed.');
+      }
+
       toast({
         title: "Success",
         description: "Transaction routed to project successfully!",
@@ -212,35 +260,58 @@ const QuickBooksRouting = () => {
       loadTransactions(loadUnroutedTransactions);
     } catch (error) {
       toast({
-        title: "Error",
-        description: "Failed to route transaction.",
+        title: "Transaction not routed",
+        description: error instanceof Error ? error.message : "Failed to route transaction.",
         variant: "destructive"
       });
     }
   };
 
   const runAutoRouting = async () => {
+    // The worst of the four. It waited three seconds on a setTimeout and then
+    // announced "Successfully routed 12 transactions using 5 rules" - a
+    // hardcoded pair of numbers about the customer's own accounting data, for
+    // work that had not happened. The edge function's process_batch action does
+    // exactly this and returns the real counts (US-309).
+    setAutoRoutingRunning(true);
     try {
-      // Implementation would run all active routing rules against unrouted transactions
       toast({
         title: "Auto-routing Started",
         description: "Processing transactions with active routing rules...",
       });
-      
-      // Simulate processing
-      setTimeout(() => {
-        toast({
-          title: "Auto-routing Complete",
-          description: "Successfully routed 12 transactions using 5 rules.",
-        });
-        loadTransactions(loadUnroutedTransactions);
-      }, 3000);
+
+      const { data, error } = await supabase.functions.invoke('quickbooks-route-transactions', {
+        body: {
+          action: 'process_batch',
+          company_id: userProfile?.company_id,
+        },
+      });
+
+      if (error) throw new Error(error.message);
+      if (!data?.success) {
+        throw new Error(data?.error || 'Auto-routing did not complete.');
+      }
+
+      const results = data.results ?? {};
+      const assigned = results.auto_assigned_count ?? 0;
+      const review = results.review_required_count ?? 0;
+      const failed = results.error_count ?? 0;
+
+      toast({
+        title: "Auto-routing Complete",
+        description: `${assigned} auto-assigned, ${review} need review`
+          + (failed ? `, ${failed} failed` : '')
+          + ` (${results.processed_count ?? 0} processed).`,
+      });
+      loadTransactions(loadUnroutedTransactions);
     } catch (error) {
       toast({
-        title: "Error",
-        description: "Auto-routing failed.",
+        title: "Auto-routing failed",
+        description: error instanceof Error ? error.message : "Auto-routing failed.",
         variant: "destructive"
       });
+    } finally {
+      setAutoRoutingRunning(false);
     }
   };
 
@@ -254,19 +325,54 @@ const QuickBooksRouting = () => {
       return;
     }
 
+    // Reported the selection length as if every transaction had been assigned,
+    // having assigned none. Each is routed through the same manual_assign
+    // action, and the count reported is the number that actually landed
+    // (US-309).
     try {
-      // Implementation would batch assign selected transactions to project
-      toast({
-        title: "Success",
-        description: `Assigned ${selectedTransactions.length} transactions to project.`,
-      });
+      const failures: string[] = [];
+      let assigned = 0;
+
+      for (const transactionId of selectedTransactions) {
+        const { data, error } = await supabase.functions.invoke('quickbooks-route-transactions', {
+          body: {
+            action: 'manual_assign',
+            company_id: userProfile?.company_id,
+            transaction_id: transactionId,
+            manual_assignment: {
+              project_id: bulkProjectId,
+              assigned_by: user?.id ?? null,
+            },
+          },
+        });
+
+        if (error || (data && data.success === false)) {
+          failures.push(error?.message ?? data?.error ?? transactionId);
+        } else {
+          assigned++;
+        }
+      }
+
+      if (failures.length > 0) {
+        toast({
+          title: `Assigned ${assigned} of ${selectedTransactions.length}`,
+          description: `${failures.length} could not be assigned: ${failures[0]}`,
+          variant: "destructive"
+        });
+      } else {
+        toast({
+          title: "Success",
+          description: `Assigned ${assigned} transactions to project.`,
+        });
+      }
+
       setSelectedTransactions([]);
       setBulkProjectId('');
       loadTransactions(loadUnroutedTransactions);
     } catch (error) {
       toast({
-        title: "Error",
-        description: "Bulk assignment failed.",
+        title: "Bulk assignment failed",
+        description: error instanceof Error ? error.message : "Bulk assignment failed.",
         variant: "destructive"
       });
     }
@@ -308,9 +414,13 @@ const QuickBooksRouting = () => {
         {/* Auto-routing Button in Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <h1 className={mobileTextClasses.title}>QuickBooks Data Routing</h1>
-          <Button onClick={runAutoRouting} className={mobileButtonClasses.primary}>
+          <Button
+            onClick={runAutoRouting}
+            disabled={autoRoutingRunning}
+            className={mobileButtonClasses.primary}
+          >
             <Zap className="h-4 w-4 mr-2" />
-            Run Auto-routing
+            {autoRoutingRunning ? 'Routing...' : 'Run Auto-routing'}
           </Button>
         </div>
             

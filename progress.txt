@@ -6107,3 +6107,54 @@ their errors.
 12 cases in `src/lib/__tests__/fakeSuccess.test.ts`, five mutation-checked. Full
 suite: 130 files, 2924 passing, 2 skipped. TS budget 646 -> 645 (the PunchList
 interface additions fixed one), locked in.
+
+---
+
+## US-309, second pass: 25 -> 22
+
+Split again, and again worth reading before counting it.
+
+**A second false-positive class in my own guard.** `PRETENDS` was matching prose
+inside user-facing string literals. `ProjectSchedule` was flagged by its own
+entirely correct destructive toast - `'That dependency would create a cycle.'` -
+in a handler that goes straight on to `await addDependency`. The guard now blanks
+string and template literals before the `PRETENDS` test, and keeps comments,
+because comments are where the real stand-ins live: `// Mock data for now`,
+`// Implementation would create rule in database`.
+
+**QuickBooksRouting** was the money one: live-routed, four fake handlers, and the
+entire backend already existed. `runAutoRouting` waited three seconds on a
+`setTimeout` and then announced:
+
+> Successfully routed 12 transactions using 5 rules.
+
+Two invented numbers about the customer's own accounting data. The
+`quickbooks-route-transactions` edge function has had `process_batch` and
+`manual_assign` all along - it is the same function whose `supabase.raw` bug I
+fixed earlier in this session - and the page simply never called it. All four
+handlers call it now, and the counts reported are the ones it returns.
+
+**InteractiveFloorPlan** is live-routed through `appRoutes` →
+`VisualProjectManagementPage` and had no storage whatsoever. `handleFileUpload`
+ran a `FileReader` into a data URL and said "Floor plan uploaded successfully";
+`handleAddIssue` called `setIssues` and said "Issue added to floor plan". Safety
+issues pinned to a site plan, gone on refresh. There is no floor plan table or
+bucket in migrations, so the honest fix is the `MobileMaterialTracker` one - the
+messages and the card description now say plainly that this is a browser-session
+view and nothing is saved.
+
+### A guard blind spot worth knowing
+
+`InteractiveFloorPlan` was only ever flagged **by coincidence**: the token it
+matched was the string `'/placeholder.svg'`. The guard never detected its actual
+shape - a `setState` call plus a success toast, with no comment and no sleep.
+Same story for `ServiceCallForm`. That is the documented
+precision-over-completeness trade, and it now has two named examples rather than
+a general disclaimer.
+
+20 cases in `fakeSuccess.test.ts`, nine mutation-checked. Full suite: 130 files,
+2932 passing, 2 skipped. TS budget 645, unchanged.
+
+Of the 22 left, `SubcontractorDisclosureForm`, `EquipmentMaintenanceTracking`,
+`EnhancedJobCosting` and `WhiteLabelPortal` have zero usages in `src/` - they
+belong to US-314's disposition rather than to this story.
