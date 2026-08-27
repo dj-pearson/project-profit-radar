@@ -3044,3 +3044,62 @@ the time-entry list fails 3 assertions; restoring them passes all 15.
 ### Still open
 Testing edge functions properly needs Deno in CI. Not possible here — no Deno
 binary, and deno.land is blocked by the agent proxy.
+
+================================================================================
+2026-08-27 — US-213: the rulesets did not actually gate anything
+================================================================================
+
+### The gap
+All four drafted rulesets — main, develop, release, hotfix — cover deletion,
+non-fast-forward and PR-required. **None had a `required_status_checks` rule.**
+Applying them exactly as drafted would still have let a red CI run merge, which
+is the single thing US-213 exists to prevent.
+
+main, develop and release now require five checks, locked to GitHub Actions with
+`integration_id: 15368` so another app cannot post a same-named green check.
+
+### Security Smoke Tests is required, and that is the point
+All twelve `scripts/check-*` guards run in that one job — CORS scoping, edge
+input validation, privilege writes, RLS write paths, audit coverage, silent
+writes, migration hygiene. Every guard added across US-198/237/240/241/244/
+297/300 is decorative unless that job blocks a merge. AC1 lists four checks;
+this is a deliberate fifth.
+
+### Two stale assumptions, both checked rather than inherited
+1. **"Depends on US-212 for the typecheck gate."** Not any more. The typecheck
+   job runs `scripts/check-ts-error-budget.mjs` (US-258), a ratchet against
+   `.github/ts-error-baseline.txt`, not raw `tsc`. It fails on regressions, not
+   on the existing 1854 errors, so `Type Check` is safe to require today.
+2. **The README said status checks were intentionally omitted because CI only
+   ran on `main`.** It runs on `main` and `develop` now. But
+   `on.pull_request.branches` filters on the **BASE** branch, so a required
+   check on `release/*` would have blocked every merge into it forever. Added
+   `release/**` to the filter in the same change as the ruleset.
+
+That second one is the failure mode worth fearing: a required context that never
+runs sits in "Expected", which at a glance looks like "pending". Nobody
+diagnoses it quickly.
+
+### A guard for exactly that
+scripts/check-ruleset-consistency.mjs reads the rulesets and ci.yml and fails on
+either shape: a required context matching no job `name:`, or a protected branch
+absent from the pull_request filter. It catches the mistake from the files,
+before the ruleset is applied, rather than via a stuck PR afterwards.
+
+Mutation-checked both ways before trusting it — renaming `Lint` to `Linting`
+fails it, and dropping `release/**` from the filter fails it.
+
+### Deliberately not done here
+Applying the rulesets is a repo-admin action against live branch protection on a
+repo with production users. That is the user's call, not mine. The README
+carries the apply loop and, more importantly, how to verify afterwards: open a
+throwaway PR into develop with a deliberate lint error and confirm the merge is
+blocked. An applied-but-unverified ruleset is not a gate.
+
+### Loose end
+`.github/ts-error-baseline.txt` is 2100; the real count is ~1854 by tsgo, so the
+ratchet carries ~246 errors of slack and would not notice a sizeable regression.
+Tightening it needs a real `tsc` count — tsgo is close but not authoritative and
+a wrong-way guess turns CI red for everyone. A `tsc --noEmit` run was started
+during this session and had not finished (~60 min here). Worth finishing before
+relying on the ratchet as a merge gate.
