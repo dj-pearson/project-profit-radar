@@ -1,10 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.3";
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-}
+import { getCorsHeaders } from '../_shared/secure-cors.ts';
 
 interface SearchConsoleRequest {
   action: 'get-performance' | 'get-keywords' | 'get-pages' | 'get-crawl-errors'
@@ -18,6 +14,7 @@ interface SearchConsoleRequest {
 }
 
 serve(async (req) => {
+  const corsHeaders = getCorsHeaders(req);
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders })
@@ -103,16 +100,16 @@ serve(async (req) => {
     // Handle different actions
     switch (requestData.action) {
       case 'get-performance':
-        return await getPerformanceData(accessToken, searchConsoleSiteUrl, requestData)
+        return await getPerformanceData(corsHeaders, accessToken, searchConsoleSiteUrl, requestData)
       
       case 'get-keywords':
-        return await getKeywords(accessToken, searchConsoleSiteUrl, requestData)
+        return await getKeywords(corsHeaders, accessToken, searchConsoleSiteUrl, requestData)
       
       case 'get-pages':
-        return await getPages(accessToken, searchConsoleSiteUrl, requestData)
+        return await getPages(corsHeaders, accessToken, searchConsoleSiteUrl, requestData)
       
       case 'get-crawl-errors':
-        return await getCrawlErrors(accessToken, searchConsoleSiteUrl)
+        return await getCrawlErrors(corsHeaders, accessToken, searchConsoleSiteUrl)
 
       default:
         return new Response(
@@ -267,7 +264,7 @@ async function signData(data: string, privateKeyBytes: Uint8Array): Promise<stri
   }
 }
 
-async function getPerformanceData(accessToken: string, siteUrl: string, request: SearchConsoleRequest) {
+async function getPerformanceData(corsHeaders: Record<string, string>, accessToken: string, siteUrl: string, request: SearchConsoleRequest) {
   const { 
     dateRange = { 
       startDate: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
@@ -324,7 +321,7 @@ async function getPerformanceData(accessToken: string, siteUrl: string, request:
   )
 }
 
-async function getKeywords(accessToken: string, siteUrl: string, request: SearchConsoleRequest) {
+async function getKeywords(corsHeaders: Record<string, string>, accessToken: string, siteUrl: string, request: SearchConsoleRequest) {
   const { 
     dateRange = { 
       startDate: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
@@ -378,7 +375,7 @@ async function getKeywords(accessToken: string, siteUrl: string, request: Search
   )
 }
 
-async function getPages(accessToken: string, siteUrl: string, request: SearchConsoleRequest) {
+async function getPages(corsHeaders: Record<string, string>, accessToken: string, siteUrl: string, request: SearchConsoleRequest) {
   const { 
     dateRange = { 
       startDate: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
@@ -431,7 +428,7 @@ async function getPages(accessToken: string, siteUrl: string, request: SearchCon
   )
 }
 
-async function getCrawlErrors(accessToken: string, siteUrl: string) {
+async function getCrawlErrors(corsHeaders: Record<string, string>, accessToken: string, siteUrl: string) {
   // Note: The legacy Search Console API for crawl errors was deprecated
   // This is a placeholder for the new URL Inspection API
   

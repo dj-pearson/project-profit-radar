@@ -42,17 +42,9 @@ const PUBLIC = new Set([
   'process-referral-signup', // referral attribution from partner sites
 ]);
 
-// Not yet converted. Each of these calls corsHeaders from module-scope helper
-// functions, so the fix is to thread it in as a parameter rather than the
-// one-line handler edit the rest took. Shrink this list; never add to it.
-const REMAINING = new Set([
-  'api-management', 'billing-automation', 'bing-search-api', 'bing-webmaster-api',
-  'blog-ai-automation', 'calculate-proration', 'enhanced-blog-ai',
-  'failed-payment-recovery', 'google-analytics-api', 'google-search-console-api',
-  'handle-chargeback', 'process-refund', 'quickbooks-route-transactions',
-  'send-payment-reminder', 'seo-analytics', 'seo-backend-integration',
-  'smart-procurement', 'usage-billing',
-]);
+// Every non-public function is converted. This stays as an empty set so the
+// guard keeps failing on any new name rather than needing to be re-armed.
+const REMAINING = new Set([]);
 const BASELINE = REMAINING.size;
 
 /** Blank out comments and string bodies so doc mentions don't count as code. */

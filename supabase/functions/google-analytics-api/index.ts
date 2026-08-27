@@ -1,10 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.50.3'
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-}
+import { getCorsHeaders } from '../_shared/secure-cors.ts';
 
 interface AnalyticsRequest {
   action: 'get-metrics' | 'get-pages' | 'get-traffic-sources' | 'get-realtime' | 'get-organic-traffic' | 'get-device-breakdown' | 'get-conversion-data' | 'get-geographic-data' | 'get-user-behavior'
@@ -17,6 +13,7 @@ interface AnalyticsRequest {
 }
 
 serve(async (req) => {
+  const corsHeaders = getCorsHeaders(req);
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders })
@@ -98,31 +95,31 @@ serve(async (req) => {
     // Handle different actions
     switch (requestData.action) {
       case 'get-metrics':
-        return await getMetrics(accessToken, ga4PropertyId, requestData)
+        return await getMetrics(corsHeaders, accessToken, ga4PropertyId, requestData)
       
       case 'get-pages':
-        return await getPages(accessToken, ga4PropertyId, requestData)
+        return await getPages(corsHeaders, accessToken, ga4PropertyId, requestData)
       
       case 'get-traffic-sources':
-        return await getTrafficSources(accessToken, ga4PropertyId, requestData)
+        return await getTrafficSources(corsHeaders, accessToken, ga4PropertyId, requestData)
       
       case 'get-realtime':
-        return await getRealtimeData(accessToken, ga4PropertyId)
+        return await getRealtimeData(corsHeaders, accessToken, ga4PropertyId)
 
       case 'get-organic-traffic':
-        return await getOrganicTraffic(accessToken, ga4PropertyId, requestData)
+        return await getOrganicTraffic(corsHeaders, accessToken, ga4PropertyId, requestData)
 
       case 'get-device-breakdown':
-        return await getDeviceBreakdown(accessToken, ga4PropertyId, requestData)
+        return await getDeviceBreakdown(corsHeaders, accessToken, ga4PropertyId, requestData)
 
       case 'get-conversion-data':
-        return await getConversionData(accessToken, ga4PropertyId, requestData)
+        return await getConversionData(corsHeaders, accessToken, ga4PropertyId, requestData)
 
       case 'get-geographic-data':
-        return await getGeographicData(accessToken, ga4PropertyId, requestData)
+        return await getGeographicData(corsHeaders, accessToken, ga4PropertyId, requestData)
 
       case 'get-user-behavior':
-        return await getUserBehavior(accessToken, ga4PropertyId, requestData)
+        return await getUserBehavior(corsHeaders, accessToken, ga4PropertyId, requestData)
 
       default:
         return new Response(
@@ -293,7 +290,7 @@ async function signData(data: string, privateKeyBytes: Uint8Array): Promise<stri
   }
 }
 
-async function getMetrics(accessToken: string, propertyId: string, request: AnalyticsRequest) {
+async function getMetrics(corsHeaders: Record<string, string>, accessToken: string, propertyId: string, request: AnalyticsRequest) {
   console.log('Fetching Analytics metrics...')
   const { dateRange = { startDate: '30daysAgo', endDate: 'today' } } = request
   
@@ -349,7 +346,7 @@ async function getMetrics(accessToken: string, propertyId: string, request: Anal
   )
 }
 
-async function getPages(accessToken: string, propertyId: string, request: AnalyticsRequest) {
+async function getPages(corsHeaders: Record<string, string>, accessToken: string, propertyId: string, request: AnalyticsRequest) {
   console.log('Fetching top pages...')
   const { dateRange = { startDate: '30daysAgo', endDate: 'today' } } = request
   
@@ -408,7 +405,7 @@ async function getPages(accessToken: string, propertyId: string, request: Analyt
   )
 }
 
-async function getTrafficSources(accessToken: string, propertyId: string, request: AnalyticsRequest) {
+async function getTrafficSources(corsHeaders: Record<string, string>, accessToken: string, propertyId: string, request: AnalyticsRequest) {
   console.log('Fetching traffic sources...')
   const { dateRange = { startDate: '30daysAgo', endDate: 'today' } } = request
   
@@ -465,7 +462,7 @@ async function getTrafficSources(accessToken: string, propertyId: string, reques
   )
 }
 
-async function getRealtimeData(accessToken: string, propertyId: string) {
+async function getRealtimeData(corsHeaders: Record<string, string>, accessToken: string, propertyId: string) {
   console.log('Fetching realtime data...')
   
   const requestBody = {
@@ -518,7 +515,7 @@ async function getRealtimeData(accessToken: string, propertyId: string) {
   )
 }
 
-async function getOrganicTraffic(accessToken: string, propertyId: string, request: AnalyticsRequest) {
+async function getOrganicTraffic(corsHeaders: Record<string, string>, accessToken: string, propertyId: string, request: AnalyticsRequest) {
   console.log('Fetching organic traffic data...')
   
   const { dateRange = { startDate: '30daysAgo', endDate: 'today' } } = request
@@ -584,7 +581,7 @@ async function getOrganicTraffic(accessToken: string, propertyId: string, reques
   )
 }
 
-async function getDeviceBreakdown(accessToken: string, propertyId: string, request: AnalyticsRequest) {
+async function getDeviceBreakdown(corsHeaders: Record<string, string>, accessToken: string, propertyId: string, request: AnalyticsRequest) {
   console.log('Fetching device breakdown data...')
   
   const { dateRange = { startDate: '30daysAgo', endDate: 'today' } } = request
@@ -639,7 +636,7 @@ async function getDeviceBreakdown(accessToken: string, propertyId: string, reque
   )
 }
 
-async function getConversionData(accessToken: string, propertyId: string, request: AnalyticsRequest) {
+async function getConversionData(corsHeaders: Record<string, string>, accessToken: string, propertyId: string, request: AnalyticsRequest) {
   console.log('Fetching conversion data...')
   
   const { dateRange = { startDate: '30daysAgo', endDate: 'today' } } = request
@@ -699,7 +696,7 @@ async function getConversionData(accessToken: string, propertyId: string, reques
   )
 }
 
-async function getGeographicData(accessToken: string, propertyId: string, request: AnalyticsRequest) {
+async function getGeographicData(corsHeaders: Record<string, string>, accessToken: string, propertyId: string, request: AnalyticsRequest) {
   console.log('Fetching geographic data...')
   
   const { dateRange = { startDate: '30daysAgo', endDate: 'today' } } = request
@@ -754,7 +751,7 @@ async function getGeographicData(accessToken: string, propertyId: string, reques
   )
 }
 
-async function getUserBehavior(accessToken: string, propertyId: string, request: AnalyticsRequest) {
+async function getUserBehavior(corsHeaders: Record<string, string>, accessToken: string, propertyId: string, request: AnalyticsRequest) {
   console.log('Fetching user behavior data...')
   
   const { dateRange = { startDate: '30daysAgo', endDate: 'today' } } = request

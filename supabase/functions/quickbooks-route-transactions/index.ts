@@ -1,11 +1,7 @@
 // QuickBooks Route Transactions Edge Function
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { initializeAuthContext, errorResponse } from '../_shared/auth-helpers.ts';
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
+import { getCorsHeaders } from '../_shared/secure-cors.ts';
 
 interface RoutingRule {
   id: string;
@@ -37,6 +33,7 @@ interface UnroutedTransaction {
 }
 
 serve(async (req) => {
+  const corsHeaders = getCorsHeaders(req);
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
@@ -54,16 +51,16 @@ serve(async (req) => {
 
     switch (action) {
       case 'process_single':
-        return await processSingleTransaction(supabase, company_id, transaction_id);
+        return await processSingleTransaction(corsHeaders, supabase, company_id, transaction_id);
 
       case 'process_batch':
-        return await processBatchTransactions(supabase, company_id);
+        return await processBatchTransactions(corsHeaders, supabase, company_id);
 
       case 'manual_assign':
-        return await manualAssignment(supabase, transaction_id, manual_assignment);
+        return await manualAssignment(corsHeaders, supabase, transaction_id, manual_assignment);
 
       case 'import_qb_transactions':
-        return await importQuickBooksTransactions(supabase, company_id);
+        return await importQuickBooksTransactions(corsHeaders, supabase, company_id);
 
       default:
         throw new Error("Invalid action specified");
@@ -85,7 +82,7 @@ serve(async (req) => {
   }
 });
 
-async function processSingleTransaction(supabase: any, companyId: string, transactionId: string) {
+async function processSingleTransaction(corsHeaders: Record<string, string>, supabase: any, companyId: string, transactionId: string) {
   // Get transaction details
   const { data: transaction, error: transactionError } = await supabase
     .from('quickbooks_unrouted_transactions')
@@ -171,7 +168,7 @@ async function processSingleTransaction(supabase: any, companyId: string, transa
   );
 }
 
-async function processBatchTransactions(supabase: any, companyId: string) {
+async function processBatchTransactions(corsHeaders: Record<string, string>, supabase: any, companyId: string) {
   let processedCount = 0;
   let autoAssignedCount = 0;
   let reviewRequiredCount = 0;
@@ -274,7 +271,7 @@ async function processBatchTransactions(supabase: any, companyId: string) {
   );
 }
 
-async function manualAssignment(supabase: any, transactionId: string, assignment: any) {
+async function manualAssignment(corsHeaders: Record<string, string>, supabase: any, transactionId: string, assignment: any) {
   const { project_id, cost_code_id, notes, assigned_by } = assignment;
 
   // Update transaction with manual assignment
@@ -328,7 +325,7 @@ async function manualAssignment(supabase: any, transactionId: string, assignment
   );
 }
 
-async function importQuickBooksTransactions(supabase: any, companyId: string) {
+async function importQuickBooksTransactions(corsHeaders: Record<string, string>, supabase: any, companyId: string) {
   // This function would integrate with existing QB sync to import new transactions
   // For now, we'll return a placeholder response
 
@@ -383,12 +380,13 @@ function calculateMatchConfidence(transaction: UnroutedTransaction, rule: Routin
       confidence = isMatch ? 100 : 0;
       break;
       
-    case 'contains':
+    case 'contains': {
       const searchValue = rule.case_sensitive ? rule.match_value : rule.match_value.toLowerCase();
       const targetValue = rule.case_sensitive ? fieldValue : fieldValue.toLowerCase();
       isMatch = targetValue.includes(searchValue);
       confidence = isMatch ? 85 : 0;
       break;
+    }
       
     case 'starts_with':
       isMatch = rule.case_sensitive

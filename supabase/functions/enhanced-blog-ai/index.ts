@@ -2,11 +2,7 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { initializeAuthContext, errorResponse } from '../_shared/auth-helpers.ts';
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
+import { getCorsHeaders } from '../_shared/secure-cors.ts';
 
 const logStep = (step: string, details?: any) => {
   console.log(`[ENHANCED-BLOG-AI] ${step}${details ? ` - ${JSON.stringify(details)}` : ''}`);
@@ -45,6 +41,7 @@ interface GenerationSettings {
 }
 
 serve(async (req) => {
+  const corsHeaders = getCorsHeaders(req);
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
@@ -74,27 +71,27 @@ serve(async (req) => {
     const { action, topic, queueId, customSettings } = await req.json();
 
     if (action === 'generate-auto-content') {
-      return await handleAutoGeneration(supabaseClient, userProfile.company_id, topic, customSettings);
+      return await handleAutoGeneration(corsHeaders, supabaseClient, userProfile.company_id, topic, customSettings);
     }
 
     if (action === 'generate-manual-content') {
-      return await handleManualGeneration(supabaseClient, userProfile.company_id, topic, customSettings);
+      return await handleManualGeneration(corsHeaders, supabaseClient, userProfile.company_id, topic, customSettings);
     }
 
     if (action === 'process-queue-item') {
-      return await processQueueItem(supabaseClient, queueId);
+      return await processQueueItem(corsHeaders, supabaseClient, queueId);
     }
 
     if (action === 'analyze-content-diversity') {
-      return await analyzeContentDiversity(supabaseClient, userProfile.company_id);
+      return await analyzeContentDiversity(corsHeaders, supabaseClient, userProfile.company_id);
     }
 
     if (action === 'update-model-config') {
-      return await updateModelConfiguration(supabaseClient, customSettings);
+      return await updateModelConfiguration(corsHeaders, supabaseClient, customSettings);
     }
 
     if (action === 'test-generation') {
-      return await testGeneration(supabaseClient, userProfile.company_id, topic, customSettings);
+      return await testGeneration(corsHeaders, supabaseClient, userProfile.company_id, topic, customSettings);
     }
 
     return new Response(JSON.stringify({ error: "Invalid action" }), {
@@ -113,7 +110,7 @@ serve(async (req) => {
 });
 
 async function handleAutoGeneration(
-  supabaseClient: any,
+  corsHeaders: Record<string, string>, supabaseClient: any,
   companyId: string,
   suggestedTopic?: string,
   customSettings?: Partial<GenerationSettings>
@@ -184,7 +181,7 @@ async function handleAutoGeneration(
 }
 
 async function handleManualGeneration(
-  supabaseClient: any,
+  corsHeaders: Record<string, string>, supabaseClient: any,
   companyId: string,
   suggestedTopic?: string,
   customSettings?: Partial<GenerationSettings>
@@ -814,7 +811,7 @@ Remember that ${topic.toLowerCase()} is not a one-time implementation but an ong
   };
 }
 
-async function processQueueItem(supabaseClient: any, queueId: string) {
+async function processQueueItem(corsHeaders: Record<string, string>, supabaseClient: any, queueId: string) {
   logStep("Processing queue item", { queueId });
 
   // Get queue item
@@ -838,7 +835,7 @@ async function processQueueItem(supabaseClient: any, queueId: string) {
   try {
     // Generate content
     const result = await handleAutoGeneration(
-      supabaseClient,
+      corsHeaders, supabaseClient,
       queueItem.company_id,
       queueItem.suggested_topic,
       queueItem.content_parameters
@@ -937,7 +934,7 @@ async function sendGenerationNotification(
   logStep("Sending generation notification", { emails, blogPostId: blogPost.id });
 }
 
-async function analyzeContentDiversity(supabaseClient: any, companyId: string) {
+async function analyzeContentDiversity(corsHeaders: Record<string, string>, supabaseClient: any, companyId: string) {
   const { data: topicHistory } = await supabaseClient
     .from('blog_topic_history')
     .select('primary_topic, created_at, topic_category')
@@ -966,7 +963,7 @@ async function analyzeContentDiversity(supabaseClient: any, companyId: string) {
   });
 }
 
-async function updateModelConfiguration(supabaseClient: any, config: any) {
+async function updateModelConfiguration(corsHeaders: Record<string, string>, supabaseClient: any, config: any) {
   // Update AI model configurations
   const { error } = await supabaseClient
     .from('ai_model_configurations')
@@ -980,7 +977,7 @@ async function updateModelConfiguration(supabaseClient: any, config: any) {
 }
 
 async function testGeneration(
-  supabaseClient: any,
+  corsHeaders: Record<string, string>, supabaseClient: any,
   companyId: string,
   topic: string,
   settings: any

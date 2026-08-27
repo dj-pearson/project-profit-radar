@@ -1,12 +1,9 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.3";
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-}
+import { getCorsHeaders } from '../_shared/secure-cors.ts';
 
 serve(async (req) => {
+  const corsHeaders = getCorsHeaders(req);
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
   }
@@ -21,11 +18,11 @@ serve(async (req) => {
 
     switch (action) {
       case 'sync_seo_pages':
-        return await syncSEOPages(supabaseClient)
+        return await syncSEOPages(corsHeaders, supabaseClient)
       case 'update_schema_markup':
-        return await updateSchemaMarkup(supabaseClient)
+        return await updateSchemaMarkup(corsHeaders, supabaseClient)
       case 'refresh_seo_config':
-        return await refreshSEOConfig(supabaseClient)
+        return await refreshSEOConfig(corsHeaders, supabaseClient)
       default:
         throw new Error('Invalid action')
     }
@@ -43,7 +40,7 @@ serve(async (req) => {
   }
 })
 
-async function syncSEOPages(supabaseClient: any) {
+async function syncSEOPages(corsHeaders: Record<string, string>, supabaseClient: any) {
   // Define all our new SEO-optimized pages
   const seoPages = [
     // Homepage
@@ -220,7 +217,7 @@ async function syncSEOPages(supabaseClient: any) {
   )
 }
 
-async function updateSchemaMarkup(supabaseClient: any) {
+async function updateSchemaMarkup(corsHeaders: Record<string, string>, supabaseClient: any) {
   // Update global schema configurations
   const globalSchemas = {
     organization: generateOrganizationSchema(),
@@ -247,7 +244,7 @@ async function updateSchemaMarkup(supabaseClient: any) {
   )
 }
 
-async function refreshSEOConfig(supabaseClient: any) {
+async function refreshSEOConfig(corsHeaders: Record<string, string>, supabaseClient: any) {
   // Refresh SEO configuration with latest optimizations
   const seoConfig = {
     meta_defaults: {

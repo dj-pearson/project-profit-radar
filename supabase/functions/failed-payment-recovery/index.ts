@@ -4,11 +4,7 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@14.21.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.3";
 import { initializeAuthContext, errorResponse } from '../_shared/auth-helpers.ts';
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
+import { getCorsHeaders } from '../_shared/secure-cors.ts';
 
 const logStep = (step: string, details?: Record<string, unknown>) => {
   const detailsStr = details ? ` - ${JSON.stringify(details)}` : '';
@@ -39,6 +35,7 @@ interface RecoverySettings {
 }
 
 serve(async (req) => {
+  const corsHeaders = getCorsHeaders(req);
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
   }
@@ -75,28 +72,28 @@ serve(async (req) => {
 
     switch (action) {
       case 'process_failures':
-        return await processAllFailures(supabaseClient);
+        return await processAllFailures(corsHeaders, supabaseClient);
 
       case 'retry_payment':
-        return await retryPayment(supabaseClient, body.failure_id!);
+        return await retryPayment(corsHeaders, supabaseClient, body.failure_id!);
 
       case 'send_dunning_email':
-        return await sendDunningEmail(supabaseClient, body.failure_id!);
+        return await sendDunningEmail(corsHeaders, supabaseClient, body.failure_id!);
 
       case 'get_settings':
-        return await getSettings(supabaseClient, targetCompanyId!);
+        return await getSettings(corsHeaders, supabaseClient, targetCompanyId!);
 
       case 'update_settings':
-        return await updateSettings(supabaseClient, targetCompanyId!, body.settings!);
+        return await updateSettings(corsHeaders, supabaseClient, targetCompanyId!, body.settings!);
 
       case 'get_dashboard':
-        return await getDashboard(supabaseClient, targetCompanyId!);
+        return await getDashboard(corsHeaders, supabaseClient, targetCompanyId!);
 
       case 'pause_dunning':
-        return await pauseDunning(supabaseClient, body.subscriber_id!);
+        return await pauseDunning(corsHeaders, supabaseClient, body.subscriber_id!);
 
       case 'resume_dunning':
-        return await resumeDunning(supabaseClient, body.subscriber_id!);
+        return await resumeDunning(corsHeaders, supabaseClient, body.subscriber_id!);
 
       default:
         return errorResponse('Invalid action', 400);
@@ -112,7 +109,7 @@ serve(async (req) => {
   }
 });
 
-async function processAllFailures(supabase: ReturnType<typeof createClient>) {
+async function processAllFailures(corsHeaders: Record<string, string>, supabase: ReturnType<typeof createClient>) {
   // Get all active payment failures that need processing
   const now = new Date();
 
@@ -348,7 +345,7 @@ Please update your payment method to continue your subscription.
 }
 
 async function retryPayment(
-  supabase: ReturnType<typeof createClient>,
+  corsHeaders: Record<string, string>, supabase: ReturnType<typeof createClient>,
   failureId: string
 ) {
   const { data: failure, error } = await supabase
@@ -379,7 +376,7 @@ async function retryPayment(
 }
 
 async function sendDunningEmail(
-  supabase: ReturnType<typeof createClient>,
+  corsHeaders: Record<string, string>, supabase: ReturnType<typeof createClient>,
   failureId: string
 ) {
   const { data: failure, error } = await supabase
@@ -410,7 +407,7 @@ async function sendDunningEmail(
 }
 
 async function getSettings(
-  supabase: ReturnType<typeof createClient>,
+  corsHeaders: Record<string, string>, supabase: ReturnType<typeof createClient>,
   companyId: string
 ) {
   const { data: settings, error } = await supabase
@@ -433,7 +430,7 @@ async function getSettings(
 }
 
 async function updateSettings(
-  supabase: ReturnType<typeof createClient>,
+  corsHeaders: Record<string, string>, supabase: ReturnType<typeof createClient>,
   companyId: string,
   settings: RecoverySettings
 ) {
@@ -463,7 +460,7 @@ async function updateSettings(
 }
 
 async function getDashboard(
-  supabase: ReturnType<typeof createClient>,
+  corsHeaders: Record<string, string>, supabase: ReturnType<typeof createClient>,
   companyId: string
 ) {
   // Get company's subscribers with failures
@@ -522,7 +519,7 @@ async function getDashboard(
 }
 
 async function pauseDunning(
-  supabase: ReturnType<typeof createClient>,
+  corsHeaders: Record<string, string>, supabase: ReturnType<typeof createClient>,
   subscriberId: string
 ) {
   const { error } = await supabase
@@ -548,7 +545,7 @@ async function pauseDunning(
 }
 
 async function resumeDunning(
-  supabase: ReturnType<typeof createClient>,
+  corsHeaders: Record<string, string>, supabase: ReturnType<typeof createClient>,
   subscriberId: string
 ) {
   const nextRetry = new Date();

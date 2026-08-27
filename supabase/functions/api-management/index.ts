@@ -1,13 +1,8 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.3";
 import { checkRateLimit, getClientIP, rateLimitResponse, RATE_LIMITS } from "../_shared/rate-limiter.ts";
+import { getCorsHeaders } from '../_shared/secure-cors.ts';
 // Using built-in crypto API instead
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-api-key',
-  'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-};
 
 interface ApiKeyValidation {
   isValid: boolean;
@@ -17,6 +12,7 @@ interface ApiKeyValidation {
 }
 
 serve(async (req) => {
+  const corsHeaders = getCorsHeaders(req);
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
@@ -39,19 +35,19 @@ serve(async (req) => {
 
     // Handle different API management endpoints
     if (pathname === '/api-management/validate-key') {
-      return await validateApiKey(req, supabase);
+      return await validateApiKey(corsHeaders, req, supabase);
     } else if (pathname === '/api-management/create-key') {
-      return await createApiKey(req, supabase);
+      return await createApiKey(corsHeaders, req, supabase);
     } else if (pathname === '/api-management/webhook/trigger') {
-      return await triggerWebhook(req, supabase);
+      return await triggerWebhook(corsHeaders, req, supabase);
     } else if (pathname === '/api-management/webhook/test') {
-      return await testWebhook(req, supabase);
+      return await testWebhook(corsHeaders, req, supabase);
     } else if (pathname === '/api-management/api/projects') {
-      return await handleProjectsApi(req, supabase);
+      return await handleProjectsApi(corsHeaders, req, supabase);
     } else if (pathname === '/api-management/api/estimates') {
-      return await handleEstimatesApi(req, supabase);
+      return await handleEstimatesApi(corsHeaders, req, supabase);
     } else if (pathname === '/api-management/api/invoices') {
-      return await handleInvoicesApi(req, supabase);
+      return await handleInvoicesApi(corsHeaders, req, supabase);
     } else {
       return new Response(
         JSON.stringify({ error: 'Endpoint not found' }),
@@ -68,7 +64,7 @@ serve(async (req) => {
   }
 });
 
-async function validateApiKey(req: Request, supabase: any): Promise<Response> {
+async function validateApiKey(corsHeaders: Record<string, string>, req: Request, supabase: any): Promise<Response> {
   const apiKey = req.headers.get('x-api-key');
 
   if (!apiKey) {
@@ -112,7 +108,7 @@ async function validateApiKey(req: Request, supabase: any): Promise<Response> {
   );
 }
 
-async function createApiKey(req: Request, supabase: any): Promise<Response> {
+async function createApiKey(corsHeaders: Record<string, string>, req: Request, supabase: any): Promise<Response> {
   const { key_name, permissions, expires_at, rate_limit_per_hour } = await req.json();
   const authHeader = req.headers.get('Authorization');
 
@@ -210,7 +206,7 @@ async function createApiKey(req: Request, supabase: any): Promise<Response> {
   );
 }
 
-async function triggerWebhook(req: Request, supabase: any): Promise<Response> {
+async function triggerWebhook(corsHeaders: Record<string, string>, req: Request, supabase: any): Promise<Response> {
   const { webhook_id, event_type, payload } = await req.json();
   
   const { data: webhook, error: webhookError } = await supabase
@@ -328,11 +324,11 @@ async function triggerWebhook(req: Request, supabase: any): Promise<Response> {
   }
 }
 
-async function testWebhook(req: Request, supabase: any): Promise<Response> {
+async function testWebhook(corsHeaders: Record<string, string>, req: Request, supabase: any): Promise<Response> {
   const { webhook_id } = await req.json();
   
   return await triggerWebhook(
-    new Request(req.url, {
+    corsHeaders, new Request(req.url, {
       method: 'POST',
       headers: req.headers,
       body: JSON.stringify({
@@ -348,8 +344,8 @@ async function testWebhook(req: Request, supabase: any): Promise<Response> {
   );
 }
 
-async function handleProjectsApi(req: Request, supabase: any): Promise<Response> {
-  const validation = await validateApiRequest(req, supabase, 'projects:read');
+async function handleProjectsApi(corsHeaders: Record<string, string>, req: Request, supabase: any): Promise<Response> {
+  const validation = await validateApiRequest(corsHeaders, req, supabase, 'projects:read');
   if (!validation.isValid) {
     return validation.response!;
   }
@@ -375,7 +371,7 @@ async function handleProjectsApi(req: Request, supabase: any): Promise<Response>
     }
 
     if (method === 'POST') {
-      const hasWritePermission = await validateApiRequest(req, supabase, 'projects:write');
+      const hasWritePermission = await validateApiRequest(corsHeaders, req, supabase, 'projects:write');
       if (!hasWritePermission.isValid) {
         return hasWritePermission.response!;
       }
@@ -417,8 +413,8 @@ async function handleProjectsApi(req: Request, supabase: any): Promise<Response>
   }
 }
 
-async function handleEstimatesApi(req: Request, supabase: any): Promise<Response> {
-  const validation = await validateApiRequest(req, supabase, 'estimates:read');
+async function handleEstimatesApi(corsHeaders: Record<string, string>, req: Request, supabase: any): Promise<Response> {
+  const validation = await validateApiRequest(corsHeaders, req, supabase, 'estimates:read');
   if (!validation.isValid) {
     return validation.response!;
   }
@@ -449,8 +445,8 @@ async function handleEstimatesApi(req: Request, supabase: any): Promise<Response
   }
 }
 
-async function handleInvoicesApi(req: Request, supabase: any): Promise<Response> {
-  const validation = await validateApiRequest(req, supabase, 'invoices:read');
+async function handleInvoicesApi(corsHeaders: Record<string, string>, req: Request, supabase: any): Promise<Response> {
+  const validation = await validateApiRequest(corsHeaders, req, supabase, 'invoices:read');
   if (!validation.isValid) {
     return validation.response!;
   }
@@ -481,7 +477,7 @@ async function handleInvoicesApi(req: Request, supabase: any): Promise<Response>
   }
 }
 
-async function validateApiRequest(req: Request, supabase: any, permission: string): Promise<{
+async function validateApiRequest(corsHeaders: Record<string, string>, req: Request, supabase: any, permission: string): Promise<{
   isValid: boolean;
   company_id?: string;
   keyHash?: string;

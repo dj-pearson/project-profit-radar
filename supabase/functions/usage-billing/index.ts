@@ -3,11 +3,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.3";
 import { initializeAuthContext, errorResponse } from '../_shared/auth-helpers.ts';
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
+import { getCorsHeaders } from '../_shared/secure-cors.ts';
 
 const logStep = (step: string, details?: Record<string, unknown>) => {
   const detailsStr = details ? ` - ${JSON.stringify(details)}` : '';
@@ -55,6 +51,7 @@ const USAGE_PRICING = {
 };
 
 serve(async (req) => {
+  const corsHeaders = getCorsHeaders(req);
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
   }
@@ -97,22 +94,22 @@ serve(async (req) => {
 
     switch (action) {
       case 'record':
-        return await recordUsage(supabaseClient, companyId, body);
+        return await recordUsage(corsHeaders, supabaseClient, companyId, body);
 
       case 'get_usage':
-        return await getUsage(supabaseClient, companyId, body);
+        return await getUsage(corsHeaders, supabaseClient, companyId, body);
 
       case 'get_summary':
-        return await getUsageSummary(supabaseClient, companyId, tier, body);
+        return await getUsageSummary(corsHeaders, supabaseClient, companyId, tier, body);
 
       case 'calculate_bill':
-        return await calculateUsageBill(supabaseClient, companyId, tier, body);
+        return await calculateUsageBill(corsHeaders, supabaseClient, companyId, tier, body);
 
       case 'generate_invoice':
-        return await generateUsageInvoice(supabaseClient, companyId, tier, body);
+        return await generateUsageInvoice(corsHeaders, supabaseClient, companyId, tier, body);
 
       case 'get_limits':
-        return await getLimits(tier);
+        return await getLimits(corsHeaders, tier);
 
       default:
         return errorResponse('Invalid action. Use: record, get_usage, get_summary, calculate_bill, generate_invoice, get_limits', 400);
@@ -129,7 +126,7 @@ serve(async (req) => {
 });
 
 async function recordUsage(
-  supabase: ReturnType<typeof createClient>,
+  corsHeaders: Record<string, string>, supabase: ReturnType<typeof createClient>,
   companyId: string,
   body: UsageRequest
 ): Promise<Response> {
@@ -219,7 +216,7 @@ async function updateUsageMetrics(
 }
 
 async function getUsage(
-  supabase: ReturnType<typeof createClient>,
+  corsHeaders: Record<string, string>, supabase: ReturnType<typeof createClient>,
   companyId: string,
   body: UsageRequest
 ): Promise<Response> {
@@ -277,7 +274,7 @@ async function getUsage(
 }
 
 async function getUsageSummary(
-  supabase: ReturnType<typeof createClient>,
+  corsHeaders: Record<string, string>, supabase: ReturnType<typeof createClient>,
   companyId: string,
   tier: keyof typeof TIER_LIMITS,
   body: UsageRequest
@@ -369,12 +366,12 @@ async function getUsageSummary(
 }
 
 async function calculateUsageBill(
-  supabase: ReturnType<typeof createClient>,
+  corsHeaders: Record<string, string>, supabase: ReturnType<typeof createClient>,
   companyId: string,
   tier: keyof typeof TIER_LIMITS,
   body: UsageRequest
 ): Promise<Response> {
-  const summaryResponse = await getUsageSummary(supabase, companyId, tier, body);
+  const summaryResponse = await getUsageSummary(corsHeaders, supabase, companyId, tier, body);
   const summaryData = await summaryResponse.json();
 
   if (!summaryData.success) {
@@ -464,12 +461,12 @@ async function calculateUsageBill(
 }
 
 async function generateUsageInvoice(
-  supabase: ReturnType<typeof createClient>,
+  corsHeaders: Record<string, string>, supabase: ReturnType<typeof createClient>,
   companyId: string,
   tier: keyof typeof TIER_LIMITS,
   body: UsageRequest
 ): Promise<Response> {
-  const billResponse = await calculateUsageBill(supabase, companyId, tier, body);
+  const billResponse = await calculateUsageBill(corsHeaders, supabase, companyId, tier, body);
   const billData = await billResponse.json();
 
   if (!billData.success) {
@@ -546,7 +543,7 @@ async function generateUsageInvoice(
   );
 }
 
-async function getLimits(tier: keyof typeof TIER_LIMITS): Promise<Response> {
+async function getLimits(corsHeaders: Record<string, string>, tier: keyof typeof TIER_LIMITS): Promise<Response> {
   const limits = TIER_LIMITS[tier];
   const pricing = USAGE_PRICING;
 

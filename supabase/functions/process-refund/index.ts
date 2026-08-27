@@ -4,11 +4,7 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@14.21.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.3";
 import { initializeAuthContext, errorResponse } from '../_shared/auth-helpers.ts';
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
+import { getCorsHeaders } from '../_shared/secure-cors.ts';
 
 const logStep = (step: string, details?: Record<string, unknown>) => {
   const detailsStr = details ? ` - ${JSON.stringify(details)}` : '';
@@ -28,6 +24,7 @@ interface RefundRequest {
 }
 
 serve(async (req) => {
+  const corsHeaders = getCorsHeaders(req);
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
   }
@@ -62,25 +59,25 @@ serve(async (req) => {
 
     switch (action) {
       case 'create':
-        return await createRefund(supabaseClient, companyId, user.id, body);
+        return await createRefund(corsHeaders, supabaseClient, companyId, user.id, body);
 
       case 'approve':
-        return await approveRefund(supabaseClient, companyId, user.id, userRole, body.refund_id);
+        return await approveRefund(corsHeaders, supabaseClient, companyId, user.id, userRole, body.refund_id);
 
       case 'reject':
-        return await rejectRefund(supabaseClient, companyId, user.id, body.refund_id, body.notes);
+        return await rejectRefund(corsHeaders, supabaseClient, companyId, user.id, body.refund_id, body.notes);
 
       case 'process':
-        return await processRefund(supabaseClient, companyId, body.refund_id);
+        return await processRefund(corsHeaders, supabaseClient, companyId, body.refund_id);
 
       case 'cancel':
-        return await cancelRefund(supabaseClient, companyId, body.refund_id);
+        return await cancelRefund(corsHeaders, supabaseClient, companyId, body.refund_id);
 
       case 'list':
-        return await listRefunds(supabaseClient, companyId);
+        return await listRefunds(corsHeaders, supabaseClient, companyId);
 
       case 'get':
-        return await getRefund(supabaseClient, companyId, body.refund_id);
+        return await getRefund(corsHeaders, supabaseClient, companyId, body.refund_id);
 
       default:
         return errorResponse('Invalid action. Use: create, approve, reject, process, cancel, list, get', 400);
@@ -97,7 +94,7 @@ serve(async (req) => {
 });
 
 async function createRefund(
-  supabase: ReturnType<typeof createClient>,
+  corsHeaders: Record<string, string>, supabase: ReturnType<typeof createClient>,
   companyId: string,
   userId: string,
   body: RefundRequest
@@ -143,7 +140,7 @@ async function createRefund(
 
   // If no approval required, process immediately
   if (!requiresApproval) {
-    return await processRefundWithStripe(supabase, companyId, refund);
+    return await processRefundWithStripe(corsHeaders, supabase, companyId, refund);
   }
 
   return new Response(
@@ -157,7 +154,7 @@ async function createRefund(
 }
 
 async function approveRefund(
-  supabase: ReturnType<typeof createClient>,
+  corsHeaders: Record<string, string>, supabase: ReturnType<typeof createClient>,
   companyId: string,
   userId: string,
   userRole: string,
@@ -206,11 +203,11 @@ async function approveRefund(
 
   // Process with Stripe
   const updatedRefund = { ...refund, status: 'processing', approved_by: userId };
-  return await processRefundWithStripe(supabase, companyId, updatedRefund);
+  return await processRefundWithStripe(corsHeaders, supabase, companyId, updatedRefund);
 }
 
 async function rejectRefund(
-  supabase: ReturnType<typeof createClient>,
+  corsHeaders: Record<string, string>, supabase: ReturnType<typeof createClient>,
   companyId: string,
   userId: string,
   refundId?: string,
@@ -256,7 +253,7 @@ async function rejectRefund(
 }
 
 async function processRefund(
-  supabase: ReturnType<typeof createClient>,
+  corsHeaders: Record<string, string>, supabase: ReturnType<typeof createClient>,
   companyId: string,
   refundId?: string
 ) {
@@ -279,11 +276,11 @@ async function processRefund(
     return errorResponse(`Cannot process refund with status: ${refund.status}`, 400);
   }
 
-  return await processRefundWithStripe(supabase, companyId, refund);
+  return await processRefundWithStripe(corsHeaders, supabase, companyId, refund);
 }
 
 async function processRefundWithStripe(
-  supabase: ReturnType<typeof createClient>,
+  corsHeaders: Record<string, string>, supabase: ReturnType<typeof createClient>,
   companyId: string,
   refund: Record<string, unknown>
 ) {
@@ -316,8 +313,6 @@ async function processRefundWithStripe(
   const stripe = new Stripe(stripeKey, { apiVersion: "2023-10-16" });
 
   try {
-    let stripeRefund: Stripe.Refund;
-
     // Process refund via Stripe
     const refundParams: Stripe.RefundCreateParams = {
       amount: Math.round((refund.amount as number) * 100), // Convert to cents
@@ -357,7 +352,7 @@ async function processRefundWithStripe(
       );
     }
 
-    stripeRefund = await stripe.refunds.create(refundParams);
+    const stripeRefund: Stripe.Refund = await stripe.refunds.create(refundParams);
 
     logStep('Stripe refund created', { stripeRefundId: stripeRefund.id });
 
@@ -418,7 +413,7 @@ async function processRefundWithStripe(
 }
 
 async function cancelRefund(
-  supabase: ReturnType<typeof createClient>,
+  corsHeaders: Record<string, string>, supabase: ReturnType<typeof createClient>,
   companyId: string,
   refundId?: string
 ) {
@@ -457,7 +452,7 @@ async function cancelRefund(
 }
 
 async function listRefunds(
-  supabase: ReturnType<typeof createClient>,
+  corsHeaders: Record<string, string>, supabase: ReturnType<typeof createClient>,
   companyId: string
 ) {
   const { data: refunds, error } = await supabase
@@ -483,7 +478,7 @@ async function listRefunds(
 }
 
 async function getRefund(
-  supabase: ReturnType<typeof createClient>,
+  corsHeaders: Record<string, string>, supabase: ReturnType<typeof createClient>,
   companyId: string,
   refundId?: string
 ) {

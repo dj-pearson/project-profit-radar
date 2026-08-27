@@ -4,11 +4,7 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@14.21.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.3";
 import { initializeAuthContext, errorResponse } from '../_shared/auth-helpers.ts';
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
+import { getCorsHeaders } from '../_shared/secure-cors.ts';
 
 const logStep = (step: string, details?: Record<string, unknown>) => {
   const detailsStr = details ? ` - ${JSON.stringify(details)}` : '';
@@ -41,6 +37,7 @@ interface ChargebackEvidence {
 }
 
 serve(async (req) => {
+  const corsHeaders = getCorsHeaders(req);
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
   }
@@ -74,25 +71,25 @@ serve(async (req) => {
 
     switch (action) {
       case 'create':
-        return await createChargeback(supabaseClient, companyId, body);
+        return await createChargeback(corsHeaders, supabaseClient, companyId, body);
 
       case 'update':
-        return await updateChargeback(supabaseClient, companyId, body);
+        return await updateChargeback(corsHeaders, supabaseClient, companyId, body);
 
       case 'submit_evidence':
-        return await submitEvidence(supabaseClient, companyId, body);
+        return await submitEvidence(corsHeaders, supabaseClient, companyId, body);
 
       case 'accept':
-        return await acceptChargeback(supabaseClient, companyId, body.chargeback_id);
+        return await acceptChargeback(corsHeaders, supabaseClient, companyId, body.chargeback_id);
 
       case 'list':
-        return await listChargebacks(supabaseClient, companyId);
+        return await listChargebacks(corsHeaders, supabaseClient, companyId);
 
       case 'get':
-        return await getChargeback(supabaseClient, companyId, body.chargeback_id);
+        return await getChargeback(corsHeaders, supabaseClient, companyId, body.chargeback_id);
 
       case 'sync':
-        return await syncChargebacksFromStripe(supabaseClient, companyId);
+        return await syncChargebacksFromStripe(corsHeaders, supabaseClient, companyId);
 
       default:
         return errorResponse('Invalid action. Use: create, update, submit_evidence, accept, list, get, sync', 400);
@@ -109,7 +106,7 @@ serve(async (req) => {
 });
 
 async function createChargeback(
-  supabase: ReturnType<typeof createClient>,
+  corsHeaders: Record<string, string>, supabase: ReturnType<typeof createClient>,
   companyId: string,
   body: ChargebackRequest
 ) {
@@ -171,7 +168,7 @@ async function createChargeback(
 }
 
 async function updateChargeback(
-  supabase: ReturnType<typeof createClient>,
+  corsHeaders: Record<string, string>, supabase: ReturnType<typeof createClient>,
   companyId: string,
   body: ChargebackRequest
 ) {
@@ -213,7 +210,7 @@ async function updateChargeback(
 }
 
 async function submitEvidence(
-  supabase: ReturnType<typeof createClient>,
+  corsHeaders: Record<string, string>, supabase: ReturnType<typeof createClient>,
   companyId: string,
   body: ChargebackRequest
 ) {
@@ -297,7 +294,7 @@ async function submitEvidence(
 }
 
 async function acceptChargeback(
-  supabase: ReturnType<typeof createClient>,
+  corsHeaders: Record<string, string>, supabase: ReturnType<typeof createClient>,
   companyId: string,
   chargebackId?: string
 ) {
@@ -381,7 +378,7 @@ async function acceptChargeback(
 }
 
 async function listChargebacks(
-  supabase: ReturnType<typeof createClient>,
+  corsHeaders: Record<string, string>, supabase: ReturnType<typeof createClient>,
   companyId: string
 ) {
   const { data: chargebacks, error } = await supabase
@@ -418,7 +415,7 @@ async function listChargebacks(
 }
 
 async function getChargeback(
-  supabase: ReturnType<typeof createClient>,
+  corsHeaders: Record<string, string>, supabase: ReturnType<typeof createClient>,
   companyId: string,
   chargebackId?: string
 ) {
@@ -449,7 +446,7 @@ async function getChargeback(
 }
 
 async function syncChargebacksFromStripe(
-  supabase: ReturnType<typeof createClient>,
+  corsHeaders: Record<string, string>, supabase: ReturnType<typeof createClient>,
   companyId: string
 ) {
   const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");

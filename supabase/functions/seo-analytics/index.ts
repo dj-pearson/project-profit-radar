@@ -1,11 +1,7 @@
 // SEO Analytics Edge Function
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { initializeAuthContext, errorResponse } from '../_shared/auth-helpers.ts';
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-}
+import { getCorsHeaders } from '../_shared/secure-cors.ts';
 
 interface SEOAnalyticsRequest {
   action: 'get_analytics_summary' | 'fetch_google_search_console' | 'fetch_bing_data' | 'generate_ai_insights' | 'get_google_auth_url' | 'get_microsoft_auth_url' | 'fetch-dashboard-data' | 'get-seo-data' | 'get-google-analytics' | 'get-search-console' | 'get-top-queries' | 'get-top-pages'
@@ -16,6 +12,7 @@ interface SEOAnalyticsRequest {
 }
 
 serve(async (req) => {
+  const corsHeaders = getCorsHeaders(req);
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders })
@@ -69,30 +66,30 @@ serve(async (req) => {
       case 'get_analytics_summary':
       case 'fetch-dashboard-data':
       case 'get-seo-data':
-        return await getDashboardData(supabaseClient, requestData)
+        return await getDashboardData(corsHeaders, supabaseClient, requestData)
       
       case 'fetch_google_search_console':
       case 'get-search-console':
-        return await getSearchConsoleData(supabaseClient, requestData)
+        return await getSearchConsoleData(corsHeaders, supabaseClient, requestData)
       
       case 'fetch_bing_data':
-        return await getBingData(supabaseClient, requestData)
+        return await getBingData(corsHeaders, supabaseClient, requestData)
       
       case 'generate_ai_insights':
-        return await generateAIInsights(supabaseClient, requestData)
+        return await generateAIInsights(corsHeaders, supabaseClient, requestData)
       
       case 'get_google_auth_url':
       case 'get_microsoft_auth_url':
-        return await getAuthUrl(requestData.action)
+        return await getAuthUrl(corsHeaders, requestData.action)
       
       case 'get-google-analytics':
-        return await getGoogleAnalyticsData(supabaseClient, requestData)
+        return await getGoogleAnalyticsData(corsHeaders, supabaseClient, requestData)
       
       case 'get-top-queries':
-        return await getTopQueries(supabaseClient, requestData)
+        return await getTopQueries(corsHeaders, supabaseClient, requestData)
       
       case 'get-top-pages':
-        return await getTopPages(supabaseClient, requestData)
+        return await getTopPages(corsHeaders, supabaseClient, requestData)
 
       default:
         return new Response(
@@ -113,7 +110,7 @@ serve(async (req) => {
   }
 })
 
-async function getDashboardData(supabaseClient: any, request: SEOAnalyticsRequest) {
+async function getDashboardData(corsHeaders: Record<string, string>, supabaseClient: any, request: SEOAnalyticsRequest) {
   try {
     // Call both analytics and search console APIs
     const [analyticsResponse, searchConsoleResponse, keywordsResponse, pagesResponse] = await Promise.all([
@@ -228,7 +225,7 @@ async function getDashboardData(supabaseClient: any, request: SEOAnalyticsReques
   }
 }
 
-async function getGoogleAnalyticsData(supabaseClient: any, request: SEOAnalyticsRequest) {
+async function getGoogleAnalyticsData(corsHeaders: Record<string, string>, supabaseClient: any, request: SEOAnalyticsRequest) {
   const { data, error } = await supabaseClient.functions.invoke('google-analytics-api', {
     body: { 
       action: 'get-metrics',
@@ -249,7 +246,7 @@ async function getGoogleAnalyticsData(supabaseClient: any, request: SEOAnalytics
   )
 }
 
-async function getSearchConsoleData(supabaseClient: any, request: SEOAnalyticsRequest) {
+async function getSearchConsoleData(corsHeaders: Record<string, string>, supabaseClient: any, request: SEOAnalyticsRequest) {
   const { data, error } = await supabaseClient.functions.invoke('google-search-console-api', {
     body: { 
       action: 'get-performance',
@@ -273,7 +270,7 @@ async function getSearchConsoleData(supabaseClient: any, request: SEOAnalyticsRe
   )
 }
 
-async function getTopQueries(supabaseClient: any, request: SEOAnalyticsRequest) {
+async function getTopQueries(corsHeaders: Record<string, string>, supabaseClient: any, request: SEOAnalyticsRequest) {
   const { data, error } = await supabaseClient.functions.invoke('google-search-console-api', {
     body: { 
       action: 'get-keywords',
@@ -297,7 +294,7 @@ async function getTopQueries(supabaseClient: any, request: SEOAnalyticsRequest) 
   )
 }
 
-async function getTopPages(supabaseClient: any, request: SEOAnalyticsRequest) {
+async function getTopPages(corsHeaders: Record<string, string>, supabaseClient: any, request: SEOAnalyticsRequest) {
   const { data, error } = await supabaseClient.functions.invoke('google-search-console-api', {
     body: { 
       action: 'get-pages',
@@ -321,7 +318,7 @@ async function getTopPages(supabaseClient: any, request: SEOAnalyticsRequest) {
   )
 }
 
-async function getBingData(supabaseClient: any, request: SEOAnalyticsRequest) {
+async function getBingData(corsHeaders: Record<string, string>, supabaseClient: any, request: SEOAnalyticsRequest) {
   // For now, return a message that Bing is not configured
   return new Response(
     JSON.stringify({ 
@@ -333,7 +330,7 @@ async function getBingData(supabaseClient: any, request: SEOAnalyticsRequest) {
   )
 }
 
-async function generateAIInsights(supabaseClient: any, request: SEOAnalyticsRequest) {
+async function generateAIInsights(corsHeaders: Record<string, string>, supabaseClient: any, request: SEOAnalyticsRequest) {
   // For now, return a message that AI insights are not configured
   return new Response(
     JSON.stringify({ 
@@ -345,7 +342,7 @@ async function generateAIInsights(supabaseClient: any, request: SEOAnalyticsRequ
   )
 }
 
-async function getAuthUrl(action: string) {
+async function getAuthUrl(corsHeaders: Record<string, string>, action: string) {
   // For now, return a message that OAuth is not configured
   const provider = action.includes('google') ? 'Google' : 'Microsoft'
   return new Response(

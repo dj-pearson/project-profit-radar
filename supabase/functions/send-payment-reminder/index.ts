@@ -2,11 +2,7 @@
 // Automated payment reminder system with email sending
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.3";
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
+import { getCorsHeaders } from '../_shared/secure-cors.ts';
 
 const logStep = (step: string, details?: Record<string, unknown>) => {
   const detailsStr = details ? ` - ${JSON.stringify(details)}` : '';
@@ -40,6 +36,7 @@ interface PaymentReminderSettings {
 }
 
 serve(async (req) => {
+  const corsHeaders = getCorsHeaders(req);
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
   }
@@ -82,22 +79,22 @@ serve(async (req) => {
 
     switch (action) {
       case 'send':
-        return await sendReminder(supabaseClient, targetCompanyId!, body.invoice_id!, body.reminder_type);
+        return await sendReminder(corsHeaders, supabaseClient, targetCompanyId!, body.invoice_id!, body.reminder_type);
 
       case 'schedule':
-        return await scheduleReminders(supabaseClient, targetCompanyId!);
+        return await scheduleReminders(corsHeaders, supabaseClient, targetCompanyId!);
 
       case 'process_scheduled':
-        return await processScheduledReminders(supabaseClient);
+        return await processScheduledReminders(corsHeaders, supabaseClient);
 
       case 'get_settings':
-        return await getSettings(supabaseClient, targetCompanyId!);
+        return await getSettings(corsHeaders, supabaseClient, targetCompanyId!);
 
       case 'update_settings':
-        return await updateSettings(supabaseClient, targetCompanyId!, body.settings!);
+        return await updateSettings(corsHeaders, supabaseClient, targetCompanyId!, body.settings!);
 
       case 'preview':
-        return await previewReminder(supabaseClient, targetCompanyId!, body.invoice_id!, body.reminder_type!);
+        return await previewReminder(corsHeaders, supabaseClient, targetCompanyId!, body.invoice_id!, body.reminder_type!);
 
       default:
         return new Response(
@@ -117,7 +114,7 @@ serve(async (req) => {
 });
 
 async function sendReminder(
-  supabase: ReturnType<typeof createClient>,
+  corsHeaders: Record<string, string>, supabase: ReturnType<typeof createClient>,
   companyId: string,
   invoiceId: string,
   reminderType?: string
@@ -241,7 +238,7 @@ async function sendReminder(
 }
 
 async function scheduleReminders(
-  supabase: ReturnType<typeof createClient>,
+  corsHeaders: Record<string, string>, supabase: ReturnType<typeof createClient>,
   companyId: string
 ) {
   // Get reminder settings
@@ -348,7 +345,7 @@ async function scheduleReminders(
   );
 }
 
-async function processScheduledReminders(supabase: ReturnType<typeof createClient>) {
+async function processScheduledReminders(corsHeaders: Record<string, string>, supabase: ReturnType<typeof createClient>) {
   // This runs as a scheduled job to process all pending reminders
   const { data: pendingReminders, error } = await supabase
     .from('payment_reminders')
@@ -378,7 +375,7 @@ async function processScheduledReminders(supabase: ReturnType<typeof createClien
 
     try {
       const response = await sendReminder(
-        supabase,
+        corsHeaders, supabase,
         reminder.invoice.company_id,
         reminder.invoice_id,
         reminder.reminder_type
@@ -418,7 +415,7 @@ async function processScheduledReminders(supabase: ReturnType<typeof createClien
 }
 
 async function getSettings(
-  supabase: ReturnType<typeof createClient>,
+  corsHeaders: Record<string, string>, supabase: ReturnType<typeof createClient>,
   companyId: string
 ) {
   const { data: settings, error } = await supabase
@@ -444,7 +441,7 @@ async function getSettings(
 }
 
 async function updateSettings(
-  supabase: ReturnType<typeof createClient>,
+  corsHeaders: Record<string, string>, supabase: ReturnType<typeof createClient>,
   companyId: string,
   settings: PaymentReminderSettings
 ) {
@@ -477,7 +474,7 @@ async function updateSettings(
 }
 
 async function previewReminder(
-  supabase: ReturnType<typeof createClient>,
+  corsHeaders: Record<string, string>, supabase: ReturnType<typeof createClient>,
   companyId: string,
   invoiceId: string,
   reminderType: string
