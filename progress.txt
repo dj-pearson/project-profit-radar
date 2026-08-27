@@ -3530,3 +3530,73 @@ based, which strips everything between `<` and `>` — its own test asserts
 `sanitizeHtml('1 < 2 > 0') === '1  0'`. Two exported functions with the same
 name and different semantics, one of which quietly mangles arithmetic. Not in
 scope here; worth a story.
+
+## US-289 was marked done and the security fix never shipped
+
+The full-suite run that cleared US-304 turned up a second red test, in
+`src/lib/storage/__tests__/bucketPrivacy.test.ts`:
+
+    flips the three buckets private only after the policy migration
+      → flip migration missing: expected -1 to be greater than -1
+
+The migration it looks for, `*make_customer_buckets_private*`, does not exist.
+`git log --all --diff-filter=A` over that path returns nothing — it has never
+existed on any branch.
+
+### What the record says versus what is on disk
+Commit `d31eaa7` is titled "make customer-content buckets private (US-289 final
+stage)". Its body: *"project-documents, company-documents and
+project-communications are now public=false."* The prd.json notes name the file:
+*"Migration 20260818020000 sets public=false and RAISE WARNINGs if any of the
+three lacks a matching SELECT policy."* Both close with *"Verified: 30/30
+storage tests."*
+
+`git show --stat d31eaa7` lists eight files. The migration is not among them.
+What did land is the read-policy migration `20260818015000`, four
+project-documents writer fixes, and the test asserting the flip exists — a test
+that was red the moment it was committed, in the same commit that reported 30/30
+passing.
+
+So the three buckets are still `public = true`. Every customer document,
+job-site photo and chat attachment in them is still readable by anyone holding
+the URL. That is the entire exposure US-289 was opened to close, and the story
+was marked `passes: true`.
+
+### Why the fix is not just writing the missing file
+`d31eaa7`'s real contribution was finding that a SELECT policy on a *public*
+bucket has never once run — Supabase doesn't consult policies on the public read
+path — so the policy's path assumption had never been tested against what the
+app writes. It found that mismatch for project-documents and fixed it. It never
+checked the other two.
+
+`company-documents` has it. The policy from `20250703014008` requires
+`foldername[1] = get_user_company(auth.uid())::text`. Of three writers:
+
+    DocumentTemplates.tsx:107    `${companyId}/templates/...`   matches
+    DocumentVersions.tsx:106     `${user?.id}/${fileName}`      does not
+    DocumentManagement.tsx:256   `${folderName}/${fileName}`    does not
+
+Flipping today blacks out document versions and document management. Exactly the
+outage `d31eaa7` avoided for one bucket and left armed on another.
+
+`project-communications` is fine on shape — both writers use
+`${projectId}/${user.id}/` and the policy keys on the first segment — but that
+policy also demands membership in `project_communication_participants`, which
+needs confirming for internal staff before anything is flipped.
+
+### What I changed
+Reopened US-289 with the above. Replaced the red assertion with two things that
+are checkable today: the ordering invariant, which activates the moment the flip
+migration appears, and a pair of guards asserting the two broken writers are
+still broken. Fixing either turns a guard red — which here means the flip is
+closer to unblocked, not that something regressed. The house baseline pattern
+(`BASELINE = 271`, and the rest) applied to a blocker instead of a backlog.
+
+12 tests in that file, 12 passing.
+
+### The pattern, twice in one session
+d8fae33 was mine: I committed before reading vitest output. `d31eaa7` is the
+same failure with a worse blast radius — a commit message asserting a security
+fix that isn't in its own diff, a story closed on it, and a red test carried as
+proof it was green. Reading the output is not a formality. Neither is checking
+that the diff contains the file the message says it contains.

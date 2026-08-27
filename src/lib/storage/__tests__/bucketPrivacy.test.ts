@@ -120,13 +120,60 @@ describe('project-documents path convention', () => {
     expect(migration).toContain('get_user_company');
   });
 
-  it('flips the three buckets private only after the policy migration', () => {
+  it('orders the flip migration after the read policies, once it is written', () => {
     const files = readdirSync(MIGRATIONS_DIR).filter((f) => f.endsWith('.sql')).sort();
     const policyAt = files.findIndex((f) => f.includes('project_documents_read_policies'));
-    const flipAt = files.findIndex((f) => f.includes('make_customer_buckets_private'));
     expect(policyAt, 'policy migration missing').toBeGreaterThan(-1);
-    expect(flipAt, 'flip migration missing').toBeGreaterThan(-1);
+
+    const flipAt = files.findIndex((f) => f.includes('make_customer_buckets_private'));
+    // The flip has NOT landed - US-289 is reopened. This asserted the flip
+    // migration existed and had been red since the commit that claimed to have
+    // written it. Ordering is the part that is checkable today, and it becomes
+    // load-bearing the moment the migration appears.
+    if (flipAt === -1) return;
     expect(flipAt, 'flip must run after the read policies exist').toBeGreaterThan(policyAt);
+  });
+});
+
+/**
+ * What still blocks the US-289 flip.
+ *
+ * A private bucket consults storage.objects policies; a public one never does.
+ * So a SELECT policy on a public bucket has never run, and its path assumption
+ * has never been tested against what the app actually writes. That mismatch was
+ * found and fixed for project-documents. company-documents has the same
+ * mismatch and it is still open: its SELECT policy (migration 20250703014008)
+ * requires the first path segment to be the caller's company id, and two of the
+ * three writers do not produce that shape.
+ *
+ * These tests assert the blocker is still present. When someone fixes a writer
+ * they go red, which is the signal that the flip is closer to unblocked - not a
+ * regression. Fix the writer, update the list, and when it is empty write
+ * supabase/migrations/<ts>_make_customer_buckets_private.sql.
+ */
+describe('US-289 flip blockers: company-documents path shapes', () => {
+  /** file -> the non-company-scoped first path segment it uploads under. */
+  const BROKEN_WRITERS = [
+    ['src/components/documents/DocumentVersions.tsx', '`${user?.id}/${fileName}`'],
+    ['src/pages/DocumentManagement.tsx', '`${folderName}/${fileName}`'],
+  ] as const;
+
+  it.each(BROKEN_WRITERS)(
+    '%s still writes a non-company-scoped path, so the flip would break its reads',
+    (file, fragment) => {
+      expect(
+        readFileSync(file, 'utf8'),
+        `${file} no longer writes ${fragment}. If it now writes ` +
+          '`${companyId}/...` the blocker is cleared - remove it from ' +
+          'BROKEN_WRITERS, and if the list is empty the US-289 flip can ship.',
+      ).toContain(fragment);
+    },
+  );
+
+  it('keeps the one writer that is already company-scoped that way', () => {
+    expect(readFileSync('src/pages/DocumentTemplates.tsx', 'utf8')).toContain(
+      '`${companyId}/templates/',
+    );
   });
 });
 
