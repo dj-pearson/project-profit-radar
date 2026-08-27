@@ -179,12 +179,26 @@ serve(async (req) => {
           return createErrorResponse(400, `Invalid ${validation.data.provider} config: ${configValidation.error}`, corsHeaders);
         }
 
-        // If setting as default, unset other defaults
+        // If setting as default, unset other defaults.
+        // The error was discarded and supabase-js returns it rather than
+        // throwing, so a failed clear followed by the insert below left TWO
+        // connections flagged is_default. Which one the login page then picks
+        // is whatever the query happens to return first, so users could be sent
+        // to the wrong identity provider. Fail closed: no second default
+        // (US-300).
         if (validation.data.is_default) {
-          await supabase
+          const { error: clearDefaultError } = await supabase
             .from("sso_connections")
             .update({ is_default: false })
             .neq("id", "00000000-0000-0000-0000-000000000000"); // Update all
+
+          if (clearDefaultError) {
+            return createErrorResponse(
+              500,
+              `Existing default connections could not be cleared, so this one was not created as default: ${clearDefaultError.message}`,
+              corsHeaders,
+            );
+          }
         }
 
         const { data, error } = await supabase
@@ -253,12 +267,22 @@ serve(async (req) => {
           }
         }
 
-        // If setting as default, unset other defaults
+        // If setting as default, unset other defaults. Same as the create path:
+        // a failed clear leaves two defaults and login provider selection
+        // becomes arbitrary (US-300).
         if (updateData.is_default) {
-          await supabase
+          const { error: clearDefaultError } = await supabase
             .from("sso_connections")
             .update({ is_default: false })
             .neq("id", id);
+
+          if (clearDefaultError) {
+            return createErrorResponse(
+              500,
+              `Existing default connections could not be cleared, so ${id} was not promoted to default: ${clearDefaultError.message}`,
+              corsHeaders,
+            );
+          }
         }
 
         const { data, error } = await supabase

@@ -5879,3 +5879,60 @@ also failed.
 
 6 new cases (65 total), four mutation-checked. Full suite: 129 files, 2859
 passing, 2 skipped. Remaining backlog 53.
+
+---
+
+## US-300, eighth edge batch: two defaults, a stuck spinner, a fake compressor
+
+**sso-manage** was the sharpest. "Unset other defaults" discarded its error on
+both the create and the update path, so a failed clear followed by the write left
+*two* `sso_connections` flagged `is_default`. Which one the login page then picks
+is whatever the query happens to return first, so users could be sent to the
+wrong identity provider. Both paths fail closed now.
+
+**sync-calendar** answered `events_synced: events.length` - the number fetched
+from the provider, not stored - so it could report "42 events synced" having
+written none. It counts stored rows now, and only advances `last_sync` when
+everything landed. Stamping a successful sync over a partial one is what turns a
+gap into a permanent one, because the next run starts after the events that never
+arrived.
+
+**sync-analytics-data**'s completion write is the one that takes a connection
+back *out* of `syncing`, so losing it meant a permanent spinner for a sync that
+had already finished. It also stored the fixed string `'Sync failed'` instead of
+the actual error, which told whoever read the row nothing.
+
+### image-processor is worth reading properly
+
+It writes `documents.transcoding_status = 'completed'` and reports savings of
+`imageBlob.size * 0.65` - the comment says "~35% savings typical" - a constant
+presented to the caller as a measurement.
+
+Nothing in that function resizes or transcodes anything. Every "responsive size",
+and the thumbnail, is the **original blob** re-uploaded under a `.webp` name with
+`contentType: 'image/webp'`. So the feature multiplies storage by the number of
+requested sizes instead of reducing it, a mobile client fetching `-small.webp`
+gets the full original, and the stored content type is wrong about its own bytes.
+
+The real work is meant to be done by an async job reading
+`image_processing_queue`. That queue insert - the only handoff to it - was
+`.then(() => {}).catch(() => {})` under a comment saying "Queue table might not
+exist, that's ok". The table does exist (migration `20251209000004`), and
+postgrest resolves with `{ error }` rather than rejecting, so the catch was dead
+code either way.
+
+Status is `pending` now, savings reports the real numbers with a note saying why
+they are equal, and the queue insert throws.
+
+I did not rewrite the pipeline. Real resizing needs an image library, and nothing
+calls this feature - `useImageProcessor` has zero usages in `src/`, it is one of
+US-314's orphans. Recorded rather than fixed.
+
+**generate-churn-predictions** incremented `predictionsGenerated` whether or not
+the write worked. **schedule-trial-emails** dropped a campaign insert error that
+surfaced twelve lines later as "Campaign not found" from the lookup - reading
+like a configuration problem, while a trial user silently lost one step of their
+nurture sequence.
+
+9 new cases (74 total), six mutation-checked. Full suite: 129 files, 2868
+passing, 2 skipped. TS budget unchanged at 646. Remaining backlog 41.

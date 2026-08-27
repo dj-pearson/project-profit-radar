@@ -596,3 +596,89 @@ describe('the seventh edge batch: writes that gate their own scheduler', () => {
     expect(src).toMatch(/const \{ error: contextError \} = await supabase/);
   });
 });
+
+describe('the eighth edge batch: two defaults, a stuck spinner, and a fake compressor', () => {
+  it('sso-manage will not leave two connections flagged as the default provider', () => {
+    // The "unset other defaults" update discarded its error, so a failed clear
+    // followed by the insert left two is_default rows and login provider
+    // selection became whatever the query returned first.
+    const src = code(F('sso-manage'));
+    const clears = src.match(/const \{ error: clearDefaultError \} = await supabase/g) || [];
+    expect(clears.length, 'both the create and update paths must clear').toBe(2);
+    expect(src).toContain('was not created as default');
+    expect(src).toContain('was not promoted to default');
+  });
+
+  it('sync-calendar counts events it stored, not events it fetched', () => {
+    const src = code(F('sync-calendar'));
+    expect(src).toMatch(/const \{ error: eventError \} = await supabaseClient/);
+    expect(src).toContain('events_synced: storedCount');
+    expect(src).toContain('events_fetched: events.length');
+    expect(src).not.toMatch(/events_synced: events\.length/);
+  });
+
+  it('and does not stamp a successful sync over a partial one', () => {
+    // Advancing last_sync after a partial store is what makes the gap
+    // permanent - the next run starts after the events that never landed.
+    const src = code(F('sync-calendar'));
+    expect(src).toContain('if (storeFailures.length === 0) {');
+    expect(src).toContain('last_sync deliberately not advanced');
+  });
+
+  it('sync-analytics-data does not strand a connection at "syncing"', () => {
+    const src = code(F('sync-analytics-data'));
+    expect(src).toMatch(/const \{ error: syncResultError \} = await serviceClient/);
+    expect(src).toContain("STUCK at 'syncing'");
+    expect(src).toMatch(/const \{ error: syncingError \} = await serviceClient/);
+  });
+
+  it('and stores why a sync failed instead of the string "Sync failed"', () => {
+    const src = code(F('sync-analytics-data'));
+    expect(src).toContain('last_sync_error: syncErrorMessage');
+    expect(src).not.toMatch(/last_sync_error: syncResult\.status === 'failed' \? 'Sync failed' : null/);
+  });
+
+  it('image-processor stops claiming a transcode it never performed', () => {
+    // Every "responsive size" is the original blob re-uploaded under a .webp
+    // name, and savings was imageBlob.size * 0.65 - a constant presented as a
+    // measurement. The document was marked transcoding_status 'completed'.
+    const src = code(F('image-processor'));
+    expect(src).toContain("transcoding_status: 'pending'");
+    expect(src).not.toContain("transcoding_status: 'completed'");
+    expect(src).not.toContain('imageBlob.size * 0.65');
+    expect(src).toContain('No compression has happened yet');
+  });
+
+  it('and reads the queue insert that is the only handoff to real processing', () => {
+    // It was `.then(() => {}).catch(() => {})` under a comment claiming the
+    // table might not exist. It does - migration 20251209000004 creates it -
+    // and postgrest resolves with { error } rather than rejecting, so the
+    // catch was dead code either way.
+    const src = code(F('image-processor'));
+    expect(src).toMatch(/const \{ error: queueError \} = await supabase/);
+    expect(src).not.toMatch(/\.then\(\(\) => \{\}\)/);
+    expect(src).toContain('no version of this image will ever be produced');
+    expect(src).toMatch(/const \{ error: documentError \} = await supabase/);
+  });
+
+  it('generate-churn-predictions counts predictions it stored', () => {
+    const src = code(F('generate-churn-predictions'));
+    expect(src).toMatch(/const \{ error: predictionError \} = existingPrediction/);
+    // The counter must be unreachable when the write failed.
+    const guardIndex = src.indexOf('if (predictionError) {');
+    const counterIndex = src.indexOf('predictionsGenerated++');
+    expect(guardIndex).toBeGreaterThan(-1);
+    expect(counterIndex).toBeGreaterThan(guardIndex);
+    expect(src.slice(guardIndex, counterIndex)).toContain('continue;');
+  });
+
+  it('schedule-trial-emails says a campaign failed to write rather than "not found"', () => {
+    // A failed insert surfaced 12 lines later as "Campaign not found" from the
+    // lookup, which reads like a configuration problem, and the trial user
+    // silently lost that step of the sequence.
+    const src = code(F('schedule-trial-emails'));
+    expect(src).toMatch(/const \{ error: campaignError \} = await supabaseClient/);
+    expect(src).toContain('was NOT created, so this email will be skipped below');
+    expect(src).toMatch(/const \{ error: preferencesError \} = await supabaseClient/);
+  });
+});

@@ -35,10 +35,19 @@ export interface ProcessingResult {
   };
   processed: ProcessedVersion[];
   thumbnail?: string;
+  /** How many versions were queued for real processing. Additive (US-300). */
+  versionsQueued?: number;
   savings?: {
     originalSize: number;
     processedSize: number;
     percentage: number;
+    /**
+     * Present while the edge function has not compressed anything yet - it
+     * uploads the original under each requested name and hands the real work
+     * to image_processing_queue. Previously `percentage` was a hardcoded 35%
+     * (US-300).
+     */
+    note?: string;
   };
   error?: string;
 }

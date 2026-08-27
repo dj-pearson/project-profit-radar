@@ -73,9 +73,14 @@ serve(async (req) => {
       throw new Error(`Unsupported provider: ${integration.provider}`);
     }
 
-    // Store events in database
+    // Store events in database. Each upsert discarded its error and supabase-js
+    // returns it rather than throwing, while the response reported
+    // events_synced: events.length - the number FETCHED from the provider. A
+    // sync could answer "42 events synced" having stored none of them (US-300).
+    let storedCount = 0;
+    const storeFailures: string[] = [];
     for (const event of events) {
-      await supabaseClient
+      const { error: eventError } = await supabaseClient
         .from('calendar_events')
         .upsert({
           company_id,
@@ -89,19 +94,41 @@ serve(async (req) => {
         }, {
           onConflict: 'external_id,integration_id'
         });
+
+      if (eventError) {
+        storeFailures.push(`${event.external_id}: ${eventError.message}`);
+      } else {
+        storedCount++;
+      }
     }
 
-    // Update last sync time
-    await supabaseClient
-      .from('calendar_integrations')
-      .update({ last_sync: new Date().toISOString() })
-      .eq('id', integration_id);
+    // Update last sync time. Only advance it when everything landed - stamping
+    // a successful sync over a partial one is what makes the gap permanent
+    // (US-300).
+    if (storeFailures.length === 0) {
+      const { error: lastSyncError } = await supabaseClient
+        .from('calendar_integrations')
+        .update({ last_sync: new Date().toISOString() })
+        .eq('id', integration_id);
 
-    logStep("Sync completed", { eventsCount: events.length });
+      if (lastSyncError) {
+        logStep("Events stored but last_sync was not advanced", { error: lastSyncError.message });
+      }
+    } else {
+      logStep("Sync incomplete, last_sync deliberately not advanced", {
+        fetched: events.length,
+        stored: storedCount,
+        failures: storeFailures.slice(0, 5),
+      });
+    }
 
-    return new Response(JSON.stringify({ 
-      success: true, 
-      events_synced: events.length 
+    logStep("Sync completed", { fetched: events.length, stored: storedCount });
+
+    return new Response(JSON.stringify({
+      success: storeFailures.length === 0,
+      events_fetched: events.length,
+      events_synced: storedCount,
+      failures: storeFailures.length,
     }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 200,
