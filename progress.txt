@@ -2988,3 +2988,59 @@ applyTemplate.
 216 edge + 56 web. The edge remainder is mostly logging, analytics and
 notification tables, where a lost write is a lost record rather than a lie.
 Triage those by whether anything downstream depends on the row existing.
+
+================================================================================
+2026-08-27 — US-287 verified complete, and a wrong turn worth recording
+================================================================================
+
+### The story's notes had gone stale
+All of US-287's code work had landed in later commits. Rather than take the
+notes at face value I checked each claim:
+
+- execute-workflow's engine is whole. startExecution creates the execution row
+  and calls executeSteps; continueExecution is defined and resumes from
+  completed_steps; executeSteps takes a real startIndex. The
+  undefined-continueExecution runtime failure the story describes is gone.
+- gsc-sync-data returns 400 when property_id is missing.
+- gsc-fetch-properties takes no request body at all. The block a botched edit
+  destroyed was obsolete site_id multi-tenant validation, dropped platform-wide
+  in the single-tenant migration — there is a comment saying so where it used to
+  be. Nothing to reinstate.
+- api-management validates key_name, plus grants and rate limit added under
+  US-297.
+- No TODO markers left.
+
+Verified with an AST check across all six named functions: every one parses, and
+none calls an identifier that is never declared or imported. That last check is
+the point — an undefined call is exactly what a botched edit leaves behind, and
+it is invisible to a parser.
+
+### The wrong turn
+I concluded the two test files under supabase/functions/_shared were dead
+weight, because `grep 'deno test'` found nothing in CI or package.json. That was
+searching for the wrong thing. They are **vitest** tests, and vitest.config.ts
+already includes `supabase/functions/_shared/**/*.{test,spec}.ts`. Running them
+takes 700ms and they pass.
+
+Two searches for absence, two wrong conclusions this session — this one, and the
+throw-inside-catch check that passed on zero files. **Absence of evidence from a
+search is only evidence if the search was aimed correctly.** Run the thing.
+
+### What was added
+AC3 asks for a test per repaired function. Most import Deno URL modules and
+cannot run under vitest, so that is not feasible; dependency-free shared logic
+is. Rather than pad coverage, the test protects a real security property: the
+writable-column allowlists from US-241/US-297.
+
+The assertions are about what must be **absent** — tenancy columns, provenance
+columns, and the time_entries approval columns that gate payroll review. A
+column silently reappearing in one of those lists reopens the mass-assignment
+hole, and an absence-assertion fails on that where a presence-assertion would
+not.
+
+Mutation-checked: adding company_id to the project list and approval_status to
+the time-entry list fails 3 assertions; restoring them passes all 15.
+
+### Still open
+Testing edge functions properly needs Deno in CI. Not possible here — no Deno
+binary, and deno.land is blocked by the agent proxy.
