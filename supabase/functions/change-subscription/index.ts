@@ -3,12 +3,20 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@14.21.0";
 import { initializeAuthContext, errorResponse } from '../_shared/auth-helpers.ts';
 import { getCorsHeaders } from '../_shared/secure-cors.ts';
+import { z } from "npm:zod@3";
+import { validateBody } from '../_shared/validate-body.ts';
 
 interface SubscriptionChangeRequest {
   new_tier: 'starter' | 'professional' | 'enterprise';
   new_billing_period?: 'monthly' | 'annual';
   proration_behavior?: 'create_prorations' | 'none' | 'always_invoice';
 }
+
+const SubscriptionChangeSchema = z.object({
+  new_tier: z.enum(['starter', 'professional', 'enterprise']),
+  new_billing_period: z.enum(['monthly', 'annual']).optional(),
+  proration_behavior: z.enum(['create_prorations', 'none', 'always_invoice']).optional(),
+});
 
 const logStep = (step: string, details?: any) => {
   const detailsStr = details ? ` - ${JSON.stringify(details)}` : '';
@@ -33,7 +41,9 @@ serve(async (req) => {
     if (!user?.email) throw new Error("User not authenticated");
     logStep("User authenticated", { userId: user.id });
 
-    const changeRequest: SubscriptionChangeRequest = await req.json();
+    const parsed = await validateBody(req, SubscriptionChangeSchema, { name: 'change-subscription' });
+    if (!parsed.ok) return parsed.response;
+    const changeRequest = parsed.data as SubscriptionChangeRequest;
     logStep("Change request received", {
       newTier: changeRequest.new_tier,
       newBilling: changeRequest.new_billing_period

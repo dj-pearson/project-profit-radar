@@ -1,6 +1,8 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { initializeAuthContext, errorResponse, successResponse, safeErrorResponse } from '../_shared/auth-helpers.ts';
 import { getCorsHeaders } from '../_shared/secure-cors.ts';
+import { z } from "npm:zod@3";
+import { validateBody } from '../_shared/validate-body.ts';
 
 interface InvoiceRequest {
   client_name: string;
@@ -19,6 +21,24 @@ interface InvoiceRequest {
   notes?: string;
   terms?: string;
 }
+
+const InvoiceRequestSchema = z.object({
+  client_name: z.string().min(1).max(500),
+  client_email: z.string().email().max(255),
+  project_id: z.string().uuid().optional(),
+  due_date: z.string().min(1),
+  line_items: z.array(z.object({
+    description: z.string().min(1).max(2000),
+    quantity: z.number(),
+    unit_price: z.number(),
+    cost_code_id: z.string().uuid().optional(),
+    project_phase_id: z.string().uuid().optional(),
+  })).min(1),
+  tax_rate: z.number().optional(),
+  discount_amount: z.number().optional(),
+  notes: z.string().max(10000).optional(),
+  terms: z.string().max(10000).optional(),
+});
 
 const logStep = (step: string, details?: any) => {
   const detailsStr = details ? ` - ${JSON.stringify(details)}` : '';
@@ -43,7 +63,9 @@ serve(async (req) => {
     const { user, supabase } = authContext;
     logStep("User authenticated", { userId: user.id });
 
-    const invoiceData: InvoiceRequest = await req.json();
+    const parsed = await validateBody(req, InvoiceRequestSchema, { name: 'generate-invoice' });
+    if (!parsed.ok) return parsed.response;
+    const invoiceData = parsed.data as InvoiceRequest;
     logStep("Invoice data received", {
       client: invoiceData.client_name,
       itemCount: invoiceData.line_items.length });

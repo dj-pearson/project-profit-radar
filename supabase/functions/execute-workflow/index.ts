@@ -3,11 +3,21 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.50.3'
 import { getCorsHeaders, handleCorsPreflightRequest } from '../_shared/secure-cors.ts'
 import { initializeAuthContext, verifyCompanyAccess, errorResponse } from '../_shared/auth-helpers.ts'
 import { authorizeWorkflowAccess } from '../_shared/workflow-auth.ts'
+import { z } from "npm:zod@3"
+import { validateBody } from '../_shared/validate-body.ts'
 
 // SECURITY (US-236): the caller is authenticated and confirmed to own the target
 // workflow/execution before anything runs with the service role (see handler below).
 // The execution engine (startExecution / continueExecution / executeSteps and the
 // per-step executors) was restored in US-287 after a botched edit truncated it.
+
+const ExecuteWorkflowSchema = z.object({
+  workflowId: z.string().uuid().optional(),
+  triggerData: z.record(z.unknown()).optional(),
+  executionId: z.string().uuid().optional(),
+}).refine((v) => v.workflowId || v.executionId, {
+  message: 'either workflowId or executionId is required',
+});
 
 interface WorkflowStep {
   name: string
@@ -47,7 +57,9 @@ Deno.serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
 
-    const { workflowId, triggerData = {}, executionId } = await req.json()
+    const parsed = await validateBody(req, ExecuteWorkflowSchema, { name: 'execute-workflow' })
+    if (!parsed.ok) return parsed.response
+    const { workflowId, triggerData = {}, executionId } = parsed.data as Record<string, any>
 
     const decision = await authorizeWorkflowAccess(
       { workflowId, executionId },

@@ -143,6 +143,9 @@ jobs:
       - name: Wildcard-CORS guard (US-240)
         run: node scripts/check-cors-wildcards.mjs
 
+      - name: Edge-function input-validation guard (US-241)
+        run: node scripts/check-edge-input-validation.mjs
+
       - name: Migration filename guard (US-235)
         run: bash scripts/check-migration-filenames.sh
 

@@ -4,6 +4,8 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { initializeAuthContext, errorResponse, successResponse, safeErrorResponse } from '../_shared/auth-helpers.ts'
 import { getCorsHeaders } from '../_shared/secure-cors.ts';
+import { z } from "npm:zod@3";
+import { validateBody } from '../_shared/validate-body.ts';
 
 interface Point {
   lat: number
@@ -21,6 +23,36 @@ interface Geofence {
   project_id: string | null
   is_active: boolean
 }
+
+const point = z.object({ lat: z.number(), lng: z.number() });
+
+/** Mirrors the params each action's handler already declares. */
+const GeofencingRequestSchema = z.discriminatedUnion('action', [
+  z.object({
+    action: z.literal('check_location'),
+    lat: z.number(), lng: z.number(),
+    user_id: z.string().uuid().optional(),
+    project_id: z.string().uuid().optional(),
+  }),
+  z.object({
+    action: z.literal('calculate_distance'),
+    point1: point, point2: point,
+  }),
+  z.object({
+    action: z.literal('check_geofence_breach'),
+    entry_id: z.string().uuid(), geofence_id: z.string().uuid(),
+    lat: z.number(), lng: z.number(),
+  }),
+  z.object({
+    action: z.literal('process_gps_entry'),
+    entry_id: z.string().uuid(), user_id: z.string().uuid(),
+    project_id: z.string().uuid().optional(),
+  }),
+  z.object({
+    action: z.literal('calculate_travel_distance'),
+    locations: z.array(point),
+  }),
+]);
 
 const logStep = (step: string, details?: any) => {
   console.log(`[GEOFENCING] ${step}${details ? ` - ${JSON.stringify(details)}` : ''}`)
@@ -43,7 +75,9 @@ serve(async (req) => {
     const { user, supabase } = authContext
     logStep('User authenticated', { userId: user.id })
 
-    const { action, ...params } = await req.json()
+    const parsed = await validateBody(req, GeofencingRequestSchema, { name: 'geofencing' })
+    if (!parsed.ok) return parsed.response
+    const { action, ...params } = parsed.data as Record<string, any>
 
     switch (action) {
       case 'check_location':
