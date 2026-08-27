@@ -4626,3 +4626,37 @@ The delegation exemption is a `DELEGATES` map that names the delegate and
 requires it to contain the check — deliberately **not** a blanket "one level of
 delegation is fine" rule, because that rule would have accepted the two real
 misplacements this whole check exists for.
+
+## US-302 AC3 — what happens if someone adopts it
+
+Worked the 20-module worklist with the story's own framing. Baseline 20 → 17,
+with a verdict recorded against each in the guard header so nobody repeats it.
+
+**`src/services/SecurityService.ts`, deleted.** Entirely mock.
+`updateSecuritySettings` and `resolveSecurityAlert` each showed a success toast
+and returned `true` from an *empty* try body — an admin toggling MFA-required
+would see "Security settings updated successfully" and change nothing.
+`performSecurityScan` returned a hardcoded score of 85 and two invented issues.
+`getSecuritySettings` returned "Mock security settings".
+
+The decisive detail is the name. There is a **live**
+`src/lib/security/securityService.ts` that `SecureRoute.tsx` and
+`useAuthorization.ts` genuinely use. Someone importing "SecurityService" could
+plausibly get the mock. That is this AC's hazard in its clearest form.
+
+**`src/hooks/useAuth.ts`, deleted.** A second `useAuth`, resolving role through
+the `get_user_primary_role` RPC while the app's comes from `AuthContext`. I
+checked whether the unreferenced one was the *more* secure of the two before
+deleting — it isn't. Both read server-side, and `AuthContext` calls that same
+RPC at line 439. A duplicate, not a fix.
+
+**`src/contexts/MockAuthContext.tsx`, deleted.** A test double in production
+source, next to the real `AuthContext`, hardcoding `role: 'admin'` and a real
+production company UUID with the comment "Real company ID from database".
+
+**Kept, real but unreferenced:** `secureLogger`, `sessionFingerprint`,
+`dosProtection`, `mobile/utils/permissions`, `useActiveSessions`, `useMFASetup`,
+`components/mfa/index`. I checked `dosProtection` specifically because it showed
+four permissive returns — they're branches of a real analysis (config disabled,
+IP whitelisted, low risk score), not blanket permissiveness. The rest of the list
+is unrouted UI, not logic.

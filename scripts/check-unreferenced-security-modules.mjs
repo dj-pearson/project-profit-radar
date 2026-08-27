@@ -55,6 +55,37 @@ const NEVER_FLAG = [
  * still needs the delete / wire-up / fail-closed decision US-302 AC3 asks for;
  * this list is the worklist, and it must only ever shrink.
  */
+/**
+ * Triaged 2026-08-27 (US-302 AC3). Verdicts, so the next reader does not repeat
+ * the work:
+ *
+ *   DELETED  services/SecurityService.ts   entirely mock - updateSecuritySettings
+ *                                          and resolveSecurityAlert showed a
+ *                                          success toast and wrote nothing,
+ *                                          performSecurityScan returned a
+ *                                          hardcoded score of 85 and two
+ *                                          invented issues. Worse, it name-
+ *                                          collided with the LIVE
+ *                                          lib/security/securityService.ts.
+ *   DELETED  hooks/useAuth.ts               a second useAuth, resolving role via
+ *                                          get_user_primary_role while the app's
+ *                                          comes from AuthContext. Both server-
+ *                                          side, so no security difference -
+ *                                          just a duplicate.
+ *   DELETED  contexts/MockAuthContext.tsx   a test double in production source,
+ *                                          hardcoding role: 'admin' and a real
+ *                                          production company UUID.
+ *
+ *   KEEP     lib/secureLogger.ts, lib/sessionFingerprint.ts,
+ *            utils/dosProtection.ts, mobile/utils/permissions.ts,
+ *            hooks/useActiveSessions.ts, hooks/useMFASetup.ts,
+ *            components/mfa/index.ts
+ *            Real implementations, currently unreferenced. dosProtection's
+ *            `allowed: true` returns are branches of a real analysis
+ *            (whitelist, disabled, low risk), not blanket permissiveness.
+ *
+ *   REVIEW   the remaining dashboards and panels are unrouted UI, not logic.
+ */
 const BASELINE = new Set([
   'src/components/admin/DosProtection.tsx',
   'src/components/audit/ActivityLogger.tsx',
@@ -64,9 +95,7 @@ const BASELINE = new Set([
   'src/components/security/IncidentResponseDashboard.tsx',
   'src/components/security/SecurityAuditPanel.tsx',
   'src/components/testing/SecurityTestSuite.tsx',
-  'src/contexts/MockAuthContext.tsx',
   'src/hooks/useActiveSessions.ts',
-  'src/hooks/useAuth.ts',
   'src/hooks/useMFASetup.ts',
   // Became unreferenced when US-296 deleted MFASetupDialog and TwoFactorAuth,
   // which were its only importers - dead code holding dead code up.
@@ -76,7 +105,6 @@ const BASELINE = new Set([
   'src/mobile/utils/permissions.ts',
   'src/pages/SecurityMonitoringPage.tsx',
   'src/routes/routeSecurity.tsx',
-  'src/services/SecurityService.ts',
   'src/utils/dosProtection.ts',
 ]);
 
