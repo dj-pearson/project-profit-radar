@@ -2313,3 +2313,69 @@ req.json() at all (validateBody reads it). Converted functions silently vanished
 from both numerator and denominator. Now it counts anything that takes a JSON
 body (reads it raw OR calls the helper) and splits on whether a schema is
 involved. 23 validated, 133 backlog, of 156.
+
+================================================================================
+2026-08-27 — US-241 mass-assignment sweep: two real findings
+================================================================================
+
+Swept every edge function with the TypeScript AST for writes that spread a
+request body into insert()/update()/upsert(). The first pass found one site; it
+only tracked variables bound *directly* from req.json(), so a body copied into
+another variable slipped past. Following aliases to a fixpoint — `const x = body`,
+`const y = { ...body }`, `const z = body as T` — surfaced the second.
+
+Script pattern, worth keeping: collect body-derived names, grow that set until
+it stops changing, then walk every CallExpression whose property name is
+insert/update/upsert and scan its first argument for an identifier in the set
+(recursing through array literals and spread assignments). It generalises to any
+"tainted value reaches sink" question in this repo.
+
+### Finding 1 — api-management, service role, cross-tenant write
+POST /api/projects on the third-party API. It builds its client with
+SUPABASE_SERVICE_ROLE_KEY, so **RLS is not a backstop** — whatever the body
+carries reaches Postgres. It spread the body and overrode `company_id`, but not
+`site_id` or `tenant_id`. An API-key holder could write a project into another
+tenant's site, and set `id`, `created_by` and `created_at` on the way.
+
+`site_id` now comes from `companies.site_id` for the key's own company. The API
+key record only carries company_id, so that lookup is the only server-side
+source; the request 400s if it does not resolve.
+
+### Finding 2 — time-tracking, self-approving timesheets
+The clock-in handler spread the body into `time_entries`. That table's RLS
+(time_entries_insert in 20260128000001_defense_in_depth_rls.sql) checks
+`user_in_company(company_id)` and that the row is your own — and nothing else.
+So `approval_status`, `approved_by`, `approved_at`, `approval_notes`,
+`rejection_reason` and `submitted_at` were all caller-settable. A worker could
+clock in with `approval_status: 'approved'` and skip timesheet review entirely.
+That is a payroll control, not a data-shape nit.
+
+Those columns and `total_hours` are off the allowlist. `total_hours` is computed
+from start/end by the stop handler anyway.
+
+### The generalisation, filed as US-297
+The RLS policies in this repo check *tenancy and ownership*. None of them
+constrain *which columns* a role may write. So any table carrying workflow-state
+or approval columns has this hole wherever a handler writes caller-supplied
+fields, and any service-role function has it with no backstop at all.
+
+### Why the allowlists could be applied immediately
+Unlike the schemas, the allowlists are not staged behind INPUT_VALIDATION_MODE.
+Dropping a column a client should never have been writing does not strand an
+older client. Checked callers before narrowing anyway:
+
+  projects        0 in-repo callers
+  time-tracking   0
+  geofencing      0
+  api-management  3      (external API-key holders too — hence deriving site_id
+                          rather than dropping it outright)
+  change-orders   7
+  generate-invoice 2
+  execute-workflow 1
+  change-subscription 1
+
+projects, time-tracking and geofencing having no caller at all is its own
+signal — more unwired surface, same family as the MFA stubs in US-296.
+
+### State
+Schemas: 8 of the ~30 target. Guard backlog 132 of 156. Body-spread writes: 0.
