@@ -3103,3 +3103,22 @@ Tightening it needs a real `tsc` count — tsgo is close but not authoritative a
 a wrong-way guess turns CI red for everyone. A `tsc --noEmit` run was started
 during this session and had not finished (~60 min here). Worth finishing before
 relying on the ratchet as a merge gate.
+
+### Addendum — the tsc baseline, now off a real number
+The background `tsc --noEmit -p tsconfig.app.json` finished: **1855 errors**.
+tsgo reported 1854 for the same tree, so the "+/-1" equivalence in US-212's
+notes is verified rather than assumed — worth knowing, because tsgo takes 90
+seconds and tsc takes about an hour here.
+
+`.github/ts-error-baseline.txt` lowered 2100 -> 1860. Slack drops from 245 to 5.
+
+The 5 is deliberate. `Type Check` is about to become a required merge gate, and
+the two failure modes are not symmetric: a baseline 5 too loose lets five errors
+slip in, while a baseline one too tight turns CI red for everyone on a trivial
+tsc-version or platform delta and blocks every merge. Re-tighten as US-212
+progresses.
+
+Also worth recording: a full tsc run *does* complete in this sandbox if you
+start it in the background and get on with something else. The US-212 note
+saying it is "impractical here" is true for foreground work and wrong as an
+absolute — when an authoritative number matters, it is an hour, not a blocker.
