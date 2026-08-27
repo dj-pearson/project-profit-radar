@@ -12,12 +12,14 @@
   <link rel="dns-prefetch" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://images.unsplash.com" crossorigin>
 
-  <!-- Self-Hosted Fonts - Only preload critical weight (400), load stylesheet async -->
+  <!-- Self-Hosted Fonts - preload the critical weight (400), then load the sheet.
+       Loaded plainly rather than with the media="print" onload="this.media='all'"
+       trick: that is an inline event handler, which 'unsafe-inline' in script-src
+       was permitting and hashes cannot cover (US-202). The sheet is 545 bytes and
+       same-origin, so the async dance bought almost nothing, and dropping it also
+       removes the noscript duplicate. -->
   <link rel="preload" href="/fonts/inter-400.woff2" as="font" type="font/woff2" crossorigin fetchpriority="high">
-  <link rel="stylesheet" href="/fonts/inter.css" media="print" onload="this.media='all'">
-  <noscript>
-    <link rel="stylesheet" href="/fonts/inter.css">
-  </noscript>
+  <link rel="stylesheet" href="/fonts/inter.css">
 
   <!-- Favicon and PWA meta tags -->
   <link rel="icon" type="image/x-icon" href="/favicon.ico">

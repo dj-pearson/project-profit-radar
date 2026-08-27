@@ -166,6 +166,9 @@ jobs:
       - name: Ruleset/workflow consistency guard (US-213)
         run: node scripts/check-ruleset-consistency.mjs
 
+      - name: CSP inline-script hash guard (US-202)
+        run: node scripts/check-csp-hashes.mjs
+
       - name: Migration filename guard (US-235)
         run: bash scripts/check-migration-filenames.sh
 
