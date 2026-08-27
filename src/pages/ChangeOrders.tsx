@@ -328,11 +328,21 @@ const ChangeOrders = () => {
 
       // US-108: persist the approver's signature (company-scoped) when provided.
       if (approved && signature && userProfile?.company_id) {
-        await supabase
+        // A change order alters the contract value, so the approver's
+        // signature is the evidence the change was authorised. Losing it
+        // silently while the toast below says "approved successfully" leaves
+        // an approved order with nothing behind it (US-300).
+        const { error: signatureError } = await supabase
           .from('change_orders')
           .update({ signature })
           .eq('id', orderId)
           .eq('company_id', userProfile.company_id);
+        if (signatureError) {
+          throw new Error(
+            `The change order was ${approved ? 'approved' : 'rejected'}, but the signature could not be saved ` +
+              `(${signatureError.message}). Re-sign it before treating the approval as authorised.`,
+          );
+        }
       }
 
       toast({

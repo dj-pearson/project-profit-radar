@@ -276,9 +276,13 @@ export function useVideoUpload(options: UseVideoUploadOptions = {}) {
           } else {
             documentId = document.id;
 
-            // If project ID provided, also create project_videos record
+            // If project ID provided, also create project_videos record.
+            // The documents insert above reads docError; this one did not, so
+            // a failure here leaves the video as a document that is never
+            // linked to the project and never appears in its video list
+            // (US-300).
             if (projectId) {
-              await supabase.from('project_videos').insert({
+              const { error: linkError } = await supabase.from('project_videos').insert({
                 company_id: companyId,
                 project_id: projectId,
                 document_id: documentId,
@@ -286,6 +290,13 @@ export function useVideoUpload(options: UseVideoUploadOptions = {}) {
                 video_type: 'documentation',
                 created_by: userProfile?.id,
               });
+              if (linkError) {
+                console.error('Failed to link video to project:', linkError);
+                throw new Error(
+                  `The video uploaded but could not be linked to the project (${linkError.message}). ` +
+                    `It is in your documents; add it to the project manually.`,
+                );
+              }
             }
           }
         }

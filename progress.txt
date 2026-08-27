@@ -3985,3 +3985,34 @@ shape it will surface: an authenticated session whose `getUser()` fell into its
 `anon_insert_session_consent` is granted `TO anon`) and is rejected.
 
 BASELINE 271 → 263. 48 web-app sites and 215 edge-function sites remain.
+
+### Seven more, all the same shape
+The UI reports success; local state and the database part company.
+
+`EstimateForm.tsx:309` is the one with teeth. Editing an estimate deletes the
+existing line items and then inserts the new ones — and the insert runs whether
+or not the delete worked. A silently failed delete leaves the old rows alongside
+the new ones and **the estimate total doubles**, on a document the customer sees.
+It now refuses to save rather than duplicating.
+
+`ClientPortalRFIs.tsx:136` uploads the attachment to storage, then inserts the
+`documents` row. Without that row the file is invisible to the app: orphaned
+storage, and an RFI claiming an attachment nobody can open. Now it takes the file
+back out of the bucket and fails loudly.
+
+`useVideoUpload.ts:281` was an inconsistency inside a single function — the
+`documents` insert three lines above it reads `docError`; the `project_videos`
+link insert did not. Without the link the video is a document that never appears
+in the project it was uploaded to.
+
+`ChangeOrders.tsx:331` persists the approver's signature. A change order alters
+the contract value, so that signature is the evidence the change was authorised,
+and it was being dropped while the toast said "approved successfully".
+
+`TaskCard.tsx:72` calls `onDelete(task.id)` after the delete, removing the card
+whether or not the row went — task vanishes, returns on refresh. `TodoWidget`
+did the same with the checkbox, and its `addTodo` destructured only `data`, so a
+failed insert did nothing at all with no indication why.
+
+AC4 and AC5, exactly: no success message for a write that failed, no local state
+cleared ahead of the write it depends on. BASELINE 263 → 256.
