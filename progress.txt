@@ -4144,3 +4144,45 @@ it. It now warns but still navigates — trapping them there would be worse.
 
 BASELINE 223 → 215. AC2 is met. What remains — 40 web-app, 175 edge — is
 telemetry, analytics, queues and integration bookkeeping.
+
+## US-301 — the CSP landmine
+
+`src/utils/security.ts` carried `addSecurityHeaders()`, which appended a *second*
+Content-Security-Policy as a meta tag. CSP policies combine **restrictively**:
+where two are present, a resource must satisfy both. Its production `script-src`
+was:
+
+    'self' https://api.ipify.org https://*.posthog.com
+
+No Stripe. No Google Tag Manager. No Sentry. No Google or Apple sign-in. None of
+the four inline-script hashes in `public/_headers`.
+
+It never ran — its only caller was `useSecurityEnhancement`, mounted nowhere. So
+it wasn't an outage, it was a landmine: adding that hook to a layout because it
+sounds like a good idea breaks checkout, analytics, SSO and the Trusted Types
+bootstrap on the next deploy.
+
+Both are deleted. `check-csp-hashes.mjs` now walks `src/` and fails on any line
+setting `http-equiv`/`httpEquiv` near a `Content-Security-Policy` string —
+comments and mentions stay legal, because violation reporting and tests
+legitimately name the header. Mutation-tested with a probe module that appends a
+meta tag: caught, named by file and line.
+
+### What deleting it exposed
+`src/utils/security.ts` is a shadow security module. It holds a **third**
+`sanitizeHtml` (regex, after the DOMPurify one in `lib/security` and the regex
+one in `lib/validations`), a **second** `checkRateLimit` that counts in
+`localStorage` and is defeated by clearing it, and a duplicate set of CSRF
+helpers alongside the real `src/lib/security/csrfProtection.ts`.
+
+After this change, the CSRF helpers, `checkRateLimit`, `logCSPViolation`,
+`getCSRFToken` and `validateCSRFToken` in that file are all unreferenced. Only
+`ResetPassword.tsx` still imports from it, and only `validatePassword` and
+`sanitizeInput`. That is US-302's problem, and it is a bigger one than the CSP.
+
+Six pre-existing eslint errors in the file surfaced the moment lint-staged
+touched it: four `no-useless-escape` in the password and phone regexes, and two
+`no-control-regex` which are deliberate — a control character in a filename is
+exactly what those checks reject — so they carry a directive with the reason
+rather than a code change. The first attempt put the directive above two more
+comment lines, so "next line" was a comment and it did nothing.

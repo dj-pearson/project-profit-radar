@@ -25,7 +25,7 @@ export const validatePassword = (password: string): { isValid: boolean; errors: 
     errors.push('Password must contain at least one number');
   }
   
-  if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)) {
+  if (!/[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/.test(password)) {
     errors.push('Password must contain at least one special character');
   }
   
@@ -36,7 +36,7 @@ export const validatePassword = (password: string): { isValid: boolean; errors: 
 };
 
 export const validatePhoneNumber = (phone: string): boolean => {
-  const phoneRegex = /^\+?[\d\s\-\(\)]{10,}$/;
+  const phoneRegex = /^\+?[\d\s\-()]{10,}$/;
   return phoneRegex.test(phone);
 };
 
@@ -88,66 +88,23 @@ export const validateCSRFToken = (token: string): boolean => {
   return storedToken === token && token.length === 64;
 };
 
-// Security headers utilities
-export const addSecurityHeaders = (): void => {
-  // Set CSP via meta tag (since we can't set HTTP headers in frontend)
-  const existingCSP = document.querySelector('meta[http-equiv="Content-Security-Policy"]');
-  if (!existingCSP) {
-    const cspMeta = document.createElement('meta');
-    cspMeta.httpEquiv = 'Content-Security-Policy';
-
-    // SECURITY: Improved CSP - removed unsafe-inline and unsafe-eval
-    // Note: Some third-party libraries may require relaxed policies
-    // Use nonces or hashes for inline scripts in production
-    const isDevelopment = import.meta.env.DEV;
-
-    cspMeta.content = `
-      default-src 'self';
-      script-src 'self' ${isDevelopment ? "'unsafe-inline' 'unsafe-eval'" : ''} https://api.ipify.org https://*.posthog.com;
-      style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
-      font-src 'self' https://fonts.gstatic.com;
-      img-src 'self' data: https: blob:;
-      connect-src 'self' https://api.ipify.org https://*.supabase.co https://*.brikly.net https://*.posthog.com;
-      frame-ancestors 'none';
-      base-uri 'self';
-      form-action 'self';
-      object-src 'none';
-      upgrade-insecure-requests;
-    `.replace(/\s+/g, ' ').trim();
-    document.head.appendChild(cspMeta);
-  }
-
-  // Add other security headers via meta tags where possible
-  const securityMetas = [
-    { name: 'referrer', content: 'strict-origin-when-cross-origin' },
-    { httpEquiv: 'X-Content-Type-Options', content: 'nosniff' },
-    { httpEquiv: 'X-XSS-Protection', content: '1; mode=block' },
-    { httpEquiv: 'X-Frame-Options', content: 'DENY' },
-    { httpEquiv: 'Permissions-Policy', content: 'geolocation=(), microphone=(), camera=()' }
-  ];
-
-  securityMetas.forEach(meta => {
-    const existing = document.querySelector(`meta[${meta.httpEquiv ? 'http-equiv' : 'name'}="${meta.httpEquiv || meta.name}"]`);
-    if (!existing) {
-      const metaElement = document.createElement('meta');
-      if (meta.httpEquiv) {
-        metaElement.httpEquiv = meta.httpEquiv;
-      } else {
-        metaElement.name = meta.name;
-      }
-      metaElement.content = meta.content;
-      document.head.appendChild(metaElement);
-    }
-  });
-};
-
-// Rate limiting utilities (client-side basic implementation)
-interface RateLimitRecord {
-  count: number;
-  lastReset: number;
-}
-
-const rateLimitStore = new Map<string, RateLimitRecord>();
+// addSecurityHeaders() was removed here (US-301).
+//
+// It injected a SECOND Content-Security-Policy as a meta tag. CSP policies
+// combine restrictively: where two are present a resource must satisfy BOTH.
+// Its production script-src was "'self' https://api.ipify.org
+// https://*.posthog.com" - no Stripe, no Google Tag Manager, no Sentry, no
+// Google or Apple sign-in, and none of the inline-script hashes carried in
+// public/_headers. Adding this to a layout because it sounds like a good idea
+// would have broken checkout, analytics, SSO and the Trusted Types bootstrap
+// on the next deploy. It never ran: its only caller was
+// src/hooks/useSecurityEnhancement.ts, which was mounted nowhere and is also
+// deleted.
+//
+// The real CSP is the HTTP header in public/_headers, which is strictly more
+// trustworthy than a meta tag and is already guarded by
+// scripts/check-csp-hashes.mjs. That guard now also fails if a second CSP
+// definition reappears anywhere under src/.
 
 export const checkRateLimit = (key: string, maxRequests: number = 10, windowMs: number = 60000): boolean => {
   const now = Date.now();
@@ -203,6 +160,9 @@ export const validateFileUpload = async (file: File): Promise<{ isValid: boolean
   }
 
   // Filename validation - prevent malicious characters
+  // A control character in a filename is precisely what this rejects, so the
+  // rule is warning about the thing the check exists for.
+  // eslint-disable-next-line no-control-regex
   if (/[<>:"/\\|?*\x00-\x1f]/.test(file.name)) {
     errors.push('Filename contains invalid characters');
   }
@@ -261,6 +221,9 @@ export const validateFileUploadSync = (file: File): { isValid: boolean; errors: 
     errors.push('File type not allowed');
   }
 
+  // A control character in a filename is precisely what this rejects, so the
+  // rule is warning about the thing the check exists for.
+  // eslint-disable-next-line no-control-regex
   if (/[<>:"/\\|?*\x00-\x1f]/.test(file.name)) {
     errors.push('Filename contains invalid characters');
   }

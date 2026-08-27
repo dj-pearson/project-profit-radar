@@ -18,7 +18,7 @@
  * cover those, and removing 'unsafe-inline' stops them firing. That is exactly
  * how the font stylesheet's onload="this.media='all'" would have broken.
  */
-import { readFileSync } from 'node:fs';
+import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import { join, dirname, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -82,9 +82,61 @@ if (!/require-trusted-types-for\s+'script'/.test(headers)) {
   problems.push("require-trusted-types-for 'script' is missing from the CSP");
 }
 
+// US-301: no second CSP anywhere under src/.
+//
+// src/utils/security.ts used to carry addSecurityHeaders(), which appended a
+// Content-Security-Policy meta tag. CSP policies combine RESTRICTIVELY - where
+// two are present a resource must satisfy both - and that one's production
+// script-src named neither Stripe, GTM, Sentry, Google/Apple sign-in, nor any
+// of the inline-script hashes below. It never ran, because its only caller was
+// a hook mounted nowhere, so it sat as a landmine: adding the hook to a layout
+// would have broken checkout, analytics and SSO on the next deploy.
+//
+// The CSP lives in public/_headers, as an HTTP header. One definition, one
+// place to keep in step.
+const srcDir = join(root, 'src');
+const secondCsp = [];
+const CSP_META = /Content-Security-Policy/i;
+const walkSrc = (dir) => {
+  for (const entry of readdirSync(dir)) {
+    const full = join(dir, entry);
+    if (statSync(full).isDirectory()) walkSrc(full);
+    else if (/\.(ts|tsx|js|jsx|html)$/.test(full)) {
+      const text = readFileSync(full, 'utf8');
+      if (!CSP_META.test(text)) continue;
+      // A mention is fine (comments, violation reporting, a test asserting the
+      // header). Building or setting one is not.
+      const lines = text.split('\n');
+      lines.forEach((line, i) => {
+        if (!CSP_META.test(line)) return;
+        if (/^\s*(\/\/|\*|\/\*)/.test(line)) return;
+        if (/httpEquiv\s*=|http-equiv\s*=|setAttribute\(\s*['"]http-equiv/.test(line)) {
+          secondCsp.push(`${relative(root, full)}:${i + 1}  ${line.trim().slice(0, 90)}`);
+        }
+      });
+    }
+  }
+};
+walkSrc(srcDir);
+
 console.log('CSP inline-script hash guard (US-202)');
 console.log(`  executable inline scripts: ${computed.length}`);
 console.log(`  hashes in script-src:      ${(scriptSrc.match(/'sha256-/g) || []).length}`);
+console.log(`  second CSP definitions in src/: ${secondCsp.length}`);
+
+if (secondCsp.length) {
+  console.error('\n\u2716 A second Content-Security-Policy is being set from src/:');
+  for (const s2 of secondCsp) console.error(`    ${s2}`);
+  console.error(
+    '\nCSP policies combine restrictively - two policies means a resource must satisfy',
+  );
+  console.error(
+    'BOTH, so a second one that omits Stripe, GTM, Sentry or the inline-script hashes',
+  );
+  console.error('above silently breaks those the moment it is mounted. The CSP belongs in');
+  console.error('public/_headers, as a header. See US-301.');
+  process.exit(1);
+}
 
 if (problems.length) {
   console.error('\n✖ CSP and index.html disagree:');
