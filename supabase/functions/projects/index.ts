@@ -3,36 +3,18 @@ import { initializeAuthContext, errorResponse, successResponse, safeErrorRespons
 import { handleCorsPreflightRequest } from '../_shared/secure-cors.ts';
 import { z } from "npm:zod@3";
 import { validateBody } from '../_shared/validate-body.ts';
+import { WRITABLE_PROJECT_COLUMNS, pickAllowed } from '../_shared/writable-columns.ts';
 import { checkEntitlement } from '../_shared/entitlements.ts';
 
 /**
- * Columns a caller may write on `projects`. Both handlers below used to spread
- * the raw body into insert()/update(), so any writable column was settable —
- * including id, created_by and created_at. RLS blocks the cross-tenant case
- * (projects_update has no WITH CHECK, so Postgres applies its USING clause to
- * the new row too), but nothing stopped a caller rewriting provenance columns
- * inside their own company. The allowlist is applied unconditionally, not
- * gated on INPUT_VALIDATION_MODE: dropping a column a client should never have
- * been writing is not the kind of tightening that breaks an older client.
+ * The write path used to spread the raw body into insert()/update(), so any
+ * writable column was settable — including id, created_by and created_at. RLS
+ * blocks the cross-tenant case (projects_update declares no WITH CHECK, so
+ * Postgres applies its USING clause to the new row too), but nothing stopped a
+ * caller rewriting provenance columns inside their own company. The allowlist
+ * lives in _shared/writable-columns.ts because api-management writes the same
+ * table from the third-party API.
  */
-const WRITABLE_PROJECT_COLUMNS = [
-  'name', 'description', 'status', 'project_type',
-  'client_name', 'client_email',
-  'site_address', 'site_latitude', 'site_longitude', 'geofence_radius_meters',
-  'start_date', 'end_date',
-  'budget', 'total_budget', 'profit_margin',
-  'estimated_hours', 'actual_hours', 'completion_percentage',
-  'project_manager_id', 'opportunity_id', 'permit_numbers', 'created_from',
-] as const;
-
-function pickWritable(body: Record<string, unknown>): Record<string, unknown> {
-  const out: Record<string, unknown> = {};
-  for (const k of WRITABLE_PROJECT_COLUMNS) {
-    if (k in body) out[k] = body[k];
-  }
-  return out;
-}
-
 const ProjectWriteSchema = z.object({
   name: z.string().min(1).max(500).optional(),
   description: z.string().max(20000).optional().nullable(),
@@ -172,7 +154,7 @@ serve(async (req) => {
           }
 
           const projectData = {
-            ...pickWritable(body),
+            ...pickAllowed(body, WRITABLE_PROJECT_COLUMNS),
             company_id: userProfile.company_id,
             created_by: user.id,
             project_manager_id: body.project_manager_id || user.id
@@ -207,7 +189,7 @@ serve(async (req) => {
 
           const { data: updatedProject, error: updateError } = await supabase
             .from('projects')
-            .update(pickWritable(body))
+            .update(pickAllowed(body, WRITABLE_PROJECT_COLUMNS))
             .eq('id', projectId)
             .eq('company_id', userProfile.company_id)
             .select()

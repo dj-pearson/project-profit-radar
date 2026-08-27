@@ -2,6 +2,7 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.3";
 import { checkRateLimit, getClientIP, rateLimitResponse, RATE_LIMITS } from "../_shared/rate-limiter.ts";
 import { getCorsHeaders } from '../_shared/secure-cors.ts';
+import { WRITABLE_PROJECT_COLUMNS, pickAllowed } from '../_shared/writable-columns.ts';
 // Using built-in crypto API instead
 
 interface ApiKeyValidation {
@@ -378,11 +379,30 @@ async function handleProjectsApi(corsHeaders: Record<string, string>, req: Reque
 
       const projectData = await req.json();
 
+      // This handler runs on the SERVICE ROLE key, so RLS is not a backstop:
+      // whatever the body carries reaches Postgres. Spreading it let an API-key
+      // holder set id, created_by, created_at and — worse — site_id and
+      // tenant_id, which are tenancy columns. Allowlist the caller-settable
+      // columns and derive the tenancy ones from the key's own company.
+      const { data: company, error: companyError } = await supabase
+        .from('companies')
+        .select('site_id')
+        .eq('id', validation.company_id)
+        .single();
+
+      if (companyError || !company) {
+        return new Response(
+          JSON.stringify({ error: 'Could not resolve company for this API key' }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
       const { data: newProject, error } = await supabase
         .from('projects')
         .insert({
-          ...projectData,
-          company_id: validation.company_id
+          ...pickAllowed(projectData, WRITABLE_PROJECT_COLUMNS),
+          company_id: validation.company_id,
+          site_id: company.site_id
         })
         .select()
         .single();

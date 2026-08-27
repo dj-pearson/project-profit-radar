@@ -1,6 +1,29 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { initializeAuthContext, errorResponse, successResponse, safeErrorResponse } from '../_shared/auth-helpers.ts';
 import { handleCorsPreflightRequest } from '../_shared/secure-cors.ts';
+import { WRITABLE_TIME_ENTRY_COLUMNS, pickAllowed } from '../_shared/writable-columns.ts';
+import { z } from "npm:zod@3";
+import { validateBody } from '../_shared/validate-body.ts';
+
+const ClockInSchema = z.object({
+  project_id: z.string().uuid(),
+  task_id: z.string().uuid().optional().nullable(),
+  cost_code_id: z.string().uuid().optional().nullable(),
+  description: z.string().max(10000).optional().nullable(),
+  location: z.string().max(1000).optional().nullable(),
+  location_accuracy: z.number().optional().nullable(),
+  gps_latitude: z.number().min(-90).max(90).optional().nullable(),
+  gps_longitude: z.number().min(-180).max(180).optional().nullable(),
+  geofence_id: z.string().uuid().optional().nullable(),
+  is_geofence_verified: z.boolean().optional().nullable(),
+  geofence_breach_detected: z.boolean().optional().nullable(),
+  geofence_distance_meters: z.number().optional().nullable(),
+  break_duration: z.number().optional().nullable(),
+}).passthrough();
+
+const ClockOutSchema = z.object({
+  entryId: z.string().uuid(),
+}).passthrough();
 
 const logStep = (step: string, details?: any) => {
   console.log(`[TIME-TRACKING] ${step}${details ? ` - ${JSON.stringify(details)}` : ''}`);
@@ -70,7 +93,9 @@ serve(async (req) => {
 
       case "POST":
         if (path === "start") {
-          const body = await req.json();
+          const parsed = await validateBody(req, ClockInSchema, { name: 'time-tracking:start' });
+          if (!parsed.ok) return parsed.response;
+          const body = parsed.data as Record<string, unknown>;
           logStep("Starting time entry", body);
 
           // Check if user already has an active entry with site isolation
@@ -85,8 +110,11 @@ serve(async (req) => {
             throw new Error("User already has an active time entry. Please stop the current entry first.");
           }
 
+          // Allowlisted rather than spread: the raw body let a caller set the
+          // approval columns, so a worker could clock in already-approved and
+          // walk past timesheet review. RLS only checks company_id and user_id.
           const timeEntryData = {
-            ...body,
+            ...pickAllowed(body, WRITABLE_TIME_ENTRY_COLUMNS),
             user_id: user.id,
             start_time: new Date().toISOString()
           };
@@ -109,8 +137,9 @@ serve(async (req) => {
         }
 
         if (path === "stop") {
-          const body = await req.json();
-          const { entryId } = body;
+          const parsed = await validateBody(req, ClockOutSchema, { name: 'time-tracking:stop' });
+          if (!parsed.ok) return parsed.response;
+          const { entryId } = parsed.data as Record<string, any>;
           logStep("Stopping time entry", { entryId });
 
           // Calculate total hours with site isolation

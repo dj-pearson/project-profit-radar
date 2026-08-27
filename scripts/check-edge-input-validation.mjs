@@ -56,9 +56,9 @@ const VALIDATED = new Set([
   'invite-team-member', 'process-invoice-payment', 'projects', 'reset-password-otp',
   'send-auth-otp', 'send-notification', 'setup-mfa', 'signup-with-otp',
   'sso-ldap-auth', 'sso-manage', 'sso-oauth-init', 'sso-saml-init',
-  'verify-auth-otp', 'verify-mfa-login', 'verify-mfa-setup',
+  'time-tracking', 'verify-auth-otp', 'verify-mfa-login', 'verify-mfa-setup',
 ]);
-const BASELINE = 133;
+const BASELINE = 132;
 
 console.log('Edge-function input-validation guard (US-241)');
 console.log(`  functions taking a JSON body:  ${reads.length}`);
