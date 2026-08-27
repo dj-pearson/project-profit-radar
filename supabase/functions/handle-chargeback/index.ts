@@ -6,6 +6,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.3";
 import { initializeAuthContext, errorResponse } from '../_shared/auth-helpers.ts';
 import { getCorsHeaders } from '../_shared/secure-cors.ts';
 import { writeAuditLog } from '../_shared/audit-log.ts';
+import { createServiceClient } from '../_shared/service-client.ts';
 
 const logStep = (step: string, details?: Record<string, unknown>) => {
   const detailsStr = details ? ` - ${JSON.stringify(details)}` : '';
@@ -318,7 +319,7 @@ async function acceptChargeback(
   // Audit trail (US-244): accepting a chargeback forfeits the dispute, so the
   // money is gone and someone chose that. Recorded before the Stripe call, so
   // the intent is on record even if closing the dispute then fails.
-  await writeAuditLog(supabase, {
+  await writeAuditLog(createServiceClient(), {
     actorUserId: userId,
     companyId,
     action: 'chargeback.accepted',

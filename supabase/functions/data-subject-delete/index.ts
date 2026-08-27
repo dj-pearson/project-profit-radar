@@ -34,6 +34,8 @@ import { createClient } from "npm:@supabase/supabase-js@2";
 import { initializeAuthContext, errorResponse, successResponse } from "../_shared/auth-helpers.ts";
 import { getCorsHeaders } from "../_shared/secure-cors.ts";
 import { checkRateLimit, getClientIP, rateLimitResponse } from "../_shared/rate-limiter.ts";
+import { writeAuditLog } from '../_shared/audit-log.ts';
+import { createServiceClient } from '../_shared/service-client.ts';
 
 serve(async (req) => {
   const corsHeaders = getCorsHeaders(req);
@@ -146,6 +148,19 @@ serve(async (req) => {
       console.error("[DSAR delete] failed to lock account (service role)", err);
     }
   }
+
+  // Audit trail (US-244): a deletion request starts a clock that ends with a
+  // subject's data being erased, and locks them out meanwhile. Recorded at
+  // request time, not fulfilment, so the origin of the request is on record.
+  await writeAuditLog(createServiceClient(), {
+    actorUserId: user.id,
+    action: 'data_subject.deletion_requested',
+    entityType: 'dsar_request',
+    entityId: inserted.id,
+    after: { status: 'pending', due_at: dueAt.toISOString(), account_locked: lockedOut },
+    description: 'Data-subject deletion requested; account locked pending fulfilment',
+    riskLevel: 'critical',
+  });
 
   return successResponse(
     {

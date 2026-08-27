@@ -5,6 +5,8 @@ import { initializeAuthContext, errorResponse } from '../_shared/auth-helpers.ts
 import { getCorsHeaders } from '../_shared/secure-cors.ts';
 import { z } from "npm:zod@3";
 import { validateBody } from '../_shared/validate-body.ts';
+import { writeAuditLog } from '../_shared/audit-log.ts';
+import { createServiceClient } from '../_shared/service-client.ts';
 
 interface SubscriptionChangeRequest {
   new_tier: 'starter' | 'professional' | 'enterprise';
@@ -191,6 +193,19 @@ serve(async (req) => {
       })
         // CRITICAL: Site isolation
       .eq('user_id', user.id);
+
+    // Audit trail (US-244): what the customer pays changed, and Stripe was
+    // already told. Recorded after the mirror write so both sides agree.
+    await writeAuditLog(createServiceClient(), {
+      actorUserId: user.id,
+      action: 'subscription.changed',
+      entityType: 'subscriber',
+      entityId: subscriber?.id ?? user.id,
+      before: { subscription_tier: subscriber.subscription_tier },
+      after: { subscription_tier: changeRequest.new_tier, billing_period: newBillingPeriod },
+      description: `Subscription changed from ${subscriber.subscription_tier} to ${changeRequest.new_tier}`,
+      riskLevel: 'high',
+    });
 
     logStep("Supabase record updated");
 

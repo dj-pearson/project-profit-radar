@@ -48,6 +48,7 @@ import { createClient } from "npm:@supabase/supabase-js@2";
 import { getCorsHeaders } from "../_shared/secure-cors.ts";
 import { requireSystemOrAdmin } from "../_shared/system-auth.ts";
 import { isInErasureScope } from "../_shared/storage-buckets.ts";
+import { writeAuditLog } from "../_shared/audit-log.ts";
 
 const SERVICE_ROLE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
@@ -169,6 +170,25 @@ serve(async (req) => {
               : "") +
             ". Retained records (tax, payroll, audit) preserved per Privacy Policy §5.",
         );
+        // Audit trail (US-244): the erasure actually happened. This runs from
+        // cron or an admin, so there may be no session user — the row records
+        // the subject and what was removed versus retained, which is what a
+        // regulator asks to see.
+        await writeAuditLog(admin, {
+          actorUserId: null,
+          companyId: row.company_id,
+          action: 'data_subject.erasure_fulfilled',
+          entityType: 'dsar_request',
+          entityId: row.id,
+          after: {
+            subject_user_id: row.user_id,
+            files_erased: erasure.removed,
+            files_retained: erasure.retained,
+          },
+          description: 'Account deleted and stored files erased after the 30-day grace period',
+          riskLevel: 'critical',
+        });
+
         fulfilled += 1;
         continue;
       }

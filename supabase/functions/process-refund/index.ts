@@ -6,6 +6,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.3";
 import { initializeAuthContext, errorResponse } from '../_shared/auth-helpers.ts';
 import { getCorsHeaders } from '../_shared/secure-cors.ts';
 import { writeAuditLog } from '../_shared/audit-log.ts';
+import { createServiceClient } from '../_shared/service-client.ts';
 
 const logStep = (step: string, details?: Record<string, unknown>) => {
   const detailsStr = details ? ` - ${JSON.stringify(details)}` : '';
@@ -201,7 +202,7 @@ async function approveRefund(
   }
 
   // Audit trail (US-244): money leaving the business, with the approver named.
-  await writeAuditLog(supabase, {
+  await writeAuditLog(createServiceClient(), {
     actorUserId: userId,
     companyId,
     action: 'refund.approved',

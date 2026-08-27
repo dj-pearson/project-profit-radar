@@ -32,8 +32,9 @@ const CRITICAL = new Map([
   ['api-management', 'minting an API credential'],
   ['invite-team-member', 'granting company access at a chosen role'],
   ['disable-mfa', 'downgrading account security'],
-  // Not yet instrumented — each needs an actor and company in scope at the
-  // right point. Move up as they are done; do not delete.
+  // Instrumented 2026-08-27. Two of these have no session user — create-root-admin
+  // is gated by ADMIN_CREATION_SECRET and process-dsar-fulfillment runs from cron
+  // — so their rows carry a null actor and say so in the description.
   ['data-subject-delete', 'erasing a subject\'s data (GDPR)'],
   ['process-dsar-fulfillment', 'fulfilling a data-subject request'],
   ['create-root-admin', 'creating a platform superuser'],
@@ -60,7 +61,7 @@ const extra = readdirSync(FN, { withFileTypes: true })
   .filter((d) => WRITES_AUDIT.test(readFileSync(join(FN, d.name, 'index.ts'), 'utf8')))
   .map((d) => d.name);
 
-const BASELINE_COVERED = 6;
+const BASELINE_COVERED = 12;
 
 console.log('Audit-trail coverage guard (US-244)');
 console.log(`  critical functions tracked: ${CRITICAL.size}`);

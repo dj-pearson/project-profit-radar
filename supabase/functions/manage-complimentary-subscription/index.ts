@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.3";
 import { getCorsHeaders } from '../_shared/secure-cors.ts';
+import { writeAuditLog } from '../_shared/audit-log.ts';
 
 interface ComplimentaryRequest {
   action: 'grant' | 'revoke';
@@ -127,6 +128,18 @@ serve(async (req) => {
           status: 'active'
         });
 
+      // Audit trail (US-244): giving away paid product. Names the admin who
+      // did it, who received it, and when it lapses.
+      await writeAuditLog(supabaseClient, {
+        actorUserId: adminUser.id,
+        action: 'complimentary_subscription.granted',
+        entityType: 'subscriber',
+        entityId: subscriber.id,
+        after: { tier, complimentary_type: type, expires_at: expiresAt, reason: request.reason },
+        description: `Granted complimentary ${tier} to ${request.user_email}`,
+        riskLevel: 'high',
+      });
+
       logStep("Complimentary subscription granted", { 
         targetUser: request.user_email, 
         tier, 
@@ -179,6 +192,16 @@ serve(async (req) => {
         })
         .eq('subscriber_id', subscriber.id)
         .eq('status', 'active');
+
+      await writeAuditLog(supabaseClient, {
+        actorUserId: adminUser.id,
+        action: 'complimentary_subscription.revoked',
+        entityType: 'subscriber',
+        entityId: subscriber.id,
+        after: { subscribed: false, is_complimentary: false },
+        description: `Revoked complimentary subscription for ${request.user_email}`,
+        riskLevel: 'high',
+      });
 
       logStep("Complimentary subscription revoked", { targetUser: request.user_email });
 
