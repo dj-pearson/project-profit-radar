@@ -7,6 +7,7 @@
  */
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.50.3';
+import { initializeAuthContext, errorResponse } from '../_shared/auth-helpers.ts';
 import { getCorsHeaders } from '../_shared/secure-cors.ts';
 
 const logStep = (step: string, details?: Record<string, unknown>) => {
@@ -58,13 +59,43 @@ Deno.serve(async (req) => {
   }
 
   try {
+    // SECURITY: this function did not identify its caller at all. It runs on
+    // the service role, so RLS is off, and companyId came straight from the
+    // body — meaning any authenticated user could drive CRM automation for any
+    // company: enrol their contacts in campaigns, queue email against them, and
+    // write crm_activities rows. verify_jwt is on, so a caller is authenticated,
+    // but authentication is not authorisation. The company now comes from the
+    // caller's own profile.
+    const authContext = await initializeAuthContext(req);
+    if (!authContext) {
+      return errorResponse('Unauthorized', 401, req);
+    }
+    const { user, supabase: userClient } = authContext;
+
+    const { data: callerProfile } = await userClient
+      .from('user_profiles')
+      .select('company_id')
+      .eq('id', user.id)
+      .single();
+
+    if (!callerProfile?.company_id) {
+      return errorResponse('Could not resolve the caller company', 403, req);
+    }
+
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
     const body = await req.json() as AutomationRequest;
-    const { trigger, entityType, entityId, companyId, metadata } = body;
+    const { trigger, entityType, entityId, metadata } = body;
+    const companyId = callerProfile.company_id;
+
+    if (body.companyId && body.companyId !== companyId) {
+      logStep('Ignoring caller-supplied companyId', {
+        claimed: body.companyId, actual: companyId, userId: user.id
+      });
+    }
 
     logStep('Processing automation request', { trigger, entityType, entityId });
 

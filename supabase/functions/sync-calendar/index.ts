@@ -26,10 +26,29 @@ serve(async (req) => {
     logStep("User authenticated", { userId: user.id });
 
     const body = await req.json();
-    const { integration_id, company_id } = body;
+    const { integration_id } = body;
 
-    if (!integration_id || !company_id) {
-      throw new Error("Integration ID and Company ID are required");
+    if (!integration_id) {
+      throw new Error("Integration ID is required");
+    }
+
+    // SECURITY: company_id used to come from the body, and calendar_events
+    // carries a permissive "System can manage calendar events" FOR ALL
+    // USING (true) policy — one of the four US-237 deferred — so RLS was not
+    // scoping the upsert and any authenticated user could write calendar events
+    // into another company. Derive it from the caller's own profile instead.
+    const { data: callerProfile } = await supabaseClient
+      .from('user_profiles')
+      .select('company_id')
+      .eq('id', user.id)
+      .single();
+
+    const company_id = callerProfile?.company_id;
+    if (!company_id) {
+      throw new Error("Could not resolve the caller company");
+    }
+    if (body.company_id && body.company_id !== company_id) {
+      logStep("Ignoring caller-supplied company_id", { claimed: body.company_id, actual: company_id });
     }
 
     // Get integration details

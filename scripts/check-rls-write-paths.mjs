@@ -30,6 +30,14 @@ const FN = join(root, 'supabase', 'functions');
 
 // The safe_tables array in 20260712120000_harden_permissive_rls_service_role.sql.
 // Keep in step with that migration if more tables are scoped later.
+//
+// NOT here yet: workflow_executions, workflow_analytics, calendar_events and
+// webhook_events. Those four keep their permissive FOR ALL USING (true), so a
+// user-JWT write still works; 20260827023111 adds a RESTRICTIVE company scope
+// instead, which closes the cross-tenant hole without removing that write path.
+// Whoever eventually scopes those permissive policies to service_role must add
+// the table here first and run this check — workflow-execution and sync-calendar
+// both write them with a user-JWT client today.
 const SERVICE_ROLE_ONLY = [
   'job_costing_summary', 'usage_metrics', 'document_signatures',
   'project_predictions', 'prediction_performance', 'incident_metrics',

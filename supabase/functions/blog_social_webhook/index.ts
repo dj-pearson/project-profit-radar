@@ -166,13 +166,25 @@ serve(async (req) => {
       throw new Error("Blog post not found");
     }
 
+    // SECURITY: this runs on the service role, so RLS is off and a body-supplied
+    // company_id would let any authenticated caller create social posts and read
+    // automation settings for another company. The blog post row carries the
+    // authoritative company, so use that and ignore the body's.
+    const companyId = blogPost.company_id;
+    if (!companyId) {
+      throw new Error("Blog post has no company");
+    }
+    if (company_id && company_id !== companyId) {
+      logStep("Ignoring caller-supplied company_id", { claimed: company_id, actual: companyId });
+    }
+
     logStep("Processing blog post", { title: blogPost.title });
 
     // Get company's social media settings
     const { data: socialSettings, error: settingsError } = await supabaseClient
       .from("social_media_automation_settings")
       .select("*")
-      .eq("company_id", company_id)
+      .eq("company_id", companyId)
       .eq("is_active", true)
       .single();
 
@@ -203,7 +215,7 @@ serve(async (req) => {
       const { data: socialPost, error: postError } = await supabaseClient
         .from("social_media_posts")
         .insert({
-          company_id,
+          company_id: companyId,
           title: `${blogPost.title} - ${platformContent.platform}`,
           content: platformContent.content,
           content_type: "text",

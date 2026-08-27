@@ -50,6 +50,29 @@ const REVIEWED = new Map([
    'quickbooks_integrations RLS is FOR ALL USING (company_id = get_user_company(auth.uid()) AND admin role); user-JWT client, and the OAuth state is verified against that same row'],
   ['quickbooks-disconnect:company_id',
    'same quickbooks_integrations policy; a foreign company_id matches no rows'],
+
+  // Reviewed 2026-08-27, after the taint analysis below was rewritten to follow
+  // shorthand properties and destructures of already-tainted variables. Each of
+  // these writes with a USER-JWT client to a table whose policies are scoped, so
+  // RLS rejects a foreign id — the value is caller-supplied but not caller-honoured.
+  ['auto-scheduling:tenant_id', 'user-JWT client; auto_schedules is RLS-scoped'],
+  ['calculate-proration:subscription_tier',
+   'mirrors the tier Stripe was billed for; companies/subscribers are RLS-scoped and the client carries the user JWT'],
+  ['convert-trial-to-paid:subscription_tier',
+   'set after the Stripe conversion succeeds; companies is RLS-scoped'],
+  ['generate-performance-benchmarks:company_id',
+   'user-JWT client; performance_benchmarks is RLS-scoped'],
+  ['optimize-resources:company_id',
+   'user-JWT client; the three resource_optimization_* tables are RLS-scoped'],
+  ['quickbooks-connect:company_id',
+   'user-JWT client; quickbooks_integrations is FOR ALL USING (company_id = get_user_company(auth.uid()) AND admin role)'],
+  ['quickbooks-sync:company_id',
+   'user-JWT client; quickbooks_sync_logs is company-scoped'],
+  ['risk-prediction:tenant_id', 'user-JWT client; risk_predictions is RLS-scoped'],
+  ['twilio-calling:company_id', 'user-JWT client; call_logs is RLS-scoped'],
+  ['verify-domain:tenant_id', 'user-JWT client; audit_logs is RLS-scoped'],
+  ['process-referral-signup:company_id',
+   'referee_company_id is checked against the referee profile earlier in the handler and throws on mismatch (US-297) — an imperative guard the AST check cannot see'],
 ]);
 
 const files = readdirSync(FN, { withFileTypes: true })
@@ -65,34 +88,43 @@ for (const { name, path } of files) {
   const sf = ts.createSourceFile(path, text, ts.ScriptTarget.ES2022, true, ts.ScriptKind.TS);
   const lineOf = (n) => sf.getLineAndCharacterOfPosition(n.getStart()).line + 1;
 
-  // names derived from the request body, grown to a fixpoint through aliases
+  // Names derived from the request body, grown to a fixpoint. Every form below
+  // has hidden a real finding from an earlier version of this guard, so keep
+  // them all: a body read, a destructure of the body, a destructure of a
+  // variable already derived from it, a plain alias, a cast, a property read.
   const body = new Set();
-  const seed = (n) => {
-    if (ts.isVariableDeclaration(n) && n.initializer) {
-      const t = n.initializer.getText(sf);
-      if (/\b(?:req|request)\s*\.\s*json\s*\(\s*\)/.test(t) || /\bvalidateBody\s*\(/.test(t) || /\bparsed\s*\.\s*data\b/.test(t)) {
-        if (ts.isIdentifier(n.name)) body.add(n.name.text);
-        else if (ts.isObjectBindingPattern(n.name))
-          for (const e of n.name.elements) if (ts.isIdentifier(e.name)) body.add(e.name.text);
-      }
+  const READS = /\b(?:req|request)\s*\.\s*json\s*\(\s*\)|\bvalidateBody\s*\(|\bparsed\s*\.\s*data\b/;
+  const bindAll = (name) => {
+    if (ts.isIdentifier(name)) { body.add(name.text); return true; }
+    if (ts.isObjectBindingPattern(name)) {
+      let added = false;
+      for (const e of name.elements) if (ts.isIdentifier(e.name)) { added = body.add(e.name.text) || added; }
+      return added;
     }
-    n.forEachChild(seed);
+    return false;
   };
-  sf.forEachChild(seed);
   for (let grew = true; grew;) {
     grew = false;
-    const alias = (n) => {
-      if (ts.isVariableDeclaration(n) && n.initializer && ts.isIdentifier(n.name) && !body.has(n.name.text)) {
-        const t = n.initializer;
-        const derives = (ts.isIdentifier(t) && body.has(t.text))
-          || (ts.isAsExpression(t) && ts.isIdentifier(t.expression) && body.has(t.expression.text))
-          || (ts.isObjectLiteralExpression(t) && t.properties.some((p) =>
-               ts.isSpreadAssignment(p) && ts.isIdentifier(p.expression) && body.has(p.expression.text)));
-        if (derives) { body.add(n.name.text); grew = true; }
+    const seed = (n) => {
+      if (ts.isVariableDeclaration(n) && n.initializer) {
+        const init = n.initializer;
+        const text = init.getText(sf);
+        let derives = READS.test(text);
+        if (!derives) {
+          let e = init;
+          while (ts.isAsExpression(e) || ts.isParenthesizedExpression(e) || ts.isAwaitExpression(e)) e = e.expression;
+          if (ts.isIdentifier(e)) derives = body.has(e.text);
+          else if (ts.isPropertyAccessExpression(e) && ts.isIdentifier(e.expression)) derives = body.has(e.expression.text);
+        }
+        if (derives) {
+          const before = body.size;
+          bindAll(n.name);
+          if (body.size > before) grew = true;
+        }
       }
-      n.forEachChild(alias);
+      n.forEachChild(seed);
     };
-    sf.forEachChild(alias);
+    sf.forEachChild(seed);
   }
   if (!body.size) continue;
 
@@ -124,6 +156,14 @@ for (const { name, path } of files) {
             const col = ts.isIdentifier(p.name) ? p.name.text
               : ts.isStringLiteral(p.name) ? p.name.text : null;
             if (col && PRIV.test(col) && tainted(p.initializer)) {
+              privHits.push({ name, line: lineOf(p), col, key: `${name}:${col}` });
+            }
+          } else if (ts.isShorthandPropertyAssignment(p)) {
+            // `{ company_id }` is the same risk as `{ company_id: company_id }`
+            // and is how sync-calendar hid a cross-tenant write from the first
+            // version of this guard.
+            const col = p.name.text;
+            if (PRIV.test(col) && body.has(col)) {
               privHits.push({ name, line: lineOf(p), col, key: `${name}:${col}` });
             }
           }
