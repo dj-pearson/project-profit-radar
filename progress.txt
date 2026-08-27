@@ -4697,3 +4697,46 @@ I can't wire these to a table without a schema decision that isn't this change's
 to make, so both toasts now say plainly that the record is on this device only
 and will be lost. The OfflineDataManager lesson, restated: never report success
 for work that was not persisted.
+
+## US-309 — success messages with nothing behind them
+
+After `MobileMaterialTracker`, I stopped finding these one at a time and swept
+for the shape: a function containing a success toast and **no write of any
+kind** — no insert/update/upsert/delete, no rpc, no `functions.invoke`, no
+storage call. 21 files whose body also carries a mock marker ("for now", "would
+upload", "simulate", "not implemented"), plus a longer tail without one.
+
+Sampled three at random. All three real:
+
+    CertificationTracker.sendRenewalReminder
+      sleeps 1s → "Renewal reminder has been sent to the employee."
+    SafetyComplianceManager.handleReportIncident
+      sleeps 1s → "Safety incident has been logged successfully."
+    EquipmentEditForm.handleSubmit
+      sleeps 500ms → "Equipment updated successfully"
+
+This is distinct from US-300. There, a write's error is discarded. Here there is
+no write to fail.
+
+### Reachability decides severity
+Of the 21, twelve have no importer at all — that's the US-302 dead-code hazard,
+not a live lie. `SafetyComplianceManager` is the sharpest example: it fakes
+incident reporting while `SafetyIncidentReport.tsx` genuinely inserts into
+`safety_incidents`. A real path and a fake one, same domain.
+
+Two were both reachable and a real user action, so I fixed those:
+
+`EquipmentEditForm` — rendered by `EquipmentManagement.tsx:373`. A user edits a
+piece of equipment, is told it saved, and the change is gone on reload.
+
+`admin/Settings.saveSettings` — there is no settings table behind that screen at
+all. Every toggle on it, including the security ones, reverts on reload, and the
+toast said "Settings saved successfully".
+
+Both now say plainly that nothing was written. Nine more are reachable and still
+need triage.
+
+### The guard is the point
+I have now found this shape four separate times today — `OfflineDataManager`,
+`MobileMaterialTracker`, `EquipmentEditForm`, `admin/Settings` — and a scan finds
+it in seconds. AC4 is the durable half of the story.

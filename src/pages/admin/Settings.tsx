@@ -100,13 +100,17 @@ const AdminSettings = () => {
     try {
       setSaving(true);
       
-      // In a real implementation, these would be saved to a settings table
-      // For now, we'll just simulate a save
+      // NOT PERSISTED. There is no settings table behind this screen; the
+      // sleep below is the whole of the "save". Every toggle on this page -
+      // including the security ones - reverts on reload, and the success toast
+      // said otherwise.
       await new Promise(resolve => setTimeout(resolve, 1000));
-      
+
       toast({
-        title: "Success",
-        description: "Settings saved successfully"
+        variant: "destructive",
+        title: "Not saved",
+        description:
+          "System settings storage is not implemented yet - these values were not written and will revert on reload."
       });
     } catch (error: any) {
       console.error('Error saving settings:', error);
