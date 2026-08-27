@@ -140,3 +140,63 @@ describe('the duplicate hub pages and the superseded sidebar', () => {
     }
   });
 });
+
+describe('the mock-data feature shells', () => {
+  const REPORT = 'docs/UNREFERENCED_COMPONENTS.md';
+
+  /** Every file the report lists, so the assertions below read the real set. */
+  function listed(): string[] {
+    return readFileSync(REPORT, 'utf8')
+      .split('\n')
+      .filter((line) => line.startsWith('| ') && line.includes('`'))
+      .map((line) => /`([^`]+)`/.exec(line)?.[1] ?? '')
+      .filter(Boolean);
+  }
+
+  it('the report exists and says it is generated', () => {
+    const doc = readFileSync(REPORT, 'utf8');
+    expect(doc).toContain('scripts/report-unreferenced-components.mjs');
+    expect(doc).toContain('Do not edit by hand');
+  });
+
+  it('none of the remaining orphans holds an explicitly-named mock variable', () => {
+    // The deletion criterion was `const mockX = ...` in a file with no data
+    // access that nothing imports: 34 files, 17,835 lines, holding invented
+    // business records - "ABC Electrical Services", "John Smith", fake phone
+    // numbers - rendered as if they were the customer's.
+    const holding = listed().filter((f) =>
+      /\bconst\s+(mock|sample|demo|dummy|fake)[A-Za-z0-9_]*\s*[:=]/i.test(readFileSync(f, 'utf8')),
+    );
+    expect(holding).toEqual([]);
+  });
+
+  it('the largest of them is gone', () => {
+    // 852 lines, zero data access, const mockSubs with named contractors.
+    expect(existsSync('src/components/subcontractors/SubcontractorCoordination.tsx')).toBe(false);
+  });
+
+  it('which retires two US-296 AC4 handlers that were never wireable', () => {
+    // updatePerformanceRating and verifyInsurance lived in that file. Binding
+    // them to a control was never the fix; the screen had no data and no route.
+    const prd = JSON.parse(readFileSync('prd.json', 'utf8')) as {
+      userStories: Array<{ id: string; notes?: string }>;
+    };
+    const notes = prd.userStories.find((s) => s.id === 'US-296')?.notes ?? '';
+    expect(notes).toContain('updatePerformanceRating');
+    expect(notes).toContain('was never the fix');
+  });
+
+  it('kept the orphans that read real data, because those are decisions not junk', () => {
+    // A 379-line orphan with five supabase calls and a live twin is an
+    // unanswered question about which one is the product.
+    expect(existsSync('src/components/integrations/APIKeyManager.tsx')).toBe(true);
+    expect(existsSync('src/components/financial/LaborBurdenCalculator.tsx')).toBe(false);
+  });
+
+  it('the report separates them rather than lumping them together', () => {
+    const doc = readFileSync(REPORT, 'utf8');
+    for (const verdict of ['mock', 'duplicate?', 'unwired feature', 'review']) {
+      expect(doc).toContain(`| ${verdict} |`);
+    }
+  });
+});
