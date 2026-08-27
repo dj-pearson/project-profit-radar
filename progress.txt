@@ -3246,3 +3246,55 @@ The sandbox classifier blocks file deletion, as it did for the MFA stubs in
 US-296. So the hazards are neutralised where they sit — fail-closed logic, a
 throwing stub, a comment pointing at the live equivalent. Deleting remains the
 right end state and is US-302's first AC.
+
+================================================================================
+2026-08-27 — US-243: ceilings on the calls that cost money
+================================================================================
+
+14 functions now enforce a per-caller rate limit. The limiter had existed in
+_shared/rate-limiter.ts the whole time; the gap was that the expensive functions
+never called it.
+
+### Key on the user, never on the request body
+An IP ceiling is shared by everyone behind one customer's NAT, and a stolen
+token steps around it by changing address. So the identifier is the caller's
+user id wherever there is one.
+
+`process-voice-command` is the cautionary case. It takes `user_id` in its
+**request body** — which is exactly what must not be used as a limit key, since
+a caller can rotate a body field and never hit the ceiling. It and voice-to-text
+now resolve the user from the JWT (verify_jwt is on for both) and fall back to
+IP only where there is no user, so a service-key path keeps working.
+
+Before signup there is no user at all, so signup-with-otp keys on IP because
+that is the only handle that exists.
+
+### The email side was worse than the AI side
+- **signup-with-otp had no throttle of any kind.** Unauthenticated, sends mail,
+  no ceiling. That is an open relay for bombing someone's inbox or burning SES
+  quota and reputation.
+- **reset-password-otp had a per-email throttle but no per-IP one.** So one
+  source could spray across many addresses and never trip it — the per-email
+  check cannot see that pattern.
+
+**Those are two different controls and both are wanted:** per-email stops one
+address being targeted, per-IP stops one source spraying. send-auth-otp already
+had both, and is the model the others now follow.
+
+Cron-driven senders (send-payment-reminder, send-scheduled-emails,
+send-usage-alert) are deliberately left alone — a ceiling there throttles
+scheduled work, not an abuser.
+
+### A trade to know rather than discover
+`checkRateLimit` returns **allowed** when it cannot reach the database. That is
+the right default for a cost control — failing open beats taking the product
+down — but it means a database outage removes the ceiling entirely. Now
+documented on the helper, along with the point that these calls want
+provider-side spend caps (OpenAI, SES) as the real backstop. A limiter the
+attacker can disable by causing load is not a spend guarantee.
+
+### Envelope
+rateLimitResponse now emits `success: false` and `timestamp` alongside the
+existing error/retryAfter/limit/requestCount — additive, so a client reading the
+old fields is unaffected. The Retry-After and X-RateLimit-* headers are
+unchanged, and those are what a client should actually key on.
