@@ -1,6 +1,8 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import { getCorsHeaders } from '../_shared/secure-cors.ts';
+import { enforceRateLimit, RATE_LIMITS } from '../_shared/rate-limiter.ts';
+import { createServiceClient } from '../_shared/service-client.ts';
 
 serve(async (req) => {
   const corsHeaders = getCorsHeaders(req);
@@ -36,6 +38,13 @@ serve(async (req) => {
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 401 }
       )
     }
+
+    // Rate limit per user (US-243). Report generation fans out into a lot of
+    // queries and, for AI-assisted reports, paid tokens — worth a ceiling.
+    const limited = await enforceRateLimit(
+      createServiceClient(), user.id, 'generate-custom-report', RATE_LIMITS.AI, corsHeaders,
+    );
+    if (limited) return limited;
 
     const startTime = Date.now()
 

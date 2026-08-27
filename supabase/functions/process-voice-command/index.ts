@@ -1,6 +1,9 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { getCorsHeaders } from '../_shared/secure-cors.ts';
+import { enforceRateLimit, RATE_LIMITS, getClientIP } from '../_shared/rate-limiter.ts';
+import { createServiceClient } from '../_shared/service-client.ts';
+import { initializeAuthContext } from '../_shared/auth-helpers.ts';
 
 interface VoiceCommandRequest {
   audio_data: string; // base64 encoded audio
@@ -24,6 +27,20 @@ serve(async (req) => {
   }
 
   try {
+    // Rate limit per caller (US-243). Deliberately NOT keyed on the body's
+    // user_id: that is attacker-controlled, so a caller could rotate it and
+    // never hit a limit. verify_jwt is on, so resolve the user from the token,
+    // and fall back to IP for any service-key caller that has no user.
+    const rlAuth = await initializeAuthContext(req);
+    const limited = await enforceRateLimit(
+      createServiceClient(),
+      rlAuth?.user?.id ?? `ip:${getClientIP(req)}`,
+      'process-voice-command',
+      RATE_LIMITS.AI,
+      corsHeaders,
+    );
+    if (limited) return limited;
+
     const { audio_data, project_id, user_id, company_id }: VoiceCommandRequest =
       await req.json();
 

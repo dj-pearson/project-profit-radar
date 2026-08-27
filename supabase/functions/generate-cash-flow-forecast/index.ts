@@ -3,6 +3,8 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { initializeAuthContext, errorResponse, successResponse } from '../_shared/auth-helpers.ts';
 import { getCorsHeaders } from '../_shared/secure-cors.ts';
+import { enforceRateLimit, RATE_LIMITS } from '../_shared/rate-limiter.ts';
+import { createServiceClient } from '../_shared/service-client.ts';
 
 const logStep = (step: string, details?: any) => {
   const detailsStr = details ? ` - ${JSON.stringify(details)}` : '';
@@ -25,6 +27,16 @@ export default async (req: Request) => {
     }
 
     const { user } = authContext;
+
+    // Rate limit per user (US-243). These endpoints spend money on every call —
+    // LLM tokens here — so a compromised token running them in a loop is a
+    // billing incident, not just load. Keyed by user id rather than IP: an IP
+    // limit is shared across a customer's whole office and a stolen token walks
+    // around it by changing address.
+    const limited = await enforceRateLimit(
+      createServiceClient(), user.id, 'generate-cash-flow-forecast', RATE_LIMITS.AI, corsHeaders,
+    );
+    if (limited) return limited;
     const body = await req.json();
     const { company_id, forecast_period } = body;
 

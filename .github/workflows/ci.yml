@@ -169,6 +169,9 @@ jobs:
       - name: CSP inline-script hash guard (US-202)
         run: node scripts/check-csp-hashes.mjs
 
+      - name: Rate-limit coverage guard (US-243)
+        run: node scripts/check-rate-limit-coverage.mjs
+
       - name: Migration filename guard (US-235)
         run: bash scripts/check-migration-filenames.sh
 

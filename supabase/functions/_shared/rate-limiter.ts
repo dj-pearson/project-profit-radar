@@ -151,7 +151,12 @@ export function rateLimitResponse(
 ): Response {
   return new Response(
     JSON.stringify({
+      // CLAUDE.md's API response shape. success and timestamp were added
+      // alongside the existing fields rather than replacing them (US-243), so a
+      // client already reading error/retryAfter keeps working.
+      success: false,
       error: 'Rate limit exceeded',
+      timestamp: new Date().toISOString(),
       retryAfter: result.retryAfter,
       limit: result.limit,
       requestCount: result.requestCount,
@@ -191,4 +196,40 @@ export function getClientIP(req: Request): string {
 
   // Fallback to unknown
   return 'unknown';
+}
+
+/**
+ * Enforce a rate limit for one caller and return a 429 if they are over it.
+ *
+ *   const limited = await enforceRateLimit(serviceClient, user.id, 'voice-to-text', RATE_LIMITS.AI, corsHeaders);
+ *   if (limited) return limited;
+ *
+ * Pass a SERVICE-ROLE client. rate_limit_violations is not the caller's to read
+ * or write, and using their JWT would make the limit depend on RLS — which is
+ * the wrong thing for a limit to depend on.
+ *
+ * Prefer a user id as the identifier over an IP. An IP limit is shared by
+ * everyone behind one corporate NAT, and a compromised token sidesteps it by
+ * moving address. Fall back to IP only where there is no authenticated user.
+ *
+ * Note checkRateLimit() returns allowed when it cannot reach the database, so a
+ * limiter outage never blocks legitimate traffic. That trade is deliberate: for
+ * a cost control, failing open beats taking the product down. It does mean a
+ * database outage removes the ceiling, which is why the expensive calls behind
+ * these limits should also have provider-side spend caps.
+ */
+export async function enforceRateLimit(
+  // deno-lint-ignore no-explicit-any
+  serviceClient: any,
+  identifier: string,
+  endpoint: string,
+  preset: { maxRequests: number; windowMinutes: number },
+  corsHeaders: Record<string, string> = {},
+): Promise<Response | null> {
+  const result = await checkRateLimit(serviceClient, {
+    identifier,
+    endpoint,
+    ...preset,
+  });
+  return result.allowed ? null : rateLimitResponse(result, corsHeaders);
 }

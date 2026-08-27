@@ -3,6 +3,8 @@ import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { initializeAuthContext, errorResponse } from '../_shared/auth-helpers.ts';
 import { getCorsHeaders } from '../_shared/secure-cors.ts';
+import { enforceRateLimit, RATE_LIMITS } from '../_shared/rate-limiter.ts';
+import { createServiceClient } from '../_shared/service-client.ts';
 
 const logStep = (step: string, details?: any) => {
   console.log(`[ENHANCED-BLOG-AI] ${step}${details ? ` - ${JSON.stringify(details)}` : ''}`);
@@ -55,6 +57,16 @@ serve(async (req) => {
     }
 
     const { user, supabase: supabaseClient } = authContext;
+
+    // Rate limit per user (US-243). These endpoints spend money on every call —
+    // LLM tokens here — so a compromised token running them in a loop is a
+    // billing incident, not just load. Keyed by user id rather than IP: an IP
+    // limit is shared across a customer's whole office and a stolen token walks
+    // around it by changing address.
+    const limited = await enforceRateLimit(
+      createServiceClient(), user.id, 'enhanced-blog-ai', RATE_LIMITS.AI, corsHeaders,
+    );
+    if (limited) return limited;
     logStep("User authenticated", { userId: user.id });
 
     // Check if user is root admin
