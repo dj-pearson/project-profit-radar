@@ -4491,3 +4491,38 @@ a negative row. Now positive, two decimal places, ceiling 1,000,000.
 profile company against `company_id` and requires admin. Its gap was shape only:
 `secret_key` was unvalidated and would have been encrypted and stored as
 whatever it was, surfacing when a charge failed. Now pattern-matched.
+
+### The authorisation lens, applied to the rest
+The payments batch paid off by looking at authorisation rather than schemas, so
+I wrote a scan for the shape that matters: a value destructured from
+`req.json()` reaching `.eq('company_id'|'user_id'|'tenant_id'|…, X)`. 44 sites
+across ~20 functions.
+
+Most are harmless — they use a user-JWT client, so RLS enforces the tenancy no
+matter what the body claims. Exactly two used a **service-role** client with a
+body-supplied id and no caller check.
+
+**`send-push-notification`.** Authenticated the caller, then looked up
+`push_subscriptions` for a body `user_id` with the service role. Any signed-in
+user could push an arbitrary `title`, `body`, `icon` and `data` payload to *any*
+other user — a phishing message delivered through Brikly's own notification
+channel, on the lock screen, with Brikly's icon. Now resolves both profiles in
+one query and requires the same `company_id`, returning the existing
+no-subscriptions response rather than a distinct error, so it can't be used to
+probe which user ids exist.
+
+**`social-post-redeploy` had no authentication at all.** Straight from
+`req.json()` to a service-role client filtered on the body's `company_id`.
+
+It isn't in `supabase/config.toml`, so `verify_jwt` defaults to true — and that
+looked like cover. It isn't. `verify_jwt` means *presents a valid project JWT*,
+and **the publishable anon key is one**, and it ships in the client bundle. So
+anyone holding the anon key could name any `company_id`, read that company's
+`automated_social_posts_config` including its `webhook_url` plus their last
+twelve social posts, and fire their webhook.
+
+That distinction is the thing worth carrying out of this: `verify_jwt` is a
+gateway signature check, not authentication. Treating it as the latter is
+exactly how this function looked covered.
+
+Backlog 128 → 126.

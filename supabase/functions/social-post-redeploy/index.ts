@@ -1,6 +1,16 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.3";
 import { getCorsHeaders } from '../_shared/secure-cors.ts';
+import { initializeAuthContext, errorResponse } from '../_shared/auth-helpers.ts';
+import { validateBody } from '../_shared/validate-body.ts';
+import { z } from "npm:zod@3";
+
+const RedeploySchema = z.object({
+  company_id: z.string().uuid(),
+  topic: z.string().max(500).optional(),
+  post_ids: z.array(z.string().uuid()).max(50).optional(),
+  platforms_override: z.array(z.string().max(50)).max(20).optional(),
+});
 
 function log(step: string, data?: any) {
   console.log(`[Social Post Redeploy] ${step}:`, data ?? "");
@@ -33,19 +43,41 @@ serve(async (req) => {
   }
 
   try {
-    const { company_id, topic, post_ids, platforms_override } = await req.json();
-
-    if (!company_id) {
-      return new Response(JSON.stringify({ error: "company_id is required" }), {
-        status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+    // This handler had no authentication at all: it went straight from
+    // req.json() to a service-role client filtered on the body's company_id.
+    //
+    // It is not in supabase/config.toml, so verify_jwt defaults to true - but
+    // that only means "presents a valid project JWT", and the publishable anon
+    // key IS one, and it ships in the client bundle. So anyone holding the anon
+    // key could name any company_id, read that company's automated_social_posts
+    // _config (including its webhook_url) and their last twelve social posts,
+    // and fire their webhook. verify_jwt is not authentication.
+    const authContext = await initializeAuthContext(req);
+    if (!authContext) {
+      return errorResponse('Unauthorized', 401, req);
     }
+
+    const parsed = await validateBody(req, RedeploySchema, { name: 'social-post-redeploy' });
+    if (!parsed.ok) return parsed.response;
+    const { company_id, topic, post_ids, platforms_override } = parsed.data;
 
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
     );
+
+    // The caller may only redeploy their own company's posts. Derived from
+    // their profile, never from the body - see
+    // scripts/check-edge-privilege-writes.mjs.
+    const { data: callerProfile, error: callerErr } = await supabase
+      .from('user_profiles')
+      .select('company_id')
+      .eq('id', authContext.user.id)
+      .single();
+
+    if (callerErr || !callerProfile?.company_id || callerProfile.company_id !== company_id) {
+      return errorResponse('Not found', 404, req);
+    }
 
     // Load webhook from config
     const { data: config, error: cfgErr } = await supabase
