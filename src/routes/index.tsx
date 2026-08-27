@@ -6,6 +6,7 @@
 
 import { Route, Outlet } from 'react-router-dom';
 import ErrorBoundary from '@/components/ErrorBoundary';
+import AccessDenied from '@/pages/AccessDenied';
 import { appRoutes } from './appRoutes';
 import { marketingRoutes } from './marketingRoutes';
 import { projectRoutes } from './projectRoutes';
@@ -20,6 +21,16 @@ const FeatureBoundaryLayout = ({ featureName }: { featureName: string }) => (
     <Outlet />
   </ErrorBoundary>
 );
+
+/**
+ * Access Denied Route
+ *
+ * SecureRoute navigates here when a signed-in user's role does not allow the
+ * page. Nothing answered /unauthorized until US-312, so those refusals landed
+ * on the 404 below and read as a broken link rather than a permissions
+ * decision.
+ */
+export const accessDeniedRoute = <Route path="/unauthorized" element={<AccessDenied />} />;
 
 /**
  * 404 Not Found Route
@@ -75,6 +86,9 @@ export const allRoutes = (
     <Route element={<FeatureBoundaryLayout featureName="Administration" />}>
       {adminRoutes}
     </Route>
+
+    {/* Access denied - a refusal, not a missing page */}
+    {accessDeniedRoute}
 
     {/* 404 - Must be last */}
     {notFoundRoute}

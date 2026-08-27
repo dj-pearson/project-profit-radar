@@ -101,7 +101,7 @@ export default function QuickBooksCallback() {
 
         // Redirect to settings after a short delay
         setTimeout(() => {
-          navigate('/settings/integrations', {
+          navigate('/integrations', {
             state: {
               message: 'QuickBooks connected successfully',
               type: 'success'
@@ -123,7 +123,7 @@ export default function QuickBooksCallback() {
   }, [searchParams, userProfile?.company_id, navigate]);
 
   const handleRetry = () => {
-    navigate('/settings/integrations');
+    navigate('/integrations');
   };
 
   return (

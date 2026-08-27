@@ -83,7 +83,7 @@ export const useGlobalShortcuts = () => {
       key: 's',
       ctrlKey: true,
       description: 'Go to Settings',
-      action: () => navigate('/settings'),
+      action: () => navigate('/user-settings'),
       category: 'Navigation'
     },
 
@@ -120,7 +120,7 @@ export const useGlobalShortcuts = () => {
       ctrlKey: true,
       description: 'Daily Report',
       action: () => {
-        navigate('/reports/daily');
+        navigate('/daily-reports');
         toast({
           title: "Daily Report",
           description: "Opening daily report form...",
@@ -146,7 +146,7 @@ export const useGlobalShortcuts = () => {
       ctrlKey: true,
       description: 'Create Invoice',
       action: () => {
-        navigate('/invoices/new');
+        navigate('/invoices');
         toast({
           title: "Invoice",
           description: "Creating new invoice...",

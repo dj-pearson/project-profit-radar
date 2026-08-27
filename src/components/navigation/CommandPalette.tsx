@@ -126,7 +126,7 @@ export function CommandPalette({
       category: 'Navigation',
       keywords: ['preferences', 'config'],
       action: () => {
-        navigate('/settings');
+        navigate('/user-settings');
         setOpen(false);
       },
       shortcut: 'Ctrl+S',
@@ -154,7 +154,7 @@ export function CommandPalette({
       category: 'Reporting',
       keywords: ['daily', 'report', 'log'],
       action: () => {
-        navigate('/reports/daily');
+        navigate('/daily-reports');
         setOpen(false);
       },
       shortcut: 'Ctrl+R',
@@ -193,7 +193,7 @@ export function CommandPalette({
       category: 'Financial',
       keywords: ['bill', 'billing', 'payment'],
       action: () => {
-        navigate('/invoices/new');
+        navigate('/invoices');
         setOpen(false);
       },
       shortcut: 'Ctrl+I',
@@ -206,7 +206,7 @@ export function CommandPalette({
       category: 'Financial',
       keywords: ['analytics', 'stats', 'profit'],
       action: () => {
-        navigate('/financial-reports');
+        navigate('/reports');
         setOpen(false);
       },
     },
@@ -233,7 +233,7 @@ export function CommandPalette({
       category: 'Time Management',
       keywords: ['calendar', 'timeline', 'dates'],
       action: () => {
-        navigate('/schedule');
+        navigate('/schedule-management');
         setOpen(false);
       },
     },
@@ -276,7 +276,7 @@ export function CommandPalette({
       category: 'Settings',
       keywords: ['organization', 'business'],
       action: () => {
-        navigate('/company');
+        navigate('/company-settings');
         setOpen(false);
       },
     },

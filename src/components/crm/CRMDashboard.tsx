@@ -216,7 +216,7 @@ export function CRMDashboard() {
                   <CardDescription>Latest leads added to your pipeline</CardDescription>
                 </div>
                 <Button asChild>
-                  <Link to="/leads">View All</Link>
+                  <Link to="/crm/leads">View All</Link>
                 </Button>
               </div>
             </CardHeader>
@@ -375,7 +375,7 @@ export function CRMDashboard() {
         </CardHeader>
         <CardContent className="flex flex-wrap gap-2">
           <Button asChild>
-            <Link to="/leads/new">
+            <Link to="/crm/leads">
               <Users className="mr-2 h-4 w-4" />
               Add Lead
             </Link>

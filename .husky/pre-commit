@@ -79,6 +79,10 @@ node scripts/check-deno-imports.mjs || exit 1
 #     `{ data: null, error }`, and `res.data || []` renders that as "nothing here".
 node scripts/check-table-definitions.mjs || exit 1
 
+# 3t. Dead links (US-312) — react-router's catch-all turns a link to a path no
+#     route answers into the 404 page, silently.
+node scripts/check-dead-links.mjs || exit 1
+
 # 4. Migration hygiene + RLS guards (US-235 / US-239 / US-237).
 bash scripts/check-migration-filenames.sh || exit 1
 bash scripts/check-no-stray-function-copies.sh || exit 1

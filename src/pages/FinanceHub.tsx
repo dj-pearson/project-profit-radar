@@ -375,7 +375,7 @@ export default function FinanceHub() {
                 <Button
                   className="w-full justify-start"
                   variant="outline"
-                  onClick={() => navigate('/finance/journal-entries/new')}
+                  onClick={() => navigate('/finance/journal-entries')}
                 >
                   <Calculator className="mr-2 h-4 w-4" aria-hidden="true" />
                   Create Journal Entry
@@ -383,7 +383,7 @@ export default function FinanceHub() {
                 <Button
                   className="w-full justify-start"
                   variant="outline"
-                  onClick={() => navigate('/finance/accounts-payable/new')}
+                  onClick={() => navigate('/finance/accounts-payable')}
                 >
                   <Receipt className="mr-2 h-4 w-4" aria-hidden="true" />
                   Enter New Bill
@@ -391,7 +391,7 @@ export default function FinanceHub() {
                 <Button
                   className="w-full justify-start"
                   variant="outline"
-                  onClick={() => navigate('/invoices/create')}
+                  onClick={() => navigate('/invoices')}
                 >
                   <FileText className="mr-2 h-4 w-4" aria-hidden="true" />
                   Create Invoice
@@ -399,7 +399,7 @@ export default function FinanceHub() {
                 <Button
                   className="w-full justify-start"
                   variant="outline"
-                  onClick={() => navigate('/finance/bill-payments/new')}
+                  onClick={() => navigate('/finance/bill-payments')}
                 >
                   <CreditCard className="mr-2 h-4 w-4" aria-hidden="true" />
                   Pay Bills

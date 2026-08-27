@@ -5140,3 +5140,61 @@ else, which is worse than the current state.
 
 17 cases in `src/lib/__tests__/undefinedTables.test.ts`, mutation-tested four
 ways. Full suite: 123 files, 2717 passing, 2 skipped.
+
+---
+
+## US-312: thirty-four links that go nowhere, including the one for "you cannot see this"
+
+Comparing every `navigate()`, `to=` and `href=` in `src/` against every
+`<Route path>` turned up 34 in-app paths that no route answers. react-router
+has a catch-all at the end of the tree, so none of them throws, warns, or fails
+a test. Each renders "Brikly / Page not found", which is exactly what a user
+following a genuinely broken link would see.
+
+The one that bothered me most:
+
+```
+return <Navigate to="/unauthorized" replace />;
+```
+
+`SecureRoute` has done that in three places since it was written, and nothing
+has ever answered `/unauthorized`. So a signed-in user refused a page for
+lacking a role saw the same screen as someone who mistyped a URL - and so did
+whoever they asked for help. There is now an `AccessDenied` page that says
+access was refused, names the page that was refused (passed through router
+state, since the URL is `/unauthorized` either way), and offers the dashboard
+and support rather than dead-ending.
+
+Three more that are not obscure:
+
+- The admin health page sends signed-out users to `/login`. The route is
+  `/auth`.
+- `UpgradePrompt` sends the upgrade CTA to `/subscription`. The route is
+  `/subscription-settings`.
+- `QuickBooksCallback` shows "Successfully connected to QuickBooks!" and then,
+  two seconds later, navigates to `/settings/integrations`. The route is
+  `/integrations`. Both the success redirect and the retry button.
+
+Eighteen links repointed across nine files. Six of them were command-palette
+entries and two were keyboard shortcuts, so the primary navigation surface had
+six dead entries in it.
+
+The guard has a limit I only found by mutation-testing it. I removed the
+`/unauthorized` route from `allRoutes` expecting a failure, and got nothing: the
+guard counts `<Route>` elements wherever they are *declared*, and the
+`export const accessDeniedRoute = <Route path="/unauthorized" .../>` line was
+still sitting there unmounted. Deciding that statically means evaluating the JSX
+tree, so the header says so and the test file asserts the route is inside
+`allRoutes` and ahead of the catch-all.
+
+Sixteen paths are baselined because each needs a decision, not a target.
+`/demo` (five "Schedule a Demo" CTAs) and `/demo-request` have no demo booking
+page at all - `/contact` is a general form and `/admin/demos` is the internal
+view, so sending demo intent to the contact form is a funnel decision, not a
+repoint. `/deals` and `/deals/new` sit exactly on the deals-vs-opportunities
+question US-276 exists to settle. `/calls`, `/meetings` and `/bookings` are the
+same three-activity-tables problem. The rest are templates, calculators and
+topic hubs that were linked before they were written.
+
+14 cases in `src/lib/__tests__/deadLinks.test.ts`, mutation-tested four ways.
+Full suite: 124 files, 2731 passing, 2 skipped.

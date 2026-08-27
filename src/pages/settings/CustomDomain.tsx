@@ -461,7 +461,7 @@ export const CustomDomain = () => {
                 <a href="mailto:support@brikly.net">Email Support</a>
               </Button>
               <Button variant="outline" size="sm" asChild>
-                <Link to="/help">View Documentation</Link>
+                <Link to="/support">View Documentation</Link>
               </Button>
             </div>
           </CardContent>
