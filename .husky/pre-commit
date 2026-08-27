@@ -63,6 +63,10 @@ node scripts/check-unauthenticated-edge-functions.mjs || exit 1
 #     thing happened.
 node scripts/check-fake-success.mjs || exit 1
 
+# 3p. No migration repair in a deploy path (US-248) — repair edits history to
+#     match your assertion; a deploy should change the DB to match the repo.
+bash scripts/check-no-migration-repair.sh || exit 1
+
 # 4. Migration hygiene + RLS guards (US-235 / US-239 / US-237).
 bash scripts/check-migration-filenames.sh || exit 1
 bash scripts/check-no-stray-function-copies.sh || exit 1

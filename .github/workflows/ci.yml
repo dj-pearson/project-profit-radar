@@ -187,6 +187,9 @@ jobs:
       - name: Fake-success guard (US-309)
         run: node scripts/check-fake-success.mjs
 
+      - name: No migration-repair in a deploy path (US-248)
+        run: bash scripts/check-no-migration-repair.sh
+
       - name: Migration filename guard (US-235)
         run: bash scripts/check-migration-filenames.sh
 

@@ -4765,3 +4765,45 @@ Added a `NEGATED` pattern.
 The baseline is a count (57), not a name list, matching `check-silent-writes.mjs`
 — a sixty-entry allowlist reads as "all reviewed" and wouldn't be, and the triage
 lives on the story where it can be read.
+
+## US-248 — reconciling the two scripts nobody wanted to delete
+
+AC2 said delete `repair-migrations.ps1` and `mark-applied.ps1` "after history is
+reconciled and documented", and nobody had done the reconciling. It takes a
+script:
+
+    mark-applied lists 345 timestamps, all 345 have a local file    (no orphans)
+    repair reverts 193 timestamps, none of them exist locally       (consistent)
+    60 local migrations appear in neither, all from 20251202 on     (added after)
+
+Internally consistent, which is the case for deleting both.
+
+What it does **not** establish, and the runbook says so plainly: that those 345
+were ever *executed* against production. `migration repair --status applied`
+records history without running SQL. If a table or column a migration should
+have created turns out to be missing in prod, that is the first place to look.
+
+**AC1** — `docs/RUNBOOK_MIGRATION_DEPLOY.md`. Clean detached checkout of the
+merge commit, staging first, `migration list` read before every push, and the
+rule stated outright: `migration repair` edits history to match your assertion,
+where a deploy should change the database to match the repo. It is a recovery
+tool, and reaching for it is an incident, not a step.
+
+**AC3** — `scripts/check-migration-drift.sh`. Fails on drift in *either*
+direction: a remote-only entry means SQL ran that isn't in the repo, a local-only
+entry means a deploy didn't finish. It exits 0 with a message when the CLI is
+absent rather than pretending to pass, and refuses to report clean if the CLI's
+output shape isn't what it expects.
+
+**AC4** — `scripts/check-no-migration-repair.sh`, in pre-commit and CI. It took
+three passes. The first scanned every tracked file and flagged `prd.json` for
+*describing* the problem. The second scoped to files that run, and then flagged
+the guard itself and the drift check — both necessarily contain the phrase, one
+in its own match pattern and the other in its error text. A guard cannot be
+forbidden from naming the thing it guards against.
+
+Final shape: scoped by file type, comment lines stripped so documenting the rule
+anywhere needs no entry, and exactly two bounded exemptions — the historical
+scripts until AC2 deletes them, and the two guard scripts themselves.
+Mutation-tested both ways: a real command in a shell script is caught, a comment
+mentioning it is not.
