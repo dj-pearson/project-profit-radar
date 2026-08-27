@@ -208,11 +208,22 @@ const handler = async (req: Request): Promise<Response> => {
 
     if (!emailResult.success) {
       console.error('[SendAuthOTP] Email send failed:', emailResult.error);
-      // Mark token as used so it can't be verified
-      await supabaseAdmin
+      // Mark token as used so it can't be verified. If this does not land,
+      // a live one-time code that was never delivered stays verifiable -
+      // supabase-js returns the error rather than throwing it, so it was
+      // never noticed (US-300). Nothing can be done for the caller here (the
+      // response is already a 500), but an undelivered live code needs to be
+      // findable in the logs.
+      const { error: invalidateError } = await supabaseAdmin
         .from('auth_otp_codes')
         .update({ is_used: true, metadata: { ...metadata, email_failed: true } })
         .eq('id', tokenId);
+      if (invalidateError) {
+        console.error(
+          '[SendAuthOTP] OTP STILL VALID: could not invalidate an undelivered code',
+          { tokenId, error: invalidateError.message },
+        );
+      }
 
       return new Response(
         JSON.stringify({ error: 'Failed to send verification email' }),

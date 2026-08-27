@@ -354,7 +354,11 @@ async function handlePaymentFailure(invoice: Stripe.Invoice, supabaseClient: any
       const nextRetry = new Date();
       nextRetry.setHours(nextRetry.getHours() + 24); // Retry in 24 hours
 
-      await supabaseClient
+      // Throw rather than swallow, matching the handlers above: Stripe retries
+      // a webhook that returns an error, and that retry is the only thing that
+      // stops Stripe and the database diverging permanently. supabase-js
+      // returns this error rather than throwing it (US-300).
+      const { error: insertFailureError } = await supabaseClient
         .from("payment_failures")
         .insert({
           subscriber_id: subscriber.id,
@@ -364,13 +368,17 @@ async function handlePaymentFailure(invoice: Stripe.Invoice, supabaseClient: any
           next_retry_at: nextRetry.toISOString(),
           dunning_status: "active"
         });
+
+      if (insertFailureError) {
+        throw new Error(`Failed to record payment failure: ${insertFailureError.message}`);
+      }
     } else {
       // Update existing failure
       const newAttemptCount = existingFailure.attempt_count + 1;
       const nextRetry = new Date();
       nextRetry.setDate(nextRetry.getDate() + newAttemptCount); // Exponential backoff
 
-      await supabaseClient
+      const { error: updateFailureError } = await supabaseClient
         .from("payment_failures")
         .update({
           attempt_count: newAttemptCount,
@@ -379,6 +387,10 @@ async function handlePaymentFailure(invoice: Stripe.Invoice, supabaseClient: any
           failure_reason: invoice.last_finalization_error?.message || "Payment failed"
         })
         .eq("id", existingFailure.id);
+
+      if (updateFailureError) {
+        throw new Error(`Failed to update payment failure: ${updateFailureError.message}`);
+      }
     }
   }
 }
@@ -394,8 +406,10 @@ async function handlePaymentSuccess(invoice: Stripe.Invoice, supabaseClient: any
     .single();
 
   if (subscriber) {
-    // Resolve any payment failures
-    await supabaseClient
+    // Resolve any payment failures. This is the one that costs money if it is
+    // lost: the customer has paid, and an unresolved row keeps process-dunning
+    // retrying the charge on every run.
+    const { error: resolveFailuresError } = await supabaseClient
       .from("payment_failures")
       .update({
         dunning_status: "resolved",
@@ -403,6 +417,12 @@ async function handlePaymentSuccess(invoice: Stripe.Invoice, supabaseClient: any
       })
       .eq("subscriber_id", subscriber.id)
       .is("resolved_at", null);
+
+    if (resolveFailuresError) {
+      throw new Error(
+        `Failed to resolve payment failures after successful payment: ${resolveFailuresError.message}`,
+      );
+    }
   }
 }
 

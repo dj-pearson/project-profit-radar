@@ -209,11 +209,18 @@ const handler = async (req: Request): Promise<Response> => {
 
     if (!emailResult.success) {
       console.error('[SignupWithOTP] Email send failed:', emailResult.error);
-      // Mark OTP as used since email failed
-      await supabaseAdmin
+      // Mark OTP as used since email failed. An unrecorded invalidation
+      // leaves an undelivered code verifiable (US-300).
+      const { error: invalidateError } = await supabaseAdmin
         .from('auth_otp_codes')
         .update({ is_used: true, metadata: { email_failed: true } })
         .eq('id', otpId);
+      if (invalidateError) {
+        console.error(
+          '[SignupWithOTP] OTP STILL VALID: could not invalidate an undelivered code',
+          { otpId, error: invalidateError.message },
+        );
+      }
 
       // Clean up the user
       await supabaseAdmin.auth.admin.deleteUser(newUser.user.id);

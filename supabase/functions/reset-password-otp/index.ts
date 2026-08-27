@@ -194,11 +194,18 @@ async function handleRequestReset(
 
   if (!emailResult.success) {
     console.error('[ResetPasswordOTP] Email send failed:', emailResult.error);
-    // Mark OTP as used since email failed
-    await supabaseAdmin
+    // Mark OTP as used since email failed. An unrecorded invalidation leaves
+    // an undelivered password-reset code verifiable (US-300).
+    const { error: invalidateError } = await supabaseAdmin
       .from('auth_otp_codes')
       .update({ is_used: true, metadata: { email_failed: true } })
       .eq('id', otpId);
+    if (invalidateError) {
+      console.error(
+        '[ResetPasswordOTP] OTP STILL VALID: could not invalidate an undelivered code',
+        { otpId, error: invalidateError.message },
+      );
+    }
 
     return new Response(
       JSON.stringify({ error: 'Failed to send verification email. Please try again.' }),

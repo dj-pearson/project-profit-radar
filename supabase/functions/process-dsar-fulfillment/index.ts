@@ -120,6 +120,12 @@ serve(async (req) => {
   let fulfilled = 0;
   let denied = 0;
   let flagged = 0;
+  // US-300: these are statutory requests on a 30-day clock, and every status
+  // write below is a supabase-js call that RETURNS its error rather than
+  // throwing. An unwritten status leaves the request pending, so the next run
+  // picks it up again and the counts reported here describe work that did not
+  // happen. Surfaced rather than dropped.
+  let bookkeeping_failures = 0;
 
   for (const row of rows) {
     try {
@@ -203,14 +209,19 @@ serve(async (req) => {
 
       // Access / portability / correction / restrict / object all require a
       // human reviewer — flag for the privacy team.
-      await admin
+      const { error: flagError } = await admin
         .from("data_subject_requests")
         .update({
           status: "in_progress",
           notes: `${row.notes ?? ""}\n[cron ${new Date().toISOString()}] Auto-flagged for privacy-team review (no automated fulfillment path).`,
         })
         .eq("id", row.id);
-      flagged += 1;
+      if (flagError) {
+        bookkeeping_failures += 1;
+        console.error(`[dsar-fulfill] ${row.id} could not be flagged for review`, flagError);
+      } else {
+        flagged += 1;
+      }
     } catch (err) {
       console.error(`[dsar-fulfill] failed to process ${row.id}`, err);
       const newNotes = `${row.notes ?? ""}\n[cron ${new Date().toISOString()}] failure: ${
@@ -221,7 +232,7 @@ serve(async (req) => {
       // batch budget.
       const retryCount = (newNotes.match(/\[cron /g) ?? []).length;
       if (retryCount >= MAX_RETRIES) {
-        await admin
+        const { error: denyError } = await admin
           .from("data_subject_requests")
           .update({
             status: "denied",
@@ -229,12 +240,28 @@ serve(async (req) => {
             notes: newNotes,
           })
           .eq("id", row.id);
-        denied += 1;
+        if (denyError) {
+          bookkeeping_failures += 1;
+          console.error(`[dsar-fulfill] ${row.id} could not be auto-denied`, denyError);
+        } else {
+          denied += 1;
+        }
       } else {
-        await admin
+        // The retry counter lives in these very notes - retryCount above is
+        // derived by counting "[cron " markers in them. So a note that is not
+        // written means the counter never advances, MAX_RETRIES is never
+        // reached, and the request is retried on every run forever.
+        const { error: noteError } = await admin
           .from("data_subject_requests")
           .update({ notes: newNotes })
           .eq("id", row.id);
+        if (noteError) {
+          bookkeeping_failures += 1;
+          console.error(
+            `[dsar-fulfill] ${row.id} retry note not written; its retry counter will not advance`,
+            noteError,
+          );
+        }
       }
     }
   }
@@ -245,6 +272,7 @@ serve(async (req) => {
       fulfilled,
       denied,
       flagged_for_review: flagged,
+      bookkeeping_failures,
     }),
     { status: 200, headers: { "Content-Type": "application/json" } },
   );
@@ -255,7 +283,11 @@ async function markCompleted(
   id: string,
   note: string,
 ) {
-  await admin
+  // Throws on failure so the caller counts it rather than reporting a request
+  // as fulfilled when its status never changed. For a deletion that matters
+  // twice over: the data is already purged, and a request left pending is
+  // re-processed on the next run.
+  const { error } = await admin
     .from("data_subject_requests")
     .update({
       status: "completed",
@@ -263,6 +295,9 @@ async function markCompleted(
       notes: note,
     })
     .eq("id", id);
+  if (error) {
+    throw new Error(`could not mark request ${id} completed: ${error.message}`);
+  }
 }
 
 /**

@@ -4016,3 +4016,39 @@ failed insert did nothing at all with no indication why.
 
 AC4 and AC5, exactly: no success message for a write that failed, no local state
 cleared ahead of the write it depends on. BASELINE 263 → 256.
+
+### First pass over the edge side
+215 edge sites, grouped by table. Taking AC2's categories:
+
+**Money — `process-dunning`, four sites.** The two that mark a `payment_failures`
+row resolved are the expensive ones: Stripe took the money, the row stays open,
+and the next run **charges the customer again**. The attempt-count update is
+nearly as bad — if it doesn't land the counter never advances, the account is
+never suspended, `next_retry_at` stays in the past, and every run retries
+immediately. All four now report through a `bookkeeping_failures` counter in the
+response.
+
+`stripe-webhook` had three more on the same table. Those now *throw*, matching
+the convention already established six times in that same file — Stripe retries
+a webhook that returns an error, and that retry is the only thing preventing
+permanent Stripe/DB divergence. The resolve-on-payment-success one is the same
+double-charge, seen from the other side.
+
+**Identity — three `auth_otp_codes` updates**, in `send-auth-otp`,
+`signup-with-otp` and `reset-password-otp`. Each invalidates a code whose
+delivery email failed. A lost update leaves a live one-time code that was never
+delivered still verifiable. Nothing can be returned to the caller — the response
+is already a 500 — so each now logs `OTP STILL VALID` with the id.
+
+**Compliance — `process-dsar-fulfillment`, four sites.** `markCompleted` now
+throws rather than reporting a statutory request fulfilled when its status never
+changed; for a deletion that matters twice, because the data is already purged
+and a pending request is re-processed on the next run.
+
+The subtle one is the retry-note write. `MAX_RETRIES` is enforced by *counting
+`[cron ` markers in the notes field* — so a failed notes write means the counter
+never advances, the cap is never reached, and the request is retried forever. The
+counter lives in the very field whose write was unchecked.
+
+BASELINE 256 → 242. 41 web-app and 201 edge sites remain; `security_logs` is the
+largest single group left at 19.
