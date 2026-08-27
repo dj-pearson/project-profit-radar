@@ -3623,3 +3623,65 @@ a storage copy is an API call, not SQL — so it needs a supplementary SELECT
 policy resolving company through `document_versions.file_path`, the same shape
 as `20260818015000`. Plus the `project_communication_participants` question, and
 the flip migration itself.
+
+## US-305 — the RPC that let anyone overwrite anyone's document
+
+I was checking one thing: does `document_versions.file_path` hold a raw storage
+path, so the US-289 company-documents policy can join on it rather than pattern
+match? It does. But reading the function that writes it turned up this.
+
+`public.create_document_version(p_document_id, p_file_path, p_file_size,
+p_checksum, p_version_notes)` is `SECURITY DEFINER` with `search_path = ''`. It
+runs past RLS on both `documents` and `document_versions`, and it carried no
+authorisation check of its own. Its last statement:
+
+    UPDATE public.documents
+    SET file_path = p_file_path, file_size = ..., version = ..., updated_at = now()
+    WHERE id = p_document_id;
+
+Any authenticated user, of any company, could pass any document id and repoint
+that document at a file of their choosing. `file_path` is what every reader
+downloads. The victim's document keeps its name, its category, its version
+history — and serves the attacker's file. The only trace is an `updated_at`
+bump.
+
+### The fix, and the trap I already fell into once
+`20260827070000` CREATE OR REPLACEs the function rather than editing the merged
+`20250801021602`. The guard denies only the genuine cross-tenant case:
+
+    d.id = p_document_id
+    AND d.company_id IS NOT NULL
+    AND d.company_id IS DISTINCT FROM public.get_user_company(auth.uid())
+    AND public.get_user_role(auth.uid()) IS DISTINCT FROM 'root_admin'
+
+`IS NOT NULL` is load-bearing. `DocumentManagement` writes
+`company_id: userProfile?.company_id`, which can persist NULL, and a guard that
+denied those would strand versioning on historical rows with nothing the user
+could do about it. That is exactly the NULL-tenancy trap that made me drop
+`seo_meta_tags` from the restrictive-RLS work earlier in this session — same
+shape, caught this time before shipping it.
+
+Signature, parameter names, defaults and return type unchanged, so PostgREST
+still resolves calls from every client already in the wild. Per CLAUDE.md a
+tightening is normally a multi-release change; this ships in one because the
+only calls whose behaviour changes are cross-tenant writes no legitimate client
+makes.
+
+### Two overloads
+`create_document_version` exists twice: `(uuid, jsonb)` from `20250126230001`,
+and this `(uuid, text, integer, text, text)` from `20250801021602`. PostgREST
+resolves by named arguments, so the app's five-key call reaches the one I fixed.
+The two-arg overload is unreferenced and still unscoped. Dropping a function is
+destructive, so it needs its own release — recorded on the story rather than
+done here.
+
+### Also landed
+`20260827060000_company_documents_read_policies.sql`: the supplementary SELECT
+policy for the legacy `<userId>/` version objects, joining
+`document_versions.file_path` to `documents.company_id`. Modelled on
+`20260818015000`. Both branches company-scoped.
+
+`securityDefinerScoping.test.ts` pins both. It resolves the function against the
+*latest* migration that defines it rather than a filename, so a future
+CREATE OR REPLACE that drops the guard fails the test. Mutation-tested: removing
+either migration fails 2 and 3 tests respectively.
