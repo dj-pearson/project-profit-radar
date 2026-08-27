@@ -2092,3 +2092,73 @@ Supabase types). A large share of that 1367-error bulk is generated-type drift �
 "not assignable to type 'never'", "Property 'x' does not exist on type 'never'" —
 and regeneration should clear it in one shot. Hand-fixing them first is wasted
 work.
+
+================================================================================
+2026-08-27 — US-240 wildcard CORS rollout (137 -> 43 functions)
+================================================================================
+
+US-263 was the plan for this tick but it is still blocked: regenerating the
+Supabase types needs either SUPABASE_ACCESS_TOKEN or a local Postgres the
+migrations can be applied to. Neither is here — psql exists but Docker doesn't,
+and there is no supabase CLI. Moved to US-240 instead.
+
+### Environment limit worth knowing
+There is no Deno in this sandbox, and deno.land is blocked by the agent proxy
+(403 on CONNECT). So edge functions cannot be typechecked or run here at all —
+not `deno check`, not `deno test`. Anything touching supabase/functions has to
+be verified statically. esbuild (already in node_modules via vite) will at least
+parse a .ts file: `node_modules/.bin/esbuild --format=esm <file>`. Note the
+`--loader=ts` flag only applies to stdin; passing it with a file path errors.
+
+### What changed
+94 functions moved off a module-scope `const corsHeaders = { 'Access-Control-
+Allow-Origin': '*' }` onto `const corsHeaders = getCorsHeaders(req)` as the
+first statement of the serve() handler. That makes CORS per-request: the origin
+is echoed only when it is on the allowlist, and Vary: Origin is set so the
+response caches per origin.
+
+_shared/cors.ts stopped defining a wildcard. It now re-exports the pinned
+corsHeaders from secure-cors.ts with a note pointing at getCorsHeaders. Its one
+importer, create-missing-content, is on the per-request helper.
+
+scripts/check-cors-wildcards.mjs is the ratchet (AC4), wired into
+.husky/pre-commit and the CI guard job. It fails on any new wildcard, strips
+comments so doc mentions don't count, and prints which backlog entries have
+been converted so REMAINING can be trimmed.
+
+### How the sweep was made safe without a compiler
+The transform only ran on files where, before the edit:
+  - exactly one module-scope `const corsHeaders = {` whose origin is '*'
+  - exactly one serve()/Deno.serve() call with an inline arrow handler
+  - every corsHeaders reference lexically inside that handler's brace range
+36 of the 137 failed one of those and were left alone. After the edit every
+touched file was re-checked for a single indented declaration, exactly one
+resolvable import, and no use before declaration — then parsed with esbuild.
+95/95 clean. One file (sso-manage) had its import inserted into the middle of a
+multi-line import block; the post-check caught it and it was moved.
+
+### Held back deliberately — 10 public endpoints
+api-auth, capture-lead, handle-demo-request, handle-sales-contact,
+gsc-oauth-callback, google-calendar-callback, outlook-calendar-callback,
+webhook-verify, track-referral, process-referral-signup. Each is genuinely
+called cross-origin (third-party API clients, OAuth redirect targets, referral
+pixels, marketing forms that may be embedded off brikly.net) and authenticates
+its own caller. They are the documented PUBLIC set in the guard script, which is
+what AC1 asks for.
+
+### Still to do — 33 functions
+Listed in REMAINING in the guard script. Each needs a hand edit because it
+breaks a precondition: corsHeaders referenced outside the handler (19), more
+than one serve() call (4), a handler passed by reference instead of inline
+(5 + 3), or more than one corsHeaders declaration (3).
+
+### Pre-existing lint errors fixed to get past the hook
+Staging these files surfaced 16 eslint errors that predate this work (confirmed
+by stashing and re-linting HEAD): six prefer-const and two unused-import
+autofixes, plus braces around four switch cases that declared consts in the case
+body (ai-content-generator's 'social', calculate-lead-score's 'greater_than',
+'less_than' and 'in_range'). no-case-declarations is not autofixable.
+
+### Before this deploys
+Run a real `deno check` over supabase/functions somewhere with network access.
+The static verification here is good but it is not a type checker.
