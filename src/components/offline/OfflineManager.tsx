@@ -23,7 +23,7 @@ export const OfflineManager: React.FC<OfflineManagerProps> = ({ className = '' }
   } = useOfflineSync();
   
   // Mock additional features for enhanced UI
-  const [syncProgress, setSyncProgress] = useState(0);
+  const [syncProgress] = useState(0);
   const [conflicts] = useState<any[]>([]);
   
   const resolveConflict = (conflictId: string, resolution: 'local' | 'server') => {

@@ -55,7 +55,7 @@ interface Performance {
 }
 
 export const SubcontractorManagement: React.FC = () => {
-  const [subcontractors, setSubcontractors] = useState<Subcontractor[]>([
+  const [subcontractors] = useState<Subcontractor[]>([
     {
       id: '1',
       companyName: 'Elite Electrical Solutions',
@@ -100,7 +100,7 @@ export const SubcontractorManagement: React.FC = () => {
     }
   ]);
 
-  const [contracts, setContracts] = useState<SubcontractorContract[]>([
+  const [contracts] = useState<SubcontractorContract[]>([
     {
       id: '1',
       subcontractorId: '1',

@@ -53,8 +53,8 @@ interface Meeting {
 export const CommunicationHub: React.FC = () => {
   const [activeTab, setActiveTab] = useState('messages');
   const [selectedThread, setSelectedThread] = useState<any>(null);
-  const [rfis, setRfis] = useState<RFI[]>([]);
-  const [meetings, setMeetings] = useState<Meeting[]>([]);
+  const [rfis] = useState<RFI[]>([]);
+  const [meetings] = useState<Meeting[]>([]);
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
   const { toast } = useToast();
   const { selectChannel } = useAdvancedChat();

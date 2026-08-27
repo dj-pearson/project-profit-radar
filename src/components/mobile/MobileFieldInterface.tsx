@@ -19,7 +19,7 @@ interface MobileFieldInterfaceProps {
 }
 
 export const MobileFieldInterface: React.FC<MobileFieldInterfaceProps> = ({ className }) => {
-  const [isOnline, setIsOnline] = useState(true);
+  const [isOnline] = useState(true);
   const [isRecording, setIsRecording] = useState(false);
   const [syncStatus, setSyncStatus] = useState<'idle' | 'syncing'>('idle');
 

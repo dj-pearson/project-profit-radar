@@ -56,7 +56,7 @@ interface Pipeline {
 }
 
 export const LeadManagementCRM: React.FC = () => {
-  const [leads, setLeads] = useState<Lead[]>([
+  const [leads] = useState<Lead[]>([
     {
       id: '1',
       firstName: 'John',

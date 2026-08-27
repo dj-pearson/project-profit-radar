@@ -62,7 +62,7 @@ interface RegulatoryRequirement {
 }
 
 export const PermitRegulatorySystem: React.FC = () => {
-  const [permits, setPermits] = useState<Permit[]>([
+  const [permits] = useState<Permit[]>([
     {
       id: '1',
       type: 'building',
@@ -138,7 +138,7 @@ export const PermitRegulatorySystem: React.FC = () => {
     }
   ]);
 
-  const [requirements, setRequirements] = useState<RegulatoryRequirement[]>([
+  const [requirements] = useState<RegulatoryRequirement[]>([
     {
       id: '1',
       category: 'safety',

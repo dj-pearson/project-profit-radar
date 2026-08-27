@@ -39,7 +39,7 @@ interface QuickAction {
 export const MobileDashboard: React.FC = () => {
   const [activeView, setActiveView] = useState('dashboard');
   const [isInitializing, setIsInitializing] = useState(true);
-  const [stats, setStats] = useState<DashboardStats>({
+  const [stats] = useState<DashboardStats>({
     safetyIncidents: 0,
     dailyReports: 3,
     equipmentItems: 15,

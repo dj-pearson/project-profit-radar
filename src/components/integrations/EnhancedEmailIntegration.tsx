@@ -62,7 +62,7 @@ const EnhancedEmailIntegration = () => {
   // Form states
   const [automationName, setAutomationName] = useState('');
   const [automationType, setAutomationType] = useState('trigger_based');
-  const [selectedProvider, setSelectedProvider] = useState('');
+  const [selectedProvider] = useState('');
 
   useEffect(() => {
     loadEmailIntegrationData();

@@ -32,7 +32,7 @@ const SearchTrafficDashboard: React.FC = () => {
   const [trafficData, setTrafficData] = useState<UnifiedTrafficMetrics[]>([]);
   const [loadingData, setLoadingData] = useState(true);
   const [syncing, setSyncing] = useState(false);
-  const [dateRange, setDateRange] = useState({
+  const [dateRange] = useState({
     start: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
     end: new Date(),
     preset: '30days' as const

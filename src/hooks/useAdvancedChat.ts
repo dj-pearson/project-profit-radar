@@ -44,8 +44,8 @@ export const useAdvancedChat = () => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [activeChannel, setActiveChannel] = useState<ChatChannel | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [isTyping, setIsTyping] = useState<string[]>([]);
-  const [onlineUsers, setOnlineUsers] = useState<string[]>([]);
+  const [isTyping] = useState<string[]>([]);
+  const [onlineUsers] = useState<string[]>([]);
 
   // Load channels
   const loadChannels = useCallback(async () => {

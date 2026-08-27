@@ -85,7 +85,7 @@ export const PlatformProvider: React.FC<PlatformProviderProps> = ({ children }) 
   });
   
   const [relationships, setRelationships] = useState<CrossModuleRelationship[]>([]);
-  const [availableActions, setAvailableActions] = useState<PlatformAction[]>([]);
+  const [availableActions] = useState<PlatformAction[]>([]);
   const [syncStatus, setSyncStatus] = useState<'idle' | 'syncing' | 'error'>('idle');
   const [lastSyncTime, setLastSyncTime] = useState<Date>();
   const [metrics, setMetrics] = useState({

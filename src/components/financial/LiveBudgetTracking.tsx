@@ -33,7 +33,7 @@ interface BudgetAlert {
 export default function LiveBudgetTracking() {
   const [budgetItems, setBudgetItems] = useState<BudgetItem[]>([]);
   const [alerts, setAlerts] = useState<BudgetAlert[]>([]);
-  const [selectedProject, setSelectedProject] = useState<string>('all');
+  const [selectedProject] = useState<string>('all');
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
