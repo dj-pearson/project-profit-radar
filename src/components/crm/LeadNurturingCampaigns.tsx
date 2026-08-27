@@ -195,10 +195,13 @@ export const LeadNurturingCampaigns: React.FC = () => {
       if (error) throw error;
 
       // Update campaign total steps
-      await supabase
+      const { error: updateLeadNurturingCampaignsError } = await supabase
         .from('lead_nurturing_campaigns')
         .update({ total_steps: stepNumber })
         .eq('id', campaignId);
+      if (updateLeadNurturingCampaignsError) {
+        throw new Error(`Failed to update lead_nurturing_campaigns: ${updateLeadNurturingCampaignsError.message}`);
+      }
 
       toast({
         title: "Step added",

@@ -316,10 +316,13 @@ const CompanyAdminSettings = () => {
       setSaving(true);
       
       // Delete existing fields for this company
-      await supabase
+      const { error: deleteCompanyCustomFieldsError } = await supabase
         .from('company_custom_fields')
         .delete()
         .eq('company_id', userProfile?.company_id);
+      if (deleteCompanyCustomFieldsError) {
+        throw new Error(`Failed to delete company_custom_fields: ${deleteCompanyCustomFieldsError.message}`);
+      }
       
       // Insert new fields
       if (customFields.length > 0) {

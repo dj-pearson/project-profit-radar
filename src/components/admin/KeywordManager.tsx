@@ -311,13 +311,16 @@ const KeywordManager = () => {
 
     try {
       // First, clear all existing selections
-      await supabase
+      const { error: updateKeywordResearchDataError } = await supabase
         .from('keyword_research_data')
         .update({ 
           selected_for_blog_generation: false,
           updated_at: new Date().toISOString()
         })
         .eq('company_id', userProfile.company_id);
+      if (updateKeywordResearchDataError) {
+        throw new Error(`Failed to update keyword_research_data: ${updateKeywordResearchDataError.message}`);
+      }
 
       // Then, select the optimal keywords
       const optimalKeywords = optimal.map(k => k.keyword);
@@ -461,9 +464,10 @@ const KeywordManager = () => {
           return b.searchVolume - a.searchVolume;
         case 'difficulty':
           return a.difficulty - b.difficulty;
-        case 'priority':
+        case 'priority': {
           const priorityOrder = { high: 3, medium: 2, low: 1 };
           return priorityOrder[b.priority] - priorityOrder[a.priority];
+        }
         default:
           return 0;
       }

@@ -702,10 +702,13 @@ export const LeadManagement = () => {
                                 value={contact.status}
                                 onValueChange={async (value) => {
                                   try {
-                                    await supabase
+                                    const { error: updateSalesContactRequestsError } = await supabase
                                       .from('sales_contact_requests')
                                       .update({ status: value })
                                       .eq('id', contact.id);
+                                    if (updateSalesContactRequestsError) {
+                                      throw new Error(`Failed to update sales_contact_requests: ${updateSalesContactRequestsError.message}`);
+                                    }
                                     loadData();
                                     toast({ title: 'Status updated successfully' });
                                   } catch (error) {

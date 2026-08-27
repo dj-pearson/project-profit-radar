@@ -87,13 +87,16 @@ const EmailPreferences = () => {
     }
     setSaving(true);
     try {
-      await supabase.from('email_preferences').upsert({
+      const { error: upsertEmailPreferencesError } = await supabase.from('email_preferences').upsert({
         user_id: user.id,
         product_updates: next.product_updates,
         marketing: next.marketing,
         newsletter: next.newsletter,
         updated_at: new Date().toISOString(),
       });
+      if (upsertEmailPreferencesError) {
+        throw new Error(`Failed to upsert email_preferences: ${upsertEmailPreferencesError.message}`);
+      }
       toast({ title: 'Preferences saved' });
     } catch (err) {
       console.error(err);

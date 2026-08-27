@@ -109,10 +109,13 @@ const MobileMaterialScanner: React.FC<MobileMaterialScannerProps> = ({
 
       // Update material quantity
       const newQuantity = selectedMaterial.quantity_available - usageQuantity;
-      await supabase
+      const { error: updateMaterialsError } = await supabase
         .from('materials')
         .update({ quantity_available: newQuantity })
         .eq('id', selectedMaterial.id);
+      if (updateMaterialsError) {
+        throw new Error(`Failed to update materials: ${updateMaterialsError.message}`);
+      }
 
       toast({
         title: "Usage Recorded",

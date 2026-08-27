@@ -132,7 +132,7 @@ const RetentionManager: React.FC = () => {
       if (error) throw error;
 
       // Create line item
-      await supabase
+      const { error: insertInvoiceLineItemsError } = await supabase
         .from('invoice_line_items')
         .insert({
           invoice_id: data.id,
@@ -141,6 +141,9 @@ const RetentionManager: React.FC = () => {
           unit_price: retention.availableRetention,
           total_price: retention.availableRetention
         } as any);
+      if (insertInvoiceLineItemsError) {
+        throw new Error(`Failed to insert invoice_line_items: ${insertInvoiceLineItemsError.message}`);
+      }
 
       toast({
         title: "Retention Invoice Created",

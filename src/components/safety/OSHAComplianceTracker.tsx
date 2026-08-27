@@ -132,7 +132,7 @@ const OSHAComplianceTracker: React.FC<OSHAComplianceTrackerProps> = ({
       if (error) throw error;
 
       // Log completion
-      await supabase
+      const { error: insertOshaComplianceLogError } = await supabase
         .from('osha_compliance_log')
         .insert({
           requirement_id: requirementId,
@@ -142,6 +142,9 @@ const OSHAComplianceTracker: React.FC<OSHAComplianceTrackerProps> = ({
           project_id: projectId,
           notes: `Completed ${requirement.title}`
         });
+      if (insertOshaComplianceLogError) {
+        throw new Error(`Failed to insert osha_compliance_log: ${insertOshaComplianceLogError.message}`);
+      }
 
       toast({
         title: "Requirement Completed",
