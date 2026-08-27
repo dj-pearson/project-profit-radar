@@ -4457,3 +4457,37 @@ AC3 ends up satisfied differently than written: rather than surfacing a
 swallowed error, there is no longer a write to fail.
 
 Silent-write baseline 215 → 214.
+
+## US-241 — the find was not a schema gap
+
+Took the money functions first: `process-refund`, `store-stripe-keys`,
+`remove-payment-method`, `set-default-payment-method`. Backlog 132 → 128, all in
+report mode via `validateBody`, so nothing 400s until `INPUT_VALIDATION_MODE`
+flips.
+
+**`remove-payment-method` had a cross-customer hole.** It authenticated the
+caller and then called `stripe.paymentMethods.detach(payment_method_id)` on
+whatever id the body carried, with no check that the method belonged to them.
+The Stripe key there is the platform's own, so every customer is in scope. Any
+signed-in user who learned another customer's `pm_` id could detach it and break
+their next renewal.
+
+`detach()` offers no protection of its own. `set-default-payment-method` is safe
+only by accident — `customers.update` rejects a method not attached to that
+customer. The fix resolves the caller's company `stripe_customer_id`, retrieves
+the method, and compares, returning the *same* 404 as a genuine miss, because a
+distinct 403 would confirm the id exists.
+
+Worth stating plainly: **adding Zod would not have caught this.** A well-formed
+`pm_` id belonging to someone else passes every schema I could write. Validation
+and authorisation are different problems, and this story only covers one.
+
+**A real schema gap too.** `process-refund` took `amount` as an unbounded
+number, and the approval gate is `amount > 100` — so a *negative* amount is
+false for that test, skips approval entirely, and lands in the refunds ledger as
+a negative row. Now positive, two decimal places, ceiling 1,000,000.
+
+`store-stripe-keys` was already well authorised — it checks the caller's own
+profile company against `company_id` and requires admin. Its gap was shape only:
+`secret_key` was unvalidated and would have been encrypted and stored as
+whatever it was, surfacing when a charge failed. Now pattern-matched.

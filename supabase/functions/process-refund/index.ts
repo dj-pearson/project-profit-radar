@@ -7,6 +7,34 @@ import { initializeAuthContext, errorResponse } from '../_shared/auth-helpers.ts
 import { getCorsHeaders } from '../_shared/secure-cors.ts';
 import { writeAuditLog } from '../_shared/audit-log.ts';
 import { createServiceClient } from '../_shared/service-client.ts';
+import { validateBody } from '../_shared/validate-body.ts';
+import { z } from "npm:zod@3";
+
+/**
+ * amount is the one that matters. It was an unbounded number, and the approval
+ * gate below is `amount > 100` - so a negative amount is false for that test
+ * and skips approval entirely, then lands in the refunds ledger as a negative
+ * row. Bounded positive, two decimal places, with a ceiling well above any
+ * plausible single refund so the schema is not the thing that blocks a real one.
+ */
+const RefundRequestSchema = z.object({
+  action: z.enum(['create', 'approve', 'reject', 'process', 'cancel', 'list', 'get']),
+  refund_id: z.string().uuid().optional(),
+  invoice_id: z.string().uuid().optional(),
+  amount: z.number().positive().max(1_000_000).multipleOf(0.01).optional(),
+  reason: z.enum([
+    'duplicate',
+    'fraudulent',
+    'requested_by_customer',
+    'service_issue',
+    'product_defective',
+    'other',
+  ]).optional(),
+  reason_description: z.string().max(2000).optional(),
+  notes: z.string().max(2000).optional(),
+  stripe_payment_intent_id: z.string().max(255).optional(),
+  stripe_charge_id: z.string().max(255).optional(),
+});
 
 const logStep = (step: string, details?: Record<string, unknown>) => {
   const detailsStr = details ? ` - ${JSON.stringify(details)}` : '';
@@ -54,7 +82,9 @@ serve(async (req) => {
     const companyId = userProfile.company_id;
     const userRole = userProfile.role;
 
-    const body: RefundRequest = await req.json();
+    const parsed = await validateBody(req, RefundRequestSchema, { name: 'process-refund' });
+    if (!parsed.ok) return parsed.response;
+    const body = parsed.data as RefundRequest;
     const { action } = body;
 
     logStep('Processing action', { action, companyId });
