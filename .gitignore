@@ -162,10 +162,19 @@ supabase/functions/**/*.bak
 # US-261: repo-hygiene — build artifacts, backups, and stray accident files
 tsc-output.txt
 *.backup
+*.backup.gz
+*.backup.bz2
+*.backup.zst
+*.dump
+*.dump.gz
+*.pgdump
+*.sql.gz
 backup_*.sql
+db_cluster*
 .env_backup
 *.crash
 Crash/
 /Cloning Motion AI_*.docx
 backups/
+backup/
 performance-budget-results.json

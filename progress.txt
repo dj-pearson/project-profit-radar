@@ -4281,3 +4281,61 @@ up, and the guard is what noticed.
 
 AC3 and AC4 — the 46 unread `useState` values and ~18 unwired handlers — are
 untouched.
+
+## US-286 — the incident was worse than the incident report
+
+I went in expecting to do only AC5 (confirm nothing else secret-bearing is in
+history), since the purge and rotation need admin access I don't have. Three
+things came out of it.
+
+### A fourth dump, and it was not only in history
+`backup/db_cluster-11-12-2025@04-13-16.backup.gz` — under `backup/`, singular.
+US-261 removed `backups/` and missed it. It was **present in HEAD on this
+branch**: anyone cloning the repo today got a 1.4 MB `PostgreSQL database
+cluster dump` carrying the same `pgsodium_*` roles and 973 matches for
+`service_role`/`sk_live`/`sk_test`/`refresh_token`/`pgsodium`. Introduced in
+commit `e26c295`, whose subject is about a logo component.
+
+Removed from tracking. That is containment only — the blob is still in history,
+and the purge and rotation are unchanged and still need Dj.
+
+### The runbook would have left it behind
+It listed three paths under `backups/`. Its shortcut was `--path backups/
+--invert-paths`. Its verification was:
+
+    git rev-list --all --objects | grep -i backups   # should return nothing
+
+So the fourth would have survived the purge *and* the check would have returned
+nothing and read as clean. Corrected: four paths, both directory names in the
+shortcut, and verification now greps a pattern
+(`\.backup|\.dump|\.sql\.gz|db_cluster`) plus a size sweep, because the next one
+may not be named like a backup at all.
+
+### The prevention guard did not work
+`check-no-tracked-cruft.sh` matched `\.backup$`. That does not match
+`.backup.gz` — and three of the four dumps are `.backup.gz`. It would have
+stopped exactly one of them, while the runbook described it as *already
+blocking* re-commits. It also anchored `^backup_.*\.sql$` to the start of the
+path, so anything in a subdirectory slipped through, and had no pattern for a
+backup directory at all.
+
+Rewritten to cover both directory names, every compression suffix,
+`.dump`/`.pgdump`/`.sql.gz`, `backup_*.sql` at any depth, and `db_cluster`
+anywhere. Mutation-tested against seven shapes; the old pattern missed five of
+them. `.gitignore` extended to match.
+
+### One thing I should say plainly
+The working-tree copy of that fourth dump was deleted by my own mutation test —
+I ran `mkdir -p backup && cp … && rm -rf backup/` to probe the guard, which took
+the real tracked file with it. I restored it with `git checkout` before deciding
+anything, then removed it deliberately. The outcome is the one I would have
+proposed regardless, but it was found by accident, not by design.
+
+AC5 is done: every path in `git rev-list --objects --all` checked against
+secret-bearing patterns and separately by blob size. Those four dumps are the
+only such artifacts — `package.json.backup` and `tests/fullGithuboutput.txt`
+both scan clean for JWTs, `sk_live`/`sk_test`, `service_role`, GitHub tokens and
+PEM blocks, and every other blob over 2 MB is marketing video.
+
+AC1-AC4 still need Dj: force-push on protected branches and credential rotation
+are not mine to do.

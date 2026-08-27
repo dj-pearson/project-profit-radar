@@ -6,13 +6,29 @@ history** and every credential it contains must be treated as compromised.
 
 ## 1. What was exposed
 
-Three tracked blobs (removed from the tree in commit `62e0769`, still in history):
+**Four** tracked blobs (removed from the tree in commit `62e0769`, still in
+history):
 
 ```
-backups/db_cluster-17-12-2025.backup       (20.6 MB, plaintext SQL)
-backups/db_cluster-17-12-2025.backup.gz     (1.5 MB)
+backups/db_cluster-17-12-2025.backup             (19.7 MB, plaintext SQL)
+backups/db_cluster-17-12-2025.backup.gz          (1.5 MB)
 backups/db_cluster-15-12-2025@04-32-12.backup.gz (1.5 MB)
+backup/db_cluster-11-12-2025@04-13-16.backup.gz  (1.4 MB)   <-- note: backup/, singular
 ```
+
+The fourth was missed when this runbook was first written. It sits under
+`backup/` rather than `backups/`, so neither the original `--path` list nor the
+`--path backups/` shortcut would have removed it, and the verification command
+(`git rev-list --all --objects | grep -i backups`) would have returned nothing
+and read as clean. It is the same class of exposure: a full
+`PostgreSQL database cluster dump` carrying the same `pgsodium_*` roles and 973
+matches for `service_role`/`sk_live`/`sk_test`/`refresh_token`/`pgsodium`.
+Introduced in commit `e26c295`, whose subject is about a logo component.
+
+Verified 2026-08-27 by enumerating every path in `git rev-list --objects --all`
+against secret-bearing patterns and by size. Those four are the only such
+artifacts: `package.json.backup` and `tests/fullGithuboutput.txt` both scan
+clean, and every other blob over 2 MB is marketing video under `media/assets/`.
 
 Contents span **538 tables**, including:
 
@@ -59,8 +75,11 @@ git filter-repo --force \
   --path backups/db_cluster-17-12-2025.backup \
   --path backups/db_cluster-17-12-2025.backup.gz \
   --path "backups/db_cluster-15-12-2025@04-32-12.backup.gz" \
+  --path "backup/db_cluster-11-12-2025@04-13-16.backup.gz" \
   --invert-paths
-# (or simply: git filter-repo --path backups/ --invert-paths  — removes the whole dir)
+# Both directories, and note the singular one. `--path backups/` alone leaves
+# the fourth dump in history:
+#   git filter-repo --path backups/ --path backup/ --invert-paths
 
 # 2. Re-add the remote (filter-repo drops it) and force-push every branch + tags:
 git remote add origin git@github.com:dj-pearson/project-profit-radar.git
@@ -97,7 +116,17 @@ force-push** (or run it via the admin bypass), then re-lock.
 ```bash
 # Confirm nothing secret-bearing remains in the rewritten history:
 gitleaks detect --source . --log-opts="--all"          # full-history scan
-git rev-list --all --objects | grep -i backups         # should return nothing
+
+# NOT `grep -i backups` - that misses backup/ (singular), which is how the
+# fourth dump went unlisted here in the first place. Match the pattern, not the
+# directory you remember:
+git rev-list --all --objects \
+  | grep -iE '\.backup|\.dump|\.sql\.gz|db_cluster'   # should return nothing
+
+# And check by size, since the next one may not be named like a backup at all:
+git rev-list --objects --all \
+  | git cat-file --batch-check='%(objecttype) %(objectname) %(objectsize) %(rest)' \
+  | awk '$1=="blob" && $3>1048576 {printf "%.1f MB  %s\n", $3/1048576, $4}' | sort -rn
 ```
 
 - The **`scripts/check-no-tracked-cruft.sh`** guard (added in US-261, wired into
