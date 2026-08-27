@@ -18,6 +18,8 @@ import { getCorsHeaders } from '../_shared/secure-cors.ts';
 import { sendEmail, getSiteEmailConfig } from '../_shared/ses-email-service.ts';
 import { generateAuthEmail, generateOTPCode } from '../_shared/auth-email-templates.ts';
 import { isDisposableEmail } from '../_shared/disposable-email.ts';
+import { enforceRateLimit, RATE_LIMITS, getClientIP } from '../_shared/rate-limiter.ts';
+import { createServiceClient } from '../_shared/service-client.ts';
 
 // Validation schema
 const signupSchema = z.object({
@@ -53,6 +55,15 @@ const handler = async (req: Request): Promise<Response> => {
   console.log('[SignupWithOTP] Processing POST request');
 
   try {
+    // Rate limit per IP (US-243). Unauthenticated and it sends mail, so without
+    // a ceiling it is an open relay for bombing an address or burning SES quota.
+    // There is no user to key on before signup, so IP is the only handle here.
+    const signupLimited = await enforceRateLimit(
+      createServiceClient(), `ip:${getClientIP(req)}`, 'signup-with-otp',
+      RATE_LIMITS.AUTH, corsHeaders,
+    );
+    if (signupLimited) return signupLimited;
+
     // Parse and validate request
     console.log('[SignupWithOTP] Parsing request body...');
     const rawBody = await req.json();

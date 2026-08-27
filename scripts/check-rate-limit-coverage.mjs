@@ -35,6 +35,16 @@ const EXPENSIVE = new Map([
   ['voice-to-text', 'Whisper transcription, billed per request'],
   ['process-voice-command', 'Whisper plus an LLM round trip'],
   ['generate-custom-report', 'heavy query fan-out, AI-assisted'],
+
+  // SES-backed senders. Unbounded sending burns quota and, worse, sender
+  // reputation — and the unauthenticated ones are an open relay for bombing
+  // someone's inbox. send-auth-otp also keeps a per-email throttle, which is a
+  // different control: per-email stops one address being targeted, per-IP stops
+  // one source spraying across many. Both are wanted.
+  ['send-email', 'generic SES sender'],
+  ['send-auth-otp', 'sends OTP mail, unauthenticated'],
+  ['signup-with-otp', 'sends OTP mail, unauthenticated'],
+  ['reset-password-otp', 'sends OTP mail, unauthenticated'],
 ]);
 
 const CALLS_LIMITER = /\benforceRateLimit\s*\(|\bcheckRateLimit\s*\(/;

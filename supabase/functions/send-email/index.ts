@@ -3,6 +3,8 @@
 import { initializeAuthContext, errorResponse, successResponse } from '../_shared/auth-helpers.ts';
 import { getCorsHeaders } from '../_shared/secure-cors.ts';
 import { sendEmail, type EmailOptions } from '../_shared/ses-email-service.ts';
+import { enforceRateLimit, RATE_LIMITS, getClientIP } from '../_shared/rate-limiter.ts';
+import { createServiceClient } from '../_shared/service-client.ts';
 
 const logStep = (step: string, details?: any) => {
   const detailsStr = details ? ` - ${JSON.stringify(details)}` : '';
@@ -42,12 +44,23 @@ export default async (req: Request) => {
     // Auth is optional for internal edge-function-to-edge-function calls
     // but required for direct client calls
     const authHeader = req.headers.get('Authorization');
+    let sender: string | null = null;
     if (authHeader) {
       const authContext = await initializeAuthContext(req);
       if (!authContext) {
         return errorResponse('Unauthorized', 401, req);
       }
+      sender = authContext.user.id;
     }
+
+    // Rate limit (US-243). This is the generic sender, so an unbounded caller
+    // burns SES reputation as well as quota. Keyed on the user where there is
+    // one and IP otherwise, since auth is optional here.
+    const emailLimited = await enforceRateLimit(
+      createServiceClient(), sender ?? `ip:${getClientIP(req)}`, 'send-email',
+      RATE_LIMITS.AUTH, corsHeaders,
+    );
+    if (emailLimited) return emailLimited;
 
     const body = await req.json();
     const { to, subject, message, text, template } = body;

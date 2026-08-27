@@ -16,6 +16,8 @@ import { getCorsHeaders, handleCorsPreflightRequest } from '../_shared/secure-co
 import { sendEmail, getSiteEmailConfig } from '../_shared/ses-email-service.ts';
 import { generateAuthEmail, generateOTPCode } from '../_shared/auth-email-templates.ts';
 import { validatePasswordStrength } from '../_shared/password-policy.ts';
+import { enforceRateLimit, RATE_LIMITS, getClientIP } from '../_shared/rate-limiter.ts';
+import { createServiceClient } from '../_shared/service-client.ts';
 
 // Validation schemas
 const requestResetSchema = z.object({
@@ -47,6 +49,15 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
+    // Rate limit per IP (US-243). There is already a per-email throttle further
+    // down, which stops one address being bombed; this stops one source spraying
+    // across many addresses, which the per-email check cannot see.
+    const resetLimited = await enforceRateLimit(
+      createServiceClient(), `ip:${getClientIP(req)}`, 'reset-password-otp',
+      RATE_LIMITS.AUTH, corsHeaders,
+    );
+    if (resetLimited) return resetLimited;
+
     const rawBody = await req.json();
     const action = rawBody.action || 'request';
 
