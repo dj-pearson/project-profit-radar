@@ -3355,3 +3355,51 @@ cannot load — so **logic that needs testing has to live in `_shared/`** until
 Deno is available in CI. Nine tests, mutation-checked three ways: reverting to a
 single unpaged request fails 2, dropping the throttle retry fails 4, ignoring
 Retry-After fails 1.
+
+================================================================================
+2026-08-27 — US-251: edge functions can now report their own failures
+================================================================================
+
+193 functions reported failures with console.error and nothing aggregated them.
+A billing webhook that starts failing at 3am paged nobody.
+
+### No SDK, on purpose
+Sentry has a documented HTTP envelope endpoint, so `_shared/observability.ts`
+posts to it with plain fetch. Three reasons, in order of weight:
+
+1. **It can be tested.** Edge-function entry points import Deno URL modules that
+   vitest cannot load. A module with zero imports lives in `_shared/` and gets
+   16 real tests. An SDK-based one would have got none.
+2. A URL import costs cold-start time on every invocation of every function.
+3. The envelope format is stable and documented; the risk of hand-rolling it is
+   low and the surface is about 40 lines.
+
+The URL-import block in this sandbox pushed me to look at the envelope API, but
+the testability argument is why it stayed.
+
+### Scrub on shape, not just on key name
+The obvious approach is a list of sensitive field names. That misses the case
+that actually matters: **a secret inside an error message.** `Error: auth failed
+for sk_live_ABC...` has no field name to match on.
+
+So scrubbing runs over the whole serialized event and matches both — keys by
+name at any depth, and secret-shaped values anywhere: JWTs, sk_live/sk_test,
+whsec_, bearer tokens, email addresses. Emails are in there because they are PII
+and error messages are full of them.
+
+### Never throws, never rejects
+On a bad DSN, a dead network, or a 429 from Sentry. Reporting an error must not
+be able to cause one — the same rule the audit writer follows (US-244). Both
+mutation-checked: letting a transport failure escape fails a test.
+
+### Where it is wired
+stripe-webhook, quickbooks-sync, process-dunning, process-funnel-queue. The last
+two are cron-driven, which is the case that most needs this: nobody reads the
+response, so a stalled queue looks exactly like an idle one.
+
+### Left for you
+Set `EDGE_SENTRY_DSN` as a **Supabase secret**, not a build variable — it is read
+at runtime via Deno.env and must not reach the web bundle. Documented in
+env.example. Until it is set, captureException is a no-op; handlers still log to
+the platform's own logs, they just do not aggregate or alert. Then throw
+deliberately in one function and confirm the event lands (AC4).
