@@ -2927,3 +2927,64 @@ reporting nothing** — same lesson as the privilege-write guard's blind spots.
 ### Next
 72 web-app sites, where the dangerous shape is a write followed by a success
 toast or a navigation, then the remaining 216 edge sites by consequence.
+
+================================================================================
+2026-08-27 — US-300 second pass: writes that lie to the user (288 -> 272)
+================================================================================
+
+### A better detector than "all 330"
+Instead of working the raw list, flag a silent write only when the next few
+statements in the same block match a **success signal**: a toast, a navigate, a
+localStorage.removeItem, a dialog close, a refetch. That found 14 sites in 13
+components — the ones where a failed write actively misleads someone, as opposed
+to merely losing an update.
+
+That distinction is the useful one. A dropped write is a bug; a dropped write
+plus "Saved successfully" is how people lose work without knowing to redo it.
+
+### The archetype
+ProgressBillingManager:
+
+    const { data, error } = await supabase.from('invoices').insert(...)...
+    if (error) throw error;                       // checked
+
+    await supabase.from('invoice_line_items').insert({...});   // NOT checked
+
+    toast({ title: "Progress Invoice Created", ... });
+
+The author checked the first error and not the second, four lines apart. A
+failed line-item insert leaves an invoice with nothing on it, and the user is
+told it was created. Same shape in RetentionManager, ProjectEstimates,
+OSHAComplianceTracker, CustomerSupportChat and LatePaymentAlertsCollection (all
+three of its collection_items updates).
+
+Every one already sat inside a try/catch that shows an error toast. The fix was
+not to add error handling — it was to reach the handling that was already there.
+Same shape as stripe-webhook's unreachable retry path last tick. That is twice
+now, so it is worth stating plainly: **when a write's failure is unhandled, check
+whether the handling exists and is simply not wired up before writing new code.**
+
+### A vacuous pass, caught
+The AST check that verifies each new throw has an enclosing catch reported
+"✔ every new throw is inside a try/catch" on its first run — while inspecting
+**zero files**, because the `git diff --name-only` feeding it ran from the
+scratchpad directory and failed. A checker that finds nothing because it looked
+at nothing prints exactly the same thing as one that found nothing because
+everything is fine.
+
+Reran against the real 13-file list. Third time this session that a clean report
+turned out to be worth re-examining (the privilege-write guard's two blind
+spots, the regex scope-check's false positives, now this).
+
+### Also fixed
+Two pre-existing lint errors in touched files, both confirmed against HEAD
+first: a switch case declaring a const in KeywordManager, and
+IndustryWorkflowTemplates naming a plain handler `useTemplate`, which
+react-hooks/rules-of-hooks reads as a hook called inside a callback — the same
+mistake as `useSuggestedResponse` earlier in this session. Renamed to
+applyTemplate.
+
+### Remaining
+216 edge + 56 web. The edge remainder is mostly logging, analytics and
+notification tables, where a lost write is a lost record rather than a lie.
+Triage those by whether anything downstream depends on the row existing.
