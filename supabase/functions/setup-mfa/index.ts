@@ -30,7 +30,10 @@ serve(async (req) => {
     const { user, supabase: supabaseClient } = authContext;
 
     // Rate limit: 3 MFA setup attempts per hour per user (prevents secret regeneration abuse)
-    const rateLimitResult = await checkRateLimit(supabaseClient, {
+    // US-307: the limiter writes rate_limit_state through consume_rate_limit,
+    // which is granted to service_role only. A user-JWT client here means the
+    // RPC is refused and the limit silently never applies.
+    const rateLimitResult = await checkRateLimit(createServiceClient(), {
       identifier: user.id,
       endpoint: 'setup-mfa',
       maxRequests: 3,

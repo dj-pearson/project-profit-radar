@@ -3814,3 +3814,76 @@ putting the table back in the watch list and confirming the guard names
 The second correction was smaller: `setup-mfa` had an unused `getClientIP`
 import, pre-existing, which only surfaced because lint-staged lints the files
 you touch. Removed.
+
+## US-307 — no rate limit had ever blocked a request
+
+I only went looking because `rate_limit_violations` was in my first draft of the
+US-306 deny list and I wanted to know who wrote it. The answer: the only writer
+is unreachable.
+
+    requestCount = violations.length      // rows in rate_limit_violations
+    allowed = requestCount < maxRequests  // 0 < 3 → true
+    if (!allowed) insert a violation row  // never runs
+
+From an empty table the count is 0, so every request passes, so no row is
+written, so the count stays 0. It cannot bootstrap. `dos-protection`'s three
+references to that table are all selects. `enforceRateLimit`, which I added
+earlier in this session, delegates straight to `checkRateLimit` and inherits it.
+
+So all 14 functions `check-rate-limit-coverage.mjs` reports as enforcing a limit
+were calling a function that always returns `allowed: true` — `signup-with-otp`,
+`send-auth-otp`, `verify-auth-otp`, `verify-mfa-login`, and the AI endpoints
+that spend money per call.
+
+### Why nobody caught it
+`src/lib/__tests__/rateLimiter.test.ts` **re-implemented** the limiter rather
+than importing it, and handed the copy a mock pre-seeded with violation rows. It
+proved the arithmetic and never asked how a row gets into the table. Twenty-odd
+green cases, and not one of them could have found this.
+
+A test that reconstructs its subject tests the reconstruction. That is the part
+worth carrying forward.
+
+### Proof before fix
+`supabase/functions/_shared/rate-limiter.test.ts` drives the real module from an
+empty store: 50 requests against a limit of 3, zero blocked, zero rows written,
+`requestCount` still 0 on the fiftieth. A fourth case seeds the rows the limiter
+is waiting for and shows it does block — the arithmetic was never the problem.
+
+### The fix
+`consume_rate_limit(identifier, endpoint, max_requests, window_minutes)` over
+`rate_limit_state`, which has existed since `20250703165323` for exactly this
+and has never been written by anything. `pg_advisory_xact_lock` on
+`hashtextextended(identifier || ':' || endpoint, 0)` before the
+read-modify-write, so two concurrent requests can't both read the same count and
+both pass — the specific failure a limiter exists to prevent, and the one that
+gets worse the harder someone pushes. The lock means no unique index, so no lock
+on a pre-existing table and the CONCURRENTLY question never arises.
+
+EXECUTE revoked from PUBLIC and granted to `service_role` alone: a function any
+client could call would let one caller burn another's quota by passing their IP.
+Three callers were handing over a user-JWT client and were converted —
+`setup-mfa`, `data-subject-delete` (×2), `data-subject-export` (×2).
+
+Still fails open on a database error, deliberately. But loudly. Failing open
+silently is how this survived.
+
+### One more confirmation the old path was dead
+Writing the refusal log against the real schema, the insert it replaces names
+`limit_value` and `window_minutes` — neither is a column — passes a bare
+identifier into `ip_address`, which is `INET`, and omits `identifier_type`,
+`method`, `limit_exceeded_by`, `time_window_seconds` and `action_taken`, all
+`NOT NULL`. Even on the branch it could never reach, it would have errored.
+
+### Guards
+`check-rate-limit-coverage.mjs` now fails when any `checkRateLimit` or
+`enforceRateLimit` call is handed a non-service client. First pass was a regex
+and false-positived on `ai-estimating`, `analyze-support-ticket` and
+`email-unsubscribe`, all of which were correct — the service key is held in a
+variable, so `SERVICE_ROLE_KEY` never appears inside the `createClient` call.
+Rewritten on the TypeScript AST in two passes. Mutation-tested with a user-JWT
+client and with an anon-key client.
+
+`src/lib/__tests__/rateLimiter.test.ts` no longer re-implements anything. Its
+real cases moved onto the module (21 tests); what's left is a guard against the
+copy coming back.

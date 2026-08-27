@@ -53,14 +53,14 @@ serve(async (req) => {
   // Deletion is high-consequence. Hard cap: 3 requests per user per day and
   // 10 per IP per day. Existing pending requests short-circuit below this
   // check anyway; this protects against request-spam/DoS.
-  const rl = await checkRateLimit(supabase, {
+  const rl = await checkRateLimit(createServiceClient(), {
     identifier: user.id,
     endpoint: "data-subject-delete",
     maxRequests: 3,
     windowMinutes: 60 * 24,
   });
   if (!rl.allowed) return rateLimitResponse(rl, corsHeaders);
-  const ipRl = await checkRateLimit(supabase, {
+  const ipRl = await checkRateLimit(createServiceClient(), {
     identifier: getClientIP(req),
     endpoint: "data-subject-delete:ip",
     maxRequests: 10,
