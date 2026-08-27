@@ -78,12 +78,19 @@ export default async (req: Request) => {
           console.error(`[subscribers] update failed`, updateSubscribersError);
         }
 
-        // Update history
-        await supabaseClient
+        // Update history. Best-effort - the subscriber record above is what
+        // gates access - but a discarded error leaves a complimentary grant
+        // showing as active in the history long after it expired, which is what
+        // anyone auditing comped accounts reads (US-300).
+        const { error: historyError } = await supabaseClient
           .from('complimentary_subscription_history')
           .update({ status: 'expired' })
           .eq('subscriber_id', existingSubscriber.id)
           .eq('status', 'active');
+
+        if (historyError) {
+          logStep('Complimentary history not marked expired', { error: historyError.message });
+        }
       } else {
         // Active complimentary subscription
         const tier = existingSubscriber.subscription_tier || 'professional';

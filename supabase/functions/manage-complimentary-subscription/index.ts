@@ -123,7 +123,10 @@ serve(async (req) => {
         throw new Error('Subscriber record not found after grant operation');
       }
 
-      await supabaseClient
+      // This row records who gave away paid product, to whom and why. The
+      // error was discarded, so a grant could take effect with no history entry
+      // behind it (US-300).
+      const { error: historyError } = await supabaseClient
         .from('complimentary_subscription_history')
         .insert({
           subscriber_id: subscriber.id,
@@ -133,6 +136,12 @@ serve(async (req) => {
           complimentary_type: type,
           status: 'active'
         });
+
+      if (historyError) {
+        throw new Error(
+          `The complimentary subscription was granted but not recorded in history: ${historyError.message}`,
+        );
+      }
 
       // Audit trail (US-244): giving away paid product. Names the admin who
       // did it, who received it, and when it lapses.
@@ -191,7 +200,10 @@ serve(async (req) => {
         throw new Error(`Failed to update subscribers: ${updateSubscribersError.message}`);
       }
 
-      await supabaseClient
+      // Closing the history row records who revoked the grant. The error was
+      // discarded, so a revoked subscription could still read as an active
+      // complimentary grant in the history (US-300).
+      const { error: revokeHistoryError } = await supabaseClient
         .from('complimentary_subscription_history')
         .update({
           status: 'revoked',
@@ -201,6 +213,12 @@ serve(async (req) => {
         })
         .eq('subscriber_id', subscriber.id)
         .eq('status', 'active');
+
+      if (revokeHistoryError) {
+        throw new Error(
+          `The complimentary subscription was revoked but the history still shows it active: ${revokeHistoryError.message}`,
+        );
+      }
 
       await writeAuditLog(supabaseClient, {
         actorUserId: adminUser.id,

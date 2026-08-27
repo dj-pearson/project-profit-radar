@@ -5535,3 +5535,59 @@ exists to produce.
 
 14 cases in `src/lib/__tests__/webSilentWrites.test.ts`, mutation-tested three
 ways. Full suite: 128 files, 2794 passing, 2 skipped.
+
+---
+
+## US-300, edge functions: the twenty-one that cost money or access
+
+171 to 150. I took the payment, billing and MFA paths first, on the grounds that
+a silent write there is measured in charges rather than in missing telemetry.
+
+The sharpest is the Stripe webhook. `webhook_events` is the idempotency guard,
+and its insert had the error discarded - so a failed insert let the handler run
+anyway, and a redelivery of the same event would find no row, process it again,
+and move money twice. It now refuses the event with a 500 so Stripe retries,
+except on `23505`, which means a concurrent delivery won the race and the guard
+is doing its job.
+
+Marking `processed = true` deliberately does *not* fail the request. The work has
+already happened; failing would guarantee the double-processing the row exists to
+prevent. It logs `PROCESSED BUT NOT RECORDED` instead, which is the honest state.
+
+The rest, by what they cost:
+
+- **usage-billing** - marking records billed is what stops the same usage being
+  invoiced next cycle, and the invoice already exists in Stripe by then. A
+  discarded error there is double billing.
+- **failed-payment-recovery** - with the attempt counter stuck, the same retry
+  and the same dunning email repeated on every run, forever. And a customer who
+  had just paid stayed in dunning, on course to be suspended.
+- **send-payment-reminder**, **billing-automation** - marking a reminder sent is
+  what stops it resending; advancing `next_run_at` is what stops an automation
+  rule re-running its actions every pass.
+- **verify-mfa-login** - consuming the used backup code. A failure left the code
+  valid and reusable while the sign-in went ahead: a single-use code defeated,
+  silently. It fails closed now and writes a security log line.
+
+That last file had a second bug the same discarded error was hiding:
+
+```js
+total_uses: supabaseClient.rpc("increment_mfa_uses", { device_id: userId }),
+```
+
+Three faults in one line. `rpc()` returns a builder, not a number, so `total_uses`
+was being assigned a serialised object. The argument is named `device_id` while
+the function declares `p_device_id`, so PostgREST could not have resolved it. And
+the value passed is the user id, not the device id. It was never awaited either,
+so the RPC never ran at all.
+
+**Two of my own tests did not bite on the first mutation run.** Asserting
+`toContain('recordError')` passes when the destructure is removed, because the
+name still appears in the check below it. And an unbounded `slice` from
+`consumeError` reached a later `500` elsewhere in the file. Both tightened to
+match the destructure and a bounded block, then re-verified against the same
+mutations. `toContain('someError')` is almost never the assertion you want for
+this class of fix.
+
+15 cases in `supabase/functions/_shared/moneyPathWrites.test.ts`. Full suite: 129
+files, 2809 passing, 2 skipped.

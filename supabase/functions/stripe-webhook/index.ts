@@ -93,7 +93,7 @@ serve(async (req) => {
     // existing row here — the previous code reset processed=false on every
     // delivery, defeating idempotency. Insert only when new.
     if (!existingEvent) {
-      await supabaseClient
+      const { error: recordError } = await supabaseClient
         .from("webhook_events")
         .insert({
           stripe_event_id: event.id,
@@ -102,19 +102,55 @@ serve(async (req) => {
           processed: false,
           processing_attempts: 0,
         });
+
+      // This row IS the idempotency guard. supabase-js returns the error rather
+      // than throwing, and it was discarded, so a failed insert let the handler
+      // run anyway - and a Stripe redelivery of the same event would find no
+      // row, process it a second time, and move money twice (US-300).
+      //
+      // 23505 is a unique violation, which means a concurrent delivery of this
+      // same event won the race and the guard is doing its job: carry on.
+      // Anything else means we cannot promise to process this event once, so
+      // refuse it. Stripe retries for up to three days, and a delayed charge is
+      // recoverable in a way that a duplicate one is not.
+      if (recordError && recordError.code !== "23505") {
+        logStep("Could not record the event, refusing to process it", {
+          id: event.id,
+          error: recordError.message,
+        });
+        return new Response(
+          JSON.stringify({
+            received: false,
+            error: "Event could not be recorded for idempotency; retry expected",
+          }),
+          { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 500 },
+        );
+      }
     }
 
     try {
       await processWebhookEvent(event, supabaseClient, stripe);
 
-      // Mark as processed
-      await supabaseClient
+      // Mark as processed. The work above has already happened, so a failure
+      // here is not a reason to make Stripe retry - that would guarantee the
+      // double-processing this row exists to prevent. It does leave the row
+      // saying processed=false, so a later redelivery would run the handler
+      // again: that is a real inconsistency and it was silent before (US-300).
+      const { error: markError } = await supabaseClient
         .from("webhook_events")
         .update({
           processed: true,
           processed_at: new Date().toISOString()
         })
         .eq("stripe_event_id", event.id);
+
+      if (markError) {
+        logStep("PROCESSED BUT NOT RECORDED - a redelivery of this event would run again", {
+          id: event.id,
+          type: event.type,
+          error: markError.message,
+        });
+      }
 
       logStep("Event processed successfully", { type: event.type });
       return new Response(JSON.stringify({ received: true }), {
@@ -128,13 +164,20 @@ serve(async (req) => {
 
       // Increment the real attempt counter (was hardcoded to 1) so repeated
       // failures are visible and retry behaviour can be reasoned about.
-      await supabaseClient
+      const { error: attemptError } = await supabaseClient
         .from("webhook_events")
         .update({
           processing_attempts: priorAttempts + 1,
           last_processing_error: errorObj.message
         })
         .eq("stripe_event_id", event.id);
+
+      if (attemptError) {
+        logStep("Attempt counter not updated, retry history will be wrong", {
+          id: event.id,
+          error: attemptError.message,
+        });
+      }
 
       throw error;
     }
@@ -586,7 +629,10 @@ async function handleDisputeClosed(dispute: Stripe.Dispute, supabaseClient: any)
       .single();
 
     if (chargeback?.company_id) {
-      await supabaseClient
+      // A chargeback fee that is not recorded is money the company owes and is
+      // never billed for. The error was discarded (US-300); throwing puts the
+      // event back in Stripe's retry queue, and the update above is idempotent.
+      const { error: feeError } = await supabaseClient
         .from("chargeback_fees")
         .insert({
           company_id: chargeback.company_id,
@@ -594,6 +640,12 @@ async function handleDisputeClosed(dispute: Stripe.Dispute, supabaseClient: any)
           fee_type: 'chargeback_loss',
           status: 'applied'
         });
+
+      if (feeError) {
+        throw new Error(
+          `Dispute lost but the chargeback fee was not recorded: ${feeError.message}`,
+        );
+      }
     }
   }
 

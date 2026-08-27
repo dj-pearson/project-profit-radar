@@ -214,7 +214,10 @@ async function sendReminder(
 
   // Update log status
   if (reminderLog) {
-    await supabase
+    // Best-effort - the email has already gone or not gone - but a discarded
+    // error left the log stuck on its initial status, so the reminder history a
+    // customer dispute would be settled from was wrong (US-300).
+    const { error: logStatusError } = await supabase
       .from('payment_reminder_logs')
       .update({
         status: emailSent ? 'sent' : 'failed',
@@ -222,6 +225,10 @@ async function sendReminder(
         error_message: emailSent ? null : 'Failed to send email'
       })
       .eq('id', reminderLog.id);
+
+    if (logStatusError) {
+      logStep('Reminder log status not updated', { error: logStatusError.message });
+    }
   }
 
   logStep('Reminder sent', { invoiceId, type, recipientEmail, success: emailSent });
@@ -314,8 +321,10 @@ async function scheduleReminders(
         .single();
 
       if (!existingReminder) {
-        // Schedule this reminder
-        await supabase
+        // Schedule this reminder. The error was discarded, so a failure meant
+        // the reminder was never queued while the run counted it as scheduled
+        // (US-300).
+        const { error: scheduleError } = await supabase
           .from('payment_reminders')
           .upsert({
             tenant_id: companyId,
@@ -327,6 +336,12 @@ async function scheduleReminders(
           }, {
             onConflict: 'tenant_id,invoice_id,reminder_type'
           });
+
+        if (scheduleError) {
+          throw new Error(
+            `Reminder for invoice ${invoice.id} was not scheduled: ${scheduleError.message}`,
+          );
+        }
 
         scheduled++;
       }
@@ -383,13 +398,23 @@ async function processScheduledReminders(corsHeaders: Record<string, string>, su
 
       const result = await response.json();
       if (result.success) {
-        await supabase
+        // Marking it sent is what stops it being sent again on the next run.
+        // The error was discarded, so a failure meant the same customer
+        // received the same reminder every pass (US-300).
+        const { error: markSentError } = await supabase
           .from('payment_reminders')
           .update({
             status: 'sent',
             sent_at: new Date().toISOString()
           })
           .eq('id', reminder.id);
+
+        if (markSentError) {
+          throw new Error(
+            `Reminder ${reminder.id} was sent but not marked, so it will send again: ${markSentError.message}`,
+          );
+        }
+
         sent++;
       } else {
         failed++;

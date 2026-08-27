@@ -536,7 +536,10 @@ async function generateUsageInvoice(
   const periodStart = new Date(bill.billing_period.start);
   const periodEnd = new Date(bill.billing_period.end);
 
-  await supabase
+  // This is what stops the same usage being billed twice. The invoice already
+  // exists in Stripe at this point, so a discarded error here left the records
+  // billed=false and the next run invoiced them again (US-300).
+  const { error: markBilledError } = await supabase
     .from('usage_billing_records')
     .update({
       billed: true,
@@ -547,6 +550,12 @@ async function generateUsageInvoice(
     .gte('billing_period_start', periodStart.toISOString())
     .lte('billing_period_end', periodEnd.toISOString())
     .eq('billed', false);
+
+  if (markBilledError) {
+    throw new Error(
+      `Invoice ${invoice.id} was raised but the usage records are still unbilled and will be invoiced again: ${markBilledError.message}`,
+    );
+  }
 
   logStep('Usage invoice generated', { invoiceId: invoice.id, total: bill.total });
 

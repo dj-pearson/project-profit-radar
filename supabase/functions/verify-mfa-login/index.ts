@@ -191,7 +191,7 @@ serve(async (req) => {
         if (trustDevice && deviceInfo?.deviceId) {
           const deviceFingerprint = await generateDeviceFingerprint(deviceInfo);
 
-          await supabaseClient.from("trusted_devices").upsert(
+          const { error: trustError } = await supabaseClient.from("trusted_devices").upsert(
             {
               user_id: userId,
               device_id: deviceInfo.deviceId,
@@ -208,18 +208,47 @@ serve(async (req) => {
               onConflict: "user_id,device_id",
             }
           );
+
+          // Not fatal - the sign-in succeeded. It does mean the user asked not
+          // to be challenged on this device for 90 days and will be challenged
+          // anyway, with no sign of why. The error was discarded (US-300).
+          if (trustError) {
+            console.error("[verify-mfa-login] device not trusted:", trustError.message);
+          }
         }
 
-        // Update MFA usage stats
-        await supabaseClient
+        // Update MFA usage stats.
+        //
+        // This had three faults in one line and the discarded error hid all of
+        // them (US-300). supabaseClient.rpc(...) returns a builder, not a
+        // number, so total_uses was assigned a serialised object; the argument
+        // was named device_id while the function's parameter is p_device_id, so
+        // PostgREST could not have resolved it; and the value passed was the
+        // user id rather than the device id. The builder was never awaited, so
+        // the RPC never ran at all.
+        //
+        // increment_mfa_uses does the increment itself, keyed on
+        // mfa_devices.id, so the id has to come back from the update.
+        const { data: usedDevices, error: usageError } = await supabaseClient
           .from("mfa_devices")
-          .update({
-            last_used_at: new Date().toISOString(),
-            total_uses: supabaseClient.rpc("increment_mfa_uses", { device_id: userId }),
-          })
+          .update({ last_used_at: new Date().toISOString() })
           .eq("user_id", userId)
           .eq("mfa_type", "totp")
-          .eq("is_enabled", true);
+          .eq("is_enabled", true)
+          .select("id");
+
+        if (usageError) {
+          console.error("[verify-mfa-login] MFA usage stats not updated:", usageError.message);
+        } else {
+          for (const device of usedDevices ?? []) {
+            const { error: countError } = await supabaseClient.rpc("increment_mfa_uses", {
+              p_device_id: device.id,
+            });
+            if (countError) {
+              console.error("[verify-mfa-login] use counter not incremented:", countError.message);
+            }
+          }
+        }
 
         // Log successful MFA verification
         await writeSecurityLog(supabaseClient, {
@@ -294,13 +323,28 @@ serve(async (req) => {
         const updatedCodes = [...backupCodes];
         updatedCodes.splice(codeIndex, 1);
 
-        await supabaseClient
+        // Consuming the code is what makes it single-use. The error was
+        // discarded, so a failure left the code valid and reusable while the
+        // sign-in went ahead - the whole point of a backup code, defeated
+        // silently (US-300). Fail closed: no consumption, no login.
+        const { error: consumeError } = await supabaseClient
           .from("user_security")
           .update({
             backup_codes: updatedCodes,
             updated_at: new Date().toISOString(),
           })
           .eq("user_id", userId);
+
+        if (consumeError) {
+          console.error("[verify-mfa-login] backup code not consumed:", consumeError.message);
+          await writeSecurityLog(supabaseClient, {
+            user_id: userId,
+            event_type: "mfa_backup_code_consume_failed",
+            ip_address: req.headers.get("cf-connecting-ip") || req.headers.get("x-forwarded-for"),
+            user_agent: req.headers.get("user-agent"),
+          });
+          return createErrorResponse(500, "Could not complete sign-in. Please try again.", corsHeaders);
+        }
 
         // Log successful backup code use
         await writeSecurityLog(supabaseClient, {
@@ -350,13 +394,19 @@ serve(async (req) => {
 
         if (isTrusted) {
           // Update last seen
-          await supabaseClient
+          const { error: seenError } = await supabaseClient
             .from("trusted_devices")
             .update({
               last_seen_at: new Date().toISOString(),
               last_ip_address: req.headers.get("cf-connecting-ip") || req.headers.get("x-forwarded-for"),
             })
             .eq("id", trustedDevice.id);
+
+          // last_ip_address on a trusted device is what an audit reads to see
+          // where it has been used from. Discarded before (US-300).
+          if (seenError) {
+            console.error("[verify-mfa-login] trusted-device last seen not updated:", seenError.message);
+          }
         }
 
         return new Response(

@@ -142,14 +142,20 @@ async function processAllFailures(corsHeaders: Record<string, string>, supabase:
 
     // Check max retries
     if (failure.attempt_count >= (failure.max_retries || 3)) {
-      // Suspend the account
-      await supabase
+      // Suspend the account. The error was discarded, so a failure left the
+      // account unsuspended and still in dunning, and the run reported a
+      // suspension that never happened (US-300).
+      const { error: suspendError } = await supabase
         .from('payment_failures')
         .update({
           dunning_status: 'suspended',
           next_retry_at: null
         })
         .eq('id', failure.id);
+
+      if (suspendError) {
+        throw new Error(`Account not suspended after max retries: ${suspendError.message}`);
+      }
 
       // Update subscriber status
       if (failure.subscriber_id) {
@@ -182,7 +188,10 @@ async function processAllFailures(corsHeaders: Record<string, string>, supabase:
       const nextRetry = new Date();
       nextRetry.setHours(nextRetry.getHours() + nextRetryHours);
 
-      await supabase
+      // Advancing the attempt counter is what makes the dunning schedule move.
+      // The error was discarded, so a failure left the counter where it was and
+      // the same retry - and the same email - repeated on every run (US-300).
+      const { error: advanceError } = await supabase
         .from('payment_failures')
         .update({
           attempt_count: failure.attempt_count + 1,
@@ -190,6 +199,10 @@ async function processAllFailures(corsHeaders: Record<string, string>, supabase:
           last_retry_at: now.toISOString()
         })
         .eq('id', failure.id);
+
+      if (advanceError) {
+        throw new Error(`Dunning attempt not advanced, this retry will repeat: ${advanceError.message}`);
+      }
     }
   }
 
@@ -231,14 +244,22 @@ async function attemptPaymentRetry(
     const invoice = await stripe.invoices.pay(invoiceId);
 
     if (invoice.paid) {
-      // Success! Mark failure as resolved
-      await supabase
+      // Success! Mark failure as resolved. The error was discarded, so a
+      // customer who had just paid could stay in dunning, keep receiving dunning
+      // email, and eventually be suspended (US-300).
+      const { error: resolveError } = await supabase
         .from('payment_failures')
         .update({
           dunning_status: 'resolved',
           resolved_at: new Date().toISOString()
         })
         .eq('id', failure.id);
+
+      if (resolveError) {
+        throw new Error(
+          `Invoice ${invoiceId} was paid but the failure is still open in dunning: ${resolveError.message}`,
+        );
+      }
 
       // Update subscriber status
       const subscriber = failure.subscriber as Record<string, unknown>;

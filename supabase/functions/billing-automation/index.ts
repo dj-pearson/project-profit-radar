@@ -316,8 +316,10 @@ async function executeRule(
 
   const result = await executeRuleActions(supabase, companyId, rule);
 
-  // Update run count and last run time
-  await supabase
+  // Update run count and last run time. next_run_at is what stops this rule
+  // firing again immediately; the error was discarded, so a failure left the
+  // rule due and it re-ran its actions on every pass (US-300).
+  const { error: runCountError } = await supabase
     .from('billing_automation_rules')
     .update({
       run_count: (rule.run_count || 0) + 1,
@@ -326,8 +328,16 @@ async function executeRule(
     })
     .eq('id', ruleId);
 
-  // Log execution
-  await supabase
+  if (runCountError) {
+    throw new Error(
+      `Rule ${ruleId} ran but its schedule was not advanced, so it will run again: ${runCountError.message}`,
+    );
+  }
+
+  // Log execution. Best-effort - the rule has already run - but the error was
+  // discarded, so a missing activity entry looked like a rule that never fired
+  // (US-300).
+  const { error: feedError } = await supabase
     .from('activity_feed')
     .insert({
       company_id: companyId,
@@ -339,6 +349,10 @@ async function executeRule(
       metadata: { result },
       user_id: '00000000-0000-0000-0000-000000000000' // System user
     });
+
+  if (feedError) {
+    console.error('[billing-automation] execution not logged to the activity feed:', feedError.message);
+  }
 
   return new Response(
     JSON.stringify({
@@ -373,8 +387,9 @@ async function runScheduledRules(corsHeaders: Record<string, string>, supabase: 
     try {
       await executeRuleActions(supabase, rule.tenant_id, rule);
 
-      // Update run count and schedule next run
-      await supabase
+      // Update run count and schedule next run. Same as the single-rule path: a
+      // discarded error left the rule due and it re-ran every pass (US-300).
+      const { error: scheduleError } = await supabase
         .from('billing_automation_rules')
         .update({
           run_count: (rule.run_count || 0) + 1,
@@ -382,6 +397,12 @@ async function runScheduledRules(corsHeaders: Record<string, string>, supabase: 
           next_run_at: rule.schedule ? calculateNextRunTime(rule.schedule) : null
         })
         .eq('id', rule.id);
+
+      if (scheduleError) {
+        throw new Error(
+          `Rule ${rule.id} ran but its schedule was not advanced, so it will run again: ${scheduleError.message}`,
+        );
+      }
 
       executed++;
     } catch (err) {
