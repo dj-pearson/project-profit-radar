@@ -177,8 +177,11 @@ serve(async (req) => {
             }
 
             if (shouldAlert) {
-              // Create alert
-              await supabaseClient.from('seo_alerts').insert({
+              // Create alert. Its error was discarded and supabase-js returns
+              // it rather than throwing, so the notification below went out for
+              // an alert that was never stored - someone got the email and
+              // found nothing in the alerts list (US-300).
+              const { error: alertError } = await supabaseClient.from('seo_alerts').insert({
                 rule_id: rule.id,
                 alert_type: rule.rule_type,
                 severity: rule.severity,
@@ -188,6 +191,13 @@ serve(async (req) => {
                 alert_data: auditData,
                 status: 'open',
               });
+
+              if (alertError) {
+                console.error(
+                  `[SCHEDULED-AUDIT] Alert for rule ${rule.id} on ${schedule.target_url} was not stored:`,
+                  alertError.message,
+                );
+              }
 
               // Send notification
               await supabaseClient.functions.invoke('send-seo-notification', {
@@ -224,8 +234,13 @@ serve(async (req) => {
             break;
         }
 
-        // Update schedule
-        await supabaseClient
+        // Update schedule. next_run_at is the selection filter at the top of
+        // this function - schedules are picked with `next_run_at <= now()`. Its
+        // error was discarded, so a lost write left next_run_at in the past and
+        // this schedule was re-run on every single tick: the target URL audited
+        // in a loop and the same alerts re-fired and re-emailed indefinitely
+        // (US-300).
+        const { error: scheduleUpdateError } = await supabaseClient
           .from('seo_monitoring_schedules')
           .update({
             last_run_at: new Date().toISOString(),
@@ -234,6 +249,12 @@ serve(async (req) => {
             run_count: schedule.run_count + 1,
           })
           .eq('id', schedule.id);
+
+        if (scheduleUpdateError) {
+          throw new Error(
+            `Schedule ${schedule.id} ran but next_run_at was NOT advanced, so it stays due and will re-run every tick: ${scheduleUpdateError.message}`,
+          );
+        }
 
         results.push(auditResult);
 
@@ -247,8 +268,9 @@ serve(async (req) => {
       }
     }
 
-    // Log execution
-    await supabaseClient
+    // Log execution. Cron-driven, so this row is how anyone knows the job ran
+    // at all; its error was discarded (US-300).
+    const { error: executionLogError } = await supabaseClient
       .from('seo_monitoring_log')
       .insert({
         log_type: 'scheduled_audit',
@@ -256,6 +278,13 @@ serve(async (req) => {
         message: `Executed ${results.length} scheduled audits`,
         details: { results },
       });
+
+    if (executionLogError) {
+      console.error(
+        '[SCHEDULED-AUDIT] Run completed but was not written to seo_monitoring_log:',
+        executionLogError.message,
+      );
+    }
 
     return new Response(JSON.stringify({
       success: true,

@@ -537,3 +537,62 @@ describe('the sixth edge batch: CRUD that lied, and a raw() that never worked', 
     expect(readFileSync('.github/workflows/ci.yml', 'utf8')).toContain('check-supabase-raw.mjs');
   });
 });
+
+describe('the seventh edge batch: writes that gate their own scheduler', () => {
+  it('api-auth says loudly when a request was not counted against its rate limit', () => {
+    // api_request_logs is not only a log: checkRateLimits counts rows in it to
+    // decide the per-minute, per-hour and per-day limits. A request that is not
+    // recorded never counts against any of them, so a failing insert quietly
+    // removes rate limiting while the API keeps answering 200.
+    const src = code(F('api-auth'));
+    expect(src).toMatch(/const \{ error: logError \} = await supabaseClient\s*\n\s*\.from\('api_request_logs'\)/);
+    expect(src).toContain('RATE LIMIT NOT COUNTED');
+    expect(src).toMatch(/const \{ error: lastUsedError \} = await supabaseClient/);
+  });
+
+  it('run-scheduled-audit refuses to leave a schedule permanently due', () => {
+    // Schedules are selected with next_run_at <= now(). A lost update leaves it
+    // in the past, so the URL is audited on every tick and the same alerts are
+    // re-fired and re-emailed forever.
+    const src = code(F('run-scheduled-audit'));
+    expect(src).toMatch(/const \{ error: scheduleUpdateError \} = await supabaseClient/);
+    expect(src).toContain('will re-run every tick');
+    expect(src).toMatch(/const \{ error: alertError \} = await supabaseClient/);
+    expect(src).toMatch(/const \{ error: executionLogError \} = await supabaseClient/);
+  });
+
+  it('social-post-scheduler will not post to a customer feed on every tick', () => {
+    // Same shape, worse consequence: configs are picked with
+    // next_post_at < now(), and the side effect is a public social post.
+    const src = code(F('social-post-scheduler'));
+    expect(src).toMatch(/const \{ error: nextPostError \} = await supabaseClient/);
+    expect(src).toContain('would post again on every tick');
+  });
+
+  it('and records that a library item was used so it is not posted twice', () => {
+    const src = code(F('social-post-scheduler'));
+    expect(src).toMatch(/const \{ error: usageError \} = await supabaseClient/);
+    expect(src).toContain('so it may be posted again');
+    expect(src).toMatch(/const \{ error: markFailedError \} = await supabaseClient/);
+  });
+
+  it('analyze-support-ticket does not return suggestions it failed to store', () => {
+    // The handler answered success: true with the suggestions inline while none
+    // of them reached the database - and the agent who opens the ticket later
+    // reads the database, not that response.
+    const src = code(F('analyze-support-ticket'));
+    expect(src).toMatch(/const \{ error: suggestionError \} = await supabase\.from\("support_suggestions"\)/);
+    expect(src).toContain('suggestion(s) were not saved');
+    // Collected across the loop rather than thrown per row, so one bad row does
+    // not hide how many others failed.
+    expect(src).toMatch(/failed\.push\(/);
+    expect(src).toMatch(/of \$\{suggestions\.length\}/);
+  });
+
+  it('and does not leave a re-categorised ticket in the old queue', () => {
+    const src = code(F('analyze-support-ticket'));
+    expect(src).toMatch(/const \{ error: ticketUpdateError \} = await supabase/);
+    expect(src).toContain('so it stays in the old queue');
+    expect(src).toMatch(/const \{ error: contextError \} = await supabase/);
+  });
+});

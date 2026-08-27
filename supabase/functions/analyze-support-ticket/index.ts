@@ -505,9 +505,15 @@ async function saveAnalysisResults(
   suggestions: any[],
   kbArticles: any[]
 ) {
-  // Save each suggestion
+  // Save each suggestion. The errors were discarded and supabase-js returns
+  // them rather than throwing, so the handler answered `success: true` with the
+  // suggestions inline while none of them reached the database - and the agent
+  // who opens the ticket later reads the database, not that response (US-300).
+  // Collected rather than thrown per iteration, so one bad row does not hide
+  // how many others also failed.
+  const failed: string[] = [];
   for (const suggestion of suggestions) {
-    await supabase.from("support_suggestions").insert({
+    const { error: suggestionError } = await supabase.from("support_suggestions").insert({
       ticket_id: ticketId,
       suggestion_type: suggestion.suggestion_type,
       confidence_score: suggestion.confidence_score,
@@ -516,20 +522,42 @@ async function saveAnalysisResults(
       suggested_content: suggestion.suggested_content,
       kb_article_id: suggestion.kb_article_id,
     });
+
+    if (suggestionError) {
+      failed.push(`${suggestion.suggestion_type}: ${suggestionError.message}`);
+    }
   }
 
-  // Update ticket with suggested category and priority
-  await supabase
+  // Update ticket with suggested category and priority. These drive routing and
+  // the SLA clock, so a lost write leaves the ticket in the wrong queue while
+  // the response reports the new category (US-300).
+  const { error: ticketUpdateError } = await supabase
     .from("support_tickets")
     .update({
       category: analysis.category,
       priority: analysis.priority,
     })
     .eq("id", ticketId);
+
+  if (ticketUpdateError) {
+    throw new Error(
+      `Ticket ${ticketId} was analyzed but its category and priority were NOT applied, so it stays in the old queue: ${ticketUpdateError.message}`,
+    );
+  }
+
+  if (failed.length > 0) {
+    throw new Error(
+      `Ticket ${ticketId}: ${failed.length} of ${suggestions.length} suggestion(s) were not saved - ${failed.join('; ')}`,
+    );
+  }
 }
 
 async function saveTicketContext(supabase: any, ticketId: string, context: any) {
-  await supabase.from("support_ticket_context").upsert({
+  // Context enrichment for the agent view. Its error was discarded (US-300);
+  // reported rather than thrown, because the analysis and the ticket update
+  // have already landed by the time this runs and losing the context is worth
+  // less than losing those.
+  const { error: contextError } = await supabase.from("support_ticket_context").upsert({
     ticket_id: ticketId,
     user_id: context.userId,
     company_id: context.companyId,
@@ -541,4 +569,11 @@ async function saveTicketContext(supabase: any, ticketId: string, context: any) 
   }, {
     onConflict: 'ticket_id'
   });
+
+  if (contextError) {
+    console.error(
+      `[ANALYZE-TICKET] Context for ticket ${ticketId} was not saved:`,
+      contextError.message,
+    );
+  }
 }

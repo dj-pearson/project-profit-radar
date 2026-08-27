@@ -171,11 +171,21 @@ serve(async (req) => {
       response_status: 200
     })
 
-    // Update last_used_at timestamp
-    await supabaseClient
+    // Update last_used_at timestamp. Read rather than discarded: this column
+    // is what "last used 3 months ago" in the key list is based on, and a stale
+    // one makes a live key look abandoned - exactly the key someone then
+    // revokes (US-300).
+    const { error: lastUsedError } = await supabaseClient
       .from('api_keys')
       .update({ last_used_at: new Date().toISOString() })
       .eq('id', apiKey.id)
+
+    if (lastUsedError) {
+      console.error(
+        `[API-AUTH] Key ${apiKey.id} was used but last_used_at was not updated:`,
+        lastUsedError.message,
+      )
+    }
 
     return new Response(
       JSON.stringify({
@@ -361,20 +371,38 @@ async function logAPIRequest(
     response_status: number
   }
 ): Promise<void> {
-  try {
-    await supabaseClient
-      .from('api_request_logs')
-      .insert({
-        api_key_id: apiKeyId,
-        endpoint: logData.endpoint,
-        method: logData.method,
-        ip_address: logData.ip_address,
-        user_agent: logData.user_agent,
-        response_status: logData.response_status,
-        response_time_ms: 0 // Could be calculated if needed
-      })
-  } catch (error) {
-    console.error('Failed to log API request:', error)
-    // Don't throw - logging failure shouldn't break the request
+  // This is not only a log. checkRateLimits above counts rows in
+  // api_request_logs to decide the per-minute, per-hour and per-day limits, so
+  // a request that is not recorded here is a request that never counts against
+  // any of them. The error was discarded and supabase-js returns it rather than
+  // throwing, so the catch never fired: if this insert started failing - a
+  // policy change, a constraint, a full disk - rate limiting would quietly stop
+  // applying at all, with the API still answering 200 (US-300).
+  //
+  // Still does not throw, because refusing a request whose auth succeeded would
+  // break working integrations over a bookkeeping failure. But it is loud now,
+  // and the marker says what is actually at stake.
+  //
+  // Worth noting the matching gap on the read side: checkRateLimits returns
+  // { allowed: true } when its own query errors, so a database problem removes
+  // rate limiting in both directions. Changing that is a policy decision rather
+  // than an unread error, so it is left as it stands and recorded here.
+  const { error: logError } = await supabaseClient
+    .from('api_request_logs')
+    .insert({
+      api_key_id: apiKeyId,
+      endpoint: logData.endpoint,
+      method: logData.method,
+      ip_address: logData.ip_address,
+      user_agent: logData.user_agent,
+      response_status: logData.response_status,
+      response_time_ms: 0 // Could be calculated if needed
+    })
+
+  if (logError) {
+    console.error(
+      `[API-AUTH] RATE LIMIT NOT COUNTED - request on key ${apiKeyId} was not recorded in api_request_logs:`,
+      logError.message,
+    )
   }
 }

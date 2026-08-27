@@ -5836,3 +5836,46 @@ invariant, not the wording.
 
 6 new cases (59 total). Full suite: 129 files, 2853 passing, 2 skipped.
 Remaining backlog 64.
+
+---
+
+## US-300, seventh edge batch: writes that gate their own scheduler, 64 -> 53
+
+One shape runs through most of this batch: the write being dropped is the write
+that controls the query which selected the work.
+
+**run-scheduled-audit** picks schedules with `next_run_at <= now()`, then
+advanced `next_run_at` with the error discarded. A lost write leaves the schedule
+permanently due - the target URL audited on every tick, the same alerts re-fired
+and re-emailed indefinitely. **social-post-scheduler** is the identical shape
+with a worse side effect: configs are picked with `next_post_at < now()`, and the
+effect is a public post to the customer's social accounts. Both throw now, caught
+per item so the batch continues and the failure is reported in `results`.
+
+**api-auth** was the subtle one. `api_request_logs` reads like an audit log, but
+`checkRateLimits` counts rows in it to decide the per-minute, per-hour and
+per-day limits. A request that fails to be recorded never counts against any of
+them - so if that insert started failing (a policy change, a constraint, a full
+disk), rate limiting would quietly stop applying while the API kept answering
+200.
+
+I left it non-throwing: refusing a request whose auth succeeded would break
+working integrations over a bookkeeping failure. But it is loud now, with the
+marker `RATE LIMIT NOT COUNTED`.
+
+The matching gap on the read side is recorded in a comment rather than changed:
+`checkRateLimits` returns `{ allowed: true }` when its own query errors, so a
+database problem removes rate limiting in both directions. That is a policy
+decision, not an unread error, and it belongs to whoever owns the rate-limit
+design rather than to this sweep.
+
+**analyze-support-ticket** answered `success: true` with the suggestions inline
+while none of them reached the database. The agent who opens the ticket later
+reads the database, not that response. Its category and priority update drives
+routing and the SLA clock, so a lost write leaves the ticket in the wrong queue
+while the response reports the new one. Suggestion failures are collected across
+the loop rather than thrown per row - one bad row should not hide how many others
+also failed.
+
+6 new cases (65 total), four mutation-checked. Full suite: 129 files, 2859
+passing, 2 skipped. Remaining backlog 53.
