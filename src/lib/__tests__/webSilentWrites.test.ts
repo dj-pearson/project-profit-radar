@@ -14,8 +14,9 @@ import { readFileSync } from 'node:fs';
  * reassigned their activities and then deleted the contacts whether or not the
  * reassignment worked.
  *
- * All 28 now read the error. The web half of the backlog is zero; the remaining
- * 171 are in edge functions.
+ * All 28 now read the error. The web half reached zero first; the edge-function
+ * half followed on 2026-08-27, so the whole backlog is now zero and the guard is
+ * a hard rule rather than a ratchet.
  */
 
 const GUARD = 'scripts/check-silent-writes.mjs';
@@ -111,15 +112,14 @@ describe('the best-effort writes', () => {
 });
 
 describe('the backlog', () => {
-  it('has come down and can only keep coming down', () => {
+  it('has come all the way down and can only stay down', () => {
     const src = readFileSync(GUARD, 'utf8');
     const baseline = Number.parseInt(/const BASELINE = (\d+);/.exec(src)?.[1] ?? '-1', 10);
-    // Not pinned to an exact number: every subsequent fix would break this test
-    // for no reason. What matters is that it is below where the web half
-    // started (199) and that the guard fails on any regression, which is what
-    // keeps the web count at zero.
-    expect(baseline).toBeGreaterThan(0);
-    expect(baseline).toBeLessThan(199);
+    // This was `toBeGreaterThan(0)` while the backlog was being worked off,
+    // deliberately unpinned so each fix would not break it. The backlog reached
+    // zero on 2026-08-27, so the guard is a hard rule now rather than a ratchet
+    // and the assertion is exact: 0, and never anything else.
+    expect(baseline).toBe(0);
   });
 
   it('and the guard still fails on a regression', () => {

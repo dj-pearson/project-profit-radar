@@ -303,8 +303,13 @@ serve(async (req) => {
       return createErrorResponse(500, "Failed to create session", corsHeaders);
     }
 
-    // Create session record
-    await supabaseClient.from("user_sessions").insert({
+    // Create session record. This row is what an admin sees in the active
+    // session list and what session revocation acts on, so an unrecorded
+    // session cannot be revoked. Its error was discarded and supabase-js
+    // returns it rather than throwing (US-300). Logged rather than failed, as
+    // in sso-oauth-callback: authentication has already succeeded here, and
+    // refusing would lock out a legitimate user without invalidating anything.
+    const { error: sessionRecordError } = await supabaseClient.from("user_sessions").insert({
       user_id: userId,
       tenant_id: ssoConnection.tenant_id,
       session_token: crypto.randomUUID(),
@@ -314,6 +319,13 @@ serve(async (req) => {
       ip_address: req.headers.get("cf-connecting-ip") || req.headers.get("x-forwarded-for"),
       user_agent: req.headers.get("user-agent"),
     });
+
+    if (sessionRecordError) {
+      console.error(
+        `[LDAP] User ${userId} SIGNED IN but the session was not recorded, so it cannot be revoked:`,
+        sessionRecordError.message,
+      );
+    }
 
     // Log successful authentication
     await writeSecurityLog(supabaseClient, {

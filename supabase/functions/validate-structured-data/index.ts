@@ -73,12 +73,25 @@ serve(async (req) => {
       }
     }
 
+    // Same as analyze-images: storing the result is the point, and the error
+    // was discarded, so a validation run reported its schemas while
+    // seo_structured_data stayed empty (US-300).
+    let schemasStoreError: string | null = null;
     if (schemas.length > 0) {
-      await supabaseClient.from('seo_structured_data').insert(schemas);
+      const { error: storeError } = await supabaseClient
+        .from('seo_structured_data')
+        .insert(schemas);
+
+      if (storeError) {
+        schemasStoreError = storeError.message;
+        console.error('[VALIDATE-STRUCTURED-DATA] Schemas were NOT stored:', storeError.message);
+      }
     }
 
     return new Response(JSON.stringify({
       success: true,
+      stored: schemasStoreError === null,
+      storage_error: schemasStoreError,
       summary: {
         total_schemas: schemas.length,
         valid_schemas: schemas.filter(s => s.is_valid).length,

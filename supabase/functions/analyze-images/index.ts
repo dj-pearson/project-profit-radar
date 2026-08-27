@@ -68,12 +68,26 @@ serve(async (req) => {
       }
     }
 
+    // Storing the analysis is the point of this function, and the error was
+    // discarded - supabase-js returns it rather than throwing - so the response
+    // reported a completed image audit while seo_image_analysis stayed empty
+    // (US-300).
+    let imagesStoreError: string | null = null;
     if (images.length > 0) {
-      await supabaseClient.from('seo_image_analysis').insert(images);
+      const { error: storeError } = await supabaseClient
+        .from('seo_image_analysis')
+        .insert(images);
+
+      if (storeError) {
+        imagesStoreError = storeError.message;
+        console.error('[ANALYZE-IMAGES] Image analysis was NOT stored:', storeError.message);
+      }
     }
 
     return new Response(JSON.stringify({
       success: true,
+      stored: imagesStoreError === null,
+      storage_error: imagesStoreError,
       summary: {
         total_images: images.length,
         images_with_alt: images.filter(i => i.has_alt_text).length,

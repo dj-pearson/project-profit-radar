@@ -1246,8 +1246,12 @@ export default async (req: Request) => {
     // Log the automation attempt and update queue if this was from a queue item
     
     if (actualQueueId) {
-      // Update the queue item with results
-      await supabaseClient
+      // Update the queue item with results. Its error was discarded and
+      // supabase-js returns it rather than throwing, so a lost write left the
+      // item unfinished after the posts had already been created and the
+      // webhook sent - and an unfinished item is one the scheduler picks up
+      // again (US-300).
+      const { error: queueUpdateError } = await supabaseClient
         .from("automated_social_posts_queue")
         .update({
           status: webhookResult ? "completed" : "failed",
@@ -1258,10 +1262,16 @@ export default async (req: Request) => {
           error_message: webhookResult ? null : "Webhook send failed"
         })
         .eq("id", actualQueueId);
+
+      if (queueUpdateError) {
+        throw new Error(
+          `Queue item ${actualQueueId} was PROCESSED (${socialPostsCreated.length} post(s) created) but its outcome was NOT recorded, so it may be processed again: ${queueUpdateError.message}`,
+        );
+      }
     }
 
     // Also log to automation logs for analytics
-    await supabaseClient.from("social_media_automation_logs").insert({
+    const { error: automationLogError } = await supabaseClient.from("social_media_automation_logs").insert({
       company_id,
       trigger_type,
       status: "completed",
@@ -1269,6 +1279,12 @@ export default async (req: Request) => {
       posts_created: socialPostsCreated.length,
       webhook_sent: !!webhookResult,
     });
+
+    if (automationLogError) {
+      logStep("Generation completed but the automation log row was not written", {
+        error: automationLogError.message,
+      });
+    }
 
     logStep("Social content generation completed successfully");
 

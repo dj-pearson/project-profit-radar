@@ -96,14 +96,27 @@ serve(async (req) => {
       throw new Error("Failed to create referral");
     }
 
-    // Update affiliate code stats
-    await supabaseClient
+    // Update affiliate code stats. total_referrals is what an affiliate is paid
+    // against, and the error was discarded - supabase-js returns it rather than
+    // throwing - so a referral that really happened could go uncounted and
+    // unpaid (US-300). The referral row above is stored and checked, so this
+    // reports rather than fails: the count can be rebuilt from referrals, but
+    // only if somebody knows to.
+    const { error: statsError } = await supabaseClient
       .from('affiliate_codes')
       .update({
         total_referrals: affiliateCodeData.total_referrals + 1,
         updated_at: new Date().toISOString()
       })
       .eq('id', affiliateCodeData.id);
+
+    if (statsError) {
+      logStep("REFERRAL RECORDED BUT NOT COUNTED - affiliate total_referrals did not advance", {
+        affiliate_code_id: affiliateCodeData.id,
+        referral_id: referral.id,
+        error: statsError.message,
+      });
+    }
 
     logStep("Referral tracked successfully", { referral_id: referral.id });
 

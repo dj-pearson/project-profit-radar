@@ -199,9 +199,19 @@ serve(async (req) => {
         severity: v.severity,
       }));
 
-      await supabaseClient
+      // These rows ARE the violation record - the response reports the
+      // violations from memory, so with the error discarded a budget breach
+      // could be reported and never persisted for anyone to act on (US-300).
+      const { error: violationsError } = await supabaseClient
         .from('seo_performance_budget_violations')
         .insert(violationRecords);
+
+      if (violationsError) {
+        console.error(
+          '[PERFORMANCE-BUDGET] Violations were detected but NOT stored:',
+          violationsError.message,
+        );
+      }
     }
 
     const analysisResult = {

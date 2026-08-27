@@ -231,7 +231,10 @@ Always respond with valid JSON only - no markdown, no explanations outside JSON.
           .filter((val: any) => val !== null && val !== '')
           .slice(0, 5);
 
-        await supabase
+        // These rows are the mapping the import wizard offers the user on the
+        // next screen, so a lost insert means a field they were shown a
+        // suggestion for arrives unmapped. The error was discarded (US-300).
+        const { error: suggestionError } = await supabase
           .from('import_field_suggestions')
           .insert({  // CRITICAL: Site isolation
             import_session_id: sessionId,
@@ -240,6 +243,13 @@ Always respond with valid JSON only - no markdown, no explanations outside JSON.
             confidence_score: mapping.confidence,
             data_sample: sampleData
           });
+
+        if (suggestionError) {
+          console.error(
+            `[SMART-DATA-ANALYZER] Field suggestion for "${mapping.sourceField}" was not stored:`,
+            suggestionError.message,
+          );
+        }
       }
     }
 

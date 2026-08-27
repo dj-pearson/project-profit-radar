@@ -165,15 +165,31 @@ serve(async (req) => {
       analysisData.recommendations.push('Content too short or lacks semantic depth');
     }
 
-    const { data: saved } = await supabaseClient
+    // The insert's error was discarded and supabase-js returns it rather than
+    // throwing. The `saved || <data>` fallback below then hid the consequence
+    // perfectly: when the insert failed, `saved` was null and the response fell
+    // back to the in-memory object, so the caller received what looked like a
+    // stored analysis record while the table it is supposed to live in stayed
+    // empty (US-300). The computed analysis is still returned - one caller uses
+    // it inline - but `stored` now says whether it was persisted.
+    const { data: saved, error: saveError } = await supabaseClient
       .from('seo_semantic_analysis')
       .insert(analysisData)
       .select()
       .single();
 
+    if (saveError) {
+      console.error(
+        '[ANALYZE-SEMANTIC-KEYWORDS] Analysis completed but was NOT stored:',
+        saveError.message,
+      );
+    }
+
     return new Response(JSON.stringify({
       success: true,
       semantic_analysis: saved || analysisData,
+      stored: !saveError,
+      storage_error: saveError?.message ?? null,
       keywords: semanticKeywords,
       primary_keyword_data: primaryKeywordData,
     }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 });

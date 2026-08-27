@@ -53,14 +53,30 @@ serve(async (req) => {
       try {
         console.log(`[BLOG-QUEUE] Processing item ${item.id}`);
 
-        // Mark as processing
-        await supabaseClient
+        // Claim the item. This was a plain update with its error discarded, and
+        // supabase-js returns the error rather than throwing, so a failed claim
+        // left the row at its old status and the next run generated the same
+        // article again - paying for the model call twice. Matching on the
+        // previous status makes the claim atomic against an overlapping run,
+        // the same fix as enhanced-blog-ai (US-300).
+        const { data: claimed, error: claimError } = await supabaseClient
           .from('blog_generation_queue')
           .update({
             status: 'processing',
             processing_started_at: new Date().toISOString()
           })
-          .eq('id', item.id);
+          .eq('id', item.id)
+          .neq('status', 'processing')
+          .select('id');
+
+        if (claimError) {
+          throw new Error(`Could not claim queue item: ${claimError.message}`);
+        }
+
+        if (!claimed || claimed.length === 0) {
+          console.log(`[BLOG-QUEUE] Item ${item.id} already claimed, skipping`);
+          continue;
+        }
 
         const { data: result, error: genError } = await supabaseClient.functions.invoke('enhanced-blog-ai-fixed', {
           body: {
@@ -83,8 +99,9 @@ serve(async (req) => {
       } catch (error: any) {
         console.error(`[BLOG-QUEUE] Error processing ${item.id}:`, error.message);
 
-        // Mark as failed
-        await supabaseClient
+        // Mark as failed. If this is lost the item stays at 'processing' and
+        // no retry ever picks it up (US-300).
+        const { error: markFailedError } = await supabaseClient
           .from('blog_generation_queue')
           .update({
             status: 'failed',
@@ -92,6 +109,13 @@ serve(async (req) => {
             processing_completed_at: new Date().toISOString()
           })
           .eq('id', item.id);
+
+        if (markFailedError) {
+          console.error(
+            `[BLOG-QUEUE] Item ${item.id} is STUCK at 'processing' - could not mark it failed:`,
+            markFailedError.message,
+          );
+        }
       }
     }
 

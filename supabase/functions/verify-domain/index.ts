@@ -131,14 +131,23 @@ serve(async (req) => {
         );
       }
 
-      // Record audit log
-      await supabase.from('audit_logs').insert({
+      // Record audit log. Domain verification is what lets a tenant claim an
+      // email domain for SSO, so this row is the evidence of who verified what
+      // and when. Its error was discarded (US-300).
+      const { error: auditError } = await supabase.from('audit_logs').insert({
         tenant_id,
         action: 'domain_verified',
         resource_type: 'tenant',
         resource_id: tenant_id,
         details: { domain, verified: true },
       });
+
+      if (auditError) {
+        console.error(
+          `[VERIFY-DOMAIN] Domain ${domain} was VERIFIED for tenant ${tenant_id} but not audited:`,
+          auditError.message,
+        );
+      }
     }
 
     return new Response(

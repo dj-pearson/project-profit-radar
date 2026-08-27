@@ -762,3 +762,143 @@ describe('the ninth edge batch: OAuth state, dedup guards, and a comment that wa
     expect(src).toContain('DISCONNECTED but the event was not logged');
   });
 });
+
+describe('the tail: analysis functions whose one write is the whole function', () => {
+  // Twelve SEO functions shared a shape. Each computes an analysis and inserts
+  // it, and each returned `saved || <the in-memory object>`. When the insert
+  // failed, `saved` was null and the response fell back to the object it had
+  // just built - so the caller received what looked like a stored record while
+  // the table stayed empty, with no difference visible from the outside.
+  const SAVED_OR = [
+    'analyze-content',
+    'analyze-internal-links',
+    'analyze-semantic-keywords',
+    'check-mobile-first',
+    'check-security-headers',
+    'detect-duplicate-content',
+    'detect-redirect-chains',
+    'generate-blog-content',
+    'optimize-page-content',
+    'track-serp-features',
+  ];
+
+  it.each(SAVED_OR)('%s reads its insert error', (fn) => {
+    const src = code(F(fn));
+    expect(src).toMatch(/const \{ data: saved, error: saveError \} = await supabaseClient/);
+    expect(src).toContain('Analysis completed but was NOT stored');
+  });
+
+  it.each(SAVED_OR)('%s tells the caller whether it was stored', (fn) => {
+    const src = code(F(fn));
+    expect(src).toContain('stored: !saveError');
+    expect(src).toContain('storage_error: saveError?.message ?? null');
+  });
+
+  it('analyze-images and validate-structured-data report their array inserts', () => {
+    for (const [fn, flag] of [
+      ['analyze-images', 'imagesStoreError'],
+      ['validate-structured-data', 'schemasStoreError'],
+    ] as const) {
+      const src = code(F(fn));
+      expect(src, fn).toMatch(/const \{ error: storeError \} = await supabaseClient/);
+      expect(src, fn).toContain(`stored: ${flag} === null`);
+    }
+  });
+
+  it('monitor-performance-budget does not report a breach it never persisted', () => {
+    const src = code(F('monitor-performance-budget'));
+    expect(src).toMatch(/const \{ error: violationsError \} = await supabaseClient/);
+    expect(src).toContain('detected but NOT stored');
+  });
+});
+
+describe('the tail: audit trails, sessions, referral money and the last queues', () => {
+  it('dos-protection records who blocked an IP and why', () => {
+    const src = code(F('dos-protection'));
+    expect(src).toMatch(/const \{ error: blockLogError \} = await supabase/);
+    expect(src).toMatch(/const \{ error: unblockLogError \} = await supabase/);
+    expect(src).toContain('was BLOCKED but the event was not recorded');
+  });
+
+  it('track-referral says when a referral was recorded but not counted', () => {
+    // total_referrals is what an affiliate is paid against.
+    const src = code(F('track-referral'));
+    expect(src).toMatch(/const \{ error: statsError \} = await supabaseClient/);
+    expect(src).toContain('REFERRAL RECORDED BUT NOT COUNTED');
+  });
+
+  it('sso-ldap-auth and sso-saml-callback record sessions that can be revoked', () => {
+    for (const fn of ['sso-ldap-auth', 'sso-saml-callback']) {
+      const src = code(F(fn));
+      expect(src, fn).toMatch(/const \{ error: sessionRecordError \} = await supabaseClient/);
+      expect(src, fn).toContain('SIGNED IN but the session was not recorded');
+    }
+  });
+
+  it('verify-domain audits a domain claim that enables SSO for a tenant', () => {
+    const src = code(F('verify-domain'));
+    expect(src).toMatch(/const \{ error: auditError \} = await supabase/);
+    expect(src).toContain('was VERIFIED for tenant');
+  });
+
+  it('process-blog-generation-queue claims atomically like enhanced-blog-ai', () => {
+    const src = code(F('process-blog-generation-queue'));
+    expect(src).toMatch(/const \{ data: claimed, error: claimError \} = await supabaseClient/);
+    expect(src).toContain(".neq('status', 'processing')");
+    expect(src).toMatch(/const \{ error: markFailedError \} = await supabaseClient/);
+  });
+
+  it('cron-social-scheduler will not post on every run either', () => {
+    const src = code(F('cron-social-scheduler'));
+    expect(src).toMatch(/const \{ error: nextPostError \} = await supabaseClient/);
+    expect(src).toContain('would post again on every run');
+  });
+
+  it('save-llms-txt and save-meta-settings stop saying "saved successfully" when nothing saved', () => {
+    for (const [fn, phrase] of [
+      ['save-llms-txt', 'llms.txt was NOT saved'],
+      ['save-meta-settings', 'Meta settings were NOT saved'],
+    ] as const) {
+      const src = code(F(fn));
+      expect(src, fn).toMatch(/const \{ data: saved, error: saveError \} = await supabaseClient/);
+      expect(src, fn).toContain(phrase);
+    }
+  });
+
+  it('blog-social-integration does not return drafts it never created', () => {
+    const src = code(F('blog-social-integration'));
+    expect(src).toMatch(/const \{ error: draftError \} = await supabase/);
+    expect(src).toContain('social draft(s) were not saved');
+  });
+
+  it('social-content-generator does not let a processed queue item be processed again', () => {
+    const src = code(F('social-content-generator'));
+    expect(src).toMatch(/const \{ error: queueUpdateError \} = await supabaseClient/);
+    expect(src).toContain('so it may be processed again');
+    expect(src).toMatch(/const \{ error: automationLogError \} = await supabaseClient/);
+  });
+
+  it('send-seo-notification and smart-data-analyzer read their last two writes', () => {
+    expect(code(F('send-seo-notification'))).toMatch(/const \{ error: logError \} = await supabaseClient/);
+    expect(code(F('smart-data-analyzer'))).toMatch(/const \{ error: suggestionError \} = await supabase/);
+  });
+});
+
+describe('US-300 is closed: the guard is a rule now, not a ratchet', () => {
+  it('the silent-write baseline is zero', () => {
+    const guard = readFileSync('scripts/check-silent-writes.mjs', 'utf8');
+    expect(guard).toMatch(/^const BASELINE = 0;$/m);
+  });
+
+  it('and the repo has no unread Supabase write left', () => {
+    // The invariant itself. 330 at the start of US-300.
+    const result = spawnSync('node', ['scripts/check-silent-writes.mjs'], { encoding: 'utf8' });
+    expect(result.stdout).toContain('writes whose error is never read: 0');
+    expect(result.status).toBe(0);
+  });
+
+  it('and the guard is wired into pre-commit and CI', () => {
+    expect(readFileSync('.husky/pre-commit', 'utf8')).toContain('check-silent-writes.mjs');
+    expect(readFileSync('.github/workflows/ci.yml', 'utf8')).toContain('check-silent-writes.mjs');
+  });
+});

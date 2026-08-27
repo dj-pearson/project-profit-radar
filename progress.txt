@@ -5981,3 +5981,65 @@ detected" with an empty table and nothing to resolve on the scheduling screen.
 
 9 new cases (83 total), all nine mutation-checked. Full suite: 129 files, 2877
 passing, 2 skipped. TS budget unchanged at 646. Remaining backlog 29.
+
+---
+
+## US-300 closed: 330 unread Supabase writes, now zero
+
+The backlog is empty. `BASELINE = 0`, and the guard is a hard rule rather than a
+ratchet - one new unread write fails the commit, which I verified by putting one
+back.
+
+The tail was twelve SEO analysis functions sharing a single shape, and it is the
+tidiest illustration of the whole story. Each computes an analysis, inserts it,
+and returned:
+
+```
+content_analysis: saved || contentData
+```
+
+When the insert failed, `saved` was null and the response fell back to the object
+it had just built. The caller received what looked like a stored record, with all
+its data, while the table it is supposed to live in stayed empty - and nothing
+about the response distinguished the two cases. They return `stored` and
+`storage_error` now. The computed analysis still comes back inline, because
+`run-scheduled-audit` reads it for alerting.
+
+Also closed in this batch: `dos-protection`'s block and unblock audit rows (an IP
+blocked with no record of who blocked it or why); `track-referral`'s
+`total_referrals`, which is what an affiliate is *paid* against;
+`sso-ldap-auth` and `sso-saml-callback` session records, matching the
+`sso-oauth-callback` fix; `verify-domain`'s audit of a domain claim that enables
+SSO for a tenant; `process-blog-generation-queue`'s claim, now atomic like
+`enhanced-blog-ai`; `cron-social-scheduler`'s `next_post_at`; and
+`save-llms-txt` / `save-meta-settings`, which are the plainest form of the entire
+bug - the user presses Save, is told "saved successfully", and nothing was saved.
+
+### A test of mine that had to be corrected
+
+`webSilentWrites.test.ts` asserted `expect(baseline).toBeGreaterThan(0)`. I wrote
+it that way deliberately, unpinned, so that every subsequent fix would not break
+it while the backlog was being worked off. Reaching zero made it fail - correctly.
+It is `expect(baseline).toBe(0)` now, mutation-tested by raising the baseline.
+
+### What this is not
+
+US-309's fake-success guard still has 43 in its backlog. That is a different
+pattern - there is no write there to fail at all, the success message simply
+stands over nothing - and its own header says so. US-300's AC4 is about a success
+message shown over a write that *failed*, and that is what is now at zero.
+
+### The two shapes worth carrying forward
+
+Both hid a real bug here, and both are now written into the guard's header:
+
+- `await supabase...` inside a `try`/`catch`. The catch is dead code, because
+  postgrest **resolves** with `{ error }` rather than rejecting. A comment
+  explaining why the catch is acceptable is a strong signal that nobody checked -
+  `data-subject-export` promised it would "log loudly so privacy ops notices"
+  over a catch that could never fire.
+- `.then(() => {}).catch(() => {})`, which discards the result outright.
+
+35 new cases in this batch: 118 in `moneyPathWrites.test.ts`, 14 in
+`webSilentWrites.test.ts`. Full suite: 129 files, 2912 passing, 2 skipped. TS
+budget unchanged at 646.

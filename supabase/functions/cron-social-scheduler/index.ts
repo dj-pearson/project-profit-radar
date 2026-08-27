@@ -97,13 +97,23 @@ serve(async (req) => {
           nextPostTime.getHours() + config.post_interval_hours
         );
 
-        await supabaseClient
+        // next_post_at is what makes a config due. Its error was discarded, so
+        // a lost write left the config permanently due and the cron posted to
+        // the customer's public social accounts on every run - the same shape
+        // already fixed in social-post-scheduler (US-300).
+        const { error: nextPostError } = await supabaseClient
           .from("automated_social_posts_config")
           .update({
             next_post_at: nextPostTime.toISOString(),
             updated_at: new Date().toISOString(),
           })
           .eq("id", config.id);
+
+        if (nextPostError) {
+          throw new Error(
+            `Config ${config.id} posted but next_post_at was NOT advanced, so it stays due and would post again on every run: ${nextPostError.message}`,
+          );
+        }
 
         allResults.push({
           company_id: config.company_id,

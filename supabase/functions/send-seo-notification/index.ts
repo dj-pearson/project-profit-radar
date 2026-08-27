@@ -187,8 +187,10 @@ serve(async (req) => {
       }
     }
 
-    // Log notification
-    await supabaseClient
+    // Log notification. The notifications have already gone out by here, so
+    // this row is the record that they did - and its error was discarded
+    // (US-300).
+    const { error: logError } = await supabaseClient
       .from('seo_monitoring_log')
       .insert({
         log_type: 'notification',
@@ -197,6 +199,13 @@ serve(async (req) => {
         details: { ...data, notification_results: results },
         related_url: data.url || null,
       });
+
+    if (logError) {
+      console.error(
+        '[SEO-NOTIFICATION] Notifications were SENT but not logged:',
+        logError.message,
+      );
+    }
 
     return new Response(JSON.stringify({
       success: results.email_sent || results.slack_sent || results.webhook_sent,

@@ -23,6 +23,15 @@
  *
  *   const { error } = await supabase.from('x').update(y);
  *   if (error) console.error('...', error);   // or a comment saying why not
+ *
+ * The baseline reached 0 on 2026-08-27 (US-300, from 330). It stays at 0: this
+ * is now a hard rule rather than a ratchet, and a new unread write fails the
+ * commit. Two shapes to watch for, because both hid a real bug here:
+ *
+ *   - `await supabase...` inside a try/catch. The catch is dead code — postgrest
+ *     RESOLVES with { error }, it does not reject. A comment explaining why the
+ *     catch is acceptable is a strong signal nobody checked.
+ *   - `.then(() => {}).catch(() => {})`, which discards the result outright.
  */
 import ts from 'typescript';
 import { readFileSync, readdirSync } from 'node:fs';
@@ -96,7 +105,7 @@ for (const p of files) {
   sf.forEachChild(walk);
 }
 
-const BASELINE = 29;
+const BASELINE = 0;
 const edge = hits.filter((h) => !h.file.startsWith('src/')).length;
 
 console.log('Silent-write guard');

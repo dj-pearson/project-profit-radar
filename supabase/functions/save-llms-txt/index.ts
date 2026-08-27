@@ -33,7 +33,11 @@ serve(async (req) => {
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
-    const { data: saved } = await supabaseClient
+    // The user presses Save and is told it saved. The error was discarded
+    // and supabase-js returns it rather than throwing, so a rejected upsert
+    // still answered 'llms.txt saved successfully' - with `saved: null`
+    // in the body as the only hint, which nothing reads (US-300).
+    const { data: saved, error: saveError } = await supabaseClient
       .from('seo_settings')
       .upsert({
         company_id: null,
@@ -45,6 +49,10 @@ serve(async (req) => {
       })
       .select()
       .single();
+
+    if (saveError) {
+      throw new Error(`llms.txt was NOT saved: ${saveError.message}`);
+    }
 
     return new Response(JSON.stringify({
       success: true,
