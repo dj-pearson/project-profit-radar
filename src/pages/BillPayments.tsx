@@ -200,13 +200,12 @@ export default function BillPayments() {
   // Create bill payment mutation
   const createPayment = useMutation({
     mutationFn: async (paymentData: PaymentFormData) => {
-      // Generate payment number
-      const { data: seqData, error: seqError } = await supabase
-        .rpc('nextval', { sequence_name: 'bill_payment_number_seq' });
-
-      if (seqError) throw seqError;
-
-      const paymentNumber = `PMT-${String(seqData).padStart(6, '0')}`;
+      // payment_number is assigned by the set_bill_payment_number trigger
+      // (US-310). This used to be `rpc('nextval', { sequence_name: ... })`,
+      // which is pg_catalog.nextval(regclass): wrong schema for PostgREST to
+      // expose and wrong argument shape, so it could never resolve and the
+      // `throw seqError` on the next line meant no bill payment has ever been
+      // recorded.
 
       // Get vendor ID from first bill
       const firstBill = bills?.find((b: BillRecord) => b.id === paymentData.billsToPayArray[0].billId);
@@ -216,7 +215,6 @@ export default function BillPayments() {
         .from('bill_payments')
         .insert({
           company_id: companyId,
-          payment_number: paymentNumber,
           payment_date: paymentData.paymentDate,
           vendor_id: firstBill?.vendor_id,
           total_amount: paymentData.totalAmount,
@@ -245,7 +243,16 @@ export default function BillPayments() {
 
       if (appsError) throw appsError;
 
-      // Update bill amounts_paid
+      // Update bill amounts_paid.
+      //
+      // This used to fall back to a direct update when the RPC failed, reading
+      // amount_paid off the client's loaded copy of the bill and writing back
+      // the sum. No migration defined apply_bill_payment, so that fallback was
+      // the only path - and two payments applied to the same bill at once both
+      // read the same amount_paid and both write the same total, losing one of
+      // them in a ledger. apply_bill_payment now exists and does the
+      // read-modify-write inside one UPDATE, under the row lock (US-310), so
+      // the fallback is gone rather than kept as a lossy second chance.
       for (const app of paymentData.billsToPayArray) {
         const { error: updateError } = await supabase.rpc('apply_bill_payment', {
           p_bill_id: app.billId,
@@ -253,31 +260,10 @@ export default function BillPayments() {
         });
 
         if (updateError) {
-          // Fallback: manual update. This runs only because the RPC already
-          // failed, so it is the last thing standing between a recorded
-          // payment and a bill that still looks unpaid. Its error has to be
-          // read - supabase-js returns it - or onSuccess reports the payment
-          // as recorded while the balance never moved.
-          const bill = bills?.find((b: BillRecord) => b.id === app.billId);
-          if (!bill) {
-            throw new Error(
-              `Payment recorded but bill ${app.billId} was not in the loaded set, so its balance was not updated. ` +
-                `Apply it manually.`,
-            );
-          }
-          const { error: fallbackError } = await supabase
-            .from('bills')
-            .update({
-              amount_paid: Number(bill.amount_paid || 0) + app.amountToPay,
-            })
-            .eq('id', app.billId);
-          if (fallbackError) {
-            throw new Error(
-              `Payment recorded but bill ${app.billId} could not be updated ` +
-                `(RPC: ${updateError.message}; direct update: ${fallbackError.message}). ` +
-                `The bill still shows the old balance and must be reconciled by hand.`,
-            );
-          }
+          throw new Error(
+            `Payment recorded but bill ${app.billId} could not be updated (${updateError.message}). ` +
+              `The bill still shows the old balance and must be reconciled by hand.`,
+          );
         }
       }
 

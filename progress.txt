@@ -4904,3 +4904,81 @@ a copy of it, and were mutation-tested too.
 
 Silent-write backlog ratcheted 214 → 206. Full suite: 120 files, 2660 passing,
 2 skipped, 28.6s.
+
+---
+
+## US-310: journal entries, bills and bill payments could not be created
+
+The guard from US-303 found this an hour after it was written. All three
+mutations open the same way:
+
+    const { data: seqData, error: seqError } = await supabase
+      .rpc('nextval', { sequence_name: 'journal_entry_number_seq' });
+    if (seqError) throw seqError;
+
+`nextval` is `pg_catalog.nextval(regclass)`. It lives in a schema PostgREST does
+not expose, and it takes one regclass argument, not a `sequence_name`. Either
+fact alone makes the call unresolvable, and no migration has ever created a
+public wrapper. The `throw` on the next line means no journal entry, no vendor
+bill and no bill payment has ever been created through this UI. The three
+sequences do exist; only the way they were reached was broken.
+
+Fixed with the pattern the repo already uses for every other numbered document,
+`generate_po_number` and thirteen siblings: a SECURITY DEFINER `generate_*`
+function plus a BEFORE INSERT trigger that fills the column when it arrives
+empty. A public `nextval` wrapper would have been fewer lines and would have
+handed any authenticated user a way to advance any sequence in the database by
+name.
+
+Verified by pulling the real `journal_entries` / `bills` / `bill_payments` DDL
+and the three sequences out of `20250707000000_enterprise_finance_module.sql`,
+applying them and this migration to Postgres 16, and inserting as
+`authenticated`. The trigger assigns JE-001000, BILL-001000, PMT-001000; a
+client that supplies its own number keeps it; a blank string is replaced rather
+than stored as a document with no number (`NOT NULL` would have accepted `'   '`
+happily); and `UNIQUE(company_id, <number>)` still rejects a duplicate within a
+company while accepting the same number in another.
+
+Then `apply_bill_payment`, which I had baselined an hour earlier as "the call
+site already falls back safely". That reasoning stops holding the moment
+payments become possible. Before this fix the mutation threw on `nextval` and
+the fallback never ran; after it, the fallback is the live path, and it reads
+`amount_paid` off the client's loaded copy of the bill and writes back the sum.
+Two payments applied to one bill at once both read the same value and both write
+the same total. One of them disappears, in a ledger.
+
+It is now one UPDATE, so the read and the write happen under the lock the UPDATE
+itself takes:
+
+    SET amount_paid = COALESCE(amount_paid, 0) + p_amount
+
+Proven with two overlapping sessions rather than asserted: the second caller
+blocked 1530ms on the row lock and applied on top, leaving 600.00 rather than
+300.00. SECURITY DEFINER bypasses RLS, so tenancy is enforced inside the
+function with `user_in_company`, which also requires an active profile. Another
+company's bill answers "bill not found" rather than "forbidden", because
+confirming that a given bill id exists is itself a leak. Also verified: open ->
+partial -> paid across two payments, a voided bill not flipped to paid, a zero
+or negative amount refused, a deactivated profile in the right company refused,
+and the other company's bill untouched at 0.00.
+
+The `check-rpc-definitions.mjs` baseline is now empty. Both of its entries went
+stale within an hour of being written, and the guard caught both, which is what
+the only-shrinks rule exists for. It also learned to strip comments before
+scanning: the migration and the tests here quote the broken `nextval` call in
+prose, and the first run flagged my own test file for describing the bug. That
+is the same lesson `check-no-migration-repair.sh` taught in US-248 and I walked
+into it again. Mutation-tested four ways: a real call to a missing name is
+caught, the same name in a line comment and in a block comment is not, and a URL
+on the same line as a real call does not hide it.
+
+Not changed, and worth a decision rather than inheritance: the sequences are
+global while uniqueness is per company, so two companies creating journal
+entries interleave and each sees gaps. Company A got JE-001000, JE-001002,
+JE-001003 while company B took JE-001001. Every other numbered document here
+already behaves this way, so singling out journal entries would be inconsistent,
+and gap-free per-company numbering needs a counter table and a decision about
+existing rows. Auditors do test journal-entry sequences for gaps.
+
+25 cases in `src/hooks/__tests__/accountingWritePaths.test.ts`, mutation-tested
+six ways. Full suite: 121 files, 2685 passing, 2 skipped, 28.2s.

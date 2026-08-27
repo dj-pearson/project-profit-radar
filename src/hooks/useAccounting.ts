@@ -219,20 +219,17 @@ export function useCreateJournalEntry() {
         throw new Error(validation.errors.join('; '));
       }
 
-      // Generate entry number
-      const { data: seqData, error: seqError } = await supabase
-        .rpc('nextval', { sequence_name: 'journal_entry_number_seq' });
-
-      if (seqError) throw seqError;
-
-      const entryNumber = `JE-${String(seqData).padStart(6, '0')}`;
-
-      // Create journal entry header with site isolation
+      // entry_number is assigned by the set_journal_entry_number trigger
+      // (US-310). This used to be `rpc('nextval', { sequence_name: ... })`,
+      // which is pg_catalog.nextval(regclass): wrong schema for PostgREST to
+      // expose and wrong argument shape, so it could never resolve and the
+      // `throw seqError` on the next line meant no journal entry has ever been
+      // created. Assigning in a BEFORE INSERT trigger is also atomic with the
+      // insert, which a client-side read of the sequence is not.
       const { data: headerData, error: headerError } = await supabase
         .from('journal_entries')
         .insert({
           company_id: entry.companyId,
-          entry_number: entryNumber,
           entry_date: entry.entryDate,
           description: entry.description,
           memo: entry.memo,
@@ -388,13 +385,8 @@ export function useCreateBill() {
       memo?: string;
       projectId?: string;
     }) => {
-            // Generate bill number
-      const { data: seqData, error: seqError } = await supabase
-        .rpc('nextval', { sequence_name: 'bill_number_seq' });
-
-      if (seqError) throw seqError;
-
-      const billNumber = `BILL-${String(seqData).padStart(6, '0')}`;
+      // bill_number is assigned by the set_bill_number trigger (US-310); see
+      // the journal entry mutation above for why the nextval RPC could not work.
 
       // Calculate totals
       const subtotal = bill.lineItems.reduce((sum, item) => sum + item.amount, 0);
@@ -404,7 +396,6 @@ export function useCreateBill() {
         .from('bills')
         .insert({
           company_id: bill.companyId,
-          bill_number: billNumber,
           vendor_id: bill.vendorId,
           vendor_ref_number: bill.vendorRefNumber,
           bill_date: bill.billDate,

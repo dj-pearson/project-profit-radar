@@ -41,26 +41,34 @@ const CODE_EXT = /\.(ts|tsx|js|jsx|mjs)$/;
  * a real defect; the note says why it is not this guard's job to block on.
  */
 const BASELINE = new Map([
-  [
-    'nextval',
-    'src/hooks/useAccounting.ts and src/pages/BillPayments.tsx call ' +
-      "rpc('nextval', { sequence_name: ... }) to generate journal-entry, bill and " +
-      'bill-payment numbers. nextval is pg_catalog.nextval(regclass): it lives in ' +
-      'pg_catalog, which PostgREST does not expose, and takes one regclass ' +
-      'argument, not a sequence_name. Both facts independently make the call ' +
-      'unresolvable. Every caller does `if (seqError) throw seqError`, so this ' +
-      'fails loudly rather than silently. Needs a public wrapper function and its ' +
-      'own story.',
-  ],
-  [
-    'apply_bill_payment',
-    'src/pages/BillPayments.tsx calls it to move a bill balance after a payment. ' +
-      'No migration defines it. The call site already treats failure as expected ' +
-      'and falls back to a direct update whose error is read and surfaced, so a ' +
-      'payment cannot be reported as applied while the balance sits stale. Adding ' +
-      'the function belongs with the accounting work, not here.',
-  ],
+  // Empty. US-303 added the six calculator functions; US-310 added the
+  // accounting document-number functions and apply_bill_payment, and removed
+  // the three nextval calls that could never resolve. Every RPC this codebase
+  // calls is now created by a migration. An entry added here needs a written
+  // reason, and the guard fails if it is ever left behind once fixed.
 ]);
+
+/**
+ * Blank out comment bodies, keeping line numbers intact.
+ *
+ * A guard must not forbid naming the thing it guards against: the migration and
+ * the tests for US-303 and US-310 both quote the broken `.rpc('nextval', ...)`
+ * call in prose, and flagging that would push authors towards deleting the
+ * explanation. Line comments are only recognised when `//` is not preceded by a
+ * colon, so a URL survives.
+ */
+function stripComments(src) {
+  return src
+    .replace(/\/\*[\s\S]*?\*\//g, (m) => m.replace(/[^\n]/g, ' '))
+    .split('\n')
+    .map((line) => {
+      const i = line.search(/(^|[^:])\/\//);
+      if (i === -1) return line;
+      const at = line.indexOf('//', i);
+      return line.slice(0, at);
+    })
+    .join('\n');
+}
 
 function walk(dir, out = []) {
   let entries;
@@ -97,7 +105,7 @@ for (const scanRoot of SCAN_ROOTS) {
     continue;
   }
   for (const file of walk(scanRoot)) {
-    const lines = readFileSync(file, 'utf8').split('\n');
+    const lines = stripComments(readFileSync(file, 'utf8')).split('\n');
     lines.forEach((line, i) => {
       const re = /\.rpc\(\s*['"`]([a-zA-Z0-9_]+)['"`]/g;
       let m;
