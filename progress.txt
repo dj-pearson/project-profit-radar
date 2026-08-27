@@ -4660,3 +4660,40 @@ production company UUID with the comment "Real company ID from database".
 four permissive returns — they're branches of a real analysis (config disabled,
 IP whitelisted, low risk score), not blanket permissiveness. The rest of the list
 is unrouted UI, not logic.
+
+## Three features that have never worked
+
+Chasing the `'your-company-id'` placeholder I noticed in passing earlier. The
+silent-write guard can't see these — the error *is* read. It's just always an
+error.
+
+**`EnhancedLeadIntelligence.tsx:145`** upserted `ai_lead_scores` with
+`company_id: 'your-company-id'`. That column is `UUID NOT NULL` (migration
+`20250726012428`), so every call failed the uuid cast with `invalid input syntax
+for type uuid`, the catch turned it into "Error calculating enhanced score", and
+the AI score that had *just been computed* was thrown away.
+
+**`LeadNurturingCampaigns.tsx:151`** did exactly the same on
+`lead_nurturing_campaigns.company_id`. Creating a nurturing campaign has never
+once succeeded.
+
+Both now take `company_id` from `userProfile` and refuse cleanly when there
+isn't one.
+
+**`MobileMaterialTracker.tsx` is worse, and different.** It doesn't write at all:
+
+    // Here you would upload photos and save to Supabase
+    // For now, just add to local state
+    ...
+    toast.success('Delivery confirmed successfully');
+
+There is no `material_deliveries` table — the only delivery-shaped table is
+`delivery_plans`, which is something else. And the screen is **live**, rendered
+by `MobileDashboard` at line 430. A field worker on site confirms a delivery,
+sees a success toast, and has recorded nothing. The photos are object URLs, so
+they don't survive a reload either. The issue-reporting path is identical.
+
+I can't wire these to a table without a schema decision that isn't this change's
+to make, so both toasts now say plainly that the record is on this device only
+and will be lost. The OfflineDataManager lesson, restated: never report success
+for work that was not persisted.

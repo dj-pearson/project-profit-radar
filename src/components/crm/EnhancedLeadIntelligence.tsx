@@ -6,6 +6,7 @@ import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/contexts/AuthContext';
 import { formatCurrency } from '@/utils/formatters';
 import { Brain, Zap, AlertTriangle, CheckCircle, Clock, BarChart3 } from 'lucide-react';
 
@@ -58,6 +59,7 @@ export const EnhancedLeadIntelligence: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [calculating, setCalculating] = useState(false);
   const { toast } = useToast();
+  const { userProfile } = useAuth();
 
   useEffect(() => {
     loadIntelligenceData();
@@ -138,11 +140,26 @@ export const EnhancedLeadIntelligence: React.FC = () => {
         timing_score?: number;
       }
       const scoreResult = data as unknown as EnhancedScoreResult | null;
+      // ai_lead_scores.company_id is `UUID NOT NULL` (migration 20250726012428).
+      // This upsert passed the literal string 'your-company-id', which fails the
+      // uuid cast - so every call errored with "invalid input syntax for type
+      // uuid", the catch below turned it into "Error calculating enhanced
+      // score", and the AI score that had just been computed was thrown away.
+      // The feature has never once worked.
+      if (!userProfile?.company_id) {
+        toast({
+          title: "Can't save the score",
+          description: 'No company on your profile.',
+          variant: 'destructive',
+        });
+        return;
+      }
+
       const { error: insertError } = await supabase
         .from('ai_lead_scores')
         .upsert({
           lead_id: leadId,
-          company_id: 'your-company-id', // This should come from user context
+          company_id: userProfile.company_id,
           overall_score: scoreResult?.overall_score || 0,
           demographic_score: scoreResult?.demographic_score || 0,
           behavioral_score: scoreResult?.behavioral_score || 0,
