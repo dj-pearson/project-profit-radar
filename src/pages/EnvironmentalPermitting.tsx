@@ -10,6 +10,10 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface EnvironmentalPermit {
   id: string;
@@ -61,16 +65,45 @@ export default function EnvironmentalPermitting() {
   const [editingAssessment, setEditingAssessment] = useState<NEPAAssessment | null>(null);
   const [editingMonitoring, setEditingMonitoring] = useState<MonitoringRecord | null>(null);
   const { toast } = useToast();
+  const { userProfile } = useAuth();
+  const queryClient = useQueryClient();
 
   const handleEditPermit = (permit: EnvironmentalPermit) => {
     setEditingPermit({ ...permit });
   };
 
-  const handleSavePermit = () => {
+  // Said "Environmental permit has been successfully updated" and wrote
+  // nothing. On a compliance screen that is the worst place for it: the edit
+  // closed, the value on screen was the one the user typed, and the permit
+  // record was unchanged (US-309).
+  const handleSavePermit = async () => {
+    if (!editingPermit?.id) return;
+
+    const { error } = await supabase
+      .from('environmental_permits')
+      .update({
+        status: editingPermit.status,
+        compliance_status: editingPermit.compliance_status,
+        priority: editingPermit.priority,
+        expiration_date: editingPermit.expiration_date || null,
+        target_decision_date: editingPermit.target_decision_date || null,
+      })
+      .eq('id', editingPermit.id);
+
+    if (error) {
+      toast({
+        variant: "destructive",
+        title: "Permit not updated",
+        description: error.message,
+      });
+      return;
+    }
+
     toast({
       title: "Permit Updated",
       description: "Environmental permit has been successfully updated.",
     });
+    queryClient.invalidateQueries({ queryKey: ['environmental-permits'] });
     setEditingPermit(null);
   };
 
@@ -78,11 +111,32 @@ export default function EnvironmentalPermitting() {
     setEditingAssessment({ ...assessment });
   };
 
-  const handleSaveAssessment = () => {
+  const handleSaveAssessment = async () => {
+    if (!editingAssessment?.id) return;
+
+    const { error } = await supabase
+      .from('environmental_assessments')
+      .update({
+        nepa_process_stage: editingAssessment.nepa_process_stage,
+        finding: editingAssessment.finding || null,
+        decision_date: editingAssessment.decision_date || null,
+      })
+      .eq('id', editingAssessment.id);
+
+    if (error) {
+      toast({
+        variant: "destructive",
+        title: "Assessment not updated",
+        description: error.message,
+      });
+      return;
+    }
+
     toast({
-      title: "Assessment Updated", 
+      title: "Assessment Updated",
       description: "NEPA assessment has been successfully updated.",
     });
+    queryClient.invalidateQueries({ queryKey: ['environmental-assessments'] });
     setEditingAssessment(null);
   };
 
@@ -90,109 +144,95 @@ export default function EnvironmentalPermitting() {
     setEditingMonitoring({ ...monitoring });
   };
 
-  const handleSaveMonitoring = () => {
+  const handleSaveMonitoring = async () => {
+    if (!editingMonitoring?.id) return;
+
+    const { error } = await supabase
+      .from('environmental_monitoring')
+      .update({
+        measured_value: editingMonitoring.measured_value,
+        permit_limit: editingMonitoring.permit_limit,
+        within_limits: editingMonitoring.within_limits,
+        monitoring_location: editingMonitoring.monitoring_location || null,
+      })
+      .eq('id', editingMonitoring.id);
+
+    if (error) {
+      toast({
+        variant: "destructive",
+        title: "Monitoring data not updated",
+        description: error.message,
+      });
+      return;
+    }
+
     toast({
       title: "Monitoring Updated",
       description: "Monitoring data has been successfully updated.",
     });
+    queryClient.invalidateQueries({ queryKey: ['environmental-monitoring'] });
     setEditingMonitoring(null);
   };
 
-  // Mock data for demonstration
-  const permits = [
-    {
-      id: "1",
-      permit_number: "ENV-2024-0001",
-      permit_name: "Clean Water Act Section 404 Permit",
-      permit_type: "wetlands",
-      issuing_agency: "army_corps",
-      status: "approved",
-      nepa_category: "environmental_assessment",
-      application_date: "2024-01-15",
-      expiration_date: "2026-01-15",
-      compliance_status: "compliant",
-      priority: "high",
-      assigned_to: "Environmental Coordinator"
-    },
-    {
-      id: "2", 
-      permit_number: "ENV-2024-0002",
-      permit_name: "NPDES Storm Water Permit",
-      permit_type: "storm_water",
-      issuing_agency: "epa",
-      status: "under_review",
-      nepa_category: "categorical_exclusion",
-      application_date: "2024-02-20",
-      target_decision_date: "2024-05-20",
-      compliance_status: "pending_review",
-      priority: "medium",
-      assigned_to: "Project Manager"
-    },
-    {
-      id: "3",
-      permit_number: "ENV-2024-0003", 
-      permit_name: "Endangered Species Act Consultation",
-      permit_type: "endangered_species",
-      issuing_agency: "usfws",
-      status: "pending",
-      nepa_category: "environmental_impact_statement",
-      application_date: "2024-03-10",
-      compliance_status: "unknown",
-      priority: "critical",
-      assigned_to: "Environmental Specialist"
-    }
-  ];
+  // These were three hardcoded arrays under the comment "Mock data for
+  // demonstration", rendered on a live route behind RouteGuard. That is worse
+  // than a fake success message: a site manager opening /environmental-permitting
+  // was shown a Clean Water Act Section 404 permit marked approved, compliant
+  // and expiring 2026-01-15, an EPA NPDES storm water permit under review, and
+  // an Endangered Species Act consultation - fabricated federal regulatory
+  // records, presented as this company's own. Someone checking whether their
+  // wetlands permit was current would have read an answer about a permit that
+  // does not exist.
+  //
+  // Every field those arrays carried maps to a real column: environmental_permits,
+  // environmental_assessments and environmental_monitoring all exist with RLS,
+  // created by migration 20250707142616. They are read from now, scoped to the
+  // company, and an empty result renders as empty rather than as somebody else's
+  // compliance history (US-309).
+  const { data: permits = [], isLoading: permitsLoading } = useQuery({
+    queryKey: ['environmental-permits', userProfile?.company_id],
+    enabled: !!userProfile?.company_id,
+    queryFn: async (): Promise<EnvironmentalPermit[]> => {
+      const { data, error } = await supabase
+        .from('environmental_permits')
+        .select('id, permit_number, permit_name, permit_type, issuing_agency, status, nepa_category, application_date, expiration_date, target_decision_date, compliance_status, priority, assigned_to')
+        .eq('company_id', userProfile!.company_id)
+        .order('application_date', { ascending: false });
 
-  const assessments = [
-    {
-      id: "1",
-      permit_id: "1",
-      assessment_type: "environmental_assessment",
-      lead_agency: "U.S. Army Corps of Engineers",
-      nepa_process_stage: "final_document",
-      finding: "finding_of_no_significant_impact",
-      decision_date: "2024-01-10",
-      prepared_by: "Environmental Consultant"
+      if (error) throw error;
+      return (data ?? []) as EnvironmentalPermit[];
     },
-    {
-      id: "2",
-      permit_id: "3", 
-      assessment_type: "environmental_impact_statement",
-      lead_agency: "U.S. Fish and Wildlife Service",
-      nepa_process_stage: "scoping",
-      scoping_period_start: "2024-03-15",
-      scoping_period_end: "2024-04-15",
-      prepared_by: "NEPA Specialist"
-    }
-  ];
+  });
 
-  const monitoringData = [
-    {
-      id: "1",
-      permit_id: "1",
-      monitoring_type: "water_quality",
-      parameter_measured: "Turbidity",
-      measured_value: 2.5,
-      permit_limit: 5.0,
-      measurement_unit: "NTU",
-      measurement_date: "2024-04-01",
-      within_limits: true,
-      monitoring_location: "Wetland Area A"
+  const { data: assessments = [] } = useQuery({
+    queryKey: ['environmental-assessments', userProfile?.company_id],
+    enabled: !!userProfile?.company_id,
+    queryFn: async (): Promise<NEPAAssessment[]> => {
+      const { data, error } = await supabase
+        .from('environmental_assessments')
+        .select('id, permit_id, assessment_type, lead_agency, nepa_process_stage, finding, decision_date, scoping_period_start, scoping_period_end, prepared_by')
+        .eq('company_id', userProfile!.company_id)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      return (data ?? []) as NEPAAssessment[];
     },
-    {
-      id: "2",
-      permit_id: "2",
-      monitoring_type: "storm_water",
-      parameter_measured: "Total Suspended Solids",
-      measured_value: 35,
-      permit_limit: 30,
-      measurement_unit: "mg/L",
-      measurement_date: "2024-04-05",
-      within_limits: false,
-      exceedance_level: 16.7,
-      monitoring_location: "Outfall 001"
-    }
-  ];
+  });
+
+  const { data: monitoringData = [] } = useQuery({
+    queryKey: ['environmental-monitoring', userProfile?.company_id],
+    enabled: !!userProfile?.company_id,
+    queryFn: async (): Promise<MonitoringRecord[]> => {
+      const { data, error } = await supabase
+        .from('environmental_monitoring')
+        .select('id, permit_id, monitoring_type, parameter_measured, measured_value, permit_limit, measurement_unit, measurement_date, within_limits, exceedance_level, monitoring_location')
+        .eq('company_id', userProfile!.company_id)
+        .order('measurement_date', { ascending: false });
+
+      if (error) throw error;
+      return (data ?? []) as MonitoringRecord[];
+    },
+  });
 
   const getStatusBadge = (status: string) => {
     const statusConfig = {
@@ -305,6 +345,25 @@ export default function EnvironmentalPermitting() {
 
         <TabsContent value="permits" className="space-y-4">
           <div className="grid gap-4">
+            {permitsLoading && (
+              <div className="space-y-4" aria-busy="true">
+                <Skeleton className="h-32 w-full" />
+                <Skeleton className="h-32 w-full" />
+              </div>
+            )}
+
+            {!permitsLoading && permits.length === 0 && (
+              <Card>
+                <CardHeader>
+                  <CardTitle>No environmental permits recorded</CardTitle>
+                  <CardDescription>
+                    Permits added for your company will appear here. This page previously showed
+                    sample permits that were not yours; it now shows only your own records.
+                  </CardDescription>
+                </CardHeader>
+              </Card>
+            )}
+
             {permits.map((permit) => (
               <Card key={permit.id} className="hover:shadow-md transition-shadow">
                 <CardHeader>

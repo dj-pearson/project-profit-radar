@@ -6043,3 +6043,67 @@ Both hid a real bug here, and both are now written into the guard's header:
 35 new cases in this batch: 118 in `moneyPathWrites.test.ts`, 14 in
 `webSilentWrites.test.ts`. Full suite: 129 files, 2912 passing, 2 skipped. TS
 budget unchanged at 646.
+
+---
+
+## US-309, first pass: 43 -> 25, and 16 of those were my guard being wrong
+
+Read the split before counting this as progress.
+
+**16 of the 18 came off because the guard was wrong**, not because screens were
+fixed. Its `PRETENDS` regex matched the bare word `placeholder` - which is the
+JSX attribute on every form input, `placeholder="Search invoices..."`, not a
+stand-in for work. That put entirely correct code in the backlog. `ResetPassword`
+awaits `supabase.auth.updateUser`, checks the error, and shows success only on
+the else branch, and it sat there as a claimed fake success. A baseline entry is
+supposed to mean somebody looked at it; an entry that could never have been a
+real hit is worse than no entry at all. The regex is
+`\bplaceholder\b(?!\s*[=:])` now, mutation-tested.
+
+The cost of that narrowing, stated plainly: `ServiceCallForm` dropped out too and
+*is* a real fake success. `handleSubmit` calls an optional `onSave?.(formData)`,
+unawaited and unchecked, then unconditionally toasts "Service Call Saved". It has
+zero usages in `src/` - one of US-314's orphans - so it is unreachable today, but
+it is a genuine hit the guard no longer sees. That is the documented
+precision-over-completeness trade, and it now has a named example.
+
+**Two screens were actually fixed.**
+
+`PunchList`, on the live `/punch-list` route. `handleStatusUpdate` said "Status
+updated successfully" and wrote nothing; `loadData()` then re-read the row and
+the badge snapped back, so an item marked complete at handover stayed open.
+Everything it needed already existed - `status` is a real column whose check
+constraint lists exactly the values the buttons pass, next to
+`date_completed`/`completed_by` and `date_verified`/`verified_by`, and
+`handleEditItem` twenty lines below already wrote the same table.
+`handleAddComment` said "Comment added successfully", wrote nothing, and cleared
+the box. There is no comments table for punch list items, only the item's own
+`notes` column, so the comment is appended there as a dated entry - and the notes
+are now rendered on the card. Without that render it would be a write nobody
+could read, which is its own kind of dishonesty.
+
+### EnvironmentalPermitting is the serious one
+
+This is worse than a fake success message. Behind `RouteGuard` at
+`/environmental-permitting`, the page rendered three hardcoded permits under the
+comment "Mock data for demonstration":
+
+- a Clean Water Act Section 404 wetlands permit, marked **approved**,
+  **compliant**, expiring 2026-01-15
+- an EPA NPDES storm water permit, under review
+- an Endangered Species Act consultation
+
+Fabricated federal regulatory records, presented as the customer's own. A site
+manager checking whether their wetlands permit was current would have read a
+confident, specific answer about a permit that does not exist.
+
+`environmental_permits`, `environmental_assessments` and
+`environmental_monitoring` all exist with RLS (migration `20250707142616`), and
+every field those arrays carried maps to a real column. The page reads them now,
+company-scoped, with a skeleton while loading and an empty state that says
+plainly it shows only your own records. Its three save handlers write and report
+their errors.
+
+12 cases in `src/lib/__tests__/fakeSuccess.test.ts`, five mutation-checked. Full
+suite: 130 files, 2924 passing, 2 skipped. TS budget 646 -> 645 (the PunchList
+interface additions fixed one), locked in.

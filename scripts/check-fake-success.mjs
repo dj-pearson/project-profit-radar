@@ -64,8 +64,18 @@ const MIN_BODY = 120;
  * comment and no sleep is not caught. This is a high-precision check, not a
  * complete one.
  */
+/**
+ * `placeholder` needs the lookahead. Without it this matched the JSX
+ * `placeholder="Search invoices..."` attribute on every form input, which is
+ * not a stand-in for work - it is the input's hint text. That put 18 matches
+ * and a number of entirely correct screens into the backlog, ResetPassword
+ * among them: it awaits supabase.auth.updateUser, checks the error, and shows
+ * success only on the else branch. A baseline entry is supposed to mean someone
+ * looked, so an entry that could never have been a real hit is worse than no
+ * entry at all. Corrected 2026-08-27 (US-309).
+ */
 const PRETENDS =
-  /for now|would (?:upload|save|call|send|be|update|create)|\bmock\b|not implemented|todo:|placeholder|simulat|in a real (?:app|implementation)|setTimeout\s*\(\s*resolve/i;
+  /for now|would (?:upload|save|call|send|be|update|create)|\bmock\b|not implemented|todo:|\bplaceholder\b(?!\s*[=:])|simulat|in a real (?:app|implementation)|setTimeout\s*\(\s*resolve/i;
 
 /**
  * A COUNT, not a name list, matching check-silent-writes.mjs.
@@ -74,7 +84,7 @@ const PRETENDS =
  * ratchets: it may fall as screens are fixed and must never rise, and the
  * triage itself lives on US-309 where it can be read.
  */
-const BASELINE = 43;
+const BASELINE = 25;
 
 const files = [];
 const walk = (d) => {
