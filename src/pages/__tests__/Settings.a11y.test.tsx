@@ -4,13 +4,26 @@ import { BrowserRouter } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import React from 'react';
 
-// Mock auth context
+// Mock auth context.
+//
+// The objects are hoisted deliberately. This mock used to build `user`,
+// `userProfile` and the returned object inline, so every render handed the
+// page fresh references; the page's access-check effect depends on them, so it
+// re-ran on every render, called navigate() and toast() again, and re-rendered.
+// The file hung indefinitely and took a vitest worker to several GB with it.
+// The real AuthContext memoises its value (AuthContext.tsx:1202), so a mock
+// that returns a new object every call is not modelling it - it is modelling
+// something that cannot happen.
+//
+// role is root_admin because src/pages/admin/Settings.tsx is root_admin-only.
+// With 'admin' every test here exercised the redirect path instead of the page
+// it claims to be testing.
+const MOCK_USER = { id: 'test-user', email: 'test@test.com' };
+const MOCK_PROFILE = { id: 'test-user', company_id: 'test-company', role: 'root_admin' };
+const MOCK_AUTH = { user: MOCK_USER, userProfile: MOCK_PROFILE, loading: false };
+
 vi.mock('@/contexts/AuthContext', () => ({
-  useAuth: () => ({
-    user: { id: 'test-user', email: 'test@test.com' },
-    userProfile: { id: 'test-user', company_id: 'test-company', role: 'admin' },
-    loading: false,
-  }),
+  useAuth: () => MOCK_AUTH,
   AuthProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
 }));
 

@@ -3887,3 +3887,56 @@ client and with an anon-key client.
 `src/lib/__tests__/rateLimiter.test.ts` no longer re-implements anything. Its
 real cases moved onto the module (21 tests); what's left is a guard against the
 copy coming back.
+
+## US-308 — the suite could not finish
+
+A full run took 1490s and reported two `Worker exited unexpectedly` errors, with
+one worker at 4.7 GB RSS. Rather than guess, I timed all 110 test files
+individually. Exactly two never finished:
+
+    src/components/accessibility/__tests__/AccessibleForm.a11y.test.tsx
+    src/pages/__tests__/Settings.a11y.test.tsx
+
+Same bug in both: a `useEffect` whose dependency is an object recreated on every
+render. Effect runs, sets state, re-renders, produces another fresh object,
+effect runs. React doesn't raise "Maximum update depth exceeded" for this shape
+— that guard counts nested synchronous updates inside one commit, and an
+effect-driven loop schedules each iteration in its own task. So it spins instead
+of erroring, which is why it presents as a hang rather than a failure.
+
+### AccessibleForm
+`initialErrors = {}` is a **default parameter**, and the effect depended on it:
+
+    useEffect(() => { setErrors(initialErrors); }, [initialErrors]);
+
+Every caller who omits the prop hands the component a fresh `{}` each render.
+
+I bisected it rather than assuming, because my first reading said the form alone
+should loop too, and it doesn't:
+
+    form + <div/>, default initialErrors        passes, 16ms
+    form + field, initialErrors pinned          passes, 12ms
+    form + field, default initialErrors         never returns
+
+Fixed by comparing serialized content with a ref guard, so the mount doesn't
+re-set what `useState` already seeded. `registerField`/`unregisterField` also
+built a new `Set` unconditionally; they now return `prev` when nothing changed —
+not the loop itself, but fuel for it.
+
+### Settings
+The test mocked `useAuth` with inline object literals, so every render produced
+fresh `user` and `userProfile`, and the page's access-check effect — which calls
+`navigate()` and `toast()` — re-fired forever. The real `AuthContext` memoises
+its value (`AuthContext.tsx:1202`), so that mock was modelling something that
+cannot happen.
+
+Hoisted the objects. Also changed `role` from `admin` to `root_admin`:
+`src/pages/admin/Settings.tsx` is root_admin-only, so every test in that file had
+been exercising the redirect rather than the page it claims to test. Four tests
+that asserted things about a page they never rendered.
+
+And narrowed the page effect to `[user?.id, userProfile?.role, loading,
+navigate]`. An effect with side effects that keys on object identity re-fires for
+free the moment any caller hands it a fresh reference.
+
+22 tests in AccessibleForm, 4 in Settings, both previously infinite.

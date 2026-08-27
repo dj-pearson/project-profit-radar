@@ -71,7 +71,13 @@ const AdminSettings = () => {
     if (userProfile?.role === 'root_admin') {
       loadSettings();
     }
-  }, [user, userProfile, loading, navigate]);
+    // Depend on the identifying primitives, not the objects. AuthContext
+    // memoises its value today, so this is stable in production - but the
+    // effect navigates and toasts, and an effect with side effects that keys
+    // on object identity re-fires for free whenever a caller hands it a fresh
+    // reference. Settings.a11y.test.tsx did exactly that and hung forever.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id, userProfile?.role, loading, navigate]);
 
   const loadSettings = async () => {
     try {
