@@ -100,11 +100,17 @@ export async function trackCalculation(
     });
 
     // Update session calculations count
-    await supabase.rpc('increment_session_calculations', {
+    // PostgrestBuilder has then() but no catch(), so `.catch()` here threw a
+    // TypeError before the request was sent — this RPC has never been called.
+    // increment_session_calculations is not defined in any migration either, so
+    // the original comment was right that it may be absent; the call is now
+    // actually attempted and its absence handled rather than assumed.
+    const { error: sessionCountError } = await supabase.rpc('increment_session_calculations', {
       p_session_id: sessionId
-    }).catch(() => {
-      // Fallback if function doesn't exist
     });
+    if (sessionCountError) {
+      console.error('increment_session_calculations unavailable', sessionCountError.message);
+    }
 
     trackEvent({
       eventType: 'calculation_performed',
@@ -193,10 +199,17 @@ export async function trackPDFDownload(sessionId: string, leadId?: string): Prom
 
     // Increase lead score for PDF download
     if (leadId) {
-      await supabase.rpc('increment_lead_score', {
+      // Same PostgrestBuilder issue: `.catch()` threw before the request was
+      // sent, so lead scores have never been incremented from here.
+      // increment_lead_score is not defined in any migration, so it may genuinely
+      // be absent — but that should be observable rather than assumed.
+      const { error: leadScoreErrorFive } = await supabase.rpc('increment_lead_score', {
         p_lead_id: leadId,
         p_points: 5
-      }).catch(() => { /* Silently handle if lead scoring not available */ });
+      });
+      if (leadScoreErrorFive) {
+        console.error('increment_lead_score unavailable', leadScoreErrorFive.message);
+      }
     }
 
     trackEvent({
@@ -226,10 +239,17 @@ export async function trackSocialShare(
 
     // Increase lead score for social share
     if (leadId) {
-      await supabase.rpc('increment_lead_score', {
+      // Same PostgrestBuilder issue: `.catch()` threw before the request was
+      // sent, so lead scores have never been incremented from here.
+      // increment_lead_score is not defined in any migration, so it may genuinely
+      // be absent — but that should be observable rather than assumed.
+      const { error: leadScoreErrorEight } = await supabase.rpc('increment_lead_score', {
         p_lead_id: leadId,
         p_points: 8
-      }).catch(() => { /* Silently handle if lead scoring not available */ });
+      });
+      if (leadScoreErrorEight) {
+        console.error('increment_lead_score unavailable', leadScoreErrorEight.message);
+      }
     }
 
     trackEvent({
@@ -256,10 +276,17 @@ export async function trackTrialClick(sessionId: string, leadId?: string): Promi
 
     // Increase lead score significantly for trial interest
     if (leadId) {
-      await supabase.rpc('increment_lead_score', {
+      // Same PostgrestBuilder issue: `.catch()` threw before the request was
+      // sent, so lead scores have never been incremented from here.
+      // increment_lead_score is not defined in any migration, so it may genuinely
+      // be absent — but that should be observable rather than assumed.
+      const { error: leadScoreErrorTwenty } = await supabase.rpc('increment_lead_score', {
         p_lead_id: leadId,
         p_points: 20
-      }).catch(() => { /* Silently handle if lead scoring not available */ });
+      });
+      if (leadScoreErrorTwenty) {
+        console.error('increment_lead_score unavailable', leadScoreErrorTwenty.message);
+      }
     }
 
     trackEvent({
@@ -303,19 +330,33 @@ export async function trackReferral(
  * Track time on page
  */
 export function trackTimeOnPage(sessionId: string, duration: number): void {
-  supabase
-    .from('calculator_sessions')
-    .update({ time_on_page: duration })
-    .eq('session_id', sessionId)
-    .then(() => {
-      trackEvent({
-        eventType: 'time_on_page',
-        sessionId,
-        metadata: { duration },
-        timestamp: new Date()
-      });
-    })
-    .catch(error => console.error('Failed to track time on page:', error));
+  // Deliberately fire-and-forget: the only caller runs this from a
+  // beforeunload handler, which cannot wait for a promise. Kept as a void
+  // function so that stays obvious at the call site.
+  //
+  // Written with await inside rather than .then().catch() because
+  // PostgrestBuilder.then() is typed as returning PromiseLike, which has no
+  // catch — the old chain worked at runtime but could not typecheck, and the
+  // sibling calls in this file that used .catch() directly on the builder were
+  // throwing before their request was ever sent.
+  void (async () => {
+    const { error } = await supabase
+      .from('calculator_sessions')
+      .update({ time_on_page: duration })
+      .eq('session_id', sessionId);
+
+    if (error) {
+      console.error('Failed to track time on page:', error);
+      return;
+    }
+
+    trackEvent({
+      eventType: 'time_on_page',
+      sessionId,
+      metadata: { duration },
+      timestamp: new Date()
+    });
+  })();
 }
 
 /**

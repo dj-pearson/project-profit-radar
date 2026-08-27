@@ -106,7 +106,14 @@ export function LineItemLibraryBrowser({
 
     // Increment use count for each item
     for (const item of itemsToAdd) {
-      await supabase.rpc('increment_line_item_use_count', { item_id: item.id }).catch(console.error);
+      // PostgrestBuilder implements PromiseLike only — it has then() but no
+      // catch(). So `.catch(console.error)` threw a TypeError before the
+      // request was ever sent, and this RPC has never incremented anything,
+      // even though increment_line_item_use_count does exist.
+      const { error: useCountError } = await supabase.rpc('increment_line_item_use_count', { item_id: item.id });
+      if (useCountError) {
+        console.error('Failed to increment line item use count', useCountError);
+      }
     }
 
     onAddItems(itemsToAdd);
