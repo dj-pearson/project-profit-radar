@@ -4381,3 +4381,44 @@ produce, so it is the highest-confidence subset.
 So: ~250 plausibly schema-drift-driven, ~90 near-certain, ≥91 definitely not.
 The spread between 250 and 90 is the honest uncertainty. Re-run this exact
 breakdown after AC2 regenerates the types and see how many actually clear.
+
+## Mining the small TS classes again — and being wrong about it
+
+Earlier today I wrote that TS2554 and TS2532 "are worth the same treatment" as
+TS2551, which had contained a live bug class. That prediction was mostly wrong.
+Across the whole tail below five occurrences — twenty-two error codes — two were
+real defects. The triage is worth writing down so nobody repeats the assumption.
+
+**Real.** `CRMDashboard.tsx:334` called `loadCRMData()` with no argument.
+`loadCRMData` is `execute` from `useLoadingState`, whose signature is
+`execute(asyncFunction)` and whose body does `await asyncFunction()`. Every
+other call site in the file passes `loadCRMDashboardData`. With `undefined` it
+throws `TypeError: asyncFunction is not a function`, which `useLoadingState`
+catches into `setError` — so editing a lead in `LeadDetailView` and coming back
+put the dashboard into its `ErrorState` banner. User-visible, and TS2554 was the
+only thing pointing at it.
+
+**Real.** `BlogAutoGeneration.tsx:303` built
+`{ company_id: userProfile?.company_id, ...settings }`, and `settings` is loaded
+with `select('*')`, so it carries that row's own `company_id` and always
+overwrote the explicit one. Not currently cross-tenant — the row is fetched with
+`.eq('company_id', userProfile.company_id)` — but the ordering is backwards, and
+what reaches the edge function is row data rather than caller identity, which is
+the shape `check-edge-privilege-writes.mjs` exists for.
+
+**Not bugs, and the distinction is the point.** The other two TS2783 —
+`estimatePDFGenerator`, `invoicePDFGenerator` — are the *same error code with the
+opposite meaning*. There the literal is a default and the spread correctly
+overrides it. Reporting all three together as duplicate-key bugs would have been
+wrong in two of three cases.
+
+Both TS2307 (`@capacitor/haptics`, `@capacitor-community/biometric-auth`) are
+optional plugins behind dynamic `import()` with catch fallbacks, and the
+biometric one fails **closed** — `createFallbackCapabilities()` returns
+`isSupported: false, isAvailable: false, securityLevel: 'none'`. The types not
+resolving is a packaging gap, not a hole. The two TS2554 in `useSupabaseMutation`
+are TanStack Query v5 callback arity drift. `InvoiceList:495` passes 2 of 3 args
+to a column render.
+
+Two in twenty-two. The small classes are worth **one** careful pass, not a
+standing belief that they hide bugs.

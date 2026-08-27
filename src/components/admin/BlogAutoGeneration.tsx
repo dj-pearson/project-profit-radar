@@ -300,8 +300,14 @@ const BlogAutoGeneration = () => {
         body: {
           action: 'generate-auto-content',
           customSettings: {
-            company_id: userProfile?.company_id,
-            ...settings
+            // Spread first: settings is loaded with select('*') from
+            // blog_auto_generation_settings, so it carries that row's own
+            // company_id and was overwriting the caller's. The caller's
+            // identity has to win over row data - an edge function handed a
+            // body company_id from a stale or mis-filtered row is the
+            // cross-tenant shape check-edge-privilege-writes.mjs exists for.
+            ...settings,
+            company_id: userProfile?.company_id
           }
         }
       });

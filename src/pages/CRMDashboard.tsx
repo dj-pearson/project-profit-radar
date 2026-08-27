@@ -331,7 +331,7 @@ const CRMDashboard = () => {
       </Tabs>
 
       {viewMode === 'lead-detail' && selectedLeadId && (
-        <LeadDetailView leadId={selectedLeadId} onBack={() => setViewMode('dashboard')} onUpdate={() => { loadCRMData(); }} />
+        <LeadDetailView leadId={selectedLeadId} onBack={() => setViewMode('dashboard')} onUpdate={() => { loadCRMData(loadCRMDashboardData); }} />
       )}
     </DashboardLayout>
     </AccessiblePageWrapper>
