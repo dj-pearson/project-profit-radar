@@ -59,6 +59,10 @@ node scripts/check-insecure-random.mjs || exit 1
 #     check, not authentication; the anon key satisfies it.
 node scripts/check-unauthenticated-edge-functions.mjs || exit 1
 
+# 3o. Fake success (US-309) — a success message the user acts on has to mean the
+#     thing happened.
+node scripts/check-fake-success.mjs || exit 1
+
 # 4. Migration hygiene + RLS guards (US-235 / US-239 / US-237).
 bash scripts/check-migration-filenames.sh || exit 1
 bash scripts/check-no-stray-function-copies.sh || exit 1

@@ -4740,3 +4740,28 @@ need triage.
 I have now found this shape four separate times today — `OfflineDataManager`,
 `MobileMaterialTracker`, `EquipmentEditForm`, `admin/Settings` — and a scan finds
 it in seconds. AC4 is the durable half of the story.
+
+### The guard, and two corrections to it
+`check-fake-success.mjs` is in pre-commit and CI now. Getting it useful took two
+corrections worth recording.
+
+**It flagged 122 files at first**, and most were fine — a handler whose success
+message sits in the `onSuccess` of a mutation defined elsewhere, or one that
+calls a save helper. A 122-entry baseline would have been theatre: it reads as
+covered and means nothing.
+
+What actually distinguishes a screen that *pretends* to work is a stand-in for
+the work: a comment saying so, or an artificial `setTimeout` delay standing
+where the request should be. Both were present in every instance I found by
+hand. Requiring one takes it to 57 — the set where the sampled hit rate was 3 of
+3. The cost is stated in the file: a handler that fakes success with no comment
+and no sleep is **not** caught. High precision, not complete.
+
+**Then it still flagged the two screens I had just fixed** — because
+`ANNOUNCES_SUCCESS` matched "saved" inside my new "Not saved" message. The guard
+would have taught the next person that being honest doesn't clear the check.
+Added a `NEGATED` pattern.
+
+The baseline is a count (57), not a name list, matching `check-silent-writes.mjs`
+— a sixty-entry allowlist reads as "all reviewed" and wouldn't be, and the triage
+lives on the story where it can be read.
