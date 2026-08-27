@@ -26,6 +26,7 @@ import {
 } from "../_shared/auth-helpers.ts";
 import { checkEntitlement } from "../_shared/entitlements.ts";
 import { getCorsHeaders } from "../_shared/secure-cors.ts";
+import { writeAuditLog } from '../_shared/audit-log.ts';
 
 const logStep = (step: string, details?: unknown) => {
   console.log(
@@ -186,6 +187,19 @@ serve(async (req) => {
       logStep("profile insert failed", insertError.message);
       return errorResponse(`Could not create the user profile: ${insertError.message}`, 400, req);
     }
+
+    // Audit trail (US-244): granting someone access to a company, at a chosen
+    // role, is exactly the kind of action a dispute or SOC2 review asks about.
+    await writeAuditLog(serviceClient, {
+      actorUserId: user.id,
+      companyId: inviter.company_id,
+      action: 'team_member.invited',
+      entityType: 'user_profile',
+      entityId: authUser.user.id,
+      after: { email: payload.email, role: payload.role },
+      description: `Invited ${payload.email} as ${payload.role}`,
+      riskLevel: 'high',
+    });
 
     logStep("Member invited", { userId: authUser.user.id, companyId: inviter.company_id });
     return successResponse(

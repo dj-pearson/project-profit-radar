@@ -5,6 +5,7 @@ import Stripe from "https://esm.sh/stripe@14.21.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.3";
 import { initializeAuthContext, errorResponse } from '../_shared/auth-helpers.ts';
 import { getCorsHeaders } from '../_shared/secure-cors.ts';
+import { writeAuditLog } from '../_shared/audit-log.ts';
 
 const logStep = (step: string, details?: Record<string, unknown>) => {
   const detailsStr = details ? ` - ${JSON.stringify(details)}` : '';
@@ -80,7 +81,7 @@ serve(async (req) => {
         return await submitEvidence(corsHeaders, supabaseClient, companyId, body);
 
       case 'accept':
-        return await acceptChargeback(corsHeaders, supabaseClient, companyId, body.chargeback_id);
+        return await acceptChargeback(corsHeaders, supabaseClient, companyId, user.id, body.chargeback_id);
 
       case 'list':
         return await listChargebacks(corsHeaders, supabaseClient, companyId);
@@ -296,6 +297,7 @@ async function submitEvidence(
 async function acceptChargeback(
   corsHeaders: Record<string, string>, supabase: ReturnType<typeof createClient>,
   companyId: string,
+  userId: string,
   chargebackId?: string
 ) {
   if (!chargebackId) {
@@ -312,6 +314,21 @@ async function acceptChargeback(
   if (fetchError || !chargeback) {
     return errorResponse('Chargeback not found', 404);
   }
+
+  // Audit trail (US-244): accepting a chargeback forfeits the dispute, so the
+  // money is gone and someone chose that. Recorded before the Stripe call, so
+  // the intent is on record even if closing the dispute then fails.
+  await writeAuditLog(supabase, {
+    actorUserId: userId,
+    companyId,
+    action: 'chargeback.accepted',
+    entityType: 'chargeback',
+    entityId: chargebackId,
+    before: { status: chargeback.status },
+    after: { status: 'accepted', amount: chargeback.amount },
+    description: `Accepted chargeback of ${chargeback.amount}, forfeiting the dispute`,
+    riskLevel: 'critical',
+  });
 
   const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
 

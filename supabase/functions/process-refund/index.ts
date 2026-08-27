@@ -5,6 +5,7 @@ import Stripe from "https://esm.sh/stripe@14.21.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.3";
 import { initializeAuthContext, errorResponse } from '../_shared/auth-helpers.ts';
 import { getCorsHeaders } from '../_shared/secure-cors.ts';
+import { writeAuditLog } from '../_shared/audit-log.ts';
 
 const logStep = (step: string, details?: Record<string, unknown>) => {
   const detailsStr = details ? ` - ${JSON.stringify(details)}` : '';
@@ -198,6 +199,19 @@ async function approveRefund(
   if (updateError) {
     return errorResponse(`Failed to approve refund: ${updateError.message}`, 500);
   }
+
+  // Audit trail (US-244): money leaving the business, with the approver named.
+  await writeAuditLog(supabase, {
+    actorUserId: userId,
+    companyId,
+    action: 'refund.approved',
+    entityType: 'refund',
+    entityId: refundId,
+    before: { status: refund.status },
+    after: { status: 'processing', amount: refund.amount, approved_by: userId },
+    description: `Approved refund of ${refund.amount} on invoice ${refund.invoice_id ?? 'n/a'}`,
+    riskLevel: 'critical',
+  });
 
   logStep('Refund approved', { refundId });
 

@@ -3,6 +3,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.3";
 import { getCorsHeaders } from '../_shared/secure-cors.ts';
+import { writeAuditLog } from '../_shared/audit-log.ts';
 
 const logStep = (step: string, details?: any) => {
   const detailsStr = details ? ` - ${JSON.stringify(details)}` : '';
@@ -123,6 +124,19 @@ serve(async (req) => {
       .eq('company_id', company_id);
 
     if (updateError) throw updateError;
+
+    // Audit trail (US-244): replacing a company's Stripe credentials changes
+    // where its money moves. Only the fact is recorded, never the key material.
+    await writeAuditLog(supabaseClient, {
+      actorUserId: user.id,
+      companyId: company_id,
+      action: 'stripe_keys.stored',
+      entityType: 'company_payment_settings',
+      entityId: company_id,
+      after: { has_secret_key: true, has_webhook_secret: !!webhook_secret },
+      description: 'Stripe API credentials replaced',
+      riskLevel: 'critical',
+    });
 
     logStep("Keys stored successfully", { company_id });
 

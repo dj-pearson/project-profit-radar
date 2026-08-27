@@ -152,6 +152,9 @@ jobs:
       - name: RLS write-path guard (US-237)
         run: node scripts/check-rls-write-paths.mjs
 
+      - name: Audit-trail coverage guard (US-244)
+        run: node scripts/check-audit-coverage.mjs
+
       - name: Migration filename guard (US-235)
         run: bash scripts/check-migration-filenames.sh
 

@@ -3,6 +3,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.3";
 import { checkRateLimit, getClientIP, rateLimitResponse, RATE_LIMITS } from "../_shared/rate-limiter.ts";
 import { getCorsHeaders } from '../_shared/secure-cors.ts';
 import { WRITABLE_PROJECT_COLUMNS, pickAllowed } from '../_shared/writable-columns.ts';
+import { writeAuditLog } from '../_shared/audit-log.ts';
 // Using built-in crypto API instead
 
 // The complete set of grants an API key can carry. validateApiRequest() checks
@@ -215,6 +216,22 @@ async function createApiKey(corsHeaders: Record<string, string>, req: Request, s
     })
     .select()
     .single();
+
+  // Audit trail (US-244): a new API key is a new credential against the
+  // company's data, so record who minted it and what it can do. The key itself
+  // is never logged — only its prefix, which is what the UI shows.
+  if (!storeError) {
+    await writeAuditLog(supabase, {
+      actorUserId: userData.user.id,
+      companyId: profile.company_id,
+      action: 'api_key.created',
+      entityType: 'api_key',
+      entityId: keyRecord?.id,
+      after: { key_name, key_prefix: keyPrefix, permissions: grants, rate_limit_per_hour: rateLimit },
+      description: `Created API key "${key_name}" with grants: ${grants.join(', ') || 'none'}`,
+      riskLevel: 'high',
+    });
+  }
 
   if (storeError) {
     return new Response(
