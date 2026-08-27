@@ -11,6 +11,9 @@ bash scripts/secret-scan.sh || exit 1
 # 3. Edge-function auth guard — no verify_jwt=false function loses its guard.
 node scripts/check-edge-function-auth.mjs || exit 1
 
+# 3b. Wildcard-CORS guard (US-240) — no new 'Access-Control-Allow-Origin: *'.
+node scripts/check-cors-wildcards.mjs || exit 1
+
 # 4. Migration hygiene + RLS guards (US-235 / US-239 / US-237).
 bash scripts/check-migration-filenames.sh || exit 1
 bash scripts/check-no-stray-function-copies.sh || exit 1

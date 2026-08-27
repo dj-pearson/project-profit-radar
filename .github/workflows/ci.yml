@@ -140,6 +140,9 @@ jobs:
       - name: Edge function auth guard (US-198)
         run: node scripts/check-edge-function-auth.mjs
 
+      - name: Wildcard-CORS guard (US-240)
+        run: node scripts/check-cors-wildcards.mjs
+
       - name: Migration filename guard (US-235)
         run: bash scripts/check-migration-filenames.sh
 

@@ -4,13 +4,10 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.3";
 import { aiService } from "../_shared/ai-service.ts";
 import { initializeAuthContext, errorResponse } from "../_shared/auth-helpers.ts";
 import { checkRateLimit, rateLimitResponse, RATE_LIMITS } from "../_shared/rate-limiter.ts";
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
+import { getCorsHeaders } from '../_shared/secure-cors.ts';
 
 serve(async (req) => {
+  const corsHeaders = getCorsHeaders(req);
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
@@ -50,7 +47,7 @@ serve(async (req) => {
         result = await aiService.generateBlogContent(prompt, model_alias);
         break;
       
-      case 'social':
+      case 'social': {
         const socialSystemPrompt = system_prompt || `You are a social media expert specializing in construction industry content. 
         Create engaging social media posts that are professional, informative, and include relevant hashtags.
         
@@ -73,6 +70,7 @@ serve(async (req) => {
           result = { content: socialResponse };
         }
         break;
+      }
       
       default:
         result = await aiService.generateSimpleContent(prompt, system_prompt, model_alias);
