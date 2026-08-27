@@ -526,7 +526,10 @@ async function generateUsageInvoice(
   }));
 
   if (lineItems.length > 0) {
-    await supabase.from('invoice_line_items').insert(lineItems);
+    const { error: insertInvoiceLineItemsError } = await supabase.from('invoice_line_items').insert(lineItems);
+    if (insertInvoiceLineItemsError) {
+      throw new Error(`Failed to insert invoice_line_items: ${insertInvoiceLineItemsError.message}`);
+    }
   }
 
   // Mark usage records as billed

@@ -388,7 +388,7 @@ async function processRefundWithStripe(
 
     // Update invoice if linked
     if (refund.invoice_id && stripeRefund.status === 'succeeded') {
-      await supabase
+      const { error: updateInvoicesError } = await supabase
         .from('invoices')
         .update({
           status: 'refunded',
@@ -396,6 +396,9 @@ async function processRefundWithStripe(
           refunded_at: new Date().toISOString()
         })
         .eq('id', refund.invoice_id);
+      if (updateInvoicesError) {
+        throw new Error(`Failed to update invoices: ${updateInvoicesError.message}`);
+      }
     }
 
     return new Response(
@@ -415,13 +418,16 @@ async function processRefundWithStripe(
     const error = stripeError as Stripe.errors.StripeError;
     logStep('Stripe refund failed', { error: error.message });
 
-    await supabase
+    const { error: updateRefundsError } = await supabase
       .from('refunds')
       .update({
         status: 'failed',
         failure_reason: error.message
       })
       .eq('id', refund.id);
+    if (updateRefundsError) {
+      throw new Error(`Failed to update refunds: ${updateRefundsError.message}`);
+    }
 
     return errorResponse(`Stripe refund failed: ${error.message}`, 500);
   }

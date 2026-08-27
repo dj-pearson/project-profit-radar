@@ -220,7 +220,7 @@ async function handleSubscriptionChange(subscription: Stripe.Subscription, supab
     const subscriptionEnd = new Date(subscription.current_period_end * 1000).toISOString();
 
     // Update subscriber
-    await supabaseClient
+    const { error: updateSubscribersError } = await supabaseClient
       .from("subscribers")
       .update({
         subscribed: isActive,
@@ -230,6 +230,9 @@ async function handleSubscriptionChange(subscription: Stripe.Subscription, supab
         updated_at: new Date().toISOString()
       })
       .eq("stripe_customer_id", subscription.customer);
+    if (updateSubscribersError) {
+      throw new Error(`Failed to update subscribers: ${updateSubscribersError.message}`);
+    }
 
     logStep("Updated subscriber record", {
       customerId: subscription.customer,
@@ -251,7 +254,7 @@ async function handleSubscriptionChange(subscription: Stripe.Subscription, supab
           (subscription.status === "past_due" ? "grace_period" :
           (subscription.status === "canceled" ? "suspended" : "pending"));
 
-        await supabaseClient
+        const { error: updateCompaniesError } = await supabaseClient
           .from("companies")
           .update({
             subscription_tier: subscriptionTier,
@@ -261,6 +264,9 @@ async function handleSubscriptionChange(subscription: Stripe.Subscription, supab
             updated_at: new Date().toISOString()
           })
           .eq("id", userProfile.company_id);
+        if (updateCompaniesError) {
+          throw new Error(`Failed to update companies: ${updateCompaniesError.message}`);
+        }
 
         logStep("Updated company subscription status", {
           companyId: userProfile.company_id,
@@ -281,7 +287,7 @@ async function handleSubscriptionCancellation(subscription: Stripe.Subscription,
     .single();
 
   // Update subscriber
-  await supabaseClient
+  const { error: updateSubscribersError } = await supabaseClient
     .from("subscribers")
     .update({
       subscribed: false,
@@ -290,6 +296,9 @@ async function handleSubscriptionCancellation(subscription: Stripe.Subscription,
       updated_at: new Date().toISOString()
     })
     .eq("stripe_customer_id", subscription.customer);
+  if (updateSubscribersError) {
+    throw new Error(`Failed to update subscribers: ${updateSubscribersError.message}`);
+  }
 
   logStep("Subscription cancelled", { customerId: subscription.customer });
 
@@ -302,13 +311,16 @@ async function handleSubscriptionCancellation(subscription: Stripe.Subscription,
       .single();
 
     if (userProfile?.company_id) {
-      await supabaseClient
+      const { error: updateCompaniesError } = await supabaseClient
         .from("companies")
         .update({
           subscription_status: "suspended",
           updated_at: new Date().toISOString()
         })
         .eq("id", userProfile.company_id);
+      if (updateCompaniesError) {
+        throw new Error(`Failed to update companies: ${updateCompaniesError.message}`);
+      }
 
       logStep("Updated company to suspended", { companyId: userProfile.company_id });
     }
@@ -408,13 +420,16 @@ async function handleChargeRefunded(charge: Stripe.Charge, supabaseClient: any) 
     .single();
 
   if (refund) {
-    await supabaseClient
+    const { error: updateRefundsError } = await supabaseClient
       .from("refunds")
       .update({
         status: "succeeded",
         updated_at: new Date().toISOString()
       })
       .eq("id", refund.id);
+    if (updateRefundsError) {
+      throw new Error(`Failed to update refunds: ${updateRefundsError.message}`);
+    }
 
     logStep("Updated refund record", { refundId: refund.id });
   }
@@ -438,7 +453,7 @@ async function handleRefundEvent(refund: Stripe.Refund, supabaseClient: any) {
       'canceled': 'canceled'
     };
 
-    await supabaseClient
+    const { error: updateRefundsError } = await supabaseClient
       .from("refunds")
       .update({
         status: statusMap[refund.status] || refund.status,
@@ -446,6 +461,9 @@ async function handleRefundEvent(refund: Stripe.Refund, supabaseClient: any) {
         updated_at: new Date().toISOString()
       })
       .eq("id", existingRefund.id);
+    if (updateRefundsError) {
+      throw new Error(`Failed to update refunds: ${updateRefundsError.message}`);
+    }
 
     logStep("Updated refund from webhook", { refundId: existingRefund.id, status: refund.status });
   }
@@ -464,7 +482,7 @@ async function handleDisputeCreated(dispute: Stripe.Dispute, supabaseClient: any
 
   if (!existing) {
     // Create new chargeback record
-    await supabaseClient
+    const { error: insertChargebacksError } = await supabaseClient
       .from("chargebacks")
       .insert({
         stripe_dispute_id: dispute.id,
@@ -480,6 +498,9 @@ async function handleDisputeCreated(dispute: Stripe.Dispute, supabaseClient: any
         fee_amount: 15.00,
         net_impact: (dispute.amount / 100) + 15.00
       });
+    if (insertChargebacksError) {
+      throw new Error(`Failed to insert chargebacks: ${insertChargebacksError.message}`);
+    }
 
     logStep("Created chargeback record", { disputeId: dispute.id });
   }
@@ -499,7 +520,7 @@ async function handleDisputeUpdated(dispute: Stripe.Dispute, supabaseClient: any
     'lost': 'lost'
   };
 
-  await supabaseClient
+  const { error: updateChargebacksError } = await supabaseClient
     .from("chargebacks")
     .update({
       status: statusMap[dispute.status] || dispute.status,
@@ -509,6 +530,9 @@ async function handleDisputeUpdated(dispute: Stripe.Dispute, supabaseClient: any
       updated_at: new Date().toISOString()
     })
     .eq("stripe_dispute_id", dispute.id);
+  if (updateChargebacksError) {
+    throw new Error(`Failed to update chargebacks: ${updateChargebacksError.message}`);
+  }
 }
 
 async function handleDisputeClosed(dispute: Stripe.Dispute, supabaseClient: any) {
@@ -517,7 +541,7 @@ async function handleDisputeClosed(dispute: Stripe.Dispute, supabaseClient: any)
   const isWon = dispute.status === 'won';
   const isLost = dispute.status === 'lost';
 
-  await supabaseClient
+  const { error: updateChargebacksError } = await supabaseClient
     .from("chargebacks")
     .update({
       status: dispute.status,
@@ -526,6 +550,9 @@ async function handleDisputeClosed(dispute: Stripe.Dispute, supabaseClient: any)
       updated_at: new Date().toISOString()
     })
     .eq("stripe_dispute_id", dispute.id);
+  if (updateChargebacksError) {
+    throw new Error(`Failed to update chargebacks: ${updateChargebacksError.message}`);
+  }
 
   // If lost, record the chargeback fee
   if (isLost) {

@@ -65,10 +65,13 @@ export default async (req: Request) => {
           Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
           { auth: { persistSession: false } }
         );
-        await serviceClient
+        const { error: updateCompaniesError } = await serviceClient
           .from('companies')
           .update({ stripe_customer_id: customerId })
           .eq('id', company.id);
+        if (updateCompaniesError) {
+          console.error(`[companies] update failed`, updateCompaniesError);
+        }
       }
 
       logStep("Created Stripe customer", { customerId });

@@ -62,7 +62,7 @@ export default async (req: Request) => {
       if (isExpired) {
         logStep("Complimentary subscription expired, checking regular subscription");
         // Complimentary expired, remove complimentary status and check regular subscription
-        await supabaseClient
+        const { error: updateSubscribersError } = await supabaseClient
           .from('subscribers')
           .update({
             is_complimentary: false,
@@ -74,6 +74,9 @@ export default async (req: Request) => {
             updated_at: new Date().toISOString()
           })
           .eq('id', existingSubscriber.id);
+        if (updateSubscribersError) {
+          console.error(`[subscribers] update failed`, updateSubscribersError);
+        }
 
         // Update history
         await supabaseClient
@@ -108,7 +111,7 @@ export default async (req: Request) => {
     
     if (customers.data.length === 0) {
       logStep("No customer found, updating unsubscribed state");
-      await supabaseClient.from("subscribers").upsert({
+      const { error: upsertSubscribersError } = await supabaseClient.from("subscribers").upsert({
         email: user.email,
         user_id: user.id,
         stripe_customer_id: null,
@@ -119,6 +122,9 @@ export default async (req: Request) => {
       }, {
         onConflict: 'email'
       });
+      if (upsertSubscribersError) {
+        console.error(`[subscribers] upsert failed`, upsertSubscribersError);
+      }
       return new Response(JSON.stringify({ subscribed: false }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 200,
@@ -169,7 +175,7 @@ export default async (req: Request) => {
       logStep("No active subscription found");
     }
 
-    await supabaseClient.from("subscribers").upsert({
+    const { error: upsertSubscribersError } = await supabaseClient.from("subscribers").upsert({
       email: user.email,
       user_id: user.id,
       stripe_customer_id: customerId,
@@ -181,6 +187,9 @@ export default async (req: Request) => {
     }, {
       onConflict: 'email'
     });
+    if (upsertSubscribersError) {
+      console.error(`[subscribers] upsert failed`, upsertSubscribersError);
+    }
 
     logStep("Updated database with subscription info", { subscribed: hasActiveSub, subscriptionTier });
     return new Response(JSON.stringify({

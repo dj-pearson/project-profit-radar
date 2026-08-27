@@ -76,7 +76,7 @@ serve(async (req) => {
         .single();
 
       if (existingSubscriber) {
-        await supabaseClient
+        const { error: updateSubscribersError } = await supabaseClient
           .from('subscribers')
           .update({
             subscribed: true,
@@ -90,8 +90,11 @@ serve(async (req) => {
             updated_at: new Date().toISOString()
           })
           .eq('id', existingSubscriber.id);
+        if (updateSubscribersError) {
+          throw new Error(`Failed to update subscribers: ${updateSubscribersError.message}`);
+        }
       } else {
-        await supabaseClient
+        const { error: insertSubscribersError } = await supabaseClient
           .from('subscribers')
           .insert({
             user_id: targetUser.id,
@@ -105,6 +108,9 @@ serve(async (req) => {
             complimentary_expires_at: expiresAt,
             complimentary_reason: request.reason
           });
+        if (insertSubscribersError) {
+          throw new Error(`Failed to insert subscribers: ${insertSubscribersError.message}`);
+        }
       }
 
       const { data: subscriber } = await supabaseClient
@@ -168,7 +174,7 @@ serve(async (req) => {
         throw new Error("Subscriber not found");
       }
 
-      await supabaseClient
+      const { error: updateSubscribersError } = await supabaseClient
         .from('subscribers')
         .update({
           subscribed: false,
@@ -181,6 +187,9 @@ serve(async (req) => {
           updated_at: new Date().toISOString()
         })
         .eq('id', subscriber.id);
+      if (updateSubscribersError) {
+        throw new Error(`Failed to update subscribers: ${updateSubscribersError.message}`);
+      }
 
       await supabaseClient
         .from('complimentary_subscription_history')

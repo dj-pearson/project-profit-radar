@@ -153,12 +153,15 @@ async function processAllFailures(corsHeaders: Record<string, string>, supabase:
 
       // Update subscriber status
       if (failure.subscriber_id) {
-        await supabase
+        const { error: updateSubscribersError } = await supabase
           .from('subscribers')
           .update({
             subscribed: false
           })
           .eq('id', failure.subscriber_id);
+        if (updateSubscribersError) {
+          console.error(`[subscribers] update failed`, updateSubscribersError);
+        }
       }
 
       suspended++;
@@ -240,12 +243,15 @@ async function attemptPaymentRetry(
       // Update subscriber status
       const subscriber = failure.subscriber as Record<string, unknown>;
       if (subscriber?.id) {
-        await supabase
+        const { error: updateSubscribersError } = await supabase
           .from('subscribers')
           .update({
             subscribed: true
           })
           .eq('id', subscriber.id);
+        if (updateSubscribersError) {
+          console.error(`[subscribers] update failed`, updateSubscribersError);
+        }
       }
 
       logStep('Payment recovered', { failureId: failure.id, invoiceId });

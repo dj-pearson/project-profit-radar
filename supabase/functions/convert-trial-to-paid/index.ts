@@ -180,7 +180,7 @@ serve(async (req) => {
     }
 
     // Update company status to pending conversion
-    await supabaseClient
+    const { error: updateCompaniesError } = await supabaseClient
       .from("companies")
       .update({
         subscription_status: "converting",
@@ -188,6 +188,9 @@ serve(async (req) => {
         updated_at: new Date().toISOString()
       })
       .eq("id", company_id);
+    if (updateCompaniesError) {
+      console.error(`[companies] update failed`, updateCompaniesError);
+    }
 
     logStep("Updated company status to converting", { company_id });
 

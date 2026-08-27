@@ -113,7 +113,7 @@ serve(async (req) => {
               dunningStatus = "suspended";
 
               // Update subscriber status
-              await supabaseClient
+              const { error: updateSubscribersError } = await supabaseClient
                 .from("subscribers")
                 .update({
                   subscribed: false,
@@ -121,6 +121,9 @@ serve(async (req) => {
                   updated_at: new Date().toISOString()
                 })
                 .eq("id", failure.subscriber_id);
+              if (updateSubscribersError) {
+                console.error(`[subscribers] update failed`, updateSubscribersError);
+              }
 
               results.suspended_accounts++;
               logStep("Account suspended due to payment failures", {

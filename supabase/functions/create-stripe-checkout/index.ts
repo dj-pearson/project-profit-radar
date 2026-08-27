@@ -71,7 +71,8 @@ serve(async (req) => {
       return createErrorResponse(400, validation.error, corsHeaders);
     }
 
-    let { subscription_tier, billing_period, company_id } = validation.data;
+    const { subscription_tier, billing_period } = validation.data;
+    let { company_id } = validation.data;
     logStep("Request validated", { subscription_tier, billing_period, company_id });
 
     // If company_id not provided, get it from user profile
@@ -156,7 +157,7 @@ serve(async (req) => {
         Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
       );
 
-      await supabaseService
+      const { error: updateCompaniesError } = await supabaseService
         .from("companies")
         .update({
           subscription_tier,
@@ -164,6 +165,9 @@ serve(async (req) => {
           updated_at: new Date().toISOString()
         })
         .eq("id", company_id);
+      if (updateCompaniesError) {
+        console.error(`[companies] update failed`, updateCompaniesError);
+      }
 
       logStep("Updated company subscription status", { company_id, status: "pending" });
     }
@@ -174,7 +178,7 @@ serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
     );
 
-    await supabaseService
+    const { error: upsertSubscribersError } = await supabaseService
       .from("subscribers")
       .upsert({
         user_id: user.id,
@@ -184,6 +188,9 @@ serve(async (req) => {
         subscription_tier: null,
         updated_at: new Date().toISOString()
       }, { onConflict: 'user_id' });
+    if (upsertSubscribersError) {
+      console.error(`[subscribers] upsert failed`, upsertSubscribersError);
+    }
 
     logStep("Ensured subscriber record exists");
 

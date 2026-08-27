@@ -307,32 +307,41 @@ async function applyProration(
 
         // Update proration record with Stripe info
         if (prorationRecord) {
-          await supabase
+          const { error: updateProrationHistoryError } = await supabase
             .from('proration_history')
             .update({
               status: 'applied',
               applied_at: new Date().toISOString()
             })
             .eq('id', prorationRecord.id);
+          if (updateProrationHistoryError) {
+            throw new Error(`Failed to update proration_history: ${updateProrationHistoryError.message}`);
+          }
         }
 
         // Update company subscription tier
-        await supabase
+        const { error: updateCompaniesError } = await supabase
           .from('companies')
           .update({
             subscription_tier: new_tier
           })
           .eq('id', company.id);
+        if (updateCompaniesError) {
+          throw new Error(`Failed to update companies: ${updateCompaniesError.message}`);
+        }
 
         // Update subscriber
         if (subscriber?.id) {
-          await supabase
+          const { error: updateSubscribersError } = await supabase
             .from('subscribers')
             .update({
               subscription_tier: new_tier,
               billing_period: newPeriod
             })
             .eq('id', subscriber.id);
+          if (updateSubscribersError) {
+            throw new Error(`Failed to update subscribers: ${updateSubscribersError.message}`);
+          }
         }
 
         return new Response(
@@ -354,12 +363,15 @@ async function applyProration(
 
       // Update proration record as failed
       if (prorationRecord) {
-        await supabase
+        const { error: updateProrationHistoryError } = await supabase
           .from('proration_history')
           .update({
             status: 'failed'
           })
           .eq('id', prorationRecord.id);
+        if (updateProrationHistoryError) {
+          throw new Error(`Failed to update proration_history: ${updateProrationHistoryError.message}`);
+        }
       }
 
       return errorResponse(`Stripe error: ${error.message}`, 500);
@@ -367,31 +379,40 @@ async function applyProration(
   }
 
   // Manual update without Stripe
-  await supabase
+  const { error: updateCompaniesError } = await supabase
     .from('companies')
     .update({
       subscription_tier: new_tier
     })
     .eq('id', company.id);
+  if (updateCompaniesError) {
+    throw new Error(`Failed to update companies: ${updateCompaniesError.message}`);
+  }
 
   if (subscriber?.id) {
-    await supabase
+    const { error: updateSubscribersError } = await supabase
       .from('subscribers')
       .update({
         subscription_tier: new_tier,
         billing_period: newPeriod
       })
       .eq('id', subscriber.id);
+    if (updateSubscribersError) {
+      throw new Error(`Failed to update subscribers: ${updateSubscribersError.message}`);
+    }
   }
 
   if (prorationRecord) {
-    await supabase
+    const { error: updateProrationHistoryError } = await supabase
       .from('proration_history')
       .update({
         status: 'applied',
         applied_at: new Date().toISOString()
       })
       .eq('id', prorationRecord.id);
+    if (updateProrationHistoryError) {
+      throw new Error(`Failed to update proration_history: ${updateProrationHistoryError.message}`);
+    }
   }
 
   return new Response(

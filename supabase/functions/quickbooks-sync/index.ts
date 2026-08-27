@@ -493,14 +493,17 @@ async function syncInvoiceToQuickBooks(supabaseClient: any, baseUrl: string, rea
 
   // Update local invoice with QuickBooks ID
   if (qbInvoice?.Id) {
-    await supabaseClient
+    const { error: updateInvoicesError } = await supabaseClient
       .from('invoices')
       .update({
         qb_invoice_id: qbInvoice.Id,
         qb_sync_token: qbInvoice.SyncToken,
         last_synced_to_qb: new Date().toISOString()
       })
-      .eq('id', invoice.id)
+      .eq('id', invoice.id);
+    if (updateInvoicesError) {
+      console.error(`[invoices] update failed`, updateInvoicesError);
+    }
   }
 
   return qbInvoice

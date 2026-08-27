@@ -509,13 +509,16 @@ async function executeLateFeee(
     const fee = feeFixed > 0 ? feeFixed : (invoice.total_amount * feePercentage / 100);
 
     // Add late fee to invoice
-    await supabase
+    const { error: updateInvoicesError } = await supabase
       .from('invoices')
       .update({
         late_fee: fee,
         total_amount: invoice.total_amount + fee
       })
       .eq('id', invoice.id);
+    if (updateInvoicesError) {
+      throw new Error(`Failed to update invoices: ${updateInvoicesError.message}`);
+    }
 
     feesApplied++;
   }
@@ -547,13 +550,16 @@ async function executeDiscountApplication(
   for (const invoice of invoices || []) {
     const discount = invoice.total_amount * discountPercentage / 100;
 
-    await supabase
+    const { error: updateInvoicesError } = await supabase
       .from('invoices')
       .update({
         discount_amount: discount,
         total_amount: invoice.total_amount - discount
       })
       .eq('id', invoice.id);
+    if (updateInvoicesError) {
+      throw new Error(`Failed to update invoices: ${updateInvoicesError.message}`);
+    }
 
     discountsApplied++;
   }

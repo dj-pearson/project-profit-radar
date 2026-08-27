@@ -201,10 +201,13 @@ serve(async (req) => {
           subscription_end_date: subscriber.subscription_end
         });
 
-            await supabaseClient
+            const { error: updateSubscribersError } = await supabaseClient
         .from('subscribers')
         .update({ renewal_notification_sent_at: new Date().toISOString() })
         .eq('id', subscriber.id);
+            if (updateSubscribersError) {
+              console.error(`[subscribers] update failed`, updateSubscribersError);
+            }
 
       notificationsSent++;
       logStep("Notification sent", { 

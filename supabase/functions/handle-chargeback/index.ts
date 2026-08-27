@@ -154,13 +154,16 @@ async function createChargeback(
 
   // Update invoice if linked
   if (invoice_id) {
-    await supabase
+    const { error: updateInvoicesError } = await supabase
       .from('invoices')
       .update({
         status: 'disputed',
         disputed_at: new Date().toISOString()
       })
       .eq('id', invoice_id);
+    if (updateInvoicesError) {
+      throw new Error(`Failed to update invoices: ${updateInvoicesError.message}`);
+    }
   }
 
   return new Response(
@@ -377,12 +380,15 @@ async function acceptChargeback(
 
   // Update linked invoice
   if (chargeback.invoice_id) {
-    await supabase
+    const { error: updateInvoicesError } = await supabase
       .from('invoices')
       .update({
         status: 'chargeback_lost'
       })
       .eq('id', chargeback.invoice_id);
+    if (updateInvoicesError) {
+      throw new Error(`Failed to update invoices: ${updateInvoicesError.message}`);
+    }
   }
 
   return new Response(
@@ -511,7 +517,7 @@ async function syncChargebacksFromStripe(
 
       if (existing) {
         // Update existing
-        await supabase
+        const { error: updateChargebacksError } = await supabase
           .from('chargebacks')
           .update({
             status: mapStripeStatus(dispute.status),
@@ -522,9 +528,12 @@ async function syncChargebacksFromStripe(
               : null
           })
           .eq('id', existing.id);
+        if (updateChargebacksError) {
+          throw new Error(`Failed to update chargebacks: ${updateChargebacksError.message}`);
+        }
       } else {
         // Create new
-        await supabase
+        const { error: insertChargebacksError } = await supabase
           .from('chargebacks')
           .insert({
             company_id: companyId,
@@ -541,6 +550,9 @@ async function syncChargebacksFromStripe(
             fee_amount: 15.00,
             net_impact: (dispute.amount / 100) + 15.00
           });
+        if (insertChargebacksError) {
+          throw new Error(`Failed to insert chargebacks: ${insertChargebacksError.message}`);
+        }
         synced++;
       }
     }
