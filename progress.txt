@@ -2874,3 +2874,56 @@ why in a comment, so the next reader knows it was a decision.
 - track-usage / usage-billing / workflow-execution wrote to tables their client
   had no RLS write path for, and reported success (US-237 follow-up).
 - useSecurityMonitor has never recorded a single security event (US-299).
+
+================================================================================
+2026-08-27 — US-300 first pass: the money paths (330 -> 288)
+================================================================================
+
+### stripe-webhook had working retry machinery it never reached
+This is the one worth understanding. The webhook already does the right thing on
+failure: a handler that throws gets its attempt recorded against webhook_events
+and returns 500, and a non-2xx is what makes Stripe retry the event.
+
+But every handler discarded the error from its database write. So a failed
+subscriber update, refund update or dispute insert fell straight through to
+`return new Response(JSON.stringify({ received: true }), { status: 200 })`.
+Stripe marked the event delivered and never sent it again. The divergence
+between Stripe and the database became permanent, silently.
+
+The fix was not to build retry handling — it was already there, correct and
+unused. Nine writes now throw.
+
+**Worth generalising: before adding error handling, check whether the codebase
+already has some that nothing is reaching.**
+
+### throw vs log — the judgement, not the mechanism
+Wrapping a write with an error check is mechanical and scripted. Deciding what
+to do with the error is not, and the split that matters is what the caller has
+been told:
+
+- **throw** where a success response depends on the write. calculate-proration,
+  process-refund, handle-chargeback, billing-automation, usage-billing, and
+  manage-complimentary-subscription — that last one told an admin "Complimentary
+  subscription granted" whether or not the subscriber row actually changed.
+- **log** where it is a background sync and failing the request helps nobody.
+  check-subscription, create-stripe-checkout, setup-payment-method,
+  trial-management, convert-trial-to-paid, failed-payment-recovery,
+  process-dunning, send-renewal-notification, quickbooks-sync. Turning a
+  transient Stripe hiccup into a broken checkout would be its own bug.
+
+### Verifying a scripted transform
+The transform is AST-driven: find a write whose result is discarded, bind
+`const { error: <op><Table>Error }`, add the check. The failure mode it can
+introduce is two writes to the same table in the same scope producing a
+duplicate const.
+
+esbuild catches exactly that ("The symbol X has already been declared") — I
+confirmed it does with a deliberate two-line test file before relying on it,
+rather than assuming. A regex-based scope check flagged five files; all five
+were false positives, because const is block-scoped and the duplicates sat in
+sibling branches. **Confirm your checker catches the thing before you trust it
+reporting nothing** — same lesson as the privilege-write guard's blind spots.
+
+### Next
+72 web-app sites, where the dangerous shape is a write followed by a success
+toast or a navigation, then the remaining 216 edge sites by consequence.
