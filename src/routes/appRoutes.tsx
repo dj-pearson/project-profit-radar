@@ -42,6 +42,7 @@ import {
 const ReferralProgram = createLazyRoute(() => import('@/pages/ReferralProgram').then(m => ({ default: m.ReferralProgram })));
 const IntegrationMarketplace = createLazyRoute(() => import('@/pages/IntegrationMarketplace').then(m => ({ default: m.IntegrationMarketplace })));
 const WorkflowAutomation = createLazyRoute(() => import('@/pages/WorkflowAutomation').then(m => ({ default: m.WorkflowAutomation })));
+const CommunicationPage = createLazyRoute(() => import('@/pages/CommunicationPage'));
 const AIInsights = createLazyRoute(() => import('@/pages/AIInsights').then(m => ({ default: m.AIInsights })));
 const MobileShowcase = createLazyRoute(() => import('@/pages/MobileShowcase'));
 const AdvancedMobileShowcase = createLazyRoute(() => import('@/pages/AdvancedMobileShowcase'));
@@ -99,15 +100,13 @@ export const appRoutes = (
     <Route path="/resources" element={<LazyResources />} />
     <Route path="/resources/:slug" element={<LazyBlogPost />} />
 
-    {/* Communication - Placeholder */}
-    <Route
-      path="/communication"
-      element={
-        <div className="p-6">
-          <h1 className="text-2xl font-bold">Communication Hub</h1>
-          <p>Feature completed - real-time messaging, client portal, notifications, and automated updates ready.</p>
-        </div>
-      }
-    />
+    {/*
+      /communication used to render a hardcoded paragraph reading "Feature
+      completed - real-time messaging, client portal, notifications, and
+      automated updates ready", while the page that actually renders the
+      messaging surface sat unrouted (US-296). A route asserting a feature is
+      finished, in place of the feature, is the worst version of a stub.
+    */}
+    <Route path="/communication" element={<RouteGuard><CommunicationPage /></RouteGuard>} />
   </>
 );

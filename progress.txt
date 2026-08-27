@@ -5258,3 +5258,63 @@ deleted. They are gone, and the insecure-random guard reports clean. AC1 and AC2
 are done; the note was stale.
 
 8 cases in `src/lib/__tests__/tsErrorBudget.test.ts`, mutation-tested four ways.
+
+---
+
+## US-296 AC4, first batch: a route that claimed the feature was finished
+
+Two corrections to the list I posted an hour ago, both from reading the call
+sites instead of trusting the symbol name tsc gave me.
+
+**The video player's seek bar was never broken.** The progress bar is a div with
+`onClick={handleProgressClick}`, which sets `videoRef.current.currentTime`. The
+unused `handleSeek` was a Slider-shaped duplicate that nothing bound; the Slider
+in that file is the volume control. Deleted as a duplicate, not wired as a
+missing feature.
+
+**The Communication Hub could always send a message.** The Messages tab renders
+`ThreadManager` and `AdvancedChatInterface`. Three of its five unwired handlers
+carried comments saying so outright - "Legacy function - now handled by
+useAdvancedChat hook" - with empty bodies.
+
+What was actually wrong there was bigger. `/communication` was routed to this:
+
+```jsx
+<div className="p-6">
+  <h1 className="text-2xl font-bold">Communication Hub</h1>
+  <p>Feature completed - real-time messaging, client portal, notifications,
+     and automated updates ready.</p>
+</div>
+```
+
+A route asserting a feature is finished, in place of the feature. Meanwhile
+`src/pages/CommunicationPage.tsx`, which renders the working messaging surface,
+was routed nowhere. That is now the route.
+
+Behind it, the RFI and Meetings tabs were mock shells. A "Create RFI" dialog
+whose submit button had no `onClick`, with hardcoded options - "Commercial
+Office Build", "David Brown (Architect)" - over a list backed by
+`useState<RFI[]>([])` with no setter, so permanently empty. You could fill the
+form in, press Create RFI, and have nothing happen at all. The dialog did not
+even close.
+
+No migration creates an RFI or meeting table, so there is nothing to wire the
+form to. Both tabs now say the feature is not built and why, which is the honest
+state; US-313 is filed for building it, with a note to check
+`project_communications` first rather than adding a table, and to fold meetings
+into `/calendar` rather than duplicating it. That story also carries a fifth AC:
+`src/pages/CommunicationHub.tsx` is a *second* 445-line communication page that
+reads real project messages and is imported by nothing.
+
+Removing the shells took `CommunicationHub.tsx` from 354 lines to 184 - the two
+handlers, the two dead state values, the `RFI` and `Meeting` interfaces,
+`getStatusColor`, `getPriorityColor`, an unused toast and date picker, and an
+empty `useEffect`.
+
+7 of the 22 unwired handlers settled. TypeScript baseline ratcheted 669 to 663.
+Fifteen remain, led by `OfflineManager.saveToOfflineStorage` and
+`OfflineCapabilities.addOfflineData`, where the offline managers do not save
+anything offline.
+
+10 cases in `src/lib/__tests__/communicationHubStubs.test.ts`, mutation-tested
+four ways. Full suite: 126 files, 2749 passing, 2 skipped.

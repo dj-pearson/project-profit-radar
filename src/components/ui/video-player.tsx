@@ -106,14 +106,11 @@ export function VideoPlayer({
     }
   }, []);
 
-  // Handle seek
-  const handleSeek = useCallback((value: number[]) => {
-    const newTime = value[0];
-    if (videoRef.current) {
-      videoRef.current.currentTime = newTime;
-      setCurrentTime(newTime);
-    }
-  }, []);
+  // Seeking is handled by handleProgressClick below, which is what the progress
+  // bar's onClick calls. A Slider-shaped handleSeek((value: number[])) also
+  // existed here and was never bound to anything - the Slider in this file is
+  // the volume control (US-296). Removed rather than wired: it was a duplicate,
+  // not a missing feature.
 
   // Handle progress bar click
   const handleProgressClick = useCallback(
