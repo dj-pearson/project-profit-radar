@@ -3189,3 +3189,60 @@ policy. Their origins were already explicitly allowlisted and none relied on
 
 One trap for any follow-up: **do not add 'strict-dynamic'.** It makes the host
 allowlist be ignored, which would break GTM, Stripe and Google sign-in.
+
+================================================================================
+2026-08-27 — sweeping for unmounted security code, and what it turned up
+================================================================================
+
+Three times this session I found code that looks like a security control, is not
+wired up, and would do harm if it were: US-296 (MFA stubs minting Math.random()
+backup codes), US-299 (a hook whose audit inserts RLS has always rejected),
+US-301 (a dead second CSP that would break checkout). So I swept for the shape
+rather than waiting to trip over the fourth.
+
+### The question that makes the sweep useful
+Not "is this dead code" — that is a tidiness question and there are 295 candidate
+modules, most of them boring. The useful question is **"what happens if someone
+adopts it?"** Dead security code is adopted on the strength of its name, by
+someone who assumes a file called ProtectedRoute protects routes.
+
+### Two route guards, and the dead one failed open
+- `src/components/ProtectedRoute.tsx` — live, exports RouteGuard, wired up in
+  routes/appRoutes.tsx, fails closed, has a redirect circuit-breaker.
+- `src/components/auth/ProtectedRoute.tsx` — imported nowhere. Both role checks:
+
+      if (role && !allowedRoles.includes(role))
+
+  which **skips the comparison entirely when role is null or undefined**. A
+  signed-in user whose profile had not loaded passed every role gate.
+  RequirePermission had the same shape.
+
+Nothing is exposed today, because the live guard is the one in use. But the dead
+one lives under `auth/`, which reads as the more canonical of the two paths, and
+its Outlet-based API is the shape react-router's own docs encourage — so it is
+exactly what a new contributor reaches for.
+
+Both now fail closed, with tests. Mutation-checked: restoring the old condition
+fails 3 of 8 assertions.
+
+### An always-allow rate limiter
+`SecurityService.checkRateLimit` returned `{ allowed: true, remainingAttempts: 5 }`
+unconditionally, and its catch also returned `{ allowed: true }`. A caller asking
+"may this proceed?" always got yes. It now throws, so anyone wiring it up finds
+out in development rather than shipping a control that does nothing. Real rate
+limiting is server-side in `_shared/rate-limiter.ts` — the only place it can be
+trusted, since a browser-side limiter is controlled by the caller.
+
+### On the 295 number
+Do not quote it. The detector counts named imports and JSX tags; it does not
+follow `React.lazy(() => import(...))` or dynamic `import()` specifiers, so an
+unknown share are false positives — `AuthCallback` and the live `ProtectedRoute`
+both showed up initially. What is trustworthy is the ~26 security-named entries,
+because those were checked individually. Fixing the detector before quoting the
+count is in US-302.
+
+### Why fixed in place rather than deleted
+The sandbox classifier blocks file deletion, as it did for the MFA stubs in
+US-296. So the hazards are neutralised where they sit — fail-closed logic, a
+throwing stub, a comment pointing at the live equivalent. Deleting remains the
+right end state and is US-302's first AC.

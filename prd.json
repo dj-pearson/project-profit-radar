@@ -4768,6 +4768,21 @@
       "priority": 3,
       "passes": false,
       "notes": "FOUND 2026-08-27 while doing US-202. Same family as US-296 (unreferenced MFA stubs with fake backup codes) and US-299 (a security hook that has never recorded anything): code that looks like a security control, is not wired up, and would do harm if it were. Worth a broader sweep for that pattern - unmounted hooks and unimported components under src/ whose names suggest security."
+    },
+    {
+      "id": "US-302",
+      "title": "Consolidate the two ProtectedRoute modules and triage unreferenced security code",
+      "description": "As a maintainer, I want one route guard and no unreferenced security-named modules, because code that reads as protection does not get audited and eventually gets adopted on the strength of its name. TWO ROUTE GUARDS EXIST. src/components/ProtectedRoute.tsx exports RouteGuard (aliased ProtectedRoute) and is the live one, wired up in src/routes/appRoutes.tsx; it fails closed and has a redirect circuit-breaker and recovery UI. src/components/auth/ProtectedRoute.tsx exports ProtectedRoute/RoleProtectedRoute/RequirePermission, is imported nowhere, and had fail-open role checks until they were fixed. Keeping both is the hazard: the dead one sits under auth/, which reads as the more canonical path, and its Outlet-based API is the shape react-router documentation encourages, so it is what a new contributor reaches for. Pick one and delete the other. MORE BROADLY: an AST sweep found 295 of 933 modules under src/ whose every export is unreferenced. That number is not trustworthy on its own - the detector does not follow React.lazy or dynamic import() specifiers, so some are false positives - but ~26 of them are security-named and those deserve individual triage: routeSecurity.tsx, routeConfig.ts, SecurityService.ts, sessionFingerprint.ts, sriVerification.ts, secureLogger.ts, useMFASetup, useActiveSessions, useAPIKeys, SecurityAuditPanel, IncidentResponseDashboard, MFAVerificationModal, AuditLoggingCompliance, PermissionManagement, MockAuthContext, and others. The triage question is not 'is this dead' but 'what happens if someone adopts it' - which is how the fail-open guards and the always-allow rate limiter were found.",
+      "acceptanceCriteria": [
+        "Exactly one ProtectedRoute module remains; the other is deleted and any references updated",
+        "The detector is improved to follow React.lazy and dynamic import() before its count is quoted",
+        "Each security-named unreferenced module is triaged as delete / wire up / make fail-closed, with the decision recorded",
+        "No unreferenced module returns a permissive answer from a security-named API",
+        "A guard rejects a newly added module under src/ that is security-named and unreferenced"
+      ],
+      "priority": 3,
+      "passes": false,
+      "notes": "FILED 2026-08-27. Fourth instance of the pattern this session, after US-296 (unreferenced MFA stubs minting Math.random() backup codes), US-299 (a security hook whose inserts RLS has always rejected), and US-301 (a dead second CSP that would break checkout). ALREADY FIXED, so this story is the consolidation rather than the bugs: auth/ProtectedRoute's two fail-open role checks now fail closed with a mutation-checked test, and SecurityService.checkRateLimit now throws instead of always answering allowed. FILE DELETION was not possible in the session that found this - the sandbox classifier blocks it - which is why the hazards were neutralised in place instead. Deleting is still the right end state."
     }
   ]
 }
