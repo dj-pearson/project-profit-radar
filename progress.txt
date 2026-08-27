@@ -4807,3 +4807,100 @@ anywhere needs no entry, and exactly two bounded exemptions — the historical
 scripts until AC2 deletes them, and the two guard scripts themselves.
 Mutation-tested both ways: a real command in a shell script is caught, a comment
 mentioning it is not.
+
+---
+
+## US-303: the calculator funnel has never captured a lead
+
+The story asked whether lead scoring is a feature. It is: `/calculator` and
+`/profitability-calculator` are live marketing routes. So the two missing
+functions get written rather than the call sites deleted. Writing them turned
+out to be the small half.
+
+I stood up Postgres 16 locally, applied
+`20250710000000_profitability_calculator_leads.sql` (the only migration that
+touches these tables), and ran the visitor journey as the `anon` role. Three
+separate failures reproduce, none of which any test or type could have seen:
+
+    INSERT INTO calculator_calculations (session_id, ...) VALUES ('calc_1756000000000_abc123xyz', ...)
+    ERROR:  invalid input syntax for type uuid: "calc_1756000000000_abc123xyz"
+
+`calculator_calculations.session_id` is a uuid FK to `calculator_sessions(id)`,
+but `generateSessionId()` returns `calc_<epoch>_<suffix>` and that is what the
+client sends. The error was never read, so no calculation has ever been stored.
+
+    INSERT INTO calculator_leads (email, ...) VALUES ('lead@example.com', ...) RETURNING id
+    ERROR:  new row violates row-level security policy for table "calculator_leads"
+
+anon holds INSERT and neither SELECT nor UPDATE. The same statement without
+`RETURNING` succeeds; with `ON CONFLICT DO UPDATE` it fails too. The client's
+upsert used both, so `trackEmailCapture` threw for every visitor and returned
+null, which is why `increment_lead_score` would never have fired even if it had
+existed. I had guessed this was a filtered `RETURNING` yielding zero rows and a
+`PGRST116`; it is a hard RLS rejection. Both halves verified independently.
+
+    UPDATE calculator_sessions SET pdf_downloaded = true WHERE session_id = '...'
+    -- 0 rows, no error
+
+No anon UPDATE policy at all. `get_calculator_funnel_metrics` reads exactly
+`email_captured`, `pdf_downloaded`, `trial_clicked` and `calculations_performed`,
+so the funnel dashboard has only ever shown zeros.
+
+And `trackReferral` built its update with `supabase.raw('referral_count + 1')`.
+There is no `raw()` on the supabase-js v2 client (`typeof client.raw` is
+`undefined`), so evaluating the argument threw before `.update()` was reached.
+
+`20260827110000_calculator_lead_scoring.sql` adds six SECURITY DEFINER entry
+points instead of the anon UPDATE and SELECT policies the client-side version
+would have needed. anon has no identity, so a policy letting it update
+`calculator_sessions` is a policy letting anyone update anyone's row. A definer
+function does the narrow thing: flip one named boolean, add clamped points to
+one lead. `record_calculator_session_event` matches the event name against a
+fixed list, so the writable column set is exactly those five.
+
+On AC2's "cannot score another company's leads": `calculator_leads` has no
+`company_id`. There is no cross-company boundary here to enforce, and saying
+otherwise would be theatre. The boundary that exists is the lead uuid, which a
+visitor only obtains for their own lead. What I could do is cap the damage from
+a guessed one, so points clamp to 1..25 and the score to 0..1000: an increment,
+not an arbitrary write.
+
+Verified end to end as `anon`: score moves 10 (capture) → 15 → 23 → 43, every
+funnel flag sticks, the calculation stores with the FK resolved, and
+`get_calculator_funnel_metrics` returns 1/1/1/1 at 100% instead of zeros.
+
+My own tests then caught two bugs in the migration. `GREATEST` and `LEAST`
+ignore NULL arguments rather than propagating them, so `GREATEST(-999.99, NULL)`
+is `-999.99`, so an absent profit margin was being stored as the floor. That is
+now a STRICT `calculator_clamp()` helper, and every numeric column is bounded to
+its own precision, because this is a public endpoint and a value wider than
+`NUMERIC(10,2)` would take the whole insert down. Second, my first clamp test
+read the lead id with a subquery running as `anon`, got NULL, and reported a
+false pass, which was itself a fair demonstration that anon cannot read the
+table.
+
+`scripts/check-rpc-definitions.mjs` is the guard this needed. Every
+`supabase.rpc('name')` in `src/` and `supabase/functions/` must name a function
+some migration creates; the migration SQL is the source of truth, so a function
+that exists only because someone typed it into the live database is not a pass:
+that is US-248's problem and this makes it visible. 52 distinct names called,
+two baselined with reasons:
+
+- `nextval`: `useAccounting.ts` and `BillPayments.tsx` call
+  `rpc('nextval', { sequence_name: ... })` for journal-entry, bill and
+  bill-payment numbering. It is `pg_catalog.nextval(regclass)`: wrong schema
+  (PostgREST does not expose `pg_catalog`) and wrong argument. Both independently
+  make it unresolvable. Every caller does `if (seqError) throw seqError`, so it
+  fails loudly. Needs a public wrapper and its own story.
+- `apply_bill_payment`: no migration defines it; the call site already falls
+  back to a direct update whose error is read and surfaced, so a payment cannot
+  report as applied while the balance sits stale.
+
+Mutation-tested three ways: a call to an invented name fails, deleting the new
+migration fails all five of its calls, and a baseline entry for something that
+now exists fails as stale. The 18 new cases in
+`src/lib/__tests__/calculatorAnalytics.test.ts` drive the real module rather than
+a copy of it, and were mutation-tested too.
+
+Silent-write backlog ratcheted 214 → 206. Full suite: 120 files, 2660 passing,
+2 skipped, 28.6s.

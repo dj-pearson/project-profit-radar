@@ -142,14 +142,20 @@ export default function ProfitabilityCalculator() {
       data.phone
     );
 
-    if (capturedLeadId) {
-      setLeadId(capturedLeadId);
-      toast.success('Email captured! Downloading your report...');
+    if (!capturedLeadId) {
+      // Until US-303 this branch was silent: capture failed for every visitor
+      // (RLS rejected the upsert) and the modal simply sat there with no
+      // report and no explanation. Say what happened instead.
+      toast.error('We could not save your email, so the report was not sent. Please try again.');
+      return;
+    }
 
-      // Auto-download PDF
-      if (results) {
-        await handlePDFDownload();
-      }
+    setLeadId(capturedLeadId);
+    toast.success('Email captured! Downloading your report...');
+
+    // Auto-download PDF
+    if (results) {
+      await handlePDFDownload();
     }
   };
 

@@ -67,6 +67,10 @@ node scripts/check-fake-success.mjs || exit 1
 #     match your assertion; a deploy should change the DB to match the repo.
 bash scripts/check-no-migration-repair.sh || exit 1
 
+# 3q. RPC definitions (US-303) — a supabase.rpc() naming a function no migration
+#     creates fails as an unread error the types cannot see.
+node scripts/check-rpc-definitions.mjs || exit 1
+
 # 4. Migration hygiene + RLS guards (US-235 / US-239 / US-237).
 bash scripts/check-migration-filenames.sh || exit 1
 bash scripts/check-no-stray-function-copies.sh || exit 1

@@ -190,6 +190,9 @@ jobs:
       - name: No migration-repair in a deploy path (US-248)
         run: bash scripts/check-no-migration-repair.sh
 
+      - name: RPC-definition guard (US-303)
+        run: node scripts/check-rpc-definitions.mjs
+
       - name: Migration filename guard (US-235)
         run: bash scripts/check-migration-filenames.sh
 
