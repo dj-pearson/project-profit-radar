@@ -3940,3 +3940,48 @@ navigate]`. An effect with side effects that keys on object identity re-fires fo
 free the moment any caller hands it a fresh reference.
 
 22 tests in AccessibleForm, 4 in Settings, both previously infinite.
+
+## US-300 — the eight silent writes that were actually load-bearing
+
+AC2 names the categories: money, payroll, compliance evidence, identity. Eight
+of the 55 web-app sites fall in them, and every one had a consequence.
+
+**Journal entries and bills** (`useAccounting.ts:266`, `:431`). Both create a
+header, insert lines, and roll the header back if the lines fail. Neither read
+the rollback's own error. A failed rollback leaves a journal entry header with no
+lines — an unbalanced entry sitting in the ledger — or a bill that reconciles
+against nothing. Both now say what actually happened and name the id to clean up.
+
+**Bill payments** (`BillPayments.tsx:259`). When `apply_bill_payment` fails, the
+fallback bumps `amount_paid` directly. That fallback runs *only* because the RPC
+already failed, so it is the last thing between a recorded payment and a bill
+that still looks unpaid — and its error was discarded, so `onSuccess` reported
+the payment as recorded while the balance never moved. It also skipped the update
+entirely, silently, when the bill wasn't in the loaded set.
+
+**GDPR requests** (`PrivacyControls.tsx:96`, `:146`). These are the worst of the
+batch. Both inserts are the *fallback* path, reached only when the
+`data-subject-export` / `data-subject-delete` edge function has already failed —
+so they are the only record that a statutory request was ever made. Both sat in
+`try { … } catch { /* noop */ }`, which never fired, because supabase-js returns
+its error. A rejected insert fell straight through to:
+
+    "We'll email a copy of your data to the address on file within 30 days,
+     as required by law."
+
+Nothing written, clock not started, user told otherwise. The deletion path was
+the same, telling users their account was scheduled for deletion. Both now say
+plainly that nothing was recorded and point at privacy@brikly.net.
+
+**Impersonation audit** (`useImpersonation.ts:227`). The record of what an admin
+did while acting as another user. Lost silently, in the one place an audit gap
+matters most.
+
+**Consent ledger** (`consentStore.ts:271`). The comment says "Errors are logged
+but swallowed." They were only swallowed. Now logged — and worth watching for one
+shape it will surface: an authenticated session whose `getUser()` fell into its
+`.catch` inserts `user_id: null`, which satisfies neither policy on the table
+(`users_insert_own_consent` requires `user_id = auth.uid()`;
+`anon_insert_session_consent` is granted `TO anon`) and is rejected.
+
+BASELINE 271 → 263. 48 web-app sites and 215 edge-function sites remain.

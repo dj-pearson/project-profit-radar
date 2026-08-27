@@ -262,8 +262,20 @@ export function useCreateJournalEntry() {
         .insert(lines);
 
       if (linesError) {
-        // Rollback: delete the header
-        await supabase.from('journal_entries').delete().eq('id', headerData.id);
+        // Rollback: delete the header. Read the rollback's own error - a
+        // failed rollback leaves a journal entry header with no lines, which
+        // is an unbalanced entry sitting in the ledger, and supabase-js
+        // returns that error rather than throwing it.
+        const { error: rollbackError } = await supabase
+          .from('journal_entries')
+          .delete()
+          .eq('id', headerData.id);
+        if (rollbackError) {
+          throw new Error(
+            `Journal entry lines failed (${linesError.message}) and the header could not be rolled back ` +
+              `(${rollbackError.message}). Entry ${headerData.id} is in the ledger with no lines and must be removed by hand.`,
+          );
+        }
         throw linesError;
       }
 
@@ -427,8 +439,18 @@ export function useCreateBill() {
         .insert(lineItems);
 
       if (linesError) {
-        // Rollback
-        await supabase.from('bills').delete().eq('id', billData.id);
+        // Rollback. As above: a failed rollback leaves a bill with no line
+        // items, which will not reconcile against anything.
+        const { error: rollbackError } = await supabase
+          .from('bills')
+          .delete()
+          .eq('id', billData.id);
+        if (rollbackError) {
+          throw new Error(
+            `Bill line items failed (${linesError.message}) and the bill could not be rolled back ` +
+              `(${rollbackError.message}). Bill ${billData.id} exists with no line items and must be removed by hand.`,
+          );
+        }
         throw linesError;
       }
 

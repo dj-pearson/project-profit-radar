@@ -223,13 +223,24 @@ const hasChecked = useRef(false);
           details,
         };
 
-        // Update session with new action
-        await supabase
+        // Update session with new action. This is the record of what an admin
+        // did while acting as someone else, so a lost write is a gap in the
+        // audit trail exactly where one matters most. The surrounding catch
+        // does not cover it - supabase-js returns its error rather than
+        // throwing (US-300).
+        const { error: logError } = await supabase
           .from('admin_impersonation_sessions')
           .update({
             actions_taken: [...currentActions, newAction],
           })
           .eq('id', session.id);
+        if (logError) {
+          console.error('[impersonation] action was NOT recorded in the session audit', {
+            sessionId: session.id,
+            action,
+            error: logError,
+          });
+        }
       } catch (error) {
         console.error('Error logging action:', error);
       }

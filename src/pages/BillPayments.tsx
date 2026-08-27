@@ -253,15 +253,30 @@ export default function BillPayments() {
         });
 
         if (updateError) {
-          // Fallback: manual update
+          // Fallback: manual update. This runs only because the RPC already
+          // failed, so it is the last thing standing between a recorded
+          // payment and a bill that still looks unpaid. Its error has to be
+          // read - supabase-js returns it - or onSuccess reports the payment
+          // as recorded while the balance never moved.
           const bill = bills?.find((b: BillRecord) => b.id === app.billId);
-          if (bill) {
-            await supabase
-              .from('bills')
-              .update({
-                amount_paid: Number(bill.amount_paid || 0) + app.amountToPay,
-              })
-              .eq('id', app.billId);
+          if (!bill) {
+            throw new Error(
+              `Payment recorded but bill ${app.billId} was not in the loaded set, so its balance was not updated. ` +
+                `Apply it manually.`,
+            );
+          }
+          const { error: fallbackError } = await supabase
+            .from('bills')
+            .update({
+              amount_paid: Number(bill.amount_paid || 0) + app.amountToPay,
+            })
+            .eq('id', app.billId);
+          if (fallbackError) {
+            throw new Error(
+              `Payment recorded but bill ${app.billId} could not be updated ` +
+                `(RPC: ${updateError.message}; direct update: ${fallbackError.message}). ` +
+                `The bill still shows the old balance and must be reconciled by hand.`,
+            );
           }
         }
       }
