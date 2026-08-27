@@ -17,6 +17,10 @@ node scripts/check-cors-wildcards.mjs || exit 1
 # 3c. Input-validation guard (US-241) — no new unvalidated req.json() body.
 node scripts/check-edge-input-validation.mjs || exit 1
 
+# 3d. Privilege-write guard (US-297) — no body spread into a write, and no
+#     unreviewed privilege/tenancy column set from request input.
+node scripts/check-edge-privilege-writes.mjs || exit 1
+
 # 4. Migration hygiene + RLS guards (US-235 / US-239 / US-237).
 bash scripts/check-migration-filenames.sh || exit 1
 bash scripts/check-no-stray-function-copies.sh || exit 1

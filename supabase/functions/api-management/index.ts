@@ -5,6 +5,18 @@ import { getCorsHeaders } from '../_shared/secure-cors.ts';
 import { WRITABLE_PROJECT_COLUMNS, pickAllowed } from '../_shared/writable-columns.ts';
 // Using built-in crypto API instead
 
+// The complete set of grants an API key can carry. validateApiRequest() checks
+// membership of this list, so anything outside it is dead weight on the key.
+const API_PERMISSIONS = new Set([
+  'projects:read', 'projects:write',
+  'estimates:read',
+  'invoices:read',
+]);
+
+// Per-key hourly ceiling, enforced by api-auth. Callers may request less.
+const DEFAULT_API_RATE_LIMIT_PER_HOUR = 1000;
+const MAX_API_RATE_LIMIT_PER_HOUR = 10000;
+
 interface ApiKeyValidation {
   isValid: boolean;
   company_id?: string;
@@ -140,6 +152,28 @@ async function createApiKey(corsHeaders: Record<string, string>, req: Request, s
     );
   }
 
+  // permissions reaches validateApiRequest() as the API key's grant. An unknown
+  // string there matches nothing, so a typo silently mints a key that can do
+  // less than its owner thinks — reject it instead of storing it.
+  const grants = Array.isArray(permissions) ? permissions : [];
+  const unknown = grants.filter((g: unknown) => !API_PERMISSIONS.has(g as string));
+  if (unknown.length) {
+    return new Response(
+      JSON.stringify({
+        error: `Unknown permission(s): ${unknown.join(', ')}. Valid: ${[...API_PERMISSIONS].join(', ')}`
+      }),
+      { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
+  }
+
+  // api-auth enforces rate_limit_per_hour as the per-key ceiling, and this
+  // value was stored verbatim — so an admin could mint a key with no practical
+  // limit and use the platform as hard as they liked. Clamp it.
+  const requestedRate = Number(rate_limit_per_hour);
+  const rateLimit = Number.isFinite(requestedRate) && requestedRate > 0
+    ? Math.min(Math.floor(requestedRate), MAX_API_RATE_LIMIT_PER_HOUR)
+    : DEFAULT_API_RATE_LIMIT_PER_HOUR;
+
   const { data: profile, error: profileError } = await supabase
     .from('user_profiles')
     .select('company_id, role')
@@ -174,9 +208,9 @@ async function createApiKey(corsHeaders: Record<string, string>, req: Request, s
       key_name,
       api_key_hash: keyHash,
       api_key_prefix: keyPrefix,
-      permissions: permissions || [],
+      permissions: grants,
       expires_at: expires_at || null,
-      rate_limit_per_hour: rate_limit_per_hour || 1000,
+      rate_limit_per_hour: rateLimit,
       created_by: userData.user.id
     })
     .select()

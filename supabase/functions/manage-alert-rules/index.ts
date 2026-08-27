@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.3";
 import { getCorsHeaders } from '../_shared/secure-cors.ts';
+import { WRITABLE_ALERT_RULE_COLUMNS, pickAllowed } from '../_shared/writable-columns.ts';
 
 serve(async (req) => {
   const corsHeaders = getCorsHeaders(req);
@@ -70,9 +71,13 @@ serve(async (req) => {
             { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
         }
 
+        // Allowlisted rather than spread: the raw rule_data let the caller set
+        // created_by and id too. This endpoint is root_admin only, so that was
+        // hygiene rather than a hole, but the create path already picks its
+        // columns explicitly and the two should not disagree.
         const { data: updated } = await supabaseClient
           .from('seo_alert_rules')
-          .update(rule_data)
+          .update(pickAllowed(rule_data, WRITABLE_ALERT_RULE_COLUMNS))
           .eq('id', rule_id)
           .select()
           .single();

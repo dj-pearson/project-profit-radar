@@ -41,6 +41,16 @@ export const WRITABLE_TIME_ENTRY_COLUMNS = [
   'break_duration',
 ] as const;
 
+/** Columns a caller may set on `seo_alert_rules` (root_admin-only endpoint). */
+export const WRITABLE_ALERT_RULE_COLUMNS = [
+  'rule_name', 'rule_type', 'threshold', 'severity', 'notification_channel', 'is_active',
+] as const;
+
+/** Columns a caller may set on `seo_monitoring_schedules` (root_admin-only endpoint). */
+export const WRITABLE_SCHEDULE_COLUMNS = [
+  'schedule_name', 'target_url', 'audit_type', 'frequency', 'is_active',
+] as const;
+
 /** Copy only the allowlisted keys out of a request body. */
 export function pickAllowed(
   body: Record<string, unknown>,

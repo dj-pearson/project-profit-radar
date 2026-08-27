@@ -45,25 +45,33 @@ serve(async (req) => {
     const billingPeriodStart = new Date(now.getFullYear(), now.getMonth(), 1);
     const billingPeriodEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0);
 
-    // Determine the target company_id and user_id
-    let targetCompanyId = company_id;
-    const targetUserId = user_id || user.id;
+    // SECURITY: company_id and user_id used to be taken from the body when
+    // present, and usage_metrics carries a "System can manage usage metrics"
+    // FOR ALL USING (true) policy (see the US-237 backlog), so RLS does not
+    // scope writes to the caller's company. Any authenticated user could
+    // therefore book usage against any company — and usage_metrics feeds
+    // usage-billing/generate-usage-invoice. Both are now derived from the
+    // caller's own profile; the body fields are only logged when they disagree.
+    const { data: profile } = await supabaseClient
+      .from("user_profiles")
+      .select("company_id")
+      .eq("id", user.id)
+      .single();
 
-    if (!targetCompanyId) {
-      // Get user's company from profile
-      const { data: profile } = await supabaseClient
-        .from("user_profiles")
-        .select("company_id")
-        .eq("id", user.id)
-        .single();
-
-      if (profile?.company_id) {
-        targetCompanyId = profile.company_id;
-      }
-    }
+    const targetCompanyId = profile?.company_id;
+    const targetUserId = user.id;
 
     if (!targetCompanyId) {
       throw new Error("Could not determine company_id for usage tracking");
+    }
+
+    if (company_id && company_id !== targetCompanyId) {
+      logStep("Ignoring caller-supplied company_id", {
+        claimed: company_id, actual: targetCompanyId, userId: user.id
+      });
+    }
+    if (user_id && user_id !== targetUserId) {
+      logStep("Ignoring caller-supplied user_id", { claimed: user_id, actual: targetUserId });
     }
 
     // Check if usage record exists for this period

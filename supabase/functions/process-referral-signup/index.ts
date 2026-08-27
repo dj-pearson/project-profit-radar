@@ -26,10 +26,54 @@ serve(async (req) => {
   try {
     logStep("Function started");
 
-    const { referee_email, referee_company_id, subscription_tier, subscription_duration_months } = await req.json();
+    const body = await req.json();
+    const { referee_email, referee_company_id } = body;
 
     if (!referee_email || !referee_company_id) {
       throw new Error("Missing referee_email or referee_company_id");
+    }
+
+    // SECURITY: this endpoint is verify_jwt = false and runs on the service
+    // role, so everything in the body is attacker-controlled. It used to take
+    // subscription_tier and subscription_duration_months from the caller and
+    // use the duration as the ONLY gate on minting affiliate_rewards rows —
+    // anyone who knew an email with a pending referral could claim rewards for
+    // a subscription that never existed. Both facts now come from the
+    // subscribers table. The body may still carry them; they are only logged
+    // when they disagree, never trusted.
+    const { data: subscriber } = await supabaseClient
+      .from('subscribers')
+      .select('user_id, subscribed, subscription_tier, billing_period')
+      .eq('email', referee_email)
+      .maybeSingle();
+
+    const subscription_tier = subscriber?.subscribed ? subscriber.subscription_tier : null;
+    const subscription_duration_months = subscriber?.subscribed
+      ? (subscriber.billing_period === 'annual' ? 12 : 1)
+      : null;
+
+    if (body.subscription_tier && body.subscription_tier !== subscription_tier) {
+      logStep("Ignoring caller-supplied subscription_tier", {
+        claimed: body.subscription_tier, actual: subscription_tier
+      });
+    }
+
+    // SECURITY: referee_company_id lands on the referral row and becomes the
+    // company_id of the referee's reward, so it cannot be taken on trust
+    // either. It must be the company the referee's own profile points at.
+    if (subscriber?.user_id) {
+      const { data: refereeProfile } = await supabaseClient
+        .from('user_profiles')
+        .select('company_id')
+        .eq('id', subscriber.user_id)
+        .maybeSingle();
+
+      if (refereeProfile && refereeProfile.company_id !== referee_company_id) {
+        logStep("referee_company_id does not match the referee's profile", {
+          claimed: referee_company_id, actual: refereeProfile.company_id
+        });
+        throw new Error("referee_company_id does not match the referee account");
+      }
     }
 
     logStep("Processing signup", { referee_email, referee_company_id, subscription_tier });

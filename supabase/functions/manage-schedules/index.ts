@@ -2,6 +2,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { initializeAuthContext, errorResponse } from '../_shared/auth-helpers.ts';
 import { getCorsHeaders } from '../_shared/secure-cors.ts';
+import { WRITABLE_SCHEDULE_COLUMNS, pickAllowed } from '../_shared/writable-columns.ts';
 
 const logStep = (step: string, details?: any) => {
   const detailsStr = details ? ` - ${JSON.stringify(details)}` : '';
@@ -94,9 +95,11 @@ serve(async (req) => {
             { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
         }
 
+        // Allowlisted rather than spread — see manage-alert-rules for the
+        // reasoning. root_admin only, but the two paths should agree.
         const { data: updated } = await supabaseClient
           .from('seo_monitoring_schedules')
-          .update(schedule_data)
+          .update(pickAllowed(schedule_data, WRITABLE_SCHEDULE_COLUMNS))
             // CRITICAL: Site isolation
           .eq('id', schedule_id)
           .select()
