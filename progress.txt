@@ -3685,3 +3685,58 @@ policy for the legacy `<userId>/` version objects, joining
 *latest* migration that defines it rather than a filename, so a future
 CREATE OR REPLACE that drops the guard fails the test. Mutation-tested: removing
 either migration fails 2 and 3 tests respectively.
+
+## US-306 — the audit trail was a guestbook
+
+US-299 says, in its own words, that `audit_logs` "has only SELECT policies —
+there is no INSERT policy for authenticated or anon — so every one of those
+inserts is rejected by RLS." I opened the migrations to confirm it before
+deciding how to fix the hook. It is not true, and the truth is worse.
+
+    "System can insert audit logs"   20250703164308   FOR INSERT WITH CHECK (true)
+    "site_audit_logs_insert"         20251203000002   FOR INSERT WITH CHECK (true)
+
+Neither carries a `TO` clause, so both grant PUBLIC. The second dropped the
+SELECT policies it replaced and left this one standing. Permissive policies OR
+together, so `authenticated` and `anon` could both insert whatever they liked —
+and every column an investigator would trust is caller-supplied: `user_id`,
+`company_id`, `action_type`, `risk_level`, `description`, `created_at`.
+
+Fabricate entries against another user. Plant them in another company's trail.
+Bury a real event under ten thousand rows of noise. CLAUDE.md makes logging
+critical actions to the trail non-negotiable, which is precisely what makes a
+forgeable trail load-bearing rather than academic.
+
+This is the third time this session the same shape has turned up: a policy
+*named* "System can …" with no `TO` clause, which reads as service-only and
+grants PUBLIC. `oauth_pending_states` was the first. The naming is doing the
+work the SQL isn't. Worth sweeping the rest of that pattern.
+
+### The fix
+`20260827080000`: RESTRICTIVE `FOR ALL TO authenticated, anon`, `USING (true)`
+so reads stay with the existing SELECT policies, `WITH CHECK (false)` so no
+client write passes. Restrictive because the permissive policies are merged and
+cannot be edited, and because restrictive policies are AND'd — no window where a
+legitimate writer loses its path. `FOR ALL` rather than `FOR INSERT` so a later
+UPDATE or DELETE policy without a `TO` clause can't reopen it from the other
+side.
+
+Nothing legitimate loses a write. Edge writers build SERVICE_ROLE_KEY clients;
+the in-database writers are SECURITY DEFINER functions and the BEFORE INSERT
+trigger from `20250202000012`, which run as the table owner; and the only
+browser-side writer is `useSecurityMonitor`, mounted nowhere.
+
+### My own guard was wrong about it
+`check-rls-policies.mjs` failed the migration — it matched `FOR ALL … USING
+(true)` without noticing `AS RESTRICTIVE`. A restrictive `USING (true)` is a
+no-op for reads; the deny lives in its `WITH CHECK`. Left alone, the guard would
+have pushed the next author towards deleting the very policies that close these
+holes. Fixed, and mutation-tested both directions: a permissive probe is still
+caught, the restrictive one is skipped.
+
+### What it does to US-299
+That story's whole premise inverts. The browser inserts were succeeding, not
+being rejected. What survives is that `useSecurityMonitor` is imported only by
+its own test, so nothing has ever reached the trail from a browser anyway — and
+the rows it builds carry no `company_id`, which is its own tell. With US-306 in
+place the hook cannot be wired up as written.

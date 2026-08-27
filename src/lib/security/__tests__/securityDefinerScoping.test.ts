@@ -84,3 +84,43 @@ describe('company-documents supplementary read policy (US-289)', () => {
     expect(scopes.length).toBeGreaterThanOrEqual(branches.length);
   });
 });
+
+/**
+ * The audit trail must not be writable by a client (US-306).
+ *
+ * Two permissive INSERT policies on audit_logs carry no TO clause, so both
+ * grant PUBLIC, and permissive policies OR together. A trail the audited actor
+ * can write to is not evidence. The restrictive policy is what closes it, and
+ * it can only do so while it stays restrictive - a permissive policy with the
+ * same body would grant rather than deny.
+ */
+describe('audit_logs denies client writes (US-306)', () => {
+  const migration = readdirSync(MIGRATIONS_DIR)
+    .filter((f) => f.includes('restrict_audit_log_client_writes'))
+    .map((f) => readFileSync(join(MIGRATIONS_DIR, f), 'utf8'))
+    .join('\n');
+
+  it('exists', () => {
+    expect(migration, 'audit_logs write-restriction migration missing').toBeTruthy();
+  });
+
+  it('is RESTRICTIVE, so it is AND-ed with the permissive policies it cannot edit', () => {
+    expect(migration).toContain('AS RESTRICTIVE');
+  });
+
+  it('denies every client write and leaves reads to the SELECT policies', () => {
+    expect(migration).toContain('WITH CHECK (false)');
+    expect(migration).toContain('USING (true)');
+  });
+
+  it('applies to the client roles only, never service_role', () => {
+    expect(migration).toContain('TO authenticated, anon');
+    expect(migration).not.toMatch(/TO\s+service_role/);
+  });
+
+  it('covers FOR ALL, not just INSERT', () => {
+    // A later UPDATE or DELETE policy without a TO clause would reopen the
+    // same hole from the other direction.
+    expect(migration).toContain('FOR ALL');
+  });
+});

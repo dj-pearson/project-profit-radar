@@ -31,6 +31,12 @@ for (const f of files) {
   let m;
   while ((m = re.exec(txt))) {
     const body = m[3].toLowerCase();
+    // AS RESTRICTIVE policies are AND'd with the permissive ones rather than
+    // OR'd, so they can only ever narrow access. `USING (true)` on a
+    // restrictive policy is a no-op for reads, not a grant - the deny lives in
+    // its WITH CHECK. Flagging them would push authors towards dropping the
+    // very policies that close these holes (US-306).
+    if (/as\s+restrictive/.test(body)) continue;
     if (/for\s+all/.test(body) && /using\s*\(\s*true\s*\)/.test(body) && !/to\s+service_role/.test(body)) {
       violations.push({
         file: f,
