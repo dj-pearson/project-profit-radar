@@ -135,3 +135,63 @@ describe('the audit trails that were being lost', () => {
     expect(src).toContain('revokeHistoryError');
   });
 });
+
+describe('the second edge batch: email, referrals and accounting sync', () => {
+  it('send-scheduled-emails stops an unsubscribed recipient being requeued', () => {
+    // The cancel failing left the row pending, and the next run emailed the
+    // person who had unsubscribed - the one outcome an unsubscribe prevents.
+    const src = code(F('send-scheduled-emails'));
+    expect(src).toContain('cancelError');
+    expect(src).toContain('Unsubscribed recipient still queued');
+    expect(src).toContain('Opted-out recipient still queued');
+  });
+
+  it('and does not lose the send record into a retry that emails twice', () => {
+    // `const { data: emailSend }` with emailSend.id read below meant a failed
+    // insert threw a TypeError into the catch, which marked the row pending and
+    // resent. The queue row is now marked sent first.
+    const src = code(F('send-scheduled-emails'));
+    expect(src).toMatch(/const \{ data: emailSend, error: sendRecordError \} = await supabaseClient/);
+    expect(src).toContain('SENT BUT NOT RECORDED');
+    expect(src).toContain('SENT BUT STILL QUEUED');
+  });
+
+  it('process-referral-signup will not grant the same reward twice', () => {
+    // Marking the referral rewarded is what stops a rerun re-inserting the
+    // reward rows.
+    const src = code(F('process-referral-signup'));
+    expect(src).toMatch(/const \{ error: rewardedError \} = await supabaseClient/);
+    expect(src).toContain('a rerun would grant them again');
+  });
+
+  it('and does not report success when a reward was never granted', () => {
+    const src = code(F('process-referral-signup'));
+    expect(src).toContain('referrerRewardError');
+    expect(src).toContain('refereeRewardError');
+  });
+
+  it('quickbooks-sync fails loudly when refreshed tokens are not saved', () => {
+    // Intuit rotates the refresh token and invalidates the old one, so losing
+    // the write breaks the integration on the next run.
+    const src = code(F('quickbooks-sync'));
+    expect(src).toMatch(/const \{ error: tokenError \} = await supabaseClient/);
+    expect(src).toContain('invalidated refresh token');
+  });
+
+  it('and its record upserts count only what they actually wrote', () => {
+    // recordsProcessed is incremented per row by the caller, so a discarded
+    // upsert error reported an import that wrote nothing - the exact silent
+    // truncation records_fetched vs records_processed exists to expose.
+    const src = code(F('quickbooks-sync'));
+    for (const table of ['quickbooks_customers', 'quickbooks_items', 'quickbooks_expenses', 'quickbooks_payments']) {
+      expect(src, `${table} upsert still discards its error`).toContain(`${table} upsert failed`);
+    }
+    expect(src).not.toMatch(/^\s*await supabaseClient\s*\n\s*\.from\('quickbooks_(customers|items|expenses|payments)'\)/m);
+  });
+
+  it('and refuses to run without a sync log to record it', () => {
+    const src = code(F('quickbooks-sync'));
+    expect(src).toMatch(/const \{ data: syncLog, error: syncLogError \} = await supabaseClient/);
+    expect(src).toContain('leave no record');
+  });
+});

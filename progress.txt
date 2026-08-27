@@ -5591,3 +5591,51 @@ this class of fix.
 
 15 cases in `supabase/functions/_shared/moneyPathWrites.test.ts`. Full suite: 129
 files, 2809 passing, 2 skipped.
+
+---
+
+## US-300, second edge batch: email, referrals, accounting sync
+
+150 to 130.
+
+**send-scheduled-emails.** Two of its six cancel the queue row when the recipient
+has unsubscribed or opted out of trial email. The error was discarded, so a
+failure left the row `pending` and the next run emailed them anyway - the one
+outcome an unsubscribe exists to prevent. A third is the `status: 'sent'` update
+that stops the same email going out again.
+
+The fourth is subtler and worse:
+
+```js
+const { data: emailSend } = await supabaseClient.from('email_sends').insert({...})
+// ...
+.update({ status: 'sent', email_send_id: emailSend.id, ... })
+```
+
+A failed insert leaves `emailSend` null, so `emailSend.id` throws a TypeError
+into the catch, which marks the queue row `pending` and increments attempts - and
+the next run sends the same email to the same person a second time. The email has
+already left by that point, so it now marks the queue row sent *first* and reports
+`SENT BUT NOT RECORDED`.
+
+**process-referral-signup.** Both reward inserts - free months for referrer and
+referee - the self-referral invalidation, and the flip to `rewarded` that stops a
+rerun inserting the same rewards again. The affiliate-code counters log rather
+than throw, because the entitlements have already landed by then.
+
+**quickbooks-sync.** The token refresh write is the one that breaks the
+integration. Intuit rotates the refresh token on every exchange and invalidates
+the old one, so failing to persist it means the next run authenticates with a
+dead token and the customer has to reconnect by hand - while *this* run carried
+on with the in-memory token and reported success.
+
+The four record upserts are the ones that make the sync a lie. `syncCustomer`,
+`syncItem`, `syncExpense` and `syncPayment` each discarded their error, while the
+caller did `recordsProcessed.customers++` per row regardless. A sync could report
+"142 records processed" having written none. There is already a comment in that
+file explaining that `records_fetched` versus `records_processed` is what makes a
+silently truncated import visible - and the four writes underneath it were
+quietly defeating exactly that. They throw into the caller's per-entity catch now.
+
+22 cases in `supabase/functions/_shared/moneyPathWrites.test.ts`, mutation-tested
+three ways on this batch. Full suite: 129 files, 2816 passing, 2 skipped.

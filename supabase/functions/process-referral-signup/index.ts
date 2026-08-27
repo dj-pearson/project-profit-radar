@@ -108,13 +108,20 @@ serve(async (req) => {
     if (referral.referrer_company_id === referee_company_id) {
       logStep("Self-referral detected, marking as invalid");
 
-      await supabaseClient
+      // The error was discarded, so a self-referral could be reported as
+      // handled while the row stayed open and eligible for rewards later
+      // (US-300).
+      const { error: expireError } = await supabaseClient
         .from('affiliate_referrals')
         .update({
           referral_status: 'expired',
           updated_at: new Date().toISOString()
         })
         .eq('id', referral.id);
+
+      if (expireError) {
+        throw new Error(`Self-referral not marked invalid: ${expireError.message}`);
+      }
 
       return new Response(JSON.stringify({
         success: true,
@@ -152,7 +159,10 @@ serve(async (req) => {
 
         // Create reward for referrer
         if (referral.referrer_reward_months > 0) {
-          await supabaseClient
+          // Free months owed to the referrer. The error was discarded, so a
+          // failure meant someone made a referral and was never paid for it,
+          // while the run reported success (US-300).
+          const { error: referrerRewardError } = await supabaseClient
             .from('affiliate_rewards')
             .insert({
               referral_id: referral.id,
@@ -162,11 +172,15 @@ serve(async (req) => {
               reward_status: 'pending',
               expires_at: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString() // 1 year expiry
             });
+
+          if (referrerRewardError) {
+            throw new Error(`Referrer reward not granted: ${referrerRewardError.message}`);
+          }
         }
 
         // Create reward for referee
         if (referral.referee_reward_months > 0) {
-          await supabaseClient
+          const { error: refereeRewardError } = await supabaseClient
             .from('affiliate_rewards')
             .insert({
               referral_id: referral.id,
@@ -176,10 +190,16 @@ serve(async (req) => {
               reward_status: 'pending',
               expires_at: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString() // 1 year expiry
             });
+
+          if (refereeRewardError) {
+            throw new Error(`Referee reward not granted: ${refereeRewardError.message}`);
+          }
         }
 
-        // Update referral status to rewarded
-        await supabaseClient
+        // Update referral status to rewarded. This is what stops the rewards
+        // above being inserted a second time if this function runs again for
+        // the same referral. The error was discarded (US-300).
+        const { error: rewardedError } = await supabaseClient
           .from('affiliate_referrals')
           .update({
             referral_status: 'rewarded',
@@ -189,8 +209,16 @@ serve(async (req) => {
           })
           .eq('id', referral.id);
 
-        // Update affiliate code successful referrals count
-        await supabaseClient
+        if (rewardedError) {
+          throw new Error(
+            `Rewards were granted but the referral is still unrewarded, so a rerun would grant them again: ${rewardedError.message}`,
+          );
+        }
+
+        // Update affiliate code successful referrals count. Counters, not
+        // entitlements - log rather than throw, since the rewards above have
+        // already landed. The error was discarded (US-300).
+        const { error: counterError } = await supabaseClient
           .from('affiliate_codes')
           .update({
             successful_referrals: referral.affiliate_codes.successful_referrals + 1,
@@ -198,6 +226,10 @@ serve(async (req) => {
             updated_at: new Date().toISOString()
           })
           .eq('id', referral.affiliate_code_id);
+
+        if (counterError) {
+          logStep("Affiliate code counters not updated", { error: counterError.message });
+        }
 
         logStep("Rewards created successfully");
       } else {
