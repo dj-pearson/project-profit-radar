@@ -1,6 +1,11 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { renderHook, act, waitFor } from '@testing-library/react';
-import { useSecurityMonitor, logSecurityEvent, type SecurityEvent } from '../useSecurityMonitor';
+import {
+  useSecurityMonitor,
+  logSecurityEvent,
+  getQueuedSecurityEvents,
+  type SecurityEvent,
+} from '../useSecurityMonitor';
 
 // --- Mocks ---
 
@@ -325,36 +330,60 @@ describe('useSecurityMonitor', () => {
       // We verify it is flushed on interval below.
     });
 
-    it('flushes events on the configured interval', async () => {
-      renderHook(() => useSecurityMonitor({ flushInterval: 10_000 }));
-
-      const event: SecurityEvent = {
-        type: 'recon_behavior',
-        timestamp: Date.now(),
-        details: { uniqueEndpoints: 25 },
-      };
+    it('never writes to the audit trail from the browser', async () => {
+      // This test used to assert the opposite - that events were flushed into
+      // audit_logs on an interval. That write never landed (supabase-js returns
+      // its errors, and the surrounding catch could not see them), and as of
+      // migration 20260827080000 the audit trail refuses client writes
+      // outright, because it carried two permissive PUBLIC INSERT policies and
+      // anyone could forge entries. So the assertion is inverted deliberately:
+      // a client-side insert here is the hole US-306 closed (US-299).
+      renderHook(() => useSecurityMonitor());
+      vi.mocked(supabase.from).mockClear();
 
       act(() => {
-        logSecurityEvent(event);
+        logSecurityEvent({
+          type: 'recon_behavior',
+          timestamp: Date.now(),
+          details: { uniqueEndpoints: 25 },
+        });
       });
 
-      // Before flush interval, insert should not have been called for our event
-      const insertMock = vi.mocked(supabase.from('audit_logs').insert);
-      insertMock.mockClear();
-
-      // Advance past flush interval
       await act(async () => {
-        vi.advanceTimersByTime(10_001);
-        // requestIdleCallback falls back to setTimeout(cb, 1)
-        vi.advanceTimersByTime(5);
+        vi.advanceTimersByTime(60_000);
       });
 
-      // The flush should have triggered a call to supabase
-      expect(supabase.from).toHaveBeenCalledWith('audit_logs');
+      expect(supabase.from).not.toHaveBeenCalled();
     });
 
-    it('flushes events on beforeunload', async () => {
+    it('keeps the event, so a real sink can be wired to it later', () => {
+      const before = getQueuedSecurityEvents().length;
+      act(() => {
+        logSecurityEvent({
+          type: 'dom_injection_attempt',
+          timestamp: Date.now(),
+          details: { selector: 'script' },
+        });
+      });
+      expect(getQueuedSecurityEvents().length).toBe(before + 1);
+    });
+
+    it('bounds the queue, since nothing drains it', () => {
+      act(() => {
+        for (let i = 0; i < 260; i += 1) {
+          logSecurityEvent({ type: 'devtools_open', timestamp: i, details: {} });
+        }
+      });
+      // An unbounded array fed by devtools detection is a slow leak on a tab
+      // left open all day.
+      expect(getQueuedSecurityEvents().length).toBeLessThanOrEqual(200);
+    });
+
+    it('does not write on beforeunload either', async () => {
+      // Same inversion as above: this asserted a flush to audit_logs on unload.
+      // There is no flush, because there is no sink (US-299).
       renderHook(() => useSecurityMonitor());
+      vi.mocked(supabase.from).mockClear();
 
       act(() => {
         logSecurityEvent({
@@ -364,17 +393,15 @@ describe('useSecurityMonitor', () => {
         });
       });
 
-      // Simulate page unload
       act(() => {
         window.dispatchEvent(new Event('beforeunload'));
       });
 
-      // Allow idle callback fallback to run
       await act(async () => {
         vi.advanceTimersByTime(5);
       });
 
-      expect(supabase.from).toHaveBeenCalledWith('audit_logs');
+      expect(supabase.from).not.toHaveBeenCalled();
     });
   });
 

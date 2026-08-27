@@ -7,10 +7,32 @@
  * - DOM injection attempts
  * - DevTools open detection
  *
- * Uses batched logging with requestIdleCallback for minimal performance impact.
+ * Detection only. Events reach the `onEvent` callback and go nowhere else, and
+ * the hook is mounted nowhere in the app today.
+ *
+ * IT DOES NOT PERSIST ANYTHING, and it never did (US-299/US-306). It used to
+ * batch events and insert them into `audit_logs` straight from the browser,
+ * wrapped in `try { … } catch { }` with the comment "Silently fail - security
+ * logging must not break the app". Two things were wrong with that:
+ *
+ *   1. supabase-js RETURNS its errors rather than throwing, so the catch never
+ *      saw a rejected insert. The failure was invisible by construction.
+ *   2. The rows it built carried no `company_id`, which is its own tell that
+ *      nothing ever exercised the path.
+ *
+ * And as of migration 20260827080000 the audit trail refuses client writes
+ * outright - audit_logs had two permissive PUBLIC INSERT policies, so any
+ * browser session, signed in or not, could forge entries. A trail the audited
+ * actor can write is not a trail.
+ *
+ * So the sink is gone rather than left looking functional. If these events are
+ * worth collecting, they go through an edge function with the service role, the
+ * way every other audit write in this codebase does (see
+ * supabase/functions/_shared/audit-log.ts). Wiring `onEvent` to a fetch of such
+ * a function is the whole remaining job. Do NOT restore a direct client insert:
+ * that is the hole US-306 closed.
  */
 import { useEffect, useRef, useCallback } from 'react';
-import { supabase } from '@/integrations/supabase/client';
 
 // --- Types ---
 
@@ -35,8 +57,6 @@ interface SecurityMonitorOptions {
   domMonitoring?: boolean;
   /** Enable devtools detection (default: true) */
   devtoolsMonitoring?: boolean;
-  /** Batch flush interval in ms (default: 10000) */
-  flushInterval?: number;
   /** Callback when a security event is detected */
   onEvent?: (event: SecurityEvent) => void;
 }
@@ -47,82 +67,29 @@ const AUTH_FAIL_THRESHOLD = 3;
 const AUTH_FAIL_WINDOW_MS = 60_000;
 const RECON_ENDPOINT_THRESHOLD = 20;
 const RECON_WINDOW_MS = 30_000;
-const DEFAULT_FLUSH_INTERVAL = 10_000;
-
-// --- Idle callback shim ---
-
-const scheduleIdle =
-  typeof window !== 'undefined' && typeof window.requestIdleCallback === 'function'
-    ? window.requestIdleCallback
-    : (cb: () => void) => setTimeout(cb, 1) as unknown as number;
-
-const cancelIdle =
-  typeof window !== 'undefined' && typeof window.cancelIdleCallback === 'function'
-    ? window.cancelIdleCallback
-    : (id: number) => clearTimeout(id);
 
 // --- Shared event queue (singleton across hook instances) ---
-
+//
+// Bounded, because nothing drains it any more: logSecurityEvent() below is a
+// public export that appends, and with the audit_logs sink removed the queue is
+// only a short in-memory record for whoever wires a real one up. An unbounded
+// array fed by devtools-open detection is a slow leak on a tab left open all
+// day. The idle-callback shim that used to schedule the flush went with it.
+const MAX_QUEUED_EVENTS = 200;
 const eventQueue: SecurityEvent[] = [];
-let flushTimerId: ReturnType<typeof setInterval> | null = null;
-let instanceCount = 0;
-
-async function flushEvents(): Promise<void> {
-  if (eventQueue.length === 0) return;
-
-  const batch = eventQueue.splice(0, eventQueue.length);
-
-  scheduleIdle(() => {
-    sendBatchToServer(batch).catch(() => {
-      // Re-queue on failure — drop if queue grows too large to avoid memory leak
-      if (eventQueue.length < 200) {
-        eventQueue.push(...batch);
-      }
-    });
-  });
-}
-
-async function sendBatchToServer(batch: SecurityEvent[]): Promise<void> {
-  try {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
-
-    const rows = batch.map((evt) => ({
-      user_id: user.id,
-      action_type: evt.type,
-      resource_type: 'security',
-      risk_level: getRiskLevel(evt.type),
-      description: `Security event: ${evt.type}`,
-      metadata: JSON.stringify(evt.details),
-      user_agent: typeof navigator !== 'undefined' ? navigator.userAgent : '',
-      created_at: new Date(evt.timestamp).toISOString(),
-    }));
-
-    await supabase.from('audit_logs').insert(rows);
-  } catch {
-    // Silently fail — security logging must not break the app
-  }
-}
-
-function getRiskLevel(type: SecurityEventType): string {
-  switch (type) {
-    case 'brute_force_attempt':
-      return 'critical';
-    case 'dom_injection_attempt':
-      return 'critical';
-    case 'recon_behavior':
-      return 'high';
-    case 'devtools_open':
-      return 'medium';
-    default:
-      return 'medium';
-  }
-}
 
 // --- Public logging function ---
 
 export function logSecurityEvent(event: SecurityEvent): void {
   eventQueue.push(event);
+  if (eventQueue.length > MAX_QUEUED_EVENTS) {
+    eventQueue.splice(0, eventQueue.length - MAX_QUEUED_EVENTS);
+  }
+}
+
+/** The events recorded so far this session. Detection only - see the file header. */
+export function getQueuedSecurityEvents(): readonly SecurityEvent[] {
+  return eventQueue;
 }
 
 // --- Hook ---
@@ -133,7 +100,6 @@ export function useSecurityMonitor(options: SecurityMonitorOptions = {}) {
     apiMonitoring = true,
     domMonitoring = true,
     devtoolsMonitoring = true,
-    flushInterval = DEFAULT_FLUSH_INTERVAL,
     onEvent,
   } = options;
 
@@ -287,35 +253,6 @@ export function useSecurityMonitor(options: SecurityMonitorOptions = {}) {
     };
   }, [devtoolsMonitoring, emit]);
 
-  // --- Batch flush lifecycle ---
-
-  useEffect(() => {
-    instanceCount++;
-
-    if (flushTimerId === null) {
-      flushTimerId = setInterval(flushEvents, flushInterval);
-    }
-
-    const handleUnload = () => {
-      flushEvents();
-    };
-
-    window.addEventListener('beforeunload', handleUnload);
-
-    return () => {
-      window.removeEventListener('beforeunload', handleUnload);
-      instanceCount--;
-
-      if (instanceCount <= 0) {
-        if (flushTimerId !== null) {
-          clearInterval(flushTimerId);
-          flushTimerId = null;
-        }
-        flushEvents();
-        instanceCount = 0;
-      }
-    };
-  }, [flushInterval]);
 
   return {
     recordAuthFailure,

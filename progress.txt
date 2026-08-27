@@ -4422,3 +4422,38 @@ to a column render.
 
 Two in twenty-two. The small classes are worth **one** careful pass, not a
 standing belief that they hide bugs.
+
+## US-299 — neither of the two options
+
+The story offered a choice: route the batch through a service-role edge
+function, or delete the hook. I took neither, because the split isn't between
+"finish it" and "bin it" — the detection logic (brute force, API recon, DOM
+injection, devtools) is fine and worth keeping. Only the sink was broken.
+
+So the sink is gone and the detection stays, with the contract made honest.
+Removed: `flushEvents`, `sendBatchToServer`, `getRiskLevel`, the interval timer,
+the `beforeunload` flush, the `requestIdleCallback` shim, the `supabase` import.
+Kept: all four detectors and the `onEvent` callback.
+
+The file header now says plainly that it persists nothing, why the old path
+could never have worked (supabase-js returns its errors, so the catch never saw
+a rejected insert; and the rows carried no `company_id`, which is its own tell
+that nothing exercised it), that `audit_logs` refuses client writes as of
+`20260827080000`, and that wiring `onEvent` to an edge function is the whole
+remaining job — with an explicit *do not restore a direct client insert*.
+
+The shared queue is now bounded at 200. Nothing drains it any more, and an
+unbounded array fed by devtools-open detection is a slow leak on a tab left open
+all day. `getQueuedSecurityEvents()` gives a future sink something to read.
+
+### Two tests asserted the broken behaviour
+`flushes events on the configured interval` and `flushes events on beforeunload`
+both asserted `supabase.from` **was** called with `audit_logs` — pinning a write
+that never landed and that the database now refuses. Both inverted to assert it
+is not called, with the reason in the test body. Plus two new ones for the queue
+bound and retention. 21 pass; removing the bound turns one red.
+
+AC3 ends up satisfied differently than written: rather than surfacing a
+swallowed error, there is no longer a write to fail.
+
+Silent-write baseline 215 → 214.
