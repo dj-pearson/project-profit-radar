@@ -363,8 +363,13 @@ serve(async (req) => {
       userId = newUser.user.id;
       isNewUser = true;
 
-      // Create user profile
-      await supabaseClient.from("user_profiles").insert({
+      // The auth user exists by this point. Without a profile row the user
+      // signs in with no company_id and no role, so get_user_company() returns
+      // null and every RLS policy denies them: logged in, seeing nothing, with
+      // no error anywhere. Delete the orphaned auth user and fail the login
+      // rather than stranding them. supabase-js returns this error rather than
+      // throwing it (US-300).
+      const { error: profileError } = await supabaseClient.from("user_profiles").insert({
         id: userId,
         email: userInfo.email,
         first_name: userInfo.firstName || "",
@@ -372,6 +377,11 @@ serve(async (req) => {
         role: ssoConnection.default_role || "office_staff",
         is_active: true,
       });
+      if (profileError) {
+        console.error("[OAuth] Failed to create user profile:", profileError);
+        await supabaseClient.auth.admin.deleteUser(userId);
+        return Response.redirect(`${siteUrl}/auth?error=user_creation_failed`);
+      }
     }
 
     // Clean up used state

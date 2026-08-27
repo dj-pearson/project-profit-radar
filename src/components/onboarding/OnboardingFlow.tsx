@@ -212,7 +212,12 @@ export const OnboardingFlow = () => {
         const currentPreferences = currentProfile?.preferences || {};
         delete currentPreferences.onboarding_progress;
 
-        await supabase
+        // Mark onboarding done. If this does not land the user is dropped
+        // back into onboarding on their next sign-in having already completed
+        // it - so it is worth telling them, but not worth trapping them here,
+        // which is why the navigate below still runs. supabase-js returns this
+        // error rather than throwing it, so the catch never saw it (US-300).
+        const { error: completionError } = await supabase
           .from('user_profiles')
           .update({
             preferences: {
@@ -221,6 +226,15 @@ export const OnboardingFlow = () => {
             }
           })
           .eq('id', user.id);
+
+        if (completionError) {
+          console.error('Error marking onboarding complete:', completionError);
+          toast({
+            title: 'Setup saved, but not marked complete',
+            description: "You may be asked to run through setup again next time you sign in.",
+            variant: 'destructive',
+          });
+        }
       } catch (error) {
         console.error('Error clearing progress:', error);
       }

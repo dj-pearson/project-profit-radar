@@ -299,11 +299,25 @@ const handler = async (req: Request): Promise<Response> => {
           );
         }
 
-        // Update user profile email
-        await supabaseAdmin
+        // Update user profile email. The auth record has already changed, so
+        // if this does not land the two diverge: the response says
+        // emailChanged: true while notifications and invoices keep going to
+        // the old address. supabase-js returns this error rather than
+        // throwing it (US-300).
+        const { error: profileEmailError } = await supabaseAdmin
           .from('user_profiles')
           .update({ email: result.new_email })
           .eq('id', authUser.id);
+
+        if (profileEmailError) {
+          console.error('[VerifyAuthOTP] Auth email changed but profile did not:', profileEmailError);
+          return new Response(
+            JSON.stringify({
+              error: 'Email partially updated. Sign in with your new address and contact support.',
+            }),
+            { status: 500, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
+          );
+        }
 
         actionResult = {
           verified: true,

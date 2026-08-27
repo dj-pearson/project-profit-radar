@@ -263,8 +263,13 @@ serve(async (req) => {
       userId = newUser.user.id;
       isNewUser = true;
 
-      // Create user profile
-      await supabaseClient.from("user_profiles").insert({
+      // The auth user exists by this point. Without a profile row the user
+      // signs in with no company_id and no role, so get_user_company() returns
+      // null and every RLS policy denies them: logged in, seeing nothing, with
+      // no error anywhere. Delete the orphaned auth user and fail the login
+      // rather than stranding them. supabase-js returns this error rather than
+      // throwing it (US-300).
+      const { error: profileError } = await supabaseClient.from("user_profiles").insert({
         id: userId,
         email: assertion.email,
         first_name: assertion.firstName || "",
@@ -272,6 +277,13 @@ serve(async (req) => {
         role: matchedConnection.default_role || "office_staff",
         is_active: true,
       });
+      if (profileError) {
+        console.error("[SAML] Failed to create user profile:", profileError);
+        await supabaseClient.auth.admin.deleteUser(userId);
+        return Response.redirect(
+          `${Deno.env.get("SITE_URL") || "https://brikly.net"}/auth?error=user_creation_failed`
+        );
+      }
     }
 
     // Create session token

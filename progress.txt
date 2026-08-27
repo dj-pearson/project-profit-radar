@@ -4090,3 +4090,57 @@ no raw insert remains, and leaves the client question to the guard that is
 mutation-tested for it.
 
 BASELINE 242 → 223. 41 web-app and 182 edge sites remain.
+
+### AC2 finished, and the worst thing I have found today
+
+`process-dsar-fulfillment:165` purged `email_preferences` like this:
+
+    await admin.from("email_preferences").delete().eq("user_id", row.user_id)
+      .catch(() => undefined);
+
+`PostgrestBuilder` implements `PromiseLike`. It has `then()` and no `catch()`.
+Calling `.catch()` throws a `TypeError` **before the request is sent**. Verified
+at runtime against the installed postgrest-js rather than inferred:
+
+    typeof b.then  : function
+    typeof b.catch : undefined
+    b.catch(()=>{}) → TypeError: b.catch is not a function
+
+That `TypeError` is raised *after* `admin.auth.admin.deleteUser` has already
+succeeded. So it escaped into the outer catch, the erasure was recorded as a
+failure, a retry note was appended, and after `MAX_RETRIES` the request was
+**auto-denied**. Every run. A GDPR erasure marked denied on an account that had
+in fact been deleted.
+
+Sixth instance of the US-303 bug class, and by far the worst placed. An AST
+sweep for a `.catch()` whose receiver chain reaches `.from()`/`.rpc()` without
+passing an `await` or `.then()` finds this one and no others across `src/` and
+`supabase/functions/`.
+
+### The rest of AC2
+**Identity.** The three SSO first-login `user_profiles` inserts — LDAP, OAuth,
+SAML. The auth user is created, and if the profile insert fails the user signs in
+with no `company_id` and no `role`: `get_user_company()` returns null, every RLS
+policy denies them, and they sit there logged in seeing nothing with no error
+anywhere. All three now delete the orphaned auth user and fail the login.
+
+`verify-auth-otp:303` updates the profile email *after* the auth email has
+already changed. A lost write leaves the two diverged while the response says
+`emailChanged: true` — notifications and invoices keep going to the old address.
+
+**Money.** `change-subscription:186` updates the `subscribers` row after Stripe
+has already been changed. A lost write bills the customer on the new tier while
+the app entitles them to the old one, silently, in whichever direction the change
+went.
+
+**Compliance.** `honorUnsubscribe` now raises rather than confirming an
+unsubscribe that was not recorded — CAN-SPAM gives 10 business days. Worth
+saying: it has no callers. The live path is `email-unsubscribe/index.ts`, which
+already reads its error, so this hardens dead code.
+
+`OnboardingFlow.tsx:215` marks onboarding complete and navigates regardless. A
+lost write drops the user back into onboarding next sign-in having already done
+it. It now warns but still navigates — trapping them there would be worse.
+
+BASELINE 223 → 215. AC2 is met. What remains — 40 web-app, 175 edge — is
+telemetry, analytics, queues and integration bookkeeping.

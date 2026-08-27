@@ -162,11 +162,27 @@ serve(async (req) => {
         }
         // Also purge any optional soft-delete markers or remaining rows
         // that were intentionally orphan-safe.
-        await admin
+        // NOT .catch(() => undefined). PostgrestBuilder implements PromiseLike:
+        // it has then() and no catch(), so calling .catch() threw a TypeError
+        // BEFORE the request was ever sent. That threw out of this block after
+        // admin.auth.admin.deleteUser had already succeeded, so every erasure
+        // landed in the outer catch, accumulated a retry note, and after
+        // MAX_RETRIES was auto-DENIED - a GDPR erasure recorded as denied on an
+        // account that had in fact been deleted. This preference row has also
+        // never been purged. (US-300; same bug class as US-303.)
+        const { error: prefsError } = await admin
           .from("email_preferences")
           .delete()
-          .eq("user_id", row.user_id)
-          .catch(() => undefined);
+          .eq("user_id", row.user_id);
+        if (prefsError) {
+          // Not fatal - the auth user is gone and cascades have run. Record it
+          // on the request rather than failing an erasure that did happen.
+          bookkeeping_failures += 1;
+          console.error(
+            `[dsar-fulfill] ${row.id} email_preferences not purged for deleted user`,
+            prefsError,
+          );
+        }
         await markCompleted(
           admin,
           row.id,
