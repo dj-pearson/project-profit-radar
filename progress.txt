@@ -3298,3 +3298,60 @@ rateLimitResponse now emits `success: false` and `timestamp` alongside the
 existing error/retryAfter/limit/requestCount — additive, so a client reading the
 old fields is unaffected. The Retry-After and X-RateLimit-* headers are
 unchanged, and those are what a client should actually key on.
+
+================================================================================
+2026-08-27 — US-252: the QuickBooks sync was importing a prefix of the data
+================================================================================
+
+### The bug
+    `SELECT * FROM ${entityType}` — no STARTPOSITION, no MAXRESULTS
+
+QuickBooks answers that with **at most 1000 rows and no indication that more
+exist**. So a company with 4000 customers imported 1000 of them, and the result
+was indistinguishable from a company that has 1000 customers. No error, no
+warning, a "completed" sync log.
+
+It also had no throttle handling. A 429 threw, the caller's try/catch logged
+`Error syncing customers` and moved on to the next entity — so a throttled run
+dropped a whole entity for that sync.
+
+Now pages in windows of 500 until a page comes back shorter than the window.
+That short page is the only end signal available: the QuickBooks query API has no
+next-page cursor.
+
+### Retry choices worth keeping
+429, 503 and 500 retry up to four times, honouring `Retry-After` when Intuit
+sends it and backing off exponentially otherwise. **401 is deliberately not
+retried** — a bad token does not fix itself, and retrying only delays the
+reconnect prompt the user actually needs to see. Retrying everything is a common
+reflex and it is wrong here.
+
+### Making truncation visible
+`records_processed` alone cannot show truncation, because it counts what we
+wrote and we wrote everything we were given. The log now also carries
+`records_fetched`, which separates two different failures:
+
+  equal          -> everything QuickBooks returned was written
+  fetched > processed -> rows were dropped on our side, in syncCustomer/syncItem/...
+
+plus `truncated_entities` (paging hit its ceiling without a short page) and
+`throttle_retries` (early warning that a company is outgrowing its sync window).
+
+### A hazard caught before shipping
+Those three columns did not exist. The sync-log update discards its error — one
+of the 272 sites in US-300 — so naming a column PostgREST rejects would have made
+the **entire log write fail silently** while the sync reported success. I checked
+the generated types before committing and added migration 20260827050000
+(nullable, no backfill, additive per CLAUDE.md).
+
+**Worth generalising: any write naming a new column needs the schema checked
+first, because wherever the error is unread the failure is invisible.** The
+silent-write backlog and the schema-drift backlog compound each other.
+
+### Structural rule for edge functions
+The paging moved to `_shared/quickbooks-paging.ts` with an injectable `fetchImpl`
+and `sleep`. `quickbooks-sync/index.ts` imports Deno URL modules, which vitest
+cannot load — so **logic that needs testing has to live in `_shared/`** until
+Deno is available in CI. Nine tests, mutation-checked three ways: reverting to a
+single unpaged request fails 2, dropping the throttle retry fails 4, ignoring
+Retry-After fails 1.
