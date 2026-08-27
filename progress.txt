@@ -2379,3 +2379,82 @@ signal — more unwired surface, same family as the MFA stubs in US-296.
 
 ### State
 Schemas: 8 of the ~30 target. Guard backlog 132 of 156. Body-spread writes: 0.
+
+================================================================================
+2026-08-27 — US-297 privilege-write audit: two real holes
+================================================================================
+
+90 edge functions build a service-role client; 41 of those read a request body
+and write. Three AST sweeps over them.
+
+### Finding 1 — free affiliate rewards (process-referral-signup)
+verify_jwt = false, service-role client, so the entire body is
+attacker-controlled. The handler took `subscription_tier` and
+`subscription_duration_months` from that body, and
+
+    if (subscription_duration_months >= minDuration) { ...mint rewards... }
+
+was the *only* gate on inserting affiliate_rewards rows for both referrer and
+referee. Anyone who knew an email with a pending referral — including their own,
+after signing up through someone's link — could POST `{ subscription_duration_
+months: 12 }` and mint rewards for a subscription that never existed. The reward
+*amounts* come from the referral row, so the size was not attacker-controlled,
+but the trigger was entirely. `referee_company_id` was also unverified and
+becomes the company_id on the referee's reward.
+
+Both facts now come from `subscribers` (subscribed / subscription_tier /
+billing_period), and referee_company_id must match the referee's own profile.
+
+### Finding 2 — cross-tenant billing writes (track-usage)
+Took `company_id` and `user_id` from the body, falling back to the profile only
+when absent. It uses a user-JWT client, so RLS applies — except `usage_metrics`
+carries `CREATE POLICY "System can manage usage metrics" ON usage_metrics FOR
+ALL USING (true)` (20250703170531_...sql), which is one of the 41 permissive
+policies the pre-commit RLS audit already reports. That policy grants every
+authenticated role full write access, so RLS was not scoping anything.
+
+usage_metrics feeds usage-billing, calculate-usage-bill and
+generate-usage-invoice. So any authenticated user could book usage against any
+company's bill. Both values now come from the caller's own profile; a
+disagreeing body value is logged and ignored.
+
+**This is the first case where one of US-237's FOR ALL USING(true) policies has
+been shown to be load-bearing.** The handler fix stands on its own, but fixing
+that policy (scoping it TO service_role) is what would give defence in depth.
+
+### Two hardenings
+- api-management minted API keys with unvalidated `permissions` and stored
+  `rate_limit_per_hour` verbatim — and api-auth enforces that column as the
+  per-key ceiling, so a company admin could mint a key with no practical limit.
+  An unknown grant string also matched nothing, so a typo silently produced a
+  key weaker than its owner believed. Grants are checked against the known set
+  (projects:read/write, estimates:read, invoices:read) and the rate is clamped.
+- manage-alert-rules and manage-schedules spread the body into their update
+  paths while their create paths listed columns explicitly. root_admin-only, so
+  hygiene rather than a hole, but the two paths disagreeing is how holes start.
+
+### Seven reviewed and left alone
+Each recorded in the guard with the specific reason, not a blanket "reviewed":
+change-subscription writes subscription_tier only after Stripe was updated with
+the real price; blog-social-integration, quickbooks-callback and
+quickbooks-disconnect all write company_id into tables whose `FOR ALL USING`
+policy Postgres also applies as WITH CHECK, so a foreign id matches nothing.
+
+### A false positive worth remembering
+store-stripe-keys looked like IDOR to the filter-based sweep — a service-role
+update filtered by a body-supplied company_id. Its ownership check is imperative
+(compare `userProfile.company_id` to the body value, throw on mismatch) rather
+than a `.eq()` in the query chain, so a sweep that only reads query chains
+cannot see it. Any future taint tool here needs to account for guard-then-query,
+not just query-shape.
+
+### The guard
+scripts/check-edge-privilege-writes.mjs, in the pre-commit hook and CI. Fails on
+any body spread into insert/update/upsert, and on any privilege/tenancy column
+set from request input that is not in REVIEWED with a reason. It also reports
+REVIEWED entries that no longer match anything, so the list cannot rot.
+
+Note it is deliberately strict about spreads: `...(cond && { k: v })` trips it
+even though that idiom is safe. Use pickAllowed() from _shared/writable-columns.ts
+rather than teaching the guard to recognise conditional spreads — one obvious
+way to write it is worth more than a cleverer checker.
