@@ -5,6 +5,7 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@14.21.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.3";
 import { checkRateLimit, getClientIP, rateLimitResponse, RATE_LIMITS } from "../_shared/rate-limiter.ts";
+import { captureException } from '../_shared/observability.ts';
 
 // Webhook endpoints from Stripe don't need CORS (server-to-server)
 // But we keep minimal headers for potential health checks
@@ -141,6 +142,8 @@ serve(async (req) => {
   } catch (error) {
     const errorObj = error as Error;
     logStep("Webhook error", { error: errorObj.message });
+    // A webhook that starts failing at 3am has to page someone (US-251).
+    await captureException(errorObj, { fn: 'stripe-webhook' });
     return new Response(JSON.stringify({ error: errorObj.message }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 500,

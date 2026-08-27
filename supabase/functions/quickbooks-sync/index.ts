@@ -3,6 +3,7 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { initializeAuthContext, errorResponse } from '../_shared/auth-helpers.ts';
 import { getCorsHeaders } from '../_shared/secure-cors.ts';
 import { fetchQuickBooksData } from '../_shared/quickbooks-paging.ts';
+import { captureException } from '../_shared/observability.ts';
 
 interface QuickBooksAPIResponse {
   QueryResponse?: {
@@ -304,6 +305,9 @@ serve(async (req) => {
   } catch (error) {
     console.error('Error in quickbooks-sync:', error)
     const errorMessage = error instanceof Error ? error.message : String(error);
+    // A sync that stops working is invisible until someone notices missing
+    // data, which is exactly the failure US-252 was about (US-251).
+    await captureException(error, { fn: 'quickbooks-sync' });
     return new Response(
       JSON.stringify({ error: errorMessage }),
       {
