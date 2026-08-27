@@ -3968,7 +3968,7 @@
       ],
       "priority": 1,
       "passes": false,
-      "notes": "PROPOSED (deep-dive audit 2026-07-12). Theme: Database. SEV: HIGH. Source: DB audit."
+      "notes": "PROPOSED (deep-dive audit 2026-07-12). Theme: Database. SEV: HIGH. Source: DB audit. || 2026-08-27: AC2 is already satisfied - no backup_*.sql placeholders remain in the repo root or in git ls-files. Related and worth carrying into this story: US-286 turned up a fourth production cluster dump that was still tracked at HEAD (backup/db_cluster-11-12-2025, under the singular directory US-261 missed), and check-no-tracked-cruft.sh has been hardened so a .backup.gz, .dump, .sql.gz or anything under backup/ or backups/ cannot be committed again. AC1, AC3 and AC4 still need Supabase project access."
     },
     {
       "id": "US-247",
@@ -4204,7 +4204,7 @@
       ],
       "priority": 2,
       "passes": false,
-      "notes": "PROPOSED (deep-dive audit 2026-07-12). Theme: Code Health. SEV: MEDIUM. Source: Architecture audit. Feeds US-212. PARTIAL (2026-07-12): deleted the stray dead src/integrations/supabase/types-N-DPEARSON.ts (3181 lines, referenced nowhere in code). Regenerating types.ts is BLOCKED here — needs SUPABASE_ACCESS_TOKEN + the supabase CLI (neither available in this environment); run `supabase gen types typescript --project-id brikly > src/integrations/supabase/types.ts` locally to finish."
+      "notes": "PROPOSED (deep-dive audit 2026-07-12). Theme: Code Health. SEV: MEDIUM. Source: Architecture audit. Feeds US-212. PARTIAL (2026-07-12): deleted the stray dead src/integrations/supabase/types-N-DPEARSON.ts (3181 lines, referenced nowhere in code). Regenerating types.ts is BLOCKED here — needs SUPABASE_ACCESS_TOKEN + the supabase CLI (neither available in this environment); run `supabase gen types typescript --project-id brikly > src/integrations/supabase/types.ts` locally to finish. PROGRESS 2026-08-27: AC1 already satisfied - types-N-DPEARSON.ts is gone from the tree and from git ls-files (removed during the US-261 cruft sweep). AC3 done, and it turned up a real footgun in the process. The db:types script was . Shell redirection TRUNCATES THE TARGET BEFORE THE COMMAND RUNS, so any failure - no network, expired access token, wrong project id, CLI not installed - left a 41,282-line types file at zero bytes and the whole app uncompilable. The failure mode was strictly worse than not running it at all. Replaced with scripts/gen-supabase-types.mjs, which generates to a temp file, sanity-checks it (non-empty, has export type Json, has export type Database, has a Tables block, and is not less than half the size of what it would replace), and only then moves it into place. Verified three failure paths leave types.ts byte-identical: CLI absent (ENOENT), a CLI that exits 0 printing an auth error, and a CLI that exits 0 with a two-table schema. types.ts now carries a DO NOT EDIT BY HAND banner naming the regeneration command, and the script strips and re-adds that banner so it survives regeneration rather than being lost on the first run. AC2 still needs live DB access - supabase gen types reaches the running project, which I cannot. AC4 measurement is running."
     },
     {
       "id": "US-264",
