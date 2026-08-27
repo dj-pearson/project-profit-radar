@@ -121,8 +121,10 @@ serve(async (req) => {
 
         const executionTime = Date.now() - startTime;
 
-        // Update execution status
-        await supabaseClient
+        // Update execution status. The error was discarded and supabase-js
+        // returns it rather than throwing, so a lost write left the execution
+        // at its starting status with no result and no timing (US-300).
+        const { error: executionUpdateError } = await supabaseClient
           .from('behavioral_trigger_executions')
           .update({
             status: actionSuccess ? 'completed' : 'failed',
@@ -132,8 +134,17 @@ serve(async (req) => {
           })
           .eq('id', execution.id);
 
-        // Add to user trigger history
-        await supabaseClient
+        if (executionUpdateError) {
+          console.error(
+            `[BEHAVIORAL-TRIGGERS] Execution ${execution.id} ran but its outcome was not recorded:`,
+            executionUpdateError.message,
+          );
+        }
+
+        // Add to user trigger history. This row is what stops a rule firing at
+        // the same user again, so losing it means they get the same nudge
+        // repeatedly (US-300).
+        const { error: historyError } = await supabaseClient
           .from('user_trigger_history')
           .insert({
             user_id: userId,
@@ -141,6 +152,13 @@ serve(async (req) => {
             execution_id: execution.id,
             triggered_at: new Date().toISOString(),
           });
+
+        if (historyError) {
+          console.error(
+            `[BEHAVIORAL-TRIGGERS] Rule ${trigger.rule_id} fired at user ${userId} but was not recorded in history, so it may fire again:`,
+            historyError.message,
+          );
+        }
 
         if (actionSuccess) {
           triggeredCount++;
@@ -234,7 +252,10 @@ async function executeEmailAction(
       .single();
 
     if (campaign) {
-      await supabaseClient
+      // Queueing the email IS the action. Its error was discarded and the
+      // function returned success: true regardless, so the trigger recorded
+      // 'completed' for an email that was never queued (US-300).
+      const { error: queueError } = await supabaseClient
         .from('email_queue')
         .insert({
           campaign_id: campaign.id,
@@ -244,6 +265,13 @@ async function executeEmailAction(
           priority: 3,
           status: 'pending',
         });
+
+      if (queueError) {
+        return {
+          success: false,
+          error: `Email was not queued for ${user.email}: ${queueError.message}`,
+        };
+      }
     }
 
     return { success: true };
@@ -264,9 +292,12 @@ async function executeModalAction(
   config: any
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    // Store modal config in user_events or a dedicated modal_queue table
-    // The frontend will poll for pending modals to display
-    await supabaseClient
+    // Store modal config in user_events or a dedicated modal_queue table.
+    // The frontend polls for pending modals, so this row is the only thing
+    // that makes the modal appear. Its error was discarded and the function
+    // answered success: true, so a trigger could report 'completed' having
+    // shown the user nothing (US-300).
+    const { error: modalError } = await supabaseClient
       .from('user_events')
       .insert({
         user_id: userId,
@@ -274,6 +305,13 @@ async function executeModalAction(
         event_category: 'engagement',
         event_properties: config,
       });
+
+    if (modalError) {
+      return {
+        success: false,
+        error: `Modal was not queued for user ${userId}: ${modalError.message}`,
+      };
+    }
 
     return { success: true };
   } catch (error) {
@@ -296,8 +334,10 @@ async function executeNotificationAction(
     const { title, message, action_url } = config;
 
     // Insert notification (assuming you have a notifications table)
-    // If not, you can create user_events with notification type
-    await supabaseClient
+    // If not, you can create user_events with notification type.
+    // Same shape as the modal action: this row is the notification, and its
+    // error was discarded under a hardcoded success: true (US-300).
+    const { error: notificationError } = await supabaseClient
       .from('user_events')
       .insert({
         user_id: userId,
@@ -311,6 +351,13 @@ async function executeNotificationAction(
           created_at: new Date().toISOString(),
         },
       });
+
+    if (notificationError) {
+      return {
+        success: false,
+        error: `Notification was not stored for user ${userId}: ${notificationError.message}`,
+      };
+    }
 
     return { success: true };
   } catch (error) {

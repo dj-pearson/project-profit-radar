@@ -5699,3 +5699,47 @@ three mutation-tested. Full suite: 129 files, 2831 passing, 2 skipped.
 
 Remaining backlog is 107, all in edge functions. Biggest clusters:
 process-funnel-queue (9), enhanced-blog-ai (5), process-behavioral-triggers (5).
+
+---
+
+## US-300, fourth edge batch: queues that repeat themselves, 107 -> 88
+
+Nineteen writes across three functions, all with the same shape: a queue marks
+its own progress, the mark is lost, and the work runs a second time.
+
+**process-funnel-queue.** `update({ status: "sending" })` discarded its error, so
+a failed claim left the row at `scheduled` and the next cron run sent the same
+email to the same subscriber again. It claims atomically now -
+`.eq("status", "scheduled").select("id")` - and an empty result means another run
+already has it.
+
+Below the Resend call nothing may throw. The catch marks the item `failed`, a
+failed item is retried, and a retry emails a real person twice. So every write
+after the send reports into a `bookkeeping_failures` array that rides back in the
+response rather than raising. The loud ones name what actually happened:
+`SENT BUT STILL MARKED sending`, and `DROPPED OUT of the funnel` when the row
+that schedules the next step is lost - which is how a subscriber stops hearing
+from a sequence with no error anywhere.
+
+Its `processed` count was `queueItems.length`, the number fetched. Skipped and
+failed items counted as processed. It counts real sends now, with `fetched` and
+`skipped` reported separately.
+
+**enhanced-blog-ai** had the same claim bug with a model bill attached: a lost
+`processing` write means the next run regenerates the article and pays for it
+again. The sharper one is `blog_topic_history`. `generateDiverseTopic` reads that
+table back to avoid handing a company a topic it published inside
+`minimum_topic_gap_days` - so a dropped insert defeats precisely the check it
+feeds, and the AI cheerfully writes the same article next week.
+
+**process-behavioral-triggers.** Three actions - email, modal, notification -
+discarded their insert error under a hardcoded `return { success: true }`. The
+trigger then recorded `completed`. Nothing had reached the user.
+
+Test note worth keeping: the first funnel-queue claim assertion did not bite
+under mutation. The fetch query above the claim also contains
+`.eq("status", "scheduled")`, so `toContain` passed with the claim unguarded.
+Tightened to a regex over the whole claim statement, then re-mutated.
+
+8 new cases (45 total in that file), all mutation-checked. Full suite: 129 files,
+2839 passing, 2 skipped. Remaining backlog 88, all edge functions.

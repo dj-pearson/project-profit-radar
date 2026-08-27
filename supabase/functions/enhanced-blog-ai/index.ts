@@ -835,14 +835,31 @@ async function processQueueItem(corsHeaders: Record<string, string>, supabaseCli
 
   if (queueError) throw queueError;
 
-  // Update status to processing
-  await supabaseClient
+  // Claim the item. This used to discard its error, and supabase-js returns
+  // the error rather than throwing, so a failed claim left the row at its old
+  // status and the next run generated the same article again - paying for the
+  // model call twice (US-300). Matching on the previous status makes the claim
+  // atomic against an overlapping run.
+  const { data: claimed, error: claimError } = await supabaseClient
     .from('blog_generation_queue')
     .update({
       status: 'processing',
       processing_started_at: new Date().toISOString()
     })
-    .eq('id', queueId);
+    .eq('id', queueId)
+    .neq('status', 'processing')
+    .select('id');
+
+  if (claimError) {
+    throw new Error(`Could not claim queue item ${queueId}: ${claimError.message}`);
+  }
+
+  if (!claimed || claimed.length === 0) {
+    logStep("Queue item already being processed, skipping", { queueId });
+    return new Response(JSON.stringify({ success: true, skipped: true, reason: 'already processing' }), {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
+  }
 
   try {
     // Generate content
@@ -853,8 +870,10 @@ async function processQueueItem(corsHeaders: Record<string, string>, supabaseCli
       queueItem.content_parameters
     );
 
-    // Update queue item with success
-    await supabaseClient
+    // Update queue item with success. A lost write leaves the item at
+    // 'processing' with the post already written, so a retry regenerates it
+    // (US-300).
+    const { error: completeError } = await supabaseClient
       .from('blog_generation_queue')
       .update({
         status: 'completed',
@@ -863,13 +882,21 @@ async function processQueueItem(corsHeaders: Record<string, string>, supabaseCli
       })
       .eq('id', queueId);
 
+    if (completeError) {
+      throw new Error(
+        `Blog post for queue item ${queueId} was GENERATED but the item was not marked completed, so it may be generated again: ${completeError.message}`,
+      );
+    }
+
     return new Response(JSON.stringify({ success: true }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
 
   } catch (error) {
-    // Update queue item with error
-    await supabaseClient
+    // Update queue item with error. If this is lost the item is stuck at
+    // 'processing' and no retry ever picks it up (US-300). Logged rather than
+    // thrown: the original error below is the one worth propagating.
+    const { error: markFailedError } = await supabaseClient
       .from('blog_generation_queue')
       .update({
         status: 'failed',
@@ -878,6 +905,13 @@ async function processQueueItem(corsHeaders: Record<string, string>, supabaseCli
         retry_count: queueItem.retry_count + 1
       })
       .eq('id', queueId);
+
+    if (markFailedError) {
+      console.error(
+        `[ENHANCED-BLOG-AI] Queue item ${queueId} is STUCK at 'processing' - could not mark it failed:`,
+        markFailedError.message,
+      );
+    }
 
     throw error;
   }
@@ -891,7 +925,12 @@ async function recordTopicHistory(
   content: BlogContent,
   settings: GenerationSettings
 ) {
-  await supabaseClient
+  // This table is read back by generateDiverseTopic to keep a company from
+  // being handed the same topic inside minimum_topic_gap_days. Its error was
+  // discarded, so a lost row meant the next run happily regenerated the topic
+  // this one just published (US-300). The post is already written by now, so
+  // this reports rather than fails.
+  const { error: topicHistoryError } = await supabaseClient
     .from('blog_topic_history')
     .insert([{
       company_id: companyId,
@@ -906,6 +945,13 @@ async function recordTopicHistory(
       generation_model: settings.preferred_model,
       generation_time_seconds: 0 // TODO: Track actual generation time
     }]);
+
+  if (topicHistoryError) {
+    console.error(
+      `[ENHANCED-BLOG-AI] Topic "${topic}" was published for company ${companyId} but not recorded, so diversity checks will not see it:`,
+      topicHistoryError.message,
+    );
+  }
 }
 
 async function analyzeGeneratedContent(
@@ -918,7 +964,8 @@ async function analyzeGeneratedContent(
   const headingMatches = content.body.match(/#{1,6}\s/g);
   const linkMatches = content.body.match(/\[.*?\]\(.*?\)/g);
 
-  await supabaseClient
+  // Reporting-only, but its error was discarded all the same (US-300).
+  const { error: analysisError } = await supabaseClient
     .from('blog_content_analysis')
     .insert([{
       blog_post_id: blogPostId,
@@ -934,6 +981,13 @@ async function analyzeGeneratedContent(
       generation_temperature: settings.model_temperature,
       ai_confidence: 8.5 // TODO: Get actual confidence from AI response
     }]);
+
+  if (analysisError) {
+    console.error(
+      `[ENHANCED-BLOG-AI] Content analysis not recorded for post ${blogPostId}:`,
+      analysisError.message,
+    );
+  }
 }
 
 async function sendGenerationNotification(

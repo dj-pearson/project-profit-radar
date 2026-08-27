@@ -309,3 +309,93 @@ describe('the third edge batch: oauth tokens, telephony and workflows', () => {
     expect(src).toContain('CONNECTED but the event was not logged');
   });
 });
+
+describe('the fourth edge batch: queues that resend when their bookkeeping is lost', () => {
+  it('process-funnel-queue claims an item atomically instead of hoping the status stuck', () => {
+    // A plain `update({ status: "sending" })` with its error discarded left the
+    // row at "scheduled", so the next cron run emailed the same subscriber
+    // again. Matching on the old status makes the claim atomic.
+    const src = code(F('process-funnel-queue'));
+    // The status guard has to be on the claim itself. The fetch query above it
+    // also filters on scheduled, so a bare toContain would pass with the claim
+    // unguarded.
+    expect(src).toMatch(
+      /const \{ data: claimed, error: claimError \} = await supabase\s*\n\s*\.from\("funnel_email_queue"\)\s*\n\s*\.update\(\{ status: "sending" \}\)\s*\n\s*\.eq\("id", item\.id\)\s*\n\s*\.eq\("status", "scheduled"\)\s*\n\s*\.select\("id"\);/,
+    );
+    expect(src).toContain('already claimed by another run');
+  });
+
+  it('and never throws after the email has been sent', () => {
+    // The catch marks the item failed, and a failed item is retried, so any
+    // throw below the send resends to a real person.
+    const src = code(F('process-funnel-queue'));
+    const sendIndex = src.indexOf('resend.emails.send');
+    const tail = src.slice(sendIndex);
+    expect(sendIndex).toBeGreaterThan(-1);
+    for (const name of [
+      'markSentError',
+      'subscriberError',
+      'sentAnalyticsError',
+      'nextQueueError',
+      'completedError',
+    ]) {
+      expect(tail, `${name} is not handled after the send`).toContain(name);
+    }
+    // Nothing between the send and the end of the loop body raises.
+    const loopTail = tail.slice(0, tail.indexOf('} catch (emailError)'));
+    expect(loopTail).not.toContain('throw ');
+  });
+
+  it('and reports a subscriber dropped out of the funnel rather than losing them quietly', () => {
+    const src = code(F('process-funnel-queue'));
+    expect(src).toContain('DROPPED OUT of the funnel');
+    expect(src).toContain('SENT BUT STILL MARKED sending');
+    expect(src).toContain('bookkeeping_failures');
+  });
+
+  it('and counts what it sent, not what it fetched', () => {
+    // `processed: queueItems?.length` counted skipped and failed items as
+    // processed.
+    const src = code(F('process-funnel-queue'));
+    expect(src).toContain('processed: sent');
+    expect(src).toContain('fetched: queueItems?.length || 0');
+    expect(src).not.toMatch(/processed: queueItems\?\.length/);
+  });
+
+  it('process-behavioral-triggers stops reporting success for actions that wrote nothing', () => {
+    // executeEmailAction, executeModalAction and executeNotificationAction each
+    // discarded their insert error and returned a hardcoded success: true, so
+    // the trigger recorded 'completed' having done nothing to the user.
+    const src = code(F('process-behavioral-triggers'));
+    expect(src).toMatch(/const \{ error: queueError \} = await supabaseClient/);
+    expect(src).toMatch(/const \{ error: modalError \} = await supabaseClient/);
+    expect(src).toMatch(/const \{ error: notificationError \} = await supabaseClient/);
+    expect(src).toContain('Email was not queued for');
+    expect(src).toContain('Modal was not queued for user');
+    expect(src).toContain('Notification was not stored for user');
+  });
+
+  it('and keeps the history row that stops a rule firing at the same user twice', () => {
+    const src = code(F('process-behavioral-triggers'));
+    expect(src).toMatch(/const \{ error: historyError \} = await supabaseClient/);
+    expect(src).toContain('so it may fire again');
+    expect(src).toMatch(/const \{ error: executionUpdateError \} = await supabaseClient/);
+  });
+
+  it('enhanced-blog-ai does not pay for the same article twice', () => {
+    const src = code(F('enhanced-blog-ai'));
+    expect(src).toMatch(/const \{ data: claimed, error: claimError \} = await supabaseClient/);
+    expect(src).toContain(".neq('status', 'processing')");
+    expect(src).toContain('was GENERATED but the item was not marked completed');
+  });
+
+  it('and keeps the topic history its own diversity check reads back', () => {
+    // generateDiverseTopic queries blog_topic_history to avoid repeating a
+    // topic inside minimum_topic_gap_days. A lost row defeats exactly that.
+    const src = code(F('enhanced-blog-ai'));
+    expect(src).toMatch(/const \{ error: topicHistoryError \} = await supabaseClient/);
+    expect(src).toContain('diversity checks will not see it');
+    expect(src).toMatch(/const \{ error: analysisError \} = await supabaseClient/);
+    expect(src).toMatch(/const \{ error: markFailedError \} = await supabaseClient/);
+  });
+});
