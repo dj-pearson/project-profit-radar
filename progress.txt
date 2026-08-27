@@ -4567,3 +4567,29 @@ that covers the gap.
 `check-unauthenticated-edge-functions.mjs` is that guard: 27 public-by-design,
 16 grandfathered and still needing the public / internal / user-auth decision.
 Mutation-tested with a new unauthenticated function.
+
+### An open mail relay
+Four of the sixteen grandfathered functions are invoked from the browser by a
+signed-in user, so the answer for them is user auth rather than internal-only.
+
+`send-notification` is the worst. It takes `to` as a body-supplied email address
+and sends through Resend as `Brikly <notifications@resend.dev>`, with no auth at
+all. Anyone holding the anon key had an **open mail relay on Brikly's Resend
+account and sending reputation** — arbitrary recipient, arbitrary subject and
+body, Brikly's name on it. Past the obvious phishing use, that is how a sending
+domain gets blacklisted.
+
+It already had a careful Zod schema — `to: z.string().email()`, the lot. That
+helped not at all. Every field was well-formed; the missing check was *who*, not
+*what*. Third time today that distinction has decided a finding.
+
+`send-support-notification` is the same shape twice over — it mails
+`support@brikly.net` and a body-supplied `customerEmail`. `send-safety-
+notification` sends incident mail under Brikly's name to body-named addresses.
+`document-classifier` spends money per call on a model provider.
+
+All four now call `initializeAuthContext`. Baseline 16 → 12.
+
+Of the twelve left, `blog-ai-automation`, `seo-backend-integration` and
+`trigger-expo-build` have no caller anywhere in the repo, so internal-only is
+probably right for them.

@@ -63,9 +63,9 @@ const PUBLIC_BY_DESIGN = new Set([
  */
 const BASELINE = new Set([
   'analyze-support-ticket', 'blog-ai-automation', 'blog_social_webhook',
-  'create-missing-content', 'document-classifier', 'enhanced-blog-ai-simple',
-  'send-notification', 'send-safety-notification', 'send-seo-notification',
-  'send-support-notification', 'seo-backend-integration', 'seo-file-generator',
+  'create-missing-content', 'enhanced-blog-ai-simple',
+  'send-seo-notification',
+  'seo-backend-integration', 'seo-file-generator',
   'social-content-generator', 'social-post-scheduler', 'social-webhook-deployer',
   'trigger-expo-build',
 ]);

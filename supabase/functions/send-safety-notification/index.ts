@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { Resend } from "https://esm.sh/resend@2.0.0";
 import { getCorsHeaders } from '../_shared/secure-cors.ts';
+import { initializeAuthContext, errorResponse } from '../_shared/auth-helpers.ts';
 
 const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 
@@ -118,6 +119,15 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
+
+    // Authenticate the caller. Safety-incident mail goes out under Brikly's
+    // name to addresses the body names; verify_jwt = true is a signature check
+    // the publishable anon key satisfies, not authentication (US-241).
+    const authContext = await initializeAuthContext(req);
+    if (!authContext) {
+      return errorResponse('Unauthorized', 401, req);
+    }
+
     console.log('Safety notification request received');
     
     const { incident, urgency }: SafetyNotificationRequest = await req.json();

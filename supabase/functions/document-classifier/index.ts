@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { getCorsHeaders } from '../_shared/secure-cors.ts';
+import { initializeAuthContext, errorResponse } from '../_shared/auth-helpers.ts';
 
 interface Project {
   id: string;
@@ -31,6 +32,15 @@ serve(async (req) => {
   }
 
   try {
+
+    // Authenticate the caller. This spends money per call on a model provider
+    // and had no auth of its own; verify_jwt = true is satisfied by the anon
+    // key, which ships in the client bundle (US-241).
+    const authContext = await initializeAuthContext(req);
+    if (!authContext) {
+      return errorResponse('Unauthorized', 401, req);
+    }
+
     const { text, projects }: ClassificationRequest = await req.json();
     
     console.log('Processing document classification request');
