@@ -44,6 +44,9 @@ const SERVICE_ROLE_ONLY = [
   'affiliate_referrals', 'affiliate_rewards', 'workflow_step_executions',
   'automated_workflow_executions', 'resource_availability_patterns',
   'weather_forecasts',
+  // Scoped by 20260827030000. These hold SSO pending state, including the PKCE
+  // code_verifier, and no client may touch them at all.
+  'saml_pending_requests', 'oauth_pending_states',
 ];
 
 const WRITES = ['insert', 'update', 'upsert', 'delete'];
