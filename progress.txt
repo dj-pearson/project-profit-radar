@@ -5198,3 +5198,63 @@ topic hubs that were linked before they were written.
 
 14 cases in `src/lib/__tests__/deadLinks.test.ts`, mutation-tested four ways.
 Full suite: 124 files, 2731 passing, 2 skipped.
+
+---
+
+## US-212 / US-296: the TypeScript gate was not gating, and I had been reading the wrong compiler
+
+Two things, one of them mine.
+
+`.github/ts-error-baseline.txt` said 1860. The real count from
+`tsc --noEmit -p tsconfig.app.json` is 669. So the ratchet had been permitting
+1191 new errors, and it drifted for a structural reason: a count *below* the
+baseline only printed a suggestion. Every fix since the baseline was written
+widened the hole instead of closing it, and nobody had to act. Baseline set to
+669, and the check now requires equality - the same rule every other baseline
+under `scripts/` follows. Fixing errors without recording it fails as loudly as
+adding them. Mutation-tested by running the ratchet against a deliberately slack
+baseline and confirming it exits 1.
+
+Mine: I ran `npx tsc --noEmit -p tsconfig.json` several times this session and
+reported "(tsc filtered clean)" on the strength of it. That command compiles
+**zero source files**. The root `tsconfig.json` is a solution file - `"files":
+[]` plus project references - so it reports zero errors no matter what is in
+`src/`. The real command is `-p tsconfig.app.json`, which is where `strict`,
+`strictNullChecks` and `noImplicitAny` live. I have checked my changed files
+against the right compiler since: the four errors in files I touched
+(`ProjectFinancialDashboard` TS2345, `OSHACompliance` TS6133, `SecureRoute`
+TS6133, and 17 in `FeatureAnnouncementSystem`) all pre-date my edits - the
+`captureException(error, ...)` on line 140 is the same call that was on line 117
+before I moved it. The trap is now in the script header and pinned by a test.
+
+Where the 669 actually are: 376 of them (56%) sit in files that import the
+supabase client or the `Database` type, and `src/integrations/supabase/types.ts`
+is 0 bytes. With `Database` unresolved, `.from()` results come back as `{}`,
+`never` or `unknown`, which is where the 200 `TS2339`s and the 47 "on type
+`never`" errors come from. Seventy-one of those `TS2339`s are one symptom:
+`EquipmentWithMaintenance`, whose base type is
+`Database['public']['Tables']['equipment']['Row']`. That majority share of
+US-212 is blocked behind US-263, not fixable by hand.
+
+The tractable set is the 159 `TS6133`s, and reading them properly turned out to
+be a different finding. They are not unused variables. Twenty-two are handlers
+declared and never called:
+
+    CommunicationHub.tsx    loadCommunicationData, loadMessages, sendMessage,
+                            createRFI, scheduleMeeting
+    OfflineManager.tsx      saveToOfflineStorage
+    video-player.tsx        handleSeek
+
+The Communication Hub cannot send a message, raise an RFI or schedule a meeting.
+The offline manager does not save anything offline. The seek bar does not seek.
+That is US-296 AC4, which estimated "~18 unwired handlers"; the real number is
+22 and the list is now exact in that story. Forty-six more are unread `useState`
+values (AC3), several of them unfinished features rather than dead state -
+drag-to-reschedule on the Gantt chart, the equipment maintenance and scheduling
+forms, pipeline templates and routing rules.
+
+Also corrected in US-296: its notes said the two MFA stub files could not be
+deleted. They are gone, and the insecure-random guard reports clean. AC1 and AC2
+are done; the note was stale.
+
+8 cases in `src/lib/__tests__/tsErrorBudget.test.ts`, mutation-tested four ways.
