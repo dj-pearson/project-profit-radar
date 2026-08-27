@@ -6158,3 +6158,67 @@ a general disclaimer.
 Of the 22 left, `SubcontractorDisclosureForm`, `EquipmentMaintenanceTracking`,
 `EnhancedJobCosting` and `WhiteLabelPortal` have zero usages in `src/` - they
 belong to US-314's disposition rather than to this story.
+
+---
+
+## US-309, third pass: 22 -> 20, both real this time
+
+`useSimplePresence` returned four hardcoded people - "John Smith - online - Job
+Site Alpha", "Sarah Johnson - away - Job Site Beta", "Mike Davis - busy - Main
+Office" - and `TeamPresencePanel` and `UserPresenceIndicator` render that
+straight to the screen. On a construction platform, who is on site right now is
+an operational question. Inventing an answer is worse than having none.
+
+`useSimpleNotifications` was worse. Five fabricated notifications, rendered by
+`RealtimeNotificationCenter` as the user's own inbox, including a **safety
+incident report marked urgent**:
+
+> Minor incident reported at Job Site Alpha. All team members are safe. Report
+> filed for review.
+
+About an incident that never happened. Alongside it, a budget breach at 90% on an
+"Office Renovation" project, and a maintenance window "tonight from 11 PM to 1 AM
+EST" that would have had people plan around downtime nobody had scheduled.
+
+Both tables already existed: `user_presence` since migration `20250803232624`
+(`collaboration/UserPresence.tsx` has read it all along) and
+`real_time_notifications` since `20250919164232`, with exactly the columns these
+hooks' interfaces describe. Both hooks read and write for real now, and an
+unreadable table renders **empty** rather than invented. The live `user_presence`
+has no `location` column, so location rides in `metadata`, which keeps the
+published hook shape unchanged for its two consumers.
+
+### Two things found while wiring it up
+
+**A missing DELETE policy.** `real_time_notifications` had SELECT, INSERT and
+UPDATE policies but no DELETE policy - and RLS denies what no policy permits
+*without returning an error*. So the delete button would have removed the row
+from local state, toasted "deleted", and left it in the table: the US-309 shape,
+reintroduced by its own fix. Migration `20260827140000` adds the policy, and the
+client checks that a row actually came back so the next gap is not silent.
+
+**A cross-tenant read, which I have not fixed and which needs your call.**
+Migration `20250919164232` adds a second SELECT policy on `user_presence`:
+
+```sql
+CREATE POLICY "Users can view all presence data"
+ON public.user_presence FOR SELECT USING (true);
+```
+
+It sits alongside the company-scoped policy from `20250803232624`, and permissive
+policies OR together - so any authenticated user can read every company's
+presence rows. That breaks the `company_id` isolation rule in CLAUDE.md.
+
+I did not fix it. Dropping that policy tightens an RLS policy, which CLAUDE.md
+lists under "never do in a single release". So it is reported rather than
+shipped, and it is your decision whether the security hole outranks the
+compatibility rule here.
+
+Test note: my first recipient-scoping assertion did not bite under mutation.
+`eq('recipient_id', ...)` also appears in `markAsRead`, `markAllAsRead` and the
+delete, so a bare `toContain` passed with the **read** left unscoped - which
+would return every user's inbox. Tightened to a regex over the select statement,
+then re-mutated.
+
+29 cases in `fakeSuccess.test.ts`. Full suite: 130 files, 2941 passing, 2
+skipped. TS budget 645, unchanged.

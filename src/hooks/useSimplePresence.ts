@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 export interface UserPresence {
   id: string;
@@ -15,119 +16,124 @@ export interface UserPresence {
   };
 }
 
-// Simple in-memory presence system for demonstration
+/**
+ * Presence backed by the real `user_presence` table.
+ *
+ * This hook used to return four hardcoded people: the signed-in user, plus
+ * "John Smith - online - Job Site Alpha", "Sarah Johnson - away - Job Site
+ * Beta" and "Mike Davis - busy - Main Office". TeamPresencePanel and
+ * UserPresenceIndicator render that straight to the screen, so a project
+ * manager looking at who was on site was shown three colleagues who do not
+ * exist, at locations nobody was at. On a construction platform "who is on site
+ * right now" is an operational question, and inventing an answer is worse than
+ * having none (US-309).
+ *
+ * `user_presence` has existed since migration 20250803232624 and
+ * collaboration/UserPresence.tsx already reads it. The live columns are
+ * company_id, status, last_seen_at, current_channel_id and metadata - there is
+ * no `location` column, so location rides in metadata, which is what keeps this
+ * hook's published shape unchanged for its two consumers.
+ */
 export const useSimplePresence = (projectId?: string) => {
   const { userProfile } = useAuth();
   const [presenceData, setPresenceData] = useState<UserPresence[]>([]);
   const [myPresence, setMyPresence] = useState<UserPresence | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
-  // Simulate team presence data
-  const simulatePresenceData = useCallback(() => {
-    if (!userProfile) return;
+  const loadPresence = useCallback(async () => {
+    if (!userProfile?.company_id) return;
 
-    const simulatedUsers: UserPresence[] = [
-      {
-        id: 'presence-1',
-        user_id: userProfile.id,
-        status: 'online',
-        last_seen: new Date().toISOString(),
-        location: 'Main Office',
-        user_profile: {
-          first_name: userProfile.first_name || 'You',
-          last_name: userProfile.last_name || '',
-        avatar_url: undefined
-        }
-      },
-      {
-        id: 'presence-2',
-        user_id: 'user-2',
-        status: 'online',
-        last_seen: new Date(Date.now() - 2 * 60 * 1000).toISOString(), // 2 minutes ago
-        location: 'Job Site Alpha',
-        user_profile: {
-          first_name: 'John',
-          last_name: 'Smith',
-          avatar_url: undefined
-        }
-      },
-      {
-        id: 'presence-3',
-        user_id: 'user-3',
-        status: 'away',
-        last_seen: new Date(Date.now() - 15 * 60 * 1000).toISOString(), // 15 minutes ago
-        location: 'Job Site Beta',
-        user_profile: {
-          first_name: 'Sarah',
-          last_name: 'Johnson',
-          avatar_url: undefined
-        }
-      },
-      {
-        id: 'presence-4',
-        user_id: 'user-4',
-        status: 'busy',
-        last_seen: new Date(Date.now() - 5 * 60 * 1000).toISOString(), // 5 minutes ago
-        location: 'Main Office',
-        user_profile: {
-          first_name: 'Mike',
-          last_name: 'Davis',
-          avatar_url: undefined
-        }
-      }
-    ];
+    setIsLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('user_presence')
+        .select(`
+          id,
+          user_id,
+          status,
+          last_seen_at,
+          metadata,
+          user_profiles:user_id (
+            first_name,
+            last_name,
+            avatar_url
+          )
+        `)
+        .eq('company_id', userProfile.company_id)
+        .order('last_seen_at', { ascending: false });
 
-    setPresenceData(simulatedUsers);
-    setMyPresence(simulatedUsers[0]);
-  }, [userProfile]);
+      if (error) throw error;
 
-  // Update user's own presence
+      const rows: UserPresence[] = ((data ?? []) as any[]).map((row) => ({
+        id: row.id,
+        user_id: row.user_id,
+        status: (row.status ?? 'offline') as UserPresence['status'],
+        last_seen: row.last_seen_at,
+        location: row.metadata?.location ?? undefined,
+        user_profile: row.user_profiles
+          ? {
+              first_name: row.user_profiles.first_name ?? '',
+              last_name: row.user_profiles.last_name ?? '',
+              avatar_url: row.user_profiles.avatar_url ?? undefined,
+            }
+          : undefined,
+      }));
+
+      setPresenceData(rows);
+      setMyPresence(rows.find((r) => r.user_id === userProfile.id) ?? null);
+    } catch (error) {
+      console.error('Failed to load presence:', error);
+      // Empty is the honest answer when presence cannot be read. It is not a
+      // reason to invent teammates.
+      setPresenceData([]);
+      setMyPresence(null);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [userProfile?.company_id, userProfile?.id]);
+
+  // Update user's own presence. This used to set local state and toast "Status
+  // Updated" without writing anything, so nobody else ever saw the change.
   const updatePresence = useCallback(async (
     status: UserPresence['status'],
     location?: string
   ) => {
-    if (!userProfile) return;
+    if (!userProfile?.company_id) return;
 
-    const updatedPresence: UserPresence = {
-      id: 'presence-1',
-      user_id: userProfile.id,
-      status,
-      last_seen: new Date().toISOString(),
-      location,
-      user_profile: {
-        first_name: userProfile.first_name || 'You',
-        last_name: userProfile.last_name || '',
-        avatar_url: undefined
-      }
-    };
+    const { error } = await supabase
+      .from('user_presence')
+      .upsert({
+        user_id: userProfile.id,
+        company_id: userProfile.company_id,
+        status,
+        last_seen_at: new Date().toISOString(),
+        metadata: location ? { location } : {},
+        updated_at: new Date().toISOString(),
+      }, { onConflict: 'user_id' });
 
-    setMyPresence(updatedPresence);
-    setPresenceData(prev => 
-      prev.map(p => p.user_id === userProfile.id ? updatedPresence : p)
-    );
+    if (error) {
+      toast({
+        variant: 'destructive',
+        title: 'Status not updated',
+        description: error.message,
+      });
+      return;
+    }
 
     toast({
       title: "Status Updated",
       description: `Your status is now "${status}"${location ? ` at ${location}` : ''}`,
     });
-  }, [userProfile]);
 
-  // Load initial presence data
-  const loadPresence = useCallback(async () => {
-    setIsLoading(true);
-    // Simulate loading delay
-    setTimeout(() => {
-      simulatePresenceData();
-      setIsLoading(false);
-    }, 500);
-  }, [simulatePresenceData]);
+    await loadPresence();
+  }, [userProfile?.company_id, userProfile?.id, loadPresence]);
 
   // Initialize presence data
   useEffect(() => {
-    if (userProfile) {
+    if (userProfile?.company_id) {
       loadPresence();
     }
-  }, [userProfile, loadPresence]);
+  }, [userProfile?.company_id, loadPresence]);
 
   // Get users by status
   const getOnlineUsers = useCallback(() => {

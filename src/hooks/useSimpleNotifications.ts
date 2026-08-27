@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 export interface SimpleNotification {
   id: string;
@@ -20,181 +21,200 @@ export interface SimpleNotification {
   };
 }
 
-// Simple in-memory notification system for demonstration
+/**
+ * Notifications backed by the real `real_time_notifications` table.
+ *
+ * This hook used to return five hardcoded notifications, rendered by
+ * RealtimeNotificationCenter as if they were the user's own. One of them was a
+ * SAFETY INCIDENT REPORT marked urgent - "Minor incident reported at Job Site
+ * Alpha. All team members are safe. Report filed for review." - about an
+ * incident that never happened, on a platform for construction sites. The
+ * others invented a budget breach at 90% on an "Office Renovation" project, a
+ * task assignment for an electrical inspection, and a maintenance window
+ * tonight from 11 PM to 1 AM EST that would have had people plan around
+ * downtime that was not scheduled.
+ *
+ * `real_time_notifications` has existed since migration 20250919164232 with
+ * exactly the columns this hook's interface describes. It is read and written
+ * for real now; an empty inbox renders as empty (US-309).
+ */
 export const useSimpleNotifications = () => {
   const { userProfile } = useAuth();
   const [notifications, setNotifications] = useState<SimpleNotification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
 
-  // Simulate notifications data
-  const simulateNotifications = useCallback(() => {
-    if (!userProfile) return;
-
-    const simulatedNotifications: SimpleNotification[] = [
-      {
-        id: 'notif-1',
-        recipient_id: userProfile.id,
-        sender_id: 'user-2',
-        type: 'project_update',
-        title: 'Project Status Update',
-        message: 'Kitchen Remodel - Johnson project has reached 75% completion. Ready for next phase inspection.',
-        priority: 'normal',
-        created_at: new Date(Date.now() - 10 * 60 * 1000).toISOString(), // 10 minutes ago
-        sender_profile: {
-          first_name: 'John',
-          last_name: 'Smith',
-          avatar_url: undefined
-        }
-      },
-      {
-        id: 'notif-2',
-        recipient_id: userProfile.id,
-        sender_id: 'user-3',
-        type: 'budget_alert',
-        title: 'Budget Alert',
-        message: 'Office Renovation project is approaching 90% of allocated budget. Review required.',
-        priority: 'high',
-        created_at: new Date(Date.now() - 30 * 60 * 1000).toISOString(), // 30 minutes ago
-        sender_profile: {
-          first_name: 'Sarah',
-          last_name: 'Johnson',
-          avatar_url: undefined
-        }
-      },
-      {
-        id: 'notif-3',
-        recipient_id: userProfile.id,
-        type: 'safety_incident',
-        title: 'Safety Incident Report',
-        message: 'Minor incident reported at Job Site Alpha. All team members are safe. Report filed for review.',
-        priority: 'urgent',
-        created_at: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(), // 2 hours ago
-        read_at: new Date(Date.now() - 1 * 60 * 60 * 1000).toISOString() // Read 1 hour ago
-      },
-      {
-        id: 'notif-4',
-        recipient_id: userProfile.id,
-        sender_id: 'user-4',
-        type: 'task_assignment',
-        title: 'New Task Assignment',
-        message: 'You have been assigned to complete electrical inspection for Retail Fitout project.',
-        priority: 'normal',
-        created_at: new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString(), // 4 hours ago
-        sender_profile: {
-          first_name: 'Mike',
-          last_name: 'Davis',
-          avatar_url: undefined
-        }
-      },
-      {
-        id: 'notif-5',
-        recipient_id: userProfile.id,
-        type: 'system',
-        title: 'System Maintenance',
-        message: 'Scheduled maintenance will occur tonight from 11 PM to 1 AM EST. Brief service interruption expected.',
-        priority: 'low',
-        created_at: new Date(Date.now() - 6 * 60 * 60 * 1000).toISOString(), // 6 hours ago
-        read_at: new Date(Date.now() - 5 * 60 * 60 * 1000).toISOString() // Read 5 hours ago
-      }
-    ];
-
-    setNotifications(simulatedNotifications);
-    setUnreadCount(simulatedNotifications.filter(n => !n.read_at).length);
-  }, [userProfile]);
-
-  // Load notifications
   const loadNotifications = useCallback(async (limit = 50) => {
-    if (!userProfile) return;
+    if (!userProfile?.id) return;
 
     setIsLoading(true);
-    // Simulate loading delay
-    setTimeout(() => {
-      simulateNotifications();
-      setIsLoading(false);
-    }, 300);
-  }, [userProfile, simulateNotifications]);
+    try {
+      const { data, error } = await supabase
+        .from('real_time_notifications')
+        .select(`
+          id, recipient_id, sender_id, type, title, message, data, read_at, priority, created_at,
+          sender_profile:sender_id ( first_name, last_name, avatar_url )
+        `)
+        .eq('recipient_id', userProfile.id)
+        .order('created_at', { ascending: false })
+        .limit(limit);
 
-  // Send notification (simulation)
+      if (error) throw error;
+
+      const rows = ((data ?? []) as unknown) as SimpleNotification[];
+      setNotifications(rows);
+      setUnreadCount(rows.filter((n) => !n.read_at).length);
+    } catch (error) {
+      console.error('Failed to load notifications:', error);
+      // Empty is the honest answer. It is not a reason to invent an inbox.
+      setNotifications([]);
+      setUnreadCount(0);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [userProfile?.id]);
+
+  useEffect(() => {
+    if (userProfile?.id) {
+      loadNotifications();
+    }
+  }, [userProfile?.id, loadNotifications]);
+
+  // Send a notification. This used to build an object, push it into local state
+  // when the recipient happened to be yourself, and toast "Demo notification has
+  // been created" - so nothing ever reached anyone else.
   const sendNotification = useCallback(async (
     recipientId: string,
     type: SimpleNotification['type'],
     title: string,
     message: string,
-    data?: any,
+    data?: Record<string, unknown>,
     priority: SimpleNotification['priority'] = 'normal'
-  ) => {
-    if (!userProfile) return null;
+  ): Promise<SimpleNotification | null> => {
+    if (!userProfile?.id) return null;
 
-    const newNotification: SimpleNotification = {
-      id: `notif-${Date.now()}`,
-      recipient_id: recipientId,
-      sender_id: userProfile.id,
-      type,
-      title,
-      message,
-      data,
-      priority,
-      created_at: new Date().toISOString(),
-      sender_profile: {
-        first_name: userProfile.first_name || 'Unknown',
-        last_name: userProfile.last_name || 'User',
-        avatar_url: undefined
-      }
-    };
+    const { data: inserted, error } = await supabase
+      .from('real_time_notifications')
+      .insert({
+        recipient_id: recipientId,
+        sender_id: userProfile.id,
+        type,
+        title,
+        message,
+        data: data ?? null,
+        priority,
+      })
+      .select()
+      .single();
 
-    // Simulate sending to self for demo
-    if (recipientId === userProfile.id) {
-      setNotifications(prev => [newNotification, ...prev]);
-      setUnreadCount(prev => prev + 1);
-
+    if (error) {
       toast({
-        title: "Notification Sent",
-        description: "Demo notification has been created.",
+        variant: 'destructive',
+        title: 'Notification not sent',
+        description: error.message,
       });
+      return null;
     }
 
-    return newNotification;
-  }, [userProfile]);
+    if (recipientId === userProfile.id) {
+      await loadNotifications();
+    }
+
+    return (inserted as unknown) as SimpleNotification;
+  }, [userProfile?.id, loadNotifications]);
 
   // Mark notification as read
   const markAsRead = useCallback(async (notificationId: string) => {
     const notification = notifications.find(n => n.id === notificationId);
     if (!notification || notification.read_at) return;
 
-    setNotifications(prev =>
-      prev.map(n =>
-        n.id === notificationId
-          ? { ...n, read_at: new Date().toISOString() }
-          : n
-      )
-    );
+    const readAt = new Date().toISOString();
+    const { error } = await supabase
+      .from('real_time_notifications')
+      .update({ read_at: readAt })
+      .eq('id', notificationId)
+      .eq('recipient_id', userProfile?.id ?? '');
 
+    if (error) {
+      console.error('Failed to mark notification read:', error.message);
+      return;
+    }
+
+    setNotifications(prev =>
+      prev.map(n => (n.id === notificationId ? { ...n, read_at: readAt } : n))
+    );
     setUnreadCount(prev => Math.max(0, prev - 1));
-  }, [notifications]);
+  }, [notifications, userProfile?.id]);
 
   // Mark all notifications as read
   const markAllAsRead = useCallback(async () => {
-    if (!userProfile) return;
+    if (!userProfile?.id) return;
 
     const now = new Date().toISOString();
-    setNotifications(prev =>
-      prev.map(n => ({ ...n, read_at: n.read_at || now }))
-    );
+    const { error } = await supabase
+      .from('real_time_notifications')
+      .update({ read_at: now })
+      .eq('recipient_id', userProfile.id)
+      .is('read_at', null);
 
+    if (error) {
+      toast({
+        variant: 'destructive',
+        title: 'Not marked as read',
+        description: error.message,
+      });
+      return;
+    }
+
+    setNotifications(prev => prev.map(n => ({ ...n, read_at: n.read_at || now })));
     setUnreadCount(0);
 
     toast({
       title: "All Read",
       description: "All notifications marked as read.",
     });
-  }, [userProfile]);
+  }, [userProfile?.id]);
 
-  // Delete notification
+  // Delete notification. This removed the row from local state and said
+  // "Notification has been deleted" - it came straight back on the next load
+  // (US-309).
   const deleteNotification = useCallback(async (notificationId: string) => {
-    setNotifications(prev => prev.filter(n => n.id !== notificationId));
-    
+    if (!userProfile?.id) return;
+
     const wasUnread = notifications.find(n => n.id === notificationId && !n.read_at);
+
+    // `.select()` so a row actually coming back is what proves the delete
+    // happened. RLS denies what no policy permits and returns no error, so
+    // without this a missing DELETE policy would remove the row from local
+    // state, toast "deleted", and leave it in the table - the US-309 shape
+    // again, reintroduced by the fix for it. The policy is added in migration
+    // 20260827140000; the check is here so the next gap is not silent.
+    const { data: removed, error } = await supabase
+      .from('real_time_notifications')
+      .delete()
+      .eq('id', notificationId)
+      .eq('recipient_id', userProfile.id)
+      .select('id');
+
+    if (error) {
+      toast({
+        variant: 'destructive',
+        title: 'Not deleted',
+        description: error.message,
+      });
+      return;
+    }
+
+    if (!removed || removed.length === 0) {
+      toast({
+        variant: 'destructive',
+        title: 'Not deleted',
+        description: 'The notification is still there. You may not have permission to remove it.',
+      });
+      return;
+    }
+
+    setNotifications(prev => prev.filter(n => n.id !== notificationId));
     if (wasUnread) {
       setUnreadCount(prev => Math.max(0, prev - 1));
     }
@@ -203,7 +223,7 @@ export const useSimpleNotifications = () => {
       title: "Deleted",
       description: "Notification has been deleted.",
     });
-  }, [notifications]);
+  }, [notifications, userProfile?.id]);
 
   // Send system notification
   const sendSystemNotification = useCallback(async (
