@@ -28,6 +28,10 @@ node scripts/check-rls-write-paths.mjs || exit 1
 # 3f. Audit-trail coverage (US-244) — critical mutations keep logging.
 node scripts/check-audit-coverage.mjs || exit 1
 
+# 3g. Silent-write guard — supabase-js returns errors rather than throwing, so
+#     an unread error is a write that may never have happened.
+node scripts/check-silent-writes.mjs || exit 1
+
 # 4. Migration hygiene + RLS guards (US-235 / US-239 / US-237).
 bash scripts/check-migration-filenames.sh || exit 1
 bash scripts/check-no-stray-function-copies.sh || exit 1

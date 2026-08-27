@@ -155,6 +155,9 @@ jobs:
       - name: Audit-trail coverage guard (US-244)
         run: node scripts/check-audit-coverage.mjs
 
+      - name: Silent-write guard
+        run: node scripts/check-silent-writes.mjs
+
       - name: Migration filename guard (US-235)
         run: bash scripts/check-migration-filenames.sh
 
