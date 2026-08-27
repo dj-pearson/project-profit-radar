@@ -3122,3 +3122,70 @@ Also worth recording: a full tsc run *does* complete in this sandbox if you
 start it in the background and get on with something else. The US-212 note
 saying it is "impractical here" is true for foreground work and wrong as an
 absolute — when an authoritative number matters, it is an hour, not a blocker.
+
+================================================================================
+2026-08-27 — US-202: 'unsafe-inline' is gone, and the blocker was not the scripts
+================================================================================
+
+### What actually blocked it
+The story frames this as hash-pinning four inline scripts. That part was easy.
+The thing that would have broken production was one **inline event handler**:
+
+    <link rel="stylesheet" href="/fonts/inter.css" media="print" onload="this.media='all'">
+
+Hashes cover inline `<script>` bodies. They do **not** cover event handlers.
+Remove `'unsafe-inline'` and that onload never fires, the sheet stays at
+`media="print"`, and fonts silently never apply. No console error a developer
+would notice on a normal page load, no test failure.
+
+The sheet is 545 bytes, same-origin, and the critical weight is already
+preloaded on the line above — so the async trick was buying almost nothing. It
+now loads plainly, which also removes the `<noscript>` duplicate.
+
+**Checking for inline handlers is the step to do first** when removing
+'unsafe-inline', before computing a single hash.
+
+### Verified before trusting: does the build rewrite inline scripts?
+If Vite minified or touched inline script bodies, hashing `index.html` would
+produce digests that never match what the browser sees. It does not — source and
+`dist/index.html` produce identical sha256 digests for all four. Re-checked
+against the built output after making the change, not just before.
+
+### The guard is the deliverable, not the hashes
+The failure mode here is silent in production and invisible to build and tests:
+edit an inline script by one character and its hash no longer matches, so the
+browser refuses to run it. One of the four is the Trusted Types bootstrap, which
+cannot be externalized because it has to run before app scripts.
+
+scripts/check-csp-hashes.mjs recomputes from index.html and fails on:
+a missing hash, an orphaned hash left by a deleted script, 'unsafe-inline' or
+'unsafe-eval' returning, a new inline event handler, or Trusted Types being
+dropped. Mutation-checked all five before wiring it in.
+
+### A landmine found on the way — US-301
+`src/utils/security.ts` has `addSecurityHeaders()`, which injects a **second**
+CSP via meta tag. Its production script-src is
+`'self' https://api.ipify.org https://*.posthog.com` — no Stripe, no GTM, no
+Sentry, no Google or Apple sign-in, no inline hashes. CSP policies combine
+restrictively, so if that ever ran alongside the header, a resource would have
+to satisfy both: checkout, analytics, SSO and the Trusted Types bootstrap would
+all break.
+
+It does not run. It is called only from `useSecurityEnhancement`, and that hook
+is mounted nowhere. So it is a landmine, not an outage — a plausible-looking
+security hook that breaks payments the day someone adds it to a layout because
+the name sounds right.
+
+That is now three of the same shape this session: US-296 (unreferenced MFA stubs
+minting fake backup codes), US-299 (a security hook that has never recorded
+anything), and this. **Unmounted, security-named code is its own risk category**
+— it reads as protection, so nobody audits it, and it gets wired up by someone
+trusting the name.
+
+### Left for a human
+AC5: exercise OAuth/SSO and Stripe redirects in a real browser under the new
+policy. Their origins were already explicitly allowlisted and none relied on
+'unsafe-inline', so no breakage is expected — but expected is not verified.
+
+One trap for any follow-up: **do not add 'strict-dynamic'.** It makes the host
+allowlist be ignored, which would break GTM, Stripe and Google sign-in.
