@@ -2751,3 +2751,66 @@ In pre-commit and CI.
 Confirm which audit_logs shape production actually has and collapse the
 candidate list to one. The adaptive writer is a way to ship safely without that
 answer — not a substitute for having it. Same bucket as US-298.
+
+================================================================================
+2026-08-27 — US-244 finished, and what the audit_logs policies revealed
+================================================================================
+
+All twelve tracked critical functions now write the trail. The six added this
+round: data-subject-delete (deletion requested, account locked),
+process-dsar-fulfillment (erasure actually performed, recording files erased vs
+retained — the thing a regulator asks to see), create-root-admin,
+change-subscription, manage-complimentary-subscription (grant and revoke), and
+process-invoice-payment.
+
+Two have no session user — create-root-admin is gated by ADMIN_CREATION_SECRET,
+process-dsar-fulfillment runs from cron — so their rows carry a null actor and
+say so in the description rather than inventing one.
+
+### Five call sites would have written nothing
+change-subscription, data-subject-delete, process-invoice-payment,
+handle-chargeback and process-refund were all passing the user-JWT client from
+initializeAuthContext.
+
+**audit_logs has only SELECT policies. There is no INSERT policy for any client
+role.** So those writes would have been rejected, and the adaptive writer would
+have burned through all three candidate shapes before giving up — turning a
+schema-discovery mechanism into a per-request waste. All thirteen call sites now
+pass a service-role client, checked with an AST sweep rather than by eye.
+
+That missing INSERT policy is also the answer to AC3: audit rows are already
+immutable to clients, and nothing needed adding.
+
+### AC4 was aimed at the wrong function
+"get-audit-history surfaces the new events" — get-audit-history reads
+`seo_audit_history`, which is SEO site audits and has nothing to do with the
+compliance trail. The surfaces that actually read audit_logs are
+src/pages/ComplianceAudit.tsx and src/components/audit/ActivityLogger.tsx, and
+both already query it by company_id, resource_type and risk_level, so the new
+events show up with no change.
+
+### Which audit_logs shape production has — good evidence, from working code
+ComplianceAudit.tsx, ActivityLogger.tsx and useSecurityMonitor.ts all use the
+20250703164308 column set: company_id, action_type, resource_type, risk_level,
+description, metadata. Three independent surfaces, all shipping, all agreeing.
+That is far better evidence than the migration history, and it is the writer's
+first candidate — so the fallback path should never actually run. Worth carrying
+into US-298 when someone confirms against the live schema.
+
+### A feature that has never worked — US-299
+src/hooks/useSecurityMonitor.ts batches security events and inserts them into
+audit_logs *from the browser*, with the user's JWT. No INSERT policy means every
+one of those is rejected. And it is wrapped in:
+
+    } catch {
+      // Silently fail — security logging must not break the app
+    }
+
+The instinct is right — US-244's writer takes the same view — but swallowing the
+error meant nobody noticed the feature does nothing at all. A security feature
+that reports success and records nothing is worse than an absent one.
+
+Same pattern hid the usage_metrics and workflow_step_executions failures in the
+US-237 follow-up. **`catch {}` around a Supabase write is worth a sweep of its
+own** — Supabase returns errors rather than throwing, so the catch usually is not
+even the thing hiding it; the discarded `error` field is.
