@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'node:fs';
+import { spawnSync } from 'node:child_process';
 
 /**
  * US-300, edge functions. Twenty-one writes in the payment, billing and MFA
@@ -470,5 +471,69 @@ describe('the fifth edge batch: single-use auth state and the marketing record o
     const src = code(F('ml-lead-scoring'));
     expect(src).toMatch(/const \{ error: activityError \} = await supabase\.from\('crm_activities'\)/);
     expect(src).toContain('the scoring activity was not recorded');
+  });
+});
+
+describe('the sixth edge batch: CRUD that lied, and a raw() that never worked', () => {
+  it('manage-alert-rules does not say "deleted" for a rule that keeps firing', () => {
+    // Every branch answered success: true without reading the error, so a
+    // rejected delete came back as "Alert rule deleted".
+    const src = code(F('manage-alert-rules'));
+    expect(src).toMatch(/const \{ data: deleted, error: deleteError \} = await supabaseClient/);
+    expect(src).toContain('was NOT deleted and will keep firing');
+    expect(src).toMatch(/const \{ data: created, error: createError \} = await supabaseClient/);
+    expect(src).toMatch(/const \{ data: updated, error: updateError \} = await supabaseClient/);
+  });
+
+  it('and distinguishes a deleted rule from an id that matched nothing', () => {
+    const src = code(F('manage-alert-rules'));
+    expect(src).toContain("'No alert rule matched that id'");
+    expect(src).toContain('deleted: deleted?.length ?? 0');
+  });
+
+  it('manage-schedules does the same for schedules that keep running audits', () => {
+    const src = code(F('manage-schedules'));
+    expect(src).toMatch(/const \{ data: deleted, error: deleteError \} = await supabaseClient/);
+    expect(src).toContain('was NOT deleted and will keep running audits');
+    expect(src).toMatch(/const \{ data: created, error: createError \} = await supabaseClient/);
+    expect(src).toMatch(/const \{ data: updated, error: updateError \} = await supabaseClient/);
+    expect(src).toContain("'No schedule matched that id'");
+  });
+
+  it('quickbooks-route-transactions increments its match counter through an RPC', () => {
+    // `.update({ matches_count: supabase.raw('matches_count + 1') })` threw a
+    // TypeError on every matched transaction - supabase-js has no `raw` - so
+    // the catch swallowed the routing-history write and both counters, and the
+    // batch reported "0 auto-assigned, 0 need review" for work it had done.
+    const src = code(F('quickbooks-route-transactions'));
+    expect(src).toMatch(/\.rpc\('increment_routing_rule_match', \{ p_rule_id: bestMatch\.rule_id \}\)/);
+    expect(src).not.toMatch(/supabase\.raw\s*\(/);
+    expect(src).toMatch(/const \{ error: routeError \} = await supabase/);
+    expect(src).toMatch(/const \{ error: historyError \} = await supabase/);
+  });
+
+  it('and that RPC is created by a migration with a tenancy check', () => {
+    const sql = readFileSync(
+      'supabase/migrations/20260827130000_routing_rule_match_counter.sql',
+      'utf8',
+    );
+    expect(sql).toContain('CREATE OR REPLACE FUNCTION public.increment_routing_rule_match');
+    expect(sql).toContain('SECURITY DEFINER');
+    expect(sql).toContain("SET search_path = ''");
+    expect(sql).toContain('public.user_in_company(v_company_id)');
+    expect(sql).toContain('COALESCE(matches_count, 0) + 1');
+    expect(sql).toContain('REVOKE ALL ON FUNCTION public.increment_routing_rule_match(uuid) FROM PUBLIC');
+  });
+
+  it('and nothing in the repo calls .raw() on a supabase client any more', () => {
+    // The same mistake shipped twice (calculatorAnalytics.trackReferral under
+    // US-303, this function under US-300), so it has its own guard now.
+    // Assert the invariant itself rather than the guard's wording: run the
+    // guard and require a clean exit.
+    const result = spawnSync('node', ['scripts/check-supabase-raw.mjs'], { encoding: 'utf8' });
+    expect(result.stdout + result.stderr).not.toMatch(/\.raw\(\.\.\.\)/);
+    expect(result.status).toBe(0);
+    expect(readFileSync('.husky/pre-commit', 'utf8')).toContain('check-supabase-raw.mjs');
+    expect(readFileSync('.github/workflows/ci.yml', 'utf8')).toContain('check-supabase-raw.mjs');
   });
 });

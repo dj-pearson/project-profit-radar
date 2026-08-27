@@ -193,6 +193,9 @@ jobs:
       - name: RPC-definition guard (US-303)
         run: node scripts/check-rpc-definitions.mjs
 
+      - name: supabase.raw() guard (US-300)
+        run: node scripts/check-supabase-raw.mjs
+
       - name: Deno import-pinning guard (US-272)
         run: node scripts/check-deno-imports.mjs
 

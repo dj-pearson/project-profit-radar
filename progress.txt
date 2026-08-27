@@ -5783,3 +5783,56 @@ stayed `marketing_qualified` everywhere that matters.
 8 new cases (53 total), four mutation-checked - including one that moves the
 throw below the log line to prove the ordering assertion bites. Full suite: 129
 files, 2847 passing, 2 skipped. Remaining backlog 73, all edge functions.
+
+---
+
+## US-300, sixth edge batch: CRUD that lied, and a raw() that never worked
+
+**manage-alert-rules and manage-schedules** were textbook. Every branch answered
+`success: true` without reading the error, so a rejected create came back as
+"Alert rule created" with `rule: undefined`, and a rejected delete came back as
+"Alert rule deleted" for a rule that carried on firing. Both return 500 with the
+reason now.
+
+The deletes also `.select('id')`, so the response can tell a row that was deleted
+from an id that matched nothing - reported as `deleted: 0` rather than pretending.
+`DELETE ... RETURNING` needs a SELECT policy; the policy on both tables is
+`FOR ALL`, which covers it. I checked before relying on it.
+
+**quickbooks-route-transactions is the real find.** Line 227 incremented a
+routing rule's match counter with:
+
+```
+.update({ matches_count: supabase.raw('matches_count + 1') })
+```
+
+supabase-js v2 has no `raw`. Verified against the installed 2.110.8 client:
+`typeof client.raw === 'undefined'`. So that line threw
+`TypeError: supabase.raw is not a function` on *every* matched transaction, fell
+into the per-transaction catch, and took the routing-history write and both
+counters with it. The batch then reported
+
+> Processed 40 transactions. 0 auto-assigned, 0 need review.
+
+with `success: true`, for work it had actually done. The suggestions were
+written; nothing else was.
+
+Replaced with `increment_routing_rule_match`, a SECURITY DEFINER RPC in migration
+`20260827130000` with a `user_in_company` tenancy check. Atomic, which
+read-modify-write from the edge function could never have been - one rule
+commonly matches several transactions in the same batch.
+
+This is the **second** `supabase.raw` in this codebase. The first was
+`calculatorAnalytics.trackReferral`, found under US-303, and it had the same
+shape: an intended atomic increment, silently doing nothing. TypeScript cannot
+see it because these clients are typed `any`, and a surrounding try/catch turns
+it into a no-op. So it has a guard now - `scripts/check-supabase-raw.mjs`,
+baseline zero, in pre-commit and CI.
+
+Test note: the guard's own test first asserted a phrase from the guard file, and
+the mutation did not bite - the phrase appears twice and `String.replace` only
+replaced one. Rewritten to spawn the guard and require exit 0. Assert the
+invariant, not the wording.
+
+6 new cases (59 total). Full suite: 129 files, 2853 passing, 2 skipped.
+Remaining backlog 64.

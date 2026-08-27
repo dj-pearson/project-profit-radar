@@ -44,7 +44,12 @@ serve(async (req) => {
       }
 
       case 'create': {
-        const { data: created } = await supabaseClient
+        // Every branch here answered `success: true` without reading the error.
+        // supabase-js returns it rather than throwing, so a rejected write came
+        // back as "Alert rule created" with `rule: undefined`, and a rejected
+        // delete came back as "Alert rule deleted" for a rule that kept firing
+        // (US-300).
+        const { data: created, error: createError } = await supabaseClient
           .from('seo_alert_rules')
           .insert({
             rule_name: rule_data.rule_name,
@@ -57,6 +62,13 @@ serve(async (req) => {
           })
           .select()
           .single();
+
+        if (createError) {
+          return new Response(JSON.stringify({
+            success: false,
+            error: `Alert rule was not created: ${createError.message}`,
+          }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 });
+        }
 
         return new Response(JSON.stringify({
           success: true,
@@ -75,12 +87,19 @@ serve(async (req) => {
         // created_by and id too. This endpoint is root_admin only, so that was
         // hygiene rather than a hole, but the create path already picks its
         // columns explicitly and the two should not disagree.
-        const { data: updated } = await supabaseClient
+        const { data: updated, error: updateError } = await supabaseClient
           .from('seo_alert_rules')
           .update(pickAllowed(rule_data, WRITABLE_ALERT_RULE_COLUMNS))
           .eq('id', rule_id)
           .select()
           .single();
+
+        if (updateError) {
+          return new Response(JSON.stringify({
+            success: false,
+            error: `Alert rule ${rule_id} was not updated: ${updateError.message}`,
+          }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 });
+        }
 
         return new Response(JSON.stringify({
           success: true,
@@ -95,14 +114,28 @@ serve(async (req) => {
             { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
         }
 
-        await supabaseClient
+        // `.select('id')` so the response can distinguish a rule that was
+        // deleted from one that matched nothing. The policy on this table is
+        // FOR ALL, so DELETE ... RETURNING is allowed.
+        const { data: deleted, error: deleteError } = await supabaseClient
           .from('seo_alert_rules')
           .delete()
-          .eq('id', rule_id);
+          .eq('id', rule_id)
+          .select('id');
+
+        if (deleteError) {
+          return new Response(JSON.stringify({
+            success: false,
+            error: `Alert rule ${rule_id} was NOT deleted and will keep firing: ${deleteError.message}`,
+          }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 });
+        }
 
         return new Response(JSON.stringify({
           success: true,
-          message: 'Alert rule deleted',
+          message: deleted && deleted.length > 0
+            ? 'Alert rule deleted'
+            : 'No alert rule matched that id',
+          deleted: deleted?.length ?? 0,
         }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 });
       }
 

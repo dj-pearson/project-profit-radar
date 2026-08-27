@@ -68,7 +68,12 @@ serve(async (req) => {
             break;
         }
 
-        const { data: created } = await supabaseClient
+        // Every branch here answered `success: true` without reading the
+        // error. supabase-js returns it rather than throwing, so a rejected
+        // write came back as "Schedule created" with `schedule: undefined`, and
+        // a rejected delete came back as "Schedule deleted" for a schedule that
+        // kept running audits (US-300).
+        const { data: created, error: createError } = await supabaseClient
           .from('seo_monitoring_schedules')
           .insert({  // CRITICAL: Site isolation
             schedule_name: schedule_data.schedule_name,
@@ -81,6 +86,13 @@ serve(async (req) => {
           })
           .select()
           .single();
+
+        if (createError) {
+          return new Response(JSON.stringify({
+            success: false,
+            error: `Schedule was not created: ${createError.message}`,
+          }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 });
+        }
 
         return new Response(JSON.stringify({
           success: true,
@@ -97,13 +109,20 @@ serve(async (req) => {
 
         // Allowlisted rather than spread — see manage-alert-rules for the
         // reasoning. root_admin only, but the two paths should agree.
-        const { data: updated } = await supabaseClient
+        const { data: updated, error: updateError } = await supabaseClient
           .from('seo_monitoring_schedules')
           .update(pickAllowed(schedule_data, WRITABLE_SCHEDULE_COLUMNS))
             // CRITICAL: Site isolation
           .eq('id', schedule_id)
           .select()
           .single();
+
+        if (updateError) {
+          return new Response(JSON.stringify({
+            success: false,
+            error: `Schedule ${schedule_id} was not updated: ${updateError.message}`,
+          }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 });
+        }
 
         return new Response(JSON.stringify({
           success: true,
@@ -118,15 +137,29 @@ serve(async (req) => {
             { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
         }
 
-        await supabaseClient
+        // `.select('id')` so the response can distinguish a schedule that was
+        // deleted from one that matched nothing. The policy on this table is
+        // FOR ALL, so DELETE ... RETURNING is allowed.
+        const { data: deleted, error: deleteError } = await supabaseClient
           .from('seo_monitoring_schedules')
           .delete()
             // CRITICAL: Site isolation
-          .eq('id', schedule_id);
+          .eq('id', schedule_id)
+          .select('id');
+
+        if (deleteError) {
+          return new Response(JSON.stringify({
+            success: false,
+            error: `Schedule ${schedule_id} was NOT deleted and will keep running audits: ${deleteError.message}`,
+          }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 });
+        }
 
         return new Response(JSON.stringify({
           success: true,
-          message: 'Schedule deleted',
+          message: deleted && deleted.length > 0
+            ? 'Schedule deleted'
+            : 'No schedule matched that id',
+          deleted: deleted?.length ?? 0,
         }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 });
       }
 

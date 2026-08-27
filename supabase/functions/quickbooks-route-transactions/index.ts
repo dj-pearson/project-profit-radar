@@ -205,8 +205,11 @@ async function processBatchTransactions(corsHeaders: Record<string, string>, sup
       const bestMatch = await findBestMatch(transaction, rules || []);
 
       if (bestMatch) {
-        // Update transaction
-        await supabase
+        // Update transaction. This is the routing suggestion itself - the row
+        // the review queue reads - and its error was discarded; supabase-js
+        // returns it rather than throwing, so a failed write still counted
+        // toward auto_assigned_count below (US-300).
+        const { error: routeError } = await supabase
           .from('quickbooks_unrouted_transactions')
           .update({
             suggested_project_id: bestMatch.project_id,
@@ -220,14 +223,30 @@ async function processBatchTransactions(corsHeaders: Record<string, string>, sup
           })
           .eq('id', transaction.id);
 
-        // Update rule statistics
-        await supabase
-          .from('quickbooks_routing_rules')
-          .update({
-            matches_count: supabase.raw('matches_count + 1'),
-            last_matched_at: new Date().toISOString()
-          })
-          .eq('id', bestMatch.rule_id);
+        if (routeError) {
+          throw new Error(
+            `Transaction ${transaction.id} was not routed: ${routeError.message}`,
+          );
+        }
+
+        // Update rule statistics.
+        // This was `.update({ matches_count: supabase.raw('matches_count + 1') })`,
+        // and supabase-js has no `raw` - the property is undefined, so the call
+        // threw a TypeError on EVERY matched transaction, fell into the catch
+        // below, and took the routing-history write and both counters with it.
+        // The batch reported "0 auto-assigned, 0 need review" for work it had
+        // actually done. increment_routing_rule_match does it atomically, which
+        // read-modify-write from here could not: one rule commonly matches
+        // several transactions in the same batch (US-300).
+        const { error: statsError } = await supabase
+          .rpc('increment_routing_rule_match', { p_rule_id: bestMatch.rule_id });
+
+        if (statsError) {
+          console.error(
+            `[QUICKBOOKS-ROUTE] Rule ${bestMatch.rule_id} matched but its counter did not advance:`,
+            statsError.message,
+          );
+        }
 
         // Log the event
         await logRoutingEvent(supabase, {
@@ -450,15 +469,22 @@ function getFieldValue(transaction: UnroutedTransaction, fieldType: string): str
 }
 
 async function logRoutingEvent(supabase: any, event: any) {
-  try {
-    await supabase
-      .from('quickbooks_routing_history')
-      .insert({
-        ...event,
-        event_timestamp: new Date().toISOString()
-      });
-  } catch (error) {
-    console.error('Failed to log routing event:', error);
-    // Don't throw - logging failure shouldn't break the main process
+  // The catch was dead code: supabase-js returns the error rather than throwing
+  // it, so a failed insert left the routing history - the audit trail for how a
+  // transaction reached a project and cost code - silently short (US-300).
+  // Still does not throw, for the reason the original comment gives, but the
+  // failure is now visible.
+  const { error: historyError } = await supabase
+    .from('quickbooks_routing_history')
+    .insert({
+      ...event,
+      event_timestamp: new Date().toISOString()
+    });
+
+  if (historyError) {
+    console.error(
+      `[QUICKBOOKS-ROUTE] Routing event for transaction ${event.transaction_id} was not logged:`,
+      historyError.message,
+    );
   }
 }
