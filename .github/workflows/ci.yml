@@ -175,6 +175,9 @@ jobs:
       - name: Sanitizer test-env guard (US-304)
         run: node scripts/check-sanitizer-test-env.mjs
 
+      - name: Unreferenced security-module guard (US-302)
+        run: node scripts/check-unreferenced-security-modules.mjs
+
       - name: Migration filename guard (US-235)
         run: bash scripts/check-migration-filenames.sh
 

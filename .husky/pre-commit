@@ -47,6 +47,10 @@ node scripts/check-rate-limit-coverage.mjs || exit 1
 #     test that doesn't declare jsdom proves nothing.
 node scripts/check-sanitizer-test-env.mjs || exit 1
 
+# 3l. Unreferenced security-named modules (US-302) — code nobody calls is code
+#     nobody audits, and it gets adopted on the strength of its name.
+node scripts/check-unreferenced-security-modules.mjs || exit 1
+
 # 4. Migration hygiene + RLS guards (US-235 / US-239 / US-237).
 bash scripts/check-migration-filenames.sh || exit 1
 bash scripts/check-no-stray-function-copies.sh || exit 1

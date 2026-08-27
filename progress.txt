@@ -4186,3 +4186,54 @@ touched it: four `no-useless-escape` in the password and phone regexes, and two
 exactly what those checks reject — so they carry a directive with the reason
 rather than a code change. The first attempt put the directive above two more
 comment lines, so "next line" was a comment and it did nothing.
+
+## US-302 — the hazard is adoption, not duplication
+
+Two `ProtectedRoute` modules. `src/components/ProtectedRoute.tsx` exports
+`RouteGuard` and is imported by all five route files. `src/components/auth/
+ProtectedRoute.tsx` was imported by nothing but its own test — and it sat under
+`auth/`, which is the more canonical-looking path, which is exactly what makes it
+dangerous. Its role checks were fail-open (`role && !allowed.includes(role)`
+skips the comparison entirely for a null role) until they were fixed earlier
+this session. A fixed-but-dead guard is still a trap.
+
+Deleted it and its test. The assurance moved onto the guard that runs:
+`RouteGuard.failclosed.test.tsx`, 15 tests — no user, still loading, profile not
+loaded, role null/undefined/empty/unknown, all seven valid roles admitted, and
+the `ProtectedRoute` alias proven to be the same object. Reintroducing the
+fail-open shape turns three of them red.
+
+Worth recording: the live guard takes no per-route role list. Every valid role
+passes every route; route-level RBAC is `RoleGuard`, elsewhere.
+
+### The other half
+`src/utils/security.ts` was a parallel security module, and every export in it
+was unreferenced:
+
+    sanitizeHtml            a third one, after lib/security and lib/validations
+    checkRateLimit          counted in localStorage; clear it and you are reset
+    CSRF helpers            duplicating the real lib/security/csrfProtection.ts
+    validateFileUpload      duplicate
+    logCSPViolation         unreferenced
+    addSecurityHeaders      the second CSP (US-301)
+
+`checkRateLimit` returning `true` is precisely the permissive-answer-from-a-
+security-named-API shape AC4 names. All deleted. The file is 35 lines now:
+`validatePassword`, and a re-export of `sanitizeInput` from
+`lib/security/sanitize.ts` rather than its own weaker DOMPurify-with-empty-
+allowlist version.
+
+### The guard
+`check-unreferenced-security-modules.mjs` flags any module under `src/` whose
+path is security-named and which nothing imports — static, dynamic, `React.lazy`
+or re-export, deliberately generous, because the point is a module with no
+inbound edge at all. Mutation-tested both ways: a new `authGuardProbe.ts` is
+caught, a new `plainHelperProbe.ts` is ignored.
+
+It found 21, now the baseline and the AC3 worklist. One of them is
+`src/hooks/useAuth.ts` — the app's `useAuth` comes from `@/contexts/AuthContext`,
+so that is the same duplicate shape again, a third time.
+
+AC2 is not done. This guard sidesteps the 295-module detector by matching
+specifier tails instead of resolving them, but that figure still should not be
+quoted until the detector follows `React.lazy`.
