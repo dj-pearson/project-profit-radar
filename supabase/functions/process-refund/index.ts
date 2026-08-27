@@ -8,7 +8,7 @@ import { getCorsHeaders } from '../_shared/secure-cors.ts';
 import { writeAuditLog } from '../_shared/audit-log.ts';
 import { createServiceClient } from '../_shared/service-client.ts';
 import { validateBody } from '../_shared/validate-body.ts';
-import { z } from "npm:zod@3";
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
 
 /**
  * amount is the one that matters. It was an unbounded number, and the approval

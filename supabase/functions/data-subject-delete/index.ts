@@ -30,7 +30,7 @@
 //   - Workspace admins may need to export the user's work product first.
 
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { createClient } from "npm:@supabase/supabase-js@2";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.3";
 import { initializeAuthContext, errorResponse, successResponse } from "../_shared/auth-helpers.ts";
 import { getCorsHeaders } from "../_shared/secure-cors.ts";
 import { checkRateLimit, getClientIP, rateLimitResponse } from "../_shared/rate-limiter.ts";

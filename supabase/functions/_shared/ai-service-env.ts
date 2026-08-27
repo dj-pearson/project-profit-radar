@@ -1,5 +1,22 @@
 /**
- * AI Service v2 - Coolify Team Shared Variables Support
+ * AI Service (environment-driven) - Coolify Team Shared Variables Support
+ *
+ * Not a newer version of _shared/ai-service.ts, despite having been called
+ * ai-service-v2 (US-272). The two are different sources of configuration and
+ * both are live:
+ *
+ *   ai-service.ts      reads model configuration from the ai_model_configurations
+ *                      table. Used by blog-ai, enhanced-blog-ai-fixed,
+ *                      ai-content-generator and blog-social-integration.
+ *   ai-service-env.ts  (this file) reads it from Coolify team shared variables,
+ *                      with standard/lightweight task routing. Used by
+ *                      test-ai-configuration.
+ *
+ * A name that says "v2" reads as "the one to use for new work", which this is
+ * not - picking it would silently move a feature off the DB-configured models
+ * the admin UI writes to. Renamed for what it is rather than merged, because
+ * the four DB-driven functions are in production and the env-driven path is a
+ * real deployment mode.
  *
  * This service provides centralized AI model management with support for:
  * - Coolify Team Shared Variables ({{ team.VARIABLE_NAME }})
@@ -17,7 +34,7 @@
  * - AI_TIMEOUT_MS: Request timeout (default: 30000)
  */
 
-import { createClient } from "npm:@supabase/supabase-js@2";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.3";
 
 // Task types for model routing
 export type AITaskType = 'standard' | 'lightweight';
@@ -66,7 +83,7 @@ interface AIServiceConfig {
   timeoutMs: number;
 }
 
-export class AIServiceV2 {
+export class AIServiceEnv {
   private supabase: any;
   private modelConfigs: Map<string, AIModelConfig> = new Map();
   private standardDefault?: AIModelConfig;
@@ -506,4 +523,4 @@ export class AIServiceV2 {
 }
 
 // Export singleton instance
-export const aiServiceV2 = new AIServiceV2();
+export const aiServiceEnv = new AIServiceEnv();

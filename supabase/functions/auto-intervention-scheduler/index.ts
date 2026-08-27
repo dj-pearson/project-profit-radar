@@ -1,8 +1,8 @@
 // Automated Intervention Scheduler
 // Runs hourly to schedule automated interventions based on account health and trial status
 
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.3";
 
 import { getCorsHeaders, handleCorsPreflightRequest } from "../_shared/secure-cors.ts";
 import { requireSystemOrAdmin } from "../_shared/system-auth.ts";

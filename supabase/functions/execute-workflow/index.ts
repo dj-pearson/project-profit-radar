@@ -3,7 +3,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.50.3'
 import { getCorsHeaders, handleCorsPreflightRequest } from '../_shared/secure-cors.ts'
 import { initializeAuthContext, verifyCompanyAccess, errorResponse } from '../_shared/auth-helpers.ts'
 import { authorizeWorkflowAccess } from '../_shared/workflow-auth.ts'
-import { z } from "npm:zod@3"
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts"
 import { validateBody } from '../_shared/validate-body.ts'
 
 // SECURITY (US-236): the caller is authenticated and confirmed to own the target

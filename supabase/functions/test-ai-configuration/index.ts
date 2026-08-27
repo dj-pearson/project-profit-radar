@@ -8,8 +8,8 @@
  * Auth: Requires root_admin role
  */
 
-import { createClient } from "npm:@supabase/supabase-js@2";
-import { AIServiceV2 } from "../_shared/ai-service-v2.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.3";
+import { AIServiceEnv } from "../_shared/ai-service-env.ts";
 import { getCorsHeaders } from '../_shared/secure-cors.ts';
 
 export default async function handler(req: Request): Promise<Response> {
@@ -62,7 +62,7 @@ export default async function handler(req: Request): Promise<Response> {
     const testType = body.testType || 'full'; // 'full', 'standard', 'lightweight', 'config_only'
 
     // Initialize AI service and run tests
-    const aiService = new AIServiceV2();
+    const aiService = new AIServiceEnv();
 
     if (testType === 'config_only') {
       // Just return configuration without making API calls

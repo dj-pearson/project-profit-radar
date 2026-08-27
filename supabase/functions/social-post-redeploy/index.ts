@@ -1,9 +1,9 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.3";
 import { getCorsHeaders } from '../_shared/secure-cors.ts';
 import { initializeAuthContext, errorResponse } from '../_shared/auth-helpers.ts';
 import { validateBody } from '../_shared/validate-body.ts';
-import { z } from "npm:zod@3";
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
 
 const RedeploySchema = z.object({
   company_id: z.string().uuid(),

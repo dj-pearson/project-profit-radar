@@ -1,6 +1,6 @@
 // Sync Analytics Data Edge Function
 // Triggers data synchronization for a connected analytics platform
-import { createClient } from "npm:@supabase/supabase-js@2";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.3";
 import { initializeAuthContext, errorResponse, successResponse } from '../_shared/auth-helpers.ts';
 import { getCorsHeaders } from '../_shared/secure-cors.ts';
 

@@ -5,7 +5,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.3";
 import { getCorsHeaders } from '../_shared/secure-cors.ts';
 import { writeAuditLog } from '../_shared/audit-log.ts';
 import { validateBody } from '../_shared/validate-body.ts';
-import { z } from "npm:zod@3";
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
 
 /**
  * The secret_key is encrypted and stored, so a non-string here would be

@@ -1,7 +1,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { initializeAuthContext, errorResponse, successResponse, safeErrorResponse } from '../_shared/auth-helpers.ts';
 import { getCorsHeaders } from '../_shared/secure-cors.ts';
-import { z } from "npm:zod@3";
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
 import { validateBody } from '../_shared/validate-body.ts';
 
 interface InvoiceRequest {

@@ -1,10 +1,10 @@
 // Remove Payment Method Edge Function
 // Detaches a payment method from the Stripe customer
-import Stripe from "npm:stripe@14";
+import Stripe from "https://esm.sh/stripe@14.21.0";
 import { initializeAuthContext, errorResponse, successResponse } from '../_shared/auth-helpers.ts';
 import { getCorsHeaders } from '../_shared/secure-cors.ts';
 import { validateBody } from '../_shared/validate-body.ts';
-import { z } from "npm:zod@3";
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
 
 /** Stripe payment-method ids are `pm_` followed by an opaque token. */
 const RemovePaymentMethodSchema = z.object({

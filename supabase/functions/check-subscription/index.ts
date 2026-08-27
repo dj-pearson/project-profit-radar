@@ -1,7 +1,7 @@
 // Check Subscription Edge Function
 // SECURITY: Uses secure CORS whitelist
-import Stripe from "npm:stripe@14";
-import { createClient } from "npm:@supabase/supabase-js@2";
+import Stripe from "https://esm.sh/stripe@14.21.0";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.3";
 import { initializeAuthContext, errorResponse } from '../_shared/auth-helpers.ts';
 import { getCorsHeaders } from '../_shared/secure-cors.ts';
 

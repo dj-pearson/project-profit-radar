@@ -1,6 +1,6 @@
 // Generate Cash Flow Forecast Edge Function
 // Generates cash flow projections for a company based on historical financial data
-import { createClient } from "npm:@supabase/supabase-js@2";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.3";
 import { initializeAuthContext, errorResponse, successResponse } from '../_shared/auth-helpers.ts';
 import { getCorsHeaders } from '../_shared/secure-cors.ts';
 import { enforceRateLimit, RATE_LIMITS } from '../_shared/rate-limiter.ts';

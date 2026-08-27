@@ -1,8 +1,8 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { initializeAuthContext, errorResponse, successResponse, safeErrorResponse } from '../_shared/auth-helpers.ts';
 import { handleCorsPreflightRequest } from '../_shared/secure-cors.ts';
 import { WRITABLE_TIME_ENTRY_COLUMNS, pickAllowed } from '../_shared/writable-columns.ts';
-import { z } from "npm:zod@3";
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
 import { validateBody } from '../_shared/validate-body.ts';
 
 const ClockInSchema = z.object({

@@ -20,7 +20,7 @@
 //   import { canSendEmail } from '../_shared/email-consent.ts';
 //   if (!(await canSendEmail(supabase, user.email, 'marketing'))) return;
 
-import { SupabaseClient } from 'npm:@supabase/supabase-js@2';
+import { SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2.50.3';
 
 export type EmailKind =
   | 'transactional'

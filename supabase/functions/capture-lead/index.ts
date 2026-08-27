@@ -48,7 +48,10 @@ const sanitizeString = (input: string | undefined, maxLength: number = 255): str
   // Trim and limit length
   let sanitized = input.trim().substring(0, maxLength);
 
-  // Remove null bytes and other control characters
+  // Remove null bytes and other control characters. no-control-regex exists to
+  // catch a control character typed into a pattern by accident; matching them
+  // on purpose is the whole job of this line.
+  // eslint-disable-next-line no-control-regex
   sanitized = sanitized.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '');
 
   // Remove or escape potentially dangerous SQL/HTML characters
@@ -78,7 +81,7 @@ const isValidEmail = (email: string): boolean => {
 const sanitizePhone = (phone: string | undefined): string | null => {
   if (!phone || typeof phone !== 'string') return null;
   // Allow only digits, spaces, dashes, parentheses, plus sign
-  const cleaned = phone.replace(/[^0-9\s\-\(\)\+]/g, '').trim();
+  const cleaned = phone.replace(/[^0-9\s\-()+]/g, '').trim();
   return cleaned.length > 0 && cleaned.length <= 20 ? cleaned : null;
 };
 

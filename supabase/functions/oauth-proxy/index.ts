@@ -10,7 +10,7 @@
  * 5. Redirects to frontend /auth/callback with token
  */
 
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.0';
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.50.3';
 import { getCorsHeaders } from '../_shared/secure-cors.ts';
 
 // Configuration from environment variables

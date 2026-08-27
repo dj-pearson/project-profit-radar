@@ -1,7 +1,7 @@
 // AI Estimating Engine Edge Function
 // Generates project cost estimates using ML predictions and historical data
 
-import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
+import { serve } from 'https://deno.land/std@0.190.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.50.3'
 import { initializeAuthContext, errorResponse, successResponse } from '../_shared/auth-helpers.ts'
 import { checkRateLimit, rateLimitResponse, RATE_LIMITS } from '../_shared/rate-limiter.ts'

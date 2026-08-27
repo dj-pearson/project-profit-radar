@@ -30,7 +30,7 @@
 //     header in outbound mail.
 
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { createClient } from "npm:@supabase/supabase-js@2";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.3";
 import { checkRateLimit, getClientIP } from "../_shared/rate-limiter.ts";
 
 const TOKEN_MAX_AGE_MS = 30 * 24 * 60 * 60 * 1000; // 30 days

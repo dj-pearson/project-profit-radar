@@ -15,7 +15,7 @@
  *   }
  */
 
-import { SupabaseClient } from 'npm:@supabase/supabase-js@2';
+import { SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2.50.3';
 
 /**
  * Extracts the lowercased domain portion from an email address.

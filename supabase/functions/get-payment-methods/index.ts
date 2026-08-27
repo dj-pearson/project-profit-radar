@@ -1,7 +1,6 @@
 // Get Payment Methods Edge Function
 // Returns the Stripe payment methods for the authenticated user's customer
-import Stripe from "npm:stripe@14";
-import { createClient } from "npm:@supabase/supabase-js@2";
+import Stripe from "https://esm.sh/stripe@14.21.0";
 import { initializeAuthContext, errorResponse, successResponse } from '../_shared/auth-helpers.ts';
 import { getCorsHeaders } from '../_shared/secure-cors.ts';
 
