@@ -180,13 +180,6 @@ export const ImprovedBudgetDashboard: React.FC<ImprovedBudgetDashboardProps> = (
     return (variance / budgeted) * 100;
   };
 
-  const getStatusColor = (budgeted: number, actual: number, committed: number) => {
-    const variancePct = getVariancePercentage(budgeted, actual, committed);
-    if (variancePct > 10) return 'success';
-    if (variancePct > 0) return 'warning';
-    return 'danger';
-  };
-
   const getStatusBadge = (budgeted: number, actual: number, committed: number) => {
     const variancePct = getVariancePercentage(budgeted, actual, committed);
 

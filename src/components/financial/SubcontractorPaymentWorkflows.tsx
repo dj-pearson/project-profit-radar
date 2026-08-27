@@ -213,16 +213,6 @@ export default function SubcontractorPaymentWorkflows() {
     }
   };
 
-  const getWaiverStatusBadgeVariant = (status: LienWaiver['status']) => {
-    switch (status) {
-      case 'pending': return 'secondary';
-      case 'received': return 'secondary';
-      case 'approved': return 'default';
-      case 'rejected': return 'destructive';
-      default: return 'secondary';
-    }
-  };
-
   const filteredPayments = payments.filter(payment =>
     filterStatus === 'all' || payment.paymentStatus === filterStatus
   );

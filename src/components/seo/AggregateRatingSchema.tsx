@@ -194,9 +194,6 @@ export const AggregateRatingSchema: React.FC<AggregateRatingSchemaProps> = ({
 
   const schema = generateSchema();
 
-  // Calculate percentage for visual display
-  const percentage = (ratingData.ratingValue / ratingData.bestRating) * 100;
-
   return (
     <>
       {/* Schema Markup */}

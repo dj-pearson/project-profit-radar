@@ -211,8 +211,6 @@ export class InvoicePDFGenerator {
 
   private addInvoiceDetails(): void {
     const startY = this.currentY + 5;
-    const boxWidth = (this.pageWidth - 2 * this.margin) / 2 - 5;
-
     // Draw background box
     this.doc.setFillColor(248, 250, 252);
     this.doc.setDrawColor(200, 200, 200);

@@ -206,10 +206,6 @@ export default function LaborBurdenCalculator() {
     return result;
   };
 
-  const calculateTotalCost = (baseRate: number, breakdown: BurdenBreakdown): number => {
-    return baseRate + breakdown.total_burden;
-  };
-
   const saveBurdenRate = async () => {
     try {
       // Calculate burden rate and total cost

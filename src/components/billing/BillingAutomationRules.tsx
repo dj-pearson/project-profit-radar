@@ -30,7 +30,7 @@ import {
 } from '@/components/ui/accordion';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { RefreshCw, Plus, Play, Trash2, Edit, Clock, Zap, FileText, Mail, DollarSign, Percent, Settings } from 'lucide-react';
+import { RefreshCw, Plus, Play, Trash2, Edit, Clock, Zap, FileText, Mail, DollarSign, Percent } from 'lucide-react';
 
 interface AutomationRule {
   id: string;
@@ -298,13 +298,6 @@ const BillingAutomationRules: React.FC = () => {
       discount_percentage: rule.actions?.discount_percentage || 0
     });
     setDialogOpen(true);
-  };
-
-  const getTypeIcon = (type: string) => {
-    const config = AUTOMATION_TYPES.find(t => t.value === type);
-    if (!config) return <Settings className="w-4 h-4" />;
-    const Icon = config.icon;
-    return <Icon className="w-4 h-4" />;
   };
 
   const groupedRules = AUTOMATION_TYPES.reduce((acc, type) => {
