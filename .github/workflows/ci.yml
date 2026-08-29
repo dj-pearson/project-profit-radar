@@ -205,6 +205,9 @@ jobs:
       - name: Dead-link guard (US-312)
         run: node scripts/check-dead-links.mjs
 
+      - name: Live-schema table guard (US-311 follow-up)
+        run: node scripts/check-live-schema-tables.mjs
+
       - name: Generated Supabase types guard (US-263)
         run: node scripts/check-generated-types.mjs
 

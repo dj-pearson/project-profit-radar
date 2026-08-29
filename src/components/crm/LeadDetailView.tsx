@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
-import { Phone, Mail, Calendar, User, Building, MapPin, DollarSign, Clock, MessageSquare } from "lucide-react";
+import { Phone, Mail, Calendar, User, Building, DollarSign, Clock, MessageSquare } from "lucide-react";
 import { format } from "date-fns";
 import { ClickToCall } from "./ClickToCall";
 import { CallHistory } from "./CallHistory";
@@ -25,14 +25,7 @@ export function LeadDetailView({ leadId }: LeadDetailViewProps) {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("leads")
-        .select(`
-          *,
-          companies (
-            name,
-            industry,
-            website
-          )
-        `)
+        .select("*")
         .eq("id", leadId)
         .single();
 
@@ -45,7 +38,7 @@ export function LeadDetailView({ leadId }: LeadDetailViewProps) {
     queryKey: ["lead-activities", leadId],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("activities")
+        .from("crm_activities")
         .select("*")
         .eq("lead_id", leadId)
         .order("created_at", { ascending: false });
@@ -110,10 +103,10 @@ export function LeadDetailView({ leadId }: LeadDetailViewProps) {
               {lead.status}
             </Badge>
           </div>
-          {lead.companies && (
+          {lead.company_name && (
             <div className="flex items-center gap-2 text-muted-foreground">
               <Building className="h-4 w-4" />
-              <span>{lead.companies.name}</span>
+              <span>{lead.company_name}</span>
             </div>
           )}
         </div>
@@ -159,25 +152,16 @@ export function LeadDetailView({ leadId }: LeadDetailViewProps) {
                 </div>
               )}
 
-              {lead.title && (
+              {lead.job_title && (
                 <div className="flex items-center gap-3">
                   <User className="h-4 w-4 text-muted-foreground" />
                   <div>
                     <div className="text-sm text-muted-foreground">Title</div>
-                    <div className="font-medium">{lead.title}</div>
+                    <div className="font-medium">{lead.job_title}</div>
                   </div>
                 </div>
               )}
 
-              {lead.location && (
-                <div className="flex items-center gap-3">
-                  <MapPin className="h-4 w-4 text-muted-foreground" />
-                  <div>
-                    <div className="text-sm text-muted-foreground">Location</div>
-                    <div className="font-medium">{lead.location}</div>
-                  </div>
-                </div>
-              )}
             </CardContent>
           </Card>
 
@@ -188,15 +172,15 @@ export function LeadDetailView({ leadId }: LeadDetailViewProps) {
             <CardContent className="space-y-4">
               <div>
                 <div className="text-sm text-muted-foreground">Source</div>
-                <div className="font-medium capitalize">{lead.source || "Unknown"}</div>
+                <div className="font-medium capitalize">{lead.lead_source || "Unknown"}</div>
               </div>
 
-              {lead.estimated_value && (
+              {lead.estimated_budget && (
                 <div>
                   <div className="text-sm text-muted-foreground">Estimated Value</div>
                   <div className="font-medium flex items-center gap-1">
                     <DollarSign className="h-4 w-4" />
-                    {lead.estimated_value.toLocaleString()}
+                    {lead.estimated_budget.toLocaleString()}
                   </div>
                 </div>
               )}
@@ -262,11 +246,11 @@ export function LeadDetailView({ leadId }: LeadDetailViewProps) {
                           className="flex gap-4 border-l-2 border-muted pl-4 pb-4"
                         >
                           <div className="flex items-center justify-center w-8 h-8 rounded-full bg-muted">
-                            {getActivityIcon(activity.type)}
+                            {getActivityIcon(activity.activity_type)}
                           </div>
                           <div className="flex-1">
                             <div className="flex items-center justify-between">
-                              <div className="font-medium">{activity.subject}</div>
+                              <div className="font-medium capitalize">{activity.activity_type}</div>
                               <div className="text-sm text-muted-foreground flex items-center gap-1">
                                 <Clock className="h-3 w-3" />
                                 {format(new Date(activity.created_at), "MMM d, h:mm a")}

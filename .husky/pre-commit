@@ -87,6 +87,12 @@ node scripts/check-table-definitions.mjs || exit 1
 #     route answers into the 404 page, silently.
 node scripts/check-dead-links.mjs || exit 1
 
+# 3s2. Live-schema tables (US-311 follow-up) - the migration-based guard above
+#      checks supabase/migrations; this checks the live schema in types.ts.
+#      A table a migration creates but prod does not have passes the first and
+#      fails at runtime.
+node scripts/check-live-schema-tables.mjs || exit 1
+
 # 3t2. Generated Supabase types (US-263) - a truncated types.ts leaves `Database`
 #      unresolved, so every from() row is `never` and it surfaces as hundreds of
 #      unrelated TS2339s. It shipped once, inside the commit that fixed the

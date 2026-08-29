@@ -1,0 +1,122 @@
+#!/usr/bin/env node
+/**
+ * Guard: src/ may only query tables the LIVE schema actually has.
+ *
+ * check-table-definitions.mjs (US-311) already checks queried tables against
+ * supabase/migrations. This checks them against the other source of truth -
+ * src/integrations/supabase/types.ts, which `supabase gen types` produces by
+ * reading the running database. The two disagree, and the gap is where this
+ * class of bug lives.
+ *
+ * Worked example, which is why this exists. LeadDetailView queried a table
+ * named `activities`. Migration 20250710170611 creates public.activities, so
+ * the migration-based guard passed it - but the live database has no such
+ * table (it has crm_activities and lead_activities). PostgREST answers with an
+ * error, the queryFn rethrows, and the page renders its "Lead not found"
+ * branch. Nothing in CI could see it: the migration exists, the code compiles,
+ * and the failure only appears against the real database.
+ *
+ * Direction matters. A table in the migrations but not in the live schema is
+ * not automatically an unapplied migration - it can equally be a table created
+ * and later dropped, one superseded by a rename, or a migration that never
+ * shipped. The absences here span the whole migration history rather than
+ * clustering after one date, so no single explanation covers them, and this
+ * guard deliberately does not try to assign one. What it asserts is narrower
+ * and is the part that decides whether the app works: if code queries it, the
+ * live schema has to have it.
+ *
+ * When the baseline shrinks because types.ts was regenerated (US-263 AC2),
+ * lower BASELINE in the same commit - same rule as every other guard here.
+ */
+import { readFileSync, readdirSync } from 'node:fs';
+import { join, dirname, relative } from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const root = join(dirname(fileURLToPath(import.meta.url)), '..');
+const TYPES = join(root, 'src', 'integrations', 'supabase', 'types.ts');
+
+// Known to be missing from the live schema as of the 2026-06-29-or-later
+// types.ts. Each is a real query that cannot succeed today.
+const BASELINE = new Set([
+  'ai_environment_config', 'api_key_rate_limits', 'consent_ledger', 'crm_contacts',
+  'disposable_email_domains', 'estimate_templates', 'financial_records',
+  'generated_content', 'image_processing_queue', 'invoice_payments', 'line_item_library',
+  'payments', 'processed_images', 'project_notes', 'project_videos',
+  'purchase_order_items', 'real_time_notifications', 'reviews',
+  'saved_filter_presets', 'sensitive_data_access_log', 'seo_page_configs',
+  'user_announcements', 'user_tour_progress', 'workflow_steps',
+]);
+
+function walk(dir, out = []) {
+  for (const d of readdirSync(dir, { withFileTypes: true })) {
+    if (['node_modules', '.git', 'dist'].includes(d.name)) continue;
+    const p = join(dir, d.name);
+    if (d.isDirectory()) walk(p, out);
+    else if (/\.(ts|tsx)$/.test(d.name)) out.push(p);
+  }
+  return out;
+}
+
+const types = readFileSync(TYPES, 'utf8');
+const section = (name) => {
+  const m = new RegExp(`\\n    ${name}: \\{\\n([\\s\\S]*?)\\n    \\}\\n`).exec(types);
+  return m ? new Set([...m[1].matchAll(/^      (\w+): \{$/gm)].map((x) => x[1])) : new Set();
+};
+const tables = section('Tables');
+const views = section('Views');
+const known = new Set([...tables, ...views]);
+
+if (tables.size === 0) {
+  console.error('✖ Could not read any tables out of types.ts - check-generated-types.mjs covers');
+  console.error('  a truncated file; this means the shape changed. Fix the parser before trusting');
+  console.error('  a pass from this guard.');
+  process.exit(1);
+}
+
+// `.storage.from('bucket')` is a storage bucket, not a table.
+const QUERY = /(?<!storage\s*\n?\s*)\.from\(\s*["'`]([a-z_0-9]+)["'`]\s*\)/g;
+const STORAGE = /\.storage\s*[\s\S]{0,40}?\.from\(\s*["'`]([a-z_0-9]+)["'`]\s*\)/g;
+
+const found = new Map();
+for (const file of walk(join(root, 'src'))) {
+  if (/\.(test|spec)\.tsx?$|__tests__/.test(file)) continue;
+  const src = readFileSync(file, 'utf8');
+  const buckets = new Set([...src.matchAll(STORAGE)].map((m) => m[1]));
+  for (const m of src.matchAll(QUERY)) {
+    const t = m[1];
+    if (known.has(t) || buckets.has(t)) continue;
+    const line = src.slice(0, m.index).split('\n').length;
+    if (!found.has(t)) found.set(t, []);
+    found.get(t).push(`${relative(root, file)}:${line}`);
+  }
+}
+
+const isNew = [...found.keys()].filter((t) => !BASELINE.has(t)).sort();
+const fixed = [...BASELINE].filter((t) => !found.has(t)).sort();
+
+console.log('Live-schema table guard (US-311 follow-up)');
+console.log(`  live schema:            ${tables.size} tables, ${views.size} views`);
+console.log(`  queried but not there:  ${found.size} (baseline ${BASELINE.size})`);
+
+if (isNew.length) {
+  console.error('\n✖ These tables are queried by src/ but do not exist in the live schema:');
+  for (const t of isNew) {
+    console.error(`    ${t}`);
+    for (const s of found.get(t).slice(0, 4)) console.error(`        ${s}`);
+  }
+  console.error('\n  supabase-js returns { data: null, error } for these - it does not throw - so');
+  console.error('  `res.data || []` renders the failure as an empty list and the feature looks');
+  console.error('  merely empty. Point the query at a table that exists, or add the migration');
+  console.error('  AND apply it, then regenerate types (npm run db:types).');
+  process.exit(1);
+}
+
+if (fixed.length) {
+  console.error(`\n✖ ${fixed.length} baselined table(s) now exist in the live schema:`);
+  for (const t of fixed) console.error(`    ${t}`);
+  console.error('\n  That is progress and it has to be locked in: remove them from BASELINE in');
+  console.error('  scripts/check-live-schema-tables.mjs. A baseline nobody lowers stops being a gate.');
+  process.exit(1);
+}
+
+console.log(`\n✔ No new queries against tables the live schema lacks (${BASELINE.size} in the backlog).`);
