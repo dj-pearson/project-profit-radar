@@ -38,7 +38,7 @@ const TYPES = join(root, 'src', 'integrations', 'supabase', 'types.ts');
 // Known to be missing from the live schema as of the 2026-06-29-or-later
 // types.ts. Each is a real query that cannot succeed today.
 const BASELINE = new Set([
-  'ai_environment_config', 'api_key_rate_limits', 'consent_ledger', 'crm_contacts',
+  'ai_environment_config', 'api_key_rate_limits', 'consent_ledger',
   'disposable_email_domains', 'estimate_templates', 'financial_records',
   'generated_content', 'image_processing_queue', 'invoice_payments', 'line_item_library',
   'payments', 'processed_images', 'project_notes', 'project_videos',

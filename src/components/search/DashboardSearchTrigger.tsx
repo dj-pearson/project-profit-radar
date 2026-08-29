@@ -93,13 +93,15 @@ export const DashboardSearchTrigger: React.FC = () => {
           }));
         }
 
-        // Search contacts. crm_contacts is not created by any migration
-        // (US-311), so this read can fail outright; without reading the error
-        // the search just quietly returns no contacts and looks like a miss.
+        // The table is `contacts`. This read named `crm_contacts`, which no
+        // migration creates and the live schema does not have (US-311), so
+        // every contact search errored and returned nothing - and because the
+        // error only reached console.error, it looked like "no matches" rather
+        // than a broken search. The company column is `company_name`.
         const { data: contacts, error: contactsError } = await supabase
-          .from('crm_contacts')
-          .select('id, first_name, last_name, company, email')
-          .or(`first_name.ilike.${searchTerm},last_name.ilike.${searchTerm},company.ilike.${searchTerm},email.ilike.${searchTerm}`)
+          .from('contacts')
+          .select('id, first_name, last_name, company_name, email')
+          .or(`first_name.ilike.${searchTerm},last_name.ilike.${searchTerm},company_name.ilike.${searchTerm},email.ilike.${searchTerm}`)
           .limit(5);
 
         if (contactsError) {
@@ -111,8 +113,8 @@ export const DashboardSearchTrigger: React.FC = () => {
             id: c.id,
             type: 'contact',
             title: `${c.first_name || ''} ${c.last_name || ''}`.trim() || c.email || 'Unknown',
-            subtitle: c.company || c.email || undefined,
-            url: '/crm-contacts',
+            subtitle: c.company_name || c.email || undefined,
+            url: '/crm/contacts',
           }));
         }
 
@@ -146,7 +148,7 @@ export const DashboardSearchTrigger: React.FC = () => {
             type: 'document',
             title: d.name,
             subtitle: d.document_type || undefined,
-            url: '/document-management',
+            url: '/documents',
           }));
         }
       } catch {

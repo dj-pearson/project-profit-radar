@@ -43,7 +43,6 @@ const SCAN_ROOTS = [join(root, 'src'), join(root, 'supabase', 'functions')];
 const BASELINE = new Map([
   ['payments', 'Read by src/components/financial/ProjectFinancialDashboard.tsx and src/pages/FinancialOverview.tsx. Both financial screens show every project as having received nothing when the read fails. The only "payments" in any migration are contractor_payments and bill_payments.'],
   ['stripe_keys', 'Read by supabase/functions/calculate-revenue-metrics/index.ts for a Stripe SECRET key, and written by supabase/functions/store-stripe-keys. A table holding live payment credentials with no migration also has no RLS policy anyone can review. Highest priority of this list.'],
-  ['crm_contacts', 'Searched by src/components/search/DashboardSearchTrigger.tsx. 20251128000002 guards its own ALTER with IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = \'crm_contacts\'), so that author already knew it might not be there.'],
   ['incident_reports', 'Read by src/components/compliance/OSHACompliance.tsx, cast `as any`. An OSHA compliance screen showing no incidents is the worst possible way for this to fail.'],
   ['safety_trainings', 'Read by src/components/compliance/OSHACompliance.tsx, cast `as any`. Same screen, same failure.'],
   ['lead_scores', 'Read by src/components/crm/LeadScoring.tsx with a join onto leads.'],
