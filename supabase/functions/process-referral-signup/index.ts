@@ -1,6 +1,27 @@
 // Process Referral Signup Edge Function
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.3";
+import { validateBody } from '../_shared/validate-body.ts';
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
+
+/**
+ * The authorisation here is already right - the comments below record why
+ * subscription_tier and duration are re-derived from the subscribers table
+ * rather than trusted. What was missing is shape. referee_company_id reaches a
+ * .eq() against a uuid column, and referee_email is the key the whole lookup
+ * turns on.
+ *
+ * subscription_tier and subscription_duration_months stay in the schema, loose,
+ * on purpose: the handler deliberately reads the caller's claimed values to LOG
+ * the disagreement. Omitting them would strip the fields in enforce mode and
+ * silently retire that check.
+ */
+const ReferralSignupSchema = z.object({
+  referee_email: z.string().email().max(320),
+  referee_company_id: z.string().uuid(),
+  subscription_tier: z.string().max(64).optional(),
+  subscription_duration_months: z.number().optional(),
+});
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -26,8 +47,15 @@ serve(async (req) => {
   try {
     logStep("Function started");
 
-    const body = await req.json();
-    const { referee_email, referee_company_id } = body;
+    const parsed = await validateBody(req, ReferralSignupSchema, {
+      name: 'process-referral-signup',
+    });
+    if (!parsed.ok) return parsed.response;
+    const body = parsed.data as Record<string, unknown>;
+    const { referee_email, referee_company_id } = body as {
+      referee_email?: string;
+      referee_company_id?: string;
+    };
 
     if (!referee_email || !referee_company_id) {
       throw new Error("Missing referee_email or referee_company_id");
