@@ -208,11 +208,11 @@ export function LeadDetailView({ leadId }: LeadDetailViewProps) {
                 </div>
               </div>
 
-              {lead.last_contacted_at && (
+              {lead.last_contact_date && (
                 <div>
                   <div className="text-sm text-muted-foreground">Last Contacted</div>
                   <div className="font-medium">
-                    {format(new Date(lead.last_contacted_at), "MMM d, yyyy")}
+                    {format(new Date(lead.last_contact_date), "MMM d, yyyy")}
                   </div>
                 </div>
               )}
