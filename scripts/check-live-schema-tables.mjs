@@ -29,7 +29,7 @@
  * lower BASELINE in the same commit - same rule as every other guard here.
  */
 import { readFileSync, readdirSync } from 'node:fs';
-import { join, dirname, relative } from 'node:path';
+import { join, dirname, relative, basename } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
@@ -91,12 +91,32 @@ for (const file of walk(join(root, 'src'))) {
   }
 }
 
+// Split what is found by root cause, because the two halves need opposite
+// fixes and lumping them together hides that. A table a migration creates but
+// the live database lacks is a deploy problem (US-248) - the code is right and
+// the schema never arrived. A table no migration mentions at all is a code
+// problem (US-311) - the query names something that was never designed.
+const createdBy = new Map();
+for (const f of readdirSync(join(root, 'supabase', 'migrations')).sort()) {
+  if (!f.endsWith('.sql')) continue;
+  const sql = readFileSync(join(root, 'supabase', 'migrations', f), 'utf8');
+  for (const m of sql.matchAll(/CREATE TABLE (?:IF NOT EXISTS )?(?:public\.)?([a-z_0-9]+)/gi)) {
+    if (!createdBy.has(m[1])) createdBy.set(m[1], basename(f));
+  }
+}
+const unapplied = [...found.keys()].filter((t) => createdBy.has(t)).sort();
+const undesigned = [...found.keys()].filter((t) => !createdBy.has(t)).sort();
+
 const isNew = [...found.keys()].filter((t) => !BASELINE.has(t)).sort();
 const fixed = [...BASELINE].filter((t) => !found.has(t)).sort();
 
 console.log('Live-schema table guard (US-311 follow-up)');
 console.log(`  live schema:            ${tables.size} tables, ${views.size} views`);
 console.log(`  queried but not there:  ${found.size} (baseline ${BASELINE.size})`);
+console.log(`    a migration creates it, prod does not have it (US-248): ${unapplied.length}`);
+for (const t of unapplied) console.log(`      ${t.padEnd(26)} ${createdBy.get(t)}`);
+console.log(`    no migration creates it at all (US-311):                ${undesigned.length}`);
+for (const t of undesigned) console.log(`      ${t}`);
 
 if (isNew.length) {
   console.error('\n✖ These tables are queried by src/ but do not exist in the live schema:');
