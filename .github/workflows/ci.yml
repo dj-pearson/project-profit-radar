@@ -205,6 +205,9 @@ jobs:
       - name: Dead-link guard (US-312)
         run: node scripts/check-dead-links.mjs
 
+      - name: Generated Supabase types guard (US-263)
+        run: node scripts/check-generated-types.mjs
+
       - name: Unreferenced-component guard (US-314)
         run: node scripts/check-unreferenced-components.mjs
 

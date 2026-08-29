@@ -19,6 +19,20 @@
  * tsconfig.json is a solution file - `"files": []` plus project references - so
  * `tsc --noEmit -p tsconfig.json` compiles zero source files and reports zero
  * errors no matter what is in src/.
+ *
+ * Second way to count nothing, and the reason for the config-diagnostic check
+ * below: if tsc rejects the CONFIG it exits before compiling a single file, and
+ * the run still produces one `error TS` line to count. TypeScript 6 makes
+ * `baseUrl` a hard error (TS5101) and tsconfig.app.json uses baseUrl, so any
+ * route to a TS6 binary turns this whole gate into a single diagnostic. The
+ * easiest such route is having no node_modules at all: `npx tsc` then finds no
+ * local install and fetches the latest TypeScript from the registry, which is
+ * how this was found. Counting that naively gives 1, which is BELOW any real
+ * baseline, and the message this script used to print in that case told the
+ * reader to set the baseline to 1 - one copy-paste from disabling the gate
+ * permanently while looking like the biggest cleanup in the project's history.
+ * A config diagnostic is not a count, so it now aborts with its own message
+ * instead of being compared to the baseline at all.
  */
 import { execSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
@@ -34,6 +48,28 @@ try {
   out = execSync('npx tsc --noEmit -p tsconfig.app.json', { cwd: root, encoding: 'utf8' });
 } catch (e) {
   out = `${e.stdout || ''}${e.stderr || ''}`;
+}
+
+// Config-level diagnostics mean tsc never compiled anything - see the header.
+// TS5xxx is the command-line/config range, TS6xxx covers missing files and bad
+// project references, and TS18003 is "no inputs found". Any of them makes the
+// error count meaningless rather than low.
+const CONFIG_DIAGNOSTIC = /error (TS5\d{3}|TS6\d{3}|TS18003)\b/g;
+const configProblems = [...new Set(out.match(CONFIG_DIAGNOSTIC) || [])];
+if (configProblems.length) {
+  console.error(
+    `::error::tsc rejected the configuration (${configProblems.join(', ')}), so it exited ` +
+      `before compiling any source file. The error count from this run is not a measurement ` +
+      `and has NOT been compared to the baseline - do not "lock in" whatever number it shows.`,
+  );
+  console.error('');
+  console.error(out.trim().split('\n').slice(0, 10).join('\n'));
+  console.error('');
+  console.error(
+    '  Usually this means dependencies are not installed, so `npx` fetched the latest ' +
+      'TypeScript instead of the version package-lock.json pins. Run `npm ci` and try again.',
+  );
+  process.exit(1);
 }
 
 const count = (out.match(/error TS\d+/g) || []).length;
