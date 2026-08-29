@@ -4,6 +4,7 @@ import { checkRateLimit, getClientIP, rateLimitResponse, RATE_LIMITS } from "../
 import { getCorsHeaders } from '../_shared/secure-cors.ts';
 import { WRITABLE_PROJECT_COLUMNS, pickAllowed } from '../_shared/writable-columns.ts';
 import { writeAuditLog } from '../_shared/audit-log.ts';
+import { requireInternalCaller } from '../_shared/internal-only.ts';
 // Using built-in crypto API instead
 
 // The complete set of grants an API key can carry. validateApiRequest() checks
@@ -259,6 +260,20 @@ async function createApiKey(corsHeaders: Record<string, string>, req: Request, s
 }
 
 async function triggerWebhook(corsHeaders: Record<string, string>, req: Request, supabase: any): Promise<Response> {
+  // The dispatch handler does no checking - correct for the /api/* routes,
+  // which each call validateApiRequest, and for create-key, which does its own
+  // auth.getUser. This route had neither. It looked a webhook up by id with no
+  // tenant scoping and POSTed a caller-supplied payload to that webhook's URL,
+  // behind nothing but an IP rate limit. Anyone holding the publishable anon
+  // key could enumerate webhook ids by the 404-versus-400 difference and then
+  // push arbitrary data into a customer's downstream systems.
+  //
+  // Nothing in the repo calls this route, so it takes the same treatment the
+  // other caller-less functions got: service-role bearer or CRON_SECRET, and a
+  // 404 rather than a 403 so the endpoint is not confirmed to exist.
+  const denied = requireInternalCaller(req);
+  if (denied) return denied;
+
   const { webhook_id, event_type, payload } = await req.json();
   
   const { data: webhook, error: webhookError } = await supabase
@@ -404,6 +419,13 @@ async function triggerWebhook(corsHeaders: Record<string, string>, req: Request,
 }
 
 async function testWebhook(corsHeaders: Record<string, string>, req: Request, supabase: any): Promise<Response> {
+  // Checked here as well as in triggerWebhook, deliberately. This function
+  // rebuilds the request before delegating, and although it copies req.headers
+  // today, relying on an auth header surviving a synthesized Request is the
+  // "check in the wrong place" shape that US-241 already had to correct once.
+  const denied = requireInternalCaller(req);
+  if (denied) return denied;
+
   const { webhook_id } = await req.json();
   
   return await triggerWebhook(
