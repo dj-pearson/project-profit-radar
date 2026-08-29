@@ -171,19 +171,20 @@ describe('the mock-data feature shells', () => {
     // that surfaced these seven. They are not a regression and not an oversight
     // in the sweep - they were never in its input.
     //
-    // They are left in place deliberately. Each sits in an island with a live-
-    // looking importer - pages/MarketingAutomation imports three of them,
-    // forms/StreamlinedDataEntry two - so removing them means deleting whole
-    // dead features, which is a decision per island rather than a file sweep.
-    // Tracked as US-314 AC5.
+    // Five of the original seven are gone, deleted as two whole islands rather
+    // than as files: pages/MarketingAutomation plus the three marketing shells it
+    // imported, and four of the five components under forms/. Deleting an island
+    // is all-or-nothing - removing only the two mock shells under forms/ would
+    // have left StreamlinedDataEntry and the barrel importing files that no
+    // longer existed.
+    //
+    // The two that remain each need a decision that is not a sweep.
+    // NotificationCenter is the more interesting one: US-076 ("build real-time
+    // notification center with event integration") is marked done, and this is a
+    // 495-line shell holding mockNotifications.
     const KNOWN = [
       'src/components/communication/NotificationCenter.tsx',
       'src/components/enterprise/EnterpriseDashboard.tsx',
-      'src/components/forms/BarcodeQRScanner.tsx',
-      'src/components/forms/PhotoFirstWorkflow.tsx',
-      'src/components/marketing/EmailMarketingCampaigns.tsx',
-      'src/components/marketing/LeadNurturingWorkflows.tsx',
-      'src/components/marketing/SocialMediaScheduler.tsx',
     ];
     // `dummy` is deliberately not in this pattern. hero/BriklyHero3D declares
     // `const dummy = useMemo(() => new THREE.Object3D(), [])`, which is the
