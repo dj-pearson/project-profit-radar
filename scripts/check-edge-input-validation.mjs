@@ -79,7 +79,17 @@ if (unvalidated.length > BASELINE) {
 }
 
 if (unvalidated.length < BASELINE) {
-  console.log(`\n  ${BASELINE - unvalidated.length} converted since the baseline — lower BASELINE in ${relative(root, fileURLToPath(import.meta.url))} and add them to VALIDATED.`);
+  console.error(
+    `\n✖ ${BASELINE - unvalidated.length} converted since the baseline, and that has to be ` +
+      `locked in: set BASELINE to ${unvalidated.length} in ` +
+      `${relative(root, fileURLToPath(import.meta.url))} and add them to VALIDATED.`,
+  );
+  console.error(
+    '  A baseline nobody lowers stops being a gate. US-212 let one drift to 1860 against a real ' +
+      'count of 669 - permitting 1191 new errors - precisely because a count below it only ' +
+      'printed a suggestion.',
+  );
+  process.exit(1);
 }
 
 console.log(`\n✔ No new unvalidated request bodies (${unvalidated.length} in the backlog).`);
