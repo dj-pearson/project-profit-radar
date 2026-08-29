@@ -51,6 +51,9 @@ const reads = [...validated, ...unvalidated];
 
 // Functions already converted. Never remove a name from here.
 const VALIDATED = new Set([
+  'analyze-support-ticket',
+  'schedule-trial-emails',
+  'track-usage',
   'billing-automation',
   'manage-complimentary-subscription',
   'process-referral-signup',
@@ -62,7 +65,7 @@ const VALIDATED = new Set([
   'sso-ldap-auth', 'sso-manage', 'sso-oauth-init', 'sso-saml-init',
   'time-tracking', 'verify-auth-otp', 'verify-mfa-login', 'verify-mfa-setup',
 ]);
-const BASELINE = 122;
+const BASELINE = 119;
 
 console.log('Edge-function input-validation guard (US-241)');
 console.log(`  functions taking a JSON body:  ${reads.length}`);

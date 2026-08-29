@@ -3,6 +3,20 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.3";
 import { getCorsHeaders } from "../_shared/secure-cors.ts";
 import { requireSystemOrAdmin } from "../_shared/system-auth.ts";
+import { validateBody } from '../_shared/validate-body.ts';
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
+
+/**
+ * These land in a scheduled-email row and are rendered into the message body,
+ * so the strings are bounded rather than open. email is the address the
+ * sequence is sent to.
+ */
+const TrialEmailSchema = z.object({
+  userId: z.string().uuid(),
+  email: z.string().email().max(320),
+  firstName: z.string().max(200).optional(),
+  companyName: z.string().max(200).optional(),
+});
 
 // Default site key for Brikly
 const DEFAULT_SITE_KEY = 'brikly';
@@ -53,7 +67,11 @@ serve(async (req) => {
     );
 
     // Get request body
-    const { userId, email, firstName, companyName } = await req.json();
+    const parsed = await validateBody(req, TrialEmailSchema, { name: 'schedule-trial-emails' });
+    if (!parsed.ok) return parsed.response;
+    const { userId, email, firstName, companyName } = parsed.data as {
+      userId: string; email: string; firstName?: string; companyName?: string;
+    };
 
     if (!userId || !email) {
       throw new Error("Missing required fields: userId and email");
