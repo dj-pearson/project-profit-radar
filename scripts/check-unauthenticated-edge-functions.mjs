@@ -54,7 +54,12 @@ const PUBLIC_BY_DESIGN = new Set([
   'sso-oauth-callback', 'sso-saml-callback', 'sso-oauth-init', 'sso-saml-init',
   'sso-ldap-auth', 'verify-mfa-login', 'webhook-verify', 'api-auth',
   'health-check', 'oauth-proxy', 'generate-sitemap-file', 'sitemap-generator',
-  'verify-domain', 'webhook-delivery', 'create-root-admin',
+  'verify-domain', 'create-root-admin',
+  // webhook-delivery was here and did not belong. The list is for functions a
+  // visitor with no account must reach, each verifying what it can inside its
+  // own flow - an OTP, an OAuth state, a signature. webhook-delivery is a cron
+  // worker on the service role that verified nothing; its HMAC code signs the
+  // OUTBOUND payload rather than checking the caller. Now internal-only.
 ]);
 
 /**

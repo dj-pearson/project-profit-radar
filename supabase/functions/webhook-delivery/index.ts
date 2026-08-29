@@ -4,6 +4,7 @@
 import { serve } from 'https://deno.land/std@0.190.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.50.3'
 import { getCorsHeaders } from '../_shared/secure-cors.ts';
+import { requireInternalCaller } from '../_shared/internal-only.ts';
 
 interface WebhookEndpoint {
   id: string
@@ -33,6 +34,24 @@ serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
   }
+
+  // This was listed as public-by-design, and it does not fit that description:
+  // no visitor needs it, and it verifies nothing in its own flow. The HMAC code
+  // below SIGNS the outbound payload (X-Webhook-Signature) - it does not
+  // authenticate the caller. It is a cron worker: GET flushes every pending
+  // delivery across all tenants, POST redelivers one by id with no scoping.
+  //
+  // Left open, anyone holding the publishable anon key could redeliver any
+  // pending webhook - duplicating events into a customer's systems - or flush
+  // the whole queue. And because failure_count drives the auto-disable below,
+  // forcing repeated deliveries against a failing endpoint could push
+  // consecutive_failures past auto_disable_after_failures and switch a
+  // customer's webhook off.
+  //
+  // webhook-trigger already calls this with the service-role bearer, which
+  // requireInternalCaller accepts, so the one real caller is unaffected.
+  const denied = requireInternalCaller(req);
+  if (denied) return denied;
 
   try {
     const supabaseClient = createClient(
