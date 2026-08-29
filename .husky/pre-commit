@@ -105,6 +105,11 @@ node scripts/check-generated-types.mjs || exit 1
 #      answered, just by the wrong route.
 node scripts/check-param-route-traps.mjs || exit 1
 
+# 3u2. Unreferenced modules (US-314 follow-up) - the component guard below only
+#      looks at components/ and pages/. hooks, lib, services and utils were
+#      uncounted, and useCRM.ts is 1,945 lines that nothing imports.
+node scripts/check-unreferenced-modules.mjs || exit 1
+
 # 3u. Unreferenced components (US-314) — Vite drops a component nothing imports,
 #     so it fails nowhere and sits in the tree looking like a feature.
 node scripts/check-unreferenced-components.mjs || exit 1

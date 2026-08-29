@@ -214,6 +214,9 @@ jobs:
       - name: Generated Supabase types guard (US-263)
         run: node scripts/check-generated-types.mjs
 
+      - name: Unreferenced-module guard (US-314 follow-up)
+        run: node scripts/check-unreferenced-modules.mjs
+
       - name: Unreferenced-component guard (US-314)
         run: node scripts/check-unreferenced-components.mjs
 
