@@ -31,8 +31,17 @@
  * baseline, and the message this script used to print in that case told the
  * reader to set the baseline to 1 - one copy-paste from disabling the gate
  * permanently while looking like the biggest cleanup in the project's history.
- * A config diagnostic is not a count, so it now aborts with its own message
- * instead of being compared to the baseline at all.
+ * A config diagnostic is not a count, so it aborts with its own message instead
+ * of being compared to the baseline at all.
+ *
+ * Classify those by WHERE the diagnostic is anchored, not by error code. The
+ * first version of this check matched the code ranges TS5xxx and TS6xxx, which
+ * is wrong: TS6xxx is a mixed range holding both config errors (TS6053 file not
+ * found) and ordinary source diagnostics, and TS6133 "declared but never read"
+ * alone accounts for 136 errors in this tree. That check aborted on every run.
+ * A config diagnostic is instead one that is anchored to a tsconfig file, or to
+ * no file at all - a source diagnostic always carries a `path(line,col):`
+ * prefix naming a .ts/.tsx file, because it was found while compiling one.
  */
 import { execSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
@@ -51,14 +60,23 @@ try {
 }
 
 // Config-level diagnostics mean tsc never compiled anything - see the header.
-// TS5xxx is the command-line/config range, TS6xxx covers missing files and bad
-// project references, and TS18003 is "no inputs found". Any of them makes the
-// error count meaningless rather than low.
-const CONFIG_DIAGNOSTIC = /error (TS5\d{3}|TS6\d{3}|TS18003)\b/g;
-const configProblems = [...new Set(out.match(CONFIG_DIAGNOSTIC) || [])];
+// Anchoring decides it: a source diagnostic names the source file it was found
+// in, so anything anchored to a tsconfig or to no file at all was raised before
+// compilation started, and the error count from that run is meaningless.
+const DIAGNOSTIC = /^(?:(.*?)\((\d+),(\d+)\): )?error (TS\d+):/;
+const sourceErrors = [];
+const configProblems = [];
+for (const line of out.split('\n')) {
+  const m = DIAGNOSTIC.exec(line.trim());
+  if (!m) continue;
+  const [, file, , , code] = m;
+  if (file && /\.(ts|tsx|mts|cts|js|jsx)$/i.test(file)) sourceErrors.push(code);
+  else configProblems.push(file ? `${code} in ${file}` : code);
+}
+
 if (configProblems.length) {
   console.error(
-    `::error::tsc rejected the configuration (${configProblems.join(', ')}), so it exited ` +
+    `::error::tsc rejected the configuration (${[...new Set(configProblems)].join(', ')}), so it exited ` +
       `before compiling any source file. The error count from this run is not a measurement ` +
       `and has NOT been compared to the baseline - do not "lock in" whatever number it shows.`,
   );
@@ -72,7 +90,7 @@ if (configProblems.length) {
   process.exit(1);
 }
 
-const count = (out.match(/error TS\d+/g) || []).length;
+const count = sourceErrors.length;
 console.log(`TypeScript errors: ${count} (baseline ${baseline})`);
 
 if (count > baseline) {
