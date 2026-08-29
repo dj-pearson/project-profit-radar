@@ -105,6 +105,11 @@ node scripts/check-generated-types.mjs || exit 1
 #      answered, just by the wrong route.
 node scripts/check-param-route-traps.mjs || exit 1
 
+# 3u1. God files (US-267) - no new file crosses 1,000 lines while the backlog
+#      is being burned down. Dead and generated files are excluded: one should
+#      be deleted rather than split, the other is rewritten by npm run db:types.
+node scripts/check-god-files.mjs || exit 1
+
 # 3u2. Unreferenced modules (US-314 follow-up) - the component guard below only
 #      looks at components/ and pages/. hooks, lib, services and utils were
 #      uncounted, and useCRM.ts is 1,945 lines that nothing imports.
