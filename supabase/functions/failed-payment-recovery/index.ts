@@ -4,6 +4,7 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@14.21.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.3";
 import { initializeAuthContext, errorResponse } from '../_shared/auth-helpers.ts';
+import { requireInternalCaller } from '../_shared/internal-only.ts';
 import { getCorsHeaders } from '../_shared/secure-cors.ts';
 
 const logStep = (step: string, details?: Record<string, unknown>) => {
@@ -66,34 +67,61 @@ serve(async (req) => {
 
     const body: RecoveryRequest = await req.json();
     const { action } = body;
-    const targetCompanyId = body.company_id || companyId;
 
-    logStep('Processing action', { action, companyId: targetCompanyId });
+    // `const targetCompanyId = body.company_id || companyId` used to be here,
+    // and it is why every action below was cross-tenant: a company_id in the
+    // BODY took precedence over the one resolved from the caller's own profile.
+    // Authentication is optional in this handler (`if (authHeader)`), the client
+    // is service-role, and the function is absent from supabase/config.toml so
+    // verify_jwt only proves a project JWT - which the publishable anon key is.
+    // So the tenant was whichever one the caller named. The body's company_id is
+    // now ignored entirely; scope comes from the caller.
+    logStep('Processing action', { action, companyId });
+
+    // The cron path. It walks every tenant's failures and cannot be scoped, so
+    // it takes the same treatment as webhook-trigger and billing-automation.
+    if (action === 'process_failures') {
+      const denied = requireInternalCaller(req);
+      if (denied) return denied;
+      return await processAllFailures(corsHeaders, supabaseClient);
+    }
+
+    // Everything else is user-initiated and must have a caller.
+    if (!companyId) return errorResponse('Unauthorized', 401);
 
     switch (action) {
-      case 'process_failures':
-        return await processAllFailures(corsHeaders, supabaseClient);
-
-      case 'retry_payment':
+      case 'retry_payment': {
+        const owned = await failureBelongsTo(supabaseClient, body.failure_id!, companyId);
+        if (!owned) return errorResponse('Payment failure not found', 404);
         return await retryPayment(corsHeaders, supabaseClient, body.failure_id!);
+      }
 
-      case 'send_dunning_email':
+      case 'send_dunning_email': {
+        const owned = await failureBelongsTo(supabaseClient, body.failure_id!, companyId);
+        if (!owned) return errorResponse('Payment failure not found', 404);
         return await sendDunningEmail(corsHeaders, supabaseClient, body.failure_id!);
+      }
 
       case 'get_settings':
-        return await getSettings(corsHeaders, supabaseClient, targetCompanyId!);
+        return await getSettings(corsHeaders, supabaseClient, companyId);
 
       case 'update_settings':
-        return await updateSettings(corsHeaders, supabaseClient, targetCompanyId!, body.settings!);
+        return await updateSettings(corsHeaders, supabaseClient, companyId, body.settings!);
 
       case 'get_dashboard':
-        return await getDashboard(corsHeaders, supabaseClient, targetCompanyId!);
+        return await getDashboard(corsHeaders, supabaseClient, companyId);
 
-      case 'pause_dunning':
+      case 'pause_dunning': {
+        const owned = await subscriberBelongsTo(supabaseClient, body.subscriber_id!, companyId);
+        if (!owned) return errorResponse('Subscriber not found', 404);
         return await pauseDunning(corsHeaders, supabaseClient, body.subscriber_id!);
+      }
 
-      case 'resume_dunning':
+      case 'resume_dunning': {
+        const owned = await subscriberBelongsTo(supabaseClient, body.subscriber_id!, companyId);
+        if (!owned) return errorResponse('Subscriber not found', 404);
         return await resumeDunning(corsHeaders, supabaseClient, body.subscriber_id!);
+      }
 
       default:
         return errorResponse('Invalid action', 400);
@@ -431,6 +459,57 @@ async function sendDunningEmail(
     }),
     { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
   );
+}
+
+/**
+ * Ownership, the long way round, because the schema does not offer a short one.
+ * payment_failures has no company_id - only subscriber_id - and subscribers has
+ * no company_id either, only user_id. So the chain is
+ *
+ *   payment_failures.subscriber_id -> subscribers.user_id -> user_profiles.company_id
+ *
+ * Both helpers return false on any missing link rather than throwing, and every
+ * caller answers 404 rather than 403: a distinct "forbidden" would confirm that
+ * the id exists, which is the thing an attacker is probing for.
+ */
+async function subscriberBelongsTo(
+  supabase: ReturnType<typeof createClient>,
+  subscriberId: string,
+  companyId: string,
+): Promise<boolean> {
+  if (!subscriberId) return false;
+
+  const { data: subscriber } = await supabase
+    .from('subscribers')
+    .select('user_id')
+    .eq('id', subscriberId)
+    .maybeSingle();
+  if (!subscriber?.user_id) return false;
+
+  const { data: profile } = await supabase
+    .from('user_profiles')
+    .select('company_id')
+    .eq('id', subscriber.user_id)
+    .maybeSingle();
+
+  return profile?.company_id === companyId;
+}
+
+async function failureBelongsTo(
+  supabase: ReturnType<typeof createClient>,
+  failureId: string,
+  companyId: string,
+): Promise<boolean> {
+  if (!failureId) return false;
+
+  const { data: failure } = await supabase
+    .from('payment_failures')
+    .select('subscriber_id')
+    .eq('id', failureId)
+    .maybeSingle();
+  if (!failure?.subscriber_id) return false;
+
+  return await subscriberBelongsTo(supabase, failure.subscriber_id, companyId);
 }
 
 async function getSettings(

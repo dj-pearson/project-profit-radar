@@ -37,6 +37,18 @@ const TYPES = join(root, 'src', 'integrations', 'supabase', 'types.ts');
 
 // Known to be missing from the live schema as of the 2026-06-29-or-later
 // types.ts. Each is a real query that cannot succeed today.
+const EDGE_BASELINE = new Set([
+  'ai_estimates', 'auth_otp_codes', 'campaign_enrollments', 'chargebacks',
+  'disposable_email_domains', 'email_automations', 'estimate_predictions', 'expo_builds',
+  'failed_payment_recovery_settings', 'financial_records', 'geofence_breach_alerts',
+  'image_processing_queue', 'intervention_logs', 'lead_scoring_rules', 'market_pricing_data',
+  'oauth_pending_states', 'payment_reminder_logs', 'payment_reminder_settings',
+  'project_team_assignments', 'proration_history', 'push_subscriptions', 'quickbooks_expenses',
+  'quickbooks_payments', 'quickbooks_routing_history', 'quickbooks_routing_rules',
+  'quickbooks_unrouted_transactions', 'refunds', 'saml_pending_requests', 'stripe_keys',
+  'system_settings', 'teams', 'usage_billing_records',
+]);
+
 const BASELINE = new Set([
   'ai_environment_config', 'api_key_rate_limits', 'consent_ledger',
   'disposable_email_domains', 'estimate_templates', 'financial_records',
@@ -77,19 +89,25 @@ if (tables.size === 0) {
 const QUERY = /(?<!storage\s*\n?\s*)\.from\(\s*["'`]([a-z_0-9]+)["'`]\s*\)/g;
 const STORAGE = /\.storage\s*[\s\S]{0,40}?\.from\(\s*["'`]([a-z_0-9]+)["'`]\s*\)/g;
 
-const found = new Map();
-for (const file of walk(join(root, 'src'))) {
-  if (/\.(test|spec)\.tsx?$|__tests__/.test(file)) continue;
-  const src = readFileSync(file, 'utf8');
-  const buckets = new Set([...src.matchAll(STORAGE)].map((m) => m[1]));
-  for (const m of src.matchAll(QUERY)) {
-    const t = m[1];
-    if (known.has(t) || buckets.has(t)) continue;
-    const line = src.slice(0, m.index).split('\n').length;
-    if (!found.has(t)) found.set(t, []);
-    found.get(t).push(`${relative(root, file)}:${line}`);
+function scan(dir) {
+  const out = new Map();
+  for (const file of walk(dir)) {
+    if (/\.(test|spec)\.tsx?$|__tests__/.test(file)) continue;
+    const src = readFileSync(file, 'utf8');
+    const buckets = new Set([...src.matchAll(STORAGE)].map((m) => m[1]));
+    for (const m of src.matchAll(QUERY)) {
+      const t = m[1];
+      if (known.has(t) || buckets.has(t)) continue;
+      const line = src.slice(0, m.index).split('\n').length;
+      if (!out.has(t)) out.set(t, []);
+      out.get(t).push(`${relative(root, file)}:${line}`);
+    }
   }
+  return out;
 }
+
+const found = scan(join(root, 'src'));
+const edgeFound = scan(join(root, 'supabase', 'functions'));
 
 // Split what is found by root cause, because the two halves need opposite
 // fixes and lumping them together hides that. A table a migration creates but
@@ -107,16 +125,37 @@ for (const f of readdirSync(join(root, 'supabase', 'migrations')).sort()) {
 const unapplied = [...found.keys()].filter((t) => createdBy.has(t)).sort();
 const undesigned = [...found.keys()].filter((t) => !createdBy.has(t)).sort();
 
+const edgeNew = [...edgeFound.keys()].filter((t) => !EDGE_BASELINE.has(t)).sort();
+const edgeFixed = [...EDGE_BASELINE].filter((t) => !edgeFound.has(t)).sort();
+
 const isNew = [...found.keys()].filter((t) => !BASELINE.has(t)).sort();
 const fixed = [...BASELINE].filter((t) => !found.has(t)).sort();
 
 console.log('Live-schema table guard (US-311 follow-up)');
 console.log(`  live schema:            ${tables.size} tables, ${views.size} views`);
-console.log(`  queried but not there:  ${found.size} (baseline ${BASELINE.size})`);
+console.log(`  queried by src/, not there:              ${found.size} (baseline ${BASELINE.size})`);
+console.log(`  queried by supabase/functions/, not there: ${edgeFound.size} (baseline ${EDGE_BASELINE.size})`);
 console.log(`    a migration creates it, prod does not have it (US-248): ${unapplied.length}`);
 for (const t of unapplied) console.log(`      ${t.padEnd(26)} ${createdBy.get(t)}`);
 console.log(`    no migration creates it at all (US-311):                ${undesigned.length}`);
 for (const t of undesigned) console.log(`      ${t}`);
+
+if (edgeNew.length) {
+  console.error('\n\u2716 These tables are queried by an edge function and are not in the live schema:');
+  for (const t of edgeNew) {
+    console.error(`    ${t}`);
+    for (const site of edgeFound.get(t).slice(0, 4)) console.error(`        ${site}`);
+  }
+  console.error('\n  Edge functions run on the service role, so there is no RLS error to notice -');
+  console.error('  the query just returns { data: null, error } and the handler usually carries on.');
+  process.exit(1);
+}
+
+if (edgeFixed.length) {
+  console.error(`\n\u2716 ${edgeFixed.length} baselined edge table(s) now exist: ${edgeFixed.join(', ')}`);
+  console.error('  Remove them from EDGE_BASELINE to lock the win in.');
+  process.exit(1);
+}
 
 if (isNew.length) {
   console.error('\n✖ These tables are queried by src/ but do not exist in the live schema:');
@@ -139,4 +178,7 @@ if (fixed.length) {
   process.exit(1);
 }
 
-console.log(`\n✔ No new queries against tables the live schema lacks (${BASELINE.size} in the backlog).`);
+console.log(
+  `\n✔ No new queries against tables the live schema lacks ` +
+    `(${BASELINE.size} in src/, ${EDGE_BASELINE.size} in edge functions).`,
+);
