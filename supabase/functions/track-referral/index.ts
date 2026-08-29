@@ -2,6 +2,7 @@
 // Note: This is a public endpoint for referral tracking
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.3";
+import { checkRateLimit, rateLimitResponse, getClientIP, RATE_LIMITS } from "../_shared/rate-limiter.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -26,6 +27,19 @@ serve(async (req) => {
 
   try {
     logStep("Function started");
+
+    // Anonymous and it writes. capture-lead - the closest sibling, reached from
+    // the same marketing forms - has limited by IP since it was written; these
+    // three never did, so the leads, demo and referral tables were open to
+    // anyone with a loop. AUTH's ceiling (10/min/IP) matches what capture-lead
+    // chose for the same shape of form.
+    const clientIP = getClientIP(req);
+    const rl = await checkRateLimit(supabaseClient, {
+      identifier: clientIP,
+      endpoint: 'track-referral',
+      ...RATE_LIMITS.AUTH,
+    });
+    if (!rl.allowed) return rateLimitResponse(rl, corsHeaders);
 
     const { affiliate_code, referee_email } = await req.json();
 
