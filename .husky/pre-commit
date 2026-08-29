@@ -99,6 +99,12 @@ node scripts/check-live-schema-tables.mjs || exit 1
 #      script that caused it.
 node scripts/check-generated-types.mjs || exit 1
 
+# 3t3. Param-route traps (US-312 follow-up) - /projects/new has no route but
+#      /projects/:id matches it, so the create action opens the detail page for
+#      a record called "new". A dead-link check cannot see this: the path IS
+#      answered, just by the wrong route.
+node scripts/check-param-route-traps.mjs || exit 1
+
 # 3u. Unreferenced components (US-314) — Vite drops a component nothing imports,
 #     so it fails nowhere and sits in the tree looking like a feature.
 node scripts/check-unreferenced-components.mjs || exit 1

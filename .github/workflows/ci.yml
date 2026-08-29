@@ -205,6 +205,9 @@ jobs:
       - name: Dead-link guard (US-312)
         run: node scripts/check-dead-links.mjs
 
+      - name: Param-route trap guard (US-312 follow-up)
+        run: node scripts/check-param-route-traps.mjs
+
       - name: Live-schema table guard (US-311 follow-up)
         run: node scripts/check-live-schema-tables.mjs
 
