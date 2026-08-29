@@ -3,6 +3,7 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.3";
 import { validateBody } from '../_shared/validate-body.ts';
 import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
+import { checkRateLimit, rateLimitResponse, getClientIP, RATE_LIMITS } from "../_shared/rate-limiter.ts";
 
 /**
  * The authorisation here is already right - the comments below record why
@@ -46,6 +47,16 @@ serve(async (req) => {
 
   try {
     logStep("Function started");
+
+    // Anonymous by design (it runs at signup) and it writes six rows, so it
+    // gets the same ceiling as capture-lead and the other public writers.
+    const clientIP = getClientIP(req);
+    const rl = await checkRateLimit(supabaseClient, {
+      identifier: clientIP,
+      endpoint: 'process-referral-signup',
+      ...RATE_LIMITS.AUTH,
+    });
+    if (!rl.allowed) return rateLimitResponse(rl, corsHeaders);
 
     const parsed = await validateBody(req, ReferralSignupSchema, {
       name: 'process-referral-signup',

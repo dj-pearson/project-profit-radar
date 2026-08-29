@@ -11,6 +11,7 @@ import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
 import { validateRequest, createErrorResponse, sanitizeError } from "../_shared/validation.ts";
 import { getCorsHeaders } from '../_shared/secure-cors.ts';
 import { writeSecurityLog } from '../_shared/security-log.ts';
+import { checkRateLimit, rateLimitResponse, getClientIP, RATE_LIMITS } from "../_shared/rate-limiter.ts";
 
 // Input validation schema
 const LDAPAuthSchema = z.object({
@@ -157,6 +158,19 @@ serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
       { auth: { persistSession: false } }
     );
+
+    // This takes a username and a password and performs an LDAP bind. Without a
+    // ceiling that is an unlimited credential-guessing oracle against the
+    // customer's own directory - and worse than a normal brute force, because
+    // most directories lock an account after N failures, so an attacker can
+    // lock out real users without ever guessing anything.
+    const clientIP = getClientIP(req);
+    const rl = await checkRateLimit(supabaseClient, {
+      identifier: clientIP,
+      endpoint: 'sso-ldap-auth',
+      ...RATE_LIMITS.AUTH,
+    });
+    if (!rl.allowed) return rateLimitResponse(rl, corsHeaders);
 
     // Validate request body
     let requestBody;

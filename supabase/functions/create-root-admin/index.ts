@@ -2,6 +2,7 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.3";
 import { getCorsHeaders, handleCorsPreflightRequest } from '../_shared/secure-cors.ts';
 import { writeAuditLog } from '../_shared/audit-log.ts';
+import { checkRateLimit, rateLimitResponse, getClientIP, RATE_LIMITS } from "../_shared/rate-limiter.ts";
 
 serve(async (req) => {
   // Use secure CORS (whitelist-based)
@@ -12,6 +13,24 @@ serve(async (req) => {
   }
 
   try {
+    // The client is built here rather than after the secret check, because the
+    // rate limit has to come FIRST to be worth anything: limiting attempts only
+    // after a correct secret protects nothing. ADMIN_CREATION_SECRET is compared
+    // with !== below and this endpoint mints a root admin, so unlimited guesses
+    // were the real exposure.
+    const supabaseAdmin = createClient(
+      Deno.env.get("SUPABASE_URL") ?? "",
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
+    );
+
+    const clientIP = getClientIP(req);
+    const rl = await checkRateLimit(supabaseAdmin, {
+      identifier: clientIP,
+      endpoint: 'create-root-admin',
+      ...RATE_LIMITS.AUTH,
+    });
+    if (!rl.allowed) return rateLimitResponse(rl, corsHeaders);
+
     // SECURITY: Require a secret API key for this sensitive operation
     // This prevents unauthorized admin creation
     const adminCreationSecret = req.headers.get('X-Admin-Creation-Secret');
@@ -32,12 +51,6 @@ serve(async (req) => {
         { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 401 }
       );
     }
-
-    // Use service role key to create admin user
-    const supabaseAdmin = createClient(
-      Deno.env.get("SUPABASE_URL") ?? "",
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
-    );
 
     console.log("Creating root admin user (authorized request)...");
 
