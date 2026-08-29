@@ -87,20 +87,17 @@ test.describe('Smoke Tests', () => {
     // Navigate to page first to establish context
     await page.goto('/');
 
-    // Try to fetch from Supabase (should at least get a response)
-    try {
-      const response = await request.get('https://api.brikly.net/rest/v1/', {
-        headers: {
-          'apikey': 'test', // This will fail auth but proves endpoint is up
-        },
-      });
+    // The try/catch here caught the error and immediately rethrew it, which is
+    // what the request would have done on its own. Removed rather than kept for
+    // shape: a wrapper that only rethrows reads like it handles something.
+    const response = await request.get('https://api.brikly.net/rest/v1/', {
+      headers: {
+        apikey: 'test', // Fails auth by design - the point is that the endpoint answers
+      },
+    });
 
-      // We expect auth failure (401) or success, not 500 or timeout
-      expect([200, 401, 403]).toContain(response.status());
-    } catch (error) {
-      // If network error, that's a problem
-      throw error;
-    }
+    // Auth failure or success, not a 500 or a timeout.
+    expect([200, 401, 403]).toContain(response.status());
   });
 
   test('navigation between pages should work', async ({ page }) => {
@@ -122,12 +119,25 @@ test.describe('Smoke Tests', () => {
     await page.goto('/');
 
     if (viewport && viewport.width < 768) {
-      // Check that mobile menu exists or navigation is adapted
-      const mobileNav =
-        (await page.getByRole('button', { name: /menu/i }).isVisible().catch(() => false)) ||
-        (await page.locator('nav').isVisible().catch(() => false));
+      // .isVisible() is a point-in-time check with no auto-retry, so this was a
+      // race: called immediately after goto() it returned false for a control
+      // that renders a moment later, and .catch(() => false) turned any error
+      // into the same false. The desktop project won the race on the <nav>
+      // element and passed; Mobile Chrome lost it and reported "no mobile
+      // navigation" for a page that has a working Toggle menu button.
+      //
+      // expect(...).toBeVisible() polls until the timeout, and .or() lets
+      // either control satisfy it, which is what the assertion always meant.
+      // `nav:visible`, not `nav`. The desktop navigation is <nav class="hidden
+      // lg:flex">, so it is in the DOM on mobile and hidden by CSS - and .or()
+      // returns matches in DOM order, so .first() picked that hidden nav and
+      // failed while the visible Toggle menu button sat right there. Filtering
+      // to visible candidates is what "navigation is adapted" actually means.
+      const mobileNav = page
+        .getByRole('button', { name: /menu/i })
+        .or(page.locator('nav:visible'));
 
-      expect(mobileNav).toBeTruthy();
+      await expect(mobileNav.first()).toBeVisible();
     }
   });
 

@@ -3499,7 +3499,7 @@
       ],
       "priority": 2,
       "passes": false,
-      "notes": "Source: testing/CI audit. Builds on US-008/US-020 e2e foundation."
+      "notes": "Source: testing/CI audit. Builds on US-008/US-020 e2e foundation. AC3 and AC5 done; AC1/AC2/AC4 partially - blocked on US-247. The 14 specs were written as test.skip(name, fn): that form never runs, reports as a bare skip with no reason, and nothing tells you what would make it run. They now call requireTestCredentials() (tests/e2e/fixtures/auth.ts), which skips with a reason naming TEST_USER_EMAIL/TEST_USER_PASSWORD, and signIn() drives the real /auth form. A forged localStorage session was rejected deliberately: it would render the UI for an unauthenticated user while every request it made was still refused server-side, so the tests would exercise a state no real user is ever in and pass while proving nothing. AC3 met - CI now runs --project=chromium plus --project=\"Mobile Chrome\" - and it immediately earned its keep by exposing a real race in smoke.spec.ts: .isVisible() is point-in-time with no retry, so the mobile-nav assertion depended on render timing. Fixed with expect(...).toBeVisible() over a nav:visible locator. AC1/AC2/AC4 stay open because without credentials the 14 specs still skip - a legible skip is not a passing test. Needs the test Supabase project from US-247."
     },
     {
       "id": "US-215",
