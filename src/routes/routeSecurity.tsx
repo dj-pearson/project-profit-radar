@@ -93,7 +93,10 @@ export const routeSecurityConfig: Record<string, RouteSecurityConfig> = {
     requireAuth: true,
     permissions: ['projects.read'],
   },
-  '/projects/new': {
+  // The route is /create-project. This was keyed '/projects/new', which no
+  // <Route> answers - /projects/:projectId matched it, so the create action
+  // opened the project detail page for a project whose id is the string 'new'.
+  '/create-project': {
     requireAuth: true,
     permissions: ['projects.write'],
     allowedRoles: ['root_admin', 'admin', 'project_manager'],
