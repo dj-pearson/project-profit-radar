@@ -37,13 +37,13 @@ const SRC = join(root, 'src');
  * repoint someone can just make.
  */
 const BASELINE = new Map([
+  // /deals, /deals/new, /calls, /meetings and /bookings were all here. Every one
+  // was linked from src/components/crm/CRMDashboard.tsx, an unreachable duplicate
+  // of the routed pages/CRMDashboard, deleted in the US-314 burn-down. Their
+  // baselined reasons deferred to US-276 (deals vs opportunities); that question is
+  // still open, it just no longer has a link pointing at it from dead code.
   ['/demo', 'Five "Schedule a Demo" CTAs (Implementation, StickyDemoCTA, PSEOPageRenderer and two more). There is no demo booking page; /contact is a general contact form and /admin/demos is the internal admin view. Sending demo intent to the contact form is a funnel decision, not a repoint.'],
   ['/demo-request', 'The exit-intent modal. Same decision as /demo, and the two should land in the same place once it is made.'],
-  ['/deals', 'CRM dashboard "View All". The closest routes are /crm/opportunities and /crm/pipeline, and which one "deals" means is exactly the question US-276 (deals vs opportunities) exists to settle. Repointing now would bake in an answer.'],
-  ['/deals/new', 'CRM dashboard. Same as /deals, and no route creates a deal - the closest pages open a dialog instead.'],
-  ['/calls', 'CRM dashboard activity link. No calls page exists; the three CRM activity tables US-276 covers are where this belongs.'],
-  ['/meetings', 'CRM dashboard activity link. Same as /calls.'],
-  ['/bookings', 'CRM dashboard activity link. Same as /calls.'],
   ['/finance/bank-reconciliation', 'FinanceHub tile. Every other tile on that page has a route; this feature was never built.'],
   ['/admin/search-traffic-dashboard/settings', 'A settings link on the search-traffic dashboard, with no settings page behind it.'],
   ['/tools/budget-calculator', 'Linked from the construction budgeting guide. /tools exists as an index; this specific calculator does not.'],

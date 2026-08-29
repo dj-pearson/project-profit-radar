@@ -159,15 +159,42 @@ describe('the mock-data feature shells', () => {
     expect(doc).toContain('Do not edit by hand');
   });
 
-  it('none of the remaining orphans holds an explicitly-named mock variable', () => {
+  it('the only orphans still holding named mock data are the seven in dead islands', () => {
     // The deletion criterion was `const mockX = ...` in a file with no data
     // access that nothing imports: 34 files, 17,835 lines, holding invented
     // business records - "ABC Electrical Services", "John Smith", fake phone
     // numbers - rendered as if they were the customer's.
-    const holding = listed().filter((f) =>
-      /\bconst\s+(mock|sample|demo|dummy|fake)[A-Za-z0-9_]*\s*[:=]/i.test(readFileSync(f, 'utf8')),
-    );
-    expect(holding).toEqual([]);
+    //
+    // That sweep was complete for the files it could see, and it could only see
+    // 194 of 272: the guard counted inbound imports rather than reachability, so
+    // a mock shell imported by another dead file was invisible to it. Fixing
+    // that surfaced these seven. They are not a regression and not an oversight
+    // in the sweep - they were never in its input.
+    //
+    // They are left in place deliberately. Each sits in an island with a live-
+    // looking importer - pages/MarketingAutomation imports three of them,
+    // forms/StreamlinedDataEntry two - so removing them means deleting whole
+    // dead features, which is a decision per island rather than a file sweep.
+    // Tracked as US-314 AC5.
+    const KNOWN = [
+      'src/components/communication/NotificationCenter.tsx',
+      'src/components/enterprise/EnterpriseDashboard.tsx',
+      'src/components/forms/BarcodeQRScanner.tsx',
+      'src/components/forms/PhotoFirstWorkflow.tsx',
+      'src/components/marketing/EmailMarketingCampaigns.tsx',
+      'src/components/marketing/LeadNurturingWorkflows.tsx',
+      'src/components/marketing/SocialMediaScheduler.tsx',
+    ];
+    // `dummy` is deliberately not in this pattern. hero/BriklyHero3D declares
+    // `const dummy = useMemo(() => new THREE.Object3D(), [])`, which is the
+    // standard instanced-mesh idiom and not mock data at all - matching on the
+    // name alone called a 3D scene a fake-data shell.
+    const holding = listed()
+      .filter((f) =>
+        /\bconst\s+(mock|sample|demo|fake)[A-Za-z0-9_]*\s*[:=]/i.test(readFileSync(f, 'utf8')),
+      )
+      .sort();
+    expect(holding).toEqual(KNOWN);
   });
 
   it('the largest of them is gone', () => {
