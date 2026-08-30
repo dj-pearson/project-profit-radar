@@ -463,24 +463,33 @@ const VoiceNotes: React.FC<VoiceNotesProps> = ({
         new Uint8Array(atob(data as string).split('').map(char => char.charCodeAt(0)))
       ], { type: 'audio/webm' });
 
-      // Upload to Supabase Storage
-      const { error: uploadError } = await supabase.storage
-        .from('project-documents')
-        .upload(`voice-notes/${note.filename}`, audioBlob, {
-          contentType: 'audio/webm',
-          upsert: true
-        });
-
-      if (uploadError) throw uploadError;
-
       // Persist the storage path, not a permanent public URL (US-289).
       // <projectId>/<category>/... so the project-documents SELECT policy
       // matches on the first segment (US-289). Falls back to the legacy
       // shape only when no project is selected; the documents-table branch
       // of the supplementary policy covers that case.
+      //
+      // This is computed BEFORE the upload, and the upload uses it. It used to
+      // be computed after, while the upload wrote the bare `voice-notes/...`
+      // shape unconditionally - so every note recorded against a project (which
+      // is all of them: InspectionConductDialog renders this with
+      // projectId={inspection.project_id}) stored a documents.file_path
+      // pointing at an object that did not exist. Playback 404s today, and
+      // after the privacy flip the row would match the documents-table policy
+      // branch while the real object matched nothing.
       const storagePath = note.projectId
         ? `${note.projectId}/voice-notes/${note.filename}`
         : `voice-notes/${note.filename}`;
+
+      // Upload to Supabase Storage
+      const { error: uploadError } = await supabase.storage
+        .from('project-documents')
+        .upload(storagePath, audioBlob, {
+          contentType: 'audio/webm',
+          upsert: true
+        });
+
+      if (uploadError) throw uploadError;
 
       // Save to database
       const { error: dbError } = await supabase

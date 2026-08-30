@@ -41,8 +41,9 @@ describe('storage bucket privacy', () => {
       }
     }
 
-    // The three historical offenders are expected until the final US-289 flip
-    // migration lands; this asserts no NEW ones appear alongside them.
+    // The three historical offenders still appear here and always will: the
+    // flip is a later UPDATE, and rewriting a merged migration is forbidden.
+    // What this asserts is that no NEW one appears alongside them.
     const KNOWN = [
       'project-documents',
       'company-documents',
@@ -120,18 +121,130 @@ describe('project-documents path convention', () => {
     expect(migration).toContain('get_user_company');
   });
 
-  it('orders the flip migration after the read policies, once it is written', () => {
+  it('orders the flip migration after the read policies', () => {
     const files = readdirSync(MIGRATIONS_DIR).filter((f) => f.endsWith('.sql')).sort();
     const policyAt = files.findIndex((f) => f.includes('project_documents_read_policies'));
     expect(policyAt, 'policy migration missing').toBeGreaterThan(-1);
 
     const flipAt = files.findIndex((f) => f.includes('make_customer_buckets_private'));
-    // The flip has NOT landed - US-289 is reopened. This asserted the flip
-    // migration existed and had been red since the commit that claimed to have
-    // written it. Ordering is the part that is checkable today, and it becomes
-    // load-bearing the moment the migration appears.
-    if (flipAt === -1) return;
+    expect(flipAt, 'flip migration missing').toBeGreaterThan(-1);
     expect(flipAt, 'flip must run after the read policies exist').toBeGreaterThan(policyAt);
+  });
+});
+
+describe('VoiceNotes uploads to the path it records', () => {
+  // The path written into documents.file_path and the path handed to
+  // storage.upload() were two different expressions: the row said
+  // `${note.projectId}/voice-notes/...` while the upload wrote a bare
+  // `voice-notes/...`. Every note recorded against a project - all of them,
+  // since InspectionConductDialog renders this with the inspection's project -
+  // pointed at an object that was never there.
+  const text = readFileSync('src/components/mobile/VoiceNotes.tsx', 'utf8');
+
+  it('hands storagePath to upload rather than a second literal', () => {
+    expect(text).toMatch(/\.upload\(storagePath,/);
+    expect(text, 'a bare voice-notes/ literal is being uploaded again').not.toMatch(
+      /\.upload\(`voice-notes\//,
+    );
+  });
+
+  it('and records the same variable in documents.file_path', () => {
+    expect(text).toMatch(/file_path:\s*storagePath/);
+  });
+
+  it('computes it before the upload, which is what made them able to disagree', () => {
+    expect(text.indexOf('const storagePath =')).toBeLessThan(text.indexOf('.upload(storagePath'));
+  });
+});
+
+/**
+ * project-communications (US-289).
+ *
+ * Its three storage policies gate every object on membership in
+ * project_communication_participants. Nothing writes that table - not the app,
+ * not an edge function, not a trigger, not a seed - so the policies authorise
+ * nobody. Uploads already fail (storage.objects RLS applies to INSERT whether
+ * or not a bucket is public); reads only work because a public bucket serves
+ * /object/public/ without consulting a policy, and would stop at the flip.
+ */
+describe('project-communications policy coverage', () => {
+  const migration = readdirSync(MIGRATIONS_DIR)
+    .filter((f) => f.includes('project_communications_company_policies'))
+    .map((f) => readFileSync(join(MIGRATIONS_DIR, f), 'utf8'))
+    .join('\n');
+
+  it('has a supplementary policy migration at all', () => {
+    expect(migration, 'project-communications policy migration missing').toBeTruthy();
+  });
+
+  it('carries the same company and role branch project_messages already has', () => {
+    expect(migration).toContain('get_user_company');
+    for (const role of ['admin', 'project_manager', 'root_admin']) {
+      expect(migration, `${role} missing from the policy branch`).toContain(`'${role}'::user_role`);
+    }
+  });
+
+  it('covers reads and uploads, since both were denied', () => {
+    expect(migration).toMatch(/FOR SELECT/);
+    expect(migration).toMatch(/FOR INSERT/);
+  });
+
+  it('does not drop the participant policies it sits beside', () => {
+    // Policies are PERMISSIVE and OR together. Dropping the original would
+    // remove access from any client who IS enrolled, and rewriting a merged
+    // migration is forbidden outright.
+    expect(migration).not.toMatch(/DROP POLICY[^\n]*participants can/i);
+  });
+
+  const WRITERS = [
+    'src/components/communication/ProjectCommunication.tsx',
+    'src/components/client-portal/ClientMessageCenter.tsx',
+  ] as const;
+
+  it.each(WRITERS)('%s writes <projectId>/<userId>/, which the policy keys on', (file) => {
+    expect(readFileSync(file, 'utf8')).toContain('${projectId}/${user.id}/');
+  });
+});
+
+describe('the flip itself', () => {
+  const flip = readdirSync(MIGRATIONS_DIR)
+    .filter((f) => f.includes('make_customer_buckets_private'))
+    .map((f) => readFileSync(join(MIGRATIONS_DIR, f), 'utf8'))
+    .join('\n');
+
+  it('exists', () => {
+    // A previous commit was titled "make customer-content buckets private
+    // (US-289 final stage)", said in its body that the buckets "are now
+    // public = false", and did not contain this file. The test that would have
+    // caught it was added by that same commit and was red from the start.
+    expect(flip, 'flip migration missing').toBeTruthy();
+  });
+
+  it('sets public = false for all three buckets', () => {
+    // Read the UPDATE's own WHERE clause, not the file. Every bucket name also
+    // appears in the pre-flight checks and the header, so a `toContain` on the
+    // whole file passed with a bucket dropped from the UPDATE - which is the
+    // one place it has to be.
+    const update = /UPDATE storage\.buckets\s+SET public = false\s+WHERE id IN \(([^)]*)\)/.exec(flip);
+    expect(update, 'no UPDATE ... SET public = false ... WHERE id IN (...)').toBeTruthy();
+    for (const b of ['project-documents', 'company-documents', 'project-communications']) {
+      expect(update![1], `${b} is not in the UPDATE`).toContain(`'${b}'`);
+    }
+  });
+
+  it('warns rather than aborting when a bucket has no SELECT policy', () => {
+    // A private bucket with no policy is an outage. Warning names it for
+    // whoever applies this; failing the migration would just leave the
+    // exposure open.
+    expect(flip).toContain('RAISE WARNING');
+    expect(flip).toContain('pg_policies');
+  });
+
+  it('counts objects matching no policy shape, which is what code cannot tell you', () => {
+    // Files from a deleted feature, or put there by hand, have no call site to
+    // audit. This is measured against production data at apply time.
+    expect(flip).toContain('FROM storage.objects');
+    expect(flip).toMatch(/NOT EXISTS/);
   });
 });
 
