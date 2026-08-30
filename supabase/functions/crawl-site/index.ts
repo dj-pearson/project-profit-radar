@@ -3,6 +3,25 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { initializeAuthContext, errorResponse } from '../_shared/auth-helpers.ts';
 import { getCorsHeaders } from '../_shared/secure-cors.ts';
 
+import { validateBody } from "../_shared/validate-body.ts";
+import { auditUrl } from "../_shared/audit-url.ts";
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
+
+// US-241. The URL below is fetched by this function. It used to arrive from the
+// request body with nothing but an `if (!url)` check, so the caller decided what
+// the edge runtime connected to - and the edge runtime holds the service-role
+// key. auditUrl is the shared definition of a fetchable target (see
+// _shared/audit-url.ts); it rejects non-http schemes, embedded credentials, and
+// loopback/private/link-local hosts. All twelve callers of that helper are
+// root_admin-gated, so this is hardening rather than an open hole, and it does
+// not reject anything until INPUT_VALIDATION_MODE=enforce.
+const CrawlSiteSchema = z.object({
+  start_url: auditUrl,
+  max_pages: z.number().int().min(1).max(500).optional(),
+  max_depth: z.number().int().min(1).max(10).optional(),
+  audit_id: z.string().uuid().optional(),
+});
+
 interface CrawlRequest {
   start_url: string;
   max_pages?: number;
@@ -40,7 +59,9 @@ serve(async (req) => {
       );
     }
 
-    const requestData: CrawlRequest = await req.json();
+    const parsed = await validateBody(req, CrawlSiteSchema, { name: 'crawl-site' });
+    if (!parsed.ok) return parsed.response;
+    const requestData = parsed.data as z.infer<typeof CrawlSiteSchema>;
     const { start_url, max_pages = 50, max_depth = 3, audit_id } = requestData;
 
     if (!start_url) {

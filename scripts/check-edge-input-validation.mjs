@@ -51,6 +51,21 @@ const reads = [...validated, ...unvalidated];
 
 // Functions already converted. Never remove a name from here.
 const VALIDATED = new Set([
+  // The twelve SEO functions that fetch a URL out of the request body. Their
+  // schemas share _shared/audit-url.ts, so what counts as a fetchable target is
+  // defined once rather than twelve times.
+  'analyze-content',
+  'analyze-images',
+  'analyze-internal-links',
+  'analyze-semantic-keywords',
+  'check-broken-links',
+  'check-mobile-first',
+  'check-security-headers',
+  'crawl-site',
+  'monitor-performance-budget',
+  'optimize-page-content',
+  'seo-audit',
+  'validate-structured-data',
   // The four anonymous marketing forms, converted as one set so they agree on
   // what fits in the `leads` row all four write.
   'capture-lead',
@@ -71,7 +86,7 @@ const VALIDATED = new Set([
   'sso-ldap-auth', 'sso-manage', 'sso-oauth-init', 'sso-saml-init',
   'time-tracking', 'verify-auth-otp', 'verify-mfa-login', 'verify-mfa-setup',
 ]);
-const BASELINE = 115;
+const BASELINE = 103;
 
 console.log('Edge-function input-validation guard (US-241)');
 console.log(`  functions taking a JSON body:  ${reads.length}`);
