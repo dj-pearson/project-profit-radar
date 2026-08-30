@@ -254,6 +254,7 @@ serve(async (req) => {
 
     return new Response(JSON.stringify({
       success: true,
+      timestamp: new Date().toISOString(),
       message: "Demo request received! Our team will contact you shortly.",
       leadId,
       demoRequestId: demoRequest.id
@@ -268,6 +269,7 @@ serve(async (req) => {
 
     return new Response(JSON.stringify({
       success: false,
+      timestamp: new Date().toISOString(),
       error: errorMessage
     }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },

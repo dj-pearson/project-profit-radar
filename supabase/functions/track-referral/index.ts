@@ -99,6 +99,7 @@ serve(async (req) => {
       logStep("Referral already exists", { referral_id: existingReferral.id });
       return new Response(JSON.stringify({
         success: true,
+        timestamp: new Date().toISOString(),
         referral_id: existingReferral.id,
         message: "Referral already tracked"
       }), {
@@ -152,6 +153,7 @@ serve(async (req) => {
 
     return new Response(JSON.stringify({
       success: true,
+      timestamp: new Date().toISOString(),
       referral_id: referral.id,
       referrer_reward_months: referral.referrer_reward_months,
       referee_reward_months: referral.referee_reward_months
@@ -163,7 +165,20 @@ serve(async (req) => {
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
     logStep("ERROR in track-referral", { message: errorMessage });
-    return new Response(JSON.stringify({ error: errorMessage }), {
+    // success and timestamp added, error left where it is (US-274). This one
+    // had no `success` key at all, which is why the sweep that stamped the
+    // other responses skipped it.
+    //
+    // NOTE, not fixed here: errorMessage is the raw caught error. US-242 says
+    // a 500 must not carry internal detail to the client, and errorResponse()
+    // exists for exactly that. Swapping it in changes the VALUE of `error`,
+    // which is a different change from adding two keys, so it is left for that
+    // story rather than folded in silently.
+    return new Response(JSON.stringify({
+      success: false,
+      timestamp: new Date().toISOString(),
+      error: errorMessage,
+    }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 500,
     });

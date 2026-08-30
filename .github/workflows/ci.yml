@@ -159,6 +159,9 @@ jobs:
       - name: Edge-function input-validation guard (US-241)
         run: node scripts/check-edge-input-validation.mjs
 
+      - name: Edge-function response-envelope guard (US-274)
+        run: node scripts/check-response-envelope.mjs
+
       - name: Edge-function privilege-write guard (US-297)
         run: node scripts/check-edge-privilege-writes.mjs
 

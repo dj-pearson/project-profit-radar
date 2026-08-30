@@ -17,6 +17,10 @@ node scripts/check-cors-wildcards.mjs || exit 1
 # 3c. Input-validation guard (US-241) — no new unvalidated req.json() body.
 node scripts/check-edge-input-validation.mjs || exit 1
 
+# 3c-2. Response-envelope guard (US-274) — no new JSON response without
+#       success + timestamp. The iOS app parses against one shape.
+node scripts/check-response-envelope.mjs || exit 1
+
 # 3d. Privilege-write guard (US-297) — no body spread into a write, and no
 #     unreviewed privilege/tenancy column set from request input.
 node scripts/check-edge-privilege-writes.mjs || exit 1

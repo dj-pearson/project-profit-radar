@@ -258,6 +258,7 @@ serve(async (req) => {
 
     return new Response(JSON.stringify({
       success: true,
+      timestamp: new Date().toISOString(),
       message: "Thank you for contacting us! Our sales team will reach out within 24 hours.",
       leadId,
       salesContactId: salesContact.id,
@@ -273,6 +274,7 @@ serve(async (req) => {
 
     return new Response(JSON.stringify({
       success: false,
+      timestamp: new Date().toISOString(),
       error: errorMessage
     }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },

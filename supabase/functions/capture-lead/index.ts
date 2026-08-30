@@ -136,6 +136,7 @@ serve(async (req) => {
       logStep("Rate limit exceeded", { ip: clientIP, count: rateLimitResult.requestCount });
       return new Response(JSON.stringify({
         success: false,
+        timestamp: new Date().toISOString(),
         error: 'Too many requests. Please try again later.'
       }), {
         headers: {
@@ -342,6 +343,7 @@ serve(async (req) => {
 
     return new Response(JSON.stringify({
       success: true,
+      timestamp: new Date().toISOString(),
       message: isNewLead ? "Thanks for your interest! Check your email for more information." : "Thanks for staying in touch!",
       leadId,
       isNewLead
@@ -356,6 +358,7 @@ serve(async (req) => {
 
     return new Response(JSON.stringify({
       success: false,
+      timestamp: new Date().toISOString(),
       error: errorMessage
     }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
