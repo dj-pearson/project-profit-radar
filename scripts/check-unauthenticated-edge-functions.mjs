@@ -54,7 +54,12 @@ const PUBLIC_BY_DESIGN = new Set([
   'sso-oauth-callback', 'sso-saml-callback', 'sso-oauth-init', 'sso-saml-init',
   'sso-ldap-auth', 'verify-mfa-login', 'webhook-verify', 'api-auth',
   'health-check', 'oauth-proxy', 'generate-sitemap-file', 'sitemap-generator',
-  'verify-domain', 'webhook-delivery', 'create-root-admin',
+  'verify-domain', 'create-root-admin',
+  // webhook-delivery was here and did not belong. The list is for functions a
+  // visitor with no account must reach, each verifying what it can inside its
+  // own flow - an OTP, an OAuth state, a signature. webhook-delivery is a cron
+  // worker on the service role that verified nothing; its HMAC code signs the
+  // OUTBOUND payload rather than checking the caller. Now internal-only.
 ]);
 
 /**
@@ -71,10 +76,20 @@ const PUBLIC_BY_DESIGN = new Set([
  * handler reaches only conditionally and deep in generation logic).
  */
 const DELEGATES = new Map([
-  // Every route function validates the caller's hashed API key through
-  // validateApiRequest (createApiKey uses auth.getUser instead, since it issues
-  // keys rather than consuming one). The dispatch handler itself does no
-  // checking, which is correct for this shape.
+  // api-management dispatches on pathname to seven route functions, and this
+  // entry vouches for the whole file on the strength of ONE of them. That was
+  // too generous, and the comment here used to assert something false: that
+  // "every route function validates the caller's hashed API key". Two did not.
+  // /api-management/webhook/trigger looked a webhook up by id with no tenant
+  // scoping and POSTed a caller-supplied payload to its URL, behind nothing but
+  // an IP rate limit, and /webhook/test delegated straight to it (US-241).
+  //
+  // Both now call requireInternalCaller, so the claim is true as of 2026-08-29:
+  // /api/* routes call validateApiRequest, create-key does its own
+  // auth.getUser, and the two webhook routes are internal-only. The limitation
+  // is still real though - a delegation entry proves one named function checks,
+  // not that every reachable route does. Anyone adding a route here must add
+  // its own check; this guard will not notice if they do not.
   ['api-management', 'handleProjectsApi'],
 ]);
 

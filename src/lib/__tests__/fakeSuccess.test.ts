@@ -39,7 +39,15 @@ describe('the guard itself had a false-positive class', () => {
     // Stated in the guard so nobody reads 43 -> 27 as 16 repairs.
     const guard = readFileSync(GUARD, 'utf8');
     expect(guard).toContain('not a stand-in for work');
-    expect(guard).toMatch(/^const BASELINE = 20;$/m);
+    // At most 20, not exactly 20. This pinned the number and so failed the
+    // moment the baseline legitimately fell to 19 - the same inversion the
+    // dead-link test had, where an assertion about a shrinking baseline was
+    // written as a floor. The claim being made here is that the narrowing took
+    // it to 20 and nothing has raised it since; a lower number is the guard
+    // working.
+    const m = /^const BASELINE = (\d+);$/m.exec(guard);
+    expect(m).not.toBeNull();
+    expect(Number(m![1])).toBeLessThanOrEqual(20);
   });
 
   it('still fires on a real stand-in', () => {

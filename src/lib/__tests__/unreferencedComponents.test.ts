@@ -153,21 +153,62 @@ describe('the mock-data feature shells', () => {
       .filter(Boolean);
   }
 
+  it('is current, so a stale report fails as a stale report', () => {
+    // Every assertion below reads the files the report names. Delete an orphan
+    // without regenerating and the next one to run dies on ENOENT naming a path
+    // nobody recognises - which is what deleting the SEO admin pages did. The
+    // report is generated; say so plainly instead.
+    const missing = listed().filter((f) => !existsSync(f));
+    expect(
+      missing,
+      `${REPORT} lists ${missing.length} file(s) that no longer exist. ` +
+        'Run `node scripts/report-unreferenced-components.mjs`.',
+    ).toEqual([]);
+  });
+
   it('the report exists and says it is generated', () => {
     const doc = readFileSync(REPORT, 'utf8');
     expect(doc).toContain('scripts/report-unreferenced-components.mjs');
     expect(doc).toContain('Do not edit by hand');
   });
 
-  it('none of the remaining orphans holds an explicitly-named mock variable', () => {
+  it('the only orphans still holding named mock data are the seven in dead islands', () => {
     // The deletion criterion was `const mockX = ...` in a file with no data
     // access that nothing imports: 34 files, 17,835 lines, holding invented
     // business records - "ABC Electrical Services", "John Smith", fake phone
     // numbers - rendered as if they were the customer's.
-    const holding = listed().filter((f) =>
-      /\bconst\s+(mock|sample|demo|dummy|fake)[A-Za-z0-9_]*\s*[:=]/i.test(readFileSync(f, 'utf8')),
-    );
-    expect(holding).toEqual([]);
+    //
+    // That sweep was complete for the files it could see, and it could only see
+    // 194 of 272: the guard counted inbound imports rather than reachability, so
+    // a mock shell imported by another dead file was invisible to it. Fixing
+    // that surfaced these seven. They are not a regression and not an oversight
+    // in the sweep - they were never in its input.
+    //
+    // Five of the original seven are gone, deleted as two whole islands rather
+    // than as files: pages/MarketingAutomation plus the three marketing shells it
+    // imported, and four of the five components under forms/. Deleting an island
+    // is all-or-nothing - removing only the two mock shells under forms/ would
+    // have left StreamlinedDataEntry and the barrel importing files that no
+    // longer existed.
+    //
+    // The two that remain each need a decision that is not a sweep.
+    // NotificationCenter is the more interesting one: US-076 ("build real-time
+    // notification center with event integration") is marked done, and this is a
+    // 495-line shell holding mockNotifications.
+    const KNOWN = [
+      'src/components/communication/NotificationCenter.tsx',
+      'src/components/enterprise/EnterpriseDashboard.tsx',
+    ];
+    // `dummy` is deliberately not in this pattern. hero/BriklyHero3D declares
+    // `const dummy = useMemo(() => new THREE.Object3D(), [])`, which is the
+    // standard instanced-mesh idiom and not mock data at all - matching on the
+    // name alone called a 3D scene a fake-data shell.
+    const holding = listed()
+      .filter((f) =>
+        /\bconst\s+(mock|sample|demo|fake)[A-Za-z0-9_]*\s*[:=]/i.test(readFileSync(f, 'utf8')),
+      )
+      .sort();
+    expect(holding).toEqual(KNOWN);
   });
 
   it('the largest of them is gone', () => {

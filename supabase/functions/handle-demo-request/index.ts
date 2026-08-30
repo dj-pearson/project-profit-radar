@@ -1,29 +1,46 @@
 // Handle Demo Request Edge Function
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.3";
+import { checkRateLimit, rateLimitResponse, getClientIP, RATE_LIMITS } from "../_shared/rate-limiter.ts";
+import { validateBody } from "../_shared/validate-body.ts";
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-interface DemoRequest {
-  email: string;
-  firstName: string;
-  lastName: string;
-  companyName: string;
-  phone?: string;
-  companySize?: string;
-  industry?: string;
-  demoType?: string;
-  preferredDate?: string;
-  preferredTime?: string;
-  timezone?: string;
-  message?: string;
-  utm_source?: string;
-  utm_medium?: string;
-  utm_campaign?: string;
-}
+// US-241. Every field below reached `leads`, `demo_requests`, `lead_activities`
+// and `conversion_events` from an unauthenticated request with nothing but a
+// truthiness check on four of them. The columns are all TEXT, so Postgres
+// imposed no ceiling either.
+//
+// The lengths are capture-lead's, not invented: that function is reached from
+// the same marketing forms and has sanitized to 100/200/20/50/100 since it was
+// written. Two siblings writing the same `leads` row should agree on what fits.
+//
+// preferred_date is a DATE column and preferredDate went into it unchecked, so
+// a non-date string was a Postgres error surfacing as a 500 on a form nobody
+// could resubmit differently.
+const DemoRequestSchema = z.object({
+  email: z.string().email().max(255),
+  firstName: z.string().min(1).max(100),
+  lastName: z.string().min(1).max(100),
+  companyName: z.string().min(1).max(200),
+  phone: z.string().max(20).optional(),
+  companySize: z.string().max(50).optional(),
+  industry: z.string().max(100).optional(),
+  demoType: z.string().max(50).optional(),
+  preferredDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'expected YYYY-MM-DD').optional(),
+  preferredTime: z.string().max(50).optional(),
+  timezone: z.string().max(100).optional(),
+  message: z.string().max(5000).optional(),
+  utm_source: z.string().max(100).optional(),
+  utm_medium: z.string().max(100).optional(),
+  utm_campaign: z.string().max(200).optional(),
+});
+
+type DemoRequest = z.infer<typeof DemoRequestSchema>;
 
 const logStep = (step: string, details?: any) => {
   const detailsStr = details ? ` - ${JSON.stringify(details)}` : '';
@@ -44,7 +61,22 @@ serve(async (req) => {
       { auth: { persistSession: false } }
     );
 
-    const requestData: DemoRequest = await req.json();
+    // Anonymous and it writes. capture-lead - the closest sibling, reached from
+    // the same marketing forms - has limited by IP since it was written; these
+    // three never did, so the leads, demo and referral tables were open to
+    // anyone with a loop. AUTH's ceiling (10/min/IP) matches what capture-lead
+    // chose for the same shape of form.
+    const clientIP = getClientIP(req);
+    const rl = await checkRateLimit(supabaseClient, {
+      identifier: clientIP,
+      endpoint: 'handle-demo-request',
+      ...RATE_LIMITS.AUTH,
+    });
+    if (!rl.allowed) return rateLimitResponse(rl, corsHeaders);
+
+    const parsed = await validateBody(req, DemoRequestSchema, { name: 'handle-demo-request' });
+    if (!parsed.ok) return parsed.response;
+    const requestData = parsed.data as DemoRequest;
 
     const {
       email,
@@ -64,7 +96,11 @@ serve(async (req) => {
       utm_campaign
     } = requestData;
 
-    // Validate required fields
+    // Kept deliberately. In report mode (the default) validateBody hands the
+    // handler the RAW body when the schema fails, so this is still the only
+    // thing standing between a blank form and four inserts. It goes when
+    // INPUT_VALIDATION_MODE=enforce, which is also when this stops being a 500
+    // and becomes the 400 it always should have been.
     if (!email || !firstName || !lastName || !companyName) {
       throw new Error("Missing required fields");
     }
@@ -218,6 +254,7 @@ serve(async (req) => {
 
     return new Response(JSON.stringify({
       success: true,
+      timestamp: new Date().toISOString(),
       message: "Demo request received! Our team will contact you shortly.",
       leadId,
       demoRequestId: demoRequest.id
@@ -232,6 +269,7 @@ serve(async (req) => {
 
     return new Response(JSON.stringify({
       success: false,
+      timestamp: new Date().toISOString(),
       error: errorMessage
     }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },

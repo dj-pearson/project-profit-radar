@@ -122,8 +122,17 @@ describe('the guard itself', () => {
   it('gives every baselined table a written reason rather than a bare name', () => {
     const src = readFileSync(GUARD, 'utf8');
     const baseline = src.slice(src.indexOf('const BASELINE = new Map(['), src.indexOf(']);'));
-    const entries = [...baseline.matchAll(/\['([a-z_]+)',\s*'([^']{40,})/g)];
-    expect(entries.length, 'baseline entries without a substantial reason').toBeGreaterThanOrEqual(13);
+    // Every entry, against every entry that carries a real reason. Comparing
+    // the two is the assertion; a count floor is not. This required at least 13
+    // entries, so removing crm_contacts - a baselined table whose only call site
+    // was fixed - failed a test whose point was that reasons exist. Third time
+    // this shape has bitten: deadLinks.test.ts required >= 16 dead links and
+    // fakeSuccess.test.ts pinned BASELINE = 20 exactly. A baseline that only
+    // shrinks must never be asserted with a floor.
+    const all = [...baseline.matchAll(/\['([a-z_]+)',/g)];
+    const reasoned = [...baseline.matchAll(/\['([a-z_]+)',\s*'([^']{40,})/g)];
+    expect(all.length).toBeGreaterThan(0);
+    expect(reasoned.length, 'baseline entries without a substantial reason').toBe(all.length);
   });
 
   it('excludes storage buckets, which are not tables', () => {

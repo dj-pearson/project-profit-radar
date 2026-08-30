@@ -86,11 +86,11 @@ const Dashboard = () => {
   const handleEmptyAction = (action: string) => {
     const actionMap: Record<string, { route: string; message: string }> = {
       'create_project': {
-        route: '/projects/new',
+        route: '/create-project',
         message: 'Let\'s create your first project'
       },
       'invite_team': {
-        route: '/team-management',
+        route: '/team',
         message: 'Time to build your team'
       },
       'setup_companies': {
@@ -110,7 +110,7 @@ const Dashboard = () => {
         message: 'Configuring platform settings'
       },
       'team_setup': {
-        route: '/team-management',
+        route: '/team',
         message: 'Let\'s set up your project team'
       },
       'explore': {

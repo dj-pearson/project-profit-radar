@@ -123,7 +123,16 @@ if (hits.length > BASELINE) {
 }
 
 if (hits.length < BASELINE) {
-  console.log(`\n  ${BASELINE - hits.length} fixed since the baseline — lower BASELINE in ${relative(root, fileURLToPath(import.meta.url))}.`);
+  console.error(
+    `\n✖ ${BASELINE - hits.length} fixed since the baseline, and that has to be locked in: set ` +
+      `BASELINE to ${hits.length} in ${relative(root, fileURLToPath(import.meta.url))}.`,
+  );
+  console.error(
+    '  A baseline nobody lowers stops being a gate. US-212 let one drift to 1860 against a real ' +
+      'count of 669 - permitting 1191 new errors - precisely because a count below it only ' +
+      'printed a suggestion.',
+  );
+  process.exit(1);
 }
 
 console.log(`\n✔ No new silent writes (${hits.length} in the backlog).`);

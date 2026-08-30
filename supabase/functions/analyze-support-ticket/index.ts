@@ -6,6 +6,13 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.3";
 import { checkRateLimit, getClientIP, rateLimitResponse, RATE_LIMITS } from "../_shared/rate-limiter.ts";
 import { getCorsHeaders } from '../_shared/secure-cors.ts';
 import { requireInternalCaller } from '../_shared/internal-only.ts';
+import { validateBody } from '../_shared/validate-body.ts';
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
+
+/** ticketId is the only input, and it reaches a uuid column. */
+const AnalyzeTicketSchema = z.object({
+  ticketId: z.string().uuid(),
+});
 
 // Categories for ticket classification
 const TICKET_CATEGORIES = [
@@ -49,7 +56,9 @@ serve(async (req) => {
     const denied = requireInternalCaller(req);
     if (denied) return denied;
 
-    const { ticketId } = await req.json();
+    const parsed = await validateBody(req, AnalyzeTicketSchema, { name: 'analyze-support-ticket' });
+    if (!parsed.ok) return parsed.response;
+    const { ticketId } = parsed.data as { ticketId: string };
 
     if (!ticketId) {
       throw new Error("ticketId is required");

@@ -225,7 +225,7 @@ export const lazyRouteConfigs: LazyRouteConfig[] = [
   // Project pages (high usage)
   { path: '/projects', component: LazyProjects, preload: true },
   { path: '/projects/:projectId', component: LazyProjectDetail },
-  { path: '/projects/new', component: LazyCreateProject },
+  { path: '/create-project', component: LazyCreateProject },
   
   // All other routes (load on demand)
   { path: '/schedule', component: LazyScheduleManagement },

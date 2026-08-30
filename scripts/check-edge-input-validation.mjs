@@ -51,6 +51,34 @@ const reads = [...validated, ...unvalidated];
 
 // Functions already converted. Never remove a name from here.
 const VALIDATED = new Set([
+  // The twelve SEO functions that fetch a URL out of the request body. Their
+  // schemas share _shared/audit-url.ts, so what counts as a fetchable target is
+  // defined once rather than twelve times.
+  'analyze-content',
+  'analyze-images',
+  'analyze-internal-links',
+  'analyze-semantic-keywords',
+  'check-broken-links',
+  'check-mobile-first',
+  'check-security-headers',
+  'crawl-site',
+  'monitor-performance-budget',
+  'optimize-page-content',
+  'seo-audit',
+  'validate-structured-data',
+  // The four anonymous marketing forms, converted as one set so they agree on
+  // what fits in the `leads` row all four write.
+  'capture-lead',
+  'handle-demo-request',
+  'handle-sales-contact',
+  'track-referral',
+  'analyze-support-ticket',
+  'schedule-trial-emails',
+  'track-usage',
+  'billing-automation',
+  'manage-complimentary-subscription',
+  'process-referral-signup',
+  'handle-chargeback',
   'change-orders', 'change-subscription', 'create-stripe-checkout', 'disable-mfa',
   'dos-protection', 'execute-workflow', 'generate-invoice', 'geofencing',
   'invite-team-member', 'process-invoice-payment', 'projects', 'reset-password-otp',
@@ -58,7 +86,7 @@ const VALIDATED = new Set([
   'sso-ldap-auth', 'sso-manage', 'sso-oauth-init', 'sso-saml-init',
   'time-tracking', 'verify-auth-otp', 'verify-mfa-login', 'verify-mfa-setup',
 ]);
-const BASELINE = 126;
+const BASELINE = 103;
 
 console.log('Edge-function input-validation guard (US-241)');
 console.log(`  functions taking a JSON body:  ${reads.length}`);
@@ -79,7 +107,17 @@ if (unvalidated.length > BASELINE) {
 }
 
 if (unvalidated.length < BASELINE) {
-  console.log(`\n  ${BASELINE - unvalidated.length} converted since the baseline — lower BASELINE in ${relative(root, fileURLToPath(import.meta.url))} and add them to VALIDATED.`);
+  console.error(
+    `\n✖ ${BASELINE - unvalidated.length} converted since the baseline, and that has to be ` +
+      `locked in: set BASELINE to ${unvalidated.length} in ` +
+      `${relative(root, fileURLToPath(import.meta.url))} and add them to VALIDATED.`,
+  );
+  console.error(
+    '  A baseline nobody lowers stops being a gate. US-212 let one drift to 1860 against a real ' +
+      'count of 669 - permitting 1191 new errors - precisely because a count below it only ' +
+      'printed a suggestion.',
+  );
+  process.exit(1);
 }
 
 console.log(`\n✔ No new unvalidated request bodies (${unvalidated.length} in the backlog).`);

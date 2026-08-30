@@ -141,7 +141,7 @@ export function CommandPalette({
       category: 'Project Management',
       keywords: ['create', 'add', 'new job'],
       action: () => {
-        navigate('/projects/new');
+        navigate('/create-project');
         setOpen(false);
       },
       shortcut: 'Ctrl+N',

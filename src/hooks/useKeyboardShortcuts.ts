@@ -93,7 +93,7 @@ export const useGlobalShortcuts = () => {
       ctrlKey: true,
       description: 'Create New Project',
       action: () => {
-        navigate('/projects/new');
+        navigate('/create-project');
         toast({
           title: "Quick Action",
           description: "Creating new project...",

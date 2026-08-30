@@ -17,6 +17,10 @@ node scripts/check-cors-wildcards.mjs || exit 1
 # 3c. Input-validation guard (US-241) — no new unvalidated req.json() body.
 node scripts/check-edge-input-validation.mjs || exit 1
 
+# 3c-2. Response-envelope guard (US-274) — no new JSON response without
+#       success + timestamp. The iOS app parses against one shape.
+node scripts/check-response-envelope.mjs || exit 1
+
 # 3d. Privilege-write guard (US-297) — no body spread into a write, and no
 #     unreviewed privilege/tenancy column set from request input.
 node scripts/check-edge-privilege-writes.mjs || exit 1
@@ -55,6 +59,11 @@ node scripts/check-unreferenced-security-modules.mjs || exit 1
 #     builds that grants access is predictable.
 node scripts/check-insecure-random.mjs || exit 1
 
+# 3n2. Anonymous writes (US-241 follow-up) - a function anyone can reach must
+#      not write to the database unthrottled. The rate-limit guard above asks
+#      which functions spend money; this asks which accept writes from nobody.
+node scripts/check-anonymous-writes.mjs || exit 1
+
 # 3n. Unauthenticated edge functions (US-241) — verify_jwt=true is a signature
 #     check, not authentication; the anon key satisfies it.
 node scripts/check-unauthenticated-edge-functions.mjs || exit 1
@@ -86,6 +95,34 @@ node scripts/check-table-definitions.mjs || exit 1
 # 3t. Dead links (US-312) — react-router's catch-all turns a link to a path no
 #     route answers into the 404 page, silently.
 node scripts/check-dead-links.mjs || exit 1
+
+# 3s2. Live-schema tables (US-311 follow-up) - the migration-based guard above
+#      checks supabase/migrations; this checks the live schema in types.ts.
+#      A table a migration creates but prod does not have passes the first and
+#      fails at runtime.
+node scripts/check-live-schema-tables.mjs || exit 1
+
+# 3t2. Generated Supabase types (US-263) - a truncated types.ts leaves `Database`
+#      unresolved, so every from() row is `never` and it surfaces as hundreds of
+#      unrelated TS2339s. It shipped once, inside the commit that fixed the
+#      script that caused it.
+node scripts/check-generated-types.mjs || exit 1
+
+# 3t3. Param-route traps (US-312 follow-up) - /projects/new has no route but
+#      /projects/:id matches it, so the create action opens the detail page for
+#      a record called "new". A dead-link check cannot see this: the path IS
+#      answered, just by the wrong route.
+node scripts/check-param-route-traps.mjs || exit 1
+
+# 3u1. God files (US-267) - no new file crosses 1,000 lines while the backlog
+#      is being burned down. Dead and generated files are excluded: one should
+#      be deleted rather than split, the other is rewritten by npm run db:types.
+node scripts/check-god-files.mjs || exit 1
+
+# 3u2. Unreferenced modules (US-314 follow-up) - the component guard below only
+#      looks at components/ and pages/. hooks, lib, services and utils were
+#      uncounted, and useCRM.ts is 1,945 lines that nothing imports.
+node scripts/check-unreferenced-modules.mjs || exit 1
 
 # 3u. Unreferenced components (US-314) — Vite drops a component nothing imports,
 #     so it fails nowhere and sits in the tree looking like a feature.

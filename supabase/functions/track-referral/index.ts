@@ -2,6 +2,18 @@
 // Note: This is a public endpoint for referral tracking
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.3";
+import { checkRateLimit, rateLimitResponse, getClientIP, RATE_LIMITS } from "../_shared/rate-limiter.ts";
+import { validateBody } from "../_shared/validate-body.ts";
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
+
+// US-241. Anonymous, two writes, and affiliate_code went straight into an
+// .eq() lookup against affiliate_codes. A code is a short opaque token, so the
+// bound is generous rather than tight - the point is that an unbounded string
+// from the internet stops being what indexes that column.
+const TrackReferralSchema = z.object({
+  affiliate_code: z.string().min(1).max(64),
+  referee_email: z.string().email().max(255),
+});
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -27,8 +39,26 @@ serve(async (req) => {
   try {
     logStep("Function started");
 
-    const { affiliate_code, referee_email } = await req.json();
+    // Anonymous and it writes. capture-lead - the closest sibling, reached from
+    // the same marketing forms - has limited by IP since it was written; these
+    // three never did, so the leads, demo and referral tables were open to
+    // anyone with a loop. AUTH's ceiling (10/min/IP) matches what capture-lead
+    // chose for the same shape of form.
+    const clientIP = getClientIP(req);
+    const rl = await checkRateLimit(supabaseClient, {
+      identifier: clientIP,
+      endpoint: 'track-referral',
+      ...RATE_LIMITS.AUTH,
+    });
+    if (!rl.allowed) return rateLimitResponse(rl, corsHeaders);
 
+    const parsed = await validateBody(req, TrackReferralSchema, { name: 'track-referral' });
+    if (!parsed.ok) return parsed.response;
+    const { affiliate_code, referee_email } = parsed.data as {
+      affiliate_code: string; referee_email: string;
+    };
+
+    // Kept: report mode hands through the raw body on a schema failure.
     if (!affiliate_code || !referee_email) {
       throw new Error("Missing affiliate_code or referee_email");
     }
@@ -69,6 +99,7 @@ serve(async (req) => {
       logStep("Referral already exists", { referral_id: existingReferral.id });
       return new Response(JSON.stringify({
         success: true,
+        timestamp: new Date().toISOString(),
         referral_id: existingReferral.id,
         message: "Referral already tracked"
       }), {
@@ -122,6 +153,7 @@ serve(async (req) => {
 
     return new Response(JSON.stringify({
       success: true,
+      timestamp: new Date().toISOString(),
       referral_id: referral.id,
       referrer_reward_months: referral.referrer_reward_months,
       referee_reward_months: referral.referee_reward_months
@@ -133,7 +165,20 @@ serve(async (req) => {
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
     logStep("ERROR in track-referral", { message: errorMessage });
-    return new Response(JSON.stringify({ error: errorMessage }), {
+    // success and timestamp added, error left where it is (US-274). This one
+    // had no `success` key at all, which is why the sweep that stamped the
+    // other responses skipped it.
+    //
+    // NOTE, not fixed here: errorMessage is the raw caught error. US-242 says
+    // a 500 must not carry internal detail to the client, and errorResponse()
+    // exists for exactly that. Swapping it in changes the VALUE of `error`,
+    // which is a different change from adding two keys, so it is left for that
+    // story rather than folded in silently.
+    return new Response(JSON.stringify({
+      success: false,
+      timestamp: new Date().toISOString(),
+      error: errorMessage,
+    }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 500,
     });

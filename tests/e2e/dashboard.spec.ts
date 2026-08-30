@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { requireTestCredentials, signIn } from './fixtures/auth';
 
 test.describe('Dashboard', () => {
   test.beforeEach(async ({ page }) => {
@@ -12,7 +13,9 @@ test.describe('Dashboard', () => {
     await expect(page).toHaveURL(/\/auth/);
   });
 
-  test.skip('should display dashboard for authenticated user', async ({ page }) => {
+  test('should display dashboard for authenticated user', async ({ page }) => {
+    requireTestCredentials();
+    await signIn(page);
     // This test requires authentication
     // Skip for now, would need test credentials
 
@@ -20,7 +23,9 @@ test.describe('Dashboard', () => {
     await expect(page.getByRole('heading', { name: /dashboard/i })).toBeVisible();
   });
 
-  test.skip('should display key metrics and widgets', async ({ page }) => {
+  test('should display key metrics and widgets', async ({ page }) => {
+    requireTestCredentials();
+    await signIn(page);
     // Check for common dashboard elements
     await expect(page).toHaveURL(/\/dashboard/);
 
@@ -30,7 +35,9 @@ test.describe('Dashboard', () => {
     await expect(dashboardContent).toBeVisible();
   });
 
-  test.skip('should navigate to projects from dashboard', async ({ page }) => {
+  test('should navigate to projects from dashboard', async ({ page }) => {
+    requireTestCredentials();
+    await signIn(page);
     await expect(page).toHaveURL(/\/dashboard/);
 
     // Find and click projects link
@@ -42,7 +49,9 @@ test.describe('Dashboard', () => {
     await expect(page).toHaveURL(/\/projects/);
   });
 
-  test.skip('should have working sidebar navigation', async ({ page }) => {
+  test('should have working sidebar navigation', async ({ page }) => {
+    requireTestCredentials();
+    await signIn(page);
     await expect(page).toHaveURL(/\/dashboard/);
 
     // Check that sidebar is present
@@ -54,7 +63,9 @@ test.describe('Dashboard', () => {
     await expect(sidebar.getByRole('link', { name: /projects/i })).toBeVisible();
   });
 
-  test.skip('should display user profile information', async ({ page }) => {
+  test('should display user profile information', async ({ page }) => {
+    requireTestCredentials();
+    await signIn(page);
     await expect(page).toHaveURL(/\/dashboard/);
 
     // Look for user menu or profile section
@@ -74,7 +85,9 @@ test.describe('Dashboard', () => {
     }
   });
 
-  test.skip('should be responsive on mobile', async ({ page, viewport }) => {
+  test('should be responsive on mobile', async ({ page, viewport }) => {
+    requireTestCredentials();
+    await signIn(page);
     if (viewport && viewport.width < 768) {
       await expect(page).toHaveURL(/\/dashboard/);
 
@@ -89,7 +102,9 @@ test.describe('Dashboard', () => {
     }
   });
 
-  test.skip('should load dashboard without errors', async ({ page }) => {
+  test('should load dashboard without errors', async ({ page }) => {
+    requireTestCredentials();
+    await signIn(page);
     const errors: string[] = [];
 
     // Listen for console errors
@@ -118,7 +133,9 @@ test.describe('Dashboard', () => {
     expect(criticalErrors).toHaveLength(0);
   });
 
-  test.skip('should have good performance metrics', async ({ page }) => {
+  test('should have good performance metrics', async ({ page }) => {
+    requireTestCredentials();
+    await signIn(page);
     await page.goto('/dashboard');
 
     // Wait for page to be fully loaded
@@ -141,7 +158,9 @@ test.describe('Dashboard', () => {
 });
 
 test.describe('Dashboard - Accessibility', () => {
-  test.skip('should have proper heading hierarchy', async ({ page }) => {
+  test('should have proper heading hierarchy', async ({ page }) => {
+    requireTestCredentials();
+    await signIn(page);
     await page.goto('/dashboard');
 
     // Check that there's a main heading
@@ -153,7 +172,9 @@ test.describe('Dashboard - Accessibility', () => {
     expect(headings.length).toBeGreaterThan(0);
   });
 
-  test.skip('should be keyboard navigable', async ({ page }) => {
+  test('should be keyboard navigable', async ({ page }) => {
+    requireTestCredentials();
+    await signIn(page);
     await page.goto('/dashboard');
 
     // Start tabbing through the page
@@ -164,7 +185,9 @@ test.describe('Dashboard - Accessibility', () => {
     expect(focusedElement).toBeTruthy();
   });
 
-  test.skip('should have alt text on images', async ({ page }) => {
+  test('should have alt text on images', async ({ page }) => {
+    requireTestCredentials();
+    await signIn(page);
     await page.goto('/dashboard');
 
     // Get all images

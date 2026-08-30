@@ -3,6 +3,26 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { initializeAuthContext, errorResponse } from '../_shared/auth-helpers.ts';
 import { createServiceClient } from '../_shared/service-client.ts';
 import { getCorsHeaders } from '../_shared/secure-cors.ts';
+import { validateBody } from '../_shared/validate-body.ts';
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
+
+/**
+ * metric_value feeds usage_metrics, which usage-billing and
+ * generate-usage-invoice read to bill customers, so it is bounded and
+ * non-negative - a negative would subtract from a bill.
+ *
+ * company_id and user_id stay in the schema, loose and deliberately. The
+ * handler ignores them for scoping (both are re-derived from the caller's own
+ * profile - see the SECURITY comment below) but still reads them to LOG a
+ * disagreement. Omitting them would strip the fields in enforce mode and
+ * silently retire that check.
+ */
+const UsageSchema = z.object({
+  metric_type: z.string().min(1).max(64),
+  metric_value: z.number().nonnegative().max(1_000_000_000),
+  company_id: z.string().uuid().optional(),
+  user_id: z.string().uuid().optional(),
+});
 
 interface UsageTrackingRequest {
   metric_type: string;
@@ -33,7 +53,10 @@ serve(async (req) => {
     const { user, supabase: supabaseClient } = authContext;
     logStep("User authenticated", { userId: user.id });
 
-    const { metric_type, metric_value, company_id, user_id }: UsageTrackingRequest = await req.json();
+    const parsed = await validateBody(req, UsageSchema, { name: 'track-usage' });
+    if (!parsed.ok) return parsed.response;
+    const { metric_type, metric_value, company_id, user_id } =
+      parsed.data as UsageTrackingRequest;
     
     if (!metric_type || metric_value === undefined) {
       throw new Error("metric_type and metric_value are required");

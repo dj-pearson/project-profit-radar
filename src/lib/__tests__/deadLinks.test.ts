@@ -86,7 +86,9 @@ describe('the repointed links', () => {
     ['src/pages/admin/SystemHealth.tsx', '/login', '/auth'],
     ['src/components/subscription/UpgradePrompt.tsx', '/subscription', '/subscription-settings'],
     ['src/pages/QuickBooksCallback.tsx', '/settings/integrations', '/integrations'],
-    ['src/components/crm/CRMDashboard.tsx', '/leads', '/crm/leads'],
+    // src/components/crm/CRMDashboard.tsx was here. It was deleted in the US-314
+    // burn-down - an unreachable duplicate of the routed pages/CRMDashboard - which
+    // settles its links more firmly than a repoint does.
     ['src/pages/settings/CustomDomain.tsx', '/help', '/support'],
     ['src/hooks/useKeyboardShortcuts.ts', '/settings', '/user-settings'],
   ];
@@ -123,8 +125,15 @@ describe('the guard', () => {
   it('gives every baselined path a written reason', () => {
     const src = readFileSync(GUARD, 'utf8');
     const baseline = src.slice(src.indexOf('const BASELINE = new Map(['), src.indexOf(']);'));
-    const entries = [...baseline.matchAll(/\['\/[A-Za-z0-9/_-]+',\s*'([^']{40,})/g)];
-    expect(entries.length).toBeGreaterThanOrEqual(16);
+    // Every entry, and every entry carrying a reason of real length. Comparing
+    // the two is the actual assertion. This used to require at least 16 entries,
+    // which inverted it: the baseline is meant to shrink, so deleting the five
+    // links that lived in the unreachable CRM dashboard (US-314) failed a test
+    // whose point was that reasons exist, not that dead links do.
+    const all = [...baseline.matchAll(/^ {2}\['\/[A-Za-z0-9/_-]*',/gm)];
+    const reasoned = [...baseline.matchAll(/^ {2}\['\/[A-Za-z0-9/_-]*',\s*'([^']{40,})/gm)];
+    expect(all.length).toBeGreaterThan(0);
+    expect(reasoned.length).toBe(all.length);
   });
 
   it('says out loud that it cannot see whether a route is mounted', () => {

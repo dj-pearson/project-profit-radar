@@ -2,6 +2,33 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.3";
 import { getCorsHeaders } from '../_shared/secure-cors.ts';
 import { writeAuditLog } from '../_shared/audit-log.ts';
+import { validateBody } from '../_shared/validate-body.ts';
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
+
+/**
+ * This endpoint gives away paid product, so the two fields that decide WHAT is
+ * given away are the ones worth constraining.
+ *
+ * subscription_tier lands in subscribers.subscription_tier, which is plain TEXT
+ * in the live schema - there is a subscription_tier ENUM type in Postgres but
+ * this column does not use it, and no CHECK constrains it either. So any string
+ * was writable, and downstream entitlement checks would then compare a tier
+ * name nothing recognises.
+ *
+ * duration_months is multiplied out into an expiry date. Unbounded it accepted
+ * a negative (an expiry in the past, i.e. a grant that is already dead) and a
+ * non-number (NaN, which makes new Date(NaN).toISOString() throw RangeError and
+ * return a 500). complimentary_type is the one field Postgres already
+ * constrains - a CHECK allows permanent, temporary and root_admin.
+ */
+const ComplimentarySchema = z.object({
+  action: z.enum(['grant', 'revoke']),
+  user_email: z.string().email().max(320),
+  duration_months: z.number().int().positive().max(120).optional(),
+  reason: z.string().min(1).max(1000),
+  subscription_tier: z.enum(['starter', 'professional', 'enterprise']).optional(),
+  type: z.enum(['permanent', 'temporary']).optional(),
+});
 
 interface ComplimentaryRequest {
   action: 'grant' | 'revoke';
@@ -51,7 +78,11 @@ serve(async (req) => {
       throw new Error("Only root admins can manage complimentary subscriptions");
     }
 
-    const request: ComplimentaryRequest = await req.json();
+    const parsed = await validateBody(req, ComplimentarySchema, {
+      name: 'manage-complimentary-subscription',
+    });
+    if (!parsed.ok) return parsed.response;
+    const request = parsed.data as ComplimentaryRequest;
     logStep("Request received", request);
 
     // Find target user
@@ -62,8 +93,15 @@ serve(async (req) => {
     }
 
     if (request.action === 'grant') {
-      const expiresAt = request.duration_months && request.type === 'temporary' 
-        ? new Date(Date.now() + (request.duration_months * 30 * 24 * 60 * 60 * 1000)).toISOString()
+      // Checked here as well as in the schema, deliberately. validateBody
+      // defaults to report mode, which logs a bad shape and hands the handler
+      // the RAW body - so until INPUT_VALIDATION_MODE=enforce is set, a
+      // non-numeric duration_months would still reach this line, make the sum
+      // NaN, and throw RangeError out of toISOString() as a 500.
+      const months = Number(request.duration_months);
+      const wantsExpiry = request.type === 'temporary' && Number.isFinite(months) && months > 0;
+      const expiresAt = wantsExpiry
+        ? new Date(Date.now() + (months * 30 * 24 * 60 * 60 * 1000)).toISOString()
         : null;
 
       const tier = request.subscription_tier || 'professional';

@@ -104,9 +104,17 @@ jobs:
       # US-258: no `npm run build` here — the e2e webServer runs the Vite dev
       # server (npm run dev:ci), so dist/ is unused, and the production build is
       # already verified by the `build` job (needs: build above).
-      - run: npx playwright test --project=chromium
+      # US-214 AC3: Mobile Chrome as well as desktop. playwright.config.ts has
+      # defined Mobile Chrome (Pixel 5) and Mobile Safari (iPhone 12) since it
+      # was written, and CI ran neither - so every responsive assertion in the
+      # suite was dead weight. Mobile Chrome uses the same chromium binary
+      # installed above, so this costs a second project run and no extra
+      # download; Mobile Safari would need webkit and is left out on purpose.
+      - run: npx playwright test --project=chromium --project="Mobile Chrome"
         env:
           CI: true
+          TEST_USER_EMAIL: ${{ secrets.TEST_USER_EMAIL }}
+          TEST_USER_PASSWORD: ${{ secrets.TEST_USER_PASSWORD }}
 
   security:
     name: Security Smoke Tests
@@ -151,6 +159,9 @@ jobs:
       - name: Edge-function input-validation guard (US-241)
         run: node scripts/check-edge-input-validation.mjs
 
+      - name: Edge-function response-envelope guard (US-274)
+        run: node scripts/check-response-envelope.mjs
+
       - name: Edge-function privilege-write guard (US-297)
         run: node scripts/check-edge-privilege-writes.mjs
 
@@ -181,6 +192,9 @@ jobs:
       - name: Insecure-random guard (US-296)
         run: node scripts/check-insecure-random.mjs
 
+      - name: Anonymous-write guard (US-241 follow-up)
+        run: node scripts/check-anonymous-writes.mjs
+
       - name: Unauthenticated edge-function guard (US-241)
         run: node scripts/check-unauthenticated-edge-functions.mjs
 
@@ -204,6 +218,21 @@ jobs:
 
       - name: Dead-link guard (US-312)
         run: node scripts/check-dead-links.mjs
+
+      - name: Param-route trap guard (US-312 follow-up)
+        run: node scripts/check-param-route-traps.mjs
+
+      - name: Live-schema table guard (US-311 follow-up)
+        run: node scripts/check-live-schema-tables.mjs
+
+      - name: Generated Supabase types guard (US-263)
+        run: node scripts/check-generated-types.mjs
+
+      - name: God-file guard (US-267)
+        run: node scripts/check-god-files.mjs
+
+      - name: Unreferenced-module guard (US-314 follow-up)
+        run: node scripts/check-unreferenced-modules.mjs
 
       - name: Unreferenced-component guard (US-314)
         run: node scripts/check-unreferenced-components.mjs

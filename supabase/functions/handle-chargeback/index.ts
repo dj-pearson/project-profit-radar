@@ -4,6 +4,8 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@14.21.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.3";
 import { initializeAuthContext, errorResponse } from '../_shared/auth-helpers.ts';
+import { validateBody } from '../_shared/validate-body.ts';
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
 import { getCorsHeaders } from '../_shared/secure-cors.ts';
 import { writeAuditLog } from '../_shared/audit-log.ts';
 import { createServiceClient } from '../_shared/service-client.ts';
@@ -12,6 +14,44 @@ const logStep = (step: string, details?: Record<string, unknown>) => {
   const detailsStr = details ? ` - ${JSON.stringify(details)}` : '';
   console.log(`[HANDLE-CHARGEBACK] ${step}${detailsStr}`);
 };
+
+/**
+ * amount is the field that matters, and it is the same shape of bug that
+ * process-refund had. createChargeback gates on `if (!amount || !reason)`,
+ * which rejects 0 because it is falsy but lets a NEGATIVE through - and amount
+ * then goes into `netImpact = amount + chargebackFee` and straight onto the
+ * chargebacks ledger. A negative chargeback reads as money coming back in.
+ * Bounded positive, two decimal places, with a ceiling far above any real
+ * single dispute so the schema never blocks a genuine one.
+ *
+ * The id fields land on uuid columns, invoice_id as a foreign key. The evidence
+ * blob carries base64 receipts and signatures, so its strings are capped rather
+ * than left open - it is submitted onward to Stripe.
+ */
+const EvidenceSchema = z.object({
+  product_description: z.string().max(20_000).optional(),
+  customer_name: z.string().max(500).optional(),
+  customer_email_address: z.string().email().max(320).optional(),
+  billing_address: z.string().max(2_000).optional(),
+  customer_signature: z.string().max(5_000_000).optional(),
+  receipt: z.string().max(5_000_000).optional(),
+  service_date: z.string().max(64).optional(),
+  service_documentation: z.string().max(5_000_000).optional(),
+  shipping_documentation: z.string().max(5_000_000).optional(),
+  uncategorized_text: z.string().max(20_000).optional(),
+  access_activity_log: z.string().max(20_000).optional(),
+});
+
+const ChargebackSchema = z.object({
+  action: z.enum(['create', 'update', 'submit_evidence', 'accept', 'list', 'get', 'sync']),
+  chargeback_id: z.string().uuid().optional(),
+  stripe_dispute_id: z.string().max(255).optional(),
+  invoice_id: z.string().uuid().optional(),
+  amount: z.number().positive().max(1_000_000).multipleOf(0.01).optional(),
+  reason: z.string().min(1).max(1_000).optional(),
+  evidence: EvidenceSchema.optional(),
+  notes: z.string().max(10_000).optional(),
+});
 
 interface ChargebackRequest {
   action: 'create' | 'update' | 'submit_evidence' | 'accept' | 'list' | 'get' | 'sync';
@@ -66,7 +106,9 @@ serve(async (req) => {
 
     const companyId = userProfile.company_id;
 
-    const body: ChargebackRequest = await req.json();
+    const parsed = await validateBody(req, ChargebackSchema, { name: 'handle-chargeback' });
+    if (!parsed.ok) return parsed.response;
+    const body = parsed.data as ChargebackRequest;
     const { action } = body;
 
     logStep('Processing action', { action, companyId });
@@ -114,8 +156,12 @@ async function createChargeback(
 ) {
   const { invoice_id, amount, reason, stripe_dispute_id, notes } = body;
 
-  if (!amount || !reason) {
-    return errorResponse('amount and reason are required', 400);
+  // Checked here as well as in the schema. validateBody defaults to report
+  // mode and hands the handler the RAW body, so until INPUT_VALIDATION_MODE is
+  // set to enforce a negative amount would still reach the ledger - and the
+  // original test (`!amount`) only caught 0, because -50 is truthy.
+  if (typeof amount !== 'number' || !Number.isFinite(amount) || amount <= 0 || !reason) {
+    return errorResponse('amount must be a positive number, and reason is required', 400);
   }
 
   // Get company payment settings for chargeback fee

@@ -5,7 +5,8 @@
  * scripts/check-unreferenced-components.mjs holds the line. This produces the
  * evidence needed to move it: for every component and page nothing imports, how
  * big it is, whether it talks to the database, whether it renders hardcoded
- * arrays, and whether a file of the same name is reachable from a route.
+ * arrays, and whether a file of the same name is genuinely reachable from an
+ * entry point (not merely imported by something, which may itself be dead).
  *
  * The distinction that matters, and the reason most of these are not mine to
  * delete: a 786-line orphan with seven supabase calls and a 631-line live
@@ -61,10 +62,52 @@ const candidates = files.filter((f) => {
   );
 });
 
-/** Files a route can reach, so "is there a live one of these?" can be answered. */
-const reachable = new Set(candidates.filter(isImported).map((f) => basename(f, '.tsx')));
+// Reachability, not just "something names it". These have to be different: a
+// file imported solely by another dead file is still dead, and calling it a
+// live twin sends the reader to delete the wrong one of the pair. Three of the
+// ten `duplicate?` verdicts in the first version of this report were pairs
+// where NEITHER file was live - ClientPortal, SEOAnalyticsDashboard and
+// ChargebackManager - so the question "which of these two is the product?" had
+// no correct answer and the honest verdict is that the whole feature is gone.
+const EXTS = ['', '.ts', '.tsx', '/index.ts', '/index.tsx'];
+const onDisk = new Set(files);
+function resolveSpec(spec, from) {
+  let base;
+  if (spec.startsWith('@/')) base = normalize(join(SRC, spec.slice(2)));
+  else if (spec.startsWith('.')) base = normalize(join(dirname(from), spec));
+  else return null;
+  for (const ext of EXTS) if (onDisk.has(base + ext)) return base + ext;
+  return null;
+}
+const edges = new Map();
+for (const [file, src] of sources) {
+  const out = new Set();
+  for (const m of src.matchAll(/(?:from|import)\s*\(?\s*['"]([^'"]+)['"]/g)) {
+    const r = resolveSpec(m[1], file);
+    if (r) out.add(r);
+  }
+  edges.set(file, out);
+}
+const entries = [join(SRC, 'main.tsx'), join(SRC, 'App.tsx')].filter((f) => onDisk.has(f));
+const reachableFiles = new Set(entries);
+const queue = [...entries];
+while (queue.length) {
+  for (const next of edges.get(queue.pop()) || []) {
+    if (!reachableFiles.has(next)) {
+      reachableFiles.add(next);
+      queue.push(next);
+    }
+  }
+}
+if (reachableFiles.size < 50) {
+  console.error('Import graph collapsed - refusing to write a report that calls everything dead.');
+  process.exit(1);
+}
+const reachable = new Set(
+  candidates.filter((f) => reachableFiles.has(f)).map((f) => basename(f, '.tsx')),
+);
 
-const rows = candidates.filter((f) => !isImported(f)).map((f) => {
+const rows = candidates.filter((f) => !reachableFiles.has(f)).map((f) => {
   const src = sources.get(f);
   const name = basename(f, '.tsx');
   const lines = src.split('\n').length;
@@ -101,7 +144,7 @@ lines.push('## What the columns mean');
 lines.push('');
 lines.push('- **db** - how many times the file names `supabase`. A file that reads real data is not junk.');
 lines.push('- **arrays** - object-literal arrays assigned in the file. Display data written in rather than fetched.');
-lines.push('- **live twin** - a file of the same name that something does import, so a route can reach it.');
+lines.push('- **live twin** - a file of the same name that IS reachable from src/main.tsx. Being imported is not enough: the importer can be dead too.');
 lines.push('- **verdict** - a starting point, not a decision:');
 lines.push('  - `mock` - no database access, no query hooks, and hardcoded arrays. Delete or finish.');
 lines.push('  - `duplicate?` - a live file of the same name exists. Which one is the product?');

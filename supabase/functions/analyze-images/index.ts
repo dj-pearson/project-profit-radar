@@ -5,6 +5,22 @@ import { initializeAuthContext, errorResponse } from '../_shared/auth-helpers.ts
 import { checkRateLimit, rateLimitResponse, RATE_LIMITS } from '../_shared/rate-limiter.ts';
 import { getCorsHeaders } from '../_shared/secure-cors.ts';
 
+import { validateBody } from "../_shared/validate-body.ts";
+import { auditUrl } from "../_shared/audit-url.ts";
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
+
+// US-241. The URL below is fetched by this function. It used to arrive from the
+// request body with nothing but an `if (!url)` check, so the caller decided what
+// the edge runtime connected to - and the edge runtime holds the service-role
+// key. auditUrl is the shared definition of a fetchable target (see
+// _shared/audit-url.ts); it rejects non-http schemes, embedded credentials, and
+// loopback/private/link-local hosts. All twelve callers of that helper are
+// root_admin-gated, so this is hardening rather than an open hole, and it does
+// not reject anything until INPUT_VALIDATION_MODE=enforce.
+const AnalyzeImagesSchema = z.object({
+  url: auditUrl,
+});
+
 serve(async (req) => {
   const corsHeaders = getCorsHeaders(req);
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
@@ -40,7 +56,9 @@ serve(async (req) => {
         { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
-    const { url } = await req.json();
+    const parsed = await validateBody(req, AnalyzeImagesSchema, { name: 'analyze-images' });
+    if (!parsed.ok) return parsed.response;
+    const { url } = parsed.data as z.infer<typeof AnalyzeImagesSchema>;
     if (!url) {
       return new Response(JSON.stringify({ error: 'URL required' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });

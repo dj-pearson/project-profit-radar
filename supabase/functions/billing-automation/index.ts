@@ -3,12 +3,89 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.3";
 import { initializeAuthContext, errorResponse } from '../_shared/auth-helpers.ts';
+import { requireInternalCaller } from '../_shared/internal-only.ts';
+import { validateBody } from '../_shared/validate-body.ts';
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
 import { getCorsHeaders } from '../_shared/secure-cors.ts';
 
 const logStep = (step: string, details?: Record<string, unknown>) => {
   const detailsStr = details ? ` - ${JSON.stringify(details)}` : '';
   console.log(`[BILLING-AUTOMATION] ${step}${detailsStr}`);
 };
+
+/**
+ * The money fields are the point. fee_percentage and discount_percentage were
+ * unbounded numbers on a rule that applies late fees and discounts to real
+ * invoices, so a 10,000% fee or a negative discount was a well-formed request.
+ * fee_fixed_amount likewise. The schedule fields carry their ranges in comments
+ * on the interface (day_of_week 0-6, day_of_month 1-31) and nowhere else.
+ *
+ * webhook_url is bounded to an https URL here, which is shape only - it does
+ * NOT make the outbound call safe. A rule can still name an internal address,
+ * and an SSRF allowlist for edge functions is a separate piece of work; the
+ * lib/security/ssrfPrevention module is frontend-only and is itself unreachable
+ * (US-314). Recorded rather than implied.
+ */
+const TriggerConditionsSchema = z.object({
+  trigger_type: z.enum(['schedule', 'event', 'condition']),
+  event_type: z.string().max(128).optional(),
+  conditions: z
+    .array(
+      z.object({
+        field: z.string().max(128),
+        operator: z.enum([
+          'equals', 'greater_than', 'less_than', 'contains', 'days_before', 'days_after',
+        ]),
+        value: z.unknown(),
+      }),
+    )
+    .max(50)
+    .optional(),
+});
+
+const AutomationActionsSchema = z.object({
+  action_type: z.enum([
+    'send_email', 'create_invoice', 'apply_fee', 'apply_discount', 'update_status',
+    'notify_admin', 'webhook',
+  ]),
+  email_template: z.string().max(128).optional(),
+  fee_percentage: z.number().min(0).max(100).optional(),
+  fee_fixed_amount: z.number().min(0).max(1_000_000).multipleOf(0.01).optional(),
+  discount_percentage: z.number().min(0).max(100).optional(),
+  status_update: z.string().max(64).optional(),
+  webhook_url: z.string().url().startsWith('https://').max(2048).optional(),
+  custom_data: z.record(z.unknown()).optional(),
+});
+
+const ScheduleConfigSchema = z.object({
+  frequency: z.enum(['once', 'daily', 'weekly', 'monthly', 'custom']),
+  time: z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/).optional(),
+  day_of_week: z.number().int().min(0).max(6).optional(),
+  day_of_month: z.number().int().min(1).max(31).optional(),
+  cron_expression: z.string().max(128).optional(),
+});
+
+const AutomationSchema = z.object({
+  action: z.enum([
+    'create_rule', 'update_rule', 'delete_rule', 'list_rules', 'execute_rule',
+    'run_scheduled', 'get_logs',
+  ]),
+  rule_id: z.string().uuid().optional(),
+  rule: z
+    .object({
+      name: z.string().min(1).max(200),
+      description: z.string().max(2000).optional(),
+      automation_type: z.enum([
+        'invoice_generation', 'payment_reminder', 'late_fee', 'discount_application',
+        'subscription_renewal', 'usage_billing', 'recurring_charge',
+      ]),
+      is_active: z.boolean().optional(),
+      trigger_conditions: TriggerConditionsSchema,
+      actions: AutomationActionsSchema,
+      schedule: ScheduleConfigSchema.optional(),
+    })
+    .optional(),
+});
 
 interface AutomationRequest {
   action: 'create_rule' | 'update_rule' | 'delete_rule' | 'list_rules' | 'execute_rule' | 'run_scheduled' | 'get_logs';
@@ -87,7 +164,9 @@ serve(async (req) => {
       }
     }
 
-    const body: AutomationRequest = await req.json();
+    const parsed = await validateBody(req, AutomationSchema, { name: 'billing-automation' });
+    if (!parsed.ok) return parsed.response;
+    const body = parsed.data as AutomationRequest;
     const { action } = body;
 
     logStep('Processing action', { action, companyId });
@@ -113,8 +192,25 @@ serve(async (req) => {
         if (!companyId) return errorResponse('Unauthorized', 401);
         return await executeRule(corsHeaders, supabaseClient, companyId, body.rule_id!);
 
-      case 'run_scheduled':
+      case 'run_scheduled': {
+        // Every other action gates on `if (!companyId)`. This one did not, and
+        // it is the one that runs on the service role across EVERY tenant:
+        // runScheduledRules selects active billing_automation_rules with no
+        // company filter and executes their actions - invoice generation,
+        // payment reminders, late fees, discounts, usage billing.
+        //
+        // The function is absent from supabase/config.toml, so verify_jwt
+        // defaults to true, and that reads like authentication. It is not: it
+        // only proves the request carries a validly-signed project JWT, and the
+        // publishable anon key is one. Anyone who had loaded the app could fire
+        // every company's billing automation at a moment of their choosing.
+        //
+        // Cron is the intended caller, so it takes the same treatment
+        // webhook-trigger and send-usage-alert got.
+        const denied = requireInternalCaller(req);
+        if (denied) return denied;
         return await runScheduledRules(corsHeaders, supabaseClient);
+      }
 
       case 'get_logs':
         if (!companyId) return errorResponse('Unauthorized', 401);

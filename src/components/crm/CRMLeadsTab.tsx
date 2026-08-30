@@ -91,7 +91,12 @@ export const CRMLeadsTab: React.FC<CRMLeadsTabProps> = ({
                 <SelectItem value="other">Other</SelectItem>
               </SelectContent>
             </Select>
-            <Button className={mobileButtonClasses.primary} onClick={() => { navigate('/crm/leads/new'); }} aria-label="Add new lead">
+            {/* /crm/leads, not /crm/leads/new. No route declares the latter, and
+                /crm/leads/:id matches it - so this opened the lead DETAIL view for a
+                lead whose id is the string 'new'. Creation lives in the add-lead
+                dialog on the /crm/leads page; LeadEditDialog here requires an
+                existing lead and has no create mode. */}
+            <Button className={mobileButtonClasses.primary} onClick={() => { navigate('/crm/leads'); }} aria-label="Add new lead">
               <Plus className="h-4 w-4 mr-2" aria-hidden="true" />
               New Lead
             </Button>

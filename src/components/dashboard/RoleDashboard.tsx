@@ -44,15 +44,15 @@ export const RoleDashboard = () => {
         message: 'Opening system settings'
       },
       'create_project': {
-        route: '/projects/new',
+        route: '/create-project',
         message: 'Creating new project'
       },
       'manage_team': {
-        route: '/team-management',
+        route: '/team',
         message: 'Opening team management'
       },
       'job_costing': {
-        route: '/financial/job-costing',
+        route: '/job-costing',
         message: 'Loading job costing'
       },
       'documents': {
@@ -76,7 +76,7 @@ export const RoleDashboard = () => {
         message: 'Managing crew assignments'
       },
       'invoicing': {
-        route: '/invoicing',
+        route: '/invoices',
         message: 'Opening invoicing'
       },
       'financial_reports': {

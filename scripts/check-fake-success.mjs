@@ -84,7 +84,7 @@ const PRETENDS =
  * ratchets: it may fall as screens are fixed and must never rise, and the
  * triage itself lives on US-309 where it can be read.
  */
-const BASELINE = 20;
+const BASELINE = 17;
 
 const files = [];
 const walk = (d) => {
@@ -157,10 +157,17 @@ if (files_flagged.length > BASELINE) {
 }
 
 if (files_flagged.length < BASELINE) {
-  console.log(
-    `\n  ${BASELINE - files_flagged.length} fixed since the baseline \u2014 lower BASELINE in ` +
+  console.error(
+    `\n\u2716 ${BASELINE - files_flagged.length} fixed since the baseline, and that has to be ` +
+      `locked in: set BASELINE to ${files_flagged.length} in ` +
       `${relative(root, fileURLToPath(import.meta.url))}.`,
   );
+  console.error(
+    '  A baseline nobody lowers stops being a gate. US-212 let one drift to 1860 against a real ' +
+      'count of 669 - permitting 1191 new errors - precisely because a count below it only ' +
+      'printed a suggestion.',
+  );
+  process.exit(1);
 }
 
 console.log(`\n\u2714 No new success messages without a write (${files_flagged.length} in the backlog).`);

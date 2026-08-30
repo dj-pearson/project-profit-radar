@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { requireTestCredentials, signIn, TEST_EMAIL, TEST_PASSWORD } from './fixtures/auth';
 
 test.describe('Authentication', () => {
   test.beforeEach(async ({ page }) => {
@@ -111,15 +112,20 @@ test.describe('Authentication', () => {
 });
 
 test.describe('Authenticated User Flow', () => {
-  // Note: These tests would require actual test credentials
-  // In a real scenario, you'd set up test users in your test environment
+  // These run wherever TEST_USER_EMAIL and TEST_USER_PASSWORD name an account
+  // on the target environment, and skip with that reason where they do not
+  // (US-214). They were `test.skip(...)`, which never ran anywhere and said
+  // nothing about why.
+  test.beforeEach(() => {
+    requireTestCredentials();
+  });
 
-  test.skip('should successfully sign in with valid credentials', async ({ page }) => {
+  test('should successfully sign in with valid credentials', async ({ page }) => {
     await page.goto('/auth');
 
     // Use test credentials from environment variables
-    const testEmail = process.env.TEST_USER_EMAIL || 'test@example.com';
-    const testPassword = process.env.TEST_USER_PASSWORD || 'testpassword';
+    const testEmail = TEST_EMAIL!;
+    const testPassword = TEST_PASSWORD!;
 
     await page.getByLabel(/email/i).fill(testEmail);
     await page.getByLabel(/password/i).fill(testPassword);
@@ -133,31 +139,24 @@ test.describe('Authenticated User Flow', () => {
     await expect(page.getByRole('heading', { name: /dashboard/i })).toBeVisible();
   });
 
-  test.skip('should persist authentication after page reload', async ({ page, context }) => {
-    // This would test that session persistence works
-    await page.goto('/dashboard');
+  test('should persist authentication after page reload', async ({ page }) => {
+    // Sign in unconditionally rather than "go to /dashboard, and if we were
+    // bounced to /auth then sign in". That branch made the test pass either
+    // way: if the redirect never happened the body was skipped and the reload
+    // proved nothing, and a session that failed to persist looked identical to
+    // one that was never established.
+    await signIn(page);
 
-    // If redirected to auth, sign in first
-    if (page.url().includes('/auth')) {
-      const testEmail = process.env.TEST_USER_EMAIL || 'test@example.com';
-      const testPassword = process.env.TEST_USER_PASSWORD || 'testpassword';
-
-      await page.getByLabel(/email/i).fill(testEmail);
-      await page.getByLabel(/password/i).fill(testPassword);
-      await page.getByRole('button', { name: /sign in/i }).click();
-
-      await page.waitForURL('**/dashboard');
-    }
-
-    // Reload the page
     await page.reload();
 
-    // Should still be on dashboard (not redirected to auth)
     await expect(page).toHaveURL(/\/dashboard/);
   });
 
-  test.skip('should successfully sign out', async ({ page }) => {
-    await page.goto('/dashboard');
+  test('should successfully sign out', async ({ page }) => {
+    // Has to sign in first. Landing on /dashboard unauthenticated redirects to
+    // /auth, where there is no sign-out control, so this used to fail on a
+    // missing button rather than on anything about signing out.
+    await signIn(page);
 
     // Find and click the sign out button/link
     const signOutButton = page.getByRole('button', { name: /sign out/i }).or(

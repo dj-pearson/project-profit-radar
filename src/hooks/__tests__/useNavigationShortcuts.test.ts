@@ -3,8 +3,14 @@ import { resolveNewTarget, isEditableTarget } from '../useNavigationShortcuts';
 
 describe('resolveNewTarget (context-aware "N")', () => {
   it('maps a route to its new-item destination', () => {
-    expect(resolveNewTarget('/projects')).toBe('/projects/new');
-    expect(resolveNewTarget('/projects/abc-123')).toBe('/projects/new');
+    // /create-project, not /projects/new. There is no /projects/new route, and
+    // /projects/:projectId matched it - so pressing N on a project page opened
+    // the project detail view for a project whose id was the string 'new'.
+    expect(resolveNewTarget('/projects')).toBe('/create-project');
+    expect(resolveNewTarget('/projects/abc-123')).toBe('/create-project');
+    // /invoices/new still has no route. Left as-is deliberately: there is no
+    // create-invoice page to point at, and sending "new invoice" to the list is
+    // a product decision rather than a repoint (US-312 baseline).
     expect(resolveNewTarget('/invoices')).toBe('/invoices/new');
     expect(resolveNewTarget('/time-tracking')).toBe('/time-tracking');
     expect(resolveNewTarget('/crm')).toBe('/crm');
