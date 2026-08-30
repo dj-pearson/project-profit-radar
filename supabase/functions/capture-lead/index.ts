@@ -3,6 +3,8 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.3";
 import { checkRateLimit, getClientIP } from "../_shared/rate-limiter.ts";
+import { validateBody } from "../_shared/validate-body.ts";
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -13,25 +15,39 @@ const corsHeaders = {
 // Default site key for Brikly
 const DEFAULT_SITE_KEY = 'brikly';
 
-interface LeadCaptureRequest {
-  email: string;
-  firstName?: string;
-  lastName?: string;
-  companyName?: string;
-  phone?: string;
-  companySize?: string;
-  industry?: string;
-  leadSource?: string;
-  interestType?: string;
-  downloadedResource?: string;
-  utm_source?: string;
-  utm_medium?: string;
-  utm_campaign?: string;
-  utm_content?: string;
-  utm_term?: string;
-  landingPage?: string;
-  referrer?: string;
-}
+// US-241. This function was already the best-behaved of the four marketing
+// forms - sanitizeString() below caps every field and isValidEmail() checks the
+// address - so the schema is not filling a hole so much as making those caps
+// declarative and checkable. The lengths here ARE the ones sanitizeString is
+// called with a few lines down, deliberately, so the two cannot disagree; the
+// sibling forms (handle-demo-request, handle-sales-contact) now use the same
+// set.
+//
+// What the schema catches that the sanitizer does not: a field that is not a
+// string. sanitizeString returns null for a number or an object, so `phone: 42`
+// is silently dropped and the lead is written without it. That is a lost field
+// nobody is told about.
+const LeadCaptureSchema = z.object({
+  email: z.string().email().max(255),
+  firstName: z.string().max(100).optional(),
+  lastName: z.string().max(100).optional(),
+  companyName: z.string().max(200).optional(),
+  phone: z.string().max(20).optional(),
+  companySize: z.string().max(50).optional(),
+  industry: z.string().max(100).optional(),
+  leadSource: z.string().max(50).optional(),
+  interestType: z.string().max(50).optional(),
+  downloadedResource: z.string().max(200).optional(),
+  utm_source: z.string().max(100).optional(),
+  utm_medium: z.string().max(100).optional(),
+  utm_campaign: z.string().max(200).optional(),
+  utm_content: z.string().max(200).optional(),
+  utm_term: z.string().max(100).optional(),
+  landingPage: z.string().max(500).optional(),
+  referrer: z.string().max(500).optional(),
+});
+
+type LeadCaptureRequest = z.infer<typeof LeadCaptureSchema>;
 
 const logStep = (step: string, details?: any) => {
   const detailsStr = details ? ` - ${JSON.stringify(details)}` : '';
@@ -133,7 +149,9 @@ serve(async (req) => {
       });
     }
 
-    const requestData: LeadCaptureRequest = await req.json();
+    const parsed = await validateBody(req, LeadCaptureSchema, { name: 'capture-lead' });
+    if (!parsed.ok) return parsed.response;
+    const requestData = parsed.data as LeadCaptureRequest;
 
     // Security: Validate and sanitize all input fields
     const rawEmail = requestData.email;

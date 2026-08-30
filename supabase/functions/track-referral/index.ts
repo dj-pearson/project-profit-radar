@@ -3,6 +3,17 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.3";
 import { checkRateLimit, rateLimitResponse, getClientIP, RATE_LIMITS } from "../_shared/rate-limiter.ts";
+import { validateBody } from "../_shared/validate-body.ts";
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
+
+// US-241. Anonymous, two writes, and affiliate_code went straight into an
+// .eq() lookup against affiliate_codes. A code is a short opaque token, so the
+// bound is generous rather than tight - the point is that an unbounded string
+// from the internet stops being what indexes that column.
+const TrackReferralSchema = z.object({
+  affiliate_code: z.string().min(1).max(64),
+  referee_email: z.string().email().max(255),
+});
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -41,8 +52,13 @@ serve(async (req) => {
     });
     if (!rl.allowed) return rateLimitResponse(rl, corsHeaders);
 
-    const { affiliate_code, referee_email } = await req.json();
+    const parsed = await validateBody(req, TrackReferralSchema, { name: 'track-referral' });
+    if (!parsed.ok) return parsed.response;
+    const { affiliate_code, referee_email } = parsed.data as {
+      affiliate_code: string; referee_email: string;
+    };
 
+    // Kept: report mode hands through the raw body on a schema failure.
     if (!affiliate_code || !referee_email) {
       throw new Error("Missing affiliate_code or referee_email");
     }

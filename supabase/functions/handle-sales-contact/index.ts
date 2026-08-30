@@ -1,28 +1,41 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.3";
 import { checkRateLimit, rateLimitResponse, getClientIP, RATE_LIMITS } from "../_shared/rate-limiter.ts";
+import { validateBody } from "../_shared/validate-body.ts";
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-interface SalesContactRequest {
-  email: string;
-  firstName: string;
-  lastName: string;
-  companyName: string;
-  phone?: string;
-  companySize?: string;
-  industry?: string;
-  inquiryType?: string;
-  message: string;
-  estimatedBudget?: string;
-  timeline?: string;
-  utm_source?: string;
-  utm_medium?: string;
-  utm_campaign?: string;
-}
+// US-241. Same shape as handle-demo-request: anonymous, five writes, every
+// field straight from req.json() with a truthiness check on five of them.
+// Lengths mirror capture-lead's sanitizer, which is reached from the same
+// marketing forms and writes the same `leads` row.
+//
+// `message` is the one that mattered. It is written to sales_contact_requests
+// AND its length is logged as message_length, which is a decent hint that
+// somebody expected long input here; nothing bounded it. 5000 is the same
+// ceiling the demo form's message now carries.
+const SalesContactSchema = z.object({
+  email: z.string().email().max(255),
+  firstName: z.string().min(1).max(100),
+  lastName: z.string().min(1).max(100),
+  companyName: z.string().min(1).max(200),
+  phone: z.string().max(20).optional(),
+  companySize: z.string().max(50).optional(),
+  industry: z.string().max(100).optional(),
+  inquiryType: z.string().max(50).optional(),
+  message: z.string().min(1).max(5000),
+  estimatedBudget: z.string().max(50).optional(),
+  timeline: z.string().max(100).optional(),
+  utm_source: z.string().max(100).optional(),
+  utm_medium: z.string().max(100).optional(),
+  utm_campaign: z.string().max(200).optional(),
+});
+
+type SalesContactRequest = z.infer<typeof SalesContactSchema>;
 
 const logStep = (step: string, details?: any) => {
   const detailsStr = details ? ` - ${JSON.stringify(details)}` : '';
@@ -56,7 +69,9 @@ serve(async (req) => {
     });
     if (!rl.allowed) return rateLimitResponse(rl, corsHeaders);
 
-    const requestData: SalesContactRequest = await req.json();
+    const parsed = await validateBody(req, SalesContactSchema, { name: 'handle-sales-contact' });
+    if (!parsed.ok) return parsed.response;
+    const requestData = parsed.data as SalesContactRequest;
     const {
       email,
       firstName,
@@ -74,7 +89,10 @@ serve(async (req) => {
       utm_campaign
     } = requestData;
 
-    // Validate required fields
+    // Kept deliberately: report mode (the default) hands the handler the RAW
+    // body when the schema fails, so this is still what stops a blank form
+    // writing five rows. It becomes redundant - and a 400 rather than a 500 -
+    // when INPUT_VALIDATION_MODE=enforce.
     if (!email || !firstName || !lastName || !companyName || !message) {
       throw new Error("Missing required fields");
     }
