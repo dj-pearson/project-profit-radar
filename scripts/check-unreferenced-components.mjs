@@ -46,7 +46,7 @@ const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const SRC = join(root, 'src');
 
 /** Lower this as files are deleted or wired. It never goes up. */
-const BASELINE = 260;
+const BASELINE = 253;
 
 function walk(dir, out = []) {
   for (const entry of readdirSync(dir, { withFileTypes: true })) {
@@ -137,6 +137,19 @@ const unnamed = orphans.filter((f) => !isImported(f));
 const islands = orphans.filter((f) => isImported(f));
 const lines = orphans.reduce((n, f) => n + sources.get(f).split('\n').length, 0);
 const islandLines = islands.reduce((n, f) => n + sources.get(f).split('\n').length, 0);
+
+// `--list` prints the orphans themselves, which is what AC3 triage needs: the
+// summary tells you the number, and the number is not the thing you act on.
+// LONE is a file nothing names at all - a lone deletion. ISLE is one reached
+// only from another orphan, so it belongs to a whole island that has to be
+// decided about together.
+if (process.argv.includes('--list')) {
+  const rows = orphans
+    .map((f) => [unnamed.includes(f) ? 'LONE' : 'ISLE', sources.get(f).split('\n').length, relative(root, f)])
+    .sort((a, b) => a[2].localeCompare(b[2]));
+  for (const [kind, n, f] of rows) console.log(`${kind} ${String(n).padStart(4)}  ${f}`);
+  process.exit(0);
+}
 
 console.log('Unreferenced-component guard (US-314)');
 console.log(`  components and pages scanned: ${candidates.length}`);

@@ -46,10 +46,10 @@ export { QuickAnswerSnippet, LastUpdated } from './QuickAnswerSnippet';
 export { default as SEOCompatibilityLayer, EnhancedSEOMetaTags } from './SEOCompatibilityLayer';
 export { DynamicSEOOptimizer } from './DynamicSEOOptimizer';
 
-// SEO Dashboard Components (Admin)
-export { default as MCPSEODashboard } from './MCPSEODashboard';
-export { default as MCPSetupWizard } from './MCPSetupWizard';
-export { SEOAnalyticsDashboard } from './SEOAnalyticsDashboard';
+// The admin SEO dashboards were exported from here and mounted nowhere. They
+// are gone (US-314): /admin/seo renders components/admin/SEOManager, and
+// /admin/seo-management renders pages/UnifiedSEODashboard, which is what the
+// /admin/seo-analytics and /seo-management redirects point at.
 
 // Re-export configuration
 export {

@@ -153,6 +153,19 @@ describe('the mock-data feature shells', () => {
       .filter(Boolean);
   }
 
+  it('is current, so a stale report fails as a stale report', () => {
+    // Every assertion below reads the files the report names. Delete an orphan
+    // without regenerating and the next one to run dies on ENOENT naming a path
+    // nobody recognises - which is what deleting the SEO admin pages did. The
+    // report is generated; say so plainly instead.
+    const missing = listed().filter((f) => !existsSync(f));
+    expect(
+      missing,
+      `${REPORT} lists ${missing.length} file(s) that no longer exist. ` +
+        'Run `node scripts/report-unreferenced-components.mjs`.',
+    ).toEqual([]);
+  });
+
   it('the report exists and says it is generated', () => {
     const doc = readFileSync(REPORT, 'utf8');
     expect(doc).toContain('scripts/report-unreferenced-components.mjs');
