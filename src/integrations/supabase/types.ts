@@ -6031,6 +6031,11 @@ export type Database = {
           status: string | null
           title: string
           updated_at: string
+          impact_days: number | null
+          revised_completion_date: string | null
+          cost_code_id: string | null
+          approval_task_id: string | null
+          client_rejection_reason: string | null
         }
         Insert: {
           amount: number
@@ -6055,6 +6060,11 @@ export type Database = {
           status?: string | null
           title: string
           updated_at?: string
+          impact_days?: number | null
+          revised_completion_date?: string | null
+          cost_code_id?: string | null
+          approval_task_id?: string | null
+          client_rejection_reason?: string | null
         }
         Update: {
           amount?: number
@@ -6079,6 +6089,11 @@ export type Database = {
           status?: string | null
           title?: string
           updated_at?: string
+          impact_days?: number | null
+          revised_completion_date?: string | null
+          cost_code_id?: string | null
+          approval_task_id?: string | null
+          client_rejection_reason?: string | null
         }
         Relationships: [
           {
@@ -24050,6 +24065,8 @@ export type Database = {
           tenant_id: string | null
           total_budget: number | null
           updated_at: string
+          original_contract_value: number | null
+          current_contract_value: number | null
         }
         Insert: {
           actual_hours?: number | null
@@ -24081,6 +24098,8 @@ export type Database = {
           tenant_id?: string | null
           total_budget?: number | null
           updated_at?: string
+          original_contract_value?: number | null
+          current_contract_value?: number | null
         }
         Update: {
           actual_hours?: number | null
@@ -24112,6 +24131,8 @@ export type Database = {
           tenant_id?: string | null
           total_budget?: number | null
           updated_at?: string
+          original_contract_value?: number | null
+          current_contract_value?: number | null
         }
         Relationships: [
           {
