@@ -97,10 +97,20 @@ export async function checkEntitlement(
     const table = RESOURCE_TABLE[resource];
     if (!table) return UNLIMITED(tier); // not row-count enforced
 
-    const { count } = await supabase
+    let query = supabase
       .from(table)
       .select("id", { count: "exact", head: true })
       .eq("company_id", companyId);
+
+    // A client_portal user is a customer being shown their own job, not a seat
+    // the contractor bought (US-319). Counting them would make the portal
+    // something a contractor rations, and would let a busy job push a company
+    // over its plan limit for inviting its own customers.
+    if (table === "user_profiles") {
+      query = query.neq("role", "client_portal");
+    }
+
+    const { count } = await query;
 
     const currentUsage = count ?? 0;
     const allowed = currentUsage + additionalCount <= limit;

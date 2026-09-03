@@ -40306,6 +40306,18 @@ export type Database = {
         Args: { p_company_id: string }
         Returns: string
       }
+      client_has_project_access: {
+        Args: { p_project_id: string }
+        Returns: boolean
+      }
+      client_respond_to_change_order: {
+        Args: {
+          p_approved: boolean
+          p_change_order_id: string
+          p_rejection_reason?: string | null
+        }
+        Returns: undefined
+      }
       create_company_for_current_user: {
         Args: {
           p_company_size?: string | null

@@ -29,6 +29,7 @@ import {
   LazyAuth,
   LazyAuthCallback,
   LazySetup,
+  LazyClientPortal,
   LazyCheckoutSuccess,
   LazyPaymentSuccess,
   LazyPaymentCancelled,
@@ -60,6 +61,13 @@ export const appRoutes = (
     <Route path="/auth" element={<LazyAuth />} />
     <Route path="/auth/callback" element={<LazyAuthCallback />} />
     <Route path="/setup" element={<LazySetup />} />
+
+    {/* The client portal (US-319). Routed at last: both portal pages were
+        imported by no route file, so the entire customer-facing half of the
+        product shipped as dead code. RouteGuard authenticates; the page itself
+        sends anyone who is not a client_portal user to their dashboard, and
+        RLS decides which projects they can see. */}
+    <Route path="/client-portal" element={<RouteGuard><LazyClientPortal /></RouteGuard>} />
     <Route path="/checkout/success" element={<LazyCheckoutSuccess />} />
     <Route path="/payment-success" element={<LazyPaymentSuccess />} />
     <Route path="/payment-cancelled" element={<LazyPaymentCancelled />} />

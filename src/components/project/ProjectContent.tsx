@@ -16,6 +16,7 @@ import { ProjectMaterials } from '@/components/project/tabs/ProjectMaterials';
 import { ProjectProcurement } from '@/components/project/tabs/ProjectProcurement';
 import { ProjectJobCosting } from '@/components/project/tabs/ProjectJobCosting';
 import { ProjectContacts } from '@/components/project/tabs/ProjectContacts';
+import { ProjectClientAccess } from '@/components/project/ProjectClientAccess';
 import { ProjectPermits } from '@/components/project/tabs/ProjectPermits';
 import { ProjectPunchList } from '@/components/project/tabs/ProjectPunchList';
 import { ProjectCostCodes } from '@/components/project/tabs/ProjectCostCodes';
@@ -350,7 +351,12 @@ export const ProjectContent: React.FC<ProjectContentProps> = ({
   );
 
   const renderContacts = () => (
-    <ProjectContacts projectId={project.id} />
+    <div className="space-y-6">
+      <ProjectContacts projectId={project.id} />
+      {/* Client portal access lives with the project's people (US-319). It is
+          the first surface anywhere that can actually give a customer a login. */}
+      <ProjectClientAccess projectId={project.id} />
+    </div>
   );
 
   const renderPermits = () => (

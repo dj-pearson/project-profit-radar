@@ -20,6 +20,8 @@ import {
   type ProjectUpdate,
   type ChangeOrder
 } from '@/components/client-portal';
+import { ClientPortalSelections } from '@/components/client/ClientPortalSelections';
+import { ClientPortalRFIs } from '@/components/client/ClientPortalRFIs';
 import {
   Building2,
   LayoutDashboard,
@@ -49,6 +51,7 @@ interface Project {
   site_address?: string;
   project_address?: any;
   client_email?: string;
+  company_id?: string;
 }
 
 interface Invoice {
@@ -78,12 +81,21 @@ const ClientPortalEnhanced = () => {
   const [loadingData, setLoadingData] = useState(true);
   const [processingPayment, setProcessingPayment] = useState<string | null>(null);
 
+  // These two components are company-scoped. Take the id from the project the
+  // client is looking at rather than from their profile: a client enrolled on
+  // two contractors' jobs has one profile and two companies.
+  const companyIdForProject = selectedProject?.company_id ?? userProfile?.company_id ?? null;
+
   useEffect(() => {
     if (!loading && !user) {
       navigate('/auth');
     }
 
-    if (!loading && user && userProfile && !userProfile.company_id && userProfile.role !== 'root_admin') {
+    // A client is never sent to contractor onboarding. Their access comes from
+    // enrolment, not from owning a company, so a missing company_id is normal
+    // for them and /setup would ask them to create a construction business.
+    if (!loading && user && userProfile && !userProfile.company_id
+        && userProfile.role !== 'root_admin' && userProfile.role !== 'client_portal') {
       navigate('/setup');
     }
 
@@ -98,7 +110,7 @@ const ClientPortalEnhanced = () => {
       return;
     }
 
-    if (userProfile?.company_id) {
+    if (userProfile?.role === 'client_portal' || userProfile?.role === 'root_admin') {
       loadClientData();
     }
   }, [user, userProfile, loading, navigate]);
@@ -107,11 +119,33 @@ const ClientPortalEnhanced = () => {
     try {
       setLoadingData(true);
 
-      // Load projects where user is the client
+      // Projects this client is ENROLLED on (US-319), not projects whose
+      // client_email string happens to match. The old .eq('client_email',
+      // user.email) was an authorisation model made of typing: it granted
+      // access to any project in any company that carried the same address,
+      // and nothing at all if the address had been entered differently.
+      // client_portal_access is the enrolment record, and RLS on projects
+      // enforces the same predicate server-side, so this query cannot return
+      // a project the client is not enrolled on even if it were wrong.
+      const { data: enrolments, error: enrolmentError } = await supabase
+        .from('client_portal_access')
+        .select('project_id')
+        .eq('is_active', true);
+
+      if (enrolmentError) throw enrolmentError;
+
+      const projectIds = (enrolments || []).map((e) => e.project_id).filter(Boolean);
+
+      if (projectIds.length === 0) {
+        setProjects([]);
+        setSelectedProject(null);
+        return;
+      }
+
       const { data: projectsData, error: projectsError } = await supabase
         .from('projects')
         .select('*')
-        .eq('client_email', user?.email)
+        .in('id', projectIds)
         .order('created_at', { ascending: false });
 
       if (projectsError) throw projectsError;
@@ -377,7 +411,7 @@ const ClientPortalEnhanced = () => {
 
             {/* Main Content Tabs */}
             <Tabs defaultValue="overview" className="space-y-6">
-              <TabsList className="grid w-full grid-cols-6">
+              <TabsList className="grid w-full grid-cols-4 md:grid-cols-8">
                 <TabsTrigger value="overview">
                   <LayoutDashboard className="h-4 w-4 mr-2" />
                   Overview
@@ -397,6 +431,17 @@ const ClientPortalEnhanced = () => {
                 <TabsTrigger value="communication">
                   <MessageSquare className="h-4 w-4 mr-2" />
                   Messages
+                </TabsTrigger>
+                {/* Absorbed from the older ClientPortal page, which was the
+                    only implementation of either and was routed by nothing
+                    (US-319). */}
+                <TabsTrigger value="selections">
+                  <CheckCircle2 className="h-4 w-4 mr-2" />
+                  Selections
+                </TabsTrigger>
+                <TabsTrigger value="rfis">
+                  <FileText className="h-4 w-4 mr-2" />
+                  Questions
                 </TabsTrigger>
                 <TabsTrigger value="billing">
                   <CreditCard className="h-4 w-4 mr-2" />
@@ -439,6 +484,26 @@ const ClientPortalEnhanced = () => {
               </TabsContent>
 
               {/* Billing Tab */}
+              <TabsContent value="selections" className="space-y-4">
+                {selectedProject && companyIdForProject && (
+                  <ClientPortalSelections
+                    projectId={selectedProject.id}
+                    companyId={companyIdForProject}
+                    userId={user?.id}
+                  />
+                )}
+              </TabsContent>
+
+              <TabsContent value="rfis" className="space-y-4">
+                {selectedProject && companyIdForProject && (
+                  <ClientPortalRFIs
+                    projectId={selectedProject.id}
+                    companyId={companyIdForProject}
+                    userId={user?.id}
+                  />
+                )}
+              </TabsContent>
+
               <TabsContent value="billing" className="space-y-6">
                 <Card>
                   <CardContent className="pt-6">

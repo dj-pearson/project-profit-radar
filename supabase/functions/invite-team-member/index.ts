@@ -36,7 +36,7 @@ import {
 import { checkEntitlement } from "../_shared/entitlements.ts";
 import { getCorsHeaders } from "../_shared/secure-cors.ts";
 import { writeAuditLog } from '../_shared/audit-log.ts';
-import { sendEmail, getSiteEmailConfig } from '../_shared/ses-email-service.ts';
+import { sendInviteWithSetPasswordLink, escapeHtml } from '../_shared/invite-email.ts';
 
 const logStep = (step: string, details?: unknown) => {
   console.log(
@@ -73,105 +73,35 @@ const ResendSchema = z.object({
 // Roles permitted to invite new members.
 const CAN_INVITE = new Set(["admin", "root_admin", "project_manager"]);
 
-const FRONTEND_URL = Deno.env.get("FRONTEND_URL") || "https://brikly.net";
-
-const escapeHtml = (value: string): string =>
-  value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;").replace(/'/g, "&#39;");
-
 /**
- * The invite email. Deliberately a set-password link rather than a credential:
- * a password mailed in plaintext is a password in the recipient's inbox
- * forever, and the previous code's alternative - minting one and telling
- * nobody - is why this function never worked.
- */
-function inviteEmailBody(args: {
-  firstName: string;
-  companyName: string;
-  inviterName: string;
-  role: string;
-  actionLink: string;
-  supportEmail: string;
-  primaryColor: string;
-}): { subject: string; html: string; text: string } {
-  const readableRole = args.role.replace(/_/g, " ");
-  const subject = `${args.inviterName} invited you to ${args.companyName} on Brikly`;
-
-  const html = `
-    <div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;max-width:560px;margin:0 auto;padding:32px 24px;color:#1f2933;">
-      <h1 style="font-size:22px;font-weight:600;margin:0 0 16px;">You have been added to ${escapeHtml(args.companyName)}</h1>
-      <p style="font-size:15px;line-height:1.6;margin:0 0 16px;">
-        Hi ${escapeHtml(args.firstName)}, ${escapeHtml(args.inviterName)} added you to
-        ${escapeHtml(args.companyName)} on Brikly as ${escapeHtml(readableRole)}.
-      </p>
-      <p style="font-size:15px;line-height:1.6;margin:0 0 24px;">
-        Choose a password to finish setting up your account.
-      </p>
-      <p style="margin:0 0 24px;">
-        <a href="${args.actionLink}"
-           style="display:inline-block;background:${args.primaryColor};color:#ffffff;text-decoration:none;padding:12px 22px;border-radius:8px;font-size:15px;font-weight:600;">
-          Set your password
-        </a>
-      </p>
-      <p style="font-size:13px;line-height:1.6;color:#52606d;margin:0 0 8px;">
-        This link expires in 24 hours. If it has, ask ${escapeHtml(args.inviterName)} to send another from Team settings.
-      </p>
-      <p style="font-size:13px;line-height:1.6;color:#52606d;margin:0;">
-        Not expecting this? You can ignore this email, or tell us at ${escapeHtml(args.supportEmail)}.
-      </p>
-    </div>`;
-
-  const text = [
-    `${args.inviterName} added you to ${args.companyName} on Brikly as ${readableRole}.`,
-    "",
-    "Set your password to finish setting up your account:",
-    args.actionLink,
-    "",
-    "This link expires in 24 hours.",
-    `Not expecting this? Ignore this email or contact ${args.supportEmail}.`,
-  ].join("\n");
-
-  return { subject, html, text };
-}
-
-/**
- * Creates the set-password link and mails it. Returns whether it was delivered
- * so the caller can tell the inviter the truth either way - an invite the
- * recipient never received is the bug this story exists for, and it must not
- * be reported as a success a second time.
+ * The staff wording. Link generation, escaping and the send live in
+ * _shared/invite-email.ts, which invite-client (US-319) uses too.
  */
 async function sendInviteEmail(
-  serviceClient: ReturnType<typeof createClient>,
+  // deno-lint-ignore no-explicit-any
+  serviceClient: any,
   args: { email: string; firstName: string; companyName: string; inviterName: string; role: string },
 ): Promise<{ sent: boolean; error?: string }> {
-  const { data: link, error: linkError } = await serviceClient.auth.admin.generateLink({
-    type: "recovery",
-    email: args.email,
-    options: { redirectTo: `${FRONTEND_URL}/reset-password` },
+  const readableRole = args.role.replace(/_/g, " ");
+  const company = escapeHtml(args.companyName);
+  const inviter = escapeHtml(args.inviterName);
+
+  return await sendInviteWithSetPasswordLink(serviceClient, args.email, {
+    subject: `${args.inviterName} invited you to ${args.companyName} on Brikly`,
+    headline: `You have been added to ${company}`,
+    bodyHtml: `
+      <p style="font-size:15px;line-height:1.6;margin:0 0 16px;">
+        Hi ${escapeHtml(args.firstName)}, ${inviter} added you to ${company} on Brikly
+        as ${escapeHtml(readableRole)}.
+      </p>
+      <p style="font-size:15px;line-height:1.6;margin:0;">
+        Choose a password to finish setting up your account.
+      </p>`,
+    bodyText:
+      `${args.inviterName} added you to ${args.companyName} on Brikly as ${readableRole}.\n\n` +
+      `Set your password to finish setting up your account.`,
+    buttonLabel: "Set your password",
   });
-
-  const actionLink = link?.properties?.action_link;
-  if (linkError || !actionLink) {
-    return { sent: false, error: linkError?.message || "Could not generate the invite link" };
-  }
-
-  const siteConfig = await getSiteEmailConfig();
-  const body = inviteEmailBody({
-    firstName: args.firstName,
-    companyName: args.companyName,
-    inviterName: args.inviterName,
-    role: args.role,
-    actionLink,
-    supportEmail: siteConfig.supportEmail,
-    primaryColor: siteConfig.primaryColor,
-  });
-
-  const result = await sendEmail(
-    { to: args.email, subject: body.subject, html: body.html, text: body.text },
-    siteConfig,
-  );
-
-  return { sent: result.success, error: result.error };
 }
 
 serve(async (req) => {

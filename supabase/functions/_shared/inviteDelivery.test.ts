@@ -18,7 +18,9 @@ import { readFileSync } from 'node:fs';
  * cannot be satisfied by a comment.
  */
 
-const PATH = 'supabase/functions/invite-team-member/index.ts';
+const TEAM = 'supabase/functions/invite-team-member/index.ts';
+const CLIENT = 'supabase/functions/invite-client/index.ts';
+const SHARED = 'supabase/functions/_shared/invite-email.ts';
 
 /** Comments stripped, so a file that *describes* the old shape does not match. */
 function code(path: string): string {
@@ -30,8 +32,10 @@ function code(path: string): string {
     .join('\n');
 }
 
-describe('invite-team-member delivers the invite (US-320)', () => {
-  const source = code(PATH);
+describe('invite delivery (US-320, US-319)', () => {
+  const source = code(TEAM);
+  const shared = code(SHARED);
+  const client = code(CLIENT);
 
   it('does not mint a password for the invitee', () => {
     // The exact regression: a random password created server-side, which the
@@ -47,15 +51,42 @@ describe('invite-team-member delivers the invite (US-320)', () => {
     expect(createUserCall).not.toMatch(/\bpassword\s*:/);
   });
 
-  it('sends the invite through the shared SES helper', () => {
-    expect(source).toMatch(/from ['"]\.\.\/_shared\/ses-email-service\.ts['"]/);
-    expect(source).toMatch(/sendEmail\(/);
+  it('sends through the one shared delivery path', () => {
+    // Both invite functions route through _shared/invite-email.ts. A second
+    // implementation is how one of them quietly stops sending.
+    expect(source).toMatch(/from ['"]\.\.\/_shared\/invite-email\.ts['"]/);
+    expect(client).toMatch(/from ['"]\.\.\/_shared\/invite-email\.ts['"]/);
+    expect(source).toMatch(/sendInviteWithSetPasswordLink|sendInviteEmail\(/);
+    expect(shared).toMatch(/sendEmail\(/);
+    expect(shared).toMatch(/from ['"]\.\/ses-email-service\.ts['"]/);
   });
 
   it('emails a set-password link rather than a credential', () => {
-    expect(source).toMatch(/generateLink\(/);
-    expect(source).toMatch(/type:\s*["']recovery["']/);
-    expect(source).toMatch(/action_link/);
+    expect(shared).toMatch(/generateLink\(/);
+    expect(shared).toMatch(/type:\s*['"]recovery['"]/);
+    expect(shared).toMatch(/action_link/);
+  });
+
+  it('never mints a password for an invited client either', () => {
+    expect(client).not.toMatch(/generatePassword/);
+    const createUserCall = client.slice(
+      client.indexOf('createUser({'),
+      client.indexOf('createUser({') + 400
+    );
+    expect(createUserCall).not.toMatch(/\bpassword\s*:/);
+  });
+
+  it('enrols the client rather than matching on an email string', () => {
+    // The portal used .eq('client_email', user.email) to decide what a client
+    // could see. Enrolment is the record; the invite is what writes it.
+    expect(client).toMatch(/client_portal_access/);
+    expect(client).toMatch(/project_communication_participants/);
+  });
+
+  it('does not let the caller name the company for a client invite', () => {
+    // company_id comes from the authenticated inviter's profile, never the body.
+    expect(client).toMatch(/inviter\.company_id/);
+    expect(client).not.toMatch(/company_id:\s*payload\.company_id/);
   });
 
   it('tells the caller whether the email was actually sent', () => {
@@ -76,9 +107,10 @@ describe('invite-team-member delivers the invite (US-320)', () => {
   });
 
   it('escapes user-supplied names in the HTML body', () => {
-    // Company and inviter names reach the template from the database and land
-    // in an HTML email.
-    expect(source).toMatch(/escapeHtml/);
+    // Company, project and inviter names reach the template from the database
+    // and land in an HTML email.
     expect(source).toMatch(/escapeHtml\(args\.companyName\)/);
+    expect(client).toMatch(/escapeHtml\(/);
+    expect(shared).toMatch(/function escapeHtml/);
   });
 });
