@@ -8445,6 +8445,7 @@ export type Database = {
           start_time: string
           status: string
           updated_at: string
+          schedule_task_id: string | null
         }
         Insert: {
           arrival_notification_sent?: boolean | null
@@ -39533,6 +39534,42 @@ export type Database = {
         }
         Relationships: []
       }
+      schedule_task_assignees: {
+        Row: {
+          id: string
+          schedule_task_id: string
+          project_id: string
+          company_id: string
+          crew_member_id: string
+          crew_assignment_id: string | null
+          notified_at: string | null
+          created_by: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          schedule_task_id: string
+          project_id: string
+          company_id: string
+          crew_member_id: string
+          crew_assignment_id?: string | null
+          notified_at?: string | null
+          created_by?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          schedule_task_id?: string
+          project_id?: string
+          company_id?: string
+          crew_member_id?: string
+          crew_assignment_id?: string | null
+          notified_at?: string | null
+          created_by?: string | null
+          created_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       customer_activity: {
@@ -39600,6 +39637,24 @@ export type Database = {
           description: string | null
           quantity: number | null
           unit_price: number | null
+        }
+        Relationships: []
+      }
+      schedule_board: {
+        Row: {
+          schedule_task_id: string | null
+          company_id: string | null
+          project_id: string | null
+          project_name: string | null
+          project_status: string | null
+          task_name: string | null
+          start_date: string | null
+          duration_days: number | null
+          end_date: string | null
+          status: string | null
+          sort_order: number | null
+          assignee_count: number | null
+          assignee_names: string | null
         }
         Relationships: []
       }

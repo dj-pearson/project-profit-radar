@@ -28,7 +28,7 @@ const SRC = join(root, 'src');
 const FUNCTIONS = join(root, 'supabase', 'functions');
 
 // Lower this as writers are converted. It never goes up.
-const BASELINE = 48;
+const BASELINE = 47;
 
 const SKIP_DIRS = new Set(['node_modules', 'dist', '__tests__', '__mocks__']);
 const SKIP_FILE = /\.(test|spec)\.[tj]sx?$|types\.ts$/;

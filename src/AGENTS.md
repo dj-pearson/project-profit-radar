@@ -27,6 +27,23 @@ import { logger } from '@/lib/logger';
 - `lib/logger.ts` - Production-safe logger (use instead of console.log)
 - `lib/utils.ts` - Core utilities (cn, formatCurrency)
 
+## Which table holds what work (US-329)
+
+Three tables sound like they hold "the schedule" and they hold different things.
+`schedule_tasks` is **the schedule**: dated, ordered work with finish-to-start
+dependencies in `schedule_task_dependencies` and a saved plan in
+`schedule_baselines`. Assign a crew through `schedule_task_assignees`, which
+generates the `crew_assignments` row and notifies the person; never write
+`crew_assignments` directly for scheduled work, or the day board and the Gantt
+drift apart again. `crew_assignments` remains the day-level board and is still
+written by hand for anything that is not a schedule task. `tasks` is the
+**to-do list** - checklist items with an owner and a due date, no dates on a
+Gantt, no dependencies - and is what My Tasks and the project hub's Tasks tab
+read. `project_milestones` is for the customer-facing timeline (the few dates an
+owner cares about), not for scheduling. `schedule_conflicts` is deprecated; the
+`UNIQUE (crew_member_id, assigned_date, start_time)` constraint on
+`crew_assignments` is the enforcement, which beats a table of reports.
+
 ## Common Pitfalls
 - **Never use bare `console.log`** - use `logger` from `@/lib/logger`
 - **Never hardcode tokens** - all secrets via env vars
