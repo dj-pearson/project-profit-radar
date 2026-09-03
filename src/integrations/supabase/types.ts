@@ -7060,6 +7060,8 @@ export type Database = {
           tenant_id: string | null
           trial_end_date: string | null
           updated_at: string
+          stripe_connect_account_id: string | null
+          stripe_connect_charges_enabled: boolean | null
         }
         Insert: {
           address?: string | null
@@ -7081,6 +7083,8 @@ export type Database = {
           tenant_id?: string | null
           trial_end_date?: string | null
           updated_at?: string
+          stripe_connect_account_id?: string | null
+          stripe_connect_charges_enabled?: boolean | null
         }
         Update: {
           address?: string | null
@@ -7102,6 +7106,8 @@ export type Database = {
           tenant_id?: string | null
           trial_end_date?: string | null
           updated_at?: string
+          stripe_connect_account_id?: string | null
+          stripe_connect_charges_enabled?: boolean | null
         }
         Relationships: [
           {
@@ -16813,6 +16819,48 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      invoice_payments: {
+        Row: {
+          company_id: string
+          created_at: string | null
+          id: string
+          invoice_id: string
+          notes: string | null
+          payment_amount: number
+          payment_date: string
+          payment_method: string
+          processed_by: string | null
+          reference_number: string | null
+          stripe_payment_intent_id: string | null
+        }
+        Insert: {
+          company_id: string
+          created_at?: string | null
+          id?: string
+          invoice_id: string
+          notes?: string | null
+          payment_amount: number
+          payment_date?: string
+          payment_method?: string
+          processed_by?: string | null
+          reference_number?: string | null
+          stripe_payment_intent_id?: string | null
+        }
+        Update: {
+          company_id?: string
+          created_at?: string | null
+          id?: string
+          invoice_id?: string
+          notes?: string | null
+          payment_amount?: number
+          payment_date?: string
+          payment_method?: string
+          processed_by?: string | null
+          reference_number?: string | null
+          stripe_payment_intent_id?: string | null
+        }
+        Relationships: []
       }
       invoices: {
         Row: {
@@ -40359,6 +40407,18 @@ export type Database = {
       }
       create_company_affiliate_code: {
         Args: { p_company_id: string }
+        Returns: string
+      }
+      record_invoice_payment: {
+        Args: {
+          p_amount: number
+          p_invoice_id: string
+          p_method?: string
+          p_notes?: string | null
+          p_processed_by?: string | null
+          p_reference_number?: string | null
+          p_stripe_payment_intent_id?: string | null
+        }
         Returns: string
       }
       resolve_labor_rate: {

@@ -268,12 +268,22 @@ const ClientPortalEnhanced = () => {
     loadProjectDetails(project.id);
   };
 
+  /**
+   * US-324: this used to refuse unless invoice.stripe_invoice_id was set, and
+   * nothing in the product ever writes that column - its only writer is
+   * payment_failures, for Brikly's own subscriptions. So the Pay button was
+   * permanently disabled on every invoice ever raised.
+   *
+   * The session is created on demand for any invoice with a balance. If the
+   * contractor has not connected a Stripe account the function says so, which
+   * is the honest failure: their client cannot pay online yet.
+   */
   const handlePayInvoice = async (invoice: Invoice) => {
-    if (!invoice.stripe_invoice_id) {
+    if (!(invoice.amount_due > 0)) {
       toast({
         variant: "destructive",
-        title: "Payment Error",
-        description: "This invoice is not set up for online payment."
+        title: "Nothing to pay",
+        description: "This invoice has no outstanding balance."
       });
       return;
     }
@@ -284,12 +294,14 @@ const ClientPortalEnhanced = () => {
       const { data, error } = await supabase.functions.invoke('process-invoice-payment', {
         body: {
           invoice_id: invoice.id,
-          stripe_invoice_id: invoice.stripe_invoice_id,
-          action: 'create_checkout_session'
+          payment_method: 'stripe_checkout'
         }
       });
 
       if (error) throw error;
+      if (data && data.success === false) {
+        throw new Error(data.error || 'This invoice could not be set up for payment.');
+      }
 
       if (data?.checkout_url) {
         window.open(data.checkout_url, '_blank');
@@ -566,7 +578,7 @@ const ClientPortalEnhanced = () => {
                                 </div>
                                 <Button
                                   onClick={() => handlePayInvoice(invoice)}
-                                  disabled={processingPayment === invoice.id || !invoice.stripe_invoice_id}
+                                  disabled={processingPayment === invoice.id}
                                   className="bg-green-600 hover:bg-green-700"
                                 >
                                   {processingPayment === invoice.id ? (

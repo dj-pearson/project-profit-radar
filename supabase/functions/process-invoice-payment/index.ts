@@ -60,7 +60,7 @@ serve(async (req) => {
       .from('invoices')
       .select(`
         *,
-        companies(name, stripe_customer_id)
+        companies(name, stripe_customer_id, stripe_connect_account_id, stripe_connect_charges_enabled)
       `)
       .eq('id', paymentData.invoice_id)
       .single();
@@ -139,9 +139,41 @@ serve(async (req) => {
   }
 });
 
+/**
+ * The contractor's own Stripe account, or nothing (US-324).
+ *
+ * Customer receipts are collected on the contractor's connected account so
+ * they never enter the platform balance. Holding other businesses' customer
+ * money makes the platform a money transmitter in most jurisdictions, and it
+ * puts a contractor's cash flow behind a payout the platform controls.
+ *
+ * A company that has not finished Stripe onboarding cannot take card payments,
+ * and the caller is told exactly that rather than having the money quietly
+ * routed somewhere else.
+ */
+function connectedAccount(invoice: any): string {
+  const account = invoice?.companies?.stripe_connect_account_id;
+  const enabled = invoice?.companies?.stripe_connect_charges_enabled;
+
+  if (!account) {
+    throw new Error(
+      "This company has not connected a Stripe account yet, so it cannot accept " +
+      "card payments. Connect one in Settings to let clients pay online."
+    );
+  }
+  if (!enabled) {
+    throw new Error(
+      "Stripe onboarding for this company is not finished, so charges are not " +
+      "enabled yet. Complete it in Settings to let clients pay online."
+    );
+  }
+  return account;
+}
+
 async function createStripeCheckout(stripe: any, invoice: any, req: Request) {
   const origin = req.headers.get("origin") || "http://localhost:3000";
-  
+  const stripeAccount = connectedAccount(invoice);
+
   const session = await stripe.checkout.sessions.create({
     customer_email: invoice.client_email,
     line_items: [{
@@ -160,9 +192,10 @@ async function createStripeCheckout(stripe: any, invoice: any, req: Request) {
     cancel_url: `${origin}/invoices/${invoice.id}?payment=cancelled`,
     metadata: {
       invoice_id: invoice.id,
-      invoice_number: invoice.invoice_number
+      invoice_number: invoice.invoice_number,
+      company_id: invoice.company_id
     }
-  });
+  }, { stripeAccount });
 
   return {
     success: true,
@@ -173,15 +206,18 @@ async function createStripeCheckout(stripe: any, invoice: any, req: Request) {
 }
 
 async function createPaymentIntent(stripe: any, invoice: any) {
+  const stripeAccount = connectedAccount(invoice);
+
   const paymentIntent = await stripe.paymentIntents.create({
     amount: Math.round(invoice.amount_due * 100), // Convert to cents
     currency: 'usd',
     metadata: {
       invoice_id: invoice.id,
-      invoice_number: invoice.invoice_number
+      invoice_number: invoice.invoice_number,
+      company_id: invoice.company_id
     },
     description: `Payment for Invoice ${invoice.invoice_number}`
-  });
+  }, { stripeAccount });
 
   return {
     success: true,
@@ -202,40 +238,35 @@ async function processManualPayment(
     throw new Error("Invalid payment amount");
   }
 
-  const newAmountPaid = invoice.amount_paid + paymentAmount;
-  const isFullyPaid = newAmountPaid >= invoice.total_amount;
+  // US-324: this used to UPDATE invoices.amount_paid directly and then build a
+  // paymentRecord it returned WITHOUT inserting, so a cheque recorded by the
+  // office left no payment history and bypassed the trigger that owns the
+  // invoice totals. record_invoice_payment inserts the row; the existing
+  // AFTER INSERT trigger recomputes amount_paid, amount_due, status and
+  // paid_at from the payments themselves.
+  const { data: paymentId, error: recordError } = await supabaseClient.rpc(
+    'record_invoice_payment',
+    {
+      p_invoice_id: invoice.id,
+      p_amount: paymentAmount,
+      p_method: 'manual',
+      p_notes: notes || 'Manual payment recorded',
+      p_processed_by: userId,
+    }
+  );
 
-  // Update invoice
-  const { error: updateError } = await supabaseClient
-    .from('invoices')
-    .update({
-      amount_paid: newAmountPaid,
-      status: isFullyPaid ? 'paid' : 'sent',
-      paid_at: isFullyPaid ? new Date().toISOString() : null,
-      updated_at: new Date().toISOString()
-    })
-    .eq('id', invoice.id);
-
-  if (updateError) {
-    throw new Error(`Error updating invoice: ${updateError.message}`);
+  if (recordError) {
+    throw new Error(`Error recording payment: ${recordError.message}`);
   }
 
-  // Log the manual payment
-  const paymentRecord = {
-    invoice_id: invoice.id,
-    amount: paymentAmount,
-    method: 'manual',
-    notes: notes || 'Manual payment recorded',
-    processed_by: userId,
-    processed_at: new Date().toISOString()
-  };
+  const newAmountPaid = (invoice.amount_paid || 0) + paymentAmount;
 
   return {
     success: true,
     payment_method: 'manual',
     amount_paid: paymentAmount,
     new_total_paid: newAmountPaid,
-    fully_paid: isFullyPaid,
-    payment_record: paymentRecord
+    fully_paid: newAmountPaid >= invoice.total_amount,
+    payment_id: paymentId,
   };
 }

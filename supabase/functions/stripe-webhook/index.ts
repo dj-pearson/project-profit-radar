@@ -213,6 +213,27 @@ async function processWebhookEvent(event: Stripe.Event, supabaseClient: any, str
       await handlePaymentSuccess(event.data.object as Stripe.Invoice, supabaseClient);
       break;
 
+    // US-324: a customer paying a contractor's invoice. Distinct from every
+    // other case here, which is Brikly's own subscription billing. Without
+    // these two the money moved and nothing in the product knew.
+    //
+    // A Checkout payment fires BOTH of these, so the recorder has to be
+    // idempotent on the payment intent - record_invoice_payment is, and a
+    // partial unique index backs it.
+    case 'checkout.session.completed':
+      await handleCustomerInvoicePayment(
+        event.data.object as Stripe.Checkout.Session,
+        supabaseClient,
+      );
+      break;
+
+    case 'payment_intent.succeeded':
+      await handleCustomerInvoicePaymentIntent(
+        event.data.object as Stripe.PaymentIntent,
+        supabaseClient,
+      );
+      break;
+
     case 'customer.subscription.trial_will_end':
       await handleTrialWillEnd(event.data.object as Stripe.Subscription, supabaseClient);
       break;
@@ -650,4 +671,83 @@ async function handleDisputeClosed(dispute: Stripe.Dispute, supabaseClient: any)
   }
 
   logStep("Dispute closed and processed", { disputeId: dispute.id, won: isWon, lost: isLost });
+}
+
+
+/**
+ * A customer paid a contractor's invoice through Checkout (US-324).
+ *
+ * The invoice is named in the session metadata rather than looked up by a
+ * Stripe id on the invoice row, because invoices.stripe_invoice_id is never
+ * written - keying on it is what left the Pay button permanently disabled.
+ */
+async function handleCustomerInvoicePayment(
+  session: Stripe.Checkout.Session,
+  supabaseClient: ReturnType<typeof createClient>,
+): Promise<void> {
+  const invoiceId = session.metadata?.invoice_id;
+  if (!invoiceId) {
+    // Not one of ours: Brikly's own subscription checkouts have no invoice_id.
+    return;
+  }
+
+  if (session.payment_status !== 'paid') {
+    logStep('Checkout session not paid; nothing recorded', {
+      invoiceId, paymentStatus: session.payment_status,
+    });
+    return;
+  }
+
+  const amount = (session.amount_total ?? 0) / 100;
+  const intentId = typeof session.payment_intent === 'string'
+    ? session.payment_intent
+    : session.payment_intent?.id ?? null;
+
+  const { error } = await supabaseClient.rpc('record_invoice_payment', {
+    p_invoice_id: invoiceId,
+    p_amount: amount,
+    p_method: 'stripe',
+    p_stripe_payment_intent_id: intentId,
+    p_reference_number: session.id,
+    p_notes: 'Paid online by the client',
+  });
+
+  if (error) {
+    // Read the error: an unrecorded payment is money the contractor received
+    // and cannot see. Throwing puts the event back in Stripe's retry queue,
+    // and the recorder is idempotent, so a retry is safe.
+    logStep('ERROR recording customer invoice payment', { invoiceId, error: error.message });
+    throw new Error(`Could not record invoice payment: ${error.message}`);
+  }
+
+  logStep('Customer invoice payment recorded', { invoiceId, amount });
+}
+
+/**
+ * The same payment arriving as a PaymentIntent, which is how a card paid
+ * outside Checkout reports. record_invoice_payment de-duplicates against the
+ * Checkout delivery above.
+ */
+async function handleCustomerInvoicePaymentIntent(
+  intent: Stripe.PaymentIntent,
+  supabaseClient: ReturnType<typeof createClient>,
+): Promise<void> {
+  const invoiceId = intent.metadata?.invoice_id;
+  if (!invoiceId) return;
+
+  const { error } = await supabaseClient.rpc('record_invoice_payment', {
+    p_invoice_id: invoiceId,
+    p_amount: (intent.amount_received ?? intent.amount ?? 0) / 100,
+    p_method: 'stripe',
+    p_stripe_payment_intent_id: intent.id,
+    p_reference_number: intent.id,
+    p_notes: 'Paid online by the client',
+  });
+
+  if (error) {
+    logStep('ERROR recording customer invoice payment intent', { invoiceId, error: error.message });
+    throw new Error(`Could not record invoice payment: ${error.message}`);
+  }
+
+  logStep('Customer invoice payment recorded', { invoiceId });
 }
