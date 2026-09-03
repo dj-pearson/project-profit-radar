@@ -2,7 +2,6 @@ import { useState, useEffect, useCallback, Suspense } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { toast } from '@/hooks/use-toast';
 import { projectService, ProjectWithRelations } from '@/services/projectService';
@@ -20,7 +19,8 @@ import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { ArrowLeft, User, Edit, Menu, Home, Building2, DollarSign, Users, Settings, FileText, Calendar, FolderOpen, Receipt, MapPin, Hash, Package } from 'lucide-react';
+import { ArrowLeft, User, Edit, Menu, Home, Building2, DollarSign, Users, Settings, FileText, Calendar, FolderOpen, Receipt, MapPin, Hash, Package, ClipboardList } from 'lucide-react';
+import { ProjectStatusControl } from '@/components/project/ProjectStatusControl';
 import { AccessiblePageWrapper } from "@/components/accessibility/AccessiblePageWrapper";
 import { cn } from '@/lib/utils';
 
@@ -35,6 +35,7 @@ const projectTabs = [
   { id: 'changeorders', label: 'Change Orders', icon: Receipt },
   { id: 'procurement', label: 'Materials', icon: Package },
   { id: 'costcodes', label: 'Cost Codes', icon: Hash },
+  { id: 'closeout', label: 'Closeout', icon: ClipboardList },
 ];
 
 const ProjectDetail = () => {
@@ -115,21 +116,6 @@ const ProjectDetail = () => {
     }
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status.toLowerCase()) {
-      case 'active':
-      case 'in_progress':
-        return 'default';
-      case 'completed':
-        return 'secondary';
-      case 'on_hold':
-        return 'outline';
-      case 'planning':
-        return 'secondary';
-      default:
-        return 'outline';
-    }
-  };
 
   if (loading) {
     return (
@@ -192,9 +178,14 @@ const ProjectDetail = () => {
               <h1 className="text-base font-bold truncate">{project.name}</h1>
               <div className="flex items-center gap-2 mt-0.5">
                 <span className="text-xs text-muted-foreground truncate flex-shrink">{project.client_name}</span>
-                <Badge variant={getStatusColor(project.status)} className="text-xs h-5 flex-shrink-0" aria-label={`Status: ${project.status.replace('_', ' ')}`}>
-                  {project.status.replace('_', ' ')}
-                </Badge>
+                <div className="flex-shrink-0">
+                  <ProjectStatusControl
+                    projectId={project.id}
+                    status={project.status}
+                    startDate={project.start_date}
+                    onChanged={() => { if (projectId) void loadProject(projectId); }}
+                  />
+                </div>
               </div>
             </div>
 
@@ -266,6 +257,7 @@ const ProjectDetail = () => {
             project={project}
             activeTab={activeTab}
             onNavigate={navigate}
+            onProjectChanged={() => { if (projectId) void loadProject(projectId); }}
           />
         </main>
 
@@ -308,9 +300,12 @@ const ProjectDetail = () => {
                     <span className="sr-only">Location: </span>{project.site_address}
                   </div>
                 )}
-                <Badge variant={getStatusColor(project.status)} aria-label={`Status: ${project.status.replace('_', ' ')}`}>
-                  {project.status.replace('_', ' ')}
-                </Badge>
+                <ProjectStatusControl
+                  projectId={project.id}
+                  status={project.status}
+                  startDate={project.start_date}
+                  onChanged={() => { if (projectId) void loadProject(projectId); }}
+                />
                 {project.start_date && (
                   <div className="flex items-center text-xs">
                     <Calendar className="h-3.5 w-3.5 mr-1" aria-hidden="true" />
@@ -438,6 +433,7 @@ const ProjectDetail = () => {
                 project={project}
                 activeTab={activeTab}
                 onNavigate={navigate}
+                onProjectChanged={() => { if (projectId) void loadProject(projectId); }}
               />
             </Suspense>
           </section>

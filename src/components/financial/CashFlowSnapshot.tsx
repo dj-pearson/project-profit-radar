@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { normalizeProjectStatus } from '@/lib/projectStatus';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -46,7 +47,9 @@ const CashFlowSnapshot = () => {
 
       // Calculate metrics from available data
       const totalBudget = projects?.reduce((sum, p) => sum + (parseFloat(String(p.budget)) || 0), 0) || 0;
-      const activeProjects = projects?.filter(p => p.status === 'active' || p.status === 'in_progress').length || 0;
+      const activeProjects = projects?.filter(
+        p => normalizeProjectStatus(p.status) === 'active'
+      ).length || 0;
       const completedRevenue = projects?.reduce((sum, p) => {
         const budget = parseFloat(String(p.budget)) || 0;
         const completion = p.completion_percentage || 0;

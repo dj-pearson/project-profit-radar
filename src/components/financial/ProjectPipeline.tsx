@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { normalizeProjectStatus } from '@/lib/projectStatus';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { useAuth } from '@/contexts/AuthContext';
@@ -55,7 +56,11 @@ const ProjectPipeline = () => {
       const thisMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
 
       // Categorize projects
-      const activeProjects = projects?.filter(p => p.status === 'in_progress') || [];
+      // Was filtering on 'in_progress', a status the product never wrote, so
+      // this stage was always empty (US-328).
+      const activeProjects = projects?.filter(
+        p => normalizeProjectStatus(p.status) === 'active'
+      ) || [];
       const upcomingProjects = projects?.filter(p => p.status === 'planned') || [];
       const completedProjects = projects?.filter(p => p.status === 'completed') || [];
       const completedThisMonth = completedProjects.filter(p => 

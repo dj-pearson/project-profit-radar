@@ -217,12 +217,12 @@ class ProjectService {
       updated_at: new Date().toISOString()
     };
 
-    // Auto-update status based on completion
-    if (percentage === 100) {
-      updates.status = 'completed';
-    } else if (percentage > 0 && updates.status === 'planning') {
-      updates.status = 'active';
-    }
+    // No longer touches status. This used to read `updates.status`, a field on
+    // a local object it had just built without one, so the planning-to-active
+    // branch was unreachable and the 100%-means-completed branch skipped every
+    // rule closeout depends on: an open punch list, outstanding invoices.
+    // Status moves through set_project_status() now, which enforces those and
+    // audits an override (US-328). Completion percentage is just a number.
 
     let query = supabase
       .from('projects')

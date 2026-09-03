@@ -24230,6 +24230,11 @@ export type Database = {
           retainage_percentage: number
           default_billing_rate: number | null
           expense_markup_percentage: number
+          status_changed_at: string | null
+          activated_at: string | null
+          completed_at: string | null
+          closed_at: string | null
+          handover_sent_at: string | null
         }
         Insert: {
           actual_hours?: number | null
@@ -39432,7 +39437,6 @@ export type Database = {
           },
         ]
       }
-    }
       project_sov_lines: {
         Row: {
           id: string
@@ -39478,6 +39482,58 @@ export type Database = {
         }
         Relationships: []
       }
+      project_closeout_items: {
+        Row: {
+          id: string
+          project_id: string
+          company_id: string
+          category: string
+          name: string
+          status: string
+          is_required: boolean
+          completed_at: string | null
+          completed_by: string | null
+          due_date: string | null
+          notes: string | null
+          sort_order: number
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          project_id: string
+          company_id: string
+          category: string
+          name: string
+          status?: string
+          is_required?: boolean
+          completed_at?: string | null
+          completed_by?: string | null
+          due_date?: string | null
+          notes?: string | null
+          sort_order?: number
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          project_id?: string
+          company_id?: string
+          category?: string
+          name?: string
+          status?: string
+          is_required?: boolean
+          completed_at?: string | null
+          completed_by?: string | null
+          due_date?: string | null
+          notes?: string | null
+          sort_order?: number
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+    }
     Views: {
       customer_activity: {
         Row: {
@@ -39544,6 +39600,24 @@ export type Database = {
           description: string | null
           quantity: number | null
           unit_price: number | null
+        }
+        Relationships: []
+      }
+      project_closeout_status: {
+        Row: {
+          project_id: string | null
+          company_id: string | null
+          project_name: string | null
+          status: string | null
+          open_punch_items: number | null
+          total_punch_items: number | null
+          required_checklist_open: number | null
+          total_checklist_items: number | null
+          completed_checklist_items: number | null
+          unpaid_invoice_total: number | null
+          invoice_count: number | null
+          warranties_registered: number | null
+          handover_sent_at: string | null
         }
         Relationships: []
       }
@@ -40433,6 +40507,18 @@ export type Database = {
       }
     }
     Functions: {
+      seed_project_closeout: {
+        Args: { p_project_id: string }
+        Returns: number
+      }
+      set_project_status: {
+        Args: {
+          p_project_id: string
+          p_status: string
+          p_override_reason?: string | null
+        }
+        Returns: string
+      }
       seed_project_sov: {
         Args: { p_project_id: string }
         Returns: number
