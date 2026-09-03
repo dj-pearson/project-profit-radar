@@ -136,7 +136,10 @@ export function ContactPicker({
       .insert({
         company_id: userProfile.company_id,
         first_name: newFirst.trim() || newEmail.trim(),
-        last_name: newLast.trim() || null,
+        // contacts.last_name is NOT NULL. Passing null here would have failed
+        // the insert for anyone entered with only a first name, which is most
+        // of them.
+        last_name: newLast.trim(),
         email: newEmail.trim() || null,
         phone: newPhone.trim() || null,
         contact_type: 'client',

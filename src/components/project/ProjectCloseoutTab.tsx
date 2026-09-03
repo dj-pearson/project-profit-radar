@@ -146,10 +146,16 @@ export function ProjectCloseoutTab({ projectId }: { projectId: string }) {
   const exportBundle = async () => {
     setExporting(true);
     try {
-      const [project, punch, changeOrders, invoices, warranties, documents] = await Promise.all([
+      const [project, company, punch, changeOrders, invoices, warranties, documents] = await Promise.all([
         supabase.from('projects')
           .select('name, client_name, site_address, start_date, completed_at, original_contract_value, current_contract_value')
           .eq('id', projectId).single(),
+        // The contractor's own name, for the header of the document their
+        // customer keeps. userProfile carries no company_name - reading one
+        // would silently have branded every handover "Brikly".
+        supabase.from('companies')
+          .select('name')
+          .eq('id', userProfile?.company_id ?? '').maybeSingle(),
         supabase.from('punch_list_items')
           .select('item_number, description, status, date_completed')
           .eq('project_id', projectId).order('item_number'),
@@ -169,11 +175,13 @@ export function ProjectCloseoutTab({ projectId }: { projectId: string }) {
 
       const failure = [project, punch, changeOrders, invoices, warranties, documents]
         .find((r) => r.error)?.error;
+      // The company lookup is deliberately not fatal: a missing name costs a
+      // header, not the bundle.
       if (failure) throw new Error(failure.message);
 
       const bundle: HandoverBundleData = {
         project: project.data as HandoverBundleData['project'],
-        companyName: userProfile?.company_name || 'Brikly',
+        companyName: company.data?.name || 'Your company',
         closeoutItems: items.map((i) => ({
           category: i.category,
           name: i.name,
