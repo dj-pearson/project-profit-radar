@@ -45,6 +45,7 @@ const CreateProject = () => {
 
   // Project basic info
   const [projectName, setProjectName] = useState('');
+  const [opportunityId, setOpportunityId] = useState<string | null>(null);
   const [description, setDescription] = useState('');
   const [projectType, setProjectType] = useState('');
   const [status, setStatus] = useState('planning');
@@ -129,14 +130,18 @@ const CreateProject = () => {
   // LEAN Navigation: Pre-fill form from URL parameters (from CRM conversion)
   useEffect(() => {
     const urlParams = new URLSearchParams(location.search);
-    const opportunityId = urlParams.get('opportunity');
+    const opportunityIdParam = urlParams.get('opportunity');
     const name = urlParams.get('name');
     const budgetParam = urlParams.get('budget');
     const type = urlParams.get('type');
     
-    if (opportunityId && name) {
+    if (opportunityIdParam && name) {
       setProjectName(name);
-      setDescription(`Project created from CRM opportunity (ID: ${opportunityId})`);
+      // The id goes in projects.opportunity_id below, not into prose. It used
+      // to be written only into the description, so the FK stayed null and no
+      // report could join a won opportunity to the job it became (US-318).
+      setOpportunityId(opportunityIdParam);
+      setDescription('');
       
       if (budgetParam) {
         setBudget(budgetParam);
@@ -232,6 +237,7 @@ const CreateProject = () => {
         permit_numbers: permitNumbers.length > 0 ? permitNumbers : undefined,
         company_id: userProfile.company_id,
         created_by: user.id,
+        opportunity_id: opportunityId || undefined,
       };
 
       const project = await projectService.createProject(projectData);

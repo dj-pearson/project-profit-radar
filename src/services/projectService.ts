@@ -55,6 +55,13 @@ export interface CreateProjectData {
   created_by: string;
   project_manager_id?: string;
   permit_numbers?: string[];
+  /**
+   * The CRM opportunity this job came from (US-318). The column has always
+   * existed; nothing wrote it, so the pipeline could not tell which
+   * opportunity became which job and CreateProject buried the id in a
+   * free-text description instead.
+   */
+  opportunity_id?: string;
 }
 
 export interface ProjectStats {

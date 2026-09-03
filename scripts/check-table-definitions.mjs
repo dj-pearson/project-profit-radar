@@ -49,7 +49,6 @@ const BASELINE = new Map([
   ['workflow_steps', 'Written by src/components/crm/WorkflowBuilder.tsx. This one throws on error, so a workflow with steps cannot be saved at all rather than saving wrong.'],
   ['geofence_breach_alerts', 'Written by supabase/functions/geofencing. The function answers breach_detected: true whether or not the alert row was stored.'],
   ['intervention_logs', 'Written by supabase/functions/send-intervention-email in both the sent and the suppressed-by-opt-out paths. The opt-out record is the one that matters for consent evidence.'],
-  ['project_notes', 'Written by src/services/estimateToProjectConversion.ts when carrying an estimate\'s notes onto the new project.'],
   ['user_announcements', 'Read and written by src/components/announcements/FeatureAnnouncementSystem.tsx, which already logs "table not available" on the read and degrades. The dismissal write is the half that silently does nothing.'],
   ['user_tour_progress', 'Written by src/components/onboarding/FeatureTour.tsx. Its try/catch never fires because supabase-js returns the error, so a finished tour is never recorded and reappears on the next visit.'],
   ['reviews', 'Read by src/components/seo/AggregateRatingSchema.tsx, which says "if it exists" and renders no rating schema when the read fails. Deliberate and correct: emitting star ratings without review data would be deceptive. Listed for completeness, not as a bug.'],

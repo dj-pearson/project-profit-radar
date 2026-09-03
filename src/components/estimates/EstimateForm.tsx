@@ -50,6 +50,13 @@ interface LineItem {
   unit: string;
   unit_cost: number;
   category: string;
+  /**
+   * US-318: cost codes were fetched into state and never used. The column
+   * existed on estimate_line_items and the insert omitted it, so no estimate
+   * could ever seed a cost-coded budget - and project_budgets.cost_code_id is
+   * NOT NULL, which is why converting an estimate produced no budget at all.
+   */
+  cost_code_id: string;
 }
 
 interface EstimateFormProps {
@@ -157,9 +164,34 @@ export function EstimateForm({ onSuccess, onCancel, estimateId }: EstimateFormPr
           unit: item.unit,
           unit_cost: item.unit_cost,
           category: item.category || "",
+          cost_code_id: item.cost_code_id || defaultCostCodeFor(item.category || ""),
         })));
       }
     }
+  };
+
+  /**
+   * Best-effort cost code for a line, so an existing estimate opened for edit
+   * arrives with something sensible selected rather than blank. It matches the
+   * line's free-text category against the company's cost codes (the seeded
+   * list from US-317 uses these category names), then falls back to the
+   * General code. The choice is always visible in the row, so the user sees
+   * and can correct it before saving - a silent mis-assignment would land in
+   * the project budget and be much harder to spot later.
+   */
+  const defaultCostCodeFor = (category: string): string => {
+    if (!category || costCodes.length === 0) return "";
+    const wanted = category.trim().toLowerCase();
+    const byCategory = costCodes.find(
+      (c) => (c.category || "").trim().toLowerCase() === wanted,
+    );
+    if (byCategory) return byCategory.id;
+    const byName = costCodes.find(
+      (c) => (c.name || "").trim().toLowerCase() === wanted,
+    );
+    if (byName) return byName.id;
+    const general = costCodes.find((c) => c.code === "01-100");
+    return general?.id || "";
   };
 
   const addLineItem = () => {
@@ -171,6 +203,7 @@ export function EstimateForm({ onSuccess, onCancel, estimateId }: EstimateFormPr
       unit: "each",
       unit_cost: 0,
       category: "",
+      cost_code_id: "",
     };
     setLineItems([...lineItems, newItem]);
   };
@@ -209,6 +242,7 @@ export function EstimateForm({ onSuccess, onCancel, estimateId }: EstimateFormPr
         unit: item.unit,
         unit_cost: item.unit_cost,
         category: item.category || '',
+        cost_code_id: item.cost_code_id || defaultCostCodeFor(item.category || ''),
       }));
       setLineItems(newItems);
     }
@@ -229,6 +263,7 @@ export function EstimateForm({ onSuccess, onCancel, estimateId }: EstimateFormPr
       unit: item.default_unit,
       unit_cost: item.default_unit_cost,
       category: item.category || '',
+      cost_code_id: item.cost_code_id || defaultCostCodeFor(item.category || ''),
     }));
     setLineItems([...lineItems, ...newItems]);
   };
@@ -246,6 +281,21 @@ export function EstimateForm({ onSuccess, onCancel, estimateId }: EstimateFormPr
   };
 
   const onSubmit = async (data: EstimateFormData, isDraft = true) => {
+    // A line without a cost code cannot become a budget line: cost_code_id is
+    // NOT NULL on project_budgets. Catching it here, where the user can see
+    // which line is missing one, beats discovering it at conversion (US-318).
+    const uncoded = lineItems.filter((item) => !item.cost_code_id);
+    if (uncoded.length > 0 && costCodes.length > 0) {
+      toast({
+        variant: "destructive",
+        title: "Every line needs a cost code",
+        description:
+          `${uncoded.length} line${uncoded.length === 1 ? "" : "s"} still need one. ` +
+          "The cost code is what carries this estimate into the project's budget.",
+      });
+      return;
+    }
+
     setIsLoading(true);
     try {
       // Get user's company ID from user profile
@@ -332,6 +382,7 @@ export function EstimateForm({ onSuccess, onCancel, estimateId }: EstimateFormPr
           unit: item.unit,
           unit_cost: item.unit_cost,
           category: item.category,
+          cost_code_id: item.cost_code_id || null,
           sort_order: index,
         }));
 
@@ -655,7 +706,7 @@ export function EstimateForm({ onSuccess, onCancel, estimateId }: EstimateFormPr
             <div className="space-y-4">
               {lineItems.map((item, index) => (
                 <div key={item.id} className="grid grid-cols-12 gap-2 items-end p-4 border rounded-lg">
-                  <div className="col-span-3">
+                  <div className="col-span-2">
                     <label className="text-sm font-medium">Item Name</label>
                     <Input
                       value={item.item_name}
@@ -663,13 +714,36 @@ export function EstimateForm({ onSuccess, onCancel, estimateId }: EstimateFormPr
                       placeholder="Item name"
                     />
                   </div>
-                  <div className="col-span-3">
+                  <div className="col-span-2">
                     <label className="text-sm font-medium">Description</label>
                     <Input
                       value={item.description}
                       onChange={(e) => updateLineItem(index, "description", e.target.value)}
                       placeholder="Description"
                     />
+                  </div>
+                  <div className="col-span-2">
+                    {/* The cost code is what carries this line into the
+                        project's budget and, later, into budget vs actual
+                        (US-318). It was fetched into state and never shown. */}
+                    <label className="text-sm font-medium" id={`cost-code-label-${item.id}`}>
+                      Cost Code
+                    </label>
+                    <Select
+                      value={item.cost_code_id}
+                      onValueChange={(value) => updateLineItem(index, "cost_code_id", value)}
+                    >
+                      <SelectTrigger aria-labelledby={`cost-code-label-${item.id}`}>
+                        <SelectValue placeholder="Select..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {costCodes.map((code) => (
+                          <SelectItem key={code.id} value={code.id}>
+                            {code.code} {code.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
                   <div className="col-span-1">
                     <label className="text-sm font-medium">Qty</label>
@@ -699,7 +773,7 @@ export function EstimateForm({ onSuccess, onCancel, estimateId }: EstimateFormPr
                       </SelectContent>
                     </Select>
                   </div>
-                  <div className="col-span-2">
+                  <div className="col-span-1">
                     <label className="text-sm font-medium">Unit Cost</label>
                     <Input
                       type="number"
