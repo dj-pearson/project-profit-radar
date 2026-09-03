@@ -14304,6 +14304,7 @@ export type Database = {
           updated_at: string
           vendor_contact: string | null
           vendor_name: string | null
+          billed_invoice_id: string | null
         }
         Insert: {
           amount: number
@@ -16874,6 +16875,7 @@ export type Database = {
           total_price: number | null
           unit_price: number
           work_completed_percentage: number | null
+          sov_line_id: string | null
         }
         Insert: {
           cost_code_id?: string | null
@@ -17996,6 +17998,7 @@ export type Database = {
           updated_at: string
           vehicle_allowance_monthly: number | null
           workers_comp_rate: number | null
+          billing_rate: number | null
         }
         Insert: {
           annual_hours?: number | null
@@ -24224,6 +24227,9 @@ export type Database = {
           original_contract_value: number | null
           current_contract_value: number | null
           client_id: string | null
+          retainage_percentage: number
+          default_billing_rate: number | null
+          expense_markup_percentage: number
         }
         Insert: {
           actual_hours?: number | null
@@ -35556,6 +35562,7 @@ export type Database = {
           burden_rate: number | null
           labor_cost: number | null
           company_id: string | null
+          billed_invoice_id: string | null
         }
         Insert: {
           approval_notes?: string | null
@@ -39426,6 +39433,51 @@ export type Database = {
         ]
       }
     }
+      project_sov_lines: {
+        Row: {
+          id: string
+          project_id: string
+          company_id: string
+          cost_code_id: string | null
+          line_number: number
+          description: string
+          scheduled_value: number
+          source: string
+          change_order_id: string | null
+          sort_order: number
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          project_id: string
+          company_id: string
+          cost_code_id?: string | null
+          line_number?: number
+          description: string
+          scheduled_value?: number
+          source?: string
+          change_order_id?: string | null
+          sort_order?: number
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          project_id?: string
+          company_id?: string
+          cost_code_id?: string | null
+          line_number?: number
+          description?: string
+          scheduled_value?: number
+          source?: string
+          change_order_id?: string | null
+          sort_order?: number
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
     Views: {
       customer_activity: {
         Row: {
@@ -39448,6 +39500,50 @@ export type Database = {
           cost_code_id: string | null
           committed_amount: number | null
           open_purchase_orders: number | null
+        }
+        Relationships: []
+      }
+      project_sov_status: {
+        Row: {
+          sov_line_id: string | null
+          project_id: string | null
+          company_id: string | null
+          cost_code_id: string | null
+          line_number: number | null
+          description: string | null
+          scheduled_value: number | null
+          source: string | null
+          sort_order: number | null
+          previously_billed: number | null
+          percent_billed: number | null
+          remaining_to_bill: number | null
+        }
+        Relationships: []
+      }
+      project_retainage: {
+        Row: {
+          project_id: string | null
+          company_id: string | null
+          project_name: string | null
+          retainage_percentage: number | null
+          contract_value: number | null
+          withheld_to_date: number | null
+          released_to_date: number | null
+          retainage_balance: number | null
+        }
+        Relationships: []
+      }
+      project_unbilled_work: {
+        Row: {
+          source_type: string | null
+          source_id: string | null
+          project_id: string | null
+          company_id: string | null
+          cost_code_id: string | null
+          work_date: string | null
+          description: string | null
+          quantity: number | null
+          unit_price: number | null
         }
         Relationships: []
       }
@@ -40337,6 +40433,19 @@ export type Database = {
       }
     }
     Functions: {
+      seed_project_sov: {
+        Args: { p_project_id: string }
+        Returns: number
+      }
+      resolve_billing_rate: {
+        Args: {
+          p_user_id: string
+          p_company_id: string
+          p_project_id: string
+          p_on_date?: string
+        }
+        Returns: number
+      }
       add_subscriber_to_funnel:
         | {
             Args: { p_email: string; p_funnel_id: string; p_source?: string }
