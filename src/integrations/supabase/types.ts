@@ -6727,6 +6727,7 @@ export type Database = {
           password_hash: string | null
           project_id: string | null
           tenant_id: string | null
+          client_id: string | null
         }
         Insert: {
           access_token: string
@@ -6745,6 +6746,7 @@ export type Database = {
           password_hash?: string | null
           project_id?: string | null
           tenant_id?: string | null
+          client_id?: string | null
         }
         Update: {
           access_token?: string
@@ -6763,6 +6765,7 @@ export type Database = {
           password_hash?: string | null
           project_id?: string | null
           tenant_id?: string | null
+          client_id?: string | null
         }
         Relationships: []
       }
@@ -14110,6 +14113,7 @@ export type Database = {
           updated_at: string
           valid_until: string | null
           version_number: number
+          client_id: string | null
         }
         Insert: {
           accepted_date?: string | null
@@ -14140,6 +14144,7 @@ export type Database = {
           updated_at?: string
           valid_until?: string | null
           version_number?: number
+          client_id?: string | null
         }
         Update: {
           accepted_date?: string | null
@@ -14170,6 +14175,7 @@ export type Database = {
           updated_at?: string
           valid_until?: string | null
           version_number?: number
+          client_id?: string | null
         }
         Relationships: [
           {
@@ -17006,6 +17012,7 @@ export type Database = {
           total_amount: number
           updated_at: string
           viewed_at: string | null
+          client_id: string | null
         }
         Insert: {
           amount_due?: number | null
@@ -17051,6 +17058,7 @@ export type Database = {
           total_amount: number
           updated_at?: string
           viewed_at?: string | null
+          client_id?: string | null
         }
         Update: {
           amount_due?: number | null
@@ -17096,6 +17104,7 @@ export type Database = {
           total_amount?: number
           updated_at?: string
           viewed_at?: string | null
+          client_id?: string | null
         }
         Relationships: [
           {
@@ -24214,6 +24223,7 @@ export type Database = {
           updated_at: string
           original_contract_value: number | null
           current_contract_value: number | null
+          client_id: string | null
         }
         Insert: {
           actual_hours?: number | null
@@ -24247,6 +24257,7 @@ export type Database = {
           updated_at?: string
           original_contract_value?: number | null
           current_contract_value?: number | null
+          client_id?: string | null
         }
         Update: {
           actual_hours?: number | null
@@ -24280,6 +24291,7 @@ export type Database = {
           updated_at?: string
           original_contract_value?: number | null
           current_contract_value?: number | null
+          client_id?: string | null
         }
         Relationships: [
           {
@@ -39415,6 +39427,20 @@ export type Database = {
       }
     }
     Views: {
+      customer_activity: {
+        Row: {
+          client_id: string | null
+          company_id: string | null
+          record_type: string | null
+          record_id: string | null
+          reference: string | null
+          title: string | null
+          status: string | null
+          amount: number | null
+          occurred_at: string | null
+        }
+        Relationships: []
+      }
       project_committed_costs: {
         Row: {
           project_id: string | null

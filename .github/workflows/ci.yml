@@ -215,6 +215,8 @@ jobs:
 
       - name: Table-definition guard (US-311)
         run: node scripts/check-table-definitions.mjs
+      - name: Customer-link guard (US-326)
+        run: node scripts/check-customer-links.mjs
 
       - name: Dead-link guard (US-312)
         run: node scripts/check-dead-links.mjs

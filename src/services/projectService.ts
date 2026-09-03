@@ -62,6 +62,8 @@ export interface CreateProjectData {
    * free-text description instead.
    */
   opportunity_id?: string;
+  /** The customer as a contacts row (US-326). */
+  client_id?: string;
 }
 
 export interface ProjectStats {

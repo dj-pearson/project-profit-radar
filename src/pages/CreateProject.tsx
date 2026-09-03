@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { ContactPicker } from '@/components/customers/ContactPicker';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -13,22 +14,13 @@ import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { projectService } from '@/services/projectService';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
-import { Calendar, DollarSign, MapPin, User, Building2, Clock, Plus, X, Zap, History } from 'lucide-react';
+import { Calendar, DollarSign, MapPin, User, Building2, Clock, Plus, X, Zap } from 'lucide-react';
 import { mobileFilterClasses } from '@/utils/mobileHelpers';
 import { ProjectTemplatesLibrary } from '@/components/projects/ProjectTemplatesLibrary';
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-} from "@/components/ui/command";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
+
+
+
+
 
 const CreateProject = () => {
   const { user, userProfile, loading } = useAuth();
@@ -39,9 +31,7 @@ const CreateProject = () => {
 
   // Quick Mode
   const [quickMode, setQuickMode] = useState(true);
-  const [recentClients, setRecentClients] = useState<Array<{ name: string; email?: string }>>([]);
   const [recentProjectTypes, setRecentProjectTypes] = useState<string[]>([]);
-  const [clientComboOpen, setClientComboOpen] = useState(false);
 
   // Project basic info
   const [projectName, setProjectName] = useState('');
@@ -51,6 +41,7 @@ const CreateProject = () => {
   const [status, setStatus] = useState('planning');
 
   // Client info
+  const [clientId, setClientId] = useState<string | null>(null);
   const [clientName, setClientName] = useState('');
   const [clientEmail, setClientEmail] = useState('');
   const [siteAddress, setSiteAddress] = useState('');
@@ -100,21 +91,16 @@ const CreateProject = () => {
       // Get recent unique clients (last 10 projects)
       const { data: recentProjects } = await supabase
         .from('projects')
-        .select('client_name, client_email, project_type')
+        .select('project_type')
         .eq('company_id', userProfile?.company_id)
         .order('created_at', { ascending: false })
         .limit(20);
 
       if (recentProjects) {
-        // Extract unique clients
-        const uniqueClients = Array.from(
-          new Map(
-            recentProjects
-              .filter(p => p.client_name)
-              .map(p => [p.client_name, { name: p.client_name, email: p.client_email }])
-          ).values()
-        ).slice(0, 10);
-        setRecentClients(uniqueClients);
+        // US-326: the recent-client list is gone. It de-duplicated NAMES from
+        // past projects, so picking one copied a string instead of linking a
+        // record - which is how one homeowner became four unlinked rows. The
+        // ContactPicker offers real contacts instead.
 
         // Extract unique project types
         const uniqueTypes = Array.from(
@@ -170,13 +156,6 @@ const CreateProject = () => {
 
   if (!user || !userProfile?.company_id) return null;
 
-  const selectRecentClient = (client: { name: string; email?: string }) => {
-    setClientName(client.name);
-    if (client.email) {
-      setClientEmail(client.email);
-    }
-    setClientComboOpen(false);
-  };
 
   const addPermit = () => {
     if (newPermit.trim() && !permitNumbers.includes(newPermit.trim())) {
@@ -227,6 +206,9 @@ const CreateProject = () => {
         description: description || undefined,
         project_type: projectType || undefined,
         status,
+        client_id: clientId || undefined,
+        // Dual-written for one release: iOS at MIN_SUPPORTED_IOS_VERSION reads
+        // these two and would show blank customers the day they were dropped.
         client_name: clientName || '',
         client_email: clientEmail || undefined,
         site_address: siteAddress || undefined,
@@ -412,63 +394,37 @@ const CreateProject = () => {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
-              <div className={mobileFilterClasses.container}>
-                <div className="space-y-2">
-                  <Label htmlFor="clientName" className="flex items-center justify-between">
-                    <span>Client Name</span>
-                    {recentClients.length > 0 && (
-                      <Popover open={clientComboOpen} onOpenChange={setClientComboOpen}>
-                        <PopoverTrigger asChild>
-                          <Button variant="ghost" size="sm" className="h-6 text-xs gap-1" aria-label="Select from recent clients">
-                            <History className="h-3 w-3" aria-hidden="true" />
-                            Recent
-                          </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-[300px] p-0" align="end">
-                          <Command>
-                            <CommandInput placeholder="Search recent clients..." />
-                            <CommandList>
-                              <CommandEmpty>No recent clients found.</CommandEmpty>
-                              <CommandGroup heading="Recently Used">
-                                {recentClients.map((client, idx) => (
-                                  <CommandItem
-                                    key={idx}
-                                    onSelect={() => selectRecentClient(client)}
-                                    className="cursor-pointer"
-                                  >
-                                    <User className="h-4 w-4 mr-2" aria-hidden="true" />
-                                    <div>
-                                      <div className="font-medium">{client.name}</div>
-                                      {client.email && (
-                                        <div className="text-xs text-muted-foreground">{client.email}</div>
-                                      )}
-                                    </div>
-                                  </CommandItem>
-                                ))}
-                              </CommandGroup>
-                            </CommandList>
-                          </Command>
-                        </PopoverContent>
-                      </Popover>
+              {/* US-326: the customer is a record, not four copies of a
+                  string. The "Recent" popover this replaces offered names
+                  selected from past projects, so choosing one COPIED the text
+                  again rather than linking anyone - which is how the same
+                  homeowner ended up as four unlinked rows. The name and email
+                  below are still written for one release, because iOS at
+                  MIN_SUPPORTED_IOS_VERSION reads them. */}
+              <div className="space-y-4">
+                <ContactPicker
+                  value={clientId}
+                  onChange={(contact) => {
+                    setClientId(contact?.id ?? null);
+                    setClientName(contact?.name ?? '');
+                    setClientEmail(contact?.email ?? '');
+                  }}
+                  label="Customer"
+                  hint="Everything for this customer links to one record. Add a new one if they are not listed."
+                />
+
+                {clientId && (
+                  <div className={mobileFilterClasses.container}>
+                    <div className="space-y-2">
+                      <Label htmlFor="clientName">Client Name</Label>
+                      <Input id="clientName" value={clientName} readOnly disabled />
+                    </div>
+                    {!quickMode && (
+                      <div className="space-y-2">
+                        <Label htmlFor="clientEmail">Client Email</Label>
+                        <Input id="clientEmail" type="email" value={clientEmail} readOnly disabled />
+                      </div>
                     )}
-                  </Label>
-                  <Input
-                    id="clientName"
-                    value={clientName}
-                    onChange={(e) => setClientName(e.target.value)}
-                    placeholder="John & Jane Smith"
-                  />
-                </div>
-                {!quickMode && (
-                  <div className="space-y-2">
-                    <Label htmlFor="clientEmail">Client Email</Label>
-                    <Input
-                      id="clientEmail"
-                      type="email"
-                      value={clientEmail}
-                      onChange={(e) => setClientEmail(e.target.value)}
-                      placeholder="client@example.com"
-                    />
                   </div>
                 )}
               </div>

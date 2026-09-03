@@ -92,6 +92,10 @@ node scripts/check-deno-imports.mjs || exit 1
 #     `{ data: null, error }`, and `res.data || []` renders that as "nothing here".
 node scripts/check-table-definitions.mjs || exit 1
 
+# US-326: a write that names a customer should link one, or the same person
+# exists twice and a corrected phone number has to be fixed in both places.
+node scripts/check-customer-links.mjs || exit 1
+
 # 3t. Dead links (US-312) — react-router's catch-all turns a link to a path no
 #     route answers into the 404 page, silently.
 node scripts/check-dead-links.mjs || exit 1

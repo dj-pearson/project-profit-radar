@@ -17,6 +17,7 @@ import { CalendarIcon } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
+import { ContactPicker } from "@/components/customers/ContactPicker";
 import { useToast } from "@/hooks/use-toast";
 import { EstimateTemplatesLibrary } from "./EstimateTemplatesLibrary";
 import { LineItemLibraryBrowser } from "./LineItemLibraryBrowser";
@@ -71,6 +72,7 @@ export function EstimateForm({ onSuccess, onCancel, estimateId }: EstimateFormPr
   const [showVersionHistory, setShowVersionHistory] = useState(false);
   const [projects, setProjects] = useState<any[]>([]);
   const [costCodes, setCostCodes] = useState<any[]>([]);
+  const [clientId, setClientId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [generatingPDF, setGeneratingPDF] = useState(false);
   const [createdEstimate, setCreatedEstimate] = useState<any>(null);
@@ -154,6 +156,9 @@ export function EstimateForm({ onSuccess, onCancel, estimateId }: EstimateFormPr
         notes: estimate.notes || "",
         terms_and_conditions: estimate.terms_and_conditions || "",
       });
+
+      // Restore the linked customer so editing does not silently unlink them.
+      setClientId(estimate.client_id || null);
 
       if (estimate.estimate_line_items) {
         setLineItems(estimate.estimate_line_items.map((item: any) => ({
@@ -313,6 +318,7 @@ export function EstimateForm({ onSuccess, onCancel, estimateId }: EstimateFormPr
       const estimateData = {
         title: data.title,
         description: data.description,
+        client_id: clientId || null,
         client_name: data.client_name,
         client_email: data.client_email,
         client_phone: data.client_phone,
@@ -628,7 +634,26 @@ export function EstimateForm({ onSuccess, onCancel, estimateId }: EstimateFormPr
           <CardHeader>
             <CardTitle>Client Information</CardTitle>
           </CardHeader>
-          <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <CardContent className="space-y-4">
+            {/* US-326: pick the customer, do not retype them. The three text
+                fields below are still saved for one release because iOS reads
+                them, but the id is what links this estimate to the project,
+                the invoice and the portal enrolment for the same person. */}
+            <ContactPicker
+              value={clientId}
+              onChange={(contact) => {
+                setClientId(contact?.id ?? null);
+                if (contact) {
+                  form.setValue('client_name', contact.name, { shouldValidate: true });
+                  form.setValue('client_email', contact.email || '', { shouldValidate: true });
+                  form.setValue('client_phone', contact.phone || '');
+                }
+              }}
+              label="Customer"
+              hint="Everything for this customer links to one record."
+            />
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <FormField
               control={form.control}
               name="client_name"
@@ -636,7 +661,7 @@ export function EstimateForm({ onSuccess, onCancel, estimateId }: EstimateFormPr
                 <FormItem>
                   <FormLabel>Client Name</FormLabel>
                   <FormControl>
-                    <Input placeholder="John Doe" {...field} />
+                    <Input placeholder="John Doe" readOnly={!!clientId} {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -684,6 +709,7 @@ export function EstimateForm({ onSuccess, onCancel, estimateId }: EstimateFormPr
                 </FormItem>
               )}
             />
+          </div>
           </CardContent>
         </Card>
 
