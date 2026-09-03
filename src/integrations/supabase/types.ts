@@ -24061,7 +24061,7 @@ export type Database = {
           project_manager_id?: string | null
           project_type?: string | null
           site_address?: string | null
-          site_id: string
+          site_id?: string
           site_latitude?: number | null
           site_longitude?: number | null
           start_date?: string | null
@@ -40304,6 +40304,14 @@ export type Database = {
       }
       create_company_affiliate_code: {
         Args: { p_company_id: string }
+        Returns: string
+      }
+      create_company_for_current_user: {
+        Args: {
+          p_company_size?: string | null
+          p_industry_type?: string | null
+          p_name: string
+        }
         Returns: string
       }
       create_default_chart_of_accounts: {

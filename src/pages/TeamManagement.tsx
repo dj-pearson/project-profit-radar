@@ -36,6 +36,7 @@ const TeamManagement = () => {
   const { checkLimit, getUpgradeRequirement, subscriptionData, refreshData } = useSubscriptionLimits();
   
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
+  const [resendingId, setResendingId] = useState<string | null>(null);
   const [loadingTeam, setLoadingTeam] = useState(true);
   const [isInviteOpen, setIsInviteOpen] = useState(false);
   const [showUpgradePrompt, setShowUpgradePrompt] = useState(false);
@@ -110,6 +111,37 @@ const TeamManagement = () => {
     setIsInviteOpen(true);
   };
 
+  /**
+   * Resend the set-password link (US-320). The edge function owns the RBAC and
+   * company scoping; this only names the member.
+   */
+  const resendInvite = async (member: TeamMember) => {
+    setResendingId(member.id);
+    try {
+      const { data, error } = await supabase.functions.invoke('invite-team-member', {
+        body: { action: 'resend', user_id: member.id },
+      });
+
+      if (error) throw error;
+      if (data && data.success === false) {
+        throw new Error(data.error || 'The invite email could not be sent');
+      }
+
+      toast({
+        title: 'Invite resent',
+        description: `A new set-password link is on its way to ${member.email}.`,
+      });
+    } catch (err) {
+      toast({
+        variant: 'destructive',
+        title: 'Could not resend the invite',
+        description: err instanceof Error ? err.message : 'Please try again.',
+      });
+    } finally {
+      setResendingId(null);
+    }
+  };
+
   const handleInviteUser = async (e: React.FormEvent) => {
     e.preventDefault();
     setInviteLoading(true);
@@ -142,10 +174,23 @@ const TeamManagement = () => {
         throw new Error(invite.error || 'Failed to invite the user');
       }
 
-      toast({
-        title: "User Invited Successfully",
-        description: `${inviteFirstName} ${inviteLastName} has been added to your team.`
-      });
+      // The account exists either way; whether the invitee can act on it
+      // depends on the email. Saying "invited" when nothing was delivered is
+      // the exact failure US-320 was opened for, so report both outcomes.
+      if (invite?.data?.emailSent === false) {
+        toast({
+          variant: 'destructive',
+          title: 'Added, but the invite email failed',
+          description:
+            `${inviteFirstName} was added to your team, but the set-password email could not be sent. ` +
+            'Use Resend invite on their row.',
+        });
+      } else {
+        toast({
+          title: "Invite sent",
+          description: `${inviteFirstName} ${inviteLastName} has been emailed a link to set their password.`
+        });
+      }
 
       // Reset form
       setInviteEmail('');
@@ -321,11 +366,25 @@ const TeamManagement = () => {
     {
       key: 'is_active',
       header: 'Status',
-      render: (value) => (
-        <Badge variant={value ? "default" : "secondary"} className="text-xs" aria-label={`Status: ${value ? 'Active' : 'Inactive'}`}>
-          {value ? "Active" : "Inactive"}
-        </Badge>
-      ),
+      // A member who has never signed in has not accepted their invite. Showing
+      // them as "Active" is what let US-320's silent failure hide: the inviter
+      // saw a healthy-looking row for someone who was never told an account
+      // existed. last_login is the authoritative signal, so no invites table is
+      // needed to tell the two apart.
+      render: (value, member) => {
+        if (value && !member.last_login) {
+          return (
+            <Badge variant="outline" className="text-xs" aria-label="Status: invite pending">
+              Invite pending
+            </Badge>
+          );
+        }
+        return (
+          <Badge variant={value ? "default" : "secondary"} className="text-xs" aria-label={`Status: ${value ? 'Active' : 'Inactive'}`}>
+            {value ? "Active" : "Inactive"}
+          </Badge>
+        );
+      },
     },
     {
       key: 'phone',
@@ -368,6 +427,18 @@ const TeamManagement = () => {
               <><UserCheck className="h-4 w-4 mr-1" aria-hidden="true" />Activate</>
             )}
           </Button>
+          {member.is_active && !member.last_login && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => resendInvite(member)}
+              disabled={resendingId === member.id}
+              aria-label={`Resend the invite to ${member.first_name} ${member.last_name}`}
+            >
+              <Mail className="h-4 w-4 mr-1" aria-hidden="true" />
+              {resendingId === member.id ? 'Sending...' : 'Resend invite'}
+            </Button>
+          )}
           <Button variant="outline" size="sm" aria-label={`Edit ${member.first_name} ${member.last_name}`}>
             <Edit className="h-4 w-4 mr-1" aria-hidden="true" />
             Edit
