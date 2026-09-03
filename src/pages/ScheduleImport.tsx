@@ -160,7 +160,7 @@ const ScheduleImport = () => {
   };
 
   return (
-    <RoleGuard allowedRoles={ROLE_GROUPS.MANAGEMENT}>
+    <RoleGuard allowedRoles={ROLE_GROUPS.PROJECT_EDITORS}>
       <DashboardLayout title="Import a schedule">
         <div className="space-y-6">
           <Card>

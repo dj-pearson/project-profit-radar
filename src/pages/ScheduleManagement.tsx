@@ -91,7 +91,7 @@ const ScheduleManagement = () => {
   const byWeek = useMemo(() => groupTasksByWeek(filtered), [filtered]);
 
   return (
-    <RoleGuard allowedRoles={ROLE_GROUPS.MANAGEMENT}>
+    <RoleGuard allowedRoles={ROLE_GROUPS.PROJECT_VIEWERS}>
       <DashboardLayout title="Schedule">
         <div className="space-y-6">
           <Card>

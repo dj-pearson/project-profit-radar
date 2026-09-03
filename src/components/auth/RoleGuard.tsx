@@ -98,6 +98,12 @@ export const ROLE_GROUPS = {
   // Can manage team
   TEAM_MANAGERS: ['root_admin', 'admin', 'project_manager'],
 
+  // Can put a crew on a scheduled task. Mirrors the RLS write policy on
+  // crew_assignments (20250706012036) and schedule_task_assignees (US-329);
+  // a superintendent is the person who actually does this, so TEAM_MANAGERS,
+  // which excludes field_supervisor, is the wrong set here.
+  CREW_SCHEDULERS: ['root_admin', 'admin', 'project_manager', 'field_supervisor'],
+
   // Can access admin features
   ADMINS: ['root_admin', 'admin'],
 

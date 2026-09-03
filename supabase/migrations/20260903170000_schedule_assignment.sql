@@ -63,13 +63,38 @@ BEGIN
   IF NOT EXISTS (
     SELECT 1 FROM pg_policies
     WHERE tablename = 'schedule_task_assignees'
-      AND policyname = 'Staff manage their company schedule assignees'
+      AND policyname = 'Staff read their company schedule assignees'
   ) THEN
-    CREATE POLICY "Staff manage their company schedule assignees"
+    -- Everyone in the company can SEE who is on what; the crew needs that.
+    CREATE POLICY "Staff read their company schedule assignees"
+      ON public.schedule_task_assignees FOR SELECT
+      TO authenticated
+      USING (company_id = public.get_user_company(auth.uid()));
+  END IF;
+
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies
+    WHERE tablename = 'schedule_task_assignees'
+      AND policyname = 'Supervisors assign their company crew'
+  ) THEN
+    -- Writing has to match crew_assignments, which has restricted writes to
+    -- these four roles since 20250706012036. The trigger that creates the
+    -- crew_assignments row is SECURITY DEFINER and bypasses that table's own
+    -- policy, so a permissive policy here would have let office_staff or
+    -- accounting schedule a crew through the back door.
+    CREATE POLICY "Supervisors assign their company crew"
       ON public.schedule_task_assignees FOR ALL
       TO authenticated
-      USING (company_id = public.get_user_company(auth.uid()))
-      WITH CHECK (company_id = public.get_user_company(auth.uid()));
+      USING (
+        company_id = public.get_user_company(auth.uid())
+        AND public.get_user_role(auth.uid()) = ANY(
+          ARRAY['admin', 'project_manager', 'field_supervisor', 'root_admin']::user_role[])
+      )
+      WITH CHECK (
+        company_id = public.get_user_company(auth.uid())
+        AND public.get_user_role(auth.uid()) = ANY(
+          ARRAY['admin', 'project_manager', 'field_supervisor', 'root_admin']::user_role[])
+      );
   END IF;
 END $$;
 

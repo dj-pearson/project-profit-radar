@@ -288,6 +288,55 @@ describe('the database wires assignment to the crew board (US-329)', () => {
   });
 });
 
+describe('the pages guard on a role group that exists (US-329)', () => {
+  // ROLE_GROUPS.MANAGEMENT does not exist. RoleGuard calls
+  // allowedRoles.includes(...), so passing undefined throws and the page
+  // crashes on load. `npm run build` cannot catch it - vite strips types
+  // without checking them - and it shipped for one commit.
+  const groups = readFileSync('src/components/auth/RoleGuard.tsx', 'utf8');
+  const declared = [...groups.matchAll(/^ {2}([A-Z_]+): \[/gm)].map((m) => m[1]);
+
+  for (const page of [
+    'src/pages/ScheduleManagement.tsx',
+    'src/pages/ScheduleImport.tsx',
+  ]) {
+    it(`${page.split('/').pop()} names a real group`, () => {
+      for (const [, name] of strip(page).matchAll(/ROLE_GROUPS\.([A-Z_]+)/g)) {
+        expect(declared).toContain(name);
+      }
+    });
+  }
+
+  it('gates assigning on the roles the RLS policy actually allows', () => {
+    // TEAM_MANAGERS excludes field_supervisor, and a superintendent is the
+    // person who does this. A group that does not match the policy either
+    // hides a legitimate button or shows one the database refuses.
+    expect(groups).toMatch(/CREW_SCHEDULERS: \['root_admin', 'admin', 'project_manager', 'field_supervisor'\]/);
+    expect(strip('src/components/schedule/ScheduleTaskAssignees.tsx'))
+      .toMatch(/useRoleCheck\(ROLE_GROUPS\.CREW_SCHEDULERS\)/);
+  });
+
+  it('restricts writing assignees to the same roles in the database', () => {
+    // The trigger that writes crew_assignments is SECURITY DEFINER and
+    // bypasses that table's own policy, so a permissive policy here would let
+    // office_staff schedule a crew through the back door.
+    const sql = strip('supabase/migrations/20260903170000_schedule_assignment.sql');
+    const write = sql.slice(sql.indexOf('CREATE POLICY "Supervisors assign their company crew"'));
+    for (const role of ['admin', 'project_manager', 'field_supervisor', 'root_admin']) {
+      expect(write).toMatch(new RegExp(`'${role}'`));
+    }
+    expect(write).not.toMatch(/'office_staff'/);
+    expect(write).not.toMatch(/'accounting'/);
+  });
+
+  it('guards each policy on the name it creates, so a re-run is safe', () => {
+    const sql = readFileSync('supabase/migrations/20260903170000_schedule_assignment.sql', 'utf8');
+    const created = [...sql.matchAll(/CREATE POLICY "([^"]+)"/g)].map((m) => m[1]);
+    const guarded = [...sql.matchAll(/policyname = '([^']+)'/g)].map((m) => m[1]);
+    expect(created.sort()).toEqual(guarded.sort());
+  });
+});
+
 describe('one schedule, not three (US-329)', () => {
   it('deleted the four components that drew projects as bars', () => {
     for (const name of ['ProjectGanttChart', 'ScheduleCalendar', 'ScheduleOverview', 'ProjectTimeline']) {

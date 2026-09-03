@@ -25,6 +25,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { logger } from '@/lib/logger';
 import { UserPlus, X, Check } from 'lucide-react';
+import { useRoleCheck, ROLE_GROUPS } from '@/components/auth/RoleGuard';
 
 interface CrewMember {
   id: string;
@@ -52,6 +53,11 @@ export function ScheduleTaskAssignees({
 }: ScheduleTaskAssigneesProps) {
   const { userProfile } = useAuth();
   const { toast } = useToast();
+  // crew_assignments has restricted writes to these roles since 20250706012036,
+  // and schedule_task_assignees now matches. Office staff and accounting can
+  // see who is on what; showing them a button the database will refuse is worse
+  // than not showing it.
+  const { hasAccess: canAssign } = useRoleCheck(ROLE_GROUPS.CREW_SCHEDULERS);
 
   const [crew, setCrew] = useState<CrewMember[]>([]);
   const [assignees, setAssignees] = useState<AssigneeRow[]>([]);
@@ -146,7 +152,7 @@ export function ScheduleTaskAssignees({
       {assignees.map((row) => (
         <Badge key={row.id} variant="secondary" className="gap-1 pr-1">
           {nameOf(row.crew_member_id)}
-          <button
+          {canAssign && <button
             type="button"
             aria-label={`Remove ${nameOf(row.crew_member_id)} from this task`}
             className="rounded-sm hover:bg-muted p-0.5"
@@ -154,11 +160,15 @@ export function ScheduleTaskAssignees({
             onClick={() => unassign(row, nameOf(row.crew_member_id))}
           >
             <X className="h-3 w-3" aria-hidden="true" />
-          </button>
+          </button>}
         </Badge>
       ))}
 
-      <Popover open={open} onOpenChange={setOpen}>
+      {!canAssign && assignees.length === 0 && (
+        <span className="text-xs text-muted-foreground">Nobody assigned</span>
+      )}
+
+      {canAssign && <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
           <Button type="button" variant="ghost" size="sm" disabled={saving}>
             <UserPlus className="h-3.5 w-3.5 mr-1" aria-hidden="true" />
@@ -196,7 +206,7 @@ export function ScheduleTaskAssignees({
             </CommandList>
           </Command>
         </PopoverContent>
-      </Popover>
+      </Popover>}
     </div>
   );
 }
