@@ -41,15 +41,9 @@
 ALTER TABLE public.client_portal_access
   ADD COLUMN IF NOT EXISTS user_id UUID REFERENCES public.user_profiles(id) ON DELETE SET NULL;
 
--- CONCURRENTLY because client_portal_access already exists and a plain build
--- takes a lock that blocks writes for its whole duration (US-249). It cannot
--- run inside a transaction block, so this file must not be wrapped in
--- BEGIN/COMMIT - it is not, and both statements are idempotent, so a re-run
--- after a failed build is safe.
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_client_portal_access_user_id
-  ON public.client_portal_access(user_id);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_client_portal_access_email
-  ON public.client_portal_access(lower(client_email));
+-- The indexes for these two lookups are in 20260903040000, on its own,
+-- because CREATE INDEX CONCURRENTLY cannot run inside a transaction block and
+-- a migration runner wraps each file in one.
 
 COMMENT ON TABLE public.client_portal_access IS
   'Canonical client portal enrolment: which client may see which project. client_portal_users is not created by any migration and is superseded by this table (US-319).';

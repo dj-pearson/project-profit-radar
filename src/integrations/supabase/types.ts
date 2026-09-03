@@ -17116,6 +17116,8 @@ export type Database = {
           project_id: string
           total_cost: number | null
           updated_at: string
+          company_id: string | null
+          time_entry_id: string | null
         }
         Insert: {
           cost_code_id: string
@@ -17132,6 +17134,8 @@ export type Database = {
           project_id: string
           total_cost?: number | null
           updated_at?: string
+          company_id?: string | null
+          time_entry_id?: string | null
         }
         Update: {
           cost_code_id?: string
@@ -17148,6 +17152,8 @@ export type Database = {
           project_id?: string
           total_cost?: number | null
           updated_at?: string
+          company_id?: string | null
+          time_entry_id?: string | null
         }
         Relationships: [
           {
@@ -35360,6 +35366,10 @@ export type Database = {
           total_hours: number | null
           updated_at: string
           user_id: string
+          hourly_rate: number | null
+          burden_rate: number | null
+          labor_cost: number | null
+          company_id: string | null
         }
         Insert: {
           approval_notes?: string | null
@@ -35390,6 +35400,10 @@ export type Database = {
           total_hours?: number | null
           updated_at?: string
           user_id: string
+          hourly_rate?: number | null
+          burden_rate?: number | null
+          labor_cost?: number | null
+          company_id?: string | null
         }
         Update: {
           approval_notes?: string | null
@@ -35420,6 +35434,10 @@ export type Database = {
           total_hours?: number | null
           updated_at?: string
           user_id?: string
+          hourly_rate?: number | null
+          burden_rate?: number | null
+          labor_cost?: number | null
+          company_id?: string | null
         }
         Relationships: [
           {
@@ -40305,6 +40323,10 @@ export type Database = {
       create_company_affiliate_code: {
         Args: { p_company_id: string }
         Returns: string
+      }
+      resolve_labor_rate: {
+        Args: { p_company_id: string; p_on_date?: string; p_user_id: string }
+        Returns: { burden_rate: number; hourly_rate: number }[]
       }
       client_has_project_access: {
         Args: { p_project_id: string }

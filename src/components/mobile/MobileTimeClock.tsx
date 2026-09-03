@@ -27,6 +27,15 @@ const MobileTimeClock: React.FC<MobileTimeClockProps> = ({
   const [location, setLocation] = useState<any>(null);
   const [projects, setProjects] = useState<any[]>([]);
   const [selectedProject, setSelectedProject] = useState(projectId || '');
+  /**
+   * US-321: without a cost code the hours have nowhere to land. The column
+   * existed on time_entries and this screen never set it, so even once labor
+   * had a rate there would be nothing to compare against a budget line.
+   * The list is the project's own budget lines first, which are the codes
+   * this job is actually expected to spend against (US-318).
+   */
+  const [selectedCostCode, setSelectedCostCode] = useState('');
+  const [costCodes, setCostCodes] = useState<Array<{ id: string; code: string; name: string; budgeted: boolean }>>([]);
   const [isInGeofence, setIsInGeofence] = useState<boolean | null>(null);
 
   const { toast } = useToast();
@@ -64,6 +73,35 @@ const MobileTimeClock: React.FC<MobileTimeClockProps> = ({
   }, [isTracking, onBreak]);
 
   // Add geofence monitoring when project is selected
+  // Cost codes for the selected project: the ones it has a budget for come
+  // first, because those are what a crew on this job normally books to.
+  useEffect(() => {
+    if (!selectedProject) {
+      setCostCodes([]);
+      setSelectedCostCode('');
+      return;
+    }
+
+    let cancelled = false;
+    (async () => {
+      const [{ data: budgetRows }, { data: allCodes }] = await Promise.all([
+        supabase.from('project_budgets').select('cost_code_id').eq('project_id', selectedProject),
+        supabase.from('cost_codes').select('id, code, name').eq('is_active', true).order('code'),
+      ]);
+      if (cancelled) return;
+
+      const budgeted = new Set((budgetRows || []).map((b) => b.cost_code_id));
+      const list = (allCodes || []).map((c) => ({
+        id: c.id, code: c.code, name: c.name, budgeted: budgeted.has(c.id),
+      }));
+      list.sort((a, b) => (Number(b.budgeted) - Number(a.budgeted)) || a.code.localeCompare(b.code));
+      setCostCodes(list);
+      setSelectedCostCode((current) => (list.some((c) => c.id === current) ? current : ''));
+    })();
+
+    return () => { cancelled = true; };
+  }, [selectedProject]);
+
   useEffect(() => {
     if (!selectedProject) return;
 
@@ -210,6 +248,15 @@ const MobileTimeClock: React.FC<MobileTimeClockProps> = ({
       return;
     }
 
+    if (!selectedCostCode) {
+      toast({
+        title: "Cost Code Required",
+        description: "Pick what you are working on, so these hours land on the right budget line.",
+        variant: "destructive"
+      });
+      return;
+    }
+
     if (!location) {
       toast({
         title: "Location Required",
@@ -238,6 +285,7 @@ const MobileTimeClock: React.FC<MobileTimeClockProps> = ({
       const entryData = {
         user_id: user?.id,
         project_id: selectedProject,
+        cost_code_id: selectedCostCode,
         start_time: new Date().toISOString(),
         gps_latitude: currentLoc.latitude,
         gps_longitude: currentLoc.longitude,
@@ -478,6 +526,30 @@ const MobileTimeClock: React.FC<MobileTimeClockProps> = ({
                 </option>
               ))}
             </select>
+
+            {selectedProject && (
+              <div className="mt-4">
+                <label htmlFor="time-clock-cost-code" className="text-sm font-medium">
+                  What are you working on?
+                </label>
+                <select
+                  id="time-clock-cost-code"
+                  value={selectedCostCode}
+                  onChange={(e) => setSelectedCostCode(e.target.value)}
+                  className="w-full p-2 border rounded mt-1"
+                >
+                  <option value="">Choose a cost code...</option>
+                  {costCodes.map((code) => (
+                    <option key={code.id} value={code.id}>
+                      {code.budgeted ? '\u2605 ' : ''}{code.code} {code.name}
+                    </option>
+                  ))}
+                </select>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Starred codes are the ones this job has a budget for.
+                </p>
+              </div>
+            )}
           </CardContent>
         </Card>
       )}

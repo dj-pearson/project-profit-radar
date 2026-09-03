@@ -28,8 +28,54 @@ const BASELINE = '20260712130000';
 const files = readdirSync(DIR).filter((f) => f.endsWith('.sql')).sort();
 const violations = [];
 
+/**
+ * Comments are not statements. Without this, a migration that EXPLAINS why it
+ * does or does not build an index is reported as building one: the regex below
+ * matches `CREATE INDEX` in prose and then scans forward past it to the `ON`
+ * of the real, already-CONCURRENTLY statement. Two migrations tripped this on
+ * the same day, and the workaround - rewording the comment - is the wrong way
+ * round, since it makes the guard shape what people are allowed to write down.
+ *
+ * Strips `-- line` comments and block comments, leaving string literals alone
+ * (an index name or a partial-index predicate can legitimately contain '--').
+ */
+function stripSqlComments(sql) {
+  let out = '';
+  let i = 0;
+  let quote = null; // "'" or '"' while inside a literal or quoted identifier
+  while (i < sql.length) {
+    const c = sql[i];
+    const next = sql[i + 1];
+    if (quote) {
+      out += c;
+      if (c === quote) quote = sql[i + 1] === quote ? quote : null;
+      i += 1;
+      continue;
+    }
+    if (c === "'" || c === '"') {
+      quote = c;
+      out += c;
+      i += 1;
+      continue;
+    }
+    if (c === '-' && next === '-') {
+      while (i < sql.length && sql[i] !== '\n') i += 1;
+      continue;
+    }
+    if (c === '/' && next === '*') {
+      i += 2;
+      while (i < sql.length && !(sql[i] === '*' && sql[i + 1] === '/')) i += 1;
+      i += 2;
+      continue;
+    }
+    out += c;
+    i += 1;
+  }
+  return out;
+}
+
 for (const f of files) {
-  const sql = readFileSync(join(DIR, f), 'utf8');
+  const sql = stripSqlComments(readFileSync(join(DIR, f), 'utf8'));
   const created = new Set(
     [...sql.matchAll(/create\s+table\s+(?:if\s+not\s+exists\s+)?(?:public\.)?["']?([\w.]+)/gi)].map((m) =>
       m[1].replace(/^public\./, '').replace(/["']/g, ''),
