@@ -48,6 +48,14 @@ const PUBLIC_ALLOWLIST = new Set([
   'handle-demo-request',     // public marketing form
   'handle-sales-contact',    // public marketing/sales form
   'track-referral',          // public referral-tracking pixel/endpoint
+  // A prospect deciding whether to hire a contractor has no account and should
+  // not need one, so the estimate they were emailed is readable and acceptable
+  // without a session. The 32-byte token in the body is the credential: it is
+  // looked up on an exact match, scoped to one estimate version, expires, is
+  // revoked when superseded, and is never used as a database credential. The
+  // function rate-limits per token and returns only what a prospect needs to
+  // decide (US-325).
+  'public-estimate',
   'process-referral-signup', // public signup-flow referral attribution
 ]);
 

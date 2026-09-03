@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useAuth } from "@/contexts/AuthContext";
 import { format } from "date-fns";
 import {
   Eye,
@@ -54,6 +55,9 @@ interface EstimatesTableProps {
 }
 
 export function EstimatesTable({ searchTerm, statusFilter, onEstimateChange }: EstimatesTableProps) {
+  const { userProfile } = useAuth();
+  // Only an admin may start a job on a price the customer has not accepted.
+  const isAdmin = userProfile?.role === 'admin' || userProfile?.role === 'root_admin';
   const [estimates, setEstimates] = useState<Estimate[]>([]);
   const [loading, setLoading] = useState(true);
   const [editingEstimate, setEditingEstimate] = useState<string | null>(null);
@@ -198,30 +202,36 @@ export function EstimatesTable({ searchTerm, statusFilter, onEstimateChange }: E
     }
   };
 
+  /**
+   * US-325: this used to flip the status to 'sent' and stop. No email, no
+   * link, no estimate_communications row - the customer was never told a
+   * proposal existed, and the estimator could not tell whether it had been
+   * seen. send-estimate emails a tokenised link the prospect can read and
+   * accept without an account, and only marks the estimate sent once the
+   * email is actually away.
+   */
   const handleSendEstimate = async (estimateId: string) => {
     try {
-      const { error } = await supabase
-        .from("estimates")
-        .update({
-          status: "sent",
-          sent_date: new Date().toISOString().split('T')[0]
-        })
-        .eq("id", estimateId);
+      const { data, error } = await supabase.functions.invoke('send-estimate', {
+        body: { estimate_id: estimateId },
+      });
 
       if (error) throw error;
+      if (data && data.success === false) {
+        throw new Error(data.error || 'The estimate could not be sent');
+      }
 
       toast({
-        title: "Estimate Sent",
-        description: "The estimate has been sent to the client.",
+        title: "Estimate sent",
+        description: `${data?.data?.to ?? 'The client'} has been emailed a link to review and accept it.`,
       });
 
       fetchEstimates();
       onEstimateChange?.();
     } catch (error) {
-      console.error("Error sending estimate:", error);
       toast({
-        title: "Error",
-        description: "Failed to send estimate",
+        title: "Could not send the estimate",
+        description: error instanceof Error ? error.message : 'Please try again.',
         variant: "destructive",
       });
     }
@@ -336,19 +346,32 @@ export function EstimatesTable({ searchTerm, statusFilter, onEstimateChange }: E
               Duplicate
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            {estimate.status === "draft" && (
+            {["draft", "sent", "viewed"].includes(estimate.status) && (
               <DropdownMenuItem onClick={() => handleSendEstimate(estimate.id)}>
                 <Send className="mr-2 h-4 w-4" aria-hidden="true" />
-                Send to Client
+                {estimate.status === "draft" ? "Send to Client" : "Resend to Client"}
               </DropdownMenuItem>
             )}
-            {!estimate.project && (estimate.status === "accepted" || estimate.status === "sent" || estimate.status === "viewed") && (
+            {/* US-325: converting before the customer has accepted starts a job
+                on a price nobody agreed to. An admin can still override, because
+                a customer who agreed by phone is a real situation - but it is a
+                deliberate act now, not the default. */}
+            {!estimate.project && estimate.status === "accepted" && (
               <DropdownMenuItem
                 onClick={() => setConvertingEstimate(estimate.id)}
                 className="text-construction-blue font-medium"
               >
                 <Building2 className="mr-2 h-4 w-4" aria-hidden="true" />
                 Convert to Project
+              </DropdownMenuItem>
+            )}
+            {!estimate.project && ["sent", "viewed"].includes(estimate.status) && isAdmin && (
+              <DropdownMenuItem
+                onClick={() => setConvertingEstimate(estimate.id)}
+                className="text-muted-foreground"
+              >
+                <Building2 className="mr-2 h-4 w-4" aria-hidden="true" />
+                Convert without acceptance
               </DropdownMenuItem>
             )}
             {(estimate.status === "accepted" || estimate.status === "sent" || estimate.status === "viewed") && (

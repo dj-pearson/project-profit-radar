@@ -13787,6 +13787,105 @@ export type Database = {
           },
         ]
       }
+      estimate_share_links: {
+        Row: {
+          accepted_at: string | null
+          company_id: string
+          created_at: string
+          created_by: string | null
+          estimate_id: string
+          expires_at: string
+          first_viewed_at: string | null
+          id: string
+          recipient_email: string
+          revoked_at: string | null
+          sent_at: string
+          token: string
+          version_number: number | null
+        }
+        Insert: {
+          accepted_at?: string | null
+          company_id: string
+          created_at?: string
+          created_by?: string | null
+          estimate_id: string
+          expires_at?: string
+          first_viewed_at?: string | null
+          id?: string
+          recipient_email: string
+          revoked_at?: string | null
+          sent_at?: string
+          token: string
+          version_number?: number | null
+        }
+        Update: {
+          accepted_at?: string | null
+          company_id?: string
+          created_at?: string
+          created_by?: string | null
+          estimate_id?: string
+          expires_at?: string
+          first_viewed_at?: string | null
+          id?: string
+          recipient_email?: string
+          revoked_at?: string | null
+          sent_at?: string
+          token?: string
+          version_number?: number | null
+        }
+        Relationships: []
+      }
+      estimate_acceptances: {
+        Row: {
+          accepted_at: string
+          accepted_by_email: string | null
+          accepted_by_name: string
+          accepted_total: number
+          company_id: string
+          created_at: string
+          estimate_id: string
+          id: string
+          ip_address: string | null
+          share_link_id: string | null
+          signature: string
+          signature_type: string
+          user_agent: string | null
+          version_number: number | null
+        }
+        Insert: {
+          accepted_at?: string
+          accepted_by_email?: string | null
+          accepted_by_name: string
+          accepted_total: number
+          company_id: string
+          created_at?: string
+          estimate_id: string
+          id?: string
+          ip_address?: string | null
+          share_link_id?: string | null
+          signature: string
+          signature_type?: string
+          user_agent?: string | null
+          version_number?: number | null
+        }
+        Update: {
+          accepted_at?: string
+          accepted_by_email?: string | null
+          accepted_by_name?: string
+          accepted_total?: number
+          company_id?: string
+          created_at?: string
+          estimate_id?: string
+          id?: string
+          ip_address?: string | null
+          share_link_id?: string | null
+          signature?: string
+          signature_type?: string
+          user_agent?: string | null
+          version_number?: number | null
+        }
+        Relationships: []
+      }
       estimate_communications: {
         Row: {
           communication_type: string
