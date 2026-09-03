@@ -115,7 +115,7 @@ vi.mock('@/components/financial/BudgetVsActualTracking', () => ({
 vi.mock('@/components/financial/CashFlowForecasting', () => ({
   CashFlowForecasting: () => <div data-testid="cash-flow-forecasting">Forecasting</div>,
 }));
-vi.mock('@/components/financial/ExpenseTracker', () => ({
+vi.mock('@/components/expenses/ExpenseTracker', () => ({
   ExpenseTracker: () => <div data-testid="expense-tracker">Expense Tracker</div>,
 }));
 vi.mock('@/components/InvoiceGenerator', () => ({

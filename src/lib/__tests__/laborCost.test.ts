@@ -71,6 +71,9 @@ describe('the invented rate is gone (US-321)', () => {
       'supabase/migrations/20260903030000_labor_cost_posting.sql', 'utf8'
     );
     expect(migration).toMatch(/BEFORE UPDATE OF approval_status ON public\.time_entries/);
-    expect(migration).toMatch(/DELETE FROM public\.job_costs WHERE time_entry_id = NEW\.id/);
+    // US-322 generalised the key from time_entry_id to (source_type, source_id)
+    // so labor, expenses, purchase order lines, bills and subcontractor
+    // payments all withdraw the same way.
+    expect(migration).toMatch(/DELETE FROM public\.job_costs\s*\n?\s*WHERE source_type = 'time_entry' AND source_id = NEW\.id/);
   });
 });

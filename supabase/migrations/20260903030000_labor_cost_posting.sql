@@ -30,8 +30,9 @@
 --   * Adding that unique key means first merging existing duplicate rows,
 --     which is a destructive data change on live job-costing data, to enable a
 --     write pattern that is wrong anyway.
---   * job_costs.time_entry_id gives idempotency where it is actually needed:
---     approve twice, post once; un-approve, and the posting is removed.
+--   * job_costs.(source_type, source_id) gives idempotency where it is
+--     actually needed: approve twice, post once; un-approve, and the posting
+--     is removed. US-322 reuses the same key for the other four cost sources.
 
 -- ---------------------------------------------------------------------------
 -- 1. What an hour cost
@@ -63,7 +64,12 @@ UPDATE public.time_entries te
 -- ---------------------------------------------------------------------------
 ALTER TABLE public.job_costs
   ADD COLUMN IF NOT EXISTS company_id UUID REFERENCES public.companies(id) ON DELETE CASCADE,
-  ADD COLUMN IF NOT EXISTS time_entry_id UUID REFERENCES public.time_entries(id) ON DELETE SET NULL;
+  -- What produced this cost row. Generic rather than one FK per source,
+  -- because labor is the first of five (US-322 adds expenses, received
+  -- purchase order lines, vendor bill lines and subcontractor payments) and
+  -- five nullable foreign keys on a ledger table is not a design.
+  ADD COLUMN IF NOT EXISTS source_type TEXT,
+  ADD COLUMN IF NOT EXISTS source_id UUID;
 
 UPDATE public.job_costs jc
    SET company_id = p.company_id
@@ -71,8 +77,10 @@ UPDATE public.job_costs jc
  WHERE jc.project_id = p.id
    AND jc.company_id IS NULL;
 
-COMMENT ON COLUMN public.job_costs.time_entry_id IS
-  'The approved time entry this labor posting came from. The approval trigger deletes before inserting, so approving twice posts once. US-321.';
+COMMENT ON COLUMN public.job_costs.source_type IS
+  'What produced this row: time_entry, expense, purchase_order_line, bill_line, subcontractor_payment, or NULL for a hand-entered cost. US-321.';
+COMMENT ON COLUMN public.job_costs.source_id IS
+  'The id of the row named by source_type. Posting deletes by (source_type, source_id) before inserting, so posting twice posts once. US-321.';
 
 -- Keep it filled for rows created from here on, whatever writes them.
 CREATE OR REPLACE FUNCTION public.set_job_cost_company_id()
@@ -118,12 +126,12 @@ CREATE TRIGGER trg_time_entry_company_id
   FOR EACH ROW EXECUTE FUNCTION public.set_time_entry_company_id();
 
 -- NO INDEX IS CREATED HERE, deliberately. A partial unique index on
--- time_entry_id would be reasonable defence in depth, but CREATE INDEX
+-- (source_type, source_id) would be reasonable defence in depth, but CREATE INDEX
 -- CONCURRENTLY cannot run inside a transaction block and migration runners
 -- wrap each file in one, so it belongs in a file of its own
--- (20260903040000). Correctness does not depend on it: the trigger below is
--- the only writer of time_entry_id and it deletes before inserting, so
--- approving twice still posts once.
+-- (20260903040000). Correctness does not depend on it: every posting path
+-- deletes by (source_type, source_id) before inserting, so posting twice
+-- still posts once.
 
 -- ---------------------------------------------------------------------------
 -- 3. One place that answers "what does this person's hour cost?"
@@ -214,7 +222,8 @@ BEGIN
   -- cost on the job.
   IF NEW.approval_status IS DISTINCT FROM 'approved'
      AND OLD.approval_status = 'approved' THEN
-    DELETE FROM public.job_costs WHERE time_entry_id = NEW.id;
+    DELETE FROM public.job_costs
+     WHERE source_type = 'time_entry' AND source_id = NEW.id;
     RETURN NEW;
   END IF;
 
@@ -273,16 +282,18 @@ BEGIN
   -- Delete then insert, so re-approving replaces this entry's posting rather
   -- than adding a second one. Both statements are inside the trigger, so they
   -- are in the same transaction as the approval itself.
-  DELETE FROM public.job_costs WHERE time_entry_id = NEW.id;
+  DELETE FROM public.job_costs
+   WHERE source_type = 'time_entry' AND source_id = NEW.id;
 
   INSERT INTO public.job_costs (
     project_id, company_id, cost_code_id, date,
-    labor_hours, labor_cost, total_cost, description, time_entry_id, created_by
+    labor_hours, labor_cost, total_cost, description,
+    source_type, source_id, created_by
   )
   VALUES (
     NEW.project_id, v_company, NEW.cost_code_id, v_date,
     v_hours, v_cost, v_cost,
-    'Approved labor', NEW.id, NEW.approved_by
+    'Approved labor', 'time_entry', NEW.id, NEW.approved_by
   );
 
   RETURN NEW;

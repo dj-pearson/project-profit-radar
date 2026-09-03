@@ -4,6 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
+import { computeJobProfit } from '@/lib/jobProfit';
 import { BarChart3, TrendingUp, TrendingDown } from 'lucide-react';
 
 interface JobData {
@@ -25,11 +26,6 @@ interface JobCostData {
   material_cost: number | null;
   equipment_cost: number | null;
   other_cost: number | null;
-}
-
-interface ExpenseData {
-  project_id: string;
-  amount: number | null;
 }
 
 interface InvoiceData {
@@ -70,15 +66,9 @@ const JobProfitabilityOverview = () => {
 
       if (jobCostsError) throw jobCostsError;
 
-      // Get actual expenses for all projects  
-      const expensesResult = await (supabase as unknown as { from: (table: string) => ReturnType<typeof supabase.from> })
-        .from('expenses')
-        .select('project_id, amount')
-        .eq('company_id', userProfile?.company_id)
-        .eq('payment_status', 'approved');
-      const { data: expensesData, error: expensesError } = expensesResult;
-
-      if (expensesError) throw expensesError;
+      // Expenses are NOT fetched here any more. An approved expense posts
+      // itself into job_costs (US-322), so reading both and adding them would
+      // count every receipt twice.
 
       // Get actual revenue from paid invoices
       const invoicesResult = await (supabase as unknown as { from: (table: string) => ReturnType<typeof supabase.from> })
@@ -92,7 +82,6 @@ const JobProfitabilityOverview = () => {
 
       // Cast data to proper types
       const jobCosts: JobCostData[] = jobCostsData || [];
-      const expenses: ExpenseData[] = expensesData || [];
       const invoices: InvoiceData[] = invoicesData || [];
 
       // Transform projects data with actual financial data
@@ -100,30 +89,31 @@ const JobProfitabilityOverview = () => {
         const budget = Number(project.budget) || 0;
         const completion = project.completion_percentage || 0;
         
-        // Calculate actual costs from job_costs table
+        // US-322: one definition of job profit, shared with
+        // ProjectProfitLoss. This screen and that one used to disagree - it
+        // added expenses on top of job_costs and counted only collected cash,
+        // while that one excluded expenses and counted the budget.
+        //
+        // Expenses are no longer added on top: an approved expense posts
+        // itself into job_costs, so summing both would count it twice.
         const projectJobCosts = jobCosts.filter(jc => jc.project_id === project.id);
-        const jobCostTotal = projectJobCosts.reduce((sum, cost) => 
-          sum + (Number(cost.labor_cost) || 0) + (Number(cost.material_cost) || 0) + 
-          (Number(cost.equipment_cost) || 0) + (Number(cost.other_cost) || 0), 0
-        );
-        
-        // Add expenses from expenses table
-        const projectExpenses = expenses.filter(exp => exp.project_id === project.id);
-        const expenseTotal = projectExpenses.reduce((sum, exp) => sum + (Number(exp.amount) || 0), 0);
-        
-        // Total actual costs
-        const actualCosts = jobCostTotal + expenseTotal;
-        
-        // Calculate actual revenue from invoices
         const projectInvoices = invoices.filter(inv => inv.project_id === project.id);
-        const actualRevenue = projectInvoices.reduce((sum, inv) => sum + (Number(inv.amount_paid) || 0), 0);
-        
-        // Use actual revenue if available, otherwise estimate based on completion and budget
-        const revenue = actualRevenue > 0 ? actualRevenue : budget * (completion / 100);
-        
-        // Calculate profit and margin from real data
-        const grossProfit = revenue - actualCosts;
-        const profitMargin = revenue > 0 ? (grossProfit / revenue) * 100 : 0;
+        const collectedToDate = projectInvoices.reduce(
+          (sum, inv) => sum + (Number(inv.amount_paid) || 0), 0
+        );
+
+        const profitResult = computeJobProfit({
+          jobCosts: projectJobCosts,
+          collectedToDate,
+          // Budget earned so far, as the last fallback when nothing has been
+          // collected yet. computeJobProfit labels which basis it used.
+          currentContractValue: budget * (completion / 100),
+        });
+
+        const actualCosts = profitResult.cost;
+        const revenue = profitResult.revenue;
+        const grossProfit = profitResult.profit;
+        const profitMargin = profitResult.marginPercent;
 
         return {
           id: project.id,

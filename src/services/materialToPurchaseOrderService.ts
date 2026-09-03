@@ -132,26 +132,38 @@ class MaterialToPurchaseOrderService {
         };
       }
 
-      // 5. Create PO line items from materials
-      const lineItems = materials.map((material) => ({
+      // 5. Create PO line items from materials.
+      //
+      // US-322: this wrote purchase_order_items, a second line table with its
+      // own writer, while PurchaseOrderForm and the project procurement tab
+      // both use purchase_order_line_items. Two tables for one concept meant
+      // committed cost and, once receipt posting exists, actual cost, saw only
+      // half the lines depending on which screen created the PO.
+      const lineItems = materials.map((material, index) => ({
         purchase_order_id: newPO.id,
-        material_id: material.id,
+        line_number: index + 1,
         description: material.name,
         quantity: material.quantity_needed || material.quantity_available || 0,
-        unit: material.unit,
+        unit_of_measure: material.unit,
         unit_price: material.unit_cost,
         total_price: (material.quantity_needed || material.quantity_available || 0) * (material.unit_cost ?? 0),
-        category: material.category || 'General'
+        cost_code_id: material.cost_code_id ?? null,
+        notes: material.category ? `Material category: ${material.category}` : null,
       }));
 
       if (lineItems.length > 0) {
         const { error: lineItemsError } = await supabase
-          .from('purchase_order_items')
+          .from('purchase_order_line_items')
           .insert(lineItems);
 
         if (lineItemsError) {
-          console.error('Failed to create PO line items:', lineItemsError);
-          // Continue anyway - PO is created
+          // Not swallowed: a purchase order with no lines commits nothing and
+          // posts nothing on receipt, so it is worth surfacing rather than
+          // leaving an empty PO that looks complete.
+          return {
+            success: false,
+            error: `The purchase order was created but its lines were not: ${lineItemsError.message}`,
+          };
         }
       }
 

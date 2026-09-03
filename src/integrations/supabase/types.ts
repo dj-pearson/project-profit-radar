@@ -17117,7 +17117,9 @@ export type Database = {
           total_cost: number | null
           updated_at: string
           company_id: string | null
-          time_entry_id: string | null
+          source_type: string | null
+          source_id: string | null
+          subcontractor_cost: number | null
         }
         Insert: {
           cost_code_id: string
@@ -17135,7 +17137,9 @@ export type Database = {
           total_cost?: number | null
           updated_at?: string
           company_id?: string | null
-          time_entry_id?: string | null
+          source_type?: string | null
+          source_id?: string | null
+          subcontractor_cost?: number | null
         }
         Update: {
           cost_code_id?: string
@@ -17153,7 +17157,9 @@ export type Database = {
           total_cost?: number | null
           updated_at?: string
           company_id?: string | null
-          time_entry_id?: string | null
+          source_type?: string | null
+          source_id?: string | null
+          subcontractor_cost?: number | null
         }
         Relationships: [
           {
@@ -39241,6 +39247,16 @@ export type Database = {
       }
     }
     Views: {
+      project_committed_costs: {
+        Row: {
+          project_id: string | null
+          company_id: string | null
+          cost_code_id: string | null
+          committed_amount: number | null
+          open_purchase_orders: number | null
+        }
+        Relationships: []
+      }
       active_seo_insights_summary: {
         Row: {
           avg_priority: number | null

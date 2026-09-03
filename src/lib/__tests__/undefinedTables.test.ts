@@ -82,7 +82,6 @@ describe('writes to tables no migration creates', () => {
   const CASES: Array<[string, string]> = [
     ['supabase/functions/geofencing/index.ts', 'alertError'],
     ['supabase/functions/send-intervention-email/index.ts', 'suppressionLogError'],
-    ['src/services/estimateToProjectConversion.ts', 'notesError'],
     ['src/components/onboarding/FeatureTour.tsx', 'user_tour_progress'],
     ['src/components/search/DashboardSearchTrigger.tsx', 'contactsError'],
   ];
@@ -105,9 +104,20 @@ describe('writes to tables no migration creates', () => {
     expect(completed).toMatch(/const \{ error \} = await supabase/);
   });
 
-  it('the estimate conversion tells the caller when the notes did not come across', () => {
+  it('the estimate conversion no longer writes project_notes at all', () => {
+    // US-322 note: this test used to assert that the conversion READ the error
+    // from its project_notes insert and told the caller the notes had not come
+    // across. US-318 went further and removed the write: project_notes is
+    // created by no migration, and the conversion could never reach that line
+    // anyway because the project insert above it failed on unknown columns.
+    // Reporting a failure well is second best to not making a doomed call.
+    //
+    // Where the estimate's notes should go is a product decision (projects
+    // .description, or a real note surface), recorded on US-318 rather than
+    // silently picked here.
     const src = code('src/services/estimateToProjectConversion.ts');
-    expect(src).toContain('notesCarriedOver');
+    expect(src).not.toContain('project_notes');
+    expect(src).not.toContain('notesCarriedOver');
   });
 });
 

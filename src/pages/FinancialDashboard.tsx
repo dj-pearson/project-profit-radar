@@ -14,7 +14,7 @@ import EstimateTracking from '@/components/financial/EstimateTracking';
 import ProfitLossSummary from '@/components/financial/ProfitLossSummary';
 import { BudgetVsActualTracking } from '@/components/financial/BudgetVsActualTracking';
 import { CashFlowForecasting } from '@/components/financial/CashFlowForecasting';
-import { ExpenseTracker } from '@/components/financial/ExpenseTracker';
+import { ExpenseTracker } from '@/components/expenses/ExpenseTracker';
 import InvoiceGenerator from '@/components/InvoiceGenerator';
 import Form1099Manager from '@/components/financial/Form1099Manager';
 import { StripePaymentProcessor } from '@/components/financial/StripePaymentProcessor';

@@ -19,12 +19,12 @@ CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_client_portal_access_user_id
 CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_client_portal_access_email
   ON public.client_portal_access(lower(client_email));
 
--- US-321: one labor posting per approved time entry. The approval trigger
--- already deletes before inserting, so this is defence in depth against a
+-- US-321/US-322: one posting per source record. Every posting path already
+-- deletes by this key before inserting, so this is defence in depth against a
 -- second writer appearing later rather than the mechanism itself.
-CREATE UNIQUE INDEX CONCURRENTLY IF NOT EXISTS uq_job_costs_time_entry
-  ON public.job_costs(time_entry_id)
-  WHERE time_entry_id IS NOT NULL;
+CREATE UNIQUE INDEX CONCURRENTLY IF NOT EXISTS uq_job_costs_source
+  ON public.job_costs(source_type, source_id)
+  WHERE source_id IS NOT NULL;
 
 -- US-321: WipReport filters job costs by company.
 CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_job_costs_company_id

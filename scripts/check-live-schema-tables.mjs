@@ -54,7 +54,7 @@ const BASELINE = new Set([
   'disposable_email_domains', 'estimate_templates', 'financial_records',
   'generated_content', 'image_processing_queue', 'invoice_payments', 'line_item_library',
   'payments', 'processed_images', 'project_videos',
-  'purchase_order_items', 'real_time_notifications', 'reviews',
+  'real_time_notifications', 'reviews',
   'saved_filter_presets', 'sensitive_data_access_log', 'seo_page_configs',
   'user_announcements', 'user_tour_progress', 'workflow_steps',
 ]);

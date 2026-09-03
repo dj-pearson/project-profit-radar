@@ -6,6 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Progress } from '@/components/ui/progress';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { supabase } from '@/integrations/supabase/client';
+import { computeJobProfit } from '@/lib/jobProfit';
 import { toast } from '@/hooks/use-toast';
 import {
   DollarSign,
@@ -84,41 +85,68 @@ const ProjectProfitLoss: React.FC<ProjectPLProps> = ({
 
       if (changeOrdersError) throw changeOrdersError;
 
-      // Load contractor payments
-      const { data: contractorPayments, error: contractorPaymentsError } = await supabase
-        .from('contractor_payments')
-        .select('*')
+      // Revenue basis: what has been invoiced on this job. computeJobProfit
+      // falls back to the contract value and labels the result, so the screen
+      // can say whether it is showing earned profit or a forecast.
+      const { data: invoices } = await supabase
+        .from('invoices')
+        .select('total_amount')
         .eq('project_id', projectId);
 
-      if (contractorPaymentsError) throw contractorPaymentsError;
+      const invoicedToDate = (invoices || []).reduce(
+        (sum, inv) => sum + (inv.total_amount || 0), 0
+      );
 
-      // Calculate financials
-      const actualCosts = (jobCosts || []).reduce((sum, cost) => sum + (cost.total_cost || 0), 0);
-      const contractorCosts = (contractorPayments || []).reduce((sum, payment) => sum + payment.amount, 0);
-      const totalActualCosts = actualCosts + contractorCosts;
+      // Open purchase orders: committed, reported beside cost and never inside
+      // it (US-322).
+      const { data: committed } = await supabase
+        .from('project_committed_costs')
+        .select('committed_amount')
+        .eq('project_id', projectId);
 
+      const committedCost = (committed || []).reduce(
+        (sum, c) => sum + (c.committed_amount || 0), 0
+      );
+
+      // US-322: one definition of job profit, shared with
+      // JobProfitabilityOverview. This screen used to count revenue as the
+      // budget plus change orders and exclude expenses, while that one counted
+      // invoices and included them - so the same job showed two profits and
+      // neither said which basis it used.
+      //
+      // Costs come from job_costs alone. Since US-321 and US-322 that ledger
+      // already carries labor, expenses, received purchase orders, vendor
+      // bills and subcontractor payments, so adding contractor_payments on top
+      // would double-count what the posting triggers wrote.
       const changeOrdersValue = (changeOrders || []).reduce((sum, co) => sum + co.amount, 0);
       const adjustedBudget = projectBudget + changeOrdersValue;
 
-      // Cost breakdown from job costs
+      const profitResult = computeJobProfit({
+        jobCosts: jobCosts || [],
+        invoicedToDate: invoicedToDate,
+        currentContractValue: adjustedBudget,
+        committedCost,
+      });
+
+      const totalActualCosts = profitResult.cost;
       const costBreakdown = {
-        labor: (jobCosts || []).reduce((sum, cost) => sum + (cost.labor_cost || 0), 0),
-        materials: (jobCosts || []).reduce((sum, cost) => sum + (cost.material_cost || 0), 0),
-        equipment: (jobCosts || []).reduce((sum, cost) => sum + (cost.equipment_cost || 0), 0),
-        subcontractors: contractorCosts,
-        overhead: (jobCosts || []).reduce((sum, cost) => sum + (cost.other_cost || 0), 0),
+        labor: profitResult.costBreakdown.labor,
+        materials: profitResult.costBreakdown.material,
+        equipment: profitResult.costBreakdown.equipment,
+        subcontractors: profitResult.costBreakdown.subcontractor,
+        overhead: profitResult.costBreakdown.other,
         other: 0
       };
 
-      const profitToDate = adjustedBudget - totalActualCosts;
-      const marginPercentage = adjustedBudget > 0 ? (profitToDate / adjustedBudget) * 100 : 0;
+      const profitToDate = profitResult.profit;
+      const marginPercentage = profitResult.marginPercent;
 
       const calculatedFinancials: ProjectFinancials = {
         project_id: projectId,
         budget: projectBudget,
         actual_costs: totalActualCosts,
-        invoiced_amount: 0, // TODO: Calculate from invoices
-        payments_received: 0, // TODO: Calculate from payments
+        invoiced_amount: invoicedToDate,
+        payments_received: 0, // Collections land here once US-324 records them
         change_orders_value: changeOrdersValue,
         estimated_completion_cost: totalActualCosts * 1.1, // Estimate 10% more
         profit_to_date: profitToDate,
