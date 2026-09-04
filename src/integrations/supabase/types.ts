@@ -9428,6 +9428,7 @@ export type Database = {
           weather_conditions: string | null
           weather_source: string | null
           work_performed: string | null
+          crew_hours: number | null
         }
         Insert: {
           client_visitors?: string | null
@@ -21556,6 +21557,12 @@ export type Database = {
           taken_at: string | null
           time_entry_id: string | null
           user_id: string
+          company_id: string | null
+          storage_bucket: string
+          source: string
+          ai_tags: string[] | null
+          ai_classified_at: string | null
+          ai_confidence: number | null
         }
         Insert: {
           caption?: string | null
@@ -39626,6 +39633,21 @@ export type Database = {
         }
         Relationships: []
       }
+      daily_report_reconciliation: {
+        Row: {
+          daily_report_id: string | null
+          project_id: string | null
+          company_id: string | null
+          date: string | null
+          reported_crew: number | null
+          reported_hours: number | null
+          timesheet_crew: number | null
+          timesheet_hours: number | null
+          hours_variance: number | null
+          photo_count: number | null
+        }
+        Relationships: []
+      }
       project_unbilled_work: {
         Row: {
           source_type: string | null
@@ -40573,6 +40595,10 @@ export type Database = {
           p_override_reason?: string | null
         }
         Returns: string
+      }
+      sync_daily_report_crew: {
+        Args: { p_daily_report_id: string }
+        Returns: number
       }
       seed_project_sov: {
         Args: { p_project_id: string }

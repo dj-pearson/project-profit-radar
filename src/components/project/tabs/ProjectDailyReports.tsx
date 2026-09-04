@@ -11,8 +11,12 @@ import {
   Users,
   Cloud,
   PlusCircle,
-  ExternalLink 
+  ExternalLink,
+  ChevronDown,
+  ChevronRight,
+  Camera
 } from 'lucide-react';
+import { DailyReportCrewPanel } from '@/components/daily-reports/DailyReportCrewPanel';
 
 interface DailyReport {
   id: string;
@@ -26,6 +30,7 @@ interface DailyReport {
   delays_issues: string;
   safety_incidents: string;
   created_at: string;
+  photo_count?: number;
 }
 
 interface ProjectDailyReportsProps {
@@ -40,6 +45,7 @@ export const ProjectDailyReports: React.FC<ProjectDailyReportsProps> = ({
   const { userProfile } = useAuth();
   const [reports, setReports] = useState<DailyReport[]>([]);
   const [loading, setLoading] = useState(true);
+  const [expanded, setExpanded] = useState<string | null>(null);
 
   useEffect(() => {
     if (projectId && userProfile?.company_id) {
@@ -52,13 +58,23 @@ export const ProjectDailyReports: React.FC<ProjectDailyReportsProps> = ({
       setLoading(true);
       const { data, error } = await supabase
         .from('daily_reports')
-        .select('*')
+        // photo_attachments rather than the photos array: the count has to
+        // match what the timeline and the handover bundle will show, and those
+        // read the rows (US-330).
+        .select('*, photo_attachments(count)')
         .eq('project_id', projectId)
         .order('created_at', { ascending: false })
         .limit(5);
 
       if (error) throw error;
-      setReports(data || []);
+
+      const withCounts = (data || []).map((r: DailyReport & {
+        photo_attachments?: Array<{ count: number }>;
+      }) => ({
+        ...r,
+        photo_count: r.photo_attachments?.[0]?.count ?? 0,
+      }));
+      setReports(withCounts);
     } catch (error: any) {
       console.error('Error loading daily reports:', error);
       toast({
@@ -150,6 +166,41 @@ export const ProjectDailyReports: React.FC<ProjectDailyReportsProps> = ({
                         Safety Incident Reported
                       </Badge>
                     )}
+
+                {/* The crew, and whether it matches the timesheets (US-330).
+                    Collapsed by default: the list is a scan of what happened,
+                    and expanding is the deliberate act of checking one day. */}
+                <div className="pt-2 border-t">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="px-0"
+                    aria-expanded={expanded === report.id}
+                    onClick={() => setExpanded(expanded === report.id ? null : report.id)}
+                  >
+                    {expanded === report.id
+                      ? <ChevronDown className="h-4 w-4 mr-1" aria-hidden="true" />
+                      : <ChevronRight className="h-4 w-4 mr-1" aria-hidden="true" />}
+                    Crew and photos
+                    {(report.photo_count ?? 0) > 0 && (
+                      <span className="ml-2 inline-flex items-center text-xs text-muted-foreground">
+                        <Camera className="h-3 w-3 mr-1" aria-hidden="true" />
+                        {report.photo_count}
+                      </span>
+                    )}
+                  </Button>
+
+                  {expanded === report.id && (
+                    <div className="mt-3">
+                      <DailyReportCrewPanel
+                        dailyReportId={report.id}
+                        projectId={report.project_id}
+                        reportDate={report.date}
+                        reportedCrewCount={report.crew_count}
+                      />
+                    </div>
+                  )}
+                </div>
               </div>
             ))}
           </div>

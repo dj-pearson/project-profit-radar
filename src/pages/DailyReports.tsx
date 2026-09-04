@@ -16,6 +16,8 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { validateFileUpload, generateSecureFilename } from '@/lib/security/fileUploadValidation';
+import { logger } from '@/lib/logger';
+import { photoStoragePath } from '@/lib/dailyReportField';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import MobileDailyReport from '@/components/mobile/MobileDailyReport';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -203,6 +205,79 @@ const DailyReports = () => {
     }
   };
 
+  /**
+   * Everything the report is a record OF, once the report row exists (US-330).
+   *
+   * A photo that is only a string in daily_reports.photos cannot be found by
+   * project, by date or by who took it, and crew entered as an integer is the
+   * same crew that already clocked in, typed a second time.
+   *
+   * Deliberately non-fatal, and deliberately not silent. The report itself is
+   * saved by the time this runs; losing it because a photo row failed would be
+   * the worse trade for somebody filing at the end of a shift. Every failure
+   * comes back as a sentence in the toast.
+   */
+  const recordFieldDetail = async ({
+    reportId, projectId, reportDate, uploaded,
+  }: {
+    reportId: string;
+    projectId: string;
+    reportDate: string;
+    uploaded: Array<{ path: string; file: File }>;
+  }): Promise<string[]> => {
+    const notes: string[] = [];
+
+    if (uploaded.length > 0 && userProfile?.company_id) {
+      const { error: photoError } = await supabase
+        .from('photo_attachments')
+        .insert(uploaded.map(({ path, file }) => ({
+          project_id: projectId,
+          daily_report_id: reportId,
+          company_id: userProfile.company_id,
+          user_id: userProfile.id,
+          file_name: file.name,
+          file_path: path,
+          file_size: file.size,
+          mime_type: file.type,
+          storage_bucket: 'project-documents',
+          source: 'daily_report',
+          taken_at: new Date(file.lastModified || Date.now()).toISOString(),
+        })) as never);
+
+      if (photoError) {
+        logger.error('Daily report saved but its photos were not recorded', photoError);
+        notes.push(
+          `The ${uploaded.length} photo(s) uploaded but were not indexed, so they ` +
+          `will not appear on the project timeline (${photoError.message})`
+        );
+      }
+    }
+
+    // Crew from the hours already clocked. The RPC does not overwrite anyone
+    // added by hand, so it is safe whether or not the crew was typed first.
+    const { data: crewAdded, error: crewError } = await supabase
+      .rpc('sync_daily_report_crew', { p_daily_report_id: reportId });
+
+    if (crewError) {
+      logger.error('Could not pull the crew from the timesheets', crewError);
+      notes.push(`Crew could not be pulled from the timesheets (${crewError.message})`);
+    } else if ((crewAdded ?? 0) > 0) {
+      notes.push(`${crewAdded} crew member(s) pulled from the day's time entries`);
+    } else {
+      // Nothing clocked in on that project and day. Worth saying, because the
+      // superintendent may have the wrong project selected.
+      const { count } = await supabase
+        .from('time_entries')
+        .select('id', { count: 'exact', head: true })
+        .eq('project_id', projectId)
+        .gte('start_time', `${reportDate}T00:00:00`)
+        .lte('start_time', `${reportDate}T23:59:59`);
+      if (!count) notes.push('Nobody clocked in on this job today');
+    }
+
+    return notes;
+  };
+
   const handleCreateReport = async () => {
     if (!newReport.project_id || !newReport.work_performed) {
       toast({
@@ -214,8 +289,13 @@ const DailyReports = () => {
     }
 
     try {
-      // Upload photos to Supabase Storage if any
+      // Upload photos to Supabase Storage if any.
+      // Two records come out of this: the storage path, which still goes in
+      // daily_reports.photos so iOS at MIN_SUPPORTED_IOS_VERSION keeps working,
+      // and a photo_attachments row, which is the thing anything else can find
+      // a photo by (US-330).
       const photoUrls: string[] = [];
+      const uploaded: Array<{ path: string; file: File }> = [];
       if (selectedPhotos.length > 0) {
         for (const photo of selectedPhotos) {
           // Validate file before upload
@@ -233,7 +313,10 @@ const DailyReports = () => {
           const fileName = generateSecureFilename(photo.name);
           // <projectId>/<category>/... so the project-documents SELECT
           // policy matches on the first segment (US-289).
-          const filePath = `${newReport.project_id}/daily-reports/${fileName}`;
+          const filePath = photoStoragePath({
+            projectId: newReport.project_id,
+            fileName,
+          });
 
           const { error: uploadError } = await supabase.storage
             .from('project-documents')
@@ -246,24 +329,39 @@ const DailyReports = () => {
 
           // Persist the storage path, not a permanent public URL (US-289).
           photoUrls.push(filePath);
+          uploaded.push({ path: filePath, file: photo });
         }
       }
 
-      const { error } = await supabase
+      const reportDate = new Date().toISOString().split('T')[0];
+      const { data: report, error } = await supabase
         .from('daily_reports')
         .insert({
           ...newReport,
           crew_count: Number(newReport.crew_count),
-          date: new Date().toISOString().split('T')[0],
+          date: reportDate,
           photos: photoUrls.length > 0 ? photoUrls : null,
           signature: newReport.signature || null
-        });
+        })
+        .select('id')
+        .single();
 
       if (error) throw error;
 
+      const notes = await recordFieldDetail({
+        reportId: report.id,
+        projectId: newReport.project_id,
+        reportDate,
+        uploaded,
+      });
+
       toast({
         title: "Success",
-        description: `Daily report created successfully${photoUrls.length > 0 ? ` with ${photoUrls.length} photo(s)` : ''}`
+        description: [
+          'Daily report created',
+          photoUrls.length > 0 ? `${photoUrls.length} photo(s)` : '',
+          ...notes,
+        ].filter(Boolean).join('. ')
       });
 
       setIsCreateDialogOpen(false);
