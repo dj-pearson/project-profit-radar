@@ -303,10 +303,14 @@ describe('closeout is real, and US-048 is answered (US-328)', () => {
   });
 
   it('appears in both the tab bar and the sub-sidebar', () => {
-    // Those two lists disagreed about what the hub contains; a new section has
-    // to land in both or it is reachable from one navigation and not the other.
-    expect(strip('src/pages/ProjectDetail.tsx')).toMatch(/id: 'closeout'/);
-    expect(strip('src/components/project/ProjectSubSidebar.tsx')).toMatch(/id: 'closeout'/);
+    // Those two lists disagreed about what the hub contains, which is why this
+    // asserted on both files separately. US-331 made them one list, so the
+    // check is now that closeout is in it and flagged for the tab bar - a
+    // stronger guarantee than the two string matches this replaced.
+    const sections = strip('src/components/project/projectSections.ts');
+    expect(sections).toMatch(/\{ id: 'closeout',[^}]*inTabBar: true \}/);
+    expect(strip('src/pages/ProjectDetail.tsx')).toMatch(/projectTabBarSections\(\)/);
+    expect(strip('src/components/project/ProjectSubSidebar.tsx')).toMatch(/projectSectionsByGroup/);
   });
 
   it('reads persisted items rather than an array in the file', () => {

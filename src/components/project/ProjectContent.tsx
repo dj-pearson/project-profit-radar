@@ -21,6 +21,7 @@ import { ProjectPermits } from '@/components/project/tabs/ProjectPermits';
 import { ProjectPunchList } from '@/components/project/tabs/ProjectPunchList';
 import { ProjectCostCodes } from '@/components/project/tabs/ProjectCostCodes';
 import ProjectCloseoutTab from '@/components/project/ProjectCloseoutTab';
+import { ProjectPhotos } from '@/components/project/tabs/ProjectPhotos';
 import ProjectActivationPrompt from '@/components/project/ProjectActivationPrompt';
 import { DashboardActivityFeed } from '@/components/activity/DashboardActivityFeed';
 import { Building2, Calendar, DollarSign, MapPin, TrendingUp, CheckCircle2, Clock, FileText, Receipt, MessageSquare, FolderOpen } from 'lucide-react';
@@ -443,6 +444,10 @@ export const ProjectContent: React.FC<ProjectContentProps> = ({
     <ProjectCostCodes projectId={project.id} />
   );
 
+  const renderPhotos = () => (
+    <ProjectPhotos projectId={project.id} />
+  );
+
   const renderCloseout = () => (
     <ProjectCloseoutTab projectId={project.id} />
   );
@@ -457,6 +462,7 @@ export const ProjectContent: React.FC<ProjectContentProps> = ({
     progress: renderProgress,
     tasks: renderTasks,
     dailyreports: renderDailyReports,
+    photos: renderPhotos,
     materials: renderMaterials,
     procurement: renderProcurement,
     equipment: renderEquipment,

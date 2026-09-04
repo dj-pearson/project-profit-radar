@@ -4,7 +4,7 @@
  * NEW: Enterprise Finance Module - Chart of Accounts, GL, AP/AR, Bank Reconciliation
  */
 
-import { Route } from 'react-router-dom';
+import { Navigate, Route } from 'react-router-dom';
 import { RouteGuard } from '@/components/ProtectedRoute';
 import {
   createLazyRoute,
@@ -18,7 +18,6 @@ import {
   LazyVendors,
   LazyQuickBooksRouting,
   LazyQuickBooksCallback,
-  LazyFinancialOverview,
 } from '@/utils/lazyRoutes';
 
 // Enterprise Finance Module - Lazy loaded with ErrorBoundary + Suspense
@@ -44,11 +43,15 @@ export const financialRoutes = (
     {/* Financial Dashboard */}
     <Route path="/financial" element={<RouteGuard><LazyFinancialDashboard /></RouteGuard>} />
 
-    {/* Company-Wide Financial Overview */}
-    <Route path="/financial-overview" element={<RouteGuard><LazyFinancialOverview /></RouteGuard>} />
-
-    {/* Enterprise Finance Hub */}
-    <Route path="/finance-hub" element={<RouteGuard><FinanceHub /></RouteGuard>} />
+    {/* Five financial landing pages competed for the same job (US-331).
+        /financial-overview was linked from nothing at all, and /finance-hub
+        duplicated /finance/hub exactly. Both redirect now rather than 404, so
+        an old bookmark still lands somewhere real. /financial and
+        /executive-dashboard are left alone deliberately: they have 12 and 1
+        inbound links and are distinct pages, so collapsing them is a product
+        decision rather than a routing cleanup. */}
+    <Route path="/financial-overview" element={<Navigate to="/financial-hub" replace />} />
+    <Route path="/finance-hub" element={<Navigate to="/finance/hub" replace />} />
     <Route path="/finance/hub" element={<RouteGuard><FinanceHub /></RouteGuard>} />
 
     {/* Chart of Accounts */}

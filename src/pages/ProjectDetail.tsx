@@ -8,6 +8,7 @@ import { projectService, ProjectWithRelations } from '@/services/projectService'
 import { ContextualActions } from '@/components/navigation/ContextualActions';
 import { AIProjectInsights } from '@/components/ai/AIProjectInsights';
 import { ProjectSubSidebar } from '@/components/project/ProjectSubSidebar';
+import { projectTabBarSections } from '@/components/project/projectSections';
 import { ProjectContent } from '@/components/project/ProjectContent';
 import { ProjectHealthBadge } from '@/components/projects/ProjectHealthBadge';
 import { FavoriteStar } from '@/components/navigation/FavoriteStar';
@@ -19,24 +20,17 @@ import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { ArrowLeft, User, Edit, Menu, Home, Building2, DollarSign, Users, Settings, FileText, Calendar, FolderOpen, Receipt, MapPin, Hash, Package, ClipboardList } from 'lucide-react';
+import { ArrowLeft, User, Edit, Menu, Home, Building2, DollarSign, Users, Settings, Calendar, MapPin } from 'lucide-react';
 import { ProjectStatusControl } from '@/components/project/ProjectStatusControl';
 import { AccessiblePageWrapper } from "@/components/accessibility/AccessiblePageWrapper";
 import { cn } from '@/lib/utils';
 
 // Tab definitions for the horizontal tab bar
-const projectTabs = [
-  { id: 'overview', label: 'Overview', icon: Home },
-  { id: 'estimates', label: 'Financials', icon: DollarSign },
-  { id: 'progress', label: 'Schedule', icon: Calendar },
-  { id: 'documents', label: 'Documents', icon: FolderOpen },
-  { id: 'tasks', label: 'Team', icon: Users },
-  { id: 'dailyreports', label: 'Daily Reports', icon: FileText },
-  { id: 'changeorders', label: 'Change Orders', icon: Receipt },
-  { id: 'procurement', label: 'Materials', icon: Package },
-  { id: 'costcodes', label: 'Cost Codes', icon: Hash },
-  { id: 'closeout', label: 'Closeout', icon: ClipboardList },
-];
+// The tab bar is a subset of PROJECT_SECTIONS, drawn from the same list as
+// the sub-sidebar (US-331). It used to be its own array of ten, three of them
+// captioned against a different section than they opened: 'estimates' said
+// "Financials", 'tasks' said "Team".
+const projectTabs = projectTabBarSections();
 
 const ProjectDetail = () => {
   const { projectId } = useParams<{ projectId: string }>();

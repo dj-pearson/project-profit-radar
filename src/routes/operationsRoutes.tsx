@@ -27,7 +27,6 @@ const CalendarSync = createLazyRoute(() => import('@/pages/CalendarSync'));
 const ProjectCalendar = createLazyRoute(() => import('@/pages/ProjectCalendar'));
 const EquipmentManagement = createLazyRoute(() => import('@/pages/EquipmentManagement'));
 const EquipmentQRLabels = createLazyRoute(() => import('@/pages/EquipmentQRLabels'));
-const AutomatedWorkflows = createLazyRoute(() => import('@/pages/AutomatedWorkflows'));
 
 // Advanced Features - Lazy loaded with ErrorBoundary + Suspense
 const SmartClientUpdatesPage = createLazyRoute(() => import('@/pages/SmartClientUpdatesPage'));
@@ -56,7 +55,11 @@ export const operationsRoutes = (
     <Route path="/project-calendar" element={<RouteGuard><ProjectCalendar /></RouteGuard>} />
     <Route path="/equipment-management" element={<RouteGuard><EquipmentManagement /></RouteGuard>} />
     <Route path="/equipment-qr-labels" element={<RouteGuard><EquipmentQRLabels /></RouteGuard>} />
-    <Route path="/workflows" element={<RouteGuard><AutomatedWorkflows /></RouteGuard>} />
+    {/* /workflows is declared in appRoutes.tsx, which wins, and points at
+        WorkflowAutomation - the one that reads the database. The declaration
+        that used to sit here pointed at a 504-line page with zero Supabase
+        calls and never rendered, so the sidebar's "Automated Workflows" item
+        has always opened the real page. Removed with that page (US-331). */}
 
     {/* Advanced Operations */}
     <Route path="/smart-client-updates" element={<RouteGuard><SmartClientUpdatesPage /></RouteGuard>} />

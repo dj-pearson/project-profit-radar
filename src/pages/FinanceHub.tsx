@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
-import { BookOpen, FileText, Receipt, CreditCard, TrendingUp, PieChart, DollarSign, Building2, Calculator, ClipboardList, Landmark, ArrowRightLeft, BarChart3, FileBarChart, Wallet } from 'lucide-react';
+import { BookOpen, FileText, Receipt, CreditCard, TrendingUp, PieChart, DollarSign, Building2, Calculator, ClipboardList, Landmark, ArrowRightLeft, BarChart3, Wallet } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 
@@ -83,36 +83,6 @@ export default function FinanceHub() {
       bgColor: 'bg-green-50',
       route: '/invoices',
       category: 'receivables',
-    },
-    {
-      id: 'credit-memos',
-      title: 'Credit Memos',
-      description: 'Issue credits and refunds to customers',
-      icon: FileBarChart,
-      color: 'text-teal-600',
-      bgColor: 'bg-teal-50',
-      route: '/finance/credit-memos',
-      category: 'receivables',
-    },
-    {
-      id: 'bank-reconciliation',
-      title: 'Bank Reconciliation',
-      description: 'Reconcile bank accounts and match transactions',
-      icon: Landmark,
-      color: 'text-cyan-600',
-      bgColor: 'bg-cyan-50',
-      route: '/finance/bank-reconciliation',
-      category: 'banking',
-    },
-    {
-      id: 'bank-accounts',
-      title: 'Bank Accounts',
-      description: 'Manage bank account connections and balances',
-      icon: Building2,
-      color: 'text-sky-600',
-      bgColor: 'bg-sky-50',
-      route: '/finance/bank-accounts',
-      category: 'banking',
     },
     {
       id: 'balance-sheet',
