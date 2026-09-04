@@ -221,6 +221,9 @@ jobs:
       - name: Tier definition is generated, not copied (US-335)
         run: node scripts/generate-tiers.mjs --check
 
+      - name: PostgREST embeds name a real foreign key (US-336)
+        run: node scripts/check-embed-constraints.mjs
+
       - name: Dead-link guard (US-312)
         run: node scripts/check-dead-links.mjs
 

@@ -100,6 +100,11 @@ node scripts/check-customer-links.mjs || exit 1
 # is how a customer gets billed for one thing and given another.
 node scripts/generate-tiers.mjs --check || exit 1
 
+# An embed must name a foreign key that relates its two tables (US-336).
+# PostgREST returns an error otherwise, and a caller that throws on error
+# fails outright - which is how task comments and timesheet approval broke.
+node scripts/check-embed-constraints.mjs || exit 1
+
 # 3t. Dead links (US-312) — react-router's catch-all turns a link to a path no
 #     route answers into the 404 page, silently.
 node scripts/check-dead-links.mjs || exit 1
