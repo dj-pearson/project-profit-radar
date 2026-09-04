@@ -12,7 +12,7 @@ import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'node:fs';
 import {
   totalsByAccount, withinPeriod, profitAndLoss, balanceSheet, trialBalance,
-  fiscalYearStartFor, type LedgerActivityRow, type AccountType,
+  fiscalYearStartFor, hasSubtype, type LedgerActivityRow, type AccountType,
 } from '../ledgerReporting';
 
 const strip = (path: string) =>
@@ -346,5 +346,29 @@ describe('the subsection breakdowns keep working (US-334)', () => {
           .toMatch(/const calculateTotal =/);
       }
     }
+  });
+});
+
+describe('subtype grouping is null-safe (US-334)', () => {
+  it('matches a named subtype', () => {
+    expect(hasSubtype({ account_subtype: 'cash' }, 'cash', 'bank')).toBe(true);
+    expect(hasSubtype({ account_subtype: 'bank' }, 'cash', 'bank')).toBe(true);
+  });
+
+  it('excludes an account with no subtype rather than throwing', () => {
+    // An account created without a subtype is real; it just belongs to no
+    // subsection. Passing null straight to Array.includes was a type error
+    // that the build did not report.
+    expect(hasSubtype({ account_subtype: null }, 'cash', 'bank')).toBe(false);
+  });
+
+  it('excludes a subtype that is not in the list', () => {
+    expect(hasSubtype({ account_subtype: 'fixed_asset' }, 'cash', 'bank')).toBe(false);
+  });
+
+  it('is what the balance sheet groups with', () => {
+    const src = strip('src/pages/BalanceSheet.tsx');
+    expect(src).toMatch(/hasSubtype\(a, 'cash', 'bank'/);
+    expect(src).not.toMatch(/\]\.includes\(a\.account_subtype\)/);
   });
 });

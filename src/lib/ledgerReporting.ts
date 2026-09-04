@@ -88,6 +88,18 @@ export function totalsByAccount(
     a.account_number.localeCompare(b.account_number));
 }
 
+/**
+ * Is this account one of the named subtypes?
+ *
+ * account_subtype is nullable - an account created without one is real, it
+ * just belongs to no subsection - so the statements need a guard rather than
+ * passing a possible null to Array.includes.
+ */
+export const hasSubtype = (
+  account: { account_subtype: string | null },
+  ...subtypes: string[]
+): boolean => account.account_subtype != null && subtypes.includes(account.account_subtype);
+
 const sumOf = (totals: AccountTotal[], ...types: AccountType[]) =>
   round2(totals
     .filter((t) => types.includes(t.account_type))

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLedgerActivity, useLedgerPostingEnabled } from '@/hooks/useAccounting';
-import { balanceSheet, fiscalYearStartFor, type LedgerActivityRow } from '@/lib/ledgerReporting';
+import { balanceSheet, fiscalYearStartFor, hasSubtype, type LedgerActivityRow } from '@/lib/ledgerReporting';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
@@ -56,10 +56,10 @@ export default function BalanceSheet() {
 
   // Group assets by subtype
   const currentAssets = assetAccounts.filter(a =>
-    ['cash', 'bank', 'accounts_receivable', 'other_current_asset'].includes(a.account_subtype)
+    hasSubtype(a, 'cash', 'bank', 'accounts_receivable', 'other_current_asset')
   );
   const fixedAssets = assetAccounts.filter(a =>
-    ['fixed_asset', 'accumulated_depreciation'].includes(a.account_subtype)
+    hasSubtype(a, 'fixed_asset', 'accumulated_depreciation')
   );
   const otherAssets = assetAccounts.filter(a =>
     a.account_subtype === 'other_asset'
@@ -67,7 +67,7 @@ export default function BalanceSheet() {
 
   // Group liabilities by subtype
   const currentLiabilities = liabilityAccounts.filter(a =>
-    ['accounts_payable', 'credit_card', 'other_current_liability'].includes(a.account_subtype)
+    hasSubtype(a, 'accounts_payable', 'credit_card', 'other_current_liability')
   );
   const longTermLiabilities = liabilityAccounts.filter(a =>
     a.account_subtype === 'long_term_liability'
