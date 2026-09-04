@@ -5,19 +5,20 @@
 // server-side gate for plan limits and must be called before creating a gated
 // resource in an edge function.
 //
-// IMPORTANT: TIER_LIMITS mirrors src/contexts/SubscriptionContext.tsx — keep the
-// two in sync (or move both to a shared source) when limits change.
+// TIER_LIMITS used to be declared here AND in src/contexts/SubscriptionContext.tsx,
+// with a comment asking whoever changed one to remember the other. A comment is
+// not a mechanism (US-335). Both now come from tiers.ts, which the web client
+// gets as a generated copy.
+import {
+  TIER_LIMITS, TIER_DISPLAY_NAMES, TIER_ORDER, FEATURE_MIN_TIER,
+  tierAllowsFeature, tierRequiredFor, limitsFor, tierRank,
+  type TierLimits, type TierName,
+} from "./tiers.ts";
 
-export interface TierLimits {
-  teamMembers: number; // -1 = unlimited
-  projects: number; // -1 = unlimited
-  storage: number; // GB, -1 = unlimited
-}
-
-export const TIER_LIMITS: Record<string, TierLimits> = {
-  starter: { teamMembers: 5, projects: 10, storage: 10 },
-  professional: { teamMembers: 20, projects: 50, storage: 100 },
-  enterprise: { teamMembers: -1, projects: -1, storage: -1 },
+export {
+  TIER_LIMITS, TIER_DISPLAY_NAMES, TIER_ORDER, FEATURE_MIN_TIER,
+  tierAllowsFeature, tierRequiredFor, limitsFor, tierRank,
+  type TierLimits, type TierName,
 };
 
 export type EntitlementResource = keyof TierLimits;
@@ -128,5 +129,55 @@ export async function checkEntitlement(
   } catch (_err) {
     // Never block legitimate work because the check itself failed.
     return UNLIMITED("unknown");
+  }
+}
+
+/**
+ * Is this company's plan allowed to use this feature? (US-335)
+ *
+ * canAccessFeature on the client returned true for any trial, complimentary or
+ * subscribed company, so no feature was tier-gated anywhere - the Pricing page
+ * sold QuickBooks sync as Professional and API access as Enterprise, and a
+ * Starter account had both.
+ *
+ * Server-side, because the client gate is bypassable by calling the API
+ * directly, which is the whole reason this module exists.
+ *
+ * Fails OPEN on an error, like checkEntitlement above: never block legitimate
+ * work because the check itself broke. It fails CLOSED on an unrecognised tier,
+ * because that withholds a paid feature rather than handing one out.
+ */
+export async function checkFeature(
+  // deno-lint-ignore no-explicit-any
+  supabase: any,
+  companyId: string,
+  feature: string,
+): Promise<{ allowed: boolean; tier: string; requiredTier: string | null; reason?: string }> {
+  const required = tierRequiredFor(feature);
+  if (!required) return { allowed: true, tier: "unknown", requiredTier: null };
+
+  try {
+    const { data, error } = await supabase
+      .from("companies")
+      .select("subscription_tier, subscription_status")
+      .eq("id", companyId)
+      .maybeSingle();
+
+    if (error || !data) return { allowed: true, tier: "unknown", requiredTier: required };
+
+    const tier = String(data.subscription_tier ?? "starter");
+    const allowed = tierAllowsFeature(tier, feature);
+
+    return {
+      allowed,
+      tier,
+      requiredTier: required,
+      reason: allowed
+        ? undefined
+        : `${feature} is included with ${TIER_DISPLAY_NAMES[required]} and above. ` +
+          `This company is on ${TIER_DISPLAY_NAMES[tier as TierName] ?? tier}.`,
+    };
+  } catch (_err) {
+    return { allowed: true, tier: "unknown", requiredTier: required };
   }
 }

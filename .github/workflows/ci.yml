@@ -218,6 +218,9 @@ jobs:
       - name: Customer-link guard (US-326)
         run: node scripts/check-customer-links.mjs
 
+      - name: Tier definition is generated, not copied (US-335)
+        run: node scripts/generate-tiers.mjs --check
+
       - name: Dead-link guard (US-312)
         run: node scripts/check-dead-links.mjs
 

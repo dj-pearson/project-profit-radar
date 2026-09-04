@@ -96,6 +96,10 @@ node scripts/check-table-definitions.mjs || exit 1
 # exists twice and a corrected phone number has to be fixed in both places.
 node scripts/check-customer-links.mjs || exit 1
 
+# One definition of what a plan includes (US-335). Two hand-maintained copies
+# is how a customer gets billed for one thing and given another.
+node scripts/generate-tiers.mjs --check || exit 1
+
 # 3t. Dead links (US-312) — react-router's catch-all turns a link to a path no
 #     route answers into the 404 page, silently.
 node scripts/check-dead-links.mjs || exit 1
