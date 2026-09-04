@@ -659,3 +659,56 @@ export default {
   useBankTransactions,
   useTrialBalance,
 };
+
+// =====================================================
+// LEDGER ACTIVITY (US-334)
+// =====================================================
+
+/**
+ * Posted ledger movement, per account per day.
+ *
+ * The statements used to sum chart_of_accounts.current_balance, a running
+ * total with no date on it, so their date-range inputs were never used in any
+ * query and a P&L for March returned the same figures as one for last year.
+ * This is what a statement for a period should read.
+ *
+ * Fetched for a wide window rather than the exact range because a balance
+ * sheet needs everything up to its as-at date and a P&L needs only the period;
+ * both come from the same rows, filtered in ledgerReporting.
+ */
+export function useLedgerActivity(companyId?: string, throughDate?: string) {
+  return useQuery({
+    queryKey: ['ledger-activity', companyId, throughDate],
+    queryFn: async () => {
+      let query = supabase
+        .from('ledger_account_activity')
+        .select('account_id, account_number, account_name, account_type, normal_balance, entry_date, net_change')
+        .eq('company_id', companyId as string)
+        .order('account_number');
+
+      if (throughDate) query = query.lte('entry_date', throughDate);
+
+      const { data, error } = await query;
+      if (error) throw error;
+      return data ?? [];
+    },
+    enabled: !!companyId,
+  });
+}
+
+/** Whether this company has Brikly keeping its books, or QuickBooks (US-334). */
+export function useLedgerPostingEnabled(companyId?: string) {
+  return useQuery({
+    queryKey: ['ledger-posting-enabled', companyId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('company_settings')
+        .select('auto_post_to_ledger')
+        .eq('company_id', companyId as string)
+        .maybeSingle();
+      if (error) throw error;
+      return Boolean(data?.auto_post_to_ledger);
+    },
+    enabled: !!companyId,
+  });
+}

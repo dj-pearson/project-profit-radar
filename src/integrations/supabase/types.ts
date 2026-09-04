@@ -7429,6 +7429,7 @@ export type Database = {
           estimate_terms: string | null
           invoice_terms: string | null
           change_order_terms: string | null
+          auto_post_to_ledger: boolean
         }
         Insert: {
           additional_settings?: Json | null
@@ -39794,6 +39795,23 @@ export type Database = {
         }
         Relationships: []
       }
+      ledger_account_activity: {
+        Row: {
+          company_id: string | null
+          account_id: string | null
+          account_number: string | null
+          account_name: string | null
+          account_type: Database["public"]["Enums"]["account_type"] | null
+          account_subtype: Database["public"]["Enums"]["account_subtype"] | null
+          normal_balance: string | null
+          entry_date: string | null
+          project_id: string | null
+          debits: number | null
+          credits: number | null
+          net_change: number | null
+        }
+        Relationships: []
+      }
       project_unbilled_work: {
         Row: {
           source_type: string | null
@@ -40741,6 +40759,10 @@ export type Database = {
           p_override_reason?: string | null
         }
         Returns: string
+      }
+      backfill_ledger: {
+        Args: { p_company_id: string; p_from_date?: string }
+        Returns: { source: string; posted: number; skipped: number }[]
       }
       next_document_number: {
         Args: { p_company_id: string; p_doc_type: string }
