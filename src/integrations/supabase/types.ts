@@ -7420,6 +7420,15 @@ export type Database = {
           safety_alerts: boolean
           time_zone: string
           updated_at: string
+          default_tax_rate: number
+          default_payment_terms_days: number
+          license_number: string | null
+          insurance_carrier: string | null
+          insurance_policy_number: string | null
+          insurance_expires_on: string | null
+          estimate_terms: string | null
+          invoice_terms: string | null
+          change_order_terms: string | null
         }
         Insert: {
           additional_settings?: Json | null
@@ -39577,6 +39586,75 @@ export type Database = {
         }
         Relationships: []
       }
+      tax_rates: {
+        Row: {
+          id: string
+          company_id: string
+          name: string
+          rate: number
+          applies_to: string
+          is_default: boolean
+          is_active: boolean
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          company_id: string
+          name: string
+          rate?: number
+          applies_to?: string
+          is_default?: boolean
+          is_active?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          company_id?: string
+          name?: string
+          rate?: number
+          applies_to?: string
+          is_default?: boolean
+          is_active?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      document_number_settings: {
+        Row: {
+          company_id: string
+          doc_type: string
+          prefix: string
+          include_year: boolean
+          pad_width: number
+          next_number: number
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          company_id: string
+          doc_type: string
+          prefix?: string
+          include_year?: boolean
+          pad_width?: number
+          next_number?: number
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          company_id?: string
+          doc_type?: string
+          prefix?: string
+          include_year?: boolean
+          pad_width?: number
+          next_number?: number
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       customer_activity: {
@@ -40594,6 +40672,10 @@ export type Database = {
           p_status: string
           p_override_reason?: string | null
         }
+        Returns: string
+      }
+      next_document_number: {
+        Args: { p_company_id: string; p_doc_type: string }
         Returns: string
       }
       sync_daily_report_crew: {
