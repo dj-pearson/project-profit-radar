@@ -157,14 +157,24 @@ describe('a photo is a record, not a string (US-330)', () => {
     expect(page).toMatch(/logger\.error\('Daily report saved but its photos were not recorded'/);
   });
 
-  it('names the foreign key when embedding the crew member', () => {
-    // There is no inferable relation between time_entries and user_profiles,
-    // so a bare embed returns a SelectQueryError at runtime and the panel
-    // shows no timesheet at all. The build does not catch it; a completed
-    // typecheck does, which is how this was found.
+  it('does not embed user_profiles on time_entries at all', () => {
+    // There is no foreign key between them. No migration creates one, and the
+    // generated types list only the cost_code, geofence and project
+    // constraints on time_entries, so BOTH the bare embed and the
+    // named-constraint hint return a SelectQueryError instead of rows - the
+    // panel would show no timesheet, which is the reconciliation this whole
+    // story exists for. The names are fetched separately.
     const panel = strip('src/components/daily-reports/DailyReportCrewPanel.tsx');
-    expect(panel).toMatch(/user_profiles!time_entries_user_id_fkey\(/);
-    expect(panel).not.toMatch(/[^!]user_profiles\(first_name/);
+    expect(panel).not.toMatch(/user_profiles[!(]/);
+    expect(panel).toMatch(/from\('user_profiles'\)[\s\S]{0,120}\.in\('id', userIds\)/);
+  });
+
+  it('still shows the hours when the names cannot be loaded', () => {
+    const panel = strip('src/components/daily-reports/DailyReportCrewPanel.tsx');
+    const block = panel.slice(panel.indexOf('const people = new Map'));
+    // Logged, not thrown: a failure here costs the names, not the comparison.
+    expect(block.slice(0, block.indexOf('setTimesheet'))).toMatch(/logger\.error/);
+    expect(block.slice(0, block.indexOf('setTimesheet'))).not.toMatch(/throw /);
   });
 
   it('counts photos from the table, not the array', () => {

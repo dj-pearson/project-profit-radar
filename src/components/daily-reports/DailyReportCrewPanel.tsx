@@ -63,13 +63,14 @@ export function DailyReportCrewPanel({
           .select('id, user_id, crew_member_name, role, hours_worked, overtime_hours')
           .eq('daily_report_id', dailyReportId)
           .order('crew_member_name'),
+        // No embed. time_entries.user_id has no foreign key to user_profiles -
+        // no migration creates one, and the generated types list only the
+        // cost_code, geofence and project constraints - so both the bare embed
+        // and the named-constraint hint return a SelectQueryError rather than
+        // rows. The names are fetched separately below.
         supabase
           .from('time_entries')
-          // The FK has to be named. There is no inferable relation between
-          // time_entries and user_profiles, so the bare embed returns a
-          // SelectQueryError at runtime and this panel shows no timesheet at
-          // all. useTimesheetApproval.ts already uses this hint.
-          .select('user_id, total_hours, user_profiles!time_entries_user_id_fkey(first_name, last_name, role)')
+          .select('user_id, total_hours')
           .eq('project_id', projectId)
           .gte('start_time', `${reportDate}T00:00:00`)
           .lte('start_time', `${reportDate}T23:59:59`),
@@ -85,16 +86,32 @@ export function DailyReportCrewPanel({
     }
 
     setItems((crew || []) as CrewItem[]);
-    setTimesheet(((entries || []) as Array<{
-      user_id: string;
-      total_hours: number | null;
-      user_profiles?: { first_name: string | null; last_name: string | null; role: string | null } | null;
-    }>).map((e) => ({
+
+    const rows = (entries || []) as Array<{ user_id: string; total_hours: number | null }>;
+    const userIds = [...new Set(rows.map((r) => r.user_id).filter(Boolean))];
+
+    // One extra query rather than an embed that cannot resolve. A failure here
+    // costs the names, not the hours, so the reconciliation still works.
+    const people = new Map<string, { first_name: string | null; last_name: string | null; role: string | null }>();
+    if (userIds.length > 0) {
+      const { data: profiles, error: profileError } = await supabase
+        .from('user_profiles')
+        .select('id, first_name, last_name, role')
+        .in('id', userIds);
+      if (profileError) {
+        logger.error('Could not load crew names for the timesheet comparison', profileError);
+      }
+      for (const p of profiles || []) {
+        people.set(p.id, { first_name: p.first_name, last_name: p.last_name, role: p.role });
+      }
+    }
+
+    setTimesheet(rows.map((e) => ({
       user_id: e.user_id,
       total_hours: e.total_hours,
-      first_name: e.user_profiles?.first_name,
-      last_name: e.user_profiles?.last_name,
-      role: e.user_profiles?.role,
+      first_name: people.get(e.user_id)?.first_name,
+      last_name: people.get(e.user_id)?.last_name,
+      role: people.get(e.user_id)?.role,
     })));
     setLoading(false);
   }, [dailyReportId, projectId, reportDate, toast]);
