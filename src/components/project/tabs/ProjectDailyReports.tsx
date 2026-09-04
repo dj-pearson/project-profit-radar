@@ -68,9 +68,9 @@ export const ProjectDailyReports: React.FC<ProjectDailyReportsProps> = ({
 
       if (error) throw error;
 
-      const withCounts = (data || []).map((r: DailyReport & {
-        photo_attachments?: Array<{ count: number }>;
-      }) => ({
+      const withCounts = ((data || []) as unknown as Array<
+        DailyReport & { photo_attachments?: Array<{ count: number }> }
+      >).map((r) => ({
         ...r,
         photo_count: r.photo_attachments?.[0]?.count ?? 0,
       }));

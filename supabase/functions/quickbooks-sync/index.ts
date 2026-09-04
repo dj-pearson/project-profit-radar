@@ -4,6 +4,9 @@ import { initializeAuthContext, errorResponse } from '../_shared/auth-helpers.ts
 import { getCorsHeaders } from '../_shared/secure-cors.ts';
 import { fetchQuickBooksData } from '../_shared/quickbooks-paging.ts';
 import { captureException } from '../_shared/observability.ts';
+import {
+  mapPurchase, mapPayment, type MappingContext,
+} from '../_shared/quickbooks-mapping.ts';
 
 interface QuickBooksAPIResponse {
   QueryResponse?: {
@@ -179,6 +182,10 @@ serve(async (req) => {
         ? 'https://quickbooks.api.intuit.com'
         : 'https://sandbox-quickbooks.api.intuit.com'
 
+      // Everything the mapper needs to resolve a QuickBooks reference to a
+      // Brikly row, fetched once rather than per imported record (US-333).
+      const mappingContext = await buildMappingContext(supabaseClient, company_id)
+
       // Sync Customers from QuickBooks to our system
       try {
         const fetched = await fetchQuickBooksData(baseUrl, integration.realm_id, accessToken, 'Customer')
@@ -220,7 +227,7 @@ serve(async (req) => {
         throttleRetries += fetched.throttleRetries
         if (fetched.truncated) truncatedEntities.push('Purchase')
         for (const purchase of fetched.rows) {
-          await syncExpense(supabaseClient, company_id, purchase)
+          await syncExpense(supabaseClient, company_id, purchase, mappingContext)
           recordsProcessed.expenses++
         }
       } catch (error) {
@@ -237,7 +244,7 @@ serve(async (req) => {
         throttleRetries += fetched.throttleRetries
         if (fetched.truncated) truncatedEntities.push('Payment')
         for (const payment of fetched.rows) {
-          await syncPayment(supabaseClient, company_id, payment)
+          await syncPayment(supabaseClient, company_id, payment, mappingContext)
           recordsProcessed.payments++
         }
       } catch (error) {
@@ -425,54 +432,155 @@ async function getLocalInvoicesForSync(supabaseClient: any, companyId: string, s
   return data || []
 }
 
-async function syncExpense(supabaseClient: any, companyId: string, qbPurchase: any) {
-  // Sync expense/purchase data from QuickBooks to our system
-  const expenseData = {
-    qb_expense_id: qbPurchase.Id,
-    company_id: companyId,
-    vendor_name: qbPurchase.EntityRef?.name || 'Unknown Vendor',
-    amount: qbPurchase.TotalAmt || 0,
-    date: qbPurchase.TxnDate,
-    payment_type: qbPurchase.PaymentType || 'other',
-    account_name: qbPurchase.AccountRef?.name,
-    memo: qbPurchase.PrivateNote,
-    category: qbPurchase.Line?.[0]?.AccountBasedExpenseLineDetail?.AccountRef?.name || 'Uncategorized',
-    qb_sync_token: qbPurchase.SyncToken,
-    last_synced_at: new Date().toISOString()
+/**
+ * The lookups the mapper needs, fetched once per sync run (US-333).
+ *
+ * Per-record lookups would be one round trip per imported row, and US-252 made
+ * these syncs paginate through everything a company has.
+ */
+async function buildMappingContext(
+  supabaseClient: any,
+  companyId: string,
+): Promise<MappingContext> {
+  const [projects, costCodes, invoices] = await Promise.all([
+    supabaseClient.from('projects').select('id, name').eq('company_id', companyId),
+    supabaseClient.from('cost_codes').select('id, code, name').eq('company_id', companyId),
+    supabaseClient.from('invoices')
+      .select('id, invoice_number, amount_due, qb_invoice_id')
+      .eq('company_id', companyId),
+  ])
+
+  const failure = [projects, costCodes, invoices].find((r: any) => r.error)
+  if (failure?.error) {
+    throw new Error(`Could not build the QuickBooks mapping context: ${failure.error.message}`)
   }
 
+  const projectsByName = new Map<string, string>()
+  for (const p of projects.data ?? []) {
+    if (p.name) projectsByName.set(String(p.name).trim().toLowerCase(), p.id)
+  }
+
+  // Both the code and the name, because QuickBooks accounts are named either
+  // way depending on how the bookkeeper set the chart of accounts up.
+  const costCodesByName = new Map<string, string>()
+  for (const c of costCodes.data ?? []) {
+    if (c.code) costCodesByName.set(String(c.code).trim().toLowerCase(), c.id)
+    if (c.name) costCodesByName.set(String(c.name).trim().toLowerCase(), c.id)
+  }
+
+  const invoicesByNumber = new Map<string, { id: string; amountDue: number }>()
+  const invoicesByQbId = new Map<string, { id: string; amountDue: number }>()
+  for (const i of invoices.data ?? []) {
+    const entry = { id: i.id, amountDue: Number(i.amount_due) || 0 }
+    if (i.invoice_number) invoicesByNumber.set(String(i.invoice_number).trim(), entry)
+    if (i.qb_invoice_id) invoicesByQbId.set(String(i.qb_invoice_id), entry)
+  }
+
+  return { companyId, projectsByName, costCodesByName, invoicesByNumber, invoicesByQbId }
+}
+
+async function syncExpense(
+  supabaseClient: any,
+  companyId: string,
+  qbPurchase: any,
+  ctx: MappingContext,
+) {
+  // Was: upsert into quickbooks_expenses, a table read by no file in src/ and
+  // absent from types.ts. A contractor was told their expenses synced and their
+  // job costing did not move (US-333).
+  const mapped = mapPurchase(qbPurchase, ctx)
+
+  if (mapped.kind === 'unmatched') {
+    await queueForReview(supabaseClient, companyId, mapped)
+    return { imported: false }
+  }
+
+  // Idempotent on the QuickBooks id, so a second run updates rather than
+  // importing the same cost twice.
   const { error } = await supabaseClient
-    .from('quickbooks_expenses')
-    .upsert(expenseData, { onConflict: 'qb_expense_id,company_id' })
+    .from('expenses')
+    .upsert(
+      { ...mapped.row, qb_purchase_id: mapped.qbId },
+      { onConflict: 'company_id,qb_purchase_id' },
+    )
 
   if (error) {
-    throw new Error(`quickbooks_expenses upsert failed: ${error.message}`)
+    throw new Error(`expenses upsert failed for QuickBooks purchase ${mapped.qbId}: ${error.message}`)
+  }
+
+  // Imported, but nobody knows which job it belongs to. It is a real cost and
+  // belongs in the expense list; the queue is how it gets assigned.
+  if (mapped.projectMatch === 'none') {
+    await queueForReview(supabaseClient, companyId, {
+      kind: 'unmatched',
+      qbId: mapped.qbId,
+      entity: 'purchase',
+      reason: 'Imported, but no project matched the QuickBooks customer or job',
+      amount: mapped.row.amount,
+      occurredOn: mapped.row.expense_date,
+      counterparty: mapped.row.vendor_name,
+      raw: qbPurchase,
+    })
+  }
+
+  return { imported: true }
+}
+
+async function queueForReview(
+  supabaseClient: any,
+  companyId: string,
+  item: { qbId: string; entity: string; reason: string; amount: number; occurredOn: string | null; counterparty: string | null; raw: unknown },
+) {
+  const { error } = await supabaseClient
+    .from('quickbooks_sync_review')
+    .upsert({
+      company_id: companyId,
+      entity: item.entity,
+      qb_id: item.qbId,
+      reason: item.reason,
+      amount: item.amount,
+      occurred_on: item.occurredOn,
+      counterparty: item.counterparty,
+      raw: item.raw,
+      last_seen_at: new Date().toISOString(),
+    }, { onConflict: 'company_id,entity,qb_id' })
+
+  if (error) {
+    // Not fatal to the run, but never silent: an unread failure here is how a
+    // row goes missing in both directions at once.
+    console.error(`quickbooks_sync_review upsert failed for ${item.entity} ${item.qbId}: ${error.message}`)
   }
 }
 
-async function syncPayment(supabaseClient: any, companyId: string, qbPayment: any) {
-  // Sync payment data from QuickBooks to our system
-  const paymentData = {
-    qb_payment_id: qbPayment.Id,
-    company_id: companyId,
-    customer_name: qbPayment.CustomerRef?.name || 'Unknown Customer',
-    amount: qbPayment.TotalAmt || 0,
-    date: qbPayment.TxnDate,
-    payment_method: qbPayment.PaymentMethodRef?.name || 'other',
-    reference_number: qbPayment.PaymentRefNum,
-    memo: qbPayment.PrivateNote,
-    deposit_to_account: qbPayment.DepositToAccountRef?.name,
-    qb_sync_token: qbPayment.SyncToken,
-    last_synced_at: new Date().toISOString()
+async function syncPayment(
+  supabaseClient: any,
+  companyId: string,
+  qbPayment: any,
+  ctx: MappingContext,
+) {
+  // Was: upsert into quickbooks_payments, read by nothing. Unlike an expense, a
+  // payment with no invoice is NOT imported: a payment row pointing at the
+  // wrong invoice marks it paid, and an AR list that says a customer has paid
+  // when they have not is worse than one missing a row (US-333).
+  const mapped = mapPayment(qbPayment, ctx)
+
+  if (mapped.kind === 'unmatched') {
+    await queueForReview(supabaseClient, companyId, mapped)
+    return { imported: false }
   }
 
   const { error } = await supabaseClient
-    .from('quickbooks_payments')
-    .upsert(paymentData, { onConflict: 'qb_payment_id,company_id' })
+    .from('invoice_payments')
+    .upsert(
+      { ...mapped.row, qb_payment_id: mapped.qbId },
+      { onConflict: 'company_id,qb_payment_id' },
+    )
 
   if (error) {
-    throw new Error(`quickbooks_payments upsert failed: ${error.message}`)
+    throw new Error(`invoice_payments upsert failed for QuickBooks payment ${mapped.qbId}: ${error.message}`)
   }
+
+  return { imported: true }
 }
 
 /**

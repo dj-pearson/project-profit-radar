@@ -65,7 +65,11 @@ export function DailyReportCrewPanel({
           .order('crew_member_name'),
         supabase
           .from('time_entries')
-          .select('user_id, total_hours, user_profiles(first_name, last_name, role)')
+          // The FK has to be named. There is no inferable relation between
+          // time_entries and user_profiles, so the bare embed returns a
+          // SelectQueryError at runtime and this panel shows no timesheet at
+          // all. useTimesheetApproval.ts already uses this hint.
+          .select('user_id, total_hours, user_profiles!time_entries_user_id_fkey(first_name, last_name, role)')
           .eq('project_id', projectId)
           .gte('start_time', `${reportDate}T00:00:00`)
           .lte('start_time', `${reportDate}T23:59:59`),

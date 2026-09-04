@@ -14316,6 +14316,7 @@ export type Database = {
           vendor_contact: string | null
           vendor_name: string | null
           billed_invoice_id: string | null
+          qb_purchase_id: string | null
         }
         Insert: {
           amount: number
@@ -16951,6 +16952,7 @@ export type Database = {
           processed_by: string | null
           reference_number: string | null
           stripe_payment_intent_id: string | null
+          qb_payment_id: string | null
         }
         Insert: {
           company_id: string
@@ -39655,8 +39657,74 @@ export type Database = {
         }
         Relationships: []
       }
+      quickbooks_sync_review: {
+        Row: {
+          id: string
+          company_id: string
+          entity: string
+          qb_id: string
+          reason: string
+          amount: number | null
+          occurred_on: string | null
+          counterparty: string | null
+          raw: Json | null
+          status: string
+          resolved_as_id: string | null
+          resolved_by: string | null
+          resolved_at: string | null
+          first_seen_at: string
+          last_seen_at: string
+        }
+        Insert: {
+          id?: string
+          company_id: string
+          entity: string
+          qb_id: string
+          reason: string
+          amount?: number | null
+          occurred_on?: string | null
+          counterparty?: string | null
+          raw?: Json | null
+          status?: string
+          resolved_as_id?: string | null
+          resolved_by?: string | null
+          resolved_at?: string | null
+          first_seen_at?: string
+          last_seen_at?: string
+        }
+        Update: {
+          id?: string
+          company_id?: string
+          entity?: string
+          qb_id?: string
+          reason?: string
+          amount?: number | null
+          occurred_on?: string | null
+          counterparty?: string | null
+          raw?: Json | null
+          status?: string
+          resolved_as_id?: string | null
+          resolved_by?: string | null
+          resolved_at?: string | null
+          first_seen_at?: string
+          last_seen_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
+      quickbooks_sync_health: {
+        Row: {
+          company_id: string | null
+          entity: string | null
+          pending: number | null
+          resolved: number | null
+          ignored: number | null
+          pending_amount: number | null
+          last_seen_at: string | null
+        }
+        Relationships: []
+      }
       customer_activity: {
         Row: {
           client_id: string | null

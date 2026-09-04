@@ -157,6 +157,16 @@ describe('a photo is a record, not a string (US-330)', () => {
     expect(page).toMatch(/logger\.error\('Daily report saved but its photos were not recorded'/);
   });
 
+  it('names the foreign key when embedding the crew member', () => {
+    // There is no inferable relation between time_entries and user_profiles,
+    // so a bare embed returns a SelectQueryError at runtime and the panel
+    // shows no timesheet at all. The build does not catch it; a completed
+    // typecheck does, which is how this was found.
+    const panel = strip('src/components/daily-reports/DailyReportCrewPanel.tsx');
+    expect(panel).toMatch(/user_profiles!time_entries_user_id_fkey\(/);
+    expect(panel).not.toMatch(/[^!]user_profiles\(first_name/);
+  });
+
   it('counts photos from the table, not the array', () => {
     expect(strip('src/components/project/tabs/ProjectDailyReports.tsx'))
       .toMatch(/photo_attachments\(count\)/);
