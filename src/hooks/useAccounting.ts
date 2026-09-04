@@ -682,7 +682,7 @@ export function useLedgerActivity(companyId?: string, throughDate?: string) {
     queryFn: async () => {
       let query = supabase
         .from('ledger_account_activity')
-        .select('account_id, account_number, account_name, account_type, normal_balance, entry_date, net_change')
+        .select('account_id, account_number, account_name, account_type, account_subtype, normal_balance, entry_date, net_change')
         .eq('company_id', companyId as string)
         .order('account_number');
 

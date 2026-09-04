@@ -30,6 +30,8 @@ export interface LedgerActivityRow {
   account_number: string;
   account_name: string;
   account_type: AccountType;
+  /** The finer classification the statements group their subsections by. */
+  account_subtype: string | null;
   normal_balance: string | null;
   entry_date: string;
   net_change: number;
@@ -40,6 +42,7 @@ export interface AccountTotal {
   account_number: string;
   account_name: string;
   account_type: AccountType;
+  account_subtype: string | null;
   amount: number;
 }
 
@@ -75,6 +78,7 @@ export function totalsByAccount(
         account_number: row.account_number,
         account_name: row.account_name,
         account_type: row.account_type,
+        account_subtype: row.account_subtype ?? null,
         amount: round2(Number(row.net_change || 0)),
       });
     }

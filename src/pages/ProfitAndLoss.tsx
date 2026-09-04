@@ -81,6 +81,9 @@ export default function ProfitAndLoss() {
     alert('Export functionality coming soon!');
   };
 
+  const calculateTotal = (accountList: Array<{ amount: number }>) =>
+    accountList.reduce((sum, account) => sum + (Number(account.amount) || 0), 0);
+
   const AccountSection = ({ title, accounts, showTotal = false, totalLabel = '' }: any) => {
     const sectionTotal = calculateTotal(accounts);
 

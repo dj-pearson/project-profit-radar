@@ -27,12 +27,14 @@ const row = (
   type: AccountType,
   net: number,
   date: string,
-  account = `acct-${type}`
+  account = `acct-${type}`,
+  subtype: string | null = null
 ): LedgerActivityRow => ({
   account_id: account,
   account_number: `${1000 + (n++ % 9)}`,
   account_name: account,
   account_type: type,
+  account_subtype: subtype,
   normal_balance: ['asset', 'cost_of_goods_sold', 'expense', 'other_expense'].includes(type)
     ? 'debit' : 'credit',
   entry_date: date,
@@ -313,5 +315,36 @@ describe('the statement pages read the ledger (US-334)', () => {
     // They existed and were never used in a query, which is the defect.
     const src = strip('src/pages/ProfitAndLoss.tsx');
     expect(src).toMatch(/profitAndLoss\(\s*\n?\s*\(activity[\s\S]{0,80}startDate,\s*\n?\s*endDate/);
+  });
+});
+
+describe('the subsection breakdowns keep working (US-334)', () => {
+  it('carries account_subtype through, which the pages group by', () => {
+    // Both statements split their sections by subtype - current vs fixed
+    // assets, payroll vs overhead. Dropping it from AccountTotal broke them,
+    // and the build did not notice because vite strips types without checking.
+    const totals = totalsByAccount([
+      row('asset', 100, '2026-03-01', 'cash', 'cash'),
+      row('asset', 50, '2026-03-01', 'plant', 'fixed_asset'),
+    ], '2026-01-01', '2026-12-31');
+    expect(totals.find((t) => t.account_id === 'cash')?.account_subtype).toBe('cash');
+    expect(totals.find((t) => t.account_id === 'plant')?.account_subtype).toBe('fixed_asset');
+  });
+
+  it('is selected by the hook that feeds them', () => {
+    expect(readFileSync('src/hooks/useAccounting.ts', 'utf8'))
+      .toMatch(/account_type, account_subtype, normal_balance/);
+  });
+
+  it('leaves no page referring to a helper that is gone', () => {
+    // calculateTotal was removed from ProfitAndLoss while its AccountSection
+    // still called it - a ReferenceError on render, invisible to the build.
+    for (const page of ['src/pages/ProfitAndLoss.tsx', 'src/pages/BalanceSheet.tsx']) {
+      const src = strip(page);
+      if (src.includes('calculateTotal(')) {
+        expect(src, `${page} calls calculateTotal without defining it`)
+          .toMatch(/const calculateTotal =/);
+      }
+    }
   });
 });
