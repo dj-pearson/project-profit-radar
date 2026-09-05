@@ -1,4 +1,9 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useMemo, ReactNode } from 'react';
+import {
+  TIER_LIMITS as SHARED_TIER_LIMITS,
+  TIER_DISPLAY_NAMES,
+  tierAllowsFeature,
+} from '@/lib/tiers.generated';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './AuthContext';
 import { useSupabaseSubscription } from '@/hooks/useSupabaseSubscription';
@@ -66,26 +71,15 @@ interface SubscriptionContextType {
   hasUnlimitedAccess: () => boolean;
 }
 
-const TIER_LIMITS: Record<string, SubscriptionTier> = {
-  starter: {
-    name: 'Starter',
-    teamMembers: 5,
-    projects: 10,
-    storage: 10
-  },
-  professional: {
-    name: 'Professional',
-    teamMembers: 20,
-    projects: 50,
-    storage: 100
-  },
-  enterprise: {
-    name: 'Enterprise',
-    teamMembers: -1,  // unlimited
-    projects: -1,     // unlimited
-    storage: -1       // unlimited
-  }
-};
+// The limits come from the one definition (US-335). This file used to declare
+// its own copy alongside supabase/functions/_shared/entitlements.ts, with a
+// comment on that one asking whoever changed it to remember this one.
+const TIER_LIMITS: Record<string, SubscriptionTier> = Object.fromEntries(
+  Object.entries(SHARED_TIER_LIMITS).map(([tier, limits]) => [
+    tier,
+    { name: TIER_DISPLAY_NAMES[tier as keyof typeof TIER_DISPLAY_NAMES], ...limits },
+  ])
+) as Record<string, SubscriptionTier>;
 
 const SubscriptionContext = createContext<SubscriptionContextType | undefined>(undefined);
 
@@ -300,13 +294,26 @@ export const SubscriptionProvider: React.FC<SubscriptionProviderProps> = ({ chil
 
   // Helper: Check if user can use a specific feature
   const canUseFeature = useCallback((feature: string) => {
-    // Complimentary users can use all features
+    // A feature sold as belonging to a higher plan is gated by the plan, not
+    // by whether the account is in good standing (US-335). This returned true
+    // for any trial, complimentary or subscribed company, so nothing the
+    // Pricing page sells as Professional or Enterprise was gated at all - a
+    // Starter account had QuickBooks sync and API access.
+    //
+    // The server check in _shared/entitlements.ts is the authoritative one;
+    // this keeps the UI honest so nobody is offered a control that will be
+    // refused.
+    const tier = subscriptionData?.subscription_tier || 'starter';
+    if (!tierAllowsFeature(tier, feature)) return false;
+
+    // Complimentary accounts are deliberately exempt from the tier gate above
+    // only where they carry a tier that allows it; the check has already run.
     if (subscriptionData?.is_complimentary) return true;
 
-    // Subscribed users can use all features
+    // Subscribed users can use everything their plan includes.
     if (subscriptionData?.subscribed) return true;
 
-    // Trial users can use all features
+    // A trial is of a specific plan, and the tier gate above has run.
     if (subscriptionStatus?.isTrial) return true;
 
     // Grace period users have limited access

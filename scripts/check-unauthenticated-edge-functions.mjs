@@ -48,6 +48,12 @@ const VERIFIES_CALLER =
  */
 const PUBLIC_BY_DESIGN = new Set([
   'capture-lead', 'handle-demo-request', 'handle-sales-contact',
+  // A prospect reading and accepting the estimate they were emailed. They have
+  // no account and requiring one before they agree loses the job. The 32-byte
+  // token in the body is the credential: exact-match lookup, scoped to one
+  // estimate version, expiring, revoked when superseded, rate limited per
+  // token, and never used as a database credential (US-325).
+  'public-estimate',
   'signup-with-otp', 'send-auth-otp', 'verify-auth-otp', 'reset-password-otp',
   'email-unsubscribe', 'track-referral', 'process-referral-signup',
   'google-calendar-callback', 'outlook-calendar-callback', 'gsc-oauth-callback',

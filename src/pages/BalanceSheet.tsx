@@ -1,7 +1,9 @@
 import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { useChartOfAccounts } from '@/hooks/useAccounting';
+import { useLedgerActivity, useLedgerPostingEnabled } from '@/hooks/useAccounting';
+import { balanceSheet, fiscalYearStartFor, hasSubtype, type LedgerActivityRow } from '@/lib/ledgerReporting';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -14,7 +16,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Separator } from '@/components/ui/separator';
-import { BarChart3, Download, Printer } from 'lucide-react';
+import { BarChart3, Download, Printer, AlertCircle } from 'lucide-react';
 import { formatCurrency } from '@/utils/accountingUtils';
 
 export default function BalanceSheet() {
@@ -23,37 +25,41 @@ export default function BalanceSheet() {
 
   const [asOfDate, setAsOfDate] = useState(new Date().toISOString().split('T')[0]);
 
-  // Fetch accounts
-  const { data: accounts, isLoading } = useChartOfAccounts(companyId);
+  // Posted ledger movement up to the as-at date. This used to sum
+  // chart_of_accounts.current_balance, an undated running total (US-334).
+  const { data: activity, isLoading } = useLedgerActivity(companyId, asOfDate);
+  const { data: postingEnabled } = useLedgerPostingEnabled(companyId);
 
-  // Group accounts by type
-  const assetAccounts = accounts?.filter(a => a.account_type === 'asset') || [];
-  const liabilityAccounts = accounts?.filter(a => a.account_type === 'liability') || [];
-  const equityAccounts = accounts?.filter(a => a.account_type === 'equity') || [];
+  const sheet = balanceSheet(
+    (activity ?? []) as LedgerActivityRow[],
+    asOfDate,
+    fiscalYearStartFor(asOfDate)
+  );
 
-  // Calculate totals
-  const calculateTotal = (accountList: any[]) => {
-    return accountList.reduce((sum, account) => {
-      return sum + (Number(account.current_balance) || 0);
-    }, 0);
-  };
+  const assetAccounts = sheet.accounts.filter(a => a.account_type === 'asset');
+  const liabilityAccounts = sheet.accounts.filter(a => a.account_type === 'liability');
+  const equityAccounts = sheet.accounts.filter(a => a.account_type === 'equity');
 
-  const totalAssets = calculateTotal(assetAccounts);
-  const totalLiabilities = calculateTotal(liabilityAccounts);
-  const totalEquity = calculateTotal(equityAccounts);
+  const calculateTotal = (accountList: Array<{ amount: number }>) =>
+    accountList.reduce((sum, account) => sum + (Number(account.amount) || 0), 0);
 
-  // Calculate net income (would come from P&L in real implementation)
-  const currentYearEarnings = 0; // Placeholder
+  const totalAssets = sheet.assets;
+  const totalLiabilities = sheet.liabilities;
+  const totalEquity = sheet.equity;
 
-  const totalLiabilitiesAndEquity = totalLiabilities + totalEquity + currentYearEarnings;
-  const isBalanced = Math.abs(totalAssets - totalLiabilitiesAndEquity) < 0.01;
+  // Was `= 0; // Placeholder`, which is why the sheet was out by exactly the
+  // year's profit and never balanced.
+  const currentYearEarnings = sheet.currentYearEarnings;
+
+  const totalLiabilitiesAndEquity = sheet.liabilitiesAndEquity;
+  const isBalanced = sheet.isBalanced;
 
   // Group assets by subtype
   const currentAssets = assetAccounts.filter(a =>
-    ['cash', 'bank', 'accounts_receivable', 'other_current_asset'].includes(a.account_subtype)
+    hasSubtype(a, 'cash', 'bank', 'accounts_receivable', 'other_current_asset')
   );
   const fixedAssets = assetAccounts.filter(a =>
-    ['fixed_asset', 'accumulated_depreciation'].includes(a.account_subtype)
+    hasSubtype(a, 'fixed_asset', 'accumulated_depreciation')
   );
   const otherAssets = assetAccounts.filter(a =>
     a.account_subtype === 'other_asset'
@@ -61,7 +67,7 @@ export default function BalanceSheet() {
 
   // Group liabilities by subtype
   const currentLiabilities = liabilityAccounts.filter(a =>
-    ['accounts_payable', 'credit_card', 'other_current_liability'].includes(a.account_subtype)
+    hasSubtype(a, 'accounts_payable', 'credit_card', 'other_current_liability')
   );
   const longTermLiabilities = liabilityAccounts.filter(a =>
     a.account_subtype === 'long_term_liability'
@@ -87,12 +93,12 @@ export default function BalanceSheet() {
           </TableCell>
         </TableRow>
         {accounts.map((account: any) => (
-          <TableRow key={account.id}>
+          <TableRow key={account.account_id}>
             <TableCell className="pl-8">
               {account.account_number} - {account.account_name}
             </TableCell>
             <TableCell className="text-right font-mono">
-              {formatCurrency(account.current_balance || 0)}
+              {formatCurrency(account.amount || 0)}
             </TableCell>
           </TableRow>
         ))}
@@ -110,6 +116,17 @@ export default function BalanceSheet() {
 
   return (
     <main className="container mx-auto py-6 space-y-6" role="main" aria-label="Balance Sheet">
+      {postingEnabled === false && (
+        <Alert>
+          <AlertCircle className="h-4 w-4" aria-hidden="true" />
+          <AlertDescription>
+            Brikly is not posting to a ledger for this company, so this statement
+            reflects only journal entries entered by hand - your books are in
+            QuickBooks. Turn on ledger posting in company settings to build it from
+            your invoices, payments and expenses.
+          </AlertDescription>
+        </Alert>
+      )}
       {/* Header */}
       <header className="flex items-center justify-between">
         <div>

@@ -47,6 +47,9 @@ export const ConvertToProjectDialog = ({
   const [estimate, setEstimate] = useState<EstimateData | null>(null);
   const [canConvert, setCanConvert] = useState(false);
   const [issues, setIssues] = useState<string[]>([]);
+  // Things that do not block the conversion but change what the user gets -
+  // chiefly line items with no cost code, which cannot become budget lines.
+  const [warnings, setWarnings] = useState<string[]>([]);
 
   // Customization fields
   const [projectName, setProjectName] = useState('');
@@ -73,6 +76,7 @@ export const ConvertToProjectDialog = ({
       setEstimate(preview.estimate);
       setCanConvert(preview.canConvert);
       setIssues(preview.issues);
+      setWarnings(preview.warnings || []);
 
       // Pre-fill form with estimate data
       if (preview.estimate) {
@@ -114,14 +118,31 @@ export const ConvertToProjectDialog = ({
       );
 
       if (result.success && result.projectId) {
+        // Say what was actually written. This used to read "Budget and line
+        // items have been transferred" over a conversion that had written
+        // neither - the project insert was rejected for unknown columns and
+        // the line items were read off a column that does not exist (US-318).
+        const lines = result.budgetLinesCreated ?? 0;
+        const total = result.budgetTotal ?? 0;
+        const budgetSummary = lines > 0
+          ? `Budget seeded: ${lines} cost code${lines === 1 ? '' : 's'} totalling ` +
+            `${total.toLocaleString(undefined, { style: 'currency', currency: 'USD' })}.`
+          : 'No budget lines were created, because no line item carried a cost code.';
+
         toast({
-          title: 'Success!',
+          title: result.error ? 'Project created, with a problem' : 'Project created',
+          variant: result.error ? 'destructive' : undefined,
           description: (
             <div className="space-y-2">
-              <p>Estimate converted to project successfully!</p>
-              <p className="text-sm text-muted-foreground">
-                Budget and line items have been transferred.
-              </p>
+              <p>{budgetSummary}</p>
+              {(result.uncodedLineItems ?? 0) > 0 && (
+                <p className="text-sm text-muted-foreground">
+                  {result.uncodedLineItems} line item
+                  {result.uncodedLineItems === 1 ? ' has' : 's have'} no cost code and
+                  {result.uncodedLineItems === 1 ? ' is' : ' are'} not in the budget.
+                </p>
+              )}
+              {result.error && <p className="text-sm">{result.error}</p>}
             </div>
           )
         });
@@ -212,6 +233,19 @@ export const ConvertToProjectDialog = ({
                 <div className="space-y-1">
                   {issues.map((issue, index) => (
                     <p key={index} className="text-sm">• {issue}</p>
+                  ))}
+                </div>
+              </AlertDescription>
+            </Alert>
+          )}
+
+          {warnings.length > 0 && (
+            <Alert>
+              <AlertTriangle className="h-4 w-4" />
+              <AlertDescription>
+                <div className="space-y-1">
+                  {warnings.map((warning, index) => (
+                    <p key={index} className="text-sm">{warning}</p>
                   ))}
                 </div>
               </AlertDescription>

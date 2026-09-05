@@ -48,15 +48,24 @@ const FinancialHub = () => {
 
         const totalPayments = paymentsData?.reduce((sum, payment) => sum + Number(payment.amount), 0) || 0;
 
-        // Calculate total revenue from projects (using a placeholder since contract_value doesn't exist)
-        const { count: projectsCount } = await supabase
+        // Contract value under contract on active jobs. This was
+        // `projectsCount * 50000` with a comment saying contract_value did not
+        // exist; US-323 added original_contract_value and current_contract_value
+        // and change-order approval moves the latter, so it does now (US-331).
+        const { data: contractRows, error: contractError } = await supabase
           .from('projects')
-          .select('*', { count: 'exact', head: true })
+          .select('current_contract_value, original_contract_value, budget')
           .eq('company_id', userProfile.company_id)
           .eq('status', 'active');
 
-        // Placeholder calculation - would need actual contract values
-        const totalRevenue = (projectsCount || 0) * 50000; // Assuming average project value
+        if (contractError) throw contractError;
+
+        const totalRevenue = (contractRows || []).reduce(
+          (sum, p) => sum + Number(
+            p.current_contract_value ?? p.original_contract_value ?? p.budget ?? 0
+          ),
+          0
+        );
 
         setMetrics({
           totalRevenue,

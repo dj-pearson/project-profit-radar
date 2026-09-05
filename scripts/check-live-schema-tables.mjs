@@ -43,8 +43,8 @@ const EDGE_BASELINE = new Set([
   'failed_payment_recovery_settings', 'financial_records', 'geofence_breach_alerts',
   'image_processing_queue', 'intervention_logs', 'lead_scoring_rules', 'market_pricing_data',
   'oauth_pending_states', 'payment_reminder_logs', 'payment_reminder_settings',
-  'project_team_assignments', 'proration_history', 'push_subscriptions', 'quickbooks_expenses',
-  'quickbooks_payments', 'quickbooks_routing_history', 'quickbooks_routing_rules',
+  'project_team_assignments', 'proration_history', 'push_subscriptions',
+  'quickbooks_routing_history', 'quickbooks_routing_rules',
   'quickbooks_unrouted_transactions', 'refunds', 'saml_pending_requests', 'stripe_keys',
   'system_settings', 'teams', 'usage_billing_records',
 ]);
@@ -52,9 +52,9 @@ const EDGE_BASELINE = new Set([
 const BASELINE = new Set([
   'ai_environment_config', 'api_key_rate_limits', 'consent_ledger',
   'disposable_email_domains', 'estimate_templates', 'financial_records',
-  'generated_content', 'image_processing_queue', 'invoice_payments', 'line_item_library',
-  'payments', 'processed_images', 'project_notes', 'project_videos',
-  'purchase_order_items', 'real_time_notifications', 'reviews',
+  'generated_content', 'image_processing_queue', 'line_item_library',
+  'payments', 'processed_images', 'project_videos',
+  'real_time_notifications', 'reviews',
   'saved_filter_presets', 'sensitive_data_access_log', 'seo_page_configs',
   'user_announcements', 'user_tour_progress', 'workflow_steps',
 ]);

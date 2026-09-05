@@ -1,4 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
+import { logger } from '@/lib/logger';
 
 export interface Task {
   id: string;
@@ -304,12 +305,14 @@ class TaskService {
    * @param taskId - Task ID
    */
   async getTaskComments(taskId: string) {
+    // No embed. task_comments.user_id references auth.users(id), and
+    // user_profiles.id references auth.users(id) too - siblings, with no
+    // relationship between them, so user_profiles!task_comments_user_id_fkey
+    // named a constraint that does not relate the two tables and PostgREST
+    // refused the query. Every comment on every task failed to load (US-336).
     const { data, error } = await supabase
       .from('task_comments')
-      .select(`
-        *,
-        user_profiles!task_comments_user_id_fkey(first_name, last_name, email)
-      `)
+      .select('*')
       .eq('task_id', taskId)
       .order('created_at', { ascending: true });
 
@@ -317,7 +320,35 @@ class TaskService {
       throw new Error(`Error fetching task comments: ${error.message}`);
     }
 
-    return data || [];
+    return this.withCommentAuthors(data || []);
+  }
+
+  /**
+   * Attach the author to each comment.
+   *
+   * A separate query rather than an embed, because there is no foreign key
+   * between task_comments and user_profiles to embed across (US-336). A
+   * failure costs the names, not the comments.
+   */
+  private async withCommentAuthors<T extends { user_id?: string | null }>(rows: T[]) {
+    const ids = [...new Set(rows.map((r) => r.user_id).filter(Boolean))] as string[];
+    if (ids.length === 0) return rows;
+
+    const { data: profiles, error } = await supabase
+      .from('user_profiles')
+      .select('id, first_name, last_name, email')
+      .in('id', ids);
+
+    if (error) {
+      logger.error('Task comments loaded without their authors', error);
+      return rows;
+    }
+
+    const byId = new Map((profiles || []).map((p) => [p.id, p]));
+    return rows.map((r) => ({
+      ...r,
+      user_profiles: r.user_id ? byId.get(r.user_id) ?? null : null,
+    }));
   }
 
   /**
@@ -336,10 +367,7 @@ class TaskService {
         user_id: user.id,
         comment
       })
-      .select(`
-        *,
-        user_profiles!task_comments_user_id_fkey(first_name, last_name, email)
-      `)
+      .select('*')
       .single();
 
     if (error) {

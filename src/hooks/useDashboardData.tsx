@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { WORKING_STATUSES, normalizeProjectStatus } from '@/lib/projectStatus';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
@@ -134,7 +135,12 @@ export const useDashboardData = () => {
       const dashboardData: DashboardData = {
         kpis: {
           totalRevenue: totalRevenue || projects?.reduce((sum, p) => sum + (p.budget || 0), 0) || 0,
-          activeProjects: projects?.length || 0,
+          // Not projects.length. Every project sat in planning forever (US-328),
+          // so counting all of them made the number look right while the
+          // status field it claimed to summarise was never written.
+          activeProjects: projects?.filter(
+            (p) => WORKING_STATUSES.includes(normalizeProjectStatus(p.status))
+          ).length || 0,
           teamMembers: teamMembers?.length || 0,
           completionRate: projects?.length ?
             Math.round(projects.reduce((sum, p) => sum + (p.completion_percentage || 0), 0) / projects.length) : 0,

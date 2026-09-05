@@ -37,6 +37,8 @@ export const LazyIndex = createLazyRoute(() => import('@/pages/Index'));
 export const LazyAuth = createLazyRoute(() => import('@/pages/Auth'));
 export const LazyAuthCallback = createLazyRoute(() => import('@/pages/AuthCallback'));
 export const LazySetup = createLazyRoute(() => import('@/pages/Setup'));
+export const LazyClientPortal = createLazyRoute(() => import('@/pages/ClientPortalEnhanced'));
+export const LazyPublicEstimate = createLazyRoute(() => import('@/pages/PublicEstimate'));
 export const LazyCheckoutSuccess = createLazyRoute(() => import('@/pages/CheckoutSuccess'));
 export const LazyPaymentSuccess = createLazyRoute(() => import('@/pages/PaymentSuccess'));
 export const LazyPaymentCancelled = createLazyRoute(() => import('@/pages/PaymentCancelled'));

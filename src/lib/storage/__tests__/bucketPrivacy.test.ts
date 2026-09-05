@@ -97,7 +97,11 @@ describe('project-documents path convention', () => {
    * matches directly.
    */
   const PROJECT_FIRST = [
-    ['src/pages/DailyReports.tsx', '${newReport.project_id}/daily-reports/'],
+    // DailyReports builds its path through photoStoragePath (US-330), which is
+    // asserted project-first below and in dailyReportField.test.ts. Naming the
+    // helper here rather than the template it replaced keeps the guard on the
+    // convention rather than on one file's spelling of it.
+    ['src/pages/DailyReports.tsx', 'photoStoragePath({'],
     ['src/components/project/tabs/ProjectPunchList.tsx', '${projectId}/punch-list'],
     ['src/components/workflow/InspectionConductDialog.tsx', '${inspection.project_id}/inspections/'],
     ['src/components/mobile/VoiceNotes.tsx', '${note.projectId}/voice-notes/'],
@@ -105,6 +109,13 @@ describe('project-documents path convention', () => {
 
   it.each(PROJECT_FIRST)('%s writes a project-first path', (file, fragment) => {
     expect(readFileSync(file, 'utf8')).toContain(fragment);
+  });
+
+  it('the shared photo path helper puts the project id first', () => {
+    // The guard above trusts this helper for DailyReports, so the trust is
+    // checked here rather than assumed from another suite.
+    expect(readFileSync('src/lib/dailyReportField.ts', 'utf8'))
+      .toContain('`${params.projectId}/daily-reports/${params.fileName}`');
   });
 
   it('keeps a supplementary read policy for the shapes that cannot be project-first', () => {

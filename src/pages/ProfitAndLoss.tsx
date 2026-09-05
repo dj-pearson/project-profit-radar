@@ -1,7 +1,9 @@
 import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { useChartOfAccounts } from '@/hooks/useAccounting';
+import { useLedgerActivity, useLedgerPostingEnabled } from '@/hooks/useAccounting';
+import { profitAndLoss, type LedgerActivityRow } from '@/lib/ledgerReporting';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -13,7 +15,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { TrendingUp, Download, Printer } from 'lucide-react';
+import { TrendingUp, Download, Printer, AlertCircle } from 'lucide-react';
 import { formatCurrency, formatPercentage } from '@/utils/accountingUtils';
 
 export default function ProfitAndLoss() {
@@ -25,40 +27,37 @@ export default function ProfitAndLoss() {
   );
   const [endDate, setEndDate] = useState(new Date().toISOString().split('T')[0]);
 
-  // Fetch accounts
-  const { data: accounts, isLoading } = useChartOfAccounts(companyId);
+  // Posted ledger movement for the period. This used to sum
+  // chart_of_accounts.current_balance - a running total with no date on it -
+  // so the date inputs above were decorative and every period returned the
+  // same figures (US-334).
+  const { data: activity, isLoading } = useLedgerActivity(companyId, endDate);
+  const { data: postingEnabled } = useLedgerPostingEnabled(companyId);
 
-  // Group accounts by type
-  const revenueAccounts = accounts?.filter(a => a.account_type === 'revenue') || [];
-  const cogsAccounts = accounts?.filter(a => a.account_type === 'cost_of_goods_sold') || [];
-  const expenseAccounts = accounts?.filter(a => a.account_type === 'expense') || [];
-  const otherIncomeAccounts = accounts?.filter(a => a.account_type === 'other_income') || [];
-  const otherExpenseAccounts = accounts?.filter(a => a.account_type === 'other_expense') || [];
+  const statement = profitAndLoss(
+    (activity ?? []) as LedgerActivityRow[],
+    startDate,
+    endDate
+  );
 
-  // Calculate totals
-  const calculateTotal = (accountList: any[]) => {
-    return accountList.reduce((sum, account) => {
-      // For revenue and other income, use positive balances
-      // For COGS, expenses, and other expenses, use absolute values
-      return sum + Math.abs(Number(account.current_balance) || 0);
-    }, 0);
-  };
+  const revenueAccounts = statement.accounts.filter(a => a.account_type === 'revenue');
+  const cogsAccounts = statement.accounts.filter(a => a.account_type === 'cost_of_goods_sold');
+  const expenseAccounts = statement.accounts.filter(a => a.account_type === 'expense');
+  const otherIncomeAccounts = statement.accounts.filter(a => a.account_type === 'other_income');
+  const otherExpenseAccounts = statement.accounts.filter(a => a.account_type === 'other_expense');
 
-  const totalRevenue = calculateTotal(revenueAccounts);
-  const totalCOGS = calculateTotal(cogsAccounts);
-  const grossProfit = totalRevenue - totalCOGS;
-  const grossMargin = totalRevenue > 0 ? (grossProfit / totalRevenue) * 100 : 0;
-
-  const totalExpenses = calculateTotal(expenseAccounts);
-  const operatingIncome = grossProfit - totalExpenses;
-  const operatingMargin = totalRevenue > 0 ? (operatingIncome / totalRevenue) * 100 : 0;
-
-  const totalOtherIncome = calculateTotal(otherIncomeAccounts);
-  const totalOtherExpense = calculateTotal(otherExpenseAccounts);
+  const totalRevenue = statement.revenue;
+  const totalCOGS = statement.costOfGoodsSold;
+  const grossProfit = statement.grossProfit;
+  const grossMargin = statement.grossMargin;
+  const totalExpenses = statement.operatingExpenses;
+  const operatingIncome = statement.operatingIncome;
+  const operatingMargin = totalRevenue === 0 ? 0 : (operatingIncome / totalRevenue) * 100;
+  const totalOtherIncome = statement.otherIncome;
+  const totalOtherExpense = statement.otherExpense;
   const netOtherIncome = totalOtherIncome - totalOtherExpense;
-
-  const netIncome = operatingIncome + netOtherIncome;
-  const netMargin = totalRevenue > 0 ? (netIncome / totalRevenue) * 100 : 0;
+  const netIncome = statement.netIncome;
+  const netMargin = statement.netMargin;
 
   // Group expenses by subtype
   const payrollExpenses = expenseAccounts.filter(a =>
@@ -82,6 +81,9 @@ export default function ProfitAndLoss() {
     alert('Export functionality coming soon!');
   };
 
+  const calculateTotal = (accountList: Array<{ amount: number }>) =>
+    accountList.reduce((sum, account) => sum + (Number(account.amount) || 0), 0);
+
   const AccountSection = ({ title, accounts, showTotal = false, totalLabel = '' }: any) => {
     const sectionTotal = calculateTotal(accounts);
 
@@ -94,12 +96,14 @@ export default function ProfitAndLoss() {
                 {title}
               </TableCell>
             </TableRow>
-            {accounts.map((account: any) => {
-              const balance = Math.abs(Number(account.current_balance) || 0);
+            {accounts.map((account: { account_id: string; account_number: string; account_name: string; amount: number }) => {
+              // Signed, not absolute: a credit note is negative revenue and
+              // taking its magnitude made a refunded month look like its best.
+              const balance = Number(account.amount) || 0;
               const percentage = totalRevenue > 0 ? (balance / totalRevenue) * 100 : 0;
 
               return (
-                <TableRow key={account.id}>
+                <TableRow key={account.account_id}>
                   <TableCell className="pl-8">
                     {account.account_number} - {account.account_name}
                   </TableCell>
@@ -131,6 +135,17 @@ export default function ProfitAndLoss() {
 
   return (
     <main className="container mx-auto py-6 space-y-6" role="main" aria-label="Profit and Loss Statement">
+      {postingEnabled === false && (
+        <Alert>
+          <AlertCircle className="h-4 w-4" aria-hidden="true" />
+          <AlertDescription>
+            Brikly is not posting to a ledger for this company, so this statement
+            reflects only journal entries entered by hand - your books are in
+            QuickBooks. Turn on ledger posting in company settings to build it from
+            your invoices, payments and expenses.
+          </AlertDescription>
+        </Alert>
+      )}
       {/* Header */}
       <header className="flex items-center justify-between">
         <div>

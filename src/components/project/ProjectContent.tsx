@@ -16,9 +16,13 @@ import { ProjectMaterials } from '@/components/project/tabs/ProjectMaterials';
 import { ProjectProcurement } from '@/components/project/tabs/ProjectProcurement';
 import { ProjectJobCosting } from '@/components/project/tabs/ProjectJobCosting';
 import { ProjectContacts } from '@/components/project/tabs/ProjectContacts';
+import { ProjectClientAccess } from '@/components/project/ProjectClientAccess';
 import { ProjectPermits } from '@/components/project/tabs/ProjectPermits';
 import { ProjectPunchList } from '@/components/project/tabs/ProjectPunchList';
 import { ProjectCostCodes } from '@/components/project/tabs/ProjectCostCodes';
+import ProjectCloseoutTab from '@/components/project/ProjectCloseoutTab';
+import { ProjectPhotos } from '@/components/project/tabs/ProjectPhotos';
+import ProjectActivationPrompt from '@/components/project/ProjectActivationPrompt';
 import { DashboardActivityFeed } from '@/components/activity/DashboardActivityFeed';
 import { Building2, Calendar, DollarSign, MapPin, TrendingUp, CheckCircle2, Clock, FileText, Receipt, MessageSquare, FolderOpen } from 'lucide-react';
 
@@ -26,11 +30,14 @@ interface ProjectContentProps {
   project: ProjectWithRelations;
   activeTab: string;
   onNavigate: (path: string) => void;
+  /** Called when a section changes the project itself, e.g. its status. */
+  onProjectChanged?: () => void;
 }
 
 export const ProjectContent: React.FC<ProjectContentProps> = ({
   project,
   activeTab,
+  onProjectChanged,
   onNavigate
 }) => {
   const formatCurrency = (amount: number | null | undefined) => {
@@ -39,6 +46,12 @@ export const ProjectContent: React.FC<ProjectContentProps> = ({
 
   const renderOverview = () => (
     <div className="space-y-6">
+      <ProjectActivationPrompt
+        projectId={project.id}
+        status={project.status}
+        startDate={project.start_date}
+        onChanged={onProjectChanged}
+      />
       {/* Project Overview Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card>
@@ -350,7 +363,12 @@ export const ProjectContent: React.FC<ProjectContentProps> = ({
   );
 
   const renderContacts = () => (
-    <ProjectContacts projectId={project.id} />
+    <div className="space-y-6">
+      <ProjectContacts projectId={project.id} />
+      {/* Client portal access lives with the project's people (US-319). It is
+          the first surface anywhere that can actually give a customer a login. */}
+      <ProjectClientAccess projectId={project.id} />
+    </div>
   );
 
   const renderPermits = () => (
@@ -426,6 +444,14 @@ export const ProjectContent: React.FC<ProjectContentProps> = ({
     <ProjectCostCodes projectId={project.id} />
   );
 
+  const renderPhotos = () => (
+    <ProjectPhotos projectId={project.id} />
+  );
+
+  const renderCloseout = () => (
+    <ProjectCloseoutTab projectId={project.id} />
+  );
+
   const renderActivity = () => (
     <DashboardActivityFeed projectId={project.id} maxItems={30} />
   );
@@ -436,6 +462,7 @@ export const ProjectContent: React.FC<ProjectContentProps> = ({
     progress: renderProgress,
     tasks: renderTasks,
     dailyreports: renderDailyReports,
+    photos: renderPhotos,
     materials: renderMaterials,
     procurement: renderProcurement,
     equipment: renderEquipment,
@@ -452,6 +479,7 @@ export const ProjectContent: React.FC<ProjectContentProps> = ({
     punchlist: renderPunchList,
     documents: renderDocuments,
     costcodes: renderCostCodes,
+    closeout: renderCloseout,
     activity: renderActivity,
   };
 

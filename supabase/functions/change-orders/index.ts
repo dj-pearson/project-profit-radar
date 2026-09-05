@@ -234,15 +234,31 @@ serve(async (req) => {
             category: 'approval'
           }));
 
-          const { error: tasksError } = await supabase
+          const { data: createdTasks, error: tasksError } = await supabase
             .from('tasks')
-            .insert(approvalTasks);
+            .insert(approvalTasks)
+            .select('id');
 
           if (tasksError) {
             logStep("Task creation error", { error: tasksError.message });
             // Don't fail the change order creation, just log the error
           } else {
             logStep("Approval tasks created", { count: approvalTasks.length });
+
+            // Link the first approval task to the change order, so approval
+            // closes it by foreign key. Matching on the number with ilike (what
+            // this replaces) closed CO-10's and CO-100's tasks whenever CO-1
+            // was approved (US-323).
+            if (createdTasks && createdTasks.length > 0) {
+              const { error: linkError } = await supabase
+                .from('change_orders')
+                .update({ approval_task_id: createdTasks[0].id })
+                .eq('id', newOrder.id);
+
+              if (linkError) {
+                logStep("Approval task link error", { error: linkError.message });
+              }
+            }
           }
         }
 
@@ -313,15 +329,19 @@ serve(async (req) => {
             updateData.approval_notes = rejectionReason || 'Internal rejection';
           }
         } else if (approvalType === 'client') {
-          updateData = {
-            client_approved: approved,
-            client_approved_date: approved ? new Date().toISOString() : null
-          };
-
-          if (!approved) {
-            updateData.status = 'rejected';
-            updateData.approval_notes = rejectionReason || 'Client rejection';
-          }
+          // US-323: a project manager cannot approve on the customer's behalf.
+          //
+          // This branch accepted the same three roles as the internal branch,
+          // so the two-sided approval the schema models was decorative: one
+          // person could set both flags and move the contract value. The
+          // client's side is written only by client_respond_to_change_order
+          // (US-319), which checks the caller is enrolled on the project, or
+          // by a signed acceptance (US-325).
+          return errorResponse(
+            "The client approves their own change orders from the client portal. " +
+            "Send them the change order rather than approving it for them.",
+            403,
+          );
         }
 
         // Update the change order
@@ -340,22 +360,12 @@ serve(async (req) => {
           return errorResponse(`Change order approval error: ${updateError.message}`, 500);
         }
 
-        // Update related approval tasks
-        if (approved || !approved) {
-          const { error: taskUpdateError } = await supabase
-            .from('tasks')
-            .update({
-              status: approved ? 'completed' : 'cancelled',
-              completion_percentage: approved ? 100 : 0,
-              updated_at: new Date().toISOString()
-            })
-            .eq('project_id', updatedOrder.project_id)
-            .eq('category', 'approval')
-            .ilike('name', `%${updatedOrder.change_order_number}%`);
-
-          if (taskUpdateError) {
-            logStep("Task update error", { error: taskUpdateError.message });
-          }
+        // The approval task is closed by the database trigger, through
+        // change_orders.approval_task_id. It used to be matched here with
+        // ilike on the change order number, so CO-1 also matched CO-10 and
+        // CO-100 and closed their approval tasks too.
+        if (updatedOrder.approval_task_id === null) {
+          logStep("No approval task linked to this change order", { orderId });
         }
 
         logStep("Change order approval processed", { orderId, approvalType, approved });
@@ -397,20 +407,22 @@ serve(async (req) => {
           return errorResponse(`Change order rejection error: ${updateError.message}`, 500);
         }
 
-        // Cancel related approval tasks
-        const { error: taskUpdateError } = await supabase
-          .from('tasks')
-          .update({
-            status: 'cancelled',
-            completion_percentage: 0,
-            updated_at: new Date().toISOString()
-          })
-          .eq('project_id', updatedOrder.project_id)
-          .eq('category', 'approval')
-          .ilike('name', `%${updatedOrder.change_order_number}%`);
+        // Cancel the linked approval task, by foreign key. The ilike match this
+        // replaces closed CO-10's and CO-100's tasks whenever CO-1 was
+        // rejected (US-323).
+        if (updatedOrder.approval_task_id) {
+          const { error: taskUpdateError } = await supabase
+            .from('tasks')
+            .update({
+              status: 'cancelled',
+              completion_percentage: 0,
+              updated_at: new Date().toISOString()
+            })
+            .eq('id', updatedOrder.approval_task_id);
 
-        if (taskUpdateError) {
-          logStep("Task update error", { error: taskUpdateError.message });
+          if (taskUpdateError) {
+            logStep("Task update error", { error: taskUpdateError.message });
+          }
         }
 
         logStep("Change order rejected", { orderId, reason: rejectionReason });

@@ -2,6 +2,7 @@
  * Timesheet Approval Hook
  */
 import { useState } from 'react';
+import { logger } from '@/lib/logger';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -77,37 +78,93 @@ export const useTimesheetApproval = () => {
     },
   });
 
-  // Fetch timesheet detail
+  /**
+   * One timesheet, with the people on it (US-336).
+   *
+   * The worker and approver used to be embedded as
+   * `user_profiles!time_entries_user_id_fkey`. That constraint is real, but it
+   * points at auth.users, not user_profiles: time_entries.user_id references
+   * auth.users(id) and user_profiles.id references auth.users(id), so the two
+   * tables are siblings with no relationship between them for PostgREST to
+   * resolve. It returned an error, and `if (error) throw error` turned that
+   * into a detail view that did not open at all.
+   *
+   * project and cost_code stay embedded - those are genuine foreign keys.
+   */
   const fetchTimesheetDetail = async (id: string) => {
-        const { data, error } = await supabase
+    const { data, error } = await supabase
       .from('time_entries')
       .select(`
         *,
-        worker:user_profiles!time_entries_user_id_fkey(first_name, last_name, email, role),
         project:projects(name, site_address, client_name),
-        cost_code:cost_codes(code, description),
-        approver:user_profiles!time_entries_approved_by_fkey(first_name, last_name, email)
+        cost_code:cost_codes(code, description)
       `)
       .eq('id', id)
       .single();
 
     if (error) throw error;
-    return data;
+
+    const ids = [data.user_id, data.approved_by].filter(Boolean) as string[];
+    if (ids.length === 0) return { ...data, worker: null, approver: null };
+
+    const { data: profiles, error: profileError } = await supabase
+      .from('user_profiles')
+      .select('id, first_name, last_name, email, role')
+      .in('id', ids);
+
+    // Degrade, do not throw: the hours are the point of this screen and a
+    // missing name should not close it.
+    if (profileError) {
+      logger.error('Timesheet detail loaded without the names on it', profileError);
+      return { ...data, worker: null, approver: null };
+    }
+
+    const byId = new Map((profiles || []).map((p) => [p.id, p]));
+    return {
+      ...data,
+      worker: byId.get(data.user_id) ?? null,
+      approver: data.approved_by ? byId.get(data.approved_by) ?? null : null,
+    };
   };
 
-  // Fetch approval history
+  /**
+   * Who did what to this timesheet (US-336).
+   *
+   * performed_by was embedded as
+   * `user_profiles!timesheet_approval_history_performed_by_fkey`. That column
+   * references auth.users(id) - 20251110000001 is the only migration that
+   * creates this table - so the constraint does not relate the two tables and
+   * PostgREST refused the query.
+   */
   const fetchApprovalHistory = async (timeEntryId: string) => {
-        const { data, error } = await supabase
+    const { data, error } = await supabase
       .from('timesheet_approval_history')
-      .select(`
-        *,
-        performed_by_user:user_profiles!timesheet_approval_history_performed_by_fkey(first_name, last_name, email)
-      `)
+      .select('*')
       .eq('time_entry_id', timeEntryId)
       .order('performed_at', { ascending: false });
 
     if (error) throw error;
-    return data as TimesheetApprovalHistoryEntry[];
+
+    const rows = data || [];
+    const ids = [...new Set(rows.map((r) => r.performed_by).filter(Boolean))] as string[];
+    if (ids.length === 0) return rows as TimesheetApprovalHistoryEntry[];
+
+    const { data: profiles, error: profileError } = await supabase
+      .from('user_profiles')
+      .select('id, first_name, last_name, email')
+      .in('id', ids);
+
+    // The history is the record; a missing name should not hide it.
+    if (profileError) {
+      logger.error('Approval history loaded without the names on it', profileError);
+      return rows as TimesheetApprovalHistoryEntry[];
+    }
+
+    const byId = new Map((profiles || []).map((p) => [p.id, p]));
+    return rows.map((r) => ({
+      ...r,
+      performed_by_user: r.performed_by ? byId.get(r.performed_by) ?? null : null,
+    })) as TimesheetApprovalHistoryEntry[];
   };
 
   // Approve single timesheet

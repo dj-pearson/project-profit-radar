@@ -1,4 +1,5 @@
 import React from 'react';
+import { FINISHED_STATUSES, normalizeProjectStatus } from '@/lib/projectStatus';
 import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { CheckCircle, AlertTriangle, AlertCircle } from 'lucide-react';
@@ -45,7 +46,7 @@ function computeHealth(project: ProjectHealthProps): HealthResult {
   }
 
   // Schedule check
-  if (project.end_date && project.status !== 'completed') {
+  if (project.end_date && !FINISHED_STATUSES.includes(normalizeProjectStatus(project.status))) {
     const now = new Date();
     const endDate = new Date(project.end_date);
     const daysRemaining = Math.ceil((endDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
@@ -63,7 +64,7 @@ function computeHealth(project: ProjectHealthProps): HealthResult {
   }
 
   // Schedule slip vs baseline (US-223): critical-path finish drift.
-  if (project.scheduleSlipDays !== undefined && project.scheduleSlipDays > 0 && project.status !== 'completed') {
+  if (project.scheduleSlipDays !== undefined && project.scheduleSlipDays > 0 && !FINISHED_STATUSES.includes(normalizeProjectStatus(project.status))) {
     const slip = project.scheduleSlipDays;
     if (slip > 14) {
       setLevel('critical');
@@ -75,7 +76,7 @@ function computeHealth(project: ProjectHealthProps): HealthResult {
   }
 
   // Completion vs expected progress
-  if (project.start_date && project.end_date && project.status !== 'completed') {
+  if (project.start_date && project.end_date && !FINISHED_STATUSES.includes(normalizeProjectStatus(project.status))) {
     const start = new Date(project.start_date).getTime();
     const end = new Date(project.end_date).getTime();
     const now = Date.now();

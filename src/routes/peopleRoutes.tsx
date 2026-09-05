@@ -11,6 +11,7 @@ import { createLazyRoute, LazyTimeTracking, LazyCRMDashboard, LazySubcontractors
 
 // Team Management - Lazy loaded with ErrorBoundary + Suspense
 const TeamManagement = createLazyRoute(() => import('@/pages/TeamManagement'));
+const CustomerDetail = createLazyRoute(() => import('@/pages/CustomerDetail'));
 const CrewScheduling = createLazyRoute(() => import('@/pages/CrewScheduling'));
 const CrewCheckin = createLazyRoute(() => import('@/pages/CrewCheckin'));
 const CrewPresence = createLazyRoute(() => import('@/pages/CrewPresence'));
@@ -51,6 +52,10 @@ export const peopleRoutes = (
     <Route path="/crm/leads" element={<RouteGuard><CRMLeads /></RouteGuard>} />
     <Route path="/crm/leads/:id" element={<RouteGuard><LeadDetailPage /></RouteGuard>} />
     <Route path="/crm/contacts" element={<RouteGuard><CRMContacts /></RouteGuard>} />
+    {/* US-326: everything for one customer, in one place. Before this the same
+        person existed as a CRM contact, free text on estimates and projects,
+        and an email on their portal access, with no key between them. */}
+    <Route path="/customers/:contactId" element={<RouteGuard><CustomerDetail /></RouteGuard>} />
     <Route path="/crm/opportunities" element={<RouteGuard><CRMOpportunities /></RouteGuard>} />
     <Route path="/crm/pipeline" element={<RouteGuard><CRMPipeline /></RouteGuard>} />
     <Route path="/crm/lead-intelligence" element={<RouteGuard><CRMLeadIntelligence /></RouteGuard>} />

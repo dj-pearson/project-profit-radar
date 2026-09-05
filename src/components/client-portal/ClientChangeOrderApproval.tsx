@@ -111,15 +111,19 @@ export const ClientChangeOrderApproval: React.FC<ClientChangeOrderApprovalProps>
       if (onApprove) {
         await onApprove(selectedChangeOrder.id, comments);
       } else {
-        // Default approval logic
-        const { error } = await supabase
-          .from('change_orders')
-          .update({
-            client_approved: true,
-            client_approved_at: new Date().toISOString(),
-            status: 'approved'
-          })
-          .eq('id', selectedChangeOrder.id);
+        // US-319: this used to update change_orders directly, writing
+        // client_approved_at and client_rejection_reason - one column named
+        // differently on the live table (client_approved_date) and one that did
+        // not exist at all - through an RLS policy that admits no client. Three
+        // reasons it could never have worked. The RPC writes only the four
+        // columns a client decision touches, for a project the caller is
+        // enrolled on, and is the only path that can set the client's side of
+        // the approval (US-323).
+        const { error } = await supabase.rpc('client_respond_to_change_order', {
+          p_change_order_id: selectedChangeOrder.id,
+          p_approved: true,
+          p_rejection_reason: null,
+        });
 
         if (error) throw error;
       }
@@ -160,16 +164,11 @@ export const ClientChangeOrderApproval: React.FC<ClientChangeOrderApprovalProps>
       if (onReject) {
         await onReject(selectedChangeOrder.id, rejectionReason);
       } else {
-        // Default rejection logic
-        const { error } = await supabase
-          .from('change_orders')
-          .update({
-            client_approved: false,
-            client_approved_at: new Date().toISOString(),
-            client_rejection_reason: rejectionReason,
-            status: 'rejected'
-          })
-          .eq('id', selectedChangeOrder.id);
+        const { error } = await supabase.rpc('client_respond_to_change_order', {
+          p_change_order_id: selectedChangeOrder.id,
+          p_approved: false,
+          p_rejection_reason: rejectionReason,
+        });
 
         if (error) throw error;
       }

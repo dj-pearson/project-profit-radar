@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { MyScheduledWork } from '@/components/schedule/MyScheduledWork';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import { LoadingState } from '@/components/ui/loading-spinner';
@@ -397,6 +398,10 @@ const MyTasks = () => {
                 ))}
               </div>
             )}
+
+            {/* US-329: `tasks` is the to-do list; schedule_tasks is the dated
+                work on the Gantt. A crew member has both and only ever saw one. */}
+            <MyScheduledWork />
           </TabsContent>
 
           <TabsContent value="created" id="created-panel" className="space-y-4" role="tabpanel" aria-labelledby="created-tab">

@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Plus, Search, Filter, FileText, DollarSign, Clock, AlertTriangle, Repeat, TrendingUp } from 'lucide-react';
+import { Plus, Search, Filter, FileText, DollarSign, Clock, AlertTriangle, Repeat, TrendingUp, Receipt } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -19,6 +19,7 @@ import InvoiceList from '@/components/invoices/InvoiceList';
 import InvoiceStats from '@/components/invoices/InvoiceStats';
 import ProgressBillingManager from '@/components/invoices/ProgressBillingManager';
 import RetentionManager from '@/components/invoices/RetentionManager';
+import TimeAndMaterialsBilling from '@/components/invoices/TimeAndMaterialsBilling';
 import RecurringInvoicesTab from '@/components/invoices/RecurringInvoicesTab';
 
 const Invoices: React.FC = () => {
@@ -151,7 +152,7 @@ const Invoices: React.FC = () => {
 
       {/* Main Content Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6" aria-label="Invoice management sections">
-        <TabsList className="grid w-full grid-cols-5" aria-label="Invoice categories">
+        <TabsList className="grid w-full grid-cols-6" aria-label="Invoice categories">
           <TabsTrigger value="overview" className="flex items-center gap-2">
             <FileText className="h-4 w-4" aria-hidden="true" />
             Overview
@@ -167,6 +168,10 @@ const Invoices: React.FC = () => {
           <TabsTrigger value="retention" className="flex items-center gap-2">
             <Clock className="h-4 w-4" aria-hidden="true" />
             Retention
+          </TabsTrigger>
+          <TabsTrigger value="time-materials" className="flex items-center gap-2">
+            <Receipt className="h-4 w-4" aria-hidden="true" />
+            Time &amp; Materials
           </TabsTrigger>
           <TabsTrigger value="overdue" className="flex items-center gap-2">
             <AlertTriangle className="h-4 w-4" aria-hidden="true" />
@@ -232,6 +237,10 @@ const Invoices: React.FC = () => {
 
         <TabsContent value="retention" className="space-y-4">
           <RetentionManager />
+        </TabsContent>
+
+        <TabsContent value="time-materials" className="space-y-4">
+          <TimeAndMaterialsBilling />
         </TabsContent>
 
         <TabsContent value="overdue" className="space-y-4">

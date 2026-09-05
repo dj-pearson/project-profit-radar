@@ -80,8 +80,6 @@ const BASELINE = new Map([
   ['/tools/schedule-builder', 'Tools page and ToolsFooter. /tools is an index and /schedule-builder exists at the top level; the nested path does not.'],
   ['/tools/bid-estimator', 'Tools page. Same shape as the other /tools/* entries - the index exists, the individual tool route does not.'],
   ['/tools/crew-calculator', 'Tools page. Same as /tools/bid-estimator.'],
-  ['/finance/bank-accounts', 'FinanceHub tile. Thirteen /finance/* routes exist and this is not among them; the feature was never built.'],
-  ['/finance/credit-memos', 'FinanceHub tile. Same as /finance/bank-accounts.'],
   ['/api-management/create-key', 'ApiDocumentation. This documents an API endpoint rather than an in-app route, and reads as navigation only because it is written as a path literal.'],
   ['/api-management/validate-key', 'ApiDocumentation. Same as /api-management/create-key - documentation of an endpoint, not a link.'],
   ['/about', 'seoConfig sitemap entry. No /about route exists; company information lives on the marketing index.'],

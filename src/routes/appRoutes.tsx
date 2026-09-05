@@ -29,6 +29,8 @@ import {
   LazyAuth,
   LazyAuthCallback,
   LazySetup,
+  LazyClientPortal,
+  LazyPublicEstimate,
   LazyCheckoutSuccess,
   LazyPaymentSuccess,
   LazyPaymentCancelled,
@@ -60,6 +62,20 @@ export const appRoutes = (
     <Route path="/auth" element={<LazyAuth />} />
     <Route path="/auth/callback" element={<LazyAuthCallback />} />
     <Route path="/setup" element={<LazySetup />} />
+
+    {/* The client portal (US-319). Routed at last: both portal pages were
+        imported by no route file, so the entire customer-facing half of the
+        product shipped as dead code. RouteGuard authenticates; the page itself
+        sends anyone who is not a client_portal user to their dashboard, and
+        RLS decides which projects they can see. */}
+    <Route path="/client-portal" element={<RouteGuard><LazyClientPortal /></RouteGuard>} />
+
+    {/* The prospect's estimate page (US-325). Deliberately OUTSIDE RouteGuard:
+        a person deciding whether to hire a contractor has no account, and
+        requiring one before they have agreed loses the job. The token in the
+        path is the credential and the edge function behind it enforces
+        expiry, revocation and version. */}
+    <Route path="/estimate/:token" element={<LazyPublicEstimate />} />
     <Route path="/checkout/success" element={<LazyCheckoutSuccess />} />
     <Route path="/payment-success" element={<LazyPaymentSuccess />} />
     <Route path="/payment-cancelled" element={<LazyPaymentCancelled />} />

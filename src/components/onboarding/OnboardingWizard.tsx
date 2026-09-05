@@ -22,6 +22,7 @@ import { Rocket, Building, FolderPlus, Users, CheckCircle, ChevronRight, Chevron
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
+import { logger } from '@/lib/logger';
 
 interface OnboardingWizardProps {
   onComplete?: () => void;
@@ -31,7 +32,7 @@ const ONBOARDING_PROGRESS_KEY = 'brikly_onboarding_progress';
 
 export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ onComplete }) => {
   const { toast } = useToast();
-  const { user, userProfile } = useAuth();
+  const { user } = useAuth();
   const [loading, setLoading] = useState(false);
 
   // Persist onboarding progress
@@ -46,9 +47,8 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ onComplete }
 
   // Company details
   const [companyName, setCompanyName] = useState('');
-  const [companyType, setCompanyType] = useState('');
+  const [industryType, setIndustryType] = useState('');
   const [companySize, setCompanySize] = useState('');
-  const [industry] = useState('construction');
 
   // First project
   const [createProject, setCreateProject] = useState(true);
@@ -56,10 +56,6 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ onComplete }
   const [projectBudget, setProjectBudget] = useState('');
   const [projectStartDate, setProjectStartDate] = useState('');
   const [projectClientName, setProjectClientName] = useState('');
-
-  // Team invitations
-  const [inviteTeam] = useState(false);
-  const [teamEmails] = useState('');
 
   const totalSteps = 4;
 
@@ -153,32 +149,50 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ onComplete }
     }
   };
 
+  /**
+   * Completing setup is what creates the tenant (US-317).
+   *
+   * This used to run companies.update(...).eq('id', userProfile?.company_id).
+   * For the users this page exists for - Setup.tsx sends anyone who already has
+   * a company straight to the dashboard - that id is undefined, so PostgREST
+   * matched zero rows, returned no error, and the wizard reported success while
+   * creating nothing. It also wrote company_type, industry and
+   * onboarding_completed, three columns the companies table does not have, and
+   * then onboarding_completed to user_profiles, which does not have it either.
+   *
+   * create_company_for_current_user inserts the company and points the caller's
+   * profile at it in one transaction, deriving the owner from auth.uid(). It is
+   * idempotent, so a double submit or a retry returns the same company rather
+   * than minting a second tenant.
+   */
   const handleComplete = async () => {
     setLoading(true);
 
     try {
-      // Update company profile
-      const { error: companyError } = await supabase
-        .from('companies')
-        .update({
-          name: companyName,
-          company_type: companyType || null,
-          company_size: companySize || null,
-          industry: industry,
-          onboarding_completed: true,
-          onboarding_completed_at: new Date().toISOString()
-        })
-        .eq('id', userProfile?.company_id);
+      const { data: companyId, error: provisionError } = await supabase.rpc(
+        'create_company_for_current_user',
+        {
+          p_name: companyName.trim(),
+          p_industry_type: industryType || null,
+          p_company_size: companySize || null,
+        }
+      );
 
-      if (companyError) throw companyError;
+      if (provisionError) throw provisionError;
+      if (!companyId) {
+        throw new Error('Setup did not return a company. Please try again.');
+      }
 
-      // Create first project if requested
+      // Create first project if requested. company_id comes from the row we
+      // just created, not from userProfile, which the client has not refetched
+      // yet and which still carries a null company_id at this point.
       if (createProject && projectName) {
         const { error: projectError } = await supabase
           .from('projects')
           .insert({
-            company_id: userProfile?.company_id,
+            company_id: companyId as string,
             name: projectName,
+            budget: projectBudget ? parseFloat(projectBudget) : null,
             total_budget: projectBudget ? parseFloat(projectBudget) : null,
             start_date: projectStartDate || new Date().toISOString().split('T')[0],
             client_name: projectClientName || null,
@@ -186,40 +200,34 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ onComplete }
             created_by: user?.id
           });
 
-        if (projectError) throw projectError;
+        // The company exists at this point, so a failed first project must not
+        // fail setup. Say so and let the user create it from the dashboard.
+        if (projectError) {
+          logger.error('Onboarding: first project could not be created', projectError);
+          toast({
+            title: 'Company created, project was not',
+            description:
+              'Your company is set up. The first project could not be saved - you can add it from Projects.',
+            variant: 'destructive'
+          });
+        }
       }
-
-      // Send team invitations if provided
-      if (inviteTeam && teamEmails) {
-        const emails = teamEmails.split(',').map(e => e.trim()).filter(e => e);
-        // TODO: Implement team invitation logic
-      }
-
-      // Mark user profile as onboarded
-      const { error: profileError } = await supabase
-        .from('user_profiles')
-        .update({
-          onboarding_completed: true,
-          onboarding_completed_at: new Date().toISOString()
-        })
-        .eq('id', user?.id);
-
-      if (profileError) throw profileError;
 
       // Clear persisted progress
       try { localStorage.removeItem(ONBOARDING_PROGRESS_KEY); } catch { /* ignore */ }
 
       toast({
         title: 'Setup Complete!',
-        description: 'Your Brikly account is ready to use',
+        description: 'Your company is ready, with a default cost code list to estimate against.',
       });
 
       onComplete?.();
-    } catch (error: any) {
-      console.error('Onboarding error:', error);
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Failed to complete setup';
+      logger.error('Onboarding error', error);
       toast({
         title: 'Setup Error',
-        description: error.message || 'Failed to complete setup',
+        description: message,
         variant: 'destructive'
       });
     } finally {
@@ -288,17 +296,22 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ onComplete }
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="company-type">Company Type</Label>
-                  <Select value={companyType} onValueChange={setCompanyType}>
-                    <SelectTrigger>
+                  {/*
+                    These four options are the industry_type enum the companies
+                    table actually stores. The previous list (general contractor,
+                    subcontractor, developer) was written for a company_type
+                    column that does not exist, so nothing could have been saved.
+                  */}
+                  <Label htmlFor="industry-type">What do you build?</Label>
+                  <Select value={industryType} onValueChange={setIndustryType}>
+                    <SelectTrigger id="industry-type">
                       <SelectValue placeholder="Select type..." />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="general_contractor">General Contractor</SelectItem>
-                      <SelectItem value="subcontractor">Subcontractor</SelectItem>
-                      <SelectItem value="specialty">Specialty Contractor</SelectItem>
-                      <SelectItem value="developer">Developer</SelectItem>
-                      <SelectItem value="other">Other</SelectItem>
+                      <SelectItem value="residential">Residential</SelectItem>
+                      <SelectItem value="commercial">Commercial</SelectItem>
+                      <SelectItem value="civil_infrastructure">Civil / Infrastructure</SelectItem>
+                      <SelectItem value="specialty_trades">Specialty Trades</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -479,7 +492,12 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ onComplete }
               </Button>
 
               <div className="flex items-center gap-2">
-                {currentStep > 1 && currentStep < totalSteps && (
+                {/*
+                  Step 2 has no Skip: the company is the tenant, and skipping it
+                  used to walk past validateCurrentStep straight into a
+                  completion with no company name.
+                */}
+                {currentStep > 2 && currentStep < totalSteps && (
                   <Button
                     variant="ghost"
                     onClick={handleSkipStep}

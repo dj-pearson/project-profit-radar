@@ -6031,6 +6031,11 @@ export type Database = {
           status: string | null
           title: string
           updated_at: string
+          impact_days: number | null
+          revised_completion_date: string | null
+          cost_code_id: string | null
+          approval_task_id: string | null
+          client_rejection_reason: string | null
         }
         Insert: {
           amount: number
@@ -6055,6 +6060,11 @@ export type Database = {
           status?: string | null
           title: string
           updated_at?: string
+          impact_days?: number | null
+          revised_completion_date?: string | null
+          cost_code_id?: string | null
+          approval_task_id?: string | null
+          client_rejection_reason?: string | null
         }
         Update: {
           amount?: number
@@ -6079,6 +6089,11 @@ export type Database = {
           status?: string | null
           title?: string
           updated_at?: string
+          impact_days?: number | null
+          revised_completion_date?: string | null
+          cost_code_id?: string | null
+          approval_task_id?: string | null
+          client_rejection_reason?: string | null
         }
         Relationships: [
           {
@@ -6712,6 +6727,7 @@ export type Database = {
           password_hash: string | null
           project_id: string | null
           tenant_id: string | null
+          client_id: string | null
         }
         Insert: {
           access_token: string
@@ -6730,6 +6746,7 @@ export type Database = {
           password_hash?: string | null
           project_id?: string | null
           tenant_id?: string | null
+          client_id?: string | null
         }
         Update: {
           access_token?: string
@@ -6748,6 +6765,7 @@ export type Database = {
           password_hash?: string | null
           project_id?: string | null
           tenant_id?: string | null
+          client_id?: string | null
         }
         Relationships: []
       }
@@ -7045,6 +7063,8 @@ export type Database = {
           tenant_id: string | null
           trial_end_date: string | null
           updated_at: string
+          stripe_connect_account_id: string | null
+          stripe_connect_charges_enabled: boolean | null
         }
         Insert: {
           address?: string | null
@@ -7066,6 +7086,8 @@ export type Database = {
           tenant_id?: string | null
           trial_end_date?: string | null
           updated_at?: string
+          stripe_connect_account_id?: string | null
+          stripe_connect_charges_enabled?: boolean | null
         }
         Update: {
           address?: string | null
@@ -7087,6 +7109,8 @@ export type Database = {
           tenant_id?: string | null
           trial_end_date?: string | null
           updated_at?: string
+          stripe_connect_account_id?: string | null
+          stripe_connect_charges_enabled?: boolean | null
         }
         Relationships: [
           {
@@ -7396,6 +7420,16 @@ export type Database = {
           safety_alerts: boolean
           time_zone: string
           updated_at: string
+          default_tax_rate: number
+          default_payment_terms_days: number
+          license_number: string | null
+          insurance_carrier: string | null
+          insurance_policy_number: string | null
+          insurance_expires_on: string | null
+          estimate_terms: string | null
+          invoice_terms: string | null
+          change_order_terms: string | null
+          auto_post_to_ledger: boolean
         }
         Insert: {
           additional_settings?: Json | null
@@ -8421,6 +8455,7 @@ export type Database = {
           start_time: string
           status: string
           updated_at: string
+          schedule_task_id: string | null
         }
         Insert: {
           arrival_notification_sent?: boolean | null
@@ -9403,6 +9438,7 @@ export type Database = {
           weather_conditions: string | null
           weather_source: string | null
           work_performed: string | null
+          crew_hours: number | null
         }
         Insert: {
           client_visitors?: string | null
@@ -13766,6 +13802,105 @@ export type Database = {
           },
         ]
       }
+      estimate_share_links: {
+        Row: {
+          accepted_at: string | null
+          company_id: string
+          created_at: string
+          created_by: string | null
+          estimate_id: string
+          expires_at: string
+          first_viewed_at: string | null
+          id: string
+          recipient_email: string
+          revoked_at: string | null
+          sent_at: string
+          token: string
+          version_number: number | null
+        }
+        Insert: {
+          accepted_at?: string | null
+          company_id: string
+          created_at?: string
+          created_by?: string | null
+          estimate_id: string
+          expires_at?: string
+          first_viewed_at?: string | null
+          id?: string
+          recipient_email: string
+          revoked_at?: string | null
+          sent_at?: string
+          token: string
+          version_number?: number | null
+        }
+        Update: {
+          accepted_at?: string | null
+          company_id?: string
+          created_at?: string
+          created_by?: string | null
+          estimate_id?: string
+          expires_at?: string
+          first_viewed_at?: string | null
+          id?: string
+          recipient_email?: string
+          revoked_at?: string | null
+          sent_at?: string
+          token?: string
+          version_number?: number | null
+        }
+        Relationships: []
+      }
+      estimate_acceptances: {
+        Row: {
+          accepted_at: string
+          accepted_by_email: string | null
+          accepted_by_name: string
+          accepted_total: number
+          company_id: string
+          created_at: string
+          estimate_id: string
+          id: string
+          ip_address: string | null
+          share_link_id: string | null
+          signature: string
+          signature_type: string
+          user_agent: string | null
+          version_number: number | null
+        }
+        Insert: {
+          accepted_at?: string
+          accepted_by_email?: string | null
+          accepted_by_name: string
+          accepted_total: number
+          company_id: string
+          created_at?: string
+          estimate_id: string
+          id?: string
+          ip_address?: string | null
+          share_link_id?: string | null
+          signature: string
+          signature_type?: string
+          user_agent?: string | null
+          version_number?: number | null
+        }
+        Update: {
+          accepted_at?: string
+          accepted_by_email?: string | null
+          accepted_by_name?: string
+          accepted_total?: number
+          company_id?: string
+          created_at?: string
+          estimate_id?: string
+          id?: string
+          ip_address?: string | null
+          share_link_id?: string | null
+          signature?: string
+          signature_type?: string
+          user_agent?: string | null
+          version_number?: number | null
+        }
+        Relationships: []
+      }
       estimate_communications: {
         Row: {
           communication_type: string
@@ -13990,6 +14125,7 @@ export type Database = {
           updated_at: string
           valid_until: string | null
           version_number: number
+          client_id: string | null
         }
         Insert: {
           accepted_date?: string | null
@@ -14020,6 +14156,7 @@ export type Database = {
           updated_at?: string
           valid_until?: string | null
           version_number?: number
+          client_id?: string | null
         }
         Update: {
           accepted_date?: string | null
@@ -14050,6 +14187,7 @@ export type Database = {
           updated_at?: string
           valid_until?: string | null
           version_number?: number
+          client_id?: string | null
         }
         Relationships: [
           {
@@ -14178,6 +14316,8 @@ export type Database = {
           updated_at: string
           vendor_contact: string | null
           vendor_name: string | null
+          billed_invoice_id: string | null
+          qb_purchase_id: string | null
         }
         Insert: {
           amount: number
@@ -16748,6 +16888,7 @@ export type Database = {
           total_price: number | null
           unit_price: number
           work_completed_percentage: number | null
+          sov_line_id: string | null
         }
         Insert: {
           cost_code_id?: string | null
@@ -16799,6 +16940,49 @@ export type Database = {
           },
         ]
       }
+      invoice_payments: {
+        Row: {
+          company_id: string
+          created_at: string | null
+          id: string
+          invoice_id: string
+          notes: string | null
+          payment_amount: number
+          payment_date: string
+          payment_method: string
+          processed_by: string | null
+          reference_number: string | null
+          stripe_payment_intent_id: string | null
+          qb_payment_id: string | null
+        }
+        Insert: {
+          company_id: string
+          created_at?: string | null
+          id?: string
+          invoice_id: string
+          notes?: string | null
+          payment_amount: number
+          payment_date?: string
+          payment_method?: string
+          processed_by?: string | null
+          reference_number?: string | null
+          stripe_payment_intent_id?: string | null
+        }
+        Update: {
+          company_id?: string
+          created_at?: string | null
+          id?: string
+          invoice_id?: string
+          notes?: string | null
+          payment_amount?: number
+          payment_date?: string
+          payment_method?: string
+          processed_by?: string | null
+          reference_number?: string | null
+          stripe_payment_intent_id?: string | null
+        }
+        Relationships: []
+      }
       invoices: {
         Row: {
           amount_due: number | null
@@ -16844,6 +17028,7 @@ export type Database = {
           total_amount: number
           updated_at: string
           viewed_at: string | null
+          client_id: string | null
         }
         Insert: {
           amount_due?: number | null
@@ -16889,6 +17074,7 @@ export type Database = {
           total_amount: number
           updated_at?: string
           viewed_at?: string | null
+          client_id?: string | null
         }
         Update: {
           amount_due?: number | null
@@ -16934,6 +17120,7 @@ export type Database = {
           total_amount?: number
           updated_at?: string
           viewed_at?: string | null
+          client_id?: string | null
         }
         Relationships: [
           {
@@ -17116,6 +17303,10 @@ export type Database = {
           project_id: string
           total_cost: number | null
           updated_at: string
+          company_id: string | null
+          source_type: string | null
+          source_id: string | null
+          subcontractor_cost: number | null
         }
         Insert: {
           cost_code_id: string
@@ -17132,6 +17323,10 @@ export type Database = {
           project_id: string
           total_cost?: number | null
           updated_at?: string
+          company_id?: string | null
+          source_type?: string | null
+          source_id?: string | null
+          subcontractor_cost?: number | null
         }
         Update: {
           cost_code_id?: string
@@ -17148,6 +17343,10 @@ export type Database = {
           project_id?: string
           total_cost?: number | null
           updated_at?: string
+          company_id?: string | null
+          source_type?: string | null
+          source_id?: string | null
+          subcontractor_cost?: number | null
         }
         Relationships: [
           {
@@ -17813,6 +18012,7 @@ export type Database = {
           updated_at: string
           vehicle_allowance_monthly: number | null
           workers_comp_rate: number | null
+          billing_rate: number | null
         }
         Insert: {
           annual_hours?: number | null
@@ -21369,6 +21569,12 @@ export type Database = {
           taken_at: string | null
           time_entry_id: string | null
           user_id: string
+          company_id: string | null
+          storage_bucket: string
+          source: string
+          ai_tags: string[] | null
+          ai_classified_at: string | null
+          ai_confidence: number | null
         }
         Insert: {
           caption?: string | null
@@ -24038,6 +24244,17 @@ export type Database = {
           tenant_id: string | null
           total_budget: number | null
           updated_at: string
+          original_contract_value: number | null
+          current_contract_value: number | null
+          client_id: string | null
+          retainage_percentage: number
+          default_billing_rate: number | null
+          expense_markup_percentage: number
+          status_changed_at: string | null
+          activated_at: string | null
+          completed_at: string | null
+          closed_at: string | null
+          handover_sent_at: string | null
         }
         Insert: {
           actual_hours?: number | null
@@ -24061,7 +24278,7 @@ export type Database = {
           project_manager_id?: string | null
           project_type?: string | null
           site_address?: string | null
-          site_id: string
+          site_id?: string
           site_latitude?: number | null
           site_longitude?: number | null
           start_date?: string | null
@@ -24069,6 +24286,9 @@ export type Database = {
           tenant_id?: string | null
           total_budget?: number | null
           updated_at?: string
+          original_contract_value?: number | null
+          current_contract_value?: number | null
+          client_id?: string | null
         }
         Update: {
           actual_hours?: number | null
@@ -24100,6 +24320,9 @@ export type Database = {
           tenant_id?: string | null
           total_budget?: number | null
           updated_at?: string
+          original_contract_value?: number | null
+          current_contract_value?: number | null
+          client_id?: string | null
         }
         Relationships: [
           {
@@ -35360,6 +35583,11 @@ export type Database = {
           total_hours: number | null
           updated_at: string
           user_id: string
+          hourly_rate: number | null
+          burden_rate: number | null
+          labor_cost: number | null
+          company_id: string | null
+          billed_invoice_id: string | null
         }
         Insert: {
           approval_notes?: string | null
@@ -35390,6 +35618,10 @@ export type Database = {
           total_hours?: number | null
           updated_at?: string
           user_id: string
+          hourly_rate?: number | null
+          burden_rate?: number | null
+          labor_cost?: number | null
+          company_id?: string | null
         }
         Update: {
           approval_notes?: string | null
@@ -35420,6 +35652,10 @@ export type Database = {
           total_hours?: number | null
           updated_at?: string
           user_id?: string
+          hourly_rate?: number | null
+          burden_rate?: number | null
+          labor_cost?: number | null
+          company_id?: string | null
         }
         Relationships: [
           {
@@ -39221,8 +39457,411 @@ export type Database = {
           },
         ]
       }
+      project_sov_lines: {
+        Row: {
+          id: string
+          project_id: string
+          company_id: string
+          cost_code_id: string | null
+          line_number: number
+          description: string
+          scheduled_value: number
+          source: string
+          change_order_id: string | null
+          sort_order: number
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          project_id: string
+          company_id: string
+          cost_code_id?: string | null
+          line_number?: number
+          description: string
+          scheduled_value?: number
+          source?: string
+          change_order_id?: string | null
+          sort_order?: number
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          project_id?: string
+          company_id?: string
+          cost_code_id?: string | null
+          line_number?: number
+          description?: string
+          scheduled_value?: number
+          source?: string
+          change_order_id?: string | null
+          sort_order?: number
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      project_closeout_items: {
+        Row: {
+          id: string
+          project_id: string
+          company_id: string
+          category: string
+          name: string
+          status: string
+          is_required: boolean
+          completed_at: string | null
+          completed_by: string | null
+          due_date: string | null
+          notes: string | null
+          sort_order: number
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          project_id: string
+          company_id: string
+          category: string
+          name: string
+          status?: string
+          is_required?: boolean
+          completed_at?: string | null
+          completed_by?: string | null
+          due_date?: string | null
+          notes?: string | null
+          sort_order?: number
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          project_id?: string
+          company_id?: string
+          category?: string
+          name?: string
+          status?: string
+          is_required?: boolean
+          completed_at?: string | null
+          completed_by?: string | null
+          due_date?: string | null
+          notes?: string | null
+          sort_order?: number
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      schedule_task_assignees: {
+        Row: {
+          id: string
+          schedule_task_id: string
+          project_id: string
+          company_id: string
+          crew_member_id: string
+          crew_assignment_id: string | null
+          notified_at: string | null
+          created_by: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          schedule_task_id: string
+          project_id: string
+          company_id: string
+          crew_member_id: string
+          crew_assignment_id?: string | null
+          notified_at?: string | null
+          created_by?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          schedule_task_id?: string
+          project_id?: string
+          company_id?: string
+          crew_member_id?: string
+          crew_assignment_id?: string | null
+          notified_at?: string | null
+          created_by?: string | null
+          created_at?: string
+        }
+        Relationships: []
+      }
+      tax_rates: {
+        Row: {
+          id: string
+          company_id: string
+          name: string
+          rate: number
+          applies_to: string
+          is_default: boolean
+          is_active: boolean
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          company_id: string
+          name: string
+          rate?: number
+          applies_to?: string
+          is_default?: boolean
+          is_active?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          company_id?: string
+          name?: string
+          rate?: number
+          applies_to?: string
+          is_default?: boolean
+          is_active?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      document_number_settings: {
+        Row: {
+          company_id: string
+          doc_type: string
+          prefix: string
+          include_year: boolean
+          pad_width: number
+          next_number: number
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          company_id: string
+          doc_type: string
+          prefix?: string
+          include_year?: boolean
+          pad_width?: number
+          next_number?: number
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          company_id?: string
+          doc_type?: string
+          prefix?: string
+          include_year?: boolean
+          pad_width?: number
+          next_number?: number
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      quickbooks_sync_review: {
+        Row: {
+          id: string
+          company_id: string
+          entity: string
+          qb_id: string
+          reason: string
+          amount: number | null
+          occurred_on: string | null
+          counterparty: string | null
+          raw: Json | null
+          status: string
+          resolved_as_id: string | null
+          resolved_by: string | null
+          resolved_at: string | null
+          first_seen_at: string
+          last_seen_at: string
+        }
+        Insert: {
+          id?: string
+          company_id: string
+          entity: string
+          qb_id: string
+          reason: string
+          amount?: number | null
+          occurred_on?: string | null
+          counterparty?: string | null
+          raw?: Json | null
+          status?: string
+          resolved_as_id?: string | null
+          resolved_by?: string | null
+          resolved_at?: string | null
+          first_seen_at?: string
+          last_seen_at?: string
+        }
+        Update: {
+          id?: string
+          company_id?: string
+          entity?: string
+          qb_id?: string
+          reason?: string
+          amount?: number | null
+          occurred_on?: string | null
+          counterparty?: string | null
+          raw?: Json | null
+          status?: string
+          resolved_as_id?: string | null
+          resolved_by?: string | null
+          resolved_at?: string | null
+          first_seen_at?: string
+          last_seen_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
+      quickbooks_sync_health: {
+        Row: {
+          company_id: string | null
+          entity: string | null
+          pending: number | null
+          resolved: number | null
+          ignored: number | null
+          pending_amount: number | null
+          last_seen_at: string | null
+        }
+        Relationships: []
+      }
+      customer_activity: {
+        Row: {
+          client_id: string | null
+          company_id: string | null
+          record_type: string | null
+          record_id: string | null
+          reference: string | null
+          title: string | null
+          status: string | null
+          amount: number | null
+          occurred_at: string | null
+        }
+        Relationships: []
+      }
+      project_committed_costs: {
+        Row: {
+          project_id: string | null
+          company_id: string | null
+          cost_code_id: string | null
+          committed_amount: number | null
+          open_purchase_orders: number | null
+        }
+        Relationships: []
+      }
+      project_sov_status: {
+        Row: {
+          sov_line_id: string | null
+          project_id: string | null
+          company_id: string | null
+          cost_code_id: string | null
+          line_number: number | null
+          description: string | null
+          scheduled_value: number | null
+          source: string | null
+          sort_order: number | null
+          previously_billed: number | null
+          percent_billed: number | null
+          remaining_to_bill: number | null
+        }
+        Relationships: []
+      }
+      project_retainage: {
+        Row: {
+          project_id: string | null
+          company_id: string | null
+          project_name: string | null
+          retainage_percentage: number | null
+          contract_value: number | null
+          withheld_to_date: number | null
+          released_to_date: number | null
+          retainage_balance: number | null
+        }
+        Relationships: []
+      }
+      daily_report_reconciliation: {
+        Row: {
+          daily_report_id: string | null
+          project_id: string | null
+          company_id: string | null
+          date: string | null
+          reported_crew: number | null
+          reported_hours: number | null
+          timesheet_crew: number | null
+          timesheet_hours: number | null
+          hours_variance: number | null
+          photo_count: number | null
+        }
+        Relationships: []
+      }
+      ledger_account_activity: {
+        Row: {
+          company_id: string | null
+          account_id: string | null
+          account_number: string | null
+          account_name: string | null
+          account_type: Database["public"]["Enums"]["account_type"] | null
+          account_subtype: Database["public"]["Enums"]["account_subtype"] | null
+          normal_balance: string | null
+          entry_date: string | null
+          project_id: string | null
+          debits: number | null
+          credits: number | null
+          net_change: number | null
+        }
+        Relationships: []
+      }
+      project_unbilled_work: {
+        Row: {
+          source_type: string | null
+          source_id: string | null
+          project_id: string | null
+          company_id: string | null
+          cost_code_id: string | null
+          work_date: string | null
+          description: string | null
+          quantity: number | null
+          unit_price: number | null
+        }
+        Relationships: []
+      }
+      schedule_board: {
+        Row: {
+          schedule_task_id: string | null
+          company_id: string | null
+          project_id: string | null
+          project_name: string | null
+          project_status: string | null
+          task_name: string | null
+          start_date: string | null
+          duration_days: number | null
+          end_date: string | null
+          status: string | null
+          sort_order: number | null
+          assignee_count: number | null
+          assignee_names: string | null
+        }
+        Relationships: []
+      }
+      project_closeout_status: {
+        Row: {
+          project_id: string | null
+          company_id: string | null
+          project_name: string | null
+          status: string | null
+          open_punch_items: number | null
+          total_punch_items: number | null
+          required_checklist_open: number | null
+          total_checklist_items: number | null
+          completed_checklist_items: number | null
+          unpaid_invoice_total: number | null
+          invoice_count: number | null
+          warranties_registered: number | null
+          handover_sent_at: string | null
+        }
+        Relationships: []
+      }
       active_seo_insights_summary: {
         Row: {
           avg_priority: number | null
@@ -40109,6 +40748,43 @@ export type Database = {
       }
     }
     Functions: {
+      seed_project_closeout: {
+        Args: { p_project_id: string }
+        Returns: number
+      }
+      set_project_status: {
+        Args: {
+          p_project_id: string
+          p_status: string
+          p_override_reason?: string | null
+        }
+        Returns: string
+      }
+      backfill_ledger: {
+        Args: { p_company_id: string; p_from_date?: string }
+        Returns: { source: string; posted: number; skipped: number }[]
+      }
+      next_document_number: {
+        Args: { p_company_id: string; p_doc_type: string }
+        Returns: string
+      }
+      sync_daily_report_crew: {
+        Args: { p_daily_report_id: string }
+        Returns: number
+      }
+      seed_project_sov: {
+        Args: { p_project_id: string }
+        Returns: number
+      }
+      resolve_billing_rate: {
+        Args: {
+          p_user_id: string
+          p_company_id: string
+          p_project_id: string
+          p_on_date?: string
+        }
+        Returns: number
+      }
       add_subscriber_to_funnel:
         | {
             Args: { p_email: string; p_funnel_id: string; p_source?: string }
@@ -40304,6 +40980,42 @@ export type Database = {
       }
       create_company_affiliate_code: {
         Args: { p_company_id: string }
+        Returns: string
+      }
+      record_invoice_payment: {
+        Args: {
+          p_amount: number
+          p_invoice_id: string
+          p_method?: string
+          p_notes?: string | null
+          p_processed_by?: string | null
+          p_reference_number?: string | null
+          p_stripe_payment_intent_id?: string | null
+        }
+        Returns: string
+      }
+      resolve_labor_rate: {
+        Args: { p_company_id: string; p_on_date?: string; p_user_id: string }
+        Returns: { burden_rate: number; hourly_rate: number }[]
+      }
+      client_has_project_access: {
+        Args: { p_project_id: string }
+        Returns: boolean
+      }
+      client_respond_to_change_order: {
+        Args: {
+          p_approved: boolean
+          p_change_order_id: string
+          p_rejection_reason?: string | null
+        }
+        Returns: undefined
+      }
+      create_company_for_current_user: {
+        Args: {
+          p_company_size?: string | null
+          p_industry_type?: string | null
+          p_name: string
+        }
         Returns: string
       }
       create_default_chart_of_accounts: {

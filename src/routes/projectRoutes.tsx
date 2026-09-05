@@ -31,6 +31,7 @@ import {
 const DailyReportTemplates = createLazyRoute(() => import('@/pages/DailyReportTemplates'));
 const ClientSelectionsPage = createLazyRoute(() => import('@/pages/ClientSelections'));
 const ProjectSchedulePage = createLazyRoute(() => import('@/pages/ProjectSchedule'));
+const ScheduleImportPage = createLazyRoute(() => import('@/pages/ScheduleImport'));
 
 export const projectRoutes = (
   <>
@@ -43,6 +44,9 @@ export const projectRoutes = (
     {/* Scheduling */}
     <Route path="/schedule-management" element={<RouteGuard><LazyScheduleManagement /></RouteGuard>} />
     <Route path="/project-schedule" element={<RouteGuard><ProjectSchedulePage /></RouteGuard>} />
+    {/* US-044/US-329: routed by nothing until now, so an imported schedule had
+        no way in. Linked from the schedule page. */}
+    <Route path="/schedule-import" element={<RouteGuard><ScheduleImportPage /></RouteGuard>} />
 
     {/* Job Costing */}
     <Route path="/job-costing" element={<RouteGuard><LazyJobCosting /></RouteGuard>} />

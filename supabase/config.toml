@@ -8,6 +8,14 @@ schemas = ["public"]
 [functions.stripe-webhook]
 verify_jwt = false
 
+# The prospect's view of an estimate they were emailed a link to. Public by
+# design: a person deciding whether to hire a contractor has no account and
+# should not need one. The 32-byte token in the request body is the credential,
+# the function holds the service role, and it returns only what a prospect
+# needs to decide (US-325).
+[functions.public-estimate]
+verify_jwt = false
+
 [functions.blog-ai]
 verify_jwt = false
 

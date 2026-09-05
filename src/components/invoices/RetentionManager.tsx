@@ -1,364 +1,350 @@
-import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+/**
+ * Retainage release from what was actually withheld (US-327).
+ *
+ * This screen used to declare `const totalInvoiceValue = 100000`, find prior
+ * releases with .ilike('notes', '%retention%'), and never write
+ * invoices.retention_percentage or retention_amount even though both columns
+ * exist. So the withheld balance lived nowhere and the release amount was a
+ * percentage of a constant.
+ *
+ * Now it reads project_retainage, which sums what the progress invoices
+ * actually held back and what earlier release invoices already paid out. That
+ * view is the one retainage model; retention_items and retention_tracking are
+ * deprecated by the same migration and were never written to by anything.
+ */
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Clock, Building, Calendar, DollarSign, AlertCircle } from 'lucide-react';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from '@/components/ui/select';
+import { Clock, AlertCircle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
-import { format, differenceInDays } from 'date-fns';
+import { logger } from '@/lib/logger';
+import { computeRetainageBalance, cents } from '@/lib/progressBilling';
+
+interface RetainageRow {
+  project_id: string;
+  project_name: string;
+  retainage_percentage: number;
+  contract_value: number;
+  withheld_to_date: number;
+  released_to_date: number;
+  retainage_balance: number;
+}
+
+interface ProjectContact {
+  id: string;
+  client_id: string | null;
+  client_name: string | null;
+  client_email: string | null;
+  status: string | null;
+}
+
+const money = (n: number) =>
+  n.toLocaleString('en-US', { style: 'currency', currency: 'USD' });
 
 const RetentionManager: React.FC = () => {
-  const [projects, setProjects] = useState([]);
-  const [retentionInvoices, setRetentionInvoices] = useState([]);
-  const [selectedProject, setSelectedProject] = useState('');
-  const [retentionPercentage, setRetentionPercentage] = useState('10');
-  const [retentionDueDate, setRetentionDueDate] = useState('');
-  const [loading, setLoading] = useState(false);
   const { userProfile } = useAuth();
   const { toast } = useToast();
 
-  useEffect(() => {
-    if (userProfile?.company_id) {
-      loadProjects();
-      loadRetentionInvoices();
-    }
-  }, [userProfile?.company_id]);
+  const [rows, setRows] = useState<RetainageRow[]>([]);
+  const [contacts, setContacts] = useState<Record<string, ProjectContact>>({});
+  const [selectedProject, setSelectedProject] = useState('');
+  const [releaseAmount, setReleaseAmount] = useState('');
+  const [dueDate, setDueDate] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [loadingRows, setLoadingRows] = useState(true);
 
-  const loadProjects = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('projects')
-        .select(`
-          id, name, client_name, client_email, status
-        `)
-        .eq('company_id', userProfile?.company_id)
-        .in('status', ['active', 'completed'])
-        .order('name');
+  const load = useCallback(async () => {
+    if (!userProfile?.company_id) return;
+    setLoadingRows(true);
 
-      if (error) throw error;
-      
-      setProjects(data || []);
-    } catch (error) {
-      console.error('Error loading projects:', error);
-    }
-  };
+    const [{ data: retainage, error: retainageError }, { data: projects, error: projectError }] =
+      await Promise.all([
+        supabase
+          .from('project_retainage')
+          .select('project_id, project_name, retainage_percentage, contract_value, withheld_to_date, released_to_date, retainage_balance')
+          .eq('company_id', userProfile.company_id)
+          .gt('withheld_to_date', 0)
+          .order('retainage_balance', { ascending: false }),
+        supabase
+          .from('projects')
+          .select('id, client_id, client_name, client_email, status')
+          .eq('company_id', userProfile.company_id),
+      ]);
 
-  const loadRetentionInvoices = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('invoices')
-        .select(`
-          *,
-          projects(name, client_name, status)
-        `)
-        .eq('company_id', userProfile?.company_id)
-        .ilike('notes', '%retention%')
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      setRetentionInvoices(data || []);
-    } catch (error) {
-      console.error('Error loading retention invoices:', error);
-    }
-  };
-
-  const calculateRetentionAmount = (project: any, percentage: number) => {
-    // For demo purposes, use a fixed project value - would need to calculate from actual invoices
-    const totalInvoiceValue = 100000; // This would be calculated from project invoices
-    
-    const retentionAmount = totalInvoiceValue * (percentage / 100);
-    
-    // Check if retention already exists
-    const existingRetention = retentionInvoices
-      .filter(inv => inv.project_id === project.id && inv.status !== 'cancelled')
-      .reduce((sum, inv) => sum + parseFloat(inv.total_amount || 0), 0);
-    
-    return {
-      totalInvoiceValue,
-      retentionAmount,
-      existingRetention,
-      availableRetention: Math.max(0, retentionAmount - existingRetention)
-    };
-  };
-
-  const createRetentionInvoice = async () => {
-    if (!selectedProject || !retentionPercentage || !retentionDueDate) {
+    if (retainageError || projectError) {
+      logger.error('Could not load retainage', retainageError || projectError);
       toast({
-        title: "Missing Information",
-        description: "Please fill in all required fields",
-        variant: "destructive"
+        variant: 'destructive',
+        title: 'Could not load retainage',
+        description: (retainageError || projectError)?.message,
+      });
+    }
+
+    setRows((retainage || []) as RetainageRow[]);
+    setContacts(Object.fromEntries(
+      ((projects || []) as ProjectContact[]).map((p) => [p.id, p])
+    ));
+    setLoadingRows(false);
+  }, [userProfile?.company_id, toast]);
+
+  useEffect(() => { void load(); }, [load]);
+
+  const selected = useMemo(
+    () => rows.find((r) => r.project_id === selectedProject) || null,
+    [rows, selectedProject]
+  );
+
+  const balance = useMemo(
+    () => computeRetainageBalance({
+      withheldToDate: selected?.withheld_to_date ?? 0,
+      releasedToDate: selected?.released_to_date ?? 0,
+    }),
+    [selected]
+  );
+
+  useEffect(() => {
+    // Default to releasing everything held. Partial releases are typed over it.
+    setReleaseAmount(balance.balance > 0 ? String(balance.balance) : '');
+  }, [balance.balance]);
+
+  const requested = cents(Number(releaseAmount) || 0);
+  const overRelease = requested > balance.balance;
+
+  const createReleaseInvoice = async () => {
+    if (!selected || !userProfile?.company_id) return;
+    const contact = contacts[selected.project_id];
+
+    if (requested <= 0) {
+      toast({
+        variant: 'destructive',
+        title: 'Enter an amount',
+        description: 'Nothing is being released.',
+      });
+      return;
+    }
+    if (overRelease) {
+      toast({
+        variant: 'destructive',
+        title: 'More than was withheld',
+        description: `Only ${money(balance.balance)} is still held on this job.`,
+      });
+      return;
+    }
+    if (!dueDate) {
+      toast({
+        variant: 'destructive',
+        title: 'A due date is needed',
+        description: 'Retainage is normally due on final acceptance.',
       });
       return;
     }
 
     setLoading(true);
     try {
-      const project = projects.find(p => p.id === selectedProject);
-      if (!project) throw new Error('Project not found');
-
-      const retention = calculateRetentionAmount(project, parseFloat(retentionPercentage));
-      
-      if (retention.availableRetention <= 0) {
-        toast({
-          title: "No Retention Available",
-          description: "Retention has already been invoiced for this project",
-          variant: "destructive"
-        });
-        return;
-      }
-
-      // Create retention invoice
-      const { data, error } = await supabase
+      const { data: invoice, error } = await supabase
         .from('invoices')
         .insert({
-          company_id: userProfile?.company_id,
-          project_id: selectedProject,
-          client_name: project.client_name || 'Unknown Client',
-          client_email: project.client_email || '',
-          subtotal: retention.availableRetention,
-          total_amount: retention.availableRetention,
-          amount_due: retention.availableRetention,
-          due_date: retentionDueDate,
-          notes: `Retention release - ${retentionPercentage}% of project value`,
-          terms: 'Retention payment due upon project completion and final acceptance.'
-        } as any) // Cast to any to bypass type checking temporarily
-        .select()
+          company_id: userProfile.company_id,
+          project_id: selected.project_id,
+          client_id: contact?.client_id ?? null,
+          client_name: contact?.client_name || 'Unknown client',
+          client_email: contact?.client_email || '',
+          invoice_type: 'retention_release',
+          subtotal: requested,
+          total_amount: requested,
+          amount_due: requested,
+          current_amount_due: requested,
+          due_date: dueDate,
+          notes: `Retainage release on ${selected.project_name}`,
+          terms: 'Retainage is due upon final completion and acceptance.',
+        } as never)
+        .select('id, invoice_number')
         .single();
 
       if (error) throw error;
 
-      // Create line item
-      const { error: insertInvoiceLineItemsError } = await supabase
+      const { error: lineError } = await supabase
         .from('invoice_line_items')
         .insert({
-          invoice_id: data.id,
-          description: `Retention Release - ${retentionPercentage}%`,
+          invoice_id: invoice.id,
+          description: `Retainage released (${selected.retainage_percentage}% withheld on ${money(selected.withheld_to_date)} of billings)`,
           quantity: 1,
-          unit_price: retention.availableRetention,
-          total_price: retention.availableRetention
-        } as any);
-      if (insertInvoiceLineItemsError) {
-        throw new Error(`Failed to insert invoice_line_items: ${insertInvoiceLineItemsError.message}`);
+          unit_price: requested,
+          total_price: requested,
+        } as never);
+
+      if (lineError) {
+        // Rolling back the header. If this delete also fails the header is
+        // orphaned - a total with no detail behind it - so say so loudly
+        // rather than reporting only the original failure.
+        const { error: rollbackError } = await supabase
+          .from('invoices').delete().eq('id', invoice.id);
+        if (rollbackError) {
+          logger.error('Invoice header left orphaned after its lines failed', {
+            invoiceId: invoice.id, rollbackError,
+          });
+          throw new Error(
+            `Invoice ${invoice.invoice_number} was created without its lines and could ` +
+            `not be removed. Void it manually. (${rollbackError.message})`
+          );
+        }
+        throw new Error(`Could not write the invoice line: ${lineError.message}`);
       }
 
       toast({
-        title: "Retention Invoice Created",
-        description: `Retention invoice ${data.invoice_number} created`,
+        title: 'Retainage release invoiced',
+        description: `${invoice.invoice_number} for ${money(requested)}`,
       });
-
       setSelectedProject('');
-      setRetentionPercentage('10');
-      setRetentionDueDate('');
-      loadRetentionInvoices();
-      
-    } catch (error) {
-      console.error('Error creating retention invoice:', error);
-      toast({
-        title: "Error",
-        description: error.message || "Failed to create retention invoice",
-        variant: "destructive"
-      });
+      setDueDate('');
+      void load();
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to create the release invoice';
+      logger.error('Retainage release failed', err);
+      toast({ variant: 'destructive', title: 'Could not release retainage', description: message });
     } finally {
       setLoading(false);
     }
   };
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD'
-    }).format(amount);
-  };
-
-  const selectedProjectData = projects.find(p => p.id === selectedProject);
-  const retention = selectedProjectData && retentionPercentage ? 
-    calculateRetentionAmount(selectedProjectData, parseFloat(retentionPercentage)) : null;
-
-  const getRetentionStatus = (invoice: any) => {
-    const today = new Date();
-    const dueDate = new Date(invoice.due_date);
-    const daysDiff = differenceInDays(dueDate, today);
-    
-    if (invoice.status === 'paid') return 'released';
-    if (daysDiff < 0) return 'overdue';
-    if (daysDiff <= 30) return 'due-soon';
-    return 'pending';
-  };
-
-  const getStatusBadge = (status: string) => {
-    const variants = {
-      released: { variant: 'default' as const, label: 'Released', className: 'bg-green-100 text-green-800' },
-      overdue: { variant: 'destructive' as const, label: 'Overdue', className: '' },
-      'due-soon': { variant: 'default' as const, label: 'Due Soon', className: 'bg-yellow-100 text-yellow-800' },
-      pending: { variant: 'outline' as const, label: 'Pending', className: '' }
-    };
-    
-    const config = variants[status as keyof typeof variants] || variants.pending;
-    
-    return (
-      <Badge variant={config.variant} className={config.className || undefined}>
-        {config.label}
-      </Badge>
-    );
-  };
-
   return (
     <div className="space-y-6">
-      {/* Retention Creator */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Clock className="h-5 w-5 text-construction-orange" />
-            Create Retention Invoice
+            <Clock className="h-5 w-5" aria-hidden="true" />
+            Retainage held
           </CardTitle>
+          <CardDescription>
+            What the progress invoices actually withheld, less what has already been released.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {loadingRows ? (
+            <Skeleton className="h-32 w-full" />
+          ) : rows.length === 0 ? (
+            <p className="text-sm text-muted-foreground py-6 text-center">
+              No retainage is being held. It accrues as progress invoices are billed on
+              projects whose terms set a retainage percentage.
+            </p>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="text-left text-muted-foreground border-b">
+                    <th className="py-2 pr-3 font-medium">Project</th>
+                    <th className="py-2 px-3 font-medium text-right">Rate</th>
+                    <th className="py-2 px-3 font-medium text-right">Withheld</th>
+                    <th className="py-2 px-3 font-medium text-right">Released</th>
+                    <th className="py-2 pl-3 font-medium text-right">Still held</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {rows.map((row) => (
+                    <tr key={row.project_id} className="border-b last:border-0">
+                      <td className="py-2 pr-3">{row.project_name}</td>
+                      <td className="py-2 px-3 text-right">{row.retainage_percentage}%</td>
+                      <td className="py-2 px-3 text-right">{money(row.withheld_to_date)}</td>
+                      <td className="py-2 px-3 text-right text-muted-foreground">
+                        {money(row.released_to_date)}
+                      </td>
+                      <td className="py-2 pl-3 text-right">
+                        <Badge variant={row.retainage_balance > 0 ? 'default' : 'outline'}>
+                          {money(row.retainage_balance)}
+                        </Badge>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Release retainage</CardTitle>
+          <CardDescription>
+            Creates an invoice for the withheld balance. Normally issued at final acceptance.
+          </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
-              <Label htmlFor="project">Project</Label>
+              <Label htmlFor="retainage-project">Project</Label>
               <Select value={selectedProject} onValueChange={setSelectedProject}>
-                <SelectTrigger>
+                <SelectTrigger id="retainage-project">
                   <SelectValue placeholder="Select a project" />
                 </SelectTrigger>
                 <SelectContent>
-                  {projects.map(project => (
-                    <SelectItem key={project.id} value={project.id}>
-                      {project.name} - {project.client_name}
+                  {rows.filter((r) => r.retainage_balance > 0).map((r) => (
+                    <SelectItem key={r.project_id} value={r.project_id}>
+                      {r.project_name} - {money(r.retainage_balance)} held
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
-            
             <div>
-              <Label htmlFor="retention-percent">Retention %</Label>
+              <Label htmlFor="retainage-amount">Amount to release</Label>
               <Input
-                id="retention-percent"
+                id="retainage-amount"
                 type="number"
-                min="0"
-                max="100"
-                step="0.1"
-                value={retentionPercentage}
-                onChange={(e) => setRetentionPercentage(e.target.value)}
-                placeholder="10"
+                min={0}
+                step="0.01"
+                value={releaseAmount}
+                onChange={(e) => setReleaseAmount(e.target.value)}
+                disabled={!selected}
               />
             </div>
-
             <div>
-              <Label htmlFor="due-date">Release Due Date</Label>
+              <Label htmlFor="retainage-due">Due date</Label>
               <Input
-                id="due-date"
+                id="retainage-due"
                 type="date"
-                value={retentionDueDate}
-                onChange={(e) => setRetentionDueDate(e.target.value)}
-                min={new Date().toISOString().split('T')[0]}
+                value={dueDate}
+                onChange={(e) => setDueDate(e.target.value)}
+                disabled={!selected}
               />
             </div>
           </div>
 
-          {/* Retention Preview */}
-          {retention && (
-            <div className="bg-muted p-4 rounded-lg space-y-2">
-              <h4 className="font-semibold">Retention Preview</h4>
-              <div className="grid grid-cols-2 gap-4 text-sm">
-                <div>
-                  <span className="text-muted-foreground">Total Invoice Value:</span>
-                  <div className="font-medium">{formatCurrency(retention.totalInvoiceValue)}</div>
-                </div>
-                <div>
-                  <span className="text-muted-foreground">Retention Amount ({retentionPercentage}%):</span>
-                  <div className="font-medium">{formatCurrency(retention.retentionAmount)}</div>
-                </div>
-                <div>
-                  <span className="text-muted-foreground">Existing Retention:</span>
-                  <div className="font-medium">{formatCurrency(retention.existingRetention)}</div>
-                </div>
-                <div>
-                  <span className="text-muted-foreground">Available to Invoice:</span>
-                  <div className="font-bold text-construction-orange">
-                    {formatCurrency(retention.availableRetention)}
-                  </div>
-                </div>
-              </div>
-              
-              {retention.availableRetention <= 0 && (
-                <div className="flex items-center gap-2 text-yellow-600 text-sm mt-2">
-                  <AlertCircle className="h-4 w-4" />
-                  Retention has already been fully invoiced for this project
-                </div>
-              )}
+          {selected && (
+            <div className="text-sm text-muted-foreground">
+              {money(balance.withheldToDate)} withheld, {money(balance.releasedToDate)} already
+              released, {money(balance.balance)} still held.
             </div>
           )}
 
-          <Button 
-            onClick={createRetentionInvoice} 
-            disabled={!selectedProject || !retentionPercentage || !retentionDueDate || loading || (retention?.availableRetention || 0) <= 0}
-            className="w-full bg-construction-orange hover:bg-construction-orange/90"
-          >
-            <Clock className="mr-2 h-4 w-4" />
-            {loading ? 'Creating...' : 'Create Retention Invoice'}
-          </Button>
-        </CardContent>
-      </Card>
-
-      {/* Existing Retention Invoices */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Retention Invoices</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {retentionInvoices.length === 0 ? (
-            <div className="text-center text-muted-foreground py-8">
-              No retention invoices found
-            </div>
-          ) : (
-            <div className="space-y-4">
-              {retentionInvoices.map((invoice) => {
-                const retentionStatus = getRetentionStatus(invoice);
-                
-                return (
-                  <div key={invoice.id} className="border rounded-lg p-4">
-                    <div className="flex items-center justify-between mb-2">
-                      <div className="flex items-center gap-3">
-                        <h4 className="font-semibold">{invoice.invoice_number}</h4>
-                        <Badge variant="outline" className="bg-orange-100 text-orange-800">
-                          Retention
-                        </Badge>
-                        {getStatusBadge(retentionStatus)}
-                      </div>
-                      <div className="text-right">
-                        <div className="font-semibold">
-                          {formatCurrency(parseFloat(invoice.total_amount || 0))}
-                        </div>
-                        <div className="text-sm text-muted-foreground">
-                          {invoice.retention_percentage}% retention
-                        </div>
-                      </div>
-                    </div>
-                    
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-muted-foreground">
-                      <div className="flex items-center gap-2">
-                        <Building className="h-4 w-4" />
-                        {invoice.projects?.name}
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Calendar className="h-4 w-4" />
-                        Due: {format(new Date(invoice.due_date), 'MMM dd, yyyy')}
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <DollarSign className="h-4 w-4" />
-                        Status: {invoice.status}
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
+          {overRelease && (
+            <Alert variant="destructive">
+              <AlertCircle className="h-4 w-4" aria-hidden="true" />
+              <AlertDescription>
+                That is more than the {money(balance.balance)} still held on this job.
+              </AlertDescription>
+            </Alert>
           )}
+
+          <div className="flex justify-end">
+            <Button
+              type="button"
+              onClick={createReleaseInvoice}
+              disabled={loading || !selected || requested <= 0 || overRelease}
+            >
+              {loading ? 'Creating...' : 'Create release invoice'}
+            </Button>
+          </div>
         </CardContent>
       </Card>
     </div>
