@@ -5356,9 +5356,9 @@
         "Users are matched by (connection id, NameID) stored on first login, not by bare email across all tenants",
         "A test feeds an unsigned and a wrongly-signed response and asserts both are rejected"
       ],
-      "priority": 1,
+      "priority": 2,
       "passes": false,
-      "notes": "PROPOSED 2026-09-09 (production-readiness audit, six parallel reviews: auth, security, page/data flows, UI/UX, SEO, ops). CRITICAL. First question for the owner: are any saml connections is_enabled in production today? If none, AC1 is a no-op and the risk is latent; if any, disable now."
+      "notes": "PROPOSED 2026-09-09 (production-readiness audit, six parallel reviews: auth, security, page/data flows, UI/UX, SEO, ops). CRITICAL. First question for the owner: are any saml connections is_enabled in production today? If none, AC1 is a no-op and the risk is latent; if any, disable now. || OWNER 2026-09-09: no SAML connection is enabled in production, so the exposure is latent. AC1 becomes: keep SAML disabled (the callback returns 503 until AC2-AC5 land), and the story drops from P1 to P2. Do not enable a connection for any customer before the validator ships."
     },
     {
       "id": "US-341",
@@ -5406,14 +5406,14 @@
       "title": "Service-role JWTs for the old cloud project are committed in eight migrations and two docs, and the secret scanner cannot see them",
       "description": "As the security owner, I want no credential in the repo to be live. Fifteen migration files carry eyJ... JWTs for Supabase project ref ilhzuvemiuyfuxfegtlv; decoding shows role service_role in at least 20250824151742_429dee36-385f-4ea1-9089-5e8900806569.sql:14, 20250823012912_92eabe43-76b9-45ee-a98e-ae5aba0be86f.sql:12,22, 20250824142631_7b3938ff...:43, 20250825030953, 20250825031043, 20250825031243, 20250824151648:5 and 20250823013056:9 (inside net.http_post header literals for cron jobs), plus MAKE_COM_QUICK_REFERENCE.md:15 and COMPLETE_AUTOMATION_DEPLOYMENT.md:55; the anon JWT is in seven more migrations and README-MCP.md:100. The project is still referenced from src/pages/Index.tsx:97 and src/config/pentest.config.ts:129. scripts/secret-scan.sh:86-88 only matches a JWT on the right-hand side of an = assignment, so these pass. Nobody has tested whether the key is still live.",
       "acceptanceCriteria": [
-        "The cloud project ilhzuvemiuyfuxfegtlv is confirmed deleted, or its service_role and anon keys are rotated; the outcome is recorded in docs/RUNBOOK_DB_DUMP_INCIDENT.md",
+        "The cloud project ilhzuvemiuyfuxfegtlv is confirmed deleted (owner confirmed 2026-09-09); a one-line note in docs/RUNBOOK_DB_DUMP_INCIDENT.md records it",
         "A new migration re-creates every cron job that embedded a JWT using vault.decrypted_secrets (or an internal-caller secret) instead, and unschedules the old jobs; merged migration files are not edited (append-only per CLAUDE.md), the history purge is US-286",
         "scripts/secret-scan.sh matches a JWT anywhere (not only after =), decodes the payload, and fails on role service_role; the two .md hits are removed",
         "src/pages/Index.tsx and src/config/pentest.config.ts no longer reference the old project"
       ],
-      "priority": 1,
+      "priority": 3,
       "passes": false,
-      "notes": "PROPOSED 2026-09-09 (production-readiness audit, six parallel reviews: auth, security, page/data flows, UI/UX, SEO, ops). HIGH. Rotation is the fix; text removal is cosmetic. Coordinate with US-286, which rewrites history for the dump blobs and can take these paths in the same filter-repo run."
+      "notes": "PROPOSED 2026-09-09 (production-readiness audit, six parallel reviews: auth, security, page/data flows, UI/UX, SEO, ops). HIGH. Rotation is the fix; text removal is cosmetic. Coordinate with US-286, which rewrites history for the dump blobs and can take these paths in the same filter-repo run. || OWNER 2026-09-09: the cloud project is gone, so the committed JWTs are dead and this drops from P1 to P3. What remains is hygiene plus one real bug: any pg_cron job from those migrations that still posts to the old project URL is failing silently every run, so AC2 (re-create the jobs against the self-hosted functions URL, or unschedule them) is the part that changes behaviour. Check cron.job on the live database for the old hostname first."
     },
     {
       "id": "US-345",
