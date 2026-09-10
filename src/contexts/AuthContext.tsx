@@ -80,9 +80,10 @@ const UserProfileSchema = z.object({
 });
 
 // OTP types for email verification flows
+// No 'invite_user': send-auth-otp no longer accepts it (US-339). Invites go
+// through invite-team-member, which authenticates the inviter.
 type OTPType =
   | 'confirm_signup'
-  | 'invite_user'
   | 'magic_link'
   | 'change_email'
   | 'reset_password'

@@ -101,3 +101,68 @@ describe('no client writes a privilege column', () => {
     expect(offenders, 'privilege column written from the browser').toEqual([]);
   });
 });
+
+/**
+ * US-339, the third door in the same family. US-337 was the UPDATE path and
+ * US-338 the signup INSERT; this is the invite.
+ *
+ * send-auth-otp reads no Authorization header at all, yet accepted
+ * type: 'invite_user' with a caller-supplied companyId and
+ * metadata: z.record(z.any()). It wrote both into the OTP token, and
+ * verify-auth-otp created the account with that company_id and role. Anyone
+ * could invite themselves into any workspace as an admin and read the code
+ * from their own inbox.
+ *
+ * Nothing legitimate used it. The real invite flow is invite-team-member,
+ * which authenticates the caller and derives company and role from the
+ * inviter's own profile.
+ */
+describe('the unauthenticated invite door stays shut', () => {
+  const otp = readFileSync('supabase/functions/send-auth-otp/index.ts', 'utf8');
+
+  /** The zod enum is what an unauthenticated caller can actually reach. */
+  const typeEnum = (): string => {
+    const m = /type:\s*z\.enum\(\[([\s\S]*?)\]\)/.exec(otp);
+    expect(m, 'send-auth-otp type enum not found').toBeTruthy();
+    return m![1];
+  };
+
+  it('does not accept invite_user', () => {
+    expect(typeEnum(), 'send-auth-otp accepts invite_user again').not.toContain('invite_user');
+  });
+
+  it('still accepts the account-scoped flows it is for', () => {
+    for (const t of ['confirm_signup', 'magic_link', 'reset_password']) {
+      expect(typeEnum()).toContain(t);
+    }
+  });
+
+  it('takes no company or invite metadata from the body', () => {
+    // Assert on the schema, not the file: every one of these names also appears
+    // in the comment explaining why it was removed.
+    const schema = /const sendOTPSchema = z\.object\(\{([\s\S]*?)\n\}\);/.exec(otp);
+    expect(schema, 'sendOTPSchema not found').toBeTruthy();
+    const fields = schema![1]
+      .split('\n')
+      .filter((l) => !l.trimStart().startsWith('//'))
+      .join('\n');
+    for (const field of ['companyId', 'inviterUserId', 'metadata']) {
+      expect(fields, `${field} is caller-supplied again`).not.toMatch(
+        new RegExp(`\\b${field}\\s*:`)
+      );
+    }
+  });
+
+  it('writes null company and empty metadata into the token', () => {
+    expect(otp).toMatch(/p_company_id:\s*null/);
+    expect(otp).toMatch(/p_metadata:\s*\{\}/);
+  });
+
+  it('leaves the authenticated invite path as the only way in', () => {
+    // invite-team-member resolves the inviter server-side. If this stops being
+    // true, the guarded door is no longer guarded.
+    const invite = readFileSync('supabase/functions/invite-team-member/index.ts', 'utf8');
+    expect(invite).toContain('initializeAuthContext');
+    expect(invite).toMatch(/\.from\(\s*["\x27]user_profiles["\x27]\s*\)[\s\S]{0,200}?\.eq\(\s*["\x27]id["\x27],\s*user\.id/);
+  });
+});

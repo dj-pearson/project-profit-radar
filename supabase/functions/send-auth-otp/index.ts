@@ -3,7 +3,6 @@
  *
  * Generates and sends OTP codes for various authentication flows:
  * - confirm_signup: Email verification for new signups
- * - invite_user: Team member invitations
  * - magic_link: Passwordless sign-in
  * - change_email: Email address change confirmation
  * - reset_password: Password reset verification
@@ -23,9 +22,21 @@ import { checkRateLimit, getClientIP, rateLimitResponse, RATE_LIMITS } from '../
 // Validation schema
 const sendOTPSchema = z.object({
   email: z.string().email('Invalid email address'),
+  // No 'invite_user'. This endpoint never authenticated its caller - it reads
+  // no Authorization header at all - so an invite_user request minted an OTP
+  // token carrying an arbitrary companyId and an arbitrary metadata.role.
+  // verify-auth-otp then created the account with that company_id and role, so
+  // anyone could post an invite for their own address against a victim
+  // company's UUID with metadata.role 'admin', read the code from their own
+  // inbox, and walk into the workspace as an admin.
+  //
+  // Nothing legitimate used it: no caller anywhere passes invite_user, and the
+  // real invite flow is invite-team-member, which authenticates the caller and
+  // derives company_id and the allowed role from the inviter's own profile
+  // rather than from the body. This was an unauthenticated door standing open
+  // next to a locked one.
   type: z.enum([
     'confirm_signup',
-    'invite_user',
     'magic_link',
     'change_email',
     'reset_password',
@@ -34,16 +45,17 @@ const sendOTPSchema = z.object({
     // Optional fields for specific flows
   recipientName: z.string().max(100).optional(),
   newEmail: z.string().email().optional(),
-  inviterName: z.string().max(100).optional(),
-  inviterUserId: z.string().uuid().optional(),
-  companyId: z.string().uuid().optional(),
-  companyName: z.string().max(200).optional(),
-  metadata: z.record(z.any()).optional()
+  // inviterName, inviterUserId, companyId, companyName and metadata went with
+  // invite_user. They existed only to describe an invite, and every one of them
+  // was caller-supplied input written into the token. None of the remaining
+  // types is company-scoped - they all act on the account owning the email.
 });
 
 // Expiration times for different token types (in minutes)
 const EXPIRATION_TIMES: Record<AuthEmailType, number> = {
   confirm_signup: 15,
+  // Unreachable: the schema above no longer accepts invite_user. The key stays
+  // because this is a Record over the shared AuthEmailType union.
   invite_user: 60,
   magic_link: 10,
   change_email: 15,
@@ -86,12 +98,7 @@ const handler = async (req: Request): Promise<Response> => {
       email,
       type,
       recipientName,
-      newEmail,
-      inviterName,
-      inviterUserId,
-      companyId,
-      companyName,
-      metadata
+      newEmail
     } = validation.data;
 
     console.log(`[SendAuthOTP] Processing ${type} request for ${email}`);
@@ -160,10 +167,12 @@ const handler = async (req: Request): Promise<Response> => {
       p_token_type: type,
       p_expires_in_minutes: expiresInMinutes,
       p_new_email: newEmail || null,
-      p_inviter_user_id: inviterUserId || null,
-      p_inviter_name: inviterName || null,
-      p_company_id: companyId || null,
-      p_metadata: metadata || {},
+      // Always null now: these described an invite, and the caller is not
+      // trusted to describe one.
+      p_inviter_user_id: null,
+      p_inviter_name: null,
+      p_company_id: null,
+      p_metadata: {},
       p_ip: clientIP,
       p_user_agent: userAgent
     });
@@ -189,8 +198,6 @@ const handler = async (req: Request): Promise<Response> => {
         recipientName,
         otpCode,
         expiresInMinutes,
-        inviterName,
-        companyName,
         newEmail
       },
       siteConfig
@@ -216,7 +223,7 @@ const handler = async (req: Request): Promise<Response> => {
       // findable in the logs.
       const { error: invalidateError } = await supabaseAdmin
         .from('auth_otp_codes')
-        .update({ is_used: true, metadata: { ...metadata, email_failed: true } })
+        .update({ is_used: true, metadata: { email_failed: true } })
         .eq('id', tokenId);
       if (invalidateError) {
         console.error(
