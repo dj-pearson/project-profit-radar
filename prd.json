@@ -6120,6 +6120,35 @@
       "priority": 4,
       "passes": false,
       "notes": "PROPOSED 2026-09-09 (production-readiness audit, six parallel reviews: auth, security, page/data flows, UI/UX, SEO, ops). US-261 did a first pass in July; this is the rest."
+    },
+    {
+      "id": "US-397",
+      "title": "Six sitemap URLs a crawler cannot index, and two 200-with-no-content pages nothing marks noindex",
+      "description": "As a search crawler, I want every URL Brikly submits to return a page. scripts/generate-sitemap.js is a hand-maintained list that drifted from src/routes/: /tutorials, /tools/schedule-builder (routed at /schedule-builder, behind schedule.write) and two /knowledge-base/article/* slugs have no route, so react-router's catch-all answered them with HTTP 200 and \"Brikly / Page not found\" - soft 404s. /support and /knowledge-base are wrapped in RouteGuard, so a crawler got the sign-in redirect. The catch-all itself and BlogPost's \"Article Not Found\" branch (which /resources/:slug renders for any unpublished slug) carried no robots tag, so both were free to index as thin pages.",
+      "acceptanceCriteria": [
+        "The six unindexable entries are out of scripts/generate-sitemap.js and public/sitemap.xml is regenerated (86 URLs)",
+        "The catch-all route renders src/pages/NotFound with <meta name=\"robots\" content=\"noindex, follow\">, replacing the inline div that had none",
+        "BlogPost's not-found branch carries the same robots tag",
+        "scripts/check-sitemap-routes.mjs fails the commit when a sitemap URL has no route (MISSING) or only a guarded one (GUARDED), wired into .husky/pre-commit and .github/workflows/ci.yml"
+      ],
+      "priority": 2,
+      "passes": true,
+      "notes": "DONE 2026-09-10 (SEO iteration 1, branch claude/seo-iterative-loop-p8j5a0). The content the removed URLs promised is US-398."
+    },
+    {
+      "id": "US-398",
+      "title": "Thirteen /resources guides and a public knowledge base exist only as sitemap entries and internal links",
+      "description": "As a contractor searching for these topics, I want the page the link promises. US-397 removed four dead sitemap URLs; the pages behind them were never built. /resources/:slug renders BlogPost, which reads the DB, so 13 more slugs in the sitemap (construction-compliance-checklist, construction-cost-estimation-methods, construction-crm-implementation-guide, construction-management-software-comparison, construction-management-software-small-business-guide, construction-material-management-control-costs-reduce-waste-2025, construction-project-management-best-practices, construction-scheduling-templates, procore-alternatives-smb-contractors-guide, small-business-construction-software-guide, top-10-construction-platforms-august-2025 and the two 7-hidden-costs guides) return \"Article Not Found\" unless a blog_posts row exists for each - which no migration or seed guarantees. Separately, src/pages/KnowledgeBaseArticle.tsx is routed nowhere and /knowledge-base is behind RouteGuard, so the knowledge base has no public surface at all, and blog-post-top-10-construction-platforms.md sits at the repo root as an unpublished draft.",
+      "acceptanceCriteria": [
+        "Each of the 13 slugs either has a published blog_posts row (verified by a test or a seed migration) or is dropped from every internal link that points at it",
+        "A guard or test asserts that a /resources/:slug in the sitemap resolves to a published post, so the DB-backed half of the sitemap cannot silently rot the way the static half did",
+        "KnowledgeBaseArticle is routed on a public path, or deleted; /knowledge-base gets a public index if the articles are meant to rank",
+        "/tutorials is either built or removed from every link and nav item that references it",
+        "blog-post-top-10-construction-platforms.md is published or archived under docs/"
+      ],
+      "priority": 3,
+      "passes": false,
+      "notes": "PROPOSED 2026-09-10 (SEO iteration 1). Content work, not a one-commit fix: 13 long-form guides plus a KB information architecture decision. Split per-guide when picked up."
     }
   ]
 }

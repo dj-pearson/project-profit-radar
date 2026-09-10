@@ -7,6 +7,7 @@
 import { Route, Outlet } from 'react-router-dom';
 import ErrorBoundary from '@/components/ErrorBoundary';
 import AccessDenied from '@/pages/AccessDenied';
+import NotFound from '@/pages/NotFound';
 import { appRoutes } from './appRoutes';
 import { marketingRoutes } from './marketingRoutes';
 import { projectRoutes } from './projectRoutes';
@@ -34,20 +35,12 @@ export const accessDeniedRoute = <Route path="/unauthorized" element={<AccessDen
 
 /**
  * 404 Not Found Route
+ *
+ * Renders src/pages/NotFound, which carries the `noindex` robots tag. The
+ * inline markup that used to be here had none, so every unanswered URL was a
+ * 200-with-no-content page a crawler was free to index (US-397).
  */
-export const notFoundRoute = (
-  <Route
-    path="*"
-    element={
-      <div className="min-h-screen bg-background text-foreground flex items-center justify-center">
-        <div className="text-center">
-          <h1 className="text-4xl font-bold mb-4">Brikly</h1>
-          <p className="text-muted-foreground">Page not found</p>
-        </div>
-      </div>
-    }
-  />
-);
+export const notFoundRoute = <Route path="*" element={<NotFound />} />;
 
 /**
  * All Application Routes

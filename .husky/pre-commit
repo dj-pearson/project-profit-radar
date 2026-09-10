@@ -105,6 +105,11 @@ node scripts/generate-tiers.mjs --check || exit 1
 # fails outright - which is how task comments and timesheet approval broke.
 node scripts/check-embed-constraints.mjs || exit 1
 
+# 3t4. Sitemap vs routes (US-397) - a sitemap URL no route answers is a soft
+#      404 (200 + "Page not found"), and one behind RouteGuard is a sign-in
+#      redirect. Both cost the sitemap credibility for the URLs that are real.
+node scripts/check-sitemap-routes.mjs || exit 1
+
 # 3t. Dead links (US-312) — react-router's catch-all turns a link to a path no
 #     route answers into the 404 page, silently.
 node scripts/check-dead-links.mjs || exit 1

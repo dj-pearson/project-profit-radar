@@ -224,6 +224,9 @@ jobs:
       - name: PostgREST embeds name a real foreign key (US-336)
         run: node scripts/check-embed-constraints.mjs
 
+      - name: Sitemap URLs are answered by a public route (US-397)
+        run: node scripts/check-sitemap-routes.mjs
+
       - name: Dead-link guard (US-312)
         run: node scripts/check-dead-links.mjs
 

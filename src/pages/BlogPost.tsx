@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { Calendar, Clock, ArrowLeft } from "lucide-react";
 import ReactMarkdown from "react-markdown";
+import { Helmet } from "react-helmet-async";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { SEOMetaTags } from "@/components/SEOMetaTags";
@@ -101,6 +102,15 @@ const BlogPost = () => {
   if (notFound || !post) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-construction-light via-white to-construction-light/30">
+        {/* /resources/:slug answers every slug, so an unpublished or retired
+            article returns HTTP 200 with this panel. Without the robots tag a
+            crawler indexes it as a thin page and the whole /resources tree
+            loses trust (US-397). */}
+        <Helmet>
+          <title>Article not found | Brikly</title>
+          <meta name="robots" content="noindex, follow" />
+          <meta name="googlebot" content="noindex, follow" />
+        </Helmet>
         <div className="container mx-auto px-4 py-8">
           <div className="max-w-4xl mx-auto text-center">
             <h1 className="text-3xl font-bold text-construction-dark mb-4">Article Not Found</h1>

@@ -27,6 +27,15 @@ const CURRENT_DATE = new Date().toISOString().split('T')[0];
  * All SEO pages configuration
  * Mirrors the structure from src/config/seoConfig.ts
  */
+/**
+ * Removed as unindexable (soft 404s / sign-in redirects), see
+ * scripts/check-sitemap-routes.mjs which now fails the commit if they return:
+ *   /support, /knowledge-base                    guarded by RouteGuard
+ *   /tutorials                                   no route, never built
+ *   /tools/schedule-builder                      routed at /schedule-builder, behind schedule.write
+ *   /knowledge-base/article/<two slugs>          no /knowledge-base/article route
+ * Building any of these is content work, tracked in prd.json.
+ */
 const seoPages = [
   // Core Marketing Pages
   { path: '/', priority: 1.0, changeFreq: 'daily' },
@@ -35,10 +44,7 @@ const seoPages = [
   { path: '/faq', priority: 0.7, changeFreq: 'monthly' },
   { path: '/blog', priority: 0.8, changeFreq: 'weekly' },
   { path: '/solutions', priority: 0.8, changeFreq: 'monthly' },
-  { path: '/support', priority: 0.7, changeFreq: 'monthly' },
   { path: '/resources', priority: 0.8, changeFreq: 'weekly' },
-  { path: '/knowledge-base', priority: 0.7, changeFreq: 'weekly' },
-  { path: '/tutorials', priority: 0.7, changeFreq: 'weekly' },
   { path: '/tools', priority: 0.7, changeFreq: 'monthly' },
 
   // Industry-Specific Pages
@@ -74,7 +80,6 @@ const seoPages = [
   { path: '/profitability-calculator', priority: 0.7, changeFreq: 'monthly' },
   { path: '/financial-health-check', priority: 0.7, changeFreq: 'monthly' },
   { path: '/health-check', priority: 0.7, changeFreq: 'monthly' },
-  { path: '/tools/schedule-builder', priority: 0.8, changeFreq: 'monthly' },
 
   // Topic Hub Pages
   { path: '/topics/construction-management-basics', priority: 0.7, changeFreq: 'monthly' },
@@ -127,8 +132,6 @@ const seoPages = [
   { path: '/resources/7-hidden-costs-of-construction-project-delays-and-how-to-avoid-them', priority: 0.8, changeFreq: 'monthly' },
 
   // Knowledge Base Articles
-  { path: '/knowledge-base/article/getting-started-complete-setup-guide', priority: 0.7, changeFreq: 'monthly' },
-  { path: '/knowledge-base/article/mobile-app-field-guide', priority: 0.7, changeFreq: 'monthly' },
 
   // Legal & Compliance Pages (lower priority but indexable so search
   // engines, regulators, and procurement teams can locate them).
