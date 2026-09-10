@@ -62,7 +62,7 @@ npm run build:mobile:sync      # Capacitor web→native wrapper (not the shippin
 
 ## Deploy
 
-Cloudflare Pages, build cmd `npm ci && npm run build` → `dist/`. Node comes from `.nvmrc` (20.18.0) everywhere — CI, Cloudflare Pages and local; vitest 4 needs ≥20.12, so `engines.node` is `>=20.12.0` and `scripts/check-node-version-pins.mjs` fails any workflow that hardcodes a version instead. npm 10.9.2. Domains: `brikly.net`, `brikly.pearsonperformance.workers.dev`. Cloudflare env: `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `STRIPE_PUBLISHABLE_KEY`. Edge-fn secrets in Supabase dashboard.
+Cloudflare Pages, build cmd `npm ci && npm run build` → `dist/`. Node comes from `.nvmrc` (22.12.0) everywhere — CI, Cloudflare Pages and local. The floor is rolldown's, not vitest's: rolldown declares `^20.19.0 || >=22.12.0` and its native binding is an optional dependency, so npm SKIPS it on an engine mismatch and `npm ci` still succeeds — vitest then dies at run time on a missing `rolldown-binding`. `scripts/check-node-version-pins.mjs` reads that range out of package-lock.json rather than hardcoding it, and fails any workflow that pins a version instead of reading `.nvmrc`. npm 10.9.2. Domains: `brikly.net`, `brikly.pearsonperformance.workers.dev`. Cloudflare env: `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `STRIPE_PUBLISHABLE_KEY`. Edge-fn secrets in Supabase dashboard.
 
 **Rollback:** the single authoritative procedure is [`docs/RUNBOOK_ROLLBACK.md`](docs/RUNBOOK_ROLLBACK.md) (web CF Pages, edge functions, migrations, iOS). The old root-level SSH/single-tenant rollback checklists are obsolete and archived under `docs/archive/rollback/` — do not follow them.
 

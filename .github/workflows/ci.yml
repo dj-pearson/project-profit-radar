@@ -132,12 +132,6 @@ jobs:
       - name: Run security unit tests
         run: npm run test:security
 
-      - name: Dependency vulnerability audit
-        # US-255: blocks on high/critical CVEs. Pre-existing backlog is
-        # suppressed via scripts/audit-allowlist.json (with expiry); new
-        # high/critical advisories fail the job.
-        run: npm run security:audit
-
       - name: Secret scanning
         run: bash scripts/secret-scan.sh
 
@@ -271,3 +265,15 @@ jobs:
 
       - name: Index CONCURRENTLY guard (US-249)
         run: node scripts/check-index-concurrently.mjs
+
+      # Last on purpose. A failing step skips every step after it, and this one
+      # sat at position 6 with 44 guards behind it - so a single unfixed CVE
+      # silently disabled the entire guard suite while the job still reported
+      # as "completed". That is how the storage-privacy and node-pin guards
+      # were registered but never actually ran. Keep this at the end: it still
+      # fails the job, it just no longer takes the guards down with it.
+      - name: Dependency vulnerability audit
+        # US-255: blocks on high/critical CVEs. Pre-existing backlog is
+        # suppressed via scripts/audit-allowlist.json (with expiry); new
+        # high/critical advisories fail the job.
+        run: npm run security:audit
