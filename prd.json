@@ -5801,8 +5801,8 @@
         "Verify in browser: FiscalPeriods save shows a toast"
       ],
       "priority": 1,
-      "passes": false,
-      "notes": "PROPOSED 2026-09-09 (production-readiness audit, six parallel reviews: auth, security, page/data flows, UI/UX, SEO, ops). P1: silent success/failure on 43 screens."
+      "passes": true,
+      "notes": "COMPLETED 2026-09-10. Decision: keep sonner and mount it. src/App.tsx now renders <SonnerToaster /> next to the use-toast <Toaster />; both hosts are load-bearing (380 files on use-toast, ~40 on sonner) so neither was codemodded. src/components/ui/sonner.tsx also switched its theme source from next-themes (which has no provider mounted, so it always reported 'system') to the app's ThemeContext actualTheme, and gained closeButton. Test at src/components/ui/__tests__/sonner.test.tsx renders the Toaster inside ThemeProvider and asserts a toast becomes visible - component-level rather than a full App render, which would need the whole provider tree and router; the host is what regressed, and that is what it guards."
     },
     {
       "id": "US-374",

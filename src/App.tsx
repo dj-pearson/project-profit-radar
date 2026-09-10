@@ -9,6 +9,7 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { SubscriptionProvider } from "@/contexts/SubscriptionContext";
 import { PlatformProvider } from "@/contexts/PlatformContext";
 import { Toaster } from "@/components/ui/toaster";
+import { Toaster as SonnerToaster } from "@/components/ui/sonner";
 import { ContextMenuProvider } from '@/components/ui/context-menu-provider';
 import ErrorBoundary from "@/components/ErrorBoundary";
 import { DashboardSkeleton } from "@/components/ui/loading-skeleton";
@@ -59,8 +60,11 @@ const AppContent = () => {
         </Routes>
       </Suspense>
 
-      {/* Essential UI */}
+      {/* Essential UI. Both toasters are load-bearing: ~40 components call
+          toast() from sonner while the rest use the radix useToast hook, and
+          the sonner host was never mounted, so those calls showed nothing. */}
       <Toaster />
+      <SonnerToaster />
 
       {/* Cookie consent banner — appears on every public page until the user
           makes a choice. Honors GPC, persists choices in localStorage, and

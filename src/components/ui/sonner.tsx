@@ -1,5 +1,5 @@
-import { useTheme } from "next-themes"
 import { Toaster as Sonner, toast } from "sonner"
+import { useTheme } from "@/contexts/ThemeContext"
 
 type ToasterProps = React.ComponentProps<typeof Sonner>
 
@@ -7,13 +7,17 @@ type ToasterProps = React.ComponentProps<typeof Sonner>
  * Glass-styled Sonner toaster. On mobile, toasts float above the bottom
  * nav using safe-area-aware offset. Each toast is a glass-thick surface
  * with shadow-ios-3 for a premium feel.
+ *
+ * Theme comes from the app's own ThemeContext (next-themes has no provider
+ * mounted in this app, so its useTheme always reported "system").
  */
 const Toaster = ({ ...props }: ToasterProps) => {
-  const { theme = "system" } = useTheme()
+  const { actualTheme } = useTheme()
 
   return (
     <Sonner
-      theme={theme as ToasterProps["theme"]}
+      theme={actualTheme}
+      closeButton
       className="toaster group"
       // Safe-area aware offset so mobile toasts float above the bottom nav
       offset="calc(env(safe-area-inset-bottom, 0px) + 88px)"
