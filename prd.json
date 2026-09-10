@@ -4724,7 +4724,7 @@
       ],
       "priority": 2,
       "passes": false,
-      "notes": "PROPOSED 2026-08-27 while working the US-237 backlog. The pattern to reuse: where a table has a tenancy column and legitimate same-tenant client writes, add an AS RESTRICTIVE policy TO authenticated, anon rather than scoping the permissive one. Restrictive policies AND rather than OR, so same-tenant writes keep working and there is no mixed-client window - which is what makes it shippable in a single release despite CLAUDE.md's rule against tightening RLS. Where no client touches the table at all, scoping the permissive policy to service_role is simpler and equally safe. THE TRAP: a restrictive WITH CHECK denies a row whose tenancy column is NULL, because NULL = x is NULL rather than true. Check what the writers actually send before shipping one - that is exactly why seo_meta_tags was left out of 20260827031000. || AUDIT 2026-09-09: still open beyond seo_meta_tags: trades FOR ALL USING (true) (20250115000005:372-373) and seven pseo_* tables \"Authenticated manage\" FOR ALL (20260313000000_create_pseo_tables.sql). The subscribers billing bypass and the materials trio are severe enough to be their own stories (US-342, US-343). Static counts on this commit: 3 tables never enable RLS (inspection_schedule, api_key_rate_limits, encryption_key_rotation_schedule); 13 enable RLS with zero policies (bids, bid_packages, bid_line_items, bid_scope_items, schedule_tasks, schedule_baselines, schedule_task_dependencies, schedule_constraints, toolbox_talks, safety_violations, ppe_tracking, calculator_email_events, performance_metrics), which are fail-closed to clients; confirm each against pg_policies."
+      "notes": "PROPOSED 2026-08-27 while working the US-237 backlog. The pattern to reuse: where a table has a tenancy column and legitimate same-tenant client writes, add an AS RESTRICTIVE policy TO authenticated, anon rather than scoping the permissive one. Restrictive policies AND rather than OR, so same-tenant writes keep working and there is no mixed-client window - which is what makes it shippable in a single release despite CLAUDE.md's rule against tightening RLS. Where no client touches the table at all, scoping the permissive policy to service_role is simpler and equally safe. THE TRAP: a restrictive WITH CHECK denies a row whose tenancy column is NULL, because NULL = x is NULL rather than true. Check what the writers actually send before shipping one - that is exactly why seo_meta_tags was left out of 20260827031000. || AUDIT 2026-09-09: still open beyond seo_meta_tags: trades FOR ALL USING (true) (20250115000005:372-373) and seven pseo_* tables \"Authenticated manage\" FOR ALL (20260313000000_create_pseo_tables.sql). The subscribers billing bypass and the materials trio are severe enough to be their own stories (US-342, US-343). Static counts on this commit: 3 tables never enable RLS (inspection_schedule, api_key_rate_limits, encryption_key_rotation_schedule); 13 enable RLS with zero policies (bids, bid_packages, bid_line_items, bid_scope_items, schedule_tasks, schedule_baselines, schedule_task_dependencies, schedule_constraints, toolbox_talks, safety_violations, ppe_tracking, calculator_email_events, performance_metrics), which are fail-closed to clients; confirm each against pg_policies. UPDATE 2026-09-10 (US-397): src/utils/seoBackendSync.ts is deleted, so src/pages/admin/SEOManager.tsx is now the ONLY writer to seo_meta_tags that omits site_id. That narrows item (1) to a single call site - still needs \\d seo_meta_tags against the live database to see whether a default or trigger populates site_id before a restrictive policy can ship."
     },
     {
       "id": "US-299",
@@ -6120,6 +6120,20 @@
       "priority": 4,
       "passes": false,
       "notes": "PROPOSED 2026-09-09 (production-readiness audit, six parallel reviews: auth, security, page/data flows, UI/UX, SEO, ops). US-261 did a first pass in July; this is the rest."
+    },
+    {
+      "id": "US-397",
+      "title": "Delete src/utils/seoBackendSync.ts, dead code that fails tsc and writes site_id-less rows",
+      "description": "As a developer, I want `npx tsc --noEmit -p tsconfig.app.json` to pass. src/utils/seoBackendSync.ts:226 upserts into seo_configurations without site_id, which the generated types declare required on Insert, so it is the single error that fails a repo-wide typecheck. It would also fail at runtime: the upsert has no onConflict target, so it inserts rather than upserts, and site_id is NOT NULL with an FK to sites. Nothing in src/, supabase/functions/, the iOS app or the tests imports the module - all four exports (syncSEOPagesToBackend, updateSEOConfiguration, initializeSEOBackendIntegration, checkSEOSyncStatus) are unreachable. Its page list is a stale hardcoded copy of the marketing sitemap (see US-382) and its config writer hardcodes brikly.net into a multi-tenant table. It is also one of the two site_id-less writers to seo_meta_tags that US-298 has to resolve before it can scope that table's RLS policy.",
+      "acceptanceCriteria": [
+        "src/utils/seoBackendSync.ts no longer exists",
+        "npx tsc --noEmit -p tsconfig.app.json exits 0",
+        "No file in the repo imports seoBackendSync",
+        "US-298 updated to record that src/pages/admin/SEOManager.tsx is now the only site_id-less writer to seo_meta_tags"
+      ],
+      "priority": 1,
+      "passes": true,
+      "notes": "COMPLETED 2026-09-10 (loop iteration 2). Deleted rather than repaired: fixing it would mean inventing a site_id resolution for a function no caller invokes, and the marketing copy it syncs duplicates the sitemap work tracked in US-382. Typecheck went from 1 error to 0."
     }
   ]
 }
