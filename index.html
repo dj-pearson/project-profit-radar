@@ -147,7 +147,19 @@
     }
     </script>
 
-  <!-- SoftwareApplication Schema - Critical for AI Overviews and Rich Results -->
+  <!-- SoftwareApplication Schema - Critical for AI Overviews and Rich Results
+
+       No aggregateRating and no review array here. Both were hardcoded (4.8
+       from 247 reviews, plus three named reviewers) and neither is
+       substantiated, which is exactly what src/config/claims.ts exists to
+       stop: FTC Endorsement Guides and Google's structured-data spam policy
+       both require substantiation in hand before publishing. The React SEO
+       components already gate this on CLAIMS.aggregateRating.verified; this
+       static shell was the one path around it.
+
+       To bring ratings back: substantiate the claim, flip `verified` and
+       `lastVerifiedAt` in src/config/claims.ts, and render the block from
+       the SEO components so there is one gate, not two. -->
   <script type="application/ld+json">
     {
       "@context": "https://schema.org",
@@ -187,37 +199,6 @@
           }
         }
       },
-      "aggregateRating": {
-        "@type": "AggregateRating",
-        "ratingValue": "4.8",
-        "bestRating": "5",
-        "worstRating": "1",
-        "ratingCount": "247",
-        "reviewCount": "247"
-      },
-      "review": [
-        {
-          "@type": "Review",
-          "author": { "@type": "Person", "name": "Mike R." },
-          "reviewRating": { "@type": "Rating", "ratingValue": "5", "bestRating": "5" },
-          "reviewBody": "Brikly replaced our spreadsheets and gave us real-time job costing. We caught a $12K overrun on a commercial remodel before it ate our margin.",
-          "datePublished": "2025-11-15"
-        },
-        {
-          "@type": "Review",
-          "author": { "@type": "Person", "name": "Sarah T." },
-          "reviewRating": { "@type": "Rating", "ratingValue": "5", "bestRating": "5" },
-          "reviewBody": "The GPS time tracking alone saves us 3 hours a week on payroll. Our crews just clock in from their phones and it syncs with QuickBooks.",
-          "datePublished": "2025-10-22"
-        },
-        {
-          "@type": "Review",
-          "author": { "@type": "Person", "name": "James L." },
-          "reviewRating": { "@type": "Rating", "ratingValue": "5", "bestRating": "5" },
-          "reviewBody": "We switched from Procore and saved $2,000/month. Brikly has everything a 15-person crew needs without the enterprise complexity.",
-          "datePublished": "2025-09-30"
-        }
-      ],
       "featureList": [
         "Real-time job costing and budget tracking",
         "GPS-enabled time tracking with geofencing",
