@@ -40,6 +40,12 @@ node scripts/check-silent-writes.mjs || exit 1
 #     or a protected branch CI never runs on, blocks every merge into it.
 node scripts/check-ruleset-consistency.mjs || exit 1
 
+# 3h2. Node version pins (US-389) - .nvmrc is the one source of truth. CI
+#      hardcoded Node 18 while .nvmrc said 20.18.0, and vitest 4's rolldown
+#      imports node:util styleText, added in 20.12. Unit Tests died at import
+#      in under a second on every push.
+node scripts/check-node-version-pins.mjs || exit 1
+
 # 3i. CSP inline-script hashes (US-202) — editing an inline script invalidates
 #     its hash and the browser silently stops running it.
 node scripts/check-csp-hashes.mjs || exit 1
