@@ -183,7 +183,7 @@ export const WorkflowAutomation = () => {
     }
   };
 
-  const useTemplate = async (templateId: string, templateName: string) => {
+  const applyTemplate = async (templateId: string, templateName: string) => {
     try {
       const { data: template, error: templateError } = await supabase
         .from('workflows')
@@ -455,7 +455,7 @@ export const WorkflowAutomation = () => {
                     <Button
                       size="sm"
                       className="w-full"
-                      onClick={() => useTemplate(template.id, template.name)}
+                      onClick={() => applyTemplate(template.id, template.name)}
                     >
                       <Target className="w-4 h-4 mr-2" />
                       Use Template
