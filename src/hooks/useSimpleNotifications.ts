@@ -225,68 +225,7 @@ export const useSimpleNotifications = () => {
     });
   }, [notifications, userProfile?.id]);
 
-  // Send system notification
-  const sendSystemNotification = useCallback(async (
-    recipientId: string,
-    title: string,
-    message: string,
-    data?: any,
-    priority: SimpleNotification['priority'] = 'normal'
-  ) => {
-    const newNotification: SimpleNotification = {
-      id: `system-${Date.now()}`,
-      recipient_id: recipientId,
-      type: 'system',
-      title,
-      message,
-      data,
-      priority,
-      created_at: new Date().toISOString()
-    };
 
-    if (recipientId === userProfile?.id) {
-      setNotifications(prev => [newNotification, ...prev]);
-      setUnreadCount(prev => prev + 1);
-    }
-
-    return newNotification;
-  }, [userProfile]);
-
-  // Simulate periodic new notifications
-  useEffect(() => {
-    if (!userProfile) return;
-
-    const interval = setInterval(() => {
-      const randomNotifications = [
-        {
-          type: 'project_update' as const,
-          title: 'Progress Update',
-          message: 'Daily progress report has been submitted for review.',
-          priority: 'normal' as const
-        },
-        {
-          type: 'task_assignment' as const,
-          title: 'Task Update',
-          message: 'Material delivery task has been completed ahead of schedule.',
-          priority: 'normal' as const
-        },
-        {
-          type: 'budget_alert' as const,
-          title: 'Budget Notification',
-          message: 'Monthly budget review is due this week.',
-          priority: 'low' as const
-        }
-      ];
-
-      // Randomly send a notification every 2-5 minutes (for demo purposes)
-      if (Math.random() < 0.3) {
-        const randomNotif = randomNotifications[Math.floor(Math.random() * randomNotifications.length)];
-        sendSystemNotification(userProfile.id, randomNotif.title, randomNotif.message, {}, randomNotif.priority);
-      }
-    }, 120000); // Every 2 minutes
-
-    return () => clearInterval(interval);
-  }, [userProfile, sendSystemNotification]);
 
   // Load notifications on mount
   useEffect(() => {
@@ -301,7 +240,6 @@ export const useSimpleNotifications = () => {
     isLoading,
     loadNotifications,
     sendNotification,
-    sendSystemNotification,
     markAsRead,
     markAllAsRead,
     deleteNotification
