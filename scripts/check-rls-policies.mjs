@@ -42,10 +42,34 @@ const WRITE_BASELINE = '20260827090000';
 const files = readdirSync(DIR).filter((f) => f.endsWith('.sql')).sort();
 const re = /CREATE\s+POLICY\s+("[^"]+"|\S+)\s+ON\s+(\S+)([\s\S]*?);/gi;
 
+/**
+ * Strip SQL comments before scanning.
+ *
+ * A migration that DROPS a permissive policy tends to quote the original
+ * CREATE POLICY in its header to explain what was wrong with it. Matching the
+ * raw file then reports the explanation as a brand-new violation, and blames
+ * the migration that fixed it - which is exactly what happened to
+ * 20260910020000_lock_subscription_tier.sql, whose only statements against
+ * subscribers are two DROP POLICYs.
+ */
+function stripSqlComments(sql) {
+  return sql
+    .replace(/\/\*[\s\S]*?\*\//g, '')
+    .split('\n')
+    .map((line) => {
+      // Only strip a `--` that starts the line's content; one inside a string
+      // literal is not a comment, and those are rare enough in policy DDL that
+      // the conservative rule is the right one.
+      const trimmed = line.trimStart();
+      return trimmed.startsWith('--') ? '' : line;
+    })
+    .join('\n');
+}
+
 const violations = [];
 const writeViolations = [];
 for (const f of files) {
-  const txt = readFileSync(join(DIR, f), 'utf8');
+  const txt = stripSqlComments(readFileSync(join(DIR, f), 'utf8'));
   let m;
   while ((m = re.exec(txt))) {
     const body = m[3].toLowerCase();
