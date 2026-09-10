@@ -138,7 +138,7 @@ interface AuthContextType {
   signUp: (
     email: string,
     password: string,
-    userData?: { first_name?: string; last_name?: string; role?: string }
+    userData?: { first_name?: string; last_name?: string }
   ) => Promise<{ error?: string }>;
   signOut: () => Promise<void>;
   resetPassword: (email: string) => Promise<{ error?: string }>;
@@ -910,7 +910,7 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
 
   // Sign up using our custom edge function (bypasses Supabase's email)
   const signUp = useCallback(
-    async (email: string, password: string, userData?: { first_name?: string; last_name?: string; role?: string }): Promise<{ error?: string; userId?: string; expiresInMinutes?: number }> => {
+    async (email: string, password: string, userData?: { first_name?: string; last_name?: string }): Promise<{ error?: string; userId?: string; expiresInMinutes?: number }> => {
       try {
         logger.debug("AuthContext: Signing up via OTP flow...");
         setLoading(true);
@@ -929,7 +929,8 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
               password,
               firstName: userData?.first_name || "",
               lastName: userData?.last_name || "",
-              role: userData?.role || "admin",
+              // No role: the server fixes it. It used to be forwarded from the
+              // caller straight into a service-role insert (US-338).
             }),
           }
         );

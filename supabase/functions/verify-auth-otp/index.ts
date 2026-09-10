@@ -16,6 +16,7 @@ import { z } from 'https://deno.land/x/zod@v3.22.4/mod.ts';
 import { getCorsHeaders } from '../_shared/secure-cors.ts';
 import { checkRateLimit, getClientIP, rateLimitResponse, RATE_LIMITS } from '../_shared/rate-limiter.ts';
 import { validatePasswordStrength } from '../_shared/password-policy.ts';
+import { safeInviteRole } from '../_shared/writable-columns.ts';
 
 // Helper function to get user by email (works with all Supabase client versions)
 async function getUserByEmail(supabaseAdmin: any, email: string) {
@@ -208,7 +209,12 @@ const handler = async (req: Request): Promise<Response> => {
             first_name: firstName || result.metadata?.first_name || '',
             last_name: lastName || result.metadata?.last_name || '',
             email: email,
-            role: result.metadata?.role || 'office_staff'
+            // The invite's own metadata, which is server-written - but clamp it
+            // anyway. This is the same insert shape that let signup-with-otp
+            // mint a root_admin, and root_admin is platform-wide rather than a
+            // workspace role, so no invite should ever produce one. An
+            // unrecognised value falls back to the least-privileged role.
+            role: safeInviteRole(result.metadata?.role)
           });
 
         if (profileError) {

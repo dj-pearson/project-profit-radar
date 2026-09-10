@@ -213,7 +213,7 @@ const Auth = () => {
       logger.warn('[Auth] Disposable email pre-check failed:', err);
     }
     setLoading(true); setOtpFlowState('sending');
-    const result = await signUp(email, password, { first_name: firstName, last_name: lastName, role: "admin" });
+    const result = await signUp(email, password, { first_name: firstName, last_name: lastName });
     if (result.error) { toast({ variant: "destructive", title: "Sign Up Failed", description: result.error }); setOtpFlowState('idle'); }
     else { setOtpExpiresIn(result.expiresInMinutes || 15); setOtpFlowState('verifying'); setEmailSent(true); setEmailSentType('signup'); startResendCooldown(60); toast({ title: "Verification Code Sent!", description: "Check your email for the 6-digit code." }); }
     setLoading(false);

@@ -5,6 +5,9 @@ import {
   WRITABLE_ALERT_RULE_COLUMNS,
   WRITABLE_SCHEDULE_COLUMNS,
   pickAllowed,
+  SELF_SIGNUP_ROLE,
+  ASSIGNABLE_INVITE_ROLES,
+  safeInviteRole,
 } from './writable-columns';
 
 // These lists are a security control, not a convenience. They exist because
@@ -87,5 +90,69 @@ describe('pickAllowed', () => {
     const body = { name: 'Roof', company_id: 'other-tenant' };
     pickAllowed(body, WRITABLE_PROJECT_COLUMNS);
     expect(body).toEqual({ name: 'Roof', company_id: 'other-tenant' });
+  });
+});
+
+/**
+ * US-338. The same class of hole one level up: not a column the caller should
+ * not be writing, a VALUE the caller should not be choosing. signup-with-otp
+ * declared `role: z.string().optional().default('admin')` and passed it into a
+ * service-role insert on user_profiles, so an UNAUTHENTICATED POST of
+ * {"role":"root_admin"} created a root admin.
+ */
+describe('role assignment is not caller-controlled', () => {
+  it('gives a self-signup a workspace role, never a platform one', () => {
+    expect(SELF_SIGNUP_ROLE).toBe('admin');
+    expect(SELF_SIGNUP_ROLE).not.toBe('root_admin');
+  });
+
+  it('never lets an invite mint a root_admin', () => {
+    expect(ASSIGNABLE_INVITE_ROLES).not.toContain('root_admin');
+  });
+
+  it('falls back to the least-privileged role for anything unrecognised', () => {
+    for (const bad of ['root_admin', 'superuser', '', 'ADMIN', null, undefined, 42, {}]) {
+      expect(safeInviteRole(bad), `${JSON.stringify(bad)} must not pass through`).toBe(
+        'office_staff'
+      );
+    }
+  });
+
+  it('passes the real workspace roles through unchanged', () => {
+    for (const role of ASSIGNABLE_INVITE_ROLES) {
+      expect(safeInviteRole(role)).toBe(role);
+    }
+  });
+
+  it('signup-with-otp accepts no role from the request body', async () => {
+    const { readFileSync } = await import('node:fs');
+    const src = readFileSync('supabase/functions/signup-with-otp/index.ts', 'utf8');
+    // The schema is what an unauthenticated caller reaches. A `role` key here
+    // in any form is the bug.
+    const schema = /const signupSchema = z\.object\(\{([\s\S]*?)\n\}\);/.exec(src);
+    expect(schema, 'signupSchema not found').toBeTruthy();
+    const body = schema![1]
+      .split('\n')
+      .filter((l) => !l.trimStart().startsWith('//'))
+      .join('\n');
+    expect(body, 'signup schema takes a role again').not.toMatch(/\brole\s*:/);
+    expect(src).toContain('role: SELF_SIGNUP_ROLE');
+  });
+
+  it('verify-auth-otp clamps the role it reads from invite metadata', async () => {
+    const { readFileSync } = await import('node:fs');
+    const src = readFileSync('supabase/functions/verify-auth-otp/index.ts', 'utf8');
+    expect(src).toContain('role: safeInviteRole(');
+    expect(src, 'raw metadata role is being trusted again').not.toMatch(
+      /role:\s*result\.metadata\?\.role\s*\|\|/
+    );
+  });
+
+  it('the browser sends no role at signup', async () => {
+    const { readFileSync } = await import('node:fs');
+    const src = readFileSync('src/contexts/AuthContext.tsx', 'utf8');
+    expect(src, 'AuthContext forwards a caller-chosen role again').not.toMatch(
+      /role:\s*userData\?\.role/
+    );
   });
 });

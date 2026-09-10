@@ -62,3 +62,35 @@ export function pickAllowed(
   }
   return out;
 }
+
+/**
+ * The role a self-signup gets, and the only roles an invite may carry.
+ *
+ * Same class of hole as the column allowlists above, one level up: it is not a
+ * column the caller should not be writing, it is a VALUE the caller should not
+ * be choosing. signup-with-otp declared `role: z.string().optional()
+ * .default('admin')` and passed it into a service-role insert on
+ * user_profiles, so an unauthenticated POST of {"role":"root_admin"} created a
+ * root admin. Every RLS policy in the schema resolves authority through
+ * get_user_role(), which reads that column.
+ *
+ * Self-signup takes no role at all. The signer-up is the first account in a
+ * new workspace, which is what 'admin' means here - and it matches what the
+ * handle_new_user trigger already hardcodes for the same case.
+ */
+export const SELF_SIGNUP_ROLE = 'admin' as const;
+
+/**
+ * Roles an invite may assign. root_admin is platform-wide and deliberately
+ * absent: it is not a workspace role and no invite should ever mint one.
+ */
+export const ASSIGNABLE_INVITE_ROLES = [
+  'admin', 'project_manager', 'field_supervisor', 'office_staff', 'accounting', 'client_portal',
+] as const;
+
+/** Fall back to the least-privileged role rather than trusting an unknown one. */
+export function safeInviteRole(role: unknown): string {
+  return typeof role === 'string' && (ASSIGNABLE_INVITE_ROLES as readonly string[]).includes(role)
+    ? role
+    : 'office_staff';
+}
