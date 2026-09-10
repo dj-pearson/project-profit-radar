@@ -5667,8 +5667,8 @@
         "The eslint rules-of-hooks rule is an error, not a warning, so the guard is mechanical (lint currently reports 3 rules-of-hooks hits)"
       ],
       "priority": 1,
-      "passes": false,
-      "notes": "PROPOSED 2026-09-09 (production-readiness audit, six parallel reviews: auth, security, page/data flows, UI/UX, SEO, ops). P1."
+      "passes": true,
+      "notes": "COMPLETED 2026-09-10 (loop iteration 6). Root cause: useRef and useVirtualizer sat at src/components/invoices/InvoiceList.tsx:409-410, below the `if (loading) return <Card>...` early return at :215. The loading render ran two fewer hooks than the loaded one, so React threw the moment invoices arrived - the list crashed on every load, not intermittently. Fix hoists both above the early return, next to the displayInvoices memo they depend on, with a comment saying why they must stay there. Also fixed the file's one lint error while in it: a `next.has(id) ? next.delete(id) : next.add(id)` expression statement became an if/else. Regression test at src/components/invoices/__tests__/InvoiceList.hooks.test.tsx renders with loading=true then rerenders loaded - the transition is the only thing that catches this, since either state alone renders fine. Verified it reproduces 'Rendered more hooks than during the previous render' against the unfixed file. FOUND VIA: `npx eslint src` flags this as react-hooks/rules-of-hooks and always did; it was invisible under 2051 total problems (79 errors, 1972 warnings)."
     },
     {
       "id": "US-364",
@@ -6161,6 +6161,20 @@
       "priority": 1,
       "passes": true,
       "notes": "COMPLETED 2026-09-10 (loop iteration 4). Split out of US-389. All 11 pins across ci.yml, prd-verification.yml, performance.yml and lighthouse.yml now read .nvmrc, so there is one source of truth that Cloudflare Pages already honors too. engines.node raised to >=20.12.0 (npm to >=10.0.0) so a developer on an old Node fails at install with a version message instead of at vitest with a SyntaxError about node:util. New scripts/check-node-version-pins.mjs, wired into the pre-commit hook and the CI security-guard job; verified it fails when a workflow is reverted to a hardcoded pin. docs/CODE_REVIEW_2026-08-06.md diagnosed this in August and prescribed bumping the pins; this does that and adds the guard so it cannot drift back. NOT VERIFIED IN CI YET - this branch has no PR, so the first real proof is the next CI run."
+    },
+    {
+      "id": "US-400",
+      "title": "79 eslint errors block the Lint job, and one of them hid a p1 crash for weeks",
+      "description": "As a developer, I want `npm run lint` to pass so its output is a signal. It currently reports 2051 problems - 79 errors and 1972 warnings - and the Lint job has been red on main throughout. The volume is the real defect: react-hooks/rules-of-hooks had been flagging the InvoiceList crash (US-363) the whole time and nobody saw it. Breakdown of the 79 errors: 40 no-useless-escape (redundant backslashes in regex literals, mechanical), 17 no-case-declarations (let/const in a switch case without braces, mechanical), 6 @typescript-eslint/ban-ts-comment, 3 @typescript-eslint/no-require-imports, 3 react-hooks/rules-of-hooks (2 now fixed in InvoiceList; the third is src/pages/WorkflowAutomation.tsx:458, where a plain async function named useTemplate trips the rule - it is not a hook, so the fix is renaming it to applyTemplate, and the misleading name is worth fixing regardless), 2 no-constant-binary-expression (these are usually real bugs - a comparison that is always true or always false - so read each one rather than silencing it), 2 jsx-a11y/heading-has-content, 2 @typescript-eslint/no-empty-object-type, 1 no-control-regex, 1 jsx-a11y/anchor-has-content, 1 @typescript-eslint/no-unused-expressions (fixed), 1 @typescript-eslint/no-non-null-asserted-optional-chain (a `?.` followed by `!` cancels the safety out, so also likely a real bug).",
+      "acceptanceCriteria": [
+        "npx eslint src reports 0 errors",
+        "The 2 no-constant-binary-expression and the 1 no-non-null-asserted-optional-chain are each read and fixed on the merits, not silenced with a disable comment",
+        "WorkflowAutomation's useTemplate is renamed so the hooks rule is not being worked around",
+        "A warning ceiling is committed the way .github/ts-error-baseline.txt is, so the 1972 warnings ratchet down instead of drifting up"
+      ],
+      "priority": 2,
+      "passes": false,
+      "notes": "PROPOSED 2026-09-10 (loop iteration 6), from reproducing the CI Lint failure locally. NEXT ITERATION: start with the 3 error classes that are probably real bugs (no-constant-binary-expression x2, no-non-null-asserted-optional-chain x1, plus the useTemplate rename), then the mechanical 57 (no-useless-escape, no-case-declarations). Do NOT bulk-autofix and push in one go - eslint --fix on no-useless-escape edits regex literals, and a wrong edit there changes matching behaviour silently."
     }
   ]
 }
