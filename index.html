@@ -35,13 +35,20 @@
 
   <link rel="apple-touch-icon" href="https://api.brikly.net/storage/v1/object/public/site-assets/BriklyLogo.png" />
 
+  <!-- The SEO tags below carry data-rh="true" so react-helmet-async adopts and
+       REPLACES them when a route mounts. Without it Helmet appends its own copy
+       and every page shipped two <link rel="canonical"> (this one, pointing at
+       the homepage, plus the route's) and two meta descriptions - which is how
+       Google is told to ignore both. They stay in the static HTML because
+       nothing prerenders the app, so this is all a crawler that does not run JS
+       ever sees. See US-399 and src/lib/seo/canonical.ts. -->
   <title>Brikly - Construction Management Software for Small Contractors | Job Costing & Scheduling</title>
   <meta name="description"
-    content="Construction management software designed for small-mid contractors. Real-time job costing, mobile crew tracking, OSHA compliance, QuickBooks sync. 50% less than competitors. Free trial." />
+    content="Construction management software designed for small-mid contractors. Real-time job costing, mobile crew tracking, OSHA compliance, QuickBooks sync. 50% less than competitors. Free trial." data-rh="true" />
   <meta name="keywords"
-    content="construction management software, job costing software, construction scheduling, OSHA compliance, contractor software, QuickBooks integration, construction time tracking" />
-  <meta name="author" content="Brikly" />
-  <link rel="canonical" href="https://brikly.net" />
+    content="construction management software, job costing software, construction scheduling, OSHA compliance, contractor software, QuickBooks integration, construction time tracking" data-rh="true" />
+  <meta name="author" content="Brikly" data-rh="true" />
+  <link rel="canonical" href="https://brikly.net/" data-rh="true" />
 
   <!-- GEO: Generative Engine Optimization meta tags for AI search attribution -->
   <meta name="citation_title" content="Brikly - Construction Management Software for Small Contractors" />
@@ -58,19 +65,19 @@
   <meta name="dc.publisher" content="Brikly" />
   <meta name="dc.format" content="text/html" />
 
-  <meta property="og:title" content="Brikly - Construction Management Software for Small Contractors" />
+  <meta property="og:title" content="Brikly - Construction Management Software for Small Contractors" data-rh="true" />
   <meta property="og:description"
-    content="Construction management software designed for small-mid contractors. Real-time job costing, mobile crew tracking, OSHA compliance, QuickBooks sync. 50% less than competitors." />
-  <meta property="og:type" content="website" />
-  <meta property="og:url" content="https://brikly.net" />
-  <meta property="og:image" content="https://api.brikly.net/storage/v1/object/public/site-assets/BriklyLogo.png" />
+    content="Construction management software designed for small-mid contractors. Real-time job costing, mobile crew tracking, OSHA compliance, QuickBooks sync. 50% less than competitors." data-rh="true" />
+  <meta property="og:type" content="website" data-rh="true" />
+  <meta property="og:url" content="https://brikly.net/" data-rh="true" />
+  <meta property="og:image" content="https://api.brikly.net/storage/v1/object/public/site-assets/BriklyLogo.png" data-rh="true" />
 
-  <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:site" content="@brikly" />
-  <meta name="twitter:title" content="Brikly - Construction Management Software for Small Contractors" />
+  <meta name="twitter:card" content="summary_large_image" data-rh="true" />
+  <meta name="twitter:site" content="@brikly" data-rh="true" />
+  <meta name="twitter:title" content="Brikly - Construction Management Software for Small Contractors" data-rh="true" />
   <meta name="twitter:description"
-    content="Construction management software for small contractors. Job costing, scheduling, OSHA compliance. 50% less than competitors." />
-  <meta name="twitter:image" content="https://api.brikly.net/storage/v1/object/public/site-assets/BriklyLogo.png" />
+    content="Construction management software for small contractors. Job costing, scheduling, OSHA compliance. 50% less than competitors." data-rh="true" />
+  <meta name="twitter:image" content="https://api.brikly.net/storage/v1/object/public/site-assets/BriklyLogo.png" data-rh="true" />
 
   <!-- Organization Schema -->
   <script type="application/ld+json">

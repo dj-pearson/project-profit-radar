@@ -16,6 +16,7 @@ import { jsonLdSafe } from '@/lib/security/jsonLd';
 import { Helmet } from 'react-helmet-async';
 import { useLocation } from 'react-router-dom';
 import { BRIKLY_LOGO_URL } from '@/lib/utils';
+import { absoluteUrl } from '@/lib/seo/canonical';
 
 export interface PageSEOProps {
   // Basic SEO
@@ -61,9 +62,9 @@ export const PageSEO: React.FC<PageSEOProps> = ({
 }) => {
   const location = useLocation();
 
-  // Construct full URL
-  const baseUrl = 'https://brikly.net';
-  const fullUrl = canonicalUrl || `${baseUrl}${location.pathname}`;
+  // Absolutized and sitemap-shaped (US-399). Pages pass canonicalUrl both ways;
+  // this used to hand a relative value to both rel=canonical and og:url.
+  const fullUrl = absoluteUrl(canonicalUrl, location.pathname);
 
   // Robots meta tag
   const robotsContent = `${noIndex ? 'noindex' : 'index'}, ${noFollow ? 'nofollow' : 'follow'}`;

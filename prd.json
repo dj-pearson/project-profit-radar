@@ -6149,6 +6149,35 @@
       "priority": 3,
       "passes": false,
       "notes": "PROPOSED 2026-09-10 (SEO iteration 1). Content work, not a one-commit fix: 13 long-form guides plus a KB information architecture decision. Split per-guide when picked up."
+    },
+    {
+      "id": "US-399",
+      "title": "Every page served two canonicals and two meta descriptions, and half the canonicals were relative",
+      "description": "As a search engine, I want one unambiguous canonical per page. index.html ships a static SEO head for crawlers that do not run JS, and react-helmet-async renders the same tags again when a route mounts - but it only replaces a static tag that carries data-rh, so it appended instead. Measured in headless Chromium against a production build: /pricing served <link rel=\"canonical\" href=\"https://brikly.net\"> AND href=\"/pricing\", plus the homepage's meta description AND its own. Two conflicting canonicals means Google honours neither. The route's own value was relative because 31 pages pass canonicalUrl=\"/pricing\" while 20 pass the full URL and neither component absolutized it; the same value fed og:url, which Facebook and LinkedIn do not resolve. Index.tsx also passed https://brikly.net while the sitemap writes https://brikly.net/.",
+      "acceptanceCriteria": [
+        "src/lib/seo/canonical.ts absolutizes every form against https://brikly.net and normalizes to the sitemap's shape (trailing slash on root only, query and hash dropped)",
+        "UnifiedSEOSystem and PageSEO both run canonical and og:url through it",
+        "The 14 SEO tags in index.html that Helmet also renders carry data-rh=\"true\"; viewport deliberately does not, since Helmet's copy lacks viewport-fit=cover",
+        "A headless-Chromium probe of a production build shows exactly one canonical, one description and one og:url per route, all absolute",
+        "src/lib/seo/__tests__ covers the normalizer and asserts index.html cannot regain a non-adoptable SEO tag"
+      ],
+      "priority": 1,
+      "passes": true,
+      "notes": "DONE 2026-09-10 (SEO iteration 2, branch claude/seo-iterative-loop-p8j5a0). Verified against dist/ in headless Chromium, before and after."
+    },
+    {
+      "id": "US-400",
+      "title": "Nothing prerenders the app, so all 86 public URLs serve the same homepage shell - and the prerenderer that exists produces zero pages",
+      "description": "As a crawler that does not run JavaScript, I want the page's own content in the first response. Cloudflare Pages builds with `npm ci && npm run build`, and that script runs generate-sitemap, vite build, copy-404 and update-sw-version - never scripts/prerender.mjs, which only `npm run build:prerender` calls and no deploy path uses. dist/ contains exactly one index.html. US-222 built the prerenderer but it was never wired in, and it does not currently work: run against a real build it returns \"done: 0 prerendered, 3 failed, 0 thin of 3\", every route failing on page.goto waitUntil 'networkidle' after 30s, because the app never reaches network idle. The deploy question is real and not a one-liner: Cloudflare's build container has no Playwright browser, and this repo has no GitHub Actions deploy job to move the build into.",
+      "acceptanceCriteria": [
+        "scripts/prerender.mjs produces non-thin HTML for a sample route against a real dist/ - drop networkidle for a load event plus an explicit wait, and block third-party requests so they cannot hold the page open",
+        "A decision is recorded on where prerendering runs: Chromium installed in the Cloudflare Pages build, or the build moved into a GitHub Actions job that deploys with wrangler",
+        "The chosen path is wired in so a normal deploy prerenders; the script's silent exit-0 when Chromium is missing is replaced by a hard failure in the deploy path, or the deploy verifies dist/pricing/index.html exists",
+        "CI proves the prerenderer still emits per-route titles and canonicals, so it cannot rot back to zero pages unnoticed"
+      ],
+      "priority": 1,
+      "passes": false,
+      "notes": "PROPOSED 2026-09-10 (SEO iteration 2). Measured, not assumed: the 0-of-3 failure is from running `PRERENDER_LIMIT=3 npm run prerender` against a production build. Blocked on a deploy-topology decision, so it is not a single-iteration fix. US-399 limits the damage in the meantime - the static head is at least correct and singular."
     }
   ]
 }

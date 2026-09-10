@@ -4,6 +4,7 @@ import { useLocation } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { BRIKLY_LOGO_URL } from '@/lib/utils';
 import { logger } from '@/lib/logger';
+import { absoluteUrl } from '@/lib/seo/canonical';
 
 export interface UnifiedSEOProps {
   // Allow manual override (existing pattern)
@@ -116,7 +117,6 @@ export const UnifiedSEOSystem: React.FC<UnifiedSEOProps> = ({
   };
 
   // Determine final values using priority system
-  const siteUrl = 'https://brikly.net';
   const finalTitle = getFinalValue(
     title,
     dbConfig?.title,
@@ -138,11 +138,17 @@ export const UnifiedSEOSystem: React.FC<UnifiedSEOProps> = ({
     ['construction', 'project management', 'contractor software']
   );
 
-  const finalCanonical = getFinalValue(
-    canonicalUrl,
-    dbConfig?.canonical_url,
-    enterpriseConfig?.canonicalUrl,
-    `${siteUrl}${location.pathname}`
+  // Absolutized and sitemap-shaped (US-399): pages pass "/pricing" as often as
+  // the full URL, and a relative value in og:url reaches Facebook and LinkedIn
+  // unresolved.
+  const finalCanonical = absoluteUrl(
+    getFinalValue(
+      canonicalUrl,
+      dbConfig?.canonical_url,
+      enterpriseConfig?.canonicalUrl,
+      null
+    ),
+    location.pathname
   );
 
   const finalOgTitle = getFinalValue(
@@ -166,11 +172,9 @@ export const UnifiedSEOSystem: React.FC<UnifiedSEOProps> = ({
     BRIKLY_LOGO_URL
   );
 
-  const finalOgUrl = getFinalValue(
-    ogUrl,
-    null,
-    enterpriseConfig?.ogUrl,
-    `${siteUrl}${location.pathname}`
+  const finalOgUrl = absoluteUrl(
+    getFinalValue(ogUrl, null, enterpriseConfig?.ogUrl, null),
+    location.pathname
   );
 
   const finalNoIndex = getFinalValue(
