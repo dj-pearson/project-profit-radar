@@ -84,6 +84,11 @@ node scripts/check-unauthenticated-edge-functions.mjs || exit 1
 #     thing happened.
 node scripts/check-fake-success.mjs || exit 1
 
+# 3o2. No fabricated fallback (US-403) - a catch that answers a failed query
+#      with Math.random() rows makes a broken screen look identical to a
+#      working one, and CustomReportBuilder exported those rows to Excel.
+node scripts/check-fabricated-fallbacks.mjs || exit 1
+
 # 3p. No migration repair in a deploy path (US-248) — repair edits history to
 #     match your assertion; a deploy should change the DB to match the repo.
 bash scripts/check-no-migration-repair.sh || exit 1

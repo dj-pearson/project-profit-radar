@@ -207,6 +207,9 @@ jobs:
       - name: Fake-success guard (US-309)
         run: node scripts/check-fake-success.mjs
 
+      - name: Fabricated-fallback guard (US-403)
+        run: node scripts/check-fabricated-fallbacks.mjs
+
       - name: No migration-repair in a deploy path (US-248)
         run: bash scripts/check-no-migration-repair.sh
 
