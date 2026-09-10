@@ -282,6 +282,27 @@ describe('useSimpleNotifications: a fabricated safety incident', () => {
     expect(src).not.toContain('simulateNotifications');
   });
 
+  it('invents no notification by any mechanism, not just the five strings above', () => {
+    // The assertion above names the exact strings one cleanup removed, so the
+    // same defect came back wearing different words: a setInterval that every
+    // two minutes had a 30% chance of injecting "Progress Update", "Task
+    // Update" or "Budget Notification" survived it untouched, and
+    // RealtimeNotificationCenter is mounted in DashboardLayout for every
+    // signed-in user. "Daily progress report has been submitted for review" is
+    // a claim about a job site that a PM can act on.
+    //
+    // So guard the mechanism instead. A notification in this hook comes from
+    // the database or it does not exist.
+    const src = code(SRC);
+    expect(src, 'randomness has no place in an inbox').not.toMatch(/Math\.random/);
+    expect(src, 'nothing should inject notifications on a timer').not.toMatch(/setInterval/);
+    // A local object pushed straight into state is a notification the server
+    // never saw; it survives until refresh and means nothing.
+    expect(src, 'notifications must come from a query, not a literal').not.toMatch(
+      /setNotifications\(prev => \[\s*newNotification/,
+    );
+  });
+
   it('reads real_time_notifications, scoped to the recipient', () => {
     const src = code(SRC);
     // Scoping has to be on the SELECT itself. `eq('recipient_id', ...)` also

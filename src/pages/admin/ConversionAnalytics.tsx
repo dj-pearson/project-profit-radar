@@ -502,20 +502,20 @@ export const ConversionAnalytics = () => {
               />
               <MetricCard
                 title="Total Sent"
-                value={emailMetrics?.total_sent.toLocaleString() || '0'}
+                value={(emailMetrics?.total_sent ?? 0).toLocaleString()}
                 subtitle="Emails delivered"
                 icon={CheckCircle}
               />
               <MetricCard
                 title="Avg Open Rate"
-                value={`${emailMetrics?.average_open_rate.toFixed(1)}%` || '0%'}
-                subtitle={`${emailMetrics?.total_opened.toLocaleString()} opens`}
+                value={`${(emailMetrics?.average_open_rate ?? 0).toFixed(1)}%`}
+                subtitle={`${(emailMetrics?.total_opened ?? 0).toLocaleString()} opens`}
                 icon={TrendingUp}
               />
               <MetricCard
                 title="Avg Click Rate"
-                value={`${emailMetrics?.average_click_rate.toFixed(1)}%` || '0%'}
-                subtitle={`${emailMetrics?.total_clicked.toLocaleString()} clicks`}
+                value={`${(emailMetrics?.average_click_rate ?? 0).toFixed(1)}%`}
+                subtitle={`${(emailMetrics?.total_clicked ?? 0).toLocaleString()} clicks`}
                 icon={Target}
               />
             </div>

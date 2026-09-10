@@ -145,8 +145,11 @@ export const SecurityDashboard: React.FC = () => {
     );
   }
 
-  const isAccountLocked = securityStatus?.account_locked_until && 
-    new Date(securityStatus.account_locked_until) > new Date();
+  // Held in its own const so the JSX below can narrow it. Reading it back off
+  // securityStatus there needed a `?.` immediately cancelled by a `!`, which
+  // silences the compiler without making the value any less possibly-undefined.
+  const accountLockedUntil = securityStatus?.account_locked_until;
+  const isAccountLocked = !!accountLockedUntil && new Date(accountLockedUntil) > new Date();
 
   return (
     <div className="space-y-4 sm:space-y-6">
@@ -216,12 +219,12 @@ export const SecurityDashboard: React.FC = () => {
       </div>
 
       {/* Account Locked Alert */}
-      {isAccountLocked && (
+      {isAccountLocked && accountLockedUntil && (
         <Alert variant="destructive">
           <AlertTriangle className="h-4 w-4" />
           <AlertDescription>
             Your account is temporarily locked until{' '}
-            {formatDate(securityStatus?.account_locked_until!)} due to multiple failed login attempts.
+            {formatDate(accountLockedUntil)} due to multiple failed login attempts.
           </AlertDescription>
         </Alert>
       )}

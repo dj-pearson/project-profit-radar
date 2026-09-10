@@ -72,6 +72,21 @@ const InvoiceList: React.FC<InvoiceListProps> = ({
     [invoices, statusFilter, dateField, dateFrom, dateTo, sortField, sortDir]
   );
 
+  // These two must stay above the `if (loading)` early return below. They used
+  // to sit next to the virtualized table body, which meant the first render
+  // (loading true) ran fewer hooks than the second (loading false), and React
+  // threw "Rendered more hooks than during the previous render" the moment the
+  // invoices arrived - so the list crashed on every load.
+  const VIRTUALIZE_THRESHOLD = 50;
+  const parentRef = useRef<HTMLDivElement>(null);
+  const virtualizer = useVirtualizer({
+    count: displayInvoices.length,
+    getScrollElement: () => parentRef.current,
+    estimateSize: () => 56,
+    overscan: 10,
+    enabled: displayInvoices.length > VIRTUALIZE_THRESHOLD,
+  });
+
   const allVisibleSelected =
     displayInvoices.length > 0 && displayInvoices.every((inv) => selectedIds.has(inv.id));
   const toggleSelectAll = () => {
@@ -80,7 +95,8 @@ const InvoiceList: React.FC<InvoiceListProps> = ({
   const toggleSelect = (id: string) => {
     setSelectedIds((prev) => {
       const next = new Set(prev);
-      next.has(id) ? next.delete(id) : next.add(id);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
       return next;
     });
   };
@@ -404,16 +420,6 @@ const InvoiceList: React.FC<InvoiceListProps> = ({
       </Button>
     </div>
   );
-
-  const VIRTUALIZE_THRESHOLD = 50;
-  const parentRef = useRef<HTMLDivElement>(null);
-  const virtualizer = useVirtualizer({
-    count: displayInvoices.length,
-    getScrollElement: () => parentRef.current,
-    estimateSize: () => 56,
-    overscan: 10,
-    enabled: displayInvoices.length > VIRTUALIZE_THRESHOLD,
-  });
 
   const renderSortableHeader = (col: TableColumn<any>) => {
     if (!col.sortable) {

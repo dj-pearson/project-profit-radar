@@ -109,6 +109,53 @@ describe('no fabricated endorsements in shipped source', () => {
   });
 });
 
+/**
+ * The guards above walk src/ only, which is how index.html kept shipping an
+ * aggregateRating of 4.8 from 247 reviews plus three named reviewers on every
+ * page long after the React SEO components started gating on CLAIMS. The
+ * static shell is a marketing surface too.
+ */
+describe('no fabricated endorsements in the static HTML shell', () => {
+  const html = readFileSync('index.html', 'utf8');
+
+  /** JSON-LD payloads only - HTML comments explaining the removal are fine. */
+  const jsonLdBlocks = (): unknown[] =>
+    [...html.matchAll(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/g)].map(
+      (m) => JSON.parse(m[1]) as unknown
+    );
+
+  const deepFind = (node: unknown, key: string): boolean => {
+    if (Array.isArray(node)) return node.some((n) => deepFind(n, key));
+    if (node && typeof node === 'object') {
+      const obj = node as Record<string, unknown>;
+      if (key in obj) return true;
+      return Object.values(obj).some((v) => deepFind(v, key));
+    }
+    return false;
+  };
+
+  it('parses every JSON-LD block', () => {
+    expect(() => jsonLdBlocks()).not.toThrow();
+    expect(jsonLdBlocks().length).toBeGreaterThan(0);
+  });
+
+  it('emits no aggregateRating while the claim is unverified', () => {
+    if (CLAIMS.aggregateRating.verified) return;
+    expect(
+      jsonLdBlocks().some((b) => deepFind(b, 'aggregateRating')),
+      'index.html publishes a rating CLAIMS marks unverified'
+    ).toBe(false);
+  });
+
+  it('emits no review array while testimonials are unverified', () => {
+    if (CLAIMS.testimonials.verified) return;
+    expect(
+      jsonLdBlocks().some((b) => deepFind(b, 'review')),
+      'index.html publishes reviews with no filed permission source'
+    ).toBe(false);
+  });
+});
+
 describe('no unsubstantiated outcome claims on marketing surfaces', () => {
   const files = marketingFiles('src');
 

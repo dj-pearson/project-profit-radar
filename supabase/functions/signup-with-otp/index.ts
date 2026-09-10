@@ -20,6 +20,7 @@ import { generateAuthEmail, generateOTPCode } from '../_shared/auth-email-templa
 import { isDisposableEmail } from '../_shared/disposable-email.ts';
 import { enforceRateLimit, RATE_LIMITS, getClientIP } from '../_shared/rate-limiter.ts';
 import { createServiceClient } from '../_shared/service-client.ts';
+import { SELF_SIGNUP_ROLE } from '../_shared/writable-columns.ts';
 
 // Validation schema
 const signupSchema = z.object({
@@ -27,7 +28,12 @@ const signupSchema = z.object({
   password: z.string().min(8, 'Password must be at least 8 characters'),
   firstName: z.string().min(1).max(100),
   lastName: z.string().min(1).max(100),
-  role: z.string().optional().default('admin'),
+  // No `role` here, deliberately. It used to be
+  // `z.string().optional().default('admin')` and went straight into the
+  // service-role insert below, so an unauthenticated POST of
+  // {"role":"root_admin"} created a root admin - and every RLS policy in the
+  // schema resolves authority through that column. Zod strips unknown keys, so
+  // a body that still sends one is ignored rather than rejected.
 });
 
 const OTP_EXPIRY_MINUTES = 15;
@@ -78,7 +84,7 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    const { email, password, firstName, lastName, role } = validation.data;
+    const { email, password, firstName, lastName } = validation.data;
 
     console.log(`[SignupWithOTP] Processing signup for ${email}`);
 
@@ -143,7 +149,10 @@ const handler = async (req: Request): Promise<Response> => {
         first_name: firstName,
         last_name: lastName,
         email: email.toLowerCase(),
-        role: role,
+        // Fixed server-side. A self-signup is the first account in a new
+        // workspace, which is what 'admin' means here, and it matches what the
+        // handle_new_user trigger hardcodes for the same case.
+        role: SELF_SIGNUP_ROLE,
         is_active: false, // Will be activated after email verification
       });
 

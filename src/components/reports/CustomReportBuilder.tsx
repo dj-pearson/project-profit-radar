@@ -23,6 +23,7 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { logger } from '@/lib/logger';
 
 interface ReportField {
   id: string;
@@ -198,99 +199,77 @@ export const CustomReportBuilder: React.FC<CustomReportBuilderProps> = ({
         description: "Report generated successfully"
       });
     } catch (error) {
-      console.error('Error generating report:', error);
+      // Say which query failed and why. The user has to be able to tell an
+      // empty result from a broken one, because the old behaviour - invented
+      // rows under a success toast - made those two look identical.
+      logger.error('Report generation failed', error);
       toast({
         variant: "destructive",
-        title: "Error",
-        description: "Failed to generate report"
+        title: "Could not generate report",
+        description: error instanceof Error ? error.message : 'The query failed. No data was returned.'
       });
+      setReportData([]);
+      setPreviewMode(false);
     } finally {
       setIsGenerating(false);
     }
   };
 
+  // Every failure here has to reach generateReport's catch. This used to fall
+  // back to generateMockData on ANY error - an RLS denial, a missing column, a
+  // dropped connection - and hand back 10-30 rows of Math.random() dollar
+  // amounts, which the caller then announced as "Report generated
+  // successfully" and offered as an Excel export. A report a contractor sends
+  // to a client is the last place to invent numbers.
   const generateRealData = async (config: ReportConfig): Promise<Record<string, unknown>[]> => {
-    try {
-      if (!userProfile?.company_id) {
-        throw new Error('No company found');
-      }
-
-      let query;
-      switch (config.dataSource) {
-        case 'projects':
-          query = supabase.from('projects').select('*');
-          break;
-        case 'job_costs':
-          query = supabase.from('job_costs').select('*');
-          break;
-        case 'time_entries':
-          query = supabase.from('time_entries').select('*');
-          break;
-        case 'expenses':
-          query = supabase.from('expenses').select('*');
-          break;
-        case 'invoices':
-          query = supabase.from('invoices').select('*');
-          break;
-        default:
-          throw new Error('Invalid data source');
-      }
-
-      // Add company filter
-      query = query.eq('company_id', userProfile.company_id);
-
-      // Apply date range filter
-      if (config.dateRange.start && config.dateRange.end) {
-        const dateField = config.dataSource === 'projects' ? 'created_at' 
-          : config.dataSource === 'job_costs' ? 'date'
-          : config.dataSource === 'time_entries' ? 'date'
-          : config.dataSource === 'expenses' ? 'expense_date'
-          : 'issue_date';
-        
-        query = query.gte(dateField, config.dateRange.start).lte(dateField, config.dateRange.end);
-      }
-
-      // Apply sorting
-      if (config.sortBy) {
-        query = query.order(config.sortBy, { ascending: config.sortOrder === 'asc' });
-      }
-
-      const { data, error } = await query.limit(1000);
-      
-      if (error) throw error;
-      
-      return data || [];
-    } catch (error) {
-      console.error('Error generating real data:', error);
-      // Fallback to mock data if real data fails
-      return generateMockData(config);
+    if (!userProfile?.company_id) {
+      throw new Error('No company found');
     }
-  };
 
-  const generateMockData = (config: ReportConfig) => {
-    const dataCount = Math.floor(Math.random() * 20) + 10;
-    return Array.from({ length: dataCount }, (_, i) => {
-      const item: Record<string, string | number | boolean> = {};
-      config.fields.forEach(field => {
-        switch (field.type) {
-          case 'string':
-            item[field.id] = `Sample ${field.name} ${i + 1}`;
-            break;
-          case 'number':
-            item[field.id] = Math.floor(Math.random() * 10000) + 1000;
-            break;
-          case 'date':
-            const date = new Date();
-            date.setDate(date.getDate() - Math.floor(Math.random() * 365));
-            item[field.id] = date.toISOString().split('T')[0];
-            break;
-          case 'boolean':
-            item[field.id] = Math.random() > 0.5;
-            break;
-        }
-      });
-      return item;
-    });
+    let query;
+    switch (config.dataSource) {
+      case 'projects':
+        query = supabase.from('projects').select('*');
+        break;
+      case 'job_costs':
+        query = supabase.from('job_costs').select('*');
+        break;
+      case 'time_entries':
+        query = supabase.from('time_entries').select('*');
+        break;
+      case 'expenses':
+        query = supabase.from('expenses').select('*');
+        break;
+      case 'invoices':
+        query = supabase.from('invoices').select('*');
+        break;
+      default:
+        throw new Error('Invalid data source');
+    }
+
+    // Add company filter
+    query = query.eq('company_id', userProfile.company_id);
+
+    // Apply date range filter
+    if (config.dateRange.start && config.dateRange.end) {
+      const dateField = config.dataSource === 'projects' ? 'created_at' 
+        : config.dataSource === 'job_costs' ? 'date'
+        : config.dataSource === 'time_entries' ? 'date'
+        : config.dataSource === 'expenses' ? 'expense_date'
+        : 'issue_date';
+      
+      query = query.gte(dateField, config.dateRange.start).lte(dateField, config.dateRange.end);
+    }
+
+    // Apply sorting
+    if (config.sortBy) {
+      query = query.order(config.sortBy, { ascending: config.sortOrder === 'asc' });
+    }
+
+    const { data, error } = await query.limit(1000);
+    if (error) throw error;
+
+    return data || [];
   };
 
   const exportToExcel = async () => {
