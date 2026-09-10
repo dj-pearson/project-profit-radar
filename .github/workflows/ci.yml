@@ -180,6 +180,9 @@ jobs:
       - name: Node version pins agree (US-389)
         run: node scripts/check-node-version-pins.mjs
 
+      - name: No source file hidden by .gitignore (US-402)
+        run: node scripts/check-ignored-source-files.mjs
+
       - name: CSP inline-script hash guard (US-202)
         run: node scripts/check-csp-hashes.mjs
 

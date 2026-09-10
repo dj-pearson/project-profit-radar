@@ -109,6 +109,31 @@ supabase-mcp-config.json
 **/*credential*
 !public-key*
 !*.public.key
+
+# ...but not source files that merely have one of those words in the name.
+#
+# The four substring patterns above (*secret*, *private*, *token*, *credential*)
+# match any path segment anywhere, source code included. That is not
+# theoretical: supabase/migrations/..._make_customer_buckets_private.sql was
+# silently dropped by *private*, so the commit meant to close the public-bucket
+# exposure shipped with no migration in it, and the test it added in the same
+# breath was red from that day on. `git add` on an ignored path is a no-op with
+# a hint that scrolls past in a scripted commit.
+#
+# Secrets stay out by scanning CONTENT, not by guessing from filenames:
+# scripts/secret-scan.sh runs on every commit via .husky/pre-commit. Key
+# material is still ignored by extension - .key, .pem, .p12, .json, .env, .csv,
+# .txt are deliberately NOT re-included below.
+!**/*.ts
+!**/*.tsx
+!**/*.js
+!**/*.jsx
+!**/*.mjs
+!**/*.cjs
+!**/*.sql
+!**/*.swift
+!**/*.sh
+
 SupabaseErrors.md
 LinkedIn_Post_Series.csv
 security.md
