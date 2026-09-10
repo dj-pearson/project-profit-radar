@@ -6145,8 +6145,8 @@
         "The commit says what the count was, what it is now, and what moved it"
       ],
       "priority": 1,
-      "passes": false,
-      "notes": "PROPOSED 2026-09-10 (loop iteration 4). Split out of US-389, which bundles three unrelated CI failures. The Node pin half of US-389 is done (US-399); this is the tsc half. NEXT ITERATION: a full typecheck of the current HEAD is already measured - read it and write the number."
+      "passes": true,
+      "notes": "COMPLETED 2026-09-10 (loop iteration 5). Measured a full `npx tsc --noEmit -p tsconfig.app.json` on this branch's HEAD: 1661 source errors, 0 config diagnostics, counted with the same anchoring rule check-ts-error-budget.mjs applies. Baseline 1793 -> 1661. Of the 132-error gap, exactly 1 is this session's (the seoBackendSync deletion in US-397); the other 131 were fixes landed by earlier work that nobody locked in, so the gate had been red on that alone. The two test files added in US-373 and US-380 contribute zero errors - checked, since tsconfig.app.json includes all of src/, tests included. RESIDUAL RISK: measured on Node 22 locally while CI now runs Node 20.18 from .nvmrc. tsc is deterministic for a pinned TypeScript version, so the count should hold, but the first CI run is the proof. STRUCTURAL PROBLEM, NOT FIXED HERE: a full typecheck takes 45-60 minutes and ~6 GB RSS on this tree, which is why nobody re-measures and why the baseline drifts. The gate is correct; measuring it is impractical. Worth a story: have the Type Check job publish the count it measured as an artifact or job summary, so the next person updating the baseline reads CI's number instead of spending an hour reproducing it."
     },
     {
       "id": "US-399",
