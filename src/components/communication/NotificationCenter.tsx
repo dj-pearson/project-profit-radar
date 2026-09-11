@@ -184,15 +184,15 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ userProf
   const getPriorityColor = (priority: string) => {
     switch (priority) {
       case 'urgent':
-        return 'border-l-red-500 bg-red-50';
+        return 'border-red-500/40 bg-red-50';
       case 'high':
-        return 'border-l-orange-500 bg-orange-50';
+        return 'border-orange-500/40 bg-orange-50';
       case 'medium':
-        return 'border-l-blue-500 bg-blue-50';
+        return 'border-blue-500/40 bg-blue-50';
       case 'low':
-        return 'border-l-gray-500 bg-gray-50';
+        return 'border-gray-500/40 bg-gray-50';
       default:
-        return 'border-l-gray-300';
+        return 'border-gray-300/40';
     }
   };
 
@@ -293,7 +293,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ userProf
               filteredNotifications.map((notification) => (
                 <Card
                   key={notification.id}
-                  className={`border-l-4 transition-colors ${getPriorityColor(notification.priority)} ${
+                  className={`transition-colors ${getPriorityColor(notification.priority)} ${
                     !notification.read ? 'bg-accent/50' : ''
                   }`}
                 >

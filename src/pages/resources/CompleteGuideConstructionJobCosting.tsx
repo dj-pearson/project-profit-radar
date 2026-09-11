@@ -185,7 +185,7 @@ export default function CompleteGuideConstructionJobCosting() {
             <section id="what-is-job-costing" className="mb-16">
               <h2 className="text-3xl font-bold text-slate-900 mb-6">1. What Is Construction Job Costing?</h2>
 
-              <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border-l-4 border-blue-600 p-6 rounded-r-lg mb-6">
+              <div className="bg-construction-blue/5 border border-construction-blue/30 p-6 rounded-lg mb-6">
                 <p className="text-lg font-semibold text-slate-900 mb-3">
                   Job costing is the process of tracking all costs for each individual construction project to determine per-project profitability.
                 </p>

@@ -144,7 +144,7 @@ export const ClientUpdatesFeed: React.FC<ClientUpdatesFeedProps> = ({
               <div
                 key={update.id}
                 className={cn(
-                  "relative border-l-4 pl-6 pb-6",
+                  "relative border-l-2 pl-6 pb-6",
                   update.isRead ? 'border-gray-300' : 'border-blue-600',
                   index === updates.length - 1 && 'pb-0'
                 )}

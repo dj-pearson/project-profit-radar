@@ -164,7 +164,7 @@ export default function ConstructionFinancialManagementGuide() {
             </header>
 
             {/* Answer-First Summary */}
-            <div className="bg-gradient-to-r from-construction-orange/10 to-construction-yellow/10 border-l-4 border-construction-orange p-6 rounded-r-lg mb-12">
+            <div className="bg-construction-orange/10 border border-construction-orange/30 p-6 rounded-lg mb-12">
               <h2 className="text-2xl font-bold text-slate-900 mb-4">What You'll Learn in This Guide</h2>
               <div className="grid md:grid-cols-2 gap-4 text-sm">
                 <div className="space-y-2">
@@ -315,7 +315,7 @@ export default function ConstructionFinancialManagementGuide() {
             <section id="cash-flow" className="mb-16">
               <h2 className="text-3xl font-bold text-slate-900 mb-6">2. Cash Flow Management Strategies</h2>
 
-              <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border-l-4 border-blue-600 p-6 rounded-r-lg mb-6">
+              <div className="bg-construction-blue/5 border border-construction-blue/30 p-6 rounded-lg mb-6">
                 <p className="text-lg font-semibold text-slate-900 mb-2">
                   Cash flow management is the #1 survival skill for construction businesses.
                 </p>

@@ -353,7 +353,7 @@ export const TimesheetDetailModal = ({
                   {history.map((entry) => (
                     <div
                       key={entry.id}
-                      className="p-4 bg-secondary/50 rounded-lg space-y-2 border-l-4 border-primary"
+                      className="p-4 bg-secondary/50 rounded-lg space-y-2 border border-primary/30"
                     >
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">

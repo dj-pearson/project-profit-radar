@@ -175,12 +175,12 @@ export const PipelineKanban: React.FC<PipelineKanbanProps> = ({ onLeadClick }) =
 
   const getPriorityColor = (priority: string) => {
     const colors = {
-      low: 'border-green-500',
-      medium: 'border-yellow-500',
-      high: 'border-orange-500',
-      urgent: 'border-red-500'
+      low: 'border-green-500/40',
+      medium: 'border-yellow-500/40',
+      high: 'border-orange-500/40',
+      urgent: 'border-red-500/40'
     };
-    return colors[priority as keyof typeof colors] || 'border-gray-500';
+    return colors[priority as keyof typeof colors] || 'border-gray-500/40';
   };
 
   const getStageColor = (color: string) => {
@@ -246,7 +246,7 @@ export const PipelineKanban: React.FC<PipelineKanbanProps> = ({ onLeadClick }) =
                               ref={provided.innerRef}
                               {...provided.draggableProps}
                               {...provided.dragHandleProps}
-                              className={`cursor-pointer transition-shadow hover:shadow-md border-l-4 ${getPriorityColor(lead.priority)} ${
+                              className={`cursor-pointer transition-shadow hover:shadow-md ${getPriorityColor(lead.priority)} ${
                                 snapshot.isDragging ? 'shadow-lg' : ''
                               }`}
                               onClick={() => onLeadClick(lead.id)}
@@ -348,7 +348,7 @@ export const PipelineKanban: React.FC<PipelineKanbanProps> = ({ onLeadClick }) =
                                 ref={provided.innerRef}
                                 {...provided.draggableProps}
                                 {...provided.dragHandleProps}
-                                className={`cursor-pointer transition-shadow hover:shadow-md border-l-4 ${getPriorityColor(lead.priority)} ${
+                                className={`cursor-pointer transition-shadow hover:shadow-md ${getPriorityColor(lead.priority)} ${
                                   snapshot.isDragging ? 'shadow-lg' : ''
                                 }`}
                                 onClick={() => onLeadClick(lead.id)}

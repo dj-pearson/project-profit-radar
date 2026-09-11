@@ -187,7 +187,7 @@ function HeroContent({ progress, setProgress }: { progress: number, setProgress:
         <div className="lg:col-span-7 pointer-events-none">
           {/* Glass morphism card - Pointer events enabled for children */}
           <div className="glass-panel-dark rounded-2xl p-8 sm:p-12 shadow-2xl backdrop-blur-md pointer-events-auto">
-            <div className="border-l-4 border-construction-orange pl-4 sm:pl-6">
+            <div className="border-l border-construction-orange pl-4 sm:pl-6">
               <p className="text-construction-orange font-semibold text-xs sm:text-sm uppercase tracking-wide mb-3">
                 For Commercial Contractors
               </p>

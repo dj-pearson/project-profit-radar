@@ -708,7 +708,7 @@ const ExecutiveDashboard: React.FC = () => {
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="p-4 border-l-4 border-red-500 bg-red-50 dark:bg-red-950/20">
+                <div className="p-4 rounded-lg border border-red-500/40 bg-red-50 dark:bg-red-950/20">
                   <div className="flex items-center justify-between mb-2">
                     <h4 className="font-medium text-red-800 dark:text-red-200">High Risk</h4>
                     <AlertTriangle className="h-5 w-5 text-red-600" />
@@ -718,7 +718,7 @@ const ExecutiveDashboard: React.FC = () => {
                   </p>
                 </div>
 
-                <div className="p-4 border-l-4 border-yellow-500 bg-yellow-50 dark:bg-yellow-950/20">
+                <div className="p-4 rounded-lg border border-yellow-500/40 bg-yellow-50 dark:bg-yellow-950/20">
                   <div className="flex items-center justify-between mb-2">
                     <h4 className="font-medium text-yellow-800 dark:text-yellow-200">Medium Risk</h4>
                     <Clock className="h-5 w-5 text-yellow-600" />
@@ -728,7 +728,7 @@ const ExecutiveDashboard: React.FC = () => {
                   </p>
                 </div>
 
-                <div className="p-4 border-l-4 border-green-500 bg-green-50 dark:bg-green-950/20">
+                <div className="p-4 rounded-lg border border-green-500/40 bg-green-50 dark:bg-green-950/20">
                   <div className="flex items-center justify-between mb-2">
                     <h4 className="font-medium text-green-800 dark:text-green-200">Low Risk</h4>
                     <CheckCircle className="h-5 w-5 text-green-600" />

@@ -228,7 +228,7 @@ const BlogPost = () => {
                   ol: ({ children }) => <ol className="mb-4 space-y-2 list-decimal list-inside">{children}</ol>,
                   li: ({ children }) => <li className="text-gray-700 ml-4">{children}</li>,
                   blockquote: ({ children }) => (
-                    <blockquote className="border-l-4 border-construction-blue pl-4 py-2 my-4 bg-construction-light/30 rounded-r-md">
+                    <blockquote className="border-l-2 border-border pl-4 py-2 my-4 text-muted-foreground italic">
                       {children}
                     </blockquote>
                   ),
