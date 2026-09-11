@@ -11,6 +11,7 @@ import { ProjectCommunication } from '@/components/communication/ProjectCommunic
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { MessageSquare, Search, Building2, Clock, Users, ArrowRight } from 'lucide-react';
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
 
 interface Project {
   id: string;
@@ -168,7 +169,7 @@ const CommunicationHub = () => {
       <DashboardLayout title="Communication Hub">
         <div className="flex items-center justify-center min-h-[400px]">
           <div className="text-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+            <LoadingSpinner size="md" className="mx-auto mb-4" />
             <p className="text-muted-foreground">Loading communications...</p>
           </div>
         </div>

@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { FileText, Send, Clock, CheckCircle, AlertTriangle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
 
 interface Invoice {
   id: string;
@@ -89,7 +90,7 @@ const InvoicingPayments = () => {
       <CardContent className="space-y-4">
         {loading ? (
           <div className="text-center py-4">
-            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary mx-auto"></div>
+            <LoadingSpinner size="sm" className="mx-auto" />
           </div>
         ) : (
           <>

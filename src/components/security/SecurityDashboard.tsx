@@ -14,6 +14,7 @@ import { SecurityMonitoringDashboard } from './SecurityMonitoringDashboard';
 import { DeviceTrustManagement } from './DeviceTrustManagement';
 import { ActiveSessionsManagement } from './ActiveSessionsManagement';
 import { mobileGridClasses, mobileCardClasses, mobileTextClasses } from '@/utils/mobileHelpers';
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
 
 interface SecurityEvent {
   id: string;
@@ -140,7 +141,7 @@ export const SecurityDashboard: React.FC = () => {
   if (loading) {
     return (
       <div className="flex items-center justify-center p-8">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        <LoadingSpinner size="md" />
       </div>
     );
   }

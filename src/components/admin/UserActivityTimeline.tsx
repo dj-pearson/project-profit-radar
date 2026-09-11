@@ -9,6 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import {
   Activity,
   Mouse,
@@ -161,7 +162,7 @@ export const UserActivityTimeline: React.FC<UserActivityTimelineProps> = ({
       <Card>
         <CardContent className="py-8">
           <div className="flex items-center justify-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+            <LoadingSpinner size="md" />
           </div>
         </CardContent>
       </Card>

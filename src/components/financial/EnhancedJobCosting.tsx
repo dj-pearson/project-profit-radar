@@ -9,6 +9,7 @@ import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { 
   TrendingUp, 
   TrendingDown, 
@@ -211,7 +212,7 @@ export const EnhancedJobCosting: React.FC<{ projectId?: string }> = ({ projectId
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        <LoadingSpinner size="md" />
       </div>
     );
   }

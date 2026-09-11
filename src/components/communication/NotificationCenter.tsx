@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Bell, MessageSquare, AtSign, AlertTriangle, CheckCircle, Clock, Settings, Trash2 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { toast } from 'sonner';
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
 
 interface Notification {
   id: string;
@@ -214,7 +215,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ userProf
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+        <LoadingSpinner size="md" />
       </div>
     );
   }

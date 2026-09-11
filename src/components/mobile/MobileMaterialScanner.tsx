@@ -8,6 +8,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sh
 import { Package, Minus, Plus, Search, AlertTriangle, CheckCircle } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
 
 interface Material {
   id: string;
@@ -174,7 +175,7 @@ const MobileMaterialScanner: React.FC<MobileMaterialScannerProps> = ({
       <div className="space-y-2 max-h-96 overflow-y-auto">
         {isLoading ? (
           <div className="text-center py-8">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+            <LoadingSpinner size="md" className="mx-auto" />
             <p className="text-sm text-muted-foreground mt-2">Loading materials...</p>
           </div>
         ) : filteredMaterials.length === 0 ? (
@@ -289,7 +290,7 @@ const MobileMaterialScanner: React.FC<MobileMaterialScannerProps> = ({
                   className="flex-1"
                 >
                   {isLoading ? (
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white" />
+                    <LoadingSpinner size="sm" tone="current" label={null} />
                   ) : (
                     <>
                       <CheckCircle className="h-4 w-4 mr-2" />

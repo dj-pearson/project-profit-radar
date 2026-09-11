@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { OnboardingWizard } from '@/components/onboarding/OnboardingWizard';
 import { logger } from '@/lib/logger';
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
 
 const Setup = () => {
   const { user, userProfile, refreshProfile, loading } = useAuth();
@@ -32,7 +33,7 @@ const Setup = () => {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-construction-blue mx-auto mb-4"></div>
+          <LoadingSpinner size="xl" className="mx-auto mb-4" />
           <p className="text-muted-foreground">Loading...</p>
         </div>
       </div>

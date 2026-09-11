@@ -25,6 +25,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
 
 const complianceSchema = z.object({
   title: z.string().min(1, "Title is required"),
@@ -238,7 +239,7 @@ const OSHAComplianceManager = () => {
       <Card>
         <CardContent className="p-8">
           <div className="text-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+            <LoadingSpinner size="md" className="mx-auto" />
             <p className="text-sm text-muted-foreground mt-2">Loading compliance data...</p>
           </div>
         </CardContent>

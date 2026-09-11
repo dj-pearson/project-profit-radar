@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { 
   Calculator, 
   DollarSign,
@@ -89,7 +90,7 @@ export const ProjectEstimates: React.FC<ProjectEstimatesProps> = ({
     return (
       <Card>
         <CardContent className="flex items-center justify-center py-8">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+          <LoadingSpinner size="md" />
         </CardContent>
       </Card>
     );

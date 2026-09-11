@@ -21,6 +21,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { formatCurrency } from "@/utils/formatters";
 import { TrendingUp, Target, DollarSign, Clock, BarChart3, PieChart, Activity, Zap, CheckCircle } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart as RechartsPieChart, Cell, Area, AreaChart } from "recharts";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
 
 interface PipelineMetrics {
   totalPipelineValue: number;
@@ -279,7 +280,7 @@ export const PipelineAnalytics: React.FC<PipelineAnalyticsProps> = ({
   if (loading) {
     return (
       <div className="flex items-center justify-center h-96">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        <LoadingSpinner size="md" />
       </div>
     );
   }

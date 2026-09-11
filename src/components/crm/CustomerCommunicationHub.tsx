@@ -14,6 +14,7 @@ import { Switch } from '@/components/ui/switch';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { MessageSquare, Mail, Phone, Calendar, FileText, Bell, Settings, Plus, Eye, Clock, CheckCircle, AlertCircle } from 'lucide-react';
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
 
 interface CommunicationLogEntry {
   id: string;
@@ -264,7 +265,7 @@ export const CustomerCommunicationHub = () => {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+          <LoadingSpinner size="md" className="mx-auto mb-4" />
           <p className="text-muted-foreground">Loading communication hub...</p>
         </div>
       </div>

@@ -22,6 +22,7 @@ import {
 } from '@/components/client-portal';
 import { ClientPortalSelections } from '@/components/client/ClientPortalSelections';
 import { ClientPortalRFIs } from '@/components/client/ClientPortalRFIs';
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import {
   Building2,
   LayoutDashboard,
@@ -365,7 +366,7 @@ const ClientPortalEnhanced = () => {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary mx-auto mb-4"></div>
+          <LoadingSpinner size="xl" className="mx-auto mb-4" />
           <p className="text-muted-foreground">Loading your projects...</p>
         </div>
       </div>

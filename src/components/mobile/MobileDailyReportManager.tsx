@@ -14,6 +14,7 @@ import { useGeolocation } from '@/hooks/useGeolocation';
 import { supabase } from '@/integrations/supabase/client';
 import { EnhancedMobileCamera } from './EnhancedMobileCamera';
 import { format } from 'date-fns';
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
 
 interface CrewMember {
   name: string;
@@ -1123,7 +1124,7 @@ const MobileDailyReportManager: React.FC<MobileDailyReportProps> = ({
           >
             {isSubmitting ? (
               <div className="flex items-center gap-2">
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                <LoadingSpinner size="sm" tone="current" label={null} />
                 Submitting...
               </div>
             ) : (

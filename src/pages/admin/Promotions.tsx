@@ -14,6 +14,7 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
 
 interface Promotion {
   id: string;
@@ -387,7 +388,7 @@ const Promotions = () => {
       <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
         {loading ? (
           <div className="text-center py-12">
-            <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary mx-auto"></div>
+            <LoadingSpinner size="xl" className="mx-auto" />
             <p className="text-muted-foreground mt-4">Loading promotions...</p>
           </div>
         ) : promotions.length === 0 ? (

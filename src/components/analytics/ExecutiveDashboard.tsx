@@ -32,6 +32,7 @@ import {
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
 
 interface ExecutiveMetrics {
   totalRevenue: number;
@@ -355,7 +356,7 @@ const ExecutiveDashboard: React.FC = () => {
     return (
       <div className="flex items-center justify-center h-96">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-construction-blue mx-auto mb-4"></div>
+          <LoadingSpinner size="xl" className="mx-auto mb-4" />
           <p className="text-muted-foreground">Loading analytics...</p>
         </div>
       </div>

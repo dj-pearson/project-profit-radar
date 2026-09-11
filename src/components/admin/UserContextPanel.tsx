@@ -23,6 +23,7 @@ import {
 import { UserActivityTimeline } from './UserActivityTimeline';
 import { DebugConsole } from './DebugConsole';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
 
 interface TicketContext {
   user_id: string;
@@ -182,7 +183,7 @@ export const UserContextPanel: React.FC<UserContextPanelProps> = ({
       <Card>
         <CardContent className="py-8">
           <div className="flex items-center justify-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+            <LoadingSpinner size="md" />
           </div>
         </CardContent>
       </Card>

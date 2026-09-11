@@ -41,6 +41,7 @@ import {
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { TimesheetEntry } from '@/hooks/useTimesheetApproval';
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
 
 interface TimesheetApprovalQueueProps {
   timesheets: TimesheetEntry[];
@@ -153,7 +154,7 @@ export const TimesheetApprovalQueue = ({
       <Card>
         <CardContent className="py-8">
           <div className="flex items-center justify-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+            <LoadingSpinner size="md" />
           </div>
         </CardContent>
       </Card>

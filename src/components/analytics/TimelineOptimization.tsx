@@ -20,6 +20,7 @@ import {
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
 
 interface OptimizationMetrics {
   currentSchedule: Array<{
@@ -169,7 +170,7 @@ const TimelineOptimization = () => {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        <LoadingSpinner size="md" />
       </div>
     );
   }

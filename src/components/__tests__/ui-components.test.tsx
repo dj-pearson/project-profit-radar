@@ -103,6 +103,32 @@ describe('LoadingSpinner', () => {
     const { container } = render(<LoadingSpinner className="text-blue-500" />);
     expect(container.firstChild).toHaveClass('text-blue-500');
   });
+
+  it('renders xl size for full-page loaders', () => {
+    const { container } = render(<LoadingSpinner size="xl" />);
+    expect(container.firstChild as HTMLElement).toHaveClass('h-32', 'w-32');
+  });
+
+  it('announces itself to assistive tech by default', () => {
+    render(<LoadingSpinner />);
+    expect(screen.getByRole('status')).toHaveTextContent('Loading');
+  });
+
+  it('accepts a more specific label', () => {
+    render(<LoadingSpinner label="Loading invoices" />);
+    expect(screen.getByRole('status')).toHaveTextContent('Loading invoices');
+  });
+
+  it('goes silent when something nearby already carries the status text', () => {
+    const { container } = render(<LoadingSpinner label={null} />);
+    expect(screen.queryByRole('status')).toBeNull();
+    expect(container.firstChild).toHaveAttribute('aria-hidden', 'true');
+  });
+
+  it('inherits the foreground colour with tone="current", for use inside a button', () => {
+    const { container } = render(<LoadingSpinner tone="current" />);
+    expect(container.firstChild).toHaveClass('border-t-current');
+  });
 });
 
 describe('LoadingState', () => {

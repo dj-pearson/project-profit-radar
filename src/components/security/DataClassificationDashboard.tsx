@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Shield, Eye, EyeOff, Lock, Users, Database, Check, X, Plus, Search, Download } from 'lucide-react';
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
 
 interface DataClassification {
   id: string;
@@ -201,7 +202,7 @@ export const DataClassificationDashboard = () => {
   if (loading) {
     return (
       <div className="flex items-center justify-center p-8">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        <LoadingSpinner size="md" />
       </div>
     );
   }

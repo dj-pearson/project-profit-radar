@@ -15,6 +15,7 @@ import { Progress } from '@/components/ui/progress';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { 
   Bot, 
   Clock, 
@@ -394,7 +395,7 @@ const BlogAutoGeneration = () => {
           >
             {generating ? (
               <>
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current mr-2"></div>
+                <LoadingSpinner size="sm" tone="current" className="mr-2" label={null} />
                 Generating...
               </>
             ) : (

@@ -6,6 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Input } from '@/components/ui/input';
 import { supabase } from '@/integrations/supabase/client';
 import { Activity, Search } from 'lucide-react';
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
 
 interface AuditLog {
   id: string;
@@ -119,7 +120,7 @@ const ActivityLogger = () => {
 
           {loading ? (
             <div className="flex items-center justify-center py-8">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+              <LoadingSpinner size="md" />
             </div>
           ) : (
             <div className="space-y-2 max-h-96 overflow-y-auto">

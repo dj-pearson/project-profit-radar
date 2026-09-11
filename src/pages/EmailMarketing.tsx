@@ -14,6 +14,7 @@ import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { Plus, Search, Mail, Send, Users, Eye, MousePointer, Calendar, Edit } from 'lucide-react';
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
 
 /** The `email_campaigns` fields the analytics block reads. */
 type CampaignStats = {
@@ -244,7 +245,7 @@ export default function EmailMarketing() {
           <TabsContent value="campaigns" className="space-y-4">
             {loading ? (
               <div className="flex items-center justify-center h-64">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                <LoadingSpinner size="md" />
               </div>
             ) : campaigns.length === 0 ? (
               <Card>
@@ -348,7 +349,7 @@ export default function EmailMarketing() {
           <TabsContent value="templates" className="space-y-4">
             {loading ? (
               <div className="flex items-center justify-center h-64">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                <LoadingSpinner size="md" />
               </div>
             ) : templates.length === 0 ? (
               <Card>
@@ -411,7 +412,7 @@ export default function EmailMarketing() {
           <TabsContent value="lists" className="space-y-4">
             {loading ? (
               <div className="flex items-center justify-center h-64">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                <LoadingSpinner size="md" />
               </div>
             ) : lists.length === 0 ? (
               <Card>
