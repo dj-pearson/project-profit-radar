@@ -10,6 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import {
   Bug,
   Zap,
@@ -272,7 +273,7 @@ export const DebugConsole: React.FC<DebugConsoleProps> = ({
           <TabsContent value="errors" className="m-0 max-h-[500px] overflow-y-auto">
             {loading ? (
               <div className="p-4 text-center">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+                <LoadingSpinner size="md" className="mx-auto" />
               </div>
             ) : errors.length === 0 ? (
               <div className="p-8 text-center text-muted-foreground">
@@ -336,7 +337,7 @@ export const DebugConsole: React.FC<DebugConsoleProps> = ({
           <TabsContent value="performance" className="m-0 max-h-[500px] overflow-y-auto">
             {loading ? (
               <div className="p-4 text-center">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+                <LoadingSpinner size="md" className="mx-auto" />
               </div>
             ) : metrics.length === 0 ? (
               <div className="p-8 text-center text-muted-foreground">

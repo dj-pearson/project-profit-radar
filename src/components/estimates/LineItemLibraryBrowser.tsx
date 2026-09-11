@@ -7,6 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Search, Plus, DollarSign, Package, CheckCircle2 } from 'lucide-react';
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
 
 interface LineItemLibraryItem {
   id: string;
@@ -204,7 +205,7 @@ export function LineItemLibraryBrowser({
               {loading ? (
                 <div className="flex items-center justify-center py-12">
                   <div className="text-center">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+                    <LoadingSpinner size="lg" className="mx-auto mb-4" />
                     <p className="text-muted-foreground">Loading library...</p>
                   </div>
                 </div>

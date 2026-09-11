@@ -14,6 +14,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Plus, Edit, CheckCircle, XCircle, ClipboardCheck, AlertTriangle, Camera, Calendar } from 'lucide-react';
 import { format } from 'date-fns';
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
 
 interface QualityInspection {
   id: string;
@@ -210,7 +211,7 @@ export const QualityControlManagement: React.FC = () => {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        <LoadingSpinner size="md" />
       </div>
     );
   }

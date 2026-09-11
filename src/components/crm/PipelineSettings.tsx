@@ -34,6 +34,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import { Settings, Plus, Edit, Trash2, Save, GripVertical, Target, Clock, Percent, RefreshCw, Zap } from "lucide-react";
 import { Json } from "@/integrations/supabase/types";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
 
 interface PipelineStage {
   id: string;
@@ -317,7 +318,7 @@ export const PipelineSettings: React.FC = () => {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-96">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        <LoadingSpinner size="md" />
       </div>
     );
   }

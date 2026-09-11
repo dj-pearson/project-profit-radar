@@ -385,17 +385,17 @@ export class DocumentClassifierService {
     // Common patterns
     const patterns = {
       amount: /\$?[\d,]+\.?\d{0,2}/g,
-      date: /\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4}/g,
+      date: /\d{1,2}[/-]\d{1,2}[/-]\d{2,4}/g,
       invoiceNumber: /(?:invoice|inv)[\s#:]*(\d+)/i,
       orderNumber: /(?:order|po)[\s#:]*(\d+)/i,
-      email: /[\w\.-]+@[\w\.-]+\.\w+/g,
-      phone: /\(?\d{3}\)?[\s\.-]?\d{3}[\s\.-]?\d{4}/g,
+      email: /[\w.-]+@[\w.-]+\.\w+/g,
+      phone: /\(?\d{3}\)?[\s.-]?\d{3}[\s.-]?\d{4}/g,
     };
 
     // Extract based on category
     switch (category) {
       case 'invoice':
-      case 'receipt':
+      case 'receipt': {
         const amounts = content.match(patterns.amount);
         if (amounts && amounts.length > 0) {
           data.amounts = amounts;
@@ -404,16 +404,19 @@ export class DocumentClassifierService {
         const invoiceNum = content.match(patterns.invoiceNumber);
         if (invoiceNum) data.invoiceNumber = invoiceNum[1];
         break;
+      }
 
-      case 'change_order':
+      case 'change_order': {
         const orderNum = content.match(patterns.orderNumber);
         if (orderNum) data.orderNumber = orderNum[1];
         break;
+      }
 
-      case 'contract':
+      case 'contract': {
         const dates = content.match(patterns.date);
         if (dates) data.dates = dates;
         break;
+      }
     }
 
     // Extract common fields
@@ -493,11 +496,11 @@ export class DocumentClassifierService {
 
     const fieldPatterns = {
       'Amount': /\$[\d,]+\.?\d{0,2}/,
-      'Date': /\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4}/,
+      'Date': /\d{1,2}[/-]\d{1,2}[/-]\d{2,4}/,
       'Invoice Number': /invoice[\s#:]*\d+/i,
       'Order Number': /(?:order|po)[\s#:]*\d+/i,
-      'Email': /[\w\.-]+@[\w\.-]+\.\w+/,
-      'Phone': /\(?\d{3}\)?[\s\.-]?\d{3}[\s\.-]?\d{4}/,
+      'Email': /[\w.-]+@[\w.-]+\.\w+/,
+      'Phone': /\(?\d{3}\)?[\s.-]?\d{3}[\s.-]?\d{4}/,
       'Address': /\d+\s+[\w\s]+(?:street|st|avenue|ave|road|rd|drive|dr|lane|ln|way)/i,
     };
 

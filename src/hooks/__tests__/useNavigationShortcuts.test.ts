@@ -8,10 +8,10 @@ describe('resolveNewTarget (context-aware "N")', () => {
     // the project detail view for a project whose id was the string 'new'.
     expect(resolveNewTarget('/projects')).toBe('/create-project');
     expect(resolveNewTarget('/projects/abc-123')).toBe('/create-project');
-    // /invoices/new still has no route. Left as-is deliberately: there is no
-    // create-invoice page to point at, and sending "new invoice" to the list is
-    // a product decision rather than a repoint (US-312 baseline).
-    expect(resolveNewTarget('/invoices')).toBe('/invoices/new');
+    // /invoices/new never had a route. There is no separate create-invoice
+    // page - the generator is a dialog on the list - so ?new=1 opens it and
+    // pressing N lands on the form rather than on a 404.
+    expect(resolveNewTarget('/invoices')).toBe('/invoices?new=1');
     expect(resolveNewTarget('/time-tracking')).toBe('/time-tracking');
     expect(resolveNewTarget('/crm')).toBe('/crm');
   });

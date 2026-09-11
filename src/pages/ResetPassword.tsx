@@ -19,6 +19,7 @@ import {
   sanitizeInput,
 } from "@/utils/security";
 import { AlertCircle, CheckCircle, Lock } from "lucide-react";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
 
 const ResetPassword = () => {
   const [password, setPassword] = useState("");
@@ -193,7 +194,7 @@ const ResetPassword = () => {
           <Card>
             <CardContent className="flex items-center justify-center p-8">
               <div className="text-center" role="status" aria-live="polite" aria-label="Validating reset link">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-construction-blue mx-auto mb-4" aria-hidden="true"></div>
+                <LoadingSpinner size="md" className="mx-auto mb-4" label={null} />
                 <p className="text-muted-foreground">Validating reset link...</p>
               </div>
             </CardContent>

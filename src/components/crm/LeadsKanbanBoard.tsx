@@ -17,9 +17,9 @@ interface LeadsKanbanBoardProps {
 }
 
 const TIER_BORDER: Record<ValueTier, string> = {
-  high: 'border-l-4 border-l-green-500',
-  medium: 'border-l-4 border-l-yellow-500',
-  low: 'border-l-4 border-l-slate-300',
+  high: 'border-green-500/40',
+  medium: 'border-yellow-500/40',
+  low: 'border-slate-300/40',
 };
 
 export const LeadsKanbanBoard: React.FC<LeadsKanbanBoardProps> = ({ leads, onStatusChange, onLeadClick }) => {

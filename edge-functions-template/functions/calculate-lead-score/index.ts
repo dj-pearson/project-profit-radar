@@ -100,17 +100,19 @@ Deno.serve(async (req) => {
           }
           break;
         
-        case 'greater_than':
+        case 'greater_than': {
           const numValue = parseFloat(fieldValue);
           const conditionNum = parseFloat(rule.condition_value);
           ruleApplies = !isNaN(numValue) && !isNaN(conditionNum) && numValue > conditionNum;
           break;
+        }
         
-        case 'less_than':
+        case 'less_than': {
           const numValueLt = parseFloat(fieldValue);
           const conditionNumLt = parseFloat(rule.condition_value);
           ruleApplies = !isNaN(numValueLt) && !isNaN(conditionNumLt) && numValueLt < conditionNumLt;
           break;
+        }
         
         case 'contains':
           ruleApplies = fieldValue && typeof fieldValue === 'string' && 
@@ -121,13 +123,14 @@ Deno.serve(async (req) => {
           ruleApplies = fieldValue && fieldValue !== '' && fieldValue !== null;
           break;
         
-        case 'in_range':
+        case 'in_range': {
           // Expect condition_value to be like "min,max"
           const [min, max] = rule.condition_value.split(',').map((v: string) => parseFloat(v.trim()));
           const rangeValue = parseFloat(fieldValue);
           ruleApplies = !isNaN(rangeValue) && !isNaN(min) && !isNaN(max) && 
                        rangeValue >= min && rangeValue <= max;
           break;
+        }
       }
 
       if (ruleApplies) {

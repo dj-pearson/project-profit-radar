@@ -10,6 +10,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import SubscriptionChange from './SubscriptionChange';
 import PaymentFailureAlert from './PaymentFailureAlert';
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
 
 interface SubscriptionData {
   subscription_tier: string;
@@ -112,7 +113,7 @@ const SubscriptionManager = () => {
       <Card>
         <CardContent className="flex items-center justify-center py-8">
           <div className="text-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-construction-orange mx-auto mb-2"></div>
+            <LoadingSpinner size="md" className="mx-auto mb-2" />
             <p className="text-muted-foreground">Loading subscription...</p>
           </div>
         </CardContent>
@@ -222,7 +223,7 @@ const SubscriptionManager = () => {
               className="flex items-center gap-2"
             >
               {refreshing ? (
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-construction-orange"></div>
+                <LoadingSpinner size="sm" />
               ) : (
                 <CheckCircle className="h-4 w-4" />
               )}

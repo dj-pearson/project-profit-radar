@@ -6,6 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { 
   Play,
   Pause, 
@@ -209,7 +210,7 @@ export default function WorkflowAutomation() {
     return (
       <div className="space-y-6">
         <div className="text-center py-8">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+          <LoadingSpinner size="md" className="mx-auto" />
           <p className="mt-2 text-muted-foreground">Loading workflow automation...</p>
         </div>
       </div>
@@ -328,7 +329,7 @@ export default function WorkflowAutomation() {
                         disabled={executing === workflow.id || !workflow.is_active}
                       >
                         {executing === workflow.id ? (
-                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current" />
+                          <LoadingSpinner size="sm" tone="current" label={null} />
                         ) : (
                           <Play className="h-4 w-4" />
                         )}

@@ -19,6 +19,7 @@ import { cn } from '@/lib/utils';
 import { StorageImage } from '@/lib/storage/StorageImage';
 import { Skeleton } from '@/components/ui/skeleton';
 import { openStorageObject } from '@/lib/storage/signedUrl';
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
 
 interface Message {
   id: string;
@@ -354,7 +355,7 @@ export const ClientMessageCenter: React.FC<ClientMessageCenterProps> = ({ projec
       <Card>
         <CardContent className="flex items-center justify-center h-96">
           <div className="text-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-2"></div>
+            <LoadingSpinner size="md" className="mx-auto mb-2" />
             <p className="text-sm text-muted-foreground">Loading messages...</p>
           </div>
         </CardContent>
@@ -521,7 +522,7 @@ export const ClientMessageCenter: React.FC<ClientMessageCenterProps> = ({ projec
               className="shrink-0"
             >
               {uploading ? (
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current" />
+                <LoadingSpinner size="sm" tone="current" label={null} />
               ) : (
                 <Upload className="h-4 w-4" />
               )}

@@ -396,12 +396,13 @@ function calculateMatchConfidence(transaction: UnroutedTransaction, rule: Routin
       confidence = isMatch ? 100 : 0;
       break;
       
-    case 'contains':
+    case 'contains': {
       const searchValue = rule.case_sensitive ? rule.match_value : rule.match_value.toLowerCase();
       const targetValue = rule.case_sensitive ? fieldValue : fieldValue.toLowerCase();
       isMatch = targetValue.includes(searchValue);
       confidence = isMatch ? 85 : 0;
       break;
+    }
       
     case 'starts_with':
       isMatch = rule.case_sensitive

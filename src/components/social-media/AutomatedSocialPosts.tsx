@@ -171,7 +171,7 @@ export const AutomatedSocialPosts = () => {
                     <div className="text-sm text-gray-500">Platforms</div>
                   </div>
                   <div className="text-center">
-                    <div className="text-2xl font-bold text-purple-600">
+                    <div className="text-2xl font-bold text-blue-600">
                       {localConfig.content_types.length}
                     </div>
                     <div className="text-sm text-gray-500">Content Types</div>

@@ -10,6 +10,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Send, CheckCircle, Settings, Mail, MessageSquare } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
 
 interface UpdateSettings {
   autoUpdatesEnabled: boolean;
@@ -275,7 +276,7 @@ const AutomatedProgressUpdates = () => {
           >
             {sending ? (
               <>
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                <LoadingSpinner size="sm" tone="current" className="mr-2" label={null} />
                 Sending Update...
               </>
             ) : (

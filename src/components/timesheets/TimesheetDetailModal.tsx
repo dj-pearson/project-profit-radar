@@ -15,6 +15,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Label } from '@/components/ui/label';
 import { Clock, MapPin, User, Building2, CheckCircle2, XCircle, AlertCircle, History } from 'lucide-react';
 import { format } from 'date-fns';
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
 
 interface TimesheetDetailModalProps {
   timesheetId: string | null;
@@ -120,7 +121,7 @@ export const TimesheetDetailModal = ({
       <Dialog open={open} onOpenChange={onClose}>
         <DialogContent className="max-w-3xl">
           <div className="flex items-center justify-center py-8">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+            <LoadingSpinner size="md" />
           </div>
         </DialogContent>
       </Dialog>
@@ -353,7 +354,7 @@ export const TimesheetDetailModal = ({
                   {history.map((entry) => (
                     <div
                       key={entry.id}
-                      className="p-4 bg-secondary/50 rounded-lg space-y-2 border-l-4 border-primary"
+                      className="p-4 bg-secondary/50 rounded-lg space-y-2 border border-primary/30"
                     >
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">

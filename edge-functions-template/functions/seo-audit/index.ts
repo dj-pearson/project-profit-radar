@@ -108,8 +108,8 @@ serve(async (req) => {
 
     // Calculate scores based on findings
     let seoScore = 100;
-    let issues = [];
-    let recommendations = [];
+    const issues = [];
+    const recommendations = [];
 
     // Title tag check
     if (!titleMatch || !titleMatch[1]) {

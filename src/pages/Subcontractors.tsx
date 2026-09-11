@@ -1,7 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { AccessiblePageWrapper } from '@/components/accessibility/AccessiblePageWrapper';
-import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -111,144 +110,6 @@ function createDefaultPrequalification(): PrequalificationItem[] {
     ...item,
     id: `pq-${Date.now()}-${index}`,
   }));
-}
-
-// --- Demo Data ---
-
-function generateDemoData(): Subcontractor[] {
-  const now = new Date();
-  return [
-    {
-      id: 'sub-1',
-      name: 'Apex Electrical Services',
-      trade: 'Electrical',
-      contactName: 'Mike Johnson',
-      phone: '(555) 123-4567',
-      email: 'mike@apexelectrical.com',
-      licenseNumber: 'EL-2024-08821',
-      rating: 5,
-      notes: 'Reliable and consistently on schedule. Preferred sub for commercial projects.',
-      prequalification: DEFAULT_PREQUALIFICATION.map((item, i) => ({
-        ...item,
-        id: `pq-1-${i}`,
-        checked: true,
-      })),
-      insuranceCertificates: [
-        {
-          id: 'ins-1a',
-          type: 'General Liability',
-          fileName: 'apex_gl_cert.pdf',
-          expirationDate: new Date(now.getTime() + 180 * 86400000).toISOString().split('T')[0],
-        },
-        {
-          id: 'ins-1b',
-          type: 'Workers Compensation',
-          fileName: 'apex_wc_cert.pdf',
-          expirationDate: new Date(now.getTime() + 90 * 86400000).toISOString().split('T')[0],
-        },
-      ],
-      createdAt: '2024-06-15',
-    },
-    {
-      id: 'sub-2',
-      name: 'Summit Plumbing Co.',
-      trade: 'Plumbing',
-      contactName: 'Sarah Chen',
-      phone: '(555) 234-5678',
-      email: 'sarah@summitplumbing.com',
-      licenseNumber: 'PL-2023-44210',
-      rating: 4,
-      notes: 'Good quality work. Occasionally needs reminders on documentation.',
-      prequalification: DEFAULT_PREQUALIFICATION.map((item, i) => ({
-        ...item,
-        id: `pq-2-${i}`,
-        checked: i < 6,
-      })),
-      insuranceCertificates: [
-        {
-          id: 'ins-2a',
-          type: 'General Liability',
-          fileName: 'summit_gl_cert.pdf',
-          expirationDate: new Date(now.getTime() + 20 * 86400000).toISOString().split('T')[0],
-        },
-      ],
-      createdAt: '2024-09-01',
-    },
-    {
-      id: 'sub-3',
-      name: 'Ironclad HVAC',
-      trade: 'HVAC',
-      contactName: 'James Rodriguez',
-      phone: '(555) 345-6789',
-      email: 'james@ironcladhvac.com',
-      licenseNumber: 'HV-2024-11003',
-      rating: 3,
-      notes: 'Competitive pricing. Quality can be inconsistent on larger jobs.',
-      prequalification: DEFAULT_PREQUALIFICATION.map((item, i) => ({
-        ...item,
-        id: `pq-3-${i}`,
-        checked: i < 4,
-      })),
-      insuranceCertificates: [
-        {
-          id: 'ins-3a',
-          type: 'General Liability',
-          fileName: 'ironclad_gl_cert.pdf',
-          expirationDate: new Date(now.getTime() - 10 * 86400000).toISOString().split('T')[0],
-        },
-      ],
-      createdAt: '2025-01-10',
-    },
-    {
-      id: 'sub-4',
-      name: 'Precision Concrete LLC',
-      trade: 'Concrete',
-      contactName: 'David Park',
-      phone: '(555) 456-7890',
-      email: 'david@precisionconcrete.com',
-      licenseNumber: 'CO-2024-55672',
-      rating: 5,
-      notes: 'Excellent flatwork. Always delivers on time with great communication.',
-      prequalification: DEFAULT_PREQUALIFICATION.map((item, i) => ({
-        ...item,
-        id: `pq-4-${i}`,
-        checked: true,
-      })),
-      insuranceCertificates: [
-        {
-          id: 'ins-4a',
-          type: 'General Liability',
-          fileName: 'precision_gl_cert.pdf',
-          expirationDate: new Date(now.getTime() + 240 * 86400000).toISOString().split('T')[0],
-        },
-        {
-          id: 'ins-4b',
-          type: 'Workers Compensation',
-          fileName: 'precision_wc_cert.pdf',
-          expirationDate: new Date(now.getTime() + 240 * 86400000).toISOString().split('T')[0],
-        },
-      ],
-      createdAt: '2024-03-20',
-    },
-    {
-      id: 'sub-5',
-      name: 'TopCoat Painting',
-      trade: 'Painting',
-      contactName: 'Lisa Martinez',
-      phone: '(555) 567-8901',
-      email: 'lisa@topcoatpainting.com',
-      licenseNumber: 'PT-2025-30098',
-      rating: 2,
-      notes: 'Budget option. Has had some quality issues on recent projects.',
-      prequalification: DEFAULT_PREQUALIFICATION.map((item, i) => ({
-        ...item,
-        id: `pq-5-${i}`,
-        checked: i < 3,
-      })),
-      insuranceCertificates: [],
-      createdAt: '2025-07-05',
-    },
-  ];
 }
 
 // --- Helpers ---
@@ -388,11 +249,9 @@ const EMPTY_FORM: SubcontractorFormData = {
 // --- Main Component ---
 
 const Subcontractors: React.FC = () => {
-  const navigate = useNavigate();
   const { toast } = useToast();
 
-  // Simulate loading state on mount
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading] = useState(false);
   const [subcontractors, setSubcontractors] = useState<Subcontractor[]>([]);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [formData, setFormData] = useState<SubcontractorFormData>({ ...EMPTY_FORM });
@@ -403,15 +262,6 @@ const Subcontractors: React.FC = () => {
   const [tradeFilter, setTradeFilter] = useState<string>('all');
   const [ratingFilter, setRatingFilter] = useState<string>('all');
   const [insuranceFilter, setInsuranceFilter] = useState<string>('all');
-
-  // Simulate data load
-  React.useEffect(() => {
-    const timer = setTimeout(() => {
-      setSubcontractors(generateDemoData());
-      setIsLoading(false);
-    }, 600);
-    return () => clearTimeout(timer);
-  }, []);
 
   // --- Filtering ---
 
@@ -489,8 +339,11 @@ const Subcontractors: React.FC = () => {
     setFormErrors({});
     setDialogOpen(false);
     toast({
-      title: 'Subcontractor added',
-      description: `${newSub.name} has been added successfully.`,
+      title: 'Not saved',
+      description:
+        `${newSub.name} is listed for this session only. Subcontractor records are ` +
+        'not stored yet, so it will be gone when you reload.',
+      variant: 'destructive',
     });
   }
 
@@ -515,26 +368,15 @@ const Subcontractors: React.FC = () => {
     );
   }
 
-  function handleInsuranceUpload(subId: string) {
-    // Simulate an insurance upload since we have no real file storage wired up
-    const newCert: InsuranceCertificate = {
-      id: `ins-${Date.now()}`,
-      type: 'General Liability',
-      fileName: 'uploaded_certificate.pdf',
-      expirationDate: new Date(Date.now() + 365 * 86400000).toISOString().split('T')[0],
-    };
-
-    setSubcontractors((prev) =>
-      prev.map((sub) =>
-        sub.id === subId
-          ? { ...sub, insuranceCertificates: [...sub.insuranceCertificates, newCert] }
-          : sub
-      )
-    );
-
+  function handleInsuranceUpload() {
+    // There is no storage bucket and no certificates table behind this. It used
+    // to invent a General Liability cert expiring in a year and say "uploaded".
     toast({
-      title: 'Certificate uploaded',
-      description: 'Insurance certificate has been uploaded (demo).',
+      title: 'Certificate upload is not available yet',
+      description:
+        'There is nowhere to store the file. Keep certificates where you keep ' +
+        'them today until this is wired up.',
+      variant: 'destructive',
     });
   }
 
@@ -751,6 +593,34 @@ const Subcontractors: React.FC = () => {
             </Dialog>
           </div>
 
+          {/*
+            This page has no table behind it. There is no `subcontractors` table
+            in any migration, so nothing entered here survives a reload. Saying
+            so is the whole point: until US-405 lands, a contractor who types in
+            their vendor list and comes back tomorrow finds it gone.
+          */}
+          <div
+            className="rounded-lg border border-amber-500/40 bg-amber-50 dark:bg-amber-950/30 p-4"
+            role="status"
+          >
+            <div className="flex items-start gap-3">
+              <AlertTriangle
+                className="h-5 w-5 shrink-0 mt-0.5 text-amber-600 dark:text-amber-400"
+                aria-hidden="true"
+              />
+              <div className="space-y-1">
+                <p className="font-medium text-amber-900 dark:text-amber-100">
+                  Subcontractor records are not stored yet
+                </p>
+                <p className="text-sm text-amber-800 dark:text-amber-200">
+                  You can try the form and the filters, but anything you enter lives
+                  for this browser session only and is not saved to your company.
+                  Keep your real subcontractor list where it is today.
+                </p>
+              </div>
+            </div>
+          </div>
+
           {/* Filter Bar */}
           <div
             className="flex flex-col sm:flex-row gap-3 p-4 bg-muted/50 rounded-lg border"
@@ -880,7 +750,7 @@ const Subcontractors: React.FC = () => {
                 </h2>
                 <p className="text-muted-foreground mb-4 max-w-md">
                   {subcontractors.length === 0
-                    ? 'Get started by adding your first subcontractor to track their prequalification and insurance status.'
+                    ? 'Once records are stored, this is where your subcontractors and their prequalification and insurance status will live.'
                     : 'Try adjusting your search or filter criteria to find what you are looking for.'}
                 </p>
                 {subcontractors.length === 0 && (
@@ -1066,7 +936,7 @@ const Subcontractors: React.FC = () => {
                           variant="outline"
                           size="sm"
                           className="w-full mt-2 gap-1.5"
-                          onClick={() => handleInsuranceUpload(sub.id)}
+                          onClick={handleInsuranceUpload}
                           aria-label={`Upload insurance certificate for ${sub.name}`}
                         >
                           <Upload className="h-3.5 w-3.5" aria-hidden="true" />

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { AccessiblePageWrapper } from "@/components/accessibility/AccessiblePageWrapper";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -52,6 +52,19 @@ const Safety = () => {
   const [checklists, setChecklists] = useState<SafetyChecklist[]>([]);
   const [loading, setLoading] = useState(true);
   const [showIncidentDialog, setShowIncidentDialog] = useState(false);
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  // A quick action that navigates has to land on the thing it promised. The
+  // mobile quick-actions sheet and the dashboard cards link here with ?new=incident
+  // rather than dropping the user on a list to hunt for the button. The param
+  // is consumed on arrival so a reload or a back-navigation does not reopen it.
+  useEffect(() => {
+    if (searchParams.get('new') !== 'incident') return;
+    setShowIncidentDialog(true);
+    const next = new URLSearchParams(searchParams);
+    next.delete('new');
+    setSearchParams(next, { replace: true });
+  }, [searchParams, setSearchParams]);
   const [showChecklistDialog, setShowChecklistDialog] = useState(false);
   const { user } = useAuth();
   const { toast } = useToast();

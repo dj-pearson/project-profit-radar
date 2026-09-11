@@ -159,7 +159,7 @@ export default function JobCostingSoftwareComparison() {
             </header>
 
             {/* Answer-First Content */}
-            <div className="bg-gradient-to-r from-construction-orange/10 to-construction-yellow/10 border-l-4 border-construction-orange p-6 rounded-r-lg mb-12">
+            <div className="bg-construction-orange/10 border border-construction-orange/30 p-6 rounded-lg mb-12">
               <h2 className="text-2xl font-bold text-slate-900 mb-4 flex items-center gap-3">
                 <Calculator className="w-6 h-6 text-construction-orange" />
                 Quick Answer: Best Job Costing Software by Business Type
@@ -373,7 +373,7 @@ export default function JobCostingSoftwareComparison() {
               <h2 className="text-3xl font-bold text-slate-900 mb-8">Detailed Software Reviews</h2>
 
               {/* Brikly */}
-              <div className="mb-12 bg-gradient-to-r from-construction-orange/5 to-construction-yellow/5 border-l-4 border-construction-orange p-6 rounded-r-lg">
+              <div className="mb-12 bg-construction-orange/5 border border-construction-orange/30 p-6 rounded-lg">
                 <div className="flex items-start justify-between mb-4">
                   <div>
                     <h3 className="text-2xl font-bold text-slate-900 mb-2">1. Brikly</h3>

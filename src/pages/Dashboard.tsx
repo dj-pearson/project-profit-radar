@@ -98,7 +98,7 @@ const Dashboard = () => {
         message: 'Setting up company management'
       },
       'daily_report': {
-        route: '/daily-reports/create',
+        route: '/daily-reports?new=1',
         message: 'Ready to submit today\'s report'
       },
       'crew_check_in': {

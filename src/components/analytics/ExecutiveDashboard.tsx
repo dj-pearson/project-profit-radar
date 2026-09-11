@@ -32,6 +32,7 @@ import {
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
 
 interface ExecutiveMetrics {
   totalRevenue: number;
@@ -355,7 +356,7 @@ const ExecutiveDashboard: React.FC = () => {
     return (
       <div className="flex items-center justify-center h-96">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-construction-blue mx-auto mb-4"></div>
+          <LoadingSpinner size="xl" className="mx-auto mb-4" />
           <p className="text-muted-foreground">Loading analytics...</p>
         </div>
       </div>
@@ -567,14 +568,14 @@ const ExecutiveDashboard: React.FC = () => {
                   </div>
                 </div>
 
-                <div className="p-4 bg-gradient-to-r from-purple-50 to-purple-100 dark:from-purple-950 dark:to-purple-900 rounded-lg">
+                <div className="p-4 bg-orange-50 dark:bg-orange-950/40 rounded-lg">
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-sm text-muted-foreground">Collection Rate</p>
-                      <p className="text-2xl font-bold text-purple-700 dark:text-purple-300">
+                      <p className="text-2xl font-bold text-orange-700 dark:text-orange-300">
                         94.2%
                       </p>
-                      <p className="text-xs text-purple-600 dark:text-purple-400">
+                      <p className="text-xs text-orange-600 dark:text-orange-400">
                         +2.1% vs last year
                       </p>
                     </div>
@@ -708,7 +709,7 @@ const ExecutiveDashboard: React.FC = () => {
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="p-4 border-l-4 border-red-500 bg-red-50 dark:bg-red-950/20">
+                <div className="p-4 rounded-lg border border-red-500/40 bg-red-50 dark:bg-red-950/20">
                   <div className="flex items-center justify-between mb-2">
                     <h4 className="font-medium text-red-800 dark:text-red-200">High Risk</h4>
                     <AlertTriangle className="h-5 w-5 text-red-600" />
@@ -718,7 +719,7 @@ const ExecutiveDashboard: React.FC = () => {
                   </p>
                 </div>
 
-                <div className="p-4 border-l-4 border-yellow-500 bg-yellow-50 dark:bg-yellow-950/20">
+                <div className="p-4 rounded-lg border border-yellow-500/40 bg-yellow-50 dark:bg-yellow-950/20">
                   <div className="flex items-center justify-between mb-2">
                     <h4 className="font-medium text-yellow-800 dark:text-yellow-200">Medium Risk</h4>
                     <Clock className="h-5 w-5 text-yellow-600" />
@@ -728,7 +729,7 @@ const ExecutiveDashboard: React.FC = () => {
                   </p>
                 </div>
 
-                <div className="p-4 border-l-4 border-green-500 bg-green-50 dark:bg-green-950/20">
+                <div className="p-4 rounded-lg border border-green-500/40 bg-green-50 dark:bg-green-950/20">
                   <div className="flex items-center justify-between mb-2">
                     <h4 className="font-medium text-green-800 dark:text-green-200">Low Risk</h4>
                     <CheckCircle className="h-5 w-5 text-green-600" />

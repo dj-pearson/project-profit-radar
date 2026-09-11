@@ -167,7 +167,7 @@ const ConstructionROICalculatorGuide = () => {
         {/* Answer-First Content */}
         <section className="py-12">
           <div className="container mx-auto px-4 max-w-4xl">
-            <Card className="border-l-4 border-l-construction-orange">
+            <Card className="border-construction-orange/40">
               <CardContent className="pt-6">
                 <div className="flex items-start gap-4">
                   <Calculator className="w-8 h-8 text-construction-orange flex-shrink-0 mt-1" />
@@ -241,7 +241,7 @@ const ConstructionROICalculatorGuide = () => {
                 Here's a conversation that happens daily in construction companies:
               </p>
 
-              <div className="bg-white p-6 rounded-lg border-l-4 border-l-yellow-500 mb-8">
+              <div className="bg-white p-6 rounded-lg border border-yellow-500/40 mb-8">
                 <p className="font-semibold text-construction-dark mb-2">
                   "How much is that new software?"
                 </p>
@@ -319,7 +319,7 @@ const ConstructionROICalculatorGuide = () => {
 
             <div className="space-y-8">
               {/* Step 1 */}
-              <Card className="border-l-4 border-l-construction-orange">
+              <Card className="border-construction-orange/40">
                 <CardContent className="pt-6">
                   <div className="flex items-start gap-4">
                     <div className="bg-construction-orange text-white w-10 h-10 rounded-full flex items-center justify-center font-bold flex-shrink-0">
@@ -378,7 +378,7 @@ const ConstructionROICalculatorGuide = () => {
               </Card>
 
               {/* Step 2 */}
-              <Card className="border-l-4 border-l-construction-orange">
+              <Card className="border-construction-orange/40">
                 <CardContent className="pt-6">
                   <div className="flex items-start gap-4">
                     <div className="bg-construction-orange text-white w-10 h-10 rounded-full flex items-center justify-center font-bold flex-shrink-0">
@@ -446,7 +446,7 @@ const ConstructionROICalculatorGuide = () => {
               </Card>
 
               {/* Step 3 */}
-              <Card className="border-l-4 border-l-construction-orange">
+              <Card className="border-construction-orange/40">
                 <CardContent className="pt-6">
                   <div className="flex items-start gap-4">
                     <div className="bg-construction-orange text-white w-10 h-10 rounded-full flex items-center justify-center font-bold flex-shrink-0">
@@ -526,7 +526,7 @@ const ConstructionROICalculatorGuide = () => {
               </Card>
 
               {/* Step 4 */}
-              <Card className="border-l-4 border-l-construction-orange">
+              <Card className="border-construction-orange/40">
                 <CardContent className="pt-6">
                   <div className="flex items-start gap-4">
                     <div className="bg-construction-orange text-white w-10 h-10 rounded-full flex items-center justify-center font-bold flex-shrink-0">
@@ -590,7 +590,7 @@ const ConstructionROICalculatorGuide = () => {
               </Card>
 
               {/* Step 5 */}
-              <Card className="border-l-4 border-l-construction-orange">
+              <Card className="border-construction-orange/40">
                 <CardContent className="pt-6">
                   <div className="flex items-start gap-4">
                     <div className="bg-construction-orange text-white w-10 h-10 rounded-full flex items-center justify-center font-bold flex-shrink-0">

@@ -262,7 +262,7 @@ export const GEOQuickQA: React.FC<GEOQuickQAProps> = ({ items, className = '' })
   return (
     <div className={`geo-quick-qa space-y-4 ${className}`}>
       {items.map((item, index) => (
-        <div key={index} className="border-l-4 border-primary pl-4">
+        <div key={index} className="border-l border-primary pl-4">
           <p className="font-semibold text-construction-dark">{item.q}</p>
           <p className="text-foreground mt-1">{item.a}</p>
         </div>

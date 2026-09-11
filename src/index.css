@@ -17,7 +17,11 @@ All colors MUST be HSL.
     --popover: 0 0% 100%;
     --popover-foreground: 215 25% 27%;
 
-    --primary: 24 100% 38%;
+    /* 36%, not 38%: at 38% this is 4.47:1 on the #fcf6f2 tinted surface the
+       GEO answer blocks use, which fails AA by 0.03. 36% reads 4.91 there,
+       5.26 on white, and 5.26 for white text on a primary button - better
+       on every pairing it appears in. */
+    --primary: 24 100% 36%;
     --primary-foreground: 0 0% 100%;
 
     --secondary: 210 17% 95%;
@@ -31,9 +35,12 @@ All colors MUST be HSL.
 
     /*
      * Accent colour for TEXT and ICONS drawn on a glass surface (US-143).
-     * `--primary` at 38% L only reaches ~4.34:1 over the light glass tints and
-     * ~2.6:1 under a deuteranopia simulation, so it is a fill colour, not a
+     * --primary now clears AA on light glass in normal vision (4.77:1 since it
+     * moved to 36% L), but under a red-green deficiency it still falls below
+     * 4.5:1 against those same tints, so it remains a fill colour rather than a
      * text colour. Use `text-primary-on-glass` for orange copy on glass.
+     * src/test/glass-contrast.test.ts holds both halves of that measurement and
+     * will say when this token can go.
      */
     --primary-on-glass: 24 100% 28%;
 
@@ -59,6 +66,11 @@ All colors MUST be HSL.
     --shadow-construction: 0 10px 30px -10px hsl(var(--construction-orange) / 0.3);
     --shadow-card: 0 4px 20px -4px hsl(215 25% 27% / 0.15);
 
+    /* 45%, not 60.2%. text-destructive is used at 267 sites - every form
+       validation message in the app - and at 60.2% it reads 3.76:1 on white,
+       under AA. 45% gives 5.43:1, and it also lifts white-on-destructive
+       (the destructive button) from 3.76 to 5.43. Better on both pairings;
+       the dark-mode token is a separate problem, see US-410. */
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
 
@@ -489,12 +501,10 @@ All colors MUST be HSL.
   @apply hover:bg-white/20 hover:border-white/30 transition-all duration-300 hover:scale-[1.02] hover:shadow-2xl;
 }
 
+/* Kept as a named accent so the three marketing headlines that use it stay
+   in one place. Solid, not a gradient: emphasis comes from weight and size. */
 .text-gradient {
-  @apply bg-clip-text text-transparent bg-gradient-to-r from-construction-orange to-orange-600;
-}
-
-.text-gradient-blue {
-  @apply bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-cyan-500;
+  @apply text-construction-orange;
 }
 
 .bg-mesh {

@@ -1,4 +1,5 @@
 import { cn } from "@/lib/utils"
+import { LoadingSpinner as CanonicalSpinner } from "@/components/ui/loading-spinner";
 
 function Skeleton({
   className,
@@ -143,16 +144,13 @@ export const DashboardSkeleton = () => (
   </div>
 );
 
-export const LoadingSpinner = ({ size = "default" }: { size?: "sm" | "default" | "lg" }) => {
-  const sizeClasses = {
-    sm: "h-4 w-4",
-    default: "h-6 w-6", 
-    lg: "h-8 w-8"
-  };
-  
-  return (
-    <div className={`${sizeClasses[size]} animate-spin rounded-full border-2 border-muted border-t-primary`} />
-  );
-};
+/**
+ * Re-export of the canonical spinner under this module's older size names, so
+ * the callers that import it from here keep working. New code should import
+ * LoadingSpinner from @/components/ui/loading-spinner directly.
+ */
+export const LoadingSpinner = ({ size = "default" }: { size?: "sm" | "default" | "lg" }) => (
+  <CanonicalSpinner size={size === "lg" ? "md" : "sm"} />
+);
 
 export { Skeleton }

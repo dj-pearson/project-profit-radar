@@ -191,7 +191,7 @@ const QuickBooksIntegrationGuide = () => {
             <CardContent>
               <div className="space-y-4">
                 {troubleshooting.map((item, index) => (
-                  <div key={index} className="border-l-4 border-primary/20 pl-4">
+                  <div key={index} className="border-l border-primary/40 pl-4">
                     <h3 className="font-semibold text-foreground mb-1">{item.issue}</h3>
                     <p className="text-muted-foreground">{item.solution}</p>
                   </div>

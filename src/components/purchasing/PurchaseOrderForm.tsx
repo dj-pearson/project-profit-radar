@@ -17,6 +17,7 @@ import {
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
 
 interface LineItem {
   line_number: number;
@@ -321,7 +322,7 @@ const PurchaseOrderForm = () => {
   if (loading && isEditing) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        <LoadingSpinner size="md" />
       </div>
     );
   }

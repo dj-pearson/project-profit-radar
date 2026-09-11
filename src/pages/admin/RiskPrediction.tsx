@@ -305,7 +305,7 @@ export function RiskPrediction() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+          <h1 className="text-3xl font-bold text-foreground">
             AI Risk Prediction
           </h1>
           <p className="text-muted-foreground mt-1">
@@ -340,7 +340,6 @@ export function RiskPrediction() {
             <Button
               onClick={generatePrediction}
               disabled={!selectedProjectId || generating}
-              className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
             >
               {generating ? (
                 <>

@@ -40,7 +40,7 @@ serve(async (req) => {
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
-    let serpFeatures: Array<{
+    const serpFeatures: Array<{
       feature_type: string;
       has_feature: boolean;
       owns_feature: boolean;

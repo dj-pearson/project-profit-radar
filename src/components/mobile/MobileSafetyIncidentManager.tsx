@@ -16,6 +16,7 @@ import { useOfflineSync } from '@/hooks/useOfflineSync';
 import { useGeolocation } from '@/hooks/useGeolocation';
 import { supabase } from '@/integrations/supabase/client';
 import { EnhancedMobileCamera } from './EnhancedMobileCamera';
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
 
 interface SafetyIncidentData {
   incident_type: string;
@@ -731,7 +732,7 @@ const MobileSafetyIncidentManager: React.FC<MobileSafetyIncidentManagerProps> = 
           >
             {isSubmitting ? (
               <div className="flex items-center gap-2">
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                <LoadingSpinner size="sm" tone="current" label={null} />
                 Submitting...
               </div>
             ) : (

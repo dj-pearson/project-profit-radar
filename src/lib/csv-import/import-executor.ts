@@ -112,7 +112,7 @@ function validateAndTransformValue(
   const stringValue = String(value).trim();
 
   switch (field.type) {
-    case 'string':
+    case 'string': {
       // Sanitize string input
       const sanitized = DOMPurify.sanitize(stringValue);
       if (sanitized.length > 2000) {
@@ -125,8 +125,9 @@ function validateAndTransformValue(
         throw new Error('Validation failed');
       }
       return sanitized;
+    }
 
-    case 'number':
+    case 'number': {
       const numValue = parseFloat(stringValue.replace(/[$,]/g, ''));
       if (isNaN(numValue)) {
         errors.push({
@@ -138,8 +139,9 @@ function validateAndTransformValue(
         throw new Error('Validation failed');
       }
       return numValue;
+    }
 
-    case 'date':
+    case 'date': {
       const dateValue = parseDate(stringValue);
       if (!dateValue) {
         errors.push({
@@ -151,12 +153,14 @@ function validateAndTransformValue(
         throw new Error('Validation failed');
       }
       return dateValue;
+    }
 
-    case 'boolean':
+    case 'boolean': {
       const boolValue = parseBooleanValue(stringValue);
       return boolValue;
+    }
 
-    case 'email':
+    case 'email': {
       const emailSchema = z.string().email();
       const emailResult = emailSchema.safeParse(stringValue);
       if (!emailResult.success) {
@@ -169,8 +173,9 @@ function validateAndTransformValue(
         throw new Error('Validation failed');
       }
       return stringValue.toLowerCase();
+    }
 
-    case 'phone':
+    case 'phone': {
       // Basic phone validation and formatting
       const phoneClean = stringValue.replace(/[^\d+]/g, '');
       if (phoneClean.length < 7 || phoneClean.length > 15) {
@@ -183,6 +188,7 @@ function validateAndTransformValue(
         throw new Error('Validation failed');
       }
       return stringValue;
+    }
 
     default:
       return DOMPurify.sanitize(stringValue);

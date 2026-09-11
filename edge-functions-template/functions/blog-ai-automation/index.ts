@@ -3,7 +3,6 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.3";
-import { aiService } from "../_shared/ai-service.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -203,7 +202,7 @@ Make the content authoritative, actionable, and valuable for construction profes
     const content = data.content[0].text;
     
     // Extract JSON from response
-    let jsonMatch = content.match(/\{[\s\S]*\}/);
+    const jsonMatch = content.match(/\{[\s\S]*\}/);
     let parsed: any = null;
     
     if (jsonMatch) {
@@ -221,7 +220,7 @@ Make the content authoritative, actionable, and valuable for construction profes
     }
 
     // Create slug for the blog post
-    let slug = parsed.title.toLowerCase()
+    const slug = parsed.title.toLowerCase()
       .replace(/[^a-z0-9]+/g, '-')
       .replace(/(^-|-$)/g, '');
 

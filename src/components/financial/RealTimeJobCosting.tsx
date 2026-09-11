@@ -14,6 +14,7 @@ import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { DollarSign, TrendingUp, TrendingDown, AlertTriangle, Users, Wrench, Package, BarChart3, Edit, Save, X } from 'lucide-react';
 import { logger } from '@/lib/logger';
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
 
 interface JobCost {
   id: string;
@@ -498,7 +499,7 @@ const RealTimeJobCosting: React.FC<RealTimeJobCostingProps> = ({ projectId }) =>
     return (
       <div className="flex items-center justify-center p-8">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-2"></div>
+          <LoadingSpinner size="md" className="mx-auto mb-2" />
           <p className="text-sm text-muted-foreground">Loading job costs...</p>
         </div>
       </div>

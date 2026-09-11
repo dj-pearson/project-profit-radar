@@ -7,6 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Calendar, FileText, DollarSign, Camera, AlertTriangle, Download, Eye, MessageSquare } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
 import { formatDistanceToNow } from 'date-fns';
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
 
 interface ClientPortalProps {
   userProfile: any;
@@ -165,7 +166,7 @@ export const ClientPortal: React.FC<ClientPortalProps> = ({ userProfile }) => {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+        <LoadingSpinner size="md" />
       </div>
     );
   }

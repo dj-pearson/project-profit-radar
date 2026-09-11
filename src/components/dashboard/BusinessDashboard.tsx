@@ -479,7 +479,7 @@ export const BusinessDashboard = () => {
         <TabsContent value="projects" className="space-y-4">
           <div className="flex items-center justify-between">
             <h3 className="text-lg font-semibold">Active Projects</h3>
-            <Button onClick={() => navigate("/projects/new")} size="sm">
+            <Button onClick={() => navigate("/create-project")} size="sm">
               <Plus className="h-4 w-4 mr-2" />
               New Project
             </Button>
@@ -547,7 +547,7 @@ export const BusinessDashboard = () => {
                   <p className="text-sm text-muted-foreground mb-4">
                     Start by creating your first project
                   </p>
-                  <Button onClick={() => navigate("/projects/new")}>
+                  <Button onClick={() => navigate("/create-project")}>
                     <Plus className="h-4 w-4 mr-2" />
                     Create Project
                   </Button>
@@ -681,7 +681,7 @@ export const BusinessDashboard = () => {
                 <div className="grid grid-cols-2 gap-2">
                   <Button
                     variant="outline"
-                    onClick={() => navigate("/projects/new")}
+                    onClick={() => navigate("/create-project")}
                     className="h-16 flex-col"
                   >
                     <Building2 className="h-5 w-5 mb-1" />

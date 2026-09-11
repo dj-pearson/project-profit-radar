@@ -697,7 +697,7 @@ Guidelines:
    */
   private generateExcerpt(content: string): string {
     // Remove markdown formatting
-    let text = content
+    const text = content
       .replace(/^#+\s+.+$/gm, '') // Remove headings
       .replace(/\*\*([^*]+)\*\*/g, '$1') // Remove bold
       .replace(/\*([^*]+)\*/g, '$1') // Remove italic

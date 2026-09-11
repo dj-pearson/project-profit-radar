@@ -305,7 +305,7 @@ export const DashboardActivityFeed: React.FC<DashboardActivityFeedProps> = ({
                 return (
                   <Card
                     key={activity.id}
-                    className="border-l-4 border-l-primary/20"
+                    className="border-primary/40"
                   >
                     <CardContent className="p-4">
                       <div className="flex items-start gap-3">

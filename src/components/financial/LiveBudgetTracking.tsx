@@ -6,6 +6,7 @@ import { Progress } from '@/components/ui/progress';
 import { AlertTriangle, TrendingUp, TrendingDown, Bell, Eye } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
 
 interface BudgetItem {
   id: string;
@@ -167,7 +168,7 @@ export default function LiveBudgetTracking() {
       <Card>
         <CardContent className="p-6">
           <div className="flex items-center justify-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+            <LoadingSpinner size="md" />
           </div>
         </CardContent>
       </Card>

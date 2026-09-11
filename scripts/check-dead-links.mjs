@@ -42,9 +42,6 @@ const BASELINE = new Map([
   // of the routed pages/CRMDashboard, deleted in the US-314 burn-down. Their
   // baselined reasons deferred to US-276 (deals vs opportunities); that question is
   // still open, it just no longer has a link pointing at it from dead code.
-  ['/demo', 'Five "Schedule a Demo" CTAs (Implementation, StickyDemoCTA, PSEOPageRenderer and two more). There is no demo booking page; /contact is a general contact form and /admin/demos is the internal admin view. Sending demo intent to the contact form is a funnel decision, not a repoint.'],
-  ['/demo-request', 'The exit-intent modal. Same decision as /demo, and the two should land in the same place once it is made.'],
-  ['/finance/bank-reconciliation', 'FinanceHub tile. Every other tile on that page has a route; this feature was never built.'],
   ['/admin/search-traffic-dashboard/settings', 'A settings link on the search-traffic dashboard, with no settings page behind it.'],
   ['/tools/budget-calculator', 'Linked from the construction budgeting guide. /tools exists as an index; this specific calculator does not.'],
   ['/tools/roi-calculator', 'Linked from the QuickBooks integration hub. Same as the budget calculator.'],
@@ -60,17 +57,6 @@ const BASELINE = new Map([
   // RoleDashboard, where six of its tiles do. Recorded rather than repointed -
   // several have two or three plausible destinations and picking one is a
   // product decision.
-  ['/mobile/camera', 'The camera action in MobileQuickActionsSheet. No camera route exists at all - photo capture lives inside the daily-report and expense forms, so this action has never had a destination.'],
-  ['/daily-reports/new', 'MobileQuickActionsSheet. /daily-reports is the list page and creation happens in a dialog on it; no /new route was ever added.'],
-  ['/crew', 'MobileQuickActionsSheet. Three crew routes exist - /crew-checkin, /crew-presence and /crew-scheduling - and which one a bare Crew action means is a product decision, not a repoint.'],
-  ['/expenses/new', 'MobileQuickActionsSheet. /expenses exists; the create flow is a dialog on it, same shape as /daily-reports/new.'],
-  ['/gps', 'MobileQuickActionsSheet. The closest route is /admin/gps-tracking, which is an admin surface rather than the field-user action this button offers.'],
-  ['/safety/new', 'MobileQuickActionsSheet. /safety exists; no create route. Same shape as the other /new paths in this sheet.'],
-  ['/schedule', 'MobileQuickActionsSheet. /project-schedule, /schedule-builder and /schedule-management all exist and mean different things; picking one here would bake in an answer.'],
-  ['/daily-reports/create', 'RoleDashboard and Dashboard. Same missing create route as /daily-reports/new, spelled differently again.'],
-  ['/crew-management', 'RoleDashboard. Same ambiguity as /crew in the mobile sheet - three crew routes exist and none is named this.'],
-  ['/reports/financial', 'RoleDashboard. No /reports/* route exists; financial reporting lives under /finance/*.'],
-  ['/invoices/new', 'useNavigationShortcuts, a keyboard shortcut. /invoices exists and creation is a dialog on it.'],
   ['/admin/lead-management', 'Navigation.tsx admin menu. No such route; lead surfaces are under /crm/*.'],
   ['/admin/demo-management', 'Navigation.tsx admin menu. /admin/demos exists as the internal demo view; this is a different name for it.'],
   ['/admin/seo-manager', 'Navigation.tsx admin menu. The SEO admin surface is reached elsewhere; no route answers this path.'],

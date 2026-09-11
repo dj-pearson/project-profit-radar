@@ -15,6 +15,7 @@ const ExecutiveDashboard = React.lazy(() => import('@/components/analytics/Execu
 import { FileSpreadsheet, FileText, Download, BarChart3, Settings } from 'lucide-react';
 import { AccessiblePageWrapper } from "@/components/accessibility/AccessiblePageWrapper";
 import { MobilePageWrapper, mobileGridClasses, mobileFilterClasses, mobileButtonClasses, mobileTextClasses, mobileCardClasses } from '@/utils/mobileHelpers';
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
 
 interface ReportProject {
   id: string;
@@ -302,13 +303,13 @@ const Reports = () => {
           </TabsList>
 
           <TabsContent value="dashboard">
-            <Suspense fallback={<div className="flex items-center justify-center p-12"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" /></div>}>
+            <Suspense fallback={<div className="flex items-center justify-center p-12"><LoadingSpinner size="md" /></div>}>
               <ExecutiveDashboard />
             </Suspense>
           </TabsContent>
 
           <TabsContent value="builder">
-            <Suspense fallback={<div className="flex items-center justify-center p-12"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" /></div>}>
+            <Suspense fallback={<div className="flex items-center justify-center p-12"><LoadingSpinner size="md" /></div>}>
               <CustomReportBuilder
                 onSave={(config) => {
                   toast({

@@ -1,7 +1,6 @@
 import { defineConfig, loadEnv } from "vite";
 import react from "@vitejs/plugin-react";
 import path from "path";
-import { componentTagger } from "lovable-tagger";
 import { visualizer } from 'rollup-plugin-visualizer';
 import { ViteImageOptimizer } from 'vite-plugin-image-optimizer';
 import { sentryVitePlugin } from '@sentry/vite-plugin';
@@ -37,7 +36,10 @@ export default defineConfig(({ mode }) => {
   },
   plugins: [
     react(), 
-    // mode === "development" && componentTagger(),
+    // The lovable-tagger dev plugin used to sit here, commented out, with a
+    // live import of it at the top of the file. The import was the only thing
+    // eslint could see, so it failed as unused on every commit that touched
+    // this file. Re-add both together if the plugin is ever wanted back.
     mode === "production" && visualizer({
       filename: 'dist/stats.html',
       open: false,
@@ -84,6 +86,10 @@ export default defineConfig(({ mode }) => {
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
+      // jsPDF dynamically imports canvg for addSvgAsImage(), which nothing here
+      // calls. Rollup emitted it anyway - 50.3 KB gzipped with core-js inlined -
+      // for a code path that never runs. See src/lib/canvg-web-stub.ts.
+      canvg: path.resolve(__dirname, "./src/lib/canvg-web-stub.ts"),
       // Exclude React Native and Expo from web build
       "react-native": path.resolve(__dirname, "./src/lib/react-native-web-fallback.ts"),
       "react-native-web": path.resolve(__dirname, "./src/lib/react-native-web-fallback.ts"),

@@ -33,6 +33,7 @@ import { ResponsiveContainer } from '@/components/layout/ResponsiveContainer';
 import { mobileFilterClasses } from '@/utils/mobileHelpers';
 import { Upload, FileText, Search, Brain, Database, Download, Trash2, Tag, FolderInput, Eye } from 'lucide-react';
 import { DocumentPreviewModal } from '@/components/documents/DocumentPreviewModal';
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
 
 interface Document {
   id: string;
@@ -502,7 +503,7 @@ const DocumentManagement = () => {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center" role="status" aria-label="Loading documents">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary mx-auto mb-4" aria-hidden="true"></div>
+          <LoadingSpinner size="xl" className="mx-auto mb-4" label={null} />
           <p className="text-muted-foreground">Loading documents...</p>
         </div>
       </div>

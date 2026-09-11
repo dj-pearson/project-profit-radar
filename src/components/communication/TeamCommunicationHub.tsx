@@ -366,11 +366,11 @@ export const TeamCommunicationHub: React.FC = () => {
 
   const renderNotification = (notification: Notification) => {
     return (
-      <div key={notification.id} className={`p-4 border-l-4 ${
-        notification.priority === 'urgent' ? 'border-red-500 bg-red-50' :
-        notification.priority === 'high' ? 'border-orange-500 bg-orange-50' :
-        notification.priority === 'medium' ? 'border-blue-500 bg-blue-50' :
-        'border-gray-300 bg-gray-50'
+      <div key={notification.id} className={`p-4 rounded-lg border ${
+        notification.priority === 'urgent' ? 'border-red-500/40 bg-red-50' :
+        notification.priority === 'high' ? 'border-orange-500/40 bg-orange-50' :
+        notification.priority === 'medium' ? 'border-blue-500/40 bg-blue-50' :
+        'border-gray-300/60 bg-gray-50'
       } ${!notification.isRead ? 'font-medium' : ''}`}>
         <div className="flex justify-between items-start mb-2">
           <h4 className="font-medium">{notification.title}</h4>

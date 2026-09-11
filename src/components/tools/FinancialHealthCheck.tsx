@@ -317,7 +317,7 @@ const FinancialHealthCheck = () => {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
-            <div className="bg-construction-orange/10 p-6 rounded-lg border-l-4 border-construction-orange">
+            <div className="bg-construction-orange/10 p-6 rounded-lg border border-construction-orange/30">
               <h4 className="font-semibold text-construction-dark mb-3">Your report will include:</h4>
               <ul className="space-y-2 text-sm">
                 <li className="flex items-start gap-2">
@@ -482,7 +482,7 @@ const FinancialHealthCheck = () => {
             </div>
 
             {/* Recommendations */}
-            <div className="bg-construction-orange/10 p-6 rounded-lg border-l-4 border-construction-orange">
+            <div className="bg-construction-orange/10 p-6 rounded-lg border border-construction-orange/30">
               <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
                 <AlertTriangle className="h-5 w-5 text-construction-orange" />
                 Your Personalized Action Plan

@@ -21,6 +21,13 @@
  * 443 and 406 dead files.
  *
  * .d.ts files are excluded - ambient declarations are never imported by design.
+ *
+ * vite.config.ts alias targets are entry points too. A module reached only
+ * through `resolve.alias` - the react-native and Capacitor web fallbacks, the
+ * canvg stub - carries no inbound import statement, so a pure import walk calls
+ * it dead when the bundler is in fact substituting it for a bare specifier on
+ * every build. Reading them out of the config keeps the list honest in both
+ * directions: they stop being counted as dead, and deleting one still is.
  */
 import { readFileSync, readdirSync, existsSync, statSync } from 'node:fs';
 import { join, dirname, resolve, relative } from 'node:path';
@@ -30,7 +37,7 @@ const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const SRC = join(root, 'src');
 
 /** Lower this as modules are deleted or wired. It never goes up. */
-const BASELINE = 113;
+const BASELINE = 110;
 
 function walk(dir, out = []) {
   for (const e of readdirSync(dir, { withFileTypes: true })) {
@@ -92,6 +99,19 @@ if (ENTRIES.length < 3) {
   console.error('  subtree will be reported as dead. Fix the list before trusting this guard.');
   process.exit(1);
 }
+
+// Anything vite.config.ts aliases a bare specifier onto is reached by the
+// bundler rather than by an import statement, so it has to seed the walk.
+const VITE_CONFIG = join(root, 'vite.config.ts');
+const ALIAS_TARGETS = [];
+if (existsSync(VITE_CONFIG)) {
+  const cfg = readFileSync(VITE_CONFIG, 'utf8');
+  for (const m of cfg.matchAll(/path\.resolve\(\s*__dirname\s*,\s*["'`]\.\/(src\/[^"'`]+)["'`]\s*\)/g)) {
+    const f = join(root, m[1]);
+    if (onDisk.has(f) && !ALIAS_TARGETS.includes(f)) ALIAS_TARGETS.push(f);
+  }
+}
+ENTRIES.push(...ALIAS_TARGETS);
 
 const shipped = reach(ENTRIES);
 const testReached = reach(files.filter(isTest));

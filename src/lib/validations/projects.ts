@@ -18,7 +18,7 @@ const baseProjectSchema = z.object({
     .optional()
     .or(z.literal('')),
   client_phone: z.string()
-    .regex(/^[\d\s\-\(\)\+]+$/, 'Invalid phone number format')
+    .regex(/^[\d\s\-()+]+$/, 'Invalid phone number format')
     .min(10, 'Phone number must be at least 10 digits')
     .max(20, 'Phone number must be less than 20 characters')
     .optional()

@@ -35,6 +35,7 @@
 import React, { useRef, useEffect, useState, useCallback, createContext, useContext } from 'react';
 import { cn } from '@/lib/utils';
 import { AlertCircle, CheckCircle2, Info } from 'lucide-react';
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
 
 // Form Context for managing form-wide state
 interface FormContextValue {
@@ -696,7 +697,7 @@ export const AccessibleFormStatus: React.FC<AccessibleFormStatusProps> = ({
       )}
       {status === 'submitting' && (
         <>
-          <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" aria-hidden="true" />
+          <LoadingSpinner size="sm" tone="current" label={null} />
           <span>Submitting...</span>
         </>
       )}

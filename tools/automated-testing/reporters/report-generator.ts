@@ -12,14 +12,11 @@ import type {
   ReportMeta,
   ReportSummary,
   PageTestReport,
-  TestResult,
   CategorizedError,
   Recommendation,
   ErrorClassification,
   ConsoleEntry,
   NetworkRequest,
-  AccessibilityResult,
-  PerformanceResult,
   EdgeFunctionTestResult,
 } from '../types';
 import { Logger } from '../utils/logger';
@@ -27,11 +24,9 @@ import {
   ensureDir,
   writeJsonFile,
   formatDuration,
-  formatBytes,
   escapeHtml,
   classifyError,
   getSeverityFromClassification,
-  groupBy,
   countBy,
 } from '../utils/helpers';
 

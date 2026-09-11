@@ -67,15 +67,16 @@ function detectEnvironment(): RuntimeEnvironment {
   // Check if running in Capacitor native
   if (Capacitor.isNativePlatform()) {
     // Check if Expo is available (hybrid mode)
-    // @ts-ignore - Expo global may or may not exist
+    // @ts-expect-error - Expo-only global, absent from the web lib.dom types
     if (typeof window !== 'undefined' && window.ExpoModules) {
       return 'expo';
     }
     return 'capacitor';
   }
 
-  // Check if running in Expo web
-  // @ts-ignore - Expo global may or may not exist
+  // Check if running in Expo web. No directive here, unlike the ExpoModules
+  // check above: TypeScript reports this access as already well-typed, and an
+  // unused @ts-expect-error is itself an error (TS2578).
   if (typeof window !== 'undefined' && window.expo) {
     return 'expo';
   }

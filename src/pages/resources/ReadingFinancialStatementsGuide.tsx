@@ -165,7 +165,7 @@ const ReadingFinancialStatementsGuide = () => {
         {/* Answer-First Content */}
         <section className="py-12">
           <div className="container mx-auto px-4 max-w-4xl">
-            <Card className="border-l-4 border-l-construction-orange">
+            <Card className="border-construction-orange/40">
               <CardContent className="pt-6">
                 <div className="flex items-start gap-4">
                   <FileText className="w-8 h-8 text-construction-orange flex-shrink-0 mt-1" />
@@ -216,7 +216,7 @@ const ReadingFinancialStatementsGuide = () => {
                 Here's the uncomfortable truth: most small construction company owners have no idea how to read their financial statements. They rely entirely on their bookkeeper or accountant to tell them if they're making money.
               </p>
 
-              <div className="bg-white p-6 rounded-lg border-l-4 border-l-red-500 mb-8">
+              <div className="bg-white p-6 rounded-lg border border-red-500/40 mb-8">
                 <p className="font-semibold text-construction-dark mb-3">
                   "My accountant said we had a great year—$3.2M in revenue and $480K in profit. But I'm struggling to make payroll and my line of credit is maxed out. What am I missing?"
                 </p>
@@ -284,7 +284,7 @@ const ReadingFinancialStatementsGuide = () => {
               How to Read a Construction Profit & Loss Statement
             </h2>
 
-            <Card className="border-l-4 border-l-construction-orange mb-8">
+            <Card className="border-construction-orange/40 mb-8">
               <CardContent className="pt-6">
                 <p className="text-gray-600 mb-4 leading-relaxed">
                   The P&L (also called Income Statement) shows revenue, costs, and profitability over a specific period (month, quarter, year). For construction, you need TWO views: company-wide P&L and project-specific P&L.
@@ -456,7 +456,7 @@ const ReadingFinancialStatementsGuide = () => {
               How to Read a Construction Balance Sheet
             </h2>
 
-            <Card className="border-l-4 border-l-construction-orange mb-8">
+            <Card className="border-construction-orange/40 mb-8">
               <CardContent className="pt-6">
                 <p className="text-gray-600 mb-4 leading-relaxed">
                   The balance sheet is a snapshot of your financial position at a specific date. It shows what you own (assets), what you owe (liabilities), and what's left over (equity). Think of it as your business net worth statement.
@@ -673,7 +673,7 @@ const ReadingFinancialStatementsGuide = () => {
               Understanding the Cash Flow Statement
             </h2>
 
-            <Card className="border-l-4 border-l-construction-orange mb-8">
+            <Card className="border-construction-orange/40 mb-8">
               <CardContent className="pt-6">
                 <p className="text-gray-600 mb-4 leading-relaxed">
                   The cash flow statement shows where cash actually went. You can be "profitable" on the P&L but have negative cash flow. This statement explains the disconnect.
@@ -751,7 +751,7 @@ const ReadingFinancialStatementsGuide = () => {
             </h2>
 
             <div className="grid md:grid-cols-2 gap-6">
-              <Card className="border-l-4 border-l-green-500">
+              <Card className="border-green-500/40">
                 <CardContent className="pt-6">
                   <h3 className="font-bold text-lg text-construction-dark mb-3">Weekly Reviews</h3>
                   <ul className="space-y-2 text-sm text-gray-600">
@@ -771,7 +771,7 @@ const ReadingFinancialStatementsGuide = () => {
                 </CardContent>
               </Card>
 
-              <Card className="border-l-4 border-l-blue-500">
+              <Card className="border-blue-500/40">
                 <CardContent className="pt-6">
                   <h3 className="font-bold text-lg text-construction-dark mb-3">Monthly Reviews</h3>
                   <ul className="space-y-2 text-sm text-gray-600">
@@ -795,7 +795,7 @@ const ReadingFinancialStatementsGuide = () => {
                 </CardContent>
               </Card>
 
-              <Card className="border-l-4 border-l-purple-500">
+              <Card className="border-purple-500/40">
                 <CardContent className="pt-6">
                   <h3 className="font-bold text-lg text-construction-dark mb-3">Quarterly Reviews</h3>
                   <ul className="space-y-2 text-sm text-gray-600">
@@ -815,7 +815,7 @@ const ReadingFinancialStatementsGuide = () => {
                 </CardContent>
               </Card>
 
-              <Card className="border-l-4 border-l-orange-500">
+              <Card className="border-orange-500/40">
                 <CardContent className="pt-6">
                   <h3 className="font-bold text-lg text-construction-dark mb-3">Annual Reviews</h3>
                   <ul className="space-y-2 text-sm text-gray-600">

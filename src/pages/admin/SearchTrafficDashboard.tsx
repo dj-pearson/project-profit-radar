@@ -12,6 +12,7 @@ import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { AnalyticsPlatform, AnalyticsPlatformConnection, UnifiedTrafficMetrics, MetricComparison } from '@/types/analytics';
 import { LineChart, Line, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
 
 const COLORS = {
   primary: '#2563eb',
@@ -278,7 +279,7 @@ const SearchTrafficDashboard: React.FC = () => {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary mx-auto mb-4"></div>
+          <LoadingSpinner size="xl" className="mx-auto mb-4" />
           <p className="text-muted-foreground">Loading search traffic dashboard...</p>
         </div>
       </div>

@@ -20,6 +20,7 @@ import {
 import { toast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Search } from "lucide-react";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
 
 interface SearchResult {
   id: string;
@@ -550,7 +551,7 @@ const GlobalSearch = () => {
           <CardContent>
             {loading ? (
               <div className="flex items-center justify-center py-8">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                <LoadingSpinner size="md" />
               </div>
             ) : results.length === 0 ? (
               <div className="text-center py-8 text-muted-foreground">

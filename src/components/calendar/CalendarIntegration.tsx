@@ -10,6 +10,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { validateRedirectUrl } from '@/lib/security/urlValidation';
 import { Calendar, RefreshCw, Settings, CheckCircle, Plus, Trash2 } from 'lucide-react';
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
 
 interface CalendarIntegration {
   id: string;
@@ -388,7 +389,7 @@ const CalendarIntegration = () => {
         <CardContent>
           {loading ? (
             <div className="flex items-center justify-center py-8">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+              <LoadingSpinner size="md" />
             </div>
           ) : events.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">

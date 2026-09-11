@@ -10,6 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { Receipt, Plus, DollarSign, FileText, AlertCircle, CheckCircle, Clock, TrendingUp } from 'lucide-react';
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
 
 interface Expense {
   id: string;
@@ -246,7 +247,7 @@ export const ExpenseTrackingSystem: React.FC<ExpenseTrackingProps> = ({
     return (
       <Card>
         <CardContent className="flex items-center justify-center h-64">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+          <LoadingSpinner size="md" />
         </CardContent>
       </Card>
     );

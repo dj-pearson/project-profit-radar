@@ -20,6 +20,7 @@ import {
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
 
 interface OptimizationMetrics {
   currentSchedule: Array<{
@@ -169,7 +170,7 @@ const TimelineOptimization = () => {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        <LoadingSpinner size="md" />
       </div>
     );
   }
@@ -245,12 +246,12 @@ const TimelineOptimization = () => {
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="flex items-center gap-2">
-              <Lightbulb className="h-5 w-5 text-purple-600" />
+              <Lightbulb className="h-5 w-5 text-blue-600" />
               Recommendations
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-purple-600">
+            <div className="text-2xl font-bold text-blue-600">
               {optimizationData?.recommendations.length || 0}
             </div>
             <p className="text-sm text-muted-foreground">Optimization opportunities</p>
@@ -483,7 +484,7 @@ const TimelineOptimization = () => {
         <TabsContent value="recommendations" className="space-y-6">
           <div className="grid grid-cols-1 gap-4">
             {optimizationData?.recommendations.map((rec, index) => (
-              <Card key={index} className="border-l-4 border-l-primary">
+              <Card key={index} className="border-primary/40">
                 <CardHeader>
                   <CardTitle className="flex items-center justify-between">
                     <div className="flex items-center gap-2">

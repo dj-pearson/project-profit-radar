@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { Shield, FileText, Package, Truck, Camera, Clock, MapPin, Settings, Home, CheckCircle, TrendingUp } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -38,6 +39,15 @@ interface QuickAction {
 
 export const MobileDashboard: React.FC = () => {
   const [activeView, setActiveView] = useState('dashboard');
+  const [searchParams] = useSearchParams();
+
+  // The camera is a view inside this page rather than a route of its own, so
+  // "Take Photo" in the mobile quick-actions sheet had nowhere to link. It now
+  // links here with ?view=camera.
+  useEffect(() => {
+    const view = searchParams.get('view');
+    if (view) setActiveView(view);
+  }, [searchParams]);
   const [isInitializing, setIsInitializing] = useState(true);
   const [stats] = useState<DashboardStats>({
     safetyIncidents: 0,

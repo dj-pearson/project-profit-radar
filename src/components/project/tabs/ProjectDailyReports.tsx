@@ -17,6 +17,7 @@ import {
   Camera
 } from 'lucide-react';
 import { DailyReportCrewPanel } from '@/components/daily-reports/DailyReportCrewPanel';
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
 
 interface DailyReport {
   id: string;
@@ -91,7 +92,7 @@ export const ProjectDailyReports: React.FC<ProjectDailyReportsProps> = ({
     return (
       <Card>
         <CardContent className="flex items-center justify-center py-8">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+          <LoadingSpinner size="md" />
         </CardContent>
       </Card>
     );

@@ -15,6 +15,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { EnhancedMobileCamera } from './EnhancedMobileCamera';
 import EquipmentQRScanner, { type ScanResult } from '@/components/equipment/EquipmentQRScanner';
 import { format } from 'date-fns';
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
 
 interface Equipment {
   id: string;
@@ -591,7 +592,7 @@ const MobileEquipmentManager: React.FC<MobileEquipmentManagerProps> = ({
             >
               {isSubmitting ? (
                 <div className="flex items-center gap-2">
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                  <LoadingSpinner size="sm" tone="current" label={null} />
                   Processing...
                 </div>
               ) : (

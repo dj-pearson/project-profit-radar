@@ -575,19 +575,19 @@ const Analytics = () => {
               <CardContent>
                 <ResponsiveGrid cols={{ default: 1, sm: 2, lg: 4 }}>
                   <div className="p-4 bg-muted/50 rounded-lg">
-                    <div className="text-2xl font-bold text-green-600">+23%</div>
+                    <div className="text-2xl font-bold text-foreground">+23%</div>
                     <p className="text-sm text-muted-foreground">Revenue Growth (YoY)</p>
                   </div>
                   <div className="p-4 bg-muted/50 rounded-lg">
-                    <div className="text-2xl font-bold text-blue-600">+15%</div>
+                    <div className="text-2xl font-bold text-foreground">+15%</div>
                     <p className="text-sm text-muted-foreground">Project Count Growth</p>
                   </div>
                   <div className="p-4 bg-muted/50 rounded-lg">
-                    <div className="text-2xl font-bold text-purple-600">+8%</div>
+                    <div className="text-2xl font-bold text-foreground">+8%</div>
                     <p className="text-sm text-muted-foreground">Avg Project Value</p>
                   </div>
                   <div className="p-4 bg-muted/50 rounded-lg">
-                    <div className="text-2xl font-bold text-orange-600">92%</div>
+                    <div className="text-2xl font-bold text-foreground">92%</div>
                     <p className="text-sm text-muted-foreground">Client Retention</p>
                   </div>
                 </ResponsiveGrid>

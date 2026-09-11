@@ -68,7 +68,7 @@ async function forecastMaterials(supabase: any, siteId: string, tenant_id: strin
   console.log('[SMART-PROCUREMENT] Forecasting materials', { siteId, tenant_id, project_id })
 
   // Get historical material usage from projects with site isolation
-  let query = supabase
+  const query = supabase
     .from('projects')
     .select('id, name, materials_used:financial_records(material_name, quantity, unit, created_at)')
     .eq('site_id', siteId)  // CRITICAL: Site isolation

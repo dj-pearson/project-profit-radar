@@ -52,7 +52,7 @@ serve(async (req) => {
 
     // Determine the target company_id and user_id
     let targetCompanyId = company_id;
-    let targetUserId = user_id || user.id;
+    const targetUserId = user_id || user.id;
 
     if (!targetCompanyId) {
       // Get user's company from profile with site isolation

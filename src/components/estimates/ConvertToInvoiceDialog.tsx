@@ -62,7 +62,7 @@ export const ConvertToInvoiceDialog: React.FC<ConvertToInvoiceDialogProps> = ({
         setOverrides({});
         setPercentage(100);
         const [{ data: est, error: estErr }, { data: items, error: itemsErr }, { data: invs }] = await Promise.all([
-          supabase.from('estimates').select('id, estimate_number, client_name, client_email, project_id, total_amount').eq('id', estimateId).single(),
+          supabase.from('estimates').select('id, estimate_number, client_id, client_name, client_email, project_id, total_amount').eq('id', estimateId).single(),
           supabase.from('estimate_line_items').select('id, item_name, description, quantity, unit_cost, total_cost, cost_code_id').eq('estimate_id', estimateId).order('sort_order', { ascending: true }),
           supabase.from('invoices').select('id, invoice_number, total_amount').eq('estimate_id', estimateId),
         ]);
@@ -111,6 +111,10 @@ export const ConvertToInvoiceDialog: React.FC<ConvertToInvoiceDialogProps> = ({
       setCreating(true);
       const { data, error } = await supabase.functions.invoke('generate-invoice', {
         body: {
+          // Carry the customer, not just their name. ProgressBillingManager and
+          // TimeAndMaterialsBilling already do this; this path did not, so the
+          // same customer ended up linked on one invoice and unlinked on another.
+          client_id: estimate.client_id ?? undefined,
           client_name: estimate.client_name,
           client_email: estimate.client_email,
           project_id: estimate.project_id,

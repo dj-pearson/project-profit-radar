@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { isCriticalConsoleError, skipUnlessBuiltApp } from './fixtures/server';
 
 /**
  * Smoke tests - Quick tests to verify critical paths work
@@ -55,16 +56,7 @@ test.describe('Smoke Tests', () => {
     await page.goto('/');
     await page.waitForLoadState('networkidle');
 
-    // Filter out known non-critical errors
-    const criticalErrors = errors.filter(
-      (error) =>
-        !error.includes('ResizeObserver') &&
-        !error.includes('Extension') &&
-        !error.includes('chrome-extension') &&
-        !error.includes('favicon')
-    );
-
-    expect(criticalErrors).toHaveLength(0);
+    expect(errors.filter(isCriticalConsoleError)).toHaveLength(0);
   });
 
   test('assets should load (CSS, JS)', async ({ page }) => {
@@ -142,6 +134,7 @@ test.describe('Smoke Tests', () => {
   });
 
   test('page should be interactive quickly (TTI)', async ({ page }) => {
+    skipUnlessBuiltApp();
     const startTime = Date.now();
 
     await page.goto('/');

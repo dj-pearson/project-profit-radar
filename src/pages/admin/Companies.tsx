@@ -13,6 +13,7 @@ import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Building2, Users, Calendar, Search, Eye } from 'lucide-react';
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
 
 interface Company {
   id: string;
@@ -419,7 +420,7 @@ const Companies = () => {
                 <h3 className="text-lg font-medium mb-4">Company Settings</h3>
                 {loadingSettings ? (
                   <div className="text-center py-4">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-construction-blue mx-auto mb-2"></div>
+                    <LoadingSpinner size="md" className="mx-auto mb-2" />
                     <p className="text-sm text-muted-foreground">Loading settings...</p>
                   </div>
                 ) : selectedCompanySettings ? (

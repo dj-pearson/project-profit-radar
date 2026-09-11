@@ -406,7 +406,7 @@ export default function KnowledgeBaseArticle() {
               ol: ({ children }) => <ol className="mb-4 ml-6 space-y-2 list-decimal">{children}</ol>,
               li: ({ children }) => <li className="text-foreground leading-relaxed">{children}</li>,
               blockquote: ({ children }) => (
-                <blockquote className="border-l-4 border-primary pl-6 my-6 italic text-muted-foreground bg-muted/30 py-4 rounded-r-lg">
+                <blockquote className="border-l-2 border-border pl-6 my-6 italic text-muted-foreground">
                   {children}
                 </blockquote>
               ),

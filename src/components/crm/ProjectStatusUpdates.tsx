@@ -13,6 +13,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { Calendar, CheckCircle, AlertTriangle, Clock, Target, Plus, Eye, Edit3, MessageSquare } from 'lucide-react';
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
 
 interface ProjectStatusUpdate {
   id: string;
@@ -217,7 +218,7 @@ export const ProjectStatusUpdates = () => {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+          <LoadingSpinner size="md" className="mx-auto mb-4" />
           <p className="text-muted-foreground">Loading status updates...</p>
         </div>
       </div>

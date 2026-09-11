@@ -11,6 +11,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { downloadInvoicePDF } from '@/utils/invoicePDFGenerator';
+import { ContactPicker } from '@/components/customers/ContactPicker';
 
 interface LineItem {
   description: string;
@@ -35,6 +36,7 @@ const InvoiceGenerator = ({ projectId, onInvoiceCreated }: InvoiceGeneratorProps
   const { toast } = useToast();
 
   const [invoiceData, setInvoiceData] = useState({
+    client_id: null as string | null,
     client_name: '',
     client_email: '',
     project_id: projectId || '',
@@ -58,7 +60,7 @@ const InvoiceGenerator = ({ projectId, onInvoiceCreated }: InvoiceGeneratorProps
     try {
       const { data, error } = await supabase
         .from('projects')
-        .select('id, name, client_name, client_email')
+        .select('id, name, client_id, client_name, client_email')
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -89,6 +91,9 @@ const InvoiceGenerator = ({ projectId, onInvoiceCreated }: InvoiceGeneratorProps
       setInvoiceData(prev => ({
         ...prev,
         project_id: projectId,
+        // The project knows who the customer is. Copying only the two strings
+        // is what left every invoice from this form unlinked (US-326).
+        client_id: project.client_id ?? prev.client_id,
         client_name: project.client_name || '',
         client_email: project.client_email || ''
       }));
@@ -141,6 +146,10 @@ const InvoiceGenerator = ({ projectId, onInvoiceCreated }: InvoiceGeneratorProps
       const { data, error } = await supabase.functions.invoke('generate-invoice', {
         body: {
           ...invoiceData,
+          // The schema takes an optional uuid, and `optional()` accepts
+          // undefined but not null - spreading state that holds null would
+          // 400 the whole request.
+          client_id: invoiceData.client_id ?? undefined,
           line_items: lineItems.filter(item => item.description.trim() !== '')
         }
       });
@@ -160,6 +169,7 @@ const InvoiceGenerator = ({ projectId, onInvoiceCreated }: InvoiceGeneratorProps
 
         // Reset form
         setInvoiceData({
+          client_id: null,
           client_name: '',
           client_email: '',
           project_id: '',
@@ -278,6 +288,23 @@ const InvoiceGenerator = ({ projectId, onInvoiceCreated }: InvoiceGeneratorProps
             </div>
           </div>
 
+          {/* Estimates and projects have had a customer picker since US-326;
+              invoices did not, so the one document the customer actually
+              receives was the only one that could not be linked to them. */}
+          <ContactPicker
+            value={invoiceData.client_id}
+            onChange={(contact) =>
+              setInvoiceData(prev => ({
+                ...prev,
+                client_id: contact?.id ?? null,
+                client_name: contact ? contact.name : prev.client_name,
+                client_email: contact ? contact.email || '' : prev.client_email,
+              }))
+            }
+            label="Customer"
+            hint="Everything for this customer links to one record."
+          />
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <Label htmlFor="client_name">Client Name</Label>
@@ -285,6 +312,7 @@ const InvoiceGenerator = ({ projectId, onInvoiceCreated }: InvoiceGeneratorProps
                 id="client_name"
                 value={invoiceData.client_name}
                 onChange={(e) => setInvoiceData(prev => ({ ...prev, client_name: e.target.value }))}
+                readOnly={!!invoiceData.client_id}
                 required
               />
             </div>
@@ -295,6 +323,7 @@ const InvoiceGenerator = ({ projectId, onInvoiceCreated }: InvoiceGeneratorProps
                 type="email"
                 value={invoiceData.client_email}
                 onChange={(e) => setInvoiceData(prev => ({ ...prev, client_email: e.target.value }))}
+                readOnly={!!invoiceData.client_id}
                 required
               />
             </div>

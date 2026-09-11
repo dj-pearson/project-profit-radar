@@ -124,7 +124,7 @@ export function ClientPortalPro() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+          <h1 className="text-3xl font-bold text-foreground">
             Client Portal Pro
           </h1>
           <p className="text-muted-foreground mt-1">

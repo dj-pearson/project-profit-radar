@@ -13,6 +13,7 @@ import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { Megaphone, Plus, Eye, Send, Star, Zap, Info, AlertTriangle, Gift, Sparkles, X } from 'lucide-react';
 import { logger } from '@/lib/logger';
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
 
 interface Announcement {
   id: string;
@@ -337,7 +338,7 @@ const FeatureAnnouncementSystem = () => {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        <LoadingSpinner size="md" />
       </div>
     );
   }
@@ -499,7 +500,7 @@ const FeatureAnnouncementSystem = () => {
           {publishedAnnouncements.map((announcement) => {
             const TypeIcon = getTypeIcon(announcement.type);
             return (
-              <Card key={announcement.id} className="border-l-4 border-l-primary">
+              <Card key={announcement.id} className="border-primary/40">
                 <CardHeader>
                   <div className="flex items-start justify-between">
                     <div className="flex items-start space-x-3">

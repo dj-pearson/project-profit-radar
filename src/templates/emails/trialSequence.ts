@@ -101,7 +101,7 @@ export const day1GettingStarted = (data: TrialEmailData): string => {
       <strong>The Brikly Team</strong></p>
     `,
     ctaText: 'Create Your First Project',
-    ctaUrl: `${data.dashboardUrl}/projects/new`,
+    ctaUrl: `${data.dashboardUrl}/create-project`,
     unsubscribeUrl: data.unsubscribeUrl,
   });
 };

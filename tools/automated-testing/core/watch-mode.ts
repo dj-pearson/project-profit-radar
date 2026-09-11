@@ -7,7 +7,7 @@
 
 import * as fs from 'fs';
 import * as path from 'path';
-import type { TestConfig, TestResult, PageTestReport } from '../types';
+import type { TestConfig, PageTestReport } from '../types';
 import { Logger } from '../utils/logger';
 import { debounce } from '../utils/helpers';
 

@@ -5,6 +5,7 @@ import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
 import { validateBody } from '../_shared/validate-body.ts';
 
 interface InvoiceRequest {
+  client_id?: string;
   client_name: string;
   client_email: string;
   project_id?: string;
@@ -23,6 +24,12 @@ interface InvoiceRequest {
 }
 
 const InvoiceRequestSchema = z.object({
+  // US-326 made contacts the customer entity and added invoices.client_id, but
+  // this function never accepted it, so the two paths that go through here -
+  // the manual invoice form and the estimate conversion - wrote the customer's
+  // name as a string and left the row unlinked. Optional, because an older
+  // client that does not send it must keep working.
+  client_id: z.string().uuid().optional(),
   client_name: z.string().min(1).max(500),
   client_email: z.string().email().max(255),
   project_id: z.string().uuid().optional(),
@@ -102,7 +109,9 @@ serve(async (req) => {
     const { data: invoice, error: invoiceError } = await supabase
       .from('invoices')
       .insert({
-        company_id: profile.company_id,          client_name: invoiceData.client_name,
+        company_id: profile.company_id,
+        client_id: invoiceData.client_id ?? null,
+        client_name: invoiceData.client_name,
         client_email: invoiceData.client_email,
         project_id: invoiceData.project_id || null,
         due_date: invoiceData.due_date,

@@ -6,7 +6,6 @@
  */
 
 import * as fs from 'fs';
-import * as path from 'path';
 import type { TestConfig, AuthConfig } from '../types';
 import { Logger } from '../utils/logger';
 import { mergeConfig } from '../config';

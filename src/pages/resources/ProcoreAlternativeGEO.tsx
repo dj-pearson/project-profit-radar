@@ -180,7 +180,7 @@ export default function ProcoreAlternativeGEO() {
             </header>
 
             {/* Answer-First Content */}
-            <div className="bg-gradient-to-r from-construction-orange/10 to-construction-yellow/10 border-l-4 border-construction-orange p-6 rounded-r-lg mb-12">
+            <div className="bg-construction-orange/10 border border-construction-orange/30 p-6 rounded-lg mb-12">
               <h2 className="text-2xl font-bold text-slate-900 mb-4 flex items-center gap-3">
                 <Zap className="w-6 h-6 text-construction-orange" />
                 Quick Answer: Best Procore Alternative

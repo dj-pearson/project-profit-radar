@@ -176,7 +176,7 @@ const CalculateTrueProjectProfitability = () => {
         {/* Answer-First Content */}
         <section className="py-12">
           <div className="container mx-auto px-4 max-w-4xl">
-            <Card className="border-l-4 border-l-construction-orange">
+            <Card className="border-construction-orange/40">
               <CardContent className="pt-6">
                 <div className="flex items-start gap-4">
                   <Calculator className="w-8 h-8 text-construction-orange flex-shrink-0 mt-1" />
@@ -218,7 +218,7 @@ const CalculateTrueProjectProfitability = () => {
                 Here's a scenario that happens to thousands of contractors every year:
               </p>
 
-              <div className="bg-white p-6 rounded-lg border-l-4 border-l-red-500 mb-8">
+              <div className="bg-white p-6 rounded-lg border border-red-500/40 mb-8">
                 <p className="font-semibold text-construction-dark mb-3">
                   "We closed the quarter with $2.5M in revenue and 30% gross margins. The books said we made $750K. But when I looked at the bank account, we barely had enough to make payroll."
                 </p>
@@ -284,7 +284,7 @@ const CalculateTrueProjectProfitability = () => {
 
             <div className="space-y-8">
               {/* Step 1 */}
-              <Card className="border-l-4 border-l-construction-orange">
+              <Card className="border-construction-orange/40">
                 <CardContent className="pt-6">
                   <div className="flex items-start gap-4">
                     <div className="bg-construction-orange text-white w-10 h-10 rounded-full flex items-center justify-center font-bold flex-shrink-0">
@@ -330,7 +330,7 @@ const CalculateTrueProjectProfitability = () => {
               </Card>
 
               {/* Step 2 */}
-              <Card className="border-l-4 border-l-construction-orange">
+              <Card className="border-construction-orange/40">
                 <CardContent className="pt-6">
                   <div className="flex items-start gap-4">
                     <div className="bg-construction-orange text-white w-10 h-10 rounded-full flex items-center justify-center font-bold flex-shrink-0">
@@ -369,7 +369,7 @@ const CalculateTrueProjectProfitability = () => {
               </Card>
 
               {/* Step 3 */}
-              <Card className="border-l-4 border-l-construction-orange">
+              <Card className="border-construction-orange/40">
                 <CardContent className="pt-6">
                   <div className="flex items-start gap-4">
                     <div className="bg-construction-orange text-white w-10 h-10 rounded-full flex items-center justify-center font-bold flex-shrink-0">
@@ -426,7 +426,7 @@ const CalculateTrueProjectProfitability = () => {
               </Card>
 
               {/* Step 4 */}
-              <Card className="border-l-4 border-l-construction-orange">
+              <Card className="border-construction-orange/40">
                 <CardContent className="pt-6">
                   <div className="flex items-start gap-4">
                     <div className="bg-construction-orange text-white w-10 h-10 rounded-full flex items-center justify-center font-bold flex-shrink-0">
@@ -491,7 +491,7 @@ const CalculateTrueProjectProfitability = () => {
               </Card>
 
               {/* Step 5 */}
-              <Card className="border-l-4 border-l-construction-orange">
+              <Card className="border-construction-orange/40">
                 <CardContent className="pt-6">
                   <div className="flex items-start gap-4">
                     <div className="bg-construction-orange text-white w-10 h-10 rounded-full flex items-center justify-center font-bold flex-shrink-0">
@@ -576,7 +576,7 @@ const CalculateTrueProjectProfitability = () => {
             </h2>
 
             <div className="grid md:grid-cols-2 gap-6">
-              <Card className="border-l-4 border-l-red-500">
+              <Card className="border-red-500/40">
                 <CardContent className="pt-6">
                   <div className="flex items-start gap-3 mb-3">
                     <XCircle className="w-6 h-6 text-red-500 flex-shrink-0 mt-1" />
@@ -594,7 +594,7 @@ const CalculateTrueProjectProfitability = () => {
                 </CardContent>
               </Card>
 
-              <Card className="border-l-4 border-l-red-500">
+              <Card className="border-red-500/40">
                 <CardContent className="pt-6">
                   <div className="flex items-start gap-3 mb-3">
                     <XCircle className="w-6 h-6 text-red-500 flex-shrink-0 mt-1" />
@@ -612,7 +612,7 @@ const CalculateTrueProjectProfitability = () => {
                 </CardContent>
               </Card>
 
-              <Card className="border-l-4 border-l-red-500">
+              <Card className="border-red-500/40">
                 <CardContent className="pt-6">
                   <div className="flex items-start gap-3 mb-3">
                     <XCircle className="w-6 h-6 text-red-500 flex-shrink-0 mt-1" />
@@ -630,7 +630,7 @@ const CalculateTrueProjectProfitability = () => {
                 </CardContent>
               </Card>
 
-              <Card className="border-l-4 border-l-red-500">
+              <Card className="border-red-500/40">
                 <CardContent className="pt-6">
                   <div className="flex items-start gap-3 mb-3">
                     <XCircle className="w-6 h-6 text-red-500 flex-shrink-0 mt-1" />
@@ -648,7 +648,7 @@ const CalculateTrueProjectProfitability = () => {
                 </CardContent>
               </Card>
 
-              <Card className="border-l-4 border-l-red-500 md:col-span-2">
+              <Card className="border-red-500/40 md:col-span-2">
                 <CardContent className="pt-6">
                   <div className="flex items-start gap-3 mb-3">
                     <XCircle className="w-6 h-6 text-red-500 flex-shrink-0 mt-1" />

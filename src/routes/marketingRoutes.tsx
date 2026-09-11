@@ -105,6 +105,7 @@ const DoNotSell = createLazyRoute(() => import('@/pages/legal/DoNotSell'));
 const EmailPreferences = createLazyRoute(() => import('@/pages/legal/EmailPreferences'));
 const Security = createLazyRoute(() => import('@/pages/legal/Security'));
 const Contact = createLazyRoute(() => import('@/pages/Contact'));
+const DemoRequest = createLazyRoute(() => import('@/pages/DemoRequest'));
 
 export const marketingRoutes = (
   <>
@@ -220,5 +221,11 @@ export const marketingRoutes = (
 
     {/* Contact / imprint — public */}
     <Route path="/contact" element={<Contact />} />
+
+    {/* Book a demo. /demo is what the marketing CTAs use; /demo-request is what
+        the exit-intent modal uses. Both were 404s until this page existed, and
+        both stay answered rather than picking a winner and breaking the other. */}
+    <Route path="/demo" element={<DemoRequest />} />
+    <Route path="/demo-request" element={<DemoRequest />} />
   </>
 );

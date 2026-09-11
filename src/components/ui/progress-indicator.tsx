@@ -1,5 +1,6 @@
 import { cn } from "@/lib/utils";
 import { CheckCircle2, Clock, AlertCircle } from "lucide-react";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
 
 interface ProgressStepProps {
   label: string;
@@ -18,7 +19,7 @@ export const ProgressStep = ({ label, status, description }: ProgressStepProps) 
       case 'completed':
         return <CheckCircle2 className="h-4 w-4 text-green-600" />;
       case 'loading':
-        return <div className="h-4 w-4 animate-spin rounded-full border-2 border-muted border-t-primary" />;
+        return <LoadingSpinner size="sm" label={null} />;
       case 'error':
         return <AlertCircle className="h-4 w-4 text-red-600" />;
       default:

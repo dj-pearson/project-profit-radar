@@ -34,7 +34,15 @@
  * A config diagnostic is not a count, so it aborts with its own message instead
  * of being compared to the baseline at all.
  *
- * Classify those by WHERE the diagnostic is anchored, not by error code. The
+ * Third way to count nothing, found the hard way: the OS kills tsc. On a
+ * memory-limited runner the compiler needs well over a gigabyte for this tree,
+ * and when the kernel takes it the entire output is the word "Killed" - no
+ * diagnostics, no config error, both lists empty, count 0. That run once
+ * printed "BELOW the baseline by 1660 ... set it to 0". So the exit status is
+ * checked as well as the output: tsc exits 0 clean and 1 with errors, and
+ * anything else, or a signal, means the number is not a measurement.
+ *
+ * Classify config problems by WHERE the diagnostic is anchored, not by error code. The
  * first version of this check matched the code ranges TS5xxx and TS6xxx, which
  * is wrong: TS6xxx is a mixed range holding both config errors (TS6053 file not
  * found) and ordinary source diagnostics, and TS6133 "declared but never read"
@@ -53,10 +61,18 @@ const baselineFile = join(root, '.github', 'ts-error-baseline.txt');
 const baseline = parseInt(readFileSync(baselineFile, 'utf8').trim(), 10);
 
 let out = '';
+// tsc's exit codes: 0 clean, 1 a CLI/internal failure, 2 diagnostics reported
+// (the ordinary "your code has errors" case), 3 a project-reference config
+// problem. Anything outside that set, or death by signal, means it did not
+// finish - see the third-way-to-count-nothing note.
+let status = 0;
+let signal = null;
 try {
   out = execSync('npx tsc --noEmit -p tsconfig.app.json', { cwd: root, encoding: 'utf8' });
 } catch (e) {
   out = `${e.stdout || ''}${e.stderr || ''}`;
+  status = typeof e.status === 'number' ? e.status : null;
+  signal = e.signal || null;
 }
 
 // Config-level diagnostics mean tsc never compiled anything - see the header.
@@ -91,6 +107,37 @@ if (configProblems.length) {
 }
 
 const count = sourceErrors.length;
+
+// Third way to count nothing, and the one that actually happened: the OS kills
+// tsc. On a memory-limited runner it needs well over a gigabyte for a tree this
+// size, and when the kernel takes it the output is the single word "Killed" -
+// no diagnostics, no config error. Both lists above come back empty, the count
+// is 0, and the message below would have told the reader to set the baseline to
+// 0. A run that did not finish is not a measurement.
+//
+// Be careful what counts as "did not finish": tsc exits 2, not 1, when it
+// reports diagnostics, so a set that only allowed 0 and 1 rejected every
+// ordinary failing run and would have failed the Type Check job on every push.
+const RAN_TO_COMPLETION = new Set([0, 1, 2, 3]);
+const finishedCleanly = signal === null && RAN_TO_COMPLETION.has(status);
+// A nonzero status means tsc had something to say. Parsing none of it means the
+// output was truncated or swallowed, which is not a clean tree either.
+if (!finishedCleanly || (status !== 0 && count === 0)) {
+  console.error(
+    `::error::tsc did not complete (${signal ? `killed by ${signal}` : `exit status ${status}`}), ` +
+      `so its output is not a measurement and has NOT been compared to the baseline - ` +
+      `do not "lock in" whatever number it shows.`,
+  );
+  console.error('');
+  console.error(out.trim().split('\n').slice(-10).join('\n') || '(no output)');
+  console.error('');
+  console.error(
+    '  A bare "Killed" is the out-of-memory killer. Give the compiler more room, e.g. ' +
+      'NODE_OPTIONS=--max-old-space-size=6144, and run it again.',
+  );
+  process.exit(1);
+}
+
 console.log(`TypeScript errors: ${count} (baseline ${baseline})`);
 
 if (count > baseline) {

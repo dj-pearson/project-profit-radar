@@ -6,6 +6,7 @@ import { Progress } from '@/components/ui/progress';
 import { Crown, Users, FolderKanban, HardDrive, TrendingUp, Gift } from 'lucide-react';
 import { useSubscription } from '@/contexts/SubscriptionContext';
 import { useNavigate } from 'react-router-dom';
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
 
 export const SubscriptionUsageWidget: React.FC = () => {
   const {
@@ -22,7 +23,7 @@ export const SubscriptionUsageWidget: React.FC = () => {
     return (
       <Card>
         <CardContent className="flex items-center justify-center py-8">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-construction-orange"></div>
+          <LoadingSpinner size="md" />
         </CardContent>
       </Card>
     );

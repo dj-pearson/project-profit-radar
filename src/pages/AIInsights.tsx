@@ -438,7 +438,7 @@ export const AIInsights = () => {
                 {highImpactInsights.map((insight) => {
                   const Icon = getInsightIcon(insight.type);
                   return (
-                    <Card key={insight.id} className="border-l-4 border-l-red-500">
+                    <Card key={insight.id} className="border-red-500/40">
                       <CardContent className="pt-6">
                         <div className="flex items-start justify-between mb-3">
                           <div className="flex items-start gap-3 flex-1">
@@ -507,7 +507,7 @@ export const AIInsights = () => {
                 {mediumImpactInsights.map((insight) => {
                   const Icon = getInsightIcon(insight.type);
                   return (
-                    <Card key={insight.id} className="border-l-4 border-l-orange-500">
+                    <Card key={insight.id} className="border-orange-500/40">
                       <CardContent className="pt-6">
                         <div className="flex items-start justify-between mb-2">
                           <div className="flex items-start gap-3 flex-1">
