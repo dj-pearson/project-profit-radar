@@ -36,7 +36,6 @@ const BASELINE = new Set([
   'src/components/admin/BlogAutoGeneration.tsx',
   'src/pages/resources/JobCostingSoftwareComparison.tsx',
   'src/components/admin/AIModelManager.tsx',
-  'src/pages/Subcontractors.tsx',
   'src/components/financial/RealTimeJobCosting.tsx',
   'src/components/navigation/HierarchicalNavigationConfig.ts',
   'src/components/sso/SSOConfigurationForm.tsx',
