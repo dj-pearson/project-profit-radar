@@ -1,5 +1,8 @@
 // Web fallback for Capacitor modules
-// This file provides no-op implementations for Capacitor plugins when running in web browsers
+// Mostly no-op implementations for Capacitor plugins when running in web
+// browsers. Filesystem is the exception - see the note above it.
+
+import { WebFilesystem } from './capacitor-filesystem-web';
 
 // Types and interfaces
 export interface Position {
@@ -139,20 +142,31 @@ export const Device = {
 };
 
 // Filesystem Plugin
+//
+// Not a no-op, unlike the rest of this file. Every method here used to reject
+// with "Filesystem not available on web", and three consumers depend on it:
+// useOfflineSync (the capture queue behind the safety-incident, time,
+// equipment and daily-report screens), VoiceNotes and useCameraCapture. On
+// brikly.net that meant going offline lost the report. WebFilesystem stores
+// the same paths in IndexedDB. See src/lib/capacitor-filesystem-web.ts.
 export const Filesystem = {
-  readFile: () => Promise.reject(new Error("Filesystem not available on web")),
-  writeFile: () => Promise.reject(new Error("Filesystem not available on web")),
+  readFile: WebFilesystem.readFile,
+  writeFile: WebFilesystem.writeFile,
+  deleteFile: WebFilesystem.deleteFile,
+  mkdir: WebFilesystem.mkdir,
+  rmdir: WebFilesystem.rmdir,
+  readdir: WebFilesystem.readdir,
+  stat: WebFilesystem.stat,
+  // Not implemented, because nothing calls them. They keep rejecting rather
+  // than pretending, so a future caller finds out immediately.
   appendFile: () =>
-    Promise.reject(new Error("Filesystem not available on web")),
-  deleteFile: () =>
-    Promise.reject(new Error("Filesystem not available on web")),
-  mkdir: () => Promise.reject(new Error("Filesystem not available on web")),
-  rmdir: () => Promise.reject(new Error("Filesystem not available on web")),
-  readdir: () => Promise.reject(new Error("Filesystem not available on web")),
-  getUri: () => Promise.reject(new Error("Filesystem not available on web")),
-  stat: () => Promise.reject(new Error("Filesystem not available on web")),
-  rename: () => Promise.reject(new Error("Filesystem not available on web")),
-  copy: () => Promise.reject(new Error("Filesystem not available on web")),
+    Promise.reject(new Error("Filesystem.appendFile is not implemented on web")),
+  getUri: () =>
+    Promise.reject(new Error("Filesystem.getUri is not implemented on web")),
+  rename: () =>
+    Promise.reject(new Error("Filesystem.rename is not implemented on web")),
+  copy: () =>
+    Promise.reject(new Error("Filesystem.copy is not implemented on web")),
   checkPermissions: () => Promise.resolve({ publicStorage: "granted" }),
   requestPermissions: () => Promise.resolve({ publicStorage: "granted" }),
 };
