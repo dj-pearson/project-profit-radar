@@ -64,6 +64,14 @@ jobs:
           PUPPETEER_SKIP_DOWNLOAD: true
       - run: npm run build
         env:
+          # Same guard, same fix as ci.yml's build job: vite.config.ts fails a
+          # production build with no VITE_SUPABASE_PUBLISHABLE_KEY. That belongs
+          # to the DEPLOY - Cloudflare Pages holds the real value per
+          # environment and still fails without it - but it also ran here, where
+          # this job only proves the tree builds. It failed in under a minute on
+          # every run. ci.yml was fixed in ccc7247 and this workflow was missed.
+          VITE_SUPABASE_URL: https://ci.placeholder.supabase.co
+          VITE_SUPABASE_PUBLISHABLE_KEY: ci-placeholder-not-a-real-key
           VITE_APP_VERSION: ${{ github.sha }}
       - uses: actions/upload-artifact@v4
         with:

@@ -146,6 +146,25 @@ if (count > baseline) {
       `Fix the new errors, or (if the increase is genuinely intended) raise ` +
       `.github/ts-error-baseline.txt and say why in the commit.`,
   );
+  // Name them. A count on its own sends the reader off to reproduce a 35-minute
+  // compile just to find out WHICH file moved, and this tree is slow enough
+  // that doing so locally is not always possible. Grouping by file puts the
+  // likely culprit first: a regression is nearly always concentrated in the
+  // handful of files the change touched.
+  const byFile = new Map();
+  for (const line of out.split('\n')) {
+    const m = /^(.*?)\((\d+),(\d+)\): error (TS\d+): (.*)$/.exec(line.trim());
+    if (!m) continue;
+    const [, file, lineNo, , code, message] = m;
+    if (!byFile.has(file)) byFile.set(file, []);
+    byFile.get(file).push(`    ${file}:${lineNo}  ${code}  ${message.slice(0, 140)}`);
+  }
+  const ranked = [...byFile.entries()].sort((a, b) => a[1].length - b[1].length);
+  console.error('');
+  console.error(`  ${byFile.size} file(s) carry errors. Fewest-first, because a new`);
+  console.error('  regression usually sits alone in a file the change touched:');
+  console.error('');
+  for (const [, lines] of ranked.slice(0, 15)) console.error(lines.slice(0, 3).join('\n'));
   process.exit(1);
 }
 

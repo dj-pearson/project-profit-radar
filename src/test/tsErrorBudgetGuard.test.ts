@@ -61,6 +61,26 @@ describe('check-ts-error-budget', () => {
     expect(r.stderr).not.toContain('did not complete');
   });
 
+  it('names the regressing files, fewest-first, when the count goes up', () => {
+    // A bare count sends the reader off to reproduce a 35-minute compile just
+    // to learn which file moved. A new regression is nearly always alone in a
+    // file the change touched, so the shortest list is the one to read first.
+    const noisy = Array.from(
+      { length: 2000 },
+      (_, i) => `echo "src/backlog.ts(${i + 1},1): error TS2304: Cannot find name x."`
+    ).join('\n');
+    const r = runWithFakeTsc(
+      `echo "src/culprit.ts(3,5): error TS2322: Type mismatch."\n${noisy}\nexit 2`
+    );
+
+    expect(r.status).toBe(1);
+    expect(r.stderr).toContain('exceed the baseline');
+    const culprit = r.stderr.indexOf('src/culprit.ts:3');
+    const backlog = r.stderr.indexOf('src/backlog.ts:1');
+    expect(culprit).toBeGreaterThan(-1);
+    expect(culprit).toBeLessThan(backlog);
+  });
+
   it('still counts a genuine source diagnostic on status 1', () => {
     const r = runWithFakeTsc(
       'echo "src/thing.ts(3,5): error TS2322: Type mismatch."; exit 1'
