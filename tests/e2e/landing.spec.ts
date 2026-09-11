@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { isCriticalConsoleError, skipUnlessBuiltApp } from './fixtures/server';
 
 test.describe('Landing Page', () => {
   test('should load and display the Brikly title', async ({ page }) => {
@@ -29,10 +30,15 @@ test.describe('Landing Page', () => {
     const viewportMeta = await page.locator('meta[name="viewport"]').getAttribute('content');
     expect(viewportMeta).toContain('width=device-width');
 
-    const descriptionMeta = await page.locator('meta[name="description"]').getAttribute('content');
-    if (descriptionMeta) {
-      expect(descriptionMeta.length).toBeGreaterThan(10);
-    }
+    // Exactly one. index.html ships a static description and the Helmet-driven
+    // SEO components render their own, so between them the head briefly carries
+    // two with different text - this assertion is what caught it (US-409).
+    // Wait for the settled head rather than the transient one at load.
+    await page.waitForLoadState('networkidle');
+    const descriptions = page.locator('meta[name="description"]');
+    await expect(descriptions).toHaveCount(1);
+    const descriptionMeta = await descriptions.getAttribute('content');
+    expect((descriptionMeta || '').length).toBeGreaterThan(10);
   });
 
   test('should load CSS and apply styles', async ({ page }) => {
@@ -54,16 +60,11 @@ test.describe('Landing Page', () => {
     await page.goto('/');
     await page.waitForLoadState('networkidle');
 
-    const critical = errors.filter(e =>
-      !e.includes('ResizeObserver') &&
-      !e.includes('Extension') &&
-      !e.includes('chrome-extension') &&
-      !e.includes('favicon')
-    );
-    expect(critical).toHaveLength(0);
+    expect(errors.filter(isCriticalConsoleError)).toHaveLength(0);
   });
 
   test('should load within 3 seconds (TTI)', async ({ page }) => {
+    skipUnlessBuiltApp();
     const start = Date.now();
     await page.goto('/');
     await page.waitForLoadState('domcontentloaded');

@@ -62,8 +62,13 @@ test.describe('Navigation', () => {
     await page.goto('/auth');
 
     await expect(page.getByLabel(/email/i)).toBeVisible();
-    await expect(page.getByLabel(/password/i)).toBeVisible();
-    await expect(page.getByRole('button', { name: /sign in/i })).toBeVisible();
+    // Exact, because /password/i also matches the show/hide toggle's
+    // aria-label ("Show password") and strict mode rejects two matches. The
+    // field itself is labelled correctly; the locator was not.
+    await expect(page.getByLabel('Password', { exact: true })).toBeVisible();
+    // Exact again: /sign in/i also matches "Sign in with Google" and
+    // "Sign in with Apple", which were added after this test was written.
+    await expect(page.getByRole('button', { name: 'Sign in', exact: true })).toBeVisible();
   });
 
   test('should be navigable by keyboard (tab focus)', async ({ page }) => {

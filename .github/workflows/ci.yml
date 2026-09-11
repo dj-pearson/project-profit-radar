@@ -123,6 +123,18 @@ jobs:
       - run: npx playwright test --project=chromium --project="Mobile Chrome"
         env:
           CI: true
+          # Without these the app falls back to https://api.brikly.net -
+          # src/integrations/supabase/client.ts defaults to PRODUCTION when
+          # VITE_SUPABASE_URL is unset. This job has been skipped since
+          # 2026-08-13 (the build job it depends on was failing), so nothing
+          # has run against that fallback; reviving the job without pinning the
+          # target would have pointed every pull request at the live database.
+          # A placeholder, or a staging project if one is ever configured.
+          VITE_SUPABASE_URL: ${{ secrets.E2E_SUPABASE_URL || 'http://127.0.0.1:54321' }}
+          VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.E2E_SUPABASE_ANON_KEY || 'e2e-placeholder-no-backend' }}
+          # Set these only against a backend that is NOT production: the auth
+          # specs sign in for real. Unset, they skip with a stated reason
+          # (tests/e2e/fixtures/auth.ts) rather than silently passing.
           TEST_USER_EMAIL: ${{ secrets.TEST_USER_EMAIL }}
           TEST_USER_PASSWORD: ${{ secrets.TEST_USER_PASSWORD }}
 
