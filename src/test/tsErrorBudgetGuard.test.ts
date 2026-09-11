@@ -41,22 +41,31 @@ describe('check-ts-error-budget', () => {
     expect(r.stderr).not.toMatch(/set .*ts-error-baseline\.txt to 0/);
   });
 
-  it('refuses a run that exits with errors but reports none', () => {
-    // Incoherent: status 1 means tsc found errors, so parsing zero of them
-    // means the output was truncated or swallowed.
-    const r = runWithFakeTsc('exit 1');
+  it('refuses a run that exits nonzero but reports nothing', () => {
+    // Incoherent: a nonzero status means tsc had something to say, so parsing
+    // none of it means the output was truncated or swallowed.
+    const r = runWithFakeTsc('exit 2');
 
     expect(r.status).toBe(1);
     expect(r.stderr).toContain('did not complete');
   });
 
-  it('still counts a genuine source diagnostic', () => {
+  it('accepts exit status 2, which is what tsc returns when it reports errors', () => {
+    // The first cut of this guard allowed only 0 and 1 and would have failed
+    // the Type Check job on every push. tsc: 0 clean, 2 diagnostics reported.
+    const r = runWithFakeTsc(
+      'echo "src/thing.ts(3,5): error TS2322: Type mismatch."; exit 2'
+    );
+
+    expect(r.stdout).toContain('TypeScript errors: 1');
+    expect(r.stderr).not.toContain('did not complete');
+  });
+
+  it('still counts a genuine source diagnostic on status 1', () => {
     const r = runWithFakeTsc(
       'echo "src/thing.ts(3,5): error TS2322: Type mismatch."; exit 1'
     );
 
-    // One error against a baseline in the thousands: a regression report, not
-    // an abort. What matters is that it measured rather than bailing out.
     expect(r.stdout).toContain('TypeScript errors: 1');
     expect(r.stderr).not.toContain('did not complete');
   });

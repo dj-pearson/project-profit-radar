@@ -61,8 +61,10 @@ const baselineFile = join(root, '.github', 'ts-error-baseline.txt');
 const baseline = parseInt(readFileSync(baselineFile, 'utf8').trim(), 10);
 
 let out = '';
-// tsc exits 0 with no errors and 1 with errors. Anything else, or death by
-// signal, means it did not finish - see the third-way-to-count-nothing note.
+// tsc's exit codes: 0 clean, 1 a CLI/internal failure, 2 diagnostics reported
+// (the ordinary "your code has errors" case), 3 a project-reference config
+// problem. Anything outside that set, or death by signal, means it did not
+// finish - see the third-way-to-count-nothing note.
 let status = 0;
 let signal = null;
 try {
@@ -112,8 +114,15 @@ const count = sourceErrors.length;
 // no diagnostics, no config error. Both lists above come back empty, the count
 // is 0, and the message below would have told the reader to set the baseline to
 // 0. A run that did not finish is not a measurement.
-const finishedCleanly = signal === null && (status === 0 || status === 1);
-if (!finishedCleanly || (status === 1 && count === 0)) {
+//
+// Be careful what counts as "did not finish": tsc exits 2, not 1, when it
+// reports diagnostics, so a set that only allowed 0 and 1 rejected every
+// ordinary failing run and would have failed the Type Check job on every push.
+const RAN_TO_COMPLETION = new Set([0, 1, 2, 3]);
+const finishedCleanly = signal === null && RAN_TO_COMPLETION.has(status);
+// A nonzero status means tsc had something to say. Parsing none of it means the
+// output was truncated or swallowed, which is not a clean tree either.
+if (!finishedCleanly || (status !== 0 && count === 0)) {
   console.error(
     `::error::tsc did not complete (${signal ? `killed by ${signal}` : `exit status ${status}`}), ` +
       `so its output is not a measurement and has NOT been compared to the baseline - ` +
