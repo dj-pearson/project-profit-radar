@@ -163,7 +163,7 @@ const RiskAssessment = () => {
       </div>
 
       {/* Overall Risk Score */}
-      <Card className="border-l-4 border-l-primary">
+      <Card className="border-primary/40">
         <CardHeader>
           <CardTitle className="flex items-center justify-between">
             <span>Overall Risk Score</span>

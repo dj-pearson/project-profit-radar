@@ -125,7 +125,7 @@ const BestConstructionSoftwareSmallBusiness2025 = () => {
         {/* Quick Answer */}
         <section className="py-12">
           <div className="container mx-auto px-4 max-w-5xl">
-            <Card className="border-l-4 border-l-construction-orange">
+            <Card className="border-construction-orange/40">
               <CardContent className="pt-6">
                 <h2 className="text-2xl font-bold mb-4 text-construction-dark flex items-center gap-2">
                   <Award className="w-8 h-8 text-construction-orange" />

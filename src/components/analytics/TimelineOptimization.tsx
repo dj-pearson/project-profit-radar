@@ -483,7 +483,7 @@ const TimelineOptimization = () => {
         <TabsContent value="recommendations" className="space-y-6">
           <div className="grid grid-cols-1 gap-4">
             {optimizationData?.recommendations.map((rec, index) => (
-              <Card key={index} className="border-l-4 border-l-primary">
+              <Card key={index} className="border-primary/40">
                 <CardHeader>
                   <CardTitle className="flex items-center justify-between">
                     <div className="flex items-center gap-2">

@@ -499,7 +499,7 @@ const FeatureAnnouncementSystem = () => {
           {publishedAnnouncements.map((announcement) => {
             const TypeIcon = getTypeIcon(announcement.type);
             return (
-              <Card key={announcement.id} className="border-l-4 border-l-primary">
+              <Card key={announcement.id} className="border-primary/40">
                 <CardHeader>
                   <div className="flex items-start justify-between">
                     <div className="flex items-start space-x-3">

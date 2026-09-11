@@ -119,7 +119,7 @@ export const ProcessGuide: React.FC<ProcessGuideProps> = ({ onClose }) => {
 
   return (
     <div className="fixed bottom-4 right-4 z-50 max-w-sm">
-      <Card className="shadow-lg border-l-4 border-l-primary">
+      <Card className="shadow-lg border-primary/40">
         <CardHeader className="pb-2">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2">

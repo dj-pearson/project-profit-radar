@@ -236,7 +236,7 @@ const PaymentFailureDetails = ({
   return (
     <div className="space-y-4 max-h-96 overflow-y-auto">
       {failures.map((failure) => (
-        <Card key={failure.id} className="border-l-4 border-l-orange-500">
+        <Card key={failure.id} className="border-orange-500/40">
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
               <CardTitle className="text-sm font-medium">

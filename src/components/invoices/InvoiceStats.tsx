@@ -42,7 +42,7 @@ const InvoiceStats: React.FC<InvoiceStatsProps> = ({ invoices }) => {
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-      <Card className="border-l-4 border-l-construction-orange">
+      <Card className="border-construction-orange/40">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="text-sm font-medium">Total Invoices</CardTitle>
           <FileText className="h-4 w-4 text-construction-orange" />
@@ -55,7 +55,7 @@ const InvoiceStats: React.FC<InvoiceStatsProps> = ({ invoices }) => {
         </CardContent>
       </Card>
 
-      <Card className="border-l-4 border-l-green-500">
+      <Card className="border-green-500/40">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="text-sm font-medium">Total Paid</CardTitle>
           <DollarSign className="h-4 w-4 text-green-500" />
@@ -70,7 +70,7 @@ const InvoiceStats: React.FC<InvoiceStatsProps> = ({ invoices }) => {
         </CardContent>
       </Card>
 
-      <Card className="border-l-4 border-l-yellow-500">
+      <Card className="border-yellow-500/40">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="text-sm font-medium">Outstanding</CardTitle>
           <Clock className="h-4 w-4 text-yellow-500" />
@@ -85,7 +85,7 @@ const InvoiceStats: React.FC<InvoiceStatsProps> = ({ invoices }) => {
         </CardContent>
       </Card>
 
-      <Card className="border-l-4 border-l-red-500">
+      <Card className="border-red-500/40">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="text-sm font-medium">Overdue</CardTitle>
           <AlertTriangle className="h-4 w-4 text-red-500" />

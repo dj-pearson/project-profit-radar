@@ -134,7 +134,7 @@ const QuickBooksVsConstructionSoftware = () => {
         {/* Quick Answer */}
         <section className="py-12">
           <div className="container mx-auto px-4 max-w-5xl">
-            <Card className="border-l-4 border-l-construction-orange">
+            <Card className="border-construction-orange/40">
               <CardContent className="pt-6">
                 <h2 className="text-2xl font-bold mb-4 text-construction-dark flex items-center gap-2">
                   <Info className="w-8 h-8 text-construction-orange" />
@@ -329,7 +329,7 @@ const QuickBooksVsConstructionSoftware = () => {
             </p>
 
             <div className="space-y-6">
-              <Card className="border-l-4 border-l-red-500">
+              <Card className="border-red-500/40">
                 <CardContent className="pt-6">
                   <h3 className="font-bold text-xl text-construction-dark mb-4 flex items-center gap-2">
                     <XCircle className="w-6 h-6 text-red-600" />
@@ -350,7 +350,7 @@ const QuickBooksVsConstructionSoftware = () => {
                 </CardContent>
               </Card>
 
-              <Card className="border-l-4 border-l-red-500">
+              <Card className="border-red-500/40">
                 <CardContent className="pt-6">
                   <h3 className="font-bold text-xl text-construction-dark mb-4 flex items-center gap-2">
                     <XCircle className="w-6 h-6 text-red-600" />
@@ -382,7 +382,7 @@ const QuickBooksVsConstructionSoftware = () => {
                 </CardContent>
               </Card>
 
-              <Card className="border-l-4 border-l-red-500">
+              <Card className="border-red-500/40">
                 <CardContent className="pt-6">
                   <h3 className="font-bold text-xl text-construction-dark mb-4 flex items-center gap-2">
                     <XCircle className="w-6 h-6 text-red-600" />
@@ -400,7 +400,7 @@ const QuickBooksVsConstructionSoftware = () => {
                 </CardContent>
               </Card>
 
-              <Card className="border-l-4 border-l-red-500">
+              <Card className="border-red-500/40">
                 <CardContent className="pt-6">
                   <h3 className="font-bold text-xl text-construction-dark mb-4 flex items-center gap-2">
                     <XCircle className="w-6 h-6 text-red-600" />
@@ -415,7 +415,7 @@ const QuickBooksVsConstructionSoftware = () => {
                 </CardContent>
               </Card>
 
-              <Card className="border-l-4 border-l-red-500">
+              <Card className="border-red-500/40">
                 <CardContent className="pt-6">
                   <h3 className="font-bold text-xl text-construction-dark mb-4 flex items-center gap-2">
                     <XCircle className="w-6 h-6 text-red-600" />
@@ -430,7 +430,7 @@ const QuickBooksVsConstructionSoftware = () => {
                 </CardContent>
               </Card>
 
-              <Card className="border-l-4 border-l-red-500">
+              <Card className="border-red-500/40">
                 <CardContent className="pt-6">
                   <h3 className="font-bold text-xl text-construction-dark mb-4 flex items-center gap-2">
                     <XCircle className="w-6 h-6 text-red-600" />
@@ -445,7 +445,7 @@ const QuickBooksVsConstructionSoftware = () => {
                 </CardContent>
               </Card>
 
-              <Card className="border-l-4 border-l-red-500">
+              <Card className="border-red-500/40">
                 <CardContent className="pt-6">
                   <h3 className="font-bold text-xl text-construction-dark mb-4 flex items-center gap-2">
                     <XCircle className="w-6 h-6 text-red-600" />

@@ -247,7 +247,7 @@ export const ThreadManager: React.FC<ThreadManagerProps> = ({
       <div
         key={thread.id}
         className={`p-3 border-b cursor-pointer hover:bg-muted/50 transition-colors ${
-          isSelected ? 'bg-muted border-l-4 border-l-primary' : ''
+          isSelected ? 'bg-muted' : ''
         }`}
         onClick={() => onThreadSelect(thread)}
       >

@@ -182,7 +182,7 @@ export const ActivityFeed: React.FC = () => {
                 : 'Unknown User';
 
               return (
-                <Card key={activity.id} className="border-l-4 border-l-primary/20">
+                <Card key={activity.id} className="border-primary/40">
                   <CardContent className="p-4">
                     <div className="flex items-start gap-3">
                       <div className={`p-2 rounded-full ${getActivityColor(activity.activity_type)} text-white`}>
