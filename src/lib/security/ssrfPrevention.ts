@@ -363,7 +363,10 @@ export function sanitizeUrl(url: string): string {
   // Step 1: Trim whitespace and remove control/invisible characters
   let cleaned = url
     .trim()
-    .replace(/[\x00-\x1F\x7F]/g, '')  // Remove control characters
+    // Stripping control characters is the whole point here: they are how a
+    // crafted URL smuggles a newline into a header or a NUL past a comparison.
+    // eslint-disable-next-line no-control-regex
+    .replace(/[\x00-\x1F\x7F]/g, '')
     .replace(/\s/g, '');               // Remove all whitespace
 
   // Step 2: Iteratively decode URL encoding to handle double/triple encoding
@@ -449,14 +452,14 @@ export function validateUrl(
     // Block the "fragment trick": `https://allowed.com#@evil.com/` — some
     // legacy parsers treat the part after `#@` as the actual host. WHATWG
     // does not, so the validator wouldn't otherwise see anything wrong.
-    if (/^\s*https?:\/\/[^\/]*#@/i.test(url)) {
+    if (/^\s*https?:\/\/[^/]*#@/i.test(url)) {
       return {
         valid: false,
         reason: 'URL contains a suspicious "#@" sequence between host and fragment',
       };
     }
 
-    const rawHostMatch = url.match(/^\s*https?:\/\/([^\/\?#]+)/i);
+    const rawHostMatch = url.match(/^\s*https?:\/\/([^/?#]+)/i);
     if (rawHostMatch) {
       const rawHost = rawHostMatch[1].split('@').pop() || '';
       const rawHostname = rawHost.replace(/^\[/, '').replace(/\][^]*$/, '').split(':')[0];

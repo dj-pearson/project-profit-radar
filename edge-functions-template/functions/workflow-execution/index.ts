@@ -100,7 +100,7 @@ Deno.serve(async (req) => {
             stepOutput = await executeAction(step, executionContext, supabase, siteId);
             break;
           
-          case 'condition':
+          case 'condition': {
             const conditionResult = evaluateConditions(step, executionContext);
             stepOutput = { passed: conditionResult, branch: conditionResult ? 'true' : 'false' };
             executionContext.last_condition_result = conditionResult;
@@ -116,12 +116,14 @@ Deno.serve(async (req) => {
               console.log('Condition failed, branching to false path');
             }
             break;
+          }
           
-          case 'delay':
+          case 'delay': {
             const delayMs = step.config.delay_seconds * 1000;
             await new Promise(resolve => setTimeout(resolve, delayMs));
             stepOutput = { delayed_ms: delayMs };
             break;
+          }
           
           default:
             stepOutput = { skipped: true };

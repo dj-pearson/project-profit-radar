@@ -32,9 +32,10 @@ export const CoreWebVitalsOptimizer: React.FC<CoreWebVitalsOptimizerProps> = ({
         fontLink.href = 'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap';
         fontLink.as = 'style';
         fontLink.onload = function() {
-          // @ts-ignore
+          // @ts-expect-error - `this` is the HTMLLinkElement inside an
+          // onload handler; TS types it as the outer scope's this.
           this.onload = null;
-          // @ts-ignore
+          // @ts-expect-error - same handler, same `this`.
           this.rel = 'stylesheet';
         };
         document.head.appendChild(fontLink);
@@ -83,7 +84,8 @@ export const CoreWebVitalsOptimizer: React.FC<CoreWebVitalsOptimizerProps> = ({
 
       // Use requestIdleCallback for non-critical tasks
       if ('requestIdleCallback' in window) {
-        // @ts-ignore
+        // @ts-expect-error - requestIdleCallback is not in the TS DOM lib
+        // yet; the `in window` check above is the guard.
         window.requestIdleCallback(() => {
           // Preload next likely pages
           if (pageType === 'homepage') {

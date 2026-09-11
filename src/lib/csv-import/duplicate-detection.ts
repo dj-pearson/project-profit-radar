@@ -292,7 +292,7 @@ export function applyResolutions(
     }
 
     switch (resolution.resolution) {
-      case 'merge':
+      case 'merge': {
         const merged = mergeRecords(
           duplicate.existingRecord,
           duplicate.importRecord,
@@ -303,6 +303,7 @@ export function applyResolutions(
           data: merged,
         });
         break;
+      }
 
       case 'create_new':
         toInsert.push(duplicate.importRecord);

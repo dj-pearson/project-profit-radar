@@ -74,6 +74,16 @@ jobs:
           PUPPETEER_SKIP_DOWNLOAD: true
       - run: npm run build
         env:
+          # vite.config.ts fails a production build that has no
+          # VITE_SUPABASE_PUBLISHABLE_KEY. That guard belongs to the DEPLOY -
+          # Cloudflare Pages, which has the real value per environment - but it
+          # also ran here, where CI is only proving the tree compiles, and it
+          # had failed this job on every push to main since 2026-08-13. E2E
+          # depends on this job, so both were dead from one missing variable.
+          # A placeholder satisfies the guard without weakening it: a deploy
+          # missing the real key still fails, in the place that can tell.
+          VITE_SUPABASE_URL: https://ci.placeholder.supabase.co
+          VITE_SUPABASE_PUBLISHABLE_KEY: ci-placeholder-not-a-real-key
           # When these secrets are configured, the build emits hidden
           # sourcemaps and uploads them to Sentry, then deletes the .map files
           # from dist so they are not served publicly. Unset => plugin no-ops.

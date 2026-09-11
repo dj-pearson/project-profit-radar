@@ -38,7 +38,7 @@ serve(async (req) => {
         result = await aiService.generateBlogContent(prompt, model_alias);
         break;
       
-      case 'social':
+      case 'social': {
         const socialSystemPrompt = system_prompt || `You are a social media expert specializing in construction industry content. 
         Create engaging social media posts that are professional, informative, and include relevant hashtags.
         
@@ -61,6 +61,7 @@ serve(async (req) => {
           result = { content: socialResponse };
         }
         break;
+      }
       
       default:
         result = await aiService.generateSimpleContent(prompt, system_prompt, model_alias);

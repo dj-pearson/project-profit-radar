@@ -93,7 +93,7 @@ serve(async (req) => {
 
     let stripeSecretKey: string;
     let finalAmount = amount;
-    let receiptEmail = user.email;
+    const receiptEmail = user.email;
 
     if (paymentSettings.processor_type === 'pearson_stripe') {
       // Use Pearson Media Stripe account

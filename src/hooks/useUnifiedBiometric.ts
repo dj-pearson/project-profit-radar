@@ -67,7 +67,8 @@ function detectEnvironment(): RuntimeEnvironment {
   // Check if running in Capacitor native
   if (Capacitor.isNativePlatform()) {
     // Check if Expo is available (hybrid mode)
-    // @ts-ignore - Expo global may or may not exist
+    // @ts-expect-error - Expo injects this global only in an Expo runtime,
+    // so it is absent from the web lib.dom types by design.
     if (typeof window !== 'undefined' && window.ExpoModules) {
       return 'expo';
     }
@@ -75,7 +76,7 @@ function detectEnvironment(): RuntimeEnvironment {
   }
 
   // Check if running in Expo web
-  // @ts-ignore - Expo global may or may not exist
+  // @ts-expect-error - same Expo-only global as above.
   if (typeof window !== 'undefined' && window.expo) {
     return 'expo';
   }

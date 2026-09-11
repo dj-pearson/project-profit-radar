@@ -248,7 +248,7 @@ export function sanitizeEmail(email: string): string {
 export function sanitizePhone(phone: string): string {
   return phone
     .trim()
-    .replace(/[^\d\s\-\+\(\)]/g, '')
+    .replace(/[^\d\s\-+()]/g, '')
     .slice(0, 20);
 }
 

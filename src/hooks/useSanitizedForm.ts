@@ -90,7 +90,7 @@ export function sanitizeValue(
       break;
     case 'number':
       // Keep only digits, decimal point, and minus sign
-      sanitized = value.replace(/[^\d.\-]/g, '').trim();
+      sanitized = value.replace(/[^\d.-]/g, '').trim();
       break;
     case 'none':
       sanitized = value;

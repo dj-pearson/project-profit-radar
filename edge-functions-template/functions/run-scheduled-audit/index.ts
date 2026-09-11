@@ -62,7 +62,7 @@ serve(async (req) => {
         let auditData: any = null;
 
         switch (schedule.audit_type) {
-          case 'full':
+          case 'full': {
             // Run full SEO audit
             const auditResponse = await supabaseClient.functions.invoke('seo-audit', {
               body: {
@@ -74,8 +74,9 @@ serve(async (req) => {
             auditResult.success = !auditResponse.error;
             auditResult.error = auditResponse.error?.message || null;
             break;
+          }
 
-          case 'performance':
+          case 'performance': {
             // Run Core Web Vitals check
             const perfResponse = await supabaseClient.functions.invoke('check-core-web-vitals', {
               body: {
@@ -87,8 +88,9 @@ serve(async (req) => {
             auditResult.success = !perfResponse.error;
             auditResult.error = perfResponse.error?.message || null;
             break;
+          }
 
-          case 'broken_links':
+          case 'broken_links': {
             // Run broken links check
             const linksResponse = await supabaseClient.functions.invoke('check-broken-links', {
               body: {
@@ -99,8 +101,9 @@ serve(async (req) => {
             auditResult.success = !linksResponse.error;
             auditResult.error = linksResponse.error?.message || null;
             break;
+          }
 
-          case 'content':
+          case 'content': {
             // Run content analysis
             const contentResponse = await supabaseClient.functions.invoke('analyze-content', {
               body: {
@@ -111,8 +114,9 @@ serve(async (req) => {
             auditResult.success = !contentResponse.error;
             auditResult.error = contentResponse.error?.message || null;
             break;
+          }
 
-          case 'security':
+          case 'security': {
             // Run security headers check
             const securityResponse = await supabaseClient.functions.invoke('check-security-headers', {
               body: {
@@ -123,6 +127,7 @@ serve(async (req) => {
             auditResult.success = !securityResponse.error;
             auditResult.error = securityResponse.error?.message || null;
             break;
+          }
 
           default:
             auditResult.error = `Unknown audit type: ${schedule.audit_type}`;

@@ -26,7 +26,7 @@ export default async (req: Request) => {
     // Handle both payload formats
     let finalTopic = topic;
     let finalCompanyId = company_id || customSettings?.company_id;
-    let finalQueueId = queue_id || customSettings?.queue_id;
+    const finalQueueId = queue_id || customSettings?.queue_id;
 
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',

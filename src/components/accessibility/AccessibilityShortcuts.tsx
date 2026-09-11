@@ -75,7 +75,7 @@ export const AccessibilityShortcuts: React.FC = () => {
           break;
 
         case 'h':
-        case '?':
+        case '?': {
           // Focus on help or main navigation
           const mainNav = document.getElementById('main-navigation');
           const mainContent = document.getElementById('main-content');
@@ -87,6 +87,7 @@ export const AccessibilityShortcuts: React.FC = () => {
             announceToScreenReader('Moved focus to main content');
           }
           break;
+        }
 
         case '1':
           focusElement('main-content');

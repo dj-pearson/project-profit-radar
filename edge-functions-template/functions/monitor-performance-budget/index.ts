@@ -81,7 +81,7 @@ serve(async (req) => {
     let jsSizeKb = 0;
     let cssSizeKb = 0;
     let imageSizeKb = 0;
-    let fontSizeKb = 0;
+    const fontSizeKb = 0;
     let totalRequests = 1; // HTML itself
 
     // Helper to fetch resource size

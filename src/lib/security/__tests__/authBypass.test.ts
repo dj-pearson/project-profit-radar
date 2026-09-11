@@ -91,6 +91,7 @@ import {
 import { supabase } from '@/integrations/supabase/client';
 import { hasPermission, checkAllowedRoles, checkRoleLevel } from '@/lib/security/securityService';
 import { UserRole, ROLE_LEVELS, DEFAULT_ROLE_PERMISSIONS } from '@/lib/security/types';
+import { z } from 'zod';
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -241,7 +242,6 @@ describe('Session Fixation Resistance', () => {
 describe('JWT Tampering Detection', () => {
   it('should reject a JWT with a modified payload (role escalation in token)', () => {
     // Zod schema validation in AuthContext catches tampered cached profiles
-    const { z } = require('zod');
     const UserProfileSchema = z.object({
       id: z.string().uuid(),
       email: z.string().email().max(255),
@@ -290,7 +290,6 @@ describe('JWT Tampering Detection', () => {
   });
 
   it('should validate cached profile data with Zod schema before use', () => {
-    const { z } = require('zod');
     const UserProfileSchema = z.object({
       id: z.string().uuid(),
       email: z.string().email().max(255),
@@ -393,7 +392,6 @@ describe('Role Escalation Prevention', () => {
   });
 
   it('should not allow modifying role in cached profile to gain access', () => {
-    const { z } = require('zod');
     const RoleSchema = z.enum([
       'root_admin', 'admin', 'project_manager',
       'field_supervisor', 'office_staff', 'accounting', 'client_portal',

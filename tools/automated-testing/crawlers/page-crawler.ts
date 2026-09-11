@@ -5,7 +5,7 @@
  * Uses Playwright for browser automation.
  */
 
-import type { Page, Browser, BrowserContext } from 'playwright';
+import type { Page } from 'playwright';
 import type {
   TestConfig,
   DiscoveredPage,
@@ -18,9 +18,7 @@ import { Logger } from '../utils/logger';
 import {
   normalizeUrl,
   isInternalUrl,
-  shouldTestUrl,
   sleep,
-  generateId,
 } from '../utils/helpers';
 import { shouldTestUrl as configShouldTestUrl } from '../config';
 

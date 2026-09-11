@@ -1,7 +1,7 @@
 // QuickBooks Sync Edge Function
 // Updated with multi-tenant site_id isolation
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-import { initializeAuthContext, errorResponse, successResponse } from '../_shared/auth-helpers.ts';
+import { initializeAuthContext, errorResponse } from '../_shared/auth-helpers.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -126,7 +126,7 @@ serve(async (req) => {
     }
 
     const startTime = Date.now()
-    let recordsProcessed = {
+    const recordsProcessed = {
       invoices: 0,
       customers: 0,
       items: 0,

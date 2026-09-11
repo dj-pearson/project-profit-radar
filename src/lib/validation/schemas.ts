@@ -15,7 +15,7 @@ export const contactFormSchema = z.object({
     .max(255, 'Email must be less than 255 characters'),
   phone: z.string()
     .trim()
-    .regex(/^[\d\s\-\+\(\)]+$/, 'Invalid phone number')
+    .regex(/^[\d\s\-+()]+$/, 'Invalid phone number')
     .optional()
     .or(z.literal('')),
   message: z.string()
@@ -74,7 +74,7 @@ export const userProfileSchema = z.object({
     .max(255, 'Email must be less than 255 characters'),
   phone: z.string()
     .trim()
-    .regex(/^[\d\s\-\+\(\)]+$/, 'Invalid phone number')
+    .regex(/^[\d\s\-+()]+$/, 'Invalid phone number')
     .optional()
     .or(z.literal('')),
   bio: z.string()
@@ -128,7 +128,7 @@ export const fileUploadSchema = z.object({
   size: z.number()
     .max(10 * 1024 * 1024, 'File size must be less than 10MB'),
   type: z.string()
-    .regex(/^[a-z]+\/[a-z0-9\-\+\.]+$/i, 'Invalid file type'),
+    .regex(/^[a-z]+\/[a-z0-9\-+.]+$/i, 'Invalid file type'),
 });
 
 export type FileUploadData = z.infer<typeof fileUploadSchema>;

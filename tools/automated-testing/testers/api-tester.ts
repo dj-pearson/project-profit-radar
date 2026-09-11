@@ -5,9 +5,9 @@
  * and contract verification.
  */
 
-import type { TestConfig, TestResult, NetworkRequest } from '../types';
+import type { TestConfig, TestResult } from '../types';
 import { Logger } from '../utils/logger';
-import { generateId, formatDuration } from '../utils/helpers';
+import { generateId } from '../utils/helpers';
 
 // ============================================================================
 // Types
@@ -283,7 +283,7 @@ export class ApiTester {
         }
         break;
 
-      case 'string':
+      case 'string': {
         const str = data as string;
         if (schema.minLength && str.length < schema.minLength) {
           errors.push(`${path}: string length ${str.length} is less than minimum ${schema.minLength}`);
@@ -301,8 +301,9 @@ export class ApiTester {
           errors.push(`${path}: value must be one of ${schema.enum.join(', ')}`);
         }
         break;
+      }
 
-      case 'number':
+      case 'number': {
         const num = data as number;
         if (schema.minimum !== undefined && num < schema.minimum) {
           errors.push(`${path}: value ${num} is less than minimum ${schema.minimum}`);
@@ -311,6 +312,7 @@ export class ApiTester {
           errors.push(`${path}: value ${num} exceeds maximum ${schema.maximum}`);
         }
         break;
+      }
     }
 
     return { valid: errors.length === 0, errors };

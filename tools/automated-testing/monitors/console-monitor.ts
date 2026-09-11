@@ -7,7 +7,7 @@
 import type { Page, ConsoleMessage } from 'playwright';
 import type { ConsoleEntry, TestResult } from '../types';
 import { Logger } from '../utils/logger';
-import { generateId, classifyError } from '../utils/helpers';
+import { generateId } from '../utils/helpers';
 import { shouldIgnoreConsoleError, IGNORED_CONSOLE_ERRORS } from '../config';
 
 // ============================================================================

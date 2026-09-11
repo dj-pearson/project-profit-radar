@@ -1,7 +1,7 @@
 // Get Audit History Edge Function
 // Updated with multi-tenant site_id isolation
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { initializeAuthContext, errorResponse, successResponse } from '../_shared/auth-helpers.ts';
+import { initializeAuthContext, errorResponse } from '../_shared/auth-helpers.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',

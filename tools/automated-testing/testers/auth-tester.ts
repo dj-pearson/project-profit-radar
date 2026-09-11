@@ -5,7 +5,7 @@
  * and protected route access.
  */
 
-import type { Page, BrowserContext } from 'playwright';
+import type { Page } from 'playwright';
 import type { TestConfig, TestResult, AuthConfig } from '../types';
 import { Logger } from '../utils/logger';
 import { generateId, sleep } from '../utils/helpers';
