@@ -404,7 +404,7 @@ const Auth = () => {
 
           {/* Footer */}
           <div className="mt-8 pt-6 border-t border-white/5">
-            <nav className="flex items-center justify-center gap-4 text-xs text-slate-500" aria-label="Footer navigation">
+            <nav className="flex items-center justify-center gap-4 text-xs text-slate-400" aria-label="Footer navigation">
               <Link to="/" className="hover:text-slate-300 transition-colors">Home</Link>
               <span className="w-1 h-1 rounded-full bg-slate-700" />
               <Link to="/pricing" className="hover:text-slate-300 transition-colors">Pricing</Link>

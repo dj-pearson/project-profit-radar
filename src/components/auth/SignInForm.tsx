@@ -45,7 +45,7 @@ const SignInForm: React.FC<SignInFormProps> = ({
             onChange={(e) => setEmail(e.target.value)}
             required
             maxLength={255}
-            autoComplete="username email"
+            autoComplete="username"
             aria-required="true"
             placeholder="you@company.com"
             className={inputClassName}
@@ -78,7 +78,7 @@ const SignInForm: React.FC<SignInFormProps> = ({
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 transition-colors"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-300 transition-colors"
               aria-label={showPassword ? "Hide password" : "Show password"}
             >
               {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -94,13 +94,13 @@ const SignInForm: React.FC<SignInFormProps> = ({
           {loading ? "Signing in..." : "Sign in"}
         </Button>
 
-        <div className="flex items-center justify-center gap-1.5 text-xs text-slate-500" aria-label="Secure connection indicator">
+        <div className="flex items-center justify-center gap-1.5 text-xs text-slate-400" aria-label="Secure connection indicator">
           <Lock className="w-3 h-3" aria-hidden="true" />
           <span>Secure Connection</span>
         </div>
       </form>
 
-      <p className="text-center text-sm text-slate-500">
+      <p className="text-center text-sm text-slate-400">
         Don't have an account?{' '}
         <button
           type="button"

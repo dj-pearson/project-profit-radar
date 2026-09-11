@@ -51,7 +51,7 @@ const AuthBrandingPanel = () => {
                 </div>
                 <div>
                   <h3 className="text-sm font-semibold text-white">{feature.title}</h3>
-                  <p className="text-sm text-slate-500">{feature.desc}</p>
+                  <p className="text-sm text-slate-400">{feature.desc}</p>
                 </div>
               </div>
             ))}
@@ -62,7 +62,7 @@ const AuthBrandingPanel = () => {
           <p className="text-sm text-slate-400">
             Built for construction companies
           </p>
-          <div className="flex items-center gap-4 text-xs text-slate-500">
+          <div className="flex items-center gap-4 text-xs text-slate-400">
             <span className="flex items-center gap-1">
               <Shield className="w-3.5 h-3.5 text-emerald-500" />
               SOC2 Ready

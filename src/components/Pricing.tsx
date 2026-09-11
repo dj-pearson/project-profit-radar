@@ -104,7 +104,7 @@ const Pricing = () => {
           <p className="text-xl text-muted-foreground max-w-3xl mx-auto mb-4">
             Average customers recoup their investment in under 30 days from prevented cost overruns alone
           </p>
-          <div className="flex items-center justify-center gap-2 text-sm text-green-600 dark:text-green-400 mb-4">
+          <div className="flex items-center justify-center gap-2 text-sm text-green-700 dark:text-green-400 mb-4">
             <TrendingUp className="h-4 w-4" />
             <span className="font-medium">Average customer ROI payback in under 30 days</span>
           </div>
@@ -133,7 +133,7 @@ const Pricing = () => {
           </div>
           <div className="mt-2 text-sm font-medium transition-all duration-300">
             {billingPeriod === 'annual' ? (
-              <span className="text-green-600 dark:text-green-400">
+              <span className="text-green-700 dark:text-green-400">
                 Save ${getAnnualSavings('professional')}/year on Professional plan
               </span>
             ) : (
@@ -211,7 +211,7 @@ const Pricing = () => {
                     </div>
                   ))}
                   {plan.limitations && plan.limitations.map((limitation, limitIndex) => (
-                    <div key={limitIndex} className="flex items-center gap-3 opacity-60">
+                    <div key={limitIndex} className="flex items-center gap-3">
                       <div className="h-4 w-4 flex-shrink-0 flex items-center justify-center">
                         <div className="w-2 h-2 bg-muted-foreground rounded-full"></div>
                       </div>
@@ -249,7 +249,7 @@ const Pricing = () => {
         <div className="flex flex-col items-center justify-center gap-6 py-8 border-y border-border">
           <div className="flex flex-wrap items-center justify-center gap-6">
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <Shield className="h-5 w-5 text-green-600" />
+              <Shield className="h-5 w-5 text-green-700" />
               <span className="font-medium">Secure Checkout</span>
             </div>
             <div className="flex items-center gap-2 text-sm text-muted-foreground">

@@ -32,7 +32,7 @@ export const PasswordRequirements: React.FC<PasswordRequirementsProps> = ({ pass
       {requirements.map(({ key, text }) => {
         const met = getStatus(key, password);
         return (
-          <li key={key} className={`flex items-center gap-1.5 text-xs ${met ? 'text-green-400' : 'text-slate-500'}`}>
+          <li key={key} className={`flex items-center gap-1.5 text-xs ${met ? 'text-green-400' : 'text-slate-400'}`}>
             {met ? (
               <CheckCircle className="h-3 w-3" aria-hidden="true" />
             ) : (

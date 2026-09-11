@@ -168,7 +168,7 @@ const PasswordResetFlow: React.FC<PasswordResetFlowProps> = ({
                 <p className="text-sm text-slate-400">
                   Code sent to <span className="text-white font-medium">{resetEmail}</span>
                 </p>
-                <p className="text-xs text-slate-500">Expires in {otpExpiresIn} minutes</p>
+                <p className="text-xs text-slate-400">Expires in {otpExpiresIn} minutes</p>
               </div>
 
               <div className="flex justify-center py-4">
@@ -203,7 +203,7 @@ const PasswordResetFlow: React.FC<PasswordResetFlowProps> = ({
               </Button>
 
               <div className="flex items-center justify-center gap-2 text-sm">
-                <span className="text-slate-500">Didn't receive it?</span>
+                <span className="text-slate-400">Didn't receive it?</span>
                 <Button
                   variant="link"
                   className="p-0 h-auto text-blue-400 hover:text-blue-300"
@@ -221,7 +221,7 @@ const PasswordResetFlow: React.FC<PasswordResetFlowProps> = ({
               </div>
 
               <div className="p-3 rounded-lg bg-slate-800/50 border border-white/5">
-                <p className="text-xs text-slate-500 flex items-start gap-2">
+                <p className="text-xs text-slate-400 flex items-start gap-2">
                   <AlertCircle className="w-3.5 h-3.5 mt-0.5 shrink-0" aria-hidden="true" />
                   Check your spam folder if you don't see the email.
                 </p>
