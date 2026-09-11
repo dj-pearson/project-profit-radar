@@ -32,7 +32,6 @@ export const CoreWebVitalsOptimizer: React.FC<CoreWebVitalsOptimizerProps> = ({
         fontLink.href = 'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap';
         fontLink.as = 'style';
         fontLink.onload = function() {
-          // @ts-expect-error - `this` is the link element, not the outer this
           this.onload = null;
           // @ts-expect-error - same handler, same `this`.
           this.rel = 'stylesheet';
@@ -83,7 +82,6 @@ export const CoreWebVitalsOptimizer: React.FC<CoreWebVitalsOptimizerProps> = ({
 
       // Use requestIdleCallback for non-critical tasks
       if ('requestIdleCallback' in window) {
-        // @ts-expect-error - not in this TS DOM lib; `in window` above guards it
         window.requestIdleCallback(() => {
           // Preload next likely pages
           if (pageType === 'homepage') {
