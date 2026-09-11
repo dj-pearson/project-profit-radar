@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useLocation } from "react-router-dom";
 import {
   WifiOff,
@@ -21,42 +21,28 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
-import { toast } from "@/hooks/use-toast";
 import { useRealtimeReconnecting } from "@/lib/realtime/connectionStore";
+import { useOfflineSync, type OfflineData } from "@/hooks/useOfflineSync";
 
 // ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------
 
-export interface PendingSyncAction {
-  id: string;
-  type: "create" | "update" | "delete";
-  entity: string;
-  description?: string;
-  timestamp: number;
-}
-
 type SyncStatus = "idle" | "syncing" | "success";
 
-const STORAGE_KEY = "brikly-offline-queue";
+/** What a queued OfflineData item is called in the sheet. */
+const TYPE_LABEL: Record<OfflineData["type"], string> = {
+  time_entry: "Time entry",
+  daily_report: "Daily report",
+  expense: "Expense",
+  photo: "Photo",
+  voice_note: "Voice note",
+  safety_incident: "Safety incident",
+};
 
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
-
-function readQueue(): PendingSyncAction[] {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return [];
-    return JSON.parse(raw) as PendingSyncAction[];
-  } catch {
-    return [];
-  }
-}
-
-function writeQueue(queue: PendingSyncAction[]): void {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(queue));
-}
 
 function formatRelativeTime(timestamp: number): string {
   const seconds = Math.floor((Date.now() - timestamp) / 1000);
@@ -69,15 +55,9 @@ function formatRelativeTime(timestamp: number): string {
   return `${days}d ago`;
 }
 
-function typeIcon(type: PendingSyncAction["type"]) {
-  switch (type) {
-    case "create":
-      return <Cloud className="h-4 w-4 text-green-500" aria-hidden="true" />;
-    case "update":
-      return <RefreshCw className="h-4 w-4 text-blue-500" aria-hidden="true" />;
-    case "delete":
-      return <X className="h-4 w-4 text-red-500" aria-hidden="true" />;
-  }
+function itemIcon(item: OfflineData) {
+  if (item.error) return <X className="h-4 w-4 text-destructive" aria-hidden="true" />;
+  return <Cloud className="h-4 w-4 text-muted-foreground" aria-hidden="true" />;
 }
 
 // ---------------------------------------------------------------------------
@@ -212,56 +192,36 @@ export function OfflineBanner() {
 // ---------------------------------------------------------------------------
 
 export function SyncQueueIndicator() {
-  const isOnline = useOnlineStatus();
-  const [queue, setQueue] = useState<PendingSyncAction[]>(readQueue);
-  const [syncStatus, setSyncStatus] = useState<SyncStatus>("idle");
+  // The real queue, not a parallel one. This component used to keep its own
+  // list in localStorage under "brikly-offline-queue" - a key that appeared in
+  // exactly one file and that nothing ever enqueued to, so the indicator
+  // rendered null forever while captures piled up in useOfflineSync's store.
+  // Worse, its "sync" was a 1500ms setTimeout that cleared the queue and
+  // toasted "Sync complete": had anything ever been in it, coming back online
+  // would have deleted the lot and reported success (US-309, US-412).
+  const { isOnline, pendingSync, syncInProgress, syncPendingData } = useOfflineSync();
   const [sheetOpen, setSheetOpen] = useState(false);
-  const wasOfflineRef = useRef(false);
+  const [justSynced, setJustSynced] = useState(false);
+  const previousCountRef = useRef(0);
 
-  // Poll localStorage for queue changes (other tabs, service worker writes)
+  const queue = pendingSync.filter((item) => !item.synced);
+
+  const syncStatus: SyncStatus = syncInProgress
+    ? "syncing"
+    : justSynced
+      ? "success"
+      : "idle";
+
+  // Show the tick when the queue actually drained, rather than on a timer.
   useEffect(() => {
-    const interval = setInterval(() => {
-      setQueue(readQueue());
-    }, 2000);
-    return () => clearInterval(interval);
-  }, []);
-
-  // Sync when coming back online
-  useEffect(() => {
-    if (!isOnline) {
-      wasOfflineRef.current = true;
-      return;
+    if (previousCountRef.current > 0 && queue.length === 0) {
+      setJustSynced(true);
+      const timer = setTimeout(() => setJustSynced(false), 2000);
+      previousCountRef.current = 0;
+      return () => clearTimeout(timer);
     }
-
-    if (isOnline && wasOfflineRef.current) {
-      wasOfflineRef.current = false;
-      const pending = readQueue();
-      if (pending.length > 0) {
-        performSync(pending);
-      }
-    }
-  }, [isOnline]);
-
-  const performSync = useCallback(async (items: PendingSyncAction[]) => {
-    if (items.length === 0) return;
-
-    setSyncStatus("syncing");
-
-    // Simulate sync processing — in production this would call
-    // the actual sync service to replay queued mutations.
-    await new Promise((resolve) => setTimeout(resolve, 1500));
-
-    writeQueue([]);
-    setQueue([]);
-    setSyncStatus("success");
-
-    toast({
-      title: "Sync complete",
-      description: `${items.length} pending ${items.length === 1 ? "action" : "actions"} synced successfully.`,
-    });
-
-    setTimeout(() => setSyncStatus("idle"), 2000);
-  }, []);
+    previousCountRef.current = queue.length;
+  }, [queue.length]);
 
   const pendingCount = queue.length;
 
@@ -346,21 +306,22 @@ export function SyncQueueIndicator() {
             queue.map((action) => (
               <Card key={action.id} role="listitem" className="transition-all duration-200">
                 <CardContent className="flex items-center gap-3 p-3">
-                  <div className="shrink-0">{typeIcon(action.type)}</div>
+                  <div className="shrink-0">{itemIcon(action)}</div>
                   <div className="min-w-0 flex-1">
-                    <p className="text-sm font-medium truncate capitalize">
-                      {action.type} {action.entity}
+                    <p className="text-sm font-medium truncate">
+                      {TYPE_LABEL[action.type] ?? action.type}
                     </p>
-                    {action.description && (
-                      <p className="text-xs text-muted-foreground truncate">
-                        {action.description}
+                    {action.error && (
+                      <p className="text-xs text-destructive truncate">
+                        {action.error}
+                        {action.retryCount > 0 && ` (attempt ${action.retryCount})`}
                       </p>
                     )}
                   </div>
                   <div className="flex items-center gap-1 text-xs text-muted-foreground shrink-0">
                     <Clock className="h-3 w-3" aria-hidden="true" />
-                    <time dateTime={new Date(action.timestamp).toISOString()}>
-                      {formatRelativeTime(action.timestamp)}
+                    <time dateTime={action.timestamp}>
+                      {formatRelativeTime(new Date(action.timestamp).getTime())}
                     </time>
                   </div>
                 </CardContent>
@@ -373,7 +334,7 @@ export function SyncQueueIndicator() {
           <div className="mt-4">
             <Button
               className="w-full"
-              onClick={() => performSync(queue)}
+              onClick={() => void syncPendingData()}
               aria-label="Sync all pending actions now"
             >
               <RefreshCw className="h-4 w-4 mr-2" aria-hidden="true" />

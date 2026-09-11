@@ -33,6 +33,23 @@ function calculateBackoff(retryCount: number): number {
 }
 
 /**
+ * One replay at a time, across every mounted instance of this hook.
+ *
+ * The guard used to be `offlineState.syncInProgress`, which is per-instance.
+ * Five capture screens use this hook and SyncQueueIndicator is mounted on every
+ * page, so two instances could read the same queued item and insert it twice -
+ * two safety incidents, two time entries - with nothing to tell them apart
+ * afterwards. A module-level flag is the right scope because the queue it
+ * protects is also module-level: one device, one set of files.
+ */
+let replayInFlight = false;
+
+/** Exposed for tests; nothing in the app calls it. */
+export function __resetReplayLock(): void {
+  replayInFlight = false;
+}
+
+/**
  * Check if an item is ready for retry based on backoff timing
  */
 function isReadyForRetry(item: OfflineData): boolean {
@@ -193,8 +210,9 @@ export const useOfflineSync = () => {
   }, [toast]);
 
   const syncPendingData = useCallback(async () => {
-    if (offlineState.syncInProgress || !navigator.onLine) return;
+    if (replayInFlight || offlineState.syncInProgress || !navigator.onLine) return;
 
+    replayInFlight = true;
     setOfflineState(prev => ({ ...prev, syncInProgress: true }));
 
     try {
@@ -294,6 +312,10 @@ export const useOfflineSync = () => {
         description: "Failed to sync offline data",
         variant: "destructive"
       });
+    } finally {
+      // Released here rather than on each exit path: a lock that leaks on a
+      // throw would wedge every future replay for the life of the page.
+      replayInFlight = false;
     }
   }, [offlineState.pendingSync, offlineState.syncInProgress, toast]);
 
