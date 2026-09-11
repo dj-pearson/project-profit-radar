@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
-import { BookOpen, FileText, Receipt, CreditCard, TrendingUp, PieChart, DollarSign, Building2, Calculator, ClipboardList, Landmark, ArrowRightLeft, BarChart3, Wallet } from 'lucide-react';
+import { BookOpen, FileText, Receipt, CreditCard, TrendingUp, PieChart, DollarSign, Building2, Calculator, ClipboardList, ArrowRightLeft, BarChart3, Wallet } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 
@@ -373,14 +373,6 @@ export default function FinanceHub() {
                 >
                   <CreditCard className="mr-2 h-4 w-4" aria-hidden="true" />
                   Pay Bills
-                </Button>
-                <Button
-                  className="w-full justify-start"
-                  variant="outline"
-                  onClick={() => navigate('/finance/bank-reconciliation')}
-                >
-                  <Landmark className="mr-2 h-4 w-4" aria-hidden="true" />
-                  Reconcile Bank Account
                 </Button>
                 <Button
                   className="w-full justify-start"

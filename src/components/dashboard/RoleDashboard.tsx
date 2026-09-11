@@ -64,7 +64,7 @@ export const RoleDashboard = () => {
         message: 'Loading reports'
       },
       'daily_report': {
-        route: '/daily-reports/create',
+        route: '/daily-reports?new=1',
         message: 'Creating daily report'
       },
       'time_tracking': {
@@ -72,7 +72,7 @@ export const RoleDashboard = () => {
         message: 'Opening time tracking'
       },
       'crew_management': {
-        route: '/crew-management',
+        route: '/crew-scheduling',
         message: 'Managing crew assignments'
       },
       'invoicing': {
@@ -80,7 +80,7 @@ export const RoleDashboard = () => {
         message: 'Opening invoicing'
       },
       'financial_reports': {
-        route: '/reports/financial',
+        route: '/reports',
         message: 'Loading financial reports'
       }
     };

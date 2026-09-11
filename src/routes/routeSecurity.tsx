@@ -123,14 +123,12 @@ export const routeSecurityConfig: Record<string, RouteSecurityConfig> = {
   // =========================================================================
   // FINANCIAL ROUTES
   // =========================================================================
+  // Was two entries. The second was keyed '/invoices/new', which no <Route>
+  // answers - the generator opens from ?new=1 on this page - so it collided
+  // with this key and silently replaced it.
   '/invoices': {
     requireAuth: true,
     permissions: ['invoices.read'],
-  },
-  '/invoices/new': {
-    requireAuth: true,
-    permissions: ['invoices.write'],
-    allowedRoles: ['root_admin', 'admin', 'project_manager', 'accounting', 'office_staff'],
   },
   '/invoices/aging': {
     requireAuth: true,

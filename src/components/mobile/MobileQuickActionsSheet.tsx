@@ -46,7 +46,7 @@ const DEFAULT_ACTIONS: MobileQuickAction[] = [
     description: 'Capture job site photo',
     icon: Camera,
     color: 'bg-purple-500',
-    href: '/mobile/camera',
+    href: '/mobile-dashboard?view=camera',
     keywords: ['photo', 'picture', 'image', 'camera'],
   },
   {
@@ -55,7 +55,7 @@ const DEFAULT_ACTIONS: MobileQuickAction[] = [
     description: 'Log todays progress',
     icon: FileText,
     color: 'bg-green-500',
-    href: '/daily-reports/new',
+    href: '/daily-reports?new=1',
     keywords: ['report', 'daily', 'progress', 'log'],
   },
   {
@@ -64,7 +64,7 @@ const DEFAULT_ACTIONS: MobileQuickAction[] = [
     description: 'Start a new project',
     icon: FolderPlus,
     color: 'bg-orange-500',
-    href: '/projects/new',
+    href: '/create-project',
     keywords: ['project', 'create', 'new'],
   },
   {
@@ -73,7 +73,7 @@ const DEFAULT_ACTIONS: MobileQuickAction[] = [
     description: 'View team and schedule',
     icon: Users,
     color: 'bg-indigo-500',
-    href: '/crew',
+    href: '/crew-scheduling',
     keywords: ['crew', 'team', 'workers', 'people'],
   },
   {
@@ -82,7 +82,7 @@ const DEFAULT_ACTIONS: MobileQuickAction[] = [
     description: 'Add a new expense',
     icon: DollarSign,
     color: 'bg-emerald-500',
-    href: '/expenses/new',
+    href: '/expenses',
     keywords: ['expense', 'receipt', 'cost', 'money'],
   },
   {
@@ -91,7 +91,7 @@ const DEFAULT_ACTIONS: MobileQuickAction[] = [
     description: 'GPS check in on site',
     icon: MapPin,
     color: 'bg-red-500',
-    href: '/gps',
+    href: '/crew-checkin',
     keywords: ['gps', 'location', 'check in', 'site'],
   },
   {
@@ -100,7 +100,7 @@ const DEFAULT_ACTIONS: MobileQuickAction[] = [
     description: 'Report a safety issue',
     icon: Shield,
     color: 'bg-amber-500',
-    href: '/safety/new',
+    href: '/safety?new=incident',
     keywords: ['safety', 'incident', 'osha', 'report'],
   },
   {
@@ -109,7 +109,7 @@ const DEFAULT_ACTIONS: MobileQuickAction[] = [
     description: 'View todays schedule',
     icon: Calendar,
     color: 'bg-teal-500',
-    href: '/schedule',
+    href: '/project-schedule',
     keywords: ['schedule', 'calendar', 'today'],
   },
 ];

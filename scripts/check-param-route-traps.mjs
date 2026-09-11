@@ -29,19 +29,12 @@ import { fileURLToPath } from 'node:url';
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 
 /**
- * Known traps that survive only in code nothing imports. BusinessDashboard is
- * unreachable from src/main.tsx (US-314) and is a deletion candidate, so
- * repointing its buttons would be maintaining code that does not ship.
+ * Empty since 2026-09-11. The last entry was three /projects/new buttons in
+ * BusinessDashboard, left alone because nothing imports that file (US-314).
+ * They were repointed at /create-project anyway: if it is ever wired up it
+ * works, and an empty baseline is a stronger guard than a documented exception.
  */
-const BASELINE = new Map([
-  [
-    '/projects/new',
-    'Three buttons in components/dashboard/BusinessDashboard.tsx, which nothing imports - it is ' +
-      'in the US-314 unreferenced set awaiting a delete-or-wire decision. Every reachable caller ' +
-      'was repointed to /create-project; these are left because fixing unreachable code makes it ' +
-      'look maintained.',
-  ],
-]);
+const BASELINE = new Map([]);
 
 const ACTION = /^(new|create|add|edit|import|export|settings|bulk)$/i;
 

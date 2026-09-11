@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { AccessiblePageWrapper } from '@/components/accessibility/AccessiblePageWrapper';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -25,6 +26,19 @@ import RecurringInvoicesTab from '@/components/invoices/RecurringInvoicesTab';
 const Invoices: React.FC = () => {
   const [activeTab, setActiveTab] = usePersistedState<string>('invoices-active-tab', 'overview');
   const [showInvoiceGenerator, setShowInvoiceGenerator] = useState(false);
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  // A quick action that navigates has to land on the thing it promised. The
+  // mobile quick-actions sheet and the dashboard cards link here with ?new=1
+  // rather than dropping the user on a list to hunt for the button. The param
+  // is consumed on arrival so a reload or a back-navigation does not reopen it.
+  useEffect(() => {
+    if (searchParams.get('new') !== '1') return;
+    setShowInvoiceGenerator(true);
+    const next = new URLSearchParams(searchParams);
+    next.delete('new');
+    setSearchParams(next, { replace: true });
+  }, [searchParams, setSearchParams]);
   const [searchTerm, setSearchTerm] = usePersistedState<string>('invoices-search', '');
   const [statusFilter, setStatusFilter] = usePersistedState<string>('invoices-status-filter', 'all');
   const [invoices, setInvoices] = useState([]);

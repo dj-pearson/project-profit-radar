@@ -25,7 +25,7 @@ const G_NAV_TARGETS: Record<string, string> = {
 // Context-aware "New" destinations, matched against the current pathname.
 const NEW_TARGETS: { match: RegExp; to: string }[] = [
   { match: /^\/projects/, to: '/create-project' },
-  { match: /^\/invoices/, to: '/invoices/new' },
+  { match: /^\/invoices/, to: '/invoices?new=1' },
   { match: /^\/(time-tracking|time)/, to: '/time-tracking' },
   { match: /^\/expenses/, to: '/expenses' },
   { match: /^\/(crm|contacts)/, to: '/crm' },
