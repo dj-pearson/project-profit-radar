@@ -42,8 +42,6 @@ const BASELINE = new Map([
   // of the routed pages/CRMDashboard, deleted in the US-314 burn-down. Their
   // baselined reasons deferred to US-276 (deals vs opportunities); that question is
   // still open, it just no longer has a link pointing at it from dead code.
-  ['/demo', 'Five "Schedule a Demo" CTAs (Implementation, StickyDemoCTA, PSEOPageRenderer and two more). There is no demo booking page; /contact is a general contact form and /admin/demos is the internal admin view. Sending demo intent to the contact form is a funnel decision, not a repoint.'],
-  ['/demo-request', 'The exit-intent modal. Same decision as /demo, and the two should land in the same place once it is made.'],
   ['/admin/search-traffic-dashboard/settings', 'A settings link on the search-traffic dashboard, with no settings page behind it.'],
   ['/tools/budget-calculator', 'Linked from the construction budgeting guide. /tools exists as an index; this specific calculator does not.'],
   ['/tools/roi-calculator', 'Linked from the QuickBooks integration hub. Same as the budget calculator.'],
