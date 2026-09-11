@@ -193,7 +193,7 @@ function HeroContent({ progress, setProgress }: { progress: number, setProgress:
               </p>
               <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white mb-6 leading-tight">
                 Real-Time Job Costing.<br />
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-orange-300">
+                <span className="text-construction-orange">
                   Zero Spreadsheets.
                 </span>
               </h1>

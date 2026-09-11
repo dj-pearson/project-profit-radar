@@ -245,12 +245,12 @@ const TimelineOptimization = () => {
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="flex items-center gap-2">
-              <Lightbulb className="h-5 w-5 text-purple-600" />
+              <Lightbulb className="h-5 w-5 text-blue-600" />
               Recommendations
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-purple-600">
+            <div className="text-2xl font-bold text-blue-600">
               {optimizationData?.recommendations.length || 0}
             </div>
             <p className="text-sm text-muted-foreground">Optimization opportunities</p>

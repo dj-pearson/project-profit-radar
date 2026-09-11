@@ -567,14 +567,14 @@ const ExecutiveDashboard: React.FC = () => {
                   </div>
                 </div>
 
-                <div className="p-4 bg-gradient-to-r from-purple-50 to-purple-100 dark:from-purple-950 dark:to-purple-900 rounded-lg">
+                <div className="p-4 bg-orange-50 dark:bg-orange-950/40 rounded-lg">
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-sm text-muted-foreground">Collection Rate</p>
-                      <p className="text-2xl font-bold text-purple-700 dark:text-purple-300">
+                      <p className="text-2xl font-bold text-orange-700 dark:text-orange-300">
                         94.2%
                       </p>
-                      <p className="text-xs text-purple-600 dark:text-purple-400">
+                      <p className="text-xs text-orange-600 dark:text-orange-400">
                         +2.1% vs last year
                       </p>
                     </div>

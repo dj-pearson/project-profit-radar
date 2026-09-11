@@ -214,7 +214,7 @@ export function AIEstimating() {
               Generate accurate project estimates using AI and machine learning
             </p>
           </div>
-          <Badge className="bg-gradient-to-r from-purple-500 to-pink-500">
+          <Badge className="bg-construction-orange">
             <Sparkles className="h-4 w-4 mr-1" />
             AI Powered
           </Badge>
@@ -449,12 +449,12 @@ export function AIEstimating() {
                       </CardContent>
                     </Card>
 
-                    <Card className="bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-950 dark:to-purple-900">
+                    <Card className="bg-blue-50 dark:bg-blue-950/40">
                       <CardHeader className="pb-3">
                         <CardTitle className="text-sm font-medium">Win Probability</CardTitle>
                       </CardHeader>
                       <CardContent>
-                        <p className="text-3xl font-bold text-purple-700 dark:text-purple-300">
+                        <p className="text-3xl font-bold text-blue-700 dark:text-blue-300">
                           {currentEstimate.recommendations.win_probability}%
                         </p>
                         <p className="text-sm text-muted-foreground">

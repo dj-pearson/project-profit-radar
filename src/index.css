@@ -489,12 +489,10 @@ All colors MUST be HSL.
   @apply hover:bg-white/20 hover:border-white/30 transition-all duration-300 hover:scale-[1.02] hover:shadow-2xl;
 }
 
+/* Kept as a named accent so the three marketing headlines that use it stay
+   in one place. Solid, not a gradient: emphasis comes from weight and size. */
 .text-gradient {
-  @apply bg-clip-text text-transparent bg-gradient-to-r from-construction-orange to-orange-600;
-}
-
-.text-gradient-blue {
-  @apply bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-cyan-500;
+  @apply text-construction-orange;
 }
 
 .bg-mesh {

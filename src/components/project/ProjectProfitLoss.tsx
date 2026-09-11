@@ -285,8 +285,8 @@ const ProjectProfitLoss: React.FC<ProjectPLProps> = ({
             </div>
             
             <div className="text-center p-4 bg-purple-50 rounded-lg">
-              <Calculator className="h-6 w-6 mx-auto mb-2 text-purple-600" />
-              <div className="text-2xl font-bold text-purple-600">
+              <Calculator className="h-6 w-6 mx-auto mb-2 text-blue-600" />
+              <div className="text-2xl font-bold text-blue-600">
                 {financials.margin_percentage.toFixed(1)}%
               </div>
               <div className="text-sm text-muted-foreground">Profit Margin</div>

@@ -255,7 +255,7 @@ const Hero = () => {
 
               <h1 ref={headlineRef} className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-bold text-construction-dark dark:text-white leading-[1.1] tracking-tight">
                 Know Your Real <br />
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-construction-orange to-orange-600">
+                <span className="text-construction-orange">
                   Profit Margins. Every Day.
                 </span>
               </h1>

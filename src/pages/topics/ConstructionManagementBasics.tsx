@@ -226,7 +226,7 @@ const ConstructionManagementBasics = () => {
             </Card>
             <Card>
               <CardContent className="p-6 text-center">
-                <div className="text-3xl font-bold text-purple-600 mb-2">6 hrs</div>
+                <div className="text-3xl font-bold text-blue-600 mb-2">6 hrs</div>
                 <div className="text-sm text-muted-foreground">Daily time savings</div>
               </CardContent>
             </Card>

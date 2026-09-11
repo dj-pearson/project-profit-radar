@@ -198,19 +198,19 @@ const EnterpriseHub = () => {
           <CardContent>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <div className="text-center p-4 border rounded-lg">
-                <div className="text-2xl font-bold text-blue-600">60%</div>
+                <div className="text-2xl font-bold text-foreground">60%</div>
                 <div className="text-sm text-muted-foreground">Faster Load Times</div>
               </div>
               <div className="text-center p-4 border rounded-lg">
-                <div className="text-2xl font-bold text-green-600">94%</div>
+                <div className="text-2xl font-bold text-foreground">94%</div>
                 <div className="text-sm text-muted-foreground">Automation Success</div>
               </div>
               <div className="text-center p-4 border rounded-lg">
-                <div className="text-2xl font-bold text-purple-600">89%</div>
+                <div className="text-2xl font-bold text-foreground">89%</div>
                 <div className="text-sm text-muted-foreground">Compliance Rate</div>
               </div>
               <div className="text-center p-4 border rounded-lg">
-                <div className="text-2xl font-bold text-orange-600">98%</div>
+                <div className="text-2xl font-bold text-foreground">98%</div>
                 <div className="text-sm text-muted-foreground">Integration Uptime</div>
               </div>
             </div>
