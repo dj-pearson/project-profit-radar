@@ -3,7 +3,8 @@ import type { FormEvent } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/hooks/use-toast";
-import { AlertCircle, Shield, Building2 } from "lucide-react";
+import { AlertCircle, Shield } from "lucide-react";
+import { BriklyLogoIcon } from "@/components/ui/BriklyLogoIcon";
 import { getReturnUrl, clearRememberedRoute } from "@/lib/routeMemory";
 import { useRedirectLoopDetection } from "@/hooks/useRedirectLoopDetection";
 import AuthBrandingPanel from "@/components/auth/AuthBrandingPanel";
@@ -312,10 +313,10 @@ const Auth = () => {
           {/* Mobile logo */}
           <div className="lg:hidden text-center mb-8">
             <Link to="/" className="inline-flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center shadow-lg shadow-blue-500/20">
-                <Building2 className="w-5 h-5 text-white" />
+              <div className="w-10 h-10 rounded-xl bg-white flex items-center justify-center shadow-lg shadow-black/20">
+                <BriklyLogoIcon className="w-6 h-6" />
               </div>
-              <span className="text-2xl font-bold text-white">Build<span className="text-blue-400">Desk</span></span>
+              <span className="text-2xl font-bold text-white">Brikly</span>
             </Link>
           </div>
 
