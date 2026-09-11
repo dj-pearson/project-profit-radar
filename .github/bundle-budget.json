@@ -1,5 +1,5 @@
 {
-  "_comment": "US-259: gzipped budget. Ratchet down as chunks split/lazy-load. The initial-load entry chunk (index-*.js) is ~158KB — already under the 800KB CLAUDE.md goal; total is dominated by lazy chunks (three/xlsx/recharts).",
-  "maxTotalGzipped": 3174016,
+  "_comment": "US-259: gzipped budget. Ratchet down as chunks split/lazy-load. The initial-load entry chunk (index-*.js) is ~158KB - already under the 800KB CLAUDE.md goal; total is dominated by lazy chunks (three/xlsx/recharts/jspdf). Lowered 2026-09-11 from 3099.6KB, which main had been exceeding by 29.8KB, after canvg was aliased out. 8KB of headroom over the measured 3081.0KB absorbs chunk-hash jitter, nothing more - a feature that needs more space should cut something or argue for the raise.",
+  "maxTotalGzipped": 3163136,
   "maxEntryGzipped": 307200
 }
