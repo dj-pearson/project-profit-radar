@@ -680,4 +680,47 @@ describe('AuthContext', () => {
       expect(typeof result.current.resetPasswordWithOTP).toBe('function');
     });
   });
+
+  describe('missing profile row (US-357)', () => {
+    it('creates a minimal profile instead of signing the user out', async () => {
+      setupDefaultMocks({ hasSession: true });
+      mockMaybeSingle.mockResolvedValue({ data: null, error: null });
+      mockRpc.mockImplementation(async (fn: string) =>
+        fn === 'ensure_user_profile'
+          ? { data: { ...mockProfile('admin'), company_id: null }, error: null }
+          : { data: null, error: null },
+      );
+
+      const { result } = renderHook(() => useAuth(), { wrapper });
+
+      await waitFor(() => expect(result.current.userProfile).not.toBeNull());
+      expect(mockRpc).toHaveBeenCalledWith('ensure_user_profile');
+      // No company, so the app routes them to /setup.
+      expect(result.current.userProfile?.company_id).toBeNull();
+      expect(mockSignOut).not.toHaveBeenCalled();
+    });
+
+    it('signs out only when the auth user itself is gone', async () => {
+      setupDefaultMocks({ hasSession: true });
+      mockMaybeSingle.mockResolvedValue({ data: null, error: null });
+      mockRpc.mockResolvedValue({ data: null, error: { code: 'P0002', message: 'auth user no longer exists' } });
+      mockGetUser.mockResolvedValue({ data: { user: null }, error: { message: 'User not found' } });
+
+      renderHook(() => useAuth(), { wrapper });
+
+      await waitFor(() => expect(mockSignOut).toHaveBeenCalled());
+    });
+
+    it('keeps the session when the profile could not be created but the user exists', async () => {
+      setupDefaultMocks({ hasSession: true });
+      mockMaybeSingle.mockResolvedValue({ data: null, error: null });
+      mockRpc.mockResolvedValue({ data: null, error: { message: 'temporarily unavailable' } });
+      mockGetUser.mockResolvedValue({ data: { user: mockUser() }, error: null });
+
+      const { result } = renderHook(() => useAuth(), { wrapper });
+
+      await waitFor(() => expect(result.current.loading).toBeFalsy());
+      expect(mockSignOut).not.toHaveBeenCalled();
+    });
+  });
 });

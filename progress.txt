@@ -6470,3 +6470,24 @@ has to be bumped whenever either document changes.
 
 The server accepts the field as optional this release, so a browser still on
 the old bundle can sign up. Making it required is next release's change.
+
+## US-357: a missing profile row no longer locks the user out
+
+`AuthContext` read "no `user_profiles` row" as "account deleted": it signed the
+user out and told them to sign up again. SSO and OAuth users hit that whenever
+`handle_new_user` fails for them, and so does anyone after a partial signup.
+It now calls `ensure_user_profile()`, which creates the caller's minimal profile
+with no company, and the existing redirect sends them to `/setup`. Sign-out only
+happens when the auth user itself is gone.
+
+On the way I found a way to become root_admin at signup. `handle_new_user` took
+the profile role from `raw_user_meta_data`, which the person signing up
+controls, so a direct GoTrue signup carrying `role: root_admin` produced a
+root_admin profile. The US-337 trigger only guards UPDATE. The trigger now
+reads `raw_app_meta_data`, which only the server can set, or defaults to
+admin. Invites and root-admin creation set role with the service role
+afterwards, so they don't depend on it.
+
+Also worth checking against production: `invite-team-member` creates the auth
+user, which fires the trigger and inserts a profile, then inserts the profile
+itself. That should hit a duplicate key unless the trigger isn't live.

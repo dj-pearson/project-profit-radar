@@ -389,6 +389,40 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
     };
   }, [session, checkSessionValidity, handleSessionExpired]);
 
+  // A session with no user_profiles row (US-357). This used to be read as
+  // "account deleted": sign out, "please sign up again". It is really what an
+  // SSO/OAuth user hits when handle_new_user fails, or anyone after a partial
+  // signup. ensure_user_profile() creates the caller's minimal profile with no
+  // company, and the app routes a company-less user to /setup. Sign-out is
+  // kept for the one case it fits: the auth user itself is gone.
+  const recoverMissingProfile = async (): Promise<UserProfile | null> => {
+    logger.warn("No user_profiles row for this session; creating a minimal one");
+    type UntypedRpc = (fn: string) => Promise<{ data: unknown; error: { code?: string; message: string } | null }>;
+    const { data: ensured, error: ensureError } = await (supabase.rpc as unknown as UntypedRpc)('ensure_user_profile');
+    if (!ensureError && ensured) {
+      return ensured as UserProfile;
+    }
+
+    const { data: authData, error: authError } = await supabase.auth.getUser();
+    if (authError || !authData?.user) {
+      await supabase.auth.signOut();
+      toast({
+        title: "Account not found",
+        description: "This account no longer exists. Please sign up again.",
+        variant: "destructive",
+      });
+      return null;
+    }
+
+    logger.error("Could not create a missing profile:", ensureError);
+    toast({
+      title: "We couldn't finish setting up your account",
+      description: "Please reload the page. If this keeps happening, contact support.",
+      variant: "destructive",
+    });
+    return null;
+  };
+
   // Fetch user profile with retry logic
   const fetchUserProfile = useCallback(
     async (userId: string, retryCount = 0): Promise<UserProfile | null> => {
@@ -415,17 +449,8 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
         if (error) {
           logger.error("Profile fetch error:", error);
           
-          // If it's a user not found error or RLS violation, the user likely doesn't exist
           if (error.code === 'PGRST116' || error.message?.includes('0 rows')) {
-            logger.warn("User profile not found - user may have been deleted");
-            // Sign out the user since their profile doesn't exist
-            await supabase.auth.signOut();
-            toast({
-              title: "Account not found",
-              description: "Your user account no longer exists. Please sign up again.",
-              variant: "destructive",
-            });
-            return null;
+            return await recoverMissingProfile();
           }
           
           if (retryCount < 2) {
@@ -437,17 +462,8 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
           return null;
         }
 
-        // If data is null, user profile doesn't exist
         if (!data) {
-          logger.warn("User profile not found - user may have been deleted");
-          // Sign out the user since their profile doesn't exist
-          await supabase.auth.signOut();
-          toast({
-            title: "Account not found",
-            description: "Your user account no longer exists. Please sign up again.",
-            variant: "destructive",
-          });
-          return null;
+          return await recoverMissingProfile();
         }
 
         // user_profiles.role is the one source of truth for role (US-348).
