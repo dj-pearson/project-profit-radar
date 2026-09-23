@@ -1,5 +1,6 @@
 import { supabase } from '@/integrations/supabase/client';
 import { logger } from '@/lib/logger';
+import { ilikeAnyFilter } from '@/lib/security/postgrestFilter';
 
 export interface Task {
   id: string;
@@ -98,7 +99,8 @@ class TaskService {
     }
     if (filters?.search) {
       // Use 'or' filter for search - handle both 'name' and 'title' columns
-      query = query.or(`name.ilike.%${filters.search}%,description.ilike.%${filters.search}%`);
+      // Quoted so a comma or parenthesis in the search box stays text (US-358).
+      query = query.or(ilikeAnyFilter(['name', 'description'], filters.search));
     }
 
     const { data, error } = await query;

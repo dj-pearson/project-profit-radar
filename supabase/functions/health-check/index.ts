@@ -1,6 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.3";
-import { evaluateHealth } from "./evaluate.ts";
+import { evaluateHealth, toPublicChecks } from "./evaluate.ts";
 import { getCorsHeaders } from '../_shared/secure-cors.ts';
 
 serve(async (req) => {
@@ -83,12 +83,17 @@ serve(async (req) => {
   const { overallStatus, httpStatus } = evaluateHealth(checks);
   const totalResponseTime = Date.now() - startTime;
 
+  // Dependency error text stays in the function log, not the public body.
+  for (const [name, c] of Object.entries(checks)) {
+    if (c.error) console.error(`[health-check] ${name} ${c.status}: ${c.error}`);
+  }
+
   return new Response(
     JSON.stringify({
       status: overallStatus,
       timestamp: new Date().toISOString(),
       totalResponseTime,
-      services: checks,
+      services: toPublicChecks(checks),
       version: "1.0.0",
     }),
     {

@@ -2,6 +2,7 @@
  * Project Service
  */
 import { supabase } from '@/integrations/supabase/client';
+import { ilikeAnyFilter } from '@/lib/security/postgrestFilter';
 
 export interface Project {
   id: string;
@@ -248,7 +249,7 @@ class ProjectService {
         materials(id, name, description),
         documents(id, name)
       `)
-      .or(`name.ilike.%${searchTerm}%, client_name.ilike.%${searchTerm}%, description.ilike.%${searchTerm}%`)
+      .or(ilikeAnyFilter(['name', 'client_name', 'description'], searchTerm)) // US-358
       .order('created_at', { ascending: false });
 
     if (companyId) {

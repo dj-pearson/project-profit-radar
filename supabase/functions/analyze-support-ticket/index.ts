@@ -8,6 +8,7 @@ import { getCorsHeaders } from '../_shared/secure-cors.ts';
 import { requireInternalCaller } from '../_shared/internal-only.ts';
 import { validateBody } from '../_shared/validate-body.ts';
 import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
+import { ilikeAnyFilter } from "../_shared/postgrest-filter.ts";
 
 /** ticketId is the only input, and it reaches a uuid column. */
 const AnalyzeTicketSchema = z.object({
@@ -494,7 +495,7 @@ async function findRelevantKBArticles(supabase: any, ticket: any, analysis: any)
   const { data: articles } = await supabase
     .from("knowledge_base_articles")
     .select("id, title, category, helpful_count, not_helpful_count")
-    .or(`title.ilike.%${analysis.category}%,content.ilike.%${analysis.category}%`)
+    .or(ilikeAnyFilter(['title', 'content'], String(analysis.category ?? ''))) // US-358: model output is input too
     .order("helpful_count", { ascending: false })
     .limit(3);
 

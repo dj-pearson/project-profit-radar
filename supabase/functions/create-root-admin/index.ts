@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.3";
 import { getCorsHeaders, handleCorsPreflightRequest } from '../_shared/secure-cors.ts';
+import { constantTimeEqual } from '../_shared/constant-time.ts';
 import { writeAuditLog } from '../_shared/audit-log.ts';
 import { checkRateLimit, rateLimitResponse, getClientIP, RATE_LIMITS } from "../_shared/rate-limiter.ts";
 
@@ -44,7 +45,8 @@ serve(async (req) => {
       );
     }
 
-    if (!adminCreationSecret || adminCreationSecret !== expectedSecret) {
+    // Constant-time, so response timing does not reveal a partly-right guess (US-358).
+    if (!adminCreationSecret || typeof adminCreationSecret !== 'string' || !constantTimeEqual(adminCreationSecret, expectedSecret)) {
       console.error('[SECURITY] Unauthorized attempt to create root admin');
       return new Response(
         JSON.stringify({ error: 'Unauthorized', success: false }),

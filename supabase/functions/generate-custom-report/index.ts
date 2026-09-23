@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.50.3'
+import { isSafeIdentifier } from '../_shared/postgrest-filter.ts'
 import { getCorsHeaders } from '../_shared/secure-cors.ts';
 import { enforceRateLimit, RATE_LIMITS } from '../_shared/rate-limiter.ts';
 import { createServiceClient } from '../_shared/service-client.ts';
@@ -139,7 +140,13 @@ async function generateReportData(supabase: any, report: any) {
   let data: any[] = []
 
   for (const source of dataSources) {
-    // Start query for this data source
+    // Table and column names come from the saved report, i.e. from a user.
+    // The client carries the caller's JWT so RLS bounds what any table
+    // returns, but a name that is not a plain identifier is refused rather
+    // than passed into the query (US-358).
+    if (!isSafeIdentifier(source)) {
+      throw new Error(`Invalid data source name: ${String(source).slice(0, 64)}`)
+    }
     query = supabase.from(source).select('*')
 
     // Apply tenant filter
@@ -152,6 +159,9 @@ async function generateReportData(supabase: any, report: any) {
       const sourceFilters = filters[source]
       for (const [column, filterConfig] of Object.entries(sourceFilters)) {
         const config = filterConfig as any
+        if (!isSafeIdentifier(column)) {
+          throw new Error(`Invalid filter column: ${column.slice(0, 64)}`)
+        }
 
         if (config.operator === 'eq') {
           query = query.eq(column, config.value)
@@ -172,6 +182,9 @@ async function generateReportData(supabase: any, report: any) {
     // Apply sorting
     if (sorting && sorting[source]) {
       const sortConfig = sorting[source] as any
+      if (!isSafeIdentifier(sortConfig?.column)) {
+        throw new Error('Invalid sort column')
+      }
       query = query.order(sortConfig.column, { ascending: sortConfig.ascending !== false })
     }
 

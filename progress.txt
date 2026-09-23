@@ -6491,3 +6491,14 @@ afterwards, so they don't depend on it.
 Also worth checking against production: `invite-team-member` creates the auth
 user, which fires the trigger and inserts a profile, then inserts the profile
 itself. That should hit a duplicate key unless the trigger isn't live.
+
+## US-358: three small hardening fixes
+
+Search boxes pasted user input straight into PostgREST `.or()` strings, so a
+comma in the term added a condition of its own. Terms are now wrapped in
+PostgREST's quoted-value syntax by one helper (with a Deno copy for edge
+functions) at all three sites. The custom report builder took table and column
+names from the saved report; they must now be plain identifiers.
+`create-root-admin` compares its secret in constant time, and `health-check`
+stops returning raw dependency errors to anonymous callers, logging them
+instead.

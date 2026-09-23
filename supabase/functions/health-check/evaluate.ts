@@ -35,3 +35,16 @@ export function evaluateHealth(
 
   return { overallStatus, httpStatus };
 }
+
+/**
+ * What an unauthenticated caller gets to see (US-358): status and timing per
+ * dependency, never the dependency's own error text, which can carry hostnames,
+ * table names or driver messages. index.ts logs the full detail server-side.
+ */
+export function toPublicChecks(
+  checks: Record<string, { status: string; responseTime: number; error?: string }>,
+): Record<string, { status: string; responseTime: number }> {
+  return Object.fromEntries(
+    Object.entries(checks).map(([name, c]) => [name, { status: c.status, responseTime: c.responseTime }]),
+  );
+}

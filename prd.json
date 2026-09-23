@@ -5603,8 +5603,8 @@
         "health-check returns ok/degraded per dependency and logs the detail server-side"
       ],
       "priority": 4,
-      "passes": false,
-      "notes": "PROPOSED 2026-09-09 (production-readiness audit, six parallel reviews: auth, security, page/data flows, UI/UX, SEO, ops)."
+      "passes": true,
+      "notes": "PROPOSED 2026-09-09 (production-readiness audit, six parallel reviews: auth, security, page/data flows, UI/UX, SEO, ops). || DONE 2026-09-23. (1) src/lib/security/postgrestFilter.ts and supabase/functions/_shared/postgrest-filter.ts: ilikeAnyFilter wraps the term in a PostgREST double-quoted value (backslash-escaping quote and backslash), so a comma or parenthesis stays text; taskService, projectService and analyze-support-ticket (its term is model output, still input) use it. generate-custom-report now checks the data source (table), every filter column and the sort column against a plain-identifier pattern before building the query; it runs on the caller's JWT so RLS still bounds the rows, and a per-table column allowlist would need schema knowledge the function does not have. (2) create-root-admin compares ADMIN_CREATION_SECRET with _shared/constant-time.ts constantTimeEqual (full-length XOR, length folded in). (3) health-check returns status and responseTime per dependency only; error text goes to the function log. Tests: _shared/hardening.test.ts (11) including an injection string, quote escaping, web/edge copies agreeing, and source checks at each site."
     },
     {
       "id": "US-359",
