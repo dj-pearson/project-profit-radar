@@ -5371,8 +5371,8 @@
         "A test calls send-payment-reminder with a valid token for company A and body.company_id for company B and asserts 403 and no email"
       ],
       "priority": 1,
-      "passes": false,
-      "notes": "PROPOSED 2026-09-09 (production-readiness audit, six parallel reviews: auth, security, page/data flows, UI/UX, SEO, ops). CRITICAL for send-payment-reminder (anonymous + cross-tenant + sends email); HIGH for the other two. Same family as the earlier US-303 guard work: the guard existed and this is the shape it could not see."
+      "passes": true,
+      "notes": "PROPOSED 2026-09-09 (production-readiness audit, six parallel reviews: auth, security, page/data flows, UI/UX, SEO, ops). CRITICAL for send-payment-reminder (anonymous + cross-tenant + sends email); HIGH for the other two. Same family as the earlier US-303 guard work: the guard existed and this is the shape it could not see. || DONE 2026-09-23. AC1: send-payment-reminder routes through send-payment-reminder/dispatch.ts - process_scheduled calls requireInternalCaller, every other action requires initializeAuthContext (401 otherwise) and runs against the caller's profile company; body.company_id that disagrees is 403 (accepted when equal, so nothing that sends its own id breaks). AC2: generate-cash-flow-forecast and data-subject-delete use _shared/caller-company.ts resolveCompanyScope, 403 on disagreement; data-subject-delete still files a ticket for a user with no company. AC3: check-unauthenticated-edge-functions.mjs now requires a guard call on every path - a call in an if branch, ternary arm, right side of &&/||/??, a case or a catch does not count. That flagged four more: send-email (optional auth, no live caller - now unconditional), and billing-automation, failed-payment-recovery, process-dsar-fulfillment, which gate per action and were read by hand into a PER_ACTION_GATES map. Mutation-checked: restoring the old send-payment-reminder makes the guard fail. AC4: _shared/caller-company.test.ts, 10 cases, including token for A + body B = 403 and the send handler never called."
     },
     {
       "id": "US-342",

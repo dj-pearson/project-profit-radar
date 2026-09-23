@@ -3,7 +3,7 @@
 import { initializeAuthContext, errorResponse, successResponse } from '../_shared/auth-helpers.ts';
 import { getCorsHeaders } from '../_shared/secure-cors.ts';
 import { sendEmail, type EmailOptions } from '../_shared/ses-email-service.ts';
-import { enforceRateLimit, RATE_LIMITS, getClientIP } from '../_shared/rate-limiter.ts';
+import { enforceRateLimit, RATE_LIMITS } from '../_shared/rate-limiter.ts';
 import { createServiceClient } from '../_shared/service-client.ts';
 
 const logStep = (step: string, details?: any) => {
@@ -41,23 +41,22 @@ export default async (req: Request) => {
   try {
     logStep("Function started");
 
-    // Auth is optional for internal edge-function-to-edge-function calls
-    // but required for direct client calls
-    const authHeader = req.headers.get('Authorization');
-    let sender: string | null = null;
-    if (authHeader) {
-      const authContext = await initializeAuthContext(req);
-      if (!authContext) {
-        return errorResponse('Unauthorized', 401, req);
-      }
-      sender = authContext.user.id;
+    // Auth used to be skipped when no Authorization header was sent, "for
+    // internal edge-function-to-edge-function calls". There are none: the two
+    // references are commented out, and a service-role bearer never passed
+    // initializeAuthContext anyway. What the branch did do was let a request
+    // with no header send arbitrary mail if verify_jwt were ever turned off.
+    // A signed-in user is now required on every path (US-341).
+    const authContext = await initializeAuthContext(req);
+    if (!authContext) {
+      return errorResponse('Unauthorized', 401, req);
     }
+    const sender: string = authContext.user.id;
 
     // Rate limit (US-243). This is the generic sender, so an unbounded caller
-    // burns SES reputation as well as quota. Keyed on the user where there is
-    // one and IP otherwise, since auth is optional here.
+    // burns SES reputation as well as quota. Keyed on the signed-in sender.
     const emailLimited = await enforceRateLimit(
-      createServiceClient(), sender ?? `ip:${getClientIP(req)}`, 'send-email',
+      createServiceClient(), sender, 'send-email',
       RATE_LIMITS.AUTH, corsHeaders,
     );
     if (emailLimited) return emailLimited;

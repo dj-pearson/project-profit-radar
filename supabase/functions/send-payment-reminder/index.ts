@@ -3,6 +3,9 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.3";
 import { getCorsHeaders } from '../_shared/secure-cors.ts';
+import { initializeAuthContext } from '../_shared/auth-helpers.ts';
+import { requireInternalCaller } from '../_shared/internal-only.ts';
+import { dispatchReminder, type ReminderBody } from './dispatch.ts';
 
 const logStep = (step: string, details?: Record<string, unknown>) => {
   const detailsStr = details ? ` - ${JSON.stringify(details)}` : '';
@@ -42,66 +45,45 @@ serve(async (req) => {
   }
 
   try {
-    // Create service role client for scheduled tasks
+    // Service-role client: RLS is bypassed, so every query below is scoped by
+    // the company dispatchReminder resolved from the caller's own profile.
     const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
     const supabaseClient = createClient(supabaseUrl, supabaseKey, {
       auth: { persistSession: false }
     });
 
-    // Check for authorization header for user-initiated requests
-    const authHeader = req.headers.get('Authorization');
-    let userId: string | null = null;
-    let companyId: string | null = null;
+    const body: ReminderRequest = await req.json();
+    logStep('Processing action', { action: body.action });
 
-    if (authHeader) {
-      const token = authHeader.replace('Bearer ', '');
-      const { data: { user }, error: authError } = await supabaseClient.auth.getUser(token);
+    const json = (payload: Record<string, unknown>, status: number) =>
+      new Response(JSON.stringify(payload), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status,
+      });
 
-      if (!authError && user) {
-        userId = user.id;
+    return await dispatchReminder(body as unknown as ReminderBody, {
+      requireInternalCaller: () => requireInternalCaller(req),
+      // Hard-fails without a valid user bearer; the anon key is not one.
+      authenticate: async () => {
+        const authContext = await initializeAuthContext(req);
+        if (!authContext) return null;
         const { data: profile } = await supabaseClient
           .from('user_profiles')
           .select('company_id')
-          .eq('id', userId)
+          .eq('id', authContext.user.id)
           .single();
-        companyId = profile?.company_id;
-      }
-    }
-
-    const body: ReminderRequest = await req.json();
-    const { action } = body;
-
-    // Use provided company_id or authenticated user's company
-    const targetCompanyId = body.company_id || companyId;
-
-    logStep('Processing action', { action, companyId: targetCompanyId });
-
-    switch (action) {
-      case 'send':
-        return await sendReminder(corsHeaders, supabaseClient, targetCompanyId!, body.invoice_id!, body.reminder_type);
-
-      case 'schedule':
-        return await scheduleReminders(corsHeaders, supabaseClient, targetCompanyId!);
-
-      case 'process_scheduled':
-        return await processScheduledReminders(corsHeaders, supabaseClient);
-
-      case 'get_settings':
-        return await getSettings(corsHeaders, supabaseClient, targetCompanyId!);
-
-      case 'update_settings':
-        return await updateSettings(corsHeaders, supabaseClient, targetCompanyId!, body.settings!);
-
-      case 'preview':
-        return await previewReminder(corsHeaders, supabaseClient, targetCompanyId!, body.invoice_id!, body.reminder_type!);
-
-      default:
-        return new Response(
-          JSON.stringify({ error: 'Invalid action. Use: send, schedule, process_scheduled, get_settings, update_settings, preview' }),
-          { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
-        );
-    }
+        return { userId: authContext.user.id, companyId: (profile?.company_id as string | undefined) ?? null };
+      },
+      processScheduled: () => processScheduledReminders(corsHeaders, supabaseClient),
+      forCompany: {
+        send: (companyId) => sendReminder(corsHeaders, supabaseClient, companyId, body.invoice_id!, body.reminder_type),
+        schedule: (companyId) => scheduleReminders(corsHeaders, supabaseClient, companyId),
+        get_settings: (companyId) => getSettings(corsHeaders, supabaseClient, companyId),
+        update_settings: (companyId) => updateSettings(corsHeaders, supabaseClient, companyId, body.settings!),
+        preview: (companyId) => previewReminder(corsHeaders, supabaseClient, companyId, body.invoice_id!, body.reminder_type!),
+      },
+      json,
+    });
 
   } catch (error) {
     const errorObj = error as Error;

@@ -36,6 +36,7 @@ import { getCorsHeaders } from "../_shared/secure-cors.ts";
 import { checkRateLimit, getClientIP, rateLimitResponse } from "../_shared/rate-limiter.ts";
 import { writeAuditLog } from '../_shared/audit-log.ts';
 import { createServiceClient } from '../_shared/service-client.ts';
+import { resolveCompanyScope } from '../_shared/caller-company.ts';
 
 serve(async (req) => {
   const corsHeaders = getCorsHeaders(req);
@@ -68,27 +69,36 @@ serve(async (req) => {
   });
   if (!ipRl.allowed) return rateLimitResponse(ipRl, corsHeaders);
 
-  // We accept a body, but also honor an empty body — the authenticated
-  // user context is enough to identify the subject.
-  let companyId: string | null = null;
+  // We accept a body, but also honor an empty body - the authenticated user
+  // context is enough to identify the subject. The erasure ticket is filed
+  // under the caller's own company; a body company_id is accepted only when
+  // it agrees, so nobody can file a ticket against another tenant (US-341).
+  let bodyCompanyId: unknown;
   try {
     const body = await req.json();
-    if (body && typeof body.company_id === "string") {
-      companyId = body.company_id;
-    }
+    bodyCompanyId = body?.company_id;
   } catch {
     /* noop */
   }
 
-  if (!companyId) {
-    // user_profiles.id is the auth user id (PK references auth.users(id));
-    // there is no separate `user_id` column on this table.
-    const { data: profile } = await supabase
-      .from("user_profiles")
-      .select("company_id")
-      .eq("id", user.id)
-      .maybeSingle();
-    companyId = (profile?.company_id as string) ?? null;
+  // user_profiles.id is the auth user id (PK references auth.users(id));
+  // there is no separate `user_id` column on this table.
+  const { data: profile } = await supabase
+    .from("user_profiles")
+    .select("company_id")
+    .eq("id", user.id)
+    .maybeSingle();
+  const profileCompanyId = (profile?.company_id as string | undefined) ?? null;
+
+  // A user with no company can still ask to be erased; only a disagreeing
+  // body company_id is refused.
+  let companyId: string | null = profileCompanyId;
+  if (profileCompanyId) {
+    const scope = resolveCompanyScope(profileCompanyId, bodyCompanyId);
+    if (!scope.ok) return errorResponse(scope.error, scope.status, req);
+    companyId = scope.companyId;
+  } else if (bodyCompanyId) {
+    return errorResponse("company_id does not match your company", 403, req);
   }
 
   const dueAt = new Date();

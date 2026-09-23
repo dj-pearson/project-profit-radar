@@ -6233,3 +6233,32 @@ The toast carries the real error message, and `refreshProfile()` runs after a
 save so the header stops showing the old name until reload.
 
 3 cases in `src/pages/__tests__/UserProfile.test.tsx`.
+
+## US-341: three service-role functions let the body pick the tenant
+
+`send-payment-reminder` treated auth as optional and then did
+`targetCompanyId = body.company_id || companyId` on a service-role client. The
+anon key is a valid project JWT, so `verify_jwt` let anyone in, `getUser()`
+failed without complaint, and the caller chose whose invoices to read and whose
+customers to email. Routing now lives in `send-payment-reminder/dispatch.ts`:
+`process_scheduled` is `requireInternalCaller`, every other action needs a
+signed-in user and runs against that user's company.
+
+`generate-cash-flow-forecast` and `data-subject-delete` both take the company
+from the caller's profile via `_shared/caller-company.ts`. A body `company_id`
+that matches is accepted (the web client sends its own), one that doesn't is 403.
+
+The guard that missed this, `check-unauthenticated-edge-functions.mjs`, counted
+any `auth.getUser(` in the handler, including one inside `if (authHeader)`. It
+now requires a guard call on every path. That turned up four more:
+
+- `send-email` skipped auth when no header was sent, "for internal calls". There
+  are no internal calls (both references are commented out). Auth is now
+  unconditional.
+- `billing-automation`, `failed-payment-recovery` and `process-dsar-fulfillment`
+  gate per action or compare the service bearer directly. I read each one; every
+  branch is covered. They sit in a `PER_ACTION_GATES` map with the reason, since
+  a static scan can't prove it.
+
+Restoring the old `send-payment-reminder` makes the guard fail. 10 cases in
+`_shared/caller-company.test.ts`.

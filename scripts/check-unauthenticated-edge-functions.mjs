@@ -99,6 +99,25 @@ const DELEGATES = new Map([
   ['api-management', 'handleProjectsApi'],
 ]);
 
+/**
+ * Handlers whose guard is legitimately conditional because it is chosen per
+ * action, reviewed by hand (US-341). Each was read on 2026-09-23 and every
+ * branch either requires a companyId resolved from a verified user or calls
+ * requireInternalCaller; the static check cannot prove that, so a person did.
+ * Editing one of these handlers means re-reading it.
+ */
+const PER_ACTION_GATES = new Map([
+  // Each rule action returns 401 without a companyId, which is set only from a
+  // verified user's profile; run_scheduled is requireInternalCaller.
+  ['billing-automation', 'companyId from verified profile per action; run_scheduled internal-only'],
+  // process_failures is requireInternalCaller; everything after it returns 401
+  // without a companyId from a verified user's profile. body.company_id ignored.
+  ['failed-payment-recovery', 'process_failures internal-only; all other actions need verified companyId'],
+  // Compares the bearer to the service-role key directly, else
+  // requireSystemOrAdmin plus a hard 403 when CRON_SECRET is unset.
+  ['process-dsar-fulfillment', 'service-role bearer compare, else requireSystemOrAdmin with no fail-open'],
+]);
+
 const BASELINE = new Set([
   // Empty: every edge function now verifies its caller, inside its handler.
   // Adding a name here should be a deliberate, argued exception.
@@ -115,6 +134,51 @@ const BASELINE = new Set([
  * So: find the handler passed to serve() / assigned to `handler` / default
  * exported, and require the guard call to be lexically inside it.
  */
+/**
+ * A guard call only counts when it runs on every path through the handler
+ * (US-341). send-payment-reminder had
+ *
+ *   if (authHeader) { ... auth.getUser(token) ... }
+ *
+ * and a name-in-handler scan accepted it, although a request with no
+ * Authorization header skipped the check entirely and went on to act on
+ * body.company_id with a service-role client. So a call that sits in the
+ * then/else branch of an if, either arm of a ternary, the right side of
+ * && / || / ??, a single switch case, or a catch block is conditional, and a
+ * handler whose only guard calls are conditional verifies nothing.
+ *
+ * The condition of an if (`if (!(await auth.getUser()))`) is evaluated on
+ * every path and still counts.
+ */
+function isConditional(node, stopAt) {
+  let child = node;
+  for (let p = node.parent; p && p !== stopAt; child = p, p = p.parent) {
+    if (ts.isIfStatement(p) && (child === p.thenStatement || child === p.elseStatement)) return true;
+    if (ts.isConditionalExpression(p) && (child === p.whenTrue || child === p.whenFalse)) return true;
+    if (ts.isBinaryExpression(p) && child === p.right && [
+      ts.SyntaxKind.AmpersandAmpersandToken, ts.SyntaxKind.BarBarToken, ts.SyntaxKind.QuestionQuestionToken,
+    ].includes(p.operatorToken.kind)) return true;
+    if (ts.isCaseClause(p) || ts.isDefaultClause(p) || ts.isCatchClause(p)) return true;
+  }
+  return false;
+}
+
+function hasUnconditionalGuard(fn, sf) {
+  let found = false;
+  const visit = (n) => {
+    if (found) return;
+    if (ts.isCallExpression(n) && VERIFIES_CALLER.test(n.expression.getText(sf) + '(') && !isConditional(n, fn)) {
+      found = true;
+      return;
+    }
+    n.forEachChild(visit);
+  };
+  visit(fn);
+  return found;
+}
+
+const conditionalOnly = new Set();
+
 function verifiesCallerInHandler(text, file) {
   if (!VERIFIES_CALLER.test(text)) return false;
   const sf = ts.createSourceFile(file, text, ts.ScriptTarget.ES2022, true, ts.ScriptKind.TS);
@@ -155,7 +219,8 @@ function verifiesCallerInHandler(text, file) {
   if (nodes.length === 0) nodes.push(...named.values());
   if (nodes.length === 0) return VERIFIES_CALLER.test(text); // shape we do not model
 
-  if (nodes.some((fn) => VERIFIES_CALLER.test(fn.getText(sf)))) return true;
+  if (nodes.some((fn) => hasUnconditionalGuard(fn, sf))) return true;
+  if (nodes.some((fn) => VERIFIES_CALLER.test(fn.getText(sf)))) conditionalOnly.add(file);
 
   // Delegation, only where it is declared and only to the named function.
   const fnName = file.split('/').slice(-2)[0];
@@ -178,13 +243,16 @@ function verifiesCallerInHandler(text, file) {
 
 const unverified = [];
 const misplaced = [];
+const conditional = [];
 for (const d of readdirSync(FN, { withFileTypes: true })) {
   if (!d.isDirectory() || d.name === '_shared') continue;
   const p = join(FN, d.name, 'index.ts');
   if (!existsSync(p)) continue;
   const text = readFileSync(p, 'utf8');
   if (verifiesCallerInHandler(text, p)) continue;
-  if (VERIFIES_CALLER.test(text)) misplaced.push(d.name);
+  if (PER_ACTION_GATES.has(d.name) && conditionalOnly.has(p)) continue;
+  if (conditionalOnly.has(p)) conditional.push(d.name);
+  else if (VERIFIES_CALLER.test(text)) misplaced.push(d.name);
   if (PUBLIC_BY_DESIGN.has(d.name)) continue;
   unverified.push(d.name);
 }
@@ -200,6 +268,11 @@ if (misplaced.length) {
   console.error('\n\u2716 Guard call present but NOT inside the request handler:');
   for (const m of misplaced) console.error(`    ${m}`);
   console.error('  A check that runs in the wrong function reads as done and is not.');
+}
+if (conditional.length) {
+  console.error('\n\u2716 Guard call present but only on some paths through the handler:');
+  for (const m of conditional) console.error(`    ${m}`);
+  console.error('  A check inside if (authHeader) { ... } lets a request with no header skip it.');
 }
 for (const f of unverified.filter((x) => BASELINE.has(x))) console.log(`    ${f}`);
 

@@ -5,6 +5,7 @@ import { initializeAuthContext, errorResponse, successResponse } from '../_share
 import { getCorsHeaders } from '../_shared/secure-cors.ts';
 import { enforceRateLimit, RATE_LIMITS } from '../_shared/rate-limiter.ts';
 import { createServiceClient } from '../_shared/service-client.ts';
+import { resolveCompanyScope } from '../_shared/caller-company.ts';
 
 const logStep = (step: string, details?: any) => {
   const detailsStr = details ? ` - ${JSON.stringify(details)}` : '';
@@ -38,11 +39,21 @@ export default async (req: Request) => {
     );
     if (limited) return limited;
     const body = await req.json();
-    const { company_id, forecast_period } = body;
+    const { forecast_period } = body;
 
-    if (!company_id) {
-      return errorResponse('company_id is required', 400, req);
+    // The forecast is read and written on a service-role client, so the company
+    // comes from the caller's profile. body.company_id is still accepted from
+    // older clients, but only when it names the caller's own company (US-341).
+    const { data: profile } = await authContext.supabase
+      .from('user_profiles')
+      .select('company_id')
+      .eq('id', user.id)
+      .maybeSingle();
+    const scope = resolveCompanyScope(profile?.company_id as string | undefined, body.company_id);
+    if (!scope.ok) {
+      return errorResponse(scope.error, scope.status, req);
     }
+    const company_id = scope.companyId;
 
     const days = parseInt(forecast_period) || 30;
     logStep("Generating forecast", { company_id, days });
