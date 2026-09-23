@@ -5577,8 +5577,8 @@
         "A test opens two sessions from one refresh token and asserts neither is signed out"
       ],
       "priority": 2,
-      "passes": false,
-      "notes": "PROPOSED 2026-09-09 (production-readiness audit, six parallel reviews: auth, security, page/data flows, UI/UX, SEO, ops). MEDIUM. Most likely root cause of the intermittent logouts the AUTH_SESSION_PERSISTENCE docs describe."
+      "passes": true,
+      "notes": "PROPOSED 2026-09-09 (production-readiness audit, six parallel reviews: auth, security, page/data flows, UI/UX, SEO, ops). MEDIUM. Most likely root cause of the intermittent logouts the AUTH_SESSION_PERSISTENCE docs describe. || DONE 2026-09-23. AC1: checkSessionValidity no longer calls refreshSession({ refresh_token }); getSession() (which renews an expiring token under autoRefreshToken) and the TOKEN_REFRESHED/SIGNED_OUT events are the only refresh path. AC2: profile-fetch-in-progress and the current profile live in refs (profileFetchInProgressRef, userProfileRef) read by the mount-time auth listener and the initial-session path; setIsProfileFetchInProgress now updates ref and state together. AC3: src/lib/auth/timing.ts PROFILE_FETCH_TIMEOUT_MS = 8000 is both the fetch timeout (was 10 s) and RouteGuard's wait (was 4 s). AC4: not the literal two-GoTrue-sessions test (no GoTrue here); instead AuthContext.test.tsx runs the monitor through three five-minute intervals on fake timers installed before render and asserts refreshSession is never called - it fails on the previous code with 3 calls. A first version installed fake timers after render and passed on the old code too; fixed."
     },
     {
       "id": "US-357",

@@ -5,6 +5,7 @@ import { Loader2 } from "lucide-react";
 import { rememberCurrentRoute } from "@/lib/routeMemory";
 import { logger } from "@/lib/logger";
 import type { ReactNode, FC } from "react";
+import { PROFILE_FETCH_TIMEOUT_MS } from '@/lib/auth/timing';
 
 interface RouteGuardProps {
   children: ReactNode;
@@ -45,10 +46,12 @@ export const RouteGuard: FC<RouteGuardProps> = ({ children }) => {
     }
   }, [user, userProfile, loading]);
 
-  // Give the profile a few seconds to load after auth resolves
+  // Give the profile as long as its fetch is allowed to take
   useEffect(() => {
     if (user && !userProfile && !loading) {
-      const timer = setTimeout(() => setProfileWaitExpired(true), 4000);
+      // Same limit as the fetch itself, so the guard never gives up on a
+      // fetch that can still succeed (US-356).
+      const timer = setTimeout(() => setProfileWaitExpired(true), PROFILE_FETCH_TIMEOUT_MS);
       return () => clearTimeout(timer);
     }
     setProfileWaitExpired(false);

@@ -20,6 +20,7 @@ import { purgeSupabaseSessionStorage } from "@/lib/supabaseStorage";
 import { useSupabaseSessionResume } from "@/hooks/useSupabaseSessionResume";
 import { checkMfaRequired, markMfaPending, readDeviceId, readMfaPending } from "@/lib/auth/mfaChallenge";
 import { LEGAL_TERMS_VERSION } from "@/lib/legal/termsVersion";
+import { PROFILE_FETCH_TIMEOUT_MS } from "@/lib/auth/timing";
 import {
   checkLoginAttempt,
   recordFailedLogin,
@@ -186,7 +187,16 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
   // Removed: siteId and siteConfig - single-tenant architecture
   const [loading, setLoading] = useState(true);
   const [profileFetching, setProfileFetching] = useState(false);
-  const [isProfileFetchInProgress, setIsProfileFetchInProgress] = useState(false);
+  const [isProfileFetchInProgress, setIsProfileFetchInProgressState] = useState(false);
+  // The auth listener is registered once, at mount, so it must read these
+  // through refs; as plain state it saw their mount-time values forever
+  // (US-356): userProfile always null, a fetch never "in progress".
+  const profileFetchInProgressRef = useRef(false);
+  const setIsProfileFetchInProgress = useCallback((v: boolean) => {
+    profileFetchInProgressRef.current = v;
+    setIsProfileFetchInProgressState(v);
+  }, []);
+  const userProfileRef = useRef<UserProfile | null>(null);
   const { toast } = useToast();
 
   // On Capacitor-native, refresh the Supabase session whenever the app
@@ -195,6 +205,9 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
   useSupabaseSessionResume();
 
   const successfulProfiles = useRef<Map<string, UserProfile>>(new Map());
+  useEffect(() => {
+    userProfileRef.current = userProfile;
+  }, [userProfile]);
   // US-346: while mfaGateRef is set, auth events are stashed instead of
   // applied, so a password-only session cannot reach the app.
   const [mfaChallenge, setMfaChallenge] = useState<MfaChallenge | null>(null);
@@ -307,24 +320,11 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
         return;
       }
 
-      // Check if refresh token is valid by trying to refresh
-      if (currentSession.refresh_token) {
-        try {
-          const { error: refreshError } = await supabase.auth.refreshSession({
-            refresh_token: currentSession.refresh_token
-          });
-          
-          if (refreshError) {
-            logger.debug('Refresh token invalid:', refreshError.message);
-            await handleSessionExpired('Refresh token invalid');
-            return;
-          }
-        } catch (refreshError) {
-          logger.debug('Refresh failed:', refreshError);
-          await handleSessionExpired('Token refresh failed');
-          return;
-        }
-      }
+      // No refreshSession() here (US-356). The client runs with
+      // autoRefreshToken, and getSession() above renews an expiring token
+      // itself. Forcing a rotation every five minutes from every tab raced
+      // GoTrue's refresh-token reuse detection: two tabs presenting the same
+      // token, one of them rejected, and the user signed out.
 
     } catch (error) {
       logger.error('Session validity check error:', error);
@@ -432,7 +432,7 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
 
         // Add timeout to prevent hanging
         const timeoutPromise = new Promise<never>((_, reject) => {
-          setTimeout(() => reject(new Error("Profile fetch timeout")), 10000);
+          setTimeout(() => reject(new Error("Profile fetch timeout")), PROFILE_FETCH_TIMEOUT_MS);
         });
 
         const fetchPromise = supabase
@@ -621,7 +621,7 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
           } catch { /* ignore: non-critical, best-effort */ }
 
           // Check current profile
-          if (userProfile?.id === session.user.id) {
+          if (userProfileRef.current?.id === session.user.id) {
             logger.debug(
               "Initial session: Profile already exists, skipping fetch"
             );
@@ -733,7 +733,7 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
 
       if (session?.user) {
         // Only fetch profile if we don't have one or the user changed
-        const currentUserId = userProfile?.id;
+        const currentUserId = userProfileRef.current?.id;
         const newUserId = session.user.id;
 
         // Check cache first for instant access
@@ -746,13 +746,13 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
         }
 
         // If profile fetch is in progress, wait
-        if (isProfileFetchInProgress) {
+        if (profileFetchInProgressRef.current) {
           logger.debug("Profile fetch already in progress, waiting...");
           return;
         }
 
         // If current profile matches user, keep it
-        if (userProfile?.id === newUserId) {
+        if (userProfileRef.current?.id === newUserId) {
           logger.debug("Profile already loaded for user, skipping fetch");
           setLoading(false);
           return;

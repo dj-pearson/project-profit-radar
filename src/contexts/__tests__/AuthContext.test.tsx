@@ -723,4 +723,31 @@ describe('AuthContext', () => {
       expect(mockSignOut).not.toHaveBeenCalled();
     });
   });
+
+  describe('session monitoring (US-356)', () => {
+    it('never rotates the refresh token itself; autoRefreshToken owns that', async () => {
+      // Fake timers before render, so the monitor's setInterval is a fake one.
+      vi.useFakeTimers({ shouldAdvanceTime: true });
+      try {
+        setupDefaultMocks({ hasSession: true });
+        mockRefreshSession.mockResolvedValue({ data: { session: mockSession() }, error: null });
+        const { result } = renderHook(() => useAuth(), { wrapper });
+        await waitFor(() => expect(result.current.userProfile).not.toBeNull());
+        const checksBefore = mockGetSession.mock.calls.length;
+
+        // Three of the five-minute checks.
+        await act(async () => {
+          await vi.advanceTimersByTimeAsync(16 * 60 * 1000);
+        });
+        expect(mockGetSession.mock.calls.length).toBeGreaterThan(checksBefore);
+      } finally {
+        vi.useRealTimers();
+      }
+
+      // Two tabs doing this with one refresh token is what tripped GoTrue's
+      // reuse detection and signed people out.
+      expect(mockRefreshSession).not.toHaveBeenCalled();
+    });
+  });
 });
+

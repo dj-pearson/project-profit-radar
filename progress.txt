@@ -6512,3 +6512,21 @@ records the template, filters and row count. A role or company change on a
 profile records old and new values; before, `log_admin_action` only said
 "UPDATE user_profiles". `recent_privilege_changes` is a view a root admin can
 query to see them. There's no screen for it yet.
+
+## US-356: AuthContext stops rotating the refresh token itself
+
+Every five minutes, every open tab called `refreshSession` with the current
+refresh token, on top of the client's own `autoRefreshToken`. Two tabs sending
+the same token is the case GoTrue's reuse detection rejects, and the user gets
+signed out. That call is gone; `getSession()` renews an expiring token on its
+own.
+
+The auth listener is registered once, so it saw `userProfile` and
+"fetch in progress" as they were at mount, forever. Both are refs now. And
+RouteGuard gave up waiting for a profile after 4 seconds while the fetch was
+allowed 10, which bounced slow first loads to /auth and back. Both use one
+8-second constant.
+
+My first test for the refresh passed on the old code, because the fake timers
+went in after the interval was registered. Installing them before render makes
+it fail on the old code with 3 calls.
