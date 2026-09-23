@@ -56,6 +56,12 @@ const BASELINE = new Set([
   'processed_images', 'project_videos',
   'real_time_notifications',
   'saved_filter_presets', 'sensitive_data_access_log', 'seo_page_configs',
+  // US-405: created by 20260924110000_subcontractors.sql, not yet applied to
+  // the live project. Unlike the rest of this list the reader does not flatten
+  // the failure into an empty list: fetchSubcontractors reports a missing table
+  // as `available: false` and the page says records cannot be saved here.
+  // Remove both once the migration is applied and types.ts regenerated.
+  'subcontractor_insurance_certificates', 'subcontractors',
 ]);
 
 function walk(dir, out = []) {

@@ -1,4 +1,5 @@
-import React, { useState, useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
+import { toast } from 'sonner';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { AccessiblePageWrapper } from '@/components/accessibility/AccessiblePageWrapper';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -6,17 +7,9 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Skeleton } from '@/components/ui/skeleton';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-  DialogFooter,
-} from '@/components/ui/dialog';
+import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import {
   Select,
   SelectContent,
@@ -38,103 +31,34 @@ import {
   HardHat,
   FileText,
   User,
+  Pencil,
+  Trash2,
+  ExternalLink,
+  X,
 } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
-
-// --- Types ---
-
-interface PrequalificationItem {
-  id: string;
-  label: string;
-  checked: boolean;
-}
-
-interface InsuranceCertificate {
-  id: string;
-  type: string;
-  fileName: string;
-  expirationDate: string;
-}
-
-interface Subcontractor {
-  id: string;
-  name: string;
-  trade: string;
-  contactName: string;
-  phone: string;
-  email: string;
-  licenseNumber: string;
-  rating: number;
-  notes: string;
-  prequalification: PrequalificationItem[];
-  insuranceCertificates: InsuranceCertificate[];
-  createdAt: string;
-}
-
-type InsuranceStatus = 'valid' | 'expiring' | 'expired' | 'all';
-
-// --- Constants ---
-
-const TRADE_TYPES = [
-  'Electrical',
-  'Plumbing',
-  'HVAC',
-  'Concrete',
-  'Framing',
-  'Roofing',
-  'Painting',
-  'Drywall',
-  'Flooring',
-  'Landscaping',
-  'Excavation',
-  'Masonry',
-  'Steel',
-  'Fire Protection',
-  'Insulation',
-  'General Labor',
-] as const;
-
-const DEFAULT_PREQUALIFICATION: Omit<PrequalificationItem, 'id'>[] = [
-  { label: 'Valid business license on file', checked: false },
-  { label: 'General liability insurance verified', checked: false },
-  { label: 'Workers compensation insurance verified', checked: false },
-  { label: 'Safety program documentation reviewed', checked: false },
-  { label: 'OSHA compliance record reviewed', checked: false },
-  { label: 'References checked (minimum 3)', checked: false },
-  { label: 'EMR (Experience Modification Rate) acceptable', checked: false },
-  { label: 'Bonding capacity verified', checked: false },
-];
-
-function createDefaultPrequalification(): PrequalificationItem[] {
-  return DEFAULT_PREQUALIFICATION.map((item, index) => ({
-    ...item,
-    id: `pq-${Date.now()}-${index}`,
-  }));
-}
+import { SubcontractorFormDialog } from '@/components/subcontractors/SubcontractorFormDialog';
+import { CertificateUploadDialog } from '@/components/subcontractors/CertificateUploadDialog';
+import { useSubcontractors } from '@/hooks/useSubcontractors';
+import { openStorageObject } from '@/lib/storage/signedUrl';
+import {
+  SUBCONTRACTOR_DOCUMENTS_BUCKET,
+  SUBCONTRACTOR_PREQUALIFICATION,
+  TRADE_TYPES,
+  certificateStatus,
+  countPrequalified,
+  daysUntil,
+  formValuesFrom,
+  getInsuranceStatus,
+  parseLocalDate,
+  togglePrequalification,
+  type InsuranceCertificate,
+  type InsuranceStatus,
+  type PrequalificationKey,
+  type Subcontractor,
+  type SubcontractorFormValues,
+} from '@/lib/subcontractors';
 
 // --- Helpers ---
-
-function getInsuranceStatus(certificates: InsuranceCertificate[]): InsuranceStatus {
-  if (certificates.length === 0) return 'expired';
-  const now = new Date();
-  const thirtyDaysMs = 30 * 86400000;
-  let hasExpired = false;
-  let hasExpiring = false;
-
-  for (const cert of certificates) {
-    const expiry = new Date(cert.expirationDate);
-    const diff = expiry.getTime() - now.getTime();
-    if (diff < 0) {
-      hasExpired = true;
-    } else if (diff <= thirtyDaysMs) {
-      hasExpiring = true;
-    }
-  }
-
-  if (hasExpired) return 'expired';
-  if (hasExpiring) return 'expiring';
-  return 'valid';
-}
 
 function getInsuranceBadge(status: InsuranceStatus) {
   switch (status) {
@@ -159,23 +83,28 @@ function getInsuranceBadge(status: InsuranceStatus) {
           Expired
         </Badge>
       );
+    case 'none':
+      return (
+        <Badge variant="outline" className="gap-1" aria-label="Insurance status: No certificate on file">
+          <FileText className="h-3 w-3" aria-hidden="true" />
+          No certificate
+        </Badge>
+      );
     default:
       return null;
   }
 }
 
-function formatDate(dateStr: string): string {
-  return new Date(dateStr).toLocaleDateString('en-US', {
+function formatDate(isoDate: string): string {
+  return parseLocalDate(isoDate).toLocaleDateString('en-US', {
     year: 'numeric',
     month: 'short',
     day: 'numeric',
   });
 }
 
-function daysUntilExpiry(dateStr: string): number {
-  const now = new Date();
-  const expiry = new Date(dateStr);
-  return Math.ceil((expiry.getTime() - now.getTime()) / 86400000);
+function errorMessage(err: unknown): string {
+  return err instanceof Error ? err.message : 'Something went wrong. Try again.';
 }
 
 // --- Star Rating Component ---
@@ -203,7 +132,8 @@ const StarRating: React.FC<StarRatingProps> = ({ rating, onChange, readonly = fa
           type="button"
           disabled={readonly}
           className={`p-0.5 transition-colors ${readonly ? 'cursor-default' : 'cursor-pointer hover:scale-110'} focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 rounded`}
-          onClick={() => onChange?.(star)}
+          // Clicking the current rating clears it back to unrated.
+          onClick={() => onChange?.(star === rating ? 0 : star)}
           onMouseEnter={() => !readonly && setHoverRating(star)}
           onMouseLeave={() => !readonly && setHoverRating(0)}
           aria-label={`${star} star${star !== 1 ? 's' : ''}`}
@@ -224,38 +154,29 @@ const StarRating: React.FC<StarRatingProps> = ({ rating, onChange, readonly = fa
   );
 };
 
-// --- Empty Form State ---
-
-interface SubcontractorFormData {
-  name: string;
-  trade: string;
-  contactName: string;
-  phone: string;
-  email: string;
-  licenseNumber: string;
-  notes: string;
-}
-
-const EMPTY_FORM: SubcontractorFormData = {
-  name: '',
-  trade: '',
-  contactName: '',
-  phone: '',
-  email: '',
-  licenseNumber: '',
-  notes: '',
-};
-
 // --- Main Component ---
 
 const Subcontractors: React.FC = () => {
-  const { toast } = useToast();
+  const {
+    subcontractors,
+    available,
+    isLoading,
+    error,
+    refetch,
+    hasCompany,
+    canManage,
+    create,
+    update,
+    remove,
+    addCertificate,
+    removeCertificate,
+  } = useSubcontractors();
 
-  const [isLoading] = useState(false);
-  const [subcontractors, setSubcontractors] = useState<Subcontractor[]>([]);
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [formData, setFormData] = useState<SubcontractorFormData>({ ...EMPTY_FORM });
-  const [formErrors, setFormErrors] = useState<Partial<Record<keyof SubcontractorFormData, string>>>({});
+  const [formOpen, setFormOpen] = useState(false);
+  const [editing, setEditing] = useState<Subcontractor | null>(null);
+  const [deleting, setDeleting] = useState<Subcontractor | null>(null);
+  const [uploadFor, setUploadFor] = useState<Subcontractor | null>(null);
+  const [removingCert, setRemovingCert] = useState<{ sub: Subcontractor; cert: InsuranceCertificate } | null>(null);
 
   // Filters
   const [searchQuery, setSearchQuery] = useState('');
@@ -263,11 +184,12 @@ const Subcontractors: React.FC = () => {
   const [ratingFilter, setRatingFilter] = useState<string>('all');
   const [insuranceFilter, setInsuranceFilter] = useState<string>('all');
 
+  const editingValues = useMemo(() => (editing ? formValuesFrom(editing) : undefined), [editing]);
+
   // --- Filtering ---
 
   const filteredSubcontractors = useMemo(() => {
     return subcontractors.filter((sub) => {
-      // Search
       if (searchQuery) {
         const q = searchQuery.toLowerCase();
         const matchesSearch =
@@ -278,113 +200,92 @@ const Subcontractors: React.FC = () => {
           sub.licenseNumber.toLowerCase().includes(q);
         if (!matchesSearch) return false;
       }
-
-      // Trade
       if (tradeFilter !== 'all' && sub.trade !== tradeFilter) return false;
-
-      // Rating minimum
       if (ratingFilter !== 'all' && sub.rating < parseInt(ratingFilter, 10)) return false;
-
-      // Insurance status
-      if (insuranceFilter !== 'all') {
-        const status = getInsuranceStatus(sub.insuranceCertificates);
-        if (status !== insuranceFilter) return false;
+      if (insuranceFilter !== 'all' && getInsuranceStatus(sub.insuranceCertificates) !== insuranceFilter) {
+        return false;
       }
-
       return true;
     });
   }, [subcontractors, searchQuery, tradeFilter, ratingFilter, insuranceFilter]);
 
-  // --- Form Validation ---
-
-  function validateForm(data: SubcontractorFormData): boolean {
-    const errors: Partial<Record<keyof SubcontractorFormData, string>> = {};
-
-    if (!data.name.trim()) errors.name = 'Company name is required';
-    if (!data.trade) errors.trade = 'Trade type is required';
-    if (!data.contactName.trim()) errors.contactName = 'Contact name is required';
-    if (!data.phone.trim()) errors.phone = 'Phone number is required';
-    if (!data.email.trim()) {
-      errors.email = 'Email is required';
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email)) {
-      errors.email = 'Invalid email address';
-    }
-
-    setFormErrors(errors);
-    return Object.keys(errors).length === 0;
-  }
-
   // --- Handlers ---
 
-  function handleAddSubcontractor() {
-    if (!validateForm(formData)) return;
-
-    const newSub: Subcontractor = {
-      id: `sub-${Date.now()}`,
-      name: formData.name.trim(),
-      trade: formData.trade,
-      contactName: formData.contactName.trim(),
-      phone: formData.phone.trim(),
-      email: formData.email.trim(),
-      licenseNumber: formData.licenseNumber.trim(),
-      rating: 0,
-      notes: formData.notes.trim(),
-      prequalification: createDefaultPrequalification(),
-      insuranceCertificates: [],
-      createdAt: new Date().toISOString().split('T')[0],
-    };
-
-    setSubcontractors((prev) => [newSub, ...prev]);
-    setFormData({ ...EMPTY_FORM });
-    setFormErrors({});
-    setDialogOpen(false);
-    toast({
-      title: 'Not saved',
-      description:
-        `${newSub.name} is listed for this session only. Subcontractor records are ` +
-        'not stored yet, so it will be gone when you reload.',
-      variant: 'destructive',
-    });
+  function openAdd() {
+    setEditing(null);
+    setFormOpen(true);
   }
 
-  function handleRatingChange(subId: string, newRating: number) {
-    setSubcontractors((prev) =>
-      prev.map((sub) => (sub.id === subId ? { ...sub, rating: newRating } : sub))
-    );
+  function openEdit(sub: Subcontractor) {
+    setEditing(sub);
+    setFormOpen(true);
   }
 
-  function handlePrequalToggle(subId: string, pqId: string) {
-    setSubcontractors((prev) =>
-      prev.map((sub) =>
-        sub.id === subId
-          ? {
-              ...sub,
-              prequalification: sub.prequalification.map((pq) =>
-                pq.id === pqId ? { ...pq, checked: !pq.checked } : pq
-              ),
-            }
-          : sub
-      )
-    );
-  }
-
-  function handleInsuranceUpload() {
-    // There is no storage bucket and no certificates table behind this. It used
-    // to invent a General Liability cert expiring in a year and say "uploaded".
-    toast({
-      title: 'Certificate upload is not available yet',
-      description:
-        'There is nowhere to store the file. Keep certificates where you keep ' +
-        'them today until this is wired up.',
-      variant: 'destructive',
-    });
-  }
-
-  function handleFormChange(field: keyof SubcontractorFormData, value: string) {
-    setFormData((prev) => ({ ...prev, [field]: value }));
-    if (formErrors[field]) {
-      setFormErrors((prev) => ({ ...prev, [field]: undefined }));
+  async function handleSave(values: SubcontractorFormValues) {
+    try {
+      if (editing) {
+        await update.mutateAsync({ id: editing.id, patch: { kind: 'details', values } });
+        toast.success(`${values.name} updated`);
+      } else {
+        await create.mutateAsync(values);
+        toast.success(`${values.name} added to your subcontractors`);
+      }
+    } catch (err) {
+      toast.error(editing ? 'Could not save changes' : 'Could not add subcontractor', {
+        description: errorMessage(err),
+      });
+      throw err;
     }
+  }
+
+  function handleRatingChange(sub: Subcontractor, rating: number) {
+    update.mutate(
+      { id: sub.id, patch: { kind: 'rating', rating } },
+      { onError: (err) => toast.error(`Rating for ${sub.name} was not saved`, { description: errorMessage(err) }) },
+    );
+  }
+
+  function handlePrequalToggle(sub: Subcontractor, key: PrequalificationKey) {
+    update.mutate(
+      { id: sub.id, patch: { kind: 'prequalification', prequalification: togglePrequalification(sub.prequalification, key) } },
+      { onError: (err) => toast.error(`Checklist for ${sub.name} was not saved`, { description: errorMessage(err) }) },
+    );
+  }
+
+  async function handleDelete() {
+    if (!deleting) return;
+    try {
+      await remove.mutateAsync(deleting);
+      toast.success(`${deleting.name} deleted`);
+    } catch (err) {
+      toast.error(`Could not delete ${deleting.name}`, { description: errorMessage(err) });
+    }
+  }
+
+  async function handleUpload(file: File, values: { coverageType: string; expiresOn: string }) {
+    if (!uploadFor) return;
+    try {
+      await addCertificate.mutateAsync({ subcontractorId: uploadFor.id, file, values });
+      toast.success(`${values.coverageType} certificate saved for ${uploadFor.name}`);
+    } catch (err) {
+      toast.error('Certificate was not uploaded', { description: errorMessage(err) });
+      throw err;
+    }
+  }
+
+  async function handleRemoveCertificate() {
+    if (!removingCert) return;
+    try {
+      await removeCertificate.mutateAsync(removingCert.cert);
+      toast.success(`${removingCert.cert.coverageType} certificate removed`);
+    } catch (err) {
+      toast.error('Could not remove certificate', { description: errorMessage(err) });
+    }
+  }
+
+  async function handleViewCertificate(cert: InsuranceCertificate) {
+    const opened = await openStorageObject(SUBCONTRACTOR_DOCUMENTS_BUCKET, cert.filePath);
+    if (!opened) toast.error('Could not open that certificate file');
   }
 
   // --- Render ---
@@ -394,6 +295,8 @@ const Subcontractors: React.FC = () => {
     ratingFilter !== 'all',
     insuranceFilter !== 'all',
   ].filter(Boolean).length;
+
+  const ready = !isLoading && !error && available && hasCompany;
 
   return (
     <DashboardLayout hasAccessibleWrapper>
@@ -410,289 +313,134 @@ const Subcontractors: React.FC = () => {
                 Manage subcontractors, track prequalification status, and monitor insurance compliance.
               </p>
             </div>
-            <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-              <DialogTrigger asChild>
-                <Button className="gap-2" aria-label="Add a new subcontractor">
-                  <Plus className="h-4 w-4" aria-hidden="true" />
-                  Add Subcontractor
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto" aria-describedby="add-sub-description">
-                <DialogHeader>
-                  <DialogTitle>Add Subcontractor</DialogTitle>
-                  <p id="add-sub-description" className="text-sm text-muted-foreground">
-                    Enter subcontractor details to add them to your vendor list.
-                  </p>
-                </DialogHeader>
-                <form
-                  onSubmit={(e) => {
-                    e.preventDefault();
-                    handleAddSubcontractor();
-                  }}
-                  className="space-y-4"
-                  aria-label="Add subcontractor form"
-                  noValidate
-                >
-                  {/* Company Name */}
-                  <div className="space-y-1.5">
-                    <Label htmlFor="sub-name">
-                      Company Name <span aria-hidden="true" className="text-red-500">*</span>
-                    </Label>
-                    <Input
-                      id="sub-name"
-                      value={formData.name}
-                      onChange={(e) => handleFormChange('name', e.target.value)}
-                      placeholder="e.g. ABC Electrical"
-                      aria-required="true"
-                      aria-invalid={!!formErrors.name}
-                      aria-describedby={formErrors.name ? 'sub-name-error' : undefined}
-                    />
-                    {formErrors.name && (
-                      <p id="sub-name-error" className="text-sm text-red-600" role="alert">
-                        {formErrors.name}
-                      </p>
-                    )}
-                  </div>
-
-                  {/* Trade Type */}
-                  <div className="space-y-1.5">
-                    <Label htmlFor="sub-trade">
-                      Trade Type <span aria-hidden="true" className="text-red-500">*</span>
-                    </Label>
-                    <Select
-                      value={formData.trade}
-                      onValueChange={(val) => handleFormChange('trade', val)}
-                    >
-                      <SelectTrigger
-                        id="sub-trade"
-                        aria-required="true"
-                        aria-invalid={!!formErrors.trade}
-                        aria-describedby={formErrors.trade ? 'sub-trade-error' : undefined}
-                      >
-                        <SelectValue placeholder="Select trade type" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {TRADE_TYPES.map((trade) => (
-                          <SelectItem key={trade} value={trade}>
-                            {trade}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    {formErrors.trade && (
-                      <p id="sub-trade-error" className="text-sm text-red-600" role="alert">
-                        {formErrors.trade}
-                      </p>
-                    )}
-                  </div>
-
-                  {/* Contact Name */}
-                  <div className="space-y-1.5">
-                    <Label htmlFor="sub-contact">
-                      Contact Name <span aria-hidden="true" className="text-red-500">*</span>
-                    </Label>
-                    <Input
-                      id="sub-contact"
-                      value={formData.contactName}
-                      onChange={(e) => handleFormChange('contactName', e.target.value)}
-                      placeholder="e.g. John Smith"
-                      aria-required="true"
-                      aria-invalid={!!formErrors.contactName}
-                      aria-describedby={formErrors.contactName ? 'sub-contact-error' : undefined}
-                    />
-                    {formErrors.contactName && (
-                      <p id="sub-contact-error" className="text-sm text-red-600" role="alert">
-                        {formErrors.contactName}
-                      </p>
-                    )}
-                  </div>
-
-                  {/* Phone */}
-                  <div className="space-y-1.5">
-                    <Label htmlFor="sub-phone">
-                      Phone <span aria-hidden="true" className="text-red-500">*</span>
-                    </Label>
-                    <Input
-                      id="sub-phone"
-                      type="tel"
-                      value={formData.phone}
-                      onChange={(e) => handleFormChange('phone', e.target.value)}
-                      placeholder="(555) 123-4567"
-                      aria-required="true"
-                      aria-invalid={!!formErrors.phone}
-                      aria-describedby={formErrors.phone ? 'sub-phone-error' : undefined}
-                    />
-                    {formErrors.phone && (
-                      <p id="sub-phone-error" className="text-sm text-red-600" role="alert">
-                        {formErrors.phone}
-                      </p>
-                    )}
-                  </div>
-
-                  {/* Email */}
-                  <div className="space-y-1.5">
-                    <Label htmlFor="sub-email">
-                      Email <span aria-hidden="true" className="text-red-500">*</span>
-                    </Label>
-                    <Input
-                      id="sub-email"
-                      type="email"
-                      value={formData.email}
-                      onChange={(e) => handleFormChange('email', e.target.value)}
-                      placeholder="contact@company.com"
-                      aria-required="true"
-                      aria-invalid={!!formErrors.email}
-                      aria-describedby={formErrors.email ? 'sub-email-error' : undefined}
-                    />
-                    {formErrors.email && (
-                      <p id="sub-email-error" className="text-sm text-red-600" role="alert">
-                        {formErrors.email}
-                      </p>
-                    )}
-                  </div>
-
-                  {/* License Number */}
-                  <div className="space-y-1.5">
-                    <Label htmlFor="sub-license">License Number</Label>
-                    <Input
-                      id="sub-license"
-                      value={formData.licenseNumber}
-                      onChange={(e) => handleFormChange('licenseNumber', e.target.value)}
-                      placeholder="e.g. EL-2024-12345"
-                    />
-                  </div>
-
-                  {/* Notes */}
-                  <div className="space-y-1.5">
-                    <Label htmlFor="sub-notes">Notes</Label>
-                    <Textarea
-                      id="sub-notes"
-                      value={formData.notes}
-                      onChange={(e) => handleFormChange('notes', e.target.value)}
-                      placeholder="Any additional notes about this subcontractor..."
-                      rows={3}
-                    />
-                  </div>
-
-                  <DialogFooter>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => {
-                        setDialogOpen(false);
-                        setFormData({ ...EMPTY_FORM });
-                        setFormErrors({});
-                      }}
-                    >
-                      Cancel
-                    </Button>
-                    <Button type="submit">Add Subcontractor</Button>
-                  </DialogFooter>
-                </form>
-              </DialogContent>
-            </Dialog>
+            {ready && canManage && (
+              <Button className="gap-2" onClick={openAdd} aria-label="Add a new subcontractor">
+                <Plus className="h-4 w-4" aria-hidden="true" />
+                Add Subcontractor
+              </Button>
+            )}
           </div>
 
-          {/*
-            This page has no table behind it. There is no `subcontractors` table
-            in any migration, so nothing entered here survives a reload. Saying
-            so is the whole point: until US-405 lands, a contractor who types in
-            their vendor list and comes back tomorrow finds it gone.
-          */}
-          <div
-            className="rounded-lg border border-amber-500/40 bg-amber-50 dark:bg-amber-950/30 p-4"
-            role="status"
-          >
-            <div className="flex items-start gap-3">
-              <AlertTriangle
-                className="h-5 w-5 shrink-0 mt-0.5 text-amber-600 dark:text-amber-400"
-                aria-hidden="true"
-              />
-              <div className="space-y-1">
-                <p className="font-medium text-amber-900 dark:text-amber-100">
-                  Subcontractor records are not stored yet
-                </p>
-                <p className="text-sm text-amber-800 dark:text-amber-200">
-                  You can try the form and the filters, but anything you enter lives
-                  for this browser session only and is not saved to your company.
-                  Keep your real subcontractor list where it is today.
-                </p>
+          {/* The tables exist in a migration this database has not had applied. */}
+          {!isLoading && !available && (
+            <div className="rounded-lg border border-amber-500/40 bg-amber-50 dark:bg-amber-950/30 p-4" role="status">
+              <div className="flex items-start gap-3">
+                <AlertTriangle className="h-5 w-5 shrink-0 mt-0.5 text-amber-600 dark:text-amber-400" aria-hidden="true" />
+                <div className="space-y-1">
+                  <p className="font-medium text-amber-900 dark:text-amber-100">
+                    Subcontractor records are not available on this server yet
+                  </p>
+                  <p className="text-sm text-amber-800 dark:text-amber-200">
+                    The subcontractor tables have not been set up in this database, so nothing can
+                    be saved here. Keep your subcontractor list where it is today.
+                  </p>
+                </div>
               </div>
             </div>
-          </div>
+          )}
+
+          {!isLoading && !hasCompany && (
+            <Card>
+              <CardContent className="py-10 text-center text-muted-foreground">
+                Your account is not linked to a company, so there is no subcontractor list to show.
+              </CardContent>
+            </Card>
+          )}
+
+          {error && (
+            <Card role="alert">
+              <CardContent className="py-10 flex flex-col items-center gap-3 text-center">
+                <XCircle className="h-8 w-8 text-destructive" aria-hidden="true" />
+                <p className="font-medium">Could not load your subcontractors</p>
+                <p className="text-sm text-muted-foreground max-w-md">{error.message}</p>
+                <Button variant="outline" onClick={() => refetch()}>
+                  Try again
+                </Button>
+              </CardContent>
+            </Card>
+          )}
+
+          {ready && !canManage && (
+            <p className="text-sm text-muted-foreground" role="status">
+              You can view this list. Adding, editing and rating subcontractors is limited to office roles.
+            </p>
+          )}
 
           {/* Filter Bar */}
-          <div
-            className="flex flex-col sm:flex-row gap-3 p-4 bg-muted/50 rounded-lg border"
-            role="search"
-            aria-label="Filter subcontractors"
-          >
-            <div className="flex-1 min-w-0">
-              <Label htmlFor="sub-search" className="sr-only">Search subcontractors</Label>
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" aria-hidden="true" />
-                <Input
-                  id="sub-search"
-                  placeholder="Search by name, trade, contact, or license..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-9"
-                  aria-label="Search subcontractors"
-                />
+          {ready && (
+            <div
+              className="flex flex-col sm:flex-row gap-3 p-4 bg-muted/50 rounded-lg border"
+              role="search"
+              aria-label="Filter subcontractors"
+            >
+              <div className="flex-1 min-w-0">
+                <Label htmlFor="sub-search" className="sr-only">Search subcontractors</Label>
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" aria-hidden="true" />
+                  <Input
+                    id="sub-search"
+                    placeholder="Search by name, trade, contact, or license..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="pl-9"
+                    aria-label="Search subcontractors"
+                  />
+                </div>
+              </div>
+              <div className="flex flex-wrap gap-3">
+                <div>
+                  <Label htmlFor="filter-trade" className="sr-only">Filter by trade</Label>
+                  <Select value={tradeFilter} onValueChange={setTradeFilter}>
+                    <SelectTrigger id="filter-trade" className="w-[160px]" aria-label="Filter by trade type">
+                      <SelectValue placeholder="All Trades" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Trades</SelectItem>
+                      {TRADE_TYPES.map((trade) => (
+                        <SelectItem key={trade} value={trade}>
+                          {trade}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label htmlFor="filter-rating" className="sr-only">Filter by minimum rating</Label>
+                  <Select value={ratingFilter} onValueChange={setRatingFilter}>
+                    <SelectTrigger id="filter-rating" className="w-[160px]" aria-label="Filter by minimum rating">
+                      <SelectValue placeholder="Any Rating" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Any Rating</SelectItem>
+                      <SelectItem value="5">5 Stars</SelectItem>
+                      <SelectItem value="4">4+ Stars</SelectItem>
+                      <SelectItem value="3">3+ Stars</SelectItem>
+                      <SelectItem value="2">2+ Stars</SelectItem>
+                      <SelectItem value="1">1+ Stars</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label htmlFor="filter-insurance" className="sr-only">Filter by insurance status</Label>
+                  <Select value={insuranceFilter} onValueChange={setInsuranceFilter}>
+                    <SelectTrigger id="filter-insurance" className="w-[170px]" aria-label="Filter by insurance status">
+                      <SelectValue placeholder="All Insurance" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Insurance</SelectItem>
+                      <SelectItem value="valid">Valid</SelectItem>
+                      <SelectItem value="expiring">Expiring Soon</SelectItem>
+                      <SelectItem value="expired">Expired</SelectItem>
+                      <SelectItem value="none">No certificate</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
             </div>
-            <div className="flex flex-wrap gap-3">
-              <div>
-                <Label htmlFor="filter-trade" className="sr-only">Filter by trade</Label>
-                <Select value={tradeFilter} onValueChange={setTradeFilter}>
-                  <SelectTrigger id="filter-trade" className="w-[160px]" aria-label="Filter by trade type">
-                    <SelectValue placeholder="All Trades" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Trades</SelectItem>
-                    {TRADE_TYPES.map((trade) => (
-                      <SelectItem key={trade} value={trade}>
-                        {trade}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label htmlFor="filter-rating" className="sr-only">Filter by minimum rating</Label>
-                <Select value={ratingFilter} onValueChange={setRatingFilter}>
-                  <SelectTrigger id="filter-rating" className="w-[160px]" aria-label="Filter by minimum rating">
-                    <SelectValue placeholder="Any Rating" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Any Rating</SelectItem>
-                    <SelectItem value="5">5 Stars</SelectItem>
-                    <SelectItem value="4">4+ Stars</SelectItem>
-                    <SelectItem value="3">3+ Stars</SelectItem>
-                    <SelectItem value="2">2+ Stars</SelectItem>
-                    <SelectItem value="1">1+ Stars</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label htmlFor="filter-insurance" className="sr-only">Filter by insurance status</Label>
-                <Select value={insuranceFilter} onValueChange={setInsuranceFilter}>
-                  <SelectTrigger id="filter-insurance" className="w-[170px]" aria-label="Filter by insurance status">
-                    <SelectValue placeholder="All Insurance" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Insurance</SelectItem>
-                    <SelectItem value="valid">Valid</SelectItem>
-                    <SelectItem value="expiring">Expiring Soon</SelectItem>
-                    <SelectItem value="expired">Expired</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-          </div>
+          )}
 
           {/* Active filter count */}
-          {(activeFilterCount > 0 || searchQuery) && (
+          {ready && (activeFilterCount > 0 || searchQuery) && (
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <span>
                 Showing {filteredSubcontractors.length} of {subcontractors.length} subcontractor{subcontractors.length !== 1 ? 's' : ''}
@@ -739,7 +487,7 @@ const Subcontractors: React.FC = () => {
           )}
 
           {/* Empty State */}
-          {!isLoading && filteredSubcontractors.length === 0 && (
+          {ready && filteredSubcontractors.length === 0 && (
             <Card>
               <CardContent className="flex flex-col items-center justify-center py-16 text-center">
                 <HardHat className="h-12 w-12 text-muted-foreground mb-4" aria-hidden="true" />
@@ -750,15 +498,11 @@ const Subcontractors: React.FC = () => {
                 </h2>
                 <p className="text-muted-foreground mb-4 max-w-md">
                   {subcontractors.length === 0
-                    ? 'Once records are stored, this is where your subcontractors and their prequalification and insurance status will live.'
+                    ? 'Add the vendors you work with to track their prequalification and insurance certificates.'
                     : 'Try adjusting your search or filter criteria to find what you are looking for.'}
                 </p>
-                {subcontractors.length === 0 && (
-                  <Button
-                    onClick={() => setDialogOpen(true)}
-                    className="gap-2"
-                    aria-label="Add your first subcontractor"
-                  >
+                {subcontractors.length === 0 && canManage && (
+                  <Button onClick={openAdd} className="gap-2" aria-label="Add your first subcontractor">
                     <Plus className="h-4 w-4" aria-hidden="true" />
                     Add Subcontractor
                   </Button>
@@ -768,7 +512,7 @@ const Subcontractors: React.FC = () => {
           )}
 
           {/* Subcontractor Cards Grid */}
-          {!isLoading && filteredSubcontractors.length > 0 && (
+          {ready && filteredSubcontractors.length > 0 && (
             <div
               className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
               role="list"
@@ -776,8 +520,8 @@ const Subcontractors: React.FC = () => {
             >
               {filteredSubcontractors.map((sub) => {
                 const insuranceStatus = getInsuranceStatus(sub.insuranceCertificates);
-                const completedPrequal = sub.prequalification.filter((pq) => pq.checked).length;
-                const totalPrequal = sub.prequalification.length;
+                const completedPrequal = countPrequalified(sub.prequalification);
+                const totalPrequal = SUBCONTRACTOR_PREQUALIFICATION.length;
 
                 return (
                   <Card
@@ -792,7 +536,7 @@ const Subcontractors: React.FC = () => {
                           <CardTitle className="text-lg truncate" id={`sub-title-${sub.id}`}>
                             {sub.name}
                           </CardTitle>
-                          <div className="flex items-center gap-2 mt-1">
+                          <div className="flex flex-wrap items-center gap-2 mt-1">
                             <Badge variant="secondary" className="gap-1">
                               <HardHat className="h-3 w-3" aria-hidden="true" />
                               {sub.trade}
@@ -800,12 +544,22 @@ const Subcontractors: React.FC = () => {
                             {getInsuranceBadge(insuranceStatus)}
                           </div>
                         </div>
+                        {canManage && (
+                          <div className="flex shrink-0 gap-1">
+                            <Button variant="ghost" size="icon" onClick={() => openEdit(sub)} aria-label={`Edit ${sub.name}`}>
+                              <Pencil className="h-4 w-4" aria-hidden="true" />
+                            </Button>
+                            <Button variant="ghost" size="icon" onClick={() => setDeleting(sub)} aria-label={`Delete ${sub.name}`}>
+                              <Trash2 className="h-4 w-4" aria-hidden="true" />
+                            </Button>
+                          </div>
+                        )}
                       </div>
-                      {/* Star Rating */}
                       <div className="mt-2">
                         <StarRating
                           rating={sub.rating}
-                          onChange={(r) => handleRatingChange(sub.id, r)}
+                          readonly={!canManage}
+                          onChange={(r) => handleRatingChange(sub, r)}
                           subcontractorName={sub.name}
                         />
                       </div>
@@ -814,30 +568,36 @@ const Subcontractors: React.FC = () => {
                     <CardContent className="space-y-4 flex-1">
                       {/* Contact Info */}
                       <div className="space-y-1.5 text-sm">
-                        <div className="flex items-center gap-2 text-muted-foreground">
-                          <User className="h-3.5 w-3.5 flex-shrink-0" aria-hidden="true" />
-                          <span>{sub.contactName}</span>
-                        </div>
-                        <div className="flex items-center gap-2 text-muted-foreground">
-                          <Phone className="h-3.5 w-3.5 flex-shrink-0" aria-hidden="true" />
-                          <a
-                            href={`tel:${sub.phone}`}
-                            className="hover:underline focus:outline-none focus:ring-2 focus:ring-blue-500 rounded"
-                            aria-label={`Call ${sub.name} at ${sub.phone}`}
-                          >
-                            {sub.phone}
-                          </a>
-                        </div>
-                        <div className="flex items-center gap-2 text-muted-foreground">
-                          <Mail className="h-3.5 w-3.5 flex-shrink-0" aria-hidden="true" />
-                          <a
-                            href={`mailto:${sub.email}`}
-                            className="hover:underline truncate focus:outline-none focus:ring-2 focus:ring-blue-500 rounded"
-                            aria-label={`Email ${sub.name} at ${sub.email}`}
-                          >
-                            {sub.email}
-                          </a>
-                        </div>
+                        {sub.contactName && (
+                          <div className="flex items-center gap-2 text-muted-foreground">
+                            <User className="h-3.5 w-3.5 flex-shrink-0" aria-hidden="true" />
+                            <span>{sub.contactName}</span>
+                          </div>
+                        )}
+                        {sub.phone && (
+                          <div className="flex items-center gap-2 text-muted-foreground">
+                            <Phone className="h-3.5 w-3.5 flex-shrink-0" aria-hidden="true" />
+                            <a
+                              href={`tel:${sub.phone}`}
+                              className="hover:underline focus:outline-none focus:ring-2 focus:ring-blue-500 rounded"
+                              aria-label={`Call ${sub.name} at ${sub.phone}`}
+                            >
+                              {sub.phone}
+                            </a>
+                          </div>
+                        )}
+                        {sub.email && (
+                          <div className="flex items-center gap-2 text-muted-foreground">
+                            <Mail className="h-3.5 w-3.5 flex-shrink-0" aria-hidden="true" />
+                            <a
+                              href={`mailto:${sub.email}`}
+                              className="hover:underline truncate focus:outline-none focus:ring-2 focus:ring-blue-500 rounded"
+                              aria-label={`Email ${sub.name} at ${sub.email}`}
+                            >
+                              {sub.email}
+                            </a>
+                          </div>
+                        )}
                         {sub.licenseNumber && (
                           <div className="flex items-center gap-2 text-muted-foreground">
                             <FileText className="h-3.5 w-3.5 flex-shrink-0" aria-hidden="true" />
@@ -857,28 +617,32 @@ const Subcontractors: React.FC = () => {
                             {completedPrequal}/{totalPrequal}
                           </span>
                         </div>
-                        <fieldset aria-label={`Prequalification checklist for ${sub.name}`}>
+                        <fieldset aria-label={`Prequalification checklist for ${sub.name}`} disabled={!canManage}>
                           <legend className="sr-only">Prequalification items for {sub.name}</legend>
-                          <ul className="space-y-1.5" role="list">
-                            {sub.prequalification.map((pq) => (
-                              <li key={pq.id} className="flex items-start gap-2">
-                                <Checkbox
-                                  id={`${sub.id}-${pq.id}`}
-                                  checked={pq.checked}
-                                  onCheckedChange={() => handlePrequalToggle(sub.id, pq.id)}
-                                  aria-label={pq.label}
-                                  className="mt-0.5"
-                                />
-                                <label
-                                  htmlFor={`${sub.id}-${pq.id}`}
-                                  className={`text-xs leading-tight cursor-pointer ${
-                                    pq.checked ? 'text-muted-foreground line-through' : ''
-                                  }`}
-                                >
-                                  {pq.label}
-                                </label>
-                              </li>
-                            ))}
+                          <ul className="space-y-1.5">
+                            {SUBCONTRACTOR_PREQUALIFICATION.map((pq) => {
+                              const checked = !!sub.prequalification[pq.key];
+                              return (
+                                <li key={pq.key} className="flex items-start gap-2">
+                                  <Checkbox
+                                    id={`${sub.id}-${pq.key}`}
+                                    checked={checked}
+                                    disabled={!canManage}
+                                    onCheckedChange={() => handlePrequalToggle(sub, pq.key)}
+                                    aria-label={pq.label}
+                                    className="mt-0.5"
+                                  />
+                                  <label
+                                    htmlFor={`${sub.id}-${pq.key}`}
+                                    className={`text-xs leading-tight ${canManage ? 'cursor-pointer' : ''} ${
+                                      checked ? 'text-muted-foreground line-through' : ''
+                                    }`}
+                                  >
+                                    {pq.label}
+                                  </label>
+                                </li>
+                              );
+                            })}
                           </ul>
                         </fieldset>
                       </div>
@@ -894,61 +658,84 @@ const Subcontractors: React.FC = () => {
                             No certificates on file
                           </p>
                         ) : (
-                          <ul className="space-y-2" role="list" aria-label={`Insurance certificates for ${sub.name}`}>
+                          <ul className="space-y-2" aria-label={`Insurance certificates for ${sub.name}`}>
                             {sub.insuranceCertificates.map((cert) => {
-                              const days = daysUntilExpiry(cert.expirationDate);
-                              const isExpired = days < 0;
-                              const isExpiring = !isExpired && days <= 30;
+                              const status = certificateStatus(cert.expiresOn);
+                              const days = daysUntil(cert.expiresOn);
 
                               return (
                                 <li
                                   key={cert.id}
                                   className={`text-xs p-2 rounded border ${
-                                    isExpired
+                                    status === 'expired'
                                       ? 'border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-950'
-                                      : isExpiring
+                                      : status === 'expiring'
                                         ? 'border-yellow-200 bg-yellow-50 dark:border-yellow-800 dark:bg-yellow-950'
                                         : 'border-green-200 bg-green-50 dark:border-green-800 dark:bg-green-950'
                                   }`}
                                 >
-                                  <div className="flex items-center justify-between">
-                                    <span className="font-medium">{cert.type}</span>
-                                    {isExpired && (
-                                      <span className="text-red-600 dark:text-red-400 font-medium" role="alert">
-                                        Expired
-                                      </span>
+                                  <div className="flex items-center justify-between gap-2">
+                                    <span className="font-medium">{cert.coverageType}</span>
+                                    {status === 'expired' && (
+                                      <span className="text-red-600 dark:text-red-400 font-medium">Expired</span>
                                     )}
-                                    {isExpiring && (
-                                      <span className="text-yellow-600 dark:text-yellow-400 font-medium" role="alert">
-                                        {days} day{days !== 1 ? 's' : ''} left
+                                    {status === 'expiring' && (
+                                      <span className="text-yellow-700 dark:text-yellow-400 font-medium">
+                                        {days === 0 ? 'Expires today' : `${days} day${days !== 1 ? 's' : ''} left`}
                                       </span>
                                     )}
                                   </div>
-                                  <div className="text-muted-foreground mt-0.5">
-                                    Expires: {formatDate(cert.expirationDate)}
+                                  <div className="flex items-center justify-between gap-2 mt-0.5">
+                                    <span className="text-muted-foreground">
+                                      Expires: {formatDate(cert.expiresOn)}
+                                    </span>
+                                    <span className="flex gap-1">
+                                      <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        className="h-6 w-6"
+                                        onClick={() => handleViewCertificate(cert)}
+                                        aria-label={`Open ${cert.coverageType} certificate for ${sub.name}`}
+                                      >
+                                        <ExternalLink className="h-3.5 w-3.5" aria-hidden="true" />
+                                      </Button>
+                                      {canManage && (
+                                        <Button
+                                          variant="ghost"
+                                          size="icon"
+                                          className="h-6 w-6"
+                                          onClick={() => setRemovingCert({ sub, cert })}
+                                          aria-label={`Remove ${cert.coverageType} certificate for ${sub.name}`}
+                                        >
+                                          <X className="h-3.5 w-3.5" aria-hidden="true" />
+                                        </Button>
+                                      )}
+                                    </span>
                                   </div>
                                 </li>
                               );
                             })}
                           </ul>
                         )}
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="w-full mt-2 gap-1.5"
-                          onClick={handleInsuranceUpload}
-                          aria-label={`Upload insurance certificate for ${sub.name}`}
-                        >
-                          <Upload className="h-3.5 w-3.5" aria-hidden="true" />
-                          Upload Certificate
-                        </Button>
+                        {canManage && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="w-full mt-2 gap-1.5"
+                            onClick={() => setUploadFor(sub)}
+                            aria-label={`Upload insurance certificate for ${sub.name}`}
+                          >
+                            <Upload className="h-3.5 w-3.5" aria-hidden="true" />
+                            Upload Certificate
+                          </Button>
+                        )}
                       </div>
 
                       {/* Notes */}
                       {sub.notes && (
                         <div>
                           <h3 className="text-sm font-medium mb-1">Notes</h3>
-                          <p className="text-xs text-muted-foreground">{sub.notes}</p>
+                          <p className="text-xs text-muted-foreground whitespace-pre-line">{sub.notes}</p>
                         </div>
                       )}
                     </CardContent>
@@ -958,6 +745,44 @@ const Subcontractors: React.FC = () => {
             </div>
           )}
         </div>
+
+        <SubcontractorFormDialog
+          open={formOpen}
+          onOpenChange={(open) => {
+            setFormOpen(open);
+            if (!open) setEditing(null);
+          }}
+          initialValues={editingValues}
+          saving={create.isPending || (!!editing && update.isPending)}
+          onSubmit={handleSave}
+        />
+
+        <CertificateUploadDialog
+          open={!!uploadFor}
+          onOpenChange={(open) => !open && setUploadFor(null)}
+          subcontractorName={uploadFor?.name ?? ''}
+          saving={addCertificate.isPending}
+          onSubmit={handleUpload}
+        />
+
+        <ConfirmDialog
+          open={!!deleting}
+          onOpenChange={(open) => !open && setDeleting(null)}
+          title={`Delete ${deleting?.name ?? 'subcontractor'}?`}
+          description="This removes the subcontractor, their prequalification checklist and every insurance certificate on file for them. It cannot be undone."
+          destructive
+          onConfirm={handleDelete}
+        />
+
+        <ConfirmDialog
+          open={!!removingCert}
+          onOpenChange={(open) => !open && setRemovingCert(null)}
+          title={`Remove ${removingCert?.cert.coverageType ?? ''} certificate?`}
+          description={`The file is deleted from ${removingCert?.sub.name ?? 'this subcontractor'}'s record. It cannot be undone.`}
+          confirmLabel="Remove"
+          destructive
+          onConfirm={handleRemoveCertificate}
+        />
       </AccessiblePageWrapper>
     </DashboardLayout>
   );

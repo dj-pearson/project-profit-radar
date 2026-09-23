@@ -6930,3 +6930,13 @@ existing client-only ScheduleBuilder publicly in marketingRoutes. Removed:
 /admin/complimentary, /admin/customer-service, /about, /brikly, the two
 Coming Soon tool cards and three template links. ApiDocumentation endpoint
 paths are relative to the function base and exempt from the guard.
+
+## US-405 - subcontractors persist (code done, needs migration applied)
+New tables subcontractors and subcontractor_insurance_certificates with
+company_id RLS (read: company minus client_portal; manage: admin, PM,
+office_staff), a composite FK tying certificates to the same company, and a
+private subcontractor-documents bucket. supabase/tests/rls/subcontractors
+(25 assertions) passes. /subcontractors uses useSubcontractors; until the
+tables exist it shows "not available on this server yet". Owner: apply the
+migration and regenerate types. TS 1489 -> 1490: tsgo now reports the
+existing TS2589 in useSupabaseMutation.ts:96 twice; no error in new files.
