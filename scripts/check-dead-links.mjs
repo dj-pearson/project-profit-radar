@@ -70,8 +70,6 @@ const BASELINE = new Map([
   ['/api-management/validate-key', 'ApiDocumentation. Same as /api-management/create-key - documentation of an endpoint, not a link.'],
   ['/about', 'seoConfig sitemap entry. No /about route exists; company information lives on the marketing index.'],
   ['/brikly', 'seoConfig sitemap entry. Not a route - this looks like a brand slug that was never a page.'],
-  ['/compare', 'PSEOPageRenderer link. Comparison pages exist under specific slugs (/brikly-vs-buildertrend); no bare /compare index does.'],
-  ['/software', 'PSEOPageRenderer link. No /software route; the software landing pages have specific slugs.'],
   ['/construction-scheduling', 'EnterpriseSeOService generated link. A marketing slug with no page behind it.'],
   ['/project-management', 'EnterpriseSeOService generated link. Same as /construction-scheduling.'],
   ['/knowledge-base/article/getting-started-complete-setup-guide', 'InternalLinking. The knowledge base routes by a different path shape; these article slugs resolve to nothing.'],

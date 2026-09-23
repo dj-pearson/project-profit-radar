@@ -7,6 +7,8 @@ import { DimensionManager } from '@/components/pseo-admin/DimensionManager';
 import { GenerationQueueManager } from '@/components/pseo-admin/GenerationQueueManager';
 import { PageManager } from '@/components/pseo-admin/PageManager';
 import { CombinationMatrixGenerator } from '@/components/pseo-admin/CombinationMatrixGenerator';
+import { PSEOPageEditor } from './PSEOPageEditor';
+import { publishBlockers, type PseoPageRow } from '@/lib/pseo/pageAuthoring';
 import {
   CONTRACTOR_TYPES,
   PAIN_POINTS,
@@ -263,14 +265,37 @@ export default function PSEOAdminDashboard() {
   };
 
   const handleBulkGenerate = async (tier: number) => {
-    toast.info(`Generation for Tier ${tier} would be triggered via the n8n workflow or Edge Function pipeline.`);
+    // No generator writes pseo_pages; pages are written in the Write tab.
+    toast.info(`Tier ${tier}: there is no automatic generator. Write each page in the Write tab.`);
+    setActiveTab('write');
   };
 
-  // Page handlers
-  const handlePublish = async (id: string) => {
+  // Authoring (US-386): the editor validates, this persists an unpublished draft.
+  const handleSaveDraft = async (row: PseoPageRow): Promise<boolean> => {
     const { error } = await supabase
       .from('pseo_pages' as any)
-      .update({ is_published: true, generation_status: 'published' } as any)
+      .upsert(row as any, { onConflict: 'combination_key' });
+    if (error) {
+      toast.error(`Failed to save draft: ${error.message}`);
+      return false;
+    }
+    toast.success(`Draft saved: ${row.canonical_url}`);
+    fetchPages();
+    return true;
+  };
+
+  // Page handlers. A page is validated again before it goes live, so a row
+  // written some other way (or edited in the table) cannot publish broken.
+  const handlePublish = async (id: string) => {
+    const page = pages.find((p) => p.id === id);
+    const blockers = page ? publishBlockers(page) : ['Page not found'];
+    if (blockers.length) {
+      toast.error(`Cannot publish: ${blockers[0]}${blockers.length > 1 ? ` (+${blockers.length - 1} more)` : ''}`);
+      return;
+    }
+    const { error } = await supabase
+      .from('pseo_pages' as any)
+      .update({ is_published: true, generation_status: 'published', published_at: new Date().toISOString() } as any)
       .eq('id', id);
     if (error) {
       toast.error(`Failed to publish: ${error.message}`);
@@ -307,14 +332,23 @@ export default function PSEOAdminDashboard() {
   };
 
   const handleBulkPublish = async (ids: string[]) => {
+    const publishable = ids.filter((id) => {
+      const page = pages.find((p) => p.id === id);
+      return page && publishBlockers(page).length === 0;
+    });
+    const skipped = ids.length - publishable.length;
+    if (!publishable.length) {
+      toast.error(`None of the ${ids.length} selected pages pass validation`);
+      return;
+    }
     const { error } = await supabase
       .from('pseo_pages' as any)
-      .update({ is_published: true, generation_status: 'published' } as any)
-      .in('id', ids);
+      .update({ is_published: true, generation_status: 'published', published_at: new Date().toISOString() } as any)
+      .in('id', publishable);
     if (error) {
       toast.error(`Failed to bulk publish: ${error.message}`);
     } else {
-      toast.success(`Published ${ids.length} pages`);
+      toast.success(`Published ${publishable.length} pages${skipped ? `; ${skipped} failed validation and stayed unpublished` : ''}`);
       fetchPages();
     }
   };
@@ -371,8 +405,9 @@ export default function PSEOAdminDashboard() {
       <PSEOStatsCards stats={stats} isLoading={isLoading} />
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-5">
+        <TabsList className="grid w-full grid-cols-6">
           <TabsTrigger value="overview">Pages</TabsTrigger>
+          <TabsTrigger value="write">Write</TabsTrigger>
           <TabsTrigger value="queue">Queue</TabsTrigger>
           <TabsTrigger value="dimensions">Dimensions</TabsTrigger>
           <TabsTrigger value="matrix">Matrix</TabsTrigger>
@@ -388,6 +423,10 @@ export default function PSEOAdminDashboard() {
             onRegenerate={handleRegenerate}
             onBulkPublish={handleBulkPublish}
           />
+        </TabsContent>
+
+        <TabsContent value="write" className="mt-4">
+          <PSEOPageEditor existingPages={pages} onSave={handleSaveDraft} />
         </TabsContent>
 
         <TabsContent value="queue" className="mt-4">
@@ -455,36 +494,20 @@ export default function PSEOAdminDashboard() {
               </button>
             </div>
             <div className="border rounded-lg p-6 space-y-4">
-              <h3 className="font-semibold text-lg">Generation Pipeline</h3>
+              <h3 className="font-semibold text-lg">How pages get written</h3>
               <p className="text-sm text-muted-foreground">
-                The generation pipeline is triggered via n8n workflow or can be called through
-                the Supabase Edge Function. Configure your API keys and schedule in the n8n
-                dashboard.
+                There is no automatic generator. Each page is written in the Write tab, saved as an
+                unpublished draft, and published from the Pages tab.
               </p>
-              <div className="text-sm space-y-1">
-                <div><span className="text-muted-foreground">Model:</span> claude-sonnet-4-20250514</div>
-                <div><span className="text-muted-foreground">Rate Limit:</span> 1 request / 8 seconds</div>
-                <div><span className="text-muted-foreground">Daily Cap:</span> 50 pages</div>
-                <div><span className="text-muted-foreground">Batch Size:</span> 10 pages per run</div>
-              </div>
             </div>
             <div className="border rounded-lg p-6 space-y-4">
-              <h3 className="font-semibold text-lg">Quality Control</h3>
-              <p className="text-sm text-muted-foreground">
-                10 automated QC checks run before any page is published. Pages that fail QC are
-                marked as "Needs Review" and can be inspected in the Pages tab.
-              </p>
+              <h3 className="font-semibold text-lg">Checks before a page can publish</h3>
               <ul className="text-sm space-y-1 list-disc list-inside text-muted-foreground">
-                <li>Schema completeness</li>
-                <li>Minimum word count</li>
-                <li>Forbidden words check</li>
-                <li>Duplicate FAQ detection</li>
-                <li>Internal link validity</li>
-                <li>Pricing accuracy</li>
-                <li>Array count validation</li>
-                <li>Contractor specificity</li>
-                <li>JSON validity</li>
-                <li>Schema version match</li>
+                <li>SEO title 15-70 characters, description 50-160</li>
+                <li>Hero plus a pain or solution section, with no empty fields</li>
+                <li>URL built from taxonomy slugs, so it matches a pSEO route</li>
+                <li>Related links only to pSEO URLs, shown once the target is published</li>
+                <li>Under 300 words of page-specific copy: published but noindex</li>
               </ul>
             </div>
             <div className="border rounded-lg p-6 space-y-4">

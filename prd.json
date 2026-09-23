@@ -5980,8 +5980,8 @@
         "A quality bar is recorded: a page with fewer than N words of unique copy is noindexed"
       ],
       "priority": 3,
-      "passes": false,
-      "notes": "PROPOSED 2026-09-09 (production-readiness audit, six parallel reviews: auth, security, page/data flows, UI/UX, SEO, ops). Content quality matters more than volume; 60 thin pages can hurt the domain. Do US-380 and US-381 first."
+      "passes": true,
+      "notes": "PROPOSED 2026-09-09 (production-readiness audit, six parallel reviews: auth, security, page/data flows, UI/UX, SEO, ops). Content quality matters more than volume; 60 thin pages can hurt the domain. Do US-380 and US-381 first. || Admin Write tab on /admin/pseo with Zod-checked drafts saved unpublished; publish (single/bulk) re-validates and sets published_at. Related links only to published pSEO rows; breadcrumb section items are text; BreadcrumbList JSON-LD; pages under 300 words of page copy render noindex,follow. Owner: author and publish the first pages; decide on /software and /compare index pages."
     },
     {
       "id": "US-387",

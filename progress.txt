@@ -6865,3 +6865,13 @@ EquipmentEditForm. Old paths that were linked anywhere redirect to the
 survivor (/equipment-management -> /equipment). Nav configs, OperationsHub and
 lazyRoutes updated; docs/INFORMATION_ARCHITECTURE.md lists the canonical page
 per area. Unreferenced-component baseline 229 -> 222.
+
+## US-386 - pSEO content path
+/admin/pseo has a Write tab: pick page type and taxonomy, URL built from
+taxonomy slugs, Zod check, saved unpublished as Needs Review. Publish (single
+and bulk) re-runs the check and sets published_at; bulk skips failures. The
+renderer only links related pages that have a published row, renders the
+breadcrumb section as text (/software and /compare have no route), emits
+BreadcrumbList, and marks thin pages (<300 words of page copy) noindex,follow.
+Settings text no longer claims an n8n pipeline. No generator was built.
+Owner: write and publish the first pages.

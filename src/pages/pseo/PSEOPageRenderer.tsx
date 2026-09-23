@@ -16,6 +16,14 @@ import {
 import { Skeleton } from '@/components/ui/skeleton';
 import { ArrowRight, Check, ChevronRight, Users } from 'lucide-react';
 import type { PSEOPage, ContractorPainPageSchema } from '@/types/pseo';
+import {
+  PSEO_MIN_UNIQUE_WORDS,
+  breadcrumbListSchema,
+  buildBreadcrumbs,
+  countUniqueCopyWords,
+  filterPublishedLinks,
+  relatedPseoUrls,
+} from '@/lib/pseo/pageAuthoring';
 
 function Breadcrumb({ items }: { items: Array<{ label: string; href?: string }> }) {
   return (
@@ -274,6 +282,9 @@ function CTABlock() {
 export default function PSEOPageRenderer() {
   const params = useParams();
   const [page, setPage] = useState<PSEOPage | null>(null);
+  // Canonical URLs of the related pages that are published right now. A
+  // related link to anything else would land on the not-found view.
+  const [publishedRelated, setPublishedRelated] = useState<Set<string>>(new Set());
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -286,7 +297,6 @@ export default function PSEOPageRenderer() {
     setError(null);
 
     // Build the canonical URL from params
-    const pathSegments = Object.values(params).filter(Boolean);
     const canonicalPath = '/' + window.location.pathname.replace(/^\//, '');
 
     const { data, error: fetchError } = await supabase
@@ -308,7 +318,22 @@ export default function PSEOPageRenderer() {
       .update({ view_count: ((data as any).view_count || 0) + 1 } as any)
       .eq('id', (data as any).id);
 
-    setPage(data as unknown as PSEOPage);
+    const loaded = data as unknown as PSEOPage;
+    const relatedUrls = relatedPseoUrls(
+      (loaded.page_schema as unknown as Partial<ContractorPainPageSchema>)?.related_pages,
+    );
+    let published = new Set<string>();
+    if (relatedUrls.length) {
+      const { data: rows } = await supabase
+        .from('pseo_pages' as any)
+        .select('canonical_url')
+        .in('canonical_url', relatedUrls)
+        .eq('is_published', true);
+      published = new Set(((rows as unknown as Array<{ canonical_url: string }>) ?? []).map((r) => r.canonical_url));
+    }
+
+    setPublishedRelated(published);
+    setPage(loaded);
     setIsLoading(false);
   };
 
@@ -342,17 +367,11 @@ export default function PSEOPageRenderer() {
 
   const schema = page.page_schema as unknown as ContractorPainPageSchema;
 
-  // Build breadcrumb from page type
-  const breadcrumbItems = [
-    { label: 'Home', href: '/' },
-    { label: 'Software', href: '/software' },
-  ];
-  if (page.page_type === 'comparison') {
-    breadcrumbItems[1] = { label: 'Compare', href: '/compare' };
-    breadcrumbItems.push({ label: page.seo_title });
-  } else {
-    breadcrumbItems.push({ label: page.seo_title });
-  }
+  const breadcrumbItems = buildBreadcrumbs(page);
+  const breadcrumbSchema = breadcrumbListSchema(breadcrumbItems, page.canonical_url, (p) => toCanonicalUrl(p));
+  const relatedPages = filterPublishedLinks(schema.related_pages, publishedRelated);
+  // Quality bar (US-386): thin pages stay reachable but out of the index.
+  const isThin = countUniqueCopyWords(schema) < PSEO_MIN_UNIQUE_WORDS;
 
   const softwareSchema = {
     '@context': 'https://schema.org',
@@ -376,6 +395,7 @@ export default function PSEOPageRenderer() {
       <Helmet>
         <title>{page.seo_title}</title>
         <meta name="description" content={page.seo_description} />
+        {isThin && <meta name="robots" content="noindex, follow" />}
         <link rel="canonical" href={toCanonicalUrl(page.canonical_url)} />
         {schema.seo?.keywords && (
           <meta name="keywords" content={schema.seo.keywords.join(', ')} />
@@ -384,6 +404,7 @@ export default function PSEOPageRenderer() {
         <meta property="og:description" content={page.seo_description} />
         <meta property="og:type" content="website" />
         <script type="application/ld+json">{JSON.stringify(softwareSchema)}</script>
+        <script type="application/ld+json">{jsonLdSafe(breadcrumbSchema)}</script>
       </Helmet>
 
       <div className="min-h-screen">
@@ -403,9 +424,7 @@ export default function PSEOPageRenderer() {
         {schema.differentiation && <DifferentiationSection diff={schema.differentiation} />}
         {schema.pricing && <PricingSection pricing={schema.pricing} />}
         {schema.faq && schema.faq.length > 0 && <FAQSection faqs={schema.faq} />}
-        {schema.related_pages && schema.related_pages.length > 0 && (
-          <RelatedPagesSection pages={schema.related_pages} />
-        )}
+        {relatedPages.length > 0 && <RelatedPagesSection pages={relatedPages} />}
         <CTABlock />
       </div>
     </>
