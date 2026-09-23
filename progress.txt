@@ -6393,3 +6393,22 @@ cross-company read on `user_roles` are gone, and `AuthContext` no longer
 overrides the profile role. The SQL test runs each case before and after the
 migration: the demoted user, the newer user and the self-granted root_admin.
 Dropping the table waits for a later release.
+
+## US-351, most of it: bots can't write straight into the lead tables
+
+`leads`, `demo_requests`, `sales_contact_requests` and `calculator_leads`
+accepted inserts from anon with `WITH CHECK (true)`. The public forms go through
+edge functions that validate and rate-limit, but a bot could skip those and POST
+to `/rest/v1/leads`. The policy on `leads` also covered signed-in users, so any
+of them could add a lead to any company.
+
+The four policies are gone. The edge functions were already on the service
+role, and calculator leads come in through a SECURITY DEFINER function, so no
+working path lost access. CRM screens get a company-scoped insert policy in
+place of the open one, which keeps every role adding leads to its own company.
+
+The rate limiter now takes `failClosed`, and the three public form functions
+use it: if the limiter can't answer, the request is refused. Authenticated
+endpoints still fail open.
+
+Turnstile is still to do.

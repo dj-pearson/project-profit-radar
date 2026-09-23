@@ -36,6 +36,14 @@ export interface RateLimitConfig {
   maxRequests: number;
   /** Time window in minutes */
   windowMinutes: number;
+  /**
+   * Deny when the limiter itself cannot answer (US-351). For anonymous
+   * endpoints that write, such as the public lead forms: failing open there
+   * means a database hiccup removes the only brake on a bot. Authenticated
+   * endpoints keep the default (open), where an outage should not lock paying
+   * users out.
+   */
+  failClosed?: boolean;
 }
 
 export interface RateLimitResult {
@@ -58,6 +66,9 @@ export async function checkRateLimit(
   config: RateLimitConfig
 ): Promise<RateLimitResult> {
   const { identifier, endpoint, maxRequests, windowMinutes } = config;
+  const unanswered = (): RateLimitResult => config.failClosed
+    ? { allowed: false, requestCount: 0, retryAfter: 60, limit: maxRequests }
+    : { allowed: true, requestCount: 0, retryAfter: 0, limit: maxRequests };
 
   try {
     // US-307: this used to count rows in rate_limit_violations and insert one
@@ -79,15 +90,15 @@ export async function checkRateLimit(
       // Fail open, deliberately: a limiter that 500s when the database is
       // unreachable takes the endpoint down with it. Logged loudly because the
       // previous version failed open silently and nobody noticed for a year.
-      console.error('[RateLimit] consume_rate_limit failed, allowing request:', error);
-      return { allowed: true, requestCount: 0, retryAfter: 0, limit: maxRequests };
+      console.error(`[RateLimit] consume_rate_limit failed, ${config.failClosed ? 'denying' : 'allowing'} request:`, error);
+      return unanswered();
     }
 
     // The function RETURNS TABLE, so PostgREST hands back an array of one row.
     const row = Array.isArray(data) ? data[0] : data;
     if (!row) {
-      console.error('[RateLimit] consume_rate_limit returned no row, allowing request');
-      return { allowed: true, requestCount: 0, retryAfter: 0, limit: maxRequests };
+      console.error(`[RateLimit] consume_rate_limit returned no row, ${config.failClosed ? 'denying' : 'allowing'} request`);
+      return unanswered();
     }
 
     if (!row.allowed) {
@@ -103,8 +114,8 @@ export async function checkRateLimit(
       limit: maxRequests,
     };
   } catch (err) {
-    console.error('[RateLimit] Unexpected error, allowing request:', err);
-    return { allowed: true, requestCount: 0, retryAfter: 0, limit: maxRequests };
+    console.error(`[RateLimit] Unexpected error, ${config.failClosed ? 'denying' : 'allowing'} request:`, err);
+    return unanswered();
   }
 }
 

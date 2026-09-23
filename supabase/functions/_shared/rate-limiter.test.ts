@@ -223,3 +223,35 @@ describe('enforceRateLimit', () => {
     expect(blocked?.status).toBe(429);
   });
 });
+
+describe('checkRateLimit with failClosed, for anonymous writes (US-351)', () => {
+  const failures = {
+    'an RPC error': { rpc: () => Promise.resolve({ data: null, error: { message: 'boom' } }) },
+    'no row': { rpc: () => Promise.resolve({ data: [], error: null }) },
+    'a thrown client': { rpc: () => { throw new Error('network'); } },
+  };
+
+  for (const [name, client] of Object.entries(failures)) {
+    it(`denies on ${name}, with a retry hint`, async () => {
+      const err = vi.spyOn(console, 'error').mockImplementation(() => {});
+      const r = await checkRateLimit(client, { ...CONFIG, failClosed: true });
+      expect(r.allowed).toBe(false);
+      expect(r.retryAfter).toBeGreaterThan(0);
+      err.mockRestore();
+    });
+  }
+
+  it('still allows a request the limiter actually answered yes to', async () => {
+    const client = { rpc: () => Promise.resolve({ data: [{ allowed: true, request_count: 1, retry_after: 0 }], error: null }) };
+    expect((await checkRateLimit(client, { ...CONFIG, failClosed: true })).allowed).toBe(true);
+  });
+});
+
+describe('the public lead forms fail closed (US-351)', () => {
+  it.each(['capture-lead', 'handle-demo-request', 'handle-sales-contact'])('%s passes failClosed: true', async (fn) => {
+    const { readFileSync } = await import('node:fs');
+    const src = readFileSync(`supabase/functions/${fn}/index.ts`, 'utf8');
+    const call = src.slice(src.indexOf('checkRateLimit(supabaseClient, {'));
+    expect(call.slice(0, call.indexOf('});'))).toContain('failClosed: true');
+  });
+});

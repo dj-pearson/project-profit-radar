@@ -5511,7 +5511,7 @@
       ],
       "priority": 2,
       "passes": false,
-      "notes": "PROPOSED 2026-09-09 (production-readiness audit, six parallel reviews: auth, security, page/data flows, UI/UX, SEO, ops). MEDIUM. Turnstile is free on Cloudflare, which is already the CDN. Site key via VITE_TURNSTILE_SITE_KEY, secret via edge secret."
+      "notes": "PROPOSED 2026-09-09 (production-readiness audit, six parallel reviews: auth, security, page/data flows, UI/UX, SEO, ops). MEDIUM. Turnstile is free on Cloudflare, which is already the CDN. Site key via VITE_TURNSTILE_SITE_KEY, secret via edge secret. || AC1, AC3, AC4 DONE 2026-09-23; AC2 (Turnstile) open. Migration 20260923050000 drops the four open INSERT policies. On leads the dropped policy was TO anon, authenticated, so it also let any signed-in user add a lead to any company; it is replaced by 'Company members can create leads' (FOR INSERT TO authenticated, company_id = get_user_company(auth.uid())) so every role keeps adding leads to its own company from QuickLeadCapture/useCRM/CRMLeads. The three functions already used the service role; calculator leads come through the SECURITY DEFINER capture_calculator_lead, not a direct insert, so nothing that works today loses its path. AC3: checkRateLimit takes failClosed; on an RPC error, no row, or a throw it denies with retryAfter 60. capture-lead, handle-demo-request and handle-sales-contact pass it; authenticated endpoints keep failing open. AC4: supabase/tests/rls/public_lead_inserts.test.sql on real Postgres - anon denied on all four tables (and shown allowed before), a field_supervisor can still add to their own company but not another, service_role still inserts. rate-limiter.test.ts +7 cases."
     },
     {
       "id": "US-352",

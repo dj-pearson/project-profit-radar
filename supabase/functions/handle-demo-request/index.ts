@@ -71,6 +71,8 @@ serve(async (req) => {
       identifier: clientIP,
       endpoint: 'handle-demo-request',
       ...RATE_LIMITS.AUTH,
+      // Anonymous write: if the limiter cannot answer, refuse (US-351).
+      failClosed: true,
     });
     if (!rl.allowed) return rateLimitResponse(rl, corsHeaders);
 

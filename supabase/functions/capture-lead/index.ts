@@ -130,6 +130,8 @@ serve(async (req) => {
       endpoint: 'capture-lead',
       maxRequests: 10, // Allow 10 leads per minute per IP
       windowMinutes: 1,
+      // Anonymous write: if the limiter cannot answer, refuse (US-351).
+      failClosed: true,
     });
 
     if (!rateLimitResult.allowed) {
