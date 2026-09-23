@@ -14,6 +14,8 @@ interface MFAVerificationModalProps {
   onSuccess: () => void;
   userId: string;
   userEmail?: string;
+  /** The held session's token; verify-mfa-login identifies the user by it (US-346). */
+  accessToken: string;
 }
 
 export const MFAVerificationModal: React.FC<MFAVerificationModalProps> = ({
@@ -22,6 +24,7 @@ export const MFAVerificationModal: React.FC<MFAVerificationModalProps> = ({
   onSuccess,
   userId,
   userEmail,
+  accessToken,
 }) => {
   const { toast } = useToast();
   const [code, setCode] = useState(['', '', '', '', '', '']);
@@ -113,6 +116,7 @@ export const MFAVerificationModal: React.FC<MFAVerificationModalProps> = ({
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
+            Authorization: `Bearer ${accessToken}`,
             apikey: supabaseAnonKey,
           },
           body: JSON.stringify({
@@ -171,6 +175,7 @@ export const MFAVerificationModal: React.FC<MFAVerificationModalProps> = ({
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
+            Authorization: `Bearer ${accessToken}`,
             apikey: supabaseAnonKey,
           },
           body: JSON.stringify({
@@ -247,6 +252,7 @@ export const MFAVerificationModal: React.FC<MFAVerificationModalProps> = ({
                   className="w-12 h-14 text-center text-2xl font-mono"
                   disabled={isVerifying}
                   autoComplete="one-time-code"
+                  aria-label={`Digit ${index + 1} of 6`}
                 />
               ))}
             </div>

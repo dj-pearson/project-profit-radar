@@ -58,7 +58,7 @@ const PUBLIC_BY_DESIGN = new Set([
   'email-unsubscribe', 'track-referral', 'process-referral-signup',
   'google-calendar-callback', 'outlook-calendar-callback', 'gsc-oauth-callback',
   'sso-oauth-callback', 'sso-saml-callback', 'sso-oauth-init', 'sso-saml-init',
-  'sso-ldap-auth', 'verify-mfa-login', 'webhook-verify', 'api-auth',
+  'sso-ldap-auth', 'webhook-verify', 'api-auth',
   'health-check', 'oauth-proxy', 'generate-sitemap-file', 'sitemap-generator',
   'verify-domain', 'create-root-admin',
   // webhook-delivery was here and did not belong. The list is for functions a

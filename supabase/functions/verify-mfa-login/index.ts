@@ -11,12 +11,15 @@ import { TOTP } from "https://deno.land/x/otpauth@v9.2.4/dist/otpauth.esm.js";
 import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
 import { validateRequest, createErrorResponse, sanitizeError } from "../_shared/validation.ts";
 import { getCorsHeaders, handleCorsPreflightRequest } from "../_shared/secure-cors.ts";
-import { checkRateLimit, getClientIP, rateLimitResponse } from "../_shared/rate-limiter.ts";
+import { checkRateLimit, rateLimitResponse } from "../_shared/rate-limiter.ts";
 import { writeSecurityLog } from "../_shared/security-log.ts";
+import { initializeAuthContext } from "../_shared/auth-helpers.ts";
 
 // Input validation schema
+// userId is optional and, when sent, must equal the caller (US-346). Older
+// builds of the modal sent it; the identity now comes from the bearer.
 const VerifyMFALoginSchema = z.object({
-  userId: z.string().uuid("Invalid user ID"),
+  userId: z.string().uuid("Invalid user ID").optional(),
   code: z
     .string()
     .length(6, "Code must be exactly 6 digits")
@@ -35,14 +38,14 @@ const VerifyMFALoginSchema = z.object({
 
 // Backup code validation schema
 const VerifyBackupCodeSchema = z.object({
-  userId: z.string().uuid("Invalid user ID"),
+  userId: z.string().uuid("Invalid user ID").optional(),
   code: z.string().min(6, "Invalid backup code").max(12),
   sessionToken: z.string().optional(),
 });
 
 // Check MFA status schema
 const CheckMFAStatusSchema = z.object({
-  userId: z.string().uuid("Invalid user ID"),
+  userId: z.string().uuid("Invalid user ID").optional(),
 });
 
 serve(async (req) => {
@@ -59,18 +62,19 @@ serve(async (req) => {
       { auth: { persistSession: false } }
     );
 
-    // Rate limit: 5 attempts per minute for MFA verification (prevents brute-force on 6-digit codes)
-    const clientIP = getClientIP(req);
-    const rateLimitResult = await checkRateLimit(supabaseClient, {
-      identifier: clientIP,
-      endpoint: 'verify-mfa-login',
-      maxRequests: 5,
-      windowMinutes: 1,
-    });
-
-    if (!rateLimitResult.allowed) {
-      return rateLimitResponse(rateLimitResult, corsHeaders);
+    // The caller is whoever the bearer says, never the body (US-346). This
+    // used to run on the service role with userId from the body and no auth,
+    // so "check" told anyone whether any user id had MFA enrolled, and the
+    // verify actions could be driven for any account.
+    //
+    // This runs right after signInWithPassword, so the caller holds a real
+    // session; that session is exactly what the client withholds from the app
+    // until verify succeeds.
+    const authContext = await initializeAuthContext(req);
+    if (!authContext) {
+      return createErrorResponse(401, "Unauthorized", corsHeaders);
     }
+    const callerId: string = authContext.user.id;
 
     // Parse request body
     let requestBody;
@@ -80,7 +84,30 @@ serve(async (req) => {
       return createErrorResponse(400, "Invalid request body", corsHeaders);
     }
 
+    if (requestBody?.userId !== undefined && requestBody.userId !== callerId) {
+      return createErrorResponse(403, "userId does not match the signed-in user", corsHeaders);
+    }
+
     const action = requestBody.action || "verify";
+
+    // Rate limit the code-guessing actions: 5 attempts per minute per account
+    // (not per IP, which an attacker rotates),
+    // which caps a 6-digit brute force. "check" is not limited here, because
+    // it runs on every sign-in and a per-IP limit would lock out an office
+    // behind one address.
+    if (action === "verify" || action === "verify_backup") {
+      const rateLimitResult = await checkRateLimit(supabaseClient, {
+        identifier: callerId,
+        endpoint: 'verify-mfa-login',
+        maxRequests: 5,
+        windowMinutes: 1,
+      });
+
+      if (!rateLimitResult.allowed) {
+        return rateLimitResponse(rateLimitResult, corsHeaders);
+      }
+    }
+
 
     switch (action) {
       case "check": {
@@ -90,7 +117,7 @@ serve(async (req) => {
           return createErrorResponse(400, validation.error, corsHeaders);
         }
 
-        const { userId } = validation.data;
+        const userId = callerId;
 
         // Check user_security table for MFA status
         const { data: securityData, error: securityError } = await supabaseClient
@@ -136,7 +163,8 @@ serve(async (req) => {
           return createErrorResponse(400, validation.error, corsHeaders);
         }
 
-        const { userId, code, trustDevice, deviceInfo } = validation.data;
+        const { code, trustDevice, deviceInfo } = validation.data;
+        const userId = callerId;
 
         // Get the stored TOTP secret
         const { data: securityData, error: fetchError } = await supabaseClient
@@ -282,7 +310,8 @@ serve(async (req) => {
           return createErrorResponse(400, validation.error, corsHeaders);
         }
 
-        const { userId, code } = validation.data;
+        const { code } = validation.data;
+        const userId = callerId;
 
         // Get backup codes
         const { data: securityData, error: fetchError } = await supabaseClient
@@ -375,10 +404,10 @@ serve(async (req) => {
       case "check_trusted_device": {
         // Check if current device is trusted
         const deviceId = requestBody.deviceId;
-        const userId = requestBody.userId;
+        const userId = callerId;
 
-        if (!deviceId || !userId) {
-          return createErrorResponse(400, "Device ID and User ID required", corsHeaders);
+        if (!deviceId) {
+          return createErrorResponse(400, "Device ID required", corsHeaders);
         }
 
         const { data: trustedDevice } = await supabaseClient

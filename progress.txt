@@ -6300,3 +6300,31 @@ the InResponseTo, time, Audience and Destination checks, is still open. It
 needs a Deno-compatible canonicalization library and an IdP to test against.
 The flag lives in `_shared/saml-availability.ts`, with a web mirror a test
 keeps in step.
+
+## US-346: MFA is now asked for at sign-in
+
+Users could enrol TOTP, and nothing ever challenged them. `signIn` now raises
+a gate before `signInWithPassword`, so the SIGNED_IN event is stashed rather
+than applied, asks `verify-mfa-login` whether the account has a factor, and
+either lets the session in or sets `mfaChallenge`. The sign-in page mounts
+`MFAVerificationModal` for it. Cancelling, a failed check, or a reload
+mid-challenge signs that one session out.
+
+`verify-mfa-login` used to run on the service role with the user id from the
+body and no auth, so its `check` action told anyone whether any user id had MFA.
+It now identifies the caller from the bearer. The client still sends `userId`
+and the function accepts it when it matches, so an older deployment of the
+function keeps working until it is redeployed by hand.
+
+Two things found on the way. The sign-in page ignored the error `signIn`
+returned, so a wrong password showed nothing; it now toasts. And the rate limit
+was 5 per minute per IP on every action, including the check that now runs on
+every sign-in, which would have locked out an office behind one address. It is
+now per account, on the two code-guessing actions only.
+
+What this does not do: the gate is in the browser. After the password step the
+tokens are real, so someone with the password who calls the API directly is not
+stopped. Closing that needs server-side enforcement (AAL2 or an RLS check),
+which is a bigger change than this story.
+
+10 new tests. Removing the listener gate fails 3 of them.

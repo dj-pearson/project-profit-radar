@@ -18,6 +18,7 @@ import { setErrorLoggingUser } from "@/services/errorLoggingService";
 import { logger } from "@/lib/logger";
 import { purgeSupabaseSessionStorage } from "@/lib/supabaseStorage";
 import { useSupabaseSessionResume } from "@/hooks/useSupabaseSessionResume";
+import { checkMfaRequired, markMfaPending, readDeviceId, readMfaPending } from "@/lib/auth/mfaChallenge";
 import {
   checkLoginAttempt,
   recordFailedLogin,
@@ -128,12 +129,19 @@ interface VerifyOTPResult {
   error?: string;
 }
 
+/** A signed-in session held back until its MFA code is verified (US-346). */
+export interface MfaChallenge {
+  userId: string;
+  email: string | null;
+  accessToken: string;
+}
+
 interface AuthContextType {
   user: User | null;
   session: Session | null;
   userProfile: UserProfile | null;
   loading: boolean;
-  signIn: (email: string, password: string) => Promise<{ error?: string }>;
+  signIn: (email: string, password: string) => Promise<{ error?: string; mfaRequired?: boolean }>;
   signInWithGoogle: () => Promise<{ error?: string }>;
   signInWithApple: () => Promise<{ error?: string }>;
   signUp: (
@@ -145,6 +153,11 @@ interface AuthContextType {
   resetPassword: (email: string) => Promise<{ error?: string }>;
   updateProfile: (updates: Partial<UserProfile>) => Promise<void>;
   refreshProfile: () => Promise<void>;
+  // MFA challenge after password sign-in (US-346). While set, the session
+  // exists but user, session and userProfile stay null.
+  mfaChallenge: MfaChallenge | null;
+  completeMfaChallenge: () => Promise<void>;
+  cancelMfaChallenge: () => Promise<void>;
   // OTP-based authentication methods
   sendOTP: (options: SendOTPOptions) => Promise<{ error?: string; expiresInMinutes?: number }>;
   verifyOTP: (options: VerifyOTPOptions) => Promise<VerifyOTPResult>;
@@ -181,6 +194,11 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
   useSupabaseSessionResume();
 
   const successfulProfiles = useRef<Map<string, UserProfile>>(new Map());
+  // US-346: while mfaGateRef is set, auth events are stashed instead of
+  // applied, so a password-only session cannot reach the app.
+  const [mfaChallenge, setMfaChallenge] = useState<MfaChallenge | null>(null);
+  const mfaGateRef = useRef(false);
+  const pendingSessionRef = useRef<Session | null>(null);
   const sessionTimeoutRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const lastActivityRef = useRef<number>(Date.now());
   const inactivityTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -525,6 +543,20 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
         }
 
         logger.debug("Initial session:", session?.user?.id || "none");
+
+        // A session left behind by an MFA challenge that was never finished
+        // (reload, closed tab) has not passed MFA. Sign it out (US-346).
+        if (session?.user && readMfaPending() === session.user.id) {
+          logger.warn("Discarding a session that never passed its MFA challenge");
+          markMfaPending(null);
+          void supabase.auth.signOut({ scope: "local" });
+          setSession(null);
+          setUser(null);
+          setUserProfile(null);
+          setLoading(false);
+          return;
+        }
+
         setSession(session);
         setUser(session?.user ?? null);
 
@@ -681,6 +713,15 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
         }
       }
 
+      // US-346: hold a session that has not passed MFA. During signIn the
+      // gate is up and the session is stashed for release after verify; a
+      // leftover pending marker (abandoned challenge) is ignored here and
+      // signed out by the initial-session path.
+      if (session?.user && (mfaGateRef.current || readMfaPending() === session.user.id)) {
+        if (mfaGateRef.current) pendingSessionRef.current = session;
+        return;
+      }
+
       setSession(session);
       setUser(session?.user ?? null);
 
@@ -797,6 +838,40 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
     }
   }, [user?.id, userProfile?.role, userProfile?.email, userProfile?.company_id]);
 
+  // Let a held session into the app: the same state the auth listener would
+  // have set, applied once MFA has passed or was not needed (US-346).
+  async function releaseSession(held: Session) {
+    const latest = pendingSessionRef.current ?? held;
+    mfaGateRef.current = false;
+    pendingSessionRef.current = null;
+    markMfaPending(null);
+    setSession(latest);
+    setUser(latest.user);
+    setIsProfileFetchInProgress(true);
+    try {
+      const profile = await fetchUserProfile(latest.user.id);
+      setUserProfile(profile ?? null);
+      if (profile) successfulProfiles.current.set(profile.id, profile);
+    } finally {
+      setIsProfileFetchInProgress(false);
+      setLoading(false);
+    }
+  }
+
+  // Drop a half-finished sign-in: revoke this session only, not the user's
+  // sessions on other devices.
+  async function abandonSignIn() {
+    mfaGateRef.current = false;
+    pendingSessionRef.current = null;
+    markMfaPending(null);
+    setMfaChallenge(null);
+    try {
+      await supabase.auth.signOut({ scope: "local" });
+    } finally {
+      setLoading(false);
+    }
+  }
+
   const signIn = useCallback(async (email: string, password: string) => {
     try {
       logger.debug("Signing in...");
@@ -810,12 +885,17 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
         return { error: getLockoutMessage(attemptCheck) };
       }
 
+      // Raise the MFA gate before the SIGNED_IN event can fire (US-346).
+      mfaGateRef.current = true;
+      pendingSessionRef.current = null;
+
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
       if (error) {
+        mfaGateRef.current = false;
         logger.error("Sign in error:", error);
         // SECURITY: Record failed login attempt
         const failResult = await recordFailedLogin(email);
@@ -844,15 +924,64 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
         }
       }
 
+      if (data.user && data.session) {
+        // Mark first, so a reload during the check still discards the session.
+        markMfaPending(data.user.id);
+        let mfaRequired: boolean;
+        try {
+          const check = await checkMfaRequired(data.session.access_token, data.user.id, readDeviceId());
+          mfaRequired = check.required;
+        } catch (checkError) {
+          // Fail closed: if we cannot tell whether this account has MFA, a
+          // password alone is not enough.
+          logger.error("MFA check failed; not signing in:", checkError);
+          await abandonSignIn();
+          return { error: "We couldn't confirm your two-factor settings, so you weren't signed in. Please try again." };
+        }
+
+        if (mfaRequired) {
+          pendingSessionRef.current = pendingSessionRef.current ?? data.session;
+          setMfaChallenge({
+            userId: data.user.id,
+            email: data.user.email ?? null,
+            accessToken: data.session.access_token,
+          });
+          setLoading(false);
+          return { mfaRequired: true };
+        }
+
+        await releaseSession(data.session);
+      } else {
+        mfaGateRef.current = false;
+      }
+
       logger.debug("Sign in successful");
       gtag.trackAuth('login', 'email');
-      // Loading will be set to false by the auth state change listener
       return {};
     } catch (error) {
       logger.error("Sign in exception:", error);
+      if (mfaGateRef.current) await abandonSignIn();
       setLoading(false);
       return { error: "An unexpected error occurred" };
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- releaseSession/abandonSignIn only touch refs and stable setters
+  }, []);
+
+  const completeMfaChallenge = useCallback(async () => {
+    const held = pendingSessionRef.current;
+    setMfaChallenge(null);
+    if (!held) {
+      await abandonSignIn();
+      return;
+    }
+    await releaseSession(held);
+    gtag.trackAuth('login', 'email');
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- see signIn
+  }, []);
+
+  const cancelMfaChallenge = useCallback(async () => {
+    setMfaChallenge(null);
+    await abandonSignIn();
   }, []);
 
   const signInWithGoogle = useCallback(async () => {
@@ -1216,6 +1345,9 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
       resetPasswordWithOTP,
       updateProfile,
       refreshProfile,
+      mfaChallenge,
+      completeMfaChallenge,
+      cancelMfaChallenge,
       sendOTP,
       verifyOTP,
       resendOTP,
@@ -1234,6 +1366,9 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
       resetPasswordWithOTP,
       updateProfile,
       refreshProfile,
+      mfaChallenge,
+      completeMfaChallenge,
+      cancelMfaChallenge,
       sendOTP,
       verifyOTP,
       resendOTP,

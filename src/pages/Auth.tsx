@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
+import { MFAVerificationModal } from "@/components/mfa/MFAVerificationModal";
 import type { FormEvent } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -56,7 +57,8 @@ const Auth = () => {
     signIn, signInWithGoogle, signInWithApple, signUp,
     resetPassword: authResetPassword, resetPasswordWithOTP,
     verifyOTP, resendOTP,
-    user, userProfile, session, loading: authLoading
+    user, userProfile, session, loading: authLoading,
+    mfaChallenge, completeMfaChallenge, cancelMfaChallenge,
   } = useAuth();
   const navigate = useNavigate();
   const { redirectLoopDetected, checkRedirectLoop, recordRedirectAttempt, clearRedirectLoopTracking, isBlocked } = useRedirectLoopDetection();
@@ -183,8 +185,9 @@ const Auth = () => {
       toast({ variant: "destructive", title: "Invalid Email", description: "Please enter a valid email address." }); return;
     }
     setLoading(true);
-    const { error } = await signIn(email, password);
-    if (!error) toast({ title: "Welcome back!", description: "You've been successfully signed in." });
+    const { error, mfaRequired } = await signIn(email, password);
+    if (error) toast({ variant: "destructive", title: "Sign in failed", description: error });
+    else if (!mfaRequired) toast({ title: "Welcome back!", description: "You've been successfully signed in." });
     setLoading(false);
   }, [email, password, signIn, verifyCsrf]);
 
@@ -414,6 +417,16 @@ const Auth = () => {
           </div>
         </div>
       </div>
+      {mfaChallenge && (
+        <MFAVerificationModal
+          isOpen
+          userId={mfaChallenge.userId}
+          userEmail={mfaChallenge.email ?? undefined}
+          accessToken={mfaChallenge.accessToken}
+          onSuccess={() => { void completeMfaChallenge(); }}
+          onClose={() => { void cancelMfaChallenge(); }}
+        />
+      )}
     </main>
   );
 };
