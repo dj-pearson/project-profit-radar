@@ -28,7 +28,10 @@ jobs:
       - run: npm ci
         env:
           PUPPETEER_SKIP_DOWNLOAD: true
-      - run: npm run lint
+      # US-400: one eslint run that fails on any error AND holds the warning
+      # count exactly at .github/eslint-warning-baseline.txt, so the warning
+      # backlog ratchets down instead of drifting up. Same scope as `npm run lint`.
+      - run: node scripts/check-eslint-warnings.mjs
 
   typecheck:
     name: Type Check

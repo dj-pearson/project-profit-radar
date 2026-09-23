@@ -37,6 +37,7 @@
     "build": "npm run generate-sitemap && npm run generate-rss && vite build && node scripts/copy-404.js && node scripts/update-sw-version.js",
     "build:dev": "npm run generate-sitemap && npm run generate-rss && vite build --mode development && node scripts/copy-404.js",
     "lint": "eslint .",
+    "lint:ratchet": "node scripts/check-eslint-warnings.mjs",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "prepare": "husky",

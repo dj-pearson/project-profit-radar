@@ -7096,3 +7096,9 @@ text colour, and Tailwind's text-destructive reads the new token, so no
 call site changed. Now 6.93 (light) and 7.06 (dark), with colour-blind
 separation from the orange primary. The other public-page fixes had
 already landed; an axe sweep of the 8 public pages is clean.
+
+## US-400 - lint gate
+npm run lint already exits 0. CI's Lint job now runs
+check-eslint-warnings.mjs: any error fails, and the warning count must
+equal .github/eslint-warning-baseline.txt (4370), so it can only go down.
+Commits that remove warnings must lower the baseline.
