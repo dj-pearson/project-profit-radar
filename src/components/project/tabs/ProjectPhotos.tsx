@@ -9,97 +9,23 @@
  * US-330 made photo_attachments the real record - project, daily report, who
  * took it, when, GPS, caption. This reads it.
  *
- * Signed URLs, not public ones: project-documents is public today only because
- * US-289's flip was never committed, and a page that hardcodes getPublicUrl is
- * a page that breaks the day it lands. Signing works either way.
+ * The read and the URL signing live in useProjectPhotos (US-266).
  */
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
-import { logger } from '@/lib/logger';
+import { useProjectPhotos, type ProjectPhotoRow } from '@/hooks/useProjectPhotos';
+import { ErrorState } from '@/components/common/ErrorState';
 import { Camera, MapPin } from 'lucide-react';
 
-interface PhotoRow {
-  id: string;
-  file_name: string;
-  file_path: string;
-  storage_bucket: string;
-  caption: string | null;
-  taken_at: string | null;
-  created_at: string;
-  daily_report_id: string | null;
-  ai_tags: string[] | null;
-  gps_coordinates: unknown;
-}
-
-/** Signed URLs last an hour; long enough to browse, short enough not to leak. */
-const SIGNED_URL_TTL_SECONDS = 3600;
+type PhotoRow = ProjectPhotoRow;
 
 export function ProjectPhotos({ projectId }: { projectId: string }) {
-  const { toast } = useToast();
-  const [photos, setPhotos] = useState<PhotoRow[]>([]);
-  const [urls, setUrls] = useState<Record<string, string>>({});
-  const [loading, setLoading] = useState(true);
+  const { photos, urls, isLoading: loading, error: loadError, refetch } = useProjectPhotos(projectId);
   const [search, setSearch] = useState('');
-
-  const load = useCallback(async () => {
-    setLoading(true);
-    const { data, error } = await supabase
-      .from('photo_attachments')
-      .select('id, file_name, file_path, storage_bucket, caption, taken_at, created_at, daily_report_id, ai_tags, gps_coordinates')
-      .eq('project_id', projectId)
-      .order('taken_at', { ascending: false })
-      .limit(300);
-
-    if (error) {
-      logger.error('Could not load project photos', error);
-      toast({
-        variant: 'destructive',
-        title: 'Could not load photos',
-        description: error.message,
-      });
-      setPhotos([]);
-      setLoading(false);
-      return;
-    }
-
-    const rows = (data || []) as PhotoRow[];
-    setPhotos(rows);
-
-    // Sign in one batch per bucket rather than one request per photo.
-    const byBucket = new Map<string, PhotoRow[]>();
-    for (const row of rows) {
-      const bucket = row.storage_bucket || 'project-documents';
-      byBucket.set(bucket, [...(byBucket.get(bucket) ?? []), row]);
-    }
-
-    const signed: Record<string, string> = {};
-    for (const [bucket, bucketRows] of byBucket) {
-      const { data: urlData, error: urlError } = await supabase.storage
-        .from(bucket)
-        .createSignedUrls(bucketRows.map((r) => r.file_path), SIGNED_URL_TTL_SECONDS);
-
-      if (urlError) {
-        // Not fatal: the list still tells you what exists and when it was
-        // taken, which beats an empty screen.
-        logger.error(`Could not sign photo URLs in ${bucket}`, urlError);
-        continue;
-      }
-      (urlData || []).forEach((entry, i) => {
-        if (entry.signedUrl) signed[bucketRows[i].id] = entry.signedUrl;
-      });
-    }
-
-    setUrls(signed);
-    setLoading(false);
-  }, [projectId, toast]);
-
-  useEffect(() => { void load(); }, [load]);
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -145,6 +71,13 @@ export function ProjectPhotos({ projectId }: { projectId: string }) {
 
         {loading ? (
           <Skeleton className="h-64 w-full" />
+        ) : loadError ? (
+          <ErrorState
+            inline
+            title="Could not load photos"
+            error={loadError}
+            onRetry={() => { void refetch(); }}
+          />
         ) : byDay.length === 0 ? (
           <p className="text-sm text-muted-foreground py-8 text-center">
             {photos.length === 0

@@ -148,7 +148,10 @@ describe('a photo is a record, not a string (US-330)', () => {
     expect(hook).toMatch(/from\('photo_attachments'\)/);
     expect(page).toMatch(/insertPhotoAttachments\(/);
     // The array stays for a release: iOS at MIN_SUPPORTED_IOS_VERSION reads it.
-    expect(page).toMatch(/photos: photoUrls\.length > 0 \? photoUrls : null/);
+    // The insert shape lives beside the form schema since US-268.
+    expect(page).toMatch(/buildDailyReportInsert\(values, \{ date: reportDate, photoPaths: photoUrls \}\)/);
+    const builder = strip('src/lib/validations/daily-reports.ts');
+    expect(builder).toMatch(/photos: extra\.photoPaths\.length > 0 \? extra\.photoPaths : null/);
   });
 
   it('does not lose the report when the photo rows fail', () => {
@@ -167,22 +170,32 @@ describe('a photo is a record, not a string (US-330)', () => {
     // named-constraint hint return a SelectQueryError instead of rows - the
     // panel would show no timesheet, which is the reconciliation this whole
     // story exists for. The names are fetched separately.
+    // The panel reads through useDailyReportCrew (US-266).
     const panel = strip('src/components/daily-reports/DailyReportCrewPanel.tsx');
+    const hook = strip('src/hooks/useDailyReportCrew.ts');
+    expect(panel).toMatch(/useDailyReportCrew\(/);
     expect(panel).not.toMatch(/user_profiles[!(]/);
-    expect(panel).toMatch(/from\('user_profiles'\)[\s\S]{0,120}\.in\('id', userIds\)/);
+    expect(hook).not.toMatch(/user_profiles[!(]/);
+    expect(hook).toMatch(/from\('user_profiles'\)[\s\S]{0,120}\.in\('id', userIds\)/);
   });
 
   it('still shows the hours when the names cannot be loaded', () => {
-    const panel = strip('src/components/daily-reports/DailyReportCrewPanel.tsx');
-    const block = panel.slice(panel.indexOf('const people = new Map'));
+    const hook = strip('src/hooks/useDailyReportCrew.ts');
+    const start = hook.indexOf('const people = new Map');
+    const end = hook.indexOf('const timesheet = rows.map');
+    expect(start).toBeGreaterThan(-1);
+    expect(end).toBeGreaterThan(start);
+    const block = hook.slice(start, end);
     // Logged, not thrown: a failure here costs the names, not the comparison.
-    expect(block.slice(0, block.indexOf('setTimesheet'))).toMatch(/logger\.error/);
-    expect(block.slice(0, block.indexOf('setTimesheet'))).not.toMatch(/throw /);
+    expect(block).toMatch(/logger\.error/);
+    expect(block).not.toMatch(/throw /);
   });
 
   it('counts photos from the table, not the array', () => {
-    expect(strip('src/components/project/tabs/ProjectDailyReports.tsx'))
-      .toMatch(/photo_attachments\(count\)/);
+    // The project tab reads through useRecentProjectDailyReports (US-266).
+    expect(strip('src/components/project/tabs/ProjectDailyReports.tsx')).toMatch(/useRecentProjectDailyReports/);
+    expect(strip('src/hooks/useProjectTabLists.ts'))
+      .toMatch(/from\('daily_reports'\)[\s\S]{0,300}photo_attachments\(count\)/);
   });
 });
 

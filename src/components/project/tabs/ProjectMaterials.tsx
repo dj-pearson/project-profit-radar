@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -8,7 +8,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { useAuth } from '@/contexts/AuthContext';
-import { supabase } from '@/integrations/supabase/client';
+import { useProjectMaterials } from '@/hooks/useProjectMaterials';
+import { ErrorState } from '@/components/common/ErrorState';
 import { toast } from '@/hooks/use-toast';
 import { Package, PlusCircle, ExternalLink, Trash2, DollarSign, TrendingUp, Calendar, User } from 'lucide-react';
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
@@ -88,9 +89,16 @@ export const ProjectMaterials: React.FC<ProjectMaterialsProps> = ({
   onNavigate
 }) => {
   const { userProfile } = useAuth();
-  const [materials, setMaterials] = useState<Material[]>([]);
-  const [materialUsage, setMaterialUsage] = useState<MaterialUsage[]>([]);
-  const [loading, setLoading] = useState(true);
+  const {
+    materials,
+    usage: materialUsage,
+    isLoading: loading,
+    error: loadError,
+    refetch,
+    createMaterial,
+    createUsage,
+    deleteUsage,
+  } = useProjectMaterials<Material, MaterialUsage>(projectId);
   const [showAddMaterial, setShowAddMaterial] = useState(false);
   const [showAddUsage, setShowAddUsage] = useState(false);
 
@@ -116,87 +124,20 @@ export const ProjectMaterials: React.FC<ProjectMaterialsProps> = ({
     notes: ''
   });
 
-  useEffect(() => {
-    if (projectId && userProfile?.company_id) {
-      loadMaterials();
-      loadMaterialUsage();
-    }
-  }, [projectId, userProfile?.company_id]);
-
-  const loadMaterials = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('materials')
-        .select('*')
-        .eq('company_id', userProfile?.company_id)
-        .eq('is_active', true)
-        .order('name');
-
-      if (error) throw error;
-      setMaterials(data || []);
-    } catch (error: any) {
-      console.error('Error loading materials:', error);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to load materials"
-      });
-    }
-  };
-
-  const loadMaterialUsage = async () => {
-    try {
-      setLoading(true);
-      const { data, error } = await supabase
-        .from('material_usage')
-        .select(`
-          *,
-          materials(*)
-        `)
-        .eq('project_id', projectId)
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      
-      // Transform data to match expected interface and coerce types
-      const transformedData: MaterialUsage[] = (data?.map((item: any) => ({
-        ...item,
-        material: item.materials as Material,
-      })) || []) as unknown as MaterialUsage[];
-      
-      setMaterialUsage(transformedData);
-    } catch (error: any) {
-      console.error('Error loading material usage:', error);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to load material usage"
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const handleCreateMaterial = async () => {
     try {
+      const companyId = userProfile?.company_id;
+      if (!companyId) throw new Error('Company information is not available.');
       const materialData = {
         ...newMaterial,
-        company_id: userProfile?.company_id,
+        company_id: companyId,
         unit_cost: parseFloat(newMaterial.unit_cost) || 0,
         quantity_available: parseInt(newMaterial.quantity_available) || 0,
         minimum_stock_level: parseInt(newMaterial.minimum_stock_level) || 0,
         created_by: userProfile?.id
       };
 
-      const { data, error } = await supabase
-        .from('materials')
-        .insert([materialData])
-        .select()
-        .single();
-
-      if (error) throw error;
-
-      setMaterials([...materials, data]);
+      await createMaterial(materialData);
       setNewMaterial({
         name: '',
         description: '',
@@ -242,24 +183,7 @@ export const ProjectMaterials: React.FC<ProjectMaterialsProps> = ({
         used_by: userProfile?.id
       };
 
-      const { data, error } = await supabase
-        .from('material_usage')
-        .insert([usageData])
-        .select(`
-          *,
-          materials(*)
-        `)
-        .single();
-
-      if (error) throw error;
-
-      // Transform data to match expected interface  
-      const transformedData: MaterialUsage = {
-        ...(data as any),
-        material: (data as any).materials as Material,
-      };
-
-      setMaterialUsage([transformedData, ...materialUsage]);
+      await createUsage(usageData);
       setNewUsage({
         material_id: '',
         quantity_used: '',
@@ -286,14 +210,7 @@ export const ProjectMaterials: React.FC<ProjectMaterialsProps> = ({
   const handleDeleteUsage = async (usageId: string) => {
     if (!(await confirmAction({ title: 'Delete this material usage record?', destructive: true }))) return;
     try {
-      const { error } = await supabase
-        .from('material_usage')
-        .delete()
-        .eq('id', usageId);
-
-      if (error) throw error;
-
-      setMaterialUsage(materialUsage.filter(usage => usage.id !== usageId));
+      await deleteUsage(usageId);
       toast({
         title: "Success",
         description: "Material usage deleted successfully"
@@ -303,7 +220,7 @@ export const ProjectMaterials: React.FC<ProjectMaterialsProps> = ({
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Failed to delete material usage"
+        description: error.message || "Failed to delete material usage"
       });
     }
   };
@@ -336,6 +253,17 @@ export const ProjectMaterials: React.FC<ProjectMaterialsProps> = ({
           <LoadingSpinner size="md" />
         </CardContent>
       </Card>
+    );
+  }
+
+  if (loadError) {
+    return (
+      <ErrorState
+        inline
+        title="Materials could not be loaded"
+        error={loadError}
+        onRetry={() => { void refetch(); }}
+      />
     );
   }
 

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useMemo, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { format } from "date-fns";
 import {
@@ -29,6 +29,7 @@ import { EstimateForm } from "./EstimateForm";
 import { ConvertToProjectDialog } from "./ConvertToProjectDialog";
 import { ConvertToInvoiceDialog } from "./ConvertToInvoiceDialog";
 import { supabase } from "@/integrations/supabase/client";
+import { useEstimatesTable } from "@/hooks/useEstimatesTable";
 import { useToast } from "@/hooks/use-toast";
 import { confirmAction } from "@/components/ui/confirm-dialog";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -39,6 +40,7 @@ interface Estimate {
   estimate_number: string;
   title: string;
   client_name: string;
+  client_id?: string | null;
   total_amount: number;
   status: string;
   estimate_date: string;
@@ -63,64 +65,32 @@ export function EstimatesTable({ searchTerm, statusFilter, onEstimateChange, onC
   const { userProfile } = useAuth();
   // Only an admin may start a job on a price the customer has not accepted.
   const isAdmin = userProfile?.role === 'admin' || userProfile?.role === 'root_admin';
-  const [estimates, setEstimates] = useState<Estimate[]>([]);
-  const [loading, setLoading] = useState(true);
   // A failed fetch used to fall through to "No estimates found", which reads as
-  // an empty pipeline. Keep the failure so the table can say so.
-  const [loadError, setLoadError] = useState(false);
+  // an empty pipeline. The hook keeps the failure so the table can say so.
+  const {
+    estimates: rows,
+    isLoading: loading,
+    error: loadError,
+    refetch,
+    invalidate: fetchEstimates,
+    duplicate: duplicateEstimate,
+    remove: deleteEstimate,
+  } = useEstimatesTable<Estimate>(statusFilter);
+  // The search is applied to the cached rows rather than refetching per keystroke.
+  const estimates = useMemo(() => {
+    if (!searchTerm) return rows;
+    const q = searchTerm.toLowerCase();
+    return rows.filter((estimate) =>
+      estimate.title.toLowerCase().includes(q) ||
+      (estimate.client_name ?? '').toLowerCase().includes(q) ||
+      estimate.estimate_number.toLowerCase().includes(q)
+    );
+  }, [rows, searchTerm]);
   const [editingEstimate, setEditingEstimate] = useState<string | null>(null);
   const [convertingEstimate, setConvertingEstimate] = useState<string | null>(null);
   const [invoicingEstimate, setInvoicingEstimate] = useState<string | null>(null);
   const [deletingEstimate, setDeletingEstimate] = useState<string | null>(null);
   const { toast } = useToast();
-
-  useEffect(() => {
-    fetchEstimates();
-  }, [searchTerm, statusFilter]);
-
-  const fetchEstimates = async () => {
-    setLoading(true);
-    setLoadError(false);
-    try {
-      let query = supabase
-        .from("estimates")
-        .select(`
-          *,
-          project:projects(id, name)
-        `)
-        .order("created_at", { ascending: false });
-
-      if (statusFilter !== "all") {
-        query = query.eq("status", statusFilter);
-      }
-
-      const { data, error } = await query;
-
-      if (error) throw error;
-
-      let filteredData = data || [];
-
-      if (searchTerm) {
-        filteredData = filteredData.filter((estimate) =>
-          estimate.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          (estimate.client_name ?? '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-          estimate.estimate_number.toLowerCase().includes(searchTerm.toLowerCase())
-        );
-      }
-
-      setEstimates(filteredData);
-    } catch (error) {
-      console.error("Error fetching estimates:", error);
-      setLoadError(true);
-      toast({
-        title: "Error",
-        description: "Failed to fetch estimates",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const getStatusBadge = (status: string) => {
     const variants: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
@@ -141,32 +111,12 @@ export function EstimatesTable({ searchTerm, statusFilter, onEstimateChange, onC
 
   const handleDuplicate = async (estimate: Estimate) => {
     try {
-      // Get user's company ID
-      const { data: userProfile } = await supabase
-        .from("user_profiles")
-        .select("company_id")
-        .eq("id", (await supabase.auth.getUser()).data.user?.id)
-        .single();
-
       if (!userProfile?.company_id) {
         throw new Error("User company not found");
       }
 
       // Create a copy of the estimate
-      const { error } = await supabase
-        .from("estimates")
-        .insert({
-          company_id: userProfile.company_id,
-          estimate_number: '', // Will be auto-generated
-          title: `${estimate.title} (Copy)`,
-          client_name: estimate.client_name,
-          total_amount: estimate.total_amount,
-          status: "draft",
-        })
-        .select()
-        .single();
-
-      if (error) throw error;
+      await duplicateEstimate({ companyId: userProfile.company_id, source: estimate });
 
       toast({
         title: "Estimate Duplicated",
@@ -188,12 +138,7 @@ export function EstimatesTable({ searchTerm, statusFilter, onEstimateChange, onC
   const handleDelete = async (estimateId: string) => {
     if (!(await confirmAction({ title: 'Delete this estimate?', description: 'Its line items are deleted with it. This cannot be undone.', destructive: true }))) return;
     try {
-      const { error } = await supabase
-        .from("estimates")
-        .delete()
-        .eq("id", estimateId);
-
-      if (error) throw error;
+      await deleteEstimate(estimateId);
 
       toast({
         title: "Estimate Deleted",
@@ -207,7 +152,7 @@ export function EstimatesTable({ searchTerm, statusFilter, onEstimateChange, onC
       console.error("Error deleting estimate:", error);
       toast({
         title: "Error",
-        description: "Failed to delete estimate",
+        description: error instanceof Error ? error.message : "Failed to delete estimate",
         variant: "destructive",
       });
     }
@@ -263,7 +208,7 @@ export function EstimatesTable({ searchTerm, statusFilter, onEstimateChange, onC
       <ErrorState
         title="Estimates did not load"
         description="We could not load your estimates. Your pipeline is not empty just because this failed."
-        onRetry={fetchEstimates}
+        onRetry={() => { void refetch(); }}
       />
     );
   }

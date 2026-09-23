@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { emailField, optionalPhoneField, requiredText } from './common';
 
 export const profileUpdateSchema = z.object({
   first_name: z.string()
@@ -63,6 +64,61 @@ export const emailUpdateSchema = z.object({
     .toLowerCase()
     .trim(),
 });
+
+/**
+ * Roles a team manager can invite someone into, in the order the invite
+ * dialog lists them. The invite-team-member edge function enforces RBAC; this
+ * only keeps the form from sending a role that is not on the list.
+ */
+export const INVITE_ROLE_OPTIONS = [
+  { value: 'admin', label: 'Admin' },
+  { value: 'superintendent', label: 'Superintendent' },
+  { value: 'project_manager', label: 'Project Manager' },
+  { value: 'estimator', label: 'Estimator' },
+  { value: 'accounting', label: 'Accounting' },
+  { value: 'safety_officer', label: 'Safety Officer' },
+  { value: 'quality_inspector', label: 'Quality Inspector' },
+  { value: 'foreman', label: 'Foreman' },
+  { value: 'field_supervisor', label: 'Field Supervisor' },
+  { value: 'technician', label: 'Technician' },
+  { value: 'equipment_operator', label: 'Equipment Operator' },
+  { value: 'journeyman', label: 'Journeyman' },
+  { value: 'office_staff', label: 'Office Staff' },
+  { value: 'apprentice', label: 'Apprentice' },
+  { value: 'laborer', label: 'Laborer' },
+] as const;
+
+const INVITE_ROLE_VALUES = INVITE_ROLE_OPTIONS.map((r) => r.value) as [string, ...string[]];
+
+/** The Team Management "Invite Team Member" dialog (US-268). */
+export const teamInviteSchema = z.object({
+  first_name: requiredText('First name is required', 50),
+  last_name: requiredText('Last name is required', 50),
+  email: emailField,
+  role: z.string().refine((v) => INVITE_ROLE_VALUES.includes(v), { message: 'Select a role' }),
+  phone: optionalPhoneField,
+});
+
+export type TeamInviteValues = z.infer<typeof teamInviteSchema>;
+
+export const EMPTY_TEAM_INVITE: TeamInviteValues = {
+  first_name: '',
+  last_name: '',
+  email: '',
+  role: '',
+  phone: '',
+};
+
+/** The body sent to invite-team-member. Same shape the useState form sent. */
+export function buildTeamInviteBody(values: TeamInviteValues) {
+  return {
+    email: values.email,
+    first_name: values.first_name,
+    last_name: values.last_name,
+    role: values.role,
+    phone: values.phone || null,
+  };
+}
 
 export type ProfileUpdateInput = z.infer<typeof profileUpdateSchema>;
 export type PasswordChangeInput = z.infer<typeof passwordChangeSchema>;

@@ -34,9 +34,12 @@ const SRC = join(root, 'src');
  * Lower this as components move onto hooks. It never goes up.
  * US-266 found 962 call sites in 266 reachable files and moved 52 of them
  * (15 components: Vendors, Invoices, DailyReports, PunchList,
- * FinancialOverview and ten tabs/panels) onto hooks in src/hooks.
+ * FinancialOverview and ten tabs/panels) onto hooks in src/hooks. A second
+ * pass moved 51 more (thirteen components: eight project tabs, closeout,
+ * project financials, the daily-report crew panel, schedule assignees and the
+ * estimates table).
  */
-const BASELINE = 910;
+const BASELINE = 859;
 
 function walk(dir, out = []) {
   for (const e of readdirSync(dir, { withFileTypes: true })) {

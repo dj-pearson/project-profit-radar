@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -14,7 +14,8 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import { Skeleton } from '@/components/ui/skeleton';
-import { supabase } from '@/integrations/supabase/client';
+import { useProjectCostCodes, type ProjectCostCodeRow } from '@/hooks/useProjectCostCodes';
+import { ErrorState } from '@/components/common/ErrorState';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from '@/hooks/use-toast';
 import {
@@ -30,16 +31,7 @@ import {
 // Types
 // ---------------------------------------------------------------------------
 
-interface ProjectCostCode {
-  id: string;
-  code: string;
-  name: string;
-  description: string;
-  category: string;
-  budgeted: number;
-  actual: number;
-  committed: number;
-}
+type ProjectCostCode = ProjectCostCodeRow;
 
 interface ProjectCostCodesProps {
   projectId: string;
@@ -343,62 +335,31 @@ const EmptyState: React.FC<{ onAdd: () => void; onImport: () => void }> = ({
 
 export const ProjectCostCodes: React.FC<ProjectCostCodesProps> = ({ projectId }) => {
   const { userProfile } = useAuth();
-  const [costCodes, setCostCodes] = useState<ProjectCostCode[]>([]);
-  const [loading, setLoading] = useState(true);
   const [addDialogOpen, setAddDialogOpen] = useState(false);
   const [importDialogOpen, setImportDialogOpen] = useState(false);
-  const [companyCodes, setCompanyCodes] = useState<
-    { id: string; code: string; name: string; description: string | null; category: string | null }[]
-  >([]);
-  const [importLoading, setImportLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [form, setForm] = useState<AddCostCodeFormState>({ ...EMPTY_FORM });
+  const {
+    costCodes,
+    isLoading: loading,
+    error: loadError,
+    refetch,
+    companyCodes,
+    companyCodesLoading: importLoading,
+    companyCodesError,
+    insert: insertCostCodes,
+  } = useProjectCostCodes(projectId, { loadCompanyCodes: importDialogOpen });
 
-  // -------------------------------------------------------------------------
-  // Data Loading
-  // -------------------------------------------------------------------------
-
-  const loadProjectCostCodes = useCallback(async () => {
-    if (!projectId) return;
-    try {
-      setLoading(true);
-      const { data, error } = await supabase
-        .from('project_cost_codes')
-        .select('*')
-        .eq('project_id', projectId)
-        .order('code', { ascending: true });
-
-      if (error) throw error;
-
-      const mapped: ProjectCostCode[] = (data || []).map((row) => ({
-        id: row.id,
-        code: row.code,
-        name: row.description || row.code,
-        description: row.description || '',
-        category: row.category || 'General',
-        budgeted: row.budget_amount ?? 0,
-        // Actual and committed would come from a transactions table in production.
-        // For now we simulate with zero so the UI is ready.
-        actual: 0,
-        committed: 0,
-      }));
-
-      setCostCodes(mapped);
-    } catch (error: unknown) {
-      console.error('Error loading project cost codes:', error);
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Failed to load cost codes for this project.',
-      });
-    } finally {
-      setLoading(false);
-    }
-  }, [projectId]);
-
+  // A failed catalogue read leaves the dialog empty; the toast says why.
   useEffect(() => {
-    loadProjectCostCodes();
-  }, [loadProjectCostCodes]);
+    if (!companyCodesError) return;
+    console.error('Error loading company cost codes:', companyCodesError);
+    toast({
+      variant: 'destructive',
+      title: 'Error',
+      description: 'Failed to load company cost codes.',
+    });
+  }, [companyCodesError]);
 
   // -------------------------------------------------------------------------
   // Add Cost Code
@@ -441,16 +402,14 @@ export const ProjectCostCodes: React.FC<ProjectCostCodesProps> = ({ projectId })
 
     try {
       setSubmitting(true);
-      const { error } = await supabase.from('project_cost_codes').insert({
+      await insertCostCodes([{
         project_id: projectId,
         company_id: userProfile.company_id,
         code: form.code.trim(),
         description: form.name.trim(),
         category: form.category.trim() || 'General',
         budget_amount: budgetAmount,
-      });
-
-      if (error) throw error;
+      }]);
 
       toast({
         title: 'Cost Code Added',
@@ -459,7 +418,6 @@ export const ProjectCostCodes: React.FC<ProjectCostCodesProps> = ({ projectId })
 
       setForm({ ...EMPTY_FORM });
       setAddDialogOpen(false);
-      await loadProjectCostCodes();
     } catch (error: unknown) {
       console.error('Error adding cost code:', error);
       toast({
@@ -476,34 +434,8 @@ export const ProjectCostCodes: React.FC<ProjectCostCodesProps> = ({ projectId })
   // Import Company Default Codes
   // -------------------------------------------------------------------------
 
-  const loadCompanyCodes = useCallback(async () => {
-    if (!userProfile?.company_id) return;
-    try {
-      setImportLoading(true);
-      const { data, error } = await supabase
-        .from('cost_codes')
-        .select('id, code, name, description, category')
-        .eq('company_id', userProfile.company_id)
-        .eq('is_active', true)
-        .order('code', { ascending: true });
-
-      if (error) throw error;
-      setCompanyCodes(data || []);
-    } catch (error: unknown) {
-      console.error('Error loading company cost codes:', error);
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Failed to load company cost codes.',
-      });
-    } finally {
-      setImportLoading(false);
-    }
-  }, [userProfile?.company_id]);
-
   const handleOpenImportDialog = () => {
     setImportDialogOpen(true);
-    loadCompanyCodes();
   };
 
   const handleImportCodes = async () => {
@@ -533,9 +465,7 @@ export const ProjectCostCodes: React.FC<ProjectCostCodesProps> = ({ projectId })
         budget_amount: 0,
       }));
 
-      const { error } = await supabase.from('project_cost_codes').insert(rows);
-
-      if (error) throw error;
+      await insertCostCodes(rows);
 
       toast({
         title: 'Codes Imported',
@@ -543,13 +473,12 @@ export const ProjectCostCodes: React.FC<ProjectCostCodesProps> = ({ projectId })
       });
 
       setImportDialogOpen(false);
-      await loadProjectCostCodes();
     } catch (error: unknown) {
       console.error('Error importing cost codes:', error);
       toast({
         variant: 'destructive',
         title: 'Error',
-        description: 'Failed to import cost codes. Please try again.',
+        description: error instanceof Error ? error.message : 'Failed to import cost codes. Please try again.',
       });
     } finally {
       setSubmitting(false);
@@ -568,6 +497,17 @@ export const ProjectCostCodes: React.FC<ProjectCostCodesProps> = ({ projectId })
 
   if (loading) {
     return <LoadingSkeleton />;
+  }
+
+  if (loadError) {
+    return (
+      <ErrorState
+        inline
+        title="Cost codes could not be loaded"
+        error={loadError}
+        onRetry={() => { void refetch(); }}
+      />
+    );
   }
 
   return (

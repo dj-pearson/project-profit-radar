@@ -1,13 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { AccessiblePageWrapper } from '@/components/accessibility/AccessiblePageWrapper';
 import { RoleGuard, ROLE_GROUPS } from '@/components/auth/RoleGuard';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { toast } from '@/hooks/use-toast';
@@ -19,6 +16,15 @@ import UpgradePrompt from '@/components/subscription/UpgradePrompt';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ErrorState, NoTeamMembers } from '@/components/ui/EmptyStates';
 import { Users, Plus, Edit, Mail, Phone, Shield, UserCheck, UserX, Crown } from 'lucide-react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import {
+  teamInviteSchema,
+  buildTeamInviteBody,
+  EMPTY_TEAM_INVITE,
+  type TeamInviteValues,
+} from '@/lib/validations/users';
+import { InviteMemberForm } from './team/InviteMemberForm';
 
 interface TeamMember {
   id: string;
@@ -46,13 +52,12 @@ const TeamManagement = () => {
   const [isInviteOpen, setIsInviteOpen] = useState(false);
   const [showUpgradePrompt, setShowUpgradePrompt] = useState(false);
   
-  // Invite form state
-  const [inviteEmail, setInviteEmail] = useState('');
-  const [inviteFirstName, setInviteFirstName] = useState('');
-  const [inviteLastName, setInviteLastName] = useState('');
-  const [inviteRole, setInviteRole] = useState('');
-  const [invitePhone, setInvitePhone] = useState('');
-  const [inviteLoading, setInviteLoading] = useState(false);
+  // Invite form (US-268): react-hook-form + Zod. Held here rather than in the
+  // dialog so a half-filled invite survives closing it.
+  const inviteForm = useForm<TeamInviteValues>({
+    resolver: zodResolver(teamInviteSchema),
+    defaultValues: EMPTY_TEAM_INVITE,
+  });
 
   useEffect(() => {
     if (!loading && !user) {
@@ -149,10 +154,7 @@ const TeamManagement = () => {
     }
   };
 
-  const handleInviteUser = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setInviteLoading(true);
-
+  const handleInviteUser = async (values: TeamInviteValues) => {
     try {
       // Invites go through the invite-team-member edge function (US-199): it
       // authenticates the caller, enforces the seat plan-limit SERVER-SIDE
@@ -162,15 +164,7 @@ const TeamManagement = () => {
       // service role instead of exposing it to the browser.
       const { data: invite, error: inviteError } = await supabase.functions.invoke(
         'invite-team-member',
-        {
-          body: {
-            email: inviteEmail,
-            first_name: inviteFirstName,
-            last_name: inviteLastName,
-            role: inviteRole,
-            phone: invitePhone || null,
-          },
-        }
+        { body: buildTeamInviteBody(values) }
       );
 
       // supabase.functions.invoke surfaces non-2xx as `error`; the function also
@@ -189,22 +183,18 @@ const TeamManagement = () => {
           variant: 'destructive',
           title: 'Added, but the invite email failed',
           description:
-            `${inviteFirstName} was added to your team, but the set-password email could not be sent. ` +
+            `${values.first_name} was added to your team, but the set-password email could not be sent. ` +
             'Use Resend invite on their row.',
         });
       } else {
         toast({
           title: "Invite sent",
-          description: `${inviteFirstName} ${inviteLastName} has been emailed a link to set their password.`
+          description: `${values.first_name} ${values.last_name} has been emailed a link to set their password.`
         });
       }
 
       // Reset form
-      setInviteEmail('');
-      setInviteFirstName('');
-      setInviteLastName('');
-      setInviteRole('');
-      setInvitePhone('');
+      inviteForm.reset(EMPTY_TEAM_INVITE);
       setIsInviteOpen(false);
       
       // Reload team members and refresh subscription data
@@ -217,8 +207,6 @@ const TeamManagement = () => {
         title: "Failed to Invite User",
         description: error.message || "An error occurred while inviting the user"
       });
-    } finally {
-      setInviteLoading(false);
     }
   };
 
@@ -477,95 +465,12 @@ const TeamManagement = () => {
                     Add a new team member to your organization
                   </DialogDescription>
                 </DialogHeader>
-                <form onSubmit={handleInviteUser} className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="firstName">First Name *</Label>
-                      <Input
-                        id="firstName"
-                        value={inviteFirstName}
-                        onChange={(e) => setInviteFirstName(e.target.value)}
-                        required
-                        aria-required="true"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="lastName">Last Name *</Label>
-                      <Input
-                        id="lastName"
-                        value={inviteLastName}
-                        onChange={(e) => setInviteLastName(e.target.value)}
-                        required
-                        aria-required="true"
-                      />
-                    </div>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="email">Email Address *</Label>
-                    <Input
-                      id="email"
-                      type="email"
-                      value={inviteEmail}
-                      onChange={(e) => setInviteEmail(e.target.value)}
-                      required
-                      aria-required="true"
-                    />
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="role">Role *</Label>
-                    <Select value={inviteRole} onValueChange={setInviteRole} required aria-required="true">
-                      <SelectTrigger id="role">
-                        <SelectValue placeholder="Select role" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="admin">Admin</SelectItem>
-                        <SelectItem value="superintendent">Superintendent</SelectItem>
-                        <SelectItem value="project_manager">Project Manager</SelectItem>
-                        <SelectItem value="estimator">Estimator</SelectItem>
-                        <SelectItem value="accounting">Accounting</SelectItem>
-                        <SelectItem value="safety_officer">Safety Officer</SelectItem>
-                        <SelectItem value="quality_inspector">Quality Inspector</SelectItem>
-                        <SelectItem value="foreman">Foreman</SelectItem>
-                        <SelectItem value="field_supervisor">Field Supervisor</SelectItem>
-                        <SelectItem value="technician">Technician</SelectItem>
-                        <SelectItem value="equipment_operator">Equipment Operator</SelectItem>
-                        <SelectItem value="journeyman">Journeyman</SelectItem>
-                        <SelectItem value="office_staff">Office Staff</SelectItem>
-                        <SelectItem value="apprentice">Apprentice</SelectItem>
-                        <SelectItem value="laborer">Laborer</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="phone">Phone Number</Label>
-                    <Input
-                      id="phone"
-                      type="tel"
-                      value={invitePhone}
-                      onChange={(e) => setInvitePhone(e.target.value)}
-                      placeholder="(555) 123-4567"
-                    />
-                  </div>
-                  
-                  <div className="flex justify-end space-x-2">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => setIsInviteOpen(false)}
-                    >
-                      Cancel
-                    </Button>
-                    <Button
-                      type="submit"
-                      disabled={inviteLoading || !inviteEmail || !inviteFirstName || !inviteLastName || !inviteRole}
-                    >
-                      {inviteLoading ? 'Inviting...' : 'Send Invite'}
-                    </Button>
-                  </div>
-                </form>
+                <InviteMemberForm
+                  form={inviteForm}
+                  onSubmit={handleInviteUser}
+                  onCancel={() => setIsInviteOpen(false)}
+                  submitting={inviteForm.formState.isSubmitting}
+                />
               </DialogContent>
             </Dialog>
         </div>

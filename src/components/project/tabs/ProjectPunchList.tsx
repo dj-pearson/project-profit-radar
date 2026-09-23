@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -18,7 +18,8 @@ import { Progress } from '@/components/ui/progress';
 import { ImageUpload } from '@/components/ui/image-upload';
 import { summarizePunchList } from '@/lib/projects/punchListProgress';
 import { useAuth } from '@/contexts/AuthContext';
-import { supabase } from '@/integrations/supabase/client';
+import { useProjectPunchList } from '@/hooks/usePunchListPage';
+import { ErrorState } from '@/components/common/ErrorState';
 import { toast } from '@/hooks/use-toast';
 import { CheckSquare, PlusCircle, ExternalLink, Edit, Trash2, Calendar, User, MapPin, AlertTriangle, CheckCircle, Clock, Play, DollarSign, Search } from 'lucide-react';
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
@@ -92,9 +93,15 @@ export const ProjectPunchList: React.FC<ProjectPunchListProps> = ({
   onNavigate
 }) => {
   const { userProfile } = useAuth();
-  const [items, setItems] = useState<PunchListItem[]>([]);
-  const [filteredItems, setFilteredItems] = useState<PunchListItem[]>([]);
-  const [loading, setLoading] = useState(true);
+  const {
+    items,
+    isLoading: loading,
+    error: loadError,
+    refetch,
+    insert: insertItem,
+    update: updateItem,
+    remove: removeItem,
+  } = useProjectPunchList<PunchListItem>(projectId);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const [filterPriority, setFilterPriority] = useState<string>('all');
@@ -135,40 +142,7 @@ export const ProjectPunchList: React.FC<ProjectPunchListProps> = ({
     photo_after_url: ''
   });
 
-  useEffect(() => {
-    if (projectId && userProfile?.company_id) {
-      loadItems();
-    }
-  }, [projectId, userProfile?.company_id]);
-
-  useEffect(() => {
-    filterItems();
-  }, [items, searchTerm, filterStatus, filterPriority]);
-
-  const loadItems = async () => {
-    try {
-      setLoading(true);
-      const { data, error } = await supabase
-        .from('punch_list_items')
-        .select('*')
-        .eq('project_id', projectId)
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      setItems((data as unknown as PunchListItem[]) || []);
-    } catch (error: any) {
-      console.error('Error loading punch list items:', error);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to load punch list items"
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const filterItems = () => {
+  const filteredItems = useMemo(() => {
     let filtered = items;
 
     // Filter by search term
@@ -191,8 +165,8 @@ export const ProjectPunchList: React.FC<ProjectPunchListProps> = ({
       filtered = filtered.filter(item => item.priority === filterPriority);
     }
 
-    setFilteredItems(filtered);
-  };
+    return filtered;
+  }, [items, searchTerm, filterStatus, filterPriority]);
 
   const generateItemNumber = () => {
     const nextNumber = items.length + 1;
@@ -226,25 +200,19 @@ export const ProjectPunchList: React.FC<ProjectPunchListProps> = ({
 
   const handleCreateItem = async () => {
     try {
+      const companyId = userProfile?.company_id;
+      if (!companyId) throw new Error('Company information is not available.');
       const itemData = {
         ...formData,
         project_id: projectId,
-        company_id: userProfile?.company_id,
+        company_id: companyId,
         estimated_cost: formData.estimated_cost ? parseFloat(formData.estimated_cost) : null,
         target_completion_date: formData.target_completion_date || null,
         assigned_to: formData.assigned_to || null,
         created_by: userProfile?.id
       };
 
-      const { data, error } = await supabase
-        .from('punch_list_items')
-        .insert([itemData])
-        .select('*')
-        .single();
-
-      if (error) throw error;
-
-      setItems([data as unknown as PunchListItem, ...items]);
+      await insertItem(itemData);
       resetForm();
       setShowAddItem(false);
 
@@ -273,16 +241,7 @@ export const ProjectPunchList: React.FC<ProjectPunchListProps> = ({
         assigned_to: formData.assigned_to || null
       };
 
-      const { data, error } = await supabase
-        .from('punch_list_items')
-        .update(itemData)
-        .eq('id', editingItem.id)
-        .select('*')
-        .single();
-
-      if (error) throw error;
-
-      setItems(items.map(i => i.id === editingItem.id ? (data as unknown as PunchListItem) : i));
+      await updateItem(editingItem.id, itemData);
       resetForm();
       setEditingItem(null);
 
@@ -312,16 +271,7 @@ export const ProjectPunchList: React.FC<ProjectPunchListProps> = ({
         updates.verified_by = userProfile?.id;
       }
 
-      const { data, error } = await supabase
-        .from('punch_list_items')
-        .update(updates)
-        .eq('id', itemId)
-        .select('*')
-        .single();
-
-      if (error) throw error;
-
-      setItems(items.map(i => i.id === itemId ? (data as unknown as PunchListItem) : i));
+      await updateItem(itemId, updates);
       toast({
         title: "Success",
         description: `Item marked as ${newStatus}`
@@ -331,7 +281,7 @@ export const ProjectPunchList: React.FC<ProjectPunchListProps> = ({
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Failed to update status"
+        description: error.message || "Failed to update status"
       });
     }
   };
@@ -339,14 +289,7 @@ export const ProjectPunchList: React.FC<ProjectPunchListProps> = ({
   const handleDeleteItem = async (itemId: string) => {
     if (!(await confirmAction({ title: 'Delete this punch list item?', destructive: true }))) return;
     try {
-      const { error } = await supabase
-        .from('punch_list_items')
-        .delete()
-        .eq('id', itemId);
-
-      if (error) throw error;
-
-      setItems(items.filter(i => i.id !== itemId));
+      await removeItem(itemId);
       toast({
         title: "Success",
         description: "Punch list item deleted successfully"
@@ -356,7 +299,7 @@ export const ProjectPunchList: React.FC<ProjectPunchListProps> = ({
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Failed to delete punch list item"
+        description: error.message || "Failed to delete punch list item"
       });
     }
   };
@@ -437,6 +380,17 @@ export const ProjectPunchList: React.FC<ProjectPunchListProps> = ({
           <LoadingSpinner size="md" />
         </CardContent>
       </Card>
+    );
+  }
+
+  if (loadError) {
+    return (
+      <ErrorState
+        inline
+        title="Punch list could not be loaded"
+        error={loadError}
+        onRetry={() => { void refetch(); }}
+      />
     );
   }
 

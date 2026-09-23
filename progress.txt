@@ -7165,3 +7165,10 @@ lines) with the public hooks unchanged; EstimateForm's cards moved to
 estimate-form/ (1215 -> 762). useCRM.ts was 1944 lines nothing imported;
 deleted. God-file list 13 -> 11, TS 1177 -> 1161, eslint warnings 3964 ->
 3963, unreferenced modules 81 -> 80.
+
+## US-266 pass 2 + US-268 pass 1
+Thirteen more project tabs and panels load through query hooks (raw calls
+910 -> 859). Team invite, project edit and daily report create now validate
+with react-hook-form + Zod and show inline errors; payloads are unchanged
+and pinned by tests. check-form-validation.mjs holds unvalidated forms at
+35. TS 1161 -> 1145, eslint warnings 3963 -> 3944.

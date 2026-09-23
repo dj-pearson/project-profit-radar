@@ -5,7 +5,9 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render as rtlRender, screen, waitFor } from '@testing-library/react';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import type { ReactElement } from 'react';
 
 type Result = { data: unknown; error: { message: string } | null };
 
@@ -56,6 +58,14 @@ vi.mock('recharts', () => {
 });
 
 import { ProjectFinancialDashboard } from '../ProjectFinancialDashboard';
+
+// The reads go through useProjectFinancials (US-266); each render gets a fresh cache.
+const render = (ui: ReactElement) =>
+  rtlRender(
+    <QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}>
+      {ui}
+    </QueryClientProvider>,
+  );
 
 describe('ProjectFinancialDashboard (US-364)', () => {
   beforeEach(() => {

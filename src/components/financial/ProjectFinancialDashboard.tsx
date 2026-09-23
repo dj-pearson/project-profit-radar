@@ -1,11 +1,8 @@
-import { useState, useEffect } from 'react';
-import { captureException } from '@/lib/sentry';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ErrorState } from '@/components/ui/states';
-import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/contexts/AuthContext';
+import { useProjectFinancials } from '@/hooks/useProjectFinancials';
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
   PieChart, Pie, Cell
@@ -16,141 +13,14 @@ interface ProjectFinancialDashboardProps {
   projectId: string;
 }
 
-interface FinancialData {
-  contractValue: number;
-  billedToDate: number;
-  collected: number;
-  outstanding: number;
-  totalCosts: number;
-  netProfit: number;
-  profitMargin: number;
-  previousProfitMargin: number;
-  monthlyCashFlow: Array<{ month: string; income: number; expenses: number }>;
-}
-
 const COLORS = ['#3b82f6', '#ef4444', '#22c55e', '#f59e0b'];
 
 const formatCurrency = (value: number) =>
   new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(value);
 
 export function ProjectFinancialDashboard({ projectId }: ProjectFinancialDashboardProps) {
-  const { userProfile } = useAuth();
-  const [data, setData] = useState<FinancialData | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [loadError, setLoadError] = useState<string | null>(null);
-  const [reloadKey, setReloadKey] = useState(0);
-
-  useEffect(() => {
-    if (!userProfile?.company_id || !projectId) return;
-
-    const loadFinancialData = async () => {
-      try {
-        setLoading(true);
-        setLoadError(null);
-
-        const [invoicesRes, expensesRes, projectRes] = await Promise.all([
-          supabase
-            .from('invoices')
-            .select('id, total_amount, status, created_at')
-            .eq('company_id', userProfile.company_id)
-            .eq('project_id', projectId),
-          supabase
-            .from('expenses')
-            .select('amount, expense_date')
-            .eq('company_id', userProfile.company_id)
-            .eq('project_id', projectId),
-          supabase
-            .from('projects')
-            .select('budget')
-            .eq('id', projectId)
-            .eq('company_id', userProfile.company_id)
-            .single(),
-        ]);
-
-        // supabase-js returns the error rather than throwing it, so each read
-        // is checked explicitly; `res.data || []` alone would turn a failed
-        // read into a project that had been billed and spent nothing.
-        const failed = [
-          ['invoices', invoicesRes.error],
-          ['expenses', expensesRes.error],
-          ['projects', projectRes.error],
-        ].filter(([, error]) => error) as Array<[string, { message: string }]>;
-
-        const invoices = invoicesRes.data || [];
-
-        // There is no `payments` table (US-311/US-364). Payments live in
-        // invoice_payments, which carries invoice_id but no project_id, so
-        // they are scoped to the project through its invoices.
-        let payments: Array<{ payment_amount: number; payment_date: string }> = [];
-        if (failed.length === 0 && invoices.length > 0) {
-          const paymentsRes = await supabase
-            .from('invoice_payments')
-            .select('payment_amount, payment_date')
-            .eq('company_id', userProfile.company_id)
-            .in('invoice_id', invoices.map(inv => inv.id));
-          if (paymentsRes.error) failed.push(['invoice_payments', paymentsRes.error]);
-          payments = paymentsRes.data || [];
-        }
-
-        if (failed.length > 0) {
-          throw new Error(
-            `Could not load project financials: ${failed.map(([t, e]) => `${t} (${e.message})`).join('; ')}`,
-          );
-        }
-
-        const expenses = expensesRes.data || [];
-        const project = projectRes.data;
-
-        const contractValue = project?.budget || 0;
-        const billedToDate = invoices.reduce((sum, inv) => sum + (inv.total_amount || 0), 0);
-        const collected = payments.reduce((sum, p) => sum + (p.payment_amount || 0), 0);
-        const outstanding = billedToDate - collected;
-        const totalCosts = expenses.reduce((sum, e) => sum + (e.amount || 0), 0);
-        const netProfit = collected - totalCosts;
-        const profitMargin = billedToDate > 0 ? (netProfit / billedToDate) * 100 : 0;
-
-        // Build monthly cash flow data for last 6 months
-        const months: Array<{ month: string; income: number; expenses: number }> = [];
-        const now = new Date();
-        for (let i = 5; i >= 0; i--) {
-          const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-          const monthStr = d.toLocaleDateString('en-US', { month: 'short', year: '2-digit' });
-          const monthKey = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
-
-          const monthIncome = payments
-            .filter(p => p.payment_date?.startsWith(monthKey))
-            .reduce((sum, p) => sum + (p.payment_amount || 0), 0);
-
-          const monthExpenses = expenses
-            .filter(e => e.expense_date?.startsWith(monthKey))
-            .reduce((sum, e) => sum + (e.amount || 0), 0);
-
-          months.push({ month: monthStr, income: monthIncome, expenses: monthExpenses });
-        }
-
-        setData({
-          contractValue,
-          billedToDate,
-          collected,
-          outstanding,
-          totalCosts,
-          netProfit,
-          profitMargin,
-          previousProfitMargin: profitMargin * 0.95,
-          monthlyCashFlow: months,
-        });
-      } catch (error) {
-        setLoadError(error instanceof Error ? error.message : 'Could not load project financials.');
-        captureException(error, {
-          context: 'ProjectFinancialDashboard.loadFinancialData',
-        });
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadFinancialData();
-  }, [projectId, userProfile?.company_id, reloadKey]);
+  const { data, isLoading: loading, error, refetch } = useProjectFinancials(projectId);
+  const loadError = error ? error.message || 'Could not load project financials.' : null;
 
   if (loading) {
     return (
@@ -171,7 +41,7 @@ export function ProjectFinancialDashboard({ projectId }: ProjectFinancialDashboa
   if (loadError) {
     // A zero here would read as "nothing billed and nothing collected", so a
     // failed load shows the error and no figures.
-    return <ErrorState error={loadError} onRetry={() => setReloadKey(k => k + 1)} />;
+    return <ErrorState error={loadError} onRetry={() => { void refetch(); }} />;
   }
 
   if (!data) return null;

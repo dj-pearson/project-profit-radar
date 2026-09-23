@@ -13,32 +13,26 @@
  * a schedule import and from whatever iOS grows, and the crew must be told
  * regardless of which path was used.
  */
-import { useCallback, useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
   Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList,
 } from '@/components/ui/command';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
-import { logger } from '@/lib/logger';
+import {
+  useScheduleTaskAssignees,
+  type ScheduleAssigneeRow,
+  type ScheduleCrewMember,
+} from '@/hooks/useScheduleTaskAssignees';
 import { UserPlus, X, Check } from 'lucide-react';
 import { useRoleCheck, ROLE_GROUPS } from '@/components/auth/RoleGuard';
 import { confirmAction } from "@/components/ui/confirm-dialog";
 
-interface CrewMember {
-  id: string;
-  first_name: string | null;
-  last_name: string | null;
-  role: string | null;
-}
-
-interface AssigneeRow {
-  id: string;
-  crew_member_id: string;
-}
+type CrewMember = ScheduleCrewMember;
+type AssigneeRow = ScheduleAssigneeRow;
 
 interface ScheduleTaskAssigneesProps {
   scheduleTaskId: string;
@@ -60,88 +54,71 @@ export function ScheduleTaskAssignees({
   // than not showing it.
   const { hasAccess: canAssign } = useRoleCheck(ROLE_GROUPS.CREW_SCHEDULERS);
 
-  const [crew, setCrew] = useState<CrewMember[]>([]);
-  const [assignees, setAssignees] = useState<AssigneeRow[]>([]);
+  const {
+    crew, assignees, error: loadError, refetch,
+    assign: assignCrew, unassign: unassignCrew,
+  } = useScheduleTaskAssignees(scheduleTaskId);
   const [open, setOpen] = useState(false);
   const [saving, setSaving] = useState(false);
-
-  const load = useCallback(async () => {
-    if (!userProfile?.company_id) return;
-    const [{ data: members, error: crewError }, { data: rows, error: rowsError }] =
-      await Promise.all([
-        supabase
-          .from('user_profiles')
-          .select('id, first_name, last_name, role')
-          .eq('company_id', userProfile.company_id)
-          .eq('is_active', true)
-          .order('first_name'),
-        supabase
-          .from('schedule_task_assignees')
-          .select('id, crew_member_id')
-          .eq('schedule_task_id', scheduleTaskId),
-      ]);
-
-    if (crewError || rowsError) {
-      logger.error('Could not load the crew for a schedule task', crewError || rowsError);
-      return;
-    }
-    setCrew((members || []) as CrewMember[]);
-    setAssignees((rows || []) as AssigneeRow[]);
-  }, [userProfile?.company_id, scheduleTaskId]);
-
-  useEffect(() => { void load(); }, [load]);
 
   const assign = async (member: CrewMember) => {
     if (!userProfile?.company_id) return;
     setSaving(true);
-    const { error } = await supabase
-      .from('schedule_task_assignees')
-      .insert({
-        schedule_task_id: scheduleTaskId,
-        project_id: projectId,
-        company_id: userProfile.company_id,
-        crew_member_id: member.id,
-        created_by: userProfile.id,
-      } as never);
-    setSaving(false);
-    setOpen(false);
-
-    if (error) {
+    try {
+      await assignCrew({
+        scheduleTaskId,
+        projectId,
+        companyId: userProfile.company_id,
+        crewMemberId: member.id,
+        createdBy: userProfile.id,
+      });
+    } catch (error) {
       toast({
         variant: 'destructive',
         title: `Could not put ${displayName(member)} on this task`,
-        description: error.message,
+        description: error instanceof Error ? error.message : undefined,
       });
       return;
+    } finally {
+      setSaving(false);
+      setOpen(false);
     }
     toast({
       title: `${displayName(member)} is scheduled`,
       description: 'They have been notified and it is on the crew board.',
     });
-    void load();
     onChanged?.();
   };
 
   const unassign = async (row: AssigneeRow, name: string) => {
     if (!(await confirmAction({ title: `Remove ${name} from this task?`, confirmLabel: 'Remove', destructive: true }))) return;
     setSaving(true);
-    const { error } = await supabase
-      .from('schedule_task_assignees')
-      .delete()
-      .eq('id', row.id);
-    setSaving(false);
-
-    if (error) {
+    try {
+      await unassignCrew(row.id);
+    } catch (error) {
       toast({
         variant: 'destructive',
         title: `Could not take ${name} off this task`,
-        description: error.message,
+        description: error instanceof Error ? error.message : undefined,
       });
       return;
+    } finally {
+      setSaving(false);
     }
-    void load();
     onChanged?.();
   };
+
+  if (loadError) {
+    // A failed read used to render as "Nobody assigned".
+    return (
+      <div className="flex items-center gap-2 text-xs text-destructive" role="alert">
+        Could not load who is on this task.
+        <Button type="button" variant="ghost" size="sm" onClick={refetch}>
+          Retry
+        </Button>
+      </div>
+    );
+  }
 
   const assigned = new Set(assignees.map((a) => a.crew_member_id));
   const nameOf = (id: string) => {

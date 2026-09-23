@@ -89,3 +89,61 @@ export function usePunchListPage<Item>({ enabled = true }: { enabled?: boolean }
     update: (id: string, patch: TablesUpdate<'punch_list_items'>) => update.mutateAsync({ id, patch }),
   };
 }
+
+export async function deletePunchListItem(id: string): Promise<void> {
+  const { data, error } = await supabase.from('punch_list_items').delete().eq('id', id).select('id');
+  if (error) throw error;
+  if (!data || data.length === 0) {
+    throw new Error('The punch list item was not deleted. You may not have permission to delete it.');
+  }
+}
+
+export const projectPunchListKey = (companyId: string | undefined, projectId: string) =>
+  ['punch-list', companyId, 'project', projectId] as const;
+
+export async function fetchProjectPunchList<Item>(projectId: string): Promise<Item[]> {
+  const { data, error } = await supabase
+    .from('punch_list_items')
+    .select('*')
+    .eq('project_id', projectId)
+    .order('created_at', { ascending: false });
+  if (error) throw error;
+  return (data ?? []) as unknown as Item[];
+}
+
+/**
+ * The project detail Punch List tab. It kept its own copy of the list and
+ * patched it by hand after each write; a failed read toasted over "No punch
+ * list items". It shares the 'punch-list' key prefix with /punch-list, so a
+ * write on either screen refreshes both.
+ */
+export function useProjectPunchList<Item>(projectId: string) {
+  const { userProfile } = useAuth();
+  const companyId = userProfile?.company_id ?? undefined;
+  const queryClient = useQueryClient();
+  const ready = !!projectId && !!companyId;
+
+  const query = useQuery({
+    queryKey: projectPunchListKey(companyId, projectId),
+    queryFn: () => fetchProjectPunchList<Item>(projectId),
+    enabled: ready,
+  });
+
+  const invalidate = () => queryClient.invalidateQueries({ queryKey: punchListKey(companyId) });
+  const create = useMutation({ mutationFn: createPunchListItem, onSettled: invalidate });
+  const update = useMutation({
+    mutationFn: ({ id, patch }: { id: string; patch: TablesUpdate<'punch_list_items'> }) => updatePunchListItem(id, patch),
+    onSettled: invalidate,
+  });
+  const remove = useMutation({ mutationFn: deletePunchListItem, onSettled: invalidate });
+
+  return {
+    items: query.data ?? [],
+    isLoading: query.isLoading || !ready,
+    error: query.error as Error | null,
+    refetch: query.refetch,
+    insert: (row: TablesInsert<'punch_list_items'>) => create.mutateAsync(row),
+    update: (id: string, patch: TablesUpdate<'punch_list_items'>) => update.mutateAsync({ id, patch }),
+    remove: (id: string) => remove.mutateAsync(id),
+  };
+}

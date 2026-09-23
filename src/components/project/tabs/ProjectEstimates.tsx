@@ -1,10 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { useAuth } from '@/contexts/AuthContext';
-import { supabase } from '@/integrations/supabase/client';
-import { toast } from '@/hooks/use-toast';
+import { useProjectEstimates } from '@/hooks/useProjectTabLists';
+import { ErrorState } from '@/components/common/ErrorState';
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { 
   Calculator, 
@@ -35,39 +34,7 @@ export const ProjectEstimates: React.FC<ProjectEstimatesProps> = ({
   projectId,
   onNavigate
 }) => {
-  const { userProfile } = useAuth();
-  const [estimates, setEstimates] = useState<Estimate[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    if (projectId && userProfile?.company_id) {
-      loadEstimates();
-    }
-  }, [projectId, userProfile?.company_id]);
-
-  const loadEstimates = async () => {
-    try {
-      setLoading(true);
-      const { data, error } = await supabase
-        .from('estimates')
-        .select('*')
-        .eq('project_id', projectId)
-        .eq('company_id', userProfile?.company_id)
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      setEstimates(data || []);
-    } catch (error: any) {
-      console.error('Error loading estimates:', error);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to load estimates"
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
+  const { rows: estimates, isLoading: loading, error: loadError, refetch } = useProjectEstimates<Estimate>(projectId);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -93,6 +60,17 @@ export const ProjectEstimates: React.FC<ProjectEstimatesProps> = ({
           <LoadingSpinner size="md" />
         </CardContent>
       </Card>
+    );
+  }
+
+  if (loadError) {
+    return (
+      <ErrorState
+        inline
+        title="Estimates could not be loaded"
+        error={loadError}
+        onRetry={() => { void refetch(); }}
+      />
     );
   }
 

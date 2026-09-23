@@ -31,9 +31,9 @@ function code(path: string): string {
 }
 
 describe('the financial screens', () => {
-  // The overview's reads moved into its query hook (US-266).
+  // Both screens' reads moved into their query hooks (US-266).
   const SCREENS = [
-    'src/components/financial/ProjectFinancialDashboard.tsx',
+    'src/hooks/useProjectFinancials.ts',
     'src/hooks/useFinancialOverview.ts',
   ];
 

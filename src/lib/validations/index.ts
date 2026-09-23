@@ -13,3 +13,4 @@ export * from './time-tracking';
 export * from './expenses';
 export * from './projects';
 export * from './users';
+export * from './daily-reports';

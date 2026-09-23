@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -8,7 +8,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { useAuth } from '@/contexts/AuthContext';
-import { supabase } from '@/integrations/supabase/client';
+import { useProjectPermits } from '@/hooks/useProjectPermits';
+import { ErrorState } from '@/components/common/ErrorState';
 import { toast } from '@/hooks/use-toast';
 import { Shield, PlusCircle, ExternalLink, Edit, Trash2, AlertTriangle, CheckCircle, Clock, FileText, DollarSign, Search } from 'lucide-react';
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
@@ -74,9 +75,15 @@ export const ProjectPermits: React.FC<ProjectPermitsProps> = ({
   onNavigate
 }) => {
   const { userProfile } = useAuth();
-  const [permits, setPermits] = useState<EnvironmentalPermit[]>([]);
-  const [filteredPermits, setFilteredPermits] = useState<EnvironmentalPermit[]>([]);
-  const [loading, setLoading] = useState(true);
+  const {
+    permits,
+    isLoading: loading,
+    error: loadError,
+    refetch,
+    create: createPermit,
+    update: updatePermit,
+    remove: deletePermit,
+  } = useProjectPermits<EnvironmentalPermit>(projectId);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const [showAddPermit, setShowAddPermit] = useState(false);
@@ -121,40 +128,7 @@ export const ProjectPermits: React.FC<ProjectPermitsProps> = ({
     annual_fee: '',
     compliance_bond_amount: ''
   });
-  useEffect(() => {
-    if (projectId && userProfile?.company_id) {
-      loadPermits();
-    }
-  }, [projectId, userProfile?.company_id]);
-
-  useEffect(() => {
-    filterPermits();
-  }, [permits, searchTerm, filterStatus]);
-
-  const loadPermits = async () => {
-    try {
-      setLoading(true);
-      const { data, error } = await supabase
-        .from('environmental_permits')
-        .select('*')
-        .eq('project_id', projectId)
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      setPermits((data as unknown as EnvironmentalPermit[]) || []);
-    } catch (error: any) {
-      console.error('Error loading permits:', error);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to load permits"
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const filterPermits = () => {
+  const filteredPermits = useMemo(() => {
     let filtered = permits;
 
     // Filter by search term
@@ -171,8 +145,8 @@ export const ProjectPermits: React.FC<ProjectPermitsProps> = ({
       filtered = filtered.filter(permit => permit.status === filterStatus);
     }
 
-    setFilteredPermits(filtered);
-  };
+    return filtered;
+  }, [permits, searchTerm, filterStatus]);
 
   const resetForm = () => {
     setFormData({
@@ -199,10 +173,12 @@ export const ProjectPermits: React.FC<ProjectPermitsProps> = ({
 
   const handleCreatePermit = async () => {
     try {
+      const companyId = userProfile?.company_id;
+      if (!companyId) throw new Error('Company information is not available.');
       const permitData = {
         ...formData,
         project_id: projectId,
-        company_id: userProfile?.company_id,
+        company_id: companyId,
         application_fee: formData.application_fee ? parseFloat(formData.application_fee) : null,
         annual_fee: formData.annual_fee ? parseFloat(formData.annual_fee) : null,
         compliance_bond_amount: formData.compliance_bond_amount ? parseFloat(formData.compliance_bond_amount) : null,
@@ -214,15 +190,7 @@ export const ProjectPermits: React.FC<ProjectPermitsProps> = ({
         expiration_date: formData.expiration_date || null
       };
 
-      const { data, error } = await supabase
-        .from('environmental_permits')
-        .insert([permitData])
-        .select()
-        .single();
-
-      if (error) throw error;
-
-      setPermits([data as unknown as EnvironmentalPermit, ...permits]);
+      await createPermit(permitData);
       resetForm();
       setShowAddPermit(false);
 
@@ -257,16 +225,7 @@ export const ProjectPermits: React.FC<ProjectPermitsProps> = ({
         expiration_date: formData.expiration_date || null
       };
 
-      const { data, error } = await supabase
-        .from('environmental_permits')
-        .update(permitData)
-        .eq('id', editingPermit.id)
-        .select()
-        .single();
-
-      if (error) throw error;
-
-      setPermits(permits.map(p => p.id === editingPermit.id ? (data as unknown as EnvironmentalPermit) : p));
+      await updatePermit(editingPermit.id, permitData);
       resetForm();
       setEditingPermit(null);
 
@@ -287,14 +246,7 @@ export const ProjectPermits: React.FC<ProjectPermitsProps> = ({
   const handleDeletePermit = async (permitId: string) => {
     if (!(await confirmAction({ title: 'Delete this permit?', description: 'This cannot be undone.', destructive: true }))) return;
     try {
-      const { error } = await supabase
-        .from('environmental_permits')
-        .delete()
-        .eq('id', permitId);
-
-      if (error) throw error;
-
-      setPermits(permits.filter(p => p.id !== permitId));
+      await deletePermit(permitId);
       toast({
         title: "Success",
         description: "Permit deleted successfully"
@@ -304,7 +256,7 @@ export const ProjectPermits: React.FC<ProjectPermitsProps> = ({
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Failed to delete permit"
+        description: error.message || "Failed to delete permit"
       });
     }
   };
@@ -395,6 +347,17 @@ export const ProjectPermits: React.FC<ProjectPermitsProps> = ({
           <LoadingSpinner size="md" />
         </CardContent>
       </Card>
+    );
+  }
+
+  if (loadError) {
+    return (
+      <ErrorState
+        inline
+        title="Permits could not be loaded"
+        error={loadError}
+        onRetry={() => { void refetch(); }}
+      />
     );
   }
 

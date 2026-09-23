@@ -1,10 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { useAuth } from '@/contexts/AuthContext';
-import { supabase } from '@/integrations/supabase/client';
-import { toast } from '@/hooks/use-toast';
+import { useRecentProjectDailyReports } from '@/hooks/useProjectTabLists';
+import { ErrorState } from '@/components/common/ErrorState';
 import { 
   FileText, 
   Calendar,
@@ -43,50 +42,8 @@ export const ProjectDailyReports: React.FC<ProjectDailyReportsProps> = ({
   projectId,
   onNavigate
 }) => {
-  const { userProfile } = useAuth();
-  const [reports, setReports] = useState<DailyReport[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { rows: reports, isLoading: loading, error: loadError, refetch } = useRecentProjectDailyReports<DailyReport>(projectId);
   const [expanded, setExpanded] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (projectId && userProfile?.company_id) {
-      loadReports();
-    }
-  }, [projectId, userProfile?.company_id]);
-
-  const loadReports = async () => {
-    try {
-      setLoading(true);
-      const { data, error } = await supabase
-        .from('daily_reports')
-        // photo_attachments rather than the photos array: the count has to
-        // match what the timeline and the handover bundle will show, and those
-        // read the rows (US-330).
-        .select('*, photo_attachments(count)')
-        .eq('project_id', projectId)
-        .order('created_at', { ascending: false })
-        .limit(5);
-
-      if (error) throw error;
-
-      const withCounts = ((data || []) as unknown as Array<
-        DailyReport & { photo_attachments?: Array<{ count: number }> }
-      >).map((r) => ({
-        ...r,
-        photo_count: r.photo_attachments?.[0]?.count ?? 0,
-      }));
-      setReports(withCounts);
-    } catch (error: any) {
-      console.error('Error loading daily reports:', error);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to load daily reports"
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
 
   if (loading) {
     return (
@@ -95,6 +52,17 @@ export const ProjectDailyReports: React.FC<ProjectDailyReportsProps> = ({
           <LoadingSpinner size="md" />
         </CardContent>
       </Card>
+    );
+  }
+
+  if (loadError) {
+    return (
+      <ErrorState
+        inline
+        title="Daily reports could not be loaded"
+        error={loadError}
+        onRetry={() => { void refetch(); }}
+      />
     );
   }
 

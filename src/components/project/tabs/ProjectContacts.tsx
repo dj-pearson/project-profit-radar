@@ -1,10 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { useAuth } from '@/contexts/AuthContext';
-import { supabase } from '@/integrations/supabase/client';
-import { toast } from '@/hooks/use-toast';
+import { useProjectContacts } from '@/hooks/useProjectTabLists';
+import { ErrorState } from '@/components/common/ErrorState';
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { 
   Users, 
@@ -38,48 +37,7 @@ interface ProjectContact {
 }
 
 export const ProjectContacts: React.FC<ProjectContactsProps> = ({ projectId }) => {
-  const { userProfile } = useAuth();
-  const [contacts, setContacts] = useState<ProjectContact[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    if (projectId && userProfile?.company_id) {
-      loadContacts();
-    }
-  }, [projectId, userProfile?.company_id]);
-
-  const loadContacts = async () => {
-    try {
-      setLoading(true);
-      const { data, error } = await supabase
-        .from('project_contacts')
-        .select(`
-          *,
-          contacts!project_contacts_contact_id_fkey (
-            id,
-            first_name,
-            last_name,
-            company_name,
-            email,
-            phone,
-            contact_type
-          )
-        `)
-        .eq('project_id', projectId);
-
-      if (error) throw error;
-      setContacts(data || []);
-    } catch (error: any) {
-      console.error('Error loading contacts:', error);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to load project contacts"
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
+  const { rows: contacts, isLoading: loading, error: loadError, refetch } = useProjectContacts<ProjectContact>(projectId);
 
   const getContactTypeColor = (type: string) => {
     switch (type) {
@@ -109,6 +67,17 @@ export const ProjectContacts: React.FC<ProjectContactsProps> = ({ projectId }) =
           <LoadingSpinner size="md" />
         </CardContent>
       </Card>
+    );
+  }
+
+  if (loadError) {
+    return (
+      <ErrorState
+        inline
+        title="Project contacts could not be loaded"
+        error={loadError}
+        onRetry={() => { void refetch(); }}
+      />
     );
   }
 

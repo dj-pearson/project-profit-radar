@@ -311,6 +311,9 @@ jobs:
       - name: Raw supabase.from() in components guard (US-266)
         run: node scripts/check-raw-supabase-in-components.mjs
 
+      - name: Raw-state form guard (US-268)
+        run: node scripts/check-form-validation.mjs
+
 
       - name: Unreferenced-module guard (US-314 follow-up)
         run: node scripts/check-unreferenced-modules.mjs

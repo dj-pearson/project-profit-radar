@@ -89,7 +89,9 @@ describe('one section list (US-331)', () => {
 
   it('has a photos section, on the record US-330 created', () => {
     expect(isProjectSection('photos')).toBe(true);
-    expect(readFileSync('src/components/project/tabs/ProjectPhotos.tsx', 'utf8'))
+    // The tab reads through useProjectPhotos (US-266).
+    expect(readFileSync('src/components/project/tabs/ProjectPhotos.tsx', 'utf8')).toMatch(/useProjectPhotos\(projectId\)/);
+    expect(readFileSync('src/hooks/useProjectPhotos.ts', 'utf8'))
       .toMatch(/from\('photo_attachments'\)/);
   });
 
@@ -97,7 +99,9 @@ describe('one section list (US-331)', () => {
     // project-documents is public today only because US-289's flip was never
     // committed. A page that hardcodes getPublicUrl breaks the day it lands.
     const page = strip('src/components/project/tabs/ProjectPhotos.tsx');
-    expect(page).toMatch(/createSignedUrls/);
+    const hook = strip('src/hooks/useProjectPhotos.ts');
+    expect(hook).toMatch(/createSignedUrls/);
+    expect(hook).not.toMatch(/getPublicUrl/);
     expect(page).not.toMatch(/getPublicUrl/);
   });
 });

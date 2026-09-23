@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSubscription } from "@/contexts/SubscriptionContext";
@@ -17,7 +17,7 @@ import {
 } from "@/components/ui/select";
 import { AccessibleModal } from "@/components/accessibility/AccessibleModal";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
+import { EditProjectForm, EDIT_PROJECT_FORM_ID } from "./projects/EditProjectForm";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { LoadingRegion, ProjectCardSkeleton } from "@/components/ui/skeletons";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -231,24 +231,8 @@ const Projects = () => {
     }
   };
 
-  const handleEditSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleEditSubmit = async (updates: Parameters<typeof handleUpdateProject>[1]) => {
     if (!editingProject) return;
-
-    const formData = new FormData(e.target as HTMLFormElement);
-    const updates = {
-      name: formData.get("name") as string,
-      client_name: formData.get("client_name") as string,
-      site_address: formData.get("site_address") as string,
-      status: formData.get("status") as string,
-      completion_percentage: parseInt(
-        formData.get("completion_percentage") as string
-      ),
-      budget: parseFloat(formData.get("budget") as string),
-      start_date: formData.get("start_date") as string,
-      end_date: formData.get("end_date") as string,
-      description: formData.get("description") as string,
-    };
 
     await handleUpdateProject(editingProject.id, updates);
     setEditDialogOpen(false);
@@ -1050,119 +1034,16 @@ const Projects = () => {
             >
               Cancel
             </Button>
-            <Button type="submit" form="edit-project-form">Update Project</Button>
+            <Button type="submit" form={EDIT_PROJECT_FORM_ID}>Update Project</Button>
           </>
         }
       >
         {editingProject && (
-          <form id="edit-project-form" onSubmit={handleEditSubmit} className="space-y-4" aria-label="Edit project form">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="name">Project Name</Label>
-                <Input
-                  id="name"
-                  name="name"
-                  defaultValue={editingProject.name}
-                  required
-                  aria-required="true"
-                />
-              </div>
-              <div>
-                <Label htmlFor="client_name">Client Name</Label>
-                <Input
-                  id="client_name"
-                  name="client_name"
-                  defaultValue={editingProject.client_name}
-                  required
-                  aria-required="true"
-                />
-              </div>
-            </div>
-
-            <div>
-              <Label htmlFor="site_address">Site Address</Label>
-              <Input
-                id="site_address"
-                name="site_address"
-                defaultValue={editingProject.site_address}
-              />
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="status">Status</Label>
-                <Select name="status" defaultValue={editingProject.status}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="planning">Planning</SelectItem>
-                    <SelectItem value="active">Active</SelectItem>
-                    <SelectItem value="in_progress">In Progress</SelectItem>
-                    <SelectItem value="on_hold">On Hold</SelectItem>
-                    <SelectItem value="completed">Completed</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label htmlFor="completion_percentage">Completion %</Label>
-                <Input
-                  id="completion_percentage"
-                  name="completion_percentage"
-                  type="number"
-                  min="0"
-                  max="100"
-                  defaultValue={editingProject.completion_percentage}
-                />
-              </div>
-            </div>
-
-            <div>
-              <Label htmlFor="budget">Budget</Label>
-              <Input
-                id="budget"
-                name="budget"
-                type="number"
-                step="0.01"
-                defaultValue={editingProject.budget}
-              />
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="start_date">Start Date</Label>
-                <Input
-                  id="start_date"
-                  name="start_date"
-                  type="date"
-                  defaultValue={editingProject.start_date}
-                  required
-                  aria-required="true"
-                />
-              </div>
-              <div>
-                <Label htmlFor="end_date">End Date</Label>
-                <Input
-                  id="end_date"
-                  name="end_date"
-                  type="date"
-                  defaultValue={editingProject.end_date}
-                  required
-                  aria-required="true"
-                />
-              </div>
-            </div>
-
-            <div>
-              <Label htmlFor="description">Description</Label>
-              <Textarea
-                id="description"
-                name="description"
-                defaultValue={editingProject.description}
-                rows={3}
-              />
-            </div>
-          </form>
+          <EditProjectForm
+            key={editingProject.id}
+            project={editingProject}
+            onSubmit={handleEditSubmit}
+          />
         )}
       </AccessibleModal>
 

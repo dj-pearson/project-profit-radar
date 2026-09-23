@@ -314,9 +314,12 @@ describe('closeout is real, and US-048 is answered (US-328)', () => {
   });
 
   it('reads persisted items rather than an array in the file', () => {
+    // The tab reads through useProjectCloseout (US-266).
     const tab = strip('src/components/project/ProjectCloseoutTab.tsx');
-    expect(tab).toMatch(/from\('project_closeout_items'\)/);
-    expect(tab).toMatch(/from\('project_closeout_status'\)/);
+    const hook = strip('src/hooks/useProjectCloseout.ts');
+    expect(tab).toMatch(/useProjectCloseout\(projectId\)/);
+    expect(hook).toMatch(/from\('project_closeout_items'\)/);
+    expect(hook).toMatch(/from\('project_closeout_status'\)/);
     expect(tab).not.toMatch(/const closeoutChecklist/);
   });
 
@@ -324,6 +327,8 @@ describe('closeout is real, and US-048 is answered (US-328)', () => {
     const tab = strip('src/components/project/ProjectCloseoutTab.tsx');
     expect(tab).toMatch(/downloadHandoverBundle/);
     expect(tab).toMatch(/handover_sent_at/);
+    // The stamp is written by the hook's send, and read back by the tab.
+    expect(strip('src/hooks/useProjectCloseout.ts')).toMatch(/update\(\{ handover_sent_at:/);
     expect(existsSync('src/utils/handoverBundleGenerator.ts')).toBe(true);
   });
 });

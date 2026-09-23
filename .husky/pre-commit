@@ -184,6 +184,11 @@ node scripts/count-a11y-adoption.mjs --check || exit 1
 #       surfaced. Exact ratchet over files reachable from src/main.tsx.
 node scripts/check-raw-supabase-in-components.mjs || exit 1
 
+# 3u1e. Raw-state forms (US-268) - forms use react-hook-form + zodResolver with
+#       the shared Form components, so errors show inline with aria-invalid.
+#       Exact ratchet on files that render a <form> without react-hook-form.
+node scripts/check-form-validation.mjs || exit 1
+
 
 # 3u2. Unreferenced modules (US-314 follow-up) - the component guard below only
 #      looks at components/ and pages/. hooks, lib, services and utils were

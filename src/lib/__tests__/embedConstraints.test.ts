@@ -94,9 +94,13 @@ describe('the guard (US-336)', () => {
 
 describe('the three broken embeds are gone (US-336)', () => {
   it('the crew panel fetches names separately', () => {
+    // The panel reads through useDailyReportCrew (US-266).
     const panel = strip('src/components/daily-reports/DailyReportCrewPanel.tsx');
+    const hook = strip('src/hooks/useDailyReportCrew.ts');
+    expect(panel).toMatch(/useDailyReportCrew\(/);
     expect(panel).not.toMatch(/user_profiles[!(]/);
-    expect(panel).toMatch(/from\('user_profiles'\)/);
+    expect(hook).not.toMatch(/user_profiles[!(]/);
+    expect(hook).toMatch(/from\('user_profiles'\)/);
   });
 
   it('timesheet detail and its history fetch names separately', () => {
@@ -121,7 +125,7 @@ describe('the three broken embeds are gone (US-336)', () => {
       ['src/hooks/useTimesheetApproval.ts', 'Timesheet detail loaded without the names on it'],
       ['src/hooks/useTimesheetApproval.ts', 'Approval history loaded without the names on it'],
       ['src/services/taskService.ts', 'Task comments loaded without their authors'],
-      ['src/components/daily-reports/DailyReportCrewPanel.tsx', 'Could not load crew names'],
+      ['src/hooks/useDailyReportCrew.ts', 'Could not load crew names'],
     ] as const) {
       expect(readFileSync(file, 'utf8'), `${file} should degrade`).toContain(marker);
     }

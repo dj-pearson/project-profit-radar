@@ -12,31 +12,23 @@
  * shows the result, keeps it editable, and says plainly where the report and
  * the timesheets disagree.
  */
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { logger } from '@/lib/logger';
+import { useDailyReportCrew, type DailyReportCrewItem } from '@/hooks/useDailyReportCrew';
+import { ErrorState } from '@/components/common/ErrorState';
 import { Users, RefreshCw, AlertCircle, Trash2 } from 'lucide-react';
 import {
   crewFromTimeEntries, totalCrewHours, reconcileDailyReport,
-  type TimeEntryLike,
 } from '@/lib/dailyReportField';
 import { confirmAction } from "@/components/ui/confirm-dialog";
 
-interface CrewItem {
-  id: string;
-  user_id: string | null;
-  crew_member_name: string;
-  role: string | null;
-  hours_worked: number | null;
-  overtime_hours: number | null;
-}
+type CrewItem = DailyReportCrewItem;
 
 interface Props {
   dailyReportId: string;
@@ -50,74 +42,10 @@ export function DailyReportCrewPanel({
   dailyReportId, projectId, reportDate, reportedCrewCount, onChanged,
 }: Props) {
   const { toast } = useToast();
-  const [items, setItems] = useState<CrewItem[]>([]);
-  const [timesheet, setTimesheet] = useState<TimeEntryLike[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [syncing, setSyncing] = useState(false);
-
-  const load = useCallback(async () => {
-    setLoading(true);
-    const [{ data: crew, error: crewError }, { data: entries, error: entryError }] =
-      await Promise.all([
-        supabase
-          .from('daily_report_crew_items')
-          .select('id, user_id, crew_member_name, role, hours_worked, overtime_hours')
-          .eq('daily_report_id', dailyReportId)
-          .order('crew_member_name'),
-        // No embed. time_entries.user_id has no foreign key to user_profiles -
-        // no migration creates one, and the generated types list only the
-        // cost_code, geofence and project constraints - so both the bare embed
-        // and the named-constraint hint return a SelectQueryError rather than
-        // rows. The names are fetched separately below.
-        supabase
-          .from('time_entries')
-          .select('user_id, total_hours')
-          .eq('project_id', projectId)
-          .gte('start_time', `${reportDate}T00:00:00`)
-          .lte('start_time', `${reportDate}T23:59:59`),
-      ]);
-
-    if (crewError || entryError) {
-      logger.error('Could not load the crew for a daily report', crewError || entryError);
-      toast({
-        variant: 'destructive',
-        title: 'Could not load the crew',
-        description: (crewError || entryError)?.message,
-      });
-    }
-
-    setItems((crew || []) as CrewItem[]);
-
-    const rows = (entries || []) as Array<{ user_id: string; total_hours: number | null }>;
-    const userIds = [...new Set(rows.map((r) => r.user_id).filter(Boolean))];
-
-    // One extra query rather than an embed that cannot resolve. A failure here
-    // costs the names, not the hours, so the reconciliation still works.
-    const people = new Map<string, { first_name: string | null; last_name: string | null; role: string | null }>();
-    if (userIds.length > 0) {
-      const { data: profiles, error: profileError } = await supabase
-        .from('user_profiles')
-        .select('id, first_name, last_name, role')
-        .in('id', userIds);
-      if (profileError) {
-        logger.error('Could not load crew names for the timesheet comparison', profileError);
-      }
-      for (const p of profiles || []) {
-        people.set(p.id, { first_name: p.first_name, last_name: p.last_name, role: p.role });
-      }
-    }
-
-    setTimesheet(rows.map((e) => ({
-      user_id: e.user_id,
-      total_hours: e.total_hours,
-      first_name: people.get(e.user_id)?.first_name,
-      last_name: people.get(e.user_id)?.last_name,
-      role: people.get(e.user_id)?.role,
-    })));
-    setLoading(false);
-  }, [dailyReportId, projectId, reportDate, toast]);
-
-  useEffect(() => { void load(); }, [load]);
+  const {
+    items, timesheet, isLoading: loading, error: loadError, refetch,
+    setHours, remove: removeItem, pull: pullCrew, isPulling: syncing,
+  } = useDailyReportCrew(dailyReportId, projectId, reportDate);
 
   const fromTimesheets = useMemo(() => crewFromTimeEntries(timesheet), [timesheet]);
 
@@ -143,57 +71,53 @@ export function DailyReportCrewPanel({
   );
 
   const pull = async () => {
-    setSyncing(true);
-    const { data, error } = await supabase
-      .rpc('sync_daily_report_crew', { p_daily_report_id: dailyReportId });
-    setSyncing(false);
-
-    if (error) {
+    let added: number;
+    try {
+      added = await pullCrew();
+    } catch (error) {
       toast({
         variant: 'destructive',
         title: 'Could not pull the crew',
-        description: error.message,
+        description: error instanceof Error ? error.message : undefined,
       });
       return;
     }
     toast({
-      title: (data ?? 0) > 0
-        ? `${data} crew member(s) added`
+      title: added > 0
+        ? `${added} crew member(s) added`
         : 'Nothing new to pull',
-      description: (data ?? 0) > 0
+      description: added > 0
         ? 'From the time entries on this job today. Edit anything that is wrong.'
         : 'Everyone who clocked in is already on this report.',
     });
-    void load();
     onChanged?.();
   };
 
   const updateHours = async (item: CrewItem, field: 'hours_worked' | 'overtime_hours', value: number) => {
-    const previous = items;
-    setItems((prev) => prev.map((i) => (i.id === item.id ? { ...i, [field]: value } : i)));
-
-    const { error } = await supabase
-      .from('daily_report_crew_items')
-      .update({ [field]: value } as never)
-      .eq('id', item.id);
-
-    if (error) {
-      setItems(previous);
-      toast({ variant: 'destructive', title: 'Could not save that', description: error.message });
+    // Optimistic in the hook; it rolls back when the write fails.
+    try {
+      await setHours(item.id, field, value);
+    } catch (error) {
+      toast({
+        variant: 'destructive',
+        title: 'Could not save that',
+        description: error instanceof Error ? error.message : undefined,
+      });
     }
   };
 
   const remove = async (item: CrewItem) => {
     if (!(await confirmAction({ title: 'Remove this crew entry from the report?', confirmLabel: 'Remove', destructive: true }))) return;
-    const { error } = await supabase
-      .from('daily_report_crew_items')
-      .delete()
-      .eq('id', item.id);
-    if (error) {
-      toast({ variant: 'destructive', title: 'Could not remove them', description: error.message });
+    try {
+      await removeItem(item.id);
+    } catch (error) {
+      toast({
+        variant: 'destructive',
+        title: 'Could not remove them',
+        description: error instanceof Error ? error.message : undefined,
+      });
       return;
     }
-    void load();
     onChanged?.();
   };
 
@@ -217,6 +141,13 @@ export function DailyReportCrewPanel({
       <CardContent className="space-y-4">
         {loading ? (
           <Skeleton className="h-28 w-full" />
+        ) : loadError ? (
+          <ErrorState
+            inline
+            title="Could not load the crew"
+            error={loadError}
+            onRetry={() => { void refetch(); }}
+          />
         ) : items.length === 0 ? (
           <p className="text-sm text-muted-foreground py-4 text-center">
             {fromTimesheets.length > 0
@@ -286,7 +217,7 @@ export function DailyReportCrewPanel({
           </div>
         )}
 
-        {!reconciliation.agrees && (
+        {!loading && !loadError && !reconciliation.agrees && (
           <Alert>
             <AlertCircle className="h-4 w-4" aria-hidden="true" />
             <AlertDescription>
