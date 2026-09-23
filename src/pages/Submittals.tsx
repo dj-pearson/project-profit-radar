@@ -366,7 +366,7 @@ const Submittals = () => {
         <Helmet>
         <title>Submittals Tracker – Approvals & Accountability | Brikly</title>
         <meta name="description" content="Manage submittals with formal approvals, due dates, and review history for full accountability." />
-        <link rel="canonical" href="/submittals" />
+        <link rel="canonical" href="https://brikly.net/submittals" />
       </Helmet>
       <div className="space-y-4 sm:space-y-6">
       {/* Header */}

@@ -24,21 +24,21 @@ export default function JobCostingSoftwareComparison() {
     "author": {
       "@type": "Organization",
       "name": "Brikly",
-      "url": "https://brikly.ai"
+      "url": "https://brikly.net"
     },
     "publisher": {
       "@type": "Organization",
       "name": "Brikly",
       "logo": {
         "@type": "ImageObject",
-        "url": "https://brikly.ai/logo.png"
+        "url": "https://brikly.net/BriklyLogo.png"
       }
     },
     "datePublished": "2025-01-14",
     "dateModified": "2025-01-14",
     "mainEntityOfPage": {
       "@type": "WebPage",
-      "@id": "https://brikly.ai/resources/job-costing-software-comparison"
+      "@id": "https://brikly.net/resources/job-costing-software-comparison"
     },
     "keywords": "construction job costing software, job costing comparison, construction cost tracking, real-time job costing, contractor software",
     "articleSection": "Construction Technology",
@@ -106,7 +106,7 @@ export default function JobCostingSoftwareComparison() {
         <meta property="og:title" content="7 Best Job Costing Software for Contractors Compared (2025)" />
         <meta property="og:description" content="Compare the top 7 construction job costing software tools. Real pricing, features, pros & cons to help you choose the right solution." />
         <meta property="og:type" content="article" />
-        <meta property="og:url" content="https://brikly.ai/resources/job-costing-software-comparison" />
+        <meta property="og:url" content="https://brikly.net/resources/job-costing-software-comparison" />
 
         {/* Twitter Card */}
         <meta name="twitter:card" content="summary_large_image" />
@@ -121,7 +121,7 @@ export default function JobCostingSoftwareComparison() {
           {JSON.stringify(faqSchema)}
         </script>
 
-        <link rel="canonical" href="https://brikly.ai/resources/job-costing-software-comparison" />
+        <link rel="canonical" href="https://brikly.net/resources/job-costing-software-comparison" />
       </Helmet>
 
       <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white">

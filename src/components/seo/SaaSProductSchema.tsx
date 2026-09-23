@@ -80,7 +80,7 @@ export const SaaSProductSchema: React.FC<SaaSProductSchemaProps> = ({
       '@type': 'Organization',
       name: 'Brikly',
       url: 'https://brikly.net',
-      logo: 'https://brikly.net/logo.png',
+      logo: 'https://brikly.net/BriklyLogo.png',
     },
 
     // Download/Access URLs
@@ -265,7 +265,7 @@ export const BriklyServiceSchema: React.FC = () => {
       '@type': 'Organization',
       name: 'Brikly',
       url: 'https://brikly.net',
-      logo: 'https://brikly.net/logo.png',
+      logo: 'https://brikly.net/BriklyLogo.png',
       telephone: '+1-800-BRIKLY',
       email: 'sales@brikly.net',
 

@@ -4,6 +4,7 @@ import { useLocation } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { BRIKLY_LOGO_URL } from '@/lib/utils';
 import { logger } from '@/lib/logger';
+import { SITE_ORIGIN, toCanonicalUrl } from '@/lib/seo/canonical';
 
 export interface UnifiedSEOProps {
   // Allow manual override (existing pattern)
@@ -116,7 +117,7 @@ export const UnifiedSEOSystem: React.FC<UnifiedSEOProps> = ({
   };
 
   // Determine final values using priority system
-  const siteUrl = 'https://brikly.net';
+  const siteUrl = SITE_ORIGIN;
   const finalTitle = getFinalValue(
     title,
     dbConfig?.title,
@@ -138,11 +139,16 @@ export const UnifiedSEOSystem: React.FC<UnifiedSEOProps> = ({
     ['construction', 'project management', 'contractor software']
   );
 
-  const finalCanonical = getFinalValue(
-    canonicalUrl,
-    dbConfig?.canonical_url,
-    enterpriseConfig?.canonicalUrl,
-    `${siteUrl}${location.pathname}`
+  // Absolute regardless of source: props and seo_configurations rows both
+  // carry relative paths (US-381).
+  const finalCanonical = toCanonicalUrl(
+    getFinalValue(
+      canonicalUrl,
+      dbConfig?.canonical_url,
+      enterpriseConfig?.canonicalUrl,
+      `${siteUrl}${location.pathname}`
+    ),
+    location.pathname
   );
 
   const finalOgTitle = getFinalValue(
@@ -166,11 +172,14 @@ export const UnifiedSEOSystem: React.FC<UnifiedSEOProps> = ({
     BRIKLY_LOGO_URL
   );
 
-  const finalOgUrl = getFinalValue(
-    ogUrl,
-    null,
-    enterpriseConfig?.ogUrl,
-    `${siteUrl}${location.pathname}`
+  const finalOgUrl = toCanonicalUrl(
+    getFinalValue(
+      ogUrl,
+      null,
+      enterpriseConfig?.ogUrl,
+      `${siteUrl}${location.pathname}`
+    ),
+    location.pathname
   );
 
   const finalNoIndex = getFinalValue(

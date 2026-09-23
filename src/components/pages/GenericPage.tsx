@@ -1,6 +1,7 @@
 import React from "react";
 import { Helmet } from "react-helmet-async";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
+import { toCanonicalUrl } from "@/lib/seo/canonical";
 
 interface GenericPageProps {
   title: string;           // SEO title (will append | Brikly)
@@ -25,7 +26,7 @@ export const GenericPage: React.FC<GenericPageProps> = ({
       <Helmet>
         <title>{pageTitle}</title>
         <meta name="description" content={description} />
-        <link rel="canonical" href={canonical} />
+        <link rel="canonical" href={toCanonicalUrl(canonical)} />
       </Helmet>
       <main className="space-y-4">
         <h1 className="text-2xl font-semibold">{h1Text}</h1>

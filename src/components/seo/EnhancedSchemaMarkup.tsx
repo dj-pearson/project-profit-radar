@@ -25,7 +25,7 @@ export const OrganizationSchema = () => (
         "@type": "Organization",
         "name": "Brikly",
         "url": "https://brikly.net",
-        "logo": "https://brikly.net/logo.png",
+        "logo": "https://brikly.net/BriklyLogo.png",
         "address": {
           "@type": "PostalAddress",
           "addressCountry": "US"

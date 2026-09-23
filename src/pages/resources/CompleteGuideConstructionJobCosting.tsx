@@ -24,21 +24,21 @@ export default function CompleteGuideConstructionJobCosting() {
     "author": {
       "@type": "Organization",
       "name": "Brikly",
-      "url": "https://brikly.ai"
+      "url": "https://brikly.net"
     },
     "publisher": {
       "@type": "Organization",
       "name": "Brikly",
       "logo": {
         "@type": "ImageObject",
-        "url": "https://brikly.ai/logo.png"
+        "url": "https://brikly.net/BriklyLogo.png"
       }
     },
     "datePublished": "2025-01-14",
     "dateModified": "2025-01-14",
     "mainEntityOfPage": {
       "@type": "WebPage",
-      "@id": "https://brikly.ai/resources/complete-guide-construction-job-costing"
+      "@id": "https://brikly.net/resources/complete-guide-construction-job-costing"
     },
     "keywords": "construction job costing, how to set up job costing, job costing best practices, construction cost tracking, contractor job costing",
     "articleSection": "Construction Financial Management",
@@ -106,7 +106,7 @@ export default function CompleteGuideConstructionJobCosting() {
         <meta property="og:title" content="Complete Guide to Construction Job Costing (2025)" />
         <meta property="og:description" content="Comprehensive guide covering job costing setup, best practices, and common mistakes for contractors." />
         <meta property="og:type" content="article" />
-        <meta property="og:url" content="https://brikly.ai/resources/complete-guide-construction-job-costing" />
+        <meta property="og:url" content="https://brikly.net/resources/complete-guide-construction-job-costing" />
 
         {/* Twitter Card */}
         <meta name="twitter:card" content="summary_large_image" />
@@ -121,7 +121,7 @@ export default function CompleteGuideConstructionJobCosting() {
           {JSON.stringify(faqSchema)}
         </script>
 
-        <link rel="canonical" href="https://brikly.ai/resources/complete-guide-construction-job-costing" />
+        <link rel="canonical" href="https://brikly.net/resources/complete-guide-construction-job-costing" />
       </Helmet>
 
       <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white">

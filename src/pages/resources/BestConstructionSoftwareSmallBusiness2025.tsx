@@ -19,7 +19,7 @@ const BestConstructionSoftwareSmallBusiness2025 = () => {
       "name": "Brikly",
       "logo": {
         "@type": "ImageObject",
-        "url": "https://brikly.net/logo.png"
+        "url": "https://brikly.net/BriklyLogo.png"
       }
     },
     "datePublished": "2025-01-14",

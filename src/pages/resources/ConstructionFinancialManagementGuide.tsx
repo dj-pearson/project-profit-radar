@@ -24,21 +24,21 @@ export default function ConstructionFinancialManagementGuide() {
     "author": {
       "@type": "Organization",
       "name": "Brikly",
-      "url": "https://brikly.ai"
+      "url": "https://brikly.net"
     },
     "publisher": {
       "@type": "Organization",
       "name": "Brikly",
       "logo": {
         "@type": "ImageObject",
-        "url": "https://brikly.ai/logo.png"
+        "url": "https://brikly.net/BriklyLogo.png"
       }
     },
     "datePublished": "2025-01-14",
     "dateModified": "2025-01-14",
     "mainEntityOfPage": {
       "@type": "WebPage",
-      "@id": "https://brikly.ai/resources/construction-financial-management-ultimate-guide"
+      "@id": "https://brikly.net/resources/construction-financial-management-ultimate-guide"
     },
     "keywords": "construction financial management, contractor accounting, construction business finances, financial management for contractors, construction cash flow",
     "articleSection": "Construction Financial Management",
@@ -106,7 +106,7 @@ export default function ConstructionFinancialManagementGuide() {
         <meta property="og:title" content="Construction Financial Management: The Ultimate Guide (2025)" />
         <meta property="og:description" content="Complete guide covering cash flow, job costing, financial reporting, and profit optimization for construction businesses." />
         <meta property="og:type" content="article" />
-        <meta property="og:url" content="https://brikly.ai/resources/construction-financial-management-ultimate-guide" />
+        <meta property="og:url" content="https://brikly.net/resources/construction-financial-management-ultimate-guide" />
 
         {/* Twitter Card */}
         <meta name="twitter:card" content="summary_large_image" />
@@ -121,7 +121,7 @@ export default function ConstructionFinancialManagementGuide() {
           {JSON.stringify(faqSchema)}
         </script>
 
-        <link rel="canonical" href="https://brikly.ai/resources/construction-financial-management-ultimate-guide" />
+        <link rel="canonical" href="https://brikly.net/resources/construction-financial-management-ultimate-guide" />
       </Helmet>
 
       <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white">

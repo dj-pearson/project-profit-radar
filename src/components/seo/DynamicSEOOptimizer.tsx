@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { useLocation } from 'react-router-dom';
 import { enterpriseSeoService, SEOPageConfig } from '@/services/EnterpriseSeOService';
+import { toCanonicalUrl } from '@/lib/seo/canonical';
 
 export interface DynamicSEOOptimizerProps {
   title?: string;
@@ -65,7 +66,7 @@ export const DynamicSEOOptimizer: React.FC<DynamicSEOOptimizerProps> = ({
   const finalTitle = title || seoConfig.title;
   const finalDescription = description || seoConfig.description;
   const finalKeywords = keywords || seoConfig.keywords;
-  const finalCanonical = canonicalUrl || seoConfig.canonicalUrl;
+  const finalCanonical = toCanonicalUrl(canonicalUrl || seoConfig.canonicalUrl, location.pathname);
   const finalImage = image || seoConfig.openGraph.image;
 
   // Generate structured data
@@ -85,7 +86,7 @@ export const DynamicSEOOptimizer: React.FC<DynamicSEOOptimizerProps> = ({
       name: 'Brikly',
       logo: {
         '@type': 'ImageObject',
-        url: 'https://brikly.net/logo.png'
+        url: 'https://brikly.net/BriklyLogo.png'
       }
     };
     if (article.publishedTime) {

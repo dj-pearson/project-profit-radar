@@ -6602,3 +6602,13 @@ view by `user_id`; the view's column is `crew_member_id`.
 These four stories took the TypeScript error count from 1658 to 1635. Most of
 the 23 cleared errors were the compiler reporting these nonexistent columns.
 The budget baseline is lowered to match.
+
+## US-381: canonical URLs are absolute
+
+`PageSEO` and `UnifiedSEOSystem` passed whatever canonical they were given
+straight through, so 31 pages shipped `href="/pricing"`. Both now resolve it
+against the site origin through one helper, and so do the four other SEO
+components that build canonicals. A scan test fails on a relative or off-host
+literal canonical. Six pages had canonicals and structured data on brikly.ai
+instead of brikly.net. Eighteen files pointed the schema logo at `/logo.png`,
+which doesn't exist; they now point at `/BriklyLogo.png`.

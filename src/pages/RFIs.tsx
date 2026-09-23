@@ -477,7 +477,7 @@ const RFIs = () => {
         <Helmet>
         <title>RFIs Tracker – Formal Questions & Approvals | Brikly</title>
         <meta name="description" content="Create and track RFIs with due dates, responses, and audit trail for accountability." />
-        <link rel="canonical" href="/rfis" />
+        <link rel="canonical" href="https://brikly.net/rfis" />
       </Helmet>
       <div className="space-y-6">
         <div className="flex items-center justify-between">

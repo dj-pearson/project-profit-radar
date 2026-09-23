@@ -1,9 +1,10 @@
 import React from 'react';
 import { Helmet } from 'react-helmet-async';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ArrowLeft, FileText } from 'lucide-react';
+import { toCanonicalUrl } from '@/lib/seo/canonical';
 
 export interface LegalPageLayoutProps {
   title: string;
@@ -35,6 +36,7 @@ const LegalPageLayout: React.FC<LegalPageLayoutProps> = ({
   relatedLinks,
 }) => {
   const navigate = useNavigate();
+  const location = useLocation();
   const today = new Date().toLocaleDateString('en-US', {
     year: 'numeric',
     month: 'long',
@@ -47,7 +49,7 @@ const LegalPageLayout: React.FC<LegalPageLayoutProps> = ({
         <title>{`${title} | Brikly Construction Management`}</title>
         <meta name="description" content={metaDescription} />
         <meta name="robots" content="index, follow" />
-        <link rel="canonical" href={`https://brikly.net${typeof window !== 'undefined' ? window.location.pathname : ''}`} />
+        <link rel="canonical" href={toCanonicalUrl(location.pathname)} />
       </Helmet>
 
       <div className="min-h-screen bg-background">

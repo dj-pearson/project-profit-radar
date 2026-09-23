@@ -5910,8 +5910,8 @@
         "A test renders each marketing route and asserts the canonical starts with https://brikly.net/"
       ],
       "priority": 2,
-      "passes": false,
-      "notes": "PROPOSED 2026-09-09 (production-readiness audit, six parallel reviews: auth, security, page/data flows, UI/UX, SEO, ops)."
+      "passes": true,
+      "notes": "PROPOSED 2026-09-09 (production-readiness audit, six parallel reviews: auth, security, page/data flows, UI/UX, SEO, ops). || DONE 2026-09-23. Root cause: PageSEO and UnifiedSEOSystem passed canonicalUrl (and a seo_meta_tags canonical_url row) through unchanged, so 31 pages passing '/path' rendered relative canonicals, which prerender then baked in. New src/lib/seo/canonical.ts (SITE_ORIGIN from config/seoConfig SITE_URL, toCanonicalUrl) is used by PageSEO, UnifiedSEOSystem (canonical and og:url), DynamicSEOOptimizer, ProgrammaticSEO, LegalPageLayout (now via useLocation), GenericPage and PSEOPageRenderer. Call sites fixed: RFIs and Submittals had relative literals; five resource pages and ROICalculatorLanding had canonical, og:url and JSON-LD url/@id on brikly.ai, now brikly.net. Also: 18 files pointed schema/email logos at https://brikly.net/logo.png, which does not exist; now /BriklyLogo.png (the asset in public/). Tests: canonicalAbsolute.test.tsx (renders the components with relative input) and canonical.test.ts (helper plus a src scan for relative/off-host literal canonicals and dynamic hrefs bypassing the helper), 17. Not done: per-route render test (the scan stands in); react-helmet and @types/react-helmet are now unimported but still in package.json."
     },
     {
       "id": "US-382",

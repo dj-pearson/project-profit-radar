@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import { jsonLdSafe } from '@/lib/security/jsonLd';
 import { useParams } from 'react-router-dom';
-import { Helmet } from 'react-helmet';
+import { Helmet } from 'react-helmet-async';
+import { toCanonicalUrl } from '@/lib/seo/canonical';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -371,7 +372,7 @@ export default function PSEOPageRenderer() {
       <Helmet>
         <title>{page.seo_title}</title>
         <meta name="description" content={page.seo_description} />
-        <link rel="canonical" href={`https://brikly.net${page.canonical_url}`} />
+        <link rel="canonical" href={toCanonicalUrl(page.canonical_url)} />
         {schema.seo?.keywords && (
           <meta name="keywords" content={schema.seo.keywords.join(', ')} />
         )}

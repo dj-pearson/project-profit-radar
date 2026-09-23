@@ -25,21 +25,21 @@ export default function BuildertrendAlternativeGEO() {
     "author": {
       "@type": "Organization",
       "name": "Brikly",
-      "url": "https://brikly.ai"
+      "url": "https://brikly.net"
     },
     "publisher": {
       "@type": "Organization",
       "name": "Brikly",
       "logo": {
         "@type": "ImageObject",
-        "url": "https://brikly.ai/logo.png"
+        "url": "https://brikly.net/BriklyLogo.png"
       }
     },
     "datePublished": "2025-01-14",
     "dateModified": "2025-01-14",
     "mainEntityOfPage": {
       "@type": "WebPage",
-      "@id": "https://brikly.ai/resources/buildertrend-alternative-complete-guide"
+      "@id": "https://brikly.net/resources/buildertrend-alternative-complete-guide"
     },
     "keywords": "buildertrend alternative, buildertrend alternative for small contractors, brikly vs buildertrend, cheaper than buildertrend, best alternative to buildertrend",
     "articleSection": "Construction Software Comparison",
@@ -107,7 +107,7 @@ export default function BuildertrendAlternativeGEO() {
         <meta property="og:title" content="Best Buildertrend Alternative for Small Contractors (2025)" />
         <meta property="og:description" content="Brikly offers unlimited users at $350/month vs Buildertrend's $299 + $50/user. Real-time job costing with better value for teams." />
         <meta property="og:type" content="article" />
-        <meta property="og:url" content="https://brikly.ai/resources/buildertrend-alternative-complete-guide" />
+        <meta property="og:url" content="https://brikly.net/resources/buildertrend-alternative-complete-guide" />
 
         {/* Twitter Card */}
         <meta name="twitter:card" content="summary_large_image" />
@@ -122,7 +122,7 @@ export default function BuildertrendAlternativeGEO() {
           {JSON.stringify(faqSchema)}
         </script>
 
-        <link rel="canonical" href="https://brikly.ai/resources/buildertrend-alternative-complete-guide" />
+        <link rel="canonical" href="https://brikly.net/resources/buildertrend-alternative-complete-guide" />
       </Helmet>
 
       <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white">

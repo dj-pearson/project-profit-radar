@@ -25,21 +25,21 @@ export default function ProcoreAlternativeGEO() {
     "author": {
       "@type": "Organization",
       "name": "Brikly",
-      "url": "https://brikly.ai"
+      "url": "https://brikly.net"
     },
     "publisher": {
       "@type": "Organization",
       "name": "Brikly",
       "logo": {
         "@type": "ImageObject",
-        "url": "https://brikly.ai/logo.png"
+        "url": "https://brikly.net/BriklyLogo.png"
       }
     },
     "datePublished": "2025-01-14",
     "dateModified": "2025-01-14",
     "mainEntityOfPage": {
       "@type": "WebPage",
-      "@id": "https://brikly.ai/resources/procore-alternative-complete-guide"
+      "@id": "https://brikly.net/resources/procore-alternative-complete-guide"
     },
     "keywords": "procore alternative, procore alternative for small contractors, brikly vs procore, cheaper than procore, best alternative to procore",
     "articleSection": "Construction Software Comparison",
@@ -124,7 +124,7 @@ export default function ProcoreAlternativeGEO() {
         <meta property="og:title" content="Best Procore Alternative for Small Contractors (2025)" />
         <meta property="og:description" content="Brikly offers unlimited users at $350/month vs Procore's $500+/user. Real-time job costing with faster setup and better mobile experience." />
         <meta property="og:type" content="article" />
-        <meta property="og:url" content="https://brikly.ai/resources/procore-alternative-complete-guide" />
+        <meta property="og:url" content="https://brikly.net/resources/procore-alternative-complete-guide" />
 
         {/* Twitter Card */}
         <meta name="twitter:card" content="summary_large_image" />
@@ -142,7 +142,7 @@ export default function ProcoreAlternativeGEO() {
           {JSON.stringify(comparisonSchema)}
         </script>
 
-        <link rel="canonical" href="https://brikly.ai/resources/procore-alternative-complete-guide" />
+        <link rel="canonical" href="https://brikly.net/resources/procore-alternative-complete-guide" />
       </Helmet>
 
       <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white">

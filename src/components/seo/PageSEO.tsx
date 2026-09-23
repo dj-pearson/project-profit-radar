@@ -16,6 +16,7 @@ import { jsonLdSafe } from '@/lib/security/jsonLd';
 import { Helmet } from 'react-helmet-async';
 import { useLocation } from 'react-router-dom';
 import { BRIKLY_LOGO_URL } from '@/lib/utils';
+import { toCanonicalUrl } from '@/lib/seo/canonical';
 
 export interface PageSEOProps {
   // Basic SEO
@@ -61,9 +62,8 @@ export const PageSEO: React.FC<PageSEOProps> = ({
 }) => {
   const location = useLocation();
 
-  // Construct full URL
-  const baseUrl = 'https://brikly.net';
-  const fullUrl = canonicalUrl || `${baseUrl}${location.pathname}`;
+  // Always absolute: call sites pass paths like "/pricing" (US-381).
+  const fullUrl = toCanonicalUrl(canonicalUrl, location.pathname);
 
   // Robots meta tag
   const robotsContent = `${noIndex ? 'noindex' : 'index'}, ${noFollow ? 'nofollow' : 'follow'}`;
@@ -139,7 +139,7 @@ export const createOrganizationSchema = () => ({
   "@type": "Organization",
   "name": "Brikly",
   "url": "https://brikly.net",
-  "logo": "https://brikly.net/logo.png",
+  "logo": "https://brikly.net/BriklyLogo.png",
   "description": "Construction management software for small and mid-size contractors in the United States.",
   "foundingDate": "2024",
   "address": {
@@ -271,7 +271,7 @@ export const createArticleSchema = (
     "name": "Brikly",
     "logo": {
       "@type": "ImageObject",
-      "url": "https://brikly.net/logo.png"
+      "url": "https://brikly.net/BriklyLogo.png"
     }
   },
   "datePublished": datePublished,

@@ -31,7 +31,7 @@ export default function ROICalculatorLanding() {
     "@type": "WebApplication",
     "name": "Brikly Construction ROI Calculator",
     "description": "Free construction ROI calculator for contractors. Calculate true project profitability including overhead, validate bids in 2 minutes, and protect your profit margins.",
-    "url": "https://brikly.ai/roi-calculator",
+    "url": "https://brikly.net/roi-calculator",
     "applicationCategory": "BusinessApplication",
     "operatingSystem": "Web",
     "offers": {
@@ -144,7 +144,7 @@ export default function ROICalculatorLanding() {
         <meta property="og:title" content="Free Construction ROI Calculator - Brikly" />
         <meta property="og:description" content="Calculate true project profitability in 2 minutes. Free tool for contractors to validate bids and protect margins." />
         <meta property="og:type" content="website" />
-        <meta property="og:url" content="https://brikly.ai/roi-calculator" />
+        <meta property="og:url" content="https://brikly.net/roi-calculator" />
 
         {/* Twitter Card */}
         <meta name="twitter:card" content="summary_large_image" />
@@ -162,7 +162,7 @@ export default function ROICalculatorLanding() {
           {JSON.stringify(howToSchema)}
         </script>
 
-        <link rel="canonical" href="https://brikly.ai/roi-calculator" />
+        <link rel="canonical" href="https://brikly.net/roi-calculator" />
       </Helmet>
 
       <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white">

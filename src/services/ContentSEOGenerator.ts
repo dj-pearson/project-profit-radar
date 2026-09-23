@@ -550,7 +550,7 @@ class ContentSEOGenerator {
         name: 'Brikly',
         logo: {
           '@type': 'ImageObject',
-          url: 'https://brikly.net/logo.png'
+          url: 'https://brikly.net/BriklyLogo.png'
         }
       },
       datePublished: new Date().toISOString(),

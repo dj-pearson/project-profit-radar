@@ -105,7 +105,7 @@ export const baseEmailTemplate = ({
           <!-- Header -->
           <tr>
             <td style="padding: 40px 40px 0; text-align: center; background: linear-gradient(135deg, #FEF3C7 0%, #FFFFFF 100%);">
-              <img src="https://brikly.net/logo.png" alt="Brikly" width="150" style="max-width: 150px; height: auto; margin-bottom: 20px;" />
+              <img src="https://brikly.net/BriklyLogo.png" alt="Brikly" width="150" style="max-width: 150px; height: auto; margin-bottom: 20px;" />
             </td>
           </tr>
 

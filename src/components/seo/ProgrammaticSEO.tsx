@@ -16,6 +16,7 @@
 import React, { useMemo } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { useLocation } from 'react-router-dom';
+import { toCanonicalUrl } from '@/lib/seo/canonical';
 import {
   getSEOConfig,
   getBreadcrumbs,
@@ -183,7 +184,9 @@ export const ProgrammaticSEO: React.FC<ProgrammaticSEOProps> = ({
   const title = overrideTitle || config?.title || 'Brikly - Construction Management Software';
   const description = overrideDescription || config?.description || COMPANY_INFO.description;
   const keywords = overrideKeywords || config?.keywords || [];
-  const canonicalUrl = overrideCanonical || `${SITE_URL}${currentPath}`;
+  const canonicalUrl = overrideCanonical
+    ? toCanonicalUrl(overrideCanonical)
+    : `${SITE_URL}${currentPath}`;
   const ogImage = overrideOgImage || config?.heroImage || DEFAULT_OG_IMAGE;
   const ogType = overrideOgType || config?.ogType || 'website';
   const noIndex = overrideNoIndex ?? config?.noIndex ?? false;
