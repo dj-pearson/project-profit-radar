@@ -46,7 +46,6 @@ const BASELINE = new Map([
   ['incident_reports', 'Read by src/components/compliance/OSHACompliance.tsx, cast `as any`. An OSHA compliance screen showing no incidents is the worst possible way for this to fail.'],
   ['safety_trainings', 'Read by src/components/compliance/OSHACompliance.tsx, cast `as any`. Same screen, same failure.'],
   ['lead_scores', 'Read by src/components/crm/LeadScoring.tsx with a join onto leads.'],
-  ['workflow_steps', 'Written by src/components/crm/WorkflowBuilder.tsx. This one throws on error, so a workflow with steps cannot be saved at all rather than saving wrong.'],
   ['geofence_breach_alerts', 'Written by supabase/functions/geofencing. The function answers breach_detected: true whether or not the alert row was stored.'],
   ['intervention_logs', 'Written by supabase/functions/send-intervention-email in both the sent and the suppressed-by-opt-out paths. The opt-out record is the one that matters for consent evidence.'],
   ['user_announcements', 'Read and written by src/components/announcements/FeatureAnnouncementSystem.tsx, which already logs "table not available" on the read and degrades. The dismissal write is the half that silently does nothing.'],

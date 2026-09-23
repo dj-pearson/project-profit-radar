@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import type { Json } from "@/integrations/supabase/types";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Mail, Phone, MessageSquare, Clock, Webhook, Plus, Save, GitBranch, LayoutTemplate, Activity, TestTube, CalendarClock, History, ShieldAlert } from "lucide-react";
 import { WorkflowTemplateLibrary } from "./WorkflowTemplateLibrary";
@@ -48,6 +49,23 @@ const initialNodes: Node[] = [
     position: { x: 250, y: 50 },
   },
 ];
+
+/**
+ * Serialise canvas nodes into the jsonb step list stored on
+ * workflow_definitions.workflow_steps. Position is kept so the canvas can be
+ * rebuilt; execute-workflow ignores it.
+ */
+export function buildWorkflowSteps(nodes: Node[]) {
+  return nodes
+    .filter((node) => node.id !== "trigger")
+    .map((node, index) => ({
+      name: String(node.data?.label ?? node.data?.actionType ?? `Step ${index + 1}`),
+      type: String(node.data?.actionType ?? "action"),
+      config: (node.data?.config as Record<string, unknown>) || {},
+      step_order: index,
+      position: { x: node.position.x, y: node.position.y },
+    }));
+}
 
 export function WorkflowBuilder({ workflowId }: WorkflowBuilderProps) {
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
@@ -137,7 +155,12 @@ export function WorkflowBuilder({ workflowId }: WorkflowBuilderProps) {
 
       if (!profile) throw new Error("Profile not found");
 
-      // Save workflow definition
+      // Steps are stored in workflow_definitions.workflow_steps (jsonb), the
+      // shape supabase/functions/execute-workflow reads: { name, type, config }.
+      // There is no workflow_steps table in the live schema; inserting into one
+      // failed every save that had steps.
+      const workflowSteps = buildWorkflowSteps(nodes);
+
       const { data: workflow, error: workflowError } = await supabase
         .from("workflow_definitions")
         .insert({
@@ -146,6 +169,7 @@ export function WorkflowBuilder({ workflowId }: WorkflowBuilderProps) {
           description: workflowDescription,
           trigger_type: triggerType,
           trigger_config: {},
+          workflow_steps: workflowSteps as unknown as Json,
           created_by: userData.user.id,
           is_active: true,
         })
@@ -153,27 +177,6 @@ export function WorkflowBuilder({ workflowId }: WorkflowBuilderProps) {
         .single();
 
       if (workflowError) throw workflowError;
-
-      // Save workflow steps
-      const stepsToInsert = nodes
-        .filter((node) => node.id !== "trigger")
-        .map((node, index) => ({
-          workflow_id: workflow.id,
-          step_order: index,
-          step_type: "action",
-          action_type: node.data.actionType,
-          action_config: node.data.config || {},
-          position_x: node.position.x,
-          position_y: node.position.y,
-        }));
-
-      if (stepsToInsert.length > 0) {
-        const { error: stepsError } = await supabase
-          .from("workflow_steps")
-          .insert(stepsToInsert);
-
-        if (stepsError) throw stepsError;
-      }
 
       return workflow;
     },

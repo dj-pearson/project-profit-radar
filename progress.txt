@@ -6560,3 +6560,16 @@ it's the same case. A new test walks all six app route files and fails on any
 route that is neither guarded, a redirect, nor on a named public list.
 `routeSecurity.tsx`, which nothing imported, is deleted. `ADD_ROLE_GUARDS.md`
 now lists only the six pages that still need a role decision.
+
+## US-365, most of it: the pipeline board reads a column that exists
+
+The kanban filtered and updated `leads.stage`, which no migration creates, and
+only logged the error, so the board was always empty. It now uses
+`leads.status` (TEXT DEFAULT 'new'), whose values the rest of the CRM already
+uses, and shows an error state when the load fails. `CRMLeads` scopes by
+company explicitly, and its insert sets `company_id`, which the new lead insert
+policy requires. WorkflowBuilder inserted into a `workflow_steps` table that
+doesn't exist. `workflow_definitions.workflow_steps` (jsonb) does, and it's
+what `execute-workflow` reads, so steps save there now.
+
+Removing the `(supabase as any)` casts still waits on regenerated types (US-263).

@@ -56,7 +56,7 @@ const BASELINE = new Set([
   'payments', 'processed_images', 'project_videos',
   'real_time_notifications', 'reviews',
   'saved_filter_presets', 'sensitive_data_access_log', 'seo_page_configs',
-  'user_announcements', 'user_tour_progress', 'workflow_steps',
+  'user_announcements', 'user_tour_progress',
 ]);
 
 function walk(dir, out = []) {

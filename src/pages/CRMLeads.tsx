@@ -121,9 +121,15 @@ const CRMLeads = () => {
   }, [location.pathname]);
 
   const loadLeadsData = async (): Promise<Lead[]> => {
+    // Scope to the caller's company explicitly, as the rest of the CRM does,
+    // instead of leaning on RLS alone. No company, no leads.
+    const companyId = userProfile?.company_id;
+    if (!companyId) return [];
+
     const { data, error } = await (supabase as any)
       .from('leads')
       .select('*')
+      .eq('company_id', companyId)
       .order('created_at', { ascending: false });
 
     if (error) throw error;
@@ -151,6 +157,7 @@ const CRMLeads = () => {
 
     try {
       const leadData = {
+        company_id: userProfile.company_id,
         first_name: newLead.first_name!,
         last_name: newLead.last_name!,
         email: newLead.email || `${newLead.first_name?.toLowerCase()}.${newLead.last_name?.toLowerCase()}@placeholder.com`,

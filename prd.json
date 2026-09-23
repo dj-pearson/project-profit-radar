@@ -5695,7 +5695,7 @@
       ],
       "priority": 2,
       "passes": false,
-      "notes": "PROPOSED 2026-09-09 (production-readiness audit, six parallel reviews: auth, security, page/data flows, UI/UX, SEO, ops). Depends on US-263 for the cast removal; the kanban fix does not."
+      "notes": "PROPOSED 2026-09-09 (production-readiness audit, six parallel reviews: auth, security, page/data flows, UI/UX, SEO, ops). Depends on US-263 for the cast removal; the kanban fix does not. || AC1, AC3, AC4 DONE 2026-09-23; AC2 (drop the (supabase as any) casts) waits for US-263's type regeneration. leads has no stage column; migration 20251104012605 adds status TEXT DEFAULT 'new' and CRMLeads/PipelineKanban already use its values, so EnhancedPipelineKanban now reads and writes status (board columns proposal/negotiation became proposal_sent/negotiating), scopes by company_id, shows common/ErrorState with retry on a failed load and a destructive toast on a failed move. CRMLeads filters by company_id and its insert now sets company_id (required by the 20260923050000 insert policy). WorkflowBuilder: there is no workflow_steps table, but workflow_definitions.workflow_steps (jsonb) exists and is exactly what execute-workflow reads (index.ts:116,155), so steps save there as {name, type, config}; workflow_steps removed from the check-live-schema-tables and check-table-definitions baselines. Tests: EnhancedPipelineKanban.test.tsx, WorkflowBuilder.steps.test.ts, CRMLeads.test.tsx (12). Also noticed: CRMPipeline.tsx passes props (onDealClick, showAnalytics) the component does not take."
     },
     {
       "id": "US-366",
