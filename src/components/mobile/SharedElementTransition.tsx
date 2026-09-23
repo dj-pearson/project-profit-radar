@@ -1,11 +1,7 @@
-import {
-  createContext,
-  useContext,
-  useId,
-  type ReactNode,
-} from 'react';
+import type { ReactNode } from 'react';
 import { motion, useReducedMotion, type Transition } from 'framer-motion';
 import { cn } from '@/lib/utils';
+import { useSharedElementScope } from './SharedElementRoot';
 
 /**
  * SharedElement — morph one UI element into another across a route
@@ -32,35 +28,6 @@ import { cn } from '@/lib/utils';
  * Honors prefers-reduced-motion: falls back to a crossfade without
  * position/size morphing.
  */
-interface SharedElementContextValue {
-  scope: string;
-}
-
-const SharedElementContext = createContext<SharedElementContextValue | null>(
-  null,
-);
-
-/**
- * Provides a scope for shared-element transitions. Render once at the
- * app root (or inside a route wrapper) so layoutIds don't collide
- * between unrelated pages.
- */
-export function SharedElementRoot({
-  children,
-  scope,
-}: {
-  children: ReactNode;
-  /** Optional namespace; defaults to a generated id. */
-  scope?: string;
-}) {
-  const generated = useId();
-  return (
-    <SharedElementContext.Provider value={{ scope: scope ?? generated }}>
-      {children}
-    </SharedElementContext.Provider>
-  );
-}
-
 interface SharedElementProps {
   /** Stable id — must match across source + destination. */
   id: string;
@@ -86,9 +53,9 @@ export function SharedElement({
   as = 'div',
   transition,
 }: SharedElementProps) {
-  const ctx = useContext(SharedElementContext);
+  const scope = useSharedElementScope();
   const reduceMotion = useReducedMotion();
-  const layoutId = ctx ? `${ctx.scope}:${id}` : `shared:${id}`;
+  const layoutId = scope ? `${scope}:${id}` : `shared:${id}`;
 
   // Reduce-motion path: crossfade only (no layout morphing).
   if (reduceMotion) {

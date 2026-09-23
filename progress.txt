@@ -6940,3 +6940,12 @@ private subcontractor-documents bucket. supabase/tests/rls/subcontractors
 tables exist it shows "not available on this server yet". Owner: apply the
 migration and regenerate types. TS 1489 -> 1490: tsgo now reports the
 existing TS2589 in useSupabaseMutation.ts:96 twice; no error in new files.
+
+## US-388 - landing page bundle (partial)
+Rollup put vite/preload-helper into the three chunk and a Babel helper into
+recharts, so index.html preloaded both though nothing on / renders them.
+Helpers now go to framework (scripts/vite-chunking.ts) and a build plugin
+fails if the entry statically reaches three, recharts or xlsx. ModernSection
+uses IntersectionObserver instead of framer-motion. Initial JS on /:
+694.6 -> 292.0 KB gz (319.1 KB with the Index chunk; AC is 300). Lighthouse
+config now mobile with an LCP gate at 4 s; not run locally.

@@ -1,10 +1,15 @@
-import { defineConfig, loadEnv } from "vite";
+import { defineConfig, loadEnv, type Plugin } from "vite";
 import react from "@vitejs/plugin-react";
 import path from "path";
 import { visualizer } from 'rollup-plugin-visualizer';
 import { ViteImageOptimizer } from 'vite-plugin-image-optimizer';
 import { sentryVitePlugin } from '@sentry/vite-plugin';
 import { copyFileSync, existsSync, mkdirSync } from 'fs';
+import {
+  findEagerLazyOnlyChunks,
+  manualChunkFor,
+  MANUAL_CHUNK_NAMES,
+} from './scripts/vite-chunking';
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => {
@@ -40,12 +45,33 @@ export default defineConfig(({ mode }) => {
     // live import of it at the top of the file. The import was the only thing
     // eslint could see, so it failed as unused on every commit that touched
     // this file. Re-add both together if the plugin is ever wanted back.
-    mode === "production" && visualizer({
-      filename: 'dist/stats.html',
+    // Bundle treemap, only for `npm run build:analyze`. It used to land in
+    // dist/stats.html on every production build and deploy with the site
+    // (2.9 MB, public). It is written outside dist/ now (US-388).
+    process.env.npm_lifecycle_event === "build:analyze" && visualizer({
+      filename: '.bundle-stats/stats.html',
       open: false,
       gzipSize: true,
       brotliSize: true
     }),
+    // Fail the build if index.html would modulepreload three/recharts/xlsx.
+    // Those are only ever needed behind a lazy import(); a helper leaking into
+    // their chunk is enough to put them on every marketing route's first
+    // paint (US-388). See scripts/vite-chunking.ts.
+    ({
+      name: 'guard-lazy-only-chunks',
+      apply: 'build',
+      generateBundle(_options, bundle) {
+        const eager = findEagerLazyOnlyChunks(bundle);
+        if (eager.length > 0) {
+          this.error(
+            `[US-388] entry statically imports lazy-only chunk(s): ${eager.join(', ')}. ` +
+              'Something shared was captured by that manual chunk; route it to ' +
+              '`framework` in scripts/vite-chunking.ts.'
+          );
+        }
+      },
+    } satisfies Plugin),
     mode === "production" && ViteImageOptimizer({
       png: { quality: 80 },
       jpeg: { quality: 80 },
@@ -179,54 +205,14 @@ export default defineConfig(({ mode }) => {
     // Performance optimizations
     rollupOptions: {
       output: {
-        manualChunks(id) {
-          // Framework chunk: React + ReactDOM + React Router must stay together
-          if (
-            id.includes('node_modules/react/') ||
-            id.includes('node_modules/react-dom/') ||
-            id.includes('node_modules/react-router-dom/') ||
-            id.includes('node_modules/react-router/') ||
-            id.includes('node_modules/scheduler/')
-          ) {
-            return 'framework';
-          }
-          // UI library chunk: Radix UI + CVA
-          if (
-            id.includes('node_modules/@radix-ui/') ||
-            id.includes('node_modules/class-variance-authority')
-          ) {
-            return 'ui-library';
-          }
-          // Query chunk: TanStack Query
-          if (id.includes('node_modules/@tanstack/')) {
-            return 'query';
-          }
-          // XLSX chunk: Heavy spreadsheet library
-          if (id.includes('node_modules/xlsx/')) {
-            return 'xlsx';
-          }
-          // Three.js chunk: 3D rendering
-          if (id.includes('node_modules/three/') || id.includes('node_modules/@react-three/')) {
-            return 'three';
-          }
-          // Recharts chunk: charting lib (~320KB gzip) + its d3/victory deps.
-          // Isolating it keeps charts out of route chunks that never render a
-          // chart and lets the chart chunk be cached independently (US-218).
-          if (
-            id.includes('node_modules/recharts/') ||
-            id.includes('node_modules/recharts-scale/') ||
-            id.includes('node_modules/victory-vendor/') ||
-            id.includes('node_modules/d3-')
-          ) {
-            return 'recharts';
-          }
-        },
+        // Chunk rules and the reason the runtime helpers are pinned to
+        // `framework` live in scripts/vite-chunking.ts (US-388).
+        manualChunks: manualChunkFor,
 
         // Optimized file naming for better caching
         chunkFileNames: (chunkInfo) => {
           // Use manual chunk name when available (framework, ui-library, etc.)
-          const manualNames = ['framework', 'ui-library', 'query', 'xlsx', 'three', 'recharts'];
-          if (manualNames.includes(chunkInfo.name)) {
+          if (MANUAL_CHUNK_NAMES.includes(chunkInfo.name)) {
             return `assets/${chunkInfo.name}-[hash].js`;
           }
           const facadeModuleId = chunkInfo.facadeModuleId ?

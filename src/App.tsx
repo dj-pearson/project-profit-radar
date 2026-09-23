@@ -19,7 +19,7 @@ import { AccessibilityProvider } from "@/components/accessibility/AccessibilityP
 import { useGlobalShortcuts } from "@/hooks/useKeyboardShortcuts";
 import { useNavigationShortcuts } from "@/hooks/useNavigationShortcuts";
 import { useHubPrefetch } from "@/hooks/useHubPrefetch";
-import { SharedElementRoot } from "@/components/mobile/SharedElementTransition";
+import { SharedElementRoot } from "@/components/mobile/SharedElementRoot";
 
 // Import centralized route configuration
 import { allRoutes } from "@/routes";

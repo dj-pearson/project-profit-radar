@@ -5,36 +5,36 @@ module.exports = {
       staticDistDir: './dist',
       // Number of runs to average
       numberOfRuns: 3,
-      // URLs to test
+      // Served by LHCI's static server; the SPA fallback returns index.html
+      // for /pricing the way Cloudflare Pages' 404.html copy does.
+      isSinglePageApplication: true,
       url: [
-        'http://localhost/index.html',
+        'http://localhost/',
+        'http://localhost/pricing',
       ],
-      settings: {
-        // Use mobile emulation
-        preset: 'desktop',
-        // Disable throttling for faster local testing
-        throttling: {
-          rttMs: 40,
-          throughputKbps: 10240,
-          cpuSlowdownMultiplier: 1,
-        },
-      },
+      // US-388: no `preset` and no `throttling` override means Lighthouse's
+      // default mobile form factor with simulated slow-4G / 4x CPU throttling,
+      // the same conditions as the brikly.net_2026-01-01 report (perf 26,
+      // LCP 13.9 s). The old desktop preset with throttling disabled could
+      // not see the mobile numbers at all.
     },
     assert: {
       // Set performance budgets
       assertions: {
-        // Performance
-        'categories:performance': ['error', { minScore: 0.9 }],
+        // Performance. On mobile throttling these start as warnings; only
+        // LCP is a hard gate (US-388 starting ratchet: <= 4 s on / and
+        // /pricing). Tighten toward 2.5 s as the landing page gets lighter.
+        'categories:performance': ['warn', { minScore: 0.9 }],
         'categories:accessibility': ['error', { minScore: 0.95 }],
         'categories:best-practices': ['error', { minScore: 0.9 }],
         'categories:seo': ['error', { minScore: 0.95 }],
 
         // Core Web Vitals
-        'first-contentful-paint': ['error', { maxNumericValue: 2000 }],
-        'largest-contentful-paint': ['error', { maxNumericValue: 2500 }],
+        'largest-contentful-paint': ['error', { maxNumericValue: 4000 }],
+        'first-contentful-paint': ['warn', { maxNumericValue: 2000 }],
         'cumulative-layout-shift': ['error', { maxNumericValue: 0.1 }],
-        'total-blocking-time': ['error', { maxNumericValue: 300 }],
-        'speed-index': ['error', { maxNumericValue: 3500 }],
+        'total-blocking-time': ['warn', { maxNumericValue: 300 }],
+        'speed-index': ['warn', { maxNumericValue: 3500 }],
 
         // Resource sizes
         'resource-summary:script:size': ['error', { maxNumericValue: 500000 }],
@@ -43,7 +43,7 @@ module.exports = {
         'resource-summary:font:size': ['error', { maxNumericValue: 150000 }],
 
         // Additional metrics
-        'interactive': ['error', { maxNumericValue: 3500 }],
+        'interactive': ['warn', { maxNumericValue: 3500 }],
         'uses-responsive-images': 'warn',
         'uses-optimized-images': 'warn',
         'modern-image-formats': 'warn',

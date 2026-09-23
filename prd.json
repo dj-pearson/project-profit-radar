@@ -6009,7 +6009,7 @@
       ],
       "priority": 3,
       "passes": false,
-      "notes": "PROPOSED 2026-09-09 (production-readiness audit, six parallel reviews: auth, security, page/data flows, UI/UX, SEO, ops). Extends US-257 with the concrete causes."
+      "notes": "PROPOSED 2026-09-09 (production-readiness audit, six parallel reviews: auth, security, page/data flows, UI/UX, SEO, ops). Extends US-257 with the concrete causes. || three.js and recharts no longer modulepreloaded: vite/preload-helper and babel helpers were landing in those manual chunks, so the entry statically imported them. Chunk rules moved to scripts/vite-chunking.ts; a build plugin fails if the entry statically reaches three/recharts/xlsx. ModernSection drops framer-motion; SharedElementRoot split out of the entry. Visualizer only under build:analyze (dist/stats.html no longer deploys). Lighthouse runs mobile on / and /pricing with a 4000 ms LCP gate. / HTML JS 694.6 -> 292.0 KB gz; with the Index route chunk 319.1 KB, over the 300 KB AC. Next cut: lazy-load @sentry/react. Lighthouse not run yet."
     },
     {
       "id": "US-389",

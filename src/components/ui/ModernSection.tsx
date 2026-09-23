@@ -1,6 +1,9 @@
-import React, { useRef } from 'react';
-import { motion, useInView, Variants } from 'framer-motion';
+import React, { useEffect, useRef, useState } from 'react';
 import { cn } from '@/lib/utils';
+
+// Reveal-on-scroll with an IntersectionObserver and a CSS transition. This was
+// framer-motion's motion.div + useInView, which put ~39 KB gz of framer-motion
+// on the landing page's critical path for a fade-and-slide (US-388).
 
 interface ModernSectionProps {
     children: React.ReactNode;
@@ -12,6 +15,22 @@ interface ModernSectionProps {
     id?: string;
 }
 
+const DISTANCE_PX = 50;
+
+const hiddenTransform = (direction: ModernSectionProps['direction']): string => {
+    switch (direction) {
+        case 'up': return `translate3d(0, ${DISTANCE_PX}px, 0)`;
+        case 'down': return `translate3d(0, -${DISTANCE_PX}px, 0)`;
+        case 'left': return `translate3d(${DISTANCE_PX}px, 0, 0)`;
+        case 'right': return `translate3d(-${DISTANCE_PX}px, 0, 0)`;
+        default: return 'none';
+    }
+};
+
+const prefersReducedMotion = (): boolean =>
+    typeof window !== 'undefined' &&
+    window.matchMedia?.('(prefers-reduced-motion: reduce)').matches === true;
+
 const ModernSection: React.FC<ModernSectionProps> = ({
     children,
     className,
@@ -21,31 +40,34 @@ const ModernSection: React.FC<ModernSectionProps> = ({
     background = 'none',
     id
 }) => {
-    const ref = useRef(null);
-    const isInView = useInView(ref, { once: true, margin: "-100px" });
+    const ref = useRef<HTMLDivElement>(null);
+    // No observer (old browser, test env) or reduced motion: render visible.
+    const [isInView, setIsInView] = useState(
+        () => typeof IntersectionObserver === 'undefined' || prefersReducedMotion()
+    );
 
-    const getVariants = (): Variants => {
-        const distance = 50;
-
-        const initial: any = { opacity: 0 };
-        if (direction === 'up') initial.y = distance;
-        if (direction === 'down') initial.y = -distance;
-        if (direction === 'left') initial.x = distance;
-        if (direction === 'right') initial.x = -distance;
-
-        return {
-            hidden: initial,
-            visible: {
-                opacity: 1,
-                x: 0,
-                y: 0,
-                transition: {
-                    duration: 0.8,
-                    ease: [0.22, 1, 0.36, 1],
-                    delay: delay
+    useEffect(() => {
+        if (isInView) return;
+        const node = ref.current;
+        if (!node) return;
+        const observer = new IntersectionObserver(
+            (entries) => {
+                if (entries.some((e) => e.isIntersecting)) {
+                    setIsInView(true);
+                    observer.disconnect();
                 }
-            }
-        };
+            },
+            { rootMargin: '-100px' }
+        );
+        observer.observe(node);
+        return () => observer.disconnect();
+    }, [isInView]);
+
+    const revealStyle: React.CSSProperties = {
+        opacity: isInView ? 1 : 0,
+        transform: isInView ? 'none' : hiddenTransform(direction),
+        transition: 'opacity 0.8s cubic-bezier(0.22, 1, 0.36, 1), transform 0.8s cubic-bezier(0.22, 1, 0.36, 1)',
+        transitionDelay: `${delay}s`,
     };
 
     const getBackgroundClass = () => {
@@ -72,15 +94,9 @@ const ModernSection: React.FC<ModernSectionProps> = ({
                 <div className="absolute inset-0 bg-gradient-to-b from-background via-transparent to-background pointer-events-none" />
             )}
 
-            <motion.div
-                ref={ref}
-                initial="hidden"
-                animate={isInView ? "visible" : "hidden"}
-                variants={getVariants()}
-                className={getWidthClass()}
-            >
+            <div ref={ref} style={revealStyle} className={getWidthClass()}>
                 {children}
-            </motion.div>
+            </div>
         </section>
     );
 };

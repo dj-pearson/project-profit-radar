@@ -203,3 +203,6 @@ Crash/
 backups/
 backup/
 performance-budget-results.json
+
+# US-388: rollup-plugin-visualizer output from `npm run build:analyze` (kept out of dist/)
+.bundle-stats/

@@ -74,7 +74,7 @@
     "build:cloudflare": "npm run generate-sitemap && npm run generate-rss && vite build --mode production && node scripts/copy-404.js",
     "cloudflare:build": "node cloudflare-build.js",
     "cloudflare:install": "npm ci && npm run build",
-    "build:analyze": "npm run generate-sitemap && npm run generate-rss && vite build --mode production && npx vite-bundle-analyzer dist/stats.html",
+    "build:analyze": "npm run generate-sitemap && npm run generate-rss && vite build --mode production && node -e \"console.log('Bundle treemap: .bundle-stats/stats.html')\"",
     "performance:audit": "node scripts/performance-audit.js",
     "performance:budget": "node scripts/check-bundle-budget.mjs",
     "images:optimize": "node scripts/convert-images-to-webp.js",
