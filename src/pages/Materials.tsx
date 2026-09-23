@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
+import { AccessiblePageWrapper } from "@/components/accessibility/AccessiblePageWrapper";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -169,7 +170,9 @@ export default function Materials() {
   };
 
   return (
+    <AccessiblePageWrapper pageTitle="Materials Management">
     <DashboardLayout
+      hasAccessibleWrapper
       title="Materials Management"
       description="Track inventory, orders, and material costs"
       headerActions={
@@ -201,7 +204,7 @@ export default function Materials() {
                 <div>
                   <Label htmlFor="project">Project (Optional)</Label>
                   <Select value={newMaterial.project_id} onValueChange={(value) => setNewMaterial(prev => ({ ...prev, project_id: value }))}>
-                    <SelectTrigger>
+                    <SelectTrigger id="project">
                       <SelectValue placeholder="Select project (optional)" />
                     </SelectTrigger>
                     <SelectContent>
@@ -235,7 +238,7 @@ export default function Materials() {
                 <div>
                   <Label htmlFor="category">Category</Label>
                   <Select value={newMaterial.category} onValueChange={(value) => setNewMaterial(prev => ({ ...prev, category: value }))}>
-                    <SelectTrigger>
+                    <SelectTrigger id="category">
                       <SelectValue placeholder="Select category" />
                     </SelectTrigger>
                     <SelectContent>
@@ -543,5 +546,6 @@ export default function Materials() {
         />
       </div>
     </DashboardLayout>
+    </AccessiblePageWrapper>
   );
 }

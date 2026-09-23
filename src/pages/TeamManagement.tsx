@@ -516,7 +516,7 @@ const TeamManagement = () => {
                   <div className="space-y-2">
                     <Label htmlFor="role">Role *</Label>
                     <Select value={inviteRole} onValueChange={setInviteRole} required aria-required="true">
-                      <SelectTrigger aria-label="Select role">
+                      <SelectTrigger id="role">
                         <SelectValue placeholder="Select role" />
                       </SelectTrigger>
                       <SelectContent>

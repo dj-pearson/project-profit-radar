@@ -395,7 +395,7 @@ export const CustomReportBuilder: React.FC<CustomReportBuilderProps> = ({
                     filters: []
                   }))}
                 >
-                  <SelectTrigger>
+                  <SelectTrigger id="dataSource">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -464,7 +464,7 @@ export const CustomReportBuilder: React.FC<CustomReportBuilderProps> = ({
                         value={filter.field}
                         onValueChange={(value) => updateFilter(index, { field: value })}
                       >
-                        <SelectTrigger className="w-48">
+                        <SelectTrigger className="w-48" aria-label={`Filter ${index + 1} field`}>
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
@@ -479,7 +479,7 @@ export const CustomReportBuilder: React.FC<CustomReportBuilderProps> = ({
                         value={filter.operator}
                         onValueChange={(value: ReportFilter['operator']) => updateFilter(index, { operator: value })}
                       >
-                        <SelectTrigger className="w-32">
+                        <SelectTrigger className="w-32" aria-label={`Filter ${index + 1} operator`}>
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
@@ -494,12 +494,14 @@ export const CustomReportBuilder: React.FC<CustomReportBuilderProps> = ({
                         value={filter.value as string}
                         onChange={(e) => updateFilter(index, { value: e.target.value })}
                         placeholder="Filter value"
+                        aria-label={`Filter ${index + 1} value`}
                         className="flex-1"
                       />
                       <Button
                         variant="ghost"
                         size="sm"
                         onClick={() => removeFilter(index)}
+                        aria-label={`Remove filter ${index + 1}`}
                       >
                         ×
                       </Button>

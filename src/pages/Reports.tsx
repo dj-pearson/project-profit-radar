@@ -14,7 +14,7 @@ const CustomReportBuilder = React.lazy(() => import('@/components/reports/Custom
 const ExecutiveDashboard = React.lazy(() => import('@/components/analytics/ExecutiveDashboard'));
 import { FileSpreadsheet, FileText, Download, BarChart3, Settings } from 'lucide-react';
 import { AccessiblePageWrapper } from "@/components/accessibility/AccessiblePageWrapper";
-import { MobilePageWrapper, mobileGridClasses, mobileFilterClasses, mobileButtonClasses, mobileTextClasses, mobileCardClasses } from '@/utils/mobileHelpers';
+import { mobileGridClasses, mobileFilterClasses, mobileButtonClasses, mobileTextClasses, mobileCardClasses } from '@/utils/mobileHelpers';
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { ErrorState } from "@/components/ui/EmptyStates";
 import { Skeleton } from '@/components/ui/skeleton';
@@ -289,7 +289,9 @@ const Reports = () => {
   return (
     <AccessiblePageWrapper pageTitle="Reports">
     <DashboardLayout title="Reports & Analytics" hasAccessibleWrapper>
-      <MobilePageWrapper title="Reports & Analytics">
+      {/* DashboardLayout renders the page's one <h1> from `title`; MobilePageWrapper
+          added a second one. */}
+      <div className="space-y-6">
         <Tabs defaultValue="dashboard" className="space-y-6">
           <TabsList className="grid w-full grid-cols-1 sm:grid-cols-3 h-auto">
             <TabsTrigger value="dashboard" className={mobileTextClasses.body}>
@@ -348,7 +350,7 @@ const Reports = () => {
                   <div>
                     <Label htmlFor="project">Select Project</Label>
                     <Select value={selectedProject} onValueChange={setSelectedProject}>
-                      <SelectTrigger>
+                      <SelectTrigger id="project">
                         <SelectValue placeholder="Choose a project" />
                       </SelectTrigger>
                       <SelectContent>
@@ -361,15 +363,18 @@ const Reports = () => {
                     </Select>
                   </div>
                   <div>
-                    <Label htmlFor="date-range">Date Range</Label>
+                    <Label htmlFor="date-range-start">Date Range</Label>
                     <div className="flex flex-col sm:flex-row gap-2">
                       <Input
+                        id="date-range-start"
                         type="date"
+                        aria-label="Report start date"
                         value={dateRange.start}
                         onChange={(e) => setDateRange({...dateRange, start: e.target.value})}
                       />
                       <Input
                         type="date"
+                        aria-label="Report end date"
                         value={dateRange.end}
                         onChange={(e) => setDateRange({...dateRange, end: e.target.value})}
                       />
@@ -432,7 +437,7 @@ const Reports = () => {
             </div>
           </TabsContent>
         </Tabs>
-      </MobilePageWrapper>
+      </div>
     </DashboardLayout>
     </AccessiblePageWrapper>
   );

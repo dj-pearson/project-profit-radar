@@ -368,7 +368,7 @@ const ExecutiveDashboard: React.FC = () => {
         </div>
         <div className="flex items-center space-x-4">
           <Select value={selectedPeriod} onValueChange={setSelectedPeriod}>
-            <SelectTrigger className="w-48">
+            <SelectTrigger className="w-48" aria-label="Reporting period">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>

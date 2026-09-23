@@ -3604,7 +3604,7 @@
       ],
       "priority": 2,
       "passes": false,
-      "notes": "Source: testing/a11y audit. Continuation of US-010..014 beyond 'top 20'. Large; batch by section."
+      "notes": "Source: testing/a11y audit. Continuation of US-010..014 beyond 'top 20'. Large; batch by section. || Pass 2026-09-23: src/pages/__tests__/AuthenticatedPages.a11y.test.tsx scans 13 authenticated pages and every tab with axe (WCAG 2.0/2.1 A+AA, fails on serious/critical; contrast left to Playwright). Fixed the critical violations it found: unnamed filter selects on EstimatesHub, CRM Leads tab, Safety, Reports (Export Center, executive dashboard, custom report builder), DocumentManagement, UserSettings (~30 controls), RFIs, PunchList; Reports double h1; PurchaseOrders nested main; Label htmlFor pointing at missing ids. AccessiblePageWrapper added to Materials, PurchaseOrders, RFIs, PunchList. OPEN: adoption 26/110 pages = 23.6% vs 90% AC (scripts/count-a11y-adoption.mjs); dialog forms not scanned; skip-link / visible-focus / reduced-motion AC untouched."
     },
     {
       "id": "US-222",

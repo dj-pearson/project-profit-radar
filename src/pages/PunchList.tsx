@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
+import { AccessiblePageWrapper } from "@/components/accessibility/AccessiblePageWrapper";
 import { RoleGuard, ROLE_GROUPS } from '@/components/auth/RoleGuard';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -391,7 +392,8 @@ const PunchList = () => {
 
   if (loading || loadingItems) {
     return (
-      <DashboardLayout title="Punch List">
+      <AccessiblePageWrapper pageTitle="Punch List">
+      <DashboardLayout title="Punch List" hasAccessibleWrapper>
         <div className="space-y-6" role="status" aria-live="polite" aria-label="Loading content">
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
               {[1,2,3,4].map(i => <Skeleton key={i} className="h-24 rounded-lg" />)}
@@ -399,12 +401,14 @@ const PunchList = () => {
             <Skeleton className="h-[300px] rounded-lg" />
           </div>
       </DashboardLayout>
+      </AccessiblePageWrapper>
     );
   }
 
   return (
     <RoleGuard allowedRoles={ROLE_GROUPS.PROJECT_VIEWERS}>
-      <DashboardLayout title="Punch List">
+      <AccessiblePageWrapper pageTitle="Punch List">
+      <DashboardLayout title="Punch List" hasAccessibleWrapper>
         <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
@@ -429,7 +433,7 @@ const PunchList = () => {
                   <div>
                     <Label htmlFor="project">Project *</Label>
                     <Select value={newItem.project_id} onValueChange={(value) => setNewItem({...newItem, project_id: value})}>
-                      <SelectTrigger>
+                      <SelectTrigger id="project">
                         <SelectValue placeholder="Select project" />
                       </SelectTrigger>
                       <SelectContent>
@@ -458,7 +462,7 @@ const PunchList = () => {
                     <div>
                       <Label htmlFor="category">Category <FormFieldHelp content="Groups the item (e.g. Electrical, Paint) for filtering and assignment." /></Label>
                       <Select value={newItem.category} onValueChange={(value) => setNewItem({...newItem, category: value})}>
-                        <SelectTrigger>
+                        <SelectTrigger id="category">
                           <SelectValue placeholder="Select category" />
                         </SelectTrigger>
                         <SelectContent>
@@ -474,7 +478,7 @@ const PunchList = () => {
                     <div>
                       <Label htmlFor="priority">Priority <FormFieldHelp content="How urgent the item is. High-priority items surface at the top of the list." /></Label>
                       <Select value={newItem.priority} onValueChange={(value) => setNewItem({...newItem, priority: value})}>
-                        <SelectTrigger>
+                        <SelectTrigger id="priority">
                           <SelectValue placeholder="Select priority" />
                         </SelectTrigger>
                         <SelectContent>
@@ -538,7 +542,7 @@ const PunchList = () => {
               <div>
                 <Label htmlFor="project-filter">Filter by Project</Label>
                 <Select value={selectedProject} onValueChange={setSelectedProject}>
-                  <SelectTrigger>
+                  <SelectTrigger id="project-filter">
                     <SelectValue placeholder="All projects" />
                   </SelectTrigger>
                   <SelectContent>
@@ -555,7 +559,7 @@ const PunchList = () => {
               <div>
                 <Label htmlFor="status-filter">Filter by Status</Label>
                 <Select value={selectedStatus} onValueChange={setSelectedStatus}>
-                  <SelectTrigger>
+                  <SelectTrigger id="status-filter">
                     <SelectValue placeholder="All statuses" />
                   </SelectTrigger>
                   <SelectContent>
@@ -750,7 +754,7 @@ const PunchList = () => {
               <div>
                 <Label htmlFor="edit-category">Category</Label>
                 <Select value={editingItem?.category || 'quality'} onValueChange={(value) => setEditingItem({...editingItem, category: value})}>
-                  <SelectTrigger>
+                  <SelectTrigger id="edit-category">
                     <SelectValue placeholder="Select category" />
                   </SelectTrigger>
                   <SelectContent>
@@ -766,7 +770,7 @@ const PunchList = () => {
               <div>
                 <Label htmlFor="edit-priority">Priority</Label>
                 <Select value={editingItem?.priority || 'medium'} onValueChange={(value) => setEditingItem({...editingItem, priority: value})}>
-                  <SelectTrigger>
+                  <SelectTrigger id="edit-priority">
                     <SelectValue placeholder="Select priority" />
                   </SelectTrigger>
                   <SelectContent>
@@ -856,6 +860,7 @@ const PunchList = () => {
         </DialogContent>
       </Dialog>
       </DashboardLayout>
+      </AccessiblePageWrapper>
     </RoleGuard>
   );
 };

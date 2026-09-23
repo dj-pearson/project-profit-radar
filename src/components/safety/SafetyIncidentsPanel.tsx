@@ -185,7 +185,7 @@ export function SafetyIncidentsPanel() {
         <CardContent className="space-y-4">
           <div className="flex flex-wrap gap-2">
             <Select value={severity} onValueChange={(v) => setSeverity(v as Severity | 'all')}>
-              <SelectTrigger className="w-36"><SelectValue placeholder="Severity" /></SelectTrigger>
+              <SelectTrigger className="w-36" aria-label="Filter by severity"><SelectValue placeholder="Severity" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All severities</SelectItem>
                 <SelectItem value="critical">Critical</SelectItem>
@@ -195,7 +195,7 @@ export function SafetyIncidentsPanel() {
               </SelectContent>
             </Select>
             <Select value={projectId} onValueChange={setProjectId}>
-              <SelectTrigger className="w-44"><SelectValue placeholder="Project" /></SelectTrigger>
+              <SelectTrigger className="w-44" aria-label="Filter by project"><SelectValue placeholder="Project" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All projects</SelectItem>
                 {data &&
@@ -207,7 +207,7 @@ export function SafetyIncidentsPanel() {
             <Input type="date" value={from} onChange={(e) => setFrom(e.target.value)} className="w-40" aria-label="From date" />
             <Input type="date" value={to} onChange={(e) => setTo(e.target.value)} className="w-40" aria-label="To date" />
             <Select value={sortBy} onValueChange={(v) => setSortBy(v as IncidentSortField)}>
-              <SelectTrigger className="w-40"><SelectValue placeholder="Sort by" /></SelectTrigger>
+              <SelectTrigger className="w-40" aria-label="Sort incidents by"><SelectValue placeholder="Sort by" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="date">Sort: Date</SelectItem>
                 <SelectItem value="severity">Sort: Severity</SelectItem>

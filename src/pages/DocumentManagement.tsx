@@ -583,7 +583,7 @@ const DocumentManagement = () => {
               <div className="space-y-2">
                 <Label htmlFor="category">Category</Label>
                 <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-                  <SelectTrigger>
+                  <SelectTrigger id="category">
                     <SelectValue placeholder="Select category (optional)" />
                   </SelectTrigger>
                   <SelectContent>
@@ -649,7 +649,7 @@ const DocumentManagement = () => {
                 />
               </div>
               <Select value={filterCategory} onValueChange={setFilterCategory}>
-                <SelectTrigger>
+                <SelectTrigger aria-label="Filter by category">
                   <SelectValue placeholder="All categories" />
                 </SelectTrigger>
                 <SelectContent>
@@ -662,7 +662,7 @@ const DocumentManagement = () => {
                 </SelectContent>
               </Select>
               <Select value={filterType} onValueChange={setFilterType}>
-                <SelectTrigger>
+                <SelectTrigger aria-label="Filter by file type">
                   <SelectValue placeholder="All file types" />
                 </SelectTrigger>
                 <SelectContent>

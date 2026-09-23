@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
+import { AccessiblePageWrapper } from "@/components/accessibility/AccessiblePageWrapper";
 import { RoleGuard, ROLE_GROUPS } from '@/components/auth/RoleGuard';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -176,8 +177,11 @@ const PurchaseOrders = () => {
 
   return (
     <RoleGuard allowedRoles={ROLE_GROUPS.FINANCIAL_VIEWERS}>
-      <DashboardLayout title="Purchase Orders">
-        <main aria-label="Purchase orders management" className="space-y-6">
+      <AccessiblePageWrapper pageTitle="Purchase Orders" mainLabel="Purchase orders management">
+      <DashboardLayout title="Purchase Orders" hasAccessibleWrapper>
+        {/* AccessiblePageWrapper owns the page's one <main>; this was a second
+            one nested inside DashboardLayout's. */}
+        <div className="space-y-6">
         {/* Summary Cards */}
         <section aria-label="Purchase order statistics" className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <Card>
@@ -355,8 +359,9 @@ const PurchaseOrders = () => {
             )}
           </CardContent>
         </Card>
-        </main>
+        </div>
       </DashboardLayout>
+      </AccessiblePageWrapper>
     </RoleGuard>
   );
 };

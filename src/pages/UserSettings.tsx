@@ -321,12 +321,12 @@ const UserSettings = () => {
               </CardHeader>
               <CardContent className="space-y-6">
                 <div>
-                  <Label>Default Dashboard View</Label>
+                  <Label htmlFor="default-dashboard-view">Default Dashboard View</Label>
                   <Select 
                     value={preferences.dashboard_layout.defaultView} 
                     onValueChange={(value) => updatePreferences('dashboard_layout.defaultView', value)}
                   >
-                    <SelectTrigger>
+                    <SelectTrigger id="default-dashboard-view">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -392,10 +392,11 @@ const UserSettings = () => {
                 <CardContent className="space-y-4">
                   {Object.entries(preferences.email_notifications).map(([key, value]) => (
                     <div key={key} className="flex items-center justify-between">
-                      <Label className="text-sm">
+                      <Label htmlFor={`email_notifications-${key}`} className="text-sm">
                         {key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
                       </Label>
                       <Switch
+                        id={`email_notifications-${key}`}
                         checked={value}
                         onCheckedChange={(checked) => 
                           updatePreferences(`email_notifications.${key}`, checked)
@@ -413,10 +414,11 @@ const UserSettings = () => {
                 <CardContent className="space-y-4">
                   {Object.entries(preferences.sms_notifications).map(([key, value]) => (
                     <div key={key} className="flex items-center justify-between">
-                      <Label className="text-sm">
+                      <Label htmlFor={`sms_notifications-${key}`} className="text-sm">
                         {key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
                       </Label>
                       <Switch
+                        id={`sms_notifications-${key}`}
                         checked={value}
                         onCheckedChange={(checked) => 
                           updatePreferences(`sms_notifications.${key}`, checked)
@@ -434,10 +436,11 @@ const UserSettings = () => {
                 <CardContent className="space-y-4">
                   {Object.entries(preferences.in_app_notifications).map(([key, value]) => (
                     <div key={key} className="flex items-center justify-between">
-                      <Label className="text-sm">
+                      <Label htmlFor={`in_app_notifications-${key}`} className="text-sm">
                         {key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
                       </Label>
                       <Switch
+                        id={`in_app_notifications-${key}`}
                         checked={value}
                         onCheckedChange={(checked) => 
                           updatePreferences(`in_app_notifications.${key}`, checked)
@@ -465,7 +468,7 @@ const UserSettings = () => {
                     value={preferences.time_zone} 
                     onValueChange={(value) => updatePreferences('time_zone', value)}
                   >
-                    <SelectTrigger>
+                    <SelectTrigger aria-label="Time zone">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -485,8 +488,9 @@ const UserSettings = () => {
                   {Object.entries(preferences.working_hours).map(([day, hours]) => (
                     <div key={day} className="space-y-2">
                       <div className="flex items-center justify-between">
-                        <Label className="capitalize">{day}</Label>
+                        <Label htmlFor={`working-hours-${day}`} className="capitalize">{day}</Label>
                         <Switch
+                          id={`working-hours-${day}`}
                           checked={hours.enabled}
                           onCheckedChange={(checked) => 
                             updatePreferences(`working_hours.${day}.enabled`, checked)
@@ -497,6 +501,7 @@ const UserSettings = () => {
                         <div className="flex gap-2">
                           <Input
                             type="time"
+                            aria-label={`${day} start time`}
                             value={hours.start}
                             onChange={(e) => 
                               updatePreferences(`working_hours.${day}.start`, e.target.value)
@@ -505,6 +510,7 @@ const UserSettings = () => {
                           <span className="self-center">to</span>
                           <Input
                             type="time"
+                            aria-label={`${day} end time`}
                             value={hours.end}
                             onChange={(e) => 
                               updatePreferences(`working_hours.${day}.end`, e.target.value)
@@ -534,9 +540,10 @@ const UserSettings = () => {
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <Wifi className="h-4 w-4" />
-                        <Label>Offline Sync</Label>
+                        <Label htmlFor="offline-sync">Offline Sync</Label>
                       </div>
                       <Switch
+                        id="offline-sync"
                         checked={preferences.mobile_preferences.offline_sync}
                         onCheckedChange={(checked) => 
                           updatePreferences('mobile_preferences.offline_sync', checked)
@@ -547,9 +554,10 @@ const UserSettings = () => {
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <MapPin className="h-4 w-4" />
-                        <Label>GPS Tracking</Label>
+                        <Label htmlFor="gps-tracking">GPS Tracking</Label>
                       </div>
                       <Switch
+                        id="gps-tracking"
                         checked={preferences.mobile_preferences.gps_tracking}
                         onCheckedChange={(checked) => 
                           updatePreferences('mobile_preferences.gps_tracking', checked)
@@ -558,8 +566,9 @@ const UserSettings = () => {
                     </div>
 
                     <div className="flex items-center justify-between">
-                      <Label>Auto Backup</Label>
+                      <Label htmlFor="auto-backup">Auto Backup</Label>
                       <Switch
+                        id="auto-backup"
                         checked={preferences.mobile_preferences.auto_backup}
                         onCheckedChange={(checked) => 
                           updatePreferences('mobile_preferences.auto_backup', checked)
@@ -568,8 +577,9 @@ const UserSettings = () => {
                     </div>
 
                     <div className="flex items-center justify-between">
-                      <Label>Cellular Data Sync</Label>
+                      <Label htmlFor="cellular-sync">Cellular Data Sync</Label>
                       <Switch
+                        id="cellular-sync"
                         checked={preferences.mobile_preferences.cellular_sync}
                         onCheckedChange={(checked) => 
                           updatePreferences('mobile_preferences.cellular_sync', checked)
@@ -579,7 +589,7 @@ const UserSettings = () => {
                   </div>
 
                   <div>
-                    <Label className="flex items-center gap-2">
+                    <Label htmlFor="photo-quality" className="flex items-center gap-2">
                       <Camera className="h-4 w-4" />
                       Photo Quality
                     </Label>
@@ -587,7 +597,7 @@ const UserSettings = () => {
                       value={preferences.mobile_preferences.photo_quality} 
                       onValueChange={(value) => updatePreferences('mobile_preferences.photo_quality', value)}
                     >
-                      <SelectTrigger>
+                      <SelectTrigger id="photo-quality">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -610,12 +620,12 @@ const UserSettings = () => {
                   <CardTitle>Language & Region</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <Label>Language</Label>
+                  <Label htmlFor="language">Language</Label>
                   <Select 
                     value={preferences.language} 
                     onValueChange={(value) => updatePreferences('language', value)}
                   >
-                    <SelectTrigger>
+                    <SelectTrigger id="language">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -638,7 +648,7 @@ const UserSettings = () => {
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div>
-                    <Label className="flex items-center gap-2">
+                    <Label htmlFor="font-size" className="flex items-center gap-2">
                       <Type className="h-4 w-4" />
                       Font Size
                     </Label>
@@ -649,7 +659,7 @@ const UserSettings = () => {
                         updateAccessibility({ fontSize: value as 'small' | 'medium' | 'large' });
                       }}
                     >
-                      <SelectTrigger>
+                      <SelectTrigger id="font-size">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -663,9 +673,10 @@ const UserSettings = () => {
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <Eye className="h-4 w-4" />
-                      <Label>High Contrast</Label>
+                      <Label htmlFor="high-contrast">High Contrast</Label>
                     </div>
                     <Switch
+                      id="high-contrast"
                       checked={preferences.accessibility_preferences.high_contrast}
                       onCheckedChange={(checked) => {
                         updatePreferences('accessibility_preferences.high_contrast', checked);
@@ -675,8 +686,9 @@ const UserSettings = () => {
                   </div>
 
                   <div className="flex items-center justify-between">
-                    <Label>Reduce Motion</Label>
+                    <Label htmlFor="reduce-motion">Reduce Motion</Label>
                     <Switch
+                      id="reduce-motion"
                       checked={preferences.accessibility_preferences.reduce_motion}
                       onCheckedChange={(checked) => {
                         updatePreferences('accessibility_preferences.reduce_motion', checked);
@@ -688,9 +700,10 @@ const UserSettings = () => {
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <Volume2 className="h-4 w-4" />
-                      <Label>Screen Reader Support</Label>
+                      <Label htmlFor="screen-reader">Screen Reader Support</Label>
                     </div>
                     <Switch
+                      id="screen-reader"
                       checked={preferences.accessibility_preferences.screen_reader}
                       onCheckedChange={(checked) => {
                         updatePreferences('accessibility_preferences.screen_reader', checked);
@@ -700,8 +713,9 @@ const UserSettings = () => {
                   </div>
 
                   <div className="flex items-center justify-between">
-                    <Label>Keyboard Navigation</Label>
+                    <Label htmlFor="keyboard-navigation">Keyboard Navigation</Label>
                     <Switch
+                      id="keyboard-navigation"
                       checked={preferences.accessibility_preferences.keyboard_navigation}
                       onCheckedChange={(checked) => {
                         updatePreferences('accessibility_preferences.keyboard_navigation', checked);

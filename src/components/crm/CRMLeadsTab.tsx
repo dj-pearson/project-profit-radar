@@ -63,7 +63,7 @@ export const CRMLeadsTab: React.FC<CRMLeadsTabProps> = ({
               </div>
             </div>
             <Select value={statusFilter} onValueChange={onStatusFilterChange}>
-              <SelectTrigger className={mobileFilterClasses.input}>
+              <SelectTrigger className={mobileFilterClasses.input} aria-label="Filter leads by status">
                 <SelectValue placeholder="Status" />
               </SelectTrigger>
               <SelectContent>
@@ -78,7 +78,7 @@ export const CRMLeadsTab: React.FC<CRMLeadsTabProps> = ({
               </SelectContent>
             </Select>
             <Select value={sourceFilter} onValueChange={onSourceFilterChange}>
-              <SelectTrigger className={mobileFilterClasses.input}>
+              <SelectTrigger className={mobileFilterClasses.input} aria-label="Filter leads by source">
                 <SelectValue placeholder="Source" />
               </SelectTrigger>
               <SelectContent>

@@ -134,7 +134,7 @@ export default function Equipment() {
                     onValueChange={(value) => setNewEquipment(prev => ({ ...prev, equipment_type: value }))}
                     aria-required="true"
                   >
-                    <SelectTrigger aria-label="Select equipment type">
+                    <SelectTrigger id="equipment_type">
                       <SelectValue placeholder="Select type" />
                     </SelectTrigger>
                     <SelectContent>

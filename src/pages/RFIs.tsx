@@ -16,6 +16,7 @@ import { supabase } from '@/integrations/supabase/client';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { Helmet } from 'react-helmet-async';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
+import { AccessiblePageWrapper } from "@/components/accessibility/AccessiblePageWrapper";
 
 // Helper to query tables not yet in the generated Database types.
 const untypedFrom = (table: string) =>
@@ -461,7 +462,8 @@ const RFIs = () => {
 
   if (loading || loadingRFIs) {
     return (
-      <DashboardLayout title="Request for Information (RFI)">
+      <AccessiblePageWrapper pageTitle="RFIs">
+      <DashboardLayout title="Request for Information (RFI)" hasAccessibleWrapper>
         <div className="space-y-6" role="status" aria-live="polite" aria-label="Loading content">
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
               {[1,2,3,4].map(i => <Skeleton key={i} className="h-24 rounded-lg" />)}
@@ -469,12 +471,14 @@ const RFIs = () => {
             <Skeleton className="h-[300px] rounded-lg" />
           </div>
       </DashboardLayout>
+      </AccessiblePageWrapper>
     );
   }
 
   return (
     <RoleGuard allowedRoles={ROLE_GROUPS.PROJECT_VIEWERS}>
-      <DashboardLayout title="Request for Information (RFI)">
+      <AccessiblePageWrapper pageTitle="RFIs">
+      <DashboardLayout title="Request for Information (RFI)" hasAccessibleWrapper>
         <Helmet>
         <title>RFIs Tracker – Formal Questions & Approvals | Brikly</title>
         <meta name="description" content="Create and track RFIs with due dates, responses, and audit trail for accountability." />
@@ -504,7 +508,7 @@ const RFIs = () => {
                   <div>
                     <Label htmlFor="project">Project *</Label>
                     <Select value={newRFI.project_id} onValueChange={(value) => setNewRFI({...newRFI, project_id: value})}>
-                      <SelectTrigger aria-required="true">
+                      <SelectTrigger id="project" aria-required="true">
                         <SelectValue placeholder="Select project" />
                       </SelectTrigger>
                       <SelectContent>
@@ -544,7 +548,7 @@ const RFIs = () => {
                     <div>
                       <Label htmlFor="priority">Priority <FormFieldHelp content="How urgent a response is. Affects sorting and reminders." /></Label>
                       <Select value={newRFI.priority} onValueChange={(value) => setNewRFI({...newRFI, priority: value})}>
-                        <SelectTrigger>
+                        <SelectTrigger id="priority">
                           <SelectValue placeholder="Select priority" />
                         </SelectTrigger>
                         <SelectContent>
@@ -586,7 +590,7 @@ const RFIs = () => {
               <div className="flex-1">
                 <Label htmlFor="project-filter">Filter by Project</Label>
                 <Select value={selectedProject} onValueChange={setSelectedProject}>
-                  <SelectTrigger>
+                  <SelectTrigger id="project-filter">
                     <SelectValue placeholder="All projects" />
                   </SelectTrigger>
                   <SelectContent>
@@ -747,7 +751,7 @@ const RFIs = () => {
             <div>
               <Label htmlFor="edit-project">Project *</Label>
               <Select value={editedRFI.project_id} onValueChange={(value) => setEditedRFI({...editedRFI, project_id: value})}>
-                <SelectTrigger aria-required="true">
+                <SelectTrigger id="edit-project" aria-required="true">
                   <SelectValue placeholder="Select project" />
                 </SelectTrigger>
                 <SelectContent>
@@ -787,7 +791,7 @@ const RFIs = () => {
               <div>
                 <Label htmlFor="edit-priority">Priority</Label>
                 <Select value={editedRFI.priority} onValueChange={(value) => setEditedRFI({...editedRFI, priority: value})}>
-                  <SelectTrigger>
+                  <SelectTrigger id="edit-priority">
                     <SelectValue placeholder="Select priority" />
                   </SelectTrigger>
                   <SelectContent>
@@ -802,7 +806,7 @@ const RFIs = () => {
               <div>
                 <Label htmlFor="edit-status">Status</Label>
                 <Select value={editedRFI.status} onValueChange={(value) => setEditedRFI({...editedRFI, status: value})}>
-                  <SelectTrigger>
+                  <SelectTrigger id="edit-status">
                     <SelectValue placeholder="Select status" />
                   </SelectTrigger>
                   <SelectContent>
@@ -893,6 +897,7 @@ const RFIs = () => {
         </DialogContent>
       </Dialog>
       </DashboardLayout>
+      </AccessiblePageWrapper>
     </RoleGuard>
   );
 };

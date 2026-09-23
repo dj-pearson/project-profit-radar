@@ -218,7 +218,7 @@ export default function EstimatesHub() {
           </div>
 
           <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="w-full md:w-48">
+            <SelectTrigger className="w-full md:w-48" aria-label="Filter by status">
               <SelectValue placeholder="Filter by status" />
             </SelectTrigger>
             <SelectContent>

@@ -7108,3 +7108,10 @@ Commits that remove warnings must lower the baseline.
 nothing was renamed, removed or re-coded, so older web and iOS clients read
 the same fields. The guard baseline is 0, so any new response without the
 envelope fails pre-commit. Nesting payloads under data is the next release.
+
+## US-221 - axe on authenticated pages (partial)
+A new vitest axe suite renders 13 signed-in pages with their real child
+components and scans every tab. It found unnamed selects and inputs on nine
+pages, a double h1 on Reports and a nested main on PurchaseOrders; all
+fixed. Wrapper adoption is 23.6% of 110 dashboard pages against a 90%
+target.
