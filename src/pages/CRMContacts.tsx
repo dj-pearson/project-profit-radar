@@ -8,6 +8,7 @@ import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { LoadingState } from '@/components/ui/loading-spinner';
 import ErrorBoundary from '@/components/ErrorBoundary';
 import { ErrorState } from '@/components/ui/states';
+import { NoContacts } from '@/components/ui/EmptyStates';
 import { AccessibleTable, type TableColumn } from '@/components/accessibility/AccessibleTable';
 import { AccessibleModal } from '@/components/accessibility/AccessibleModal';
 import { useLoadingState } from '@/hooks/useLoadingState';
@@ -509,6 +510,8 @@ const CRMContacts = () => {
                   error={contactsError}
                   onRetry={() => loadContacts(loadContactsData)}
                 />
+              ) : !contactsLoading && (contacts?.length ?? 0) === 0 ? (
+                <NoContacts onCreate={() => setShowNewContactDialog(true)} />
               ) : (() => {
                 const contactColumns: TableColumn<Contact>[] = [
                   {

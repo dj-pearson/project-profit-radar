@@ -20,7 +20,11 @@ import {
   Filter,
   AlertCircle,
   Building,
-  ClipboardList
+  ClipboardList,
+  Calculator,
+  HardHat,
+  FilePen,
+  Contact
 } from 'lucide-react';
 
 interface EmptyStateProps {
@@ -95,7 +99,7 @@ export const NoProjects: React.FC<{ onCreate?: () => void }> = ({ onCreate }) =>
       }
       secondaryAction={{
         label: 'Learn More',
-        onClick: () => (window.location.href = '/help/projects')
+        onClick: () => (window.location.href = '/knowledge-base')
       }}
     />
   );
@@ -271,7 +275,7 @@ export const ErrorState: React.FC<{
       }
       secondaryAction={{
         label: 'Contact Support',
-        onClick: () => (window.location.href = '/help')
+        onClick: () => (window.location.href = '/support')
       }}
     />
   );
@@ -346,5 +350,63 @@ export const NoTasks: React.FC<{ onCreate?: () => void }> = ({ onCreate }) => {
     />
   );
 };
+
+/**
+ * A named empty state with a single create CTA. The list pages below all have
+ * the same shape (icon, one sentence, one button), so they share this.
+ */
+const makeCreateEmptyState = (
+  icon: React.ReactNode,
+  title: string,
+  description: string,
+  label: string
+): React.FC<{ onCreate?: () => void }> => {
+  const Component: React.FC<{ onCreate?: () => void }> = ({ onCreate }) => (
+    <EmptyState
+      icon={icon}
+      title={title}
+      description={description}
+      action={
+        onCreate
+          ? { label, onClick: onCreate, icon: <Plus className="h-4 w-4 mr-2" /> }
+          : undefined
+      }
+    />
+  );
+  Component.displayName = title;
+  return Component;
+};
+
+// No Estimates
+export const NoEstimates = makeCreateEmptyState(
+  <Calculator className="h-8 w-8 text-gray-400" />,
+  'No estimates yet',
+  'Price your first job and send it to the client from here',
+  'Create Estimate'
+);
+
+// No Daily Reports
+export const NoDailyReports = makeCreateEmptyState(
+  <HardHat className="h-8 w-8 text-gray-400" />,
+  'No daily reports yet',
+  'Log crew, weather and work completed for each day on site',
+  'Create Daily Report'
+);
+
+// No Change Orders
+export const NoChangeOrders = makeCreateEmptyState(
+  <FilePen className="h-8 w-8 text-gray-400" />,
+  'No change orders yet',
+  'Record scope changes so the added cost gets approved and billed',
+  'Create Change Order'
+);
+
+// No Contacts
+export const NoContacts = makeCreateEmptyState(
+  <Contact className="h-8 w-8 text-gray-400" />,
+  'No contacts yet',
+  'Add the clients, architects and suppliers you work with',
+  'Add Contact'
+);
 
 export default EmptyState;

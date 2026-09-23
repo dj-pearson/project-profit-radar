@@ -39,6 +39,8 @@ export default function EstimatesHub() {
     }
   });
   const [loading, setLoading] = useState(true);
+  // On a failed stats load the cards show a dash, not zeros that read as real.
+  const [statsError, setStatsError] = useState(false);
   const { toast } = useToast();
   const { userProfile } = useAuth();
   const location = useLocation();
@@ -59,10 +61,12 @@ export default function EstimatesHub() {
   const loadStats = async () => {
     try {
       setLoading(true);
+      setStatsError(false);
       const estimateStats = await estimateService.getEstimateStats(userProfile?.company_id);
       setStats(estimateStats);
     } catch (error) {
       console.error("Error loading estimate stats:", error);
+      setStatsError(true);
       toast({
         title: "Error",
         description: "Failed to load estimate statistics",
@@ -135,7 +139,7 @@ export default function EstimatesHub() {
               <FileText className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
             </CardHeader>
             <CardContent>
-              {loading ? (
+              {loading || statsError ? (
                 <div className="text-2xl font-bold">-</div>
               ) : (
                 <div className="text-2xl font-bold">{stats.totalEstimates}</div>
@@ -152,7 +156,7 @@ export default function EstimatesHub() {
               <DollarSign className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
             </CardHeader>
             <CardContent>
-              {loading ? (
+              {loading || statsError ? (
                 <div className="text-2xl font-bold">-</div>
               ) : (
                 <div className="text-2xl font-bold">${stats.pendingValue.toLocaleString()}</div>
@@ -169,7 +173,7 @@ export default function EstimatesHub() {
               <TrendingUp className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
             </CardHeader>
             <CardContent>
-              {loading ? (
+              {loading || statsError ? (
                 <div className="text-2xl font-bold">-</div>
               ) : (
                 <div className="text-2xl font-bold">{stats.conversionRate}%</div>
@@ -186,7 +190,7 @@ export default function EstimatesHub() {
               <Calendar className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
             </CardHeader>
             <CardContent>
-              {loading ? (
+              {loading || statsError ? (
                 <div className="text-2xl font-bold">-</div>
               ) : (
                 <div className="text-2xl font-bold">
@@ -301,6 +305,7 @@ export default function EstimatesHub() {
               searchTerm={searchTerm}
               statusFilter={statusFilter}
               onEstimateChange={loadStats}
+              onCreate={handleCreateEstimate}
             />
           </TabsContent>
 
@@ -309,6 +314,7 @@ export default function EstimatesHub() {
               searchTerm={searchTerm}
               statusFilter="draft"
               onEstimateChange={loadStats}
+              onCreate={handleCreateEstimate}
             />
           </TabsContent>
 
@@ -317,6 +323,7 @@ export default function EstimatesHub() {
               searchTerm={searchTerm}
               statusFilter="sent"
               onEstimateChange={loadStats}
+              onCreate={handleCreateEstimate}
             />
           </TabsContent>
 
@@ -325,6 +332,7 @@ export default function EstimatesHub() {
               searchTerm={searchTerm}
               statusFilter="viewed"
               onEstimateChange={loadStats}
+              onCreate={handleCreateEstimate}
             />
           </TabsContent>
 
@@ -333,6 +341,7 @@ export default function EstimatesHub() {
               searchTerm={searchTerm}
               statusFilter="accepted"
               onEstimateChange={loadStats}
+              onCreate={handleCreateEstimate}
             />
           </TabsContent>
         </Tabs>

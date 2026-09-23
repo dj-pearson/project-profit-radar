@@ -19,6 +19,8 @@ import { validateFileUpload, generateSecureFilename } from '@/lib/security/fileU
 import { logger } from '@/lib/logger';
 import { photoStoragePath } from '@/lib/dailyReportField';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
+import { Skeleton } from '@/components/ui/skeleton';
+import { ErrorState, NoDailyReports } from '@/components/ui/EmptyStates';
 import MobileDailyReport from '@/components/mobile/MobileDailyReport';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Calendar, Users, AlertTriangle, PlusCircle, FileText, Cloud, Camera, X, Upload, Smartphone, Copy, LayoutTemplate, Settings2 } from 'lucide-react';
@@ -64,6 +66,9 @@ const DailyReports = () => {
   const [dailyReports, setDailyReports] = useState<DailyReport[]>([]);
   const [selectedProject, setSelectedProject] = useState<string>('');
   const [loadingReports, setLoadingReports] = useState(true);
+  // A failed load used to render "No reports have been created yet" over a
+  // toast. Keep it so the list says the load failed and offers a retry.
+  const [loadError, setLoadError] = useState(false);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [searchParams, setSearchParams] = useSearchParams();
 
@@ -124,7 +129,8 @@ const DailyReports = () => {
   const loadData = async () => {
     try {
       setLoadingReports(true);
-      
+      setLoadError(false);
+
       // Load projects
       const { data: projectsData, error: projectsError } = await supabase
         .from('projects')
@@ -170,6 +176,7 @@ const DailyReports = () => {
 
     } catch (error: any) {
       console.error('Error loading data:', error);
+      setLoadError(true);
       toast({
         variant: "destructive",
         title: "Error",
@@ -412,9 +419,9 @@ const DailyReports = () => {
       <DashboardLayout title="Daily Reports" hasAccessibleWrapper>
         <div className="space-y-6" role="status" aria-live="polite" aria-label="Loading content">
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-              {[1,2,3,4].map(i => <div key={i} className="h-24 bg-muted animate-pulse rounded-lg" />)}
+              {[1,2,3,4].map(i => <Skeleton key={i} className="h-24 rounded-lg" />)}
             </div>
-            <div className="h-[300px] bg-muted animate-pulse rounded-lg" />
+            <Skeleton className="h-[300px] rounded-lg" />
           </div>
       </DashboardLayout>
       </AccessiblePageWrapper>
@@ -736,7 +743,15 @@ const DailyReports = () => {
 
         {/* Reports Table */}
         <section aria-label="Daily reports list" className="space-y-6">
-          {(() => {
+          {loadError ? (
+            <ErrorState
+              title="Daily reports did not load"
+              description="We could not load your daily reports. Nothing is missing yet; try again."
+              onRetry={loadData}
+            />
+          ) : dailyReports.length === 0 ? (
+            <NoDailyReports onCreate={() => setIsCreateDialogOpen(true)} />
+          ) : (() => {
             const dailyReportColumns: TableColumn<DailyReport>[] = [
               {
                 key: 'date',

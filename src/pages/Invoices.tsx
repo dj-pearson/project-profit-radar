@@ -15,6 +15,7 @@ import { usePersistedState } from '@/hooks/usePersistedState';
 import { TableSkeleton } from '@/components/ui/loading-skeleton';
 import { Skeleton } from '@/components/ui/skeleton';
 import { logger } from '@/lib/logger';
+import { ErrorState, NoInvoices } from '@/components/ui/EmptyStates';
 import InvoiceGenerator from '@/components/InvoiceGenerator';
 import InvoiceList from '@/components/invoices/InvoiceList';
 import InvoiceStats from '@/components/invoices/InvoiceStats';
@@ -43,6 +44,9 @@ const Invoices: React.FC = () => {
   const [statusFilter, setStatusFilter] = usePersistedState<string>('invoices-status-filter', 'all');
   const [invoices, setInvoices] = useState([]);
   const [loading, setLoading] = useState(true);
+  // A failed load used to leave invoices at [] and render a list of nothing
+  // with $0 stats. Keep the failure so the page says so and offers a retry.
+  const [loadError, setLoadError] = useState(false);
   const { userProfile } = useAuth();
   const { toast } = useToast();
 
@@ -57,6 +61,7 @@ const Invoices: React.FC = () => {
     
     try {
       setLoading(true);
+      setLoadError(false);
       const { data, error } = await supabase
         .from('invoices')
         .select(`
@@ -71,6 +76,7 @@ const Invoices: React.FC = () => {
       setInvoices(data || []);
     } catch (error) {
       logger.error('Error loading invoices', error instanceof Error ? error : undefined);
+      setLoadError(true);
       toast({
         title: "Error",
         description: "Failed to load invoices",
@@ -161,8 +167,8 @@ const Invoices: React.FC = () => {
         </div>
       </div>
 
-      {/* Stats Overview */}
-      <InvoiceStats invoices={invoices} />
+      {/* Stats Overview: hidden on a failed load so $0 totals are not mistaken for real ones */}
+      {!loadError && <InvoiceStats invoices={invoices} />}
 
       {/* Main Content Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6" aria-label="Invoice management sections">
@@ -234,11 +240,21 @@ const Invoices: React.FC = () => {
           </Card>
 
           {/* Invoice List */}
-          <InvoiceList 
-            invoices={filteredInvoices} 
-            loading={loading}
-            onInvoiceUpdate={loadInvoices}
-          />
+          {loadError ? (
+            <ErrorState
+              title="Invoices did not load"
+              description="We could not load your invoices. Nothing shown here reflects your real balances."
+              onRetry={loadInvoices}
+            />
+          ) : !loading && invoices.length === 0 ? (
+            <NoInvoices onCreate={() => setShowInvoiceGenerator(true)} />
+          ) : (
+            <InvoiceList
+              invoices={filteredInvoices}
+              loading={loading}
+              onInvoiceUpdate={loadInvoices}
+            />
+          )}
         </TabsContent>
 
         <TabsContent value="recurring" className="space-y-4">
@@ -266,12 +282,20 @@ const Invoices: React.FC = () => {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <InvoiceList 
-                invoices={filteredInvoices.filter(inv => inv.status === 'overdue')} 
-                loading={loading}
-                onInvoiceUpdate={loadInvoices}
-                highlightOverdue={true}
-              />
+              {loadError ? (
+                <ErrorState
+                  title="Invoices did not load"
+                  description="We could not check for overdue invoices. Try again before assuming none are late."
+                  onRetry={loadInvoices}
+                />
+              ) : (
+                <InvoiceList
+                  invoices={filteredInvoices.filter(inv => inv.status === 'overdue')}
+                  loading={loading}
+                  onInvoiceUpdate={loadInvoices}
+                  highlightOverdue={true}
+                />
+              )}
             </CardContent>
           </Card>
         </TabsContent>

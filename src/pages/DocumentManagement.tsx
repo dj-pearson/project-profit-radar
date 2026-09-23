@@ -33,7 +33,8 @@ import { ResponsiveContainer } from '@/components/layout/ResponsiveContainer';
 import { mobileFilterClasses } from '@/utils/mobileHelpers';
 import { Upload, FileText, Search, Brain, Database, Download, Trash2, Tag, FolderInput, Eye } from 'lucide-react';
 import { DocumentPreviewModal } from '@/components/documents/DocumentPreviewModal';
-import { LoadingSpinner } from "@/components/ui/loading-spinner";
+import { Skeleton } from "@/components/ui/skeleton";
+import { ErrorState, NoDocuments } from "@/components/ui/EmptyStates";
 
 interface Document {
   id: string;
@@ -94,6 +95,9 @@ const DocumentManagement = () => {
   const [categories, setCategories] = useState<DocumentCategory[]>([]);
   const [projects, setProjects] = useState<Project[]>([]);
   const [loadingDocs, setLoadingDocs] = useState(true);
+  // A failed load used to render "Upload your first document" over a toast,
+  // as if the folder were empty. Keep it so the table says the load failed.
+  const [loadError, setLoadError] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [isUploading, setIsUploading] = useState(false);
   
@@ -143,7 +147,8 @@ const DocumentManagement = () => {
   const loadDocuments = async () => {
     try {
       setLoadingDocs(true);
-      
+      setLoadError(false);
+
       let query = supabase
         .from('documents')
         .select(`
@@ -167,6 +172,7 @@ const DocumentManagement = () => {
 
     } catch (error: unknown) {
       console.error('Error loading documents:', error);
+      setLoadError(true);
       toast({
         variant: "destructive",
         title: "Error",
@@ -501,11 +507,12 @@ const DocumentManagement = () => {
 
   if (!userProfile) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center" role="status" aria-label="Loading documents">
-        <div className="text-center">
-          <LoadingSpinner size="xl" className="mx-auto mb-4" label={null} />
-          <p className="text-muted-foreground">Loading documents...</p>
-        </div>
+      <div className="min-h-screen bg-background p-6 space-y-4" role="status" aria-label="Loading documents">
+        <Skeleton className="h-10 w-64" />
+        <Skeleton className="h-12 w-full" />
+        {[0, 1, 2, 3, 4].map((i) => (
+          <Skeleton key={i} className="h-14 w-full" />
+        ))}
       </div>
     );
   }
@@ -814,6 +821,15 @@ const DocumentManagement = () => {
                 <Button size="sm" variant="ghost" className="ml-auto" onClick={() => setSelectedDocIds(new Set())}>Clear</Button>
               </div>
             )}
+            {loadError ? (
+              <ErrorState
+                title="Documents did not load"
+                description="We could not load your documents. Nothing has been deleted; try again."
+                onRetry={loadDocuments}
+              />
+            ) : !loadingDocs && documents.length === 0 ? (
+              <NoDocuments onUpload={() => setIsUploadOpen(true)} />
+            ) : (
             <AccessibleTable<Document>
               caption="Documents"
               hideCaption
@@ -844,6 +860,7 @@ const DocumentManagement = () => {
                 </div>
               }
             />
+            )}
             <AlertDialog open={showBulkDeleteConfirm} onOpenChange={setShowBulkDeleteConfirm}>
               <AlertDialogContent>
                 <AlertDialogHeader>

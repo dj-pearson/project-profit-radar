@@ -31,6 +31,8 @@ import { ConvertToInvoiceDialog } from "./ConvertToInvoiceDialog";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { confirmAction } from "@/components/ui/confirm-dialog";
+import { Skeleton } from "@/components/ui/skeleton";
+import { EmptyState, ErrorState, NoEstimates } from "@/components/ui/EmptyStates";
 
 interface Estimate {
   id: string;
@@ -53,14 +55,19 @@ interface EstimatesTableProps {
   searchTerm: string;
   statusFilter: string;
   onEstimateChange?: () => void;
+  /** Opens the create flow; shown as the CTA when there are no estimates at all. */
+  onCreate?: () => void;
 }
 
-export function EstimatesTable({ searchTerm, statusFilter, onEstimateChange }: EstimatesTableProps) {
+export function EstimatesTable({ searchTerm, statusFilter, onEstimateChange, onCreate }: EstimatesTableProps) {
   const { userProfile } = useAuth();
   // Only an admin may start a job on a price the customer has not accepted.
   const isAdmin = userProfile?.role === 'admin' || userProfile?.role === 'root_admin';
   const [estimates, setEstimates] = useState<Estimate[]>([]);
   const [loading, setLoading] = useState(true);
+  // A failed fetch used to fall through to "No estimates found", which reads as
+  // an empty pipeline. Keep the failure so the table can say so.
+  const [loadError, setLoadError] = useState(false);
   const [editingEstimate, setEditingEstimate] = useState<string | null>(null);
   const [convertingEstimate, setConvertingEstimate] = useState<string | null>(null);
   const [invoicingEstimate, setInvoicingEstimate] = useState<string | null>(null);
@@ -73,6 +80,7 @@ export function EstimatesTable({ searchTerm, statusFilter, onEstimateChange }: E
 
   const fetchEstimates = async () => {
     setLoading(true);
+    setLoadError(false);
     try {
       let query = supabase
         .from("estimates")
@@ -103,6 +111,7 @@ export function EstimatesTable({ searchTerm, statusFilter, onEstimateChange }: E
       setEstimates(filteredData);
     } catch (error) {
       console.error("Error fetching estimates:", error);
+      setLoadError(true);
       toast({
         title: "Error",
         description: "Failed to fetch estimates",
@@ -241,23 +250,34 @@ export function EstimatesTable({ searchTerm, statusFilter, onEstimateChange }: E
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center py-8">
-        <div className="text-muted-foreground">Loading estimates...</div>
+      <div className="space-y-3 py-4" aria-busy="true" aria-label="Loading estimates">
+        {[0, 1, 2, 3].map((i) => (
+          <Skeleton key={i} className="h-12 w-full" />
+        ))}
       </div>
     );
   }
 
-  if (estimates.length === 0) {
+  if (loadError) {
     return (
-      <div className="text-center py-8">
-        <div className="text-muted-foreground mb-4">
-          {searchTerm || statusFilter !== "all"
-            ? "No estimates match your filters."
-            : "No estimates found. Create your first estimate to get started."
-          }
-        </div>
-      </div>
+      <ErrorState
+        title="Estimates did not load"
+        description="We could not load your estimates. Your pipeline is not empty just because this failed."
+        onRetry={fetchEstimates}
+      />
     );
+  }
+
+  if (estimates.length === 0) {
+    if (searchTerm || statusFilter !== "all") {
+      return (
+        <EmptyState
+          title="No estimates match"
+          description={searchTerm ? "No estimates match your search." : "No estimates have this status yet."}
+        />
+      );
+    }
+    return <NoEstimates onCreate={onCreate} />;
   }
 
   const estimateColumns: TableColumn<Estimate>[] = [

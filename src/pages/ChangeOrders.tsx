@@ -37,6 +37,8 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { format } from "date-fns";
 import { AccessiblePageWrapper } from "@/components/accessibility/AccessiblePageWrapper";
 import { AccessibleTable, type TableColumn } from "@/components/accessibility/AccessibleTable";
+import { Skeleton } from "@/components/ui/skeleton";
+import { ErrorState, NoChangeOrders } from "@/components/ui/EmptyStates";
 
 interface Project {
   id: string;
@@ -83,6 +85,9 @@ const ChangeOrders = () => {
   const [companyUsers, setCompanyUsers] = useState<UserProfile[]>([]);
   const [selectedProject, setSelectedProject] = useState<string>('');
   const [loadingOrders, setLoadingOrders] = useState(true);
+  // A failed load used to render "No change orders have been created yet",
+  // which hides unbilled scope. Keep it so the table says the load failed.
+  const [loadError, setLoadError] = useState(false);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [approvalDueDate, setApprovalDueDate] = useState<Date>();
   const [selectedApprovers, setSelectedApprovers] = useState<string[]>([]);
@@ -131,6 +136,7 @@ const ChangeOrders = () => {
   const loadData = async () => {
     try {
       setLoadingOrders(true);
+      setLoadError(false);
       
       // Load projects
       const { data: projectsData, error: projectsError } = await supabase
@@ -171,6 +177,7 @@ const ChangeOrders = () => {
 
     } catch (error: unknown) {
       console.error('Error loading data:', error);
+      setLoadError(true);
       toast({
         variant: "destructive",
         title: "Error",
@@ -556,9 +563,9 @@ const ChangeOrders = () => {
       <DashboardLayout title="Change Orders" hasAccessibleWrapper>
         <div className="space-y-6" role="status" aria-live="polite" aria-label="Loading content">
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-              {[1,2,3,4].map(i => <div key={i} className="h-24 bg-muted animate-pulse rounded-lg" />)}
+              {[1,2,3,4].map(i => <Skeleton key={i} className="h-24 rounded-lg" />)}
             </div>
-            <div className="h-[300px] bg-muted animate-pulse rounded-lg" />
+            <Skeleton className="h-[300px] rounded-lg" />
           </div>
       </DashboardLayout>
       </AccessiblePageWrapper>
@@ -797,6 +804,15 @@ const ChangeOrders = () => {
         {/* Change Orders Table */}
         <Card>
           <CardContent className="pt-6">
+            {loadError ? (
+              <ErrorState
+                title="Change orders did not load"
+                description="We could not load your change orders. Pending approvals may be missing from view; try again."
+                onRetry={loadData}
+              />
+            ) : changeOrders.length === 0 ? (
+              <NoChangeOrders onCreate={() => setIsCreateDialogOpen(true)} />
+            ) : (
             <AccessibleTable<ChangeOrder>
               caption="Change Orders"
               hideCaption
@@ -816,6 +832,7 @@ const ChangeOrders = () => {
                 </div>
               }
             />
+            )}
           </CardContent>
         </Card>
       </div>

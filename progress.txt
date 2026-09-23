@@ -6914,3 +6914,11 @@ BriklyOffline sync_queue are moved in on first load, copy-then-delete with
 the same id. Deleted lib/offline-sync.ts and hooks/useMobileFeatures.ts.
 Modules baseline 109 -> 106, TS 1500 -> 1489. Not yet checked in a real
 browser.
+
+## US-375 - list page error and empty states (partial)
+Ten list pages now show ErrorState with Try Again on a failed load (it was
+the "nothing here yet" copy behind a toast) and a shared empty state with a
+create action on zero rows; stat cards hide or show "-" instead of fake
+zeros on failure. New NoEstimates/NoDailyReports/NoChangeOrders/NoContacts.
+ErrorState's Contact Support and NoProjects' Learn More pointed at routes
+that don't exist; fixed. Open: CRM campaigns and workflows.

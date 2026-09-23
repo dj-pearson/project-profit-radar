@@ -16,6 +16,8 @@ import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { AccessibleTable, type TableColumn } from '@/components/accessibility/AccessibleTable';
 import { useSubscriptionLimits } from '@/hooks/useSubscriptionLimits';
 import UpgradePrompt from '@/components/subscription/UpgradePrompt';
+import { Skeleton } from '@/components/ui/skeleton';
+import { ErrorState, NoTeamMembers } from '@/components/ui/EmptyStates';
 import { Users, Plus, Edit, Mail, Phone, Shield, UserCheck, UserX, Crown } from 'lucide-react';
 
 interface TeamMember {
@@ -38,6 +40,9 @@ const TeamManagement = () => {
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
   const [resendingId, setResendingId] = useState<string | null>(null);
   const [loadingTeam, setLoadingTeam] = useState(true);
+  // A failed load used to show "0 members" stats and an empty table. Keep it
+  // so the page says the load failed instead.
+  const [loadError, setLoadError] = useState(false);
   const [isInviteOpen, setIsInviteOpen] = useState(false);
   const [showUpgradePrompt, setShowUpgradePrompt] = useState(false);
   
@@ -77,7 +82,8 @@ const TeamManagement = () => {
   const loadTeamMembers = async () => {
     try {
       setLoadingTeam(true);
-      
+      setLoadError(false);
+
       const { data, error } = await supabase
         .from('user_profiles')
         .select('*')
@@ -89,6 +95,7 @@ const TeamManagement = () => {
       
     } catch (error: any) {
       console.error('Error loading team members:', error);
+      setLoadError(true);
       toast({
         variant: "destructive",
         title: "Error",
@@ -245,9 +252,9 @@ const TeamManagement = () => {
       <div className="min-h-screen bg-background p-6">
         <div className="space-y-6">
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-            {[1,2,3,4].map(i => <div key={i} className="h-24 bg-muted animate-pulse rounded-lg" />)}
+            {[1,2,3,4].map(i => <Skeleton key={i} className="h-24 rounded-lg" />)}
           </div>
-          <div className="h-[300px] bg-muted animate-pulse rounded-lg" />
+          <Skeleton className="h-[300px] rounded-lg" />
         </div>
       </div>
     );
@@ -564,6 +571,7 @@ const TeamManagement = () => {
         </div>
         
         {/* Team Stats */}
+        {!loadError && (
         <section aria-label="Team statistics" className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-6 mb-6 sm:mb-8">
           <Card role="region" aria-label="Total members statistic">
             <CardContent className="p-3 sm:p-6">
@@ -615,6 +623,7 @@ const TeamManagement = () => {
             </CardContent>
           </Card>
         </section>
+        )}
 
         {/* Team Members */}
         <Card>
@@ -625,6 +634,15 @@ const TeamManagement = () => {
             </CardDescription>
           </CardHeader>
           <CardContent>
+            {loadError ? (
+              <ErrorState
+                title="Team members did not load"
+                description="We could not load your team. Nobody has been removed; try again."
+                onRetry={loadTeamMembers}
+              />
+            ) : teamMembers.length === 0 ? (
+              <NoTeamMembers onInvite={handleInviteClick} />
+            ) : (
             <AccessibleTable<TeamMember>
               caption="Team Members"
               hideCaption
@@ -637,6 +655,7 @@ const TeamManagement = () => {
                 </div>
               }
             />
+            )}
           </CardContent>
         </Card>
 

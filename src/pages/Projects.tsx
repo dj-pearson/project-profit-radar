@@ -20,6 +20,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { ProjectCardSkeleton } from "@/components/ui/loading-skeleton";
+import { ErrorState, NoProjects } from "@/components/ui/EmptyStates";
 import { ResponsiveGrid } from "@/components/layout/ResponsiveContainer";
 import { VirtualizedGrid } from "@/components/ui/virtualized-grid";
 import { SharedElement, sharedId } from "@/components/mobile/SharedElementTransition";
@@ -98,6 +99,9 @@ const Projects = () => {
 
   const [projects, setProjects] = useState<ProjectWithRelations[]>([]);
   const [loading, setLoading] = useState(true);
+  // A failed load used to fall through to "No active projects" behind a
+  // toast. Keep it so the page says the load failed and offers a retry.
+  const [loadError, setLoadError] = useState(false);
   const [searchTerm, setSearchTerm] = usePersistedState<string>("projects-search", "");
   const [statusFilter, setStatusFilter] = usePersistedState<string>("projects-status-filter", "all");
   const [activeTab, setActiveTab] = usePersistedState<string>("projects-active-tab", "active");
@@ -148,10 +152,12 @@ const Projects = () => {
   const loadProjects = async () => {
     try {
       setLoading(true);
+      setLoadError(false);
       const companyId = userProfile?.role !== "root_admin" ? userProfile?.company_id : undefined;
       const data = await projectService.getProjects(companyId);
       setProjects(data || []);
     } catch (error: unknown) {
+      setLoadError(true);
       toast({
         variant: "destructive",
         title: "Error loading projects",
@@ -880,6 +886,15 @@ const Projects = () => {
       />
 
       {/* Projects Tabs */}
+      {loadError ? (
+        <ErrorState
+          title="Projects did not load"
+          description="We could not load your projects. Nothing has been deleted; try again."
+          onRetry={loadProjects}
+        />
+      ) : projects.length === 0 ? (
+        <NoProjects onCreate={() => handleCreateProject("empty_state_click")} />
+      ) : (
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6" aria-label="Projects by status">
         <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 h-auto" aria-label="Project status categories">
           <TabsTrigger value="active" className="text-xs sm:text-sm py-2" aria-label={`Active projects: ${activeProjects.length}`}>
@@ -1016,6 +1031,7 @@ const Projects = () => {
           )}
         </TabsContent>
       </Tabs>
+      )}
 
       {/* Edit Project Modal */}
       <AccessibleModal
