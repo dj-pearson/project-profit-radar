@@ -6691,3 +6691,10 @@ for the providers that have none. The custom report builder offered three
 time-entry columns that don't exist; it now offers the real ones.
 
 TypeScript errors: 1589 to 1583.
+
+## US-384: the blog has a feed, topics and pages
+
+Every build now writes `public/feed.xml` from published posts, reading them the
+same way the sitemap does. `blog_posts` has no category column, so five topic
+pages match on title and slug. The index is paginated with plain links and
+`rel=prev/next`, and each page is its own canonical URL.

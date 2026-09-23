@@ -15,6 +15,7 @@ const PaymentCenter = createLazyRoute(() => import('@/pages/PaymentCenter'));
 const FeaturesPage = createLazyRoute(() => import('@/pages/Features'));
 const BlogPage = createLazyRoute(() => import('@/pages/Blog'));
 const Resources = createLazyRoute(() => import('@/pages/Resources'));
+const ResourcesCategory = createLazyRoute(() => import('@/pages/ResourcesCategory'));
 const Solutions = createLazyRoute(() => import('@/pages/Solutions'));
 const FAQ = createLazyRoute(() => import('@/pages/FAQ'));
 
@@ -116,6 +117,10 @@ export const marketingRoutes = (
     <Route path="/blog" element={<BlogPage />} />
     {/* Alias of /resources/:slug (US-383); BlogPost sets the canonical to /resources/<slug>. */}
     <Route path="/blog/:slug" element={<LazyBlogPost />} />
+    {/* Blog listing pagination and topic pages (US-384). /resources itself is in appRoutes. */}
+    <Route path="/resources/page/:page" element={<Resources />} />
+    <Route path="/resources/category/:category" element={<ResourcesCategory />} />
+    <Route path="/resources/category/:category/page/:page" element={<ResourcesCategory />} />
     <Route path="/solutions" element={<Solutions />} />
     <Route path="/faq" element={<FAQ />} />
 

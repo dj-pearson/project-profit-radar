@@ -5950,8 +5950,8 @@
         "The sitemap (US-382) lists category pages"
       ],
       "priority": 3,
-      "passes": false,
-      "notes": "PROPOSED 2026-09-09 (production-readiness audit, six parallel reviews: auth, security, page/data flows, UI/UX, SEO, ops)."
+      "passes": true,
+      "notes": "PROPOSED 2026-09-09 (production-readiness audit, six parallel reviews: auth, security, page/data flows, UI/UX, SEO, ops). || DONE 2026-09-23. RSS: scripts/generate-rss.js runs in every build after generate-sitemap, reads published blog_posts via Supabase REST with the publishable key (as the sitemap does), keeps the newest 50 live posts, escapes XML and strips control characters, links /resources/<slug>, writes public/feed.xml and an identical rss.xml; with Supabase unreachable it keeps the existing feed or writes an empty one (RSS_REQUIRE_DB=1 fails the build instead). Categories: blog_posts has no category column, so five topics in src/components/blog/blogCategories.json match on title and slug; a test ensures each has at least one guide. Routes /resources/page/:page, /resources/category/:category and /resources/category/:category/page/:page; /page/1 redirects to the bare URL; pagination is plain links with rel=prev/next in the markup and head, each page canonical to itself; the sitemap lists the five topic pages. Tests: rssFeed and blogListing (44 with routes). Not run against live Supabase. OWNER: SUPABASE_URL and the publishable key in the Cloudflare Pages build env; a site-wide rss alternate link in index.html would be a follow-up."
     },
     {
       "id": "US-385",

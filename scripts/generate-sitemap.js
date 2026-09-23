@@ -20,6 +20,11 @@
  *      route table too: the first route rendering LazyBlogPost, and the
  *      routes rendering LazyPSEOPageRenderer.
  *
+ *   4. Blog topic pages (US-384) come from src/components/blog/blogCategories.json,
+ *      at the URL shape of the route rendering ResourcesCategory. They are
+ *      listed whether or not Supabase answers: each topic always carries at
+ *      least one hand-written guide (a test holds that).
+ *
  * If Supabase can't be reached the build still succeeds with a loud warning
  * and the static URLs only; set SITEMAP_REQUIRE_DB=1 to make that fatal.
  *
@@ -76,6 +81,8 @@ export const NON_INDEXABLE = new Set([
 
 const BLOG_COMPONENT = 'LazyBlogPost';
 const PSEO_COMPONENT = 'LazyPSEOPageRenderer';
+const CATEGORY_COMPONENT = 'ResourcesCategory';
+export const BLOG_CATEGORIES_FILE = 'src/components/blog/blogCategories.json';
 
 const read = (rel) => fs.readFileSync(path.join(ROOT, rel), 'utf8');
 
@@ -183,7 +190,9 @@ export function dynamicTemplates(routes) {
   const open = routes.filter((r) => !r.guarded && !r.redirect);
   const blog = open.find((r) => r.component === BLOG_COMPONENT && r.path.includes(':'));
   const pseo = open.filter((r) => r.component === PSEO_COMPONENT && r.path.includes(':')).map((r) => r.path);
-  return { blog: blog ? blog.path : null, pseo };
+  // The topic page itself, not its /page/:page continuation.
+  const category = open.find((r) => r.component === CATEGORY_COMPONENT && /\/:[\w]+$/.test(r.path) && !/\/page\/:[\w]+$/.test(r.path));
+  return { blog: blog ? blog.path : null, pseo, category: category ? category.path : null };
 }
 
 /** Does a concrete path match a react-router style pattern like /a/:b/:c? */
@@ -298,6 +307,12 @@ export function dynamicEntries(templates, { blogPosts = [], pseoPages = [] }) {
     }
   }
   return { entries: entries.map((e) => (e.lastmod ? e : { path: e.path })), dropped };
+}
+
+/** One entry per blog topic in blogCategories.json, at the routed URL shape. */
+export function categoryEntries(templates, categories = JSON.parse(read(BLOG_CATEGORIES_FILE))) {
+  if (!templates.category) return [];
+  return categories.filter((c) => c && c.slug).map((c) => ({ path: blogPath(templates.category, c.slug) }));
 }
 
 /** Static first; a DB row can't duplicate a static page. */
@@ -501,7 +516,7 @@ Sitemap: ${DOMAIN}/sitemap.xml
 async function main() {
   loadDotEnv();
   const table = loadRouteTable();
-  const statics = staticEntries(table);
+  const statics = [...staticEntries(table), ...categoryEntries(table.templates)];
 
   let dynamic = { entries: [], dropped: 0 };
   let dbNote;

@@ -1,0 +1,32 @@
+[
+  {
+    "slug": "job-costing-and-financials",
+    "name": "Job Costing & Financials",
+    "description": "Job costing, budgets, cash flow, profitability and accounting for small contractors.",
+    "keywords": ["job cost*", "costing", "budget*", "cash flow", "profit*", "financ*", "invoic*", "quickbooks", "accounting", "margin*", "estimat*", "bid*", "roi"]
+  },
+  {
+    "slug": "scheduling-and-project-management",
+    "name": "Scheduling & Project Management",
+    "description": "Scheduling, delays, daily logs and running projects from preconstruction to closeout.",
+    "keywords": ["schedul*", "delay*", "project manag*", "gantt", "timeline*", "daily log*", "punch list*", "change order*", "construction manag*"]
+  },
+  {
+    "slug": "safety-and-compliance",
+    "name": "Safety & Compliance",
+    "description": "OSHA compliance, safety logs, inspections and permits.",
+    "keywords": ["osha", "safety", "complian*", "incident*", "permit*", "inspection*", "toolbox talk*"]
+  },
+  {
+    "slug": "software-comparisons",
+    "name": "Software Comparisons",
+    "description": "Honest comparisons of construction software for small and mid-size builders.",
+    "keywords": ["vs", "versus", "alternative*", "compar*", "procore", "buildertrend", "best construction*", "software review*"]
+  },
+  {
+    "slug": "field-and-mobile",
+    "name": "Field & Mobile",
+    "description": "Field teams, crews, time tracking and mobile apps on the jobsite.",
+    "keywords": ["mobile", "field", "app", "apps", "crew*", "time track*", "timesheet*", "jobsite*", "daily log*"]
+  }
+]
