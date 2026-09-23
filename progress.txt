@@ -6895,3 +6895,12 @@ files), gray-on-color badge text, the Instagram purple gradient, and 4px left
 borders in email and test-report HTML. Left: Inter as a recorded choice,
 Arial in email, grid background, a test fixture, two report transitions, and
 purple gradients the ACs don't name.
+
+## US-369 - columns screens depend on (partial)
+Several columns lived only inside CREATE TABLE IF NOT EXISTS, a no-op where an
+older table existed. Migration 20260924120000 adds them with ADD COLUMN IF NOT
+EXISTS; due_at copies due_date before its default; marketing is seeded FALSE
+for users who opted out via marketing_emails; requester_email/company_id NOT
+NULL dropped on data_subject_requests (widening). Tested on a throwaway PG
+with both table layouts, twice. scripts/gen-supabase-types.mjs now uses
+SUPABASE_DB_URL. Open: owner regenerates types.ts and checks 20260414 ran.

@@ -11,6 +11,14 @@
  * So: generate to a temporary file, sanity-check the output actually looks like
  * generated types, and only then move it into place. types.ts is never touched
  * unless there is something valid to put there.
+ *
+ * Source (US-369): production is self-hosted (see the header of
+ * supabase/migrations/20260209100000_bootstrap_foundational_schema.sql), so
+ * types are generated from that database with --db-url, read from
+ * SUPABASE_DB_URL. The old `--project-id brikly` default pointed at the retired
+ * cloud project and produced types missing every column added since, which is
+ * how eight screens ended up casting around the compiler. SUPABASE_PROJECT_ID is
+ * still honoured when set explicitly, for a cloud staging project.
  */
 import { execFileSync } from 'node:child_process';
 import { writeFileSync, readFileSync, renameSync, unlinkSync, existsSync, statSync } from 'node:fs';
@@ -20,7 +28,21 @@ import { fileURLToPath } from 'node:url';
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const TARGET = join(root, 'src', 'integrations', 'supabase', 'types.ts');
 const TMP = `${TARGET}.new`;
-const PROJECT_ID = process.env.SUPABASE_PROJECT_ID || 'brikly';
+const DB_URL = process.env.SUPABASE_DB_URL;
+const PROJECT_ID = process.env.SUPABASE_PROJECT_ID;
+
+let source;
+if (DB_URL) {
+  source = { args: ['--db-url', DB_URL], label: 'SUPABASE_DB_URL' };
+} else if (PROJECT_ID) {
+  source = { args: ['--project-id', PROJECT_ID], label: `project "${PROJECT_ID}"` };
+} else {
+  console.error('Set SUPABASE_DB_URL to the self-hosted Postgres connection string');
+  console.error('(postgresql://postgres:<password>@<host>:5432/postgres) and run again.');
+  console.error('SUPABASE_PROJECT_ID is only for a Supabase cloud project.');
+  console.error('\ntypes.ts was NOT modified.');
+  process.exit(1);
+}
 
 const BANNER = `// GENERATED FILE - DO NOT EDIT BY HAND.
 //
@@ -38,17 +60,18 @@ let generated;
 try {
   generated = execFileSync(
     'supabase',
-    ['gen', 'types', 'typescript', '--project-id', PROJECT_ID],
+    ['gen', 'types', 'typescript', ...source.args],
     { cwd: root, encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 },
   );
 } catch (err) {
-  console.error(`Could not generate types: ${err.message}`);
+  // The message echoes the command line, and --db-url carries the password.
+  const message = DB_URL ? String(err.message).split(DB_URL).join('<SUPABASE_DB_URL>') : err.message;
+  console.error(`Could not generate types: ${message}`);
   console.error('');
   console.error('types.ts was NOT modified. Check that:');
   console.error('  - the supabase CLI is installed and on PATH');
-  console.error('  - SUPABASE_ACCESS_TOKEN is set (supabase login)');
-  console.error(`  - the project id is right (currently "${PROJECT_ID}";`);
-  console.error('    override with SUPABASE_PROJECT_ID)');
+  console.error(`  - the database named by ${source.label} is reachable from here`);
+  console.error('  - for --project-id only: SUPABASE_ACCESS_TOKEN is set (supabase login)');
   process.exit(1);
 }
 

@@ -126,6 +126,16 @@ The application uses Supabase for backend services. Configuration is managed thr
 - Database connection settings in `/src/integrations/supabase/client.ts`
 - Environment variables for production deployments
 
+### Regenerating database types
+
+`src/integrations/supabase/types.ts` is generated from the self-hosted production Postgres, not from a Supabase cloud project. Set `SUPABASE_DB_URL` to its connection string (it lives with the other self-hosted secrets; never commit it) and run:
+
+```bash
+SUPABASE_DB_URL=postgresql://postgres:<password>@<host>:5432/postgres npm run db:types
+```
+
+The script (`scripts/gen-supabase-types.mjs`) passes the URL to `supabase gen types typescript --db-url`, writes to a temp file and only replaces `types.ts` if the output looks valid. `SUPABASE_PROJECT_ID` still works for a cloud staging project. Never edit `types.ts` by hand.
+
 ## Contributing
 
 1. Fork the repository

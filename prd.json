@@ -5747,7 +5747,7 @@
       ],
       "priority": 2,
       "passes": false,
-      "notes": "PROPOSED 2026-09-09 (production-readiness audit, six parallel reviews: auth, security, page/data flows, UI/UX, SEO, ops). This is the concrete form of US-263. Keep US-263 for the tooling decision; this story is the eight screens."
+      "notes": "PROPOSED 2026-09-09 (production-readiness audit, six parallel reviews: auth, security, page/data flows, UI/UX, SEO, ops). This is the concrete form of US-263. Keep US-263 for the tooling decision; this story is the eight screens. || Migration 20260924120000 adds, idempotently, the columns earlier CREATE TABLE IF NOT EXISTS never added on older tables (data_subject_requests user_id/email/source/legal_basis/notes/due_at/denial_reason, email_preferences.marketing seeded from marketing_emails, punch_list_items.notes, client_portal_access access_level/last_accessed_at/company_id/created_by, audit_logs.risk_level). gen-supabase-types reads SUPABASE_DB_URL. OPEN (owner): regenerate types.ts against the self-hosted DB; check whether 20260414 ran (DSAR/email_preferences policies); client_portal_access unique (project_id, client_email); pick marketing vs marketing_emails."
     },
     {
       "id": "US-370",
