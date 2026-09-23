@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useBills, useChartOfAccounts } from '@/hooks/useAccounting';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -38,6 +38,14 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import {
+  billPaymentFormSchema,
+  emptyBillPayment,
+  type BillPaymentFormValues,
+} from '@/lib/validations/accounting';
 
 interface BillRecord {
   id: string;
@@ -143,16 +151,18 @@ export default function BillPayments() {
     enabled: !!companyId,
   });
 
-  // Form state
-  const [formData, setFormData] = useState({
-    paymentDate: new Date().toISOString().split('T')[0],
-    paymentMethod: 'check',
-    bankAccountId: '',
-    checkNumber: '',
-    referenceNumber: '',
-    memo: '',
-    billsToPayArray: [] as BillToPayApplication[],
+  // Form state (US-268: react-hook-form + billPaymentFormSchema)
+  const form = useForm<BillPaymentFormValues>({
+    resolver: zodResolver(billPaymentFormSchema),
+    defaultValues: emptyBillPayment(),
   });
+  const billsToPayArray = form.watch('billsToPayArray');
+  const paymentMethod = form.watch('paymentMethod');
+  const billErrors = form.formState.errors.billsToPayArray;
+  const billsMessage =
+    (billErrors as { message?: string } | undefined)?.message ?? billErrors?.root?.message;
+  const setBillsToPay = (next: BillToPayApplication[]) =>
+    form.setValue('billsToPayArray', next, { shouldValidate: form.formState.isSubmitted });
 
   // Filter bills by selected vendor
   const filteredBills = selectedVendorId
@@ -160,7 +170,7 @@ export default function BillPayments() {
     : bills;
 
   // Calculate total payment amount
-  const totalPaymentAmount = formData.billsToPayArray.reduce(
+  const totalPaymentAmount = billsToPayArray.reduce(
     (sum, app) => sum + app.amountToPay,
     0
   );
@@ -176,26 +186,19 @@ export default function BillPayments() {
         amountDue: bill.amount_due,
         amountToPay: bill.amount_due, // Default to full amount
       };
-      setFormData({
-        ...formData,
-        billsToPayArray: [...formData.billsToPayArray, newApp],
-      });
+      setBillsToPay([...billsToPayArray, newApp]);
     } else {
-      setFormData({
-        ...formData,
-        billsToPayArray: formData.billsToPayArray.filter(app => app.billId !== bill.id),
-      });
+      setBillsToPay(billsToPayArray.filter(app => app.billId !== bill.id));
     }
   };
 
   // Update amount to pay for a bill
   const updateAmountToPay = (billId: string, amount: number) => {
-    setFormData({
-      ...formData,
-      billsToPayArray: formData.billsToPayArray.map(app =>
+    setBillsToPay(
+      billsToPayArray.map(app =>
         app.billId === billId ? { ...app, amountToPay: amount } : app
       ),
-    });
+    );
   };
 
   // Create bill payment mutation
@@ -276,15 +279,7 @@ export default function BillPayments() {
       toast.success('Bill payment created successfully');
       setIsPayDialogOpen(false);
       // Reset form
-      setFormData({
-        paymentDate: new Date().toISOString().split('T')[0],
-        paymentMethod: 'check',
-        bankAccountId: '',
-        checkNumber: '',
-        referenceNumber: '',
-        memo: '',
-        billsToPayArray: [],
-      });
+      form.reset(emptyBillPayment());
       setSelectedVendorId('');
     },
     onError: (error: unknown) => {
@@ -293,16 +288,9 @@ export default function BillPayments() {
     },
   });
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (formData.billsToPayArray.length === 0) {
-      toast.error('Please select at least one bill to pay');
-      return;
-    }
-
+  const handleSubmit = async (values: BillPaymentFormValues) => {
     await createPayment.mutateAsync({
-      ...formData,
+      ...values,
       totalAmount: totalPaymentAmount,
     });
   };
@@ -336,7 +324,8 @@ export default function BillPayments() {
             </Button>
           </DialogTrigger>
           <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto" aria-describedby="pay-bills-description">
-            <form onSubmit={handleSubmit} aria-label="Pay bills form">
+            <Form {...form}>
+            <form onSubmit={form.handleSubmit(handleSubmit)} noValidate aria-label="Pay bills form">
               <DialogHeader>
                 <DialogTitle>Pay Bills</DialogTitle>
                 <DialogDescription id="pay-bills-description">
@@ -347,89 +336,102 @@ export default function BillPayments() {
               <div className="space-y-4 py-4">
                 {/* Payment Details */}
                 <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="paymentDate">Payment Date</Label>
-                    <Input
-                      id="paymentDate"
-                      type="date"
-                      value={formData.paymentDate}
-                      onChange={(e) =>
-                        setFormData({ ...formData, paymentDate: e.target.value })
-                      }
-                      required
-                    />
-                  </div>
+                  <FormField
+                    control={form.control}
+                    name="paymentDate"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Payment Date</FormLabel>
+                        <FormControl>
+                          <Input type="date" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
-                  <div className="space-y-2">
-                    <Label htmlFor="paymentMethod">Payment Method</Label>
-                    <Select
-                      value={formData.paymentMethod}
-                      onValueChange={(value) =>
-                        setFormData({ ...formData, paymentMethod: value })
-                      }
-                    >
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="check">Check</SelectItem>
-                        <SelectItem value="ach">ACH</SelectItem>
-                        <SelectItem value="wire">Wire Transfer</SelectItem>
-                        <SelectItem value="credit_card">Credit Card</SelectItem>
-                        <SelectItem value="cash">Cash</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
+                  <FormField
+                    control={form.control}
+                    name="paymentMethod"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Payment Method</FormLabel>
+                        <Select value={field.value} onValueChange={field.onChange}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="check">Check</SelectItem>
+                            <SelectItem value="ach">ACH</SelectItem>
+                            <SelectItem value="wire">Wire Transfer</SelectItem>
+                            <SelectItem value="credit_card">Credit Card</SelectItem>
+                            <SelectItem value="cash">Cash</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="bankAccountId">Bank Account</Label>
-                    <Select
-                      value={formData.bankAccountId}
-                      onValueChange={(value) =>
-                        setFormData({ ...formData, bankAccountId: value })
-                      }
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select bank account" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {bankAccounts.map((account) => (
-                          <SelectItem key={account.id} value={account.id}>
-                            {account.account_number} - {account.account_name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
+                  <FormField
+                    control={form.control}
+                    name="bankAccountId"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Bank Account</FormLabel>
+                        <Select value={field.value} onValueChange={field.onChange}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select bank account" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {bankAccounts.map((account) => (
+                              <SelectItem key={account.id} value={account.id}>
+                                {account.account_number} - {account.account_name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
-                  {formData.paymentMethod === 'check' && (
-                    <div className="space-y-2">
-                      <Label htmlFor="checkNumber">Check Number</Label>
-                      <Input
-                        id="checkNumber"
-                        value={formData.checkNumber}
-                        onChange={(e) =>
-                          setFormData({ ...formData, checkNumber: e.target.value })
-                        }
-                        placeholder="1001"
-                      />
-                    </div>
+                  {paymentMethod === 'check' && (
+                    <FormField
+                      control={form.control}
+                      name="checkNumber"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Check Number</FormLabel>
+                          <FormControl>
+                            <Input placeholder="1001" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
                   )}
 
-                  {formData.paymentMethod !== 'check' && (
-                    <div className="space-y-2">
-                      <Label htmlFor="referenceNumber">Reference Number</Label>
-                      <Input
-                        id="referenceNumber"
-                        value={formData.referenceNumber}
-                        onChange={(e) =>
-                          setFormData({ ...formData, referenceNumber: e.target.value })
-                        }
-                        placeholder="Transaction reference"
-                      />
-                    </div>
+                  {paymentMethod !== 'check' && (
+                    <FormField
+                      control={form.control}
+                      name="referenceNumber"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Reference Number</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Transaction reference" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
                   )}
                 </div>
 
@@ -469,17 +471,21 @@ export default function BillPayments() {
                       <TableBody>
                         {filteredBills && filteredBills.length > 0 ? (
                           filteredBills.map((bill: BillRecord) => {
-                            const isSelected = formData.billsToPayArray.some(
+                            const isSelected = billsToPayArray.some(
                               app => app.billId === bill.id
                             );
-                            const application = formData.billsToPayArray.find(
+                            const appIndex = billsToPayArray.findIndex(
                               app => app.billId === bill.id
                             );
+                            const application = appIndex >= 0 ? billsToPayArray[appIndex] : undefined;
+                            const amountError = appIndex >= 0 ? billErrors?.[appIndex]?.amountToPay?.message : undefined;
+                            const amountErrorId = `bill-pay-${bill.id}-amount-error`;
 
                             return (
                               <TableRow key={bill.id}>
                                 <TableCell>
                                   <Checkbox
+                                    aria-label={`Pay bill ${bill.bill_number}`}
                                     checked={isSelected}
                                     onCheckedChange={(checked) =>
                                       toggleBillSelection(bill, checked as boolean)
@@ -506,9 +512,17 @@ export default function BillPayments() {
                                         updateAmountToPay(bill.id, Number(e.target.value))
                                       }
                                       className="text-right"
+                                      aria-label={`Amount to pay on bill ${bill.bill_number}`}
+                                      aria-invalid={amountError ? true : undefined}
+                                      aria-describedby={amountError ? amountErrorId : undefined}
                                     />
                                   ) : (
                                     <span className="text-muted-foreground">-</span>
+                                  )}
+                                  {amountError && (
+                                    <p id={amountErrorId} className="text-sm font-medium text-destructive mt-1">
+                                      {amountError}
+                                    </p>
                                   )}
                                 </TableCell>
                               </TableRow>
@@ -524,10 +538,13 @@ export default function BillPayments() {
                       </TableBody>
                     </Table>
                   </div>
+                  {billsMessage && (
+                    <p role="alert" className="text-sm font-medium text-destructive">{billsMessage}</p>
+                  )}
                 </div>
 
                 {/* Total Payment */}
-                {formData.billsToPayArray.length > 0 && (
+                {billsToPayArray.length > 0 && (
                   <div className="bg-primary/10 rounded-lg p-4">
                     <div className="flex items-center justify-between">
                       <span className="font-semibold text-lg">Total Payment Amount:</span>
@@ -536,24 +553,25 @@ export default function BillPayments() {
                       </span>
                     </div>
                     <div className="text-sm text-muted-foreground mt-1">
-                      Paying {formData.billsToPayArray.length} bill(s)
+                      Paying {billsToPayArray.length} bill(s)
                     </div>
                   </div>
                 )}
 
                 {/* Memo */}
-                <div className="space-y-2">
-                  <Label htmlFor="memo">Memo (Optional)</Label>
-                  <Textarea
-                    id="memo"
-                    value={formData.memo}
-                    onChange={(e) =>
-                      setFormData({ ...formData, memo: e.target.value })
-                    }
-                    placeholder="Payment notes..."
-                    rows={2}
-                  />
-                </div>
+                <FormField
+                  control={form.control}
+                  name="memo"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Memo (Optional)</FormLabel>
+                      <FormControl>
+                        <Textarea placeholder="Payment notes..." rows={2} {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
               </div>
 
               <DialogFooter>
@@ -566,13 +584,14 @@ export default function BillPayments() {
                 </Button>
                 <Button
                   type="submit"
-                  disabled={formData.billsToPayArray.length === 0 || !formData.bankAccountId}
+                  disabled={billsToPayArray.length === 0 || form.formState.isSubmitting}
                 >
                   <DollarSign className="mr-2 h-4 w-4" />
                   Process Payment - {formatCurrency(totalPaymentAmount)}
                 </Button>
               </DialogFooter>
             </form>
+            </Form>
           </DialogContent>
         </Dialog>
       </header>

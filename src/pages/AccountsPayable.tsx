@@ -37,6 +37,17 @@ import { formatCurrency } from '@/utils/accountingUtils';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import {
+  billFormSchema,
+  buildBillPayload,
+  emptyBill,
+  newBillLineItem,
+  type BillFormValues,
+  type BillLineItemValues,
+} from '@/lib/validations/accounting';
 
 interface Vendor {
   id: string;
@@ -70,15 +81,6 @@ interface Bill {
   company_id: string;
 }
 
-interface BillLineItem {
-  id: string;
-  description: string;
-  quantity: number;
-  unitPrice: number;
-  amount: number;
-  expenseAccountId: string;
-}
-
 export default function AccountsPayable() {
   const { user } = useAuth();
   const companyId = user?.user_metadata?.company_id;
@@ -109,45 +111,29 @@ export default function AccountsPayable() {
     enabled: !!companyId,
   });
 
-  // Form state
-  const [formData, setFormData] = useState({
-    vendorId: '',
-    billDate: new Date().toISOString().split('T')[0],
-    dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-    vendorRefNumber: '',
-    memo: '',
-    lineItems: [] as BillLineItem[],
+  // Form state (US-268: react-hook-form + billFormSchema)
+  const form = useForm<BillFormValues>({
+    resolver: zodResolver(billFormSchema),
+    defaultValues: emptyBill([]),
   });
+  const lineItems = form.watch('lineItems');
+  const lineItemErrors = form.formState.errors.lineItems;
+  const lineItemsMessage =
+    (lineItemErrors as { message?: string } | undefined)?.message ?? lineItemErrors?.root?.message;
+
+  const setLineItems = (next: BillLineItemValues[]) =>
+    form.setValue('lineItems', next, { shouldValidate: form.formState.isSubmitted });
 
   // Add line item
-  const addLineItem = () => {
-    const newItem: BillLineItem = {
-      id: Math.random().toString(36).substr(2, 9),
-      description: '',
-      quantity: 1,
-      unitPrice: 0,
-      amount: 0,
-      expenseAccountId: '',
-    };
-    setFormData({
-      ...formData,
-      lineItems: [...formData.lineItems, newItem],
-    });
-  };
+  const addLineItem = () => setLineItems([...lineItems, newBillLineItem()]);
 
   // Remove line item
-  const removeLineItem = (itemId: string) => {
-    setFormData({
-      ...formData,
-      lineItems: formData.lineItems.filter(item => item.id !== itemId),
-    });
-  };
+  const removeLineItem = (itemId: string) => setLineItems(lineItems.filter(item => item.id !== itemId));
 
   // Update line item
-  const updateLineItem = (itemId: string, updates: Partial<BillLineItem>) => {
-    setFormData({
-      ...formData,
-      lineItems: formData.lineItems.map(item => {
+  const updateLineItem = (itemId: string, updates: Partial<BillLineItemValues>) => {
+    setLineItems(
+      lineItems.map(item => {
         if (item.id === itemId) {
           const updated = { ...item, ...updates };
           // Recalculate amount if quantity or unit price changed
@@ -158,46 +144,23 @@ export default function AccountsPayable() {
         }
         return item;
       }),
-    });
+    );
   };
 
   // Calculate totals
   const calculateTotals = () => {
-    const subtotal = formData.lineItems.reduce((sum, item) => sum + item.amount, 0);
+    const subtotal = lineItems.reduce((sum, item) => sum + item.amount, 0);
     return { subtotal, total: subtotal }; // Tax would be added here
   };
 
   const totals = calculateTotals();
 
   // Handle form submission
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    await createBill.mutateAsync({
-      companyId,
-      vendorId: formData.vendorId,
-      billDate: formData.billDate,
-      dueDate: formData.dueDate,
-      vendorRefNumber: formData.vendorRefNumber,
-      memo: formData.memo,
-      lineItems: formData.lineItems.map(item => ({
-        description: item.description,
-        quantity: item.quantity,
-        unitPrice: item.unitPrice,
-        amount: item.amount,
-        expenseAccountId: item.expenseAccountId,
-      })),
-    });
+  const handleSubmit = async (values: BillFormValues) => {
+    await createBill.mutateAsync(buildBillPayload(companyId, values));
 
     // Reset form
-    setFormData({
-      vendorId: '',
-      billDate: new Date().toISOString().split('T')[0],
-      dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-      vendorRefNumber: '',
-      memo: '',
-      lineItems: [],
-    });
+    form.reset(emptyBill([]));
     setIsCreateDialogOpen(false);
   };
 
@@ -236,30 +199,15 @@ export default function AccountsPayable() {
           <DialogTrigger asChild>
             <Button
               aria-label="Create new bill"
-              onClick={() => {
-                setFormData({
-                  vendorId: '',
-                  billDate: new Date().toISOString().split('T')[0],
-                  dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-                  vendorRefNumber: '',
-                  memo: '',
-                  lineItems: [{
-                    id: Math.random().toString(36).substr(2, 9),
-                    description: '',
-                    quantity: 1,
-                    unitPrice: 0,
-                    amount: 0,
-                    expenseAccountId: '',
-                  }],
-                });
-              }}
+              onClick={() => form.reset(emptyBill())}
             >
               <Plus className="mr-2 h-4 w-4" aria-hidden="true" />
               New Bill
             </Button>
           </DialogTrigger>
           <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto" aria-describedby="create-bill-description">
-            <form onSubmit={handleSubmit} aria-label="Create bill form">
+            <Form {...form}>
+            <form onSubmit={form.handleSubmit(handleSubmit)} noValidate aria-label="Create bill form">
               <DialogHeader>
                 <DialogTitle>Create Bill</DialogTitle>
                 <DialogDescription id="create-bill-description">
@@ -270,66 +218,74 @@ export default function AccountsPayable() {
               <div className="space-y-4 py-4">
                 {/* Header Fields */}
                 <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="vendorId">Vendor</Label>
-                    <Select
-                      value={formData.vendorId}
-                      onValueChange={(value) =>
-                        setFormData({ ...formData, vendorId: value })
-                      }
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select vendor" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {vendors?.map((vendor: Vendor) => (
-                          <SelectItem key={vendor.id} value={vendor.id}>
-                            {vendor.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
+                  <FormField
+                    control={form.control}
+                    name="vendorId"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Vendor</FormLabel>
+                        <Select value={field.value} onValueChange={field.onChange}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select vendor" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {vendors?.map((vendor: Vendor) => (
+                              <SelectItem key={vendor.id} value={vendor.id}>
+                                {vendor.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
-                  <div className="space-y-2">
-                    <Label htmlFor="vendorRefNumber">Vendor Invoice #</Label>
-                    <Input
-                      id="vendorRefNumber"
-                      value={formData.vendorRefNumber}
-                      onChange={(e) =>
-                        setFormData({ ...formData, vendorRefNumber: e.target.value })
-                      }
-                      placeholder="INV-12345"
-                    />
-                  </div>
+                  <FormField
+                    control={form.control}
+                    name="vendorRefNumber"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Vendor Invoice #</FormLabel>
+                        <FormControl>
+                          <Input placeholder="INV-12345" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="billDate">Bill Date</Label>
-                    <Input
-                      id="billDate"
-                      type="date"
-                      value={formData.billDate}
-                      onChange={(e) =>
-                        setFormData({ ...formData, billDate: e.target.value })
-                      }
-                      required
-                    />
-                  </div>
+                  <FormField
+                    control={form.control}
+                    name="billDate"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Bill Date</FormLabel>
+                        <FormControl>
+                          <Input type="date" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
-                  <div className="space-y-2">
-                    <Label htmlFor="dueDate">Due Date</Label>
-                    <Input
-                      id="dueDate"
-                      type="date"
-                      value={formData.dueDate}
-                      onChange={(e) =>
-                        setFormData({ ...formData, dueDate: e.target.value })
-                      }
-                      required
-                    />
-                  </div>
+                  <FormField
+                    control={form.control}
+                    name="dueDate"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Due Date</FormLabel>
+                        <FormControl>
+                          <Input type="date" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
                 </div>
 
                 {/* Line Items */}
@@ -355,7 +311,10 @@ export default function AccountsPayable() {
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {formData.lineItems.map((item) => (
+                        {lineItems.map((item, index) => {
+                          const accountError = lineItemErrors?.[index]?.expenseAccountId?.message;
+                          const accountErrorId = `bill-line-${item.id}-account-error`;
+                          return (
                           <TableRow key={item.id}>
                             <TableCell>
                               <Select
@@ -364,7 +323,12 @@ export default function AccountsPayable() {
                                   updateLineItem(item.id, { expenseAccountId: value })
                                 }
                               >
-                                <SelectTrigger className="w-full">
+                                <SelectTrigger
+                                  className="w-full"
+                                  aria-label={`Expense account for line ${index + 1}`}
+                                  aria-invalid={accountError ? true : undefined}
+                                  aria-describedby={accountError ? accountErrorId : undefined}
+                                >
                                   <SelectValue placeholder="Select account" />
                                 </SelectTrigger>
                                 <SelectContent>
@@ -377,6 +341,11 @@ export default function AccountsPayable() {
                                   ))}
                                 </SelectContent>
                               </Select>
+                              {accountError && (
+                                <p id={accountErrorId} className="text-sm font-medium text-destructive mt-1">
+                                  {accountError}
+                                </p>
+                              )}
                             </TableCell>
                             <TableCell>
                               <Input
@@ -418,13 +387,15 @@ export default function AccountsPayable() {
                                 variant="ghost"
                                 size="sm"
                                 onClick={() => removeLineItem(item.id)}
-                                disabled={formData.lineItems.length <= 1}
+                                disabled={lineItems.length <= 1}
+                                aria-label={`Remove line ${index + 1}`}
                               >
                                 <Trash2 className="h-4 w-4" />
                               </Button>
                             </TableCell>
                           </TableRow>
-                        ))}
+                          );
+                        })}
                         {/* Totals Row */}
                         <TableRow className="bg-muted/50 font-semibold">
                           <TableCell colSpan={4} className="text-right">
@@ -438,20 +409,24 @@ export default function AccountsPayable() {
                       </TableBody>
                     </Table>
                   </div>
+                  {lineItemsMessage && (
+                    <p role="alert" className="text-sm font-medium text-destructive">{lineItemsMessage}</p>
+                  )}
                 </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="memo">Memo (Optional)</Label>
-                  <Textarea
-                    id="memo"
-                    value={formData.memo}
-                    onChange={(e) =>
-                      setFormData({ ...formData, memo: e.target.value })
-                    }
-                    placeholder="Additional notes..."
-                    rows={2}
-                  />
-                </div>
+                <FormField
+                  control={form.control}
+                  name="memo"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Memo (Optional)</FormLabel>
+                      <FormControl>
+                        <Textarea placeholder="Additional notes..." rows={2} {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
               </div>
 
               <DialogFooter>
@@ -462,11 +437,12 @@ export default function AccountsPayable() {
                 >
                   Cancel
                 </Button>
-                <Button type="submit" disabled={!formData.vendorId || formData.lineItems.length === 0}>
+                <Button type="submit" disabled={lineItems.length === 0 || form.formState.isSubmitting}>
                   Create Bill
                 </Button>
               </DialogFooter>
             </form>
+            </Form>
           </DialogContent>
         </Dialog>
       </header>

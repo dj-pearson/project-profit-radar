@@ -1,12 +1,17 @@
 import React, { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Form } from '@/components/ui/form';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Checkbox } from '@/components/ui/checkbox';
+import { CheckboxFormField, InputFormField, SelectFormField, TextareaFormField } from '@/components/forms/FormFields';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import {
+  buildInsuranceData,
+  insuranceFormDefaults,
+  insuranceFormSchema,
+  type InsuranceFormValues,
+} from '@/lib/validations/bonds';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -20,55 +25,16 @@ export const InsuranceForm: React.FC<InsuranceFormProps> = ({ insurance, onClose
   const { userProfile } = useAuth();
   const [loading, setLoading] = useState(false);
 
-  const [formData, setFormData] = useState({
-    policy_type: insurance?.policy_type || 'general_liability',
-    policy_number: insurance?.policy_number || '',
-    policy_name: insurance?.policy_name || '',
-    description: insurance?.description || '',
-    coverage_limit: insurance?.coverage_limit || 0,
-    deductible: insurance?.deductible || 0,
-    aggregate_limit: insurance?.aggregate_limit || 0,
-    per_occurrence_limit: insurance?.per_occurrence_limit || 0,
-    premium_amount: insurance?.premium_amount || 0,
-    insurance_company: insurance?.insurance_company || '',
-    insurance_company_rating: insurance?.insurance_company_rating || '',
-    carrier_contact_name: insurance?.carrier_contact_name || '',
-    carrier_contact_phone: insurance?.carrier_contact_phone || '',
-    carrier_contact_email: insurance?.carrier_contact_email || '',
-    agent_company: insurance?.agent_company || '',
-    agent_name: insurance?.agent_name || '',
-    agent_phone: insurance?.agent_phone || '',
-    agent_email: insurance?.agent_email || '',
-    effective_date: insurance?.effective_date || '',
-    expiry_date: insurance?.expiry_date || '',
-    issued_date: insurance?.issued_date || '',
-    status: insurance?.status || 'pending',
-    additional_insured_required: insurance?.additional_insured_required || false,
-    waiver_of_subrogation: insurance?.waiver_of_subrogation || false,
-    primary_non_contributory: insurance?.primary_non_contributory || false,
-    notes: insurance?.notes || '',
-    claims_made: insurance?.claims_made || false,
-    total_claims_amount: insurance?.total_claims_amount || 0,
-    claims_count: insurance?.claims_count || 0
+  const form = useForm<InsuranceFormValues>({
+    resolver: zodResolver(insuranceFormSchema),
+    defaultValues: insuranceFormDefaults(insurance),
   });
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async (values: InsuranceFormValues) => {
     setLoading(true);
 
     try {
-      const insuranceData = {
-        ...formData,
-        company_id: userProfile?.company_id,
-        created_by: userProfile?.id,
-        coverage_limit: parseFloat(formData.coverage_limit.toString()) || 0,
-        deductible: parseFloat(formData.deductible.toString()) || 0,
-        aggregate_limit: parseFloat(formData.aggregate_limit.toString()) || 0,
-        per_occurrence_limit: parseFloat(formData.per_occurrence_limit.toString()) || 0,
-        premium_amount: parseFloat(formData.premium_amount.toString()) || 0,
-        total_claims_amount: parseFloat(formData.total_claims_amount.toString()) || 0,
-        claims_count: parseInt(formData.claims_count.toString()) || 0
-      };
+      const insuranceData = buildInsuranceData(values, userProfile);
 
       if (insurance) {
         const { error } = await supabase
@@ -106,10 +72,6 @@ export const InsuranceForm: React.FC<InsuranceFormProps> = ({ insurance, onClose
     } finally {
       setLoading(false);
     }
-  };
-
-  const handleInputChange = (field: string, value: any) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
   };
 
   const policyTypes = [
@@ -162,336 +124,65 @@ export const InsuranceForm: React.FC<InsuranceFormProps> = ({ insurance, onClose
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <Form {...form}>
+        <form onSubmit={form.handleSubmit(handleSubmit)} noValidate className="space-y-6" aria-label="Insurance policy form">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="policy_type">Policy Type *</Label>
-              <Select
-                value={formData.policy_type}
-                onValueChange={(value) => handleInputChange('policy_type', value)}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select policy type" />
-                </SelectTrigger>
-                <SelectContent>
-                  {policyTypes.map(type => (
-                    <SelectItem key={type.value} value={type.value}>
-                      {type.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="policy_number">Policy Number *</Label>
-              <Input
-                id="policy_number"
-                value={formData.policy_number}
-                onChange={(e) => handleInputChange('policy_number', e.target.value)}
-                placeholder="Policy number"
-                required
-              />
-            </div>
+            <SelectFormField control={form.control} name="policy_type" label="Policy Type *" placeholder="Select policy type" options={policyTypes} />
+            <InputFormField control={form.control} name="policy_number" label="Policy Number *" placeholder="Policy number" aria-required="true" />
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="policy_name">Policy Name *</Label>
-              <Input
-                id="policy_name"
-                value={formData.policy_name}
-                onChange={(e) => handleInputChange('policy_name', e.target.value)}
-                placeholder="Descriptive name for the policy"
-                required
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="insurance_company">Insurance Company *</Label>
-              <Input
-                id="insurance_company"
-                value={formData.insurance_company}
-                onChange={(e) => handleInputChange('insurance_company', e.target.value)}
-                placeholder="Insurance carrier name"
-                required
-              />
-            </div>
+            <InputFormField control={form.control} name="policy_name" label="Policy Name *" placeholder="Descriptive name for the policy" aria-required="true" />
+            <InputFormField control={form.control} name="insurance_company" label="Insurance Company *" placeholder="Insurance carrier name" aria-required="true" />
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="description">Description</Label>
-            <Textarea
-              id="description"
-              value={formData.description}
-              onChange={(e) => handleInputChange('description', e.target.value)}
-              placeholder="Detailed description of the policy coverage"
-              rows={3}
-            />
+          <TextareaFormField control={form.control} name="description" label="Description" placeholder="Detailed description of the policy coverage" rows={3} />
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <InputFormField control={form.control} name="coverage_limit" label="Coverage Limit *" type="number" step="0.01" min="0" placeholder="0.00" aria-required="true" />
+            <InputFormField control={form.control} name="aggregate_limit" label="Aggregate Limit" type="number" step="0.01" min="0" placeholder="0.00" />
+            <InputFormField control={form.control} name="per_occurrence_limit" label="Per Occurrence Limit" type="number" step="0.01" min="0" placeholder="0.00" />
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <InputFormField control={form.control} name="deductible" label="Deductible" type="number" step="0.01" min="0" placeholder="0.00" />
+            <InputFormField control={form.control} name="premium_amount" label="Premium Amount" type="number" step="0.01" min="0" placeholder="0.00" />
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <SelectFormField control={form.control} name="insurance_company_rating" label="Company Rating (AM Best)" placeholder="Select rating" options={ratings} />
+            <SelectFormField control={form.control} name="status" label="Status" placeholder="Select status" options={statuses} />
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="coverage_limit">Coverage Limit *</Label>
-              <Input
-                id="coverage_limit"
-                type="number"
-                step="0.01"
-                min="0"
-                value={formData.coverage_limit}
-                onChange={(e) => handleInputChange('coverage_limit', e.target.value)}
-                placeholder="0.00"
-                required
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="aggregate_limit">Aggregate Limit</Label>
-              <Input
-                id="aggregate_limit"
-                type="number"
-                step="0.01"
-                min="0"
-                value={formData.aggregate_limit}
-                onChange={(e) => handleInputChange('aggregate_limit', e.target.value)}
-                placeholder="0.00"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="per_occurrence_limit">Per Occurrence Limit</Label>
-              <Input
-                id="per_occurrence_limit"
-                type="number"
-                step="0.01"
-                min="0"
-                value={formData.per_occurrence_limit}
-                onChange={(e) => handleInputChange('per_occurrence_limit', e.target.value)}
-                placeholder="0.00"
-              />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="deductible">Deductible</Label>
-              <Input
-                id="deductible"
-                type="number"
-                step="0.01"
-                min="0"
-                value={formData.deductible}
-                onChange={(e) => handleInputChange('deductible', e.target.value)}
-                placeholder="0.00"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="premium_amount">Premium Amount</Label>
-              <Input
-                id="premium_amount"
-                type="number"
-                step="0.01"
-                min="0"
-                value={formData.premium_amount}
-                onChange={(e) => handleInputChange('premium_amount', e.target.value)}
-                placeholder="0.00"
-              />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="insurance_company_rating">Company Rating (AM Best)</Label>
-              <Select
-                value={formData.insurance_company_rating}
-                onValueChange={(value) => handleInputChange('insurance_company_rating', value)}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select rating" />
-                </SelectTrigger>
-                <SelectContent>
-                  {ratings.map(rating => (
-                    <SelectItem key={rating.value} value={rating.value}>
-                      {rating.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="status">Status</Label>
-              <Select
-                value={formData.status}
-                onValueChange={(value) => handleInputChange('status', value)}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select status" />
-                </SelectTrigger>
-                <SelectContent>
-                  {statuses.map(status => (
-                    <SelectItem key={status.value} value={status.value}>
-                      {status.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="effective_date">Effective Date *</Label>
-              <Input
-                id="effective_date"
-                type="date"
-                value={formData.effective_date}
-                onChange={(e) => handleInputChange('effective_date', e.target.value)}
-                required
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="expiry_date">Expiry Date *</Label>
-              <Input
-                id="expiry_date"
-                type="date"
-                value={formData.expiry_date}
-                onChange={(e) => handleInputChange('expiry_date', e.target.value)}
-                required
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="issued_date">Issued Date</Label>
-              <Input
-                id="issued_date"
-                type="date"
-                value={formData.issued_date}
-                onChange={(e) => handleInputChange('issued_date', e.target.value)}
-              />
-            </div>
+            <InputFormField control={form.control} name="effective_date" label="Effective Date *" type="date" aria-required="true" />
+            <InputFormField control={form.control} name="expiry_date" label="Expiry Date *" type="date" aria-required="true" />
+            <InputFormField control={form.control} name="issued_date" label="Issued Date" type="date" />
           </div>
 
           <div className="space-y-4">
             <h4 className="text-sm font-medium">Special Requirements</h4>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="additional_insured_required"
-                  checked={formData.additional_insured_required}
-                  onCheckedChange={(checked) => handleInputChange('additional_insured_required', checked)}
-                />
-                <Label htmlFor="additional_insured_required">Additional Insured Required</Label>
-              </div>
-
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="waiver_of_subrogation"
-                  checked={formData.waiver_of_subrogation}
-                  onCheckedChange={(checked) => handleInputChange('waiver_of_subrogation', checked)}
-                />
-                <Label htmlFor="waiver_of_subrogation">Waiver of Subrogation</Label>
-              </div>
-
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="primary_non_contributory"
-                  checked={formData.primary_non_contributory}
-                  onCheckedChange={(checked) => handleInputChange('primary_non_contributory', checked)}
-                />
-                <Label htmlFor="primary_non_contributory">Primary Non-Contributory</Label>
-              </div>
+              <CheckboxFormField control={form.control} name="additional_insured_required" label="Additional Insured Required" />
+              <CheckboxFormField control={form.control} name="waiver_of_subrogation" label="Waiver of Subrogation" />
+              <CheckboxFormField control={form.control} name="primary_non_contributory" label="Primary Non-Contributory" />
             </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="carrier_contact_name">Carrier Contact Name</Label>
-              <Input
-                id="carrier_contact_name"
-                value={formData.carrier_contact_name}
-                onChange={(e) => handleInputChange('carrier_contact_name', e.target.value)}
-                placeholder="Contact person at carrier"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="carrier_contact_phone">Carrier Phone</Label>
-              <Input
-                id="carrier_contact_phone"
-                value={formData.carrier_contact_phone}
-                onChange={(e) => handleInputChange('carrier_contact_phone', e.target.value)}
-                placeholder="Phone number"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="carrier_contact_email">Carrier Email</Label>
-              <Input
-                id="carrier_contact_email"
-                type="email"
-                value={formData.carrier_contact_email}
-                onChange={(e) => handleInputChange('carrier_contact_email', e.target.value)}
-                placeholder="Email address"
-              />
-            </div>
+            <InputFormField control={form.control} name="carrier_contact_name" label="Carrier Contact Name" placeholder="Contact person at carrier" />
+            <InputFormField control={form.control} name="carrier_contact_phone" label="Carrier Phone" placeholder="Phone number" />
+            <InputFormField control={form.control} name="carrier_contact_email" label="Carrier Email" type="email" placeholder="Email address" />
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="agent_company">Agent Company</Label>
-              <Input
-                id="agent_company"
-                value={formData.agent_company}
-                onChange={(e) => handleInputChange('agent_company', e.target.value)}
-                placeholder="Insurance agency name"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="agent_name">Agent Name</Label>
-              <Input
-                id="agent_name"
-                value={formData.agent_name}
-                onChange={(e) => handleInputChange('agent_name', e.target.value)}
-                placeholder="Agent name"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="agent_phone">Agent Phone</Label>
-              <Input
-                id="agent_phone"
-                value={formData.agent_phone}
-                onChange={(e) => handleInputChange('agent_phone', e.target.value)}
-                placeholder="Phone number"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="agent_email">Agent Email</Label>
-              <Input
-                id="agent_email"
-                type="email"
-                value={formData.agent_email}
-                onChange={(e) => handleInputChange('agent_email', e.target.value)}
-                placeholder="Email address"
-              />
-            </div>
+            <InputFormField control={form.control} name="agent_company" label="Agent Company" placeholder="Insurance agency name" />
+            <InputFormField control={form.control} name="agent_name" label="Agent Name" placeholder="Agent name" />
+            <InputFormField control={form.control} name="agent_phone" label="Agent Phone" placeholder="Phone number" />
+            <InputFormField control={form.control} name="agent_email" label="Agent Email" type="email" placeholder="Email address" />
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="notes">Notes</Label>
-            <Textarea
-              id="notes"
-              value={formData.notes}
-              onChange={(e) => handleInputChange('notes', e.target.value)}
-              placeholder="Additional notes or comments"
-              rows={3}
-            />
-          </div>
+          <TextareaFormField control={form.control} name="notes" label="Notes" placeholder="Additional notes or comments" rows={3} />
 
           <div className="flex justify-end space-x-2">
             <Button type="button" variant="outline" onClick={onClose}>
@@ -502,6 +193,7 @@ export const InsuranceForm: React.FC<InsuranceFormProps> = ({ insurance, onClose
             </Button>
           </div>
         </form>
+        </Form>
       </DialogContent>
     </Dialog>
   );

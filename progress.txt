@@ -7186,3 +7186,10 @@ helpers; tsc over the 11 files reports the same 48 old errors before and
 after, and the rebuilt navigation config serializes identically. The
 god-file baseline is empty. A max-lines warning at 500 now flags the next
 tier; it adds 149 warnings, so the eslint baseline is 4091.
+
+## US-268 done + US-266 pass 3
+Every form in the app now validates with react-hook-form + Zod (guard at 0;
+four non-forms exempted with reasons). Sixteen more screens moved to query
+hooks (raw calls 859 -> 785); the mobile time tracker and equipment form
+stopped inventing projects and machines when a read failed. TS 1142 ->
+1111, eslint warnings 4091 -> 4064, customer-links 24 -> 22.

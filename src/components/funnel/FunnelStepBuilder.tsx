@@ -5,13 +5,21 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Plus, Mail, Clock, Edit, Trash2, MoveUp, MoveDown } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { confirmAction } from "@/components/ui/confirm-dialog";
 import { ListSkeleton } from '@/components/ui/skeletons';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import {
+  FUNNEL_STEP_DEFAULTS,
+  buildFunnelStepData,
+  funnelStepFormSchema,
+  type FunnelStepFormValues,
+} from "@/lib/validations/funnels";
 
 interface FunnelStep {
   id: string;
@@ -84,6 +92,7 @@ export function FunnelStepBuilder({ funnelId }: FunnelStepBuilderProps) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["funnel-steps", funnelId] });
       setIsAddStepOpen(false);
+      stepForm.reset(FUNNEL_STEP_DEFAULTS);
       toast({
         title: "Step added",
         description: "Funnel step has been added successfully.",
@@ -109,16 +118,13 @@ export function FunnelStepBuilder({ funnelId }: FunnelStepBuilderProps) {
     },
   });
 
-  const handleAddStep = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    const formData = new FormData(e.currentTarget);
-    
-    addStepMutation.mutate({
-      name: formData.get("name") as string,
-      email_template_id: formData.get("email_template_id") as string,
-      delay_amount: parseInt(formData.get("delay_amount") as string),
-      delay_unit: formData.get("delay_unit") as string,
-    });
+  const stepForm = useForm<FunnelStepFormValues>({
+    resolver: zodResolver(funnelStepFormSchema),
+    defaultValues: FUNNEL_STEP_DEFAULTS,
+  });
+
+  const handleAddStep = (values: FunnelStepFormValues) => {
+    addStepMutation.mutate(buildFunnelStepData(values));
   };
 
   const delayUnitOptions = [
@@ -155,58 +161,83 @@ export function FunnelStepBuilder({ funnelId }: FunnelStepBuilderProps) {
                 Add a new email step to your funnel sequence
               </DialogDescription>
             </DialogHeader>
-            <form onSubmit={handleAddStep} className="space-y-4">
-              <div>
-                <Label htmlFor="name">Step Name</Label>
-                <Input
-                  id="name"
-                  name="name"
-                  placeholder="Welcome Email"
-                  required
-                />
-              </div>
-              <div>
-                <Label htmlFor="email_template_id">Email Template</Label>
-                <Select name="email_template_id" required>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select email template" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {emailTemplates?.map((template) => (
-                      <SelectItem key={template.id} value={template.id}>
-                        {template.name} - {template.subject}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+            <Form {...stepForm}>
+            <form onSubmit={stepForm.handleSubmit(handleAddStep)} noValidate className="space-y-4" aria-label="Add funnel step form">
+              <FormField
+                control={stepForm.control}
+                name="name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Step Name</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Welcome Email" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={stepForm.control}
+                name="email_template_id"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Email Template</FormLabel>
+                    <Select value={field.value} onValueChange={field.onChange}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select email template" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {emailTemplates?.map((template) => (
+                          <SelectItem key={template.id} value={template.id}>
+                            {template.name} - {template.subject}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
               <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="delay_amount">Delay Amount</Label>
-                  <Input
-                    id="delay_amount"
-                    name="delay_amount"
-                    type="number"
-                    min="0"
-                    defaultValue="0"
-                    required
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="delay_unit">Delay Unit</Label>
-                  <Select name="delay_unit" defaultValue="days">
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {delayUnitOptions.map((option) => (
-                        <SelectItem key={option.value} value={option.value}>
-                          {option.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+                <FormField
+                  control={stepForm.control}
+                  name="delay_amount"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Delay Amount</FormLabel>
+                      <FormControl>
+                        <Input type="number" min="0" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={stepForm.control}
+                  name="delay_unit"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Delay Unit</FormLabel>
+                      <Select value={field.value} onValueChange={field.onChange}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {delayUnitOptions.map((option) => (
+                            <SelectItem key={option.value} value={option.value}>
+                              {option.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
               </div>
               <div className="flex justify-end space-x-2">
                 <Button type="button" variant="outline" onClick={() => setIsAddStepOpen(false)}>
@@ -217,6 +248,7 @@ export function FunnelStepBuilder({ funnelId }: FunnelStepBuilderProps) {
                 </Button>
               </div>
             </form>
+            </Form>
           </DialogContent>
         </Dialog>
       </div>

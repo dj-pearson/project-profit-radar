@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
@@ -15,6 +14,10 @@ import { FunnelStepBuilder } from "@/components/funnel/FunnelStepBuilder";
 import { FunnelAnalytics } from "@/components/funnel/FunnelAnalytics";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { AccessiblePageWrapper } from "@/components/accessibility/AccessiblePageWrapper";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { FUNNEL_FORM_DEFAULTS, funnelFormSchema, type FunnelFormValues } from "@/lib/validations/funnels";
 
 interface LeadFunnel {
   id: string;
@@ -80,6 +83,7 @@ export default function FunnelManager() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["funnels"] });
       setIsCreateDialogOpen(false);
+      funnelForm.reset(FUNNEL_FORM_DEFAULTS);
       toast({
         title: "Funnel created",
         description: "Your lead funnel has been created successfully.",
@@ -112,14 +116,16 @@ export default function FunnelManager() {
     },
   });
 
-  const handleCreateFunnel = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    const formData = new FormData(e.currentTarget);
-    
+  const funnelForm = useForm<FunnelFormValues>({
+    resolver: zodResolver(funnelFormSchema),
+    defaultValues: FUNNEL_FORM_DEFAULTS,
+  });
+
+  const handleCreateFunnel = (values: FunnelFormValues) => {
     createFunnelMutation.mutate({
-      name: formData.get("name") as string,
-      description: formData.get("description") as string,
-      trigger_event: formData.get("trigger_event") as string,
+      name: values.name,
+      description: values.description,
+      trigger_event: values.trigger_event,
     });
   };
 
@@ -211,39 +217,58 @@ export default function FunnelManager() {
                   Set up a new lead funnel with automated email sequences
                 </DialogDescription>
               </DialogHeader>
-              <form onSubmit={handleCreateFunnel} className="space-y-4" aria-label="Create funnel form">
-                <div>
-                  <Label htmlFor="name">Funnel Name</Label>
-                  <Input
-                    id="name"
-                    name="name"
-                    placeholder="Trial Onboarding Sequence"
-                    required
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="description">Description</Label>
-                  <Textarea
-                    id="description"
-                    name="description"
-                    placeholder="Nurture trial users through their 14-day journey..."
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="trigger_event">Trigger Event</Label>
-                  <Select name="trigger_event" required>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select trigger event" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {triggerEventOptions.map((option) => (
-                        <SelectItem key={option.value} value={option.value}>
-                          {option.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+              <Form {...funnelForm}>
+              <form onSubmit={funnelForm.handleSubmit(handleCreateFunnel)} noValidate className="space-y-4" aria-label="Create funnel form">
+                <FormField
+                  control={funnelForm.control}
+                  name="name"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Funnel Name</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Trial Onboarding Sequence" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={funnelForm.control}
+                  name="description"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Description</FormLabel>
+                      <FormControl>
+                        <Textarea placeholder="Nurture trial users through their 14-day journey..." {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={funnelForm.control}
+                  name="trigger_event"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Trigger Event</FormLabel>
+                      <Select value={field.value} onValueChange={field.onChange}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select trigger event" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {triggerEventOptions.map((option) => (
+                            <SelectItem key={option.value} value={option.value}>
+                              {option.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
                 <div className="flex justify-end space-x-2">
                   <Button type="button" variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
                     Cancel
@@ -253,6 +278,7 @@ export default function FunnelManager() {
                   </Button>
                 </div>
               </form>
+              </Form>
             </DialogContent>
           </Dialog>
         </div>

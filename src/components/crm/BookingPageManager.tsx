@@ -4,7 +4,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
@@ -13,6 +12,17 @@ import { Clock, Copy, ExternalLink, Plus, Trash2 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { confirmAction } from "@/components/ui/confirm-dialog";
 import { ListSkeleton, LoadingRegion } from '@/components/ui/skeletons';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { InputFormField, SelectFormField, TextareaFormField } from "@/components/forms/FormFields";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import {
+  BOOKING_PAGE_DEFAULTS,
+  bookingPageFormSchema,
+  buildBookingPageData,
+  slugify,
+  type BookingPageFormValues,
+} from "@/lib/validations/crm";
 
 interface BookingPage {
   id: string;
@@ -38,13 +48,9 @@ export function BookingPageManager() {
   const queryClient = useQueryClient();
   const [isCreating, setIsCreating] = useState(false);
 
-  const [formData, setFormData] = useState({
-    title: "",
-    slug: "",
-    description: "",
-    duration_minutes: 30,
-    location_type: "video_zoom",
-    is_active: true,
+  const form = useForm<BookingPageFormValues>({
+    resolver: zodResolver(bookingPageFormSchema),
+    defaultValues: BOOKING_PAGE_DEFAULTS,
   });
 
   const [availability, setAvailability] = useState<AvailabilityRule[]>([
@@ -69,7 +75,7 @@ export function BookingPageManager() {
   });
 
   const createPageMutation = useMutation({
-    mutationFn: async (data: typeof formData & { availability: AvailabilityRule[] }) => {
+    mutationFn: async (data: ReturnType<typeof buildBookingPageData> & { availability: AvailabilityRule[] }) => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Not authenticated");
 
@@ -100,14 +106,7 @@ export function BookingPageManager() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["booking-pages"] });
       setIsCreating(false);
-      setFormData({
-        title: "",
-        slug: "",
-        description: "",
-        duration_minutes: 30,
-        location_type: "video_zoom",
-        is_active: true,
-      });
+      form.reset(BOOKING_PAGE_DEFAULTS);
       toast({ title: "Booking page created successfully" });
     },
     onError: (error: Error) => {
@@ -139,9 +138,8 @@ export function BookingPageManager() {
     },
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    createPageMutation.mutate({ ...formData, availability });
+  const handleSubmit = (values: BookingPageFormValues) => {
+    createPageMutation.mutate({ ...buildBookingPageData(values), availability });
   };
 
   const copyBookingLink = (slug: string) => {
@@ -182,82 +180,66 @@ export function BookingPageManager() {
             <DialogHeader>
               <DialogTitle>Create Booking Page</DialogTitle>
             </DialogHeader>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="title">Page Title</Label>
-                <Input
-                  id="title"
-                  value={formData.title}
-                  onChange={(e) => {
-                    setFormData({ ...formData, title: e.target.value });
-                    if (!formData.slug) {
-                      setFormData(prev => ({
-                        ...prev,
-                        title: e.target.value,
-                        slug: e.target.value.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, ""),
-                      }));
-                    }
-                  }}
-                  placeholder="15 Minute Consultation"
-                  required
-                />
-              </div>
+            <Form {...form}>
+            <form onSubmit={form.handleSubmit(handleSubmit)} noValidate className="space-y-4" aria-label="Create booking page form">
+              <FormField
+                control={form.control}
+                name="title"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Page Title</FormLabel>
+                    <FormControl>
+                      <Input
+                        {...field}
+                        onChange={(e) => {
+                          field.onChange(e);
+                          // Fill the slug from the title while the slug is still empty.
+                          if (!form.getValues("slug")) {
+                            form.setValue("slug", slugify(e.target.value));
+                          }
+                        }}
+                        placeholder="15 Minute Consultation"
+                        aria-required="true"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-              <div className="space-y-2">
-                <Label htmlFor="slug">URL Slug</Label>
-                <div className="flex items-center gap-2">
-                  <span className="text-sm text-muted-foreground">/book/</span>
-                  <Input
-                    id="slug"
-                    value={formData.slug}
-                    onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
-                    placeholder="15-min-consultation"
-                    required
-                  />
-                </div>
-              </div>
+              <FormField
+                control={form.control}
+                name="slug"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>URL Slug</FormLabel>
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm text-muted-foreground">/book/</span>
+                      <FormControl>
+                        <Input {...field} placeholder="15-min-consultation" aria-required="true" />
+                      </FormControl>
+                    </div>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-              <div className="space-y-2">
-                <Label htmlFor="description">Description</Label>
-                <Textarea
-                  id="description"
-                  value={formData.description}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  placeholder="Brief description of this meeting type"
-                />
-              </div>
+              <TextareaFormField control={form.control} name="description" label="Description" placeholder="Brief description of this meeting type" />
 
               <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="duration">Duration (minutes)</Label>
-                  <Input
-                    id="duration"
-                    type="number"
-                    value={formData.duration_minutes}
-                    onChange={(e) => setFormData({ ...formData, duration_minutes: parseInt(e.target.value) })}
-                    min={15}
-                    step={15}
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="location">Meeting Type</Label>
-                  <Select
-                    value={formData.location_type}
-                    onValueChange={(value) => setFormData({ ...formData, location_type: value })}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="video_zoom">Zoom</SelectItem>
-                      <SelectItem value="video_google_meet">Google Meet</SelectItem>
-                      <SelectItem value="video_teams">Microsoft Teams</SelectItem>
-                      <SelectItem value="phone">Phone Call</SelectItem>
-                      <SelectItem value="in_person">In Person</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+                <InputFormField control={form.control} name="duration_minutes" label="Duration (minutes)" type="number" min={15} step={15} />
+                <SelectFormField
+                  control={form.control}
+                  name="location_type"
+                  label="Meeting Type"
+                  options={[
+                    { value: "video_zoom", label: "Zoom" },
+                    { value: "video_google_meet", label: "Google Meet" },
+                    { value: "video_teams", label: "Microsoft Teams" },
+                    { value: "phone", label: "Phone Call" },
+                    { value: "in_person", label: "In Person" },
+                  ]}
+                />
               </div>
 
               <div className="space-y-4">
@@ -324,6 +306,7 @@ export function BookingPageManager() {
                 {createPageMutation.isPending ? "Creating..." : "Create Booking Page"}
               </Button>
             </form>
+            </Form>
           </DialogContent>
         </Dialog>
       </div>

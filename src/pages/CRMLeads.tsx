@@ -10,8 +10,8 @@ import { LoadingRegion, TableSkeleton } from '@/components/ui/skeletons';
 import { Skeleton } from '@/components/ui/skeleton';
 import ErrorBoundary from '@/components/ErrorBoundary';
 import { ErrorState, EmptyState } from '@/components/ui/states';
-import { useLoadingState } from '@/hooks/useLoadingState';
-import { supabase } from '@/integrations/supabase/client';
+import { useCRMLeads } from '@/hooks/useCRMPipeline';
+import type { TablesInsert, TablesUpdate } from '@/integrations/supabase/types';
 import { useToast } from '@/hooks/use-toast';
 import { usePersistedState } from '@/hooks/usePersistedState';
 import { Input } from '@/components/ui/input';
@@ -94,12 +94,15 @@ const CRMLeads = () => {
   const [selectedLead, setSelectedLead] = useState<string | null>(null);
   const [editingLead, setEditingLead] = useState<Lead | null>(null);
   
-  const { 
-    data: leads, 
-    loading: leadsLoading, 
-    error: leadsError, 
-    execute: loadLeads 
-  } = useLoadingState<Lead[]>([]);
+  const {
+    leads,
+    isLoading: leadsLoading,
+    error: leadsError,
+    refetch,
+    createLead: createLeadMutation,
+    updateLead: updateLeadMutation,
+  } = useCRMLeads<Lead>({ enabled: !loading && !!user && !!userProfile });
+  const reloadLeads = () => { void refetch(); };
 
   useEffect(() => {
     if (!loading && !user) {
@@ -109,10 +112,6 @@ const CRMLeads = () => {
     if (!loading && user && userProfile && !userProfile.company_id && userProfile.role !== 'root_admin') {
       navigate('/setup');
     }
-    
-    if (!loading && user && userProfile) {
-      loadLeads(loadLeadsData);
-    }
   }, [user, userProfile, loading, navigate]);
 
   useEffect(() => {
@@ -121,22 +120,6 @@ const CRMLeads = () => {
       setShowNewLeadDialog(true);
     }
   }, [location.pathname]);
-
-  const loadLeadsData = async (): Promise<Lead[]> => {
-    // Scope to the caller's company explicitly, as the rest of the CRM does,
-    // instead of leaning on RLS alone. No company, no leads.
-    const companyId = userProfile?.company_id;
-    if (!companyId) return [];
-
-    const { data, error } = await (supabase as any)
-      .from('leads')
-      .select('*')
-      .eq('company_id', companyId)
-      .order('created_at', { ascending: false });
-
-    if (error) throw error;
-    return data || [];
-  };
 
   const createLead = async () => {
     if (!userProfile?.company_id) {
@@ -182,11 +165,7 @@ const CRMLeads = () => {
         tags: newLead.tags
       };
 
-      const { error } = await supabase
-        .from('leads')
-        .insert([leadData]);
-
-      if (error) throw error;
+      await createLeadMutation.mutateAsync(leadData as TablesInsert<'leads'>);
 
       toast({
         title: "Success",
@@ -204,7 +183,6 @@ const CRMLeads = () => {
         site_accessible: true,
         decision_maker: false
       });
-      loadLeads(loadLeadsData);
     } catch (error) {
       console.error('Error creating lead:', error);
       toast({
@@ -257,16 +235,8 @@ const CRMLeads = () => {
 
   const updateLead = async (leadId: string, updates: Partial<Lead>) => {
     try {
-      const { error } = await supabase
-        .from('leads')
-        .update(updates)
-        .eq('id', leadId);
+      await updateLeadMutation.mutateAsync({ id: leadId, patch: updates as TablesUpdate<'leads'> });
 
-      if (error) throw error;
-
-      // Update local state
-      loadLeads(loadLeadsData);
-      
       toast({
         title: "Success",
         description: "Lead updated successfully!",
@@ -402,7 +372,7 @@ const CRMLeads = () => {
                     
                     <CSVImportButton
                       dataType="contacts"
-                      onImportComplete={() => loadLeads(loadLeadsData)}
+                      onImportComplete={reloadLeads}
                       variant="outline"
                     />
 
@@ -756,7 +726,7 @@ const CRMLeads = () => {
                   ) : leadsError ? (
                     <ErrorState 
                       error={leadsError} 
-                      onRetry={() => loadLeads(loadLeadsData)}
+                      onRetry={reloadLeads}
                     />
                   ) : !filteredLeads.length ? (
                     <EmptyState

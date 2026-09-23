@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Form, FormControl, FormField, FormItem, FormLabel } from '@/components/ui/form';
 import { Switch } from '@/components/ui/switch';
+import { InputFormField, SelectFormField, TextareaFormField } from '@/components/forms/FormFields';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { buildWarrantyData, warrantyFormDefaults, warrantyFormSchema, type WarrantyFormValues } from '@/lib/validations/warranty';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
@@ -39,26 +40,9 @@ export const WarrantyForm: React.FC<WarrantyFormProps> = ({ warranty, projectId,
   const [vendors, setVendors] = useState<Vendor[]>([]);
   const [purchaseOrders, setPurchaseOrders] = useState<PurchaseOrder[]>([]);
 
-  const [formData, setFormData] = useState({
-    warranty_type: warranty?.warranty_type || 'material',
-    item_name: warranty?.item_name || '',
-    item_description: warranty?.item_description || '',
-    manufacturer: warranty?.manufacturer || '',
-    model_number: warranty?.model_number || '',
-    serial_number: warranty?.serial_number || '',
-    project_id: warranty?.project_id || projectId || '',
-    vendor_id: warranty?.vendor_id || '',
-    purchase_order_id: warranty?.purchase_order_id || '',
-    warranty_duration_months: warranty?.warranty_duration_months || 12,
-    warranty_start_date: warranty?.warranty_start_date || undefined,
-    installation_date: warranty?.installation_date || undefined,
-    coverage_details: warranty?.coverage_details || '',
-    coverage_limitations: warranty?.coverage_limitations || '',
-    is_transferable: warranty?.is_transferable || false,
-    warranty_contact_name: warranty?.warranty_contact_name || '',
-    warranty_contact_phone: warranty?.warranty_contact_phone || '',
-    warranty_contact_email: warranty?.warranty_contact_email || '',
-    notes: warranty?.notes || ''
+  const form = useForm<WarrantyFormValues>({
+    resolver: zodResolver(warrantyFormSchema),
+    defaultValues: warrantyFormDefaults(warranty, projectId),
   });
 
   useEffect(() => {
@@ -93,23 +77,11 @@ export const WarrantyForm: React.FC<WarrantyFormProps> = ({ warranty, projectId,
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async (values: WarrantyFormValues) => {
     setLoading(true);
 
     try {
-      const warrantyData = {
-        ...formData,
-        // Handle empty strings for UUID fields
-        project_id: formData.project_id || null,
-        vendor_id: formData.vendor_id || null,
-        purchase_order_id: formData.purchase_order_id || null,
-        // Handle empty strings for date fields
-        warranty_start_date: formData.warranty_start_date || null,
-        installation_date: formData.installation_date || null,
-        company_id: userProfile?.company_id,
-        created_by: userProfile?.id
-      };
+      const warrantyData = buildWarrantyData(values, userProfile);
 
       if (warranty) {
         const { error } = await supabase
@@ -149,10 +121,6 @@ export const WarrantyForm: React.FC<WarrantyFormProps> = ({ warranty, projectId,
     }
   };
 
-  const handleInputChange = (field: string, value: any) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
-  };
-
   const warrantyTypes = [
     { value: 'material', label: 'Material' },
     { value: 'equipment', label: 'Equipment' },
@@ -182,257 +150,76 @@ export const WarrantyForm: React.FC<WarrantyFormProps> = ({ warranty, projectId,
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <Form {...form}>
+        <form onSubmit={form.handleSubmit(handleSubmit)} noValidate className="space-y-6" aria-label="Warranty form">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="warranty_type">Warranty Type *</Label>
-              <Select
-                value={formData.warranty_type}
-                onValueChange={(value) => handleInputChange('warranty_type', value)}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select warranty type" />
-                </SelectTrigger>
-                <SelectContent>
-                  {warrantyTypes.map(type => (
-                    <SelectItem key={type.value} value={type.value}>
-                      {type.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="item_name">Item Name *</Label>
-              <Input
-                id="item_name"
-                value={formData.item_name}
-                onChange={(e) => handleInputChange('item_name', e.target.value)}
-                placeholder="e.g., Kitchen Sink, HVAC System"
-                required
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="manufacturer">Manufacturer</Label>
-              <Input
-                id="manufacturer"
-                value={formData.manufacturer}
-                onChange={(e) => handleInputChange('manufacturer', e.target.value)}
-                placeholder="e.g., Kohler, Trane"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="model_number">Model Number</Label>
-              <Input
-                id="model_number"
-                value={formData.model_number}
-                onChange={(e) => handleInputChange('model_number', e.target.value)}
-                placeholder="Model/Part Number"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="serial_number">Serial Number</Label>
-              <Input
-                id="serial_number"
-                value={formData.serial_number}
-                onChange={(e) => handleInputChange('serial_number', e.target.value)}
-                placeholder="Serial Number"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="project_id">Project</Label>
-              <Select
-                value={formData.project_id}
-                onValueChange={(value) => handleInputChange('project_id', value)}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select project" />
-                </SelectTrigger>
-                <SelectContent>
-                  {projects.map(project => (
-                    <SelectItem key={project.id} value={project.id}>
-                      {project.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="vendor_id">Vendor/Supplier</Label>
-              <Select
-                value={formData.vendor_id}
-                onValueChange={(value) => handleInputChange('vendor_id', value)}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select vendor" />
-                </SelectTrigger>
-                <SelectContent>
-                  {vendors.map(vendor => (
-                    <SelectItem key={vendor.id} value={vendor.id}>
-                      {vendor.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="purchase_order_id">Purchase Order</Label>
-              <Select
-                value={formData.purchase_order_id}
-                onValueChange={(value) => handleInputChange('purchase_order_id', value)}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select purchase order" />
-                </SelectTrigger>
-                <SelectContent>
-                  {purchaseOrders.map(po => (
-                    <SelectItem key={po.id} value={po.id}>
-                      {po.po_number}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+            <SelectFormField control={form.control} name="warranty_type" label="Warranty Type *" placeholder="Select warranty type" options={warrantyTypes} />
+            <InputFormField control={form.control} name="item_name" label="Item Name *" placeholder="e.g., Kitchen Sink, HVAC System" aria-required="true" />
+            <InputFormField control={form.control} name="manufacturer" label="Manufacturer" placeholder="e.g., Kohler, Trane" />
+            <InputFormField control={form.control} name="model_number" label="Model Number" placeholder="Model/Part Number" />
+            <InputFormField control={form.control} name="serial_number" label="Serial Number" placeholder="Serial Number" />
+            <SelectFormField
+              control={form.control}
+              name="project_id"
+              label="Project"
+              placeholder="Select project"
+              options={projects.map((p) => ({ value: p.id, label: p.name }))}
+            />
+            <SelectFormField
+              control={form.control}
+              name="vendor_id"
+              label="Vendor/Supplier"
+              placeholder="Select vendor"
+              options={vendors.map((v) => ({ value: v.id, label: v.name }))}
+            />
+            <SelectFormField
+              control={form.control}
+              name="purchase_order_id"
+              label="Purchase Order"
+              placeholder="Select purchase order"
+              options={purchaseOrders.map((po) => ({ value: po.id, label: po.po_number }))}
+            />
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="warranty_duration_months">Warranty Duration *</Label>
-              <Select
-                value={formData.warranty_duration_months.toString()}
-                onValueChange={(value) => handleInputChange('warranty_duration_months', parseInt(value))}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select duration" />
-                </SelectTrigger>
-                <SelectContent>
-                  {durationOptions.map(option => (
-                    <SelectItem key={option.value} value={option.value.toString()}>
-                      {option.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="warranty_start_date">Start Date *</Label>
-              <Input
-                id="warranty_start_date"
-                type="date"
-                value={formData.warranty_start_date || ''}
-                onChange={(e) => handleInputChange('warranty_start_date', e.target.value || undefined)}
-                required
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="installation_date">Installation Date</Label>
-              <Input
-                id="installation_date"
-                type="date"
-                value={formData.installation_date || ''}
-                onChange={(e) => handleInputChange('installation_date', e.target.value || undefined)}
-              />
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="item_description">Item Description</Label>
-            <Textarea
-              id="item_description"
-              value={formData.item_description}
-              onChange={(e) => handleInputChange('item_description', e.target.value)}
-              placeholder="Detailed description of the item"
-              rows={3}
+            <SelectFormField
+              control={form.control}
+              name="warranty_duration_months"
+              label="Warranty Duration *"
+              placeholder="Select duration"
+              options={durationOptions.map((o) => ({ value: o.value.toString(), label: o.label }))}
             />
+            <InputFormField control={form.control} name="warranty_start_date" label="Start Date *" type="date" aria-required="true" />
+            <InputFormField control={form.control} name="installation_date" label="Installation Date" type="date" />
           </div>
+
+          <TextareaFormField control={form.control} name="item_description" label="Item Description" placeholder="Detailed description of the item" rows={3} />
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="coverage_details">Coverage Details</Label>
-              <Textarea
-                id="coverage_details"
-                value={formData.coverage_details}
-                onChange={(e) => handleInputChange('coverage_details', e.target.value)}
-                placeholder="What is covered under this warranty"
-                rows={3}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="coverage_limitations">Coverage Limitations</Label>
-              <Textarea
-                id="coverage_limitations"
-                value={formData.coverage_limitations}
-                onChange={(e) => handleInputChange('coverage_limitations', e.target.value)}
-                placeholder="What is NOT covered or limitations"
-                rows={3}
-              />
-            </div>
+            <TextareaFormField control={form.control} name="coverage_details" label="Coverage Details" placeholder="What is covered under this warranty" rows={3} />
+            <TextareaFormField control={form.control} name="coverage_limitations" label="Coverage Limitations" placeholder="What is NOT covered or limitations" rows={3} />
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="warranty_contact_name">Warranty Contact Name</Label>
-              <Input
-                id="warranty_contact_name"
-                value={formData.warranty_contact_name}
-                onChange={(e) => handleInputChange('warranty_contact_name', e.target.value)}
-                placeholder="Contact person for warranty claims"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="warranty_contact_phone">Contact Phone</Label>
-              <Input
-                id="warranty_contact_phone"
-                value={formData.warranty_contact_phone}
-                onChange={(e) => handleInputChange('warranty_contact_phone', e.target.value)}
-                placeholder="Phone number"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="warranty_contact_email">Contact Email</Label>
-              <Input
-                id="warranty_contact_email"
-                type="email"
-                value={formData.warranty_contact_email}
-                onChange={(e) => handleInputChange('warranty_contact_email', e.target.value)}
-                placeholder="Email address"
-              />
-            </div>
+            <InputFormField control={form.control} name="warranty_contact_name" label="Warranty Contact Name" placeholder="Contact person for warranty claims" />
+            <InputFormField control={form.control} name="warranty_contact_phone" label="Contact Phone" placeholder="Phone number" />
+            <InputFormField control={form.control} name="warranty_contact_email" label="Contact Email" type="email" placeholder="Email address" />
           </div>
 
-          <div className="flex items-center space-x-2">
-            <Switch
-              id="is_transferable"
-              checked={formData.is_transferable}
-              onCheckedChange={(checked) => handleInputChange('is_transferable', checked)}
-            />
-            <Label htmlFor="is_transferable">
-              This warranty can be transferred to the customer
-            </Label>
-          </div>
+          <FormField
+            control={form.control}
+            name="is_transferable"
+            render={({ field }) => (
+              <FormItem className="flex items-center space-x-2 space-y-0">
+                <FormControl>
+                  <Switch checked={field.value} onCheckedChange={field.onChange} />
+                </FormControl>
+                <FormLabel className="font-normal">This warranty can be transferred to the customer</FormLabel>
+              </FormItem>
+            )}
+          />
 
-          <div className="space-y-2">
-            <Label htmlFor="notes">Notes</Label>
-            <Textarea
-              id="notes"
-              value={formData.notes}
-              onChange={(e) => handleInputChange('notes', e.target.value)}
-              placeholder="Additional notes or comments"
-              rows={3}
-            />
-          </div>
+          <TextareaFormField control={form.control} name="notes" label="Notes" placeholder="Additional notes or comments" rows={3} />
 
           <div className="flex justify-end space-x-2">
             <Button type="button" variant="outline" onClick={onClose}>
@@ -443,6 +230,7 @@ export const WarrantyForm: React.FC<WarrantyFormProps> = ({ warranty, projectId,
             </Button>
           </div>
         </form>
+        </Form>
       </DialogContent>
     </Dialog>
   );

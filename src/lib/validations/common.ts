@@ -119,3 +119,19 @@ export const optionalNumericString = (opts: {
     },
     { message: opts.message },
   );
+
+/** An optional email address: empty, or a valid address. Not transformed. */
+export const optionalEmailField = z
+  .string()
+  .max(255, 'Email must be 255 characters or fewer')
+  .refine((v) => v === '' || z.string().email().safeParse(v).success, { message: 'Enter a valid email address' });
+
+/** A required amount typed into a number input: 0 or more. */
+export const requiredAmountField = (message: string) =>
+  z.string().refine((v) => v.trim() !== '' && Number.isFinite(Number(v)) && Number(v) >= 0, { message });
+
+/** An optional amount typed into a number input: empty, or 0 or more. */
+export const optionalAmountField = optionalNumericString({ min: 0, message: 'Enter an amount of 0 or more' });
+
+/** Form value for a number the row may hold as a number, null or nothing. */
+export const numericDefault = (v: unknown, fallback: number): string => String(v || fallback);

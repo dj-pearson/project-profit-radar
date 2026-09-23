@@ -3,7 +3,16 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { InputFormField } from '@/components/forms/FormFields';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import {
+  COST_CODE_DEFAULTS,
+  buildCostCodeInsert,
+  costCodeFormSchema,
+  type CostCodeFormValues,
+} from '@/lib/validations/projects';
 import {
   Dialog,
   DialogContent,
@@ -35,14 +44,6 @@ type ProjectCostCode = ProjectCostCodeRow;
 
 interface ProjectCostCodesProps {
   projectId: string;
-}
-
-interface AddCostCodeFormState {
-  code: string;
-  name: string;
-  description: string;
-  category: string;
-  budgeted: string;
 }
 
 // ---------------------------------------------------------------------------
@@ -107,14 +108,6 @@ const getBudgetStatus = (
     textColor: 'text-green-600',
     label: 'On Track',
   };
-};
-
-const EMPTY_FORM: AddCostCodeFormState = {
-  code: '',
-  name: '',
-  description: '',
-  category: 'General',
-  budgeted: '',
 };
 
 // ---------------------------------------------------------------------------
@@ -338,7 +331,10 @@ export const ProjectCostCodes: React.FC<ProjectCostCodesProps> = ({ projectId })
   const [addDialogOpen, setAddDialogOpen] = useState(false);
   const [importDialogOpen, setImportDialogOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const [form, setForm] = useState<AddCostCodeFormState>({ ...EMPTY_FORM });
+  const costCodeForm = useForm<CostCodeFormValues>({
+    resolver: zodResolver(costCodeFormSchema),
+    defaultValues: COST_CODE_DEFAULTS,
+  });
   const {
     costCodes,
     isLoading: loading,
@@ -365,32 +361,7 @@ export const ProjectCostCodes: React.FC<ProjectCostCodesProps> = ({ projectId })
   // Add Cost Code
   // -------------------------------------------------------------------------
 
-  const handleFormChange = (field: keyof AddCostCodeFormState, value: string) => {
-    setForm((prev) => ({ ...prev, [field]: value }));
-  };
-
-  const handleAddCostCode = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (!form.code.trim() || !form.name.trim()) {
-      toast({
-        variant: 'destructive',
-        title: 'Validation Error',
-        description: 'Code and name are required.',
-      });
-      return;
-    }
-
-    const budgetAmount = parseFloat(form.budgeted) || 0;
-    if (budgetAmount < 0) {
-      toast({
-        variant: 'destructive',
-        title: 'Validation Error',
-        description: 'Budget amount cannot be negative.',
-      });
-      return;
-    }
-
+  const handleAddCostCode = async (form: CostCodeFormValues) => {
     if (!userProfile?.company_id) {
       toast({
         variant: 'destructive',
@@ -402,21 +373,14 @@ export const ProjectCostCodes: React.FC<ProjectCostCodesProps> = ({ projectId })
 
     try {
       setSubmitting(true);
-      await insertCostCodes([{
-        project_id: projectId,
-        company_id: userProfile.company_id,
-        code: form.code.trim(),
-        description: form.name.trim(),
-        category: form.category.trim() || 'General',
-        budget_amount: budgetAmount,
-      }]);
+      await insertCostCodes([buildCostCodeInsert(projectId, userProfile.company_id, form)]);
 
       toast({
         title: 'Cost Code Added',
         description: `Cost code ${form.code} has been added to the project.`,
       });
 
-      setForm({ ...EMPTY_FORM });
+      costCodeForm.reset(COST_CODE_DEFAULTS);
       setAddDialogOpen(false);
     } catch (error: unknown) {
       console.error('Error adding cost code:', error);
@@ -543,70 +507,52 @@ export const ProjectCostCodes: React.FC<ProjectCostCodesProps> = ({ projectId })
                     Create a new cost code with a budget for this project.
                   </DialogDescription>
                 </DialogHeader>
-                <form onSubmit={handleAddCostCode} className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="cc-code">
-                      Code <span aria-hidden="true">*</span>
-                      <span className="sr-only">(required)</span>
-                    </Label>
-                    <Input
-                      id="cc-code"
-                      placeholder="e.g. 01-100"
-                      value={form.code}
-                      onChange={(e) => handleFormChange('code', e.target.value)}
-                      required
-                      aria-required="true"
-                      autoComplete="off"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="cc-name">
-                      Name <span aria-hidden="true">*</span>
-                      <span className="sr-only">(required)</span>
-                    </Label>
-                    <Input
-                      id="cc-name"
-                      placeholder="e.g. General Conditions"
-                      value={form.name}
-                      onChange={(e) => handleFormChange('name', e.target.value)}
-                      required
-                      aria-required="true"
-                      autoComplete="off"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="cc-description">Description</Label>
-                    <Input
-                      id="cc-description"
-                      placeholder="Optional description"
-                      value={form.description}
-                      onChange={(e) => handleFormChange('description', e.target.value)}
-                      autoComplete="off"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="cc-category">Category</Label>
-                    <Input
-                      id="cc-category"
-                      placeholder="e.g. Labor, Material, Equipment"
-                      value={form.category}
-                      onChange={(e) => handleFormChange('category', e.target.value)}
-                      autoComplete="off"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="cc-budget">Budget Amount ($)</Label>
-                    <Input
-                      id="cc-budget"
-                      type="number"
-                      min="0"
-                      step="0.01"
-                      placeholder="0.00"
-                      value={form.budgeted}
-                      onChange={(e) => handleFormChange('budgeted', e.target.value)}
-                      autoComplete="off"
-                    />
-                  </div>
+                <Form {...costCodeForm}>
+                <form onSubmit={costCodeForm.handleSubmit(handleAddCostCode)} noValidate className="space-y-4" aria-label="Add cost code form">
+                  <FormField
+                    control={costCodeForm.control}
+                    name="code"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>
+                          Code <span aria-hidden="true">*</span>
+                          <span className="sr-only">(required)</span>
+                        </FormLabel>
+                        <FormControl>
+                          <Input placeholder="e.g. 01-100" aria-required="true" autoComplete="off" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={costCodeForm.control}
+                    name="name"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>
+                          Name <span aria-hidden="true">*</span>
+                          <span className="sr-only">(required)</span>
+                        </FormLabel>
+                        <FormControl>
+                          <Input placeholder="e.g. General Conditions" aria-required="true" autoComplete="off" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <InputFormField control={costCodeForm.control} name="description" label="Description" placeholder="Optional description" autoComplete="off" />
+                  <InputFormField control={costCodeForm.control} name="category" label="Category" placeholder="e.g. Labor, Material, Equipment" autoComplete="off" />
+                  <InputFormField
+                    control={costCodeForm.control}
+                    name="budgeted"
+                    label="Budget Amount ($)"
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    placeholder="0.00"
+                    autoComplete="off"
+                  />
                   <DialogFooter>
                     <Button
                       type="button"
@@ -621,6 +567,7 @@ export const ProjectCostCodes: React.FC<ProjectCostCodesProps> = ({ projectId })
                     </Button>
                   </DialogFooter>
                 </form>
+                </Form>
               </DialogContent>
             </Dialog>
           </div>

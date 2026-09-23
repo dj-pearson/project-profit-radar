@@ -32,8 +32,36 @@ const SRC = join(root, 'src');
  * PasswordResetFlow), the public lead forms (ContactSalesModal,
  * EmailCaptureModal, PublicBookingForm, the Footer newsletter box),
  * CreateProject, FiscalPeriods, ChartOfAccounts and admin Promotions (24).
+ * The third converted the rest: JournalEntries, AccountsPayable,
+ * BillPayments, admin FunnelManager, DocumentManagement and the component
+ * forms (bonds, insurance, permits, warranties, CRM dialogs, tasks, cost
+ * codes, client access, equipment assignment, funnel steps, invoices), with
+ * four files exempted below (0).
  */
-const BASELINE = 24;
+const BASELINE = 0;
+
+/**
+ * Files that render a <form> with nothing for a schema to check. Each entry
+ * says why; adding one needs the same kind of reason, not "too big to convert".
+ */
+const EXEMPT = new Map([
+  [
+    'src/components/accessibility/AccessibleForm.tsx',
+    'A form primitive like components/ui/form: callers pass their own errors and onSubmit, it owns no fields.',
+  ],
+  [
+    'src/components/collaboration/ChatInterface.tsx',
+    'Chat message composer: one free-text box, Send stays disabled until it holds non-blank text.',
+  ],
+  [
+    'src/components/communication/ThreadManager.tsx',
+    'Inline "new conversation" box: one name field, maxLength 100, Create stays disabled until it is non-blank.',
+  ],
+  [
+    'src/lib/security/csrfProtection.tsx',
+    'The <form> tags are in JSDoc usage examples; the component renders a single hidden input.',
+  ],
+]);
 
 function walk(dir, out = []) {
   for (const e of readdirSync(dir, { withFileTypes: true })) {
@@ -49,16 +77,30 @@ const FORM_TAG = /<form[\s>]/;
 const RHF_IMPORT = /from\s+['"]react-hook-form['"]/;
 
 const offenders = [];
+const seenExempt = new Set();
 for (const file of walk(SRC)) {
+  const rel = relative(root, file).split('\\').join('/');
   const text = readFileSync(file, 'utf8');
+  if (EXEMPT.has(rel)) {
+    if (FORM_TAG.test(text)) seenExempt.add(rel);
+    continue;
+  }
   if (FORM_TAG.test(text) && !RHF_IMPORT.test(text)) {
-    offenders.push(relative(root, file).split('\\').join('/'));
+    offenders.push(rel);
   }
 }
 offenders.sort();
 
 if (process.argv.includes('--list')) {
   for (const f of offenders) console.log(f);
+}
+
+// An exemption outlives its reason once the file is gone or has no <form>.
+const stale = [...EXEMPT.keys()].filter((f) => !seenExempt.has(f));
+if (stale.length > 0) {
+  console.error('check-form-validation: these exemptions no longer match a file rendering <form>; remove them:');
+  for (const f of stale) console.error(`  ${f}`);
+  process.exit(1);
 }
 
 const count = offenders.length;

@@ -12,8 +12,8 @@ import { DataTablePageSkeleton, TableSkeleton } from '@/components/ui/skeletons'
 import ErrorBoundary from '@/components/ErrorBoundary';
 import { ErrorState, EmptyState } from '@/components/ui/states';
 import { ResponsiveGrid } from '@/components/layout/ResponsiveContainer';
-import { useLoadingState } from '@/hooks/useLoadingState';
-import { supabase } from '@/integrations/supabase/client';
+import { useCRMOpportunities } from '@/hooks/useCRMPipeline';
+import type { TablesInsert } from '@/integrations/supabase/types';
 import { useToast } from '@/hooks/use-toast';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -85,17 +85,15 @@ const CRMOpportunities = () => {
     bid_required: false
   });
   
-  const { 
-    data: opportunities, 
-    loading: opportunitiesLoading, 
-    error: opportunitiesError, 
-    execute: loadOpportunities 
-  } = useLoadingState<Opportunity[]>([]);
-
-  const { 
-    data: leads, 
-    execute: loadLeads 
-  } = useLoadingState<Lead[]>([]);
+  const {
+    opportunities,
+    isLoading: opportunitiesLoading,
+    error: opportunitiesError,
+    refetch,
+    leadOptions: leads,
+    createOpportunity: createOpportunityMutation,
+  } = useCRMOpportunities<Opportunity, Lead>({ enabled: !loading && !!user && !!userProfile });
+  const reloadOpportunities = () => { void refetch(); };
 
   useEffect(() => {
     if (!loading && !user) {
@@ -104,11 +102,6 @@ const CRMOpportunities = () => {
     
     if (!loading && user && userProfile && !userProfile.company_id && userProfile.role !== 'root_admin') {
       navigate('/setup');
-    }
-    
-    if (!loading && user && userProfile) {
-      loadOpportunities(loadOpportunitiesData);
-      loadLeads(loadLeadsData);
     }
   }, [user, userProfile, loading, navigate]);
 
@@ -141,32 +134,6 @@ const CRMOpportunities = () => {
       setShowNewOpportunityDialog(true);
     }
   }, [location.search]);
-
-  const loadOpportunitiesData = async (): Promise<Opportunity[]> => {
-    if (!userProfile?.company_id) {
-      throw new Error('No company associated with user');
-    }
-
-    const { data, error } = await (supabase as any)
-      .from('opportunities')
-      .select('*')
-      .eq('company_id', userProfile.company_id)
-      .order('created_at', { ascending: false });
-
-    if (error) throw error;
-    return data || [];
-  };
-
-  const loadLeadsData = async (): Promise<Lead[]> => {
-    const { data, error } = await (supabase as any)
-      .from('leads')
-      .select('id, first_name, last_name')
-      .in('status', ['qualified', 'proposal_sent', 'negotiating'])
-      .order('created_at', { ascending: false }) as any;
-
-    if (error) throw error;
-    return data || [];
-  };
 
   const createOpportunity = async () => {
     if (!userProfile?.company_id) {
@@ -221,11 +188,7 @@ const CRMOpportunities = () => {
         account_manager: user?.id
       };
 
-      const { error } = await supabase
-        .from('opportunities')
-        .insert([opportunityData]);
-
-      if (error) throw error;
+      await createOpportunityMutation.mutateAsync(opportunityData as TablesInsert<'opportunities'>);
 
       toast({
         title: "Success",
@@ -239,7 +202,6 @@ const CRMOpportunities = () => {
         risk_level: 'medium',
         bid_required: false
       });
-      loadOpportunities(loadOpportunitiesData);
     } catch (error) {
       console.error('Error creating opportunity:', error);
       toast({
@@ -634,7 +596,7 @@ const CRMOpportunities = () => {
                   ) : opportunitiesError ? (
                     <ErrorState 
                       error={opportunitiesError} 
-                      onRetry={() => loadOpportunities(loadOpportunitiesData)}
+                      onRetry={reloadOpportunities}
                     />
                   ) : !filteredOpportunities.length ? (
                     <EmptyState

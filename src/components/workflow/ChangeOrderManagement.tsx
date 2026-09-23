@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -11,7 +11,9 @@ import { AccessibleModal } from '@/components/accessibility/AccessibleModal';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
-import { supabase } from '@/integrations/supabase/client';
+import { useChangeOrderManagement } from '@/hooks/useChangeOrderManagement';
+import { ErrorState } from '@/components/common/ErrorState';
+import type { TablesInsert, TablesUpdate } from '@/integrations/supabase/types';
 import { Plus, Edit, CheckCircle, XCircle, Clock, DollarSign, TrendingUp, FileText } from 'lucide-react';
 import { format } from 'date-fns';
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
@@ -19,9 +21,9 @@ import { LoadingSpinner } from "@/components/ui/loading-spinner";
 export const ChangeOrderManagement: React.FC = () => {
   const { userProfile } = useAuth();
   const { toast } = useToast();
-  const [changeOrders, setChangeOrders] = useState<any[]>([]);
-  const [projects, setProjects] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const {
+    changeOrders, projects, isLoading: loading, error: loadError, refetch, create, update,
+  } = useChangeOrderManagement<any>();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingOrder, setEditingOrder] = useState<any>(null);
   const [activeTab, setActiveTab] = useState('all');
@@ -33,46 +35,6 @@ export const ChangeOrderManagement: React.FC = () => {
     justification: '',
     amount: 0
   });
-
-  useEffect(() => {
-    loadData();
-  }, [userProfile?.company_id]);
-
-  const loadData = async () => {
-    if (!userProfile?.company_id) return;
-
-    try {
-      // Load change orders
-      const ordersResult = await supabase
-        .from('change_orders')
-        .select('*, projects:project_id(name)')
-        .eq('company_id', userProfile.company_id)
-        .order('created_at', { ascending: false });
-      
-      if (ordersResult.error) throw ordersResult.error;
-
-      // Load projects for dropdown
-      const projectsResult = await supabase
-        .from('projects')
-        .select('id, name')
-        .eq('company_id', userProfile.company_id)
-        .order('name');
-
-      if (projectsResult.error) throw projectsResult.error;
-
-      setChangeOrders(ordersResult.data || []);
-      setProjects(projectsResult.data || []);
-    } catch (error) {
-      console.error('Error loading data:', error);
-      toast({
-        title: "Error",
-        description: "Failed to load change order data",
-        variant: "destructive"
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleSubmit = async () => {
     if (!userProfile?.company_id || !changeOrderForm.project_id || !changeOrderForm.title) return;
@@ -89,28 +51,19 @@ export const ChangeOrderManagement: React.FC = () => {
         // The number is not part of an edit. This wrote a fresh timestamp
         // number on every save, so a change order the customer had signed as
         // CO-12345678 came back as something else (US-332).
-        const { error } = await supabase
-          .from('change_orders')
-          .update(changeOrderData)
-          .eq('id', editingOrder.id);
-
-        if (error) throw error;
+        await update.mutateAsync({ id: editingOrder.id, patch: changeOrderData as TablesUpdate<'change_orders'> });
 
         toast({
           title: "Success",
           description: "Change order updated successfully"
         });
       } else {
-        const { error } = await supabase
-          .from('change_orders')
-          .insert([{
-            ...changeOrderData,
-            // A placeholder: set_change_order_number replaces it with the
-            // company's own sequence when numbering is configured (US-332).
-            change_order_number: `CO-${Date.now().toString().slice(-8)}`,
-          }]);
-
-        if (error) throw error;
+        await create.mutateAsync({
+          ...changeOrderData,
+          // A placeholder: set_change_order_number replaces it with the
+          // company's own sequence when numbering is configured (US-332).
+          change_order_number: `CO-${Date.now().toString().slice(-8)}`,
+        } as TablesInsert<'change_orders'>);
 
         toast({
           title: "Success",
@@ -121,12 +74,11 @@ export const ChangeOrderManagement: React.FC = () => {
       setDialogOpen(false);
       setEditingOrder(null);
       resetForm();
-      loadData();
     } catch (error) {
       console.error('Error saving change order:', error);
       toast({
         title: "Error",
-        description: "Failed to save change order",
+        description: error instanceof Error ? error.message : "Failed to save change order",
         variant: "destructive"
       });
     }
@@ -141,24 +93,17 @@ export const ChangeOrderManagement: React.FC = () => {
         updateData.approval_date = new Date().toISOString();
       }
 
-      const { error } = await supabase
-        .from('change_orders')
-        .update(updateData)
-        .eq('id', orderId);
-
-      if (error) throw error;
+      await update.mutateAsync({ id: orderId, patch: updateData });
 
       toast({
         title: "Success",
         description: `Change order ${newStatus} successfully`
       });
-      
-      loadData();
     } catch (error) {
       console.error('Error updating change order:', error);
       toast({
         title: "Error",
-        description: "Failed to update change order",
+        description: error instanceof Error ? error.message : "Failed to update change order",
         variant: "destructive"
       });
     }
@@ -194,6 +139,16 @@ export const ChangeOrderManagement: React.FC = () => {
       <div className="flex items-center justify-center min-h-[400px]">
         <LoadingSpinner size="md" />
       </div>
+    );
+  }
+
+  if (loadError) {
+    return (
+      <ErrorState
+        title="Change orders could not be loaded"
+        error={loadError}
+        onRetry={() => { void refetch(); }}
+      />
     );
   }
 

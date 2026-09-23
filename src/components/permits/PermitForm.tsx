@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Form } from '@/components/ui/form';
 import { AccessibleModal } from '@/components/accessibility/AccessibleModal';
-import { Checkbox } from '@/components/ui/checkbox';
+import { CheckboxFormField, InputFormField, SelectFormField, TextareaFormField } from '@/components/forms/FormFields';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { buildPermitData, permitFormDefaults, permitFormSchema, type PermitFormValues } from '@/lib/validations/permits';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -27,29 +27,9 @@ export const PermitForm: React.FC<PermitFormProps> = ({ permit, projectId, onClo
   const [loading, setLoading] = useState(false);
   const [projects, setProjects] = useState<Project[]>([]);
 
-  const [formData, setFormData] = useState({
-    project_id: permit?.project_id || projectId || '',
-    permit_type: permit?.permit_type || '',
-    permit_name: permit?.permit_name || '',
-    permit_number: permit?.permit_number || '',
-    description: permit?.description || '',
-    issuing_authority: permit?.issuing_authority || '',
-    application_date: permit?.application_date || undefined,
-    application_fee: permit?.application_fee || 0,
-    application_status: permit?.application_status || 'not_applied',
-    approval_date: permit?.approval_date || undefined,
-    permit_fee: permit?.permit_fee || 0,
-    permit_start_date: permit?.permit_start_date || undefined,
-    permit_expiry_date: permit?.permit_expiry_date || undefined,
-    contact_name: permit?.contact_name || '',
-    contact_phone: permit?.contact_phone || '',
-    contact_email: permit?.contact_email || '',
-    conditions: permit?.conditions || '',
-    inspection_required: permit?.inspection_required || false,
-    bond_required: permit?.bond_required || false,
-    bond_amount: permit?.bond_amount || 0,
-    priority: permit?.priority || 'medium',
-    notes: permit?.notes || ''
+  const form = useForm<PermitFormValues>({
+    resolver: zodResolver(permitFormSchema),
+    defaultValues: permitFormDefaults(permit, projectId),
   });
 
   useEffect(() => {
@@ -71,19 +51,11 @@ export const PermitForm: React.FC<PermitFormProps> = ({ permit, projectId, onClo
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async (values: PermitFormValues) => {
     setLoading(true);
 
     try {
-      const permitData = {
-        ...formData,
-        company_id: userProfile?.company_id,
-        created_by: userProfile?.id,
-        application_fee: parseFloat(formData.application_fee.toString()) || 0,
-        permit_fee: parseFloat(formData.permit_fee.toString()) || 0,
-        bond_amount: parseFloat(formData.bond_amount.toString()) || 0
-      };
+      const permitData = buildPermitData(values, userProfile);
 
       if (permit) {
         const { error } = await supabase
@@ -121,10 +93,6 @@ export const PermitForm: React.FC<PermitFormProps> = ({ permit, projectId, onClo
     } finally {
       setLoading(false);
     }
-  };
-
-  const handleInputChange = (field: string, value: any) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
   };
 
   const permitTypes = [
@@ -167,291 +135,68 @@ export const PermitForm: React.FC<PermitFormProps> = ({ permit, projectId, onClo
       description={permit ? 'Update permit information' : 'Add a new permit to track'}
       size="xl"
     >
-      <form onSubmit={handleSubmit} className="space-y-6">
+      <Form {...form}>
+      <form onSubmit={form.handleSubmit(handleSubmit)} noValidate className="space-y-6" aria-label="Permit form">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="project_id">Project *</Label>
-              <Select
-                value={formData.project_id}
-                onValueChange={(value) => handleInputChange('project_id', value)}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select project" />
-                </SelectTrigger>
-                <SelectContent>
-                  {projects.map(project => (
-                    <SelectItem key={project.id} value={project.id}>
-                      {project.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+          <SelectFormField
+            control={form.control}
+            name="project_id"
+            label="Project *"
+            placeholder="Select project"
+            options={projects.map((p) => ({ value: p.id, label: p.name }))}
+          />
+          <SelectFormField
+            control={form.control}
+            name="permit_type"
+            label="Permit Type *"
+            placeholder="Select permit type"
+            options={permitTypes.map((t) => ({ value: t, label: t }))}
+          />
+        </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="permit_type">Permit Type *</Label>
-              <Select
-                value={formData.permit_type}
-                onValueChange={(value) => handleInputChange('permit_type', value)}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select permit type" />
-                </SelectTrigger>
-                <SelectContent>
-                  {permitTypes.map(type => (
-                    <SelectItem key={type} value={type}>
-                      {type}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <InputFormField control={form.control} name="permit_name" label="Permit Name *" placeholder="Descriptive name for the permit" aria-required="true" />
+          <InputFormField control={form.control} name="permit_number" label="Permit Number" placeholder="Official permit number" />
+        </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="permit_name">Permit Name *</Label>
-              <Input
-                id="permit_name"
-                value={formData.permit_name}
-                onChange={(e) => handleInputChange('permit_name', e.target.value)}
-                placeholder="Descriptive name for the permit"
-                required
-              />
-            </div>
+        <TextareaFormField control={form.control} name="description" label="Description" placeholder="Detailed description of the permit" rows={3} />
 
-            <div className="space-y-2">
-              <Label htmlFor="permit_number">Permit Number</Label>
-              <Input
-                id="permit_number"
-                value={formData.permit_number}
-                onChange={(e) => handleInputChange('permit_number', e.target.value)}
-                placeholder="Official permit number"
-              />
-            </div>
-          </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <InputFormField control={form.control} name="issuing_authority" label="Issuing Authority *" placeholder="City, county, or state agency" aria-required="true" />
+          <SelectFormField control={form.control} name="application_status" label="Application Status" placeholder="Select status" options={applicationStatuses} />
+        </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="description">Description</Label>
-            <Textarea
-              id="description"
-              value={formData.description}
-              onChange={(e) => handleInputChange('description', e.target.value)}
-              placeholder="Detailed description of the permit"
-              rows={3}
-            />
-          </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <InputFormField control={form.control} name="application_date" label="Application Date" type="date" />
+          <InputFormField control={form.control} name="approval_date" label="Approval Date" type="date" />
+          <SelectFormField control={form.control} name="priority" label="Priority" placeholder="Select priority" options={priorityLevels} />
+        </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="issuing_authority">Issuing Authority *</Label>
-              <Input
-                id="issuing_authority"
-                value={formData.issuing_authority}
-                onChange={(e) => handleInputChange('issuing_authority', e.target.value)}
-                placeholder="City, county, or state agency"
-                required
-              />
-            </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <InputFormField control={form.control} name="permit_start_date" label="Permit Start Date" type="date" />
+          <InputFormField control={form.control} name="permit_expiry_date" label="Permit Expiry Date" type="date" />
+        </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="application_status">Application Status</Label>
-              <Select
-                value={formData.application_status}
-                onValueChange={(value) => handleInputChange('application_status', value)}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select status" />
-                </SelectTrigger>
-                <SelectContent>
-                  {applicationStatuses.map(status => (
-                    <SelectItem key={status.value} value={status.value}>
-                      {status.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <InputFormField control={form.control} name="application_fee" label="Application Fee" type="number" step="0.01" min="0" placeholder="0.00" />
+          <InputFormField control={form.control} name="permit_fee" label="Permit Fee" type="number" step="0.01" min="0" placeholder="0.00" />
+          <InputFormField control={form.control} name="bond_amount" label="Bond Amount" type="number" step="0.01" min="0" placeholder="0.00" />
+        </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="application_date">Application Date</Label>
-              <Input
-                id="application_date"
-                type="date"
-                value={formData.application_date || ''}
-                onChange={(e) => handleInputChange('application_date', e.target.value || undefined)}
-              />
-            </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <InputFormField control={form.control} name="contact_name" label="Contact Name" placeholder="Authority contact person" />
+          <InputFormField control={form.control} name="contact_phone" label="Contact Phone" placeholder="Phone number" />
+          <InputFormField control={form.control} name="contact_email" label="Contact Email" type="email" placeholder="Email address" />
+        </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="approval_date">Approval Date</Label>
-              <Input
-                id="approval_date"
-                type="date"
-                value={formData.approval_date || ''}
-                onChange={(e) => handleInputChange('approval_date', e.target.value || undefined)}
-              />
-            </div>
+        <TextareaFormField control={form.control} name="conditions" label="Permit Conditions" placeholder="Special conditions or requirements for this permit" rows={3} />
 
-            <div className="space-y-2">
-              <Label htmlFor="priority">Priority</Label>
-              <Select
-                value={formData.priority}
-                onValueChange={(value) => handleInputChange('priority', value)}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select priority" />
-                </SelectTrigger>
-                <SelectContent>
-                  {priorityLevels.map(level => (
-                    <SelectItem key={level.value} value={level.value}>
-                      {level.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
+        <div className="flex items-center space-x-6">
+          <CheckboxFormField control={form.control} name="inspection_required" label="Inspection Required" />
+          <CheckboxFormField control={form.control} name="bond_required" label="Bond Required" />
+        </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="permit_start_date">Permit Start Date</Label>
-              <Input
-                id="permit_start_date"
-                type="date"
-                value={formData.permit_start_date || ''}
-                onChange={(e) => handleInputChange('permit_start_date', e.target.value || undefined)}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="permit_expiry_date">Permit Expiry Date</Label>
-              <Input
-                id="permit_expiry_date"
-                type="date"
-                value={formData.permit_expiry_date || ''}
-                onChange={(e) => handleInputChange('permit_expiry_date', e.target.value || undefined)}
-              />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="application_fee">Application Fee</Label>
-              <Input
-                id="application_fee"
-                type="number"
-                step="0.01"
-                min="0"
-                value={formData.application_fee}
-                onChange={(e) => handleInputChange('application_fee', e.target.value)}
-                placeholder="0.00"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="permit_fee">Permit Fee</Label>
-              <Input
-                id="permit_fee"
-                type="number"
-                step="0.01"
-                min="0"
-                value={formData.permit_fee}
-                onChange={(e) => handleInputChange('permit_fee', e.target.value)}
-                placeholder="0.00"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="bond_amount">Bond Amount</Label>
-              <Input
-                id="bond_amount"
-                type="number"
-                step="0.01"
-                min="0"
-                value={formData.bond_amount}
-                onChange={(e) => handleInputChange('bond_amount', e.target.value)}
-                placeholder="0.00"
-              />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="contact_name">Contact Name</Label>
-              <Input
-                id="contact_name"
-                value={formData.contact_name}
-                onChange={(e) => handleInputChange('contact_name', e.target.value)}
-                placeholder="Authority contact person"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="contact_phone">Contact Phone</Label>
-              <Input
-                id="contact_phone"
-                value={formData.contact_phone}
-                onChange={(e) => handleInputChange('contact_phone', e.target.value)}
-                placeholder="Phone number"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="contact_email">Contact Email</Label>
-              <Input
-                id="contact_email"
-                type="email"
-                value={formData.contact_email}
-                onChange={(e) => handleInputChange('contact_email', e.target.value)}
-                placeholder="Email address"
-              />
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="conditions">Permit Conditions</Label>
-            <Textarea
-              id="conditions"
-              value={formData.conditions}
-              onChange={(e) => handleInputChange('conditions', e.target.value)}
-              placeholder="Special conditions or requirements for this permit"
-              rows={3}
-            />
-          </div>
-
-          <div className="flex items-center space-x-6">
-            <div className="flex items-center space-x-2">
-              <Checkbox
-                id="inspection_required"
-                checked={formData.inspection_required}
-                onCheckedChange={(checked) => handleInputChange('inspection_required', checked)}
-              />
-              <Label htmlFor="inspection_required">Inspection Required</Label>
-            </div>
-
-            <div className="flex items-center space-x-2">
-              <Checkbox
-                id="bond_required"
-                checked={formData.bond_required}
-                onCheckedChange={(checked) => handleInputChange('bond_required', checked)}
-              />
-              <Label htmlFor="bond_required">Bond Required</Label>
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="notes">Notes</Label>
-            <Textarea
-              id="notes"
-              value={formData.notes}
-              onChange={(e) => handleInputChange('notes', e.target.value)}
-              placeholder="Additional notes or comments"
-              rows={3}
-            />
-          </div>
+        <TextareaFormField control={form.control} name="notes" label="Notes" placeholder="Additional notes or comments" rows={3} />
 
         <div className="flex justify-end space-x-2">
           <Button type="button" variant="outline" onClick={onClose}>
@@ -462,6 +207,7 @@ export const PermitForm: React.FC<PermitFormProps> = ({ permit, projectId, onClo
           </Button>
         </div>
       </form>
+      </Form>
     </AccessibleModal>
   );
 };

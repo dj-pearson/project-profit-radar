@@ -16,13 +16,18 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import { Form } from '@/components/ui/form';
+import { InputFormField, SelectFormField } from '@/components/forms/FormFields';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import {
+  CLIENT_INVITE_DEFAULTS,
+  buildClientInviteBody,
+  clientInviteFormSchema,
+  type ClientInviteFormValues,
+} from '@/lib/validations/users';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
-import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
-} from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { logger } from '@/lib/logger';
@@ -54,10 +59,10 @@ export function ProjectClientAccess({ projectId }: ProjectClientAccessProps) {
   const [submitting, setSubmitting] = useState(false);
   const [busyId, setBusyId] = useState<string | null>(null);
 
-  const [email, setEmail] = useState('');
-  const [firstName, setFirstName] = useState('');
-  const [lastName, setLastName] = useState('');
-  const [accessLevel, setAccessLevel] = useState('read_only');
+  const form = useForm<ClientInviteFormValues>({
+    resolver: zodResolver(clientInviteFormSchema),
+    defaultValues: CLIENT_INVITE_DEFAULTS,
+  });
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -81,30 +86,15 @@ export function ProjectClientAccess({ projectId }: ProjectClientAccessProps) {
 
   useEffect(() => { void load(); }, [load]);
 
-  const invite = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!email.trim() || !firstName.trim()) {
-      toast({
-        variant: 'destructive',
-        title: 'Name and email are required',
-        description: 'The invite email is addressed to a person.',
-      });
-      return;
-    }
-
+  const invite = async (values: ClientInviteFormValues) => {
+    const { email, firstName } = values;
     setSubmitting(true);
     try {
       // The edge function owns account creation, enrolment, the participant row
       // and delivery. None of that is safe from the browser: it needs the
       // service role, and company_id has to come from the authenticated caller.
       const { data, error } = await supabase.functions.invoke('invite-client', {
-        body: {
-          project_id: projectId,
-          email: email.trim(),
-          first_name: firstName.trim(),
-          last_name: lastName.trim() || null,
-          access_level: accessLevel,
-        },
+        body: buildClientInviteBody(projectId, values),
       });
 
       if (error) throw error;
@@ -127,7 +117,7 @@ export function ProjectClientAccess({ projectId }: ProjectClientAccessProps) {
         });
       }
 
-      setEmail(''); setFirstName(''); setLastName(''); setAccessLevel('read_only');
+      form.reset(CLIENT_INVITE_DEFAULTS);
       await load();
     } catch (err) {
       toast({
@@ -204,57 +194,27 @@ export function ProjectClientAccess({ projectId }: ProjectClientAccessProps) {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={invite} className="space-y-4">
+          <Form {...form}>
+          <form onSubmit={form.handleSubmit(invite)} noValidate className="space-y-4" aria-label="Invite client form">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="client-first-name">First name</Label>
-                <Input
-                  id="client-first-name"
-                  value={firstName}
-                  onChange={(e) => setFirstName(e.target.value)}
-                  placeholder="Dana"
-                />
-              </div>
-              <div>
-                <Label htmlFor="client-last-name">Last name</Label>
-                <Input
-                  id="client-last-name"
-                  value={lastName}
-                  onChange={(e) => setLastName(e.target.value)}
-                  placeholder="Whitfield"
-                />
-              </div>
+              <InputFormField control={form.control} name="firstName" label="First name" placeholder="Dana" aria-required="true" />
+              <InputFormField control={form.control} name="lastName" label="Last name" placeholder="Whitfield" />
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="client-email">Email</Label>
-                <Input
-                  id="client-email"
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="dana@example.com"
-                />
-              </div>
-              <div>
-                <Label htmlFor="client-access-level">What they can do</Label>
-                <Select value={accessLevel} onValueChange={setAccessLevel}>
-                  <SelectTrigger id="client-access-level">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {Object.entries(ACCESS_LEVELS).map(([value, label]) => (
-                      <SelectItem key={value} value={value}>{label}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+              <InputFormField control={form.control} name="email" label="Email" type="email" placeholder="dana@example.com" aria-required="true" />
+              <SelectFormField
+                control={form.control}
+                name="accessLevel"
+                label="What they can do"
+                options={Object.entries(ACCESS_LEVELS).map(([value, label]) => ({ value, label }))}
+              />
             </div>
             <Button type="submit" disabled={submitting}>
               <Mail className="h-4 w-4 mr-2" aria-hidden="true" />
               {submitting ? 'Sending invite...' : 'Send invite'}
             </Button>
           </form>
+          </Form>
         </CardContent>
       </Card>
 

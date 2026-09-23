@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { AccessiblePageWrapper } from '@/components/accessibility/AccessiblePageWrapper';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -15,15 +15,14 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
 } from 'recharts';
 import { Download, FileText, Clock, RefreshCw } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/contexts/AuthContext';
+import { useTimeReports } from '@/hooks/useTimeReports';
+import { ErrorState } from '@/components/common/ErrorState';
 import { useToast } from '@/hooks/use-toast';
 import { logger } from '@/lib/logger';
 import { Skeleton } from '@/components/ui/skeleton';
 import { exportRowsToCsv } from '@/lib/exportCsv';
 import {
   hoursByProject, hoursByEmployee, hoursByDayOfWeek, totalHours,
-  type TimeEntryInput, type ProjectMeta, type EmployeeMeta,
 } from '@/lib/reports/timeReports';
 
 function defaultStart(): string {
@@ -33,63 +32,15 @@ function defaultStart(): string {
 }
 
 const TimeReports: React.FC = () => {
-  const { userProfile } = useAuth();
   const { toast } = useToast();
-  const [loading, setLoading] = useState(true);
-  const [entries, setEntries] = useState<TimeEntryInput[]>([]);
-  const [projects, setProjects] = useState<ProjectMeta[]>([]);
-  const [employees, setEmployees] = useState<EmployeeMeta[]>([]);
+  const {
+    projects, entries, employees, isLoading, isFetching, error: loadError, refetch,
+  } = useTimeReports();
+  const loading = isLoading || isFetching;
+  const load = () => { void refetch(); };
   const [dateFrom, setDateFrom] = useState<string>(defaultStart());
   const [dateTo, setDateTo] = useState<string>(new Date().toISOString().slice(0, 10));
   const [projectFilter, setProjectFilter] = useState<string>('all');
-
-  const load = async () => {
-    if (!userProfile?.company_id) return;
-    try {
-      setLoading(true);
-      const { data: projData, error: projErr } = await supabase
-        .from('projects')
-        .select('id, name, estimated_hours')
-        .eq('company_id', userProfile.company_id);
-      if (projErr) throw projErr;
-      const projectList = (projData ?? []) as ProjectMeta[];
-      setProjects(projectList);
-
-      const projectIds = projectList.map((p) => p.id);
-      if (projectIds.length === 0) {
-        setEntries([]);
-      } else {
-        const { data: entryData, error: entryErr } = await supabase
-          .from('time_entries')
-          .select('id, user_id, project_id, start_time, end_time, total_hours, break_duration')
-          .in('project_id', projectIds)
-          .order('start_time', { ascending: false });
-        if (entryErr) throw entryErr;
-        setEntries((entryData ?? []) as TimeEntryInput[]);
-      }
-
-      const { data: empData } = await supabase
-        .from('user_profiles')
-        .select('id, first_name, last_name, email')
-        .eq('company_id', userProfile.company_id);
-      setEmployees(
-        (empData ?? []).map((u: { id: string; first_name: string | null; last_name: string | null; email: string }) => ({
-          id: u.id,
-          name: [u.first_name, u.last_name].filter(Boolean).join(' ').trim() || u.email,
-        }))
-      );
-    } catch (error) {
-      logger.error('Error loading time reports', error instanceof Error ? error : undefined);
-      toast({ title: 'Error', description: 'Failed to load time reports', variant: 'destructive' });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    if (userProfile?.company_id) load();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [userProfile?.company_id]);
 
   const filteredEntries = useMemo(() => {
     const fromTs = dateFrom ? new Date(dateFrom).getTime() : -Infinity;
@@ -218,6 +169,8 @@ const TimeReports: React.FC = () => {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <Skeleton className="h-72" /><Skeleton className="h-72" />
           </div>
+        ) : loadError ? (
+          <ErrorState title="Time reports could not be loaded" error={loadError} onRetry={load} />
         ) : (
           <>
             {/* Charts */}

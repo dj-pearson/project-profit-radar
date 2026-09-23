@@ -37,9 +37,12 @@ const SRC = join(root, 'src');
  * FinancialOverview and ten tabs/panels) onto hooks in src/hooks. A second
  * pass moved 51 more (thirteen components: eight project tabs, closeout,
  * project financials, the daily-report crew panel, schedule assignees and the
- * estimates table).
+ * estimates table). A third moved 74 more (sixteen files: documents, the
+ * progress/retainage/T&M billing tabs, both change-order screens, the four CRM
+ * pages and pipeline settings, time reports, the time-tracking dashboard,
+ * quick entry, the mobile time tracker and the equipment assignment form).
  */
-const BASELINE = 859;
+const BASELINE = 785;
 
 function walk(dir, out = []) {
   for (const e of readdirSync(dir, { withFileTypes: true })) {

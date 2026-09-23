@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import React from 'react';
 
 // Stable references: the page's effect depends on user and userProfile.
@@ -42,6 +43,14 @@ vi.mock('@/integrations/supabase/client', () => ({
 
 import CRMLeads from '../CRMLeads';
 
+// The page reads through useCRMLeads (US-266), so it needs a query client.
+const renderPage = () =>
+  render(
+    <QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}>
+      <MemoryRouter><CRMLeads /></MemoryRouter>
+    </QueryClientProvider>,
+  );
+
 describe('CRMLeads tenant scoping (US-365)', () => {
   beforeEach(() => {
     calls = [];
@@ -49,14 +58,14 @@ describe('CRMLeads tenant scoping (US-365)', () => {
   });
 
   it("filters the leads query on the caller's company_id", async () => {
-    render(<MemoryRouter><CRMLeads /></MemoryRouter>);
+    renderPage();
     await waitFor(() => expect(calls).toContainEqual(['from', 'leads']));
     expect(calls).toContainEqual(['eq', 'company_id', 'co-1']);
   });
 
   it('does not query leads at all without a company', async () => {
     MOCK_PROFILE = { id: 'u-1', company_id: null, role: 'root_admin' };
-    render(<MemoryRouter><CRMLeads /></MemoryRouter>);
+    renderPage();
     await new Promise(r => setTimeout(r, 20));
     expect(calls).not.toContainEqual(['from', 'leads']);
   });

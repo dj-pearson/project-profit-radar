@@ -12,8 +12,8 @@ import { ErrorState } from '@/components/ui/states';
 import { NoContacts } from '@/components/ui/EmptyStates';
 import { AccessibleTable, type TableColumn } from '@/components/accessibility/AccessibleTable';
 import { AccessibleModal } from '@/components/accessibility/AccessibleModal';
-import { useLoadingState } from '@/hooks/useLoadingState';
-import { supabase } from '@/integrations/supabase/client';
+import { useCRMContacts } from '@/hooks/useCRMContacts';
+import type { TablesInsert } from '@/integrations/supabase/types';
 import { useToast } from '@/hooks/use-toast';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -81,11 +81,14 @@ const CRMContacts = () => {
   });
 
   const {
-    data: contacts,
-    loading: contactsLoading,
+    contacts,
+    isLoading: contactsLoading,
     error: contactsError,
-    execute: loadContacts
-  } = useLoadingState<Contact[]>([]);
+    refetch: refetchContacts,
+    create,
+    tag: tagContacts,
+    remove,
+  } = useCRMContacts<Contact>({ enabled: !loading && !!user && !!userProfile });
 
   useEffect(() => {
     if (!loading && !user) {
@@ -95,26 +98,7 @@ const CRMContacts = () => {
     if (!loading && user && userProfile && !userProfile.company_id && userProfile.role !== 'root_admin') {
       navigate('/setup');
     }
-
-    if (!loading && user && userProfile) {
-      loadContacts(loadContactsData);
-    }
   }, [user, userProfile, loading, navigate]);
-
-  const loadContactsData = async (): Promise<Contact[]> => {
-    if (!userProfile?.company_id) {
-      throw new Error('No company associated with user');
-    }
-
-    const { data, error } = await supabase
-      .from('contacts')
-      .select('*')
-      .eq('company_id', userProfile.company_id)
-      .order('created_at', { ascending: false });
-
-    if (error) throw error;
-    return data || [];
-  };
 
   const createContact = async () => {
     if (!userProfile?.company_id) {
@@ -169,11 +153,7 @@ const CRMContacts = () => {
         created_by: user?.id
       };
 
-      const { error } = await supabase
-        .from('contacts')
-        .insert([contactData]);
-
-      if (error) throw error;
+      await create.mutateAsync(contactData as TablesInsert<'contacts'>);
 
       toast({
         title: "Success",
@@ -187,7 +167,6 @@ const CRMContacts = () => {
         preferred_contact_method: 'email',
         country: 'United States'
       });
-      loadContacts(loadContactsData);
     } catch (error) {
       console.error('Error creating contact:', error);
       toast({
@@ -252,18 +231,10 @@ const CRMContacts = () => {
     setBulkLoading(true);
     try {
       // Append the tag to each selected contact's tags array (dedup).
-      await Promise.all(
-        filteredContacts
-          .filter((c) => selectedIds.has(c.id))
-          .map((c) => {
-            const next = Array.from(new Set([...(c.tags || []), tag]));
-            return supabase.from('contacts').update({ tags: next }).eq('id', c.id);
-          }),
-      );
+      await tagContacts.mutateAsync({ contacts: filteredContacts.filter((c) => selectedIds.has(c.id)), tag });
       toast({ title: 'Tag added', description: `"${tag}" added to ${ids.length} contact(s).` });
       setTagToAdd('');
       setSelectedIds(new Set());
-      loadContacts(loadContactsData);
     } catch (err: any) {
       toast({ variant: 'destructive', title: 'Add tag failed', description: err.message });
     } finally {
@@ -298,11 +269,9 @@ const CRMContacts = () => {
     if (!(await confirmAction({ title: `Delete ${ids.length} contact(s)?`, description: `This cannot be undone.`, destructive: true }))) return;
     setBulkLoading(true);
     try {
-      const { error: err } = await supabase.from('contacts').delete().in('id', ids);
-      if (err) throw err;
+      await remove.mutateAsync(ids);
       toast({ title: 'Contacts deleted', description: `${ids.length} removed.` });
       setSelectedIds(new Set());
-      loadContacts(loadContactsData);
     } catch (err: any) {
       toast({ variant: 'destructive', title: 'Bulk delete failed', description: err.message });
     } finally {
@@ -510,7 +479,7 @@ const CRMContacts = () => {
               {contactsError ? (
                 <ErrorState
                   error={contactsError}
-                  onRetry={() => loadContacts(loadContactsData)}
+                  onRetry={() => { void refetchContacts(); }}
                 />
               ) : !contactsLoading && (contacts?.length ?? 0) === 0 ? (
                 <NoContacts onCreate={() => setShowNewContactDialog(true)} />

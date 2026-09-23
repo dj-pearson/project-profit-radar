@@ -10,7 +10,7 @@
  * a sum over invoice lines that name their SOV line, and retainage comes from
  * the project's own terms.
  */
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -22,34 +22,16 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
 import { TrendingUp, AlertCircle, ListPlus } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { logger } from '@/lib/logger';
 import { useBillingDefaults } from '@/hooks/useBillingDefaults';
+import { useProgressBilling } from '@/hooks/useProgressBilling';
+import { ErrorState } from '@/components/common/ErrorState';
 import { newInvoiceDefaults } from '@/lib/companyBilling';
 import {
-  computeProgressInvoice, reconcileSovToContract, cents, type SovLine,
+  computeProgressInvoice, reconcileSovToContract, cents,
 } from '@/lib/progressBilling';
-
-interface ProjectRow {
-  id: string;
-  name: string;
-  client_id: string | null;
-  client_name: string | null;
-  client_email: string | null;
-  current_contract_value: number | null;
-  original_contract_value: number | null;
-  budget: number | null;
-  retainage_percentage: number | null;
-}
-
-interface SovStatusRow extends SovLine {
-  project_id: string;
-  percent_billed: number;
-  remaining_to_bill: number;
-  sort_order: number;
-}
 
 const money = (n: number) =>
   n.toLocaleString('en-US', { style: 'currency', currency: 'USD' });
@@ -60,67 +42,28 @@ const ProgressBillingManager: React.FC = () => {
   // US-332: due date and terms from the company's payment terms, not 30 days.
   const { defaults: billingDefaults } = useBillingDefaults();
 
-  const [projects, setProjects] = useState<ProjectRow[]>([]);
   const [selectedProject, setSelectedProject] = useState('');
-  const [sovLines, setSovLines] = useState<SovStatusRow[]>([]);
   const [percentages, setPercentages] = useState<Record<string, number>>({});
-  const [loading, setLoading] = useState(false);
-  const [loadingSov, setLoadingSov] = useState(false);
-  const [seeding, setSeeding] = useState(false);
+  const {
+    projects, projectsError, refetchProjects,
+    sovLines, loadingSov, sovError, refetchSov,
+    seed, createInvoice,
+  } = useProgressBilling(selectedProject);
+  const loading = createInvoice.isPending;
+  const seeding = seed.isPending;
 
   const project = useMemo(
     () => projects.find((p) => p.id === selectedProject) || null,
     [projects, selectedProject]
   );
 
-  const loadProjects = useCallback(async () => {
-    if (!userProfile?.company_id) return;
-    const { data, error } = await supabase
-      .from('projects')
-      .select('id, name, client_id, client_name, client_email, current_contract_value, original_contract_value, budget, retainage_percentage')
-      .eq('company_id', userProfile.company_id)
-      .in('status', ['active', 'planning'])
-      .order('name');
-
-    if (error) {
-      logger.error('Could not load projects for progress billing', error);
-      toast({ variant: 'destructive', title: 'Could not load projects', description: error.message });
-      return;
-    }
-    setProjects((data || []) as ProjectRow[]);
-  }, [userProfile?.company_id, toast]);
-
-  const loadSov = useCallback(async (projectId: string) => {
-    if (!projectId) { setSovLines([]); return; }
-    setLoadingSov(true);
-    const { data, error } = await supabase
-      .from('project_sov_status')
-      .select('sov_line_id, project_id, description, scheduled_value, previously_billed, percent_billed, remaining_to_bill, cost_code_id, line_number, sort_order')
-      .eq('project_id', projectId)
-      .order('sort_order');
-
-    if (error) {
-      logger.error('Could not load the schedule of values', error);
-      toast({
-        variant: 'destructive',
-        title: 'Could not load the schedule of values',
-        description: error.message,
-      });
-      setSovLines([]);
-    } else {
-      const rows = (data || []) as SovStatusRow[];
-      setSovLines(rows);
-      // Start each line where it already stands, so a period that touches one
-      // trade does not silently un-bill the rest.
-      setPercentages(
-        Object.fromEntries(rows.map((r) => [r.sov_line_id, Number(r.percent_billed) || 0]))
-      );
-    }
-    setLoadingSov(false);
-  }, [toast]);
-
-  useEffect(() => { void loadProjects(); }, [loadProjects]);
-  useEffect(() => { void loadSov(selectedProject); }, [selectedProject, loadSov]);
+  // Start each line where it already stands, so a period that touches one
+  // trade does not silently un-bill the rest.
+  useEffect(() => {
+    setPercentages(
+      Object.fromEntries(sovLines.map((r) => [r.sov_line_id, Number(r.percent_billed) || 0]))
+    );
+  }, [sovLines]);
 
   const contractValue = cents(
     project?.current_contract_value ?? project?.original_contract_value ?? project?.budget ?? 0
@@ -146,23 +89,19 @@ const ProgressBillingManager: React.FC = () => {
 
   const seedSov = async () => {
     if (!selectedProject) return;
-    setSeeding(true);
-    const { data, error } = await supabase.rpc('seed_project_sov', { p_project_id: selectedProject });
-    setSeeding(false);
-
-    if (error) {
+    try {
+      const created = await seed.mutateAsync(selectedProject);
+      toast({
+        title: 'Schedule of values created',
+        description: `${created} line(s) from the project budget. Edit the values before you bill.`,
+      });
+    } catch (err) {
       toast({
         variant: 'destructive',
         title: 'Could not build the schedule of values',
-        description: error.message,
+        description: err instanceof Error ? err.message : 'The schedule of values was not created.',
       });
-      return;
     }
-    toast({
-      title: 'Schedule of values created',
-      description: `${data ?? 0} line(s) from the project budget. Edit the values before you bill.`,
-    });
-    void loadSov(selectedProject);
   };
 
   const createProgressInvoice = async () => {
@@ -186,13 +125,14 @@ const ProgressBillingManager: React.FC = () => {
       return;
     }
 
-    setLoading(true);
     try {
       const { due_date: dueDate, terms } = newInvoiceDefaults(billingDefaults);
 
-      const { data: invoice, error } = await supabase
-        .from('invoices')
-        .insert({
+      // The invoice without its lines is a header with no detail and a total
+      // nothing supports; insertInvoiceWithLines removes the header if the
+      // lines fail.
+      const invoice = await createInvoice.mutateAsync({
+        header: {
           company_id: userProfile.company_id,
           project_id: project.id,
           client_id: project.client_id,
@@ -212,16 +152,9 @@ const ProgressBillingManager: React.FC = () => {
           due_date: dueDate,
           notes: `Progress billing through ${new Date().toLocaleDateString()}`,
           terms,
-        } as never)
-        .select('id, invoice_number')
-        .single();
-
-      if (error) throw error;
-
-      const { error: lineError } = await supabase
-        .from('invoice_line_items')
-        .insert(billable.map((line) => ({
-          invoice_id: invoice.id,
+        },
+        lines: (invoiceId) => billable.map((line) => ({
+          invoice_id: invoiceId,
           sov_line_id: line.sov_line_id,
           cost_code_id: line.cost_code_id ?? null,
           description: `${line.description} - ${line.percentComplete}% complete`,
@@ -229,27 +162,8 @@ const ProgressBillingManager: React.FC = () => {
           unit_price: line.thisPeriod,
           total_price: line.thisPeriod,
           work_completed_percentage: line.percentComplete,
-        })) as never);
-
-      if (lineError) {
-        // The invoice without its lines is a header with no detail and a total
-        // nothing supports. Better no invoice than that.
-        // Rolling back the header. If this delete also fails the header is
-        // orphaned - a total with no detail behind it - so say so loudly
-        // rather than reporting only the original failure.
-        const { error: rollbackError } = await supabase
-          .from('invoices').delete().eq('id', invoice.id);
-        if (rollbackError) {
-          logger.error('Invoice header left orphaned after its lines failed', {
-            invoiceId: invoice.id, rollbackError,
-          });
-          throw new Error(
-            `Invoice ${invoice.invoice_number} was created without its lines and could ` +
-            `not be removed. Void it manually. (${rollbackError.message})`
-          );
-        }
-        throw new Error(`Could not write the invoice lines: ${lineError.message}`);
-      }
+        })),
+      });
 
       toast({
         title: 'Progress invoice created',
@@ -258,13 +172,10 @@ const ProgressBillingManager: React.FC = () => {
             ? ` (${money(billing.retainageThisPeriod)} retainage withheld)` : ''
         }`,
       });
-      void loadSov(project.id);
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to create the progress invoice';
       logger.error('Progress invoice failed', err);
       toast({ variant: 'destructive', title: 'Could not create the invoice', description: message });
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -282,6 +193,14 @@ const ProgressBillingManager: React.FC = () => {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
+          {projectsError && (
+            <ErrorState
+              inline
+              title="Projects could not be loaded"
+              error={projectsError}
+              onRetry={() => { void refetchProjects(); }}
+            />
+          )}
           <div>
             <Label htmlFor="progress-project">Project</Label>
             <Select value={selectedProject} onValueChange={setSelectedProject}>
@@ -336,6 +255,13 @@ const ProgressBillingManager: React.FC = () => {
           <CardContent>
             {loadingSov ? (
               <Skeleton className="h-40 w-full" />
+            ) : sovError ? (
+              <ErrorState
+                inline
+                title="The schedule of values could not be loaded"
+                error={sovError}
+                onRetry={() => { void refetchSov(); }}
+              />
             ) : sovLines.length === 0 ? (
               <div className="text-center py-8 space-y-3">
                 <p className="text-sm text-muted-foreground">

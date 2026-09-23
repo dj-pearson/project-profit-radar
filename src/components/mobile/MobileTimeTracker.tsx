@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -12,7 +12,8 @@ import { Clock, Play, Pause, Square, MapPin, Wifi, WifiOff, Users, AlertTriangle
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { useOfflineSync } from '@/hooks/useOfflineSync';
-import { supabase } from '@/integrations/supabase/client';
+import { useMobileTimeTracker } from '@/hooks/useMobileTimeTracker';
+import type { TablesInsert } from '@/integrations/supabase/types';
 import { Geolocation } from '@capacitor/geolocation';
 
 interface MobileTimeTrackerProps {
@@ -50,15 +51,6 @@ interface TimeEntry {
   };
 }
 
-interface CrewMember {
-  id: string;
-  name: string;
-  role: string;
-  hourly_rate: number;
-  is_present: boolean;
-  time_entry?: TimeEntry;
-}
-
 const MobileTimeTracker: React.FC<MobileTimeTrackerProps> = ({
   projectId,
   onTimeEntryChange
@@ -75,59 +67,43 @@ const MobileTimeTracker: React.FC<MobileTimeTrackerProps> = ({
   const [isInGeofence, setIsInGeofence] = useState<boolean | null>(null);
   
   // Project & task state
-  interface ProjectOption {
-    id: string;
-    name: string;
-    client_name: string;
-    site_address?: string;
-    site_latitude?: number | null;
-    site_longitude?: number | null;
-    geofence_radius_meters?: number;
-  }
-  interface TaskOption {
-    id: string;
-    name: string;
-    status: string;
-  }
-  interface CostCodeOption {
-    id: string;
-    code: string;
-    name: string;
-    category?: string;
-    is_active?: boolean;
-  }
-  const [projects, setProjects] = useState<ProjectOption[]>([]);
-  const [tasks, setTasks] = useState<TaskOption[]>([]);
-  const [costCodes, setCostCodes] = useState<CostCodeOption[]>([]);
   const [selectedProject, setSelectedProject] = useState(projectId || '');
   const [selectedTask, setSelectedTask] = useState('');
   const [selectedCostCode, setSelectedCostCode] = useState('');
   
-  // Crew management state
-  const [crewMembers, setCrewMembers] = useState<CrewMember[]>([]);
-  const [dailyEntries, setDailyEntries] = useState<TimeEntry[]>([]);
-  
   // Form state
   const [notes, setNotes] = useState('');
-  const [hourlyRate, setHourlyRate] = useState<number>(0);
+  const [hourlyRate, setHourlyRate] = useState<number>(25); // Default hourly rate
 
   const { toast } = useToast();
   const { user, userProfile } = useAuth();
   const { isOnline, saveOfflineData } = useOfflineSync();
+  const {
+    projects, costCodes, optionsError, refetchOptions,
+    tasks, crewMembers, dailyEntries, projectError, refetchProject,
+    activeEntry, activeEntryLoaded, start, update,
+  } = useMobileTimeTracker<TimeEntry>(selectedProject);
+  const loadDailyEntries = () => { void refetchProject(); };
 
   useEffect(() => {
-    loadInitialData();
     getCurrentLocation();
-    checkActiveEntry();
   }, []);
 
+  // Resume an entry left running today, once, when the lookup comes back.
+  const resumed = useRef(false);
   useEffect(() => {
-    if (selectedProject) {
-      loadProjectTasks();
-      loadCrewMembers();
-      loadDailyEntries();
-    }
-  }, [selectedProject]);
+    if (resumed.current || !activeEntryLoaded) return;
+    resumed.current = true;
+    if (!activeEntry) return;
+    setCurrentEntry(activeEntry);
+    setIsTracking(true);
+    setSelectedProject(activeEntry.project_id);
+    setSelectedTask(activeEntry.task_id || '');
+    setSelectedCostCode(activeEntry.cost_code_id || '');
+    setNotes(activeEntry.notes || '');
+    const startTime = new Date(activeEntry.start_time);
+    setElapsedTime(Math.floor((Date.now() - startTime.getTime()) / 1000));
+  }, [activeEntry, activeEntryLoaded]);
 
   useEffect(() => {
     let interval: ReturnType<typeof setInterval> | undefined;
@@ -138,158 +114,6 @@ const MobileTimeTracker: React.FC<MobileTimeTrackerProps> = ({
     }
     return () => interval && clearInterval(interval);
   }, [isTracking, onBreak]);
-
-  const loadInitialData = async () => {
-    try {
-      if (!userProfile?.company_id) return;
-
-      // Load projects with fallback
-      const { data: projectsData, error: projectsError } = await supabase
-        .from('projects')
-        .select('id, name, client_name, site_address, site_latitude, site_longitude, geofence_radius_meters')
-        .eq('company_id', userProfile.company_id)
-        .eq('status', 'active');
-
-      if (projectsError) {
-        console.error('Error loading projects:', projectsError);
-      }
-
-      // Load cost codes with fallback
-      const { data: costCodesData, error: costCodesError } = await supabase
-        .from('cost_codes')
-        .select('*')
-        .eq('company_id', userProfile.company_id)
-        .eq('is_active', true);
-
-      if (costCodesError) {
-        console.error('Error loading cost codes:', costCodesError);
-      }
-
-      // Set projects with fallback data if none exist
-      if (projectsData && projectsData.length > 0) {
-        setProjects(projectsData);
-      } else {
-        const fallbackProjects = [
-          {
-            id: 'proj-1',
-            name: 'Downtown Office Complex',
-            client_name: 'ABC Corporation',
-            site_address: '123 Main Street, Downtown',
-            site_latitude: null,
-            site_longitude: null,
-            geofence_radius_meters: 100
-          },
-          {
-            id: 'proj-2', 
-            name: 'Residential Towers Phase 2',
-            client_name: 'Residential Development LLC',
-            site_address: '456 Oak Avenue',
-            site_latitude: null,
-            site_longitude: null,
-            geofence_radius_meters: 150
-          }
-        ];
-        setProjects(fallbackProjects);
-      }
-
-      // Set cost codes with fallback data if none exist
-      if (costCodesData && costCodesData.length > 0) {
-        setCostCodes(costCodesData);
-      } else {
-        const fallbackCostCodes = [
-          { id: 'cc-1', code: 'LAB-001', name: 'General Labor', category: 'labor', is_active: true },
-          { id: 'cc-2', code: 'MAT-001', name: 'Materials', category: 'materials', is_active: true },
-          { id: 'cc-3', code: 'EQP-001', name: 'Equipment', category: 'equipment', is_active: true }
-        ];
-        setCostCodes(fallbackCostCodes);
-      }
-
-      // Set default hourly rate from user profile or default
-      setHourlyRate(25); // Default hourly rate
-    } catch (error) {
-      console.error('Error loading initial data:', error);
-      toast({
-        title: "Error Loading Data",
-        description: "Failed to load projects and cost codes",
-        variant: "destructive"
-      });
-    }
-  };
-
-  const loadProjectTasks = async () => {
-    if (!selectedProject) return;
-
-    try {
-      const { data, error } = await supabase
-        .from('tasks')
-        .select('id, name, status')
-        .eq('project_id', selectedProject)
-        .eq('status', 'active');
-
-      if (error) throw error;
-      setTasks(data || []);
-    } catch (error) {
-      console.error('Error loading tasks:', error);
-    }
-  };
-
-  const loadCrewMembers = async () => {
-    if (!selectedProject || !userProfile?.company_id) return;
-
-    try {
-      const { data, error } = await supabase
-        .from('user_profiles')
-        .select(`
-          id,
-          first_name,
-          last_name,
-          role,
-          crew_assignments!inner(project_id)
-        `)
-        .eq('company_id', userProfile.company_id)
-        .eq('crew_assignments.project_id', selectedProject)
-        .eq('is_active', true);
-
-      if (error) throw error;
-
-      const members: CrewMember[] = (data || []).map(member => ({
-        id: member.id,
-        name: `${member.first_name} ${member.last_name}`,
-        role: member.role,
-        hourly_rate: 25, // Default hourly rate
-        is_present: false
-      }));
-
-      setCrewMembers(members);
-    } catch (error) {
-      console.error('Error loading crew members:', error);
-    }
-  };
-
-  const loadDailyEntries = async () => {
-    if (!selectedProject) return;
-
-    try {
-      const today = new Date().toISOString().split('T')[0];
-      const { data, error } = await supabase
-        .from('time_entries')
-        .select(`
-          *,
-          user_profiles(first_name, last_name),
-          tasks(name),
-          cost_codes(code, name)
-        `)
-        .eq('project_id', selectedProject)
-        .gte('start_time', `${today}T00:00:00`)
-        .lt('start_time', `${today}T23:59:59`)
-        .order('start_time', { ascending: false });
-
-      if (error) throw error;
-      setDailyEntries((data || []) as unknown as TimeEntry[]);
-    } catch (error) {
-      console.error('Error loading daily entries:', error);
-    }
-  };
 
   const getCurrentLocation = async () => {
     try {
@@ -351,36 +175,6 @@ const MobileTimeTracker: React.FC<MobileTimeTrackerProps> = ({
     return R * c;
   };
 
-  const checkActiveEntry = async () => {
-    try {
-      const today = new Date().toISOString().split('T')[0];
-      const { data, error } = await supabase
-        .from('time_entries')
-        .select('*')
-        .eq('user_id', user?.id)
-        .gte('start_time', `${today}T00:00:00`)
-        .is('end_time', null)
-        .maybeSingle();
-
-      if (error) throw error;
-
-      if (data) {
-        setCurrentEntry(data as unknown as TimeEntry);
-        setIsTracking(true);
-        setSelectedProject(data.project_id);
-        setSelectedTask(data.task_id || '');
-        setSelectedCostCode(data.cost_code_id || '');
-        setNotes((data as unknown as TimeEntry).notes || '');
-        
-        const startTime = new Date(data.start_time);
-        const now = new Date();
-        setElapsedTime(Math.floor((now.getTime() - startTime.getTime()) / 1000));
-      }
-    } catch (error) {
-      console.error('Error checking active entry:', error);
-    }
-  };
-
   const startTracking = async () => {
     if (!selectedProject) {
       toast({
@@ -418,14 +212,8 @@ const MobileTimeTracker: React.FC<MobileTimeTrackerProps> = ({
       };
 
       if (isOnline) {
-        const { data, error } = await supabase
-          .from('time_entries')
-          .insert(entryData as unknown as Record<string, unknown>)
-          .select()
-          .single();
-
-        if (error) throw error;
-        setCurrentEntry(data as unknown as TimeEntry);
+        const created = await start.mutateAsync(entryData as unknown as TablesInsert<'time_entries'>);
+        setCurrentEntry(created);
       } else {
         await saveOfflineData('time_entry', entryData);
         setCurrentEntry({ ...entryData, id: `offline_${Date.now()}` } as TimeEntry);
@@ -468,12 +256,7 @@ const MobileTimeTracker: React.FC<MobileTimeTrackerProps> = ({
       };
 
       if (isOnline && !currentEntry.id.startsWith('offline_')) {
-        const { error } = await supabase
-          .from('time_entries')
-          .update(updateData)
-          .eq('id', currentEntry.id);
-
-        if (error) throw error;
+        await update.mutateAsync({ id: currentEntry.id, patch: updateData });
       } else {
         await saveOfflineData('time_entry', {
           ...currentEntry,
@@ -499,7 +282,7 @@ const MobileTimeTracker: React.FC<MobileTimeTrackerProps> = ({
       console.error('Error stopping time tracking:', error);
       toast({
         title: "Error",
-        description: "Failed to stop time tracking",
+        description: error instanceof Error ? error.message : "Failed to stop time tracking",
         variant: "destructive"
       });
     }
@@ -512,14 +295,10 @@ const MobileTimeTracker: React.FC<MobileTimeTrackerProps> = ({
         
         try {
           if (isOnline && !currentEntry.id.startsWith('offline_')) {
-            const { error } = await supabase
-              .from('time_entries')
-              .update({
-                break_duration: (currentEntry.break_duration || 0) + breakDuration
-              })
-              .eq('id', currentEntry.id);
-
-            if (error) throw error;
+            await update.mutateAsync({
+              id: currentEntry.id,
+              patch: { break_duration: (currentEntry.break_duration || 0) + breakDuration },
+            });
           }
 
           setCurrentEntry(prev => ({ 
@@ -616,6 +395,12 @@ const MobileTimeTracker: React.FC<MobileTimeTrackerProps> = ({
                 <CardTitle className="text-lg tracking-tight">Time Entry Setup</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
+                {optionsError && (
+                  <p role="alert" className="text-sm text-destructive">
+                    Projects and cost codes could not be loaded, so you cannot start a timer yet.{' '}
+                    <button type="button" className="underline" onClick={() => { void refetchOptions(); }}>Try again</button>
+                  </p>
+                )}
                 <MobileSelectField
                   label="Project"
                   required
@@ -777,7 +562,12 @@ const MobileTimeTracker: React.FC<MobileTimeTrackerProps> = ({
               </CardTitle>
             </CardHeader>
             <CardContent>
-              {crewMembers.length === 0 ? (
+              {projectError ? (
+                <p role="alert" className="text-sm text-destructive text-center py-4">
+                  Crew and today's entries could not be loaded.{' '}
+                  <button type="button" className="underline" onClick={loadDailyEntries}>Try again</button>
+                </p>
+              ) : crewMembers.length === 0 ? (
                 <p className="text-muted-foreground text-center py-4">
                   No crew members assigned to this project
                 </p>
@@ -839,7 +629,12 @@ const MobileTimeTracker: React.FC<MobileTimeTrackerProps> = ({
               </CardTitle>
             </CardHeader>
             <CardContent>
-              {dailyEntries.length === 0 ? (
+              {projectError ? (
+                <p role="alert" className="text-sm text-destructive text-center py-4">
+                  Today's entries could not be loaded.{' '}
+                  <button type="button" className="underline" onClick={loadDailyEntries}>Try again</button>
+                </p>
+              ) : dailyEntries.length === 0 ? (
                 <p className="text-muted-foreground text-center py-4">
                   No time entries for today
                 </p>

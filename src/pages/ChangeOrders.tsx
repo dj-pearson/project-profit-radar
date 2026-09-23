@@ -22,7 +22,7 @@ import {
   ResponsiveDialogDescription,
 } from '@/components/ui/responsive-dialog';
 import { toast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
+import { useChangeOrdersPage } from '@/hooks/useChangeOrdersPage';
 import { 
   ArrowLeft, 
   FileText,
@@ -47,13 +47,6 @@ import { AccessibleTable, type TableColumn } from "@/components/accessibility/Ac
 import { Skeleton } from "@/components/ui/skeleton";
 import { ErrorState, NoChangeOrders } from "@/components/ui/EmptyStates";
 
-interface Project {
-  id: string;
-  name: string;
-  client_name: string;
-  status: string;
-}
-
 interface ChangeOrder {
   id: string;
   project_id: string;
@@ -74,27 +67,27 @@ interface ChangeOrder {
   projects: { name: string; client_name: string };
 }
 
-interface UserProfile {
-  id: string;
-  first_name: string;
-  last_name: string;
-  role: string;
-}
-
 const ChangeOrders = () => {
   const { user, userProfile, loading } = useAuth();
   // US-332: the change-order terms and licence line print on the PDF.
   const { defaults: billing } = useBillingDefaults();
   const navigate = useNavigate();
   
-  const [projects, setProjects] = useState<Project[]>([]);
-  const [changeOrders, setChangeOrders] = useState<ChangeOrder[]>([]);
-  const [companyUsers, setCompanyUsers] = useState<UserProfile[]>([]);
-  const [selectedProject, setSelectedProject] = useState<string>('');
-  const [loadingOrders, setLoadingOrders] = useState(true);
+  const canManage = !!userProfile && ['admin', 'project_manager', 'root_admin'].includes(userProfile.role);
   // A failed load used to render "No change orders have been created yet",
-  // which hides unbilled scope. Keep it so the table says the load failed.
-  const [loadError, setLoadError] = useState(false);
+  // which hides unbilled scope. The table says the load failed instead.
+  const {
+    projects,
+    approvers: companyUsers,
+    changeOrders,
+    isLoading: loadingOrders,
+    error: loadError,
+    refetch,
+    save,
+    approve,
+  } = useChangeOrdersPage<ChangeOrder>({ enabled: canManage });
+  const loadData = () => { void refetch(); };
+  const [selectedProject, setSelectedProject] = useState<string>('');
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [approvalDueDate, setApprovalDueDate] = useState<Date>();
   const [selectedApprovers, setSelectedApprovers] = useState<string[]>([]);
@@ -134,66 +127,7 @@ const ChangeOrders = () => {
       });
       return;
     }
-    
-    if (userProfile?.company_id) {
-      loadData();
-    }
   }, [user, userProfile, loading, navigate]);
-
-  const loadData = async () => {
-    try {
-      setLoadingOrders(true);
-      setLoadError(false);
-      
-      // Load projects
-      const { data: projectsData, error: projectsError } = await supabase
-        .from('projects')
-        .select('id, name, client_name, status')
-        .eq('company_id', userProfile?.company_id)
-        .order('name');
-
-      if (projectsError) throw projectsError;
-      setProjects(projectsData || []);
-
-      // Load company users for approver assignment
-      const { data: usersData, error: usersError } = await supabase
-        .from('user_profiles')
-        .select('id, first_name, last_name, role')
-        .eq('company_id', userProfile?.company_id)
-        .in('role', ['admin', 'project_manager', 'superintendent', 'root_admin']);
-
-      if (usersError) throw usersError;
-      setCompanyUsers(usersData || []);
-
-      // Load change orders
-      const { data: ordersData, error: ordersError } = await supabase.functions.invoke('change-orders', {
-        body: { action: 'list' }
-      });
-
-
-      if (ordersError) {
-        console.error('Change orders error:', ordersError);
-        throw ordersError;
-      }
-      
-      if (ordersData?.changeOrders) {
-        setChangeOrders(ordersData.changeOrders);
-      } else {
-        setChangeOrders([]);
-      }
-
-    } catch (error: unknown) {
-      console.error('Error loading data:', error);
-      setLoadError(true);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: error instanceof Error ? error.message : "Failed to load change orders data"
-      });
-    } finally {
-      setLoadingOrders(false);
-    }
-  };
 
   const handleCreateOrder = async () => {
     // Validate required fields
@@ -218,18 +152,13 @@ const ChangeOrders = () => {
     }
 
     try {
-      const { error } = await supabase.functions.invoke('change-orders', {
-        body: { 
-          action: 'create',
-          ...newOrder,
-          amount: amount,
-          assigned_approvers: selectedApprovers,
-          approval_due_date: approvalDueDate ? format(approvalDueDate, 'yyyy-MM-dd') : null
-        }
+      await save.mutateAsync({
+        action: 'create',
+        ...newOrder,
+        amount: amount,
+        assigned_approvers: selectedApprovers,
+        approval_due_date: approvalDueDate ? format(approvalDueDate, 'yyyy-MM-dd') : null
       });
-
-
-      if (error) throw error;
 
       toast({
         title: "Success",
@@ -248,8 +177,6 @@ const ChangeOrders = () => {
       setSelectedApprovers([]);
       setApprovalDueDate(undefined);
       setEditingOrder(null);
-      
-      loadData();
     } catch (error: unknown) {
       console.error('Error creating change order:', error);
       toast({
@@ -285,18 +212,14 @@ const ChangeOrders = () => {
     }
 
     try {
-      const { error } = await supabase.functions.invoke('change-orders', {
-        body: { 
-          action: 'update',
-          orderId: editingOrder.id,
-          ...newOrder,
-          amount: amount,
-          assigned_approvers: selectedApprovers,
-          approval_due_date: approvalDueDate ? format(approvalDueDate, 'yyyy-MM-dd') : null
-        }
+      await save.mutateAsync({
+        action: 'update',
+        orderId: editingOrder.id,
+        ...newOrder,
+        amount: amount,
+        assigned_approvers: selectedApprovers,
+        approval_due_date: approvalDueDate ? format(approvalDueDate, 'yyyy-MM-dd') : null
       });
-
-      if (error) throw error;
 
       toast({
         title: "Success",
@@ -315,8 +238,6 @@ const ChangeOrders = () => {
       setSelectedApprovers([]);
       setApprovalDueDate(undefined);
       setEditingOrder(null);
-      
-      loadData();
     } catch (error: unknown) {
       console.error('Error updating change order:', error);
       toast({
@@ -334,42 +255,14 @@ const ChangeOrders = () => {
     signature?: string | null
   ) => {
     try {
-      const { error } = await supabase.functions.invoke('change-orders', {
-        body: {
-          action: 'approve',
-          orderId,
-          approvalType,
-          approved
-        }
-      });
-
-      if (error) throw error;
-
-      // US-108: persist the approver's signature (company-scoped) when provided.
-      if (approved && signature && userProfile?.company_id) {
-        // A change order alters the contract value, so the approver's
-        // signature is the evidence the change was authorised. Losing it
-        // silently while the toast below says "approved successfully" leaves
-        // an approved order with nothing behind it (US-300).
-        const { error: signatureError } = await supabase
-          .from('change_orders')
-          .update({ signature })
-          .eq('id', orderId)
-          .eq('company_id', userProfile.company_id);
-        if (signatureError) {
-          throw new Error(
-            `The change order was ${approved ? 'approved' : 'rejected'}, but the signature could not be saved ` +
-              `(${signatureError.message}). Re-sign it before treating the approval as authorised.`,
-          );
-        }
-      }
+      // The signature, when given, is saved after the approval and checked:
+      // see recordChangeOrderApproval (US-108, US-300).
+      await approve.mutateAsync({ orderId, approvalType, approved, signature });
 
       toast({
         title: "Success",
         description: `Change order ${approved ? 'approved' : 'rejected'} successfully`
       });
-      
-      loadData();
     } catch (error: unknown) {
       console.error('Error updating approval:', error);
       toast({
@@ -398,17 +291,12 @@ const ChangeOrders = () => {
     }
 
     try {
-      const { error } = await supabase.functions.invoke('change-orders', {
-        body: { 
-          action: 'approve',
-          orderId: rejectionOrderId,
-          approvalType: rejectionType,
-          approved: false,
-          rejectionReason: rejectionReason
-        }
+      await approve.mutateAsync({
+        orderId: rejectionOrderId,
+        approvalType: rejectionType,
+        approved: false,
+        rejectionReason: rejectionReason
       });
-
-      if (error) throw error;
 
       toast({
         title: "Success",
@@ -417,7 +305,6 @@ const ChangeOrders = () => {
       
       setIsRejectionDialogOpen(false);
       setRejectionReason('');
-      loadData();
     } catch (error: unknown) {
       console.error('Error rejecting change order:', error);
       toast({

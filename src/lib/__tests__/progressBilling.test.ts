@@ -220,8 +220,12 @@ const strip = (path: string) =>
     .join('\n');
 
 describe('the constants and the notes hack are gone (US-327)', () => {
-  const progress = strip('src/components/invoices/ProgressBillingManager.tsx');
-  const retention = strip('src/components/invoices/RetentionManager.tsx');
+  // US-266 moved the reads into hooks; each screen is its component plus the
+  // hook it reads through.
+  const progress = strip('src/components/invoices/ProgressBillingManager.tsx') +
+    strip('src/hooks/useProgressBilling.ts');
+  const retention = strip('src/components/invoices/RetentionManager.tsx') +
+    strip('src/hooks/useRetainageRelease.ts');
 
   it('no longer invents a $100,000 contract', () => {
     expect(progress).not.toMatch(/totalBudget\s*=\s*100000/);

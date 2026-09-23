@@ -1,10 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import { AccessibleModal } from '@/components/accessibility/AccessibleModal';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Label } from '@/components/ui/label';
+import { Form } from '@/components/ui/form';
+import { InputFormField, SelectFormField, TextareaFormField } from '@/components/forms/FormFields';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import {
+  TASK_CATEGORIES,
+  buildEditTaskUpdate,
+  editTaskDefaults,
+  editTaskFormSchema,
+  taskCategoryLabel,
+  type EditTaskFormValues,
+} from '@/lib/validations/tasks';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -40,23 +48,6 @@ interface User {
   last_name: string;
 }
 
-type TaskCategory = 'general' | 'permit' | 'estimate' | 'inspection' | 'material_order' | 'labor' | 'safety' | 'quality_control' | 'client_communication' | 'documentation' | 'financial' | 'equipment';
-
-const TASK_CATEGORIES: TaskCategory[] = [
-  'general',
-  'permit',
-  'estimate',
-  'inspection',
-  'material_order',
-  'labor',
-  'safety',
-  'quality_control',
-  'client_communication',
-  'documentation',
-  'financial',
-  'equipment'
-];
-
 export const EditTaskDialog: React.FC<EditTaskDialogProps> = ({
   task,
   isOpen,
@@ -68,33 +59,16 @@ export const EditTaskDialog: React.FC<EditTaskDialogProps> = ({
   const [projects, setProjects] = useState<Project[]>([]);
   const [users, setUsers] = useState<User[]>([]);
 
-  const [formData, setFormData] = useState({
-    name: task.name,
-    description: task.description || '',
-    category: task.category as TaskCategory,
-    priority: task.priority,
-    status: task.status,
-    project_id: task.project_id,
-    assigned_to: 'unassigned', // Will be set properly after users load
-    due_date: task.due_date ? task.due_date.split('T')[0] : '',
-    estimated_hours: task.estimated_hours?.toString() || ''
+  const form = useForm<EditTaskFormValues>({
+    resolver: zodResolver(editTaskFormSchema),
+    defaultValues: editTaskDefaults(task),
   });
 
   useEffect(() => {
     if (isOpen) {
       loadProjects();
       loadUsers();
-      setFormData({
-        name: task.name,
-        description: task.description || '',
-        category: task.category as TaskCategory,
-        priority: task.priority,
-        status: task.status,
-        project_id: task.project_id,
-        assigned_to: 'unassigned', // Will be set after users load
-        due_date: task.due_date ? task.due_date.split('T')[0] : '',
-        estimated_hours: task.estimated_hours?.toString() || ''
-      });
+      form.reset(editTaskDefaults(task));
     }
   }, [isOpen, task]);
 
@@ -102,12 +76,9 @@ export const EditTaskDialog: React.FC<EditTaskDialogProps> = ({
   useEffect(() => {
     if (users.length > 0 && task.assigned_to) {
       const userExists = users.some(user => user.id === task.assigned_to);
-      setFormData(prev => ({
-        ...prev,
-        assigned_to: userExists ? task.assigned_to : 'unassigned'
-      }));
+      form.setValue('assigned_to', userExists ? task.assigned_to : 'unassigned');
     }
-  }, [users, task.assigned_to]);
+  }, [users, task.assigned_to, form]);
 
   const loadProjects = async () => {
     if (!userProfile?.company_id) return;
@@ -141,24 +112,11 @@ export const EditTaskDialog: React.FC<EditTaskDialogProps> = ({
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!formData.name.trim() || !formData.project_id) return;
-
+  const handleSubmit = async (values: EditTaskFormValues) => {
     setLoading(true);
 
     try {
-      const taskData = {
-        name: formData.name.trim(),
-        description: formData.description.trim() || null,
-        category: formData.category,
-        priority: formData.priority,
-        status: formData.status,
-        project_id: formData.project_id,
-        assigned_to: formData.assigned_to === 'unassigned' ? null : formData.assigned_to || null,
-        due_date: formData.due_date || null,
-        estimated_hours: formData.estimated_hours ? parseFloat(formData.estimated_hours) : null
-      };
+      const taskData = buildEditTaskUpdate(values);
 
       const { data, error } = await supabase
         .from('tasks')
@@ -202,135 +160,69 @@ export const EditTaskDialog: React.FC<EditTaskDialogProps> = ({
         </div>
       )}
 
-      <form id="edit-task-form" onSubmit={handleSubmit} className="space-y-4">
-        <div className="space-y-2">
-          <Label htmlFor="name">Task Name *</Label>
-          <Input
-            id="name"
-            value={formData.name}
-            onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-            placeholder="Enter task name"
-            required
+      <Form {...form}>
+      <form id="edit-task-form" onSubmit={form.handleSubmit(handleSubmit)} noValidate className="space-y-4" aria-label="Edit task form">
+        <InputFormField control={form.control} name="name" label="Task Name *" placeholder="Enter task name" aria-required="true" />
+
+        <TextareaFormField control={form.control} name="description" label="Description" placeholder="Task description (optional)" rows={3} />
+
+        <div className="grid grid-cols-2 gap-4">
+          <SelectFormField
+            control={form.control}
+            name="category"
+            label="Category"
+            options={TASK_CATEGORIES.map((c) => ({ value: c, label: taskCategoryLabel(c) }))}
+          />
+          <SelectFormField
+            control={form.control}
+            name="priority"
+            label="Priority"
+            options={[
+              { value: 'low', label: 'Low' },
+              { value: 'medium', label: 'Medium' },
+              { value: 'high', label: 'High' },
+              { value: 'urgent', label: 'Urgent' },
+            ]}
           />
         </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="description">Description</Label>
-          <Textarea
-            id="description"
-            value={formData.description}
-            onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-            placeholder="Task description (optional)"
-            rows={3}
-          />
-        </div>
+        <SelectFormField
+          control={form.control}
+          name="status"
+          label="Status"
+          options={[
+            { value: 'todo', label: 'To Do' },
+            { value: 'in_progress', label: 'In Progress' },
+            { value: 'completed', label: 'Completed' },
+            { value: 'on_hold', label: 'On Hold' },
+          ]}
+        />
+
+        <SelectFormField
+          control={form.control}
+          name="project_id"
+          label="Project *"
+          placeholder="Select a project"
+          options={projects.map((p) => ({ value: p.id, label: p.name }))}
+        />
+
+        <SelectFormField
+          control={form.control}
+          name="assigned_to"
+          label="Assigned To"
+          placeholder="Assign to..."
+          options={[
+            { value: 'unassigned', label: 'Unassigned' },
+            ...users.map((u) => ({ value: u.id, label: `${u.first_name} ${u.last_name}` })),
+          ]}
+        />
 
         <div className="grid grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <Label htmlFor="category">Category</Label>
-            <Select value={formData.category} onValueChange={(value: TaskCategory) => setFormData(prev => ({ ...prev, category: value }))}>
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {TASK_CATEGORIES.map(category => (
-                  <SelectItem key={category} value={category}>
-                    {category.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="priority">Priority</Label>
-            <Select value={formData.priority} onValueChange={(value) => setFormData(prev => ({ ...prev, priority: value }))}>
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="low">Low</SelectItem>
-                <SelectItem value="medium">Medium</SelectItem>
-                <SelectItem value="high">High</SelectItem>
-                <SelectItem value="urgent">Urgent</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="status">Status</Label>
-          <Select value={formData.status} onValueChange={(value) => setFormData(prev => ({ ...prev, status: value }))}>
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="todo">To Do</SelectItem>
-              <SelectItem value="in_progress">In Progress</SelectItem>
-              <SelectItem value="completed">Completed</SelectItem>
-              <SelectItem value="on_hold">On Hold</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="project">Project *</Label>
-          <Select value={formData.project_id} onValueChange={(value) => setFormData(prev => ({ ...prev, project_id: value }))}>
-            <SelectTrigger>
-              <SelectValue placeholder="Select a project" />
-            </SelectTrigger>
-            <SelectContent>
-              {projects.map(project => (
-                <SelectItem key={project.id} value={project.id}>
-                  {project.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="assigned_to">Assigned To</Label>
-          <Select value={formData.assigned_to} onValueChange={(value) => setFormData(prev => ({ ...prev, assigned_to: value }))}>
-            <SelectTrigger>
-              <SelectValue placeholder="Assign to..." />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="unassigned">Unassigned</SelectItem>
-              {users.map(user => (
-                <SelectItem key={user.id} value={user.id}>
-                  {user.first_name} {user.last_name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-
-        <div className="grid grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <Label htmlFor="due_date">Due Date</Label>
-            <Input
-              id="due_date"
-              type="date"
-              value={formData.due_date}
-              onChange={(e) => setFormData(prev => ({ ...prev, due_date: e.target.value }))}
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="estimated_hours">Estimated Hours</Label>
-            <Input
-              id="estimated_hours"
-              type="number"
-              step="0.5"
-              min="0"
-              value={formData.estimated_hours}
-              onChange={(e) => setFormData(prev => ({ ...prev, estimated_hours: e.target.value }))}
-              placeholder="0"
-            />
-          </div>
+          <InputFormField control={form.control} name="due_date" label="Due Date" type="date" />
+          <InputFormField control={form.control} name="estimated_hours" label="Estimated Hours" type="number" step="0.5" min="0" placeholder="0" />
         </div>
       </form>
+      </Form>
     </AccessibleModal>
   );
 };

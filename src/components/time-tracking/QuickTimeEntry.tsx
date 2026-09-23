@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -10,14 +10,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Clock, MapPin, Save, AlertCircle } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useAuth } from '@/contexts/AuthContext';
-import { supabase } from '@/integrations/supabase/client';
+import { useMyProjects, useCreateMyTimeEntry } from '@/hooks/useMyTimeTracking';
 import { useToast } from '@/hooks/use-toast';
 import { timeEntrySchema, type TimeEntryInput } from '@/lib/validations';
-
-interface Project {
-  id: string;
-  name: string;
-}
+import type { TablesInsert } from '@/integrations/supabase/types';
 
 interface QuickTimeEntryProps {
   onEntryCreated?: () => void;
@@ -26,8 +22,9 @@ interface QuickTimeEntryProps {
 export const QuickTimeEntry = ({ onEntryCreated }: QuickTimeEntryProps) => {
   const { user } = useAuth();
   const { toast } = useToast();
-  const [projects, setProjects] = useState<Project[]>([]);
-  const [loading, setLoading] = useState(false);
+  const { projects, error: projectsError, refetch: refetchProjects } = useMyProjects();
+  const createEntry = useCreateMyTimeEntry();
+  const loading = createEntry.isPending;
   
   const {
     register,
@@ -50,8 +47,6 @@ export const QuickTimeEntry = ({ onEntryCreated }: QuickTimeEntryProps) => {
   const formValues = watch();
 
   useEffect(() => {
-    fetchProjects();
-    
     // Set default times (current time - 1 hour to current time)
     const now = new Date();
     const oneHourAgo = new Date(now.getTime() - 60 * 60 * 1000);
@@ -60,41 +55,20 @@ export const QuickTimeEntry = ({ onEntryCreated }: QuickTimeEntryProps) => {
     setValue('end_time', now.toISOString());
   }, [setValue]);
 
-  const fetchProjects = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('projects')
-        .select('id, name')
-        .eq('created_by', user?.id)
-        .order('name');
-
-      if (error) throw error;
-      setProjects(data || []);
-    } catch (error) {
-      console.error('Error fetching projects:', error);
-    }
-  };
-
   const onSubmit = async (data: TimeEntryInput) => {
-    setLoading(true);
-
     try {
-      const { error } = await supabase
-        .from('time_entries')
-        .insert({
-          user_id: user?.id,
-          project_id: data.project_id || null,
-          description: data.task_description,
-          start_time: data.start_time,
-          end_time: data.end_time,
-          notes: data.notes || null,
-          gps_latitude: data.location_latitude,
-          gps_longitude: data.location_longitude,
-          location_accuracy: data.location_accuracy,
-          location: data.location_address || null,
-        });
-
-      if (error) throw error;
+      await createEntry.mutateAsync({
+        user_id: user?.id,
+        project_id: data.project_id || null,
+        description: data.task_description,
+        start_time: data.start_time,
+        end_time: data.end_time,
+        notes: data.notes || null,
+        gps_latitude: data.location_latitude,
+        gps_longitude: data.location_longitude,
+        location_accuracy: data.location_accuracy,
+        location: data.location_address || null,
+      } as TablesInsert<'time_entries'>);
 
       toast({
         title: "Time Entry Created",
@@ -108,11 +82,9 @@ export const QuickTimeEntry = ({ onEntryCreated }: QuickTimeEntryProps) => {
       console.error('Error creating time entry:', error);
       toast({
         title: "Error",
-        description: "Failed to create time entry",
+        description: error instanceof Error ? error.message : "Failed to create time entry",
         variant: "destructive",
       });
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -215,6 +187,12 @@ export const QuickTimeEntry = ({ onEntryCreated }: QuickTimeEntryProps) => {
                   ))}
                 </SelectContent>
               </Select>
+              {projectsError && (
+                <p role="alert" className="text-sm text-destructive">
+                  Your projects could not be loaded.{' '}
+                  <button type="button" className="underline" onClick={() => { void refetchProjects(); }}>Try again</button>
+                </p>
+              )}
             </div>
           </div>
 

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState } from "react";
 import {
   Card,
   CardContent,
@@ -28,12 +28,13 @@ import {
 } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Switch } from "@/components/ui/switch";
-import { supabase } from "@/integrations/supabase/client";
+import { usePipelineStages } from "@/hooks/usePipelineStages";
+import { ErrorState } from "@/components/common/ErrorState";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import { Settings, Plus, Edit, Trash2, Save, GripVertical, Target, Clock, Percent, RefreshCw, Zap } from "lucide-react";
-import { Json } from "@/integrations/supabase/types";
+import type { Json, TablesInsert, TablesUpdate } from "@/integrations/supabase/types";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { confirmAction } from "@/components/ui/confirm-dialog";
 
@@ -51,32 +52,12 @@ interface PipelineStage {
   required_fields: Json;
 }
 
-interface PipelineTemplate {
-  id: string;
-  name: string;
-  description?: string;
-  deal_type: string;
-  is_default: boolean;
-  is_active: boolean;
-}
-
-interface LeadRoutingRule {
-  id: string;
-  name: string;
-  description?: string;
-  priority: number;
-  is_active: boolean;
-  conditions: Json;
-  assign_to_user_id?: string;
-  use_round_robin: boolean;
-  round_robin_users: string[];
-}
-
 export const PipelineSettings: React.FC = () => {
-  const [stages, setStages] = useState<PipelineStage[]>([]);
-  const [templates, setTemplates] = useState<PipelineTemplate[]>([]);
-  const [routingRules, setRoutingRules] = useState<LeadRoutingRule[]>([]);
-  const [loading, setLoading] = useState(true);
+  const {
+    stages, isLoading: loading, error: loadError, refetch,
+    create: createStageMutation, update: updateStageMutation,
+    remove: removeStageMutation, reorder,
+  } = usePipelineStages<PipelineStage>();
   const [editingStage, setEditingStage] = useState<PipelineStage | null>(null);
   const [showNewStageDialog, setShowNewStageDialog] = useState(false);
   const { toast } = useToast();
@@ -93,56 +74,6 @@ export const PipelineSettings: React.FC = () => {
     auto_tasks: [],
     required_fields: [],
   });
-
-  const loadPipelineSettings = useCallback(async () => {
-    try {
-      if (!userProfile?.company_id) return;
-
-      // Load stages
-      const { data: stagesData, error: stagesError } = await supabase
-        .from("pipeline_stages")
-        .select("*")
-        .eq("company_id", userProfile.company_id)
-        .order("stage_order");
-
-      if (stagesError) throw stagesError;
-      setStages(stagesData || []);
-
-      // Load templates
-      const { data: templatesData, error: templatesError } = await supabase
-        .from("pipeline_templates")
-        .select("*")
-        .eq("company_id", userProfile.company_id)
-        .order("created_at");
-
-      if (templatesError) throw templatesError;
-      setTemplates(templatesData || []);
-
-      // Load routing rules
-      const { data: rulesData, error: rulesError } = await supabase
-        .from("lead_routing_rules")
-        .select("*")
-        .eq("company_id", userProfile.company_id)
-        .order("priority", { ascending: false });
-
-      if (rulesError) throw rulesError;
-      setRoutingRules(rulesData || []);
-    } catch (error: unknown) {
-      const errorMessage =
-        error instanceof Error ? error.message : "Unknown error occurred";
-      toast({
-        title: "Error loading pipeline settings",
-        description: errorMessage,
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
-  }, [userProfile?.company_id, toast]);
-
-  useEffect(() => {
-    loadPipelineSettings();
-  }, [loadPipelineSettings]);
 
   const handleDragEnd = async (result: {
     destination?: { droppableId: string; index: number } | null;
@@ -161,23 +92,9 @@ export const PipelineSettings: React.FC = () => {
       stage_order: index + 1,
     }));
 
-    setStages(updatedStages);
-
     try {
-      // Update all stage orders in database
-      const updatePromises = updatedStages.map((stage) =>
-        supabase
-          .from("pipeline_stages")
-          .update({ stage_order: stage.stage_order })
-          .eq("id", stage.id)
-      );
-
-      const results = await Promise.all(updatePromises);
-      const errors = results.filter((result) => result.error);
-
-      if (errors.length > 0) {
-        throw new Error("Failed to update some stages");
-      }
+      // Shown in the new order at once; rolled back if any stage fails to save.
+      await reorder.mutateAsync(updatedStages);
 
       toast({
         title: "Stage order updated",
@@ -191,8 +108,6 @@ export const PipelineSettings: React.FC = () => {
         description: errorMessage,
         variant: "destructive",
       });
-      // Revert on error
-      loadPipelineSettings();
     }
   };
 
@@ -216,15 +131,7 @@ export const PipelineSettings: React.FC = () => {
         stage_order: nextOrder,
       };
 
-      const { data, error } = await supabase
-        .from("pipeline_stages")
-        .insert(stageToInsert)
-        .select()
-        .single();
-
-      if (error) throw error;
-
-      setStages([...stages, data as PipelineStage]);
+      await createStageMutation.mutateAsync(stageToInsert as TablesInsert<"pipeline_stages">);
       setShowNewStageDialog(false);
       setNewStage({
         name: "",
@@ -255,14 +162,7 @@ export const PipelineSettings: React.FC = () => {
 
   const updateStage = async (stage: PipelineStage) => {
     try {
-      const { error } = await supabase
-        .from("pipeline_stages")
-        .update(stage)
-        .eq("id", stage.id);
-
-      if (error) throw error;
-
-      setStages(stages.map((s) => (s.id === stage.id ? stage : s)));
+      await updateStageMutation.mutateAsync({ id: stage.id, patch: stage as TablesUpdate<"pipeline_stages"> });
       setEditingStage(null);
 
       toast({
@@ -283,14 +183,7 @@ export const PipelineSettings: React.FC = () => {
   const deleteStage = async (stageId: string) => {
     if (!(await confirmAction({ title: 'Delete this pipeline stage?', description: 'This cannot be undone.', destructive: true }))) return;
     try {
-      const { error } = await supabase
-        .from("pipeline_stages")
-        .delete()
-        .eq("id", stageId);
-
-      if (error) throw error;
-
-      setStages(stages.filter((s) => s.id !== stageId));
+      await removeStageMutation.mutateAsync(stageId);
 
       toast({
         title: "Stage deleted",
@@ -325,6 +218,16 @@ export const PipelineSettings: React.FC = () => {
     );
   }
 
+  if (loadError) {
+    return (
+      <ErrorState
+        title="Pipeline stages could not be loaded"
+        error={loadError}
+        onRetry={() => { void refetch(); }}
+      />
+    );
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -334,7 +237,7 @@ export const PipelineSettings: React.FC = () => {
             Configure your sales pipeline stages and automation
           </p>
         </div>
-        <Button onClick={loadPipelineSettings}>
+        <Button onClick={() => { void refetch(); }}>
           <RefreshCw className="h-4 w-4 mr-2" />
           Refresh
         </Button>

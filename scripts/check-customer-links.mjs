@@ -28,7 +28,11 @@ const SRC = join(root, 'src');
 const FUNCTIONS = join(root, 'supabase', 'functions');
 
 // Lower this as writers are converted. It never goes up.
-const BASELINE = 26;
+// 26 -> 24: MobileTimeTracker's invented fallback projects (US-266) are gone.
+// 24 -> 22: InvoiceGenerator's request is built by buildInvoiceRequest (US-268),
+// which carries client_id with the name and email, and the last two
+// MobileTimeTracker client_name writes went with its move onto query hooks.
+const BASELINE = 22;
 
 const SKIP_DIRS = new Set(['node_modules', 'dist', '__tests__', '__mocks__']);
 const SKIP_FILE = /\.(test|spec)\.[tj]sx?$|types\.ts$/;

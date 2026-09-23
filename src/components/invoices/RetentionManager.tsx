@@ -12,7 +12,7 @@
  * view is the one retainage model; retention_items and retention_tracking are
  * deprecated by the same migration and were never written to by anything.
  */
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -24,29 +24,12 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
 import { Clock, AlertCircle } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { logger } from '@/lib/logger';
+import { useRetainageRelease } from '@/hooks/useRetainageRelease';
+import { ErrorState } from '@/components/common/ErrorState';
 import { computeRetainageBalance, cents } from '@/lib/progressBilling';
-
-interface RetainageRow {
-  project_id: string;
-  project_name: string;
-  retainage_percentage: number;
-  contract_value: number;
-  withheld_to_date: number;
-  released_to_date: number;
-  retainage_balance: number;
-}
-
-interface ProjectContact {
-  id: string;
-  client_id: string | null;
-  client_name: string | null;
-  client_email: string | null;
-  status: string | null;
-}
 
 const money = (n: number) =>
   n.toLocaleString('en-US', { style: 'currency', currency: 'USD' });
@@ -55,49 +38,13 @@ const RetentionManager: React.FC = () => {
   const { userProfile } = useAuth();
   const { toast } = useToast();
 
-  const [rows, setRows] = useState<RetainageRow[]>([]);
-  const [contacts, setContacts] = useState<Record<string, ProjectContact>>({});
   const [selectedProject, setSelectedProject] = useState('');
   const [releaseAmount, setReleaseAmount] = useState('');
   const [dueDate, setDueDate] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [loadingRows, setLoadingRows] = useState(true);
-
-  const load = useCallback(async () => {
-    if (!userProfile?.company_id) return;
-    setLoadingRows(true);
-
-    const [{ data: retainage, error: retainageError }, { data: projects, error: projectError }] =
-      await Promise.all([
-        supabase
-          .from('project_retainage')
-          .select('project_id, project_name, retainage_percentage, contract_value, withheld_to_date, released_to_date, retainage_balance')
-          .eq('company_id', userProfile.company_id)
-          .gt('withheld_to_date', 0)
-          .order('retainage_balance', { ascending: false }),
-        supabase
-          .from('projects')
-          .select('id, client_id, client_name, client_email, status')
-          .eq('company_id', userProfile.company_id),
-      ]);
-
-    if (retainageError || projectError) {
-      logger.error('Could not load retainage', retainageError || projectError);
-      toast({
-        variant: 'destructive',
-        title: 'Could not load retainage',
-        description: (retainageError || projectError)?.message,
-      });
-    }
-
-    setRows((retainage || []) as RetainageRow[]);
-    setContacts(Object.fromEntries(
-      ((projects || []) as ProjectContact[]).map((p) => [p.id, p])
-    ));
-    setLoadingRows(false);
-  }, [userProfile?.company_id, toast]);
-
-  useEffect(() => { void load(); }, [load]);
+  const {
+    rows, contacts, isLoading: loadingRows, error: loadError, refetch, createInvoice,
+  } = useRetainageRelease();
+  const loading = createInvoice.isPending;
 
   const selected = useMemo(
     () => rows.find((r) => r.project_id === selectedProject) || null,
@@ -149,11 +96,9 @@ const RetentionManager: React.FC = () => {
       return;
     }
 
-    setLoading(true);
     try {
-      const { data: invoice, error } = await supabase
-        .from('invoices')
-        .insert({
+      const invoice = await createInvoice.mutateAsync({
+        header: {
           company_id: userProfile.company_id,
           project_id: selected.project_id,
           client_id: contact?.client_id ?? null,
@@ -167,39 +112,15 @@ const RetentionManager: React.FC = () => {
           due_date: dueDate,
           notes: `Retainage release on ${selected.project_name}`,
           terms: 'Retainage is due upon final completion and acceptance.',
-        } as never)
-        .select('id, invoice_number')
-        .single();
-
-      if (error) throw error;
-
-      const { error: lineError } = await supabase
-        .from('invoice_line_items')
-        .insert({
-          invoice_id: invoice.id,
+        },
+        lines: (invoiceId) => [{
+          invoice_id: invoiceId,
           description: `Retainage released (${selected.retainage_percentage}% withheld on ${money(selected.withheld_to_date)} of billings)`,
           quantity: 1,
           unit_price: requested,
           total_price: requested,
-        } as never);
-
-      if (lineError) {
-        // Rolling back the header. If this delete also fails the header is
-        // orphaned - a total with no detail behind it - so say so loudly
-        // rather than reporting only the original failure.
-        const { error: rollbackError } = await supabase
-          .from('invoices').delete().eq('id', invoice.id);
-        if (rollbackError) {
-          logger.error('Invoice header left orphaned after its lines failed', {
-            invoiceId: invoice.id, rollbackError,
-          });
-          throw new Error(
-            `Invoice ${invoice.invoice_number} was created without its lines and could ` +
-            `not be removed. Void it manually. (${rollbackError.message})`
-          );
-        }
-        throw new Error(`Could not write the invoice line: ${lineError.message}`);
-      }
+        }],
+      });
 
       toast({
         title: 'Retainage release invoiced',
@@ -207,13 +128,10 @@ const RetentionManager: React.FC = () => {
       });
       setSelectedProject('');
       setDueDate('');
-      void load();
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to create the release invoice';
       logger.error('Retainage release failed', err);
       toast({ variant: 'destructive', title: 'Could not release retainage', description: message });
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -232,6 +150,13 @@ const RetentionManager: React.FC = () => {
         <CardContent>
           {loadingRows ? (
             <Skeleton className="h-32 w-full" />
+          ) : loadError ? (
+            <ErrorState
+              inline
+              title="Retainage could not be loaded"
+              error={loadError}
+              onRetry={() => { void refetch(); }}
+            />
           ) : rows.length === 0 ? (
             <p className="text-sm text-muted-foreground py-6 text-center">
               No retainage is being held. It accrues as progress invoices are billed on

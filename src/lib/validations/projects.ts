@@ -177,3 +177,31 @@ export const CREATE_PROJECT_DEFAULTS: CreateProjectFormValues = {
   budget: '',
   estimatedHours: '',
 };
+
+/** Project Cost Codes "Add Cost Code" dialog (US-268). */
+export const costCodeFormSchema = z.object({
+  code: requiredText('Code is required', 50),
+  name: requiredText('Name is required', 200),
+  description: z.string(),
+  category: z.string().max(100, 'Must be 100 characters or fewer'),
+  budgeted: optionalNumericString({ min: 0, message: 'Budget amount cannot be negative' }),
+});
+export type CostCodeFormValues = z.infer<typeof costCodeFormSchema>;
+
+export const COST_CODE_DEFAULTS: CostCodeFormValues = {
+  code: '',
+  name: '',
+  description: '',
+  category: 'General',
+  budgeted: '',
+};
+
+/** The project_cost_codes row the useState dialog inserted. */
+export const buildCostCodeInsert = (projectId: string, companyId: string, v: CostCodeFormValues) => ({
+  project_id: projectId,
+  company_id: companyId,
+  code: v.code.trim(),
+  description: v.name.trim(),
+  category: v.category.trim() || 'General',
+  budget_amount: parseFloat(v.budgeted) || 0,
+});

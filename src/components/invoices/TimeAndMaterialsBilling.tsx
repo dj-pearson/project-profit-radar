@@ -10,7 +10,7 @@
  * the same period cannot bill the same hour again. Rows with no billing rate
  * are listed and excluded rather than billed at zero or at cost.
  */
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
@@ -21,21 +21,14 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
 import { Receipt, AlertCircle } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { logger } from '@/lib/logger';
 import { useBillingDefaults } from '@/hooks/useBillingDefaults';
+import { useTimeAndMaterialsBilling } from '@/hooks/useTimeAndMaterialsBilling';
+import { ErrorState } from '@/components/common/ErrorState';
 import { newInvoiceDefaults } from '@/lib/companyBilling';
-import { computeTimeAndMaterials, type UnbilledWorkRow } from '@/lib/progressBilling';
-
-interface ProjectRow {
-  id: string;
-  name: string;
-  client_id: string | null;
-  client_name: string | null;
-  client_email: string | null;
-}
+import { computeTimeAndMaterials } from '@/lib/progressBilling';
 
 const money = (n: number) =>
   n.toLocaleString('en-US', { style: 'currency', currency: 'USD' });
@@ -46,55 +39,17 @@ const TimeAndMaterialsBilling: React.FC = () => {
   // US-332: due date and terms from the company's payment terms, not 30 days.
   const { defaults: billingDefaults } = useBillingDefaults();
 
-  const [projects, setProjects] = useState<ProjectRow[]>([]);
   const [selectedProject, setSelectedProject] = useState('');
-  const [rows, setRows] = useState<UnbilledWorkRow[]>([]);
   const [excluded, setExcluded] = useState<Set<string>>(new Set());
-  const [loadingRows, setLoadingRows] = useState(false);
-  const [creating, setCreating] = useState(false);
+  const {
+    projects, projectsError, refetchProjects,
+    rows, loadingRows, rowsError, refetchRows,
+    createInvoice: createInvoiceMutation,
+  } = useTimeAndMaterialsBilling(selectedProject);
+  const creating = createInvoiceMutation.isPending;
 
-  const loadProjects = useCallback(async () => {
-    if (!userProfile?.company_id) return;
-    const { data, error } = await supabase
-      .from('projects')
-      .select('id, name, client_id, client_name, client_email')
-      .eq('company_id', userProfile.company_id)
-      .in('status', ['active', 'planning', 'completed'])
-      .order('name');
-
-    if (error) {
-      logger.error('Could not load projects for T&M billing', error);
-      return;
-    }
-    setProjects((data || []) as ProjectRow[]);
-  }, [userProfile?.company_id]);
-
-  const loadWork = useCallback(async (projectId: string) => {
-    if (!projectId) { setRows([]); return; }
-    setLoadingRows(true);
-    const { data, error } = await supabase
-      .from('project_unbilled_work')
-      .select('source_type, source_id, description, work_date, quantity, unit_price, cost_code_id')
-      .eq('project_id', projectId)
-      .order('work_date');
-
-    if (error) {
-      logger.error('Could not load unbilled work', error);
-      toast({
-        variant: 'destructive',
-        title: 'Could not load unbilled work',
-        description: error.message,
-      });
-      setRows([]);
-    } else {
-      setRows((data || []) as UnbilledWorkRow[]);
-      setExcluded(new Set());
-    }
-    setLoadingRows(false);
-  }, [toast]);
-
-  useEffect(() => { void loadProjects(); }, [loadProjects]);
-  useEffect(() => { void loadWork(selectedProject); }, [selectedProject, loadWork]);
+  // A fresh list of unbilled work starts with every row included.
+  useEffect(() => { setExcluded(new Set()); }, [rows]);
 
   const included = useMemo(
     () => rows.filter((r) => !excluded.has(r.source_id)),
@@ -115,99 +70,34 @@ const TimeAndMaterialsBilling: React.FC = () => {
       return;
     }
 
-    setCreating(true);
     try {
       const { due_date: dueDate, terms } = newInvoiceDefaults(billingDefaults);
+      const { invoiceNumber, stampError } = await createInvoiceMutation.mutateAsync({
+        companyId: userProfile.company_id,
+        project,
+        billable: totals.billable,
+        total: totals.total,
+        dueDate,
+        terms,
+      });
 
-      const { data: invoice, error } = await supabase
-        .from('invoices')
-        .insert({
-          company_id: userProfile.company_id,
-          project_id: project.id,
-          client_id: project.client_id,
-          client_name: project.client_name || 'Unknown client',
-          client_email: project.client_email || '',
-          invoice_type: 'time_and_materials',
-          subtotal: totals.total,
-          total_amount: totals.total,
-          amount_due: totals.total,
-          current_amount_due: totals.total,
-          due_date: dueDate,
-          notes: `Time and materials: ${totals.billable.length} item(s)`,
-          terms,
-        } as never)
-        .select('id, invoice_number')
-        .single();
-
-      if (error) throw error;
-
-      const { error: lineError } = await supabase
-        .from('invoice_line_items')
-        .insert(totals.billable.map((row) => ({
-          invoice_id: invoice.id,
-          cost_code_id: row.cost_code_id ?? null,
-          description: `${row.work_date} - ${row.description}`,
-          quantity: row.quantity,
-          unit_price: row.unit_price as number,
-          total_price: row.lineTotal,
-        })) as never);
-
-      if (lineError) {
-        // Rolling back the header. If this delete also fails the header is
-        // orphaned - a total with no detail behind it - so say so loudly
-        // rather than reporting only the original failure.
-        const { error: rollbackError } = await supabase
-          .from('invoices').delete().eq('id', invoice.id);
-        if (rollbackError) {
-          logger.error('Invoice header left orphaned after its lines failed', {
-            invoiceId: invoice.id, rollbackError,
-          });
-          throw new Error(
-            `Invoice ${invoice.invoice_number} was created without its lines and could ` +
-            `not be removed. Void it manually. (${rollbackError.message})`
-          );
-        }
-        throw new Error(`Could not write the invoice lines: ${lineError.message}`);
-      }
-
-      // Stamp the sources. Until this runs the same hours are still billable,
-      // which is the safe direction: a failure here means the work can be
-      // billed again, not that it was silently lost.
-      const timeIds = totals.billable.filter((r) => r.source_type === 'time').map((r) => r.source_id);
-      const expenseIds = totals.billable.filter((r) => r.source_type === 'expense').map((r) => r.source_id);
-
-      const stamps = await Promise.all([
-        timeIds.length
-          ? supabase.from('time_entries').update({ billed_invoice_id: invoice.id } as never).in('id', timeIds)
-          : Promise.resolve({ error: null }),
-        expenseIds.length
-          ? supabase.from('expenses').update({ billed_invoice_id: invoice.id } as never).in('id', expenseIds)
-          : Promise.resolve({ error: null }),
-      ]);
-
-      const stampError = stamps.find((s) => s.error)?.error;
       if (stampError) {
         // Loud, because the alternative is billing the same hours next month.
-        logger.error('T&M invoice created but sources were not marked billed', stampError);
         toast({
           variant: 'destructive',
-          title: `Invoice ${invoice.invoice_number} was created, but the work was not marked billed`,
-          description: `It will appear as unbilled again. Reason: ${stampError.message}`,
+          title: `Invoice ${invoiceNumber} was created, but the work was not marked billed`,
+          description: `It will appear as unbilled again. Reason: ${stampError}`,
         });
       } else {
         toast({
           title: 'Time and materials invoiced',
-          description: `${invoice.invoice_number} for ${money(totals.total)}`,
+          description: `${invoiceNumber} for ${money(totals.total)}`,
         });
       }
-
-      void loadWork(project.id);
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to create the invoice';
       logger.error('T&M invoice failed', err);
       toast({ variant: 'destructive', title: 'Could not create the invoice', description: message });
-    } finally {
-      setCreating(false);
     }
   };
 
@@ -231,6 +121,14 @@ const TimeAndMaterialsBilling: React.FC = () => {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
+          {projectsError && (
+            <ErrorState
+              inline
+              title="Projects could not be loaded"
+              error={projectsError}
+              onRetry={() => { void refetchProjects(); }}
+            />
+          )}
           <div>
             <Label htmlFor="tm-project">Project</Label>
             <Select value={selectedProject} onValueChange={setSelectedProject}>
@@ -267,6 +165,13 @@ const TimeAndMaterialsBilling: React.FC = () => {
           <CardContent>
             {loadingRows ? (
               <Skeleton className="h-40 w-full" />
+            ) : rowsError ? (
+              <ErrorState
+                inline
+                title="Unbilled work could not be loaded"
+                error={rowsError}
+                onRetry={() => { void refetchRows(); }}
+              />
             ) : rows.length === 0 ? (
               <p className="text-sm text-muted-foreground py-6 text-center">
                 Nothing is waiting to be billed. Hours appear here once they are approved,

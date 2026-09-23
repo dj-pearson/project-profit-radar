@@ -3,8 +3,17 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { InputFormField, SelectFormField, TextareaFormField } from '@/components/forms/FormFields';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import {
+  blankInvoiceLine,
+  buildInvoiceRequest,
+  invoiceFormSchema,
+  type InvoiceFormValues,
+  type InvoiceLineValues,
+} from '@/lib/validations/invoices';
 import { Separator } from '@/components/ui/separator';
 import { Plus, Trash2, FileText, Download } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
@@ -18,20 +27,8 @@ import {
   computeTax, newInvoiceDefaults, taxBreakdownLabel, FALLBACK_BILLING_DEFAULTS,
 } from '@/lib/companyBilling';
 
-interface LineItem {
-  description: string;
-  quantity: number;
-  unit_price: number;
-  cost_code_id?: string;
-  project_phase_id?: string;
-  /** US-332: NULL means the invoice rate applies. */
-  tax_rate: number | null;
-  taxable: boolean;
-}
-
-const blankLine = (): LineItem => ({
-  description: '', quantity: 1, unit_price: 0, tax_rate: null, taxable: true,
-});
+type LineItem = InvoiceLineValues;
+const blankLine = blankInvoiceLine;
 
 // Before the company's settings arrive: exactly what this form always started
 // with (Net 30, no tax). Replaced by the company's own defaults once loaded.
@@ -55,17 +52,31 @@ const InvoiceGenerator = ({ projectId, onInvoiceCreated }: InvoiceGeneratorProps
   const { defaults: billing, loaded: billingLoaded, error: billingError } = useBillingDefaults();
   const appliedBillingDefaults = useRef(false);
 
-  const [invoiceData, setInvoiceData] = useState({
-    client_id: null as string | null,
-    client_name: '',
-    client_email: '',
-    project_id: projectId || '',
-    ...initialDefaults(),
-    discount_amount: 0,
-    notes: '',
+  const form = useForm<InvoiceFormValues>({
+    resolver: zodResolver(invoiceFormSchema),
+    defaultValues: {
+      client_id: null,
+      client_name: '',
+      client_email: '',
+      project_id: projectId || '',
+      ...initialDefaults(),
+      discount_amount: 0,
+      notes: '',
+      line_items: [blankLine()],
+    },
   });
-
-  const [lineItems, setLineItems] = useState<LineItem[]>([blankLine()]);
+  const invoiceData = form.watch();
+  const lineItems = invoiceData.line_items;
+  const lineErrors = form.formState.errors.line_items;
+  const setLineItems = (next: LineItem[]) =>
+    form.setValue('line_items', next, { shouldValidate: form.formState.isSubmitted });
+  const setFields = (patch: Partial<InvoiceFormValues>) => {
+    for (const [key, value] of Object.entries(patch)) {
+      form.setValue(key as keyof InvoiceFormValues, value as never, {
+        shouldValidate: form.formState.isSubmitted,
+      });
+    }
+  };
 
   // Apply the company's defaults once they load, to whichever of the three
   // fields the user has not already changed.
@@ -74,13 +85,11 @@ const InvoiceGenerator = ({ projectId, onInvoiceCreated }: InvoiceGeneratorProps
     appliedBillingDefaults.current = true;
     const initial = initialDefaults();
     const next = newInvoiceDefaults(billing);
-    setInvoiceData(prev => ({
-      ...prev,
-      due_date: prev.due_date === initial.due_date ? next.due_date : prev.due_date,
-      tax_rate: prev.tax_rate === initial.tax_rate ? next.tax_rate : prev.tax_rate,
-      terms: prev.terms === initial.terms ? next.terms : prev.terms,
-    }));
-  }, [billingLoaded, billing]);
+    const prev = form.getValues();
+    form.setValue('due_date', prev.due_date === initial.due_date ? next.due_date : prev.due_date);
+    form.setValue('tax_rate', prev.tax_rate === initial.tax_rate ? next.tax_rate : prev.tax_rate);
+    form.setValue('terms', prev.terms === initial.terms ? next.terms : prev.terms);
+  }, [billingLoaded, billing, form]);
 
   useEffect(() => {
     loadProjects();
@@ -119,15 +128,14 @@ const InvoiceGenerator = ({ projectId, onInvoiceCreated }: InvoiceGeneratorProps
   const handleProjectChange = (projectId: string) => {
     const project = projects.find(p => p.id === projectId);
     if (project) {
-      setInvoiceData(prev => ({
-        ...prev,
+      setFields({
         project_id: projectId,
         // The project knows who the customer is. Copying only the two strings
         // is what left every invoice from this form unlinked (US-326).
-        client_id: project.client_id ?? prev.client_id,
+        client_id: project.client_id ?? form.getValues('client_id'),
         client_name: project.client_name || '',
-        client_email: project.client_email || ''
-      }));
+        client_email: project.client_email || '',
+      });
     }
   };
 
@@ -141,7 +149,7 @@ const InvoiceGenerator = ({ projectId, onInvoiceCreated }: InvoiceGeneratorProps
     }
   };
 
-  const updateLineItem = (index: number, field: keyof LineItem, value: any) => {
+  const updateLineItem = <K extends keyof LineItem>(index: number, field: K, value: LineItem[K]) => {
     const updated = [...lineItems];
     updated[index] = { ...updated[index], [field]: value };
     setLineItems(updated);
@@ -165,38 +173,13 @@ const InvoiceGenerator = ({ projectId, onInvoiceCreated }: InvoiceGeneratorProps
     return calculateSubtotal() + calculateTax() - invoiceData.discount_amount;
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async (values: InvoiceFormValues) => {
     if (!user) return;
 
     setLoading(true);
     try {
-      // Validate required fields
-      if (!invoiceData.client_name || !invoiceData.client_email) {
-        throw new Error('Client name and email are required');
-      }
-
-      if (lineItems.some(item => !item.description || item.unit_price <= 0)) {
-        throw new Error('All line items must have description and positive unit price');
-      }
-
       const { data, error } = await supabase.functions.invoke('generate-invoice', {
-        body: {
-          ...invoiceData,
-          // The schema takes an optional uuid, and `optional()` accepts
-          // undefined but not null - spreading state that holds null would
-          // 400 the whole request.
-          client_id: invoiceData.client_id ?? undefined,
-          line_items: lineItems
-            .filter(item => item.description.trim() !== '')
-            .map(({ tax_rate, taxable, ...item }) => ({
-              ...item,
-              // Sent only when the line overrides the invoice rate, so the
-              // request is byte-for-byte the old one when nobody does.
-              ...(tax_rate != null ? { tax_rate } : {}),
-              ...(taxable === false ? { taxable } : {}),
-            })),
-        }
+        body: buildInvoiceRequest(values),
       });
 
       if (error) throw error;
@@ -213,7 +196,7 @@ const InvoiceGenerator = ({ projectId, onInvoiceCreated }: InvoiceGeneratorProps
         onInvoiceCreated?.(data.invoice);
 
         // Reset form
-        setInvoiceData({
+        form.reset({
           client_id: null,
           client_name: '',
           client_email: '',
@@ -221,8 +204,8 @@ const InvoiceGenerator = ({ projectId, onInvoiceCreated }: InvoiceGeneratorProps
           ...newInvoiceDefaults(billing),
           discount_amount: 0,
           notes: '',
+          line_items: [blankLine()],
         });
-        setLineItems([blankLine()]);
       }
 
     } catch (error) {
@@ -316,7 +299,8 @@ const InvoiceGenerator = ({ projectId, onInvoiceCreated }: InvoiceGeneratorProps
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <Form {...form}>
+        <form onSubmit={form.handleSubmit(handleSubmit)} noValidate className="space-y-6" aria-label="Generate invoice form">
           {billingError && (
             <p role="alert" className="text-sm text-destructive">
               Could not load your billing settings, so the tax rate and terms here are not your
@@ -325,34 +309,15 @@ const InvoiceGenerator = ({ projectId, onInvoiceCreated }: InvoiceGeneratorProps
           )}
           {/* Client Information */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="project">Project (Optional)</Label>
-              <Select 
-                value={invoiceData.project_id} 
-                onValueChange={handleProjectChange}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select a project" />
-                </SelectTrigger>
-                <SelectContent>
-                  {projects.map(project => (
-                    <SelectItem key={project.id} value={project.id}>
-                      {project.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label htmlFor="due_date">Due Date</Label>
-              <Input
-                id="due_date"
-                type="date"
-                value={invoiceData.due_date}
-                onChange={(e) => setInvoiceData(prev => ({ ...prev, due_date: e.target.value }))}
-                required
-              />
-            </div>
+            <SelectFormField
+              control={form.control}
+              name="project_id"
+              label="Project (Optional)"
+              placeholder="Select a project"
+              options={projects.map((project) => ({ value: project.id, label: project.name }))}
+              onValueChange={handleProjectChange}
+            />
+            <InputFormField control={form.control} name="due_date" label="Due Date" type="date" aria-required="true" />
           </div>
 
           {/* Estimates and projects have had a customer picker since US-326;
@@ -361,39 +326,32 @@ const InvoiceGenerator = ({ projectId, onInvoiceCreated }: InvoiceGeneratorProps
           <ContactPicker
             value={invoiceData.client_id}
             onChange={(contact) =>
-              setInvoiceData(prev => ({
-                ...prev,
+              setFields({
                 client_id: contact?.id ?? null,
-                client_name: contact ? contact.name : prev.client_name,
-                client_email: contact ? contact.email || '' : prev.client_email,
-              }))
+                client_name: contact ? contact.name : form.getValues('client_name'),
+                client_email: contact ? contact.email || '' : form.getValues('client_email'),
+              })
             }
             label="Customer"
             hint="Everything for this customer links to one record."
           />
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="client_name">Client Name</Label>
-              <Input
-                id="client_name"
-                value={invoiceData.client_name}
-                onChange={(e) => setInvoiceData(prev => ({ ...prev, client_name: e.target.value }))}
-                readOnly={!!invoiceData.client_id}
-                required
-              />
-            </div>
-            <div>
-              <Label htmlFor="client_email">Client Email</Label>
-              <Input
-                id="client_email"
-                type="email"
-                value={invoiceData.client_email}
-                onChange={(e) => setInvoiceData(prev => ({ ...prev, client_email: e.target.value }))}
-                readOnly={!!invoiceData.client_id}
-                required
-              />
-            </div>
+            <InputFormField
+              control={form.control}
+              name="client_name"
+              label="Client Name"
+              readOnly={!!invoiceData.client_id}
+              aria-required="true"
+            />
+            <InputFormField
+              control={form.control}
+              name="client_email"
+              label="Client Email"
+              type="email"
+              readOnly={!!invoiceData.client_id}
+              aria-required="true"
+            />
           </div>
 
           <Separator />
@@ -409,7 +367,11 @@ const InvoiceGenerator = ({ projectId, onInvoiceCreated }: InvoiceGeneratorProps
             </div>
 
             <div className="space-y-4">
-              {lineItems.map((item, index) => (
+              {lineItems.map((item, index) => {
+                const descError = lineErrors?.[index]?.description?.message;
+                const priceError = lineErrors?.[index]?.unit_price?.message;
+                const qtyError = lineErrors?.[index]?.quantity?.message;
+                return (
                 <div key={index} className="grid grid-cols-12 gap-4 items-end">
                   <div className="col-span-12 md:col-span-4">
                     <Label htmlFor={`line-description-${index}`}>Description</Label>
@@ -418,7 +380,12 @@ const InvoiceGenerator = ({ projectId, onInvoiceCreated }: InvoiceGeneratorProps
                       value={item.description}
                       onChange={(e) => updateLineItem(index, 'description', e.target.value)}
                       placeholder="Item description"
+                      aria-invalid={descError ? true : undefined}
+                      aria-describedby={descError ? `line-description-${index}-error` : undefined}
                     />
+                    {descError && (
+                      <p id={`line-description-${index}-error`} className="text-sm font-medium text-destructive mt-1">{descError}</p>
+                    )}
                   </div>
                   <div className="col-span-6 md:col-span-2">
                     <Label htmlFor={`line-quantity-${index}`}>Quantity</Label>
@@ -429,7 +396,12 @@ const InvoiceGenerator = ({ projectId, onInvoiceCreated }: InvoiceGeneratorProps
                       step="0.01"
                       value={item.quantity}
                       onChange={(e) => updateLineItem(index, 'quantity', parseFloat(e.target.value) || 0)}
+                      aria-invalid={qtyError ? true : undefined}
+                      aria-describedby={qtyError ? `line-quantity-${index}-error` : undefined}
                     />
+                    {qtyError && (
+                      <p id={`line-quantity-${index}-error`} className="text-sm font-medium text-destructive mt-1">{qtyError}</p>
+                    )}
                   </div>
                   <div className="col-span-6 md:col-span-2">
                     <Label htmlFor={`line-price-${index}`}>Unit Price</Label>
@@ -440,7 +412,12 @@ const InvoiceGenerator = ({ projectId, onInvoiceCreated }: InvoiceGeneratorProps
                       step="0.01"
                       value={item.unit_price}
                       onChange={(e) => updateLineItem(index, 'unit_price', parseFloat(e.target.value) || 0)}
+                      aria-invalid={priceError ? true : undefined}
+                      aria-describedby={priceError ? `line-price-${index}-error` : undefined}
                     />
+                    {priceError && (
+                      <p id={`line-price-${index}-error`} className="text-sm font-medium text-destructive mt-1">{priceError}</p>
+                    )}
                   </div>
                   <div className="col-span-6 md:col-span-2">
                     <Label htmlFor={`line-tax-${index}`}>Tax</Label>
@@ -475,7 +452,8 @@ const InvoiceGenerator = ({ projectId, onInvoiceCreated }: InvoiceGeneratorProps
                     </Button>
                   </div>
                 </div>
-              ))}
+                );
+              })}
             </div>
           </div>
 
@@ -484,29 +462,51 @@ const InvoiceGenerator = ({ projectId, onInvoiceCreated }: InvoiceGeneratorProps
           {/* Totals and Settings */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-4">
-              <div>
-                <Label htmlFor="tax_rate">Invoice tax rate (%)</Label>
-                <Input
-                  id="tax_rate"
-                  type="number"
-                  min="0"
-                  max="100"
-                  step="0.01"
-                  value={invoiceData.tax_rate}
-                  onChange={(e) => setInvoiceData(prev => ({ ...prev, tax_rate: parseFloat(e.target.value) || 0 }))}
-                />
-              </div>
-              <div>
-                <Label htmlFor="discount_amount">Discount Amount ($)</Label>
-                <Input
-                  id="discount_amount"
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  value={invoiceData.discount_amount}
-                  onChange={(e) => setInvoiceData(prev => ({ ...prev, discount_amount: parseFloat(e.target.value) || 0 }))}
-                />
-              </div>
+              <FormField
+                control={form.control}
+                name="tax_rate"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Invoice tax rate (%)</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="number"
+                        min="0"
+                        max="100"
+                        step="0.01"
+                        name={field.name}
+                        ref={field.ref}
+                        onBlur={field.onBlur}
+                        value={field.value}
+                        onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="discount_amount"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Discount Amount ($)</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        name={field.name}
+                        ref={field.ref}
+                        onBlur={field.onBlur}
+                        value={field.value}
+                        onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
             </div>
 
             <div className="space-y-2">
@@ -541,26 +541,8 @@ const InvoiceGenerator = ({ projectId, onInvoiceCreated }: InvoiceGeneratorProps
 
           {/* Notes and Terms */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="notes">Notes</Label>
-              <Textarea
-                id="notes"
-                value={invoiceData.notes}
-                onChange={(e) => setInvoiceData(prev => ({ ...prev, notes: e.target.value }))}
-                placeholder="Additional notes for this invoice"
-                rows={3}
-              />
-            </div>
-            <div>
-              <Label htmlFor="terms">Terms & Conditions</Label>
-              <Textarea
-                id="terms"
-                value={invoiceData.terms}
-                onChange={(e) => setInvoiceData(prev => ({ ...prev, terms: e.target.value }))}
-                placeholder="Payment terms and conditions"
-                rows={3}
-              />
-            </div>
+            <TextareaFormField control={form.control} name="notes" label="Notes" placeholder="Additional notes for this invoice" rows={3} />
+            <TextareaFormField control={form.control} name="terms" label="Terms & Conditions" placeholder="Payment terms and conditions" rows={3} />
           </div>
 
           <Button
@@ -573,6 +555,7 @@ const InvoiceGenerator = ({ projectId, onInvoiceCreated }: InvoiceGeneratorProps
             {loading ? 'Generating...' : 'Generate Invoice'}
           </Button>
         </form>
+        </Form>
 
         {/* PDF Download Section - Shows after invoice creation */}
         {lastCreatedInvoice && (

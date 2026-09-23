@@ -13,8 +13,8 @@ import ErrorBoundary from '@/components/ErrorBoundary';
 import { ErrorState, EmptyState } from '@/components/ui/states';
 import { KPISkeleton } from '@/components/ui/skeleton-loader';
 import { ResponsiveGrid } from '@/components/layout/ResponsiveContainer';
-import { useLoadingState } from '@/hooks/useLoadingState';
-import { supabase } from '@/integrations/supabase/client';
+import { useCRMDashboard } from '@/hooks/useCRMPipeline';
+import type { TablesUpdate } from '@/integrations/supabase/types';
 import { useToast } from '@/hooks/use-toast';
 import { mobileGridClasses } from '@/utils/mobileHelpers';
 import { ContextualActions } from '@/components/navigation/ContextualActions';
@@ -54,18 +54,6 @@ export interface Opportunity {
   created_at: string;
 }
 
-interface CRMData {
-  leads: Lead[];
-  opportunities: Opportunity[];
-  totalLeads: number;
-  qualifiedLeads: number;
-  totalOpportunities: number;
-  totalPipelineValue: number;
-  avgConversionRate: number;
-  thisMonthNewLeads: number;
-  followUpsDue: number;
-}
-
 const NEW_OPPORTUNITY_PATH = '/crm/opportunities?new=1';
 
 const tabTriggerClass = "inline-flex items-center justify-center whitespace-nowrap border-b-2 border-transparent px-4 py-3 text-sm font-medium text-muted-foreground transition-all hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:border-primary data-[state=active]:text-primary data-[state=active]:bg-background/50";
@@ -86,54 +74,20 @@ const CRMDashboard = () => {
     setViewMode('lead-detail');
   };
 
-  const { data: crmData, loading: crmLoading, error: crmError, execute: loadCRMData } = useLoadingState<CRMData>({
-    leads: [], opportunities: [], totalLeads: 0, qualifiedLeads: 0,
-    totalOpportunities: 0, totalPipelineValue: 0, avgConversionRate: 0,
-    thisMonthNewLeads: 0, followUpsDue: 0
-  });
+  const {
+    data: crmData,
+    isLoading: crmLoading,
+    error: crmError,
+    refetch,
+    updateLead: updateLeadMutation,
+    updateOpportunity: updateOpportunityMutation,
+  } = useCRMDashboard<Lead, Opportunity>({ enabled: !loading && !!user && !!userProfile });
+  const reloadCRM = () => { void refetch(); };
 
   useEffect(() => {
     if (!loading && !user) navigate('/auth');
     if (!loading && user && userProfile && !userProfile.company_id && userProfile.role !== 'root_admin') navigate('/setup');
-    if (!loading && user && userProfile) loadCRMData(loadCRMDashboardData);
   }, [user, userProfile, loading, navigate]);
-
-  const loadCRMDashboardData = async (): Promise<CRMData> => {
-    if (!userProfile?.company_id) throw new Error('No company associated with user');
-    const currentMonth = new Date();
-    currentMonth.setDate(1);
-    try {
-      const { data: leadsData, error: leadsError } = await supabase
-        .from('leads')
-        .select('id, first_name, last_name, email, phone, company_name, status, lead_source, priority, assigned_to, created_at')
-        .order('created_at', { ascending: false }) as any;
-      if (leadsError) throw leadsError;
-
-      const { data: opportunitiesData, error: opportunitiesError } = await supabase
-        .from('opportunities')
-        .select('id, name, estimated_value, probability_percent, stage, expected_close_date, account_manager, project_type, created_at')
-        .eq('company_id', userProfile.company_id)
-        .order('created_at', { ascending: false });
-      if (opportunitiesError) throw opportunitiesError;
-
-      const leads = leadsData || [];
-      const opportunities = opportunitiesData || [];
-      const qualifiedLeads = leads.filter((l: Lead) => ['qualified', 'proposal_sent', 'negotiating'].includes(l.status));
-      const thisMonthNewLeads = leads.filter((l: Lead) => l.created_at && new Date(l.created_at) >= currentMonth);
-      const totalPipelineValue = opportunities.reduce((sum: number, o: Opportunity) => sum + (o.estimated_value || 0), 0);
-      const wonLeads = leads.filter((l: Lead) => l.status === 'won');
-      const avgConversionRate = leads.length > 0 ? (wonLeads.length / leads.length) * 100 : 0;
-
-      return {
-        leads: leads as Lead[], opportunities, totalLeads: leads.length,
-        qualifiedLeads: qualifiedLeads.length, totalOpportunities: opportunities.length,
-        totalPipelineValue, avgConversionRate, thisMonthNewLeads: thisMonthNewLeads.length, followUpsDue: 0
-      };
-    } catch (error) {
-      console.error('Error loading CRM data:', error);
-      throw error;
-    }
-  };
 
   const getStatusColorClass = (status: string) => {
     const map: Record<string, string> = {
@@ -175,10 +129,8 @@ const CRMDashboard = () => {
         const value = updates[key as keyof Lead];
         cleanedUpdates[key] = value === '' ? null : value;
       });
-      const { error } = await supabase.from('leads').update(cleanedUpdates).eq('id', leadId);
-      if (error) { console.error('Supabase error:', error); throw error; }
+      await updateLeadMutation.mutateAsync({ id: leadId, patch: cleanedUpdates as TablesUpdate<'leads'> });
       toast({ title: "Lead updated", description: "Lead information has been updated successfully." });
-      loadCRMData(loadCRMDashboardData);
     } catch (error) {
       console.error('Error updating lead:', error);
       toast({ title: "Error", description: "Failed to update lead. Please try again.", variant: "destructive" });
@@ -190,10 +142,8 @@ const CRMDashboard = () => {
 
   const updateOpportunity = async (opportunityId: string, updates: Partial<Opportunity>) => {
     try {
-      const { error } = await supabase.from('opportunities').update(updates).eq('id', opportunityId);
-      if (error) throw error;
+      await updateOpportunityMutation.mutateAsync({ id: opportunityId, patch: updates as TablesUpdate<'opportunities'> });
       toast({ title: "Opportunity updated", description: "Opportunity information has been updated successfully." });
-      loadCRMData(loadCRMDashboardData);
     } catch (error) {
       console.error('Error updating opportunity:', error);
       toast({ title: "Error", description: "Failed to update opportunity. Please try again.", variant: "destructive" });
@@ -223,7 +173,7 @@ const CRMDashboard = () => {
             {Array.from({ length: 8 }).map((_, i) => <KPISkeleton key={i} />)}
           </ResponsiveGrid>
         ) : crmError ? (
-          <ErrorState error={crmError} onRetry={() => loadCRMData(loadCRMDashboardData)} className="mb-8" />
+          <ErrorState error={crmError} onRetry={reloadCRM} className="mb-8" />
         ) : (
           <div className={mobileGridClasses.stats}>
             <KPICard title="Total Leads" value={crmData?.totalLeads || 0} icon={Users} subtitle="All active leads" change={`+${crmData?.thisMonthNewLeads || 0} this month`} changeType="positive" />
@@ -335,7 +285,7 @@ const CRMDashboard = () => {
       </Tabs>
 
       {viewMode === 'lead-detail' && selectedLeadId && (
-        <LeadDetailView leadId={selectedLeadId} onBack={() => setViewMode('dashboard')} onUpdate={() => { loadCRMData(loadCRMDashboardData); }} />
+        <LeadDetailView leadId={selectedLeadId} onBack={() => setViewMode('dashboard')} onUpdate={reloadCRM} />
       )}
     </DashboardLayout>
     </AccessiblePageWrapper>

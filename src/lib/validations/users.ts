@@ -123,3 +123,37 @@ export function buildTeamInviteBody(values: TeamInviteValues) {
 export type ProfileUpdateInput = z.infer<typeof profileUpdateSchema>;
 export type PasswordChangeInput = z.infer<typeof passwordChangeSchema>;
 export type EmailUpdateInput = z.infer<typeof emailUpdateSchema>;
+
+/**
+ * Project "Invite your client" form (US-268). The handler trims name and
+ * email before sending, as the useState version did, so the checks here run
+ * on the trimmed value.
+ */
+export const clientInviteFormSchema = z.object({
+  firstName: z.string().refine((v) => v.trim().length > 0, { message: 'First name is required' }),
+  lastName: z.string().max(100, 'Must be 100 characters or fewer'),
+  email: z
+    .string()
+    .refine((v) => v.trim().length > 0, { message: 'Email is required' })
+    .refine((v) => v.trim() === '' || z.string().email().safeParse(v.trim()).success, {
+      message: 'Enter a valid email address',
+    }),
+  accessLevel: z.string(),
+});
+export type ClientInviteFormValues = z.infer<typeof clientInviteFormSchema>;
+
+export const CLIENT_INVITE_DEFAULTS: ClientInviteFormValues = {
+  firstName: '',
+  lastName: '',
+  email: '',
+  accessLevel: 'read_only',
+};
+
+/** The invite-client edge function body. */
+export const buildClientInviteBody = (projectId: string, v: ClientInviteFormValues) => ({
+  project_id: projectId,
+  email: v.email.trim(),
+  first_name: v.firstName.trim(),
+  last_name: v.lastName.trim() || null,
+  access_level: v.accessLevel,
+});

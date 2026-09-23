@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'node:fs';
+import { buildInvoiceRequest } from '@/lib/validations/invoices';
 import { join } from 'node:path';
 
 /**
@@ -42,9 +43,24 @@ describe('the invoice path carries the customer, not just their name', () => {
   });
 
   it('never sends null for an optional uuid, which the schema would reject', () => {
-    const form = read('src/components/InvoiceGenerator.tsx');
     // z.string().uuid().optional() accepts undefined, not null, and the form
-    // holds null when nothing is picked.
-    expect(form).toMatch(/client_id:\s*invoiceData\.client_id\s*\?\?\s*undefined/);
+    // holds null when nothing is picked. Since US-268 the request is built by
+    // buildInvoiceRequest in src/lib/validations/invoices.ts.
+    const form = read('src/components/InvoiceGenerator.tsx');
+    expect(form).toMatch(/body:\s*buildInvoiceRequest\(values\)/);
+    const body = buildInvoiceRequest({
+      client_id: null,
+      client_name: 'Dana',
+      client_email: 'dana@example.com',
+      project_id: '',
+      due_date: '2026-10-01',
+      tax_rate: 0,
+      terms: '',
+      discount_amount: 0,
+      notes: '',
+      line_items: [{ description: 'Framing', quantity: 1, unit_price: 10, tax_rate: null, taxable: true }],
+    });
+    expect(body.client_id).toBeUndefined();
+    expect(JSON.parse(JSON.stringify(body))).not.toHaveProperty('client_id');
   });
 });

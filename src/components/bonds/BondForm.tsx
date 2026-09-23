@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Form } from '@/components/ui/form';
 import { AccessibleModal } from '@/components/accessibility/AccessibleModal';
-import { Checkbox } from '@/components/ui/checkbox';
+import { CheckboxFormField, InputFormField, SelectFormField, TextareaFormField } from '@/components/forms/FormFields';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { bondFormDefaults, bondFormSchema, buildBondData, type BondFormValues } from '@/lib/validations/bonds';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -26,36 +26,11 @@ export const BondForm: React.FC<BondFormProps> = ({ bond, onClose, onSave }) => 
   const [loading, setLoading] = useState(false);
   const [projects, setProjects] = useState<Project[]>([]);
 
-  const [formData, setFormData] = useState({
-    project_id: bond?.project_id || '',
-    bond_type: bond?.bond_type || 'performance',
-    bond_number: bond?.bond_number || '',
-    bond_name: bond?.bond_name || '',
-    description: bond?.description || '',
-    bond_amount: bond?.bond_amount || 0,
-    premium_amount: bond?.premium_amount || 0,
-    bond_percentage: bond?.bond_percentage || 100,
-    principal_name: bond?.principal_name || '',
-    obligee_name: bond?.obligee_name || '',
-    surety_company: bond?.surety_company || '',
-    surety_contact_name: bond?.surety_contact_name || '',
-    surety_contact_phone: bond?.surety_contact_phone || '',
-    surety_contact_email: bond?.surety_contact_email || '',
-    agent_company: bond?.agent_company || '',
-    agent_name: bond?.agent_name || '',
-    agent_phone: bond?.agent_phone || '',
-    agent_email: bond?.agent_email || '',
-    effective_date: bond?.effective_date || '',
-    expiry_date: bond?.expiry_date || '',
-    issued_date: bond?.issued_date || '',
-    status: bond?.status || 'pending',
-    notes: bond?.notes || '',
-    claim_made: bond?.claim_made || false,
-    claim_amount: bond?.claim_amount || 0,
-    claim_date: bond?.claim_date || '',
-    claim_status: bond?.claim_status || null,
-    claim_notes: bond?.claim_notes || ''
+  const form = useForm<BondFormValues>({
+    resolver: zodResolver(bondFormSchema),
+    defaultValues: bondFormDefaults(bond),
   });
+  const claimMade = form.watch('claim_made');
 
   useEffect(() => {
     loadProjects();
@@ -76,43 +51,11 @@ export const BondForm: React.FC<BondFormProps> = ({ bond, onClose, onSave }) => 
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async (values: BondFormValues) => {
     setLoading(true);
 
     try {
-      const bondData = {
-        company_id: userProfile?.company_id,
-        created_by: userProfile?.id,
-        project_id: formData.project_id || null,
-        bond_type: formData.bond_type,
-        bond_number: formData.bond_number,
-        bond_name: formData.bond_name,
-        description: formData.description,
-        bond_amount: parseFloat(formData.bond_amount.toString()) || 0,
-        premium_amount: parseFloat(formData.premium_amount.toString()) || 0,
-        bond_percentage: parseFloat(formData.bond_percentage.toString()) || 100,
-        principal_name: formData.principal_name,
-        obligee_name: formData.obligee_name,
-        surety_company: formData.surety_company,
-        surety_contact_name: formData.surety_contact_name,
-        surety_contact_phone: formData.surety_contact_phone,
-        surety_contact_email: formData.surety_contact_email,
-        agent_company: formData.agent_company,
-        agent_name: formData.agent_name,
-        agent_phone: formData.agent_phone,
-        agent_email: formData.agent_email,
-        effective_date: formData.effective_date || null,
-        expiry_date: formData.expiry_date || null,
-        issued_date: formData.issued_date || null,
-        status: formData.status,
-        notes: formData.notes,
-        claim_made: formData.claim_made,
-        claim_amount: parseFloat(formData.claim_amount.toString()) || 0,
-        claim_date: formData.claim_date || null,
-        claim_status: formData.claim_status,
-        claim_notes: formData.claim_notes
-      };
+      const bondData = buildBondData(values, userProfile);
 
       if (bond) {
         const { error } = await supabase
@@ -152,10 +95,6 @@ export const BondForm: React.FC<BondFormProps> = ({ bond, onClose, onSave }) => 
     }
   };
 
-  const handleInputChange = (field: string, value: any) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
-  };
-
   const bondTypes = [
     { value: 'performance', label: 'Performance Bond' },
     { value: 'payment', label: 'Payment Bond' },
@@ -193,316 +132,67 @@ export const BondForm: React.FC<BondFormProps> = ({ bond, onClose, onSave }) => 
       description={bond ? 'Update bond information' : 'Add a new bond for tracking'}
       size="xl"
     >
-      <form onSubmit={handleSubmit} className="space-y-6">
+      <Form {...form}>
+      <form onSubmit={form.handleSubmit(handleSubmit)} noValidate className="space-y-6" aria-label="Bond form">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="project_id">Project</Label>
-              <Select
-                value={formData.project_id}
-                onValueChange={(value) => handleInputChange('project_id', value)}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select project (optional)" />
-                </SelectTrigger>
-                <SelectContent>
-                  {projects.map(project => (
-                    <SelectItem key={project.id} value={project.id}>
-                      {project.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+          <SelectFormField
+            control={form.control}
+            name="project_id"
+            label="Project"
+            placeholder="Select project (optional)"
+            options={projects.map((p) => ({ value: p.id, label: p.name }))}
+          />
+          <SelectFormField control={form.control} name="bond_type" label="Bond Type *" placeholder="Select bond type" options={bondTypes} />
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <InputFormField control={form.control} name="bond_number" label="Bond Number *" placeholder="Bond number" aria-required="true" />
+          <InputFormField control={form.control} name="bond_name" label="Bond Name *" placeholder="Descriptive name for the bond" aria-required="true" />
+        </div>
+
+        <TextareaFormField control={form.control} name="description" label="Description" placeholder="Detailed description of the bond" rows={3} />
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <InputFormField control={form.control} name="bond_amount" label="Bond Amount *" type="number" step="0.01" min="0" placeholder="0.00" aria-required="true" />
+          <InputFormField control={form.control} name="premium_amount" label="Premium Amount" type="number" step="0.01" min="0" placeholder="0.00" />
+          <InputFormField control={form.control} name="bond_percentage" label="Coverage Percentage" type="number" step="0.01" min="0" max="100" placeholder="100.00" />
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <InputFormField control={form.control} name="principal_name" label="Principal (Contractor) *" placeholder="The contractor name" aria-required="true" />
+          <InputFormField control={form.control} name="obligee_name" label="Obligee (Project Owner) *" placeholder="The project owner/beneficiary" aria-required="true" />
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <InputFormField control={form.control} name="surety_company" label="Surety Company *" placeholder="Insurance/surety company name" aria-required="true" />
+          <InputFormField control={form.control} name="surety_contact_name" label="Surety Contact" placeholder="Contact person at surety company" />
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <InputFormField control={form.control} name="surety_contact_phone" label="Surety Phone" placeholder="Phone number" />
+          <InputFormField control={form.control} name="surety_contact_email" label="Surety Email" type="email" placeholder="Email address" />
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <InputFormField control={form.control} name="effective_date" label="Effective Date *" type="date" aria-required="true" />
+          <InputFormField control={form.control} name="expiry_date" label="Expiry Date *" type="date" aria-required="true" />
+          <SelectFormField control={form.control} name="status" label="Status" placeholder="Select status" options={statuses} />
+        </div>
+
+        <div className="space-y-4">
+          <CheckboxFormField control={form.control} name="claim_made" label="Claim Made Against This Bond" />
+
+          {claimMade && (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 border rounded-lg">
+              <InputFormField control={form.control} name="claim_amount" label="Claim Amount" type="number" step="0.01" min="0" placeholder="0.00" />
+              <InputFormField control={form.control} name="claim_date" label="Claim Date" type="date" />
+              <SelectFormField control={form.control} name="claim_status" label="Claim Status" placeholder="Select claim status" options={claimStatuses} />
+              <TextareaFormField control={form.control} name="claim_notes" label="Claim Notes" placeholder="Notes about the claim" rows={3} className="md:col-span-3" />
             </div>
+          )}
+        </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="bond_type">Bond Type *</Label>
-              <Select
-                value={formData.bond_type}
-                onValueChange={(value) => handleInputChange('bond_type', value)}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select bond type" />
-                </SelectTrigger>
-                <SelectContent>
-                  {bondTypes.map(type => (
-                    <SelectItem key={type.value} value={type.value}>
-                      {type.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="bond_number">Bond Number *</Label>
-              <Input
-                id="bond_number"
-                value={formData.bond_number}
-                onChange={(e) => handleInputChange('bond_number', e.target.value)}
-                placeholder="Bond number"
-                required
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="bond_name">Bond Name *</Label>
-              <Input
-                id="bond_name"
-                value={formData.bond_name}
-                onChange={(e) => handleInputChange('bond_name', e.target.value)}
-                placeholder="Descriptive name for the bond"
-                required
-              />
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="description">Description</Label>
-            <Textarea
-              id="description"
-              value={formData.description}
-              onChange={(e) => handleInputChange('description', e.target.value)}
-              placeholder="Detailed description of the bond"
-              rows={3}
-            />
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="bond_amount">Bond Amount *</Label>
-              <Input
-                id="bond_amount"
-                type="number"
-                step="0.01"
-                min="0"
-                value={formData.bond_amount}
-                onChange={(e) => handleInputChange('bond_amount', e.target.value)}
-                placeholder="0.00"
-                required
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="premium_amount">Premium Amount</Label>
-              <Input
-                id="premium_amount"
-                type="number"
-                step="0.01"
-                min="0"
-                value={formData.premium_amount}
-                onChange={(e) => handleInputChange('premium_amount', e.target.value)}
-                placeholder="0.00"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="bond_percentage">Coverage Percentage</Label>
-              <Input
-                id="bond_percentage"
-                type="number"
-                step="0.01"
-                min="0"
-                max="100"
-                value={formData.bond_percentage}
-                onChange={(e) => handleInputChange('bond_percentage', e.target.value)}
-                placeholder="100.00"
-              />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="principal_name">Principal (Contractor) *</Label>
-              <Input
-                id="principal_name"
-                value={formData.principal_name}
-                onChange={(e) => handleInputChange('principal_name', e.target.value)}
-                placeholder="The contractor name"
-                required
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="obligee_name">Obligee (Project Owner) *</Label>
-              <Input
-                id="obligee_name"
-                value={formData.obligee_name}
-                onChange={(e) => handleInputChange('obligee_name', e.target.value)}
-                placeholder="The project owner/beneficiary"
-                required
-              />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="surety_company">Surety Company *</Label>
-              <Input
-                id="surety_company"
-                value={formData.surety_company}
-                onChange={(e) => handleInputChange('surety_company', e.target.value)}
-                placeholder="Insurance/surety company name"
-                required
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="surety_contact_name">Surety Contact</Label>
-              <Input
-                id="surety_contact_name"
-                value={formData.surety_contact_name}
-                onChange={(e) => handleInputChange('surety_contact_name', e.target.value)}
-                placeholder="Contact person at surety company"
-              />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="surety_contact_phone">Surety Phone</Label>
-              <Input
-                id="surety_contact_phone"
-                value={formData.surety_contact_phone}
-                onChange={(e) => handleInputChange('surety_contact_phone', e.target.value)}
-                placeholder="Phone number"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="surety_contact_email">Surety Email</Label>
-              <Input
-                id="surety_contact_email"
-                type="email"
-                value={formData.surety_contact_email}
-                onChange={(e) => handleInputChange('surety_contact_email', e.target.value)}
-                placeholder="Email address"
-              />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="effective_date">Effective Date *</Label>
-              <Input
-                id="effective_date"
-                type="date"
-                value={formData.effective_date}
-                onChange={(e) => handleInputChange('effective_date', e.target.value)}
-                required
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="expiry_date">Expiry Date *</Label>
-              <Input
-                id="expiry_date"
-                type="date"
-                value={formData.expiry_date}
-                onChange={(e) => handleInputChange('expiry_date', e.target.value)}
-                required
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="status">Status</Label>
-              <Select
-                value={formData.status}
-                onValueChange={(value) => handleInputChange('status', value)}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select status" />
-                </SelectTrigger>
-                <SelectContent>
-                  {statuses.map(status => (
-                    <SelectItem key={status.value} value={status.value}>
-                      {status.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-
-          <div className="space-y-4">
-            <div className="flex items-center space-x-2">
-              <Checkbox
-                id="claim_made"
-                checked={formData.claim_made}
-                onCheckedChange={(checked) => handleInputChange('claim_made', checked)}
-              />
-              <Label htmlFor="claim_made">Claim Made Against This Bond</Label>
-            </div>
-
-            {formData.claim_made && (
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 border rounded-lg">
-                <div className="space-y-2">
-                  <Label htmlFor="claim_amount">Claim Amount</Label>
-                  <Input
-                    id="claim_amount"
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    value={formData.claim_amount}
-                    onChange={(e) => handleInputChange('claim_amount', e.target.value)}
-                    placeholder="0.00"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="claim_date">Claim Date</Label>
-                  <Input
-                    id="claim_date"
-                    type="date"
-                    value={formData.claim_date}
-                    onChange={(e) => handleInputChange('claim_date', e.target.value)}
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="claim_status">Claim Status</Label>
-                  <Select
-                    value={formData.claim_status}
-                    onValueChange={(value) => handleInputChange('claim_status', value)}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select claim status" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {claimStatuses.map(status => (
-                        <SelectItem key={status.value} value={status.value}>
-                          {status.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="md:col-span-3 space-y-2">
-                  <Label htmlFor="claim_notes">Claim Notes</Label>
-                  <Textarea
-                    id="claim_notes"
-                    value={formData.claim_notes}
-                    onChange={(e) => handleInputChange('claim_notes', e.target.value)}
-                    placeholder="Notes about the claim"
-                    rows={3}
-                  />
-                </div>
-              </div>
-            )}
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="notes">Notes</Label>
-            <Textarea
-              id="notes"
-              value={formData.notes}
-              onChange={(e) => handleInputChange('notes', e.target.value)}
-              placeholder="Additional notes or comments"
-              rows={3}
-            />
-          </div>
+        <TextareaFormField control={form.control} name="notes" label="Notes" placeholder="Additional notes or comments" rows={3} />
 
         <div className="flex justify-end space-x-2">
           <Button type="button" variant="outline" onClick={onClose}>
@@ -513,6 +203,7 @@ export const BondForm: React.FC<BondFormProps> = ({ bond, onClose, onSave }) => 
           </Button>
         </div>
       </form>
+      </Form>
     </AccessibleModal>
   );
 };

@@ -4,7 +4,6 @@ import { useJournalEntries, useChartOfAccounts, useCreateJournalEntry, usePostJo
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import {
   Select,
@@ -33,19 +32,21 @@ import {
 import { VirtualizedTable } from '@/components/ui/virtual-table';
 import { Badge } from '@/components/ui/badge';
 import { Plus, Trash2, Calculator, CheckCircle } from 'lucide-react';
-import { formatCurrency, validateJournalEntry } from '@/utils/accountingUtils';
+import { formatCurrency } from '@/utils/accountingUtils';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { confirmAction } from "@/components/ui/confirm-dialog";
 import { Skeleton } from '@/components/ui/skeleton';
-
-interface JournalEntryLine {
-  id: string;
-  accountId: string;
-  accountName?: string;
-  debitAmount: number;
-  creditAmount: number;
-  description: string;
-}
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import {
+  buildJournalEntryPayload,
+  emptyJournalEntry,
+  journalEntryFormSchema,
+  newJournalLine,
+  type JournalEntryFormValues,
+  type JournalEntryLineValues,
+} from '@/lib/validations/accounting';
 
 export default function JournalEntries() {
   const { user } = useAuth();
@@ -62,53 +63,33 @@ export default function JournalEntries() {
   const createEntry = useCreateJournalEntry();
   const postEntry = usePostJournalEntry();
 
-  // Form state
-  const [formData, setFormData] = useState({
-    entryDate: new Date().toISOString().split('T')[0],
-    description: '',
-    memo: '',
-    lines: [] as JournalEntryLine[],
+  // Form state (US-268: react-hook-form + journalEntryFormSchema)
+  const form = useForm<JournalEntryFormValues>({
+    resolver: zodResolver(journalEntryFormSchema),
+    defaultValues: emptyJournalEntry(),
   });
+  const lines = form.watch('lines');
+  const lineErrors = form.formState.errors.lines;
+  const linesMessage =
+    (lineErrors as { message?: string } | undefined)?.message ?? lineErrors?.root?.message;
 
-  const [validationErrors, setValidationErrors] = useState<string[]>([]);
+  const setLines = (next: JournalEntryLineValues[]) =>
+    form.setValue('lines', next, { shouldValidate: form.formState.isSubmitted });
 
   // Add a new line
-  const addLine = () => {
-    const newLine: JournalEntryLine = {
-      id: Math.random().toString(36).substr(2, 9),
-      accountId: '',
-      debitAmount: 0,
-      creditAmount: 0,
-      description: '',
-    };
-    setFormData({
-      ...formData,
-      lines: [...formData.lines, newLine],
-    });
-  };
+  const addLine = () => setLines([...lines, newJournalLine()]);
 
   // Remove a line
-  const removeLine = (lineId: string) => {
-    setFormData({
-      ...formData,
-      lines: formData.lines.filter(line => line.id !== lineId),
-    });
-  };
+  const removeLine = (lineId: string) => setLines(lines.filter(line => line.id !== lineId));
 
   // Update a line
-  const updateLine = (lineId: string, updates: Partial<JournalEntryLine>) => {
-    setFormData({
-      ...formData,
-      lines: formData.lines.map(line =>
-        line.id === lineId ? { ...line, ...updates } : line
-      ),
-    });
-  };
+  const updateLine = (lineId: string, updates: Partial<JournalEntryLineValues>) =>
+    setLines(lines.map(line => (line.id === lineId ? { ...line, ...updates } : line)));
 
   // Calculate totals
   const calculateTotals = () => {
-    const totalDebits = formData.lines.reduce((sum, line) => sum + (Number(line.debitAmount) || 0), 0);
-    const totalCredits = formData.lines.reduce((sum, line) => sum + (Number(line.creditAmount) || 0), 0);
+    const totalDebits = lines.reduce((sum, line) => sum + (Number(line.debitAmount) || 0), 0);
+    const totalCredits = lines.reduce((sum, line) => sum + (Number(line.creditAmount) || 0), 0);
     const difference = totalDebits - totalCredits;
     const isBalanced = Math.abs(difference) < 0.01;
 
@@ -118,49 +99,11 @@ export default function JournalEntries() {
   const totals = calculateTotals();
 
   // Handle form submission
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    // Validate
-    const validation = validateJournalEntry({
-      entryDate: formData.entryDate,
-      description: formData.description,
-      lines: formData.lines.map(l => ({
-        accountId: l.accountId,
-        debitAmount: Number(l.debitAmount) || 0,
-        creditAmount: Number(l.creditAmount) || 0,
-        description: l.description,
-      })),
-    });
-
-    if (!validation.isValid) {
-      setValidationErrors(validation.errors);
-      return;
-    }
-
-    setValidationErrors([]);
-
-    // Submit
-    await createEntry.mutateAsync({
-      companyId,
-      entryDate: formData.entryDate,
-      description: formData.description,
-      memo: formData.memo,
-      lines: formData.lines.map(line => ({
-        accountId: line.accountId,
-        debitAmount: Number(line.debitAmount) || 0,
-        creditAmount: Number(line.creditAmount) || 0,
-        description: line.description,
-      })),
-    });
+  const handleSubmit = async (values: JournalEntryFormValues) => {
+    await createEntry.mutateAsync(buildJournalEntryPayload(companyId, values));
 
     // Reset form
-    setFormData({
-      entryDate: new Date().toISOString().split('T')[0],
-      description: '',
-      memo: '',
-      lines: [],
-    });
+    form.reset({ ...emptyJournalEntry(), lines: [] });
     setIsCreateDialogOpen(false);
   };
 
@@ -198,37 +141,15 @@ export default function JournalEntries() {
           <DialogTrigger asChild>
             <Button
               aria-label="Create new journal entry"
-              onClick={() => {
-                setFormData({
-                  entryDate: new Date().toISOString().split('T')[0],
-                  description: '',
-                  memo: '',
-                  lines: [
-                    {
-                      id: Math.random().toString(36).substr(2, 9),
-                      accountId: '',
-                      debitAmount: 0,
-                      creditAmount: 0,
-                      description: '',
-                    },
-                    {
-                      id: Math.random().toString(36).substr(2, 9),
-                      accountId: '',
-                      debitAmount: 0,
-                      creditAmount: 0,
-                      description: '',
-                    },
-                  ],
-                });
-                setValidationErrors([]);
-              }}
+              onClick={() => form.reset(emptyJournalEntry())}
             >
               <Plus className="mr-2 h-4 w-4" aria-hidden="true" />
               New Journal Entry
             </Button>
           </DialogTrigger>
           <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto" aria-describedby="journal-entry-description">
-            <form onSubmit={handleSubmit} aria-label="Create journal entry form">
+            <Form {...form}>
+            <form onSubmit={form.handleSubmit(handleSubmit)} noValidate aria-label="Create journal entry form">
               <DialogHeader>
                 <DialogTitle>Create Journal Entry</DialogTitle>
                 <DialogDescription id="journal-entry-description">
@@ -237,65 +158,53 @@ export default function JournalEntries() {
               </DialogHeader>
 
               <div className="space-y-4 py-4">
-                {/* Validation Errors */}
-                {validationErrors.length > 0 && (
-                  <Alert variant="destructive">
-                    <AlertDescription>
-                      <ul className="list-disc pl-4">
-                        {validationErrors.map((error, idx) => (
-                          <li key={idx}>{error}</li>
-                        ))}
-                      </ul>
-                    </AlertDescription>
-                  </Alert>
-                )}
-
                 {/* Header Fields */}
                 <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="entryDate">Entry Date *</Label>
-                    <Input
-                      id="entryDate"
-                      type="date"
-                      value={formData.entryDate}
-                      onChange={(e) =>
-                        setFormData({ ...formData, entryDate: e.target.value })
-                      }
-                      required
-                      aria-required="true"
-                    />
-                  </div>
+                  <FormField
+                    control={form.control}
+                    name="entryDate"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Entry Date *</FormLabel>
+                        <FormControl>
+                          <Input type="date" aria-required="true" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
-                  <div className="space-y-2">
-                    <Label htmlFor="description">Description *</Label>
-                    <Input
-                      id="description"
-                      value={formData.description}
-                      onChange={(e) =>
-                        setFormData({ ...formData, description: e.target.value })
-                      }
-                      placeholder="E.g., Monthly depreciation"
-                      required
-                      aria-required="true"
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="memo">Memo (Optional)</Label>
-                  <Textarea
-                    id="memo"
-                    value={formData.memo}
-                    onChange={(e) =>
-                      setFormData({ ...formData, memo: e.target.value })
-                    }
-                    placeholder="Additional notes..."
-                    rows={2}
+                  <FormField
+                    control={form.control}
+                    name="description"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Description *</FormLabel>
+                        <FormControl>
+                          <Input placeholder="E.g., Monthly depreciation" aria-required="true" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
                   />
                 </div>
 
+                <FormField
+                  control={form.control}
+                  name="memo"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Memo (Optional)</FormLabel>
+                      <FormControl>
+                        <Textarea placeholder="Additional notes..." rows={2} {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
                 {/* Journal Entry Lines */}
-                <fieldset className="space-y-2">
+                <fieldset className="space-y-2" aria-describedby={linesMessage ? 'journal-lines-error' : undefined}>
                   <div className="flex items-center justify-between">
                     <legend className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">Journal Entry Lines</legend>
                     <Button type="button" onClick={addLine} size="sm" variant="outline" aria-label="Add new journal entry line">
@@ -316,7 +225,12 @@ export default function JournalEntries() {
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {formData.lines.map((line, index) => (
+                        {lines.map((line, index) => {
+                          const accountError = lineErrors?.[index]?.accountId?.message;
+                          const amountError = lineErrors?.[index]?.debitAmount?.message;
+                          const accountErrorId = `journal-line-${line.id}-account-error`;
+                          const amountErrorId = `journal-line-${line.id}-amount-error`;
+                          return (
                           <TableRow key={line.id}>
                             <TableCell>
                               <Select
@@ -329,7 +243,12 @@ export default function JournalEntries() {
                                   });
                                 }}
                               >
-                                <SelectTrigger className="w-full" aria-label={`Select account for line ${index + 1}`}>
+                                <SelectTrigger
+                                  className="w-full"
+                                  aria-label={`Select account for line ${index + 1}`}
+                                  aria-invalid={accountError ? true : undefined}
+                                  aria-describedby={accountError ? accountErrorId : undefined}
+                                >
                                   <SelectValue placeholder="Select account" />
                                 </SelectTrigger>
                                 <SelectContent>
@@ -340,6 +259,11 @@ export default function JournalEntries() {
                                   ))}
                                 </SelectContent>
                               </Select>
+                              {accountError && (
+                                <p id={accountErrorId} className="text-sm font-medium text-destructive mt-1">
+                                  {accountError}
+                                </p>
+                              )}
                             </TableCell>
                             <TableCell>
                               <Input
@@ -348,6 +272,7 @@ export default function JournalEntries() {
                                   updateLine(line.id, { description: e.target.value })
                                 }
                                 placeholder="Line description"
+                                aria-label={`Description for line ${index + 1}`}
                               />
                             </TableCell>
                             <TableCell>
@@ -364,7 +289,15 @@ export default function JournalEntries() {
                                 }
                                 className="text-right"
                                 disabled={line.creditAmount > 0}
+                                aria-label={`Debit for line ${index + 1}`}
+                                aria-invalid={amountError ? true : undefined}
+                                aria-describedby={amountError ? amountErrorId : undefined}
                               />
+                              {amountError && (
+                                <p id={amountErrorId} className="text-sm font-medium text-destructive mt-1">
+                                  {amountError}
+                                </p>
+                              )}
                             </TableCell>
                             <TableCell>
                               <Input
@@ -380,6 +313,9 @@ export default function JournalEntries() {
                                 }
                                 className="text-right"
                                 disabled={line.debitAmount > 0}
+                                aria-label={`Credit for line ${index + 1}`}
+                                aria-invalid={amountError ? true : undefined}
+                                aria-describedby={amountError ? amountErrorId : undefined}
                               />
                             </TableCell>
                             <TableCell>
@@ -388,14 +324,15 @@ export default function JournalEntries() {
                                 variant="ghost"
                                 size="sm"
                                 onClick={() => removeLine(line.id)}
-                                disabled={formData.lines.length <= 2}
+                                disabled={lines.length <= 2}
                                 aria-label={`Remove line ${index + 1}`}
                               >
                                 <Trash2 className="h-4 w-4" aria-hidden="true" />
                               </Button>
                             </TableCell>
                           </TableRow>
-                        ))}
+                          );
+                        })}
                         {/* Totals Row */}
                         <TableRow className="bg-muted/50 font-semibold">
                           <TableCell colSpan={2} className="text-right">
@@ -423,8 +360,14 @@ export default function JournalEntries() {
                     </Table>
                   </div>
 
+                  {linesMessage && totals.isBalanced && (
+                    <p id="journal-lines-error" role="alert" className="text-sm font-medium text-destructive">
+                      {linesMessage}
+                    </p>
+                  )}
+
                   {!totals.isBalanced && (
-                    <Alert variant="destructive" role="alert">
+                    <Alert variant="destructive" role="alert" id={linesMessage ? 'journal-lines-error' : undefined}>
                       <AlertDescription>
                         Entry is not balanced. Debits must equal credits.
                         Difference: {formatCurrency(Math.abs(totals.difference))}
@@ -442,11 +385,12 @@ export default function JournalEntries() {
                 >
                   Cancel
                 </Button>
-                <Button type="submit" disabled={!totals.isBalanced || formData.lines.length < 2}>
+                <Button type="submit" disabled={!totals.isBalanced || lines.length < 2 || form.formState.isSubmitting}>
                   Create Entry
                 </Button>
               </DialogFooter>
             </form>
+            </Form>
           </DialogContent>
         </Dialog>
       </header>
