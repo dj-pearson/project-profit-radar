@@ -6430,3 +6430,17 @@ result and showed the success screen regardless. It checks now.
 
 Not covered: the calculator writes through an RPC, not an edge function, so a
 token can't gate it without moving that path.
+
+## US-352 and US-354: two policies that trusted any session
+
+`companies` still had the open INSERT policy that `20260903010000` scheduled
+to drop one release later. Nothing inserts into `companies` directly (the wizard
+uses `create_company_for_current_user`), so it's dropped, and a source-scan test
+fails if a direct insert appears.
+
+The `blog-images` write policies were named "Root admins can ..." and checked
+only that a session existed, so any customer could replace a published post's
+hero image. They now use the site-assets check, root_admin or admin, which
+matches who can open `/blog-manager`. That route admits company admins, which
+means a customer's admin can still edit the platform blog. That's a product
+decision for you.

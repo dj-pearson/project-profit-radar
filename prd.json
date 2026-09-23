@@ -5523,8 +5523,8 @@
         "OnboardingWizard still creates a company end-to-end (existing test or a manual run recorded in progress.txt)"
       ],
       "priority": 3,
-      "passes": false,
-      "notes": "PROPOSED 2026-09-09 (production-readiness audit, six parallel reviews: auth, security, page/data flows, UI/UX, SEO, ops)."
+      "passes": true,
+      "notes": "PROPOSED 2026-09-09 (production-readiness audit, six parallel reviews: auth, security, page/data flows, UI/UX, SEO, ops). || DONE 2026-09-23. Migration 20260923060000 drops 'Allow company creation for authenticated users'. Grep over src/, supabase/functions/ and Brikly-iOS found no direct insert or upsert into companies; src/lib/security/__tests__/companyCreationPath.test.ts now fails if one is added. OnboardingWizard creates the company through create_company_for_current_user (SECURITY DEFINER, runs as owner, needs no INSERT policy); its existing test 'creates the company through create_company_for_current_user' passes (6/6 in src/components/onboarding). Not run end-to-end against a live database from here."
     },
     {
       "id": "US-353",
@@ -5549,8 +5549,8 @@
         "A test as a non-admin user asserts upload to blog-images is refused"
       ],
       "priority": 3,
-      "passes": false,
-      "notes": "PROPOSED 2026-09-09 (production-readiness audit, six parallel reviews: auth, security, page/data flows, UI/UX, SEO, ops). Also for US-298 to record: trades (20250115000005:372-373) and the seven pseo_* tables (20260313000000) still carry FOR ALL USING (true) for authenticated."
+      "passes": true,
+      "notes": "PROPOSED 2026-09-09 (production-readiness audit, six parallel reviews: auth, security, page/data flows, UI/UX, SEO, ops). Also for US-298 to record: trades (20250115000005:372-373) and the seven pseo_* tables (20260313000000) still carry FOR ALL USING (true) for authenticated. || DONE 2026-09-23. Migration 20260923070000 replaces the three blog-images write policies (same names) with the site-assets check: TO authenticated, user_profiles.role in (root_admin, admin), USING and WITH CHECK on update. That matches who can reach the only uploader, BlogPostFormDialog on /blog-manager (SecureRoute root_admin, admin). OPEN QUESTION for the owner: /blog-manager admits company admins, so a customer's admin can still write the platform blog and its images; narrowing to root_admin means narrowing that route too. Test: supabase/tests/rls/blog_images_bucket.test.sql - before, a field_supervisor overwrites a blog image; after, they cannot insert, update or delete, everyone still reads, root_admin still uploads. The harness bootstrap now mirrors the own-row SELECT on user_profiles that production has."
     },
     {
       "id": "US-355",

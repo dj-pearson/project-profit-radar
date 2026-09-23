@@ -33,6 +33,12 @@ CREATE TABLE public.user_profiles (
   role public.user_role NOT NULL DEFAULT 'office_staff'
 );
 
+-- Policies that subquery user_profiles run as the caller. Production lets a
+-- user read at least their own row; mirror that much.
+ALTER TABLE public.user_profiles ENABLE ROW LEVEL SECURITY;
+GRANT SELECT ON public.user_profiles TO authenticated;
+CREATE POLICY own_profile ON public.user_profiles FOR SELECT TO authenticated USING (id = auth.uid());
+
 CREATE FUNCTION public.get_user_company(user_id uuid) RETURNS uuid
 LANGUAGE sql STABLE SECURITY DEFINER AS $$
   SELECT company_id FROM public.user_profiles WHERE id = user_id;
