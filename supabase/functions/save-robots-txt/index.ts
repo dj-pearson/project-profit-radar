@@ -1,6 +1,14 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.3";
 import { getCorsHeaders } from '../_shared/secure-cors.ts';
+import { validateBody } from '../_shared/validate-body.ts';
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
+
+// Request body (US-241), report mode by default - see _shared/validate-body.ts.
+const RobotsTxtSchema = z.object({
+  content: z.string().min(1).max(100_000),
+  domain: z.string().max(253).nullish(),
+}).passthrough();
 
 serve(async (req) => {
   const corsHeaders = getCorsHeaders(req);
@@ -27,7 +35,9 @@ serve(async (req) => {
         { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
-    const { content, domain } = await req.json();
+    const parsed = await validateBody(req, RobotsTxtSchema, { name: 'save-robots-txt' });
+    if (!parsed.ok) return parsed.response;
+    const { content, domain } = parsed.data;
     if (!content) {
       return new Response(JSON.stringify({ error: 'Content required' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });

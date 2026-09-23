@@ -2,6 +2,24 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { Resend } from "https://esm.sh/resend@2.0.0";
 import { getCorsHeaders } from '../_shared/secure-cors.ts';
 import { initializeAuthContext, errorResponse } from '../_shared/auth-helpers.ts';
+import { validateBody } from '../_shared/validate-body.ts';
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
+
+// Request body (US-241), report mode by default - see _shared/validate-body.ts.
+// incident is the row the client just inserted, so passthrough. severity and
+// incident_type are required because the subject line calls toUpperCase() and
+// replace() on them. MobileSafetyIncidentManager also sends emergency_services.
+const SafetyNotificationSchema = z.object({
+  incident: z.object({
+    id: z.string().max(64).optional(),
+    incident_type: z.string().min(1).max(100),
+    severity: z.string().min(1).max(32),
+    description: z.string().max(10_000).nullish(),
+    location_description: z.string().max(1000).nullish(),
+  }).passthrough(),
+  urgency: z.string().max(32).nullish(),
+  emergency_services: z.boolean().nullish(),
+}).passthrough();
 
 const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 
@@ -130,7 +148,9 @@ const handler = async (req: Request): Promise<Response> => {
 
     console.log('Safety notification request received');
     
-    const { incident, urgency }: SafetyNotificationRequest = await req.json();
+    const parsed = await validateBody(req, SafetyNotificationSchema, { name: 'send-safety-notification' });
+    if (!parsed.ok) return parsed.response;
+    const { incident, urgency } = parsed.data as unknown as SafetyNotificationRequest;
 
     if (!incident) {
       throw new Error('Incident data is required');

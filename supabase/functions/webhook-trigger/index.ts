@@ -5,6 +5,15 @@ import { serve } from 'https://deno.land/std@0.190.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.50.3'
 import { getCorsHeaders } from '../_shared/secure-cors.ts';
 import { requireInternalCaller } from '../_shared/internal-only.ts';
+import { validateBody } from '../_shared/validate-body.ts';
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
+
+// Request body (US-241), report mode by default - see _shared/validate-body.ts.
+const TriggerSchema = z.object({
+  event_type: z.string().min(1).max(100),
+  tenant_id: z.string().uuid(),
+  data: z.unknown().optional(),
+}).passthrough();
 
 serve(async (req) => {
   const corsHeaders = getCorsHeaders(req);
@@ -27,7 +36,9 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
 
-    const { event_type, tenant_id, data } = await req.json()
+    const parsed = await validateBody(req, TriggerSchema, { name: 'webhook-trigger' })
+    if (!parsed.ok) return parsed.response
+    const { event_type, tenant_id, data } = parsed.data
 
     if (!event_type || !tenant_id) {
       return new Response(

@@ -3,6 +3,18 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@14.21.0";
 import { initializeAuthContext, errorResponse } from '../_shared/auth-helpers.ts';
 import { getCorsHeaders } from '../_shared/secure-cors.ts';
+import { validateBody } from '../_shared/validate-body.ts';
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
+
+// Request body (US-241), report mode by default - see _shared/validate-body.ts.
+// An unknown tier or period used to reach pricing[tier][period] and 500 on a
+// TypeError.
+const ConversionSchema = z.object({
+  company_id: z.string().uuid(),
+  subscription_tier: z.enum(['starter', 'professional', 'enterprise']),
+  billing_period: z.enum(['monthly', 'annual']),
+  payment_method_id: z.string().regex(/^pm_[A-Za-z0-9_]+$/).max(255).optional(),
+}).passthrough();
 
 interface ConversionRequest {
   company_id: string;
@@ -34,7 +46,9 @@ serve(async (req) => {
     if (!user?.email) throw new Error("User not authenticated");
     logStep("User authenticated", { userId: user.id });
 
-    const { company_id, subscription_tier, billing_period, payment_method_id }: ConversionRequest = await req.json();
+    const parsed = await validateBody(req, ConversionSchema, { name: 'convert-trial-to-paid' });
+    if (!parsed.ok) return parsed.response;
+    const { company_id, subscription_tier, billing_period, payment_method_id } = parsed.data as ConversionRequest;
     logStep("Conversion request", {  company_id, subscription_tier, billing_period });
 
     // Verify user has access to this company

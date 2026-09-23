@@ -2,6 +2,23 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts"
 import { initializeAuthContext, errorResponse } from '../_shared/auth-helpers.ts'
 import { getCorsHeaders } from '../_shared/secure-cors.ts';
+import { validateBody } from '../_shared/validate-body.ts';
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
+
+// Request body (US-241), report mode by default - see _shared/validate-body.ts.
+// iterations drives the genetic-algorithm loop, so it is bounded; the web
+// slider sends 50-500.
+const ScheduleRequestSchema = z.object({
+  tenant_id: z.string().uuid(),
+  schedule_name: z.string().min(1).max(200),
+  schedule_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  project_ids: z.array(z.string().uuid()).min(1).max(500),
+  user_id: z.string().uuid().nullish(),
+  minimize_travel: z.boolean().optional(),
+  balance_workload: z.boolean().optional(),
+  respect_skills: z.boolean().optional(),
+  iterations: z.number().int().min(1).max(1000).optional(),
+}).passthrough();
 
 interface ScheduleRequest {
   tenant_id: string
@@ -54,6 +71,9 @@ serve(async (req) => {
     const { user, supabase: supabaseClient } = authContext
     console.log('[AUTO-SCHEDULING] User authenticated', { userId: user.id })
 
+    const parsed = await validateBody(req, ScheduleRequestSchema, { name: 'auto-scheduling' })
+    if (!parsed.ok) return parsed.response
+
     const {
       tenant_id,
       schedule_name,
@@ -64,7 +84,7 @@ serve(async (req) => {
       balance_workload = true,
       respect_skills = true,
       iterations = 100
-    } = await req.json() as ScheduleRequest
+    } = parsed.data as ScheduleRequest
 
     if (!tenant_id || !schedule_name || !schedule_date || !project_ids || project_ids.length === 0) {
       throw new Error('Missing required fields')

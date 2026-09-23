@@ -5,6 +5,22 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.3";
 import { initializeAuthContext, errorResponse } from '../_shared/auth-helpers.ts';
 import { createServiceClient } from '../_shared/service-client.ts';
 import { getCorsHeaders } from '../_shared/secure-cors.ts';
+import { validateBody } from '../_shared/validate-body.ts';
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
+
+// Request body (US-241), report mode by default - see _shared/validate-body.ts.
+// metric_value is non-negative on purpose: 'record' adds it to the period's
+// running usage_metrics total, so a negative value lowered a company's own
+// metered bill. A string was worse - existing + '5' concatenates.
+const UsageBillingSchema = z.object({
+  action: z.enum(['record', 'get_usage', 'get_summary', 'calculate_bill', 'generate_invoice', 'get_limits']),
+  metric_name: z.string().min(1).max(100).optional(),
+  metric_value: z.number().finite().nonnegative().max(1_000_000_000).optional(),
+  unit_type: z.string().min(1).max(50).optional(),
+  billing_period_start: z.string().max(64).refine((s) => !Number.isNaN(Date.parse(s)), 'must be a date').optional(),
+  billing_period_end: z.string().max(64).refine((s) => !Number.isNaN(Date.parse(s)), 'must be a date').optional(),
+  metadata: z.record(z.unknown()).optional(),
+}).passthrough();
 
 const logStep = (step: string, details?: Record<string, unknown>) => {
   const detailsStr = details ? ` - ${JSON.stringify(details)}` : '';
@@ -88,7 +104,9 @@ serve(async (req) => {
 
     const tier = (company?.subscription_tier as keyof typeof TIER_LIMITS) || 'starter';
 
-    const body: UsageRequest = await req.json();
+    const parsed = await validateBody(req, UsageBillingSchema, { name: 'usage-billing' });
+    if (!parsed.ok) return parsed.response;
+    const body = parsed.data as UsageRequest;
     const { action } = body;
 
     logStep('Processing action', { action, companyId, tier });

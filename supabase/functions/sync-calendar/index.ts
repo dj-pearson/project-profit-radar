@@ -2,6 +2,15 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { initializeAuthContext, errorResponse } from '../_shared/auth-helpers.ts';
 import { getCorsHeaders } from '../_shared/secure-cors.ts';
+import { validateBody } from '../_shared/validate-body.ts';
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
+
+// Request body (US-241), report mode by default - see _shared/validate-body.ts.
+// company_id is accepted but ignored; the handler derives it from the caller.
+const SyncCalendarSchema = z.object({
+  integration_id: z.string().uuid(),
+  company_id: z.string().uuid().nullish(),
+}).passthrough();
 
 const logStep = (step: string, details?: any) => {
   console.log(`[SYNC-CALENDAR] ${step}${details ? ` - ${JSON.stringify(details)}` : ''}`);
@@ -25,7 +34,9 @@ serve(async (req) => {
     if (!user?.id) throw new Error("User not authenticated");
     logStep("User authenticated", { userId: user.id });
 
-    const body = await req.json();
+    const parsed = await validateBody(req, SyncCalendarSchema, { name: 'sync-calendar' });
+    if (!parsed.ok) return parsed.response;
+    const body = parsed.data;
     const { integration_id } = body;
 
     if (!integration_id) {

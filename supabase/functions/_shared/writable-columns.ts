@@ -51,6 +51,29 @@ export const WRITABLE_SCHEDULE_COLUMNS = [
   'schedule_name', 'target_url', 'audit_type', 'frequency', 'is_active',
 ] as const;
 
+/** Columns a caller may set on `failed_payment_recovery_settings`
+ *  (failed-payment-recovery, update_settings). The handler upserts on a
+ *  service-role client with onConflict: company_id, so a company_id in the
+ *  body picked WHICH tenant's row was overwritten. */
+export const WRITABLE_RECOVERY_SETTINGS_COLUMNS = [
+  'is_enabled', 'retry_intervals', 'max_retry_attempts',
+  'send_failure_notification', 'notify_admin_on_failure',
+  'auto_pause_subscription_after_attempts', 'auto_cancel_subscription_after_days',
+  'grace_period_days', 'failure_email_subject', 'failure_email_body',
+  'dunning_email_intervals', 'final_warning_days_before_cancel',
+] as const;
+
+/** Columns a caller may set on `payment_reminder_settings`
+ *  (send-payment-reminder, update_settings). Same service-role upsert shape
+ *  as the recovery settings above. */
+export const WRITABLE_REMINDER_SETTINGS_COLUMNS = [
+  'is_enabled', 'days_before_due', 'days_after_due',
+  'email_from_name', 'email_reply_to', 'include_payment_link',
+  'upcoming_subject', 'upcoming_body', 'due_today_subject', 'due_today_body',
+  'overdue_subject', 'overdue_body', 'final_notice_subject', 'final_notice_body',
+  'send_sms', 'sms_template', 'max_reminders_per_invoice', 'pause_on_partial_payment',
+] as const;
+
 /** Copy only the allowlisted keys out of a request body. */
 export function pickAllowed(
   body: Record<string, unknown>,

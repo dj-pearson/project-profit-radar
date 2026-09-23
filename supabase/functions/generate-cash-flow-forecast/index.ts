@@ -6,6 +6,19 @@ import { getCorsHeaders } from '../_shared/secure-cors.ts';
 import { enforceRateLimit, RATE_LIMITS } from '../_shared/rate-limiter.ts';
 import { createServiceClient } from '../_shared/service-client.ts';
 import { resolveCompanyScope } from '../_shared/caller-company.ts';
+import { validateBody } from '../_shared/validate-body.ts';
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
+
+// Request body (US-241), report mode by default - see _shared/validate-body.ts.
+// forecast_period drives a one-row-per-day loop, so it is bounded. The web
+// client sends it as a string ('30' | '90' | '180').
+const ForecastSchema = z.object({
+  forecast_period: z.union([
+    z.number().int().min(1).max(365),
+    z.string().regex(/^\d{1,3}$/),
+  ]).optional(),
+  company_id: z.string().uuid().nullish(),
+}).passthrough();
 
 const logStep = (step: string, details?: any) => {
   const detailsStr = details ? ` - ${JSON.stringify(details)}` : '';
@@ -38,7 +51,9 @@ export default async (req: Request) => {
       createServiceClient(), user.id, 'generate-cash-flow-forecast', RATE_LIMITS.AI, corsHeaders,
     );
     if (limited) return limited;
-    const body = await req.json();
+    const parsed = await validateBody(req, ForecastSchema, { name: 'generate-cash-flow-forecast' });
+    if (!parsed.ok) return parsed.response;
+    const body = parsed.data;
     const { forecast_period } = body;
 
     // The forecast is read and written on a service-role client, so the company
@@ -55,7 +70,7 @@ export default async (req: Request) => {
     }
     const company_id = scope.companyId;
 
-    const days = parseInt(forecast_period) || 30;
+    const days = parseInt(String(forecast_period)) || 30;
     logStep("Generating forecast", { company_id, days });
 
     // Use service role for reads and writes

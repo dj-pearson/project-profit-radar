@@ -5,6 +5,18 @@ import { getCorsHeaders } from '../_shared/secure-cors.ts';
 import { sendEmail, type EmailOptions } from '../_shared/ses-email-service.ts';
 import { enforceRateLimit, RATE_LIMITS } from '../_shared/rate-limiter.ts';
 import { createServiceClient } from '../_shared/service-client.ts';
+import { validateBody } from '../_shared/validate-body.ts';
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
+
+// Request body (US-241), report mode by default - see _shared/validate-body.ts.
+const recipient = z.string().email().max(320);
+const SendEmailSchema = z.object({
+  to: z.union([recipient, z.array(recipient).min(1).max(50)]),
+  subject: z.string().min(1).max(500),
+  message: z.string().max(100_000).nullish(),
+  text: z.string().max(100_000).nullish(),
+  template: z.string().max(100).nullish(),
+}).passthrough();
 
 const logStep = (step: string, details?: any) => {
   const detailsStr = details ? ` - ${JSON.stringify(details)}` : '';
@@ -61,8 +73,9 @@ export default async (req: Request) => {
     );
     if (emailLimited) return emailLimited;
 
-    const body = await req.json();
-    const { to, subject, message, text, template } = body;
+    const parsed = await validateBody(req, SendEmailSchema, { name: 'send-email' });
+    if (!parsed.ok) return parsed.response;
+    const { to, subject, message, text, template } = parsed.data;
 
     if (!to || !subject) {
       return errorResponse('to and subject are required', 400, req);

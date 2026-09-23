@@ -2,6 +2,21 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@14.21.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.3";
 import { getCorsHeaders } from '../_shared/secure-cors.ts';
+import { validateBody } from '../_shared/validate-body.ts';
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
+
+// Request body (US-241), report mode by default - see _shared/validate-body.ts.
+// The web client (StripePaymentProcessor) also sends currency, project_id and
+// client_email, which this handler ignores; passthrough keeps them legal.
+const CheckoutSchema = z.object({
+  invoice_id: z.string().min(1).max(255),
+  // Cents. Not .int(): the client sends customAmount * 100, and 19.99 * 100 is
+  // 1998.9999999999998 in floating point.
+  amount: z.number().positive().finite().max(100_000_000),
+  description: z.string().max(500).nullish(),
+  success_url: z.string().url().max(2048).optional(),
+  cancel_url: z.string().url().max(2048).optional(),
+}).passthrough();
 
 const logStep = (step: string, details?: any) => {
   const detailsStr = details ? ` - ${JSON.stringify(details)}` : '';
@@ -39,7 +54,9 @@ serve(async (req) => {
 
             logStep("User authenticated", { userId: user.id, email: user.email });
 
-    const { invoice_id, amount, description, success_url, cancel_url } = await req.json();
+    const parsed = await validateBody(req, CheckoutSchema, { name: 'enhanced-create-checkout' });
+    if (!parsed.ok) return parsed.response;
+    const { invoice_id, amount, description, success_url, cancel_url } = parsed.data;
     if (!invoice_id || !amount) {
       throw new Error("invoice_id and amount are required");
     }

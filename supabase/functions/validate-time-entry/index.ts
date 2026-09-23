@@ -2,6 +2,27 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { initializeAuthContext, errorResponse } from '../_shared/auth-helpers.ts';
 import { getCorsHeaders } from '../_shared/secure-cors.ts';
+import { validateBody } from '../_shared/validate-body.ts';
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
+
+// Request body (US-241), report mode by default - see _shared/validate-body.ts.
+// Mirrors validateTimeEntry() below rather than replacing it. That function
+// already rejects with its own 400 { error, details } shape, which clients may
+// read, and in report mode validateBody hands the raw body through - so the
+// hand-written checks stay the enforcement until INPUT_VALIDATION_MODE flips.
+// Keep the two in step.
+const TimeEntrySchema = z.object({
+  project_id: z.string().min(1).max(64),
+  task_description: z.string().max(500).refine((s) => s.trim().length > 0, 'cannot be empty'),
+  start_time: z.string().max(64).refine((s) => !Number.isNaN(Date.parse(s)), 'must be a date'),
+  end_time: z.string().max(64).nullish(),
+  break_duration: z.number().min(0).max(480).optional(),
+  notes: z.string().max(1000).nullish(),
+  location_latitude: z.number().min(-90).max(90).optional(),
+  location_longitude: z.number().min(-180).max(180).optional(),
+  location_accuracy: z.number().min(0).optional(),
+  location_address: z.string().max(500).nullish(),
+}).passthrough();
 
 /**
  * Server-side validation schema for time entries
@@ -148,7 +169,9 @@ serve(async (req) => {
     console.log('[VALIDATE-TIME-ENTRY] User authenticated', { userId: user.id });
 
     // Parse request body
-    const body = await req.json();
+    const parsed = await validateBody(req, TimeEntrySchema, { name: 'validate-time-entry' });
+    if (!parsed.ok) return parsed.response;
+    const body = parsed.data;
     console.log('[VALIDATE-TIME-ENTRY] Validating time entry:', {  user_id: user.id });
 
     // Validate input

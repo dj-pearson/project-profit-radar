@@ -2,6 +2,16 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts"
 import { initializeAuthContext, errorResponse } from '../_shared/auth-helpers.ts'
 import { getCorsHeaders } from '../_shared/secure-cors.ts'
+import { validateBody } from '../_shared/validate-body.ts';
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
+
+// Request body (US-241), report mode by default - see _shared/validate-body.ts.
+// action stays a string: an unknown one already gets this handler's own 400.
+const PaymentRemindersSchema = z.object({
+  tenant_id: z.string().uuid(),
+  action: z.string().max(64).optional(),
+  invoice_id: z.string().uuid().optional(),
+}).passthrough();
 
 serve(async (req) => {
   const corsHeaders = getCorsHeaders(req)
@@ -18,7 +28,9 @@ serve(async (req) => {
     const { user, supabase: supabaseClient } = authContext
     console.log('[PAYMENT-REMINDERS] User authenticated', { userId: user.id })
 
-    const { tenant_id, action, invoice_id } = await req.json()
+    const parsed = await validateBody(req, PaymentRemindersSchema, { name: 'payment-reminders' })
+    if (!parsed.ok) return parsed.response
+    const { tenant_id, action, invoice_id } = parsed.data
 
     if (!tenant_id) {
       return new Response(
@@ -31,7 +43,7 @@ serve(async (req) => {
       case 'check_pending_reminders':
         return await checkPendingReminders(supabaseClient, tenant_id)
       case 'send_reminder':
-        return await sendReminder(supabaseClient, tenant_id, invoice_id)
+        return await sendReminder(supabaseClient, tenant_id, invoice_id as string)
       case 'generate_reminders':
         return await generateReminders(supabaseClient, tenant_id)
       default:

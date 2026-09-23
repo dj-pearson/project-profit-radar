@@ -2,6 +2,17 @@
 // Helps webhook consumers verify that payloads are from Brikly
 
 import { serve } from 'https://deno.land/std@0.190.0/http/server.ts'
+import { validateBody } from '../_shared/validate-body.ts';
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
+
+// Request body (US-241), report mode by default - see _shared/validate-body.ts.
+// payload is either the raw string a consumer received or its parsed JSON;
+// the handler stringifies the latter, so both stay legal.
+const VerifySchema = z.object({
+  payload: z.unknown(),
+  signature: z.string().min(1).max(512),
+  secret: z.string().min(1).max(1024),
+}).passthrough();
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -15,7 +26,9 @@ serve(async (req) => {
   }
 
   try {
-    const { payload, signature, secret } = await req.json()
+    const parsed = await validateBody(req, VerifySchema, { name: 'webhook-verify' })
+    if (!parsed.ok) return parsed.response
+    const { payload, signature, secret } = parsed.data
 
     if (!payload || !signature || !secret) {
       return new Response(

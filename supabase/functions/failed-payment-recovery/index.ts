@@ -6,6 +6,39 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.3";
 import { initializeAuthContext, errorResponse } from '../_shared/auth-helpers.ts';
 import { requireInternalCaller } from '../_shared/internal-only.ts';
 import { getCorsHeaders } from '../_shared/secure-cors.ts';
+import { validateBody } from '../_shared/validate-body.ts';
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
+import { pickAllowed, WRITABLE_RECOVERY_SETTINGS_COLUMNS } from '../_shared/writable-columns.ts';
+
+// Request body (US-241), report mode by default - see _shared/validate-body.ts.
+// Every settings field is nullable: the web client round-trips the row that
+// get_settings returned, and a cleared number input posts parseInt('') = NaN,
+// which JSON serialises as null.
+const nonNegInt = (max: number) => z.number().int().min(0).max(max).nullable().optional();
+const RecoverySettingsSchema = z.object({
+  is_enabled: z.boolean().nullable().optional(),
+  retry_intervals: z.array(z.number().int().min(0).max(8760)).max(50).nullable().optional(),
+  max_retry_attempts: nonNegInt(100),
+  send_failure_notification: z.boolean().nullable().optional(),
+  notify_admin_on_failure: z.boolean().nullable().optional(),
+  auto_pause_subscription_after_attempts: nonNegInt(100),
+  auto_cancel_subscription_after_days: nonNegInt(3650),
+  grace_period_days: nonNegInt(3650),
+  failure_email_subject: z.string().max(500).nullable().optional(),
+  failure_email_body: z.string().max(20_000).nullable().optional(),
+  dunning_email_intervals: z.array(z.number().int().min(0).max(3650)).max(50).nullable().optional(),
+  final_warning_days_before_cancel: nonNegInt(3650),
+}).passthrough();
+
+const RecoverySchema = z.object({
+  action: z.enum([
+    'process_failures', 'retry_payment', 'send_dunning_email', 'get_settings',
+    'update_settings', 'get_dashboard', 'pause_dunning', 'resume_dunning',
+  ]),
+  failure_id: z.string().uuid().optional(),
+  subscriber_id: z.string().uuid().optional(),
+  settings: RecoverySettingsSchema.optional(),
+}).passthrough();
 
 const logStep = (step: string, details?: Record<string, unknown>) => {
   const detailsStr = details ? ` - ${JSON.stringify(details)}` : '';
@@ -65,7 +98,9 @@ serve(async (req) => {
       }
     }
 
-    const body: RecoveryRequest = await req.json();
+    const parsed = await validateBody(req, RecoverySchema, { name: 'failed-payment-recovery' });
+    if (!parsed.ok) return parsed.response;
+    const body = parsed.data as RecoveryRequest;
     const { action } = body;
 
     // `const targetCompanyId = body.company_id || companyId` used to be here,
@@ -543,8 +578,14 @@ async function updateSettings(
   const { data, error } = await supabase
     .from('failed_payment_recovery_settings')
     .upsert({
+      // Allowlisted, and company_id AFTER the spread. It used to come first,
+      // with the raw settings spread after it, on a service-role client - so a
+      // settings.company_id in the body won and rewrote another tenant's
+      // dunning settings (onConflict: company_id). The web client round-trips
+      // the whole row, company_id included, so that was one edited request
+      // away.
+      ...pickAllowed((settings ?? {}) as Record<string, unknown>, WRITABLE_RECOVERY_SETTINGS_COLUMNS),
       company_id: companyId,
-      ...settings
     }, {
       onConflict: 'company_id'
     })

@@ -5,6 +5,20 @@ import Stripe from "https://esm.sh/stripe@14.21.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.3";
 import { initializeAuthContext, errorResponse } from '../_shared/auth-helpers.ts';
 import { getCorsHeaders } from '../_shared/secure-cors.ts';
+import { validateBody } from '../_shared/validate-body.ts';
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
+
+// Request body (US-241). Report mode by default: a failing parse is logged and
+// the raw body goes through - see _shared/validate-body.ts. new_tier is an
+// allowlist rather than any string because apply_change writes it straight to
+// companies.subscription_tier, and an unknown tier was quietly priced at the
+// starter rate (PRICING[key] || 14900) before being stored.
+const ProrationSchema = z.object({
+  action: z.enum(['calculate', 'preview_change', 'apply_change', 'get_history']),
+  new_tier: z.enum(['starter', 'professional', 'enterprise']).optional(),
+  new_period: z.enum(['monthly', 'annual']).optional(),
+  effective_date: z.string().max(64).refine((s) => !Number.isNaN(Date.parse(s)), 'must be a date').optional(),
+}).passthrough();
 
 const logStep = (step: string, details?: Record<string, unknown>) => {
   const detailsStr = details ? ` - ${JSON.stringify(details)}` : '';
@@ -92,7 +106,9 @@ serve(async (req) => {
       .eq('stripe_customer_id', company.stripe_customer_id)
       .single();
 
-    const body: ProrationRequest = await req.json();
+    const parsed = await validateBody(req, ProrationSchema, { name: 'calculate-proration' });
+    if (!parsed.ok) return parsed.response;
+    const body = parsed.data as ProrationRequest;
     const { action } = body;
 
     logStep('Processing action', { action, companyId });

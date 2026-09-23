@@ -2,6 +2,22 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { initializeAuthContext, errorResponse } from '../_shared/auth-helpers.ts';
 import { getCorsHeaders } from '../_shared/secure-cors.ts';
+import { validateBody } from '../_shared/validate-body.ts';
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
+
+// Request body (US-241), report mode by default - see _shared/validate-body.ts.
+// action stays a string: an unknown one is this handler's own error path.
+const RouteSchema = z.object({
+  action: z.string().max(64),
+  company_id: z.string().uuid().optional(),
+  transaction_id: z.string().uuid().optional(),
+  manual_assignment: z.object({
+    project_id: z.string().uuid().nullish(),
+    cost_code_id: z.string().uuid().nullish(),
+    notes: z.string().max(2000).nullish(),
+    assigned_by: z.string().uuid().nullish(),
+  }).passthrough().optional(),
+}).passthrough();
 
 interface RoutingRule {
   id: string;
@@ -47,7 +63,14 @@ serve(async (req) => {
     const { user, supabase } = authContext;
     console.log("[QUICKBOOKS-ROUTE] User authenticated", { userId: user.id });
 
-    const { action, company_id, transaction_id, manual_assignment } = await req.json();
+    const parsed = await validateBody(req, RouteSchema, { name: 'quickbooks-route-transactions' });
+    if (!parsed.ok) return parsed.response;
+    // company_id / transaction_id are per-action requirements; each branch has
+    // always handled its own missing value, so they stay loosely typed here.
+    const { action, company_id, transaction_id, manual_assignment } = parsed.data as {
+      action: string; company_id: string; transaction_id: string;
+      manual_assignment?: Record<string, unknown>;
+    };
 
     switch (action) {
       case 'process_single':
@@ -57,7 +80,13 @@ serve(async (req) => {
         return await processBatchTransactions(corsHeaders, supabase, company_id);
 
       case 'manual_assign':
-        return await manualAssignment(corsHeaders, supabase, transaction_id, manual_assignment);
+        // assigned_by is the caller, not whatever the body names. It is written
+        // to the transaction and to the routing audit event, and the web client
+        // already sends user.id here, so nothing legitimate changes.
+        return await manualAssignment(corsHeaders, supabase, transaction_id, {
+          ...(manual_assignment ?? {}),
+          assigned_by: user.id,
+        });
 
       case 'import_qb_transactions':
         return await importQuickBooksTransactions(corsHeaders, supabase, company_id);

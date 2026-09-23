@@ -51,6 +51,22 @@ const reads = [...validated, ...unvalidated];
 
 // Functions already converted. Never remove a name from here.
 const VALIDATED = new Set([
+  // 2026-09-23 batch, money and integrations first. failed-payment-recovery
+  // and send-payment-reminder also moved their settings upsert onto a column
+  // allowlist (a body company_id chose which tenant's row a service-role
+  // upsert overwrote). apply-timeline-optimization's optimization_id is
+  // optional because its only caller never sends one.
+  'calculate-proration', 'convert-trial-to-paid', 'enhanced-create-checkout',
+  'failed-payment-recovery', 'generate-1099s', 'payment-reminders',
+  'send-payment-reminder', 'usage-billing', 'generate-cash-flow-forecast',
+  'quickbooks-connect', 'quickbooks-disconnect', 'quickbooks-callback',
+  'quickbooks-route-transactions', 'quickbooks-sync',
+  'google-calendar-auth', 'outlook-calendar-auth', 'sync-calendar', 'verify-domain',
+  'webhook-trigger', 'webhook-verify', 'webhook-delivery',
+  'daily-reports', 'validate-time-entry', 'apply-timeline-optimization',
+  'auto-scheduling', 'workflow-execution', 'manage-alert-rules', 'manage-schedules',
+  'send-safety-notification', 'save-llms-txt', 'save-meta-settings', 'save-robots-txt',
+  'send-email',
   // The twelve SEO functions that fetch a URL out of the request body. Their
   // schemas share _shared/audit-url.ts, so what counts as a fetchable target is
   // defined once rather than twelve times.
@@ -86,7 +102,7 @@ const VALIDATED = new Set([
   'sso-ldap-auth', 'sso-manage', 'sso-oauth-init', 'sso-saml-init',
   'time-tracking', 'verify-auth-otp', 'verify-mfa-login', 'verify-mfa-setup',
 ]);
-const BASELINE = 103;
+const BASELINE = 70;
 
 console.log('Edge-function input-validation guard (US-241)');
 console.log(`  functions taking a JSON body:  ${reads.length}`);

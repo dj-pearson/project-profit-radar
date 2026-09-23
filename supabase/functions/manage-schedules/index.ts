@@ -3,6 +3,25 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { initializeAuthContext, errorResponse } from '../_shared/auth-helpers.ts';
 import { getCorsHeaders } from '../_shared/secure-cors.ts';
 import { WRITABLE_SCHEDULE_COLUMNS, pickAllowed } from '../_shared/writable-columns.ts';
+import { validateBody } from '../_shared/validate-body.ts';
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
+import { auditUrl } from '../_shared/audit-url.ts';
+
+// Request body (US-241), report mode by default - see _shared/validate-body.ts.
+// target_url is STORED and fetched on a timer by run-scheduled-audit, so it
+// goes through the same auditUrl rule as the twelve SEO fetchers - one bad
+// value here is a recurring request, not a single one.
+const SchedulesSchema = z.object({
+  action: z.enum(['list', 'create', 'update', 'delete']),
+  schedule_id: z.string().uuid().optional(),
+  schedule_data: z.object({
+    schedule_name: z.string().min(1).max(200).optional(),
+    target_url: auditUrl.optional(),
+    audit_type: z.string().max(64).nullish(),
+    frequency: z.enum(['hourly', 'daily', 'weekly', 'monthly']).optional(),
+    is_active: z.boolean().optional(),
+  }).passthrough().optional(),
+}).passthrough();
 
 const logStep = (step: string, details?: any) => {
   const detailsStr = details ? ` - ${JSON.stringify(details)}` : '';
@@ -32,7 +51,11 @@ serve(async (req) => {
         { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
-    const { action, schedule_id, schedule_data } = await req.json();
+    const parsed = await validateBody(req, SchedulesSchema, { name: 'manage-schedules' });
+    if (!parsed.ok) return parsed.response;
+    const { action, schedule_id, schedule_data } = parsed.data as {
+      action: string; schedule_id?: string; schedule_data: Record<string, any>;
+    };
     logStep("Processing action", {  action, schedule_id });
 
     switch (action) {

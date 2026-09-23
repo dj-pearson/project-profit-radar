@@ -2,6 +2,24 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.3";
 import { getCorsHeaders } from '../_shared/secure-cors.ts';
 import { WRITABLE_ALERT_RULE_COLUMNS, pickAllowed } from '../_shared/writable-columns.ts';
+import { validateBody } from '../_shared/validate-body.ts';
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
+
+// Request body (US-241), report mode by default - see _shared/validate-body.ts.
+// An unknown action already gets this handler's 400, so the enum changes no
+// status code.
+const AlertRulesSchema = z.object({
+  action: z.enum(['list', 'create', 'update', 'delete']),
+  rule_id: z.string().uuid().optional(),
+  rule_data: z.object({
+    rule_name: z.string().min(1).max(200).optional(),
+    rule_type: z.string().max(100).optional(),
+    threshold: z.union([z.number().finite(), z.string().max(64)]).nullish(),
+    severity: z.string().max(32).nullish(),
+    notification_channel: z.string().max(64).nullish(),
+    is_active: z.boolean().optional(),
+  }).passthrough().optional(),
+}).passthrough();
 
 serve(async (req) => {
   const corsHeaders = getCorsHeaders(req);
@@ -28,7 +46,11 @@ serve(async (req) => {
         { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
-    const { action, rule_id, rule_data } = await req.json();
+    const parsed = await validateBody(req, AlertRulesSchema, { name: 'manage-alert-rules' });
+    if (!parsed.ok) return parsed.response;
+    const { action, rule_id, rule_data } = parsed.data as {
+      action: string; rule_id?: string; rule_data: Record<string, any>;
+    };
 
     switch (action) {
       case 'list': {

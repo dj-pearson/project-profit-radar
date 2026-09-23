@@ -2,6 +2,16 @@
 import { initializeAuthContext, verifyCompanyAccess, errorResponse } from '../_shared/auth-helpers.ts';
 import { createServiceClient } from '../_shared/service-client.ts';
 import { getCorsHeaders, handleCorsPreflightRequest } from '../_shared/secure-cors.ts';
+import { validateBody } from '../_shared/validate-body.ts';
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
+
+// Request body (US-241), report mode by default - see _shared/validate-body.ts.
+// user_id is sent by WorkflowExecutionService and ignored here.
+const ExecuteWorkflowSchema = z.object({
+  workflow_id: z.string().uuid(),
+  trigger_data: z.unknown().optional(),
+  user_id: z.string().uuid().optional(),
+}).passthrough();
 
 interface WorkflowStep {
   id: string;
@@ -46,7 +56,9 @@ Deno.serve(async (req) => {
     // workflow_id returns no row and never reaches these writes.
     const stepClient = createServiceClient();
 
-    const { workflow_id, trigger_data } = await req.json() as WorkflowExecution;
+    const parsed = await validateBody(req, ExecuteWorkflowSchema, { name: 'workflow-execution' });
+    if (!parsed.ok) return parsed.response;
+    const { workflow_id, trigger_data } = parsed.data as WorkflowExecution;
 
     logStep('Executing workflow', { workflow_id, trigger_data });
 

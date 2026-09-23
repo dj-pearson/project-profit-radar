@@ -8,6 +8,21 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts"
 import { initializeAuthContext, errorResponse } from '../_shared/auth-helpers.ts';
 import { getCorsHeaders } from '../_shared/secure-cors.ts';
 import { getQuickBooksTokenKey, tokenColumnsForWrite } from '../_shared/quickbooks-token-crypto.ts';
+import { validateBody } from '../_shared/validate-body.ts';
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
+
+// Request body (US-241), report mode by default - see _shared/validate-body.ts.
+// realm_id is interpolated into the Intuit API path
+// (/v3/company/<realm_id>/companyinfo/...), so it is held to the digits Intuit
+// issues. It is nullish because the web callback page forwards
+// searchParams.get('realmId'), which is null when Intuit omits it.
+const CallbackSchema = z.object({
+  code: z.string().min(1).max(2048),
+  state: z.string().min(1).max(512),
+  realm_id: z.string().regex(/^\d{1,32}$/).nullish(),
+  company_id: z.string().uuid(),
+  redirect_uri: z.string().url().max(2048),
+}).passthrough();
 
 interface TokenResponse {
   access_token: string;
@@ -45,7 +60,9 @@ serve(async (req) => {
     const { user, supabase: supabaseClient } = authContext;
     console.log("[QUICKBOOKS-CALLBACK] User authenticated", { userId: user.id });
 
-    const { code, state, realm_id, company_id, redirect_uri } = await req.json()
+    const parsed = await validateBody(req, CallbackSchema, { name: 'quickbooks-callback' })
+    if (!parsed.ok) return parsed.response
+    const { code, state, realm_id, company_id, redirect_uri } = parsed.data
 
     // Validate required parameters
     if (!code || !state || !company_id || !redirect_uri) {

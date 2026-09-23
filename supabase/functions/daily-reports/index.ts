@@ -1,6 +1,26 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { initializeAuthContext, errorResponse, successResponse, safeErrorResponse } from '../_shared/auth-helpers.ts';
 import { getCorsHeaders } from '../_shared/secure-cors.ts';
+import { validateBody } from '../_shared/validate-body.ts';
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
+
+// POST body (US-241), report mode by default - see _shared/validate-body.ts.
+// action is optional and free-form: an unknown or missing one already falls
+// through to this handler's 404, and an enum would turn that into a 400.
+const reportText = z.string().max(10_000).nullish();
+const DailyReportSchema = z.object({
+  action: z.string().max(32).optional(),
+  project_id: z.string().uuid().nullish(),
+  reportId: z.string().uuid().optional(),
+  date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullish(),
+  work_performed: reportText,
+  weather_conditions: reportText,
+  materials_delivered: reportText,
+  equipment_used: reportText,
+  delays_issues: reportText,
+  safety_incidents: reportText,
+  crew_count: z.number().int().min(0).max(10_000).nullish(),
+}).passthrough();
 
 const logStep = (step: string, details?: any) => {
   console.log(`[DAILY-REPORTS] ${step}${details ? ` - ${JSON.stringify(details)}` : ''}`);
@@ -68,7 +88,9 @@ serve(async (req) => {
     }
 
     if (method === "POST") {
-      const body = await req.json();
+      const parsed = await validateBody(req, DailyReportSchema, { name: 'daily-reports' });
+      if (!parsed.ok) return parsed.response;
+      const body = parsed.data;
       const { action } = body;
 
       if (action === "list") {

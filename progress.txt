@@ -6972,3 +6972,11 @@ carries one. 52 pages lost their own h1 block and pass description and
 headerActions instead. Pages with no title keep the Brikly h1 fallback.
 TS 1483 -> 1484: the existing TS2589 in useSupabaseMutation.ts is reported
 twice again, no new error. Open: the format module and its eslint rule.
+
+## US-241 - Zod on edge functions (batch)
+33 more functions validate their body through _shared/validate-body.ts
+(report mode until INPUT_VALIDATION_MODE=enforce). Baseline 103 -> 70.
+Two cross-tenant writes fixed outright: failed-payment-recovery and
+send-payment-reminder let a body's company_id overwrite another company's
+settings on a service-role upsert. Found, not fixed: verify-domain has no
+ownership check and no auth.

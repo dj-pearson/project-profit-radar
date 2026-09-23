@@ -10,6 +10,13 @@ import { createServiceClient } from '../_shared/service-client.ts';
 import {
   CLEARED_TOKEN_COLUMNS, getQuickBooksTokenKey, loadQuickBooksTokens,
 } from '../_shared/quickbooks-token-crypto.ts';
+import { validateBody } from '../_shared/validate-body.ts';
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
+
+// Request body (US-241), report mode by default - see _shared/validate-body.ts.
+const DisconnectSchema = z.object({
+  company_id: z.string().uuid(),
+}).passthrough();
 
 serve(async (req) => {
   const corsHeaders = getCorsHeaders(req);
@@ -27,7 +34,9 @@ serve(async (req) => {
     const { user, supabase: supabaseClient } = authContext;
     console.log("[QUICKBOOKS-DISCONNECT] User authenticated", { userId: user.id });
 
-    const { company_id } = await req.json()
+    const parsed = await validateBody(req, DisconnectSchema, { name: 'quickbooks-disconnect' })
+    if (!parsed.ok) return parsed.response
+    const { company_id } = parsed.data
 
     if (!company_id) {
       throw new Error('Company ID is required')

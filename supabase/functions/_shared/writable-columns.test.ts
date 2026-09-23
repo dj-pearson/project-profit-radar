@@ -4,6 +4,8 @@ import {
   WRITABLE_TIME_ENTRY_COLUMNS,
   WRITABLE_ALERT_RULE_COLUMNS,
   WRITABLE_SCHEDULE_COLUMNS,
+  WRITABLE_RECOVERY_SETTINGS_COLUMNS,
+  WRITABLE_REMINDER_SETTINGS_COLUMNS,
   pickAllowed,
   SELF_SIGNUP_ROLE,
   ASSIGNABLE_INVITE_ROLES,
@@ -33,6 +35,8 @@ describe('writable-column allowlists', () => {
     time_entries: WRITABLE_TIME_ENTRY_COLUMNS,
     seo_alert_rules: WRITABLE_ALERT_RULE_COLUMNS,
     seo_monitoring_schedules: WRITABLE_SCHEDULE_COLUMNS,
+    failed_payment_recovery_settings: WRITABLE_RECOVERY_SETTINGS_COLUMNS,
+    payment_reminder_settings: WRITABLE_REMINDER_SETTINGS_COLUMNS,
   };
 
   for (const [table, columns] of Object.entries(lists)) {
@@ -59,6 +63,20 @@ describe('writable-column allowlists', () => {
     // total_hours is computed from start/end by the stop handler.
     expect(WRITABLE_TIME_ENTRY_COLUMNS as readonly string[]).not.toContain('total_hours');
   });
+});
+
+describe('settings upserts keep the caller\'s own company (US-241)', () => {
+  // Both handlers upsert on a service-role client with onConflict: company_id.
+  // They used to write { company_id: companyId, ...settings }, so a
+  // settings.company_id in the body won and chose another tenant's row.
+  for (const fn of ['failed-payment-recovery', 'send-payment-reminder']) {
+    it(`${fn} puts company_id after the allowlisted settings`, async () => {
+      const { readFileSync } = await import('node:fs');
+      const src = readFileSync(`supabase/functions/${fn}/index.ts`, 'utf8');
+      expect(src, 'raw settings spread is back').not.toMatch(/\.\.\.settings\b/);
+      expect(src).toMatch(/\.\.\.pickAllowed\([^\n]*SETTINGS_COLUMNS\),\s*\n\s*company_id: companyId,/);
+    });
+  }
 });
 
 describe('pickAllowed', () => {

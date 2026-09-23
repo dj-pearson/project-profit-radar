@@ -2,6 +2,19 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { initializeAuthContext, errorResponse } from '../_shared/auth-helpers.ts';
 import { getCorsHeaders } from '../_shared/secure-cors.ts';
+import { validateBody } from '../_shared/validate-body.ts';
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
+
+// Request body (US-241), report mode by default - see _shared/validate-body.ts.
+// optimization_id is OPTIONAL on purpose, and that is a finding rather than a
+// preference: the only caller (TimelineOptimization.tsx) sends company_id and
+// `optimizations` and never an optimization_id, so this update has been
+// matching on id = undefined. Requiring it would log every real request.
+const ApplyOptimizationSchema = z.object({
+  optimization_id: z.string().uuid().optional(),
+  company_id: z.string().uuid(),
+  optimizations: z.unknown().optional(),
+}).passthrough();
 
 serve(async (req) => {
   const corsHeaders = getCorsHeaders(req);
@@ -18,7 +31,9 @@ serve(async (req) => {
     const { user, supabase: supabaseClient } = authContext;
     console.log("[APPLY-TIMELINE-OPT] User authenticated", { userId: user.id });
 
-    const { optimization_id, company_id } = await req.json();
+    const parsed = await validateBody(req, ApplyOptimizationSchema, { name: 'apply-timeline-optimization' });
+    if (!parsed.ok) return parsed.response;
+    const { optimization_id, company_id } = parsed.data;
 
     // Update the optimization status to "applied" with site isolation
     const { error: updateError } = await supabaseClient

@@ -1,6 +1,27 @@
 import { serve } from 'https://deno.land/std@0.190.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.50.3';
 import { getCorsHeaders } from '../_shared/secure-cors.ts';
+import { validateBody } from '../_shared/validate-body.ts';
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
+import { describeAuditUrl } from '../_shared/audit-url-rules.ts';
+
+// Request body (US-241), report mode by default - see _shared/validate-body.ts.
+// verifyDNS() fetches https://<domain>, so the domain is held to a bare
+// hostname (an optional http(s):// prefix and trailing slash are tolerated,
+// because verifyDNS strips them and tenants.custom_domain may carry them) and
+// run through the same private-host blocklist as the SEO fetchers. No path,
+// port or credentials.
+const VerifyDomainSchema = z.object({
+  tenant_id: z.string().uuid(),
+  domain: z
+    .string()
+    .max(300)
+    .regex(/^(?:https?:\/\/)?[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)+\/?$/, 'must be a bare hostname')
+    .refine(
+      (d) => describeAuditUrl(`https://${d.replace(/^https?:\/\//, '').replace(/\/$/, '')}`) === null,
+      'host is loopback, private or link-local',
+    ),
+}).passthrough();
 
 interface VerifyDomainRequest {
   tenant_id: string;
@@ -75,7 +96,9 @@ serve(async (req) => {
     const supabase = createClient(supabaseUrl, supabaseKey);
 
     // Parse request body
-    const { tenant_id, domain }: VerifyDomainRequest = await req.json();
+    const parsed = await validateBody(req, VerifyDomainSchema, { name: 'verify-domain' });
+    if (!parsed.ok) return parsed.response;
+    const { tenant_id, domain } = parsed.data as VerifyDomainRequest;
 
     if (!tenant_id || !domain) {
       return new Response(

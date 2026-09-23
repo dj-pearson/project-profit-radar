@@ -12,6 +12,14 @@ import {
   mapPurchase, mapPayment, expenseChanges,
   type MappingContext, type Unmatched, type ImportedExpense,
 } from '../_shared/quickbooks-mapping.ts';
+import { validateBody } from '../_shared/validate-body.ts';
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
+
+// Request body (US-241), report mode by default - see _shared/validate-body.ts.
+const SyncSchema = z.object({
+  company_id: z.string().uuid(),
+  sync_type: z.enum(['full', 'incremental']).optional(),
+}).passthrough();
 
 interface QuickBooksAPIResponse {
   QueryResponse?: {
@@ -136,7 +144,9 @@ serve(async (req) => {
     const { user, supabase: supabaseClient } = authContext;
     console.log(`[QUICKBOOKS-SYNC] User authenticated: ${user.id}`);
 
-    const { company_id, sync_type = 'incremental' } = await req.json()
+    const parsed = await validateBody(req, SyncSchema, { name: 'quickbooks-sync' })
+    if (!parsed.ok) return parsed.response
+    const { company_id, sync_type = 'incremental' } = parsed.data
 
     console.log(`Starting ${sync_type} sync for company: ${company_id}`)
 

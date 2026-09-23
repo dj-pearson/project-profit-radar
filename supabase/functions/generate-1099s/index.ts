@@ -2,6 +2,18 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { initializeAuthContext, errorResponse } from '../_shared/auth-helpers.ts';
 import { getCorsHeaders } from '../_shared/secure-cors.ts';
+import { validateBody } from '../_shared/validate-body.ts';
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
+
+// Request body (US-241), report mode by default - see _shared/validate-body.ts.
+// tax_year was used as `tax_year + 1` for the filing deadlines, so a string
+// year produced '20251-01-31'.
+const Generate1099Schema = z.object({
+  tax_year: z.number().int().min(2000).max(2100),
+  contractor_ids: z.array(z.string().uuid()).max(5000).optional(),
+  include_zero_amounts: z.boolean().optional(),
+  preview_only: z.boolean().optional(),
+}).passthrough();
 
 interface Generate1099Request {
   tax_year: number;
@@ -43,7 +55,9 @@ serve(async (req) => {
     if (!user?.email) throw new Error("User not authenticated");
     logStep("User authenticated", { userId: user.id });
 
-    const requestData: Generate1099Request = await req.json();
+    const parsed = await validateBody(req, Generate1099Schema, { name: 'generate-1099s' });
+    if (!parsed.ok) return parsed.response;
+    const requestData = parsed.data as Generate1099Request;
     logStep("Request data received", {
       tax_year: requestData.tax_year,
       contractor_count: requestData.contractor_ids?.length

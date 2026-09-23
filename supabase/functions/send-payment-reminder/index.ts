@@ -6,6 +6,39 @@ import { getCorsHeaders } from '../_shared/secure-cors.ts';
 import { initializeAuthContext } from '../_shared/auth-helpers.ts';
 import { requireInternalCaller } from '../_shared/internal-only.ts';
 import { dispatchReminder, type ReminderBody } from './dispatch.ts';
+import { validateBody } from '../_shared/validate-body.ts';
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
+import { pickAllowed, WRITABLE_REMINDER_SETTINGS_COLUMNS } from '../_shared/writable-columns.ts';
+
+// Request body (US-241), report mode by default - see _shared/validate-body.ts.
+// action stays a string here: dispatchReminder owns the unknown-action 400 and
+// its test pins that shape. company_id is accepted but never trusted
+// (see dispatch.ts).
+const ReminderSettingsSchema = z.object({
+  is_enabled: z.boolean().nullable().optional(),
+  days_before_due: z.array(z.number().int().min(0).max(365)).max(50).nullable().optional(),
+  days_after_due: z.array(z.number().int().min(0).max(365)).max(50).nullable().optional(),
+  email_from_name: z.string().max(200).nullable().optional(),
+  email_reply_to: z.string().max(320).nullable().optional(),
+  include_payment_link: z.boolean().nullable().optional(),
+  upcoming_subject: z.string().max(500).nullable().optional(),
+  upcoming_body: z.string().max(20_000).nullable().optional(),
+  due_today_subject: z.string().max(500).nullable().optional(),
+  due_today_body: z.string().max(20_000).nullable().optional(),
+  overdue_subject: z.string().max(500).nullable().optional(),
+  overdue_body: z.string().max(20_000).nullable().optional(),
+  final_notice_subject: z.string().max(500).nullable().optional(),
+  final_notice_body: z.string().max(20_000).nullable().optional(),
+}).passthrough();
+
+const ReminderSchema = z.object({
+  action: z.string().max(64),
+  invoice_id: z.string().uuid().optional(),
+  company_id: z.string().uuid().optional(),
+  reminder_type: z.enum(['upcoming', 'due_today', 'overdue', 'final_notice', 'custom']).optional(),
+  custom_message: z.string().max(5000).optional(),
+  settings: ReminderSettingsSchema.optional(),
+}).passthrough();
 
 const logStep = (step: string, details?: Record<string, unknown>) => {
   const detailsStr = details ? ` - ${JSON.stringify(details)}` : '';
@@ -53,7 +86,9 @@ serve(async (req) => {
       auth: { persistSession: false }
     });
 
-    const body: ReminderRequest = await req.json();
+    const parsed = await validateBody(req, ReminderSchema, { name: 'send-payment-reminder' });
+    if (!parsed.ok) return parsed.response;
+    const body = parsed.data as ReminderRequest;
     logStep('Processing action', { action: body.action });
 
     const json = (payload: Record<string, unknown>, status: number) =>
@@ -455,8 +490,12 @@ async function updateSettings(
   const { data, error } = await supabase
     .from('payment_reminder_settings')
     .upsert({
+      // Allowlisted, company_id last. With company_id first and the raw
+      // settings spread after it, a settings.company_id in the body won on
+      // this service-role client and overwrote another tenant's reminder
+      // settings.
+      ...pickAllowed((settings ?? {}) as Record<string, unknown>, WRITABLE_REMINDER_SETTINGS_COLUMNS),
       company_id: companyId,
-      ...settings
     }, {
       onConflict: 'company_id'
     })
