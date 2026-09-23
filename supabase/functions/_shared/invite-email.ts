@@ -16,17 +16,11 @@
  * setSession, then updateUser). Reusing a proven path beats adding one.
  */
 import { sendEmail, getSiteEmailConfig } from './ses-email-service.ts';
+import { escapeHtml } from './html-escape.ts';
 
 const FRONTEND_URL = Deno.env.get('FRONTEND_URL') || 'https://brikly.net';
 
-export function escapeHtml(value: string): string {
-  return value
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#39;');
-}
+export { escapeHtml };
 
 export interface InviteEmailCopy {
   subject: string;

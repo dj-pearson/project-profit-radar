@@ -4,12 +4,13 @@ import { initializeAuthContext, errorResponse } from '../_shared/auth-helpers.ts
 import { getCorsHeaders } from '../_shared/secure-cors.ts';
 import { validateBody } from '../_shared/validate-body.ts';
 import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
+import { planTimelineOptimizationApply } from '../_shared/timeline-optimization-apply.ts';
 
 // Request body (US-241), report mode by default - see _shared/validate-body.ts.
-// optimization_id is OPTIONAL on purpose, and that is a finding rather than a
-// preference: the only caller (TimelineOptimization.tsx) sends company_id and
-// `optimizations` and never an optimization_id, so this update has been
-// matching on id = undefined. Requiring it would log every real request.
+// optimization_id is OPTIONAL on purpose: the only caller
+// (TimelineOptimization.tsx) sends company_id and `optimizations` and never an
+// optimization_id. See _shared/timeline-optimization-apply.ts for how each
+// shape is handled.
 const ApplyOptimizationSchema = z.object({
   optimization_id: z.string().uuid().optional(),
   company_id: z.string().uuid(),
@@ -33,24 +34,43 @@ serve(async (req) => {
 
     const parsed = await validateBody(req, ApplyOptimizationSchema, { name: 'apply-timeline-optimization' });
     if (!parsed.ok) return parsed.response;
-    const { optimization_id, company_id } = parsed.data;
+    const plan = planTimelineOptimizationApply(parsed.data, user.id);
 
-    // Update the optimization status to "applied" with site isolation
-    const { error: updateError } = await supabaseClient
-      .from('timeline_optimizations')
-      .update({
-        status: 'applied',
-        applied_at: new Date().toISOString()
-      })
-        // CRITICAL: Site isolation
-      .eq('id', optimization_id)
-      .eq('company_id', company_id);
-
-    if (updateError) {
-      throw new Error(`Failed to update optimization: ${updateError.message}`);
+    if (plan.kind === 'invalid') {
+      console.warn('[APPLY-TIMELINE-OPT] Nothing to apply', { userId: user.id });
+      return errorResponse(plan.error, 400, req);
     }
 
-    return new Response(JSON.stringify({ success: true }), {
+    // User-scoped client: RLS ("Staff can manage timeline optimizations")
+    // limits both writes to the caller's company; company_id is matched too.
+    let applied = 0;
+    if (plan.kind === 'update') {
+      const { data, error: updateError } = await supabaseClient
+        .from('timeline_optimizations')
+        .update(plan.values)
+        .eq('id', plan.id)
+        .eq('company_id', parsed.data.company_id)
+        .select('id');
+      if (updateError) {
+        throw new Error(`Failed to update optimization: ${updateError.message}`);
+      }
+      applied = data?.length ?? 0;
+    } else {
+      const { data, error: insertError } = await supabaseClient
+        .from('timeline_optimizations')
+        .insert(plan.rows)
+        .select('id');
+      if (insertError) {
+        throw new Error(`Failed to record optimizations: ${insertError.message}`);
+      }
+      applied = data?.length ?? 0;
+    }
+
+    return new Response(JSON.stringify({
+      success: true,
+      data: { applied },
+      timestamp: new Date().toISOString(),
+    }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
 

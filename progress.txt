@@ -6989,3 +6989,13 @@ project managers lose the finance ledger pages. Nav and dashboard quick
 actions were checked and ROUTE_ACCESS widened where they linked. A refusal
 redirects to /dashboard with a toast. Unreferenced modules 99 -> 98 because
 routeConfig.ts is now imported.
+
+## Found-bug fixes (from US-241 / US-405 reports)
+payment-reminders: helpers read an undefined corsHeaders, so every success
+path threw; they now take it as a parameter. send-safety-notification:
+incident fields are HTML-escaped (escapeHtml moved to _shared/html-escape.ts).
+apply-timeline-optimization always 500'd (no id from the caller, and a
+status column that doesn't exist); it now records applied optimizations
+from the body the web sends and returns 400 when it has nothing to apply.
+confirmAction: ConfirmDialogHost was already mounted; added the missing test.
+Response-envelope baseline 695 -> 694.

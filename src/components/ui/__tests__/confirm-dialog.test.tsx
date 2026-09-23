@@ -2,6 +2,7 @@ import { render, screen, act, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, it, expect, vi } from 'vitest';
 import { useState } from 'react';
+import { readFileSync } from 'node:fs';
 import {
   ConfirmDialog,
   ConfirmDialogHost,
@@ -74,6 +75,25 @@ describe('useConfirm + ConfirmDialogHost', () => {
     expect(screen.getByRole('button', { name: 'Close period' })).toBeInTheDocument();
     await user.keyboard('{Escape}');
     await expect(result).resolves.toBe(false);
+  });
+
+  it('confirmAction resolves true when the user confirms', async () => {
+    const user = userEvent.setup();
+    render(<ConfirmDialogHost />);
+    let result: Promise<boolean> | undefined;
+    act(() => {
+      result = confirmAction({ title: 'Delete GPT model?', destructive: true });
+    });
+    await screen.findByRole('alertdialog');
+    await user.click(screen.getByRole('button', { name: 'Delete' }));
+    await expect(result).resolves.toBe(true);
+  });
+
+  it('App mounts exactly one host, so confirmAction is not always false in the app', () => {
+    const app = readFileSync('src/App.tsx', 'utf8')
+      .replace(/\{\/\*[\s\S]*?\*\/\}/g, '')
+      .replace(/\/\*[\s\S]*?\*\//g, '');
+    expect(app.match(/<ConfirmDialogHost\s*\/>/g)).toHaveLength(1);
   });
 
   it('resolves false when no host is mounted, so nothing runs unconfirmed', async () => {

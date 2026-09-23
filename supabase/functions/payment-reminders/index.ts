@@ -13,6 +13,10 @@ const PaymentRemindersSchema = z.object({
   invoice_id: z.string().uuid().optional(),
 }).passthrough();
 
+// The helpers below build their own Responses, so the per-request CORS headers
+// are passed in; they are not in scope outside the serve() callback.
+type CorsHeaders = ReturnType<typeof getCorsHeaders>
+
 serve(async (req) => {
   const corsHeaders = getCorsHeaders(req)
   if (req.method === 'OPTIONS') {
@@ -41,11 +45,11 @@ serve(async (req) => {
 
     switch (action) {
       case 'check_pending_reminders':
-        return await checkPendingReminders(supabaseClient, tenant_id)
+        return await checkPendingReminders(supabaseClient, tenant_id, corsHeaders)
       case 'send_reminder':
-        return await sendReminder(supabaseClient, tenant_id, invoice_id as string)
+        return await sendReminder(supabaseClient, tenant_id, invoice_id as string, corsHeaders)
       case 'generate_reminders':
-        return await generateReminders(supabaseClient, tenant_id)
+        return await generateReminders(supabaseClient, tenant_id, corsHeaders)
       default:
         return new Response(
           JSON.stringify({ error: 'Invalid action. Use: check_pending_reminders, send_reminder, generate_reminders' }),
@@ -62,7 +66,7 @@ serve(async (req) => {
   }
 })
 
-async function checkPendingReminders(supabase: any, tenant_id: string) {
+async function checkPendingReminders(supabase: any, tenant_id: string, corsHeaders: CorsHeaders) {
   console.log('[PAYMENT-REMINDERS] Checking pending reminders', { tenant_id })
 
   // Get all pending reminders
@@ -111,7 +115,7 @@ async function checkPendingReminders(supabase: any, tenant_id: string) {
   )
 }
 
-async function sendReminder(supabase: any, tenant_id: string, invoice_id: string) {
+async function sendReminder(supabase: any, tenant_id: string, invoice_id: string, corsHeaders: CorsHeaders) {
   console.log('[PAYMENT-REMINDERS] Sending reminder for invoice:', invoice_id)
 
   if (!invoice_id) {
@@ -173,7 +177,7 @@ async function sendReminder(supabase: any, tenant_id: string, invoice_id: string
   )
 }
 
-async function generateReminders(supabase: any, tenant_id: string) {
+async function generateReminders(supabase: any, tenant_id: string, corsHeaders: CorsHeaders) {
   console.log('[PAYMENT-REMINDERS] Generating reminders', { tenant_id })
 
   // Get active billing automation rules

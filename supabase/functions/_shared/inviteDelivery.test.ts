@@ -111,6 +111,10 @@ describe('invite delivery (US-320, US-319)', () => {
     // and land in an HTML email.
     expect(source).toMatch(/escapeHtml\(args\.companyName\)/);
     expect(client).toMatch(/escapeHtml\(/);
-    expect(shared).toMatch(/function escapeHtml/);
+    // escapeHtml lives in html-escape.ts (pure, so vitest can import it) and
+    // invite-email.ts re-exports it for the callers that import it there.
+    expect(shared).toMatch(/import \{ escapeHtml \} from '\.\/html-escape\.ts'/);
+    expect(shared).toMatch(/export \{ escapeHtml \}/);
+    expect(code('supabase/functions/_shared/html-escape.ts')).toMatch(/function escapeHtml/);
   });
 });
