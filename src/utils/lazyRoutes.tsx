@@ -80,36 +80,22 @@ export const LazyQuickBooksCallback = createLazyRoute(() => import('@/pages/Quic
 export const LazyInvoices = createLazyRoute(() => import('@/pages/Invoices'));
 export const LazyARAgingReport = createLazyRoute(() => import('@/pages/ARAgingReport'));
 export const LazyExpenses = createLazyRoute(() => import('@/pages/Expenses'));
-export const LazyBudgetManagement = createLazyRoute(() => import('@/pages/BudgetManagement'));
-export const LazyFinancialReports = createLazyRoute(() => import('@/pages/FinancialReports'));
 export const LazyFinancialOverview = createLazyRoute(() => import('@/pages/FinancialOverview'));
 export const LazyUserProfile = createLazyRoute(() => import('@/pages/UserProfile'));
-export const LazyTaxManagement = createLazyRoute(() => import('@/pages/TaxManagement'));
 
 // CRM area pages
 export const LazyCRMDashboard = createLazyRoute(() => import('@/pages/CRMDashboard'));
-export const LazyLeadManagement = createLazyRoute(() => import('@/pages/LeadManagement'));
-export const LazyContactManagement = createLazyRoute(() => import('@/pages/ContactManagement'));
 
 // Operations pages
-export const LazyInventoryManagement = createLazyRoute(() => import('@/pages/InventoryManagement'));
-export const LazyVendorManagement = createLazyRoute(() => import('@/pages/VendorManagement'));
-export const LazyQualityControl = createLazyRoute(() => import('@/pages/QualityControl'));
 export const LazySafetyManagement = createLazyRoute(() => import('@/pages/SafetyManagement'));
 
 // People & HR pages
-export const LazyEmployeeManagement = createLazyRoute(() => import('@/pages/EmployeeManagement'));
 export const LazyTimeTracking = createLazyRoute(() => import('@/pages/TimeTracking'));
-export const LazyPayroll = createLazyRoute(() => import('@/pages/Payroll'));
-export const LazyPerformanceReviews = createLazyRoute(() => import('@/pages/PerformanceReviews'));
 
 // Admin pages
 export const LazyApprovalWorkflows = createLazyRoute(() => import('@/pages/admin/ApprovalWorkflows'));
 export const LazyCompanySettings = createLazyRoute(() => import('@/pages/CompanySettings'));
-export const LazyUserManagement = createLazyRoute(() => import('@/pages/UserManagement'));
-export const LazyIntegrations = createLazyRoute(() => import('@/pages/Integrations'));
 export const LazyAuditLogs = createLazyRoute(() => import('@/pages/AuditLogs'));
-export const LazyBackupRestore = createLazyRoute(() => import('@/pages/BackupRestore'));
 
 // Admin - Company & Security
 export const LazySecuritySettings = createLazyRoute(() => import('@/pages/SecuritySettings'));
@@ -245,33 +231,19 @@ export const lazyRouteConfigs: LazyRouteConfig[] = [
   // Financial pages
   { path: '/invoices', component: LazyInvoices },
   { path: '/expenses', component: LazyExpenses },
-  { path: '/budget', component: LazyBudgetManagement },
-  { path: '/financial-reports', component: LazyFinancialReports },
-  { path: '/tax-management', component: LazyTaxManagement },
   
   // CRM pages
   { path: '/crm', component: LazyCRMDashboard },
-  { path: '/leads', component: LazyLeadManagement },
-  { path: '/contacts', component: LazyContactManagement },
   
   // Operations pages
-  { path: '/inventory', component: LazyInventoryManagement },
-  { path: '/vendors', component: LazyVendorManagement },
-  { path: '/quality', component: LazyQualityControl },
   { path: '/safety', component: LazySafetyManagement },
   
   // People & HR pages
-  { path: '/employees', component: LazyEmployeeManagement },
   { path: '/time-tracking', component: LazyTimeTracking },
-  { path: '/payroll', component: LazyPayroll },
-  { path: '/performance', component: LazyPerformanceReviews },
   
   // Admin pages
   { path: '/company-settings', component: LazyCompanySettings },
-  { path: '/user-management', component: LazyUserManagement },
-  { path: '/integrations', component: LazyIntegrations },
   { path: '/audit-logs', component: LazyAuditLogs },
-  { path: '/backup-restore', component: LazyBackupRestore },
   
   // Utility pages
   { path: '/my-tasks', component: LazyMyTasks },

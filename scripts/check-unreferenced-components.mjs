@@ -11,8 +11,8 @@
  * static mock: a hardcoded tool list and six hardcoded layers with invented item
  * counts. src/pages/AdminHub.tsx, FinancialHub.tsx and OperationsHub.tsx are
  * 30-line duplicates of the ones under src/pages/hubs/ that the routes actually
- * load (US-282). src/pages/CommunicationHub.tsx is a second 445-line
- * communication page (US-313). Four offline components totalling 1,171 lines
+ * load (US-282). src/pages/CommunicationHub.tsx was a second 445-line
+ * communication page (US-313; deleted in US-372). Four offline components totalling 1,171 lines
  * were never rendered while a fifth, offline/OfflineIndicator, is the one App
  * actually mounts.
  *
@@ -46,7 +46,7 @@ const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const SRC = join(root, 'src');
 
 /** Lower this as files are deleted or wired. It never goes up. */
-const BASELINE = 229;
+const BASELINE = 222;
 
 function walk(dir, out = []) {
   for (const entry of readdirSync(dir, { withFileTypes: true })) {

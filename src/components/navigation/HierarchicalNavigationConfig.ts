@@ -652,20 +652,8 @@ export const hierarchicalNavigation: NavigationArea[] = [
       },
       {
         id: "equipment_workflows",
-        label: "Equipment & Workflows",
+        label: "Workflows",
         items: [
-          {
-            title: "Equipment Management",
-            url: "/equipment-management",
-            icon: Wrench,
-            roles: [
-              "admin",
-              "project_manager",
-              "field_supervisor",
-              "office_staff",
-              "root_admin",
-            ],
-          },
           {
             title: "Automated Workflows",
             url: "/workflows",

@@ -279,12 +279,6 @@ export const dashboardAreas: DashboardArea[] = [
         ]
       },
       {
-        label: "Equipment & Assets",
-        items: [
-          { title: "Equipment Management", url: "/equipment-management", icon: Wrench, roles: ["admin", "project_manager", "field_supervisor", "office_staff", "root_admin"] }
-        ]
-      },
-      {
         label: "Process Automation",
         items: [
           { title: "Automated Workflows", url: "/workflows", icon: Settings, roles: ["admin", "project_manager", "root_admin"] },

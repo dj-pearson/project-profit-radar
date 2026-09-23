@@ -94,7 +94,7 @@ are separate and are not listed here.
 | Page | Route |
 |---|---|
 | Team | `/team`, `/people-hub` |
-| Equipment | `/equipment` (**one entry**; `/equipment-management` and `/equipment-qr-labels` sit under it) |
+| Equipment | `/equipment` (**one entry**; `/equipment-qr-labels` sits under it, `/equipment-management` redirects to it) |
 | Company settings | `/company-settings`, `/user-settings`, `/security-settings`, `/settings/custom-domain` |
 | Subscription | `/subscription-settings`, `/upgrade` |
 | Integrations | `/integrations`, `/quickbooks-routing` |
@@ -123,6 +123,24 @@ section than they opened — `estimates` said "Financials", `tasks` said "Team".
   not a routing cleanup, and is not taken here.
 - **The `/workflows` duplicate is removed**, along with the mock page it pointed
   at. The surviving route was always the one that rendered.
+- **`/equipment-management` redirects to `/equipment`** (US-372). Its schedule
+  view is the Gantt already in Equipment's Assignments tab, and its edit dialog
+  never wrote a row. The page, `EquipmentEditForm` and the orphaned
+  `EquipmentTracking` are deleted; the sidebar has one Equipment entry.
+- **The four schedule pages stay, for now** (US-372, recorded here rather than
+  resolved). `/schedule-management` is the company-wide schedule and the one
+  the sidebar should name; `/project-schedule` is the per-project Gantt and
+  belongs under the project hub; `/project-calendar` is a month grid of calendar
+  events (not `schedule_board` rows) and is the first candidate to become a view
+  of `/schedule-management`; `/crew-scheduling` is
+  dispatch, a different job that happens to share the word. Merging them
+  changes what people see, so it is a product call, not a routing cleanup.
+- **`/workflows` and `/workflow-management` are not duplicates** despite the
+  names. `/workflows` (WorkflowAutomation) is rule-based automation and reads
+  the database; `/workflow-management` is a tab shell over change orders, QC,
+  RFIs/submittals and the client portal, each of which has its own page. The
+  second should be retired into those pages with a redirect, not merged into
+  the first. Left to the US-331 follow-up.
 - **Three FinanceHub tiles are removed** rather than routed: bank accounts, bank
   reconciliation and credit memos have tables but no pages. A tile that 404s is
   worse than no tile. Bank reconciliation in particular is an unbuilt feature,

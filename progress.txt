@@ -6857,3 +6857,11 @@ signed-in user read every company's figures. They now run with the reader's
 own permissions.
 
 Still open: pushing data back to QuickBooks, and the sync dashboard.
+
+## US-372 - duplicate and orphan pages
+Deleted 22 pages under src/pages that duplicated a live page or had no route
+(BudgetManagement, EquipmentManagement, UserManagement, ...) plus
+EquipmentEditForm. Old paths that were linked anywhere redirect to the
+survivor (/equipment-management -> /equipment). Nav configs, OperationsHub and
+lazyRoutes updated; docs/INFORMATION_ARCHITECTURE.md lists the canonical page
+per area. Unreferenced-component baseline 229 -> 222.

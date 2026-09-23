@@ -101,7 +101,6 @@ const BASELINE = new Set([
   'src/lib/secureLogger.ts',
   'src/lib/sessionFingerprint.ts',
   'src/mobile/utils/permissions.ts',
-  'src/pages/SecurityMonitoringPage.tsx',
   'src/routes/routeSecurity.tsx',
   'src/utils/dosProtection.ts',
 ]);

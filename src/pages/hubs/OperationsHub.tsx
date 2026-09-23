@@ -145,7 +145,7 @@ const OperationsHub = () => {
             <Button variant="outline" onClick={() => navigate('/permit-management')}>
               Apply for Permit
             </Button>
-            <Button variant="outline" onClick={() => navigate('/equipment-management')}>
+            <Button variant="outline" onClick={() => navigate('/equipment')}>
               Check Out Equipment
             </Button>
             <Button variant="outline" onClick={() => navigate('/workflows')}>

@@ -5788,8 +5788,8 @@
         "The schedule and workflow duplicates are recorded as an IA decision for US-331 rather than resolved here"
       ],
       "priority": 3,
-      "passes": false,
-      "notes": "PROPOSED 2026-09-09 (production-readiness audit, six parallel reviews: auth, security, page/data flows, UI/UX, SEO, ops). Overlaps US-314 (233 unreferenced files) on the orphans; this is the routed-twice subset plus the stub map."
+      "passes": true,
+      "notes": "PROPOSED 2026-09-09 (production-readiness audit, six parallel reviews: auth, security, page/data flows, UI/UX, SEO, ops). Overlaps US-314 (233 unreferenced files) on the orphans; this is the routed-twice subset plus the stub map. || Folded 22 duplicate/orphan pages into one canonical page each; old paths redirect (e.g. /equipment-management -> /equipment). Nav configs and lazyRoutes point at the survivors. Unreferenced-component baseline 229 -> 222."
     },
     {
       "id": "US-373",

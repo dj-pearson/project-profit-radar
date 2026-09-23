@@ -5,7 +5,7 @@
  * ⚡ Performance: All routes are lazy-loaded to reduce initial bundle size
  */
 
-import { Route } from 'react-router-dom';
+import { Navigate, Route } from 'react-router-dom';
 import { RouteGuard } from '@/components/ProtectedRoute';
 import { createLazyRoute } from '@/utils/lazyRoutes';
 
@@ -25,7 +25,6 @@ const PublicProcurement = createLazyRoute(() => import('@/pages/PublicProcuremen
 const ServiceDispatch = createLazyRoute(() => import('@/pages/ServiceDispatch'));
 const CalendarSync = createLazyRoute(() => import('@/pages/CalendarSync'));
 const ProjectCalendar = createLazyRoute(() => import('@/pages/ProjectCalendar'));
-const EquipmentManagement = createLazyRoute(() => import('@/pages/EquipmentManagement'));
 const EquipmentQRLabels = createLazyRoute(() => import('@/pages/EquipmentQRLabels'));
 
 // Advanced Features - Lazy loaded with ErrorBoundary + Suspense
@@ -53,7 +52,11 @@ export const operationsRoutes = (
     <Route path="/service-dispatch" element={<RouteGuard><ServiceDispatch /></RouteGuard>} />
     <Route path="/calendar" element={<RouteGuard><CalendarSync /></RouteGuard>} />
     <Route path="/project-calendar" element={<RouteGuard><ProjectCalendar /></RouteGuard>} />
-    <Route path="/equipment-management" element={<RouteGuard><EquipmentManagement /></RouteGuard>} />
+    {/* One equipment page (US-372). /equipment-management rendered a second
+        copy of the fleet whose schedule view is Equipment's Assignments tab and
+        whose edit dialog never saved. Kept as a redirect for bookmarks and
+        shipped iOS deep links. */}
+    <Route path="/equipment-management" element={<Navigate to="/equipment" replace />} />
     <Route path="/equipment-qr-labels" element={<RouteGuard><EquipmentQRLabels /></RouteGuard>} />
     {/* /workflows is declared in appRoutes.tsx, which wins, and points at
         WorkflowAutomation - the one that reads the database. The declaration
