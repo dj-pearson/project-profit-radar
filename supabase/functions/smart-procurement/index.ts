@@ -120,8 +120,10 @@ async function forecastMaterials(corsHeaders: Record<string, string>, supabase: 
     const avgQuantity = stats.total / stats.count
     const confidence = Math.min(95, (stats.count / 10) * 100) // Higher confidence with more data points
 
-    // Calculate lead time (7-14 days typical)
-    const leadTime = Math.floor(Math.random() * 7) + 7
+    // No supplier lead-time data exists, so assume the top of the typical
+    // 7-14 day range: ordering early is recoverable, ordering late is not.
+    // This was a random 7-14 per run, saved to material_forecasts as a date.
+    const leadTime = 14
 
     const recommendedOrderDate = new Date(forecastDate)
     recommendedOrderDate.setDate(recommendedOrderDate.getDate() - leadTime)

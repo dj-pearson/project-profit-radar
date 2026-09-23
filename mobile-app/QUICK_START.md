@@ -177,7 +177,7 @@ npm run ios
 ## 📚 Learn More
 
 - **Full README**: See `mobile-app/README.md`
-- **Architecture**: See `../MOBILE_APP_ARCHITECTURE.md`
+- **Architecture**: See `../docs/archive/MOBILE_APP_ARCHITECTURE.md`
 - **Expo Docs**: https://docs.expo.dev
 - **React Native**: https://reactnative.dev
 

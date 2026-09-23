@@ -131,10 +131,10 @@ export default async (req: Request) => {
 
     for (let i = 1; i <= days; i++) {
       const projDate = new Date(Date.now() + i * 24 * 60 * 60 * 1000);
-      // Add slight variance (+/- 10%) for realism
-      const variance = 0.9 + Math.random() * 0.2;
-      const projectedIncome = dailyIncome * variance;
-      const projectedExpenses = dailyExpenses * variance;
+      // No random "variance for realism": a projection is a function of the
+      // history it was built from, and the same inputs give the same forecast.
+      const projectedIncome = dailyIncome;
+      const projectedExpenses = dailyExpenses;
       runningBalance += projectedIncome - projectedExpenses;
 
       projections.push({

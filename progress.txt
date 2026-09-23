@@ -7132,3 +7132,12 @@ web build reads is documented in docs/EDGE_SECRETS.md, generated and checked
 by check-edge-secrets.mjs. The app URL had three names; they now resolve
 through _shared/app-urls.ts. Caught before commit: two SSO functions
 shadowed the helper (const siteUrl = siteUrl()), which throws at runtime.
+
+## Fabricated edge data
+check-keyword-positions saved Math.random() rankings (and random volume and
+difficulty even with a key) as real SEO data. It now refuses without
+SERP_API_KEY and reports failed lookups instead of saving "not ranking".
+check-fabricated-fallbacks.mjs now traces Math.random() into edge-function
+DB writes and responses; 17 remaining hits are baselined with reasons.
+Cash-flow forecasts no longer get random "variance for realism". Still
+broken: the keyword insert writes columns seo_serp_positions lacks.

@@ -101,7 +101,7 @@ export const EmailSyncSetup = ({ companyId }: { companyId: string }) => {
   const connectGmail = () => {
     toast({
       title: "Gmail Setup Required",
-      description: "Please configure Google OAuth first. See EMAIL_SYNC_SETUP_GUIDE.md",
+      description: "Gmail sync is not connected yet. An administrator has to set up Google OAuth for Brikly before you can connect a mailbox.",
     });
     // In production, this would redirect to OAuth flow
     // window.location.href = `/api/auth/gmail`;
@@ -110,7 +110,7 @@ export const EmailSyncSetup = ({ companyId }: { companyId: string }) => {
   const connectOutlook = () => {
     toast({
       title: "Outlook Setup Required",
-      description: "Please configure Microsoft OAuth first. See EMAIL_SYNC_SETUP_GUIDE.md",
+      description: "Outlook sync is not connected yet. An administrator has to set up Microsoft OAuth for Brikly before you can connect a mailbox.",
     });
     // In production, this would redirect to OAuth flow
     // window.location.href = `/api/auth/outlook`;
