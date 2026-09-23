@@ -13,8 +13,8 @@
 import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'node:fs';
 import {
-  mapPurchase, mapPayment, customerRefOf, jobNameOf, summarise,
-  type MappingContext, type QuickBooksPurchase, type QuickBooksPayment,
+  mapPurchase, mapPayment, customerRefOf, jobNameOf, summarise, paymentMethodOf, expenseChanges,
+  type MappingContext, type QuickBooksPurchase, type QuickBooksPayment, type ImportedExpense,
 } from './quickbooks-mapping';
 
 const strip = (path: string) =>
@@ -220,6 +220,115 @@ describe('a QuickBooks payment becomes an invoice payment (US-333)', () => {
     expect(mapPayment(payment({ TotalAmt: 0 }), ctx()).kind).toBe('unmatched');
     expect(mapPayment(payment({ TotalAmt: -50 }), ctx()).kind).toBe('unmatched');
   });
+
+  it('queues one payment that settles several invoices instead of landing it all on the first', () => {
+    // A $3,000 cheque for two $1,500 invoices used to mark the first paid
+    // twice over and leave the second open.
+    const both = ctx({
+      invoicesByQbId: new Map([
+        ['qb-inv-42', { id: 'inv-42', amountDue: 1500 }],
+        ['qb-inv-43', { id: 'inv-43', amountDue: 1500 }],
+      ]),
+    });
+    const result = mapPayment(payment({
+      TotalAmt: 3000,
+      Line: [
+        { Amount: 1500, LinkedTxn: [{ TxnId: 'qb-inv-42', TxnType: 'Invoice' }] },
+        { Amount: 1500, LinkedTxn: [{ TxnId: 'qb-inv-43', TxnType: 'Invoice' }] },
+      ],
+    }), both);
+    expect(result.kind).toBe('unmatched');
+    if (result.kind !== 'unmatched') return;
+    expect(result.reason).toMatch(/Pays 2 invoices/);
+    expect(result.amount).toBe(3000);
+  });
+
+  it('applies the linked line amount, not TotalAmt, which includes unapplied credit', () => {
+    const result = mapPayment(payment({
+      TotalAmt: 800,
+      Line: [{ Amount: 500, LinkedTxn: [{ TxnId: 'qb-inv-42', TxnType: 'Invoice' }] }],
+    }), ctx());
+    if (result.kind !== 'payment') throw new Error(`expected a payment, got ${JSON.stringify(result)}`);
+    expect(result.row.payment_amount).toBe(500);
+  });
+
+  it('queues a payment larger than the invoice balance, the double-recorded case', () => {
+    // Paid through Brikly, then received again in QuickBooks: Brikly already
+    // shows the invoice settled.
+    const paid = ctx({ invoicesByQbId: new Map([['qb-inv-42', { id: 'inv-42', amountDue: 0 }]]) });
+    const result = mapPayment(payment(), paid);
+    expect(result.kind).toBe('unmatched');
+    if (result.kind !== 'unmatched') return;
+    expect(result.reason).toMatch(/past its balance \(500\.00 paid, 0\.00 due\)/);
+  });
+
+  it('checks the memo fallback against the balance too', () => {
+    const result = mapPayment(payment({ Line: [], TotalAmt: 1000.01, PaymentRefNum: 'INV-2026-0007' }), ctx());
+    expect(result.kind).toBe('unmatched');
+    const exact = mapPayment(payment({ Line: [], TotalAmt: 1000, PaymentRefNum: 'INV-2026-0007' }), ctx());
+    expect(exact.kind).toBe('payment');
+  });
+
+  it('skips the balance check for a payment it already imported, whose own row is in the balance', () => {
+    const paid = ctx({ invoicesByQbId: new Map([['qb-inv-42', { id: 'inv-42', amountDue: 0 }]]) });
+    expect(mapPayment(payment(), paid, { alreadyImported: true }).kind).toBe('payment');
+  });
+});
+
+describe('what an imported expense says about itself (US-333)', () => {
+  it('is marked paid, because a QuickBooks Purchase is money already spent', () => {
+    const result = mapPurchase(purchase(), ctx());
+    if (result.kind !== 'expense') throw new Error('expected an expense');
+    expect(result.row.payment_status).toBe('paid');
+  });
+
+  it('stores the payment method the ledger trigger recognises', () => {
+    // post_expense_to_ledger credits the card account only for 'credit_card'.
+    expect(paymentMethodOf('CreditCard')).toBe('credit_card');
+    expect(paymentMethodOf('Check')).toBe('check');
+    expect(paymentMethodOf('Cash')).toBe('cash');
+    expect(paymentMethodOf(undefined)).toBe('other');
+    const result = mapPurchase(purchase({ PaymentType: 'CreditCard' }), ctx());
+    if (result.kind !== 'expense') throw new Error('expected an expense');
+    expect(result.row.payment_method).toBe('credit_card');
+  });
+});
+
+describe('a re-run updates only what changed (US-333)', () => {
+  const mapped = () => {
+    const r = mapPurchase(purchase(), ctx());
+    if (r.kind !== 'expense') throw new Error('expected an expense');
+    return r.row;
+  };
+  const existing = (over: Partial<ImportedExpense> = {}): ImportedExpense => ({
+    id: 'exp-1', project_id: 'proj-maple', cost_code_id: 'cc-carp', vendor_name: 'Ace Lumber',
+    amount: 1234.56, expense_date: '2026-09-01', description: 'QuickBooks purchase p1',
+    payment_method: 'other', is_billable: false, ...over,
+  });
+
+  it('writes nothing when QuickBooks has not changed', () => {
+    // Every write naming amount or project re-fires the job-cost trigger.
+    expect(expenseChanges(existing(), mapped())).toEqual({});
+  });
+
+  it('writes the amount when QuickBooks corrected it', () => {
+    // Postgres numeric arrives as a string through PostgREST.
+    expect(expenseChanges(existing({ amount: '1000.00' as unknown as number }), mapped()))
+      .toEqual({ amount: 1234.56 });
+  });
+
+  it('never clears a project someone assigned in Brikly', () => {
+    const r = mapPurchase(purchase({ Line: [] }), ctx());
+    if (r.kind !== 'expense') throw new Error('expected an expense');
+    expect(r.row.project_id).toBeNull();
+    const changes = expenseChanges(existing({ project_id: 'proj-assigned', cost_code_id: 'cc-assigned' }), r.row);
+    expect(changes).not.toHaveProperty('project_id');
+    expect(changes).not.toHaveProperty('cost_code_id');
+  });
+
+  it('does take a project QuickBooks now names', () => {
+    expect(expenseChanges(existing({ project_id: null }), mapped())).toEqual({ project_id: 'proj-maple' });
+  });
 });
 
 describe('the run summary the dashboard was missing (US-333)', () => {
@@ -249,10 +358,31 @@ describe('the sync function uses it (US-333)', () => {
     expect(fn).toMatch(/from\('invoice_payments'\)/);
   });
 
-  it('is idempotent on the QuickBooks id', () => {
-    // A second run must update rather than importing the same cost twice.
-    expect(fn).toMatch(/onConflict: 'company_id,qb_purchase_id'/);
-    expect(fn).toMatch(/onConflict: 'company_id,qb_payment_id'/);
+  it('is idempotent on the QuickBooks id without an upsert the database cannot infer', () => {
+    // The unique indexes on (company_id, qb_purchase_id) and (company_id,
+    // qb_payment_id) are partial, and an ON CONFLICT naming only the columns
+    // does not match a partial index: every import failed with 42P10
+    // (quickbooks_sync_import.test.sql). A re-run looks the id up instead.
+    expect(fn).not.toMatch(/onConflict: 'company_id,qb_purchase_id'/);
+    expect(fn).not.toMatch(/onConflict: 'company_id,qb_payment_id'/);
+    expect(fn).toMatch(/ctx\.importedExpenses\.get\(mapped\.qbId\)/);
+    expect(fn).toMatch(/ctx\.importedPayments\.get\(/);
+    expect(fn).toMatch(/qb_purchase_id: mapped\.qbId/);
+    expect(fn).toMatch(/qb_payment_id: mapped\.qbId/);
+  });
+
+  it('approves an imported purchase, so the job-cost trigger posts it', () => {
+    // post_expense_to_job_costs skips rows with no approved_at.
+    const insert = fn.slice(fn.indexOf(".from('expenses')\n      .insert("));
+    expect(insert.slice(0, 300)).toMatch(/approved_at: new Date\(\)\.toISOString\(\)/);
+  });
+
+  it('reads past the 1000-row PostgREST cap when building its lookups', () => {
+    expect(fn).toMatch(/\.range\(from, from \+ PAGE - 1\)/);
+  });
+
+  it('closes a queue row once its record lands', () => {
+    expect(fn).toMatch(/status: 'resolved'/);
   });
 
   it('builds the lookups once per run, not per record', () => {

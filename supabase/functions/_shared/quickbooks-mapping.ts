@@ -74,6 +74,15 @@ export interface MappingContext {
   invoicesByQbId: Map<string, { id: string; amountDue: number }>;
 }
 
+export interface MapPaymentOptions {
+  /**
+   * Skip the "would this overpay the invoice" check. Only for a payment this
+   * sync already imported: its own row is already in the invoice's balance, so
+   * checking it again would always fail.
+   */
+  alreadyImported?: boolean;
+}
+
 export type MatchConfidence = 'exact' | 'none';
 
 export interface MappedExpense {
@@ -87,6 +96,7 @@ export interface MappedExpense {
     expense_date: string;
     description: string;
     payment_method: string;
+    payment_status: 'paid';
     is_billable: boolean;
   };
   qbId: string;
@@ -199,6 +209,23 @@ function resolveCostCode(
 }
 
 /**
+ * QuickBooks' PaymentType as the value Brikly stores.
+ *
+ * Not cosmetic: the ledger posting trigger (US-334) credits the credit-card
+ * account only for payment_method 'credit_card' or 'card', so QuickBooks'
+ * 'CreditCard' passed through as-is posted every card purchase against the
+ * bank. 'credit_card' is also the column's default.
+ */
+export function paymentMethodOf(paymentType: string | undefined): string {
+  switch (norm(paymentType)) {
+    case 'creditcard': return 'credit_card';
+    case 'check': return 'check';
+    case 'cash': return 'cash';
+    default: return 'other';
+  }
+}
+
+/**
  * A QuickBooks purchase as a Brikly expense.
  *
  * An expense with no project is still imported: it is a real cost the company
@@ -245,7 +272,11 @@ export function mapPurchase(
       description: purchase.PrivateNote
         || purchase.Line?.[0]?.Description
         || `QuickBooks purchase ${purchase.Id}`,
-      payment_method: purchase.PaymentType || 'other',
+      payment_method: paymentMethodOf(purchase.PaymentType),
+      // A QuickBooks Purchase is money already spent (cash, cheque or card);
+      // an unpaid one is a Bill, which this does not import. 'pending' would
+      // put every imported cost in the expense list's to-approve count.
+      payment_status: 'paid',
       is_billable: billable,
     },
   };
@@ -261,29 +292,64 @@ export function mapPurchase(
  *
  * The linked transaction is authoritative; the invoice number in the memo is a
  * fallback for payments recorded by hand in QuickBooks.
+ *
+ * Three more ways to mark the wrong thing paid, each queued rather than
+ * guessed:
+ *   - One QuickBooks payment can settle several invoices, one Line each. It
+ *     used to land in full on whichever invoice matched first, so a $3,000
+ *     cheque covering two $1,500 invoices marked one of them paid twice over
+ *     and left the other open. invoice_payments keys one row per QuickBooks
+ *     payment, so a split payment is a person's call.
+ *   - The amount applied to the invoice is the Line's, not TotalAmt. TotalAmt
+ *     includes anything left unapplied as a credit on the customer's account.
+ *   - A payment larger than what Brikly thinks is still owed. The usual cause
+ *     is the same money recorded twice: the customer paid through Brikly, and
+ *     the bookkeeper then received the payment in QuickBooks as well.
  */
 export function mapPayment(
   payment: QuickBooksPayment,
-  ctx: MappingContext
+  ctx: MappingContext,
+  opts: MapPaymentOptions = {}
 ): MappedPayment | Unmatched {
-  const amount = money(payment.TotalAmt);
+  const total = money(payment.TotalAmt);
   const date = payment.TxnDate;
   const who = payment.CustomerRef?.name ?? null;
 
   if (!date) {
-    return unmatched(payment.Id, 'payment', 'No transaction date', amount, null, who, payment);
+    return unmatched(payment.Id, 'payment', 'No transaction date', total, null, who, payment);
   }
-  if (amount <= 0) {
-    return unmatched(payment.Id, 'payment', 'Zero or negative amount', amount, date, who, payment);
+  if (total <= 0) {
+    return unmatched(payment.Id, 'payment', 'Zero or negative amount', total, date, who, payment);
   }
 
-  // 1. The invoice QuickBooks says this pays.
+  // 1. The invoice(s) QuickBooks says this pays, with the amount applied to each.
+  const applied = new Map<string, number>();
   for (const line of payment.Line ?? []) {
     for (const txn of line.LinkedTxn ?? []) {
       if (txn.TxnType !== 'Invoice' || !txn.TxnId) continue;
-      const invoice = ctx.invoicesByQbId.get(txn.TxnId);
-      if (invoice) return paymentRow(payment, ctx, invoice.id, amount, date, 'exact');
+      applied.set(txn.TxnId, money((applied.get(txn.TxnId) ?? 0) + money(line.Amount)));
     }
+  }
+
+  if (applied.size > 1) {
+    return unmatched(
+      payment.Id, 'payment',
+      `Pays ${applied.size} invoices in QuickBooks; record each part against its invoice by hand`,
+      total, date, who, payment
+    );
+  }
+
+  if (applied.size === 1) {
+    const [[qbInvoiceId, lineAmount]] = [...applied];
+    const invoice = ctx.invoicesByQbId.get(qbInvoiceId);
+    if (invoice) {
+      // A linked line with no Amount is malformed; fall back to the total
+      // rather than importing a zero payment.
+      const amount = lineAmount > 0 ? lineAmount : total;
+      return checkedPaymentRow(payment, ctx, invoice, amount, date, who, opts);
+    }
+    // Linked to a QuickBooks invoice Brikly does not have. Fall through to the
+    // memo, which is how a bookkeeper names an invoice raised outside the sync.
   }
 
   // 2. An invoice number written in the reference or the memo.
@@ -291,14 +357,35 @@ export function mapPayment(
     .filter((v): v is string => Boolean(v));
   for (const text of candidates) {
     const invoice = ctx.invoicesByNumber.get(text.trim());
-    if (invoice) return paymentRow(payment, ctx, invoice.id, amount, date, 'exact');
+    if (invoice) return checkedPaymentRow(payment, ctx, invoice, total, date, who, opts);
   }
 
   return unmatched(
     payment.Id, 'payment',
     'No linked invoice, and no invoice number in the reference or memo',
-    amount, date, who, payment
+    total, date, who, payment
   );
+}
+
+function checkedPaymentRow(
+  payment: QuickBooksPayment,
+  ctx: MappingContext,
+  invoice: { id: string; amountDue: number },
+  amount: number,
+  date: string,
+  who: string | null,
+  opts: MapPaymentOptions
+): MappedPayment | Unmatched {
+  // Half a cent of slack for rounding between the two systems.
+  if (!opts.alreadyImported && amount > money(invoice.amountDue) + 0.005) {
+    return unmatched(
+      payment.Id, 'payment',
+      `Would take the invoice past its balance (${amount.toFixed(2)} paid, ` +
+        `${money(invoice.amountDue).toFixed(2)} due); it may already be recorded in Brikly`,
+      amount, date, who, payment
+    );
+  }
+  return paymentRow(payment, ctx, invoice.id, amount, date, 'exact');
 }
 
 function paymentRow(
@@ -335,6 +422,44 @@ function unmatched(
   raw: unknown
 ): Unmatched {
   return { kind: 'unmatched', qbId, entity, reason, amount, occurredOn, counterparty, raw };
+}
+
+/** An expense this sync imported on an earlier run. */
+export interface ImportedExpense {
+  id: string
+  project_id: string | null
+  cost_code_id: string | null
+  vendor_name: string | null
+  amount: number
+  expense_date: string
+  description: string
+  payment_method: string | null
+  is_billable: boolean | null
+}
+
+/**
+ * What to write to an expense imported on an earlier run.
+ *
+ * Only what changed, so an unchanged purchase writes nothing. Every UPDATE that
+ * names amount, date, project or cost code re-fires the US-322 job-cost trigger,
+ * which deletes and re-inserts the job_costs row, so writing the whole row back
+ * on every run churned every imported cost.
+ *
+ * A project or cost code QuickBooks does not know is never written back as
+ * NULL. Assigning the job in Brikly is what the review queue is for, and the
+ * next sync used to undo it.
+ */
+export function expenseChanges(existing: ImportedExpense, mapped: MappedExpense['row']) {
+  const changes: Record<string, unknown> = {}
+  const same = (a: unknown, b: unknown) => String(a ?? '') === String(b ?? '')
+  if (Number(existing.amount) !== mapped.amount) changes.amount = mapped.amount
+  for (const k of ['vendor_name', 'expense_date', 'description', 'payment_method'] as const) {
+    if (!same(existing[k], mapped[k])) changes[k] = mapped[k]
+  }
+  if (Boolean(existing.is_billable) !== mapped.is_billable) changes.is_billable = mapped.is_billable
+  if (mapped.project_id && existing.project_id !== mapped.project_id) changes.project_id = mapped.project_id
+  if (mapped.cost_code_id && existing.cost_code_id !== mapped.cost_code_id) changes.cost_code_id = mapped.cost_code_id
+  return changes
 }
 
 /** A run's outcome, for the sync dashboard. */

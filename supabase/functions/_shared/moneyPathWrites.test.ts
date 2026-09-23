@@ -187,15 +187,21 @@ describe('the second edge batch: email, referrals and accounting sync', () => {
     for (const table of ['quickbooks_customers', 'quickbooks_items']) {
       expect(src, `${table} upsert still discards its error`).toContain(`${table} upsert failed`);
     }
-    // US-333 moved the other two. Purchases now upsert into expenses and
-    // payments into invoice_payments; quickbooks_expenses and
+    // US-333 moved the other two. Purchases now land in expenses and
+    // payments in invoice_payments; quickbooks_expenses and
     // quickbooks_payments were shadow tables read by no file in src/. The
-    // invariant is unchanged - the write that replaced each one still reads
-    // its error - so it follows the write rather than naming a dead table.
-    expect(src, 'the expenses upsert discards its error')
-      .toContain('expenses upsert failed for QuickBooks purchase');
-    expect(src, 'the invoice_payments upsert discards its error')
-      .toContain('invoice_payments upsert failed for QuickBooks payment');
+    // writes are an insert for a new QuickBooks id and an update for one
+    // imported before (an upsert cannot target the partial unique indexes).
+    // The invariant is unchanged - every write that replaced each one still
+    // reads its error - so it follows the writes rather than naming a dead table.
+    for (const msg of [
+      'expenses insert failed for QuickBooks purchase',
+      'expenses update failed for QuickBooks purchase',
+      'invoice_payments insert failed for QuickBooks payment',
+      'invoice_payments update failed for QuickBooks payment',
+    ]) {
+      expect(src, `a QuickBooks import write discards its error: ${msg}`).toContain(msg);
+    }
     expect(src).not.toMatch(/^\s*await supabaseClient\s*\n\s*\.from\('quickbooks_(customers|items)'\)/m);
     // And the shadow tables are gone from this function entirely.
     expect(src).not.toMatch(/from\('quickbooks_(expenses|payments)'\)/);

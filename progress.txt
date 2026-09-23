@@ -6840,3 +6840,20 @@ company name, licence and insurance. The estimate PDF had been printing an
 invented "License #123456" on every estimate.
 
 TypeScript errors: 1536 to 1533.
+
+## US-333, the import half: QuickBooks data now actually lands
+
+The sync was already pointed at `expenses` and `invoice_payments`, but it never
+worked. Both upserts named a conflict target that only has partial unique
+indexes, so Postgres rejected every imported purchase and payment. Re-runs now
+look up what's already imported and insert or update, without touching a
+project or cost code someone assigned in Brikly. Imports are marked approved,
+so they reach job costs. Card purchases post to the card account instead of
+the bank. A payment that could mark the wrong invoice paid goes to the review
+queue instead.
+
+Two finance views, the sync health summary and the ledger activity, let any
+signed-in user read every company's figures. They now run with the reader's
+own permissions.
+
+Still open: pushing data back to QuickBooks, and the sync dashboard.

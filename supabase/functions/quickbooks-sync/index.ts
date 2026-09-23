@@ -9,7 +9,8 @@ import {
   getQuickBooksTokenKey, loadQuickBooksTokens, tokenColumnsForWrite, type QuickBooksTokens,
 } from '../_shared/quickbooks-token-crypto.ts';
 import {
-  mapPurchase, mapPayment, type MappingContext,
+  mapPurchase, mapPayment, expenseChanges,
+  type MappingContext, type Unmatched, type ImportedExpense,
 } from '../_shared/quickbooks-mapping.ts';
 
 interface QuickBooksAPIResponse {
@@ -249,7 +250,7 @@ serve(async (req) => {
         throttleRetries += fetched.throttleRetries
         if (fetched.truncated) truncatedEntities.push('Purchase')
         for (const purchase of fetched.rows) {
-          await syncExpense(supabaseClient, company_id, purchase, mappingContext)
+          await syncExpense(supabaseClient, company_id, purchase, mappingContext, user.id)
           recordsProcessed.expenses++
         }
       } catch (error) {
@@ -266,7 +267,7 @@ serve(async (req) => {
         throttleRetries += fetched.throttleRetries
         if (fetched.truncated) truncatedEntities.push('Payment')
         for (const payment of fetched.rows) {
-          await syncPayment(supabaseClient, company_id, payment, mappingContext)
+          await syncPayment(supabaseClient, company_id, payment, mappingContext, user.id)
           recordsProcessed.payments++
         }
       } catch (error) {
@@ -454,6 +455,50 @@ async function getLocalInvoicesForSync(supabaseClient: any, companyId: string, s
   return data || []
 }
 
+/** A payment this sync imported on an earlier run. */
+interface ImportedPayment {
+  id: string
+  invoice_id: string
+  payment_amount: number
+  payment_date: string
+  payment_method: string
+  reference_number: string | null
+  notes: string | null
+}
+
+/**
+ * The mapper's lookups plus what this company already has from QuickBooks.
+ *
+ * Knowing which QuickBooks ids were imported before is what makes a re-run
+ * idempotent. It used to be left to upsert(onConflict: 'company_id,
+ * qb_purchase_id'), which cannot work: the only unique index on those columns
+ * is partial (WHERE qb_purchase_id IS NOT NULL), and Postgres will not infer a
+ * partial index from an ON CONFLICT that names columns without the predicate,
+ * which is all PostgREST can send. Every imported purchase and payment failed
+ * with 42P10 (supabase/tests/rls/quickbooks_sync_import.test.sql proves it).
+ */
+interface SyncContext extends MappingContext {
+  importedExpenses: Map<string, ImportedExpense>
+  importedPayments: Map<string, ImportedPayment>
+  /** "entity:qbId" of queue rows still pending, so an import can close them. */
+  pendingReview: Set<string>
+}
+
+// PostgREST caps a response at 1000 rows by default. These lookups decide
+// whether a row is new, so a silently short list re-imports or mis-queues
+// everything past the cap.
+const PAGE = 1000
+
+async function selectAll(build: () => any): Promise<any[]> {
+  const rows: any[] = []
+  for (let from = 0; ; from += PAGE) {
+    const { data, error } = await build().range(from, from + PAGE - 1)
+    if (error) throw new Error(`Could not build the QuickBooks mapping context: ${error.message}`)
+    rows.push(...(data ?? []))
+    if (!data || data.length < PAGE) return rows
+  }
+}
+
 /**
  * The lookups the mapper needs, fetched once per sync run (US-333).
  *
@@ -463,49 +508,66 @@ async function getLocalInvoicesForSync(supabaseClient: any, companyId: string, s
 async function buildMappingContext(
   supabaseClient: any,
   companyId: string,
-): Promise<MappingContext> {
-  const [projects, costCodes, invoices] = await Promise.all([
-    supabaseClient.from('projects').select('id, name').eq('company_id', companyId),
-    supabaseClient.from('cost_codes').select('id, code, name').eq('company_id', companyId),
-    supabaseClient.from('invoices')
+): Promise<SyncContext> {
+  const [projects, costCodes, invoices, expenses, payments, review] = await Promise.all([
+    selectAll(() => supabaseClient.from('projects').select('id, name')
+      .eq('company_id', companyId).order('id')),
+    selectAll(() => supabaseClient.from('cost_codes').select('id, code, name')
+      .eq('company_id', companyId).order('id')),
+    selectAll(() => supabaseClient.from('invoices')
       .select('id, invoice_number, amount_due, qb_invoice_id')
-      .eq('company_id', companyId),
+      .eq('company_id', companyId).order('id')),
+    selectAll(() => supabaseClient.from('expenses')
+      .select('id, qb_purchase_id, project_id, cost_code_id, vendor_name, amount, expense_date, description, payment_method, is_billable')
+      .eq('company_id', companyId).not('qb_purchase_id', 'is', null).order('id')),
+    selectAll(() => supabaseClient.from('invoice_payments')
+      .select('id, qb_payment_id, invoice_id, payment_amount, payment_date, payment_method, reference_number, notes')
+      .eq('company_id', companyId).not('qb_payment_id', 'is', null).order('id')),
+    selectAll(() => supabaseClient.from('quickbooks_sync_review').select('entity, qb_id')
+      .eq('company_id', companyId).eq('status', 'pending').order('id')),
   ])
 
-  const failure = [projects, costCodes, invoices].find((r: any) => r.error)
-  if (failure?.error) {
-    throw new Error(`Could not build the QuickBooks mapping context: ${failure.error.message}`)
-  }
-
   const projectsByName = new Map<string, string>()
-  for (const p of projects.data ?? []) {
+  for (const p of projects) {
     if (p.name) projectsByName.set(String(p.name).trim().toLowerCase(), p.id)
   }
 
   // Both the code and the name, because QuickBooks accounts are named either
   // way depending on how the bookkeeper set the chart of accounts up.
   const costCodesByName = new Map<string, string>()
-  for (const c of costCodes.data ?? []) {
+  for (const c of costCodes) {
     if (c.code) costCodesByName.set(String(c.code).trim().toLowerCase(), c.id)
     if (c.name) costCodesByName.set(String(c.name).trim().toLowerCase(), c.id)
   }
 
+  // One entry object shared by both maps, so recording a payment against it
+  // below lowers the balance whichever way the next payment finds it.
   const invoicesByNumber = new Map<string, { id: string; amountDue: number }>()
   const invoicesByQbId = new Map<string, { id: string; amountDue: number }>()
-  for (const i of invoices.data ?? []) {
+  for (const i of invoices) {
     const entry = { id: i.id, amountDue: Number(i.amount_due) || 0 }
     if (i.invoice_number) invoicesByNumber.set(String(i.invoice_number).trim(), entry)
     if (i.qb_invoice_id) invoicesByQbId.set(String(i.qb_invoice_id), entry)
   }
 
-  return { companyId, projectsByName, costCodesByName, invoicesByNumber, invoicesByQbId }
+  const importedExpenses = new Map<string, ImportedExpense>()
+  for (const e of expenses) importedExpenses.set(String(e.qb_purchase_id), e)
+  const importedPayments = new Map<string, ImportedPayment>()
+  for (const p of payments) importedPayments.set(String(p.qb_payment_id), p)
+  const pendingReview = new Set<string>(review.map((r: any) => `${r.entity}:${r.qb_id}`))
+
+  return {
+    companyId, projectsByName, costCodesByName, invoicesByNumber, invoicesByQbId,
+    importedExpenses, importedPayments, pendingReview,
+  }
 }
 
 async function syncExpense(
   supabaseClient: any,
   companyId: string,
   qbPurchase: any,
-  ctx: MappingContext,
+  ctx: SyncContext,
+  userId: string,
 ) {
   // Was: upsert into quickbooks_expenses, a table read by no file in src/ and
   // absent from types.ts. A contractor was told their expenses synced and their
@@ -517,22 +579,55 @@ async function syncExpense(
     return { imported: false }
   }
 
-  // Idempotent on the QuickBooks id, so a second run updates rather than
-  // importing the same cost twice.
-  const { error } = await supabaseClient
-    .from('expenses')
-    .upsert(
-      { ...mapped.row, qb_purchase_id: mapped.qbId },
-      { onConflict: 'company_id,qb_purchase_id' },
-    )
+  const existing = ctx.importedExpenses.get(mapped.qbId)
+  let expenseId: string
+  let projectId: string | null
 
-  if (error) {
-    throw new Error(`expenses upsert failed for QuickBooks purchase ${mapped.qbId}: ${error.message}`)
+  if (existing) {
+    const changes = expenseChanges(existing, mapped.row)
+    if (Object.keys(changes).length > 0) {
+      const { error } = await supabaseClient
+        .from('expenses')
+        .update(changes)
+        .eq('id', existing.id)
+        .eq('company_id', companyId)
+      if (error) {
+        throw new Error(`expenses update failed for QuickBooks purchase ${mapped.qbId}: ${error.message}`)
+      }
+      Object.assign(existing, changes)
+    }
+    expenseId = existing.id
+    projectId = existing.project_id
+  } else {
+    // approved_at is what posts the expense to job_costs (US-322's trigger
+    // skips anything unapproved, because an unapproved receipt is a claim).
+    // A QuickBooks Purchase is money the books already say was spent, so it
+    // is not a claim. Left unset, no imported cost ever reached job costing.
+    // approved_by stays NULL: nobody in Brikly looked at it, and saying the
+    // person who pressed Sync approved it would be a false audit trail.
+    const { data, error } = await supabaseClient
+      .from('expenses')
+      .insert({
+        ...mapped.row,
+        qb_purchase_id: mapped.qbId,
+        created_by: userId,
+        approved_at: new Date().toISOString(),
+      })
+      .select('id, qb_purchase_id, project_id, cost_code_id, vendor_name, amount, expense_date, description, payment_method, is_billable')
+      .single()
+    if (error || !data) {
+      throw new Error(`expenses insert failed for QuickBooks purchase ${mapped.qbId}: ${error?.message ?? 'no row returned'}`)
+    }
+    ctx.importedExpenses.set(mapped.qbId, data)
+    expenseId = data.id
+    projectId = data.project_id
   }
 
-  // Imported, but nobody knows which job it belongs to. It is a real cost and
-  // belongs in the expense list; the queue is how it gets assigned.
-  if (mapped.projectMatch === 'none') {
+  if (projectId) {
+    await resolveReview(supabaseClient, companyId, ctx, 'purchase', mapped.qbId, expenseId, userId)
+  } else {
+    // Imported, but nobody knows which job it belongs to. It is a real cost and
+    // belongs in the expense list; the queue is how it gets assigned.
     await queueForReview(supabaseClient, companyId, {
       kind: 'unmatched',
       qbId: mapped.qbId,
@@ -551,7 +646,7 @@ async function syncExpense(
 async function queueForReview(
   supabaseClient: any,
   companyId: string,
-  item: { qbId: string; entity: string; reason: string; amount: number; occurredOn: string | null; counterparty: string | null; raw: unknown },
+  item: Unmatched,
 ) {
   const { error } = await supabaseClient
     .from('quickbooks_sync_review')
@@ -574,33 +669,124 @@ async function queueForReview(
   }
 }
 
+/**
+ * Close a queue row once the record it was about has landed. Without this, a
+ * purchase queued for having no project stayed "pending" after a later run
+ * matched it, and the dashboard count only ever went up.
+ */
+async function resolveReview(
+  supabaseClient: any,
+  companyId: string,
+  ctx: SyncContext,
+  entity: 'purchase' | 'payment',
+  qbId: string,
+  resolvedAsId: string,
+  userId: string,
+) {
+  const key = `${entity}:${qbId}`
+  if (!ctx.pendingReview.has(key)) return
+
+  const { error } = await supabaseClient
+    .from('quickbooks_sync_review')
+    .update({
+      status: 'resolved',
+      resolved_as_id: resolvedAsId,
+      resolved_by: userId,
+      resolved_at: new Date().toISOString(),
+    })
+    .eq('company_id', companyId)
+    .eq('entity', entity)
+    .eq('qb_id', qbId)
+    .eq('status', 'pending')
+
+  if (error) {
+    console.error(`quickbooks_sync_review resolve failed for ${key}: ${error.message}`)
+    return
+  }
+  ctx.pendingReview.delete(key)
+}
+
 async function syncPayment(
   supabaseClient: any,
   companyId: string,
   qbPayment: any,
-  ctx: MappingContext,
+  ctx: SyncContext,
+  userId: string,
 ) {
   // Was: upsert into quickbooks_payments, read by nothing. Unlike an expense, a
   // payment with no invoice is NOT imported: a payment row pointing at the
   // wrong invoice marks it paid, and an AR list that says a customer has paid
   // when they have not is worse than one missing a row (US-333).
-  const mapped = mapPayment(qbPayment, ctx)
+  const existing = ctx.importedPayments.get(String(qbPayment?.Id))
+  const mapped = mapPayment(qbPayment, ctx, { alreadyImported: Boolean(existing) })
+
+  if (existing) {
+    // The invoice's amount_paid, amount_due and status, and the ledger entry,
+    // are all written by AFTER INSERT triggers. Moving an imported payment to
+    // another invoice or changing its amount would leave both stale, so a
+    // change like that is a person's job, not the sync's.
+    if (mapped.kind === 'unmatched'
+      || mapped.row.invoice_id !== existing.invoice_id
+      || mapped.row.payment_amount !== Number(existing.payment_amount)) {
+      const now = mapped.kind === 'unmatched'
+        ? mapped.reason
+        : `${mapped.row.payment_amount.toFixed(2)} on invoice ${mapped.row.invoice_id}`
+      await queueForReview(supabaseClient, companyId, {
+        kind: 'unmatched',
+        qbId: String(qbPayment.Id),
+        entity: 'payment',
+        reason: `Changed in QuickBooks after it was imported (was ${Number(existing.payment_amount).toFixed(2)} ` +
+          `on invoice ${existing.invoice_id}; now ${now}). Adjust the Brikly payment by hand`,
+        amount: mapped.kind === 'unmatched' ? mapped.amount : mapped.row.payment_amount,
+        occurredOn: qbPayment?.TxnDate ?? existing.payment_date,
+        counterparty: qbPayment?.CustomerRef?.name ?? null,
+        raw: qbPayment,
+      })
+      return { imported: false }
+    }
+
+    const changes: Record<string, unknown> = {}
+    for (const k of ['payment_date', 'payment_method', 'reference_number', 'notes'] as const) {
+      if ((existing[k] ?? null) !== (mapped.row[k] ?? null)) changes[k] = mapped.row[k]
+    }
+    if (Object.keys(changes).length > 0) {
+      const { error } = await supabaseClient
+        .from('invoice_payments')
+        .update(changes)
+        .eq('id', existing.id)
+        .eq('company_id', companyId)
+      if (error) {
+        throw new Error(`invoice_payments update failed for QuickBooks payment ${mapped.qbId}: ${error.message}`)
+      }
+      Object.assign(existing, changes)
+    }
+    return { imported: true }
+  }
 
   if (mapped.kind === 'unmatched') {
     await queueForReview(supabaseClient, companyId, mapped)
     return { imported: false }
   }
 
-  const { error } = await supabaseClient
+  const { data, error } = await supabaseClient
     .from('invoice_payments')
-    .upsert(
-      { ...mapped.row, qb_payment_id: mapped.qbId },
-      { onConflict: 'company_id,qb_payment_id' },
-    )
+    .insert({ ...mapped.row, qb_payment_id: mapped.qbId, processed_by: userId })
+    .select('id, qb_payment_id, invoice_id, payment_amount, payment_date, payment_method, reference_number, notes')
+    .single()
 
-  if (error) {
-    throw new Error(`invoice_payments upsert failed for QuickBooks payment ${mapped.qbId}: ${error.message}`)
+  if (error || !data) {
+    throw new Error(`invoice_payments insert failed for QuickBooks payment ${mapped.qbId}: ${error?.message ?? 'no row returned'}`)
   }
+
+  ctx.importedPayments.set(mapped.qbId, data)
+  // Two QuickBooks payments against one invoice in the same run: the second
+  // must be checked against the balance the first left, not the one this run
+  // started with.
+  // Both maps hold the same entry object, so this lowers it exactly once.
+  const entry = [...ctx.invoicesByQbId.values(), ...ctx.invoicesByNumber.values()]
+    .find((e) => e.id === mapped.row.invoice_id)
+  if (entry) entry.amountDue -= mapped.row.payment_amount
+  await resolveReview(supabaseClient, companyId, ctx, 'payment', mapped.qbId, data.id, userId)
 
   return { imported: true }
 }
