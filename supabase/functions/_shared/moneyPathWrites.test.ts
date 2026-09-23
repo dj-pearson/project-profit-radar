@@ -912,7 +912,9 @@ describe('US-300 is closed: the guard is a rule now, not a ratchet', () => {
     const result = spawnSync('node', ['scripts/check-silent-writes.mjs'], { encoding: 'utf8' });
     expect(result.stdout).toContain('writes whose error is never read: 0');
     expect(result.status).toBe(0);
-  });
+    // Shells out to a scan of the whole repo: ~4.5 s on an idle machine, over
+    // the 10 s default on a loaded runner. The limit is for the scan, not a skip.
+  }, 60_000);
 
   it('and the guard is wired into pre-commit and CI', () => {
     expect(readFileSync('.husky/pre-commit', 'utf8')).toContain('check-silent-writes.mjs');
