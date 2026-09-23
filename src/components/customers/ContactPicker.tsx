@@ -20,8 +20,13 @@ import {
 } from '@/components/ui/command';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import {
-  Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
-} from '@/components/ui/dialog';
+  ResponsiveDialog,
+  ResponsiveDialogContent,
+  ResponsiveDialogHeader,
+  ResponsiveDialogFooter,
+  ResponsiveDialogTitle,
+  ResponsiveDialogDescription,
+} from '@/components/ui/responsive-dialog';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
@@ -245,14 +250,14 @@ export function ContactPicker({
       </Popover>
       {hint && <p className="text-xs text-muted-foreground mt-1">{hint}</p>}
 
-      <Dialog open={creating} onOpenChange={setCreating}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Add a customer</DialogTitle>
-            <DialogDescription>
+      <ResponsiveDialog open={creating} onOpenChange={setCreating}>
+        <ResponsiveDialogContent>
+          <ResponsiveDialogHeader>
+            <ResponsiveDialogTitle>Add a customer</ResponsiveDialogTitle>
+            <ResponsiveDialogDescription>
               They are saved once, and every estimate, project and invoice for them links here.
-            </DialogDescription>
-          </DialogHeader>
+            </ResponsiveDialogDescription>
+          </ResponsiveDialogHeader>
           <div className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
@@ -279,16 +284,16 @@ export function ContactPicker({
               </div>
             </div>
           </div>
-          <DialogFooter>
+          <ResponsiveDialogFooter>
             <Button type="button" variant="outline" onClick={() => setCreating(false)}>
               Cancel
             </Button>
             <Button type="button" onClick={createContact} disabled={saving}>
               {saving ? 'Adding...' : 'Add customer'}
             </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+          </ResponsiveDialogFooter>
+        </ResponsiveDialogContent>
+      </ResponsiveDialog>
     </div>
   );
 }

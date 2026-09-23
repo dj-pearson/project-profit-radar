@@ -7,7 +7,14 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import {
+  ResponsiveDialog,
+  ResponsiveDialogTrigger,
+  ResponsiveDialogContent,
+  ResponsiveDialogHeader,
+  ResponsiveDialogTitle,
+  ResponsiveDialogDescription,
+} from '@/components/ui/responsive-dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
@@ -373,8 +380,8 @@ export const RFISubmittalManagement: React.FC = () => {
           <p className="text-muted-foreground">Manage requests for information and submittal workflows</p>
         </div>
         <div className="flex space-x-2">
-          <Dialog open={rfiDialogOpen} onOpenChange={setRfiDialogOpen}>
-            <DialogTrigger asChild>
+          <ResponsiveDialog open={rfiDialogOpen} onOpenChange={setRfiDialogOpen}>
+            <ResponsiveDialogTrigger asChild>
               <Button onClick={() => {
                 setEditingRfi(null);
                 resetRfiForm();
@@ -382,14 +389,14 @@ export const RFISubmittalManagement: React.FC = () => {
                 <MessageSquare className="h-4 w-4 mr-2" />
                 Create RFI
               </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
-              <DialogHeader>
-                <DialogTitle>{editingRfi ? 'Edit RFI' : 'Create New RFI'}</DialogTitle>
-                <DialogDescription>
+            </ResponsiveDialogTrigger>
+            <ResponsiveDialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+              <ResponsiveDialogHeader>
+                <ResponsiveDialogTitle>{editingRfi ? 'Edit RFI' : 'Create New RFI'}</ResponsiveDialogTitle>
+                <ResponsiveDialogDescription>
                   Submit a request for information about project details
-                </DialogDescription>
-              </DialogHeader>
+                </ResponsiveDialogDescription>
+              </ResponsiveDialogHeader>
               <div className="space-y-4">
                 <div>
                   <Label htmlFor="project">Project *</Label>
@@ -466,11 +473,11 @@ export const RFISubmittalManagement: React.FC = () => {
                   </Button>
                 </div>
               </div>
-            </DialogContent>
-          </Dialog>
+            </ResponsiveDialogContent>
+          </ResponsiveDialog>
 
-          <Dialog open={submittalDialogOpen} onOpenChange={setSubmittalDialogOpen}>
-            <DialogTrigger asChild>
+          <ResponsiveDialog open={submittalDialogOpen} onOpenChange={setSubmittalDialogOpen}>
+            <ResponsiveDialogTrigger asChild>
               <Button variant="outline" onClick={() => {
                 setEditingSubmittal(null);
                 resetSubmittalForm();
@@ -478,14 +485,14 @@ export const RFISubmittalManagement: React.FC = () => {
                 <Upload className="h-4 w-4 mr-2" />
                 Create Submittal
               </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
-              <DialogHeader>
-                <DialogTitle>{editingSubmittal ? 'Edit Submittal' : 'Create New Submittal'}</DialogTitle>
-                <DialogDescription>
+            </ResponsiveDialogTrigger>
+            <ResponsiveDialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+              <ResponsiveDialogHeader>
+                <ResponsiveDialogTitle>{editingSubmittal ? 'Edit Submittal' : 'Create New Submittal'}</ResponsiveDialogTitle>
+                <ResponsiveDialogDescription>
                   Create a submittal for project documentation review
-                </DialogDescription>
-              </DialogHeader>
+                </ResponsiveDialogDescription>
+              </ResponsiveDialogHeader>
               <div className="space-y-4">
                 <div>
                   <Label htmlFor="project">Project *</Label>
@@ -572,8 +579,8 @@ export const RFISubmittalManagement: React.FC = () => {
                   </Button>
                 </div>
               </div>
-            </DialogContent>
-          </Dialog>
+            </ResponsiveDialogContent>
+          </ResponsiveDialog>
         </div>
       </div>
 

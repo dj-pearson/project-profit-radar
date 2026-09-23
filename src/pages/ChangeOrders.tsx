@@ -12,7 +12,15 @@ import { FormFieldHelp } from '@/components/help/HelpTooltip';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import {
+  ResponsiveDialog,
+  ResponsiveDialogTrigger,
+  ResponsiveDialogContent,
+  ResponsiveDialogHeader,
+  ResponsiveDialogTitle,
+  ResponsiveDialogDescription,
+} from '@/components/ui/responsive-dialog';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { 
@@ -588,20 +596,20 @@ const ChangeOrders = () => {
             <ArrowLeft className="h-4 w-4 mr-2" aria-hidden="true" />
             Back to Dashboard
           </Button>
-          <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-            <DialogTrigger asChild>
+          <ResponsiveDialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+            <ResponsiveDialogTrigger asChild>
               <Button className={mobileButtonClasses.primary}>
                 <PlusCircle className="h-4 w-4 mr-2" aria-hidden="true" />
                 Create Change Order
               </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-2xl" aria-describedby="change-order-dialog-description">
-              <DialogHeader>
-                <DialogTitle>{editingOrder ? 'Edit Change Order' : 'Create Change Order'}</DialogTitle>
-                <DialogDescription id="change-order-dialog-description">
+            </ResponsiveDialogTrigger>
+            <ResponsiveDialogContent className="max-w-2xl" aria-describedby="change-order-dialog-description">
+              <ResponsiveDialogHeader>
+                <ResponsiveDialogTitle>{editingOrder ? 'Edit Change Order' : 'Create Change Order'}</ResponsiveDialogTitle>
+                <ResponsiveDialogDescription id="change-order-dialog-description">
                   {editingOrder ? 'Update the change order details and approval workflow.' : 'Create a new change order for project modifications that require client approval.'}
-                </DialogDescription>
-              </DialogHeader>
+                </ResponsiveDialogDescription>
+              </ResponsiveDialogHeader>
               <div className="space-y-4">
                 <div>
                   <Label htmlFor="project">Project *</Label>
@@ -762,8 +770,8 @@ const ChangeOrders = () => {
                   </Button>
                 </div>
               </div>
-            </DialogContent>
-          </Dialog>
+            </ResponsiveDialogContent>
+          </ResponsiveDialog>
         </>
       }
     >

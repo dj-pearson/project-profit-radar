@@ -12,7 +12,14 @@ import { SignatureCapture } from '@/components/ui/signature-capture';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import {
+  ResponsiveDialog,
+  ResponsiveDialogTrigger,
+  ResponsiveDialogContent,
+  ResponsiveDialogHeader,
+  ResponsiveDialogTitle,
+  ResponsiveDialogDescription,
+} from '@/components/ui/responsive-dialog';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { validateFileUpload, generateSecureFilename } from '@/lib/security/fileUploadValidation';
@@ -448,20 +455,20 @@ const DailyReports = () => {
                 Mobile Report
               </Button>
             )}
-            <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-              <DialogTrigger asChild>
+            <ResponsiveDialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+              <ResponsiveDialogTrigger asChild>
                 <Button aria-label="Create new daily report">
                   <PlusCircle className="h-4 w-4 mr-2" aria-hidden="true" />
                   Create Report
                 </Button>
-              </DialogTrigger>
-              <DialogContent className="max-w-2xl" aria-describedby="create-report-description">
-                <DialogHeader>
-                  <DialogTitle>Create Daily Report</DialogTitle>
-                  <DialogDescription id="create-report-description">
+              </ResponsiveDialogTrigger>
+              <ResponsiveDialogContent className="max-w-2xl" aria-describedby="create-report-description">
+                <ResponsiveDialogHeader>
+                  <ResponsiveDialogTitle>Create Daily Report</ResponsiveDialogTitle>
+                  <ResponsiveDialogDescription id="create-report-description">
                     Record daily progress, crew activity, and any issues for the project.
-                  </DialogDescription>
-                </DialogHeader>
+                  </ResponsiveDialogDescription>
+                </ResponsiveDialogHeader>
                 <form className="space-y-4" aria-label="Create daily report form" onSubmit={(e) => { e.preventDefault(); handleCreateReport(); }}>
                   <div>
                     <Label htmlFor="project">Project *</Label>
@@ -711,8 +718,8 @@ const DailyReports = () => {
                     </Button>
                   </div>
                 </form>
-              </DialogContent>
-              </Dialog>
+              </ResponsiveDialogContent>
+              </ResponsiveDialog>
           </div>
         </header>
         {/* Filters */}

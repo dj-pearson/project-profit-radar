@@ -112,6 +112,9 @@ export function SignatureCapture({
       </div>
       <canvas
         ref={canvasRef}
+        // Inside a ResponsiveDialog on a phone the form is a vaul Drawer; a
+        // downward stroke would otherwise drag the sheet closed mid-signature.
+        data-vaul-no-drag
         width={width}
         height={height}
         className="w-full touch-none rounded-md border bg-white"

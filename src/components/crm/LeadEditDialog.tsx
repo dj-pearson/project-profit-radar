@@ -1,6 +1,12 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import {
+  ResponsiveDialog,
+  ResponsiveDialogTrigger,
+  ResponsiveDialogContent,
+  ResponsiveDialogHeader,
+  ResponsiveDialogTitle,
+} from '@/components/ui/responsive-dialog';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -37,15 +43,15 @@ export const LeadEditDialog: React.FC<LeadEditDialogProps> = ({ lead, onUpdate, 
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogTrigger asChild>
+    <ResponsiveDialog open={isOpen} onOpenChange={setIsOpen}>
+      <ResponsiveDialogTrigger asChild>
         {children}
-      </DialogTrigger>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto" aria-describedby="edit-lead-description">
-        <DialogHeader>
-          <DialogTitle>Edit Lead: {lead.first_name} {lead.last_name}</DialogTitle>
+      </ResponsiveDialogTrigger>
+      <ResponsiveDialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto" aria-describedby="edit-lead-description">
+        <ResponsiveDialogHeader>
+          <ResponsiveDialogTitle>Edit Lead: {lead.first_name} {lead.last_name}</ResponsiveDialogTitle>
           <p id="edit-lead-description" className="sr-only">Form to edit lead contact information and status</p>
-        </DialogHeader>
+        </ResponsiveDialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4" aria-label="Edit lead form">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-2">
@@ -206,7 +212,7 @@ export const LeadEditDialog: React.FC<LeadEditDialogProps> = ({ lead, onUpdate, 
             </Button>
           </div>
         </form>
-      </DialogContent>
-    </Dialog>
+      </ResponsiveDialogContent>
+    </ResponsiveDialog>
   );
 };

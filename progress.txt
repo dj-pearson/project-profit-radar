@@ -7032,3 +7032,9 @@ src/lib/format.ts is the one formatter; the four formatCurrency exports go
 through it with their old output pinned by tests. ESLint warns on direct
 toLocaleDateString / new Intl.NumberFormat, and check-direct-formatting.mjs
 ratchets the remaining 326 and 51 uses so they can only go down.
+
+## US-379 - form dialogs and project nav on phones
+Ten form dialogs use ResponsiveDialog (a Drawer on phones). The signature
+canvas opts out of drawer drag so a downward stroke doesn't close the sheet.
+The mobile nav on /projects/:id now keeps the project id; it used to send
+people to global /documents, /job-costing, /change-orders.

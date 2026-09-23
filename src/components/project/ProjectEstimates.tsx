@@ -3,7 +3,13 @@ import { Plus, Eye, Edit, Send, Copy, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import {
+  ResponsiveDialog,
+  ResponsiveDialogTrigger,
+  ResponsiveDialogContent,
+  ResponsiveDialogHeader,
+  ResponsiveDialogTitle,
+} from "@/components/ui/responsive-dialog";
 import { EstimateForm } from "@/components/estimates/EstimateForm";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -179,17 +185,17 @@ export function ProjectEstimates({ projectId }: ProjectEstimatesProps) {
             Manage estimates for this project with version control
           </p>
         </div>
-        <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-          <DialogTrigger asChild>
+        <ResponsiveDialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+          <ResponsiveDialogTrigger asChild>
             <Button className="gap-2">
               <Plus className="h-4 w-4" />
               New Estimate
             </Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle>Create New Estimate</DialogTitle>
-            </DialogHeader>
+          </ResponsiveDialogTrigger>
+          <ResponsiveDialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+            <ResponsiveDialogHeader>
+              <ResponsiveDialogTitle>Create New Estimate</ResponsiveDialogTitle>
+            </ResponsiveDialogHeader>
             <EstimateForm
               onSuccess={() => {
                 setIsCreateDialogOpen(false);
@@ -197,8 +203,8 @@ export function ProjectEstimates({ projectId }: ProjectEstimatesProps) {
               }}
               onCancel={() => setIsCreateDialogOpen(false)}
             />
-          </DialogContent>
-        </Dialog>
+          </ResponsiveDialogContent>
+        </ResponsiveDialog>
       </div>
 
       {/* Estimates List */}
@@ -330,11 +336,11 @@ export function ProjectEstimates({ projectId }: ProjectEstimatesProps) {
       )}
 
       {/* Edit Dialog */}
-      <Dialog open={!!editingEstimate} onOpenChange={() => setEditingEstimate(null)}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Edit Estimate</DialogTitle>
-          </DialogHeader>
+      <ResponsiveDialog open={!!editingEstimate} onOpenChange={() => setEditingEstimate(null)}>
+        <ResponsiveDialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <ResponsiveDialogHeader>
+            <ResponsiveDialogTitle>Edit Estimate</ResponsiveDialogTitle>
+          </ResponsiveDialogHeader>
           {editingEstimate && (
             <EstimateForm
               estimateId={editingEstimate}
@@ -345,8 +351,8 @@ export function ProjectEstimates({ projectId }: ProjectEstimatesProps) {
               onCancel={() => setEditingEstimate(null)}
             />
           )}
-        </DialogContent>
-      </Dialog>
+        </ResponsiveDialogContent>
+      </ResponsiveDialog>
     </div>
   );
 }

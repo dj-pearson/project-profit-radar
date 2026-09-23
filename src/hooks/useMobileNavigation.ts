@@ -12,16 +12,17 @@ import {
   Calendar,
   FileText,
   BarChart3,
-  type LucideIcon
 } from 'lucide-react';
 
-export interface MobileNavItem {
-  icon: LucideIcon;
-  label: string;
-  href: string;
-  roles?: string[];
-  badge?: string | number;
-}
+import {
+  isMobileNavItemActive,
+  projectContextNavItems,
+  projectIdFromPath,
+  type MobileNavItem,
+} from '@/components/mobile/projectNav';
+
+export { isMobileNavItemActive, projectContextNavItems, projectIdFromPath };
+export type { MobileNavItem };
 
 interface NavigationConfig {
   default: MobileNavItem[];
@@ -97,15 +98,10 @@ export function useMobileNavigation() {
   const getContextualNavigation = (): MobileNavItem[] | null => {
     const path = location.pathname;
 
-    // Project detail page - show project-specific navigation
-    if (path.startsWith('/projects/') && path !== '/projects-hub') {
-      return [
-        { icon: Building2, label: 'Overview', href: path },
-        { icon: FileText, label: 'Documents', href: '/documents' },
-        { icon: DollarSign, label: 'Costs', href: '/job-costing' },
-        { icon: Calendar, label: 'Schedule', href: '/schedule-management' },
-        { icon: Wrench, label: 'Changes', href: '/change-orders' },
-      ];
+    // Project pages - every link keeps the project id
+    const projectId = projectIdFromPath(path);
+    if (projectId) {
+      return projectContextNavItems(projectId);
     }
 
     // Financial section - show financial navigation

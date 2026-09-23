@@ -15,12 +15,13 @@ import { FavoriteStar } from '@/components/navigation/FavoriteStar';
 import { useRecentItems } from '@/hooks/useRecentItems';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { MobileBottomNav } from '@/components/mobile/MobileBottomNav';
+import { projectContextNavItems } from '@/components/mobile/projectNav';
 import { SharedElement, sharedId } from '@/components/mobile/SharedElementTransition';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { ArrowLeft, User, Edit, Menu, Home, Building2, DollarSign, Users, Settings, Calendar, MapPin } from 'lucide-react';
+import { ArrowLeft, User, Edit, Menu, DollarSign, Calendar, MapPin } from 'lucide-react';
 import { ProjectStatusControl } from '@/components/project/ProjectStatusControl';
 import { AccessiblePageWrapper } from "@/components/accessibility/AccessiblePageWrapper";
 import { cn } from '@/lib/utils';
@@ -255,14 +256,8 @@ const ProjectDetail = () => {
           />
         </main>
 
-        {/* Mobile Bottom Navigation */}
-        <MobileBottomNav items={[
-          { icon: Home, label: 'Home', href: '/dashboard' },
-          { icon: Building2, label: 'Projects', href: '/projects-hub' },
-          { icon: DollarSign, label: 'Financial', href: '/financial-hub' },
-          { icon: Users, label: 'People', href: '/people-hub' },
-          { icon: Settings, label: 'Admin', href: '/admin-hub' },
-        ]} />
+        {/* Mobile Bottom Navigation - project-scoped, keeps the project id */}
+        <MobileBottomNav items={projectContextNavItems(project.id)} />
       </div>
       </AccessiblePageWrapper>
     );

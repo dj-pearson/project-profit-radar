@@ -6,7 +6,13 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import {
+  ResponsiveDialog,
+  ResponsiveDialogTrigger,
+  ResponsiveDialogContent,
+  ResponsiveDialogHeader,
+  ResponsiveDialogTitle,
+} from '@/components/ui/responsive-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { Receipt, Plus, DollarSign, FileText, AlertCircle, CheckCircle, Clock, TrendingUp } from 'lucide-react';
@@ -307,17 +313,17 @@ export const ExpenseTrackingSystem: React.FC<ExpenseTrackingProps> = ({
               <Receipt className="h-5 w-5" />
               Expense Tracking
             </CardTitle>
-            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-              <DialogTrigger asChild>
+            <ResponsiveDialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+              <ResponsiveDialogTrigger asChild>
                 <Button>
                   <Plus className="h-4 w-4 mr-2" />
                   Add Expense
                 </Button>
-              </DialogTrigger>
-              <DialogContent className="max-w-md">
-                <DialogHeader>
-                  <DialogTitle>Submit New Expense</DialogTitle>
-                </DialogHeader>
+              </ResponsiveDialogTrigger>
+              <ResponsiveDialogContent className="max-w-md">
+                <ResponsiveDialogHeader>
+                  <ResponsiveDialogTitle>Submit New Expense</ResponsiveDialogTitle>
+                </ResponsiveDialogHeader>
                 <div className="space-y-4">
                   {!projectId && (
                     <div className="space-y-2">
@@ -408,8 +414,8 @@ export const ExpenseTrackingSystem: React.FC<ExpenseTrackingProps> = ({
                     Submit Expense
                   </Button>
                 </div>
-              </DialogContent>
-            </Dialog>
+              </ResponsiveDialogContent>
+            </ResponsiveDialog>
           </div>
         </CardHeader>
         <CardContent>

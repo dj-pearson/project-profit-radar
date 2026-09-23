@@ -6,7 +6,14 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import {
+  ResponsiveDialog,
+  ResponsiveDialogTrigger,
+  ResponsiveDialogContent,
+  ResponsiveDialogHeader,
+  ResponsiveDialogTitle,
+  ResponsiveDialogDescription,
+} from '@/components/ui/responsive-dialog';
 import { Progress } from '@/components/ui/progress';
 import { ImageUpload } from '@/components/ui/image-upload';
 import { summarizePunchList } from '@/lib/projects/punchListProgress';
@@ -524,20 +531,20 @@ export const ProjectPunchList: React.FC<ProjectPunchListProps> = ({
                 <ExternalLink className="h-4 w-4 mr-2" />
                 Full View
               </Button>
-              <Dialog open={showAddItem} onOpenChange={setShowAddItem}>
-                <DialogTrigger asChild>
+              <ResponsiveDialog open={showAddItem} onOpenChange={setShowAddItem}>
+                <ResponsiveDialogTrigger asChild>
                   <Button size="sm">
                     <PlusCircle className="h-4 w-4 mr-2" />
                     Add Item
                   </Button>
-                </DialogTrigger>
-                <DialogContent className="max-w-2xl">
-                  <DialogHeader>
-                    <DialogTitle>Add Punch List Item</DialogTitle>
-                    <DialogDescription>
+                </ResponsiveDialogTrigger>
+                <ResponsiveDialogContent className="max-w-2xl">
+                  <ResponsiveDialogHeader>
+                    <ResponsiveDialogTitle>Add Punch List Item</ResponsiveDialogTitle>
+                    <ResponsiveDialogDescription>
                       Add a new item to the project punch list
-                    </DialogDescription>
-                  </DialogHeader>
+                    </ResponsiveDialogDescription>
+                  </ResponsiveDialogHeader>
                   <div className="space-y-4 max-h-96 overflow-y-auto">
                     <div className="grid grid-cols-2 gap-4">
                       <div>
@@ -707,8 +714,8 @@ export const ProjectPunchList: React.FC<ProjectPunchListProps> = ({
                       </Button>
                     </div>
                   </div>
-                </DialogContent>
-              </Dialog>
+                </ResponsiveDialogContent>
+              </ResponsiveDialog>
             </div>
           </CardTitle>
           <CardDescription>Track project completion items and deficiencies</CardDescription>
@@ -952,14 +959,14 @@ export const ProjectPunchList: React.FC<ProjectPunchListProps> = ({
       </Card>
 
       {/* Edit Item Dialog */}
-      <Dialog open={!!editingItem} onOpenChange={() => setEditingItem(null)}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>Edit Punch List Item</DialogTitle>
-            <DialogDescription>
+      <ResponsiveDialog open={!!editingItem} onOpenChange={() => setEditingItem(null)}>
+        <ResponsiveDialogContent className="max-w-2xl">
+          <ResponsiveDialogHeader>
+            <ResponsiveDialogTitle>Edit Punch List Item</ResponsiveDialogTitle>
+            <ResponsiveDialogDescription>
               Update punch list item details
-            </DialogDescription>
-          </DialogHeader>
+            </ResponsiveDialogDescription>
+          </ResponsiveDialogHeader>
           <div className="space-y-4 max-h-96 overflow-y-auto">
             <div className="grid grid-cols-2 gap-4">
               <div>
@@ -1077,8 +1084,8 @@ export const ProjectPunchList: React.FC<ProjectPunchListProps> = ({
               </Button>
             </div>
           </div>
-        </DialogContent>
-      </Dialog>
+        </ResponsiveDialogContent>
+      </ResponsiveDialog>
     </div>
   );
 };

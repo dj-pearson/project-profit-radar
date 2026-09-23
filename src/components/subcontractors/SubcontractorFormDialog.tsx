@@ -5,13 +5,13 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
+  ResponsiveDialog,
+  ResponsiveDialogContent,
+  ResponsiveDialogHeader,
+  ResponsiveDialogFooter,
+  ResponsiveDialogTitle,
+  ResponsiveDialogDescription,
+} from '@/components/ui/responsive-dialog';
 import {
   Form,
   FormControl,
@@ -80,16 +80,16 @@ export const SubcontractorFormDialog: React.FC<SubcontractorFormDialogProps> = (
   const currentTrade = form.watch('trade');
 
   return (
-    <Dialog open={open} onOpenChange={(next) => !saving && onOpenChange(next)}>
-      <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>{editing ? 'Edit subcontractor' : 'Add subcontractor'}</DialogTitle>
-          <DialogDescription>
+    <ResponsiveDialog open={open} onOpenChange={(next) => !saving && onOpenChange(next)}>
+      <ResponsiveDialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+        <ResponsiveDialogHeader>
+          <ResponsiveDialogTitle>{editing ? 'Edit subcontractor' : 'Add subcontractor'}</ResponsiveDialogTitle>
+          <ResponsiveDialogDescription>
             {editing
               ? 'Changes are saved to your company subcontractor list.'
               : 'Adds this vendor to your company subcontractor list.'}
-          </DialogDescription>
-        </DialogHeader>
+          </ResponsiveDialogDescription>
+        </ResponsiveDialogHeader>
         <Form {...form}>
           <form onSubmit={submit} className="space-y-4" noValidate>
             <FormField
@@ -210,17 +210,17 @@ export const SubcontractorFormDialog: React.FC<SubcontractorFormDialogProps> = (
                 </FormItem>
               )}
             />
-            <DialogFooter>
+            <ResponsiveDialogFooter>
               <Button type="button" variant="outline" disabled={saving} onClick={() => onOpenChange(false)}>
                 Cancel
               </Button>
               <Button type="submit" disabled={saving}>
                 {saving ? 'Saving...' : editing ? 'Save changes' : 'Add subcontractor'}
               </Button>
-            </DialogFooter>
+            </ResponsiveDialogFooter>
           </form>
         </Form>
-      </DialogContent>
-    </Dialog>
+      </ResponsiveDialogContent>
+    </ResponsiveDialog>
   );
 };

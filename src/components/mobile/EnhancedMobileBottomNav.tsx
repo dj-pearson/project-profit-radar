@@ -3,7 +3,11 @@ import { Link, useLocation } from 'react-router-dom';
 import { motion, useReducedMotion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
-import { useMobileNavigation, type MobileNavItem } from '@/hooks/useMobileNavigation';
+import {
+  isMobileNavItemActive,
+  useMobileNavigation,
+  type MobileNavItem,
+} from '@/hooks/useMobileNavigation';
 import { useHaptics } from '@/hooks/useHaptics';
 
 interface EnhancedMobileBottomNavProps {
@@ -38,12 +42,8 @@ export function EnhancedMobileBottomNav({
     haptics.tap();
   };
 
-  const isActive = (href: string) => {
-    if (href === '/dashboard') {
-      return location.pathname === href;
-    }
-    return location.pathname.startsWith(href);
-  };
+  const isActive = (href: string) =>
+    isMobileNavItemActive(href, location.pathname, location.hash);
 
   const navHeight = variant === 'compact' ? 'h-14' : 'h-16';
 

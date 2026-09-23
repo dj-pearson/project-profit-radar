@@ -1,6 +1,7 @@
 import { Link, useLocation } from 'react-router-dom';
 import { LucideIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { isMobileNavItemActive, projectIdFromPath } from '@/components/mobile/projectNav';
 
 interface NavItem {
   icon: LucideIcon;
@@ -43,7 +44,13 @@ export function MobileBottomNav({ items }: MobileBottomNavProps) {
             icon={item.icon}
             label={item.label}
             href={item.href}
-            active={location.pathname === item.href}
+            active={
+              // Project links address hub sections by hash; everything else
+              // stays an exact path match.
+              item.href.includes('#') || projectIdFromPath(item.href)
+                ? isMobileNavItemActive(item.href, location.pathname, location.hash)
+                : location.pathname === item.href
+            }
           />
         ))}
       </div>
