@@ -9,7 +9,6 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
@@ -17,38 +16,15 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { enterpriseSeoService } from '@/services/EnterpriseSeOService';
 import { contentSeoGenerator, ContentSEOConfig } from '@/services/ContentSEOGenerator';
-import { Search, Globe, BarChart3, Settings, FileText, Zap, Target, Rocket, CheckCircle, AlertTriangle, Plus, Eye, MousePointer, TrendingUp, Brain, RefreshCw } from 'lucide-react';
+import { Search, Globe, BarChart3, Settings, FileText, Zap, Target, Rocket, CheckCircle, AlertTriangle, Eye, MousePointer, TrendingUp, Brain, RefreshCw } from 'lucide-react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { logger } from '@/lib/logger';
 
-// Interfaces
-interface SEOConfig {
-  id?: string;
-  site_name: string;
-  site_description: string;
-  site_keywords: string[];
-  default_og_image: string;
-  google_analytics_id: string;
-  google_search_console_id: string;
-  canonical_domain: string;
-  robots_txt: string;
-  sitemap_enabled: boolean;
-  schema_org_enabled: boolean;
-}
-
-interface MetaTag {
-  id?: string;
-  page_path: string;
-  title: string;
-  description: string;
-  keywords: string[];
-  og_title: string;
-  og_description: string;
-  og_image: string;
-  canonical_url: string;
-  no_index: boolean;
-  no_follow: boolean;
-}
+import type { SEOConfig, MetaTag } from './unified-seo/types';
+import { buildSchemaMarkup } from './unified-seo/schemaMarkup';
+import { SEOAnalyticsTab } from './unified-seo/SEOAnalyticsTab';
+import { SEOContentTab } from './unified-seo/SEOContentTab';
+import { SEOMetaTagsTab } from './unified-seo/SEOMetaTagsTab';
 
 const UnifiedSEODashboard = () => {
   const { user, userProfile, loading } = useAuth();
@@ -303,100 +279,7 @@ const UnifiedSEODashboard = () => {
     try {
       setIsGenerating(true);
       
-      // Generate comprehensive schema markup for the construction business
-      const organizationSchema = {
-        "@context": "https://schema.org",
-        "@type": "SoftwareApplication",
-        "name": config.site_name,
-        "description": config.site_description,
-        "url": config.canonical_domain,
-        "applicationCategory": "BusinessApplication",
-        "operatingSystem": "Web",
-        "offers": {
-          "@type": "Offer",
-          "price": "149",
-          "priceCurrency": "USD",
-          "priceValidUntil": "2025-12-31"
-        },
-        "publisher": {
-          "@type": "Organization",
-          "name": config.site_name,
-          "url": config.canonical_domain,
-          "logo": {
-            "@type": "ImageObject",
-            "url": config.default_og_image
-          }
-        }
-      };
-
-      const breadcrumbSchema = {
-        "@context": "https://schema.org",
-        "@type": "BreadcrumbList",
-        "itemListElement": [
-          {
-            "@type": "ListItem",
-            "position": 1,
-            "name": "Home",
-            "item": config.canonical_domain
-          },
-          {
-            "@type": "ListItem",
-            "position": 2,
-            "name": "Features",
-            "item": `${config.canonical_domain}/features`
-          },
-          {
-            "@type": "ListItem",
-            "position": 3,
-            "name": "Pricing",
-            "item": `${config.canonical_domain}/pricing`
-          }
-        ]
-      };
-
-      const faqSchema = {
-        "@context": "https://schema.org",
-        "@type": "FAQPage",
-        "mainEntity": [
-          {
-            "@type": "Question",
-            "name": "What is Brikly?",
-            "acceptedAnswer": {
-              "@type": "Answer",
-              "text": "Brikly is a construction management platform designed for small to medium-sized construction businesses, providing real-time project management, financial tracking, and collaborative tools."
-            }
-          },
-          {
-            "@type": "Question",
-            "name": "How much does Brikly cost?",
-            "acceptedAnswer": {
-              "@type": "Answer",
-              "text": "Brikly offers tiered pricing starting at $149/month for unlimited users, providing comprehensive construction management features without per-user fees."
-            }
-          },
-          {
-            "@type": "Question",
-            "name": "What industries does Brikly serve?",
-            "acceptedAnswer": {
-              "@type": "Answer",
-              "text": "Brikly serves construction companies, contractors, project managers, and construction professionals across various construction industry sectors."
-            }
-          }
-        ]
-      };
-
-      const schemaMarkup = `<!-- Schema.org JSON-LD markup for ${config.site_name} -->
-<script type="application/ld+json">
-${JSON.stringify(organizationSchema, null, 2)}
-</script>
-
-<script type="application/ld+json">
-${JSON.stringify(breadcrumbSchema, null, 2)}
-</script>
-
-<script type="application/ld+json">
-${JSON.stringify(faqSchema, null, 2)}
-</script>`;
+      const schemaMarkup = buildSchemaMarkup(config);
 
       // Copy to clipboard
       await navigator.clipboard.writeText(schemaMarkup);
@@ -865,84 +748,11 @@ ${JSON.stringify(faqSchema, null, 2)}
 
           {/* Analytics Tab */}
           <TabsContent value="analytics" className="space-y-4">
-            {mcpConfigured ? (
-              <div className="space-y-4">
-                {/* Top Keywords */}
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Top Performing Keywords</CardTitle>
-                    <CardDescription>Keywords driving the most traffic</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-4">
-                      {analytics?.[0]?.top_queries?.slice(0, 10).map((query: { query: string; position: string; ctr: string; impressions: number; clicks: number }, index: number) => (
-                        <div key={index} className="flex items-center justify-between p-4 border rounded-lg">
-                          <div className="flex-1">
-                            <h4 className="font-medium">{query.query}</h4>
-                            <div className="flex gap-4 text-sm text-muted-foreground mt-1">
-                              <span>Position: {query.position}</span>
-                              <span>CTR: {query.ctr}%</span>
-                            </div>
-                          </div>
-                          <div className="text-right">
-                            <div className="font-medium">{query.impressions?.toLocaleString()} impressions</div>
-                            <div className="text-sm text-muted-foreground">{query.clicks?.toLocaleString()} clicks</div>
-                          </div>
-                        </div>
-                      )) || (
-                        <p className="text-muted-foreground text-center py-8">
-                          No keyword data available. Refresh data to load latest metrics.
-                        </p>
-                      )}
-                    </div>
-                  </CardContent>
-                </Card>
-
-                {/* Top Pages */}
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Top Performing Pages</CardTitle>
-                    <CardDescription>Pages with highest search visibility</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-4">
-                      {analytics?.[0]?.top_pages?.slice(0, 10).map((page: { page: string; ctr: string; impressions: number; clicks: number }, index: number) => (
-                        <div key={index} className="flex items-center justify-between p-4 border rounded-lg">
-                          <div className="flex-1">
-                            <h4 className="font-medium">{page.page}</h4>
-                            <div className="text-sm text-muted-foreground mt-1">
-                              CTR: {page.ctr}%
-                            </div>
-                          </div>
-                          <div className="text-right">
-                            <div className="font-medium">{page.impressions?.toLocaleString()} impressions</div>
-                            <div className="text-sm text-muted-foreground">{page.clicks?.toLocaleString()} clicks</div>
-                          </div>
-                        </div>
-                      )) || (
-                        <p className="text-muted-foreground text-center py-8">
-                          No page data available. Refresh data to load latest metrics.
-                        </p>
-                      )}
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-            ) : (
-              <Card>
-                <CardContent className="text-center py-12">
-                  <AlertTriangle className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                  <h3 className="text-lg font-semibold mb-2">Analytics Not Available</h3>
-                  <p className="text-muted-foreground mb-4">
-                    Configure Google Analytics and Search Console APIs to see detailed analytics data.
-                  </p>
-                  <Button onClick={checkAPICredentials}>
-                    <CheckCircle className="h-4 w-4 mr-2" />
-                    Check Configuration
-                  </Button>
-                </CardContent>
-              </Card>
-            )}
+            <SEOAnalyticsTab
+              mcpConfigured={mcpConfigured}
+              analytics={analytics}
+              checkAPICredentials={checkAPICredentials}
+            />
           </TabsContent>
 
           {/* Configuration Tab */}
@@ -1009,201 +819,23 @@ ${JSON.stringify(faqSchema, null, 2)}
 
           {/* Content Generation Tab */}
           <TabsContent value="content" className="space-y-4">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* Content Configuration */}
-              <Card>
-                <CardHeader>
-                  <CardTitle>Content Generator</CardTitle>
-                  <CardDescription>Generate SEO-optimized content</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">Title</label>
-                    <Input
-                      placeholder="Enter content title"
-                      value={contentConfig.title || ''}
-                      onChange={(e) => setContentConfig({...contentConfig, title: e.target.value})}
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">Primary Keyword</label>
-                    <Input
-                      placeholder="e.g., construction management software"
-                      value={contentConfig.primaryKeyword || ''}
-                      onChange={(e) => setContentConfig({...contentConfig, primaryKeyword: e.target.value})}
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium">Content Type</label>
-                      <Select
-                        value={contentConfig.contentType}
-                        onValueChange={(value) => setContentConfig({...contentConfig, contentType: value as ContentSEOConfig['contentType']})}
-                      >
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="blog_post">Blog Post</SelectItem>
-                          <SelectItem value="landing_page">Landing Page</SelectItem>
-                          <SelectItem value="comparison">Comparison</SelectItem>
-                          <SelectItem value="guide">Guide</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium">Target Audience</label>
-                      <Select
-                        value={contentConfig.targetAudience}
-                        onValueChange={(value) => setContentConfig({...contentConfig, targetAudience: value as ContentSEOConfig['targetAudience']})}
-                      >
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="contractors">Contractors</SelectItem>
-                          <SelectItem value="project_managers">Project Managers</SelectItem>
-                          <SelectItem value="business_owners">Business Owners</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-
-                  <Button 
-                    onClick={generateContent} 
-                    className="w-full" 
-                    disabled={isGenerating || !contentConfig.title || !contentConfig.primaryKeyword}
-                  >
-                    {isGenerating ? 'Generating...' : 'Generate SEO Content'}
-                  </Button>
-                </CardContent>
-              </Card>
-
-              {/* Generated Content Preview */}
-              <Card>
-                <CardHeader>
-                  <CardTitle>Generated Content</CardTitle>
-                  <CardDescription>Preview your SEO-optimized content</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  {generatedContent ? (
-                    <div className="space-y-4">
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="text-center p-3 border rounded-lg">
-                          <div className="text-2xl font-bold text-green-600">
-                            {generatedContent.seoScore}
-                          </div>
-                          <div className="text-sm text-muted-foreground">SEO Score</div>
-                        </div>
-                        <div className="text-center p-3 border rounded-lg">
-                          <div className="text-2xl font-bold text-blue-600">
-                            {generatedContent.keywordDensity?.toFixed(1) || 0}%
-                          </div>
-                          <div className="text-sm text-muted-foreground">Keyword Density</div>
-                        </div>
-                      </div>
-                      
-                      <div className="space-y-2">
-                        <h4 className="font-medium">Generated Title</h4>
-                        <p className="text-sm text-muted-foreground border p-3 rounded">
-                          {generatedContent.title}
-                        </p>
-                      </div>
-                      
-                      <div className="space-y-2">
-                        <h4 className="font-medium">Meta Description</h4>
-                        <p className="text-sm text-muted-foreground border p-3 rounded">
-                          {generatedContent.metaDescription}
-                        </p>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="text-center py-12 text-muted-foreground">
-                      <FileText className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                      <p>Generate content to see preview</p>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            </div>
+            <SEOContentTab
+              contentConfig={contentConfig}
+              setContentConfig={setContentConfig}
+              generateContent={generateContent}
+              isGenerating={isGenerating}
+              generatedContent={generatedContent}
+            />
           </TabsContent>
 
           {/* Meta Tags Tab */}
           <TabsContent value="meta-tags" className="space-y-4">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* Add New Meta Tag */}
-              <Card>
-                <CardHeader>
-                  <CardTitle>Add Meta Tag</CardTitle>
-                  <CardDescription>Create page-specific SEO meta tags</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">Page Path</label>
-                    <Input
-                      placeholder="/about-us"
-                      value={newMetaTag.page_path}
-                      onChange={(e) => setNewMetaTag({...newMetaTag, page_path: e.target.value})}
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">Title</label>
-                    <Input
-                      placeholder="Page title"
-                      value={newMetaTag.title}
-                      onChange={(e) => setNewMetaTag({...newMetaTag, title: e.target.value})}
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">Description</label>
-                    <Textarea
-                      placeholder="Page description for search results"
-                      value={newMetaTag.description}
-                      onChange={(e) => setNewMetaTag({...newMetaTag, description: e.target.value})}
-                      rows={3}
-                    />
-                  </div>
-
-                  <Button onClick={addMetaTag} className="w-full">
-                    <Plus className="h-4 w-4 mr-2" />
-                    Add Meta Tag
-                  </Button>
-                </CardContent>
-              </Card>
-
-              {/* Existing Meta Tags */}
-              <Card>
-                <CardHeader>
-                  <CardTitle>Existing Meta Tags</CardTitle>
-                  <CardDescription>Manage page-specific SEO settings</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4 max-h-96 overflow-y-auto">
-                    {metaTags.length > 0 ? (
-                      metaTags.map((tag, index) => (
-                        <div key={index} className="p-4 border rounded-lg">
-                          <div className="flex items-center justify-between mb-2">
-                            <h4 className="font-medium">{tag.page_path}</h4>
-                            <Badge variant="outline">{tag.title}</Badge>
-                          </div>
-                          <p className="text-sm text-muted-foreground">{tag.description}</p>
-                        </div>
-                      ))
-                    ) : (
-                      <div className="text-center py-12 text-muted-foreground">
-                        <Target className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                        <p>No meta tags configured yet</p>
-                      </div>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
+            <SEOMetaTagsTab
+              newMetaTag={newMetaTag}
+              setNewMetaTag={setNewMetaTag}
+              addMetaTag={addMetaTag}
+              metaTags={metaTags}
+            />
           </TabsContent>
         </Tabs>
       </div>

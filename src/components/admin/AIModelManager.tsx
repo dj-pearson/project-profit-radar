@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -11,71 +11,15 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Separator } from '@/components/ui/separator';
-import { AlertTriangle, Bot, Plus, Trash2, Edit, RefreshCw, Save, Link, Zap, Server, CheckCircle2, XCircle, Loader2, Settings2, TestTube, Cloud, Copy } from 'lucide-react';
+import { AlertTriangle, Bot, Plus, RefreshCw, Save, Zap, Server, CheckCircle2, XCircle, Loader2, TestTube, Cloud } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { logger } from '@/lib/logger';
 import { confirmAction } from "@/components/ui/confirm-dialog";
 
-interface AIModel {
-  id: string;
-  provider: string;
-  model_name: string;
-  model_display_name: string;
-  model_family: string;
-  model_alias?: string;
-  is_alias: boolean;
-  points_to_model?: string;
-  auto_update_alias: boolean;
-  auth_method: 'bearer' | 'x-api-key' | 'basic';
-  api_endpoint?: string;
-  max_tokens?: number;
-  context_window?: number;
-  speed_rating?: number;
-  quality_rating?: number;
-  cost_rating?: number;
-  is_active: boolean;
-  is_default: boolean;
-  priority_order: number;
-  description?: string;
-  deprecated_date?: string;
-  deprecation_reason?: string;
-  last_updated?: string;
-  created_at: string;
-  task_type?: 'standard' | 'lightweight';
-  usage_category?: string;
-}
-
-interface AIEnvConfig {
-  id: string;
-  config_key: string;
-  description: string;
-  default_value: string | null;
-  coolify_variable: string;
-  is_required: boolean;
-  config_type: string;
-}
-
-interface TestResult {
-  success: boolean;
-  timestamp: string;
-  environment: Record<string, string>;
-  config: {
-    defaultProvider: string;
-    defaultModel: string;
-    lightweightModel: string;
-    maxRetries: number;
-    timeoutMs: number;
-  };
-  standardModel: { name: string; provider: string } | null;
-  lightweightModel: { name: string; provider: string } | null;
-  apiKeyStatus: Record<string, boolean>;
-  testResults: {
-    standard?: { success: boolean; latencyMs: number; error?: string };
-    lightweight?: { success: boolean; latencyMs: number; error?: string };
-  };
-}
+import type { AIEnvConfig, AIModel, TestResult } from './ai-model-manager/types';
+import { EnvironmentTab } from './ai-model-manager/EnvironmentTab';
+import { ModelsList } from './ai-model-manager/ModelsList';
 
 const AIModelManager = () => {
   const { userProfile } = useAuth();
@@ -886,216 +830,12 @@ const AIModelManager = () => {
         </TabsContent>
 
         <TabsContent value="environment" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Cloud className="h-5 w-5" />
-                Coolify Team Shared Variables
-              </CardTitle>
-              <CardDescription>
-                These environment variables are managed centrally in Coolify and shared across all platforms.
-                Changes propagate automatically to all connected services.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <Alert>
-                <Settings2 className="h-4 w-4" />
-                <AlertTitle>How to Configure</AlertTitle>
-                <AlertDescription>
-                  <ol className="list-decimal list-inside space-y-1 mt-2">
-                    <li>Go to your Coolify dashboard</li>
-                    <li>Navigate to Team Settings &rarr; Shared Variables</li>
-                    <li>Add or update the variables listed below</li>
-                    <li>Redeploy your services to apply changes</li>
-                  </ol>
-                </AlertDescription>
-              </Alert>
-
-              <Separator />
-
-              <div className="space-y-4">
-                <h3 className="font-semibold">Required Variables</h3>
-                <div className="grid gap-3">
-                  {[
-                    { key: 'AI_DEFAULT_PROVIDER', value: 'anthropic', desc: 'Default AI provider', coolify: 'AI_DEFAULT_PROVIDER' },
-                    { key: 'DEFAULT_AI_MODEL', value: 'claude-sonnet-4-5-20250929', desc: 'Model for standard/heavy tasks', coolify: 'DEFAULT_AI_MODEL' },
-                    { key: 'LIGHTWEIGHT_AI_MODEL', value: 'claude-3-5-haiku-20241022', desc: 'Model for lightweight tasks', coolify: 'LIGHTWEIGHT_AI_MODEL' },
-                    { key: 'CLAUDE_API_KEY', value: 'sk-ant-...', desc: 'Anthropic/Claude API key', coolify: 'CLAUDE_API_KEY' },
-                  ].map((env) => (
-                    <div key={env.key} className="flex items-center justify-between p-3 border rounded-lg">
-                      <div className="space-y-1">
-                        <div className="flex items-center gap-2">
-                          <code className="bg-muted px-2 py-0.5 rounded font-mono text-sm">{env.key}</code>
-                          <Badge variant="destructive" className="text-xs">Required</Badge>
-                        </div>
-                        <p className="text-sm text-muted-foreground">{env.desc}</p>
-                        <p className="text-xs text-muted-foreground">
-                          Coolify: <code className="bg-muted px-1 rounded">{'{{ team.' + env.coolify + ' }}'}</code>
-                        </p>
-                      </div>
-                      <Button variant="ghost" size="sm" onClick={() => copyToClipboard(`{{ team.${env.coolify} }}`)}>
-                        <Copy className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  ))}
-                </div>
-
-                <h3 className="font-semibold mt-6">Optional Variables</h3>
-                <div className="grid gap-3">
-                  {[
-                    { key: 'OPENAI_API_KEY', value: 'sk-...', desc: 'OpenAI API key (for OpenAI models)', coolify: 'OPENAI_GLOBAL_API' },
-                    { key: 'AI_MAX_RETRIES', value: '3', desc: 'Max retry attempts for AI calls', coolify: 'AI_MAX_RETRIES' },
-                    { key: 'AI_TIMEOUT_MS', value: '30000', desc: 'Timeout in milliseconds', coolify: 'AI_TIMEOUT_MS' },
-                  ].map((env) => (
-                    <div key={env.key} className="flex items-center justify-between p-3 border rounded-lg">
-                      <div className="space-y-1">
-                        <div className="flex items-center gap-2">
-                          <code className="bg-muted px-2 py-0.5 rounded font-mono text-sm">{env.key}</code>
-                          <Badge variant="secondary" className="text-xs">Optional</Badge>
-                        </div>
-                        <p className="text-sm text-muted-foreground">{env.desc}</p>
-                        <p className="text-xs text-muted-foreground">
-                          Coolify: <code className="bg-muted px-1 rounded">{'{{ team.' + env.coolify + ' }}'}</code>
-                        </p>
-                      </div>
-                      <Button variant="ghost" size="sm" onClick={() => copyToClipboard(`{{ team.${env.coolify} }}`)}>
-                        <Copy className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              <Separator />
-
-              <div>
-                <h3 className="font-semibold mb-3">Current Environment Status</h3>
-                {testResult ? (
-                  <div className="grid gap-2">
-                    {Object.entries(testResult.environment).map(([key, value]) => (
-                      <div key={key} className="flex items-center justify-between p-2 bg-muted rounded">
-                        <code className="text-sm">{key}</code>
-                        <span className={`text-sm ${value === '(not set)' ? 'text-red-500' : 'text-green-500'}`}>
-                          {value}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-muted-foreground text-sm">
-                    Run the test to see current environment status.
-                  </p>
-                )}
-              </div>
-            </CardContent>
-          </Card>
+          <EnvironmentTab
+            testResult={testResult}
+            copyToClipboard={copyToClipboard}
+          />
         </TabsContent>
       </Tabs>
-    </div>
-  );
-};
-
-interface ModelsListProps {
-  models: AIModel[];
-  onEdit: (model: AIModel) => void;
-  onDelete: (model: AIModel) => void;
-}
-
-const ModelsList: React.FC<ModelsListProps> = ({ models, onEdit, onDelete }) => {
-  if (models.length === 0) {
-    return (
-      <Card>
-        <CardContent className="text-center py-12">
-          <Bot className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-          <h3 className="text-lg font-medium mb-2">No models found</h3>
-          <p className="text-muted-foreground">
-            Add your first AI model to get started.
-          </p>
-        </CardContent>
-      </Card>
-    );
-  }
-
-  return (
-    <div className="grid gap-4">
-      {models.map((model) => (
-        <Card key={model.id} className={`transition-all ${!model.is_active ? 'opacity-60' : ''}`}>
-          <CardHeader className="pb-3">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-3">
-                <div className={`h-3 w-3 rounded-full ${model.is_active ? 'bg-green-500' : 'bg-gray-400'}`} />
-                <div>
-                  <CardTitle className="text-lg flex items-center gap-2">
-                    {model.model_display_name}
-                    {model.is_alias && <Link className="h-4 w-4 text-blue-500" />}
-                    {model.is_default && <Badge variant="default">Default</Badge>}
-                    {model.task_type === 'lightweight' && (
-                      <Badge variant="secondary" className="bg-yellow-100 text-yellow-800">
-                        <Zap className="h-3 w-3 mr-1" />
-                        Lightweight
-                      </Badge>
-                    )}
-                  </CardTitle>
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <span>{model.provider}</span>
-                    <span>•</span>
-                    <span>{model.model_name}</span>
-                    {model.is_alias && model.points_to_model && (
-                      <>
-                        <span>•</span>
-                        <span className="text-blue-600">→ {model.points_to_model}</span>
-                      </>
-                    )}
-                  </div>
-                </div>
-              </div>
-              <div className="flex items-center space-x-2">
-                <Button variant="outline" size="sm" onClick={() => onEdit(model)}>
-                  <Edit className="h-4 w-4" />
-                </Button>
-                <Button variant="outline" size="sm" onClick={() => onDelete(model)}>
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent className="pt-0">
-            <div className="grid grid-cols-2 md:grid-cols-5 gap-4 text-sm">
-              <div>
-                <span className="text-muted-foreground">Auth:</span>
-                <p className="font-medium">{model.auth_method}</p>
-              </div>
-              <div>
-                <span className="text-muted-foreground">Speed:</span>
-                <p className="font-medium">{model.speed_rating}/10</p>
-              </div>
-              <div>
-                <span className="text-muted-foreground">Quality:</span>
-                <p className="font-medium">{model.quality_rating}/10</p>
-              </div>
-              <div>
-                <span className="text-muted-foreground">Cost:</span>
-                <p className="font-medium">{model.cost_rating}/10</p>
-              </div>
-              <div>
-                <span className="text-muted-foreground">Task Type:</span>
-                <p className="font-medium capitalize">{model.task_type || 'standard'}</p>
-              </div>
-            </div>
-            {model.description && (
-              <p className="text-sm text-muted-foreground mt-2">{model.description}</p>
-            )}
-            {model.deprecated_date && (
-              <div className="mt-2 p-2 bg-yellow-50 rounded border border-yellow-200">
-                <p className="text-sm text-yellow-800">
-                  <AlertTriangle className="h-4 w-4 inline mr-1" />
-                  Deprecated: {model.deprecation_reason}
-                </p>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      ))}
     </div>
   );
 };

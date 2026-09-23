@@ -27,23 +27,22 @@ const SRC = join(root, 'src');
 const LIMIT = 1000;
 
 /**
- * Shipped files already over the limit. This list only shrinks.
- * Off it so far: AuthContext.tsx (1,434 -> split into src/contexts/auth/) and
- * EstimateForm.tsx (1,215 -> sections in components/estimates/estimate-form/).
+ * Shipped files already over the limit. This list only shrinks, and it is now
+ * empty: nothing that ships is at or over 1,000 lines.
+ * Off it: AuthContext.tsx (1,434 -> split into src/contexts/auth/),
+ * EstimateForm.tsx (1,215 -> sections in components/estimates/estimate-form/),
+ * then the remaining eleven, each split into a sibling folder of
+ * subcomponents, pure helpers and types: UnifiedSEODashboard (unified-seo/),
+ * Projects (projects/), MobileDailyReportManager (daily-report/),
+ * KeywordManager (keyword-manager/), BlogAutoGeneration
+ * (blog-auto-generation/), JobCostingSoftwareComparison
+ * (job-costing-comparison/), AIModelManager (ai-model-manager/),
+ * RealTimeJobCosting (job-costing/), HierarchicalNavigationConfig
+ * (hierarchical-navigation/), SSOConfigurationForm (sso-config/) and
+ * ProjectPunchList (punch-list/). The soft max-lines warning in
+ * eslint.config.js (500) is what keeps them from growing back.
  */
-const BASELINE = new Set([
-  'src/pages/UnifiedSEODashboard.tsx',
-  'src/pages/Projects.tsx',
-  'src/components/mobile/MobileDailyReportManager.tsx',
-  'src/components/admin/KeywordManager.tsx',
-  'src/components/admin/BlogAutoGeneration.tsx',
-  'src/pages/resources/JobCostingSoftwareComparison.tsx',
-  'src/components/admin/AIModelManager.tsx',
-  'src/components/financial/RealTimeJobCosting.tsx',
-  'src/components/navigation/HierarchicalNavigationConfig.ts',
-  'src/components/sso/SSOConfigurationForm.tsx',
-  'src/components/project/tabs/ProjectPunchList.tsx',
-]);
+const BASELINE = new Set([]);
 
 /** Generated, and regenerated wholesale. Never a decomposition target. */
 const GENERATED = new Set(['src/integrations/supabase/types.ts']);

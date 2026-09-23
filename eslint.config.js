@@ -125,6 +125,12 @@ export default tseslint.config(
         "error",
         { object: "window", property: "confirm", message: "Use confirmAction() from @/components/ui/confirm-dialog." },
       ],
+      // US-267: soft size limit. scripts/check-god-files.mjs hard-fails a
+      // shipped file at 1,000 lines; this warns from 500 counted lines (blank
+      // lines and comments excluded) so a file gets split while it is still
+      // cheap to split. "warn" because ~150 files predate it; the warning
+      // ratchet in scripts/check-eslint-warnings.mjs holds the count.
+      "max-lines": ["warn", { max: 500, skipBlankLines: true, skipComments: true }],
       // US-377: dates and numbers are formatted by @/lib/format (formatDate,
       // formatDateTime, formatNumber, formatCurrency). "warn" because ~375
       // direct calls predate it; scripts/check-direct-formatting.mjs holds

@@ -7179,3 +7179,10 @@ newsletter box, CreateProject, fiscal periods, chart of accounts and
 promotions validate with react-hook-form + Zod. Auth still runs through
 the page's handlers, so CSRF, rate limiting, the MFA gate, Turnstile and
 the terms checkbox are unchanged. Unvalidated forms 35 -> 24.
+
+## US-267 pass 2 - no shipped file over 1000 lines
+Eleven more files split into sibling folders of subcomponents and pure
+helpers; tsc over the 11 files reports the same 48 old errors before and
+after, and the rebuilt navigation config serializes identically. The
+god-file baseline is empty. A max-lines warning at 500 now flags the next
+tier; it adds 149 warnings, so the eslint baseline is 4091.

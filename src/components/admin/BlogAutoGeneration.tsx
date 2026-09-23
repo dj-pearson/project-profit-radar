@@ -4,7 +4,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
@@ -16,85 +15,12 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
-import { 
-  Bot, 
-  Clock, 
-  Zap, 
-  Brain, 
-  Target, 
-  Globe, 
-  Sparkles,
-  Calendar,
-  TrendingUp,
-  AlertTriangle,
-  CheckCircle,
-  PlayCircle,
-  Save,
-  TestTube
-} from 'lucide-react';
+import { Bot, Clock, Zap, Brain, Calendar, TrendingUp, AlertTriangle, CheckCircle, PlayCircle, Save, TestTube } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 
-interface AutoGenSettings {
-  id?: string;
-  company_id: string;
-  is_enabled: boolean;
-  generation_frequency: string;
-  generation_time: string;
-  generation_timezone: string;
-  last_generation_at?: string;
-  next_generation_at?: string;
-  preferred_ai_provider: string;
-  preferred_model: string;
-  fallback_model: string;
-  model_temperature: number;
-  target_word_count: number;
-  content_style: string;
-  industry_focus: string[];
-  target_keywords: string[];
-  optimize_for_geographic: boolean; // Geographic/Local SEO
-  target_locations: string[];
-  seo_focus: string;
-  geo_optimization: boolean; // Generative Engine Optimization
-  perplexity_optimization: boolean;
-  ai_search_optimization: boolean;
-  topic_diversity_enabled: boolean;
-  minimum_topic_gap_days: number;
-  content_analysis_depth: string;
-  auto_publish: boolean;
-  publish_as_draft: boolean;
-  require_review: boolean;
-  notify_on_generation: boolean;
-  notification_emails: string[];
-  content_template?: string;
-  custom_instructions?: string;
-  brand_voice_guidelines?: string;
-}
-
-interface AIModel {
-  id: string;
-  provider: string;
-  model_name: string;
-  model_display_name: string;
-  model_family: string;
-  description: string;
-  speed_rating: number;
-  quality_rating: number;
-  cost_rating: number;
-  recommended_for_blog: boolean;
-  is_active: boolean;
-}
-
-interface QueueItem {
-  id: string;
-  scheduled_for: string;
-  status: string;
-  suggested_topic?: string;
-  ai_provider: string;
-  ai_model: string;
-  generated_blog_id?: string;
-  error_message?: string;
-  retry_count: number;
-}
+import type { AIModel, AutoGenSettings, QueueItem } from './blog-auto-generation/types';
+import { ContentSettingsTab } from './blog-auto-generation/ContentSettingsTab';
+import { SeoSettingsTab } from './blog-auto-generation/SeoSettingsTab';
 
 const BlogAutoGeneration = () => {
   const { userProfile } = useAuth();
@@ -701,240 +627,18 @@ const BlogAutoGeneration = () => {
 
         {/* Content Tab */}
         <TabsContent value="content" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Target className="h-5 w-5" />
-                Content Configuration
-              </CardTitle>
-              <CardDescription>
-                Define content style, topics, and quality parameters
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div>
-                  <Label htmlFor="word-count">Target Word Count</Label>
-                  <Input
-                    type="number"
-                    min="500"
-                    max="3000"
-                    value={settings.target_word_count}
-                    onChange={(e) => setSettings(prev => ({ ...prev, target_word_count: parseInt(e.target.value) }))}
-                  />
-                </div>
-
-                <div>
-                  <Label htmlFor="content-style">Content Style</Label>
-                  <Select 
-                    value={settings.content_style} 
-                    onValueChange={(value) => setSettings(prev => ({ ...prev, content_style: value }))}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="professional">Professional</SelectItem>
-                      <SelectItem value="conversational">Conversational</SelectItem>
-                      <SelectItem value="technical">Technical</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div>
-                  <Label htmlFor="analysis-depth">Content Analysis Depth</Label>
-                  <Select 
-                    value={settings.content_analysis_depth} 
-                    onValueChange={(value) => setSettings(prev => ({ ...prev, content_analysis_depth: value }))}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="title">Title Only</SelectItem>
-                      <SelectItem value="excerpt">Title + Excerpt</SelectItem>
-                      <SelectItem value="full">Full Content</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-
-              <div>
-                <Label htmlFor="industry-focus">Industry Focus</Label>
-                <Input
-                  placeholder="construction, project management, technology"
-                  value={settings.industry_focus.join(', ')}
-                  onChange={(e) => setSettings(prev => ({ 
-                    ...prev, 
-                    industry_focus: e.target.value.split(',').map(s => s.trim()).filter(Boolean)
-                  }))}
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="target-keywords">Target Keywords</Label>
-                <Input
-                  placeholder="construction management, project planning, safety protocols"
-                  value={settings.target_keywords.join(', ')}
-                  onChange={(e) => setSettings(prev => ({ 
-                    ...prev, 
-                    target_keywords: e.target.value.split(',').map(s => s.trim()).filter(Boolean)
-                  }))}
-                />
-              </div>
-
-              <div className="space-y-4">
-                <div className="flex items-center space-x-2">
-                  <Switch
-                    checked={settings.topic_diversity_enabled}
-                    onCheckedChange={(checked) => setSettings(prev => ({ ...prev, topic_diversity_enabled: checked }))}
-                  />
-                  <Label>Enable topic diversity checking</Label>
-                </div>
-
-                {settings.topic_diversity_enabled && (
-                  <div>
-                    <Label htmlFor="topic-gap">Minimum days between similar topics</Label>
-                    <Input
-                      type="number"
-                      min="1"
-                      max="365"
-                      value={settings.minimum_topic_gap_days}
-                      onChange={(e) => setSettings(prev => ({ ...prev, minimum_topic_gap_days: parseInt(e.target.value) }))}
-                    />
-                  </div>
-                )}
-              </div>
-
-              <div>
-                <Label htmlFor="custom-instructions">Custom Instructions</Label>
-                <Textarea
-                  placeholder="Additional instructions for content generation..."
-                  value={settings.custom_instructions || ''}
-                  onChange={(e) => setSettings(prev => ({ ...prev, custom_instructions: e.target.value }))}
-                  rows={3}
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="brand-voice">Brand Voice Guidelines</Label>
-                <Textarea
-                  placeholder="Describe your brand voice and tone..."
-                  value={settings.brand_voice_guidelines || ''}
-                  onChange={(e) => setSettings(prev => ({ ...prev, brand_voice_guidelines: e.target.value }))}
-                  rows={3}
-                />
-              </div>
-            </CardContent>
-          </Card>
+          <ContentSettingsTab
+            settings={settings}
+            setSettings={setSettings}
+          />
         </TabsContent>
 
         {/* SEO & GEO Tab */}
         <TabsContent value="seo" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Globe className="h-5 w-5" />
-                SEO & GEO Optimization
-              </CardTitle>
-              <CardDescription>
-                Configure traditional SEO, Generative Engine Optimization (GEO), and AI search optimization
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-                              <div>
-                <Label htmlFor="seo-focus">Content Strategy Focus</Label>
-                <Select 
-                  value={settings.seo_focus} 
-                  onValueChange={(value) => setSettings(prev => ({ ...prev, seo_focus: value }))}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="traditional">Traditional SEO Focus</SelectItem>
-                    <SelectItem value="geo">Generative Engine Optimization (GEO) Focus</SelectItem>
-                    <SelectItem value="balanced">Balanced Traditional + GEO</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {/* Generative Engine Optimization (GEO) */}
-              <div className="space-y-4 p-4 border rounded-lg bg-blue-50">
-                <div className="flex items-center space-x-2">
-                  <Switch
-                    checked={settings.geo_optimization}
-                    onCheckedChange={(checked) => setSettings(prev => ({ ...prev, geo_optimization: checked }))}
-                  />
-                  <Label className="font-medium">Enable Generative Engine Optimization (GEO)</Label>
-                </div>
-                <p className="text-sm text-muted-foreground">
-                  Optimizes content for AI-powered search engines like ChatGPT, Claude, Perplexity, and Google's AI Overviews. 
-                  This creates content that AI systems can easily understand, cite, and reference.
-                </p>
-              </div>
-
-              {/* AI-Specific Optimizations */}
-              <div className="space-y-4">
-                <h4 className="font-medium">AI Search Engine Optimizations</h4>
-                
-                <div className="flex items-center space-x-2">
-                  <Switch
-                    checked={settings.perplexity_optimization}
-                    onCheckedChange={(checked) => setSettings(prev => ({ ...prev, perplexity_optimization: checked }))}
-                  />
-                  <Label>Optimize for Perplexity AI & Conversational AI</Label>
-                </div>
-
-                <div className="flex items-center space-x-2">
-                  <Switch
-                    checked={settings.ai_search_optimization}
-                    onCheckedChange={(checked) => setSettings(prev => ({ ...prev, ai_search_optimization: checked }))}
-                  />
-                  <Label>Optimize for Google AI Overviews & Featured Snippets</Label>
-                </div>
-              </div>
-
-              {/* Geographic/Local SEO */}
-              <div className="space-y-4">
-                <h4 className="font-medium">Geographic/Local SEO</h4>
-                
-                <div className="flex items-center space-x-2">
-                  <Switch
-                    checked={settings.optimize_for_geographic}
-                    onCheckedChange={(checked) => setSettings(prev => ({ ...prev, optimize_for_geographic: checked }))}
-                  />
-                  <Label>Enable geographic/local search optimization</Label>
-                </div>
-
-                {settings.optimize_for_geographic && (
-                  <div>
-                    <Label htmlFor="target-locations">Target Locations</Label>
-                    <Input
-                      placeholder="New York, Los Angeles, Chicago"
-                      value={settings.target_locations.join(', ')}
-                      onChange={(e) => setSettings(prev => ({ 
-                        ...prev, 
-                        target_locations: e.target.value.split(',').map(s => s.trim()).filter(Boolean)
-                      }))}
-                    />
-                    <p className="text-xs text-muted-foreground mt-1">
-                      Add specific cities or regions for local SEO optimization
-                    </p>
-                  </div>
-                )}
-              </div>
-
-              <Alert>
-                <Sparkles className="h-4 w-4" />
-                <AlertDescription>
-                  <strong>Generative Engine Optimization (GEO)</strong> is the new frontier of content optimization. 
-                  Unlike traditional SEO that targets search result rankings, GEO optimizes content to be easily 
-                  understood, cited, and referenced by AI systems when generating responses to user queries.
-                </AlertDescription>
-              </Alert>
-            </CardContent>
-          </Card>
+          <SeoSettingsTab
+            settings={settings}
+            setSettings={setSettings}
+          />
         </TabsContent>
 
         {/* Publishing Tab */}

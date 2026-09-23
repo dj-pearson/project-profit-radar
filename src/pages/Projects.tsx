@@ -16,7 +16,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { AccessibleModal } from "@/components/accessibility/AccessibleModal";
-import { Label } from "@/components/ui/label";
 import { EditProjectForm, EDIT_PROJECT_FORM_ID } from "./projects/EditProjectForm";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { LoadingRegion, ProjectCardSkeleton } from "@/components/ui/skeletons";
@@ -28,28 +27,7 @@ import { SharedElement, sharedId } from "@/components/mobile/SharedElementTransi
 import { useToast } from "@/hooks/use-toast";
 import { gtag } from "@/hooks/useGoogleAnalytics";
 import { usePersistedState } from "@/hooks/usePersistedState";
-import {
-  Building2,
-  Search,
-  Filter,
-  Plus,
-  Edit,
-  Eye,
-  Calendar,
-  MapPin,
-  User,
-  DollarSign,
-  MoreHorizontal,
-  Trash2,
-  CalendarDays,
-  FileText,
-  Package,
-  FilterX,
-  SlidersHorizontal,
-  ArrowUpDown,
-  ArrowUp,
-  ArrowDown,
-} from "lucide-react";
+import { Building2, Search, Filter, Plus, Edit, Eye, Calendar, MapPin, User, DollarSign, MoreHorizontal, Trash2, FilterX, SlidersHorizontal, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
 import { projectService, ProjectWithRelations } from "@/services/projectService";
 import {
   DropdownMenu,
@@ -57,13 +35,6 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import { Calendar as CalendarComponent } from "@/components/ui/calendar";
-import { format } from "date-fns";
 import UpgradePrompt from "@/components/subscription/UpgradePrompt";
 import { SaveAsTemplateDialog } from "@/components/projects/SaveAsTemplateDialog";
 import { BulkActionsToolbar } from "@/components/projects/BulkActionsToolbar";
@@ -72,6 +43,8 @@ import { FilterPresetsManager } from "@/components/filters/FilterPresetsManager"
 import { CSVImportButton } from "@/components/smart-import";
 import { AccessiblePageWrapper } from "@/components/accessibility/AccessiblePageWrapper";
 import { ProjectHealthBadge } from "@/components/projects/ProjectHealthBadge";
+import { AdvancedFilters } from "./projects/AdvancedFilters";
+import { filterAndSortProjects, type SortDirection, type SortField } from "./projects/projectFilters";
 
 interface Project {
   id: string;
@@ -125,8 +98,6 @@ const Projects = () => {
   const [documentFilter, setDocumentFilter] = usePersistedState<string>("projects-document-filter", "");
 
   // Sort state
-  type SortField = 'name' | 'status' | 'budget' | 'start_date' | 'completion_percentage';
-  type SortDirection = 'asc' | 'desc';
   const [sortField, setSortField] = usePersistedState<SortField>("projects-sort-field", "name");
   const [sortDirection, setSortDirection] = usePersistedState<SortDirection>("projects-sort-dir", "asc");
 
@@ -322,94 +293,18 @@ const Projects = () => {
     setSelectedProjects(new Set());
   };
 
-  const filteredProjects = projects.filter((project) => {
-    // Basic search
-    const matchesSearch =
-      project.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      project.client_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      project.site_address?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      project.description?.toLowerCase().includes(searchTerm.toLowerCase());
-
-    // Status filter
-    const matchesStatus =
-      statusFilter === "all" || project.status === statusFilter;
-
-    // Budget range filter
-    const matchesBudget =
-      (!budgetMin || (project.budget ?? 0) >= parseFloat(budgetMin)) &&
-      (!budgetMax || (project.budget ?? 0) <= parseFloat(budgetMax));
-
-    // Date range filters
-    const projectStartDate = new Date(project.start_date);
-    const projectEndDate = new Date(project.end_date);
-    const matchesStartDate = !startDate || projectStartDate >= startDate;
-    const matchesEndDate = !endDate || projectEndDate <= endDate;
-
-    // Material filter
-    const matchesMaterial =
-      !materialFilter ||
-      (project.materials &&
-        Array.isArray(project.materials) &&
-        project.materials.some(
-          (material) =>
-            material.name
-              ?.toLowerCase()
-              .includes(materialFilter.toLowerCase()) ||
-            material.description
-              ?.toLowerCase()
-              .includes(materialFilter.toLowerCase())
-        ));
-
-    // Task filter
-    const matchesTask =
-      !taskFilter ||
-      (project.tasks &&
-        Array.isArray(project.tasks) &&
-        project.tasks.some(
-          (task) =>
-            task.name?.toLowerCase().includes(taskFilter.toLowerCase()) ||
-            task.description?.toLowerCase().includes(taskFilter.toLowerCase())
-        ));
-
-    // Document filter
-    const matchesDocument =
-      !documentFilter ||
-      (project.documents &&
-        Array.isArray(project.documents) &&
-        project.documents.some(
-          (doc) =>
-            doc.name?.toLowerCase().includes(documentFilter.toLowerCase()) ||
-            doc.file_path
-              ?.toLowerCase()
-              .includes(documentFilter.toLowerCase())
-        ));
-
-    return (
-      matchesSearch &&
-      matchesStatus &&
-      matchesBudget &&
-      matchesStartDate &&
-      matchesEndDate &&
-      matchesMaterial &&
-      matchesTask &&
-      matchesDocument
-    );
-  }).sort((a, b) => {
-    const dir = sortDirection === 'asc' ? 1 : -1;
-    switch (sortField) {
-      case 'name':
-        return dir * a.name.localeCompare(b.name);
-      case 'status':
-        return dir * a.status.localeCompare(b.status);
-      case 'budget':
-        return dir * ((a.budget || 0) - (b.budget || 0));
-      case 'start_date':
-        return dir * (new Date(a.start_date).getTime() - new Date(b.start_date).getTime());
-      case 'completion_percentage':
-        return dir * ((a.completion_percentage || 0) - (b.completion_percentage || 0));
-      default:
-        return 0;
-    }
+  const filteredProjects = filterAndSortProjects(projects, {
+    searchTerm,
+    statusFilter,
+    budgetMin,
+    budgetMax,
+    startDate,
+    endDate,
+    materialFilter,
+    taskFilter,
+    documentFilter,
+    sortField,
+    sortDirection,
   });
 
   const getProjectsByStatus = (status: string) => {
@@ -696,129 +591,22 @@ const Projects = () => {
 
         {/* Advanced Filters */}
         {showAdvancedFilters && (
-          <Card id="advanced-filters" className="p-3 sm:p-4" role="region" aria-label="Advanced filters">
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
-              {/* Budget Range */}
-              <fieldset className="space-y-2">
-                <legend className="text-sm font-medium">Budget Range</legend>
-                <div className="flex gap-2">
-                  <Input
-                    placeholder="Min ($)"
-                    type="number"
-                    value={budgetMin}
-                    onChange={(e) => setBudgetMin(e.target.value)}
-                    className="text-sm"
-                    aria-label="Minimum budget"
-                  />
-                  <Input
-                    placeholder="Max ($)"
-                    type="number"
-                    value={budgetMax}
-                    onChange={(e) => setBudgetMax(e.target.value)}
-                    className="text-sm"
-                    aria-label="Maximum budget"
-                  />
-                </div>
-              </fieldset>
-
-              {/* Start Date Range */}
-              <div className="space-y-2">
-                <Label id="start-date-label" className="text-sm font-medium">Start Date From</Label>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      className="w-full justify-start text-left font-normal"
-                      aria-labelledby="start-date-label"
-                    >
-                      <CalendarDays className="mr-2 h-4 w-4" aria-hidden="true" />
-                      {startDate ? format(startDate, "PPP") : "Pick start date"}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
-                    <CalendarComponent
-                      mode="single"
-                      selected={startDate}
-                      onSelect={setStartDate}
-                      initialFocus
-                      className="pointer-events-auto"
-                    />
-                  </PopoverContent>
-                </Popover>
-              </div>
-
-              {/* End Date Range */}
-              <div className="space-y-2">
-                <Label id="end-date-label" className="text-sm font-medium">End Date To</Label>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      className="w-full justify-start text-left font-normal"
-                      aria-labelledby="end-date-label"
-                    >
-                      <CalendarDays className="mr-2 h-4 w-4" aria-hidden="true" />
-                      {endDate ? format(endDate, "PPP") : "Pick end date"}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
-                    <CalendarComponent
-                      mode="single"
-                      selected={endDate}
-                      onSelect={setEndDate}
-                      initialFocus
-                      className="pointer-events-auto"
-                    />
-                  </PopoverContent>
-                </Popover>
-              </div>
-
-              {/* Materials Filter */}
-              <div className="space-y-2">
-                <Label htmlFor="materials-filter" className="text-sm font-medium">Materials</Label>
-                <div className="relative">
-                  <Package className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" aria-hidden="true" />
-                  <Input
-                    id="materials-filter"
-                    placeholder="Search materials..."
-                    value={materialFilter}
-                    onChange={(e) => setMaterialFilter(e.target.value)}
-                    className="pl-10"
-                  />
-                </div>
-              </div>
-
-              {/* Tasks Filter */}
-              <div className="space-y-2">
-                <Label htmlFor="tasks-filter" className="text-sm font-medium">Tasks</Label>
-                <div className="relative">
-                  <Calendar className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" aria-hidden="true" />
-                  <Input
-                    id="tasks-filter"
-                    placeholder="Search tasks..."
-                    value={taskFilter}
-                    onChange={(e) => setTaskFilter(e.target.value)}
-                    className="pl-10"
-                  />
-                </div>
-              </div>
-
-              {/* Documents Filter */}
-              <div className="space-y-2">
-                <Label htmlFor="documents-filter" className="text-sm font-medium">Documents</Label>
-                <div className="relative">
-                  <FileText className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" aria-hidden="true" />
-                  <Input
-                    id="documents-filter"
-                    placeholder="Search documents..."
-                    value={documentFilter}
-                    onChange={(e) => setDocumentFilter(e.target.value)}
-                    className="pl-10"
-                  />
-                </div>
-              </div>
-            </div>
-          </Card>
+          <AdvancedFilters
+            budgetMin={budgetMin}
+            setBudgetMin={setBudgetMin}
+            budgetMax={budgetMax}
+            setBudgetMax={setBudgetMax}
+            startDate={startDate}
+            setStartDate={setStartDate}
+            endDate={endDate}
+            setEndDate={setEndDate}
+            materialFilter={materialFilter}
+            setMaterialFilter={setMaterialFilter}
+            taskFilter={taskFilter}
+            setTaskFilter={setTaskFilter}
+            documentFilter={documentFilter}
+            setDocumentFilter={setDocumentFilter}
+          />
         )}
 
         {/* Results Count */}

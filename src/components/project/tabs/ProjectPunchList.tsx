@@ -1,7 +1,6 @@
 import React, { useMemo, useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
@@ -21,72 +20,17 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useProjectPunchList } from '@/hooks/usePunchListPage';
 import { ErrorState } from '@/components/common/ErrorState';
 import { toast } from '@/hooks/use-toast';
-import { CheckSquare, PlusCircle, ExternalLink, Edit, Trash2, Calendar, User, MapPin, AlertTriangle, CheckCircle, Clock, Play, DollarSign, Search } from 'lucide-react';
+import { CheckSquare, PlusCircle, ExternalLink, AlertTriangle, CheckCircle, Play, Search } from 'lucide-react';
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { confirmAction } from "@/components/ui/confirm-dialog";
 
-interface PunchListItem {
-  id: string;
-  project_id: string;
-  item_number: string;
-  title: string;
-  description: string;
-  location?: string;
-  category: 'deficiency' | 'incomplete_work' | 'cleanup' | 'touch_up' | 'safety' | 'code_compliance' | 'other';
-  priority: 'low' | 'medium' | 'high' | 'critical';
-  trade?: string;
-  status: 'open' | 'in_progress' | 'completed' | 'verified' | 'closed';
-  assigned_to?: string;
-  assigned_company?: string;
-  date_identified: string;
-  target_completion_date?: string;
-  date_completed?: string;
-  date_verified?: string;
-  photo_before_url?: string;
-  photo_after_url?: string;
-  estimated_cost?: number;
-  actual_cost?: number;
-  notes?: string;
-  completion_notes?: string;
-  created_by?: string;
-  created_at: string;
-}
+import { categories, priorities, trades, type PunchListItem } from './punch-list/punchListConfig';
+import { PunchListItems } from './punch-list/PunchListItems';
 
 interface ProjectPunchListProps {
   projectId: string;
   onNavigate: (path: string) => void;
 }
-
-const categories = [
-  { value: 'deficiency', label: 'Deficiency', color: 'text-red-600' },
-  { value: 'incomplete_work', label: 'Incomplete Work', color: 'text-orange-600' },
-  { value: 'cleanup', label: 'Cleanup', color: 'text-yellow-600' },
-  { value: 'touch_up', label: 'Touch Up', color: 'text-blue-600' },
-  { value: 'safety', label: 'Safety', color: 'text-red-700' },
-  { value: 'code_compliance', label: 'Code Compliance', color: 'text-purple-600' },
-  { value: 'other', label: 'Other', color: 'text-gray-600' }
-];
-
-const priorities = [
-  { value: 'low', label: 'Low', color: 'text-green-600' },
-  { value: 'medium', label: 'Medium', color: 'text-yellow-600' },
-  { value: 'high', label: 'High', color: 'text-orange-600' },
-  { value: 'critical', label: 'Critical', color: 'text-red-600' }
-];
-
-const trades = [
-  'general',
-  'electrical',
-  'plumbing',
-  'hvac',
-  'flooring',
-  'painting',
-  'drywall',
-  'roofing',
-  'concrete',
-  'landscaping',
-  'other'
-];
 
 export const ProjectPunchList: React.FC<ProjectPunchListProps> = ({
   projectId,
@@ -322,43 +266,6 @@ export const ProjectPunchList: React.FC<ProjectPunchListProps> = ({
       photo_after_url: item.photo_after_url || ''
     });
     setEditingItem(item);
-  };
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'open': return 'destructive';
-      case 'in_progress': return 'secondary';
-      case 'completed': return 'outline';
-      case 'verified': return 'success';
-      case 'closed': return 'success';
-      default: return 'outline';
-    }
-  };
-
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case 'open': return <AlertTriangle className="h-4 w-4 text-red-600" />;
-      case 'in_progress': return <Play className="h-4 w-4 text-blue-600" />;
-      case 'completed': return <CheckCircle className="h-4 w-4 text-orange-600" />;
-      case 'verified': return <CheckCircle className="h-4 w-4 text-green-600" />;
-      case 'closed': return <CheckSquare className="h-4 w-4 text-green-600" />;
-      default: return <Clock className="h-4 w-4 text-gray-600" />;
-    }
-  };
-
-  const getCategoryInfo = (category: string) => {
-    return categories.find(c => c.value === category) || categories[categories.length - 1];
-  };
-
-  const getPriorityInfo = (priority: string) => {
-    return priorities.find(p => p.value === priority) || priorities[1];
-  };
-
-  const formatCurrency = (amount?: number) => {
-    return amount ? new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD'
-    }).format(amount) : 'N/A';
   };
 
   const getPunchListStats = () => {
@@ -713,202 +620,16 @@ export const ProjectPunchList: React.FC<ProjectPunchListProps> = ({
             </Select>
           </div>
 
-          {filteredItems.length > 0 ? (
-            <div className="space-y-4">
-              {filteredItems.map((item) => {
-                const categoryInfo = getCategoryInfo(item.category);
-                const priorityInfo = getPriorityInfo(item.priority);
-                
-                return (
-                  <div key={item.id} className="border rounded-lg p-4 space-y-3">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-3">
-                        {getStatusIcon(item.status)}
-                        <div>
-                          <div className="flex items-center space-x-2">
-                            <span className="font-medium">{item.title}</span>
-                            <Badge variant="outline">{item.item_number}</Badge>
-                            {item.priority === 'critical' && (
-                              <Badge variant="destructive">Critical</Badge>
-                            )}
-                          </div>
-                          <p className="text-sm text-muted-foreground">{item.description}</p>
-                        </div>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <Badge variant={getStatusColor(item.status) as any}>
-                          {item.status.replace('_', ' ')}
-                        </Badge>
-                        {item.status === 'open' && (
-                          <Button 
-                            size="sm" 
-                            variant="outline"
-                            onClick={() => handleUpdateStatus(item.id, 'in_progress')}
-                          >
-                            Start
-                          </Button>
-                        )}
-                        {item.status === 'in_progress' && (
-                          <Button 
-                            size="sm" 
-                            variant="outline"
-                            onClick={() => handleUpdateStatus(item.id, 'completed')}
-                          >
-                            Complete
-                          </Button>
-                        )}
-                        {item.status === 'completed' && (
-                          <Button 
-                            size="sm" 
-                            variant="outline"
-                            onClick={() => handleUpdateStatus(item.id, 'verified')}
-                          >
-                            Verify
-                          </Button>
-                        )}
-                        <Button 
-                          variant="ghost" 
-                          size="sm"
-                          onClick={() => startEdit(item)}
-                        >
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleDeleteItem(item.id)}
-                          className="text-destructive hover:text-destructive"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </div>
-
-                    {(item.photo_before_url || item.photo_after_url) && (
-                      <div className="flex gap-4 mb-4">
-                        {item.photo_before_url && (
-                          <figure className="text-xs text-muted-foreground">
-                            <img
-                              src={item.photo_before_url}
-                              alt={`Before: ${item.title}`}
-                              className="h-24 w-32 object-cover rounded border"
-                            />
-                            <figcaption className="mt-1 text-center">Before</figcaption>
-                          </figure>
-                        )}
-                        {item.photo_after_url && (
-                          <figure className="text-xs text-muted-foreground">
-                            <img
-                              src={item.photo_after_url}
-                              alt={`After: ${item.title}`}
-                              className="h-24 w-32 object-cover rounded border"
-                            />
-                            <figcaption className="mt-1 text-center">After</figcaption>
-                          </figure>
-                        )}
-                      </div>
-                    )}
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 text-sm">
-                      <div className="flex items-center space-x-2">
-                        <span className="text-muted-foreground">Category:</span>
-                        <Badge variant="outline" className={categoryInfo.color}>
-                          {categoryInfo.label}
-                        </Badge>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <span className="text-muted-foreground">Priority:</span>
-                        <Badge variant="outline" className={priorityInfo.color}>
-                          {priorityInfo.label}
-                        </Badge>
-                      </div>
-                      {item.location && (
-                        <div className="flex items-center space-x-2">
-                          <MapPin className="h-4 w-4 text-muted-foreground" />
-                          <span>{item.location}</span>
-                        </div>
-                      )}
-                      {item.trade && (
-                        <div className="flex items-center space-x-2">
-                          <span className="text-muted-foreground">Trade:</span>
-                          <span className="capitalize">{item.trade}</span>
-                        </div>
-                      )}
-                    </div>
-
-                    {(item.assigned_company || item.assigned_to || item.target_completion_date) && (
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-                        {item.assigned_company && (
-                          <div className="flex items-center space-x-2">
-                            <User className="h-4 w-4 text-muted-foreground" />
-                            <span className="text-muted-foreground">Company:</span>
-                            <span>{item.assigned_company}</span>
-                          </div>
-                        )}
-                        {item.assigned_to && (
-                          <div className="flex items-center space-x-2">
-                            <User className="h-4 w-4 text-muted-foreground" />
-                            <span className="text-muted-foreground">Assigned:</span>
-                            <span>{item.assigned_to}</span>
-                          </div>
-                        )}
-                        {item.target_completion_date && (
-                          <div className="flex items-center space-x-2">
-                            <Calendar className="h-4 w-4 text-muted-foreground" />
-                            <span className="text-muted-foreground">Due:</span>
-                            <span>{new Date(item.target_completion_date).toLocaleDateString()}</span>
-                          </div>
-                        )}
-                      </div>
-                    )}
-
-                    {item.estimated_cost && (
-                      <div className="flex items-center space-x-2 text-sm">
-                        <DollarSign className="h-4 w-4 text-muted-foreground" />
-                        <span className="text-muted-foreground">Estimated Cost:</span>
-                        <span>{formatCurrency(item.estimated_cost)}</span>
-                      </div>
-                    )}
-
-                    {item.notes && (
-                      <div className="text-sm">
-                        <span className="text-muted-foreground">Notes:</span>
-                        <p className="mt-1">{item.notes}</p>
-                      </div>
-                    )}
-
-                    <div className="flex items-center justify-between text-xs text-muted-foreground">
-                      <div>
-                        Created {new Date(item.created_at).toLocaleDateString()}
-                        {item.created_by && (
-                          <span> by {item.created_by}</span>
-                        )}
-                      </div>
-                      {item.date_completed && (
-                        <div>Completed {new Date(item.date_completed).toLocaleDateString()}</div>
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          ) : (
-            <div className="text-center py-8">
-              <CheckSquare className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-              <p className="text-muted-foreground mb-4">
-                {searchTerm || filterStatus !== 'all' || filterPriority !== 'all'
-                  ? 'No items match your search criteria'
-                  : 'No punch list items created yet'
-                }
-              </p>
-              {!searchTerm && filterStatus === 'all' && filterPriority === 'all' && (
-                <Button onClick={() => setShowAddItem(true)} variant="outline">
-                  <PlusCircle className="h-4 w-4 mr-2" />
-                  Create First Item
-                </Button>
-              )}
-            </div>
-          )}
+          <PunchListItems
+            filteredItems={filteredItems}
+            searchTerm={searchTerm}
+            filterStatus={filterStatus}
+            filterPriority={filterPriority}
+            setShowAddItem={setShowAddItem}
+            handleUpdateStatus={handleUpdateStatus}
+            handleDeleteItem={handleDeleteItem}
+            startEdit={startEdit}
+          />
         </CardContent>
       </Card>
 

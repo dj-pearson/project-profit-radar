@@ -1,12 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { FileText, Camera, Users, CheckCircle2, X, Plus, Send, Calendar, Eye, Wrench, Truck } from 'lucide-react';
+import { FileText, Camera, CheckCircle2, X, Send, Calendar, Eye } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { useOfflineSync } from '@/hooks/useOfflineSync';
@@ -16,55 +15,10 @@ import { EnhancedMobileCamera } from './EnhancedMobileCamera';
 import { format } from 'date-fns';
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 
-interface CrewMember {
-  name: string;
-  role: string;
-  hours_worked: number;
-  overtime_hours: number;
-}
-
-interface TaskProgress {
-  task_name: string;
-  planned_completion: number;
-  actual_completion: number;
-  status: 'on_track' | 'behind' | 'ahead' | 'blocked';
-  notes?: string;
-}
-
-interface MaterialUsage {
-  material_name: string;
-  quantity_used: number;
-  unit: string;
-  waste_percentage?: number;
-}
-
-interface EquipmentUsage {
-  equipment_name: string;
-  hours_used: number;
-  condition: 'good' | 'fair' | 'needs_repair' | 'down';
-  notes?: string;
-}
-
-interface DailyReportData {
-  report_date: string;
-  project_id: string;
-  weather_conditions: string;
-  temperature: string;
-  work_performed: string;
-  crew_members: CrewMember[];
-  task_progress: TaskProgress[];
-  material_usage: MaterialUsage[];
-  equipment_usage: EquipmentUsage[];
-  safety_observations: string;
-  quality_issues: string;
-  delays_challenges: string;
-  photos: string[];
-  next_day_plan: string;
-  client_visitors: string;
-  deliveries_received: string;
-  total_crew_hours: number;
-  work_completion_percentage: number;
-}
+import type { CrewMember, DailyReportData, EquipmentUsage, MaterialUsage, TaskProgress } from './daily-report/types';
+import { CrewStep } from './daily-report/CrewStep';
+import { TaskProgressStep } from './daily-report/TaskProgressStep';
+import { MaterialsEquipmentStep } from './daily-report/MaterialsEquipmentStep';
 
 interface MobileDailyReportProps {
   projectId?: string;
@@ -402,26 +356,6 @@ const MobileDailyReportManager: React.FC<MobileDailyReportProps> = ({
     }
   };
 
-  const getTaskStatusColor = (status: string) => {
-    switch (status) {
-      case 'ahead': return 'bg-green-100 text-green-800 border-green-200';
-      case 'on_track': return 'bg-blue-100 text-blue-800 border-blue-200';
-      case 'behind': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
-      case 'blocked': return 'bg-red-100 text-red-800 border-red-200';
-      default: return 'bg-gray-100 text-gray-800 border-gray-200';
-    }
-  };
-
-  const getEquipmentConditionColor = (condition: string) => {
-    switch (condition) {
-      case 'good': return 'bg-green-100 text-green-800 border-green-200';
-      case 'fair': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
-      case 'needs_repair': return 'bg-orange-100 text-orange-800 border-orange-200';
-      case 'down': return 'bg-red-100 text-red-800 border-red-200';
-      default: return 'bg-gray-100 text-gray-800 border-gray-200';
-    }
-  };
-
   const canProceedToNextStep = () => {
     switch (currentStep) {
       case 1:
@@ -598,389 +532,39 @@ const MobileDailyReportManager: React.FC<MobileDailyReportProps> = ({
 
       {/* Step 2: Crew Information */}
       {currentStep === 2 && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Users className="h-5 w-5" />
-              Crew Information
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 gap-4 p-4 border rounded-lg bg-muted/50">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label>Name</Label>
-                  <Input
-                    value={newCrewMember.name}
-                    onChange={(e) => setNewCrewMember(prev => ({ ...prev, name: e.target.value }))}
-                    placeholder="Crew member name"
-                  />
-                </div>
-                <div>
-                  <Label>Role</Label>
-                  <Input
-                    value={newCrewMember.role}
-                    onChange={(e) => setNewCrewMember(prev => ({ ...prev, role: e.target.value }))}
-                    placeholder="Position/trade"
-                  />
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label>Regular Hours</Label>
-                  <Input
-                    type="number"
-                    min="0"
-                    step="0.5"
-                    value={newCrewMember.hours_worked}
-                    onChange={(e) => setNewCrewMember(prev => ({ 
-                      ...prev, 
-                      hours_worked: parseFloat(e.target.value) || 0 
-                    }))}
-                  />
-                </div>
-                <div>
-                  <Label>Overtime Hours</Label>
-                  <Input
-                    type="number"
-                    min="0"
-                    step="0.5"
-                    value={newCrewMember.overtime_hours}
-                    onChange={(e) => setNewCrewMember(prev => ({ 
-                      ...prev, 
-                      overtime_hours: parseFloat(e.target.value) || 0 
-                    }))}
-                  />
-                </div>
-              </div>
-              <Button
-                onClick={addCrewMember}
-                disabled={!newCrewMember.name || !newCrewMember.role}
-                className="w-full"
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                Add Crew Member
-              </Button>
-            </div>
-
-            {reportData.crew_members.map((member, index) => (
-              <div key={index} className="flex items-center justify-between p-3 bg-background border rounded">
-                <div className="flex-1">
-                  <div className="font-medium">{member.name}</div>
-                  <div className="text-sm text-muted-foreground">
-                    {member.role} • {member.hours_worked + member.overtime_hours}h total
-                    {member.overtime_hours > 0 && ` (${member.overtime_hours}h OT)`}
-                  </div>
-                </div>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => removeCrewMember(index)}
-                >
-                  <X className="h-4 w-4" />
-                </Button>
-              </div>
-            ))}
-
-            {reportData.crew_members.length > 0 && (
-              <div className="text-center p-2 bg-muted rounded">
-                <strong>Total Crew Hours: {reportData.total_crew_hours}h</strong>
-              </div>
-            )}
-          </CardContent>
-        </Card>
+        <CrewStep
+          newCrewMember={newCrewMember}
+          setNewCrewMember={setNewCrewMember}
+          addCrewMember={addCrewMember}
+          removeCrewMember={removeCrewMember}
+          reportData={reportData}
+        />
       )}
 
       {/* Step 3: Task Progress */}
       {currentStep === 3 && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <CheckCircle2 className="h-5 w-5" />
-              Task Progress
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="p-4 border rounded-lg bg-muted/50 space-y-4">
-              <div>
-                <Label>Task Name</Label>
-                <Input
-                  value={newTask.task_name}
-                  onChange={(e) => setNewTask(prev => ({ ...prev, task_name: e.target.value }))}
-                  placeholder="Task or activity name"
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label>Planned (%)</Label>
-                  <Input
-                    type="number"
-                    min="0"
-                    max="100"
-                    value={newTask.planned_completion}
-                    onChange={(e) => setNewTask(prev => ({ 
-                      ...prev, 
-                      planned_completion: parseInt(e.target.value) || 0 
-                    }))}
-                  />
-                </div>
-                <div>
-                  <Label>Actual (%)</Label>
-                  <Input
-                    type="number"
-                    min="0"
-                    max="100"
-                    value={newTask.actual_completion}
-                    onChange={(e) => setNewTask(prev => ({ 
-                      ...prev, 
-                      actual_completion: parseInt(e.target.value) || 0 
-                    }))}
-                  />
-                </div>
-              </div>
-              <div>
-                <Label>Status</Label>
-                <Select value={newTask.status} onValueChange={(value) => 
-                  setNewTask(prev => ({ ...prev, status: value as TaskProgress['status'] }))
-                }>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="ahead">Ahead of Schedule</SelectItem>
-                    <SelectItem value="on_track">On Track</SelectItem>
-                    <SelectItem value="behind">Behind Schedule</SelectItem>
-                    <SelectItem value="blocked">Blocked</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label>Notes</Label>
-                <Textarea
-                  value={newTask.notes || ''}
-                  onChange={(e) => setNewTask(prev => ({ ...prev, notes: e.target.value }))}
-                  placeholder="Additional notes..."
-                  rows={2}
-                />
-              </div>
-              <Button
-                onClick={addTask}
-                disabled={!newTask.task_name}
-                className="w-full"
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                Add Task
-              </Button>
-            </div>
-
-            {reportData.task_progress.map((task, index) => (
-              <div key={index} className="flex items-center justify-between p-3 bg-background border rounded">
-                <div className="flex-1">
-                  <div className="font-medium">{task.task_name}</div>
-                  <div className="flex items-center gap-2 mt-1">
-                    <Badge className={getTaskStatusColor(task.status)}>
-                      {task.status.replace('_', ' ')}
-                    </Badge>
-                    <span className="text-sm text-muted-foreground">
-                      {task.actual_completion}% complete
-                    </span>
-                  </div>
-                </div>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => removeTask(index)}
-                >
-                  <X className="h-4 w-4" />
-                </Button>
-              </div>
-            ))}
-          </CardContent>
-        </Card>
+        <TaskProgressStep
+          newTask={newTask}
+          setNewTask={setNewTask}
+          addTask={addTask}
+          removeTask={removeTask}
+          reportData={reportData}
+        />
       )}
 
       {/* Step 4: Materials & Equipment */}
       {currentStep === 4 && (
-        <div className="space-y-4">
-          {/* Materials */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Wrench className="h-5 w-5" />
-                Materials Used
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="p-4 border rounded-lg bg-muted/50 space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label>Material</Label>
-                    <Input
-                      value={newMaterial.material_name}
-                      onChange={(e) => setNewMaterial(prev => ({ ...prev, material_name: e.target.value }))}
-                      placeholder="Material name"
-                    />
-                  </div>
-                  <div>
-                    <Label>Unit</Label>
-                    <Input
-                      value={newMaterial.unit}
-                      onChange={(e) => setNewMaterial(prev => ({ ...prev, unit: e.target.value }))}
-                      placeholder="lbs, yards, etc."
-                    />
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label>Quantity Used</Label>
-                    <Input
-                      type="number"
-                      min="0"
-                      value={newMaterial.quantity_used}
-                      onChange={(e) => setNewMaterial(prev => ({ 
-                        ...prev, 
-                        quantity_used: parseFloat(e.target.value) || 0 
-                      }))}
-                    />
-                  </div>
-                  <div>
-                    <Label>Waste (%)</Label>
-                    <Input
-                      type="number"
-                      min="0"
-                      max="100"
-                      value={newMaterial.waste_percentage || 0}
-                      onChange={(e) => setNewMaterial(prev => ({ 
-                        ...prev, 
-                        waste_percentage: parseFloat(e.target.value) || 0 
-                      }))}
-                    />
-                  </div>
-                </div>
-                <Button
-                  onClick={addMaterial}
-                  disabled={!newMaterial.material_name || !newMaterial.unit}
-                  className="w-full"
-                >
-                  <Plus className="h-4 w-4 mr-2" />
-                  Add Material
-                </Button>
-              </div>
-
-              {reportData.material_usage.map((material, index) => (
-                <div key={index} className="flex items-center justify-between p-3 bg-background border rounded">
-                  <div className="flex-1">
-                    <div className="font-medium">{material.material_name}</div>
-                    <div className="text-sm text-muted-foreground">
-                      {material.quantity_used} {material.unit}
-                      {material.waste_percentage ? ` • ${material.waste_percentage}% waste` : ''}
-                    </div>
-                  </div>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => removeMaterial(index)}
-                  >
-                    <X className="h-4 w-4" />
-                  </Button>
-                </div>
-              ))}
-            </CardContent>
-          </Card>
-
-          {/* Equipment */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Truck className="h-5 w-5" />
-                Equipment Usage
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="p-4 border rounded-lg bg-muted/50 space-y-4">
-                <div>
-                  <Label>Equipment</Label>
-                  <Input
-                    value={newEquipment.equipment_name}
-                    onChange={(e) => setNewEquipment(prev => ({ ...prev, equipment_name: e.target.value }))}
-                    placeholder="Equipment name"
-                  />
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label>Hours Used</Label>
-                    <Input
-                      type="number"
-                      min="0"
-                      step="0.5"
-                      value={newEquipment.hours_used}
-                      onChange={(e) => setNewEquipment(prev => ({ 
-                        ...prev, 
-                        hours_used: parseFloat(e.target.value) || 0 
-                      }))}
-                    />
-                  </div>
-                  <div>
-                    <Label>Condition</Label>
-                    <Select value={newEquipment.condition} onValueChange={(value) => 
-                      setNewEquipment(prev => ({ ...prev, condition: value as EquipmentUsage['condition'] }))
-                    }>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="good">Good</SelectItem>
-                        <SelectItem value="fair">Fair</SelectItem>
-                        <SelectItem value="needs_repair">Needs Repair</SelectItem>
-                        <SelectItem value="down">Down/Broken</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-                <div>
-                  <Label>Notes</Label>
-                  <Textarea
-                    value={newEquipment.notes || ''}
-                    onChange={(e) => setNewEquipment(prev => ({ ...prev, notes: e.target.value }))}
-                    placeholder="Equipment notes..."
-                    rows={2}
-                  />
-                </div>
-                <Button
-                  onClick={addEquipment}
-                  disabled={!newEquipment.equipment_name}
-                  className="w-full"
-                >
-                  <Plus className="h-4 w-4 mr-2" />
-                  Add Equipment
-                </Button>
-              </div>
-
-              {reportData.equipment_usage.map((equipment, index) => (
-                <div key={index} className="flex items-center justify-between p-3 bg-background border rounded">
-                  <div className="flex-1">
-                    <div className="font-medium">{equipment.equipment_name}</div>
-                    <div className="flex items-center gap-2 mt-1">
-                      <Badge className={getEquipmentConditionColor(equipment.condition)}>
-                        {equipment.condition.replace('_', ' ')}
-                      </Badge>
-                      <span className="text-sm text-muted-foreground">
-                        {equipment.hours_used}h used
-                      </span>
-                    </div>
-                  </div>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => removeEquipment(index)}
-                  >
-                    <X className="h-4 w-4" />
-                  </Button>
-                </div>
-              ))}
-            </CardContent>
-          </Card>
-        </div>
+        <MaterialsEquipmentStep
+          newMaterial={newMaterial}
+          setNewMaterial={setNewMaterial}
+          addMaterial={addMaterial}
+          removeMaterial={removeMaterial}
+          newEquipment={newEquipment}
+          setNewEquipment={setNewEquipment}
+          addEquipment={addEquipment}
+          removeEquipment={removeEquipment}
+          reportData={reportData}
+        />
       )}
 
       {/* Step 5: Notes & Photos */}

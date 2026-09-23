@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -30,58 +29,15 @@ import { Shield, Server, Globe, CheckCircle, AlertCircle, Loader2 } from 'lucide
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { SAML_AVAILABLE, SAML_UNAVAILABLE_NOTICE } from '@/lib/sso/samlAvailability';
 
-// SAML Configuration Schema
-const samlConfigSchema = z.object({
-  display_name: z.string().min(1, 'Display name is required'),
-  entity_id: z.string().min(1, 'Entity ID is required'),
-  sso_url: z.string().url('Invalid SSO URL'),
-  slo_url: z.string().url('Invalid SLO URL').optional().or(z.literal('')),
-  certificate: z.string().min(1, 'Certificate is required'),
-  sign_request: z.boolean().default(false),
-  want_assertions_signed: z.boolean().default(true),
-  allowed_domains: z.string().optional(),
-  default_role: z.string().default('office_staff'),
-  is_enabled: z.boolean().default(false),
-  is_default: z.boolean().default(false),
-});
-
-// OAuth Configuration Schema
-const oauthConfigSchema = z.object({
-  display_name: z.string().min(1, 'Display name is required'),
-  provider: z.enum(['oauth_google', 'oauth_microsoft', 'oauth_github']),
-  client_id: z.string().min(1, 'Client ID is required'),
-  client_secret: z.string().min(1, 'Client Secret is required'),
-  authorize_url: z.string().url('Invalid authorize URL').optional().or(z.literal('')),
-  token_url: z.string().url('Invalid token URL').optional().or(z.literal('')),
-  scopes: z.string().optional(),
-  allowed_domains: z.string().optional(),
-  default_role: z.string().default('office_staff'),
-  is_enabled: z.boolean().default(false),
-  is_default: z.boolean().default(false),
-});
-
-// LDAP Configuration Schema
-const ldapConfigSchema = z.object({
-  display_name: z.string().min(1, 'Display name is required'),
-  host: z.string().min(1, 'Host is required'),
-  port: z.coerce.number().int().min(1).max(65535).default(389),
-  use_ssl: z.boolean().default(false),
-  bind_dn: z.string().min(1, 'Bind DN is required'),
-  bind_password: z.string().min(1, 'Bind password is required'),
-  user_search_base: z.string().min(1, 'User search base is required'),
-  user_search_filter: z.string().default('(uid={username})'),
-  group_search_base: z.string().optional(),
-  email_attribute: z.string().default('mail'),
-  name_attribute: z.string().default('cn'),
-  allowed_domains: z.string().optional(),
-  default_role: z.string().default('office_staff'),
-  is_enabled: z.boolean().default(false),
-  is_default: z.boolean().default(false),
-});
-
-type SAMLConfig = z.infer<typeof samlConfigSchema>;
-type OAuthConfig = z.infer<typeof oauthConfigSchema>;
-type LDAPConfig = z.infer<typeof ldapConfigSchema>;
+import {
+  ldapConfigSchema,
+  oauthConfigSchema,
+  samlConfigSchema,
+  type LDAPConfig,
+  type OAuthConfig,
+  type SAMLConfig,
+} from './sso-config/schemas';
+import { LdapConfigTab } from './sso-config/LdapConfigTab';
 
 interface SSOConfigurationFormProps {
   onSuccess?: () => void;
@@ -842,239 +798,14 @@ export const SSOConfigurationForm: React.FC<SSOConfigurationFormProps> = ({
 
           {/* LDAP Configuration */}
           <TabsContent value="ldap">
-            <Form {...ldapForm}>
-              <form onSubmit={ldapForm.handleSubmit(handleLDAPSubmit)} className="space-y-4">
-                <FormField
-                  control={ldapForm.control}
-                  name="display_name"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Display Name</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Active Directory" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <div className="grid grid-cols-3 gap-4">
-                  <FormField
-                    control={ldapForm.control}
-                    name="host"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Host</FormLabel>
-                        <FormControl>
-                          <Input placeholder="ldap.company.com" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={ldapForm.control}
-                    name="port"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Port</FormLabel>
-                        <FormControl>
-                          <Input type="number" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={ldapForm.control}
-                    name="use_ssl"
-                    render={({ field }) => (
-                      <FormItem className="flex items-center justify-between rounded-lg border p-3 h-[70px]">
-                        <FormLabel>Use SSL/TLS</FormLabel>
-                        <FormControl>
-                          <Switch checked={field.value} onCheckedChange={field.onChange} />
-                        </FormControl>
-                      </FormItem>
-                    )}
-                  />
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <FormField
-                    control={ldapForm.control}
-                    name="bind_dn"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Bind DN</FormLabel>
-                        <FormControl>
-                          <Input placeholder="cn=admin,dc=company,dc=com" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={ldapForm.control}
-                    name="bind_password"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Bind Password</FormLabel>
-                        <FormControl>
-                          <Input
-                            type="password"
-                            placeholder={existingConnection ? '••••••••' : 'password'}
-                            {...field}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <FormField
-                    control={ldapForm.control}
-                    name="user_search_base"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>User Search Base</FormLabel>
-                        <FormControl>
-                          <Input placeholder="ou=users,dc=company,dc=com" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={ldapForm.control}
-                    name="user_search_filter"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>User Search Filter</FormLabel>
-                        <FormControl>
-                          <Input placeholder="(uid={username})" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <FormField
-                    control={ldapForm.control}
-                    name="email_attribute"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Email Attribute</FormLabel>
-                        <FormControl>
-                          <Input placeholder="mail" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={ldapForm.control}
-                    name="name_attribute"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Name Attribute</FormLabel>
-                        <FormControl>
-                          <Input placeholder="cn" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <FormField
-                    control={ldapForm.control}
-                    name="allowed_domains"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Allowed Domains</FormLabel>
-                        <FormControl>
-                          <Input placeholder="company.com" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={ldapForm.control}
-                    name="default_role"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Default Role</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select role" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            {roleOptions.map((role) => (
-                              <SelectItem key={role.value} value={role.value}>
-                                {role.label}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <FormField
-                    control={ldapForm.control}
-                    name="is_enabled"
-                    render={({ field }) => (
-                      <FormItem className="flex items-center justify-between rounded-lg border p-3">
-                        <FormLabel>Enable Connection</FormLabel>
-                        <FormControl>
-                          <Switch checked={field.value} onCheckedChange={field.onChange} />
-                        </FormControl>
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={ldapForm.control}
-                    name="is_default"
-                    render={({ field }) => (
-                      <FormItem className="flex items-center justify-between rounded-lg border p-3">
-                        <FormLabel>Default Connection</FormLabel>
-                        <FormControl>
-                          <Switch checked={field.value} onCheckedChange={field.onChange} />
-                        </FormControl>
-                      </FormItem>
-                    )}
-                  />
-                </div>
-
-                <div className="flex justify-between pt-4">
-                  <Button type="button" variant="outline" onClick={onCancel}>
-                    Cancel
-                  </Button>
-                  <Button type="submit" disabled={isSubmitting}>
-                    {isSubmitting && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-                    {existingConnection ? 'Update' : 'Create'} LDAP Connection
-                  </Button>
-                </div>
-              </form>
-            </Form>
+            <LdapConfigTab
+              ldapForm={ldapForm}
+              handleLDAPSubmit={handleLDAPSubmit}
+              isSubmitting={isSubmitting}
+              existingConnection={existingConnection}
+              roleOptions={roleOptions}
+              onCancel={onCancel}
+            />
           </TabsContent>
         </Tabs>
 

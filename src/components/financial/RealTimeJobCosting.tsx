@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -12,53 +12,13 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { DollarSign, TrendingUp, TrendingDown, AlertTriangle, Users, Wrench, Package, BarChart3, Edit, Save, X } from 'lucide-react';
+import { DollarSign, TrendingUp, TrendingDown, AlertTriangle, Users, Package, BarChart3, Edit, Save, X } from 'lucide-react';
 import { logger } from '@/lib/logger';
 import { DashboardSkeleton, LoadingRegion } from '@/components/ui/skeletons';
 
-interface JobCost {
-  id: string;
-  project_id: string;
-  cost_code_id: string;
-  date: string;
-  labor_hours: number;
-  labor_cost: number;
-  material_cost: number;
-  equipment_cost: number;
-  other_cost: number;
-  total_cost: number;
-  description: string;
-  created_at: string;
-  cost_codes?: {
-    code: string;
-    name: string;
-    category: string;
-  };
-}
-
-interface Project {
-  id: string;
-  name: string;
-  budget: number;
-  status: string;
-}
-
-interface CostCode {
-  id: string;
-  code: string;
-  name: string;
-  category: string;
-}
-
-interface CostSummary {
-  totalCost: number;
-  laborCost: number;
-  materialCost: number;
-  equipmentCost: number;
-  otherCost: number;
-  budgetVariance: number;
-  budgetVariancePercentage: number;
-}
+import type { CostCode, CostSummary, JobCost, Project } from './job-costing/types';
+import { AddCostTab } from './job-costing/AddCostTab';
+import { CostAnalyticsTab } from './job-costing/CostAnalyticsTab';
 
 interface RealTimeJobCostingProps {
   projectId?: string;
@@ -849,237 +809,21 @@ const RealTimeJobCosting: React.FC<RealTimeJobCostingProps> = ({ projectId }) =>
             </TabsContent>
 
             <TabsContent value="add" className="space-y-4">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Add New Job Cost</CardTitle>
-                  <CardDescription>
-                    Record costs for labor, materials, equipment, and other expenses
-                  </CardDescription>
-                </CardHeader>
-                 <CardContent className="space-y-4">
-                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                     <div className="space-y-2">
-                       <Label>Project *</Label>
-                       <Select 
-                         value={newCostForm.project_id} 
-                         onValueChange={(value) => updateFormField('project_id', value)}
-                       >
-                         <SelectTrigger>
-                           <SelectValue placeholder="Select project" />
-                         </SelectTrigger>
-                         <SelectContent>
-                           {projects.map((project) => (
-                             <SelectItem key={project.id} value={project.id}>
-                               {project.name}
-                             </SelectItem>
-                           ))}
-                         </SelectContent>
-                       </Select>
-                     </div>
-                     
-                     <div className="space-y-2">
-                       <Label>Cost Code *</Label>
-                       <Select 
-                         value={newCostForm.cost_code_id} 
-                         onValueChange={(value) => updateFormField('cost_code_id', value)}
-                       >
-                         <SelectTrigger>
-                           <SelectValue placeholder="Select cost code" />
-                         </SelectTrigger>
-                         <SelectContent>
-                           {costCodes.map((code) => (
-                             <SelectItem key={code.id} value={code.id}>
-                               {code.code} - {code.name}
-                             </SelectItem>
-                           ))}
-                         </SelectContent>
-                       </Select>
-                     </div>
-                     
-                     <div className="space-y-2">
-                       <Label>Date</Label>
-                       <Input
-                         type="date"
-                         value={newCostForm.date}
-                         onChange={(e) => updateFormField('date', e.target.value)}
-                       />
-                     </div>
-                   </div>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                    <div className="space-y-2">
-                      <Label>Labor Hours</Label>
-                      <Input
-                        type="number"
-                        step="0.5"
-                        min="0"
-                        value={newCostForm.labor_hours}
-                        onChange={(e) => updateFormField('labor_hours', e.target.value)}
-                        placeholder="0"
-                      />
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <Label>Labor Cost</Label>
-                      <Input
-                        type="number"
-                        step="0.01"
-                        min="0"
-                        value={newCostForm.labor_cost}
-                        onChange={(e) => updateFormField('labor_cost', e.target.value)}
-                        placeholder="0.00"
-                      />
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <Label>Material Cost</Label>
-                      <Input
-                        type="number"
-                        step="0.01"
-                        min="0"
-                        value={newCostForm.material_cost}
-                        onChange={(e) => updateFormField('material_cost', e.target.value)}
-                        placeholder="0.00"
-                      />
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <Label>Equipment Cost</Label>
-                      <Input
-                        type="number"
-                        step="0.01"
-                        min="0"
-                        value={newCostForm.equipment_cost}
-                        onChange={(e) => updateFormField('equipment_cost', e.target.value)}
-                        placeholder="0.00"
-                      />
-                    </div>
-                  </div>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label>Other Cost</Label>
-                      <Input
-                        type="number"
-                        step="0.01"
-                        min="0"
-                        value={newCostForm.other_cost}
-                        onChange={(e) => updateFormField('other_cost', e.target.value)}
-                        placeholder="0.00"
-                      />
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <Label>Total Cost</Label>
-                      <Input
-                        type="number"
-                        step="0.01"
-                        value={
-                          (parseFloat(newCostForm.labor_cost) || 0) +
-                          (parseFloat(newCostForm.material_cost) || 0) +
-                          (parseFloat(newCostForm.equipment_cost) || 0) +
-                          (parseFloat(newCostForm.other_cost) || 0)
-                        }
-                        readOnly
-                        className="bg-muted"
-                      />
-                    </div>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label>Description</Label>
-                    <Textarea
-                      value={newCostForm.description}
-                      onChange={(e) => updateFormField('description', e.target.value)}
-                      placeholder="Describe the work performed or materials used..."
-                      rows={3}
-                    />
-                  </div>
-                  
-                   <Button 
-                     onClick={addJobCost}
-                     disabled={addingCost || !newCostForm.project_id || !newCostForm.cost_code_id}
-                     className="w-full"
-                   >
-                     {addingCost ? 'Adding...' : 'Add Job Cost'}
-                   </Button>
-                </CardContent>
-              </Card>
+              <AddCostTab
+                projects={projects}
+                newCostForm={newCostForm}
+                updateFormField={updateFormField}
+                costCodes={costCodes}
+                addJobCost={addJobCost}
+                addingCost={addingCost}
+              />
             </TabsContent>
 
             <TabsContent value="analytics" className="space-y-4">
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Cost Breakdown by Category</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-3">
-                      {[
-                        { name: 'Labor', value: costSummary.laborCost, icon: Users, color: 'bg-blue-500' },
-                        { name: 'Materials', value: costSummary.materialCost, icon: Package, color: 'bg-green-500' },
-                        { name: 'Equipment', value: costSummary.equipmentCost, icon: Wrench, color: 'bg-orange-500' },
-                        { name: 'Other', value: costSummary.otherCost, icon: DollarSign, color: 'bg-purple-500' }
-                      ].map(({ name, value, icon: Icon, color }) => {
-                        const percentage = costSummary.totalCost > 0 ? (value / costSummary.totalCost) * 100 : 0;
-                        return (
-                          <div key={name} className="flex items-center justify-between">
-                            <div className="flex items-center space-x-2">
-                              <div className={`w-3 h-3 rounded-full ${color}`} />
-                              <Icon className="h-4 w-4" />
-                              <span className="font-medium">{name}</span>
-                            </div>
-                            <div className="text-right">
-                              <p className="font-bold">${value.toLocaleString()}</p>
-                              <p className="text-sm text-muted-foreground">{percentage.toFixed(1)}%</p>
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Project Health</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-4">
-                      <div>
-                        <div className="flex justify-between text-sm mb-1">
-                          <span>Budget Usage</span>
-                          <span>{currentProject.budget ? ((costSummary.totalCost / currentProject.budget) * 100).toFixed(1) : 0}%</span>
-                        </div>
-                        <Progress value={currentProject.budget ? (costSummary.totalCost / currentProject.budget) * 100 : 0} />
-                      </div>
-                      
-                      <div className="grid grid-cols-2 gap-4 text-sm">
-                        <div>
-                          <p className="text-muted-foreground">Budget</p>
-                          <p className="font-bold text-lg">${currentProject.budget?.toLocaleString() || '0'}</p>
-                        </div>
-                        <div>
-                          <p className="text-muted-foreground">Spent</p>
-                          <p className="font-bold text-lg">${costSummary.totalCost.toLocaleString()}</p>
-                        </div>
-                        <div>
-                          <p className="text-muted-foreground">Remaining</p>
-                          <p className={`font-bold text-lg ${costSummary.budgetVariance >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                            ${Math.abs(costSummary.budgetVariance).toLocaleString()}
-                          </p>
-                        </div>
-                        <div>
-                          <p className="text-muted-foreground">Status</p>
-                          <Badge variant={costSummary.budgetVariance >= 0 ? 'default' : 'destructive'}>
-                            {costSummary.budgetVariance >= 0 ? 'On Budget' : 'Over Budget'}
-                          </Badge>
-                        </div>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
+              <CostAnalyticsTab
+                costSummary={costSummary}
+                currentProject={currentProject}
+              />
             </TabsContent>
           </Tabs>
         </>
