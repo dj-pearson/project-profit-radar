@@ -29,6 +29,21 @@ serve(async (req) => {
       return errorResponse('Unauthorized', 401, req);
     }
 
+    // Admin only, the same roles enhanced-blog-ai-fixed admits through
+    // requireSystemOrAdmin. A signed-in check alone let any user of any tenant
+    // spend CLAUDE_API_KEY tokens through the test-claude action. The role is
+    // checked directly rather than through requireSystemOrAdmin because that
+    // guard admits everyone while CRON_SECRET is unset, and this function has
+    // no scheduler caller.
+    const { data: callerProfile } = await authContext.supabase
+      .from('user_profiles')
+      .select('role')
+      .eq('id', authContext.user.id)
+      .maybeSingle();
+    if (!callerProfile || !['admin', 'root_admin'].includes(callerProfile.role)) {
+      return errorResponse('Forbidden - admin access required', 403, req);
+    }
+
     console.log("Enhanced Blog AI Simple - Function started");
     
     const parsed = await validateBody(req, EnhancedBlogAiSimpleSchema, { name: 'enhanced-blog-ai-simple' });
@@ -43,11 +58,12 @@ serve(async (req) => {
     const supabaseUrl = Deno.env.get("SUPABASE_URL");
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
 
+    // Presence only. Never log or return any part of a key (prefix, length):
+    // a prefix narrows the search space and identifies the key in a leak.
     console.log("Environment check:", {
       hasClaudeKey: !!claudeKey,
       hasSupabaseUrl: !!supabaseUrl,
       hasSupabaseKey: !!supabaseKey,
-      claudeKeyLength: claudeKey?.length || 0
     });
 
     if (action === 'test-generation') {
@@ -59,7 +75,6 @@ serve(async (req) => {
           hasClaudeKey: !!claudeKey,
           hasSupabaseUrl: !!supabaseUrl,
           hasSupabaseKey: !!supabaseKey,
-          claudeKeyPrefix: claudeKey?.substring(0, 10) + "..." || "Not found"
         },
         content: {
           title: `Test: ${topic}`,
@@ -165,7 +180,6 @@ serve(async (req) => {
     return new Response(JSON.stringify({
       success: false,
       error: error.message,
-      stack: error.stack
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 500,

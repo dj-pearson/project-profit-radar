@@ -7008,3 +7008,11 @@ let a request-body id reach another tenant's rows; all fixed and pinned in
 _shared/tenantScope.test.ts (image-processor, process-behavioral-triggers,
 enhanced-blog-ai-fixed, sync-analytics-data, social-webhook-deployer,
 generate-timeline-optimization, ml-lead-scoring).
+
+## Found-issue fixes (from US-241 batch 3)
+enhanced-blog-ai-simple: returned the first 10 chars of CLAUDE_API_KEY and let
+any signed-in user spend Claude tokens; now admin/root_admin only, no key or
+stack in responses. seo-file-generator: now root_admin only, like the save
+functions. ApiManagement create-key calls the pathname route; the Test
+Webhook button (internal-only route) and the social "Test Post Now" button
+(internal-only function) are removed.

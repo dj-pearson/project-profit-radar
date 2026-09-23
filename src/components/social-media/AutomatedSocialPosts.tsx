@@ -23,7 +23,7 @@ import { Separator } from "@/components/ui/separator";
 import { PostQueueActions } from "./PostQueueActions";
 import { useAutomatedSocialPosts } from "@/hooks/useAutomatedSocialPosts";
 import { useAuth } from '@/contexts/AuthContext';
-import { Clock, Play, Settings, BarChart3, CheckCircle, XCircle, AlertCircle } from "lucide-react";
+import { Clock, Settings, BarChart3, CheckCircle, XCircle, AlertCircle } from "lucide-react";
 import { formatDistanceToNow, format } from "date-fns";
 
 export const AutomatedSocialPosts = () => {
@@ -34,7 +34,6 @@ export const AutomatedSocialPosts = () => {
     contentLibrary,
     loading,
     saveConfig,
-    triggerManualPost,
     getTimeUntilNextPost,
     isActive,
     loadQueue,
@@ -294,16 +293,7 @@ export const AutomatedSocialPosts = () => {
               </div>
 
               {/* Save Button */}
-              <div className="flex justify-between">
-                <Button
-                  variant="outline"
-                  onClick={() => triggerManualPost()}
-                  disabled={loading}
-                  className="flex items-center gap-2"
-                >
-                  <Play className="h-4 w-4" />
-                  Test Post Now
-                </Button>
+              <div className="flex justify-end">
                 <Button onClick={handleSaveConfig} disabled={loading}>
                   Save Configuration
                 </Button>

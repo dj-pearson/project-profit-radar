@@ -13,7 +13,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 
 import { Switch } from '@/components/ui/switch';
-import { Copy, Plus, TestTube, Activity } from 'lucide-react';
+import { Copy, Plus, Activity } from 'lucide-react';
 
 interface ApiKey {
   id: string;
@@ -86,11 +86,10 @@ const ApiManagement: React.FC = () => {
       expires_at?: string;
       rate_limit_per_hour: number;
     }) => {
-      const { data, error } = await supabase.functions.invoke('api-management', {
-        body: { 
-          action: 'create-key',
-          ...keyData 
-        }
+      // api-management routes by pathname, not by a body `action`: invoking
+      // the bare function name reached its 404 branch every time.
+      const { data, error } = await supabase.functions.invoke('api-management/create-key', {
+        body: keyData
       });
       
       if (error) throw error;
@@ -164,33 +163,10 @@ const ApiManagement: React.FC = () => {
     }
   });
 
-  // Test Webhook Mutation
-  const testWebhookMutation = useMutation({
-    mutationFn: async (webhookId: string) => {
-      const { data, error } = await supabase.functions.invoke('api-management', {
-        body: { 
-          action: 'test-webhook',
-          webhook_id: webhookId 
-        }
-      });
-      
-      if (error) throw error;
-      return data;
-    },
-    onSuccess: () => {
-      toast({
-        title: 'Test Sent',
-        description: 'Test webhook has been sent successfully.',
-      });
-    },
-    onError: (error) => {
-      toast({
-        title: 'Test Failed',
-        description: 'Failed to send test webhook.',
-        variant: 'destructive',
-      });
-    }
-  });
+  // There is no "Test Webhook" button. api-management/webhook/test is
+  // internal-only (service-role bearer or CRON_SECRET, 404 otherwise), so a
+  // browser call can never reach it, and opening it to users would let them
+  // POST to arbitrary stored webhook URLs.
 
   const copyToClipboard = async (text: string) => {
     try {
@@ -358,8 +334,6 @@ const ApiManagement: React.FC = () => {
                 <WebhookCard
                   key={webhook.id}
                   webhook={webhook}
-                  onTest={(id) => testWebhookMutation.mutate(id)}
-                  isTestLoading={testWebhookMutation.isPending}
                 />
               ))
             )}
@@ -436,9 +410,7 @@ const ApiKeyCard: React.FC<{ apiKey: ApiKey }> = ({ apiKey }) => {
 
 const WebhookCard: React.FC<{
   webhook: WebhookEndpoint;
-  onTest: (id: string) => void;
-  isTestLoading: boolean;
-}> = ({ webhook, onTest, isTestLoading }) => {
+}> = ({ webhook }) => {
   return (
     <Card>
       <CardHeader>
@@ -486,17 +458,6 @@ const WebhookCard: React.FC<{
             </div>
           </div>
 
-          <div className="flex space-x-2">
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => onTest(webhook.id)}
-              disabled={isTestLoading}
-            >
-              <TestTube className="h-4 w-4 mr-2" />
-              Test Webhook
-            </Button>
-          </div>
         </div>
       </CardContent>
     </Card>

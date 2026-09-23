@@ -33,6 +33,19 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
 
+    // root_admin only, matching save-robots-txt and save-llms-txt. robots.txt
+    // and llms.txt in site-assets are platform-wide, and this overwrites them
+    // with the service role, so a company admin (or any signed-in user, before
+    // this check) could rewrite what every crawler sees for brikly.net.
+    const { data: callerProfile } = await supabaseClient
+      .from('user_profiles')
+      .select('role')
+      .eq('id', authContext.user.id)
+      .maybeSingle()
+    if (callerProfile?.role !== 'root_admin') {
+      return errorResponse('Access denied', 403, req)
+    }
+
     const parsed = await validateBody(req, SeoFileGeneratorSchema, { name: 'seo-file-generator' })
     if (!parsed.ok) return parsed.response
     const { fileType } = parsed.data

@@ -207,47 +207,11 @@ export const useAutomatedSocialPosts = () => {
     }
   };
 
-  // Trigger manual post
-  const triggerManualPost = async (contentType?: string) => {
-    if (!userProfile?.company_id) return;
-
-    try {
-      setLoading(true);
-
-      const { data, error } = await supabase.functions.invoke(
-        "social-post-scheduler",
-        {
-          body: {
-            company_id: userProfile.company_id,
-            manual_trigger: true,
-            content_type: contentType,
-          },
-        }
-      );
-
-      if (error) throw error;
-
-      toast({
-        title: "Success",
-        description: "Manual post triggered successfully",
-      });
-
-      // Refresh queue
-      await loadQueue();
-
-      return data;
-    } catch (error: unknown) {
-      console.error("Error triggering manual post:", error);
-      toast({
-        title: "Error",
-        description: "Failed to trigger manual post",
-        variant: "destructive",
-      });
-      throw error;
-    } finally {
-      setLoading(false);
-    }
-  };
+  // No manual "post now" trigger. social-post-scheduler is internal-only
+  // (service-role bearer or CRON_SECRET), so a browser invoke always got a
+  // 404, and the admin-authorized cron-social-scheduler runs every tenant's
+  // due configs, which is not a per-company manual post. Posting runs on the
+  // schedule (cron-social-scheduler) and on blog publish (blog-social-webhook).
 
   // Get next scheduled post time
   const getNextPostTime = () => {
@@ -298,7 +262,6 @@ export const useAutomatedSocialPosts = () => {
     saveConfig,
     loadQueue,
     loadContentLibrary,
-    triggerManualPost,
     getNextPostTime,
     getTimeUntilNextPost,
     isActive,

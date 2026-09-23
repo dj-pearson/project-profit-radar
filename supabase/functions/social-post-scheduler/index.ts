@@ -6,9 +6,11 @@ import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
 
 // Request body (US-241), report mode by default - see _shared/validate-body.ts.
 // Callers: the pg_cron job ({"manual_trigger": false}), cron-social-scheduler
-// ({ company_id, manual_trigger }), blog-social-webhook (adds blog_trigger and
-// blog_post_id) and useAutomatedSocialPosts.ts ({ company_id, manual_trigger,
-// content_type }). allowEmpty because the body was always optional here.
+// ({ company_id, manual_trigger }) and blog-social-webhook (adds blog_trigger
+// and blog_post_id). useAutomatedSocialPosts.ts used to send { company_id,
+// manual_trigger, content_type } from the browser, which the internal-only
+// guard below always refused; that button is gone. content_type stays in the
+// schema so nothing narrows. allowEmpty because the body was always optional.
 const SocialPostSchedulerSchema = z.object({
   manual_trigger: z.boolean().nullish(),
   company_id: z.string().uuid().nullish(),
