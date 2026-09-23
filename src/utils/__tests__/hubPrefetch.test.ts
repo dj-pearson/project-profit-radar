@@ -30,11 +30,10 @@ describe('warmForRoute (US-220)', () => {
     vi.useRealTimers();
   });
 
-  it('has at least one hub registered with chunks and data', () => {
+  it('has at least one hub registered, each with chunks', () => {
     expect(HUB_WARMUPS.length).toBeGreaterThan(0);
     for (const hub of HUB_WARMUPS) {
       expect(hub.chunks.length).toBeGreaterThan(0);
-      expect(hub.data.length).toBeGreaterThan(0);
     }
   });
 
@@ -47,13 +46,12 @@ describe('warmForRoute (US-220)', () => {
     ]);
   });
 
-  it('warms the invoices query on the financial hub', () => {
+  // US-364: the invoices prefetch selected invoices.amount (the column is
+  // total_amount), 400'd on every visit, and filled a key nothing reads.
+  it('does not prefetch invoices on the financial hub', () => {
     const qc = makeQueryClient();
     warmForRoute('/financial-hub', qc, 'company-1');
-    expect(qc.prefetchQuery).toHaveBeenCalledTimes(1);
-    expect((qc.prefetchQuery as ReturnType<typeof vi.fn>).mock.calls[0][0].queryKey).toEqual([
-      'invoices',
-    ]);
+    expect(qc.prefetchQuery).not.toHaveBeenCalled();
   });
 
   it('no-ops on routes that match no hub', () => {

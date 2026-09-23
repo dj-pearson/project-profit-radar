@@ -3,6 +3,7 @@ import { captureException } from '@/lib/sentry';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
+import { ErrorState } from '@/components/ui/states';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import {
@@ -37,6 +38,7 @@ export function ProjectFinancialDashboard({ projectId }: ProjectFinancialDashboa
   const [data, setData] = useState<FinancialData | null>(null);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
+  const [reloadKey, setReloadKey] = useState(0);
 
   useEffect(() => {
     if (!userProfile?.company_id || !projectId) return;
@@ -46,20 +48,15 @@ export function ProjectFinancialDashboard({ projectId }: ProjectFinancialDashboa
         setLoading(true);
         setLoadError(null);
 
-        const [invoicesRes, expensesRes, paymentsRes, projectRes] = await Promise.all([
+        const [invoicesRes, expensesRes, projectRes] = await Promise.all([
           supabase
             .from('invoices')
-            .select('amount, status, created_at')
+            .select('id, total_amount, status, created_at')
             .eq('company_id', userProfile.company_id)
             .eq('project_id', projectId),
           supabase
             .from('expenses')
-            .select('amount, date')
-            .eq('company_id', userProfile.company_id)
-            .eq('project_id', projectId),
-          supabase
-            .from('payments')
-            .select('amount, payment_date')
+            .select('amount, expense_date')
             .eq('company_id', userProfile.company_id)
             .eq('project_id', projectId),
           supabase
@@ -70,18 +67,30 @@ export function ProjectFinancialDashboard({ projectId }: ProjectFinancialDashboa
             .single(),
         ]);
 
-        // supabase-js returns the error rather than throwing it, so the catch
-        // below never fired and `res.data || []` turned a failed read into an
-        // empty list: the dashboard rendered a project that had been billed
-        // nothing, collected nothing and spent nothing. `payments` in
-        // particular is not created by any migration (US-311), so that read
-        // fails outright wherever the table was never made by hand.
+        // supabase-js returns the error rather than throwing it, so each read
+        // is checked explicitly; `res.data || []` alone would turn a failed
+        // read into a project that had been billed and spent nothing.
         const failed = [
           ['invoices', invoicesRes.error],
           ['expenses', expensesRes.error],
-          ['payments', paymentsRes.error],
           ['projects', projectRes.error],
         ].filter(([, error]) => error) as Array<[string, { message: string }]>;
+
+        const invoices = invoicesRes.data || [];
+
+        // There is no `payments` table (US-311/US-364). Payments live in
+        // invoice_payments, which carries invoice_id but no project_id, so
+        // they are scoped to the project through its invoices.
+        let payments: Array<{ payment_amount: number; payment_date: string }> = [];
+        if (failed.length === 0 && invoices.length > 0) {
+          const paymentsRes = await supabase
+            .from('invoice_payments')
+            .select('payment_amount, payment_date')
+            .eq('company_id', userProfile.company_id)
+            .in('invoice_id', invoices.map(inv => inv.id));
+          if (paymentsRes.error) failed.push(['invoice_payments', paymentsRes.error]);
+          payments = paymentsRes.data || [];
+        }
 
         if (failed.length > 0) {
           throw new Error(
@@ -89,14 +98,12 @@ export function ProjectFinancialDashboard({ projectId }: ProjectFinancialDashboa
           );
         }
 
-        const invoices = invoicesRes.data || [];
         const expenses = expensesRes.data || [];
-        const payments = paymentsRes.data || [];
         const project = projectRes.data;
 
         const contractValue = project?.budget || 0;
-        const billedToDate = invoices.reduce((sum, inv) => sum + (inv.amount || 0), 0);
-        const collected = payments.reduce((sum, p) => sum + (p.amount || 0), 0);
+        const billedToDate = invoices.reduce((sum, inv) => sum + (inv.total_amount || 0), 0);
+        const collected = payments.reduce((sum, p) => sum + (p.payment_amount || 0), 0);
         const outstanding = billedToDate - collected;
         const totalCosts = expenses.reduce((sum, e) => sum + (e.amount || 0), 0);
         const netProfit = collected - totalCosts;
@@ -112,10 +119,10 @@ export function ProjectFinancialDashboard({ projectId }: ProjectFinancialDashboa
 
           const monthIncome = payments
             .filter(p => p.payment_date?.startsWith(monthKey))
-            .reduce((sum, p) => sum + (p.amount || 0), 0);
+            .reduce((sum, p) => sum + (p.payment_amount || 0), 0);
 
           const monthExpenses = expenses
-            .filter(e => e.date?.startsWith(monthKey))
+            .filter(e => e.expense_date?.startsWith(monthKey))
             .reduce((sum, e) => sum + (e.amount || 0), 0);
 
           months.push({ month: monthStr, income: monthIncome, expenses: monthExpenses });
@@ -133,9 +140,6 @@ export function ProjectFinancialDashboard({ projectId }: ProjectFinancialDashboa
           monthlyCashFlow: months,
         });
       } catch (error) {
-        // Reached now that the reads above surface their errors. A financial
-        // dashboard showing zeros because a query failed is worse than one
-        // showing nothing, so the empty state stands and ops gets told.
         setLoadError(error instanceof Error ? error.message : 'Could not load project financials.');
         captureException(error, {
           context: 'ProjectFinancialDashboard.loadFinancialData',
@@ -146,7 +150,7 @@ export function ProjectFinancialDashboard({ projectId }: ProjectFinancialDashboa
     };
 
     loadFinancialData();
-  }, [projectId, userProfile?.company_id]);
+  }, [projectId, userProfile?.company_id, reloadKey]);
 
   if (loading) {
     return (
@@ -165,22 +169,9 @@ export function ProjectFinancialDashboard({ projectId }: ProjectFinancialDashboa
   }
 
   if (loadError) {
-    // Previously this returned null, so a failed load and a project with no
-    // financial records looked identical: a blank space. Say which it is.
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Project financials unavailable</CardTitle>
-        </CardHeader>
-        <CardContent className="text-sm text-muted-foreground">
-          <p>{loadError}</p>
-          <p className="mt-2">
-            No figures are shown rather than showing zeros, because a zero here would read as
-            "nothing billed and nothing collected".
-          </p>
-        </CardContent>
-      </Card>
-    );
+    // A zero here would read as "nothing billed and nothing collected", so a
+    // failed load shows the error and no figures.
+    return <ErrorState error={loadError} onRetry={() => setReloadKey(k => k + 1)} />;
   }
 
   if (!data) return null;

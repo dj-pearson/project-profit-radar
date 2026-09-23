@@ -6573,3 +6573,11 @@ doesn't exist. `workflow_definitions.workflow_steps` (jsonb) does, and it's
 what `execute-workflow` reads, so steps save there now.
 
 Removing the `(supabase as any)` casts still waits on regenerated types (US-263).
+
+## US-364: the project Financial tab loads
+
+It selected `invoices.amount`, `expenses.date` and a `payments` table, none of
+which exist, so the tab always errored. It now uses `total_amount`,
+`expense_date`, and `invoice_payments` scoped to the project's invoices, with a
+retryable error state instead of figures when a query fails. The hub prefetch
+that 400'd on every visit fed a cache key nothing read, so it's gone.

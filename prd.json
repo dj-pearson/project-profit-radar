@@ -5680,8 +5680,8 @@
         "The tab shows an error state on query failure rather than zeros (US-375 pattern)"
       ],
       "priority": 2,
-      "passes": false,
-      "notes": "PROPOSED 2026-09-09 (production-readiness audit, six parallel reviews: auth, security, page/data flows, UI/UX, SEO, ops)."
+      "passes": true,
+      "notes": "PROPOSED 2026-09-09 (production-readiness audit, six parallel reviews: auth, security, page/data flows, UI/UX, SEO, ops). || DONE 2026-09-23. ProjectFinancialDashboard selects invoices.total_amount (types.ts invoices Row) and expenses.expense_date, and reads payments from invoice_payments (payment_amount, payment_date; migration 20250923014807, FK to invoices, no project_id) scoped by company_id and .in(invoice_id, the project's invoices), skipped when the project has none. A failed query renders ui/states ErrorState with retry and no figures. hubPrefetch no longer prefetches invoices: its ['invoices'] key had one reader, useOptimizedInvoices, which nothing calls. Tests: ProjectFinancialDashboard.test.tsx and hubPrefetch.test.ts (8). Left: useOptimizedInvoices in src/hooks/useOptimizedQueries.ts still selects invoices.amount; it has no callers."
     },
     {
       "id": "US-365",

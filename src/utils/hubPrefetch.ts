@@ -33,29 +33,12 @@ const prefetchProjects: Prefetcher = (qc, companyId) =>
     staleTime: 3 * 60 * 1000,
   });
 
-const prefetchInvoices: Prefetcher = (qc, companyId) =>
-  qc.prefetchQuery({
-    queryKey: [...queryKeys.invoices],
-    queryFn: async () => {
-      const { data } = await supabase
-        .from('invoices')
-        .select(
-          'id,invoice_number,amount,status,due_date,client_name,project_id,created_at'
-        )
-        .eq('company_id', companyId)
-        .order('created_at', { ascending: false })
-        .limit(100);
-      return data ?? [];
-    },
-    staleTime: 5 * 60 * 1000,
-  });
-
 interface HubWarmup {
   /** Match the current pathname (prefix-style). */
   match: RegExp;
   /** Likely-next route chunks to preload. */
   chunks: Array<() => Promise<unknown>>;
-  /** Queries to warm (require a company_id). */
+  /** Queries to warm (require a company_id). May be empty: chunk-only hub. */
   data: Prefetcher[];
 }
 
@@ -76,13 +59,17 @@ export const HUB_WARMUPS: HubWarmup[] = [
   },
   {
     // Financial hub fans out into invoices / financial dashboard / expenses.
+    // Chunks only (US-364): the old invoices prefetch selected a column that
+    // does not exist (invoices.amount) and 400'd on every visit, and nothing
+    // reads its ['invoices'] cache key. Add a prefetcher here only alongside
+    // a page query that shares its key.
     match: /^\/(financial-hub|invoices|financial-dashboard|expenses)(\/|$)/,
     chunks: [
       () => import('@/pages/Invoices'),
       () => import('@/pages/FinancialDashboard'),
       () => import('@/pages/Expenses'),
     ],
-    data: [prefetchInvoices],
+    data: [],
   },
 ];
 
