@@ -10,6 +10,8 @@ import { Label } from '@/components/ui/label';
 import { Table, TableBody, TableCell, TableRow } from '@/components/ui/table';
 import { ArrowRightLeft, Download, Printer, TrendingUp, TrendingDown } from 'lucide-react';
 import { formatCurrency } from '@/utils/accountingUtils';
+import { downloadCsv } from '@/lib/exportCsv';
+import { cashFlowCsv, statementFilename } from '@/lib/statementCsv';
 
 export default function CashFlowStatement() {
   const { user } = useAuth();
@@ -89,8 +91,21 @@ export default function CashFlowStatement() {
     window.print();
   };
 
+  // Exports exactly what the page shows, section by section.
   const handleExport = () => {
-    alert('Export functionality coming soon!');
+    const csv = cashFlowCsv(
+      [
+        { title: 'Operating Activities', items: operatingActivities, total: netCashFromOperating, totalLabel: 'Net Cash Provided by Operating Activities' },
+        { title: 'Investing Activities', items: investingActivities, total: netCashFromInvesting, totalLabel: 'Net Cash Used in Investing Activities' },
+        { title: 'Financing Activities', items: financingActivities, total: netCashFromFinancing, totalLabel: 'Net Cash Provided by Financing Activities' },
+      ],
+      [
+        { label: 'Net Increase (Decrease) in Cash', amount: netCashChange },
+        { label: 'Cash at Beginning of Period', amount: beginningCash },
+        { label: 'Cash at End of Period', amount: endingCash },
+      ]
+    );
+    downloadCsv(statementFilename('cash-flow', startDate, endDate), csv);
   };
 
   const CashFlowSection = ({ title, items, total, totalLabel }: any) => (

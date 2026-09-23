@@ -24,14 +24,7 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { logger } from '@/lib/logger';
-
-interface ReportField {
-  id: string;
-  name: string;
-  type: 'string' | 'number' | 'date' | 'boolean';
-  table: string;
-  aggregation?: 'sum' | 'avg' | 'count' | 'min' | 'max';
-}
+import { AVAILABLE_FIELDS, dateRangeFilter, type ReportField } from './customReportSources';
 
 interface ReportFilter {
   field: string;
@@ -55,46 +48,6 @@ interface ReportConfig {
     end: string;
   };
 }
-
-const AVAILABLE_FIELDS: Record<string, ReportField[]> = {
-  projects: [
-    { id: 'name', name: 'Project Name', type: 'string', table: 'projects' },
-    { id: 'status', name: 'Status', type: 'string', table: 'projects' },
-    { id: 'budget', name: 'Budget', type: 'number', table: 'projects', aggregation: 'sum' },
-    { id: 'completion_percentage', name: 'Completion %', type: 'number', table: 'projects', aggregation: 'avg' },
-    { id: 'start_date', name: 'Start Date', type: 'date', table: 'projects' },
-    { id: 'end_date', name: 'End Date', type: 'date', table: 'projects' },
-    { id: 'client_name', name: 'Client Name', type: 'string', table: 'projects' }
-  ],
-  job_costs: [
-    { id: 'date', name: 'Date', type: 'date', table: 'job_costs' },
-    { id: 'labor_cost', name: 'Labor Cost', type: 'number', table: 'job_costs', aggregation: 'sum' },
-    { id: 'material_cost', name: 'Material Cost', type: 'number', table: 'job_costs', aggregation: 'sum' },
-    { id: 'equipment_cost', name: 'Equipment Cost', type: 'number', table: 'job_costs', aggregation: 'sum' },
-    { id: 'total_cost', name: 'Total Cost', type: 'number', table: 'job_costs', aggregation: 'sum' },
-    { id: 'labor_hours', name: 'Labor Hours', type: 'number', table: 'job_costs', aggregation: 'sum' }
-  ],
-  time_entries: [
-    { id: 'date', name: 'Date', type: 'date', table: 'time_entries' },
-    { id: 'hours', name: 'Hours', type: 'number', table: 'time_entries', aggregation: 'sum' },
-    { id: 'description', name: 'Description', type: 'string', table: 'time_entries' },
-    { id: 'billable', name: 'Billable', type: 'boolean', table: 'time_entries' }
-  ],
-  expenses: [
-    { id: 'expense_date', name: 'Date', type: 'date', table: 'expenses' },
-    { id: 'amount', name: 'Amount', type: 'number', table: 'expenses', aggregation: 'sum' },
-    { id: 'vendor_name', name: 'Vendor', type: 'string', table: 'expenses' },
-    { id: 'description', name: 'Description', type: 'string', table: 'expenses' },
-    { id: 'is_billable', name: 'Billable', type: 'boolean', table: 'expenses' }
-  ],
-  invoices: [
-    { id: 'invoice_number', name: 'Invoice Number', type: 'string', table: 'invoices' },
-    { id: 'total_amount', name: 'Total Amount', type: 'number', table: 'invoices', aggregation: 'sum' },
-    { id: 'status', name: 'Status', type: 'string', table: 'invoices' },
-    { id: 'issue_date', name: 'Issue Date', type: 'date', table: 'invoices' },
-    { id: 'due_date', name: 'Due Date', type: 'date', table: 'invoices' }
-  ]
-};
 
 interface CustomReportBuilderProps {
   onSave?: (config: ReportConfig) => void;
@@ -252,13 +205,8 @@ export const CustomReportBuilder: React.FC<CustomReportBuilderProps> = ({
 
     // Apply date range filter
     if (config.dateRange.start && config.dateRange.end) {
-      const dateField = config.dataSource === 'projects' ? 'created_at' 
-        : config.dataSource === 'job_costs' ? 'date'
-        : config.dataSource === 'time_entries' ? 'date'
-        : config.dataSource === 'expenses' ? 'expense_date'
-        : 'issue_date';
-      
-      query = query.gte(dateField, config.dateRange.start).lte(dateField, config.dateRange.end);
+      const { field, from, to } = dateRangeFilter(config.dataSource, config.dateRange.start, config.dateRange.end);
+      query = query.gte(field, from).lte(field, to);
     }
 
     // Apply sorting

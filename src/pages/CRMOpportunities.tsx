@@ -113,10 +113,10 @@ const CRMOpportunities = () => {
 
   useEffect(() => {
     // Check if we're on the /new route and open the dialog
-    if (location.pathname.includes('/new')) {
+    if (location.pathname.includes('/new') || new URLSearchParams(location.search).get('new') === '1') {
       setShowNewOpportunityDialog(true);
     }
-  }, [location.pathname]);
+  }, [location.pathname, location.search]);
 
   // LEAN Navigation: Pre-fill opportunity form from lead conversion
   useEffect(() => {

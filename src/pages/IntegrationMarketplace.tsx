@@ -9,6 +9,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
+import { NotBuiltButton } from '@/components/ui/not-built-button';
+import { getIntegrationAuthUrl, hasOAuthStart } from '@/lib/integrationOAuth';
 
 interface IntegrationApp {
   id: string;
@@ -42,7 +44,7 @@ interface UserIntegration {
 }
 
 export const IntegrationMarketplace = () => {
-  const { user } = useAuth();
+  const { user, userProfile } = useAuth();
   const { toast } = useToast();
 
   const [loading, setLoading] = useState(true);
@@ -121,8 +123,14 @@ export const IntegrationMarketplace = () => {
     setConnectingApp(app.id);
     try {
       if (app.auth_type === 'oauth2') {
-        // Redirect to OAuth flow
-        window.location.href = `/integrations/${app.slug}/oauth/authorize`;
+        // Start the provider's OAuth flow through its edge function (US-371).
+        const authUrl = await getIntegrationAuthUrl(
+          app.slug,
+          { companyId: userProfile?.company_id ?? '', origin: window.location.origin },
+          (name, options) => supabase.functions.invoke(name, options)
+        );
+        window.location.href = authUrl;
+        return;
       } else {
         // Create integration record
         const { error } = await supabase.from('user_integrations' as 'projects').insert({
@@ -402,10 +410,19 @@ export const IntegrationMarketplace = () => {
                               >
                                 Disconnect
                               </Button>
-                              <Button size="sm" variant="outline">
+                              <NotBuiltButton
+                                feature={`${app.name} settings`}
+                                size="sm"
+                                variant="outline"
+                                aria-label={`${app.name} settings`}
+                              >
                                 <Settings className="w-4 h-4" />
-                              </Button>
+                              </NotBuiltButton>
                             </>
+                          ) : app.auth_type === 'oauth2' && !hasOAuthStart(app.slug) ? (
+                            <NotBuiltButton feature={`Connecting ${app.name}`} size="sm" className="flex-1">
+                              Connect
+                            </NotBuiltButton>
                           ) : (
                             <Button
                               size="sm"

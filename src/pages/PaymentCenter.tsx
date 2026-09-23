@@ -4,7 +4,8 @@ import { PaymentDashboard } from '@/components/payments/PaymentDashboard';
 import { PaymentMethodManager } from '@/components/payments/PaymentMethodManager';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuth } from '@/contexts/AuthContext';
-import { Navigate, useLocation } from 'react-router-dom';
+import { Link, Navigate, useLocation } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
 import { rememberCurrentRoute } from '@/lib/routeMemory';
 
 const PaymentCenter = () => {
@@ -53,18 +54,24 @@ const PaymentCenter = () => {
           <TabsContent value="invoices">
             <div className="text-center py-12">
               <h3 className="text-lg font-medium mb-2">Invoice Management</h3>
-              <p className="text-muted-foreground">
-                Invoice management features coming soon
+              <p className="text-muted-foreground mb-4">
+                Create, send and track invoices on the Invoices page.
               </p>
+              <Button asChild>
+                <Link to="/invoices">Open Invoices</Link>
+              </Button>
             </div>
           </TabsContent>
 
           <TabsContent value="subscriptions">
             <div className="text-center py-12">
               <h3 className="text-lg font-medium mb-2">Subscription Management</h3>
-              <p className="text-muted-foreground">
-                Subscription management features coming soon
+              <p className="text-muted-foreground mb-4">
+                Change your plan or billing details in Subscription Settings.
               </p>
+              <Button asChild>
+                <Link to="/subscription-settings">Open Subscription Settings</Link>
+              </Button>
             </div>
           </TabsContent>
         </Tabs>

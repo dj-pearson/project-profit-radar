@@ -28,6 +28,7 @@ export default function MobileShowcase() {
   const isMobile = useIsMobile();
   const [showActionSheet, setShowActionSheet] = useState(false);
   const [showDrawer, setShowDrawer] = useState(false);
+  const closeActionSheet = () => setShowActionSheet(false);
 
   // Sample data for demonstrations
   const stats = [
@@ -58,16 +59,6 @@ export default function MobileShowcase() {
     <MobileDashboardLayout
       title="Mobile Showcase"
       showBottomNav={true}
-      actions={
-        <MobileButton
-          size="sm"
-          variant="outline"
-          icon={<Plus className="h-4 w-4" />}
-          onClick={() => {}}
-        >
-          Add
-        </MobileButton>
-      }
     >
       <MobileLayout withPadding={false} className="space-y-6">
         {/* Introduction */}
@@ -79,6 +70,10 @@ export default function MobileShowcase() {
             <p className="text-sm">
               Every component adapts seamlessly between mobile and desktop, with touch-friendly targets,
               optimized layouts, and native-feeling interactions.
+            </p>
+            <p className="text-sm text-muted-foreground mt-2">
+              Everything below is sample data. The buttons show sizes and styles; they don't act on
+              any real project.
             </p>
           </div>
         </MobileSection>
@@ -94,7 +89,6 @@ export default function MobileShowcase() {
                 icon={stat.icon}
                 trend={stat.trend as any}
                 trendValue={stat.trendValue}
-                onClick={() => {}}
               />
             ))}
           </MobileGrid>
@@ -111,7 +105,6 @@ export default function MobileShowcase() {
                   subtitle={`${project.budget} • ${project.completion} complete`}
                   value={project.status}
                   icon={<Building2 className="h-5 w-5" />}
-                  onClick={() => {}}
                   className={index < projects.length - 1 ? 'border-b' : ''}
                 />
               ))}
@@ -124,7 +117,6 @@ export default function MobileShowcase() {
           <MobileTable
             data={projects}
             columns={tableColumns}
-            onRowClick={() => {}}
             emptyMessage="No projects found"
             keyExtractor={(item) => item.id.toString()}
           />
@@ -227,8 +219,8 @@ export default function MobileShowcase() {
       {isMobile && (
         <MobileFAB
           icon={<Plus className="h-6 w-6" />}
-          onClick={() => {}}
-          label="Add new item"
+          onClick={() => setShowActionSheet(true)}
+          label="Show example action sheet"
           position="bottom-right"
         />
       )}
@@ -237,27 +229,27 @@ export default function MobileShowcase() {
       <MobileActionSheet
         isOpen={showActionSheet}
         onClose={() => setShowActionSheet(false)}
-        title="Choose an Action"
+        title="Example action sheet (sample data; choosing an item just closes it)"
       >
         <MobileActionSheetItem
           icon={<Edit className="h-5 w-5" />}
           label="Edit Project"
-          onClick={() => {}}
+          onClick={closeActionSheet}
         />
         <MobileActionSheetItem
           icon={<Share className="h-5 w-5" />}
           label="Share Project"
-          onClick={() => {}}
+          onClick={closeActionSheet}
         />
         <MobileActionSheetItem
           icon={<Download className="h-5 w-5" />}
           label="Download Report"
-          onClick={() => {}}
+          onClick={closeActionSheet}
         />
         <MobileActionSheetItem
           icon={<Trash className="h-5 w-5" />}
           label="Delete Project"
-          onClick={() => {}}
+          onClick={closeActionSheet}
           variant="destructive"
         />
       </MobileActionSheet>

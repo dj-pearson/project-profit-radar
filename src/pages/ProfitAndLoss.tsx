@@ -18,6 +18,8 @@ import {
 } from '@/components/ui/table';
 import { TrendingUp, Download, Printer, AlertCircle } from 'lucide-react';
 import { formatCurrency, formatPercentage } from '@/utils/accountingUtils';
+import { downloadCsv } from '@/lib/exportCsv';
+import { profitAndLossCsv, statementFilename } from '@/lib/statementCsv';
 import { ErrorState, NoLedgerActivity } from '@/components/ui/EmptyStates';
 
 export default function ProfitAndLoss() {
@@ -81,7 +83,7 @@ export default function ProfitAndLoss() {
   };
 
   const handleExport = () => {
-    alert('Export functionality coming soon!');
+    downloadCsv(statementFilename('profit-and-loss', startDate, endDate), profitAndLossCsv(statement));
   };
 
   const calculateTotal = (accountList: Array<{ amount: number }>) =>

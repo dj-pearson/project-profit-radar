@@ -1,9 +1,8 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
+import { NotBuiltButton } from '@/components/ui/not-built-button';
 import { Badge } from '@/components/ui/badge';
-import { useToast } from '@/hooks/use-toast';
 import { 
   Calendar, 
   Clock, 
@@ -31,8 +30,6 @@ export const PostScheduler: React.FC<PostSchedulerProps> = ({
   accounts,
   onPostUpdated
 }) => {
-  const { toast } = useToast();
-  const [loading, setLoading] = useState(false);
 
   const getPlatformIcon = (platform: string) => {
     switch (platform.toLowerCase()) {
@@ -58,52 +55,6 @@ export const PostScheduler: React.FC<PostSchedulerProps> = ({
   const scheduledPosts = posts.filter(post => post.status === 'scheduled');
   const draftPosts = posts.filter(post => post.status === 'draft');
   const publishedPosts = posts.filter(post => post.status === 'published');
-
-  const handleEditPost = async (postId: string) => {
-    // TODO: Implement edit functionality
-    toast({
-      title: "Edit Post",
-      description: "Edit functionality coming soon",
-    });
-  };
-
-  const handleDeletePost = async (postId: string) => {
-    setLoading(true);
-    try {
-      // TODO: Implement delete functionality
-      toast({
-        title: "Delete Post",
-        description: "Delete functionality coming soon",
-      });
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to delete post",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handlePublishPost = async (postId: string) => {
-    setLoading(true);
-    try {
-      // TODO: Implement publish functionality
-      toast({
-        title: "Publish Post",
-        description: "Publish functionality coming soon",
-      });
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to publish post",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
 
   return (
     <div className="space-y-6">
@@ -151,25 +102,13 @@ export const PostScheduler: React.FC<PostSchedulerProps> = ({
                         </div>
                       ))}
                     </div>
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      className="gap-2"
-                      onClick={() => handleEditPost(post.id)}
-                      disabled={loading}
-                    >
+                    <NotBuiltButton feature="Editing posts" variant="outline" size="sm" className="gap-2">
                       <Edit className="h-4 w-4" />
                       Edit
-                    </Button>
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      className="gap-2"
-                      onClick={() => handleDeletePost(post.id)}
-                      disabled={loading}
-                    >
+                    </NotBuiltButton>
+                    <NotBuiltButton feature="Deleting posts" variant="outline" size="sm" className="gap-2" aria-label="Delete post">
                       <Trash2 className="h-4 w-4" />
-                    </Button>
+                    </NotBuiltButton>
                   </div>
                 </div>
               ))}
@@ -212,25 +151,14 @@ export const PostScheduler: React.FC<PostSchedulerProps> = ({
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      className="gap-2"
-                      onClick={() => handleEditPost(post.id)}
-                      disabled={loading}
-                    >
+                    <NotBuiltButton feature="Editing posts" variant="outline" size="sm" className="gap-2">
                       <Edit className="h-4 w-4" />
                       Edit
-                    </Button>
-                    <Button 
-                      size="sm" 
-                      className="gap-2"
-                      onClick={() => handlePublishPost(post.id)}
-                      disabled={loading}
-                    >
+                    </NotBuiltButton>
+                    <NotBuiltButton feature="Publishing from here" size="sm" className="gap-2">
                       <Play className="h-4 w-4" />
                       Publish
-                    </Button>
+                    </NotBuiltButton>
                   </div>
                 </div>
               ))}

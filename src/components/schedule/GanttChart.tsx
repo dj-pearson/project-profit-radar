@@ -1,6 +1,8 @@
 import React, { useState, useRef, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { NotBuiltButton } from "@/components/ui/not-built-button";
+import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Task, Project, ScheduleAnalytics } from "@/types/schedule";
 import { computeSchedule } from "@/lib/schedule/criticalPath";
@@ -197,20 +199,11 @@ export const GanttChart: React.FC<GanttChartProps> = ({
       }
     } catch (error) {
       console.error('Error exporting PDF:', error);
-      alert('Error generating PDF. Please try again.');
+      toast.error('Error generating PDF. Please try again.');
     }
     setIsExporting(false);
   };
 
-  // Handle settings
-  const handleSettings = () => {
-    if (onSettings) {
-      onSettings();
-    } else {
-      // Default settings functionality
-      alert('Settings panel coming soon! Configure project details, resources, and preferences.');
-    }
-  };
 
   // Calculate analytics
   const analytics: ScheduleAnalytics = {
@@ -280,10 +273,18 @@ export const GanttChart: React.FC<GanttChartProps> = ({
             Export PDF
           </Button>
           
-          <Button variant="outline" size="sm" onClick={handleSettings}>
-            <Settings className="mr-2 h-4 w-4" />
-            Settings
-          </Button>
+          {/* No schedule settings panel exists; only callers that supply one get a live button (US-371). */}
+          {onSettings ? (
+            <Button variant="outline" size="sm" onClick={onSettings}>
+              <Settings className="mr-2 h-4 w-4" />
+              Settings
+            </Button>
+          ) : (
+            <NotBuiltButton feature="Schedule settings" variant="outline" size="sm">
+              <Settings className="mr-2 h-4 w-4" />
+              Settings
+            </NotBuiltButton>
+          )}
         </div>
       </div>
 

@@ -66,6 +66,8 @@ interface CRMData {
   followUpsDue: number;
 }
 
+const NEW_OPPORTUNITY_PATH = '/crm/opportunities?new=1';
+
 const tabTriggerClass = "inline-flex items-center justify-center whitespace-nowrap border-b-2 border-transparent px-4 py-3 text-sm font-medium text-muted-foreground transition-all hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:border-primary data-[state=active]:text-primary data-[state=active]:bg-background/50";
 
 const CRMDashboard = () => {
@@ -183,6 +185,9 @@ const CRMDashboard = () => {
     }
   };
 
+  // The create dialog lives on /crm/opportunities; ?new=1 opens it (US-371).
+  const openNewOpportunity = () => navigate(NEW_OPPORTUNITY_PATH);
+
   const updateOpportunity = async (opportunityId: string, updates: Partial<Opportunity>) => {
     try {
       const { error } = await supabase.from('opportunities').update(updates).eq('id', opportunityId);
@@ -267,14 +272,14 @@ const CRMDashboard = () => {
                 <CardTitle>Sales Opportunities</CardTitle>
                 <CardDescription>Track your sales pipeline and close deals</CardDescription>
               </div>
-              <Button onClick={() => { toast({ title: 'Coming Soon', description: 'Opportunity creation will be available in a future update.' }); }} aria-label="Create new opportunity">
+              <Button onClick={openNewOpportunity} aria-label="Create new opportunity">
                 <Plus className="h-4 w-4 mr-2" aria-hidden="true" />
                 New Opportunity
               </Button>
             </CardHeader>
             <CardContent>
               {!crmData?.opportunities?.length ? (
-                <EmptyState icon={Target} title="No opportunities" description="Start tracking your sales pipeline by creating opportunities from qualified leads." action={{ label: "Create Opportunity", onClick: () => setActiveTab('opportunities') }} />
+                <EmptyState icon={Target} title="No opportunities" description="Start tracking your sales pipeline by creating opportunities from qualified leads." action={{ label: "Create Opportunity", onClick: openNewOpportunity }} />
               ) : (
                 <div className="space-y-4">
                   {crmData.opportunities.map((opportunity) => (
@@ -321,9 +326,8 @@ const CRMDashboard = () => {
             <CardContent>
               <div className="text-center py-12">
                 <BarChart3 className="h-12 w-12 mx-auto text-muted-foreground mb-4" aria-hidden="true" />
-                <h3 className="text-lg font-medium mb-2">Reports Coming Soon</h3>
-                <p className="text-muted-foreground mb-4">Advanced analytics and reporting features are being developed.</p>
-                <p className="text-sm text-muted-foreground">Features will include conversion tracking, source analysis, performance metrics, and custom reports.</p>
+                <h3 className="text-lg font-medium mb-2">CRM reports are not built yet</h3>
+                <p className="text-muted-foreground">The pipeline figures on the Overview tab are the reporting that exists today.</p>
               </div>
             </CardContent>
           </Card>

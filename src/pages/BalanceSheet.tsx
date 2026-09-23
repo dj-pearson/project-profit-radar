@@ -19,6 +19,8 @@ import {
 import { Separator } from '@/components/ui/separator';
 import { BarChart3, Download, Printer, AlertCircle } from 'lucide-react';
 import { formatCurrency } from '@/utils/accountingUtils';
+import { downloadCsv } from '@/lib/exportCsv';
+import { balanceSheetCsv, statementFilename } from '@/lib/statementCsv';
 import { ErrorState, NoLedgerActivity } from '@/components/ui/EmptyStates';
 
 export default function BalanceSheet() {
@@ -81,8 +83,7 @@ export default function BalanceSheet() {
   };
 
   const handleExport = () => {
-    // In a real implementation, this would export to PDF or Excel
-    alert('Export functionality coming soon!');
+    downloadCsv(statementFilename('balance-sheet', asOfDate), balanceSheetCsv(sheet));
   };
 
   const AccountSection = ({ title, accounts, showTotal = false }: any) => {

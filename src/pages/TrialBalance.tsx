@@ -17,6 +17,8 @@ import {
 } from '@/components/ui/table';
 import { ClipboardList, Download, Printer, CheckCircle, AlertCircle } from 'lucide-react';
 import { formatCurrency, getAccountTypeLabel, type AccountType } from '@/utils/accountingUtils';
+import { downloadCsv } from '@/lib/exportCsv';
+import { trialBalanceCsv, statementFilename } from '@/lib/statementCsv';
 
 interface ChartAccount {
   id: string;
@@ -80,8 +82,26 @@ export default function TrialBalance() {
     window.print();
   };
 
+  // Same rows, same debit/credit split the table renders.
   const handleExport = () => {
-    alert('Export functionality coming soon!');
+    const rows = accountOrder.flatMap((type) => {
+      const isDebitType = ['asset', 'expense', 'cost_of_goods_sold', 'other_expense'].includes(type);
+      return (accountsByType?.[type] ?? []).map((account) => {
+        const balance = Math.abs(Number(account.current_balance) || 0);
+        return {
+          account_number: account.account_number,
+          account_name: account.account_name,
+          account_type: account.account_type,
+          account_subtype: account.account_subtype,
+          debit: isDebitType ? balance : null,
+          credit: isDebitType ? null : balance,
+        };
+      });
+    });
+    downloadCsv(
+      statementFilename('trial-balance', asOfDate),
+      trialBalanceCsv(rows, { debits: totalDebits, credits: totalCredits })
+    );
   };
 
   return (

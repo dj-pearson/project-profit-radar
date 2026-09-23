@@ -24,6 +24,8 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { FileText, Download, Printer, ChevronRight } from 'lucide-react';
 import { formatCurrency } from '@/utils/accountingUtils';
+import { downloadCsv } from '@/lib/exportCsv';
+import { generalLedgerCsv, statementFilename } from '@/lib/statementCsv';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Separator } from '@/components/ui/separator';
@@ -126,26 +128,20 @@ export default function GeneralLedger() {
   // Get selected account details
   const selectedAccount = accounts?.find(a => a.id === selectedAccountId);
 
-  // Calculate running balance
-  const transactionsWithBalance = (transactions as JournalEntryLine[] | undefined)?.map((tx, index) => {
+  // Calculate running balance. This used to read transactionsWithBalance[index - 1]
+  // from inside its own initialiser, which throws for any account with two or
+  // more lines; carry the balance in a local instead.
+  const isDebitAccount = ['asset', 'expense', 'cost_of_goods_sold', 'other_expense'].includes(
+    selectedAccount?.account_type || ''
+  );
+  let carried = 0;
+  const transactionsWithBalance: TransactionWithBalance[] | undefined = (
+    transactions as JournalEntryLine[] | undefined
+  )?.map((tx) => {
     const debit = Number(tx.debit_amount) || 0;
     const credit = Number(tx.credit_amount) || 0;
-
-    // Calculate running balance based on account's normal balance
-    const isDebitAccount = ['asset', 'expense', 'cost_of_goods_sold', 'other_expense'].includes(
-      selectedAccount?.account_type || ''
-    );
-
-    const previousBalance = index === 0 ? 0 : transactionsWithBalance[index - 1].runningBalance;
-    const change = isDebitAccount ? debit - credit : credit - debit;
-    const runningBalance = previousBalance + change;
-
-    return {
-      ...tx,
-      debit,
-      credit,
-      runningBalance,
-    };
+    carried += isDebitAccount ? debit - credit : credit - debit;
+    return { ...tx, debit, credit, runningBalance: carried };
   });
 
   // Group transactions by month if needed
@@ -171,7 +167,16 @@ export default function GeneralLedger() {
   };
 
   const handleExport = () => {
-    alert('Export functionality coming soon!');
+    const rows = (transactionsWithBalance ?? []).map((tx) => ({
+      entry_date: tx.journal_entry?.entry_date ?? '',
+      entry_number: tx.journal_entry?.entry_number ?? '',
+      description: [tx.journal_entry?.description, tx.description].filter(Boolean).join(' - '),
+      debit: tx.debit,
+      credit: tx.credit,
+      runningBalance: tx.runningBalance,
+    }));
+    const stem = `general-ledger-${selectedAccount?.account_number ?? 'account'}`;
+    downloadCsv(statementFilename(stem, startDate, endDate), generalLedgerCsv(rows));
   };
 
   const isLoading = accountsLoading || transactionsLoading;

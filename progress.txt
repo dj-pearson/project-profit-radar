@@ -6677,3 +6677,17 @@ alias of the real `/resources/<slug>` page, whose canonical always names the
 `/resources` URL. A missing post, a missing pSEO page and the site-wide 404
 now carry `noindex`. The SPA still answers every URL with HTTP 200; a real 404
 status needs Cloudflare Pages configuration.
+
+## US-371: buttons that did nothing now work or say they can't
+
+Five statement Export buttons showed `alert('coming soon')`; they now download
+a CSV of the figures on screen. Wiring that up turned up a crash: the general
+ledger's running balance read its own array while building it, which threw for
+any account with two or more lines. "New Opportunity" showed a "Coming Soon"
+toast although the create dialog already existed; it now opens it. Integration
+"Connect" sent users to a 404. It now starts the real OAuth function for
+QuickBooks and the two calendars, and shows a disabled "not built yet" button
+for the providers that have none. The custom report builder offered three
+time-entry columns that don't exist; it now offers the real ones.
+
+TypeScript errors: 1589 to 1583.
