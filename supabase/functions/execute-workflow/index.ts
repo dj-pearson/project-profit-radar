@@ -5,6 +5,7 @@ import { initializeAuthContext, verifyCompanyAccess, errorResponse } from '../_s
 import { authorizeWorkflowAccess } from '../_shared/workflow-auth.ts'
 import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts"
 import { validateBody } from '../_shared/validate-body.ts'
+import { evaluateWorkflowCondition } from '../_shared/workflow-condition.ts'
 
 // SECURITY (US-236): the caller is authenticated and confirmed to own the target
 // workflow/execution before anything runs with the service role (see handler below).
@@ -494,15 +495,29 @@ async function executeReportGenerationStep(supabase: any, step: WorkflowStep, ex
 async function executeConditionStep(supabase: any, step: WorkflowStep, execution: any) {
   const { condition, if_true_action, if_false_action } = step.config
 
-  // Mock condition evaluation - in real implementation, evaluate actual conditions
-  const conditionMet = Math.random() > 0.5 // Random for demo
-  const action = conditionMet ? if_true_action : if_false_action
+  // Evaluated against trigger_data (see _shared/workflow-condition.ts). This
+  // was a coin flip (random > 0.5), saved as condition_met. A condition that cannot
+  // be evaluated fails the step with the reason instead of picking a branch.
+  const evaluation = evaluateWorkflowCondition(condition, execution.trigger_data)
+  if (!evaluation.ok) {
+    return {
+      success: false,
+      error: evaluation.error,
+      output: {
+        condition_evaluated: condition,
+        condition_met: null,
+        action_taken: null,
+        evaluated_at: new Date().toISOString()
+      }
+    }
+  }
+  const action = evaluation.met ? if_true_action : if_false_action
 
   return {
     success: true,
     output: {
       condition_evaluated: condition,
-      condition_met: conditionMet,
+      condition_met: evaluation.met,
       action_taken: action,
       evaluated_at: new Date().toISOString()
     }

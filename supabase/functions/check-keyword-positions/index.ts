@@ -8,11 +8,14 @@ import {
   estimateCtr,
   findDomainPosition,
   isSerpConfigured,
+  mergeSavedPositions,
   serpNotConfiguredResponse,
   summarizePositions,
   toPositionRecord,
+  toSerpPositionRow,
   type KeywordPosition,
 } from '../_shared/keyword-positions.ts';
+import { resolveSeoSiteId } from '../_shared/seo-site.ts';
 
 // Request body (US-241), report mode by default - see _shared/validate-body.ts.
 // root_admin only. SEOManager.tsx sends { keywords, domain }, keywords being a
@@ -104,11 +107,17 @@ serve(async (req) => {
       }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
+    // The response keeps the shape SEOManager reads (toPositionRecord); the
+    // table gets the columns it actually has (toSerpPositionRow). Inserting
+    // the display shape failed on every call: current_position, ranking_url,
+    // domain, country and friends are not columns, and site_id was missing.
     const serpRecords = results.map((r) => toPositionRecord(r, { domain, country, device }));
+    const siteId = await resolveSeoSiteId(supabaseClient, user.id);
+    const serpRows = results.map((r) => toSerpPositionRow(r, { country, device, siteId }));
 
     const { data: saved, error: insertError } = await supabaseClient
       .from('seo_serp_positions')
-      .insert(serpRecords)
+      .insert(serpRows)
       .select();
 
     if (insertError) {
@@ -119,9 +128,10 @@ serve(async (req) => {
       timestamp: new Date().toISOString(),
       success: true,
       summary: summarizePositions(results),
-      positions: saved || serpRecords,
+      positions: mergeSavedPositions(serpRecords, insertError ? null : saved),
       failed,
       saved: !insertError,
+      storage_error: insertError?.message ?? null,
       note: 'Live SERP data. Search volume and traffic are not reported by the SERP API and are left empty.'
     }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 });
 

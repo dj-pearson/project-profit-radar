@@ -7141,3 +7141,12 @@ check-fabricated-fallbacks.mjs now traces Math.random() into edge-function
 DB writes and responses; 17 remaining hits are baselined with reasons.
 Cash-flow forecasts no longer get random "variance for realism". Still
 broken: the keyword insert writes columns seo_serp_positions lacks.
+
+## Fabricated edge data, part 2
+check-keyword-positions and track-serp-features wrote columns
+seo_serp_positions doesn't have, so every save failed; they now map to the
+real columns, and migration 20260924150000 adds a nullable site_id. The 17
+baselined Math.random() values are gone: real calculations where the data
+exists, null or empty with an "unavailable" flag where it doesn't, and
+errors instead of simulated backlinks and SERP features. Workflow condition
+steps are evaluated against trigger data instead of a coin flip.

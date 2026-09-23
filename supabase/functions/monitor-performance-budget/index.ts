@@ -132,12 +132,16 @@ serve(async (req) => {
       totalRequests++;
     }
 
-    // Simulate performance metrics (in production, use PageSpeed Insights API)
-    const loadTimeMs = Math.floor(Math.random() * 5000) + 1000;
-    const fcpMs = Math.floor(Math.random() * 3000) + 500;
-    const lcpMs = Math.floor(Math.random() * 4000) + 1000;
-    const ttiMs = Math.floor(Math.random() * 5000) + 1500;
-    const cls = Math.random() * 0.3;
+    // Timing metrics need a real browser run (PageSpeed Insights / Lighthouse),
+    // which this function does not make. They were random numbers, checked
+    // against the budget and saved as violations. Now they are null and the
+    // timing budgets are not evaluated; the size and request budgets above are
+    // measured from the page and still are.
+    const loadTimeMs: number | null = null;
+    const fcpMs: number | null = null;
+    const lcpMs: number | null = null;
+    const ttiMs: number | null = null;
+    const cls: number | null = null;
 
     // Check violations
     const violations = [];
@@ -181,7 +185,7 @@ serve(async (req) => {
         severity: 'medium',
       });
     }
-    if (loadTimeMs > budget.max_load_time_ms) {
+    if (loadTimeMs !== null && loadTimeMs > budget.max_load_time_ms) {
       violations.push({
         metric: 'load_time',
         actual: loadTimeMs,
@@ -189,7 +193,7 @@ serve(async (req) => {
         severity: 'high',
       });
     }
-    if (lcpMs > budget.max_largest_contentful_paint_ms) {
+    if (lcpMs !== null && lcpMs > budget.max_largest_contentful_paint_ms) {
       violations.push({
         metric: 'largest_contentful_paint',
         actual: lcpMs,
@@ -197,7 +201,7 @@ serve(async (req) => {
         severity: 'high',
       });
     }
-    if (cls > budget.max_cumulative_layout_shift) {
+    if (cls !== null && cls > budget.max_cumulative_layout_shift) {
       violations.push({
         metric: 'cumulative_layout_shift',
         actual: Math.round(cls * 1000) / 1000,
@@ -250,8 +254,10 @@ serve(async (req) => {
         fcp_ms: fcpMs,
         lcp_ms: lcpMs,
         tti_ms: ttiMs,
-        cls: Math.round(cls * 1000) / 1000,
+        cls: cls === null ? null : Math.round(cls * 1000) / 1000,
       },
+      timing_metrics_available: false,
+      note: 'Load time, FCP, LCP, TTI and CLS are not measured by this check (no PageSpeed Insights run), so they are null and their budgets were not evaluated.',
       budget,
     };
 

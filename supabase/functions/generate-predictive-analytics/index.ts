@@ -4,6 +4,7 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { initializeAuthContext, errorResponse } from '../_shared/auth-helpers.ts';
 import { getCorsHeaders } from '../_shared/secure-cors.ts';
 import { validateBody } from '../_shared/validate-body.ts';
+import { forecastBudgets, forecastCompletion, scheduledTrend } from '../_shared/predictive-forecasts.ts';
 import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
 
 // Request body (US-241), report mode by default - see _shared/validate-body.ts.
@@ -223,71 +224,21 @@ function analyzeRecentTrends(projects: any[], expenses: any[]): any {
 }
 
 async function enhancePredictionsWithRealData(predictions: any, projects: any[], supabaseClient: any): Promise<any> {
-  // Map AI predictions to actual project data
+  // Computed from the projects themselves (see _shared/predictive-forecasts.ts).
+  // Every figure below used to be random around the AI output. A project the
+  // data cannot forecast is left out rather than guessed.
   const activeProjects = projects.filter(p => ['active', 'in_progress', 'planning'].includes(p.status));
-  
-  predictions.projectCompletionPredictions = activeProjects.map((project, index) => {
-    const originalEnd = new Date(project.end_date || Date.now() + (90 * 24 * 60 * 60 * 1000));
-    const predictedEnd = new Date(originalEnd.getTime() + (Math.random() * 30 - 15) * 24 * 60 * 60 * 1000);
-    const delayDays = Math.ceil((predictedEnd.getTime() - originalEnd.getTime()) / (1000 * 60 * 60 * 24));
-    
-    return {
-      projectId: project.id,
-      projectName: project.name,
-      predictedEndDate: predictedEnd.toISOString().split('T')[0],
-      originalEndDate: originalEnd.toISOString().split('T')[0],
-      confidenceScore: 0.7 + Math.random() * 0.3,
-      delayRisk: delayDays > 14 ? 'high' : delayDays > 7 ? 'medium' : 'low',
-      delayDays: Math.max(0, delayDays)
-    };
-  });
+  const now = new Date();
 
-  predictions.budgetForecasting = activeProjects.map(project => {
-    const originalBudget = project.budget || 100000;
-    const variance = (Math.random() * 40 - 10); // -10% to +30% variance
-    const predictedCost = originalBudget * (1 + variance / 100);
-    
-    return {
-      projectId: project.id,
-      projectName: project.name,
-      predictedFinalCost: Math.round(predictedCost),
-      originalBudget: originalBudget,
-      variancePercentage: variance,
-      overrunRisk: variance > 20 ? 'high' : variance > 10 ? 'medium' : 'low'
-    };
-  });
-
-  // Generate 12 months of resource forecasting
-  predictions.resourceDemandForecast = Array.from({ length: 12 }, (_, i) => {
-    const date = new Date();
-    date.setMonth(date.getMonth() + i);
-    const baseHours = 1800 + Math.random() * 800;
-    const capacity = 2500;
-    
-    return {
-      period: date.toISOString().slice(0, 7),
-      predictedLaborHours: Math.round(baseHours),
-      predictedEquipmentNeeds: Math.round(baseHours * 0.08),
-      predictedMaterialCosts: Math.round(50000 + Math.random() * 40000),
-      capacity: capacity,
-      utilization: Math.round((baseHours / capacity) * 100)
-    };
-  });
-
-  // Generate trend predictions
-  predictions.trendPredictions = Array.from({ length: 12 }, (_, i) => {
-    const date = new Date();
-    date.setMonth(date.getMonth() + i);
-    const baseRevenue = 200000 + Math.random() * 100000;
-    
-    return {
-      month: date.toISOString().slice(0, 7),
-      predictedRevenue: Math.round(baseRevenue),
-      predictedProjects: 2 + Math.round(Math.random() * 3),
-      marketTrend: Math.random() > 0.7 ? 'growing' : Math.random() > 0.3 ? 'stable' : 'declining',
-      confidence: 0.6 + Math.random() * 0.3
-    };
-  });
+  predictions.projectCompletionPredictions = forecastCompletion(activeProjects, now);
+  predictions.budgetForecasting = forecastBudgets(activeProjects);
+  // Nothing records planned labor hours or material spend by month.
+  predictions.resourceDemandForecast = [];
+  predictions.trendPredictions = scheduledTrend(activeProjects, projects, now);
+  predictions.forecastNote =
+    'Completion and cost forecasts are projected from start date, percent complete and cost to date; ' +
+    'projects missing those are omitted. Revenue by month is contract value scheduled to finish, not a market prediction. ' +
+    'Resource demand is unavailable: no planned labor or material data exists.';
 
   return predictions;
 }

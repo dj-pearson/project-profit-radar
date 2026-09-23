@@ -159,51 +159,20 @@ function srcOffenders() {
 const FUNCTIONS = join(root, 'supabase', 'functions');
 
 /**
- * Per-file hit counts that were here when the edge check landed, each with
- * the reason it has not been fixed in that change. Exact: a new hit fails, and
- * so does a fixed one until its count is lowered or its entry removed.
+ * Per-file hit counts allowed to remain, each with the reason it cannot be
+ * fixed yet. Exact: a new hit fails, and so does a fixed one until its count
+ * is lowered or its entry removed.
+ *
+ * Empty. The 17 hits baselined when the edge check landed (bing-search-api,
+ * execute-workflow, generate-performance-benchmarks, generate-predictive-
+ * analytics, generate-risk-assessment, generate-timeline-optimization,
+ * monitor-performance-budget, seo-analytics, sync-backlinks,
+ * track-serp-features) were all removed: each value is now null, an explicit
+ * not-configured / not-available error, or computed from real rows. An entry
+ * added here needs a reason that says why a real source or a null is not
+ * possible, not only that the fix is work.
  */
-const EDGE_BASELINE = new Map([
-  // page clicks/impressions/ctr/position and keyword ctr/position/trend are
-  // random when the Bing response has no per-page stats; needs a real Bing
-  // Webmaster source or nulls, and SEOManager reads these fields.
-  ['supabase/functions/bing-search-api/index.ts', { count: 2 }],
-  // condition steps pick their branch with Math.random() > 0.5 and the result
-  // is saved to workflow_(step_)executions; needs a real condition evaluator,
-  // which is a feature, not a one-line fix.
-  ['supabase/functions/execute-workflow/index.ts', { count: 3 }],
-  // the OpenAI prompt's example JSON and the 12-month historicalTrends are
-  // random, then saved to performance_benchmarks; needs monthly history
-  // queried from projects.
-  ['supabase/functions/generate-performance-benchmarks/index.ts', { count: 2 }],
-  // completion dates, confidence, cost variance and revenue forecasts are
-  // random around the AI output; the predictions need a model or should be
-  // dropped from the response.
-  ['supabase/functions/generate-predictive-analytics/index.ts', { count: 1 }],
-  // per-project budget/schedule risk and the overall risk scores are random
-  // ranges, returned as the assessment; needs scoring from budget and schedule
-  // data.
-  ['supabase/functions/generate-risk-assessment/index.ts', { count: 1 }],
-  // time saved, resource figures, utilization and bottlenecks are random; the
-  // optimizer does not exist yet, so this should return an error until it
-  // does.
-  ['supabase/functions/generate-timeline-optimization/index.ts', { count: 1 }],
-  // load time/FCP/LCP/TTI/CLS are simulated in place of PageSpeed Insights and
-  // saved as budget violations; needs a PAGESPEED key and a not-configured
-  // error like check-keyword-positions.
-  ['supabase/functions/monitor-performance-budget/index.ts', { count: 2 }],
-  // trendingQueries[].change is a random percentage labelled as mock; needs a
-  // previous-period comparison from Search Console.
-  ['supabase/functions/seo-analytics/index.ts', { count: 1 }],
-  // with no backlink API configured it upserts hard-coded simulated backlinks
-  // with random follow/spam/first_seen/status into seo_backlinks; same fix as
-  // check-keyword-positions.
-  ['supabase/functions/sync-backlinks/index.ts', { count: 2 }],
-  // with no SERP data it falls back to random feature presence/ownership and
-  // inserts it into seo_serp_positions; same fix as check-keyword-positions
-  // (SERP_API_KEY).
-  ['supabase/functions/track-serp-features/index.ts', { count: 2 }],
-]);
+const EDGE_BASELINE = new Map([]);
 
 /** Response helpers whose argument becomes the body the caller reads. */
 const RESPONSE_HELPER = /^(?:create)?(?:success|json)Response$/;
@@ -496,8 +465,10 @@ function main() {
   if (failed) process.exit(1);
   console.log('No catch block returns fabricated data.');
   console.log(
-    `Edge functions: ${edge.total} Math.random()-derived write/response hit(s), ` +
-      `all baselined across ${EDGE_BASELINE.size} file(s).`
+    edge.total === 0
+      ? 'Edge functions: no Math.random()-derived value is written or returned.'
+      : `Edge functions: ${edge.total} Math.random()-derived write/response hit(s), ` +
+          `all baselined across ${EDGE_BASELINE.size} file(s).`
   );
 }
 

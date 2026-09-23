@@ -4,6 +4,13 @@ import { initializeAuthContext, errorResponse } from '../_shared/auth-helpers.ts
 import { getCorsHeaders } from '../_shared/secure-cors.ts';
 import { validateBody } from '../_shared/validate-body.ts';
 import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
+import {
+  findDomainPosition,
+  isSerpConfigured,
+  serpNotConfiguredResponse,
+  toSerpFeaturesRow,
+} from '../_shared/keyword-positions.ts';
+import { resolveSeoSiteId } from '../_shared/seo-site.ts';
 
 // Request body (US-241), report mode by default - see _shared/validate-body.ts.
 // root_admin only; no caller in src/. keyword and domain go into a search-API
@@ -57,110 +64,95 @@ serve(async (req) => {
       feature_data?: any;
     }> = [];
 
+    // No simulated path. Without SERP_API_KEY this used to pick each feature's
+    // presence and ownership at random and insert it as the SERP
+    // (see _shared/keyword-positions.ts). No key is now an error, and so is a
+    // failed lookup: an empty feature list would read as "no features".
     const serpApiKey = Deno.env.get('SERP_API_KEY');
-
-    if (serpApiKey) {
-      // Use real SERP API
-      try {
-        const searchUrl = `https://serpapi.com/search.json?q=${encodeURIComponent(keyword)}&location=${country}&device=${device}&api_key=${serpApiKey}`;
-        const serpResponse = await fetch(searchUrl);
-        const serpData = await serpResponse.json();
-
-        // Check for various SERP features
-        const featureTypes = [
-          'featured_snippet',
-          'knowledge_graph',
-          'local_pack',
-          'people_also_ask',
-          'image_pack',
-          'video_carousel',
-          'shopping_results',
-          'news_results',
-          'twitter_results',
-          'reviews',
-          'site_links',
-        ];
-
-        for (const featureType of featureTypes) {
-          const snakeCase = featureType.toLowerCase().replace(/ /g, '_');
-          const hasFeature = !!serpData[snakeCase];
-          let ownsFeature = false;
-          let featureUrl = null;
-          let featureData = null;
-
-          if (hasFeature && domain) {
-            const featureContent = serpData[snakeCase];
-            featureData = featureContent;
-
-            // Check if domain owns this feature
-            if (Array.isArray(featureContent)) {
-              ownsFeature = featureContent.some((item: any) =>
-                item.link?.includes(domain) || item.displayed_link?.includes(domain)
-              );
-              const ownedItem = featureContent.find((item: any) =>
-                item.link?.includes(domain) || item.displayed_link?.includes(domain)
-              );
-              if (ownedItem) {
-                featureUrl = ownedItem.link || ownedItem.displayed_link;
-              }
-            } else if (featureContent.link) {
-              ownsFeature = featureContent.link.includes(domain);
-              featureUrl = featureContent.link;
-            }
-          }
-
-          serpFeatures.push({
-            feature_type: featureType,
-            has_feature: hasFeature,
-            owns_feature: ownsFeature,
-            feature_url: featureUrl || undefined,
-            feature_data: featureData,
-          });
-        }
-      } catch (error) {
-        console.error('SERP API error:', error);
-      }
+    if (!isSerpConfigured(serpApiKey)) {
+      console.error('[TRACK-SERP-FEATURES] SERP_API_KEY is not set');
+      return serpNotConfiguredResponse(corsHeaders);
     }
 
-    // Fallback to simulated data
-    if (serpFeatures.length === 0) {
-      const simulatedFeatures = [
-        { type: 'featured_snippet', probability: 0.3 },
-        { type: 'knowledge_graph', probability: 0.2 },
-        { type: 'local_pack', probability: 0.4 },
-        { type: 'people_also_ask', probability: 0.8 },
-        { type: 'image_pack', probability: 0.6 },
-        { type: 'video_carousel', probability: 0.3 },
-        { type: 'shopping_results', probability: 0.2 },
-        { type: 'news_results', probability: 0.4 },
-        { type: 'site_links', probability: 0.5 },
-        { type: 'reviews', probability: 0.3 },
+    // deno-lint-ignore no-explicit-any
+    let serpData: any = null;
+    try {
+      const searchUrl = `https://serpapi.com/search.json?q=${encodeURIComponent(keyword)}&location=${encodeURIComponent(country)}&device=${encodeURIComponent(device)}&api_key=${serpApiKey}`;
+      const serpResponse = await fetch(searchUrl);
+      if (!serpResponse.ok) throw new Error(`SerpApi returned ${serpResponse.status}`);
+      serpData = await serpResponse.json();
+
+      // Check for various SERP features
+      const featureTypes = [
+        'featured_snippet',
+        'knowledge_graph',
+        'local_pack',
+        'people_also_ask',
+        'image_pack',
+        'video_carousel',
+        'shopping_results',
+        'news_results',
+        'twitter_results',
+        'reviews',
+        'site_links',
       ];
 
-      for (const sim of simulatedFeatures) {
-        const hasFeature = Math.random() < sim.probability;
-        const ownsFeature = Boolean(hasFeature && domain && Math.random() < 0.3);
+      for (const featureType of featureTypes) {
+        const snakeCase = featureType.toLowerCase().replace(/ /g, '_');
+        const hasFeature = !!serpData[snakeCase];
+        let ownsFeature = false;
+        let featureUrl = null;
+        let featureData = null;
+
+        if (hasFeature && domain) {
+          const featureContent = serpData[snakeCase];
+          featureData = featureContent;
+
+          // Check if domain owns this feature
+          if (Array.isArray(featureContent)) {
+            ownsFeature = featureContent.some((item: any) =>
+              item.link?.includes(domain) || item.displayed_link?.includes(domain)
+            );
+            const ownedItem = featureContent.find((item: any) =>
+              item.link?.includes(domain) || item.displayed_link?.includes(domain)
+            );
+            if (ownedItem) {
+              featureUrl = ownedItem.link || ownedItem.displayed_link;
+            }
+          } else if (featureContent.link) {
+            ownsFeature = featureContent.link.includes(domain);
+            featureUrl = featureContent.link;
+          }
+        }
 
         serpFeatures.push({
-          feature_type: sim.type,
+          feature_type: featureType,
           has_feature: hasFeature,
           owns_feature: ownsFeature,
-          feature_url: ownsFeature ? `https://${domain}/page` : undefined,
-          feature_data: hasFeature ? { simulated: true } : undefined,
+          feature_url: featureUrl || undefined,
+          feature_data: featureData,
         });
       }
+    } catch (error) {
+      console.error('SERP API error:', error);
+      return new Response(JSON.stringify({
+        success: false,
+        timestamp: new Date().toISOString(),
+        error: `SERP lookup failed: ${error instanceof Error ? error.message : String(error)}`,
+      }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
-    // Save to database with site isolation
-    const positionRecord = {  // CRITICAL: Site isolation
+    // Save to database. The row used to carry domain, country,
+    // current_position, serp_features and owned_features, none of which are
+    // columns of seo_serp_positions, and no site_id, so it never stored.
+    const organic = findDomainPosition(serpData?.organic_results, domain);
+    const siteId = await resolveSeoSiteId(supabaseClient, user.id);
+    const positionRecord = toSerpFeaturesRow({
       keyword,
-      domain: domain || null,
-      country,
-      device,
-      current_position: null,
-      serp_features: serpFeatures.filter(f => f.has_feature).map(f => f.feature_type),
-      owned_features: serpFeatures.filter(f => f.owns_feature).map(f => f.feature_type),
-    };
+      presentFeatures: serpFeatures.filter(f => f.has_feature).map(f => f.feature_type),
+      position: organic.position,
+      url: organic.url,
+    }, { country, device, siteId });
 
     // The insert's error was discarded and supabase-js returns it rather than
     // throwing. The `saved || <data>` fallback below then hid the consequence
@@ -199,6 +191,7 @@ serve(async (req) => {
       success: true,
       stored: !saveError,
       storage_error: saveError?.message ?? null,
+      stored_id: saved?.id ?? null,
       keyword,
       serp_features: serpFeatures,
       summary: {
@@ -207,7 +200,7 @@ serve(async (req) => {
         opportunities: opportunities.length,
       },
       opportunities,
-      note: serpApiKey ? 'Live SERP data' : 'Simulated data - configure SERP_API_KEY for live tracking',
+      note: 'Live SERP data',
     }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 });
 
   } catch (error) {

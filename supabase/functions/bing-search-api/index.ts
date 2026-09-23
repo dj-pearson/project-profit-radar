@@ -207,13 +207,17 @@ async function getBingSiteInfo(corsHeaders: Record<string, string>, apiKey: stri
     const siteData = await response.json()
     console.log('Bing site info processed successfully')
 
-    // Transform to pages format
+    // Transform to pages format. The Web Search API lists indexed pages but
+    // reports no clicks, impressions, CTR or position for them; those were
+    // random numbers. They stay in the shape (callers read the keys) as null,
+    // and `metrics_available: false` says why.
     const pages = (siteData.webPages?.value || []).map((page: any) => ({
       page: page.url || '/',
-      clicks: Math.floor(Math.random() * 100), // Simulated data
-      impressions: Math.floor(Math.random() * 1000),
-      ctr: Math.random() * 5,
-      position: Math.floor(Math.random() * 20) + 1,
+      clicks: null,
+      impressions: null,
+      ctr: null,
+      position: null,
+      metrics_available: false,
       source: 'bing'
     }))
 
@@ -252,9 +256,11 @@ async function getBingSearchTrends(corsHeaders: Record<string, string>, apiKey: 
           query: term,
           clicks: Math.floor(totalResults * 0.001), // Estimate
           impressions: Math.floor(totalResults * 0.1),
-          ctr: Math.random() * 3,
-          position: Math.floor(Math.random() * 15) + 1,
-          trend: Math.random() > 0.5 ? 'up' : 'down',
+          // No CTR, position or trend source in a web search response; these
+          // were random. Null says "not measured".
+          ctr: null,
+          position: null,
+          trend: null,
           source: 'bing'
         })
       }

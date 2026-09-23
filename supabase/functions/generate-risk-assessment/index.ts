@@ -4,6 +4,7 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { initializeAuthContext, errorResponse } from '../_shared/auth-helpers.ts';
 import { getCorsHeaders } from '../_shared/secure-cors.ts';
 import { validateBody } from '../_shared/validate-body.ts';
+import { scoreProjectRisk } from '../_shared/risk-scoring.ts';
 import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
 
 // Request body (US-241), report mode by default - see _shared/validate-body.ts.
@@ -157,7 +158,7 @@ serve(async (req) => {
     const riskData = JSON.parse(aiResult.choices[0].message.content);
 
     // Enhance with real project data
-    const enhancedRiskData = enhanceRiskDataWithProjects(riskData, projects || []);
+    const enhancedRiskData = enhanceRiskDataWithProjects(riskData, projects || [], expenses || []);
 
     logStep("Risk assessment completed", {
       projectsAnalyzed: projects?.length || 0,
@@ -182,54 +183,26 @@ serve(async (req) => {
   }
 });
 
-function enhanceRiskDataWithProjects(riskData: any, projects: any[]): any {
+function enhanceRiskDataWithProjects(
+  riskData: any,
+  projects: any[],
+  expenses: Array<{ project_id?: string | null; amount?: unknown }>,
+): any {
   const activeProjects = projects.filter(p => ['active', 'in_progress'].includes(p.status));
-  
-  // Map real projects to risk assessments
+  const now = new Date();
+
+  // Scored from budget, spend, dates and percent complete (see
+  // _shared/risk-scoring.ts). These were random 40-80 / 30-60 ranges.
   riskData.projectRisks = activeProjects.map(project => {
-    const budgetRisk = Math.random() * 40 + 40; // 40-80 risk score
-    const scheduleRisk = Math.random() * 30 + 30; // 30-60 risk score
-    const overallRisk = (budgetRisk + scheduleRisk) / 2;
-    
-    return {
-      projectId: project.id,
-      projectName: project.name,
-      riskScore: Math.round(overallRisk),
-      topRisks: [
-        {
-          type: "Budget Overrun",
-          severity: budgetRisk > 70 ? 'high' : budgetRisk > 50 ? 'medium' : 'low',
-          probability: budgetRisk / 100,
-          impact: Math.round(budgetRisk / 10),
-          description: `Project tracking ${Math.round(budgetRisk - 50)}% over initial estimates`,
-          mitigation: "Implement weekly budget tracking and approval gates"
-        },
-        {
-          type: "Schedule Delay",
-          severity: scheduleRisk > 60 ? 'high' : scheduleRisk > 40 ? 'medium' : 'low',
-          probability: scheduleRisk / 100,
-          impact: Math.round(scheduleRisk / 10),
-          description: `Timeline showing potential ${Math.round(scheduleRisk / 5)} day delay`,
-          mitigation: "Add buffer time and optimize resource allocation"
-        }
-      ]
-    };
+    const spent = expenses
+      .filter(e => e.project_id === project.id)
+      .reduce((sum, e) => sum + (Number(e.amount) || 0), 0);
+    return scoreProjectRisk(project, spent, now);
   });
 
-  // Generate historical risk trends
-  riskData.riskTrends = Array.from({ length: 12 }, (_, i) => {
-    const date = new Date();
-    date.setMonth(date.getMonth() - i);
-    
-    return {
-      period: date.toISOString().slice(0, 7),
-      overallRisk: 45 + Math.random() * 30,
-      budgetRisk: 40 + Math.random() * 40,
-      scheduleRisk: 35 + Math.random() * 35,
-      qualityRisk: 30 + Math.random() * 25,
-      resourceRisk: 45 + Math.random() * 30
-    };
-  }).reverse();
+  // No risk history is stored; this was twelve months of random scores.
+  riskData.riskTrends = [];
+  riskData.riskTrendsNote = 'Risk history is not recorded, so no trend is shown.';
 
   return riskData;
 }

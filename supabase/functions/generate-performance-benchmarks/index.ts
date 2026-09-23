@@ -3,6 +3,7 @@ import { initializeAuthContext, errorResponse } from '../_shared/auth-helpers.ts
 import { getCorsHeaders } from '../_shared/secure-cors.ts';
 import { validateBody } from '../_shared/validate-body.ts';
 import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
+import { buildHistoricalTrends, type HistoryProject } from '../_shared/benchmark-history.ts';
 
 // Request body (US-241), report mode by default - see _shared/validate-body.ts.
 // The caller, src/components/analytics/PerformanceBenchmarking.tsx, sends
@@ -109,7 +110,7 @@ Please provide a JSON response with the following structure:
     }
   ],
   "competitiveAnalysis": {
-    "marketPosition": ${Math.floor(Math.random() * 30) + 60},
+    "marketPosition": null,
     "strengths": ["Strong project completion rate", "Effective cost management"],
     "weaknesses": ["Safety incident frequency", "Client communication"],
     "opportunities": ["Digital transformation", "Specialized services"],
@@ -123,7 +124,7 @@ Please provide a JSON response with the following structure:
   "improvementOpportunities": [
     {
       "area": "Safety Management",
-      "currentScore": ${Math.floor(Math.random() * 20) + 70},
+      "currentScore": null,
       "potentialScore": 95,
       "impact": "high",
       "difficulty": "medium",
@@ -131,7 +132,7 @@ Please provide a JSON response with the following structure:
     },
     {
       "area": "Cost Control",
-      "currentScore": ${Math.floor(Math.random() * 15) + 75},
+      "currentScore": null,
       "potentialScore": 92,
       "impact": "high",
       "difficulty": "low",
@@ -139,17 +140,18 @@ Please provide a JSON response with the following structure:
     }
   ],
   "kpiDashboard": {
-    "overallScore": ${Math.floor(Math.random() * 20) + 75},
+    "overallScore": null,
     "categories": [
-      { "name": "Financial", "score": ${Math.floor(Math.random() * 15) + 80}, "trend": "up" },
-      { "name": "Operational", "score": ${Math.floor(Math.random() * 20) + 75}, "trend": "stable" },
-      { "name": "Safety", "score": ${Math.floor(Math.random() * 25) + 70}, "trend": "up" },
-      { "name": "Quality", "score": ${Math.floor(Math.random() * 10) + 85}, "trend": "down" }
+      { "name": "Financial", "score": null, "trend": "up" },
+      { "name": "Operational", "score": null, "trend": "stable" },
+      { "name": "Safety", "score": null, "trend": "up" },
+      { "name": "Quality", "score": null, "trend": "down" }
     ]
   }
 }
 
-Ensure all numbers are realistic for the construction industry and consistent with the company's actual performance data.`;
+Ensure all numbers are realistic for the construction industry and consistent with the company's actual performance data.
+The company data above does not determine marketPosition, currentScore, overallScore or the category scores. Leave them null unless the metrics above support a specific value; do not invent them.`;
 
     // Call OpenAI API
     const openaiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -177,7 +179,7 @@ Ensure all numbers are realistic for the construction industry and consistent wi
     const benchmarkData = JSON.parse(openaiData.choices[0].message.content);
 
     // Enhance with actual company metrics
-    const enhancedBenchmarks = enhanceBenchmarkData(benchmarkData, metrics, company);
+    const enhancedBenchmarks = enhanceBenchmarkData(benchmarkData, metrics, company, projects || []);
 
     // Store in database with site isolation
     const { data: savedBenchmark, error: saveError } = await supabase
@@ -313,7 +315,7 @@ function calculateBudgetVariance(projects: any[], expenses: any[]): number {
     : 0;
 }
 
-function enhanceBenchmarkData(benchmarkData: any, metrics: any, company: any): any {
+function enhanceBenchmarkData(benchmarkData: any, metrics: any, company: any, projects: HistoryProject[]): any {
   // Update benchmark data with actual company metrics
   benchmarkData.performanceMetrics = benchmarkData.performanceMetrics.map((metric: any) => {
     if (metric.metric === 'Project Success Rate') {
@@ -326,18 +328,14 @@ function enhanceBenchmarkData(benchmarkData: any, metrics: any, company: any): a
     return metric;
   });
 
-  // Generate more realistic historical trends
-  benchmarkData.historicalTrends = Array.from({ length: 12 }, (_, i) => {
-    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-    const currentMonth = new Date().getMonth();
-    const monthIndex = (currentMonth - 11 + i + 12) % 12;
-    
-    return {
-      month: monthNames[monthIndex],
-      performance: Math.max(0, metrics.successRate + (Math.random() - 0.5) * 20),
-      industry: 89 + (Math.random() - 0.5) * 6
-    };
-  });
+  // Twelve months of completion rate computed from the company's own
+  // projects (see _shared/benchmark-history.ts). This was successRate plus
+  // random noise, and a random "industry" line, saved and charted as history.
+  benchmarkData.historicalTrends = buildHistoricalTrends(
+    projects,
+    benchmarkData.industryComparison?.avgCompletionRate,
+    new Date(),
+  );
 
   // Enhance competitive analysis with company-specific insights
   benchmarkData.competitiveAnalysis.companyName = company?.name || 'Your Company';

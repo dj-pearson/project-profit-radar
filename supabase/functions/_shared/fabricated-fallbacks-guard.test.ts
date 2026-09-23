@@ -70,9 +70,21 @@ describe('fabricated-value guard for edge functions', () => {
 
   it('has no hit left in the fixed functions', async () => {
     const { readFileSync } = await import('node:fs');
-    for (const name of ['check-keyword-positions', 'generate-cash-flow-forecast', 'smart-procurement']) {
+    for (const name of [
+      'check-keyword-positions', 'generate-cash-flow-forecast', 'smart-procurement',
+      // The 17 hits once baselined across these ten.
+      'bing-search-api', 'execute-workflow', 'generate-performance-benchmarks',
+      'generate-predictive-analytics', 'generate-risk-assessment', 'generate-timeline-optimization',
+      'monitor-performance-budget', 'seo-analytics', 'sync-backlinks', 'track-serp-features',
+    ]) {
       const file = join(process.cwd(), 'supabase/functions', name, 'index.ts');
       expect(findEdgeFabrications(file, readFileSync(file, 'utf8'))).toEqual([]);
     }
+  });
+
+  it('baselines nothing: any new Math.random() value in an edge write or response fails', async () => {
+    const { readFileSync } = await import('node:fs');
+    const src = readFileSync(join(process.cwd(), 'scripts/check-fabricated-fallbacks.mjs'), 'utf8');
+    expect(src).toMatch(/const EDGE_BASELINE = new Map\(\[\]\);/);
   });
 });

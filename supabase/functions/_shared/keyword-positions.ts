@@ -125,3 +125,106 @@ export function summarizePositions(results: KeywordPosition[]) {
     total_estimated_traffic: null,
   };
 }
+
+/**
+ * Columns seo_serp_positions actually has: 20251107000000_enterprise_seo_features
+ * plus site_id (NOT NULL on the live database; added nullable, IF NOT EXISTS,
+ * by 20260924150000 so a replayed history has it too). toPositionRecord's
+ * shape is what SEOManager reads from the response, and none of
+ * current_position, ranking_url, domain, country, previous_position,
+ * position_change, search_volume, ctr or serp_features exists on the table, so
+ * inserting it failed on every call. The row below is the storage mapping.
+ */
+export const SERP_POSITION_COLUMNS = [
+  'id', 'keyword_id', 'company_id', 'site_id',
+  'keyword', 'search_engine', 'location', 'device', 'language',
+  'position', 'url', 'title', 'description',
+  'has_featured_snippet', 'featured_snippet_type', 'has_knowledge_panel',
+  'has_people_also_ask', 'has_image_pack', 'has_video_carousel', 'has_local_pack',
+  'competitors', 'estimated_traffic', 'estimated_value',
+  'checked_at', 'created_at',
+] as const;
+
+export type SerpPositionColumn = (typeof SERP_POSITION_COLUMNS)[number];
+
+export interface SerpRowContext {
+  country: string;
+  device: string;
+  siteId: string | null;
+}
+
+/** The seo_serp_positions row for one checked keyword. */
+export function toSerpPositionRow(r: KeywordPosition, ctx: SerpRowContext): Partial<Record<SerpPositionColumn, unknown>> {
+  return {
+    site_id: ctx.siteId,
+    keyword: r.keyword,
+    search_engine: 'google',
+    location: ctx.country,
+    device: ctx.device,
+    position: r.position,
+    url: r.url,
+    // No search volume, so no traffic estimate (see toPositionRecord).
+    estimated_traffic: null,
+    competitors: [],
+  };
+}
+
+/** SERP feature names track-serp-features checks, mapped to their boolean column. */
+export const SERP_FEATURE_COLUMNS: Record<string, SerpPositionColumn> = {
+  featured_snippet: 'has_featured_snippet',
+  knowledge_graph: 'has_knowledge_panel',
+  people_also_ask: 'has_people_also_ask',
+  image_pack: 'has_image_pack',
+  video_carousel: 'has_video_carousel',
+  local_pack: 'has_local_pack',
+};
+
+/**
+ * The seo_serp_positions row for a track-serp-features run. It used to insert
+ * domain, country, current_position, serp_features and owned_features, none of
+ * which exist. Features without a column (shopping_results, news_results, ...)
+ * and ownership stay in the response only.
+ */
+export function toSerpFeaturesRow(
+  input: {
+    keyword: string;
+    presentFeatures: string[];
+    position: number | null;
+    url: string | null;
+  },
+  ctx: SerpRowContext,
+): Partial<Record<SerpPositionColumn, unknown>> {
+  const row: Partial<Record<SerpPositionColumn, unknown>> = {
+    site_id: ctx.siteId,
+    keyword: input.keyword,
+    search_engine: 'google',
+    location: ctx.country,
+    device: ctx.device,
+    position: input.position,
+    url: input.url,
+    competitors: [],
+  };
+  for (const [feature, column] of Object.entries(SERP_FEATURE_COLUMNS)) {
+    row[column] = input.presentFeatures.includes(feature);
+  }
+  return row;
+}
+
+/**
+ * The response entries: the display shape SEOManager reads, over the stored
+ * row when there is one (so `id`, `checked_at` and the table columns are
+ * added, never replacing a display key).
+ */
+export function mergeSavedPositions<T extends Record<string, unknown>>(
+  display: T[],
+  saved: Array<Record<string, unknown>> | null | undefined,
+): Array<T & Record<string, unknown>> {
+  const rows = Array.isArray(saved) ? saved : [];
+  return display.map((d, i) => {
+    const byIndex = rows[i];
+    const match = byIndex && byIndex.keyword === d.keyword
+      ? byIndex
+      : rows.find((row) => row.keyword === d.keyword);
+    return { ...(match ?? {}), ...d };
+  });
+}

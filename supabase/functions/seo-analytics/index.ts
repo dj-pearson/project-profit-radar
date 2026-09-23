@@ -207,11 +207,13 @@ async function getDashboardData(corsHeaders: Record<string, string>, supabaseCli
       bounceRate: ((analyticsResponse.data.data.bounceRate || 0) * 100).toFixed(1) + '%',
       pageViews: analyticsResponse.data.data.pageviews,
       
-      // Mock trending data (would calculate from historical data in production)
-      trendingQueries: keywordsResponse.data?.data?.keywords?.slice(0, 5).map((keyword: any, index: number) => ({
+      // Trend and change need a previous-period comparison from Search Console,
+      // which this does not fetch. They were alternating up/down and a random
+      // percentage; now null ("not measured") until that comparison exists.
+      trendingQueries: keywordsResponse.data?.data?.keywords?.slice(0, 5).map((keyword: any) => ({
         ...keyword,
-        trend: index % 2 === 0 ? 'up' : 'down',
-        change: (Math.random() * 20 - 10).toFixed(1) + '%'
+        trend: null,
+        change: null
       })) || [],
       
       // Device breakdown (mock data - would need additional Analytics API call)

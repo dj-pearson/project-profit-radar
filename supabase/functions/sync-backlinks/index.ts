@@ -3,6 +3,7 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { initializeAuthContext, errorResponse } from '../_shared/auth-helpers.ts';
 import { getCorsHeaders } from '../_shared/secure-cors.ts';
 import { validateBody } from '../_shared/validate-body.ts';
+import { backlinksUnavailableResponse, isProviderConfigured } from '../_shared/backlinks.ts';
 import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
 
 // Request body (US-241), report mode by default - see _shared/validate-body.ts.
@@ -64,120 +65,61 @@ serve(async (req) => {
     }> = [];
 
     let totalBacklinks = 0;
-    let provider_used = 'simulated';
+    let provider_used = 'none';
 
-    // Try Ahrefs API
+    // No simulated path (see _shared/backlinks.ts): without a working
+    // provider there is nothing to sync, so say so instead of inventing links.
     const ahrefsApiKey = Deno.env.get('AHREFS_API_KEY');
-    if (provider === 'ahrefs' && ahrefsApiKey) {
-      try {
-        const ahrefsUrl = `https://api.ahrefs.com/v3/site-explorer/backlinks?target=${encodeURIComponent(target_url)}&output=json&limit=1000`;
-        const ahrefsResponse = await fetch(ahrefsUrl, {
-          headers: {
-            'Authorization': `Bearer ${ahrefsApiKey}`,
-            'Accept': 'application/json',
-          },
-        });
-
-        if (ahrefsResponse.ok) {
-          const ahrefsData = await ahrefsResponse.json();
-          provider_used = 'ahrefs';
-
-          for (const link of ahrefsData.backlinks || []) {
-            backlinks.push({  // CRITICAL: Site isolation
-              source_url: link.url_from,
-              source_domain: link.domain_from,
-              target_url: link.url_to,
-              anchor_text: link.anchor || '',
-              link_type: link.type || 'text',
-              is_followed: !link.nofollow,
-              domain_rating: link.domain_rating || 0,
-              domain_authority: link.domain_rating || 0,
-              page_authority: link.url_rating || 0,
-              spam_score: 0,
-              first_seen: link.first_seen || new Date().toISOString(),
-              last_seen: link.last_seen || new Date().toISOString(),
-              link_status: link.is_lost ? 'lost' : 'active',
-            });
-          }
-
-          totalBacklinks = ahrefsData.stats?.backlinks || backlinks.length;
-        }
-      } catch (error) {
-        console.error('Ahrefs API error:', error);
-      }
+    if (!isProviderConfigured(provider, ahrefsApiKey)) {
+      const mozCredentialsSet = provider === 'moz' &&
+        !!Deno.env.get('MOZ_ACCESS_ID') && !!Deno.env.get('MOZ_SECRET_KEY');
+      console.error('[SYNC-BACKLINKS] No backlink provider configured', { provider });
+      return backlinksUnavailableResponse(corsHeaders, null, mozCredentialsSet);
     }
 
-    // Try Moz API
-    const mozAccessId = Deno.env.get('MOZ_ACCESS_ID');
-    const mozSecretKey = Deno.env.get('MOZ_SECRET_KEY');
-    if (provider === 'moz' && mozAccessId && mozSecretKey && backlinks.length === 0) {
-      try {
-        // Moz API authentication and request would go here
-        provider_used = 'moz';
-        // Implementation depends on Moz API documentation
-      } catch (error) {
-        console.error('Moz API error:', error);
+    try {
+      const ahrefsUrl = `https://api.ahrefs.com/v3/site-explorer/backlinks?target=${encodeURIComponent(target_url)}&output=json&limit=1000`;
+      const ahrefsResponse = await fetch(ahrefsUrl, {
+        headers: {
+          'Authorization': `Bearer ${ahrefsApiKey}`,
+          'Accept': 'application/json',
+        },
+      });
+
+      if (!ahrefsResponse.ok) {
+        throw new Error(`Ahrefs returned ${ahrefsResponse.status}`);
       }
-    }
 
-    // Fallback to simulated data for testing
-    if (backlinks.length === 0) {
-      const domain = new URL(target_url).hostname;
-      const simulatedBacklinks = [
-        {
-          source_domain: 'example.com',
-          source_url: 'https://example.com/article',
-          anchor_text: 'Brikly',
-          domain_rating: 75,
-        },
-        {
-          source_domain: 'industry-blog.com',
-          source_url: 'https://industry-blog.com/reviews',
-          anchor_text: 'construction management software',
-          domain_rating: 62,
-        },
-        {
-          source_domain: 'news-site.com',
-          source_url: 'https://news-site.com/tech',
-          anchor_text: 'visit site',
-          domain_rating: 85,
-        },
-        {
-          source_domain: 'forum.example.com',
-          source_url: 'https://forum.example.com/thread-123',
-          anchor_text: domain,
-          domain_rating: 45,
-        },
-        {
-          source_domain: 'directory.com',
-          source_url: 'https://directory.com/listing-456',
-          anchor_text: 'homepage',
-          domain_rating: 38,
-        },
-      ];
+      const ahrefsData = await ahrefsResponse.json();
+      provider_used = 'ahrefs';
 
-      for (const sim of simulatedBacklinks) {
-        backlinks.push({  // CRITICAL: Site isolation
-          source_url: sim.source_url,
-          source_domain: sim.source_domain,
-          target_url,
-          anchor_text: sim.anchor_text,
-          link_type: 'text',
-          is_followed: Math.random() > 0.2,
-          domain_rating: sim.domain_rating,
-          domain_authority: sim.domain_rating,
-          page_authority: Math.floor(sim.domain_rating * 0.8),
-          spam_score: Math.floor(Math.random() * 20),
-          first_seen: new Date(Date.now() - Math.random() * 365 * 24 * 60 * 60 * 1000).toISOString(),
-          last_seen: new Date().toISOString(),
-          link_status: Math.random() > 0.1 ? 'active' : 'lost',
+      for (const link of ahrefsData.backlinks || []) {
+        backlinks.push({
+          source_url: link.url_from,
+          source_domain: link.domain_from,
+          target_url: link.url_to,
+          anchor_text: link.anchor || '',
+          link_type: link.type || 'text',
+          is_followed: !link.nofollow,
+          domain_rating: link.domain_rating || 0,
+          domain_authority: link.domain_rating || 0,
+          page_authority: link.url_rating || 0,
+          spam_score: 0,
+          first_seen: link.first_seen || new Date().toISOString(),
+          last_seen: link.last_seen || new Date().toISOString(),
+          link_status: link.is_lost ? 'lost' : 'active',
         });
       }
 
-      totalBacklinks = backlinks.length;
+      totalBacklinks = ahrefsData.stats?.backlinks || backlinks.length;
+    } catch (error) {
+      // A failed lookup is not "no backlinks"; report it.
+      console.error('Ahrefs API error:', error);
+      return backlinksUnavailableResponse(corsHeaders, error instanceof Error ? error.message : String(error));
     }
 
     // Save backlinks to database
+    let storageError: string | null = null;
     if (backlinks.length > 0) {
       const { error: insertError } = await supabaseClient
         .from('seo_backlinks')
@@ -187,6 +129,7 @@ serve(async (req) => {
 
       if (insertError) {
         console.error('Insert error:', insertError);
+        storageError = insertError.message;
       }
     }
 
@@ -211,9 +154,8 @@ serve(async (req) => {
       backlinks_synced: backlinks.length,
       metrics,
       provider: provider_used,
-      note: provider_used === 'simulated'
-        ? 'Using simulated data. Configure AHREFS_API_KEY or MOZ credentials for live backlink data.'
-        : undefined,
+      stored: storageError === null,
+      storage_error: storageError,
     }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 });
 
   } catch (error) {

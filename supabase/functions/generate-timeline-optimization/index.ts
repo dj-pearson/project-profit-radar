@@ -169,7 +169,7 @@ serve(async (req) => {
     const optimizationData = JSON.parse(aiResult.choices[0].message.content);
 
     // Enhance with real project data
-    const enhancedOptimization = enhanceOptimizationWithProjects(optimizationData, projects || []);
+    const enhancedOptimization = enhanceOptimizationWithProjects(optimizationData, projects || [], crewAssignments || []);
 
     return new Response(JSON.stringify({ success: true, timestamp: new Date().toISOString(), ...enhancedOptimization }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -188,79 +188,52 @@ serve(async (req) => {
   }
 });
 
-function enhanceOptimizationWithProjects(optimizationData: any, projects: any[]): any {
+function enhanceOptimizationWithProjects(
+  optimizationData: any,
+  projects: any[],
+  crewAssignments: Array<{ project_id?: string | null }>,
+): any {
   const activeProjects = projects.filter(p => ['active', 'in_progress', 'planning'].includes(p.status));
-  
-  // Map current schedule to real projects
+
+  // The current schedule is the projects as recorded. criticalPath, the crew
+  // size and the equipment count were random; there is no dependency data, so
+  // criticalPath is null, and labor is the number of crew assignments on the
+  // project. A missing date stays null instead of defaulting to today + 90.
   optimizationData.currentSchedule = activeProjects.map(project => ({
     projectId: project.id,
     projectName: project.name,
-    startDate: project.start_date || new Date().toISOString().split('T')[0],
-    endDate: project.end_date || new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+    startDate: project.start_date || null,
+    endDate: project.end_date || null,
     duration: calculateProjectDuration(project),
-    criticalPath: Math.random() > 0.5,
+    criticalPath: null,
     dependencies: [],
     resourceRequirements: [
-      { type: "labor", amount: 6 + Math.floor(Math.random() * 8), period: "daily" },
-      { type: "equipment", amount: 1 + Math.floor(Math.random() * 3), period: "weekly" }
+      {
+        type: "labor",
+        amount: crewAssignments.filter(a => a.project_id === project.id).length,
+        period: "assignments"
+      }
     ]
   }));
 
-  // Generate optimized schedule
-  optimizationData.optimizedSchedule = activeProjects.map(project => {
-    const timeSaved = Math.floor(Math.random() * 15) + 2; // 2-16 days saved  
-    const originalStart = new Date(project.start_date || Date.now());
-    const originalEnd = new Date(project.end_date || Date.now() + 90 * 24 * 60 * 60 * 1000);
-    const optimizedEnd = new Date(originalEnd.getTime() - timeSaved * 24 * 60 * 60 * 1000);
-    
-    return {
-      projectId: project.id,
-      projectName: project.name,
-      originalStartDate: originalStart.toISOString().split('T')[0],
-      optimizedStartDate: originalStart.toISOString().split('T')[0],
-      originalEndDate: originalEnd.toISOString().split('T')[0],
-      optimizedEndDate: optimizedEnd.toISOString().split('T')[0],
-      timeSaved: timeSaved,
-      resourceEfficiency: 10 + Math.random() * 20,
-      optimization_type: ['resource_leveling', 'parallel_execution', 'critical_path'][Math.floor(Math.random() * 3)]
-    };
-  });
-
-  // Generate resource optimization periods
-  optimizationData.resourceOptimization = Array.from({ length: 6 }, (_, i) => {
-    const date = new Date();
-    date.setMonth(date.getMonth() + i);
-    const currentUtil = 75 + Math.random() * 20;
-    const optimizedUtil = Math.min(95, currentUtil + 5 + Math.random() * 10);
-    
-    return {
-      period: date.toISOString().slice(0, 7),
-      currentUtilization: Math.round(currentUtil * 10) / 10,
-      optimizedUtilization: Math.round(optimizedUtil * 10) / 10,
-      efficiency_gain: Math.round((optimizedUtil - currentUtil) * 10) / 10,
-      bottlenecks: generateBottlenecks()
-    };
-  });
+  // No optimizer exists yet. timeSaved (2-16 days), resourceEfficiency,
+  // optimization_type and the six months of utilization and bottlenecks were
+  // all random, shown as savings. Until a real scheduler computes them these
+  // are empty, and optimizationAvailable says why.
+  optimizationData.optimizedSchedule = [];
+  optimizationData.resourceOptimization = [];
+  optimizationData.optimizationAvailable = false;
+  optimizationData.optimizationNote =
+    'Schedule optimization is not available yet: no optimizer computes time saved or utilization.';
 
   return optimizationData;
 }
 
-function calculateProjectDuration(project: any): number {
+function calculateProjectDuration(project: any): number | null {
   if (project.start_date && project.end_date) {
     const start = new Date(project.start_date);
-    const end = new Date(project.end_date); 
+    const end = new Date(project.end_date);
     return Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
   }
-  return 90; // Default duration
-}
-
-function generateBottlenecks(): string[] {
-  const possibleBottlenecks = [
-    "Crane availability", "Skilled welders", "Material delivery", "Weather delays",
-    "Permit approvals", "Subcontractor scheduling", "Equipment maintenance",
-    "Site access", "Inspection delays", "Concrete curing time"
-  ];
-  
-  const count = 1 + Math.floor(Math.random() * 3);
-  return possibleBottlenecks.sort(() => Math.random() - 0.5).slice(0, count);
+  return null; // No dates, no duration (was a flat 90).
 }
