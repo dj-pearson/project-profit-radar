@@ -32,24 +32,6 @@ function code(path: string): string {
     .join('\n');
 }
 
-describe('the destructive writes', () => {
-  it('merging contacts stops before the delete if the activities did not move', () => {
-    // The worst of the 28: a failed reassignment fell through to deleting the
-    // secondary contacts, taking their history with them.
-    const src = code('src/hooks/useCRM.ts');
-    expect(src).toContain('reassignError');
-    expect(src).toContain('so nothing was merged');
-    // The check has to come before the delete in the merge, not after it.
-    // `.in('id', secondaryIds)` also appears elsewhere in this file, so the
-    // delete is located from the reassign onwards rather than from the start.
-    const reassign = src.indexOf('if (reassignError)');
-    expect(reassign).toBeGreaterThan(-1);
-    const deleteSecondary = src.indexOf(".delete()", reassign);
-    expect(deleteSecondary).toBeGreaterThan(reassign);
-    expect(src.slice(reassign, deleteSecondary)).toContain("from('contacts')");
-  });
-});
-
 describe('the writes behind a success message', () => {
   it('call notes only claim to be saved when they were', () => {
     // `.then(() => toast("saved"))` resolves with { data, error } whether or not

@@ -1,21 +1,12 @@
 import { useState, useEffect, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
-import { Plus, Trash2, Save, Send, Download, Sparkles, Package, CheckCircle2 } from "lucide-react";
+import { Save, Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { downloadEstimatePDF } from "@/utils/estimatePDFGenerator";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Calendar } from "@/components/ui/calendar";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { CalendarIcon } from "lucide-react";
-import { format } from "date-fns";
-import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { ContactPicker } from "@/components/customers/ContactPicker";
 import { useToast } from "@/hooks/use-toast";
@@ -24,51 +15,20 @@ import { LineItemLibraryBrowser } from "./LineItemLibraryBrowser";
 import { EstimateVersionHistory } from "@/components/estimates/EstimateVersionHistory";
 import { createEstimateVersion } from "@/services/estimateVersions";
 import { History } from "lucide-react";
-import { LineTaxSelect } from "@/components/billing/LineTaxSelect";
 import { useBillingDefaults } from "@/hooks/useBillingDefaults";
 import { computeTax, taxBreakdownLabel } from "@/lib/companyBilling";
-
-const estimateSchema = z.object({
-  title: z.string().min(1, "Title is required"),
-  description: z.string().optional(),
-  client_name: z.string().min(1, "Client name is required"),
-  client_email: z.string().email("Valid email is required"),
-  client_phone: z.string().optional(),
-  site_address: z.string().optional(),
-  project_id: z.string().optional(),
-  markup_percentage: z.number().min(0).max(100),
-  tax_percentage: z.number().min(0).max(100),
-  discount_amount: z.number().min(0),
-  valid_until: z.date().optional(),
-  notes: z.string().optional(),
-  terms_and_conditions: z.string().optional(),
-});
-
-type EstimateFormData = z.infer<typeof estimateSchema>;
-
-interface LineItem {
-  id: string;
-  item_name: string;
-  description: string;
-  quantity: number;
-  unit: string;
-  unit_cost: number;
-  category: string;
-  /**
-   * US-318: cost codes were fetched into state and never used. The column
-   * existed on estimate_line_items and the insert omitted it, so no estimate
-   * could ever seed a cost-coded budget - and project_budgets.cost_code_id is
-   * NOT NULL, which is why converting an estimate produced no budget at all.
-   */
-  cost_code_id: string;
-  /** US-332: NULL means the estimate's tax rate applies. */
-  tax_rate: number | null;
-  taxable: boolean;
-}
-
-// tax_rate and taxable are US-332 columns on estimate_line_items and
-// tax_amount on estimates; the generated types predate them.
-type LineTaxColumns = { tax_rate?: number | null; taxable?: boolean };
+import {
+  estimateSchema,
+  type EstimateFormData,
+  type LineItem,
+  type LineTaxColumns,
+} from "./estimate-form/types";
+import { EstimateTemplateBanner } from "./estimate-form/EstimateTemplateBanner";
+import { EstimateBasicInfoCard } from "./estimate-form/EstimateBasicInfoCard";
+import { EstimateLineItemsCard } from "./estimate-form/EstimateLineItemsCard";
+import { EstimatePricingCard } from "./estimate-form/EstimatePricingCard";
+import { EstimateNotesCard } from "./estimate-form/EstimateNotesCard";
+import { EstimateCreatedPanel } from "./estimate-form/EstimateCreatedPanel";
 
 interface EstimateFormProps {
   onSuccess: () => void;
@@ -589,6 +549,12 @@ export function EstimateForm({ onSuccess, onCancel, estimateId }: EstimateFormPr
     onSuccess();
   };
 
+  // Watched once per render for the line tax selects and the totals.
+  const markupPercentage = form.watch("markup_percentage") || 0;
+  const taxPercentage = form.watch("tax_percentage") || 0;
+  const discountAmount = form.watch("discount_amount") || 0;
+  const taxTotals = calculateTaxTotals();
+
   return (
     <Form {...form}>
       <form className="space-y-6">
@@ -616,106 +582,13 @@ export function EstimateForm({ onSuccess, onCancel, estimateId }: EstimateFormPr
         )}
 
         {/* Template Selector */}
-        <Card className="bg-gradient-to-r from-primary/5 to-primary/10 border-primary/20">
-          <CardContent className="p-4">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-              <div className="flex-1">
-                <h3 className="font-semibold text-base mb-1 flex items-center gap-2">
-                  <Sparkles className="h-4 w-4 text-primary" />
-                  Start with a Template
-                </h3>
-                <p className="text-sm text-muted-foreground">
-                  {appliedTemplate
-                    ? `Using template: ${appliedTemplate}`
-                    : 'Pre-fill estimate with template including line items and terms'}
-                </p>
-              </div>
-              <Button
-                type="button"
-                variant={appliedTemplate ? "outline" : "default"}
-                onClick={() => setShowTemplates(true)}
-                size="sm"
-                className="shrink-0"
-              >
-                <Sparkles className="h-4 w-4 mr-2" />
-                {appliedTemplate ? 'Change Template' : 'Choose Template'}
-              </Button>
-            </div>
-            {appliedTemplate && (
-              <div className="mt-2 flex items-center gap-2 text-xs">
-                <Badge variant="secondary" className="gap-1">
-                  <CheckCircle2 className="h-3 w-3" />
-                  Template Applied
-                </Badge>
-                <span className="text-muted-foreground">All fields can still be customized</span>
-              </div>
-            )}
-          </CardContent>
-        </Card>
+        <EstimateTemplateBanner
+          appliedTemplate={appliedTemplate}
+          onChooseTemplate={() => setShowTemplates(true)}
+        />
 
         {/* Basic Information */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Basic Information</CardTitle>
-          </CardHeader>
-          <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <FormField
-              control={form.control}
-              name="title"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Estimate Title</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Kitchen Renovation Estimate" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="project_id"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Link to Project (Optional)</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select a project" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {projects.map((project) => (
-                        <SelectItem key={project.id} value={project.id}>
-                          {project.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="description"
-              render={({ field }) => (
-                <FormItem className="md:col-span-2">
-                  <FormLabel>Description</FormLabel>
-                  <FormControl>
-                    <Textarea 
-                      placeholder="Brief description of the work to be performed..."
-                      {...field} 
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </CardContent>
-        </Card>
+        <EstimateBasicInfoCard form={form} projects={projects} />
 
         {/* Client Information */}
         <Card>
@@ -802,334 +675,36 @@ export function EstimateForm({ onSuccess, onCancel, estimateId }: EstimateFormPr
         </Card>
 
         {/* Line Items */}
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle>Line Items</CardTitle>
-            <div className="flex gap-2">
-              <Button type="button" onClick={() => setShowLineItemLibrary(true)} size="sm" variant="outline" className="gap-2">
-                <Package className="h-4 w-4" />
-                Browse Library
-              </Button>
-              <Button type="button" onClick={addLineItem} size="sm" className="gap-2">
-                <Plus className="h-4 w-4" />
-                Add Item
-              </Button>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {lineItems.map((item, index) => (
-                <div key={item.id} className="grid grid-cols-12 gap-2 items-end p-4 border rounded-lg">
-                  <div className="col-span-2">
-                    <label className="text-sm font-medium">Item Name</label>
-                    <Input
-                      value={item.item_name}
-                      onChange={(e) => updateLineItem(index, "item_name", e.target.value)}
-                      placeholder="Item name"
-                    />
-                  </div>
-                  <div className="col-span-2">
-                    <label className="text-sm font-medium">Description</label>
-                    <Input
-                      value={item.description}
-                      onChange={(e) => updateLineItem(index, "description", e.target.value)}
-                      placeholder="Description"
-                    />
-                  </div>
-                  <div className="col-span-2">
-                    {/* The cost code is what carries this line into the
-                        project's budget and, later, into budget vs actual
-                        (US-318). It was fetched into state and never shown. */}
-                    <label className="text-sm font-medium" id={`cost-code-label-${item.id}`}>
-                      Cost Code
-                    </label>
-                    <Select
-                      value={item.cost_code_id}
-                      onValueChange={(value) => updateLineItem(index, "cost_code_id", value)}
-                    >
-                      <SelectTrigger aria-labelledby={`cost-code-label-${item.id}`}>
-                        <SelectValue placeholder="Select..." />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {costCodes.map((code) => (
-                          <SelectItem key={code.id} value={code.id}>
-                            {code.code} {code.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="col-span-1">
-                    <label className="text-sm font-medium">Qty</label>
-                    <Input
-                      type="number"
-                      value={item.quantity}
-                      onChange={(e) => updateLineItem(index, "quantity", parseFloat(e.target.value) || 0)}
-                      min="0"
-                      step="0.01"
-                    />
-                  </div>
-                  <div className="col-span-1">
-                    <label className="text-sm font-medium">Unit</label>
-                    <Select 
-                      value={item.unit} 
-                      onValueChange={(value) => updateLineItem(index, "unit", value)}
-                    >
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="each">Each</SelectItem>
-                        <SelectItem value="sq ft">Sq Ft</SelectItem>
-                        <SelectItem value="lin ft">Lin Ft</SelectItem>
-                        <SelectItem value="hour">Hour</SelectItem>
-                        <SelectItem value="day">Day</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="col-span-1">
-                    <label className="text-sm font-medium">Unit Cost</label>
-                    <Input
-                      type="number"
-                      value={item.unit_cost}
-                      onChange={(e) => updateLineItem(index, "unit_cost", parseFloat(e.target.value) || 0)}
-                      min="0"
-                      step="0.01"
-                    />
-                  </div>
-                  <div className="col-span-1">
-                    <label className="text-sm font-medium" htmlFor={`line-tax-${item.id}`}>Tax</label>
-                    <LineTaxSelect
-                      id={`line-tax-${item.id}`}
-                      label={`Tax for ${item.item_name || `line ${index + 1}`}`}
-                      value={item}
-                      documentRate={form.watch("tax_percentage") || 0}
-                      rates={billing.taxRates}
-                      onChange={(tax) => {
-                        const updatedItems = [...lineItems];
-                        updatedItems[index] = { ...updatedItems[index], ...tax };
-                        setLineItems(updatedItems);
-                      }}
-                    />
-                  </div>
-                  <div className="col-span-1">
-                    <label className="text-sm font-medium">Total</label>
-                    <div className="text-sm font-medium py-2">
-                      ${(item.quantity * item.unit_cost).toFixed(2)}
-                    </div>
-                  </div>
-                  <div className="col-span-1">
-                    <Button
-                      type="button"
-                      variant="destructive"
-                      size="sm"
-                      onClick={() => removeLineItem(index)}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
-              ))}
-              
-              {lineItems.length === 0 && (
-                <div className="text-center py-8 text-muted-foreground">
-                  No line items added yet. Click "Add Item" to get started.
-                </div>
-              )}
-            </div>
-          </CardContent>
-        </Card>
+        <EstimateLineItemsCard
+          lineItems={lineItems}
+          costCodes={costCodes}
+          documentTaxRate={taxPercentage}
+          taxRates={billing.taxRates}
+          onAdd={addLineItem}
+          onBrowseLibrary={() => setShowLineItemLibrary(true)}
+          onUpdate={updateLineItem}
+          onRemove={removeLineItem}
+          onTaxChange={(index, tax) => {
+            const updatedItems = [...lineItems];
+            updatedItems[index] = { ...updatedItems[index], ...tax };
+            setLineItems(updatedItems);
+          }}
+        />
 
         {/* Pricing */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Pricing & Terms</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-              <FormField
-                control={form.control}
-                name="markup_percentage"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Markup %</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="number"
-                        min="0"
-                        max="100"
-                        step="0.1"
-                        {...field}
-                        onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="tax_percentage"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Tax %</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="number"
-                        min="0"
-                        max="100"
-                        step="0.1"
-                        {...field}
-                        onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="discount_amount"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Discount Amount</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="number"
-                        min="0"
-                        step="0.01"
-                        {...field}
-                        onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-              <FormField
-                control={form.control}
-                name="valid_until"
-                render={({ field }) => (
-                  <FormItem className="flex flex-col">
-                    <FormLabel>Valid Until</FormLabel>
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <FormControl>
-                          <Button
-                            variant="outline"
-                            className={cn(
-                              "pl-3 text-left font-normal",
-                              !field.value && "text-muted-foreground"
-                            )}
-                          >
-                            {field.value ? (
-                              format(field.value, "PPP")
-                            ) : (
-                              <span>Pick a date</span>
-                            )}
-                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                          </Button>
-                        </FormControl>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0" align="start">
-                        <Calendar
-                          mode="single"
-                          selected={field.value}
-                          onSelect={field.onChange}
-                          disabled={(date) => date < new Date()}
-                          initialFocus
-                          className="pointer-events-auto"
-                        />
-                      </PopoverContent>
-                    </Popover>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-
-            {/* Total Summary */}
-            <div className="border-t pt-4">
-              <div className="flex justify-between items-center mb-2">
-                <span>Subtotal:</span>
-                <span>${calculateSubtotal().toFixed(2)}</span>
-              </div>
-              <div className="flex justify-between items-center mb-2">
-                <span>Markup ({form.watch("markup_percentage") || 0}%):</span>
-                <span>${(calculateSubtotal() * (form.watch("markup_percentage") || 0) / 100).toFixed(2)}</span>
-              </div>
-              {calculateTaxTotals().byRate.length > 1 ? (
-                calculateTaxTotals().byRate.map((group) => (
-                  <div key={group.rate} className="flex justify-between items-center mb-2">
-                    <span>{taxBreakdownLabel(group, billing.taxRates)}:</span>
-                    <span>${group.tax.toFixed(2)}</span>
-                  </div>
-                ))
-              ) : (
-                <div className="flex justify-between items-center mb-2">
-                  <span>Tax ({calculateTaxTotals().byRate[0]?.rate ?? (form.watch("tax_percentage") || 0)}%):</span>
-                  <span>${calculateTaxTotals().taxAmount.toFixed(2)}</span>
-                </div>
-              )}
-              <div className="flex justify-between items-center mb-2">
-                <span>Discount:</span>
-                <span>-${(form.watch("discount_amount") || 0).toFixed(2)}</span>
-              </div>
-              <div className="flex justify-between items-center text-lg font-bold border-t pt-2">
-                <span>Total:</span>
-                <span>${calculateTotal().toFixed(2)}</span>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+        <EstimatePricingCard
+          form={form}
+          subtotal={calculateSubtotal()}
+          markupPercentage={markupPercentage}
+          taxPercentage={taxPercentage}
+          discountAmount={discountAmount}
+          taxTotals={taxTotals}
+          total={calculateTotal()}
+          taxRates={billing.taxRates}
+        />
 
         {/* Notes */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Additional Information</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <FormField
-              control={form.control}
-              name="notes"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Notes</FormLabel>
-                  <FormControl>
-                    <Textarea 
-                      placeholder="Internal notes (not visible to client)..."
-                      {...field} 
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="terms_and_conditions"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Terms & Conditions</FormLabel>
-                  <FormControl>
-                    <Textarea 
-                      placeholder="Terms and conditions for this estimate..."
-                      rows={4}
-                      {...field} 
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </CardContent>
-        </Card>
+        <EstimateNotesCard form={form} />
 
         {/* Actions */}
         <div className="flex justify-end gap-4">
@@ -1160,40 +735,12 @@ export function EstimateForm({ onSuccess, onCancel, estimateId }: EstimateFormPr
 
       {/* PDF Download Section - Shows after estimate creation */}
       {createdEstimate && (
-        <div className="mt-6 pt-6 border-t">
-          <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4">
-            <div className="flex items-start justify-between">
-              <div className="flex-1">
-                <h4 className="text-sm font-semibold text-green-900 dark:text-green-100 mb-1">
-                  Estimate Created Successfully!
-                </h4>
-                <p className="text-sm text-green-700 dark:text-green-300">
-                  Estimate #{createdEstimate.estimate_number} has been created.
-                  Download the PDF or close this form.
-                </p>
-              </div>
-            </div>
-
-            <div className="flex flex-col sm:flex-row gap-3 mt-4">
-              <Button
-                onClick={handleGeneratePDF}
-                disabled={generatingPDF}
-                className="flex-1 bg-green-600 hover:bg-green-700"
-              >
-                <Download className="mr-2 h-4 w-4" />
-                {generatingPDF ? 'Generating PDF...' : 'Download PDF'}
-              </Button>
-
-              <Button
-                onClick={handleClose}
-                variant="outline"
-                className="flex-1"
-              >
-                Close & View Estimates
-              </Button>
-            </div>
-          </div>
-        </div>
+        <EstimateCreatedPanel
+          estimateNumber={createdEstimate.estimate_number}
+          generatingPDF={generatingPDF}
+          onDownloadPDF={handleGeneratePDF}
+          onClose={handleClose}
+        />
       )}
 
       {/* Template Library Modal */}

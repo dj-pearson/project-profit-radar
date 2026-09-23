@@ -26,9 +26,12 @@ const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const SRC = join(root, 'src');
 const LIMIT = 1000;
 
-/** Shipped files already over the limit. This list only shrinks. */
+/**
+ * Shipped files already over the limit. This list only shrinks.
+ * Off it so far: AuthContext.tsx (1,434 -> split into src/contexts/auth/) and
+ * EstimateForm.tsx (1,215 -> sections in components/estimates/estimate-form/).
+ */
 const BASELINE = new Set([
-  'src/contexts/AuthContext.tsx',
   'src/pages/UnifiedSEODashboard.tsx',
   'src/pages/Projects.tsx',
   'src/components/mobile/MobileDailyReportManager.tsx',
@@ -40,7 +43,6 @@ const BASELINE = new Set([
   'src/components/navigation/HierarchicalNavigationConfig.ts',
   'src/components/sso/SSOConfigurationForm.tsx',
   'src/components/project/tabs/ProjectPunchList.tsx',
-  'src/components/estimates/EstimateForm.tsx',
 ]);
 
 /** Generated, and regenerated wholesale. Never a decomposition target. */

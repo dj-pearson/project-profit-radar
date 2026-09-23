@@ -37,7 +37,7 @@ const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const SRC = join(root, 'src');
 
 /** Lower this as modules are deleted or wired. It never goes up. */
-const BASELINE = 81;
+const BASELINE = 80;
 
 function walk(dir, out = []) {
   for (const e of readdirSync(dir, { withFileTypes: true })) {

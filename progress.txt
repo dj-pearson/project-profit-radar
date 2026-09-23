@@ -7158,3 +7158,10 @@ throw. A ratchet holds raw supabase.from in components at 910 (from 962).
 Every DashboardLayout page now has AccessiblePageWrapper (26 -> 110), one
 main landmark, and a skip link target; reduced motion applies from first
 paint. TS 1208 -> 1177, eslint warnings 3979 -> 3964.
+
+## US-267 - god files (partial)
+AuthContext split into seven modules under src/contexts/auth/ (1434 -> 643
+lines) with the public hooks unchanged; EstimateForm's cards moved to
+estimate-form/ (1215 -> 762). useCRM.ts was 1944 lines nothing imported;
+deleted. God-file list 13 -> 11, TS 1177 -> 1161, eslint warnings 3964 ->
+3963, unreferenced modules 81 -> 80.
