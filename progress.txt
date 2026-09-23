@@ -6875,3 +6875,14 @@ breadcrumb section as text (/software and /compare have no route), emits
 BreadcrumbList, and marks thin pages (<300 words of page copy) noindex,follow.
 Settings text no longer claims an n8n pipeline. No generator was built.
 Owner: write and publish the first pages.
+
+## US-309 - fake success screens
+check-fake-success baseline 14 -> 1. Real writes now: Footer newsletter
+(capture-lead, thanks only on success), /communication threads and messages
+(chat_channels/chat_messages via useAdvancedChat; pin/mute/voice/file removed,
+no columns or bucket for them), WorkflowAutomationService CRUD on
+workflow_definitions. Honest "not saved" messages: AutomatedUpdates,
+WorkflowVersionControl, EquipmentMaintenanceTracking, EnhancedJobCosting,
+WhiteLabelPortal, SubcontractorDisclosureForm, ThirdPartyMarketplace,
+MobileMaterialTracker, IntegrationEcosystemService.syncIntegration,
+IntegrationService non-QuickBooks methods. Left: connectQuickBooks.

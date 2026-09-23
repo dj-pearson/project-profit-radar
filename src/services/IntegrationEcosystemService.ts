@@ -204,45 +204,26 @@ class IntegrationEcosystemService {
         throw new Error('Integration not found');
       }
 
-      // Update status to syncing
-      integration.syncStatus = 'syncing';
+      // This slept two seconds, invented a record count with Math.random() and
+      // announced "Integration sync completed: 97/102 records". No sync ran
+      // (US-309). Until one exists, report that nothing was synced.
+      const now = new Date().toISOString();
+      integration.syncStatus = 'error';
+      integration.errorMessage = 'Sync is not built for this integration; no records were synced.';
       this.integrations.set(integrationId, integration);
 
-      const startTime = new Date().toISOString();
-      
-      // Mock sync process
-      await new Promise(resolve => setTimeout(resolve, 2000));
-
-      const endTime = new Date().toISOString();
-      const recordsProcessed = Math.floor(Math.random() * 100) + 50;
-      const recordsSuccess = Math.floor(recordsProcessed * 0.95);
-      const recordsFailed = recordsProcessed - recordsSuccess;
-
-      const result: SyncResult = {
+      toast.error('Nothing was synced', { description: integration.errorMessage });
+      return {
         integrationId,
-        startTime,
-        endTime,
-        status: recordsFailed === 0 ? 'success' : 'partial',
-        recordsProcessed,
-        recordsSuccess,
-        recordsFailed,
-        errors: recordsFailed > 0 ? ['Some records failed validation'] : [],
-        details: {
-          syncType: 'full',
-          recordTypes: ['projects', 'tasks', 'expenses']
-        }
+        startTime: now,
+        endTime: now,
+        status: 'failed',
+        recordsProcessed: 0,
+        recordsSuccess: 0,
+        recordsFailed: 0,
+        errors: [integration.errorMessage],
+        details: { syncType: 'none', recordTypes: [] }
       };
-
-      // Update integration status
-      integration.syncStatus = result.status === 'success' ? 'success' : 'error';
-      integration.lastSync = endTime;
-      if (result.errors.length > 0) {
-        integration.errorMessage = result.errors.join(', ');
-      }
-      this.integrations.set(integrationId, integration);
-
-      toast.success(`Integration sync completed: ${recordsSuccess}/${recordsProcessed} records`);
-      return result;
     } catch (error: any) {
       console.error('Error syncing integration:', error);
       toast.error('Integration sync failed');

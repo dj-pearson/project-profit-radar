@@ -1,18 +1,27 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { MessageSquare, Calendar as CalendarIcon, FileText, Settings } from 'lucide-react';
 import { ThreadManager } from "./ThreadManager";
 import { AdvancedChatInterface } from "./AdvancedChatInterface";
-import { useAdvancedChat } from "@/hooks/useAdvancedChat";
+import { useAdvancedChat, type ChatChannel } from "@/hooks/useAdvancedChat";
+import { useAuth } from "@/contexts/AuthContext";
 
 
 
 export const CommunicationHub: React.FC = () => {
   const [activeTab, setActiveTab] = useState('messages');
-  const [selectedThread, setSelectedThread] = useState<any>(null);
-  const { selectChannel } = useAdvancedChat();
+  const [selectedThread, setSelectedThread] = useState<ChatChannel | null>(null);
+  // One hook instance for the whole tab, so the list and the message pane read
+  // the same state. Both children used to render invented data (US-309).
+  const chat = useAdvancedChat();
+  const { userProfile } = useAuth();
+  const { loadChannels } = chat;
+
+  useEffect(() => {
+    loadChannels();
+  }, [loadChannels]);
 
   return (
     <div className="min-h-screen bg-background">
@@ -49,10 +58,29 @@ export const CommunicationHub: React.FC = () => {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-[calc(100vh-200px)]">
               {/* Enhanced Thread Manager */}
               <div className="lg:col-span-1">
-                <ThreadManager 
-                  onThreadSelect={(thread) => {
-                    setSelectedThread(thread);
-                    selectChannel(thread as any);
+                <ThreadManager
+                  channels={chat.channels}
+                  loading={chat.isLoading}
+                  onThreadSelect={(channel) => {
+                    setSelectedThread(channel);
+                    chat.selectChannel(channel);
+                  }}
+                  onCreateChannel={async (name) => {
+                    const row = await chat.createChannel(name);
+                    if (!row) return null;
+                    return {
+                      id: row.id,
+                      name: row.name,
+                      description: row.description ?? undefined,
+                      channel_type: row.channel_type as ChatChannel['channel_type'],
+                      project_id: row.project_id ?? undefined,
+                      is_private: row.is_private,
+                      created_at: row.created_at,
+                      created_by: row.created_by,
+                      last_activity_at: row.last_activity_at ?? undefined,
+                      member_count: 0,
+                      unread_count: 0,
+                    };
                   }}
                   selectedThreadId={selectedThread?.id}
                 />
@@ -61,8 +89,16 @@ export const CommunicationHub: React.FC = () => {
               {/* Enhanced Chat Interface */}
               <div className="lg:col-span-2">
                 {selectedThread ? (
-                  <AdvancedChatInterface 
+                  <AdvancedChatInterface
                     thread={selectedThread}
+                    messages={chat.messages}
+                    currentUserId={userProfile?.id}
+                    onSend={async (content, replyTo) => {
+                      const saved = await chat.sendMessage(selectedThread.id, content, 'text', undefined, replyTo);
+                      // Re-read rather than trust realtime to deliver our own row.
+                      if (saved) await chat.loadMessages(selectedThread.id);
+                      return saved;
+                    }}
                     onBack={() => setSelectedThread(null)}
                   />
                 ) : (
@@ -70,9 +106,6 @@ export const CommunicationHub: React.FC = () => {
                     <div className="text-center">
                       <MessageSquare className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
                       <p className="text-muted-foreground">Select a conversation to start messaging</p>
-                      <p className="text-sm text-muted-foreground mt-2">
-                        Advanced features: File sharing, voice messages, search & more
-                      </p>
                     </div>
                   </Card>
                 )}

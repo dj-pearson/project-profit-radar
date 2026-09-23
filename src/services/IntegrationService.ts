@@ -39,6 +39,30 @@ export interface CrossModuleOperation {
   created_at: string;
 }
 
+/**
+ * US-309: most of this service announced success over work it never did -
+ * "Imported 2 contacts successfully" about two hardcoded people, "Task created
+ * successfully" with no insert, invented project and invoice ids. Every method
+ * below that has nothing behind it now says so and reports failure to its
+ * caller. The three QuickBooks methods are left for the QuickBooks work.
+ */
+function notBuilt(title: string, description: string): void {
+  toast.error(title, { description });
+}
+
+function notBuiltOperation(source: string, target: string): SyncOperation {
+  const now = new Date().toISOString();
+  return {
+    id: `not-built-${Date.now()}`,
+    operation_type: 'export',
+    source_module: source,
+    target_module: target,
+    status: 'failed',
+    created_at: now,
+    error_message: 'Not built; nothing was synced.'
+  };
+}
+
 class IntegrationService {
   async connectQuickBooks(companyId: string, credentials: any): Promise<boolean> {
     try {
@@ -95,128 +119,38 @@ class IntegrationService {
   }
 
   async connectGoogleCalendar(companyId: string, credentials: any): Promise<boolean> {
-    try {
-      toast.success('Google Calendar connected successfully');
-      return true;
-    } catch (error: any) {
-      console.error('Google Calendar connection failed:', error);
-      toast.error('Failed to connect Google Calendar');
-      return false;
-    }
+    notBuilt('Google Calendar was not connected', 'Connecting Google Calendar from here is not built yet.');
+    return false;
   }
 
   async syncTasksToCalendar(companyId: string, projectId?: string): Promise<SyncOperation> {
-    try {
-      const operation: SyncOperation = {
-        id: `sync-${Date.now()}`,
-        operation_type: 'export',
-        source_module: 'tasks',
-        target_module: 'google_calendar',
-        status: 'completed',
-        created_at: new Date().toISOString(),
-        completed_at: new Date().toISOString()
-      };
-
-      toast.success('Tasks synced to Google Calendar');
-      return operation;
-    } catch (error: any) {
-      console.error('Task sync failed:', error);
-      toast.error('Failed to sync tasks to Google Calendar');
-      throw error;
-    }
+    notBuilt('No tasks were synced', 'Syncing tasks to Google Calendar is not built yet.');
+    return notBuiltOperation('tasks', 'google_calendar');
   }
 
   async connectSlack(companyId: string, credentials: any): Promise<boolean> {
-    try {
-      toast.success('Slack connected successfully');
-      return true;
-    } catch (error: any) {
-      console.error('Slack connection failed:', error);
-      toast.error('Failed to connect Slack');
-      return false;
-    }
+    notBuilt('Slack was not connected', 'Connecting Slack from here is not built yet.');
+    return false;
   }
 
   async importContactsFromCRM(companyId: string, projectId: string): Promise<{ success: boolean; contactsImported: number }> {
-    try {
-      // Mock contact import
-      const mockContacts = [
-        {
-          id: 'contact-1',
-          first_name: 'John',
-          last_name: 'Smith',
-          email: 'john.smith@example.com',
-          phone: '555-0123',
-          company_name: 'ABC Construction'
-        },
-        {
-          id: 'contact-2',
-          first_name: 'Jane',
-          last_name: 'Doe',
-          email: 'jane.doe@example.com',
-          phone: '555-0124',
-          company_name: 'XYZ Builders'
-        }
-      ];
-
-      toast.success(`Imported ${mockContacts.length} contacts successfully`);
-      
-      return { success: true, contactsImported: mockContacts.length };
-    } catch (error: any) {
-      console.error('Contact import failed:', error);
-      toast.error('Failed to import contacts from CRM');
-      return { success: false, contactsImported: 0 };
-    }
+    notBuilt('No contacts were imported', 'Importing contacts from a CRM is not built yet.');
+    return { success: false, contactsImported: 0 };
   }
 
   async createTaskFromData(data: any): Promise<void> {
-    try {
-      // Mock task creation
-      // Task would be created with: name, priority, status, project_id
-      
-      toast.success('Task created successfully');
-    } catch (error: any) {
-      console.error('Task creation failed:', error);
-      toast.error('Failed to create task');
-      throw error;
-    }
+    notBuilt('No task was created', 'Creating a task from here is not built yet.');
+    throw new Error('createTaskFromData is not built; no task was created.');
   }
 
   async processCrossModuleOperations(operations: CrossModuleOperation[]): Promise<void> {
-    try {
-      for (const operation of operations) {
-        // Process each cross-module operation
-      }
-      
-      toast.success(`Processed ${operations.length} cross-module operations`);
-    } catch (error: any) {
-      console.error('Cross-module operation processing failed:', error);
-      toast.error('Failed to process cross-module operations');
-      throw error;
-    }
+    notBuilt('Nothing was processed', `${operations.length} cross-module operation(s) were not run; this is not built yet.`);
+    throw new Error('processCrossModuleOperations is not built; nothing was processed.');
   }
 
   async syncInvoicesFromAccounting(companyId: string): Promise<{ success: boolean; invoicesSynced: number }> {
-    try {
-      // Mock invoice sync
-      const mockInvoices = [
-        {
-          id: 'inv-1',
-          client_name: 'ABC Construction',
-          amount: 15000,
-          status: 'sent',
-          due_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
-        }
-      ];
-
-      toast.success(`Synced ${mockInvoices.length} invoices from accounting system`);
-      
-      return { success: true, invoicesSynced: mockInvoices.length };
-    } catch (error: any) {
-      console.error('Invoice sync failed:', error);
-      toast.error('Failed to sync invoices from accounting system');
-      return { success: false, invoicesSynced: 0 };
-    }
+    notBuilt('No invoices were synced', 'Syncing invoices from an accounting system through this service is not built.');
+    return { success: false, invoicesSynced: 0 };
   }
 
   async getIntegrationStatus(companyId: string): Promise<{
@@ -238,15 +172,16 @@ class IntegrationService {
   }
 
   async scheduleDataSync(companyId: string, frequency: 'hourly' | 'daily' | 'weekly'): Promise<void> {
-    try {
-      toast.success(`Data sync scheduled to run ${frequency}`);
-    } catch (error: any) {
-      console.error('Failed to schedule data sync:', error);
-      toast.error('Failed to schedule data sync');
-      throw error;
-    }
+    notBuilt('No sync was scheduled', `A ${frequency} data sync is not built yet.`);
+    throw new Error('scheduleDataSync is not built; nothing was scheduled.');
   }
 
+  /**
+   * Reachable from ContextualActions on CRMDashboard. This toasted "Project
+   * created from opportunity" and navigated to /projects/proj-<timestamp>, an
+   * id that was never inserted (US-309). The caller only navigates on
+   * success, so returning false leaves the user where they were.
+   */
   async createProjectFromOpportunity(data: {
     opportunityId: string;
     projectName: string;
@@ -254,27 +189,14 @@ class IntegrationService {
     startDate: string;
     projectType: string;
   }): Promise<{ success: boolean; projectId?: string }> {
-    try {
-      const projectId = `proj-${Date.now()}`;
-      toast.success('Project created from opportunity');
-      return { success: true, projectId };
-    } catch (error: any) {
-      console.error('Failed to create project from opportunity:', error);
-      toast.error('Failed to create project from opportunity');
-      return { success: false };
-    }
+    notBuilt('No project was created', 'Creating a project from this action is not built yet.');
+    return { success: false };
   }
 
+  /** Same shape as above, reachable from ProjectDetail: "Invoice created" over an invented id (US-309). */
   async createInvoiceFromProject(projectId: string): Promise<{ success: boolean; invoiceId?: string }> {
-    try {
-      const invoiceId = `inv-${Date.now()}`;
-      toast.success('Invoice created from project');
-      return { success: true, invoiceId };
-    } catch (error: any) {
-      console.error('Failed to create invoice from project:', error);
-      toast.error('Failed to create invoice from project');
-      return { success: false };
-    }
+    notBuilt('No invoice was created', 'Creating an invoice from this action is not built yet. Use Invoices to create one.');
+    return { success: false };
   }
 }
 

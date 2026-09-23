@@ -98,25 +98,14 @@ export const WhiteLabelPortal = () => {
     }
   };
 
+  // This slept a second and said "Portal Settings Saved". No portal settings
+  // table exists, so nothing was saved and every change reverted on reload
+  // (US-309). The button now says that.
   const savePortalConfig = async () => {
-    setLoading(true);
-    try {
-      // In real implementation, would save to portal_configs table
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      toast({
-        title: "Portal Settings Saved",
-        description: "Your white-label portal configuration has been saved successfully."
-      });
-    } catch (error) {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to save portal configuration. Please try again."
-      });
-    } finally {
-      setLoading(false);
-    }
+    toast({
+      title: "Not saved",
+      description: "White-label portal settings are not stored yet. Your changes will be lost when you leave this page."
+    });
   };
 
   const generatePreviewUrl = () => {

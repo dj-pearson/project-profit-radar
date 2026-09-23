@@ -101,30 +101,11 @@ export const MobileMaterialTracker: React.FC = () => {
 
   const loadDeliveries = async () => {
     try {
-      // Mock data for now - replace with actual Supabase query
-      const mockDeliveries: MaterialDelivery[] = [
-        {
-          id: '1',
-          project_id: 'proj1',
-          supplier_name: 'ABC Supply Co',
-          material_type: 'Concrete Blocks',
-          quantity_ordered: 100,
-          quantity_delivered: 95,
-          unit_of_measure: 'blocks',
-          delivery_date: new Date().toISOString(),
-          expected_delivery_date: new Date().toISOString(),
-          po_number: 'PO-2024-001',
-          status: 'partial',
-          delivery_notes: 'Some blocks damaged during transport',
-          quality_rating: 4,
-          photos: [],
-          received_by: 'John Doe',
-          delivery_person: 'Mike Smith',
-          vehicle_info: 'Truck #123',
-          created_at: new Date().toISOString()
-        }
-      ];
-      setDeliveries(mockDeliveries);
+      // This showed an invented delivery ("ABC Supply Co", received by
+      // "John Doe") as if it were the project's own. Deliveries are not stored
+      // anywhere yet (see handleSubmitDelivery), so there are none to list
+      // (US-309).
+      setDeliveries([]);
     } catch (error) {
       console.error('Error loading deliveries:', error);
       toast.error('Failed to load deliveries');
@@ -133,7 +114,7 @@ export const MobileMaterialTracker: React.FC = () => {
 
   const loadIssues = async () => {
     try {
-      // Mock data for now
+      // Issue reports are not stored yet either; nothing to read.
       setIssues([]);
     } catch (error) {
       console.error('Error loading issues:', error);
@@ -161,7 +142,7 @@ export const MobileMaterialTracker: React.FC = () => {
   const handlePhotoCapture = (file: File) => {
     setCapturedPhotos(prev => [...prev, file]);
     setShowCamera(false);
-    toast.success('Photo captured successfully');
+    toast('Photo attached to this form');
   };
 
   const handleSubmitDelivery = async () => {

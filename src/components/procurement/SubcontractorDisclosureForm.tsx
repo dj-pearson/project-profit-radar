@@ -12,7 +12,8 @@ import { useToast } from "@/hooks/use-toast";
 interface SubcontractorDisclosureFormProps {
   bidSubmissionId?: string;
   disclosureId?: string;
-  onSave?: (data: any) => void;
+  /** Must perform the write and throw on failure; the success message waits on it. */
+  onSave?: (data: any) => void | Promise<void>;
   onCancel?: () => void;
 }
 
@@ -113,20 +114,35 @@ export default function SubcontractorDisclosureForm({
     }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  // This called an optional onSave unawaited and unchecked, then always said
+  // "Subcontractor Disclosure Saved" - with no onSave at all, nothing was
+  // written anywhere (US-309). Success now waits on the save and is only
+  // claimed when there was one.
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    // Calculate percentage if subcontract amount is provided
-    if (formData.subcontract_amount) {
-      // This would typically be calculated based on total bid amount
-      // For now, we'll leave it to be set manually
+
+    if (!onSave) {
+      toast({
+        title: "Not saved",
+        description: "This form has no save connected, so the disclosure was not stored.",
+        variant: "destructive",
+      });
+      return;
     }
 
-    onSave?.(formData);
-    toast({
-      title: "Subcontractor Disclosure Saved",
-      description: disclosureId ? "Disclosure updated successfully" : "New disclosure created successfully",
-    });
+    try {
+      await onSave(formData);
+      toast({
+        title: "Subcontractor Disclosure Saved",
+        description: disclosureId ? "Disclosure updated successfully" : "New disclosure created successfully",
+      });
+    } catch (error) {
+      toast({
+        title: "Not saved",
+        description: error instanceof Error ? error.message : "The disclosure could not be saved.",
+        variant: "destructive",
+      });
+    }
   };
 
   return (

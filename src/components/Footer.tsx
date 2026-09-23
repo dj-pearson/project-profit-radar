@@ -6,14 +6,48 @@ import SmartLogo from "@/components/ui/smart-logo";
 import { toast } from "sonner";
 import { OPEN_PREFERENCES_EVENT } from "@/lib/consent/consentStore";
 import { CONTACT, hasPostalAddress, postalAddressLines } from '@/config/companyContact';
+import { supabase } from "@/integrations/supabase/client";
+import { Turnstile, useTurnstileToken } from "@/components/security/Turnstile";
 
 const Footer = () => {
   const [email, setEmail] = useState("");
+  const [subscribing, setSubscribing] = useState(false);
+  const human = useTurnstileToken();
 
-  const handleNewsletterSubmit = (e: FormEvent<HTMLFormElement>) => {
+  /**
+   * This said "Thanks for subscribing!" and cleared the box without sending the
+   * address anywhere, on every marketing page (US-309). It now goes through
+   * capture-lead, the same edge function LeadCaptureForm uses, and thanks the
+   * visitor only when that function reports success.
+   */
+  const handleNewsletterSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    toast.success("Thanks for subscribing!");
-    setEmail("");
+    const address = email.trim();
+    if (!address || subscribing) return;
+    setSubscribing(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("capture-lead", {
+        body: {
+          turnstileToken: human.token ?? undefined,
+          email: address,
+          interestType: "newsletter",
+          leadSource: "website",
+          landingPage: window.location.pathname,
+          referrer: document.referrer,
+        },
+      });
+      if (error) throw error;
+      if (!data?.success) throw new Error(data?.error || "The signup was not recorded.");
+      toast.success("Thanks for subscribing!");
+      setEmail("");
+      // Turnstile tokens are single-use; the widget remounts on the next entry.
+      human.setToken(null);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Please try again.";
+      toast.error("You're not subscribed yet", { description: message });
+    } finally {
+      setSubscribing(false);
+    }
   };
   const companyLinks = [
     { name: "Solutions", href: "/solutions" },
@@ -151,7 +185,16 @@ const Footer = () => {
                   required
                   className="flex-1 text-sm px-3 py-1.5 rounded bg-white/10 border border-white/20 text-white placeholder:text-white/50 focus:outline-none focus:ring-1 focus:ring-construction-orange"
                 />
-                <Button type="submit" variant="ghost" size="sm" className="text-white text-sm hover:bg-white/10">
+                {/* Mounted once the visitor starts typing, so the challenge script is not
+                    loaded on every page view just because the footer rendered. */}
+                {email && <Turnstile onToken={human.setToken} />}
+                <Button
+                  type="submit"
+                  variant="ghost"
+                  size="sm"
+                  className="text-white text-sm hover:bg-white/10"
+                  disabled={subscribing || !human.ready}
+                >
                   Subscribe
                   <ArrowRight className="ml-1 h-3 w-3" />
                 </Button>

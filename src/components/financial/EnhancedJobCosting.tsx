@@ -77,7 +77,7 @@ export const EnhancedJobCosting: React.FC<{ projectId?: string }> = ({ projectId
     { id: 'project-2', project_name: 'Residential Complex Phase 1', status: 'active' },
     { id: 'project-3', project_name: 'Highway Bridge Repair', status: 'active' }
   ]);
-  const [refreshing, setRefreshing] = useState(false);
+  const [refreshing] = useState(false);
 
   // Load real data from database
   useEffect(() => {
@@ -176,25 +176,14 @@ export const EnhancedJobCosting: React.FC<{ projectId?: string }> = ({ projectId
     }
   };
 
-  // Refresh material pricing
+  // This slept two seconds and said "Material pricing updated successfully".
+  // No pricing source is connected, so nothing was refreshed (US-309). The
+  // button now says so; the figures shown are whatever is already stored.
   const refreshMaterialPricing = async () => {
-    setRefreshing(true);
-    try {
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      toast({
-        title: "Success",
-        description: "Material pricing updated successfully"
-      });
-    } catch (error) {
-      toast({
-        title: "Error", 
-        description: "Failed to refresh material pricing",
-        variant: "destructive"
-      });
-    } finally {
-      setRefreshing(false);
-    }
+    toast({
+      title: "Not refreshed",
+      description: "Live material pricing is not connected yet. Prices shown are the last values stored.",
+    });
   };
 
   const getProfitMarginColor = (percentage: number) => {

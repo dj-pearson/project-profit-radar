@@ -192,33 +192,10 @@ export const EquipmentMaintenanceTracking: React.FC = () => {
     try {
       if (!userProfile?.company_id) return;
 
-      // Fallback assignments data for now
-      const fallbackAssignments: ScheduledAssignment[] = [
-        {
-          id: '1',
-          equipmentId: 'eq-1',
-          projectId: 'proj-1',
-          projectName: 'Downtown Office Complex',
-          startDate: new Date().toISOString().split('T')[0],
-          endDate: new Date(Date.now() + 30*24*60*60*1000).toISOString().split('T')[0],
-          operatorName: 'Available',
-          purpose: 'Excavation and foundation work',
-          status: 'scheduled'
-        },
-        {
-          id: '2', 
-          equipmentId: 'eq-2',
-          projectId: 'proj-2',
-          projectName: 'Residential Development',
-          startDate: new Date(Date.now() + 7*24*60*60*1000).toISOString().split('T')[0],
-          endDate: new Date(Date.now() + 37*24*60*60*1000).toISOString().split('T')[0],
-          operatorName: 'Available',
-          purpose: 'Equipment usage', 
-          status: 'scheduled'
-        }
-      ];
-
-      setAssignments(fallbackAssignments);
+      // Two invented assignments ("Downtown Office Complex", "Residential
+      // Development") used to be shown here. No assignment is read from the
+      // database by this screen, so the list starts empty (US-309).
+      setAssignments([]);
     } catch (error) {
       console.error('Error loading assignments:', error);
       setAssignments([]);
@@ -230,7 +207,7 @@ export const EquipmentMaintenanceTracking: React.FC = () => {
       id: Date.now().toString(),
       equipmentId,
       projectId,
-      projectName: 'Available for Assignment', // Would come from project lookup
+      projectName: 'Available for Assignment',
       startDate,
       endDate,
       operatorName,
@@ -256,9 +233,10 @@ export const EquipmentMaintenanceTracking: React.FC = () => {
         : eq
     ));
 
+    // Local state only; nothing below reaches the database (US-309).
     toast({
-      title: "Equipment Scheduled",
-      description: "Equipment has been successfully scheduled for the project.",
+      title: "Not saved - shown on this screen only",
+      description: "Equipment scheduling is not stored yet. This assignment will be gone when you leave the page.",
     });
 
     setShowScheduleForm(false);
@@ -290,8 +268,8 @@ export const EquipmentMaintenanceTracking: React.FC = () => {
     ));
 
     toast({
-      title: "Maintenance Record Added",
-      description: "Maintenance record has been successfully logged.",
+      title: "Not saved - shown on this screen only",
+      description: "Maintenance records entered here are not stored yet and will be gone when you leave the page.",
     });
 
     setShowMaintenanceForm(false);
@@ -303,8 +281,8 @@ export const EquipmentMaintenanceTracking: React.FC = () => {
     ));
 
     toast({
-      title: "Status Updated",
-      description: `Equipment status has been updated to ${newStatus.replace('_', ' ')}.`,
+      title: "Not saved - shown on this screen only",
+      description: `The status change to ${newStatus.replace('_', ' ')} is not stored and will revert when you leave the page.`,
     });
   };
 

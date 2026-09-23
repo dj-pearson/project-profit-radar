@@ -246,15 +246,13 @@ export const AutomatedUpdates: React.FC<AutomatedUpdatesProps> = ({
     }
   };
 
-  const testRule = async (ruleId: string) => {
-    try {
-      // Mock test execution
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      toast.success('Test update sent successfully');
-    } catch (error) {
-      console.error('Error testing rule:', error);
-      toast.error('Failed to test rule');
-    }
+  // This waited a second and said "Test update sent successfully" without
+  // sending anything (US-309). There is no test-send path for automation rules,
+  // so the button says that instead of claiming delivery.
+  const testRule = async (_ruleId: string) => {
+    toast.info('No test update was sent', {
+      description: 'Test sends for automation rules are not built yet.',
+    });
   };
 
   if (loading) {

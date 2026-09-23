@@ -7,7 +7,6 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { History, RotateCcw, Eye, GitBranch, Clock, User, ChevronRight } from 'lucide-react';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
-import { supabase } from '@/integrations/supabase/client';
 
 interface WorkflowVersion {
   id: string;
@@ -34,7 +33,7 @@ export function WorkflowVersionControl({
 }: WorkflowVersionControlProps) {
   const [versions, setVersions] = useState<WorkflowVersion[]>([]);
   const [selectedVersion, setSelectedVersion] = useState<WorkflowVersion | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [loading] = useState(false);
   const [compareMode, setCompareMode] = useState(false);
 
   useEffect(() => {
@@ -43,77 +42,20 @@ export function WorkflowVersionControl({
     }
   }, [workflowId]);
 
+  /**
+   * This listed three invented versions ("Added SMS notification step" by
+   * "John Doe", an "Initial Version" by "Jane Smith"), and restoring one of
+   * them replaced the user's canvas with an empty workflow. A saveNewVersion
+   * beside it toasted "New version saved" over local state only, and nothing
+   * called it (US-309).
+   *
+   * No workflow_versions table exists, so there is no history to read. The
+   * list stays empty and says why, instead of showing a history that never
+   * happened.
+   */
   const loadVersions = async () => {
     if (!workflowId) return;
-    
-    setLoading(true);
-    try {
-      // In a real implementation, this would fetch from a workflow_versions table
-      // For now, we'll simulate with mock data
-      const mockVersions: WorkflowVersion[] = [
-        {
-          id: 'v1',
-          version: 3,
-          name: 'Current Version',
-          workflowData: currentWorkflowData,
-          createdBy: 'John Doe',
-          createdAt: new Date(),
-          changesSummary: 'Added SMS notification step',
-          isCurrent: true,
-        },
-        {
-          id: 'v2',
-          version: 2,
-          name: 'Version 2',
-          workflowData: { nodes: [], edges: [] },
-          createdBy: 'John Doe',
-          createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000),
-          changesSummary: 'Updated email template and added delay',
-          isCurrent: false,
-        },
-        {
-          id: 'v3',
-          version: 1,
-          name: 'Initial Version',
-          workflowData: { nodes: [], edges: [] },
-          createdBy: 'Jane Smith',
-          createdAt: new Date(Date.now() - 24 * 60 * 60 * 1000),
-          changesSummary: 'Initial workflow creation',
-          isCurrent: false,
-        },
-      ];
-
-      setVersions(mockVersions);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const saveNewVersion = async (changesSummary: string) => {
-    if (!workflowId) return;
-
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('Not authenticated');
-
-      // In a real implementation, this would save to workflow_versions table
-      const newVersion: WorkflowVersion = {
-        id: `v${Date.now()}`,
-        version: versions.length + 1,
-        name: `Version ${versions.length + 1}`,
-        workflowData: currentWorkflowData,
-        createdBy: user.email || 'Unknown',
-        createdAt: new Date(),
-        changesSummary,
-        isCurrent: true,
-      };
-
-      setVersions([newVersion, ...versions.map(v => ({ ...v, isCurrent: false }))]);
-      toast.success('New version saved');
-    } catch (error: unknown) {
-      console.error('Failed to save version:', error);
-      toast.error('Failed to save version');
-    }
+    setVersions([]);
   };
 
   const restoreVersion = (version: WorkflowVersion) => {
@@ -168,8 +110,10 @@ export function WorkflowVersionControl({
           ) : versions.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
               <History className="h-12 w-12 mx-auto mb-2 opacity-50" />
-              <p>No version history yet</p>
-              <p className="text-sm">Versions will appear here as you make changes</p>
+              <p>Version history is not recorded</p>
+              <p className="text-sm">
+                Past versions of a workflow are not stored yet, so there is nothing to compare or restore.
+              </p>
             </div>
           ) : (
             <ScrollArea className="h-[500px]">

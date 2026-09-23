@@ -4,8 +4,8 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Search, Star, Download, Settings, ExternalLink, Zap } from 'lucide-react';
-import { useAuth } from '@/contexts/AuthContext';
+import { Search, ExternalLink, Zap } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 
 interface Integration {
@@ -15,12 +15,8 @@ interface Integration {
   category: string;
   provider: string;
   logo_url?: string;
-  rating: number;
-  installs: number;
   price: 'free' | 'paid' | 'freemium';
-  status: 'available' | 'installed' | 'pending';
   features: string[];
-  webhook_url?: string;
 }
 
 const SAMPLE_INTEGRATIONS: Integration[] = [
@@ -30,10 +26,7 @@ const SAMPLE_INTEGRATIONS: Integration[] = [
     description: 'Sync financial data with QuickBooks Online for seamless accounting integration.',
     category: 'Accounting',
     provider: 'Intuit',
-    rating: 4.8,
-    installs: 15420,
     price: 'free',
-    status: 'available',
     features: ['Real-time sync', 'Invoice management', 'Expense tracking', 'Tax reporting']
   },
   {
@@ -42,10 +35,7 @@ const SAMPLE_INTEGRATIONS: Integration[] = [
     description: 'Connect with Procore for advanced project management and document sharing.',
     category: 'Project Management',
     provider: 'Procore',
-    rating: 4.6,
-    installs: 8750,
     price: 'paid',
-    status: 'available',
     features: ['Document sync', 'Project updates', 'Team collaboration', 'Progress tracking']
   },
   {
@@ -54,10 +44,7 @@ const SAMPLE_INTEGRATIONS: Integration[] = [
     description: 'Connect with 5000+ apps through Zapier webhooks and automation.',
     category: 'Automation',
     provider: 'Zapier',
-    rating: 4.9,
-    installs: 12300,
     price: 'freemium',
-    status: 'available',
     features: ['Custom workflows', 'Multi-app sync', 'Trigger automation', 'Data mapping']
   },
   {
@@ -66,10 +53,7 @@ const SAMPLE_INTEGRATIONS: Integration[] = [
     description: 'Store and share project documents with Google Drive integration.',
     category: 'Storage',
     provider: 'Google',
-    rating: 4.7,
-    installs: 21500,
     price: 'free',
-    status: 'installed',
     features: ['File sync', 'Team sharing', 'Version control', 'Mobile access']
   },
   {
@@ -78,10 +62,7 @@ const SAMPLE_INTEGRATIONS: Integration[] = [
     description: 'Get real-time project updates and notifications in your Slack channels.',
     category: 'Communication',
     provider: 'Slack',
-    rating: 4.5,
-    installs: 9800,
     price: 'free',
-    status: 'available',
     features: ['Real-time alerts', 'Custom channels', 'Team mentions', 'Rich formatting']
   },
   {
@@ -90,20 +71,16 @@ const SAMPLE_INTEGRATIONS: Integration[] = [
     description: 'Collaborate with your team using Microsoft Teams integration.',
     category: 'Communication',
     provider: 'Microsoft',
-    rating: 4.3,
-    installs: 7200,
     price: 'free',
-    status: 'available',
     features: ['Video calls', 'File sharing', 'Team chat', 'Calendar sync']
   }
 ];
 
 const ThirdPartyMarketplace: React.FC = () => {
-  const { userProfile } = useAuth();
-  const [integrations, setIntegrations] = useState<Integration[]>(SAMPLE_INTEGRATIONS);
+  const navigate = useNavigate();
+  const integrations = SAMPLE_INTEGRATIONS;
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
-  const [loading, setLoading] = useState(false);
 
   const categories = ['all', 'Accounting', 'Project Management', 'Communication', 'Storage', 'Automation'];
 
@@ -114,60 +91,23 @@ const ThirdPartyMarketplace: React.FC = () => {
     return matchesSearch && matchesCategory;
   });
 
-  const handleInstall = async (integration: Integration) => {
-    if (!userProfile?.company_id) return;
-    
-    setLoading(true);
-    try {
-      // For Zapier integration, show webhook URL input
-      if (integration.name === 'Zapier Automation') {
-        const webhookUrl = prompt('Enter your Zapier webhook URL:');
-        if (!webhookUrl) {
-          setLoading(false);
-          return;
-        }
-        integration.webhook_url = webhookUrl;
-      }
-
-      // Simulate installation
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      // Update integration status
-      setIntegrations(prev => 
-        prev.map(int => 
-          int.id === integration.id 
-            ? { ...int, status: 'installed' as const }
-            : int
-        )
-      );
-
-      toast.success(`${integration.name} installed successfully!`);
-    } catch (error) {
-      toast.error('Failed to install integration');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleUninstall = async (integration: Integration) => {
-    setLoading(true);
-    try {
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      setIntegrations(prev => 
-        prev.map(int => 
-          int.id === integration.id 
-            ? { ...int, status: 'available' as const }
-            : int
-        )
-      );
-
-      toast.success(`${integration.name} uninstalled successfully!`);
-    } catch (error) {
-      toast.error('Failed to uninstall integration');
-    } finally {
-      setLoading(false);
-    }
+  /**
+   * Install and Uninstall each slept, flipped a local badge and announced
+   * "<name> installed successfully!" - nothing was connected, nothing was
+   * stored, and the badge was gone on reload. The Zapier path even prompted for
+   * a webhook URL and then discarded it. The catalog also showed invented star
+   * ratings and install counts, and listed Google Drive as installed for every
+   * company (US-309).
+   *
+   * None of these connectors exist behind this page. Say so, and point at
+   * /integrations, which is where the real connections are managed.
+   */
+  const handleInstall = (integration: Integration) => {
+    toast.info(`${integration.name} was not installed`, {
+      description:
+        'Installing from this catalog is not built yet. Connected integrations are managed under Integrations.',
+      action: { label: 'Open Integrations', onClick: () => navigate('/integrations') },
+    });
   };
 
   const getPriceColor = (price: string) => {
@@ -234,11 +174,6 @@ const ThirdPartyMarketplace: React.FC = () => {
                     <p className="text-xs sm:text-sm text-muted-foreground truncate">{integration.provider}</p>
                   </div>
                 </div>
-                {integration.status === 'installed' && (
-                  <Badge variant="secondary" className="bg-green-100 text-green-800 text-xs flex-shrink-0">
-                    Installed
-                  </Badge>
-                )}
               </div>
             </CardHeader>
 
@@ -247,17 +182,7 @@ const ThirdPartyMarketplace: React.FC = () => {
                 {integration.description}
               </p>
 
-              {/* Mobile-optimized metrics */}
-              <div className="flex items-center justify-between text-xs sm:text-sm gap-2">
-                <div className="flex items-center space-x-1">
-                  <Star className="h-3 w-3 sm:h-4 sm:w-4 text-yellow-500 fill-current" />
-                  <span className="font-medium">{integration.rating}</span>
-                </div>
-                <div className="flex items-center space-x-1">
-                  <Download className="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground" />
-                  <span className="text-muted-foreground hidden sm:inline">{integration.installs.toLocaleString()}</span>
-                  <span className="text-muted-foreground sm:hidden">{(integration.installs / 1000).toFixed(0)}k</span>
-                </div>
+              <div className="flex items-center justify-end text-xs sm:text-sm gap-2">
                 <Badge className={getPriceColor(integration.price) + " text-xs"}>
                   {integration.price}
                 </Badge>
@@ -282,42 +207,21 @@ const ThirdPartyMarketplace: React.FC = () => {
 
               {/* Action buttons - Mobile optimized */}
               <div className="flex flex-col sm:flex-row gap-2 pt-1 sm:pt-2">
-                {integration.status === 'installed' ? (
-                  <>
-                    <Button variant="outline" size="sm" className="w-full sm:flex-1 h-9 text-xs sm:text-sm">
-                      <Settings className="h-3 w-3 sm:h-4 sm:w-4 mr-2" />
-                      Configure
-                    </Button>
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      className="w-full sm:w-auto h-9 text-xs sm:text-sm"
-                      onClick={() => handleUninstall(integration)}
-                      disabled={loading}
-                    >
-                      Uninstall
-                    </Button>
-                  </>
-                ) : (
-                  <>
-                    <Button 
-                      onClick={() => handleInstall(integration)} 
-                      size="sm" 
-                      className="w-full sm:flex-1 h-9 text-xs sm:text-sm"
-                      disabled={loading}
-                    >
-                      {integration.name === 'Zapier Automation' ? (
-                        <><Zap className="h-3 w-3 sm:h-4 sm:w-4 mr-2" /> Connect</>
-                      ) : (
-                        <>Install</>
-                      )}
-                    </Button>
-                    <Button variant="outline" size="sm" className="w-full sm:w-auto h-9">
-                      <ExternalLink className="h-3 w-3 sm:h-4 sm:w-4" />
-                      <span className="sm:hidden ml-2">Details</span>
-                    </Button>
-                  </>
-                )}
+                <Button 
+                  onClick={() => handleInstall(integration)} 
+                  size="sm" 
+                  className="w-full sm:flex-1 h-9 text-xs sm:text-sm"
+                >
+                  {integration.name === 'Zapier Automation' ? (
+                    <><Zap className="h-3 w-3 sm:h-4 sm:w-4 mr-2" /> Connect</>
+                  ) : (
+                    <>Install</>
+                  )}
+                </Button>
+                <Button variant="outline" size="sm" className="w-full sm:w-auto h-9">
+                  <ExternalLink className="h-3 w-3 sm:h-4 sm:w-4" />
+                  <span className="sm:hidden ml-2">Details</span>
+                </Button>
               </div>
             </CardContent>
           </Card>
