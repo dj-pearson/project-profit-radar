@@ -6590,3 +6590,15 @@ so documents never appeared. The kind now maps to `category_id` (a per-company
 "Templates" or "RFI Attachments" category) plus a tag. The tag is the fallback
 for portal users, whom RLS doesn't let create a category. Search shows the
 category name and logs failures.
+
+## US-367: the geofence map reads where clock-ins are written
+
+Every mounted clock-in writes `time_entries` with `gps_latitude/longitude` and
+`start_time`. The map read `clock_in_lat` and friends from `time_entries`,
+where those columns don't exist, so it always failed. It now reads the real
+columns and shows a retryable error state. The crew check-in hook filtered its
+view by `user_id`; the view's column is `crew_member_id`.
+
+These four stories took the TypeScript error count from 1658 to 1635. Most of
+the 23 cleared errors were the compiler reporting these nonexistent columns.
+The budget baseline is lowered to match.

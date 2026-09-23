@@ -1,5 +1,6 @@
 /**
- * US-072: crew marker construction for the geofence map
+ * US-072 / US-367: crew marker construction for the geofence map, from
+ * time_entries rows (gps_latitude/gps_longitude/start_time/end_time).
  */
 import { describe, it, expect } from 'vitest';
 import { buildCrewMarkers, type TimeEntryLite } from '@/lib/geofence-markers';
@@ -9,70 +10,43 @@ const names = new Map<string, string>([
   ['u2', 'Bob Smith'],
 ]);
 
-describe('buildCrewMarkers (US-072)', () => {
-  it('marks an open entry (no clock-out) as on site with a single marker', () => {
+describe('buildCrewMarkers', () => {
+  it('marks an open entry (no end_time) as on site', () => {
+    const entries: TimeEntryLite[] = [
+      { user_id: 'u1', gps_latitude: 40.1, gps_longitude: -74.2, start_time: '2026-06-27T13:00:00.000Z', end_time: null },
+    ];
+    const markers = buildCrewMarkers(entries, names);
+    expect(markers).toHaveLength(1);
+    expect(markers[0]).toMatchObject({ kind: 'onsite', lat: 40.1, lng: -74.2 });
+    expect(markers[0].label).toContain('Jane Doe');
+  });
+
+  it('emits one clock-in marker for a finished entry (time_entries has no clock-out coordinates)', () => {
     const entries: TimeEntryLite[] = [
       {
-        user_id: 'u1',
-        clock_in_lat: 40.1,
-        clock_in_lng: -74.2,
-        clock_in_timestamp: '2026-06-27T13:00:00.000Z',
-        clock_out_lat: null,
-        clock_out_lng: null,
-        clock_out_timestamp: null,
+        user_id: 'u2',
+        gps_latitude: 40.1,
+        gps_longitude: -74.2,
+        start_time: '2026-06-27T13:00:00.000Z',
+        end_time: '2026-06-27T21:00:00.000Z',
       },
     ];
     const markers = buildCrewMarkers(entries, names);
     expect(markers).toHaveLength(1);
-    expect(markers[0].kind).toBe('onsite');
-    expect(markers[0].lat).toBe(40.1);
-    expect(markers[0].label).toContain('Jane Doe');
+    expect(markers[0].kind).toBe('in');
+    expect(markers[0].label).toContain('Bob Smith');
   });
 
-  it('emits clock-in and clock-out markers for a completed entry', () => {
+  it('skips entries without coordinates', () => {
     const entries: TimeEntryLite[] = [
-      {
-        user_id: 'u2',
-        clock_in_lat: 40.1,
-        clock_in_lng: -74.2,
-        clock_in_timestamp: '2026-06-27T13:00:00.000Z',
-        clock_out_lat: 40.15,
-        clock_out_lng: -74.25,
-        clock_out_timestamp: '2026-06-27T21:00:00.000Z',
-      },
-    ];
-    const markers = buildCrewMarkers(entries, names);
-    expect(markers).toHaveLength(2);
-    expect(markers.map((m) => m.kind).sort()).toEqual(['in', 'out']);
-    expect(markers.every((m) => m.label.includes('Bob Smith'))).toBe(true);
-  });
-
-  it('skips entries without clock-in coordinates and falls back to "Crew"', () => {
-    const entries: TimeEntryLite[] = [
-      {
-        user_id: 'unknown',
-        clock_in_lat: null,
-        clock_in_lng: null,
-        clock_in_timestamp: '2026-06-27T13:00:00.000Z',
-        clock_out_lat: null,
-        clock_out_lng: null,
-        clock_out_timestamp: null,
-      },
+      { user_id: 'u1', gps_latitude: null, gps_longitude: null, start_time: '2026-06-27T13:00:00.000Z', end_time: null },
     ];
     expect(buildCrewMarkers(entries, names)).toHaveLength(0);
   });
 
   it('falls back to "Crew" for a user not in the name map', () => {
     const entries: TimeEntryLite[] = [
-      {
-        user_id: 'unknown',
-        clock_in_lat: 40.1,
-        clock_in_lng: -74.2,
-        clock_in_timestamp: '2026-06-27T13:00:00.000Z',
-        clock_out_lat: null,
-        clock_out_lng: null,
-        clock_out_timestamp: null,
-      },
+      { user_id: 'unknown', gps_latitude: 40.1, gps_longitude: -74.2, start_time: '2026-06-27T13:00:00.000Z', end_time: null },
     ];
     const markers = buildCrewMarkers(entries, names);
     expect(markers).toHaveLength(1);

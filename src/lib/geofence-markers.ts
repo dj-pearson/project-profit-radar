@@ -1,23 +1,31 @@
 /**
  * US-072: Pure helpers for the geofence map (extracted so the data mapping is
  * unit-testable without rendering Leaflet, which needs a real DOM).
+ *
+ * US-367: the input is a `time_entries` row, because that is the table every
+ * live clock-in path writes (MobileTimeClock, MobileTimeTracker,
+ * AutoClockInManager, TimeTrackingDashboard, the time-tracking edge
+ * function). time_entries stores one GPS fix, taken at clock-in, in
+ * gps_latitude/gps_longitude; it has no clock-out coordinates, so a finished
+ * shift is drawn at its clock-in point rather than as a second marker.
  */
+
+/** The time_entries columns the map reads. Keep in sync with the select. */
+export const TIME_ENTRY_MAP_COLUMNS = 'user_id, gps_latitude, gps_longitude, start_time, end_time';
 
 export interface TimeEntryLite {
   user_id: string;
-  clock_in_lat: number | null;
-  clock_in_lng: number | null;
-  clock_in_timestamp: string;
-  clock_out_lat: number | null;
-  clock_out_lng: number | null;
-  clock_out_timestamp: string | null;
+  gps_latitude: number | null;
+  gps_longitude: number | null;
+  start_time: string;
+  end_time: string | null;
 }
 
 export interface CrewMarker {
   lat: number;
   lng: number;
   label: string;
-  kind: 'onsite' | 'in' | 'out';
+  kind: 'onsite' | 'in';
 }
 
 const hhmm = (iso: string): string => {
@@ -29,9 +37,9 @@ const hhmm = (iso: string): string => {
 };
 
 /**
- * Turn today's time entries into map markers: a clock-in point per entry
- * (flagged "on site" when there's no clock-out yet) and a clock-out point
- * where present. Entries without coordinates are skipped.
+ * Turn today's time entries into map markers: one point per entry at its
+ * clock-in location, flagged "on site" while the entry is still open.
+ * Entries without coordinates are skipped.
  */
 export function buildCrewMarkers(
   entries: TimeEntryLite[],
@@ -39,25 +47,18 @@ export function buildCrewMarkers(
 ): CrewMarker[] {
   const markers: CrewMarker[] = [];
   for (const e of entries) {
+    if (e.gps_latitude == null || e.gps_longitude == null) continue;
     const name = nameById.get(e.user_id) ?? 'Crew';
-    if (e.clock_in_lat != null && e.clock_in_lng != null) {
-      const onsite = e.clock_out_timestamp == null;
-      const t = hhmm(e.clock_in_timestamp);
-      markers.push({
-        lat: e.clock_in_lat,
-        lng: e.clock_in_lng,
-        label: onsite ? `${name} — on site (in ${t})` : `${name} — clocked in ${t}`,
-        kind: onsite ? 'onsite' : 'in',
-      });
-    }
-    if (e.clock_out_lat != null && e.clock_out_lng != null && e.clock_out_timestamp) {
-      markers.push({
-        lat: e.clock_out_lat,
-        lng: e.clock_out_lng,
-        label: `${name} — clocked out ${hhmm(e.clock_out_timestamp)}`,
-        kind: 'out',
-      });
-    }
+    const onsite = e.end_time == null;
+    const t = hhmm(e.start_time);
+    markers.push({
+      lat: e.gps_latitude,
+      lng: e.gps_longitude,
+      label: onsite
+        ? `${name} - on site (in ${t})`
+        : `${name} - clocked in ${t}, out ${hhmm(e.end_time as string)}`,
+      kind: onsite ? 'onsite' : 'in',
+    });
   }
   return markers;
 }

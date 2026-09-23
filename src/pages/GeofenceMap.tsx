@@ -13,7 +13,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from '@/hooks/use-toast';
 import { logger } from '@/lib/logger';
-import { buildCrewMarkers, type CrewMarker } from '@/lib/geofence-markers';
+import { ErrorState } from '@/components/ui/states';
+import { buildCrewMarkers, TIME_ENTRY_MAP_COLUMNS, type CrewMarker, type TimeEntryLite } from '@/lib/geofence-markers';
 
 interface Geofence {
   id: string;
@@ -37,6 +38,7 @@ export default function GeofenceMap() {
   const [crew, setCrew] = useState<CrewMarker[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   // Add-geofence flow
   const [adding, setAdding] = useState(false);
@@ -51,6 +53,7 @@ export default function GeofenceMap() {
 
   const loadData = useCallback(async () => {
     if (!companyId) return;
+    setLoadError(null);
     try {
       const { data: gfData, error: gfErr } = await supabase
         .from('geofences')
@@ -76,17 +79,20 @@ export default function GeofenceMap() {
       if (ids.length) {
         const startOfDay = new Date();
         startOfDay.setHours(0, 0, 0, 0);
+        // US-367: time_entries is what the clock-in paths write; its GPS fix
+        // lives in gps_latitude/gps_longitude and the shift in start_time/end_time.
         const { data: entries, error: entriesErr } = await supabase
           .from('time_entries')
-          .select('user_id, clock_in_lat, clock_in_lng, clock_in_timestamp, clock_out_lat, clock_out_lng, clock_out_timestamp')
+          .select(TIME_ENTRY_MAP_COLUMNS)
           .in('user_id', ids)
-          .gte('clock_in_timestamp', startOfDay.toISOString());
+          .gte('start_time', startOfDay.toISOString());
         if (entriesErr) throw entriesErr;
-        markers = buildCrewMarkers(entries ?? [], nameById);
+        markers = buildCrewMarkers((entries ?? []) as TimeEntryLite[], nameById);
       }
       setCrew(markers);
     } catch (err) {
       logger.error('Failed to load geofence map data', err as Error);
+      setLoadError('Could not load geofences and crew locations.');
       toast({ title: 'Could not load map data', variant: 'destructive' });
     }
   }, [companyId]);
@@ -154,7 +160,7 @@ export default function GeofenceMap() {
       bounds.push([g.center_lat, g.center_lng]);
     }
 
-    const colorFor = (k: CrewMarker['kind']) => (k === 'out' ? '#ef4444' : k === 'onsite' ? '#2563eb' : '#22c55e');
+    const colorFor = (k: CrewMarker['kind']) => (k === 'onsite' ? '#2563eb' : '#22c55e');
     for (const m of crew) {
       L.circleMarker([m.lat, m.lng], {
         radius: m.kind === 'onsite' ? 8 : 6,
@@ -278,15 +284,21 @@ export default function GeofenceMap() {
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-4">
           <div className="lg:col-span-3">
             <Card>
-              <CardContent className="p-0">
+              <CardContent className="relative p-0">
                 <div ref={containerRef} className="h-[600px] w-full rounded-lg" role="application" aria-label="Geofence map" />
+                {loadError && (
+                  // Cover the map instead of letting an empty one read as "no crew on site".
+                  // z-[1000] sits above Leaflet's panes and controls.
+                  <div className="absolute inset-0 z-[1000] flex items-center justify-center rounded-lg bg-background/90">
+                    <ErrorState error={loadError} onRetry={loadData} />
+                  </div>
+                )}
               </CardContent>
             </Card>
             <div className="mt-2 flex flex-wrap gap-3 text-xs text-muted-foreground">
               <span className="flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-full bg-blue-500" /> Geofence</span>
-              <span className="flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-full bg-green-500" /> Clock-in</span>
+              <span className="flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-full bg-green-500" /> Clocked in, shift ended</span>
               <span className="flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-full bg-blue-600" /> On site</span>
-              <span className="flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-full bg-red-500" /> Clock-out</span>
             </div>
           </div>
 

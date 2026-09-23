@@ -10,17 +10,18 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { useGPSLocation } from '@/hooks/useGPSLocation';
 
+/**
+ * A row of the crew_assignments_pending_checkin view
+ * (supabase/migrations/20251110000002_crew_gps_checkin.sql). The view keys the
+ * crew member as crew_member_id (= user_profiles.id = auth user id); it has no
+ * user_id column, so filtering on user_id errored (US-367).
+ */
 export interface CrewAssignment {
   id: string;
-  user_id: string;
+  crew_member_id: string;
   project_id: string;
   assigned_date: string;
   status: string;
-  is_onsite: boolean;
-  gps_checkin_timestamp: string | null;
-  gps_checkout_timestamp: string | null;
-  gps_checkin_verified: boolean;
-  distance_from_site: number | null;
   crew_member_name: string;
   project_name: string;
   project_location: string;
@@ -79,7 +80,7 @@ export const useCrewGPSCheckin = () => {
       const { data, error } = await supabase
         .from('crew_assignments_pending_checkin')
         .select('*')
-        .eq('user_id', user.id);
+        .eq('crew_member_id', user.id);
 
       if (error) throw error;
       return data as CrewAssignment[];
