@@ -4121,7 +4121,7 @@
       ],
       "priority": 2,
       "passes": false,
-      "notes": "PROPOSED (deep-dive audit 2026-07-12). Theme: Performance. SEV: HIGH. Source: Frontend audit. || AUDIT 2026-09-09: lighthouserc.cjs asserts on the desktop preset with no throttling, so the mobile numbers (performance 26, LCP 13.9 s on the January report) are invisible to CI. Concrete causes and the ratchet are US-388."
+      "notes": "PROPOSED (deep-dive audit 2026-07-12). Theme: Performance. SEV: HIGH. Source: Frontend audit. || AUDIT 2026-09-09: lighthouserc.cjs asserts on the desktop preset with no throttling, so the mobile numbers (performance 26, LCP 13.9 s on the January report) are invisible to CI. Concrete causes and the ratchet are US-388. || LHCI runs in lighthouse.yml against the prerendered build (build:prerender, PRERENDER_STRICT=1, example.invalid Supabase) for /, /pricing, /features, /job-costing-software on PRs to main, develop and release/**. Hard budgets at measured values plus headroom (LCP 16000/14000/14000/9500 ms, JS 1.40/1.10/1.10/0.70 MB, TBT 300, CLS 0.1, CSS 40 KB, perf >= 0.50, a11y/SEO 0.95); AC targets (LCP 2500, FCP 1800, perf 90) are warnings. Measured median LCP on / is 13.7 s on simulated slow 4G: the h1 is in the prerendered HTML but paint waits for 227 modulepreloads. OPEN: AC4 unused landing JS; US-388 4 s LCP gate replaced by the ratchet until that lands. docs/LIGHTHOUSE_BUDGET.md."
     },
     {
       "id": "US-258",

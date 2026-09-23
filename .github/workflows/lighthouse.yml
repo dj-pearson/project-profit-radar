@@ -1,15 +1,29 @@
 name: Lighthouse CI
 
+# Performance budget for the public marketing routes (US-257). Budgets and the
+# route list live in lighthouserc.cjs; the numbers behind them are in
+# docs/LIGHTHOUSE_BUDGET.md. A failing assertion fails this check on the PR.
+
 on:
   push:
     branches: [main, develop]
   pull_request:
-    branches: [main]
+    # Feature and fix PRs target develop, so that is where a regression has to
+    # be caught; main and release/** cover release and hotfix PRs.
+    branches: [main, develop, 'release/**']
 
 jobs:
   lighthouse:
     name: Lighthouse Audit
     runs-on: ubuntu-latest
+    env:
+      # Job-level so `vite build` and `vite preview` (started by LHCI) load the
+      # same config; vite.config.ts refuses to start without both. The URL is
+      # deliberately unresolvable: the audit measures the page, and must never
+      # send traffic to the production Supabase project. The committed budgets
+      # were measured with these same values.
+      VITE_SUPABASE_URL: https://example.invalid
+      VITE_SUPABASE_PUBLISHABLE_KEY: lighthouse-audit-placeholder
 
     steps:
       - uses: actions/checkout@v4
@@ -25,21 +39,23 @@ jobs:
         env:
           PUPPETEER_SKIP_DOWNLOAD: true
 
-      - name: Build
-        run: npx vite build
+      # The prerender step (scripts/prerender.mjs) renders the marketing routes
+      # with Playwright's Chromium. Without it the build ships the empty SPA
+      # shell and the audit would measure a page users never get.
+      - name: Install Chromium for the prerender
+        run: npx playwright install chromium --with-deps
+
+      - name: Build (with prerender)
+        # build:prerender = npm run build, then fail unless / and /pricing
+        # were actually prerendered.
+        run: npm run build:prerender
         env:
-          # Placeholder values so the bundle has non-empty config and
-          # React can boot during the audit. The audit only measures
-          # render performance — no real Supabase calls are made.
-          VITE_SUPABASE_URL: https://api.brikly.net
-          VITE_SUPABASE_PUBLISHABLE_KEY: lighthouse-audit-placeholder
-          VITE_EDGE_FUNCTIONS_URL: https://functions.brikly.net
+          PRERENDER_STRICT: '1'
 
-      - name: Install Lighthouse CI
-        run: npm install -g @lhci/cli@0.15.x
-
+      # @lhci/cli is a devDependency, so the version is pinned by the lockfile.
+      # LHCI starts `vite preview` itself (collect.startServerCommand).
       - name: Run Lighthouse CI
-        run: lhci autorun
+        run: npx lhci autorun
         env:
           LHCI_GITHUB_APP_TOKEN: ${{ secrets.LHCI_GITHUB_APP_TOKEN }}
 

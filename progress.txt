@@ -7239,3 +7239,10 @@ window landed after focus jumped back to the already-filled first box and
 was dropped, so the code never auto-submitted. This was the flaky
 Auth.mfa test (3 in 10 alone) and a real user bug. Focus now moves
 synchronously; the test asserts digit 1 has focus when the dialog opens.
+
+## US-257 - Lighthouse budget in CI
+Lighthouse CI now audits the prerendered build of four marketing routes on
+every PR to main, develop and release branches, with hard budgets at
+today's measured values plus headroom and the real targets as warnings.
+Measured LCP on / is 13.7 s on simulated slow 4G, almost all render delay:
+the hero is already in the HTML, but paint waits for 227 modulepreloads.

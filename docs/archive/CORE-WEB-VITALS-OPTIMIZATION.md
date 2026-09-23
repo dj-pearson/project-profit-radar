@@ -379,3 +379,18 @@ const PerformanceDashboard = () => {
 
 *Last Updated: September 29, 2025*
 *Performance Target: 90+ Lighthouse Score*
+## Measured baseline, 2026-09-23 (US-257)
+
+Lighthouse CI, mobile defaults (simulated slow 4G, 4x CPU), median of three
+runs against the prerendered production build served by `vite preview`:
+
+| Route | Perf | LCP | FCP | TBT | CLS | JS transfer |
+|---|---|---|---|---|---|---|
+| `/` | 55 | 13.7 s | 13.4 s | 0 ms | 0.003 | 1,294 KB |
+| `/pricing` | 56 | 11.9 s | 11.3 s | 0 ms | 0.000 | 1,002 KB |
+| `/features` | 56 | 11.8 s | 11.3 s | 0 ms | 0.000 | 994 KB |
+| `/job-costing-software` | 57 | 8.1 s | 7.1 s | 156 ms | 0.000 | 628 KB |
+
+The 90+ / LCP < 2.5 s target above is not met on any route. CI now fails on a
+regression past these numbers plus headroom; budgets, method and how to change
+them are in `docs/LIGHTHOUSE_BUDGET.md`.
