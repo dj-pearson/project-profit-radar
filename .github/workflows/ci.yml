@@ -61,7 +61,22 @@ jobs:
       - run: npm ci
         env:
           PUPPETEER_SKIP_DOWNLOAD: true
-      - run: npm run test:run
+      # US-215: one run that is both the test suite and the coverage gate.
+      # test:coverage is `vitest run --coverage`, so every test still runs and
+      # a failing test still fails the job; on top of that, coverage below the
+      # ratchet in vitest.config.ts (coverage.thresholds) fails it too. The
+      # axe suites (src/pages/__tests__/*.a11y.test.tsx) run here as ordinary
+      # tests, so an a11y regression they cover fails this job.
+      - run: npm run test:coverage
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: coverage
+          path: |
+            coverage/coverage-summary.json
+            coverage/lcov.info
+          retention-days: 7
+          if-no-files-found: ignore
 
   build:
     name: Build

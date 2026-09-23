@@ -7246,3 +7246,10 @@ every PR to main, develop and release branches, with hard budgets at
 today's measured values plus headroom and the real targets as warnings.
 Measured LCP on / is 13.7 s on simulated slow 4G, almost all render delay:
 the hero is already in the HTML, but paint waits for 227 modulepreloads.
+
+## US-215 - coverage in CI
+CI's Unit Tests job now runs with coverage and fails below a ratchet set at
+the real measured numbers (22% statements, 18% branches, 18% functions, 22%
+lines over all of src, not only imported files). The old 60% threshold was
+never enforced. Added @vitest/coverage-v8, which was missing. Axe suites
+already run in unit tests and the Playwright a11y spec in E2E.
