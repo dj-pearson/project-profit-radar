@@ -2,7 +2,7 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { Resend } from "https://esm.sh/resend@2.0.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.3";
 import { getCorsHeaders } from "../_shared/secure-cors.ts";
-import { requireSystemOrAdmin } from "../_shared/system-auth.ts";
+import { requireInternalCallerOrRootAdmin } from "../_shared/system-auth.ts";
 import { validateBody } from "../_shared/validate-body.ts";
 import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
 
@@ -23,7 +23,12 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
-  const denied = await requireSystemOrAdmin(req);
+  // This emails every subscriber on the platform, so a company admin must not
+  // be able to fire it (requireSystemOrAdmin let any admin in, and let anyone
+  // in while CRON_SECRET was unset). The daily run reaches it through
+  // check-renewal-notifications, which invokes it with the service-role
+  // client; a manual run from the admin Settings page is root_admin only.
+  const denied = await requireInternalCallerOrRootAdmin(req, { corsHeaders });
   if (denied) return denied;
 
   try {

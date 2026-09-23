@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -341,8 +342,8 @@ const SubscriptionManager = () => {
                     <p className="text-muted-foreground mb-4">
                       You need an active subscription to change plans.
                     </p>
-                    <Button className="bg-construction-orange hover:bg-construction-orange/90">
-                      Subscribe Now
+                    <Button asChild className="bg-construction-orange hover:bg-construction-orange/90">
+                      <Link to="/upgrade">Subscribe Now</Link>
                     </Button>
                   </CardContent>
                 </Card>

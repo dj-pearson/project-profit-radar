@@ -3,7 +3,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 const env = new Map<string, string>();
 vi.stubGlobal('Deno', { env: { get: (k: string) => env.get(k) } });
 
-const { requireInternalCaller } = await import('./internal-only.ts');
+const { requireInternalCaller, isInternalCaller } = await import('./internal-only.ts');
 
 const req = (headers: Record<string, string> = {}) =>
   new Request('https://api.brikly.net/functions/v1/webhook-trigger', { headers });
@@ -55,5 +55,28 @@ describe('requireInternalCaller', () => {
     const res = requireInternalCaller(req());
     expect(res?.status).toBe(404);
     expect(await res!.json()).toEqual({ error: 'Not found' });
+  });
+});
+
+describe('isInternalCaller', () => {
+  beforeEach(() => env.clear());
+
+  it('is true for the service-role bearer and the cron secret', () => {
+    env.set('SUPABASE_SERVICE_ROLE_KEY', 'svc-key');
+    env.set('CRON_SECRET', 'cron-secret');
+    expect(isInternalCaller(req({ authorization: 'Bearer svc-key' }))).toBe(true);
+    expect(isInternalCaller(req({ 'x-cron-secret': 'cron-secret' }))).toBe(true);
+  });
+
+  it('is false for a user JWT or the anon key', () => {
+    env.set('SUPABASE_SERVICE_ROLE_KEY', 'svc-key');
+    env.set('CRON_SECRET', 'cron-secret');
+    expect(isInternalCaller(req({ authorization: 'Bearer eyJhbGciOiJIUzI1NiJ9.user.sig' }))).toBe(false);
+    expect(isInternalCaller(req())).toBe(false);
+  });
+
+  it('is false when nothing is configured, including for an empty bearer', () => {
+    expect(isInternalCaller(req({ authorization: 'Bearer ' }))).toBe(false);
+    expect(isInternalCaller(req({ 'x-cron-secret': '' }))).toBe(false);
   });
 });

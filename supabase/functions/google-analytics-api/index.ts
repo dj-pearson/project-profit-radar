@@ -1,6 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts"
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.50.3'
 import { getCorsHeaders } from '../_shared/secure-cors.ts';
+import { requireInternalCallerOrRootAdmin } from '../_shared/system-auth.ts';
 import { validateBody } from '../_shared/validate-body.ts'
 import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts"
 const DateRangeSchema = z.object({
@@ -38,46 +38,16 @@ serve(async (req) => {
   try {
     console.log('=== Google Analytics API Function Called ===')
     
-    // Create Supabase client
-    const supabaseClient = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
-      {
-        global: {
-          headers: { Authorization: req.headers.get('Authorization')! },
-        },
-      }
-    )
-
-    // Verify user authentication and root admin role
-    const {
-      data: { user },
-      error: authError,
-    } = await supabaseClient.auth.getUser()
-
-    if (authError || !user) {
-      console.log('Auth error:', authError)
-      return new Response(
-        JSON.stringify({ error: 'Unauthorized', details: authError?.message }),
-        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      )
-    }
-
-    const { data: userProfile } = await supabaseClient
-      .from('user_profiles')
-      .select('role')
-      .eq('id', user.id)
-      .single()
-
-    if (!userProfile || userProfile.role !== 'root_admin') {
-      console.log('Access denied. User role:', userProfile?.role)
-      return new Response(
-        JSON.stringify({ error: 'Access denied. Root admin required.' }),
-        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      )
-    }
-
-    console.log('User authenticated as root_admin')
+    // Root admin, or an internal caller: sync-analytics-data invokes this
+    // with the service-role client, and that bearer is not a user, so the
+    // getUser() check that used to be here refused it. The service-role key
+    // and CRON_SECRET never reach a browser; every other caller still has to
+    // be a signed-in root_admin.
+    const denied = await requireInternalCallerOrRootAdmin(req, {
+      corsHeaders,
+      forbiddenMessage: 'Access denied. Root admin required.',
+    })
+    if (denied) return denied
 
     // Get request data
     const parsed = await validateBody(req, AnalyticsSchema, { name: 'google-analytics-api' })

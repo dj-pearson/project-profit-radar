@@ -3,6 +3,7 @@ import { Resend } from "https://esm.sh/resend@2.0.0";
 import { initializeAuthContext, errorResponse } from "../_shared/auth-helpers.ts";
 import { getCorsHeaders } from '../_shared/secure-cors.ts';
 import { validateBody } from "../_shared/validate-body.ts";
+import { generateBookingConfirmationHTML } from "../_shared/booking-confirmation-email.ts";
 import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
 
 const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
@@ -70,59 +71,16 @@ const handler = async (req: Request): Promise<Response> => {
       hour12: true
     });
 
-    const emailHtml = `
-      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-        <h1 style="color: #2563eb; margin-bottom: 24px;">Meeting Confirmed! 🎉</h1>
-        
-        <div style="background: #f8fafc; border-radius: 8px; padding: 24px; margin-bottom: 24px;">
-          <h2 style="margin-top: 0; color: #334155;">${booking.booking_pages?.title || 'Meeting'}</h2>
-          
-          <div style="margin: 16px 0;">
-            <strong style="color: #64748b;">📅 Date:</strong><br/>
-            <span style="font-size: 16px;">${formattedDate}</span>
-          </div>
-          
-          <div style="margin: 16px 0;">
-            <strong style="color: #64748b;">⏰ Time:</strong><br/>
-            <span style="font-size: 16px;">${formattedStartTime} - ${formattedEndTime}</span>
-          </div>
-          
-          ${booking.booking_pages?.location ? `
-            <div style="margin: 16px 0;">
-              <strong style="color: #64748b;">📍 Location:</strong><br/>
-              <span style="font-size: 16px;">${booking.booking_pages.location}</span>
-            </div>
-          ` : ''}
-          
-          <div style="margin: 16px 0;">
-            <strong style="color: #64748b;">👤 Attendee:</strong><br/>
-            <span style="font-size: 16px;">${booking.attendee_name}</span><br/>
-            <span style="color: #64748b;">${booking.attendee_email}</span>
-          </div>
-          
-          ${booking.notes ? `
-            <div style="margin: 16px 0;">
-              <strong style="color: #64748b;">📝 Notes:</strong><br/>
-              <span style="font-size: 14px;">${booking.notes}</span>
-            </div>
-          ` : ''}
-        </div>
-        
-        <div style="background: #ecfdf5; border-left: 4px solid #10b981; padding: 16px; margin-bottom: 24px;">
-          <p style="margin: 0; color: #065f46;">
-            <strong>✓ This meeting has been added to your calendar.</strong><br/>
-            You will receive a reminder before the meeting starts.
-          </p>
-        </div>
-        
-        <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 24px 0;">
-        
-        <p style="color: #64748b; font-size: 12px; text-align: center;">
-          This is an automated confirmation from Brikly CRM.<br/>
-          If you need to reschedule or cancel, please contact us directly.
-        </p>
-      </div>
-    `;
+    const emailHtml = generateBookingConfirmationHTML({
+      title: booking.booking_pages?.title,
+      location: booking.booking_pages?.location,
+      attendeeName: booking.attendee_name,
+      attendeeEmail: booking.attendee_email,
+      notes: booking.notes,
+      date: formattedDate,
+      startTime: formattedStartTime,
+      endTime: formattedEndTime,
+    });
 
     // Send email to attendee
     const attendeeEmail = await resend.emails.send({

@@ -1,4 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { readdirSync, readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import React, { cloneElement, isValidElement, type ReactElement, type ReactNode } from 'react';
 import { render, screen } from '@testing-library/react';
 import { MemoryRouter, Routes, Route, useLocation } from 'react-router-dom';
@@ -180,6 +182,30 @@ describe('ROUTE_ACCESS consistency', () => {
     for (const [name, value] of Object.entries(NavigationConfig)) visit(value, `NavigationConfig.${name}`);
     visit(hierarchicalNavigation, 'HierarchicalNavigationConfig');
     expect(drift).toEqual([]);
+  });
+
+  /**
+   * US-315 deleted /marketplace, /visual-project, /mobile-testing and others,
+   * and their ROUTE_ACCESS entries stayed behind granting access to nothing.
+   * Every key has to be a path some <Route> in src/routes declares (a page or
+   * a <Navigate> redirect), matched literally so :param patterns count.
+   */
+  it('lists only paths a route in src/routes declares', () => {
+    const declared = new Set<string>();
+    const dir = 'src/routes';
+    for (const file of readdirSync(dir).filter((f) => f.endsWith('.tsx'))) {
+      const src = readFileSync(join(dir, file), 'utf8');
+      for (const m of src.matchAll(/<Route\b((?:[^>]|\n)*?)\/?>/g)) {
+        const pm = /path=\{?["'`]([^"'`]+)["'`]/.exec(m[1]);
+        if (pm) declared.add(pm[1]);
+      }
+    }
+    expect(declared.size).toBeGreaterThan(100);
+    const stale = Object.keys(ROUTE_ACCESS).filter((path) => !declared.has(path));
+    expect(stale).toEqual([]);
+    for (const gone of ['/marketplace', '/visual-project', '/mobile-testing', '/login']) {
+      expect(ROUTE_ACCESS[gone], gone).toBeUndefined();
+    }
   });
 
   it('lists only real roles', () => {

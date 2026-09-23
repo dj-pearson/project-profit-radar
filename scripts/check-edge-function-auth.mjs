@@ -63,6 +63,9 @@ const PUBLIC_ALLOWLIST = new Set([
 const GUARD_TOKENS = [
   'initializeAuthContext',
   'requireSystemOrAdmin',
+  // requireInternalCaller and requireInternalCallerOrRootAdmin (service-role
+  // bearer / CRON_SECRET, the latter also a signed-in root_admin).
+  'requireInternalCaller',
   'withAuth(',
   'constructEvent(',        // Stripe signature verification
   'verifyApiKey',

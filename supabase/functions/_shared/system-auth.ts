@@ -12,6 +12,7 @@
 // Once CRON_SECRET is set, anonymous callers are rejected.
 
 import { initializeAuthContext } from "./auth-helpers.ts";
+import { isInternalCaller } from "./internal-only.ts";
 
 const jsonError = (message: string, status: number): Response =>
   new Response(
@@ -55,6 +56,42 @@ export async function requireSystemOrAdmin(req: Request): Promise<Response | nul
 
   if (!profile || !["admin", "root_admin"].includes(profile.role)) {
     return jsonError("Forbidden — admin access required", 403);
+  }
+  return null;
+}
+
+/**
+ * For a job that acts across every tenant: an internal caller (service-role
+ * bearer or CRON_SECRET, see isInternalCaller) or a signed-in root_admin.
+ * Company admins are refused, which requireSystemOrAdmin does not do, and
+ * nothing fails open when CRON_SECRET is unset.
+ *
+ * Returns null when allowed, or the 401/403 to return. Pass the function's
+ * CORS headers so a browser caller can read the refusal.
+ */
+export async function requireInternalCallerOrRootAdmin(
+  req: Request,
+  opts: { corsHeaders?: Record<string, string>; forbiddenMessage?: string } = {},
+): Promise<Response | null> {
+  if (isInternalCaller(req)) return null;
+
+  const deny = (message: string, status: number) =>
+    new Response(
+      JSON.stringify({ error: message, success: false, timestamp: new Date().toISOString() }),
+      { status, headers: { ...(opts.corsHeaders ?? {}), "Content-Type": "application/json" } },
+    );
+
+  const ctx = await initializeAuthContext(req);
+  if (!ctx) return deny("Unauthorized", 401);
+
+  const { data: profile } = await ctx.supabase
+    .from("user_profiles")
+    .select("role")
+    .eq("id", ctx.user.id)
+    .maybeSingle();
+
+  if (profile?.role !== "root_admin") {
+    return deny(opts.forbiddenMessage ?? "Forbidden - root admin access required", 403);
   }
   return null;
 }

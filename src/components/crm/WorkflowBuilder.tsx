@@ -19,8 +19,19 @@ import { WorkflowScheduler } from "./WorkflowScheduler";
 import { WorkflowVersionControl } from "./WorkflowVersionControl";
 import { WorkflowErrorHandling } from "./WorkflowErrorHandling";
 
+/** A saved workflow_definitions row, as the builder needs it to reopen one. */
+export interface SavedWorkflow {
+  id: string;
+  name: string;
+  description: string | null;
+  trigger_type: string;
+  workflow_steps: Json;
+}
+
 interface WorkflowBuilderProps {
   workflowId?: string;
+  /** Set when reopening a saved workflow; the canvas starts from it. */
+  initialWorkflow?: SavedWorkflow;
 }
 
 const actionTypes = [
@@ -67,14 +78,51 @@ export function buildWorkflowSteps(nodes: Node[]) {
     }));
 }
 
-export function WorkflowBuilder({ workflowId }: WorkflowBuilderProps) {
-  const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
+/**
+ * The inverse of buildWorkflowSteps: rebuild canvas nodes from a saved
+ * workflow's steps, so /crm/workflows/builder/:id opens that workflow rather
+ * than a blank canvas. Steps saved without a position are stacked.
+ */
+export function workflowNodesFromSteps(triggerType: string, steps: unknown): Node[] {
+  const list = Array.isArray(steps) ? steps : [];
+  return [
+    {
+      id: "trigger",
+      type: "input",
+      data: { label: `Trigger: ${triggerType}` },
+      position: { x: 250, y: 50 },
+    },
+    ...list.map((raw, index) => {
+      const step = (raw && typeof raw === "object" && !Array.isArray(raw) ? raw : {}) as Record<string, unknown>;
+      const pos = step.position as { x?: unknown; y?: unknown } | undefined;
+      const type = String(step.type ?? "action");
+      return {
+        id: `${type}-saved-${index}`,
+        type: "default",
+        data: {
+          label: String(step.name ?? type),
+          actionType: type,
+          config: (step.config as Record<string, unknown>) || {},
+        },
+        position: {
+          x: typeof pos?.x === "number" ? pos.x : 250,
+          y: typeof pos?.y === "number" ? pos.y : 200 + index * 100,
+        },
+      };
+    }),
+  ];
+}
+
+export function WorkflowBuilder({ workflowId, initialWorkflow }: WorkflowBuilderProps) {
+  const [nodes, setNodes, onNodesChange] = useNodesState(
+    initialWorkflow ? workflowNodesFromSteps(initialWorkflow.trigger_type, initialWorkflow.workflow_steps) : initialNodes
+  );
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
   const [selectedNode, setSelectedNode] = useState<Node | null>(null);
-  const [workflowName, setWorkflowName] = useState("");
-  const [workflowDescription, setWorkflowDescription] = useState("");
-  const [triggerType, setTriggerType] = useState("record_created");
-  const [showTemplates, setShowTemplates] = useState(true);
+  const [workflowName, setWorkflowName] = useState(initialWorkflow?.name ?? "");
+  const [workflowDescription, setWorkflowDescription] = useState(initialWorkflow?.description ?? "");
+  const [triggerType, setTriggerType] = useState(initialWorkflow?.trigger_type ?? "record_created");
+  const [showTemplates, setShowTemplates] = useState(!initialWorkflow);
   const [showAnalytics, setShowAnalytics] = useState(false);
   const [showTester, setShowTester] = useState(false);
   const [showScheduler, setShowScheduler] = useState(false);
@@ -160,6 +208,24 @@ export function WorkflowBuilder({ workflowId }: WorkflowBuilderProps) {
       // There is no workflow_steps table in the live schema; inserting into one
       // failed every save that had steps.
       const workflowSteps = buildWorkflowSteps(nodes);
+
+      // A reopened workflow is saved in place; inserting would fork a copy
+      // every time someone edited one.
+      if (initialWorkflow) {
+        const { data: updated, error: updateError } = await supabase
+          .from("workflow_definitions")
+          .update({
+            name: workflowName,
+            description: workflowDescription,
+            trigger_type: triggerType,
+            workflow_steps: workflowSteps as unknown as Json,
+          })
+          .eq("id", initialWorkflow.id)
+          .select()
+          .single();
+        if (updateError) throw updateError;
+        return updated;
+      }
 
       const { data: workflow, error: workflowError } = await supabase
         .from("workflow_definitions")

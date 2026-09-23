@@ -7069,3 +7069,14 @@ Three DashboardSkeletons became one; MobileDashboardLayout and PageLayout
 /ai-quality-control and /smart-client-updates now render inside the app
 sidebar. Twelve dead dashboard variants deleted. Components 217 -> 205, TS
 1480 -> 1450. Bundle-size AC not measured yet.
+
+## Follow-up bug bundle
+ROUTE_ACCESS lost 9 entries for routes that no longer exist or are only
+redirects; a test now requires every key to match a declared route.
+Subscribe Now opens /upgrade. /crm/workflows/builder/:id loads the saved
+workflow and saves edits as an update (it used to open blank and save a
+copy). Booking confirmation email escapes every field. send-renewal-
+notification and the GA/GSC functions accept only an internal caller or a
+root_admin (new requireInternalCallerOrRootAdmin, no fail-open). Envelope
+baseline 689 -> 685. Still open: GA/GSC have no 'sync' action, so
+sync-analytics-data does nothing yet.

@@ -20,13 +20,16 @@ export interface RouteConfig {
  * A route not listed here stays open to every signed-in role. Every role the
  * navigation configs show a link to must be listed on that link's route;
  * src/routes/__tests__/routeAccess.test.tsx fails if they drift apart.
+ *
+ * Every key must be a path src/routes declares; the same test fails on an
+ * entry for a deleted page. A path that is only a <Navigate> redirect is not
+ * listed either: no RouteGuard runs there, the target's entry is what applies.
  */
 export const ROUTE_ACCESS: Record<string, UserRole[]> = {
   // Public routes (no auth required) - handled separately
   '/': [],
   '/pricing': [],
   '/features': [],
-  '/login': [],
   '/auth': [],
 
   // Dashboard & Core
@@ -46,7 +49,6 @@ export const ROUTE_ACCESS: Record<string, UserRole[]> = {
   '/projects/:projectId/tasks/new': ['root_admin', 'admin', 'project_manager', 'field_supervisor'],
   '/create-project': ['root_admin', 'admin', 'project_manager'],
   '/schedule-management': ['root_admin', 'admin', 'project_manager', 'field_supervisor', 'office_staff', 'accounting'],
-  '/visual-project': ['root_admin', 'admin', 'project_manager', 'field_supervisor'],
 
   // Project Operations
   '/job-costing': ['root_admin', 'admin', 'project_manager', 'accounting'],
@@ -116,11 +118,8 @@ export const ROUTE_ACCESS: Record<string, UserRole[]> = {
 
   // Advanced Features
   '/smart-client-updates': ['root_admin', 'admin', 'project_manager'],
-  '/material-orchestration': ['root_admin', 'admin', 'project_manager', 'field_supervisor'],
-  '/trade-handoff': ['root_admin', 'admin', 'project_manager', 'field_supervisor'],
   '/ai-quality-control': ['root_admin', 'admin', 'project_manager', 'field_supervisor'],
   '/workflow-management': ['root_admin', 'admin', 'project_manager', 'office_staff'],
-  '/workflow-testing': ['root_admin', 'admin'],
 
   // Company Settings
   '/company-settings': ['root_admin', 'admin'],
@@ -142,7 +141,6 @@ export const ROUTE_ACCESS: Record<string, UserRole[]> = {
   '/admin/social-media': ['root_admin', 'admin'],
   '/admin/seo-management': ['root_admin', 'admin'],
   '/admin/search-traffic-dashboard': ['root_admin'],
-  '/admin/search-traffic-dashboard/settings': ['root_admin'],
 
   // System Admin (Root Admin Only)
   '/system-admin/settings': ['root_admin'],
@@ -154,7 +152,6 @@ export const ROUTE_ACCESS: Record<string, UserRole[]> = {
   // Tools & Resources
   '/tools': ['root_admin', 'admin', 'project_manager', 'field_supervisor', 'office_staff'],
   '/resources': [], // Public
-  '/schedule-builder': ['root_admin', 'admin', 'project_manager'],
   '/support': ['root_admin', 'admin', 'project_manager', 'field_supervisor', 'office_staff', 'accounting'],
   '/knowledge-base': ['root_admin', 'admin', 'project_manager', 'field_supervisor', 'office_staff', 'accounting'],
 
@@ -162,11 +159,7 @@ export const ROUTE_ACCESS: Record<string, UserRole[]> = {
   '/collaboration': ['root_admin', 'admin', 'project_manager', 'field_supervisor', 'office_staff'],
   '/communication': ['root_admin', 'admin', 'project_manager', 'field_supervisor', 'office_staff'],
 
-  // Marketplace
-  '/marketplace': ['root_admin', 'admin'],
-
   // Mobile
-  '/mobile-testing': ['root_admin'],
   '/mobile-dashboard': ['root_admin', 'admin', 'project_manager', 'field_supervisor', 'office_staff', 'accounting'],
 };
 

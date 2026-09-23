@@ -23,14 +23,10 @@
  */
 
 export function requireInternalCaller(req: Request): Response | null {
-  const serviceRole = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
-  const cronSecret = Deno.env.get("CRON_SECRET");
+  if (isInternalCaller(req)) return null;
 
   const authHeader = req.headers.get("authorization") ?? "";
-  if (serviceRole && authHeader === `Bearer ${serviceRole}`) return null;
-
   const provided = req.headers.get("x-cron-secret");
-  if (cronSecret && provided && provided === cronSecret) return null;
 
   console.error("[internal-only] rejected external invocation", {
     path: new URL(req.url).pathname,
@@ -44,4 +40,22 @@ export function requireInternalCaller(req: Request): Response | null {
     status: 404,
     headers: { "Content-Type": "application/json" },
   });
+}
+
+/**
+ * Whether the request comes from an internal caller: the service-role bearer
+ * or the CRON_SECRET header. Neither is ever held by a browser, so a function
+ * that also serves signed-in users can use this to let cron and other edge
+ * functions in without widening what a user may do. False when neither secret
+ * is configured.
+ */
+export function isInternalCaller(req: Request): boolean {
+  const serviceRole = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+  const cronSecret = Deno.env.get("CRON_SECRET");
+
+  const authHeader = req.headers.get("authorization") ?? "";
+  if (serviceRole && authHeader === `Bearer ${serviceRole}`) return true;
+
+  const provided = req.headers.get("x-cron-secret");
+  return Boolean(cronSecret && provided && provided === cronSecret);
 }
