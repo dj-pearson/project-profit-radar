@@ -11,6 +11,7 @@ import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
 import { Clock, Copy, ExternalLink, Plus, Trash2 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { confirmAction } from "@/components/ui/confirm-dialog";
 
 interface BookingPage {
   id: string;
@@ -368,7 +369,9 @@ export function BookingPageManager() {
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => deletePageMutation.mutate(page.id)}
+                  onClick={async () => {
+                    if (await confirmAction({ title: 'Delete this booking page?', description: 'Its public link stops working.', destructive: true })) deletePageMutation.mutate(page.id);
+                  }}
                 >
                   <Trash2 className="h-3 w-3" />
                 </Button>

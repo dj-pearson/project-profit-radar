@@ -28,6 +28,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { generateMonthlyPeriods } from '@/utils/accountingUtils';
+import { confirmAction } from "@/components/ui/confirm-dialog";
 
 interface NewFiscalYearData {
   yearNumber: number;
@@ -221,13 +222,13 @@ export default function FiscalPeriods() {
   };
 
   const handleClosePeriod = async (periodId: string) => {
-    if (confirm('Are you sure you want to close this period? No further transactions can be posted to it.')) {
+    if (await confirmAction({ title: 'Are you sure you want to close this period?', description: 'No further transactions can be posted to it.', confirmLabel: 'Close period' })) {
       await closePeriod.mutateAsync(periodId);
     }
   };
 
   const handleReopenPeriod = async (periodId: string) => {
-    if (confirm('Are you sure you want to reopen this period? This will allow new transactions to be posted.')) {
+    if (await confirmAction({ title: 'Are you sure you want to reopen this period?', description: 'This will allow new transactions to be posted.', confirmLabel: 'Reopen period' })) {
       await reopenPeriod.mutateAsync(periodId);
     }
   };

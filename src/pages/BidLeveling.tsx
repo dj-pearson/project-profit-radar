@@ -44,6 +44,7 @@ import {
   type LevelingData,
 } from '@/services/bidLevelingService';
 import { levelBids } from '@/lib/bid-leveling';
+import { confirmAction } from "@/components/ui/confirm-dialog";
 
 interface ProjectOption {
   id: string;
@@ -172,7 +173,7 @@ const BidLeveling = () => {
   };
 
   const handleDeletePackage = async () => {
-    if (!companyId || !packageId || !confirm('Delete this bid package and all its bids?')) return;
+    if (!companyId || !packageId || !(await confirmAction({ title: 'Delete this bid package and all its bids?', destructive: true }))) return;
     try {
       await deletePackage(packageId, companyId);
       setPackageId('');
@@ -249,7 +250,7 @@ const BidLeveling = () => {
   };
 
   const handleDeleteBid = async (bidId: string) => {
-    if (!companyId || !confirm('Remove this bid?')) return;
+    if (!companyId || !(await confirmAction({ title: 'Remove this bid?', confirmLabel: 'Remove', destructive: true }))) return;
     try {
       await deleteBid(bidId, companyId);
       await loadLeveling();
@@ -272,7 +273,7 @@ const BidLeveling = () => {
 
   const handleAward = async (bidId: string, vendorName: string) => {
     if (!companyId || !user?.id || !packageId) return;
-    if (!confirm(`Award this package to ${vendorName}?`)) return;
+    if (!(await confirmAction({ title: `Award this package to ${vendorName}?`, confirmLabel: 'Award' }))) return;
     setBusy(true);
     try {
       await awardBid({ companyId, packageId, bidId, vendorName, userId: user.id });

@@ -115,6 +115,25 @@ export default tseslint.config(
           "allow": ["error"]
         }
       ],
+      // US-374: confirmations go through confirmAction()/useConfirm() from
+      // @/components/ui/confirm-dialog, not the browser dialog.
+      "no-restricted-globals": [
+        "error",
+        { name: "confirm", message: "Use confirmAction() from @/components/ui/confirm-dialog." },
+      ],
+      "no-restricted-properties": [
+        "error",
+        { object: "window", property: "confirm", message: "Use confirmAction() from @/components/ui/confirm-dialog." },
+      ],
+    },
+  },
+  {
+    // US-374 allowlist (owned by the SEO/blog workstream, not yet converted).
+    // Mirrors ALLOWLIST in src/components/ui/__tests__/no-window-confirm.test.ts.
+    files: ["src/components/admin/KeywordManager.tsx", "src/pages/BlogManager.tsx"],
+    rules: {
+      "no-restricted-globals": "off",
+      "no-restricted-properties": "off",
     },
   },
   {

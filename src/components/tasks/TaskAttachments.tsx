@@ -6,6 +6,7 @@ import { format } from 'date-fns';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useDropzone } from 'react-dropzone';
+import { confirmAction } from "@/components/ui/confirm-dialog";
 
 interface Attachment {
   id: string;
@@ -124,7 +125,7 @@ export const TaskAttachments: React.FC<TaskAttachmentsProps> = ({ taskId }) => {
   };
 
   const handleDelete = async (attachment: Attachment) => {
-    if (!confirm('Are you sure you want to delete this attachment?')) return;
+    if (!(await confirmAction({ title: 'Are you sure you want to delete this attachment?', destructive: true }))) return;
 
     try {
       // Delete from storage

@@ -11,6 +11,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { formatDistanceToNow } from 'date-fns';
+import { confirmAction } from "@/components/ui/confirm-dialog";
 
 interface APIKey {
   id: string;
@@ -132,7 +133,7 @@ export const APIKeyManager: React.FC = () => {
   };
 
   const deleteAPIKey = async (keyId: string) => {
-    if (!confirm('Are you sure you want to delete this API key? This action cannot be undone.')) {
+    if (!(await confirmAction({ title: 'Are you sure you want to delete this API key?', description: 'This action cannot be undone.', destructive: true }))) {
       return;
     }
 

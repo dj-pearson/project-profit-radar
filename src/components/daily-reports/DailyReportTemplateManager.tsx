@@ -35,6 +35,7 @@ import {
   FileText,
 } from 'lucide-react';
 import { useDailyReportTemplates, DailyReportTemplate } from '@/hooks/useDailyReportTemplates';
+import { confirmAction } from "@/components/ui/confirm-dialog";
 
 interface TemplateFormData {
   name: string;
@@ -142,8 +143,8 @@ const DailyReportTemplateManager = () => {
     }
   };
 
-  const handleDelete = (id: string) => {
-    if (confirm('Are you sure you want to delete this template?')) {
+  const handleDelete = async (id: string) => {
+    if (await confirmAction({ title: 'Are you sure you want to delete this template?', destructive: true })) {
       deleteTemplate(id);
     }
   };

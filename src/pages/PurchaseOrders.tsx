@@ -11,6 +11,7 @@ import { Plus, Search, Filter, Package, Eye, Edit, Trash2, Send, Check } from 'l
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
+import { confirmAction } from "@/components/ui/confirm-dialog";
 
 interface PurchaseOrder {
   id: string;
@@ -119,7 +120,7 @@ const PurchaseOrders = () => {
   };
 
   const deletePO = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this purchase order?')) return;
+    if (!(await confirmAction({ title: 'Are you sure you want to delete this purchase order?', destructive: true }))) return;
 
     try {
       const { error } = await supabase

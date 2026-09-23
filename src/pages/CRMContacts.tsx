@@ -19,6 +19,7 @@ import { Label } from '@/components/ui/label';
 import { AccessibleForm, AccessibleFormField, AccessibleTextarea, AccessibleFieldset } from '@/components/accessibility/AccessibleForm';
 import { Users, Search, Plus, Phone, Mail, Building2, Edit, Trash2, Download, Tag, Send, X } from 'lucide-react';
 import { filterAndSortContacts, collectContactTags, type ContactRow } from '@/components/crm/contactListUtils';
+import { confirmAction } from "@/components/ui/confirm-dialog";
 
 interface Contact {
   id: string;
@@ -292,7 +293,7 @@ const CRMContacts = () => {
   const bulkDeleteContacts = async () => {
     const ids = [...selectedIds];
     if (ids.length === 0) return;
-    if (!window.confirm(`Delete ${ids.length} contact(s)? This cannot be undone.`)) return;
+    if (!(await confirmAction({ title: `Delete ${ids.length} contact(s)?`, description: `This cannot be undone.`, destructive: true }))) return;
     setBulkLoading(true);
     try {
       const { error: err } = await supabase.from('contacts').delete().in('id', ids);

@@ -8,6 +8,7 @@ import { Play, Square, Clock, Trash2 } from 'lucide-react';
 import { format, differenceInSeconds } from 'date-fns';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { confirmAction } from "@/components/ui/confirm-dialog";
 
 interface TimeEntry {
   id: string;
@@ -139,7 +140,7 @@ export const TaskTimeTracking: React.FC<TaskTimeTrackingProps> = ({ taskId }) =>
   };
 
   const deleteEntry = async (entryId: string) => {
-    if (!confirm('Are you sure you want to delete this time entry?')) return;
+    if (!(await confirmAction({ title: 'Are you sure you want to delete this time entry?', destructive: true }))) return;
 
     try {
       const { error } = await supabase

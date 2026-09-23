@@ -11,6 +11,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { validateRedirectUrl } from '@/lib/security/urlValidation';
 import { Calendar, RefreshCw, Settings, CheckCircle, Plus, Trash2 } from 'lucide-react';
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
+import { confirmAction } from "@/components/ui/confirm-dialog";
 
 interface CalendarIntegration {
   id: string;
@@ -205,7 +206,7 @@ const CalendarIntegration = () => {
   };
 
   const removeIntegration = async (integrationId: string) => {
-    if (!confirm('Are you sure you want to remove this calendar integration?')) {
+    if (!(await confirmAction({ title: 'Are you sure you want to remove this calendar integration?', confirmLabel: 'Remove', destructive: true }))) {
       return;
     }
 

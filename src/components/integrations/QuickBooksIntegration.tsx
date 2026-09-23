@@ -11,6 +11,7 @@ import { validateRedirectUrl } from '@/lib/security/urlValidation';
 import { RefreshCw, AlertCircle, DollarSign, ArrowUpDown } from 'lucide-react';
 import { QuickBooksSync } from './QuickBooksSync';
 import { QuickBooksSyncHistory } from './QuickBooksSyncHistory';
+import { confirmAction } from "@/components/ui/confirm-dialog";
 
 interface QBIntegrationStatus {
   connected: boolean;
@@ -155,7 +156,7 @@ export const QuickBooksIntegration = () => {
   };
 
   const disconnectQuickBooks = async () => {
-    if (!confirm('Are you sure you want to disconnect from QuickBooks? This will stop all automatic syncing.')) {
+    if (!(await confirmAction({ title: 'Are you sure you want to disconnect from QuickBooks?', description: 'This will stop all automatic syncing.', confirmLabel: 'Disconnect', destructive: true }))) {
       return;
     }
 

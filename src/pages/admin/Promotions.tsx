@@ -15,6 +15,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
+import { confirmAction } from "@/components/ui/confirm-dialog";
 
 interface Promotion {
   id: string;
@@ -122,7 +123,7 @@ const Promotions = () => {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this promotion?')) return;
+    if (!(await confirmAction({ title: 'Are you sure you want to delete this promotion?', destructive: true }))) return;
 
     try {
       const { error } = await supabase

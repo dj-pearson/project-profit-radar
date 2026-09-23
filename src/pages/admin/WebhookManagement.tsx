@@ -26,6 +26,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { secureSecret } from '@/lib/security/secureRandom';
+import { confirmAction } from "@/components/ui/confirm-dialog";
 
 interface WebhookEndpoint {
   id: string;
@@ -238,7 +239,7 @@ export const WebhookManagement = () => {
   };
 
   const deleteWebhookEndpoint = async (endpointId: string) => {
-    if (!confirm('Are you sure you want to delete this webhook endpoint? This action cannot be undone.')) {
+    if (!(await confirmAction({ title: 'Are you sure you want to delete this webhook endpoint?', description: 'This action cannot be undone.', destructive: true }))) {
       return;
     }
 

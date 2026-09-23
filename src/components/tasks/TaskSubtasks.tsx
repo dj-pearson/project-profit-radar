@@ -6,6 +6,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Trash2, Plus } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { confirmAction } from "@/components/ui/confirm-dialog";
 
 interface Subtask {
   id: string;
@@ -116,7 +117,7 @@ export const TaskSubtasks: React.FC<TaskSubtasksProps> = ({ taskId, onSubtaskUpd
   };
 
   const handleDelete = async (subtaskId: string) => {
-    if (!confirm('Are you sure you want to delete this subtask?')) return;
+    if (!(await confirmAction({ title: 'Are you sure you want to delete this subtask?', destructive: true }))) return;
 
     try {
       const { error } = await supabase

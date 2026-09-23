@@ -45,6 +45,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { confirmAction } from "@/components/ui/confirm-dialog";
 
 const MyTasks = () => {
   const { userProfile } = useAuth();
@@ -122,8 +123,8 @@ const MyTasks = () => {
     });
   };
 
-  const handleDeleteTask = (taskId: string) => {
-    if (confirm('Are you sure you want to delete this task?')) {
+  const handleDeleteTask = async (taskId: string) => {
+    if (await confirmAction({ title: 'Are you sure you want to delete this task?', destructive: true })) {
       deleteTask.mutate(taskId);
     }
   };

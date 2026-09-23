@@ -30,6 +30,7 @@ import { ConvertToProjectDialog } from "./ConvertToProjectDialog";
 import { ConvertToInvoiceDialog } from "./ConvertToInvoiceDialog";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { confirmAction } from "@/components/ui/confirm-dialog";
 
 interface Estimate {
   id: string;
@@ -176,6 +177,7 @@ export function EstimatesTable({ searchTerm, statusFilter, onEstimateChange }: E
   };
 
   const handleDelete = async (estimateId: string) => {
+    if (!(await confirmAction({ title: 'Delete this estimate?', description: 'Its line items are deleted with it. This cannot be undone.', destructive: true }))) return;
     try {
       const { error } = await supabase
         .from("estimates")

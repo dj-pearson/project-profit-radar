@@ -7,6 +7,7 @@ import { Trash2, Edit3 } from 'lucide-react';
 import { format } from 'date-fns';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { confirmAction } from "@/components/ui/confirm-dialog";
 
 interface Comment {
   id: string;
@@ -95,7 +96,7 @@ export const TaskComments: React.FC<TaskCommentsProps> = ({ taskId }) => {
   };
 
   const handleDelete = async (commentId: string) => {
-    if (!confirm('Are you sure you want to delete this comment?')) return;
+    if (!(await confirmAction({ title: 'Are you sure you want to delete this comment?', destructive: true }))) return;
 
     try {
       const { error } = await supabase

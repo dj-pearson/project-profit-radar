@@ -10,6 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { Plus, Edit, Trash2, Save, X, Loader2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { confirmAction } from "@/components/ui/confirm-dialog";
 
 interface BudgetManagerProps {
   projectId: string;
@@ -149,6 +150,7 @@ export const BudgetManager: React.FC<BudgetManagerProps> = ({ projectId }) => {
   };
 
   const handleDelete = async (itemId: string) => {
+    if (!(await confirmAction({ title: 'Delete this budget line item?', destructive: true }))) return;
     setIsDeleting(true);
     try {
       const { error } = await supabase

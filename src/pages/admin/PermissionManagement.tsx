@@ -26,6 +26,7 @@ import { supabase } from '@/integrations/supabase/client';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { useToast } from '@/hooks/use-toast';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
+import { confirmAction } from "@/components/ui/confirm-dialog";
 
 // Helper to query tables not yet in the generated Database types.
 // Returns a standard Supabase query builder for the given table name.
@@ -258,7 +259,7 @@ export const PermissionManagement = () => {
   };
 
   const deleteRole = async (roleId: string, roleName: string) => {
-    if (!confirm(`Are you sure you want to delete the role "${roleName}"? This action cannot be undone.`)) {
+    if (!(await confirmAction({ title: `Are you sure you want to delete the role "${roleName}"?`, description: `This action cannot be undone.`, destructive: true }))) {
       return;
     }
 

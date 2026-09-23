@@ -6709,3 +6709,16 @@ every route, is now gated on a verified claim. There's a 1200x630 default share
 image, and the Yandex verification file moved into `public/` where it's served.
 Still needed from you: Google and Bing verification tokens, and a decision on
 the "$350 unlimited users" copy on about 20 marketing pages.
+
+## US-374: deletes ask first, through one dialog
+
+Twenty-three delete paths asked nothing and thirty-eight used
+`window.confirm`, which the app's own design system can't style and screen
+readers handle badly. There's now one promise-based confirm dialog, mounted
+once, and it resolves "no" if it isn't mounted, so nothing deletes
+unconfirmed. Thirty-six `confirm()` calls and fourteen unconfirmed deletes use
+it, and a test plus an ESLint rule stop `window.confirm` from coming back. Two
+blog and SEO admin files are still on an allowlist, and two admin deletes still
+don't ask.
+
+TypeScript errors: 1583 to 1580.

@@ -30,6 +30,7 @@ import { AccessibleTable, type TableColumn } from '@/components/accessibility/Ac
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import { filterAndSortInvoices } from './invoiceListUtils';
+import { confirmAction } from "@/components/ui/confirm-dialog";
 
 interface InvoiceListProps {
   invoices: any[];
@@ -151,7 +152,7 @@ const InvoiceList: React.FC<InvoiceListProps> = ({
   const bulkDelete = async () => {
     const ids = [...selectedIds];
     if (ids.length === 0) return;
-    if (!window.confirm(`Delete ${ids.length} invoice(s)? This cannot be undone.`)) return;
+    if (!(await confirmAction({ title: `Delete ${ids.length} invoice(s)?`, description: `This cannot be undone.`, destructive: true }))) return;
     setBulkLoading(true);
     try {
       const { error } = await supabase.from('invoices').delete().in('id', ids);

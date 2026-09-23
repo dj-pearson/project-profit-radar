@@ -17,6 +17,7 @@ import { supabase } from '@/integrations/supabase/client';
 import VisualScheduler from '@/components/scheduling/VisualScheduler';
 import { CrewScheduleBoard } from '@/components/scheduling/CrewScheduleBoard';
 import { Calendar, Users, Plus, MapPin, Clock, Phone, Trash2 } from 'lucide-react';
+import { confirmAction } from "@/components/ui/confirm-dialog";
 
 interface CrewProject {
   id: string;
@@ -293,6 +294,7 @@ const CrewScheduling = () => {
   };
 
   const handleDeleteAssignment = async (assignmentId: string) => {
+    if (!(await confirmAction({ title: 'Delete this crew assignment?', destructive: true }))) return;
     try {
       const { error } = await supabase
         .from('crew_assignments')

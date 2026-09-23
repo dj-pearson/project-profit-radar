@@ -51,6 +51,7 @@ import {
   SELECTION_STATUS_LABELS,
   type SelectionBoardRow,
 } from '@/lib/client-selections';
+import { confirmAction } from "@/components/ui/confirm-dialog";
 
 interface ProjectOption {
   id: string;
@@ -170,7 +171,7 @@ const ClientSelections = () => {
   };
 
   const handleDeleteCategory = async (id: string) => {
-    if (!companyId || !confirm('Delete this category and its options?')) return;
+    if (!companyId || !(await confirmAction({ title: 'Delete this category and its options?', destructive: true }))) return;
     try {
       await deleteCategory(id, companyId);
       await load();

@@ -47,6 +47,7 @@ import {
   type ConditionField,
   type ConditionOperator,
 } from '@/lib/approval-workflows';
+import { confirmAction } from "@/components/ui/confirm-dialog";
 
 const APPROVER_ROLES: { value: string; label: string }[] = [
   { value: 'admin', label: 'Admin' },
@@ -294,7 +295,7 @@ const ApprovalWorkflows = () => {
 
   const handleDelete = async (wf: ApprovalWorkflow) => {
     if (!companyId) return;
-    if (!confirm(`Delete workflow "${wf.name}"?`)) return;
+    if (!(await confirmAction({ title: `Delete workflow "${wf.name}"?`, destructive: true }))) return;
     const { error } = await supabase
       .from('approval_workflows')
       .delete()

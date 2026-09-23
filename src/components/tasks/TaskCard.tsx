@@ -8,6 +8,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { format } from 'date-fns';
 import { EditTaskDialog } from './EditTaskDialog';
 import { toast } from 'sonner';
+import { confirmAction } from "@/components/ui/confirm-dialog";
 
 interface Task {
   id: string;
@@ -67,7 +68,7 @@ export const TaskCard: React.FC<TaskCardProps> = ({
   };
 
   const handleDelete = async () => {
-    if (!confirm('Are you sure you want to delete this task?')) return;
+    if (!(await confirmAction({ title: 'Are you sure you want to delete this task?', destructive: true }))) return;
 
     try {
       // onDelete removes the card from the list, so it must not run on a

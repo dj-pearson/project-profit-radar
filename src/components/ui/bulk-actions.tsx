@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { logger } from '@/lib/logger';
+import { confirmAction } from '@/components/ui/confirm-dialog';
 
 interface BulkAction {
   id: string;
@@ -89,11 +90,13 @@ export const BulkActionsBar = ({
     selectedCount
   } = useBulkSelection(items);
 
-  const handleExecuteAction = (action: BulkAction) => {
+  const handleExecuteAction = async (action: BulkAction) => {
     if (action.requiresConfirmation) {
-      const confirmed = window.confirm(
-        `Are you sure you want to ${action.label.toLowerCase()} ${selectedCount} item${selectedCount > 1 ? 's' : ''}?`
-      );
+      const confirmed = await confirmAction({
+        title: `${action.label} ${selectedCount} item${selectedCount > 1 ? 's' : ''}?`,
+        confirmLabel: action.label,
+        destructive: action.variant === 'destructive',
+      });
       if (!confirmed) return;
     }
     

@@ -12,6 +12,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import { Package, PlusCircle, ExternalLink, Trash2, DollarSign, TrendingUp, Calendar, User } from 'lucide-react';
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
+import { confirmAction } from "@/components/ui/confirm-dialog";
 
 interface Material {
   id: string;
@@ -283,6 +284,7 @@ export const ProjectMaterials: React.FC<ProjectMaterialsProps> = ({
   };
 
   const handleDeleteUsage = async (usageId: string) => {
+    if (!(await confirmAction({ title: 'Delete this material usage record?', destructive: true }))) return;
     try {
       const { error } = await supabase
         .from('material_usage')

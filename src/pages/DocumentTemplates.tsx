@@ -27,6 +27,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { toast } from '@/hooks/use-toast';
 import { logger } from '@/lib/logger';
 import { documentKindFields, documentKindFilter, findDocumentCategoryId } from '@/lib/documentKinds';
+import { confirmAction } from "@/components/ui/confirm-dialog";
 
 interface Template {
   id: string;
@@ -165,6 +166,7 @@ export default function DocumentTemplates() {
   };
 
   const handleDelete = async (t: Template) => {
+    if (!(await confirmAction({ title: `Delete template "${t.name}"?`, description: 'The file is removed from storage. This cannot be undone.', destructive: true }))) return;
     setBusy(true);
     try {
       await supabase.storage.from(TEMPLATE_BUCKET).remove([t.file_path]);

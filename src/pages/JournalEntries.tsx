@@ -34,6 +34,7 @@ import { Badge } from '@/components/ui/badge';
 import { Plus, Trash2, Calculator, CheckCircle } from 'lucide-react';
 import { formatCurrency, validateJournalEntry } from '@/utils/accountingUtils';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { confirmAction } from "@/components/ui/confirm-dialog";
 
 interface JournalEntryLine {
   id: string;
@@ -162,7 +163,7 @@ export default function JournalEntries() {
   };
 
   const handlePostEntry = async (entryId: string) => {
-    if (confirm('Are you sure you want to post this journal entry? This will update account balances.')) {
+    if (await confirmAction({ title: 'Are you sure you want to post this journal entry?', description: 'This will update account balances.', confirmLabel: 'Post entry' })) {
       await postEntry.mutateAsync(entryId);
     }
   };

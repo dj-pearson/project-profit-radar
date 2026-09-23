@@ -34,6 +34,7 @@ import {
   formatDocumentNumber, dueDateFrom, paymentTermsLabel, insuranceExpired,
   DOCUMENT_TYPE_LABELS, type DocumentType,
 } from '@/lib/companyBilling';
+import { confirmAction } from "@/components/ui/confirm-dialog";
 
 interface BillingSettings {
   default_tax_rate: number;
@@ -194,6 +195,7 @@ export function CompanyBillingSettings() {
   };
 
   const removeTaxRate = async (id: string) => {
+    if (!(await confirmAction({ title: 'Remove this tax rate?', confirmLabel: 'Remove', destructive: true }))) return;
     const { error } = await supabase.from('tax_rates').delete().eq('id', id);
     if (error) {
       toast({ variant: 'destructive', title: 'Could not remove that rate', description: error.message });

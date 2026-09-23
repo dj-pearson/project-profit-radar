@@ -50,6 +50,7 @@ import {
   type ScheduleDependencyRow,
 } from '@/lib/schedule/scheduleBoard';
 import type { Project as GanttProject, Task as GanttTask, TaskStatus } from '@/types/schedule';
+import { confirmAction } from "@/components/ui/confirm-dialog";
 
 interface ProjectOption {
   id: string;
@@ -200,7 +201,7 @@ const ProjectSchedule = () => {
   };
 
   const handleDeleteTask = async (id: string) => {
-    if (!companyId || !confirm('Delete this task?')) return;
+    if (!companyId || !(await confirmAction({ title: 'Delete this task?', destructive: true }))) return;
     try {
       await deleteScheduleTask(id, companyId);
       await load();

@@ -14,6 +14,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { SimplifiedSidebar } from "@/components/navigation/SimplifiedSidebar";
 import { SidebarProvider } from "@/components/ui/sidebar";
+import { confirmAction } from "@/components/ui/confirm-dialog";
 
 interface Category {
   id: string;
@@ -207,7 +208,7 @@ export default function KnowledgeBaseAdmin() {
   };
 
   const deleteArticle = async (articleId: string) => {
-    if (!confirm('Are you sure you want to delete this article? This action cannot be undone.')) {
+    if (!(await confirmAction({ title: 'Are you sure you want to delete this article?', description: 'This action cannot be undone.', destructive: true }))) {
       return;
     }
 

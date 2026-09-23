@@ -15,6 +15,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import { CheckSquare, PlusCircle, ExternalLink, Edit, Trash2, Calendar, User, MapPin, AlertTriangle, CheckCircle, Clock, Play, DollarSign, Search } from 'lucide-react';
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
+import { confirmAction } from "@/components/ui/confirm-dialog";
 
 interface PunchListItem {
   id: string;
@@ -329,6 +330,7 @@ export const ProjectPunchList: React.FC<ProjectPunchListProps> = ({
   };
 
   const handleDeleteItem = async (itemId: string) => {
+    if (!(await confirmAction({ title: 'Delete this punch list item?', destructive: true }))) return;
     try {
       const { error } = await supabase
         .from('punch_list_items')

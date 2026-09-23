@@ -13,6 +13,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import { confirmAction } from "@/components/ui/confirm-dialog";
 
 interface Vendor {
   id: string;
@@ -186,7 +187,7 @@ const Vendors = () => {
   };
 
   const deleteVendor = async (vendor: Vendor) => {
-    if (!confirm(`Are you sure you want to delete ${vendor.name}?`)) return;
+    if (!(await confirmAction({ title: `Are you sure you want to delete ${vendor.name}?`, destructive: true }))) return;
 
     try {
       const { error } = await supabase

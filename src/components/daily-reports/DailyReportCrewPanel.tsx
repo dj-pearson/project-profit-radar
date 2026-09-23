@@ -27,6 +27,7 @@ import {
   crewFromTimeEntries, totalCrewHours, reconcileDailyReport,
   type TimeEntryLike,
 } from '@/lib/dailyReportField';
+import { confirmAction } from "@/components/ui/confirm-dialog";
 
 interface CrewItem {
   id: string;
@@ -183,6 +184,7 @@ export function DailyReportCrewPanel({
   };
 
   const remove = async (item: CrewItem) => {
+    if (!(await confirmAction({ title: 'Remove this crew entry from the report?', confirmLabel: 'Remove', destructive: true }))) return;
     const { error } = await supabase
       .from('daily_report_crew_items')
       .delete()

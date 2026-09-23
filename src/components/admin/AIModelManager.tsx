@@ -16,6 +16,7 @@ import { AlertTriangle, Bot, Plus, Trash2, Edit, RefreshCw, Save, Link, Zap, Ser
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { logger } from '@/lib/logger';
+import { confirmAction } from "@/components/ui/confirm-dialog";
 
 interface AIModel {
   id: string;
@@ -280,7 +281,7 @@ const AIModelManager = () => {
   };
 
   const deleteModel = async (model: AIModel) => {
-    if (!confirm(`Are you sure you want to delete ${model.model_display_name}?`)) return;
+    if (!(await confirmAction({ title: `Are you sure you want to delete ${model.model_display_name}?`, destructive: true }))) return;
 
     try {
       const { error } = await supabase

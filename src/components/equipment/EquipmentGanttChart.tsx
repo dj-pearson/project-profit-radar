@@ -9,6 +9,7 @@ import { format, addDays, differenceInDays, startOfWeek, endOfWeek, eachDayOfInt
 import { Plus, Trash2, Calendar } from 'lucide-react';
 import EquipmentAssignmentForm from './EquipmentAssignmentForm';
 import { useToast } from '@/hooks/use-toast';
+import { confirmAction } from "@/components/ui/confirm-dialog";
 
 interface EquipmentAssignment {
   assignment_id: string;
@@ -114,6 +115,7 @@ const EquipmentGanttChart: React.FC<EquipmentGanttChartProps> = ({
   };
 
   const handleDeleteAssignment = async (assignmentId: string) => {
+    if (!(await confirmAction({ title: 'Delete this equipment assignment?', destructive: true }))) return;
     try {
       const { error } = await supabase
         .from('equipment_assignments')

@@ -10,6 +10,7 @@ import { SubscriptionProvider } from "@/contexts/SubscriptionContext";
 import { PlatformProvider } from "@/contexts/PlatformContext";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as SonnerToaster } from "@/components/ui/sonner";
+import { ConfirmDialogHost } from "@/components/ui/confirm-dialog";
 import { ContextMenuProvider } from '@/components/ui/context-menu-provider';
 import ErrorBoundary from "@/components/ErrorBoundary";
 import { DashboardSkeleton } from "@/components/ui/loading-skeleton";
@@ -65,6 +66,8 @@ const AppContent = () => {
           the sonner host was never mounted, so those calls showed nothing. */}
       <Toaster />
       <SonnerToaster />
+      {/* US-374: the one host behind useConfirm(); replaces window.confirm. */}
+      <ConfirmDialogHost />
 
       {/* Cookie consent banner — appears on every public page until the user
           makes a choice. Honors GPC, persists choices in localStorage, and

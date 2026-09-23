@@ -8,6 +8,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
+import { confirmAction } from "@/components/ui/confirm-dialog";
 
 interface WorkflowData {
   id: string;
@@ -157,7 +158,7 @@ export const WorkflowAutomation = () => {
   };
 
   const deleteWorkflow = async (workflowId: string, name: string) => {
-    if (!confirm(`Are you sure you want to delete "${name}"?`)) return;
+    if (!(await confirmAction({ title: `Are you sure you want to delete "${name}"?`, destructive: true }))) return;
 
     try {
       const { error } = await supabase

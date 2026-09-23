@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { Plus, Mail, Clock, Edit, Trash2, MoveUp, MoveDown } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { confirmAction } from "@/components/ui/confirm-dialog";
 
 interface FunnelStep {
   id: string;
@@ -244,7 +245,9 @@ export function FunnelStepBuilder({ funnelId }: FunnelStepBuilderProps) {
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => deleteStepMutation.mutate(step.id)}
+                    onClick={async () => {
+                      if (await confirmAction({ title: 'Delete this funnel step?', destructive: true })) deleteStepMutation.mutate(step.id);
+                    }}
                   >
                     <Trash2 className="h-4 w-4" />
                   </Button>

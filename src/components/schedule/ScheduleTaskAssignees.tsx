@@ -26,6 +26,7 @@ import { useToast } from '@/hooks/use-toast';
 import { logger } from '@/lib/logger';
 import { UserPlus, X, Check } from 'lucide-react';
 import { useRoleCheck, ROLE_GROUPS } from '@/components/auth/RoleGuard';
+import { confirmAction } from "@/components/ui/confirm-dialog";
 
 interface CrewMember {
   id: string;
@@ -122,6 +123,7 @@ export function ScheduleTaskAssignees({
   };
 
   const unassign = async (row: AssigneeRow, name: string) => {
+    if (!(await confirmAction({ title: `Remove ${name} from this task?`, confirmLabel: 'Remove', destructive: true }))) return;
     setSaving(true);
     const { error } = await supabase
       .from('schedule_task_assignees')

@@ -12,6 +12,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
+import { confirmAction } from "@/components/ui/confirm-dialog";
 
 interface APIKey {
   id: string;
@@ -210,7 +211,7 @@ export const APIKeyManagement = () => {
   };
 
   const deleteAPIKey = async (keyId: string, keyName: string) => {
-    if (!confirm(`Are you sure you want to delete the API key "${keyName}"? This action cannot be undone.`)) {
+    if (!(await confirmAction({ title: `Are you sure you want to delete the API key "${keyName}"?`, description: `This action cannot be undone.`, destructive: true }))) {
       return;
     }
 

@@ -41,6 +41,7 @@ import {
   type ScheduledReport,
   type ExportHistoryRow,
 } from '@/services/exportCenterService';
+import { confirmAction } from "@/components/ui/confirm-dialog";
 
 interface ProjectOption {
   id: string;
@@ -177,7 +178,7 @@ const ExportCenter = () => {
   };
 
   const handleDeleteSchedule = async (id: string) => {
-    if (!companyId || !confirm('Delete this scheduled report?')) return;
+    if (!companyId || !(await confirmAction({ title: 'Delete this scheduled report?', destructive: true }))) return;
     try {
       await deleteSchedule(id, companyId);
       await refreshLists();

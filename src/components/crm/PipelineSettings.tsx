@@ -35,6 +35,7 @@ import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import { Settings, Plus, Edit, Trash2, Save, GripVertical, Target, Clock, Percent, RefreshCw, Zap } from "lucide-react";
 import { Json } from "@/integrations/supabase/types";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
+import { confirmAction } from "@/components/ui/confirm-dialog";
 
 interface PipelineStage {
   id: string;
@@ -280,6 +281,7 @@ export const PipelineSettings: React.FC = () => {
   };
 
   const deleteStage = async (stageId: string) => {
+    if (!(await confirmAction({ title: 'Delete this pipeline stage?', description: 'This cannot be undone.', destructive: true }))) return;
     try {
       const { error } = await supabase
         .from("pipeline_stages")

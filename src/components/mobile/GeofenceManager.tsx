@@ -26,6 +26,7 @@ import {
 } from 'lucide-react';
 import { useGeofencing, type GeofenceRegion } from '@/hooks/useGeofencing';
 import { toast } from '@/hooks/use-toast';
+import { confirmAction } from "@/components/ui/confirm-dialog";
 
 export const GeofenceManager = () => {
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -199,7 +200,7 @@ export const GeofenceManager = () => {
   };
 
   const handleDeleteRegion = async (regionId: string) => {
-    if (!confirm('Are you sure you want to delete this geofence?')) return;
+    if (!(await confirmAction({ title: 'Are you sure you want to delete this geofence?', destructive: true }))) return;
 
     try {
       await removeRegion(regionId);

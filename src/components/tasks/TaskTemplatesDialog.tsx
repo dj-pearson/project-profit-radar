@@ -12,6 +12,7 @@ import { Plus, Edit, Trash2, Copy } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
+import { confirmAction } from "@/components/ui/confirm-dialog";
 
 interface TaskTemplatesDialogProps {
   isOpen: boolean;
@@ -195,7 +196,7 @@ export const TaskTemplatesDialog: React.FC<TaskTemplatesDialogProps> = ({
   };
 
   const deleteProjectTemplate = async (id: string) => {
-    if (!confirm('Are you sure? This will delete all associated task templates.')) return;
+    if (!(await confirmAction({ title: 'Are you sure?', description: 'This will delete all associated task templates.', destructive: true }))) return;
 
     // supabase-js returns the error rather than throwing it, so this catch never
     // fired: a delete that failed still removed the row from local state, and
@@ -219,7 +220,7 @@ export const TaskTemplatesDialog: React.FC<TaskTemplatesDialogProps> = ({
   };
 
   const deleteTaskTemplate = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this task template?')) return;
+    if (!(await confirmAction({ title: 'Are you sure you want to delete this task template?', destructive: true }))) return;
 
     const { error } = await supabase
       .from('task_templates')
