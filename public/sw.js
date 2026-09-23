@@ -11,7 +11,7 @@ const IMAGE_CACHE = `brikly-images-v${BUILD_VERSION}`;
 const STATIC_ASSETS = [
   '/index.html',
   '/manifest.json',
-  '/BriklyLogo.png',
+  '/BriklyLogo-384.png',
   '/robots.txt',
   '/sitemap.xml'
 ];

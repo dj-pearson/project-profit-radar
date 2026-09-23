@@ -4484,8 +4484,8 @@
         "alt text added to the 9 <img> elements missing it"
       ],
       "priority": 4,
-      "passes": false,
-      "notes": "PROPOSED (deep-dive audit 2026-07-12). Theme: Performance. SEV: LOW. Source: Frontend audit (fonts + logo merged)."
+      "passes": true,
+      "notes": "PROPOSED (deep-dive audit 2026-07-12). Theme: Performance. SEV: LOW. Source: Frontend audit (fonts + logo merged). || Fonts already consolidated (inter-400/600 self-hosted, one preload) and every img already had alt at HEAD. Logo: WebP 64,760 -> 14,926 B (384x96), new AVIF 8,836 B and 384 PNG 10,654 B, full PNG 196,037 -> 64,050 B (kept 1200x300 for JSON-LD/sw/_headers). SmartLogo renders a picture (AVIF/WebP/PNG) with width/height immediately instead of a pulse placeholder until a remote probe. Blog images get width/height/decoding; featured image fetchPriority high. Stray Google Fonts dns-prefetch/preconnect hints removed. Open: logo PNG has ~18% side padding (design call); src/utils/fontOptimization.ts and responsive-logo.tsx unused."
     },
     {
       "id": "US-284",

@@ -61,6 +61,14 @@ const SmartLogo = ({
     local: "/BriklyLogo.webp",
   };
 
+  // The Brikly logo ships from public/ at 384x96 (AVIF 8.8KB, WebP 15KB,
+  // PNG 10KB; US-283). Render it straight away with fixed dimensions instead
+  // of probing the remote copy first: the probe held a grey placeholder in
+  // the header until a cross-origin image request finished, then swapped.
+  // Only a white-label tenant logo, whose size and URL are unknown, still
+  // goes through the remote -> local -> text fallback below.
+  const useBundledLogo = !useTenantLogo && !showText && priority !== "text";
+
   // Get tenant display name for text fallback
   const brandName = useTenantLogo && tenant?.display_name
     ? tenant.display_name
@@ -79,7 +87,7 @@ const SmartLogo = ({
 
   // Try loading images with fallback logic
   useEffect(() => {
-    if (showText || imageState === "text") return;
+    if (useBundledLogo || showText || imageState === "text") return;
 
     const tryImageLoad = (src: string, fallbackState: "local" | "text") => {
       const img = new Image();
@@ -115,10 +123,30 @@ const SmartLogo = ({
     } else {
       tryImageLoad(imageSources.remote, "local");
     }
-  }, [imageState, priority, showText]);
+  }, [imageState, priority, showText, useBundledLogo]);
 
   // Render the logo content
   const renderLogo = () => {
+    if (useBundledLogo) {
+      const h = heightValues[size];
+      return (
+        <picture>
+          <source srcSet="/BriklyLogo.avif" type="image/avif" />
+          <source srcSet="/BriklyLogo.webp" type="image/webp" />
+          <img
+            src="/BriklyLogo-384.png"
+            alt={brandName}
+            width={h * 4}
+            height={h}
+            className={`${sizeClasses[size]} ${className}`}
+            style={{ height: `${h}px`, objectFit: "contain", display: "block" }}
+            loading="eager"
+            decoding="async"
+          />
+        </picture>
+      );
+    }
+
     // Image version (Tenant or Brikly native image)
     if (imageState !== "text" && !showText) {
       const currentSrc =
@@ -129,7 +157,6 @@ const SmartLogo = ({
           src={currentSrc}
           alt={brandName}
           height={heightValues[size]}
-          width="auto"
           className={`${sizeClasses[size]} ${className}`}
           style={{ 
             maxHeight: `${heightValues[size]}px`, 
@@ -145,6 +172,7 @@ const SmartLogo = ({
             }
           }}
           loading="eager"
+          decoding="async"
         />
       );
     }
@@ -167,7 +195,7 @@ const SmartLogo = ({
   };
 
   // Loading state
-  if (imageState === "loading" && !showText) {
+  if (imageState === "loading" && !showText && !useBundledLogo) {
     return (
       <div
         className={`${sizeClasses[size]} bg-gray-200 animate-pulse rounded flex items-center justify-center`}

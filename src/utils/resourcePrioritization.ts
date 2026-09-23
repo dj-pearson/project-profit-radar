@@ -21,9 +21,6 @@ export const resourcePriorities: Record<string, ResourcePriority[]> = {
     { type: 'font', url: '/fonts/inter-400.woff2', priority: 'critical' },
     { type: 'font', url: '/fonts/inter-600.woff2', priority: 'high' },
     { type: 'style', url: '/fonts/inter.css', priority: 'critical' },
-
-    // Medium priority
-    { type: 'image', url: '/BriklyLogo.webp', priority: 'medium' },
   ],
   dashboard: [
     { type: 'font', url: '/fonts/inter-400.woff2', priority: 'critical' },
@@ -133,9 +130,9 @@ export const preconnectCriticalOrigins = (): void => {
   if (typeof document === 'undefined') return;
 
   const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+  // Fonts are self-hosted from /fonts (US-283); no font CDN to warm up.
   const origins = [
     supabaseUrl,
-    'https://fonts.gstatic.com',
   ].filter(Boolean) as string[];
   
   origins.forEach(origin => {

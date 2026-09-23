@@ -194,7 +194,11 @@ const BlogPost = () => {
                 <img 
                   src={post.featured_image_url} 
                   alt={post.title}
+                  width={1200}
+                  height={630}
                   className="w-full h-64 md:h-96 object-cover"
+                  fetchPriority="high"
+                  decoding="async"
                 />
               </div>
             )}

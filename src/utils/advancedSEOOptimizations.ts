@@ -49,10 +49,6 @@ export const generateAdvancedMetaTags = (page: string, data: any) => {
     'geo.placename': 'Denver, Colorado',
     'geo.position': '39.7392;-104.9903',
     'ICBM': '39.7392, -104.9903',
-    
-    // Performance
-    'dns-prefetch': 'https://fonts.googleapis.com',
-    'preconnect': 'https://fonts.gstatic.com'
   };
 
   // Remove undefined values

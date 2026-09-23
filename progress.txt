@@ -7217,3 +7217,10 @@ components and pages (695 warnings, baseline 4689). Removed invented
 numbers: the safety dashboard's fixed 95% compliance and 100%
 documentation, and a "999 days ago" last login. Editing an RFI no longer
 renumbers it. TS 1112 -> 1067.
+
+## US-283 - critical-path assets
+The header logo loaded as a grey placeholder until a JS probe of a remote
+image finished; it now renders a picture element (AVIF 8.8 KB, WebP 14.9 KB,
+PNG fallback) with fixed dimensions on first paint. The full PNG went from
+196 KB to 64 KB. Blog images declare their size, and three leftover hints
+to Google Fonts (which the app doesn't use) are gone.

@@ -37,7 +37,7 @@ export function ArticleCard({ post }: { post: BlogListingPost }) {
     <Card className="h-full flex flex-col overflow-hidden">
       {imageUrl && (
         <div className="aspect-video overflow-hidden">
-          <img src={imageUrl} alt="" className="w-full h-full object-cover" loading="lazy" />
+          <img src={imageUrl} alt="" width={640} height={360} className="w-full h-full object-cover" loading="lazy" decoding="async" />
         </div>
       )}
       <CardHeader>
