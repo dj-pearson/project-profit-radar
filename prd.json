@@ -5616,8 +5616,8 @@
         "A root-admin view or scheduled query surfaces role changes recorded by audit_user_profiles"
       ],
       "priority": 3,
-      "passes": false,
-      "notes": "PROPOSED 2026-09-09 (production-readiness audit, six parallel reviews: auth, security, page/data flows, UI/UX, SEO, ops)."
+      "passes": true,
+      "notes": "PROPOSED 2026-09-09 (production-readiness audit, six parallel reviews: auth, security, page/data flows, UI/UX, SEO, ops). || DONE 2026-09-23, with triggers rather than client calls so every path (web, iOS, edge function, SQL console) is covered. Migration 20260923100000: AFTER DELETE on projects writes action delete / resource project with actor auth.uid(), company, id, name and key old values (risk high); AFTER INSERT on export_history writes action export with template, format, filters and row_count in metadata; AFTER UPDATE OF role, company_id on user_profiles (only when either actually changes) writes privilege_change with old and new role/company, flagging actor_is_system when auth.uid() is NULL. All three write through write_audit_log_internal, which clients cannot call. AC3: view public.recent_privilege_changes (security_invoker, so audit_logs RLS applies: root_admin sees all companies) lists old/new role and company, actor and target. No UI page yet; the view is queryable from the dashboard or a future admin screen. Test: supabase/tests/rls/audit_triggers.test.sql on real Postgres."
     },
     {
       "id": "US-360",

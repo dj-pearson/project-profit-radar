@@ -6502,3 +6502,13 @@ names from the saved report; they must now be plain identifiers.
 `create-root-admin` compares its secret in constant time, and `health-check`
 stops returning raw dependency errors to anonymous callers, logging them
 instead.
+
+## US-359: project deletes, exports and role changes are audited
+
+Three triggers write the audit rows, which covers every path: the web app,
+iOS, an edge function or SQL in the dashboard. Deleting a project records who,
+which company, and the project's name and key fields. An Export Center export
+records the template, filters and row count. A role or company change on a
+profile records old and new values; before, `log_admin_action` only said
+"UPDATE user_profiles". `recent_privilege_changes` is a view a root admin can
+query to see them. There's no screen for it yet.
