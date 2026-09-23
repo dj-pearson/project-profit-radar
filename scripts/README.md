@@ -94,7 +94,7 @@ Injects a unique build timestamp into the service worker file during each build.
 ```bash
 npm run generate-sitemap
 ```
-Generates `public/sitemap.xml` and `public/robots.txt` from the centralized SEO configuration in the codebase. Runs automatically at the start of every production build to keep the sitemap in sync with all 262+ pages.
+Generates `public/sitemap.xml` and `public/robots.txt`. Runs at the start of every build. Static URLs are read from the route table in `src/routes/*.tsx` (unguarded, no params, not an alias, not in `NON_INDEXABLE`), with `<lastmod>` taken from the page file's last commit; in a shallow clone lastmod is omitted rather than guessed. Published `blog_posts` (at `/resources/<slug>`) and `pseo_pages` come from Supabase REST with the anon key (`SUPABASE_ANON_KEY` or `VITE_SUPABASE_PUBLISHABLE_KEY`, plus `SUPABASE_URL`/`VITE_SUPABASE_URL`, default `https://api.brikly.net`), `updated_at` as lastmod. Without a key the build warns and lists static pages only; `SITEMAP_REQUIRE_DB=1` makes that fatal. Tested by `src/routes/__tests__/sitemap.test.tsx`.
 
 ---
 

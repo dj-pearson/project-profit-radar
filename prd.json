@@ -5924,8 +5924,8 @@
         "A test asserts every sitemap URL is answered by a route and none is guarded"
       ],
       "priority": 2,
-      "passes": false,
-      "notes": "PROPOSED 2026-09-09 (production-readiness audit, six parallel reviews: auth, security, page/data flows, UI/UX, SEO, ops)."
+      "passes": true,
+      "notes": "PROPOSED 2026-09-09 (production-readiness audit, six parallel reviews: auth, security, page/data flows, UI/UX, SEO, ops). || DONE 2026-09-23. scripts/generate-sitemap.js (run by every build via npm run generate-sitemap) now derives static URLs from src/routes/*.tsx in mount order: no :param routes, nothing wrapped in a guard or Navigate, none on NON_INDEXABLE (auth, setup, payment/checkout returns, /unauthorized, email-preferences), aliases dropped (a second path to the same component, or a page whose canonicalUrl names another route). 70 static URLs; /contact, /legal/security, /demo and / added; /auth, /setup, /knowledge-base, /support and five URLs no route answered removed. lastmod is each page file's last commit date, omitted (never faked) in a shallow clone. Published blog_posts (/resources/<slug>) and pseo_pages are read at build time from Supabase REST with the publishable key, paged 1000 at a time, updated_at as lastmod, skipped when no route answers their URL. robots.txt: stray LLMs-txt line removed, app paths disallowed without trailing slash. OWNER: keep SUPABASE_URL and the publishable key in the Cloudflare Pages build env (SITEMAP_REQUIRE_DB=1 makes a missing key fail the build); Pages' clone depth decides whether static lastmods appear. Test: src/routes/__tests__/sitemap.test.tsx (9)."
     },
     {
       "id": "US-383",

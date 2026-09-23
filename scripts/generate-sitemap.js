@@ -1,196 +1,372 @@
 /**
- * Dynamic Sitemap Generator
+ * Build-time sitemap + robots.txt generator (US-382).
  *
- * Generates sitemap.xml from the centralized SEO configuration.
- * This ensures the sitemap is always in sync with page definitions.
+ * The sitemap used to be a hand-kept list of 92 URLs, every <lastmod> stamped
+ * with the build date, /auth and /setup included, guarded pages included,
+ * five URLs nothing routed, and not one blog post. This version derives it:
  *
- * Features:
- * - Reads from centralized SEO config
- * - Includes priority and change frequency from config
- * - Automatically filters noIndex pages
- * - Adds image sitemap entries where applicable
- * - Generates both standard and news sitemaps
+ *   1. Static URLs come from the route table in src/routes/*.tsx, read as
+ *      text (a build script can't import TSX). A route is listed when it has
+ *      no :params, its element is not a guard or a <Navigate>, it is not in
+ *      NON_INDEXABLE, and it is not an alias: a second path rendering the same
+ *      component, or a path whose page declares a canonicalUrl pointing at a
+ *      different routed path.
+ *   2. lastmod for a static URL is the last commit date of its page file.
+ *      In a shallow clone that date is unknowable (the boundary commit
+ *      "adds" every file), so lastmod is omitted rather than invented.
+ *   3. Published blog_posts and pseo_pages are read from Supabase REST at
+ *      build time with the anon key (both tables let anon read published
+ *      rows), with updated_at as lastmod. Their URL shapes come from the
+ *      route table too: the first route rendering LazyBlogPost, and the
+ *      routes rendering LazyPSEOPageRenderer.
+ *
+ * If Supabase can't be reached the build still succeeds with a loud warning
+ * and the static URLs only; set SITEMAP_REQUIRE_DB=1 to make that fatal.
+ *
+ * src/routes/__tests__/sitemap.test.tsx checks the output against the real
+ * React route tree, so a parser miss here fails a test instead of shipping.
  */
 
 import fs from 'fs';
 import path from 'path';
+import { execFileSync } from 'child_process';
 import { fileURLToPath } from 'url';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+export const DOMAIN = 'https://brikly.net';
 
-// Domain configuration
-const DOMAIN = 'https://brikly.net';
-const CURRENT_DATE = new Date().toISOString().split('T')[0];
+const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
 /**
- * All SEO pages configuration
- * Mirrors the structure from src/config/seoConfig.ts
+ * Route files in the order src/routes/index.tsx mounts them. Order matters:
+ * when two paths render the same component, the first one is canonical.
  */
-const seoPages = [
-  // Core Marketing Pages
-  { path: '/', priority: 1.0, changeFreq: 'daily' },
-  { path: '/features', priority: 0.9, changeFreq: 'weekly' },
-  { path: '/pricing', priority: 0.9, changeFreq: 'weekly' },
-  { path: '/faq', priority: 0.7, changeFreq: 'monthly' },
-  { path: '/blog', priority: 0.8, changeFreq: 'weekly' },
-  { path: '/solutions', priority: 0.8, changeFreq: 'monthly' },
-  { path: '/support', priority: 0.7, changeFreq: 'monthly' },
-  { path: '/resources', priority: 0.8, changeFreq: 'weekly' },
-  { path: '/knowledge-base', priority: 0.7, changeFreq: 'weekly' },
-  { path: '/tutorials', priority: 0.7, changeFreq: 'weekly' },
-  { path: '/tools', priority: 0.7, changeFreq: 'monthly' },
-
-  // Industry-Specific Pages
-  { path: '/plumbing-contractor-software', priority: 0.8, changeFreq: 'monthly' },
-  { path: '/hvac-contractor-software', priority: 0.8, changeFreq: 'monthly' },
-  { path: '/electrical-contractor-software', priority: 0.8, changeFreq: 'monthly' },
-  { path: '/commercial-contractors', priority: 0.8, changeFreq: 'monthly' },
-  { path: '/residential-contractors', priority: 0.8, changeFreq: 'monthly' },
-
-  // Feature-Specific Pages
-  { path: '/job-costing-software', priority: 0.9, changeFreq: 'weekly' },
-  { path: '/construction-management-software', priority: 0.9, changeFreq: 'weekly' },
-  { path: '/construction-scheduling-software', priority: 0.8, changeFreq: 'weekly' },
-  { path: '/construction-project-management-software', priority: 0.8, changeFreq: 'weekly' },
-  { path: '/osha-compliance-software', priority: 0.8, changeFreq: 'weekly' },
-  { path: '/construction-field-management', priority: 0.8, changeFreq: 'weekly' },
-
-  // New Feature Sub-Pages
-  { path: '/features/job-costing', priority: 0.8, changeFreq: 'monthly' },
-  { path: '/features/real-time-budgeting', priority: 0.8, changeFreq: 'monthly' },
-  { path: '/features/financial-management', priority: 0.8, changeFreq: 'monthly' },
-
-  // Comparison Pages (High Intent)
-  { path: '/procore-alternative', priority: 0.9, changeFreq: 'weekly' },
-  { path: '/procore-alternative-detailed', priority: 0.8, changeFreq: 'weekly' },
-  { path: '/buildertrend-alternative', priority: 0.9, changeFreq: 'weekly' },
-  { path: '/brikly-vs-buildertrend-comparison', priority: 0.8, changeFreq: 'monthly' },
-  { path: '/brikly-vs-coconstruct', priority: 0.8, changeFreq: 'monthly' },
-
-  // Free Tools
-  { path: '/roi-calculator', priority: 0.8, changeFreq: 'monthly' },
-  { path: '/calculator', priority: 0.8, changeFreq: 'monthly' },
-  { path: '/profitability-calculator', priority: 0.7, changeFreq: 'monthly' },
-  { path: '/financial-health-check', priority: 0.7, changeFreq: 'monthly' },
-  { path: '/health-check', priority: 0.7, changeFreq: 'monthly' },
-  { path: '/tools/schedule-builder', priority: 0.8, changeFreq: 'monthly' },
-
-  // Topic Hub Pages
-  { path: '/topics/construction-management-basics', priority: 0.7, changeFreq: 'monthly' },
-  { path: '/topics/safety-and-osha-compliance', priority: 0.7, changeFreq: 'monthly' },
-
-  // Resource Guides - Core
-  { path: '/resources/best-construction-management-software-small-business-2025', priority: 0.8, changeFreq: 'monthly' },
-  { path: '/resources/job-costing-construction-setup-guide', priority: 0.8, changeFreq: 'monthly' },
-  { path: '/resources/osha-safety-logs-digital-playbook', priority: 0.7, changeFreq: 'monthly' },
-  { path: '/resources/construction-scheduling-software-prevent-delays', priority: 0.7, changeFreq: 'monthly' },
-  { path: '/resources/construction-daily-logs-best-practices', priority: 0.7, changeFreq: 'monthly' },
-  { path: '/resources/procore-vs-brikly-small-contractors', priority: 0.8, changeFreq: 'monthly' },
-  { path: '/resources/quickbooks-integration-guide', priority: 0.7, changeFreq: 'monthly' },
-  { path: '/resources/construction-mobile-app-guide', priority: 0.7, changeFreq: 'monthly' },
-
-  // Resource Guides - Financial Intelligence
-  { path: '/resources/financial-intelligence-guide', priority: 0.8, changeFreq: 'monthly' },
-  { path: '/resources/real-cost-delayed-job-costing', priority: 0.7, changeFreq: 'monthly' },
-  { path: '/resources/budget-vs-actual-tracking-guide', priority: 0.7, changeFreq: 'monthly' },
-  { path: '/resources/quickbooks-limitations-construction', priority: 0.7, changeFreq: 'monthly' },
-  { path: '/resources/cash-flow-management-guide', priority: 0.7, changeFreq: 'monthly' },
-  { path: '/resources/calculate-true-project-profitability', priority: 0.7, changeFreq: 'monthly' },
-  { path: '/resources/reading-financial-statements-guide', priority: 0.7, changeFreq: 'monthly' },
-  { path: '/resources/construction-roi-calculator-guide', priority: 0.7, changeFreq: 'monthly' },
-
-  // Resource Guides - Comparisons
-  { path: '/resources/best-construction-software-small-business-2025', priority: 0.8, changeFreq: 'monthly' },
-  { path: '/resources/quickbooks-vs-construction-software', priority: 0.7, changeFreq: 'monthly' },
-  { path: '/resources/job-costing-software-comparison', priority: 0.7, changeFreq: 'monthly' },
-  { path: '/resources/procore-alternative-complete-guide', priority: 0.8, changeFreq: 'monthly' },
-  { path: '/resources/buildertrend-alternative-complete-guide', priority: 0.8, changeFreq: 'monthly' },
-
-  // Resource Guides - Ultimate Guides
-  { path: '/resources/complete-guide-construction-job-costing', priority: 0.8, changeFreq: 'monthly' },
-  { path: '/resources/construction-financial-management-ultimate-guide', priority: 0.8, changeFreq: 'monthly' },
-
-  // Additional Resource Guides
-  { path: '/resources/procore-alternatives-smb-contractors-guide', priority: 0.8, changeFreq: 'monthly' },
-  { path: '/resources/top-10-construction-platforms-august-2025', priority: 0.8, changeFreq: 'monthly' },
-  { path: '/resources/construction-management-software-comparison', priority: 0.7, changeFreq: 'monthly' },
-  { path: '/resources/small-business-construction-software-guide', priority: 0.7, changeFreq: 'monthly' },
-  { path: '/resources/construction-management-software-small-business-guide', priority: 0.8, changeFreq: 'monthly' },
-  { path: '/resources/construction-project-management-best-practices', priority: 0.7, changeFreq: 'monthly' },
-  { path: '/resources/construction-scheduling-templates', priority: 0.7, changeFreq: 'monthly' },
-  { path: '/resources/construction-cost-estimation-methods', priority: 0.7, changeFreq: 'monthly' },
-  { path: '/resources/construction-compliance-checklist', priority: 0.7, changeFreq: 'monthly' },
-  { path: '/resources/construction-crm-implementation-guide', priority: 0.7, changeFreq: 'monthly' },
-  { path: '/resources/7-hidden-costs-of-poor-project-scheduling-and-how-to-avoid-them', priority: 0.8, changeFreq: 'monthly' },
-  { path: '/resources/construction-material-management-control-costs-reduce-waste-2025', priority: 0.8, changeFreq: 'monthly' },
-  { path: '/resources/7-hidden-costs-of-construction-project-delays-and-how-to-avoid-them', priority: 0.8, changeFreq: 'monthly' },
-
-  // Knowledge Base Articles
-  { path: '/knowledge-base/article/getting-started-complete-setup-guide', priority: 0.7, changeFreq: 'monthly' },
-  { path: '/knowledge-base/article/mobile-app-field-guide', priority: 0.7, changeFreq: 'monthly' },
-
-  // Legal & Compliance Pages (lower priority but indexable so search
-  // engines, regulators, and procurement teams can locate them).
-  { path: '/privacy-policy', priority: 0.5, changeFreq: 'monthly' },
-  { path: '/terms-of-service', priority: 0.5, changeFreq: 'monthly' },
-  { path: '/acceptable-use-policy', priority: 0.4, changeFreq: 'yearly' },
-  { path: '/refund-policy', priority: 0.4, changeFreq: 'yearly' },
-  { path: '/cookie-policy', priority: 0.4, changeFreq: 'yearly' },
-  { path: '/dmca', priority: 0.3, changeFreq: 'yearly' },
-  { path: '/sla', priority: 0.4, changeFreq: 'yearly' },
-  { path: '/dpa', priority: 0.4, changeFreq: 'yearly' },
-  { path: '/subprocessors', priority: 0.4, changeFreq: 'monthly' },
-  { path: '/ai-disclosure', priority: 0.4, changeFreq: 'monthly' },
-  { path: '/do-not-sell', priority: 0.4, changeFreq: 'yearly' },
-  { path: '/email-preferences', priority: 0.3, changeFreq: 'yearly' },
-  { path: '/accessibility-statement', priority: 0.5, changeFreq: 'yearly' },
-  { path: '/accessibility', priority: 0.4, changeFreq: 'monthly' },
-
-  // Auth Pages (Low Priority)
-  { path: '/auth', priority: 0.2, changeFreq: 'yearly' },
-  { path: '/setup', priority: 0.2, changeFreq: 'yearly' },
+export const ROUTE_FILES = [
+  'src/routes/appRoutes.tsx',
+  'src/routes/marketingRoutes.tsx',
+  'src/routes/projectRoutes.tsx',
+  'src/routes/financialRoutes.tsx',
+  'src/routes/peopleRoutes.tsx',
+  'src/routes/operationsRoutes.tsx',
+  'src/routes/adminRoutes.tsx',
 ];
 
+/** Files that define lazy page components used by the route files. */
+const COMPONENT_FILES = ['src/utils/lazyRoutes.ts', 'src/utils/lazyRoutes.tsx', ...ROUTE_FILES];
+
+/** Same list src/routes/__tests__/routeGuards.test.tsx treats as guards. */
+export const GUARD_NAMES = new Set(['RouteGuard', 'RoleGuard', 'SecureRoute', 'ProtectedRoute', 'AdminRoute']);
+
 /**
- * Generate the XML sitemap content
+ * Public routes that answer without auth but are not pages anyone should
+ * land on from search: sign-in, OAuth/Stripe return pages, a
+ * token-in-the-URL preference page.
  */
-function generateSitemapXML(pages) {
-  const xmlHeader = `<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
-        xmlns:image="http://www.google.com/schemas/sitemap-image/1.1"
-        xmlns:xhtml="http://www.w3.org/1999/xhtml">`;
+export const NON_INDEXABLE = new Set([
+  '/auth',
+  '/auth/callback',
+  '/setup',
+  '/unauthorized',
+  '/checkout/success',
+  '/payment-success',
+  '/payment-cancelled',
+  '/payment-center',
+  '/email-preferences',
+  '/unsubscribe',
+]);
 
-  const xmlFooter = '</urlset>';
+const BLOG_COMPONENT = 'LazyBlogPost';
+const PSEO_COMPONENT = 'LazyPSEOPageRenderer';
 
-  const urlEntries = pages.map(page => {
-    return `  <url>
-    <loc>${DOMAIN}${page.path}</loc>
-    <lastmod>${CURRENT_DATE}</lastmod>
-    <changefreq>${page.changeFreq}</changefreq>
-    <priority>${page.priority}</priority>
-  </url>`;
-  });
+const read = (rel) => fs.readFileSync(path.join(ROOT, rel), 'utf8');
 
-  return `${xmlHeader}\n${urlEntries.join('\n')}\n${xmlFooter}`;
+/**
+ * Pull every <Route path="..." element={<X ...}> out of a route file. Handles
+ * the multi-line form adminRoutes uses. Layout routes with no path are skipped.
+ */
+export function parseRoutes(source, file = '') {
+  const routes = [];
+  const chunks = source.split(/<Route\b/).slice(1);
+  for (const chunk of chunks) {
+    const pathMatch = chunk.match(/^[^>]*?\bpath=["']([^"']+)["']/s);
+    if (!pathMatch) continue;
+    const elementMatch = chunk.match(/\belement=\{\s*<\s*([A-Za-z_$][\w$]*)/);
+    const component = elementMatch ? elementMatch[1] : null;
+    // The page inside a guard: <RouteGuard><Page /></RouteGuard>
+    let inner = component;
+    if (component && GUARD_NAMES.has(component)) {
+      const innerMatch = chunk.match(/\belement=\{\s*<\s*[\w$]+[^>]*>\s*<\s*([A-Za-z_$][\w$]*)/);
+      inner = innerMatch ? innerMatch[1] : null;
+    }
+    routes.push({
+      path: pathMatch[1],
+      component,
+      page: inner,
+      guarded: component ? GUARD_NAMES.has(component) : false,
+      redirect: component === 'Navigate',
+      file,
+    });
+  }
+  return routes;
+}
+
+/** Map lazy component name -> source file (relative to repo root). */
+export function parseComponentFiles(sources) {
+  const map = new Map();
+  const re = /(?:export\s+)?const\s+([A-Za-z_$][\w$]*)\s*=\s*createLazyRoute\(\s*\(\)\s*=>\s*import\(\s*['"]([^'"]+)['"]/g;
+  for (const src of sources) {
+    for (const m of src.matchAll(re)) {
+      if (map.has(m[1])) continue;
+      const resolved = resolveModule(m[2]);
+      if (resolved) map.set(m[1], resolved);
+    }
+  }
+  return map;
+}
+
+function resolveModule(spec) {
+  if (!spec.startsWith('@/')) return null;
+  const base = path.join('src', spec.slice(2));
+  for (const candidate of [`${base}.tsx`, `${base}.ts`, path.join(base, 'index.tsx'), path.join(base, 'index.ts')]) {
+    if (fs.existsSync(path.join(ROOT, candidate))) return candidate.split(path.sep).join('/');
+  }
+  return null;
+}
+
+/** Every canonicalUrl="..." literal in a page file, as a path. */
+export function declaredCanonicals(pageSource) {
+  const out = [];
+  for (const m of pageSource.matchAll(/canonicalUrl=["']([^"']+)["']/g)) {
+    let p = m[1].replace(/^https?:\/\/[^/]+/, '');
+    if (p === '') p = '/';
+    if (p.length > 1) p = p.replace(/\/$/, '');
+    out.push(p);
+  }
+  return out;
 }
 
 /**
- * Generate robots.txt with sitemap reference and AI crawler governance
+ * Reduce the full route list to the indexable static paths.
+ * `pageSourceFor(component)` returns the page file's text, or null.
  */
-function generateRobotsTxt() {
-  return `# Brikly Robots.txt
+export function selectStaticRoutes(routes, pageSourceFor) {
+  const candidates = routes.filter(
+    (r) =>
+      !r.path.includes(':') &&
+      !r.path.includes('*') &&
+      !r.guarded &&
+      !r.redirect &&
+      r.component &&
+      !NON_INDEXABLE.has(r.path),
+  );
+  const candidatePaths = new Set(candidates.map((r) => r.path));
+
+  const seenComponents = new Set();
+  const seenPaths = new Set();
+  const selected = [];
+  for (const r of candidates) {
+    if (seenPaths.has(r.path)) continue;
+    // A second path onto the same component is an alias of the first.
+    if (seenComponents.has(r.component)) continue;
+    const src = pageSourceFor(r.component);
+    const canon = src ? declaredCanonicals(src) : [];
+    // The page says its canonical lives at another routed path: alias.
+    if (canon.length && !canon.includes(r.path) && canon.some((c) => candidatePaths.has(c))) continue;
+    seenComponents.add(r.component);
+    seenPaths.add(r.path);
+    selected.push(r);
+  }
+  return selected;
+}
+
+/** Route templates for DB-backed pages, taken from the route table. */
+export function dynamicTemplates(routes) {
+  const open = routes.filter((r) => !r.guarded && !r.redirect);
+  const blog = open.find((r) => r.component === BLOG_COMPONENT && r.path.includes(':'));
+  const pseo = open.filter((r) => r.component === PSEO_COMPONENT && r.path.includes(':')).map((r) => r.path);
+  return { blog: blog ? blog.path : null, pseo };
+}
+
+/** Does a concrete path match a react-router style pattern like /a/:b/:c? */
+export function matchesPattern(pattern, concrete) {
+  const p = pattern.split('/');
+  const c = concrete.split('/');
+  if (p.length !== c.length) return false;
+  return p.every((seg, i) => (seg.startsWith(':') ? c[i].length > 0 : seg === c[i]));
+}
+
+export function blogPath(template, slug) {
+  return template.replace(/:[\w]+/, encodeURIComponent(slug));
+}
+
+/**
+ * Last commit date (YYYY-MM-DD) per file, from one `git log` pass.
+ * Returns an empty map in a shallow clone or without git, which means
+ * "omit lastmod", never "use today".
+ */
+export function gitLastModified(files) {
+  const dates = new Map();
+  try {
+    const shallow = execFileSync('git', ['rev-parse', '--is-shallow-repository'], { cwd: ROOT, encoding: 'utf8' }).trim();
+    if (shallow !== 'false') return dates;
+    const out = execFileSync('git', ['log', '--format=@%cs', '--name-only', '--', ...files], {
+      cwd: ROOT,
+      encoding: 'utf8',
+      maxBuffer: 64 * 1024 * 1024,
+    });
+    let current = null;
+    for (const line of out.split('\n')) {
+      if (line.startsWith('@')) current = line.slice(1);
+      else if (line && current && !dates.has(line)) dates.set(line, current);
+    }
+  } catch {
+    // No git (tarball build): no lastmod.
+  }
+  return dates;
+}
+
+const xmlEscape = (s) =>
+  s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&apos;');
+
+export function toDate(value) {
+  if (!value) return null;
+  const d = new Date(value);
+  return Number.isNaN(d.getTime()) ? null : d.toISOString().slice(0, 10);
+}
+
+/** entries: [{ path, lastmod? }] */
+export function buildSitemapXML(entries) {
+  const body = entries
+    .map((e) => {
+      const lastmod = e.lastmod ? `\n    <lastmod>${e.lastmod}</lastmod>` : '';
+      return `  <url>\n    <loc>${xmlEscape(DOMAIN + e.path)}</loc>${lastmod}\n  </url>`;
+    })
+    .join('\n');
+  return `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${body}\n</urlset>\n`;
+}
+
+/** Load the route table and derive everything that doesn't need the network. */
+export function loadRouteTable() {
+  const routes = ROUTE_FILES.flatMap((f) => parseRoutes(read(f), f));
+  const componentSources = COMPONENT_FILES.filter((f) => fs.existsSync(path.join(ROOT, f))).map(read);
+  const componentFiles = parseComponentFiles(componentSources);
+  const pageSourceFor = (component) => {
+    const file = componentFiles.get(component);
+    return file ? read(file) : null;
+  };
+  const staticRoutes = selectStaticRoutes(routes, pageSourceFor);
+  return { routes, staticRoutes, componentFiles, templates: dynamicTemplates(routes) };
+}
+
+/**
+ * Static entries with real lastmod where git knows it.
+ * `dates` is injectable for tests.
+ */
+export function staticEntries({ staticRoutes, componentFiles }, dates) {
+  const files = staticRoutes.map((r) => componentFiles.get(r.component)).filter(Boolean);
+  const lastMod = dates || gitLastModified(files);
+  return staticRoutes.map((r) => {
+    const file = componentFiles.get(r.component);
+    const lastmod = file ? lastMod.get(file) || null : null;
+    return lastmod ? { path: r.path, lastmod } : { path: r.path };
+  });
+}
+
+/**
+ * Turn DB rows into entries. Rows whose URL no route would answer are
+ * dropped (and counted) instead of being advertised.
+ */
+export function dynamicEntries(templates, { blogPosts = [], pseoPages = [] }) {
+  const entries = [];
+  let dropped = 0;
+  if (templates.blog) {
+    for (const post of blogPosts) {
+      if (!post.slug) {
+        dropped++;
+        continue;
+      }
+      entries.push({ path: blogPath(templates.blog, post.slug), lastmod: toDate(post.updated_at) });
+    }
+  } else {
+    dropped += blogPosts.length;
+  }
+  for (const page of pseoPages) {
+    const p = page.canonical_url;
+    if (p && templates.pseo.some((t) => matchesPattern(t, p))) {
+      entries.push({ path: p, lastmod: toDate(page.updated_at) });
+    } else {
+      dropped++;
+    }
+  }
+  return { entries: entries.map((e) => (e.lastmod ? e : { path: e.path })), dropped };
+}
+
+/** Static first; a DB row can't duplicate a static page. */
+export function mergeEntries(staticList, dynamicList) {
+  const seen = new Set(staticList.map((e) => e.path));
+  const merged = [...staticList];
+  for (const e of dynamicList) {
+    if (seen.has(e.path)) continue;
+    seen.add(e.path);
+    merged.push(e);
+  }
+  return merged;
+}
+
+function loadDotEnv() {
+  for (const f of ['.env', '.env.local']) {
+    const p = path.join(ROOT, f);
+    if (!fs.existsSync(p) || typeof process.loadEnvFile !== 'function') continue;
+    try {
+      // loadEnvFile never overrides variables already set by the build env.
+      process.loadEnvFile(p);
+    } catch {
+      // Unparseable .env: fall through to whatever the environment has.
+    }
+  }
+}
+
+async function fetchAll(baseUrl, key, table, query) {
+  const rows = [];
+  const pageSize = 1000;
+  for (let from = 0; ; from += pageSize) {
+    const res = await fetch(`${baseUrl}/rest/v1/${table}?${query}`, {
+      headers: {
+        apikey: key,
+        Authorization: `Bearer ${key}`,
+        Range: `${from}-${from + pageSize - 1}`,
+        'Range-Unit': 'items',
+      },
+      signal: AbortSignal.timeout(15000),
+    });
+    if (!res.ok) throw new Error(`${table}: HTTP ${res.status}`);
+    const batch = await res.json();
+    rows.push(...batch);
+    if (batch.length < pageSize) return rows;
+  }
+}
+
+export async function fetchContent(env = process.env) {
+  const url = (env.SUPABASE_URL || env.VITE_SUPABASE_URL || 'https://api.brikly.net').replace(/\/$/, '');
+  const key = env.SUPABASE_ANON_KEY || env.VITE_SUPABASE_PUBLISHABLE_KEY || env.VITE_SUPABASE_ANON_KEY;
+  if (!key) throw new Error('no Supabase anon key (SUPABASE_ANON_KEY or VITE_SUPABASE_PUBLISHABLE_KEY)');
+  const [blogPosts, pseoPages] = await Promise.all([
+    fetchAll(url, key, 'blog_posts', 'select=slug,updated_at&status=eq.published&order=updated_at.desc'),
+    fetchAll(url, key, 'pseo_pages', 'select=canonical_url,updated_at&is_published=eq.true&order=updated_at.desc'),
+  ]);
+  return { blogPosts, pseoPages };
+}
+
+/** robots.txt. No build date in it: a changing comment is noise in every diff. */
+export function generateRobotsTxt() {
+  return `# Brikly robots.txt
 # ${DOMAIN}
-# Last Updated: ${CURRENT_DATE}
+# Generated by scripts/generate-sitemap.js; edit there, not here.
 
 # ===========================================
 # AI SEARCH ENGINE CRAWLERS - ALLOW
 # These bots retrieve content for AI-powered search results.
-# Allowing them enables visibility in AI Overviews,
-# ChatGPT Search, Perplexity answers, and similar.
 # ===========================================
 
-# OpenAI Search Bots (ChatGPT Search, SearchGPT)
 User-agent: GPTBot
 Allow: /
 Crawl-delay: 1
@@ -201,42 +377,34 @@ Allow: /
 User-agent: OAI-SearchBot
 Allow: /
 
-# Anthropic Search Bot (Claude)
 User-agent: ClaudeBot
 Allow: /
 Crawl-delay: 1
 
-# Perplexity AI Search
 User-agent: PerplexityBot
 Allow: /
 Crawl-delay: 1
 
-# Google AI (Gemini, AI Overviews)
 User-agent: Google-Extended
 Allow: /
 
-# Apple AI (Siri, Apple Intelligence)
 User-agent: Applebot
 Allow: /
 
 User-agent: Applebot-Extended
 Allow: /
 
-# Microsoft Copilot / Bing AI
 User-agent: Bingbot
 Allow: /
 
-# Meta AI search
 User-agent: Meta-ExternalAgent
 Allow: /
 Crawl-delay: 2
 
-# Cohere AI (retrieval-augmented generation)
 User-agent: cohere-ai
 Allow: /
 Crawl-delay: 2
 
-# You.com AI search
 User-agent: YouBot
 Allow: /
 Crawl-delay: 1
@@ -259,8 +427,6 @@ Allow: /
 
 # ===========================================
 # AI TRAINING-ONLY BOTS - BLOCK
-# These bots scrape content solely for model training
-# without providing search visibility in return.
 # ===========================================
 
 User-agent: CCBot
@@ -294,110 +460,82 @@ Disallow: /
 User-agent: *
 Allow: /
 
-# Block authenticated/app pages (not indexable)
-Disallow: /dashboard/
-Disallow: /admin/
-Disallow: /auth/
-Disallow: /setup/
-Disallow: /api/
-Disallow: /payment-center/
-Disallow: /settings/
+# Authenticated/app pages. No trailing slash: "Disallow: /auth/" left
+# /auth itself crawlable.
+Disallow: /auth
+Disallow: /dashboard
+Disallow: /admin
+Disallow: /setup
+Disallow: /api
+Disallow: /payment-center
+Disallow: /settings
 
-# Block URL parameters that create duplicate content
+# URL parameters that create duplicate content
 Disallow: /*?*refreshed=
 Disallow: /*?*v=
 Disallow: /*?*timestamp=
 Disallow: /*?*cache=
 
-# Block testing/internal pages
+# Testing/internal pages
 Disallow: /testing/
 Disallow: /test/
 Disallow: /debug/
 Disallow: /component-showcase
 
-# Index pruning: block thin/auto-generated pages
+# Thin pages
 Disallow: /404
 Disallow: /not-found
 
-# Allow all marketing pages explicitly
-Allow: /features
-Allow: /pricing
-Allow: /blog
-Allow: /resources
-Allow: /topics
-Allow: /faq
-Allow: /solutions
-Allow: /procore-alternative
-Allow: /buildertrend-alternative
-Allow: /roi-calculator
-Allow: /knowledge-base
-Allow: /help
-
-# Allow marketing URL parameters
+# Marketing URL parameters
 Allow: /*?utm_source=
 Allow: /*?utm_medium=
 Allow: /*?utm_campaign=
 Allow: /*?ref=
 
-# ===========================================
-# DISCOVERY FILES
-# ===========================================
-
-# Sitemap location
-Sitemap: ${DOMAIN}/sitemap.xml
-
-# LLM discovery support
-LLMs-txt: ${DOMAIN}/.well-known/llms.txt
-
-# Crawl delay for unspecified bots
 Crawl-delay: 1
+
+Sitemap: ${DOMAIN}/sitemap.xml
 `;
 }
 
-/**
- * Main function to generate sitemap and robots.txt
- */
-function generateSitemap() {
-  const publicDir = path.join(process.cwd(), 'public');
+async function main() {
+  loadDotEnv();
+  const table = loadRouteTable();
+  const statics = staticEntries(table);
 
-  // Ensure public directory exists
-  if (!fs.existsSync(publicDir)) {
-    fs.mkdirSync(publicDir, { recursive: true });
+  let dynamic = { entries: [], dropped: 0 };
+  let dbNote;
+  try {
+    const content = await fetchContent();
+    dynamic = dynamicEntries(table.templates, content);
+    dbNote = `${content.blogPosts.length} blog posts, ${content.pseoPages.length} pSEO pages`;
+  } catch (err) {
+    const msg = `[sitemap] Could not read blog_posts/pseo_pages from Supabase: ${err.message}. The sitemap will list static pages only.`;
+    if (process.env.SITEMAP_REQUIRE_DB === '1') {
+      console.error(msg);
+      process.exit(1);
+    }
+    console.warn(`\n*** ${msg}\n*** Set SUPABASE_ANON_KEY (or VITE_SUPABASE_PUBLISHABLE_KEY) in the build env; SITEMAP_REQUIRE_DB=1 makes this fatal.\n`);
+    dbNote = 'unavailable';
   }
 
-  // Generate and write sitemap.xml
-  const sitemapContent = generateSitemapXML(seoPages);
-  const sitemapPath = path.join(publicDir, 'sitemap.xml');
-  fs.writeFileSync(sitemapPath, sitemapContent, 'utf8');
+  const entries = mergeEntries(statics, dynamic.entries);
+  const publicDir = path.join(ROOT, 'public');
+  fs.mkdirSync(publicDir, { recursive: true });
+  fs.writeFileSync(path.join(publicDir, 'sitemap.xml'), buildSitemapXML(entries), 'utf8');
+  fs.writeFileSync(path.join(publicDir, 'robots.txt'), generateRobotsTxt(), 'utf8');
 
-  // Generate and write robots.txt
-  const robotsContent = generateRobotsTxt();
-  const robotsPath = path.join(publicDir, 'robots.txt');
-  fs.writeFileSync(robotsPath, robotsContent, 'utf8');
-
-  // Log summary
-  console.log('');
-  console.log('='.repeat(50));
-  console.log('Sitemap Generation Complete');
-  console.log('='.repeat(50));
-  console.log(`Sitemap: ${sitemapPath}`);
-  console.log(`Robots:  ${robotsPath}`);
-  console.log(`Pages:   ${seoPages.length}`);
-  console.log(`Date:    ${CURRENT_DATE}`);
-  console.log('='.repeat(50));
-  console.log('');
-
-  // Page breakdown by priority
-  const highPriority = seoPages.filter(p => p.priority >= 0.8).length;
-  const mediumPriority = seoPages.filter(p => p.priority >= 0.5 && p.priority < 0.8).length;
-  const lowPriority = seoPages.filter(p => p.priority < 0.5).length;
-
-  console.log('Page Priority Breakdown:');
-  console.log(`  High (0.8-1.0):   ${highPriority} pages`);
-  console.log(`  Medium (0.5-0.7): ${mediumPriority} pages`);
-  console.log(`  Low (<0.5):       ${lowPriority} pages`);
-  console.log('');
+  const dated = statics.filter((e) => e.lastmod).length;
+  console.log(
+    `[sitemap] ${entries.length} URLs: ${statics.length} static (${dated} with git lastmod), ` +
+      `${dynamic.entries.length} from Supabase (${dbNote})` +
+      (dynamic.dropped ? `, ${dynamic.dropped} rows skipped with no matching route` : ''),
+  );
 }
 
-// Run the generator
-generateSitemap();
+if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+  main().catch((err) => {
+    console.error(err);
+    process.exit(1);
+  });
+}

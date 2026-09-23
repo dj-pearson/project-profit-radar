@@ -6659,3 +6659,13 @@ because some of those tables already have a unique constraint starting with
 `company_id`, and 48 exist in migrations but not in the live database. The file
 says how to apply it if `db push` refuses a non-transactional migration, and
 how to check for an index left invalid by a failed build.
+
+## US-382: the sitemap is built from the routes
+
+`public/sitemap.xml` was a hand-kept list of 92 URLs, all with the same fake
+lastmod. It included app routes like `/auth` and `/setup` and none of the blog
+posts. The build now derives it from the route files. Guarded routes,
+redirects, parameterised routes and duplicate aliases are dropped, and lastmod
+is each page's last commit date, or left out when git can't say. Published blog
+posts and pSEO pages come from the database at build time using the
+publishable key. Cloudflare Pages needs that key in its build environment.
