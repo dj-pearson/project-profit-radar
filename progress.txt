@@ -6736,3 +6736,13 @@ time. PMs see and manage the participant list on the project's Contacts tab.
 Still open: an expired enrolment keeps its row, and a client can still label a
 post as from the contractor. Fixing that means tightening a policy, which needs
 its own release.
+
+## US-312: the last in-app dead link
+
+Most of this was already fixed. What remained was the schedule "Share" button:
+it copied a `/shared-schedule/<id>` link that no route answers and nothing
+stores, and told the user anyone with the link could see their timeline. It's
+now a disabled "not built yet" button. A new test catches links built from
+`window.location.origin`, which the script guard can't see. It found one more:
+the public booking link, whose pages aren't routed. Whether to route them or
+delete them is a product decision.
