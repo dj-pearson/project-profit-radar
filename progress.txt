@@ -7038,3 +7038,11 @@ Ten form dialogs use ResponsiveDialog (a Drawer on phones). The signature
 canvas opts out of drawer drag so a downward stroke doesn't close the sheet.
 The mobile nav on /projects/:id now keeps the project id; it used to send
 people to global /documents, /job-costing, /change-orders.
+
+## US-241 - input validation backlog at 0
+The last 21 functions validate their bodies; the guard baseline is 0 and
+any new req.json() without a schema fails it. Owner: set
+INPUT_VALIDATION_MODE=enforce once the report-mode logs are quiet. Fixed in
+this batch: twilio-calling read other tenants' call status and recordings
+with platform credentials; send-support-notification mailed any address;
+two PostgREST .or() filter injections.

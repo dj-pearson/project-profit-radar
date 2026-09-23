@@ -26,6 +26,7 @@ const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const fnDir = join(root, 'supabase', 'functions');
 
 const READS_BODY = /\b(?:req|request)\s*\.\s*json\s*\(\s*\)/;
+const READS_FORM = /\b(?:req|request)\s*\.\s*formData\s*\(\s*\)/;
 const USES_HELPER = /\bvalidateBody\s*\(|\bvalidateRequest\s*\(/;
 const HAS_SCHEMA = /\bz\s*\.\s*object\s*\(|\bz\s*\.\s*discriminatedUnion\s*\(|\bz\s*\.\s*union\s*\(/;
 
@@ -37,11 +38,13 @@ const stripComments = (s) =>
 // validateBody() reads it — so the backlog is "still reads the body raw".
 const validated = [];
 const unvalidated = [];
+const formReaders = [];
 for (const d of readdirSync(fnDir, { withFileTypes: true })) {
   if (!d.isDirectory() || d.name === '_shared') continue;
   const idx = join(fnDir, d.name, 'index.ts');
   if (!existsSync(idx)) continue;
   const src = stripComments(readFileSync(idx, 'utf8'));
+  if (READS_FORM.test(src)) formReaders.push(d.name);
   const takesBody = READS_BODY.test(src) || USES_HELPER.test(src);
   if (!takesBody) continue;
   if (USES_HELPER.test(src) || HAS_SCHEMA.test(src)) validated.push(d.name);
@@ -123,13 +126,56 @@ const VALIDATED = new Set([
   'send-auth-otp', 'send-notification', 'setup-mfa', 'signup-with-otp',
   'sso-ldap-auth', 'sso-manage', 'sso-oauth-init', 'sso-saml-init',
   'time-tracking', 'verify-auth-otp', 'verify-mfa-login', 'verify-mfa-setup',
+  // 2026-09-23 batch 4, the last 21. twilio-calling validates its JSON
+  // actions; its form-data recording callback is listed in FORM_DATA_READERS.
+  // trigger-expo-build belongs to the archived Expo app and is validated
+  // rather than exempted, since it is still deployed and spends EAS minutes.
+  'ai-content-generator', 'ai-estimating', 'analytics-oauth-google',
+  'bing-search-api', 'bing-webmaster-api', 'calculate-lead-score',
+  'customer-portal', 'document-classifier', 'google-analytics-api',
+  'google-indexing-api', 'google-search-console-api',
+  'send-booking-confirmation', 'send-intervention-email',
+  'send-renewal-notification', 'send-support-notification', 'send-usage-alert',
+  'seo-backend-integration', 'smart-procurement', 'test-ai-configuration',
+  'trigger-expo-build', 'twilio-calling',
 ]);
-const BASELINE = 21;
+const BASELINE = 0;
+
+// Request bodies that are form data, not JSON, so a Zod-over-JSON schema does
+// not apply. Each entry names why. A function that starts reading
+// req.formData() has to be added here with a reason, and an entry whose
+// function stops reading form data has to be removed, so the list cannot rot.
+const FORM_DATA_READERS = {
+  'twilio-calling':
+    "Twilio's RecordingStatusCallback posts application/x-www-form-urlencoded " +
+    'with ?action=recording_callback; the fields read (CallSid, RecordingSid, ' +
+    'RecordingUrl, RecordingDuration) are Twilio-defined. Every JSON action goes ' +
+    'through validateBody.',
+  'sso-saml-callback':
+    'The SAML HTTP-POST binding delivers SAMLResponse/RelayState as form fields ' +
+    'from the IdP. The endpoint answers 503 before reading them while ' +
+    'SAML_AVAILABLE is false (_shared/saml-availability.ts, US-340), because ' +
+    'signatures are not yet verified.',
+};
 
 console.log('Edge-function input-validation guard (US-241)');
 console.log(`  functions taking a JSON body:  ${reads.length}`);
 console.log(`  with a Zod schema:            ${validated.length}`);
 console.log(`  backlog (baseline ${BASELINE}):     ${unvalidated.length}`);
+
+const unlistedForm = formReaders.filter((n) => !(n in FORM_DATA_READERS));
+if (unlistedForm.length) {
+  console.error(
+    `\nx These read req.formData() with no entry in FORM_DATA_READERS: ${unlistedForm.join(', ')}.\n` +
+      '  Validate the fields, then add the function there with the reason form data is expected.',
+  );
+  process.exit(1);
+}
+const staleForm = Object.keys(FORM_DATA_READERS).filter((n) => !formReaders.includes(n));
+if (staleForm.length) {
+  console.error(`\nx FORM_DATA_READERS lists functions that no longer read form data: ${staleForm.join(', ')}. Remove them.`);
+  process.exit(1);
+}
 
 const regressed = [...VALIDATED].filter((n) => unvalidated.includes(n));
 if (regressed.length) {

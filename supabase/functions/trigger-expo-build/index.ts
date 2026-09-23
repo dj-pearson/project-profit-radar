@@ -3,6 +3,15 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts"
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.3";
 import { getCorsHeaders } from '../_shared/secure-cors.ts';
 import { requireInternalCaller } from '../_shared/internal-only.ts';
+import { validateBody } from "../_shared/validate-body.ts";
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
+
+// Archived Expo app (mobile-app/, see CLAUDE.md). No caller in the repo; an
+// operator invokes it by hand with the service-role key.
+const BuildSchema = z.object({
+  platform: z.enum(['ios', 'android', 'all']).optional(),
+  profile: z.string().regex(/^[A-Za-z0-9_-]{1,50}$/).optional(),
+}).passthrough();
 
 serve(async (req) => {
   const corsHeaders = getCorsHeaders(req);
@@ -22,7 +31,9 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
 
-    const { platform, profile } = await req.json()
+    const parsed = await validateBody(req, BuildSchema, { name: 'trigger-expo-build', allowEmpty: true })
+    if (!parsed.ok) return parsed.response
+    const { platform, profile } = parsed.data
     console.log('Triggering Expo build:', { platform, profile })
 
     // Get Expo access token from environment

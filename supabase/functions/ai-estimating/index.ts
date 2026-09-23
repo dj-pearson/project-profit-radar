@@ -6,7 +6,22 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.50.3'
 import { initializeAuthContext, errorResponse, successResponse } from '../_shared/auth-helpers.ts'
 import { checkRateLimit, rateLimitResponse, RATE_LIMITS } from '../_shared/rate-limiter.ts'
 import { getCorsHeaders } from '../_shared/secure-cors.ts';
+import { validateBody } from '../_shared/validate-body.ts'
+import { quoteFilterValue } from '../_shared/postgrest-filter.ts'
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts"
 
+// Sent by src/pages/admin/AIEstimating.tsx. It also sends tenant_id and
+// user_id; both are ignored (the company comes from the caller's profile) and
+// stay accepted. parseFloat/parseInt on an empty field serialise as null.
+const EstimateSchema = z.object({
+  project_name: z.string().max(300).nullish(),
+  project_type: z.string().min(1).max(100),
+  square_footage: z.number().nonnegative().max(100_000_000).nullish(),
+  location_zip: z.string().max(20).nullish(),
+  estimated_duration_days: z.number().int().nonnegative().max(36500).nullish(),
+  tenant_id: z.string().max(100).nullish(),
+  user_id: z.string().max(100).nullish(),
+}).passthrough()
 interface EstimateRequest {
   project_name: string
   project_type: string
@@ -62,7 +77,9 @@ serve(async (req) => {
       .single()
     const companyId = (profile as { company_id?: string } | null)?.company_id ?? null
 
-    const requestData: EstimateRequest = await req.json()
+    const parsed = await validateBody(req, EstimateSchema, { name: 'ai-estimating' })
+    if (!parsed.ok) return parsed.response
+    const requestData = parsed.data as unknown as EstimateRequest
 
     const {
       project_name,
@@ -95,7 +112,7 @@ serve(async (req) => {
       .select('*')
         // CRITICAL: Site isolation
       .eq('project_type', project_type)
-      .or(`location_zip.eq.${location_zip},location_region.eq.nationwide`)
+      .or(`location_zip.eq.${quoteFilterValue(String(location_zip ?? ''))},location_region.eq.nationwide`)
       .order('valid_from', { ascending: false })
       .limit(1)
       .single()

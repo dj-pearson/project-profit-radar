@@ -11,6 +11,13 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.3";
 import { AIServiceEnv } from "../_shared/ai-service-env.ts";
 import { getCorsHeaders } from '../_shared/secure-cors.ts';
+import { validateBody } from "../_shared/validate-body.ts";
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
+
+// AIModelManager sends { testType: 'full' }; an empty body means 'full'.
+const TestSchema = z.object({
+  testType: z.enum(['full', 'standard', 'lightweight', 'config_only']).optional(),
+}).passthrough();
 
 export default async function handler(req: Request): Promise<Response> {
   const corsHeaders = getCorsHeaders(req);
@@ -58,7 +65,9 @@ export default async function handler(req: Request): Promise<Response> {
     }
 
     // Parse request body
-    const body = await req.json().catch(() => ({}));
+    const parsed = await validateBody(req, TestSchema, { name: 'test-ai-configuration', allowEmpty: true });
+    if (!parsed.ok) return parsed.response;
+    const body = (parsed.data ?? {}) as { testType?: string };
     const testType = body.testType || 'full'; // 'full', 'standard', 'lightweight', 'config_only'
 
     // Initialize AI service and run tests

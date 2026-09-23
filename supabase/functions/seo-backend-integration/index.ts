@@ -2,6 +2,13 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts"
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.3";
 import { getCorsHeaders } from '../_shared/secure-cors.ts';
 import { requireInternalCaller } from '../_shared/internal-only.ts';
+import { validateBody } from '../_shared/validate-body.ts';
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
+
+// Internal only, no caller in the repo; an operator invokes it by hand.
+const SeoBackendSchema = z.object({
+  action: z.enum(['sync_seo_pages', 'update_schema_markup', 'refresh_seo_config']),
+}).passthrough();
 
 serve(async (req) => {
   const corsHeaders = getCorsHeaders(req);
@@ -21,7 +28,9 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
 
-    const { action } = await req.json()
+    const parsed = await validateBody(req, SeoBackendSchema, { name: 'seo-backend-integration' })
+    if (!parsed.ok) return parsed.response
+    const { action } = parsed.data
 
     switch (action) {
       case 'sync_seo_pages':

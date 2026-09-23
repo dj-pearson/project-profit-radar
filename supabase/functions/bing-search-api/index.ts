@@ -1,6 +1,16 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.50.3'
 import { getCorsHeaders } from '../_shared/secure-cors.ts';
+import { validateBody } from '../_shared/validate-body.ts'
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts"
+
+// root_admin only; no caller in src/ or Brikly-iOS/ today.
+const BingSearchSchema = z.object({
+  action: z.string().min(1).max(50),
+  query: z.string().max(500).nullish(),
+  market: z.string().max(20).nullish(),
+  count: z.number().int().min(1).max(1000).nullish(),
+}).passthrough()
 
 interface BingSearchRequest {
   action: 'search-analytics' | 'site-info' | 'search-trends'
@@ -58,7 +68,9 @@ serve(async (req) => {
     }
 
     // Get request data
-    const requestData: BingSearchRequest = await req.json()
+    const parsed = await validateBody(req, BingSearchSchema, { name: 'bing-search-api' })
+    if (!parsed.ok) return parsed.response
+    const requestData = parsed.data as unknown as BingSearchRequest
     console.log('Request data:', requestData)
 
     // Get Bing Search API credentials from Supabase secrets

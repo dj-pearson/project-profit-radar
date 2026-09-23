@@ -1,6 +1,22 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.50.3'
 import { getCorsHeaders } from '../_shared/secure-cors.ts';
+import { validateBody } from '../_shared/validate-body.ts'
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts"
+const DateRangeSchema = z.object({
+  startDate: z.string().max(40),
+  endDate: z.string().max(40),
+}).passthrough()
+
+// Callers: UnifiedSEODashboard.tsx and seo-analytics send { action, dateRange };
+// sync-analytics-data sends { action: 'sync', connection_id, date_range },
+// which is why action is a free string rather than an enum.
+const AnalyticsSchema = z.object({
+  action: z.string().min(1).max(50),
+  dateRange: DateRangeSchema.nullish(),
+  dimensions: z.array(z.string().max(100)).max(20).nullish(),
+  metrics: z.array(z.string().max(100)).max(20).nullish(),
+}).passthrough()
 
 interface AnalyticsRequest {
   action: 'get-metrics' | 'get-pages' | 'get-traffic-sources' | 'get-realtime' | 'get-organic-traffic' | 'get-device-breakdown' | 'get-conversion-data' | 'get-geographic-data' | 'get-user-behavior'
@@ -64,7 +80,9 @@ serve(async (req) => {
     console.log('User authenticated as root_admin')
 
     // Get request data
-    const requestData: AnalyticsRequest = await req.json()
+    const parsed = await validateBody(req, AnalyticsSchema, { name: 'google-analytics-api' })
+    if (!parsed.ok) return parsed.response
+    const requestData = parsed.data as unknown as AnalyticsRequest
     console.log('Request data:', requestData)
 
     // Get Google credentials from Supabase secrets

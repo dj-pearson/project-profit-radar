@@ -2,19 +2,28 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { Resend } from "https://esm.sh/resend@2.0.0";
 import { getCorsHeaders } from '../_shared/secure-cors.ts';
 import { initializeAuthContext, errorResponse } from '../_shared/auth-helpers.ts';
+import { escapeHtml } from '../_shared/html-escape.ts';
+import { validateBody } from "../_shared/validate-body.ts";
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
 
 const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 
-interface SupportNotificationRequest {
-  ticketId: string;
-  ticketNumber: string;
-  customerName: string;
-  customerEmail: string;
-  subject: string;
-  description: string;
-  priority: string;
-  category: string;
-}
+// Sent by src/components/support/CustomerSupportChat.tsx. customerEmail is the
+// caller's own profile email there.
+const SupportNotificationSchema = z.object({
+  ticketId: z.string().max(100).nullish(),
+  ticketNumber: z.union([z.string().max(100), z.number()]).nullish(),
+  customerName: z.string().max(200).nullish(),
+  customerEmail: z.string().max(320).nullish(),
+  subject: z.string().max(500).nullish(),
+  description: z.string().max(10000).nullish(),
+  priority: z.string().max(50).nullish(),
+  category: z.string().max(100).nullish(),
+}).passthrough();
+
+const str = (v: unknown): string => (v === null || v === undefined ? '' : String(v));
+// Subject lines are headers, not HTML: unescaped, but on one line.
+const oneLine = (v: unknown): string => str(v).replace(/[\r\n]+/g, ' ').slice(0, 200);
 
 const handler = async (req: Request): Promise<Response> => {
   const corsHeaders = getCorsHeaders(req);
@@ -34,16 +43,33 @@ const handler = async (req: Request): Promise<Response> => {
       return errorResponse('Unauthorized', 401, req);
     }
 
-    const {
-      ticketId,
-      ticketNumber,
-      customerName,
-      customerEmail,
-      subject,
-      description,
-      priority,
-      category
-    }: SupportNotificationRequest = await req.json();
+    const parsed = await validateBody(req, SupportNotificationSchema, { name: 'send-support-notification' });
+    if (!parsed.ok) return parsed.response;
+    const body = parsed.data;
+
+    // Everything below lands in HTML mail sent as support@brikly.net, so every
+    // body value is escaped before interpolation.
+    const ticketNumber = escapeHtml(str(body.ticketNumber));
+    const customerName = escapeHtml(str(body.customerName));
+    const subject = escapeHtml(str(body.subject));
+    const description = escapeHtml(str(body.description));
+    const rawPriority = str(body.priority) || 'medium';
+    const priority = escapeHtml(rawPriority);
+    const category = escapeHtml(str(body.category));
+
+    // The confirmation goes to the caller's own address, never to a
+    // body-supplied one. Taking `to` from the body let any signed-in user send
+    // Brikly-branded mail, with their own HTML in it, to any address (US-241).
+    // The only caller already sends the caller's profile email here.
+    const callerEmail = authContext.user.email ?? '';
+    const bodyEmail = str(body.customerEmail);
+    if (bodyEmail && bodyEmail.toLowerCase() !== callerEmail.toLowerCase()) {
+      console.warn('[send-support-notification] body customerEmail differs from the caller; using the caller address');
+    }
+    const customerEmail = escapeHtml(callerEmail);
+    if (!callerEmail) {
+      return errorResponse('Your account has no email address', 400, req);
+    }
 
     console.log("Processing support notification for ticket:", ticketNumber);
 
@@ -51,7 +77,7 @@ const handler = async (req: Request): Promise<Response> => {
     const adminEmailResponse = await resend.emails.send({
       from: "Brikly Support <support@brikly.net>",
       to: ["support@brikly.net"],
-      subject: `New Support Ticket: ${ticketNumber} - ${subject}`,
+      subject: `New Support Ticket: ${oneLine(body.ticketNumber)} - ${oneLine(body.subject)}`,
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
           <h2 style="color: #1f2937; border-bottom: 2px solid #3b82f6; padding-bottom: 10px;">
@@ -62,7 +88,7 @@ const handler = async (req: Request): Promise<Response> => {
             <h3 style="color: #3b82f6; margin-top: 0;">Ticket Details</h3>
             <p><strong>Ticket Number:</strong> ${ticketNumber}</p>
             <p><strong>Subject:</strong> ${subject}</p>
-            <p><strong>Priority:</strong> <span style="color: ${getPriorityColor(priority)}; font-weight: bold;">${priority.toUpperCase()}</span></p>
+            <p><strong>Priority:</strong> <span style="color: ${getPriorityColor(rawPriority)}; font-weight: bold;">${escapeHtml(rawPriority.toUpperCase())}</span></p>
             <p><strong>Category:</strong> ${category}</p>
           </div>
 
@@ -90,8 +116,8 @@ const handler = async (req: Request): Promise<Response> => {
     // Send confirmation to customer
     const customerEmailResponse = await resend.emails.send({
       from: "Brikly Support <support@brikly.net>",
-      to: [customerEmail],
-      subject: `Support Ticket Created: ${ticketNumber}`,
+      to: [callerEmail],
+      subject: `Support Ticket Created: ${oneLine(body.ticketNumber)}`,
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
           <h2 style="color: #1f2937; border-bottom: 2px solid #3b82f6; padding-bottom: 10px;">

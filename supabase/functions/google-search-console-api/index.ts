@@ -1,6 +1,22 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts"
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.3";
 import { getCorsHeaders } from '../_shared/secure-cors.ts';
+import { validateBody } from '../_shared/validate-body.ts'
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts"
+const DateRangeSchema = z.object({
+  startDate: z.string().max(40),
+  endDate: z.string().max(40),
+}).passthrough()
+
+// Callers: seo-analytics sends { action, dateRange }; sync-analytics-data sends
+// { action: 'sync', connection_id, date_range }, hence a free-string action.
+const SearchConsoleSchema = z.object({
+  action: z.string().min(1).max(50),
+  dateRange: DateRangeSchema.nullish(),
+  dimensions: z.array(z.string().max(100)).max(20).nullish(),
+  searchType: z.string().max(20).nullish(),
+  rowLimit: z.number().int().min(1).max(25000).nullish(),
+}).passthrough()
 
 interface SearchConsoleRequest {
   action: 'get-performance' | 'get-keywords' | 'get-pages' | 'get-crawl-errors'
@@ -61,7 +77,9 @@ serve(async (req) => {
     console.log('=== Google Search Console API Function Called ===')
     
     // Get request data
-    const requestData: SearchConsoleRequest = await req.json()
+    const parsed = await validateBody(req, SearchConsoleSchema, { name: 'google-search-console-api' })
+    if (!parsed.ok) return parsed.response
+    const requestData = parsed.data as unknown as SearchConsoleRequest
     console.log('Request data:', requestData)
 
     // Get Google credentials from Supabase secrets

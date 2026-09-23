@@ -5,6 +5,20 @@ import { errorResponse, successResponse } from '../_shared/auth-helpers.ts';
 import { getCorsHeaders } from '../_shared/secure-cors.ts';
 import { sendEmail } from '../_shared/ses-email-service.ts';
 import { requireInternalCaller } from '../_shared/internal-only.ts';
+import { escapeHtml } from '../_shared/html-escape.ts';
+import { validateBody } from "../_shared/validate-body.ts";
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
+
+// The one (commented-out) caller is track-usage, which sends usagePercentage
+// as a toFixed() string, so numbers are accepted as strings too.
+const num = z.union([z.number(), z.string().max(32)]);
+const UsageAlertSchema = z.object({
+  companyId: z.string().uuid(),
+  metricType: z.string().min(1).max(100),
+  totalUsage: num.optional(),
+  limit: num.optional(),
+  usagePercentage: num.optional(),
+}).passthrough();
 
 const logStep = (step: string, details?: any) => {
   const detailsStr = details ? ` - ${JSON.stringify(details)}` : '';
@@ -29,8 +43,9 @@ export default async (req: Request) => {
   try {
     logStep("Function started");
 
-    const body = await req.json();
-    const { companyId, metricType, totalUsage, limit, usagePercentage } = body;
+    const parsed = await validateBody(req, UsageAlertSchema, { name: 'send-usage-alert' });
+    if (!parsed.ok) return parsed.response;
+    const { companyId, metricType, totalUsage, limit, usagePercentage } = parsed.data;
 
     if (!companyId || !metricType) {
       return errorResponse('companyId and metricType are required', 400, req);
@@ -63,14 +78,14 @@ export default async (req: Request) => {
     }
 
     const companyName = company?.name || 'Your company';
-    const pct = Math.round(usagePercentage);
+    const pct = Math.round(Number(usagePercentage));
     const subject = `Usage Alert: ${metricType} at ${pct}% capacity`;
     const message = `
       <p>Hi,</p>
-      <p><strong>${companyName}</strong> has reached <strong>${pct}%</strong> of the <strong>${metricType}</strong> usage limit.</p>
+      <p><strong>${escapeHtml(String(companyName))}</strong> has reached <strong>${pct}%</strong> of the <strong>${escapeHtml(String(metricType))}</strong> usage limit.</p>
       <ul>
-        <li>Current usage: <strong>${totalUsage}</strong></li>
-        <li>Limit: <strong>${limit}</strong></li>
+        <li>Current usage: <strong>${escapeHtml(String(totalUsage))}</strong></li>
+        <li>Limit: <strong>${escapeHtml(String(limit))}</strong></li>
       </ul>
       <p>Consider upgrading your plan to avoid service interruptions.</p>
     `;

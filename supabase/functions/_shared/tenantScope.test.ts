@@ -78,3 +78,39 @@ describe('service-role paths check the caller owns the body-named row', () => {
     expect(gate).toBeLessThan(read);
   });
 });
+
+// US-241, batch 4. These are not service-role clients, but the effect is the
+// same: the credential that reaches the other tenant's data is the platform's.
+describe('platform credentials only reach the caller own rows', () => {
+  it('twilio-calling checks call_logs (RLS) before asking Twilio about a call', () => {
+    // TWILIO_ACCOUNT_SID is one account for every tenant, so Twilio answers
+    // for any CallSid or RecordingSid it is handed.
+    const src = code('twilio-calling');
+    const callCheck = at(src, '.eq("call_sid", callSid)\n          .maybeSingle()');
+    const callFetch = at(src, '/Calls/${encodeURIComponent(callSid)}.json');
+    expect(callCheck).toBeLessThan(callFetch);
+    const recCheck = at(src, '.eq("recording_sid", recordingSid)\n          .maybeSingle()');
+    const recFetch = at(src, '/Recordings/${encodeURIComponent(recordingSid)}.json');
+    expect(recCheck).toBeLessThan(recFetch);
+    // The lookup runs on the caller-JWT client, not a service-role one.
+    expect(src).not.toMatch(/SERVICE_ROLE/);
+  });
+
+  it('send-support-notification mails the caller, not a body-supplied address', () => {
+    const src = code('send-support-notification');
+    expect(src).toContain('to: [callerEmail]');
+    expect(src).toContain('const callerEmail = authContext.user.email');
+    expect(src).not.toMatch(/to: \[customerEmail\]/);
+  });
+
+  it('calculate-lead-score builds its rules filter from the fetched lead, not the body', () => {
+    const src = code('calculate-lead-score');
+    expect(src).toContain('company_id.eq.${lead.company_id}');
+    expect(src).not.toContain('company_id.eq.${companyId}');
+  });
+
+  it('ai-estimating quotes location_zip inside its PostgREST or() filter', () => {
+    const src = code('ai-estimating');
+    expect(src).toContain('location_zip.eq.${quoteFilterValue(');
+  });
+});

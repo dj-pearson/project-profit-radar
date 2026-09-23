@@ -1,6 +1,21 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.50.3'
 import { getCorsHeaders } from '../_shared/secure-cors.ts';
+import { validateBody } from '../_shared/validate-body.ts'
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts"
+const DateRangeSchema = z.object({
+  startDate: z.string().max(40),
+  endDate: z.string().max(40),
+}).passthrough()
+
+// root_admin only; no caller in src/ or Brikly-iOS/ today.
+const BingWebmasterSchema = z.object({
+  action: z.string().min(1).max(50),
+  dateRange: DateRangeSchema.nullish(),
+  dimensions: z.array(z.string().max(100)).max(20).nullish(),
+  searchType: z.string().max(20).nullish(),
+  rowLimit: z.number().int().min(1).max(25000).nullish(),
+}).passthrough()
 
 interface BingWebmasterRequest {
   action: 'get-performance' | 'get-pages' | 'get-keywords' | 'get-crawl-errors' | 'get-backlinks'
@@ -62,7 +77,9 @@ serve(async (req) => {
     }
 
     // Get request data
-    const requestData: BingWebmasterRequest = await req.json()
+    const parsed = await validateBody(req, BingWebmasterSchema, { name: 'bing-webmaster-api' })
+    if (!parsed.ok) return parsed.response
+    const requestData = parsed.data as unknown as BingWebmasterRequest
     console.log('Request data:', requestData)
 
     // Get Bing Webmaster API credentials from Supabase secrets

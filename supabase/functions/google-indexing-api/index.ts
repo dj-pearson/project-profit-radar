@@ -1,6 +1,15 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts"
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.3";
 import { getCorsHeaders } from '../_shared/secure-cors.ts';
+import { validateBody } from '../_shared/validate-body.ts'
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts"
+
+// Sent by src/hooks/useGoogleIndexing.ts. The hand-written checks below stay:
+// in report mode validateBody hands the handler the raw body.
+const IndexingSchema = z.object({
+  urls: z.array(z.string().url().max(2048)).min(1).max(200),
+  action: z.enum(['URL_UPDATED', 'URL_DELETED']),
+}).passthrough()
 
 type IndexingAction = 'URL_UPDATED' | 'URL_DELETED'
 
@@ -92,7 +101,9 @@ serve(async (req) => {
       )
     }
 
-    const requestData: IndexingRequest = await req.json()
+    const parsed = await validateBody(req, IndexingSchema, { name: 'google-indexing-api' })
+    if (!parsed.ok) return parsed.response
+    const requestData = parsed.data as unknown as IndexingRequest
 
     if (!requestData.urls || !Array.isArray(requestData.urls) || requestData.urls.length === 0) {
       return new Response(

@@ -1,6 +1,16 @@
 // Calculate Lead Score Edge Function
 import { initializeAuthContext, errorResponse, successResponse } from '../_shared/auth-helpers.ts';
 import { getCorsHeaders } from '../_shared/secure-cors.ts';
+import { validateBody } from "../_shared/validate-body.ts";
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
+
+// Two callers, two shapes: LeadTrackingDashboard sends { leadId, companyId },
+// useLeadScore (src/hooks/useCRM.ts) sends { lead_id } alone.
+const LeadScoreSchema = z.object({
+  leadId: z.string().uuid().nullish(),
+  lead_id: z.string().uuid().nullish(),
+  companyId: z.string().uuid().nullish(),
+}).passthrough();
 
 interface ScoringRule {
   id: string;
@@ -44,19 +54,24 @@ Deno.serve(async (req) => {
     const { user, supabase: supabaseClient } = authContext;
     console.log(`[CALCULATE-LEAD-SCORE] User authenticated: ${user.id}`);
 
-    const { leadId, companyId } = await req.json();
+    const parsed = await validateBody(req, LeadScoreSchema, { name: 'calculate-lead-score' });
+    if (!parsed.ok) return parsed.response;
+    const leadId = parsed.data.leadId ?? parsed.data.lead_id;
+    const companyId = parsed.data.companyId;
 
-    if (!leadId || !companyId) {
-      return errorResponse('Lead ID and Company ID are required', 400);
+    // companyId used to be required, which 400'd every call from useLeadScore.
+    // It only ever narrowed a lookup that RLS already scopes to the caller.
+    if (!leadId) {
+      return errorResponse('Lead ID is required', 400);
     }
 
     // Get the lead data
-    const { data: lead, error: leadError } = await supabaseClient
+    let leadQuery = supabaseClient
       .from('leads')
       .select('*')
-      .eq('id', leadId)
-      .eq('company_id', companyId)
-      .single();
+      .eq('id', leadId);
+    if (companyId) leadQuery = leadQuery.eq('company_id', companyId);
+    const { data: lead, error: leadError } = await leadQuery.single();
 
     if (leadError || !lead) {
       console.error('Error fetching lead:', leadError);
@@ -67,7 +82,9 @@ Deno.serve(async (req) => {
     const { data: scoringRules, error: rulesError } = await supabaseClient
       .from('lead_scoring_rules')
       .select('*')
-      .or(`is_system_rule.eq.true,company_id.eq.${companyId}`)
+      // The lead row's company, not the body's: the body value went into this
+      // filter string unescaped, so a crafted companyId could append filters.
+      .or(`is_system_rule.eq.true,company_id.eq.${lead.company_id}`)
       .eq('is_active', true);
 
     if (rulesError) {

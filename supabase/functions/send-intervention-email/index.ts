@@ -18,6 +18,14 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { initializeAuthContext, errorResponse } from "../_shared/auth-helpers.ts";
 import { sendCommercialEmail } from "../_shared/commercial-email.ts";
 import { getCorsHeaders } from "../_shared/secure-cors.ts";
+import { validateBody } from "../_shared/validate-body.ts";
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
+
+// Sent by src/pages/admin/ChurnPrediction.tsx.
+const InterventionSchema = z.object({
+  userId: z.string().uuid(),
+  predictionId: z.string().uuid(),
+}).passthrough();
 
 serve(async (req) => {
   const corsHeaders = getCorsHeaders(req);
@@ -34,7 +42,9 @@ serve(async (req) => {
     const { supabase: supabaseClient } = authContext;
     console.log('[SEND-INTERVENTION-EMAIL] Auth context initialized');
 
-    const { userId, predictionId } = await req.json();
+    const parsed = await validateBody(req, InterventionSchema, { name: "send-intervention-email" });
+    if (!parsed.ok) return parsed.response;
+    const { userId, predictionId } = parsed.data;
 
     // Get user and prediction data
     const { data: user, error: userError } = await supabaseClient

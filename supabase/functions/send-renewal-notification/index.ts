@@ -3,6 +3,14 @@ import { Resend } from "https://esm.sh/resend@2.0.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.3";
 import { getCorsHeaders } from "../_shared/secure-cors.ts";
 import { requireSystemOrAdmin } from "../_shared/system-auth.ts";
+import { validateBody } from "../_shared/validate-body.ts";
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
+
+// RenewalNotificationPanel and check-renewal-notifications both invoke with no
+// body (a scheduled run); subscriber_id narrows a manual run to one row.
+const RenewalSchema = z.object({
+  subscriber_id: z.string().uuid().nullish(),
+}).passthrough();
 
 const logStep = (step: string, details?: any) => {
   const detailsStr = details ? ` - ${JSON.stringify(details)}` : '';
@@ -33,14 +41,13 @@ serve(async (req) => {
     const resend = new Resend(resendKey);
 
     // Get the request body if this is a manual trigger
-    let subscriberId = null;
+    let subscriberId: string | null = null;
     if (req.method === "POST") {
-      try {
-        const body = await req.json();
-        subscriberId = body.subscriber_id;
-      } catch {
-        // No body or invalid JSON - that's ok for scheduled runs
-      }
+      // No body is the scheduled-run case, hence allowEmpty.
+      const parsed = await validateBody(req, RenewalSchema, { name: "send-renewal-notification", allowEmpty: true });
+      if (!parsed.ok) return parsed.response;
+      const raw = (parsed.data as { subscriber_id?: unknown } | null)?.subscriber_id;
+      subscriberId = typeof raw === "string" && raw ? raw : null;
     }
 
     // Find subscriptions that need renewal notifications

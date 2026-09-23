@@ -2,6 +2,17 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts"
 import { initializeAuthContext, errorResponse } from '../_shared/auth-helpers.ts'
 import { getCorsHeaders } from '../_shared/secure-cors.ts';
+import { validateBody } from '../_shared/validate-body.ts'
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts"
+
+// No caller in src/ or Brikly-iOS/ today (SmartProcurement.tsx reads the
+// tables directly). The client carries the caller's JWT, so RLS scopes
+// tenant_id.
+const ProcurementSchema = z.object({
+  tenant_id: z.string().uuid(),
+  project_id: z.string().uuid().nullish(),
+  action: z.enum(['forecast_materials', 'optimize_suppliers', 'generate_recommendations']),
+}).passthrough()
 
 interface MaterialUsage {
   material_name: string
@@ -27,7 +38,9 @@ serve(async (req) => {
     const { user, supabase: supabaseClient } = authContext
     console.log('[SMART-PROCUREMENT] User authenticated', { userId: user.id })
 
-    const { tenant_id, project_id, action } = await req.json()
+    const parsed = await validateBody(req, ProcurementSchema, { name: 'smart-procurement' })
+    if (!parsed.ok) return parsed.response
+    const { tenant_id, project_id, action } = parsed.data
 
     if (!tenant_id) {
       return new Response(

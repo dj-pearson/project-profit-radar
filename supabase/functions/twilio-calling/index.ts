@@ -1,6 +1,39 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.3";
 import { getCorsHeaders } from '../_shared/secure-cors.ts';
+import { validateBody } from "../_shared/validate-body.ts";
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
+
+// JSON actions, sent by src/components/crm/ClickToCall.tsx and CallHistory.tsx.
+// recording_callback is not here: Twilio posts it as form data with the action
+// in the query string, and it is read with req.formData() below. The input
+// validation guard lists that path by name (FORM_DATA_READERS).
+const CALL_SID = /^CA[0-9a-fA-F]{32}$/;
+const RECORDING_SID = /^RE[0-9a-fA-F]{32}$/;
+const optionalId = z.string().max(100).nullish();
+const TwilioActionSchema = z.discriminatedUnion("action", [
+  z.object({
+    action: z.literal("initiate_call"),
+    to: z.string().min(1).max(32),
+    leadId: optionalId,
+    contactId: optionalId,
+    opportunityId: optionalId,
+    dealId: optionalId,
+    companyId: optionalId,
+  }).passthrough(),
+  z.object({
+    action: z.literal("get_call_status"),
+    callSid: z.string().regex(CALL_SID),
+  }).passthrough(),
+  z.object({
+    action: z.literal("get_recording"),
+    recordingSid: z.string().regex(RECORDING_SID),
+  }).passthrough(),
+  z.object({
+    action: z.literal("transcribe"),
+    callLogId: z.string().uuid(),
+  }).passthrough(),
+]);
 
 serve(async (req) => {
   const corsHeaders = getCorsHeaders(req);
@@ -28,7 +61,21 @@ serve(async (req) => {
       throw new Error("Unauthorized");
     }
 
-    const { action, ...params } = await req.json();
+    // Twilio's recording status callback is form data with the action in the
+    // query string (see RecordingStatusCallback below). Every other action is
+    // a JSON body. Reading req.json() first, as this used to, threw on the
+    // form body, so that branch could never run.
+    const queryAction = new URL(req.url).searchParams.get("action");
+    let action: string | undefined;
+    // deno-lint-ignore no-explicit-any
+    let params: Record<string, any> = {};
+    if (queryAction === "recording_callback") {
+      action = queryAction;
+    } else {
+      const parsed = await validateBody(req, TwilioActionSchema, { name: "twilio-calling" });
+      if (!parsed.ok) return parsed.response;
+      ({ action, ...params } = parsed.data as { action?: string; [k: string]: unknown });
+    }
 
     // Twilio credentials
     const accountSid = Deno.env.get("TWILIO_ACCOUNT_SID");
@@ -104,9 +151,29 @@ serve(async (req) => {
       case "get_call_status": {
         // Get status of an existing call
         const { callSid } = params;
+        if (typeof callSid !== "string" || !CALL_SID.test(callSid)) {
+          throw new Error("Invalid callSid");
+        }
+
+        // The Twilio credentials are the platform's, so Twilio will answer
+        // for ANY tenant's call. Only look up a call the caller can already
+        // see in call_logs; this client carries their JWT, so RLS scopes it to
+        // their company (US-241).
+        const { data: ownCall, error: ownCallError } = await supabaseClient
+          .from("call_logs")
+          .select("id")
+          .eq("call_sid", callSid)
+          .maybeSingle();
+        if (ownCallError) throw new Error("Failed to look up call");
+        if (!ownCall) {
+          return new Response(JSON.stringify({ success: false, error: "Call not found", timestamp: new Date().toISOString() }), {
+            status: 404,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
 
         const statusResponse = await fetch(
-          `${twilioBaseUrl}/Calls/${callSid}.json`,
+          `${twilioBaseUrl}/Calls/${encodeURIComponent(callSid)}.json`,
           {
             headers: {
               Authorization: `Basic ${twilioAuth}`,
@@ -180,8 +247,26 @@ serve(async (req) => {
       case "get_recording": {
         // Get recording URL with auth
         const { recordingSid } = params;
+        if (typeof recordingSid !== "string" || !RECORDING_SID.test(recordingSid)) {
+          throw new Error("Invalid recordingSid");
+        }
 
-        const recordingUrl = `${twilioBaseUrl}/Recordings/${recordingSid}.json`;
+        // Same platform-credential problem as get_call_status: a recording
+        // sid from another company would otherwise hand back its media URL.
+        const { data: ownRecording, error: ownRecordingError } = await supabaseClient
+          .from("call_logs")
+          .select("id")
+          .eq("recording_sid", recordingSid)
+          .maybeSingle();
+        if (ownRecordingError) throw new Error("Failed to look up recording");
+        if (!ownRecording) {
+          return new Response(JSON.stringify({ success: false, error: "Recording not found", timestamp: new Date().toISOString() }), {
+            status: 404,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+
+        const recordingUrl = `${twilioBaseUrl}/Recordings/${encodeURIComponent(recordingSid)}.json`;
         const recordingResponse = await fetch(recordingUrl, {
           headers: {
             Authorization: `Basic ${twilioAuth}`,

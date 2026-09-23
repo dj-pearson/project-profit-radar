@@ -4,6 +4,24 @@
 import { serve } from 'https://deno.land/std@0.190.0/http/server.ts';
 import { initializeAuthContext, errorResponse } from '../_shared/auth-helpers.ts';
 import { getCorsHeaders } from '../_shared/secure-cors.ts';
+import { validateBody } from '../_shared/validate-body.ts';
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
+
+// The action is in the query string; these are the bodies that go with it.
+// initiate takes no body. No caller in src/ or Brikly-iOS/ today.
+const CallbackSchema = z.object({
+  code: z.string().max(4096).nullish(),
+  state: z.string().max(512),
+  error: z.string().max(500).nullish(),
+}).passthrough();
+const ConnectionSchema = z.object({
+  connection_id: z.string().uuid(),
+}).passthrough();
+const BODY_SCHEMAS: Record<string, z.ZodTypeAny> = {
+  callback: CallbackSchema,
+  refresh: ConnectionSchema,
+  disconnect: ConnectionSchema,
+};
 
 const GOOGLE_CLIENT_ID = Deno.env.get('GOOGLE_OAUTH_CLIENT_ID') || '';
 const GOOGLE_CLIENT_SECRET = Deno.env.get('GOOGLE_OAUTH_CLIENT_SECRET') || '';
@@ -39,6 +57,15 @@ serve(async (req) => {
     const url = new URL(req.url);
     const action = url.searchParams.get('action');
 
+    // deno-lint-ignore no-explicit-any
+    let body: any = {};
+    const bodySchema = action ? BODY_SCHEMAS[action] : undefined;
+    if (bodySchema) {
+      const parsed = await validateBody(req, bodySchema, { name: `analytics-oauth-google:${action}` });
+      if (!parsed.ok) return parsed.response;
+      body = parsed.data ?? {};
+    }
+
     // Step 1: Initiate OAuth flow
     if (action === 'initiate') {
       const platform = url.searchParams.get('platform'); // 'google_analytics' or 'google_search_console'
@@ -71,7 +98,7 @@ serve(async (req) => {
 
     // Step 2: Handle OAuth callback
     if (action === 'callback') {
-      const { code, state, error } = await req.json();
+      const { code, state, error } = body;
 
       if (error) {
         throw new Error(`OAuth error: ${error}`);
@@ -267,7 +294,7 @@ serve(async (req) => {
 
     // Step 3: Refresh token
     if (action === 'refresh') {
-      const { connection_id } = await req.json();
+      const { connection_id } = body;
 
       // Get connection with site isolation
       const { data: connection } = await supabaseClient
@@ -339,7 +366,7 @@ serve(async (req) => {
 
     // Step 4: Disconnect
     if (action === 'disconnect') {
-      const { connection_id } = await req.json();
+      const { connection_id } = body;
 
       // Revoke Google token with site isolation
       const { data: connection } = await supabaseClient
@@ -351,7 +378,7 @@ serve(async (req) => {
 
       if (connection?.access_token_encrypted) {
         await fetch(
-          `https://oauth2.googleapis.com/revoke?token=${connection.access_token_encrypted}`,
+          `https://oauth2.googleapis.com/revoke?token=${encodeURIComponent(connection.access_token_encrypted)}`,
           {
             method: 'POST',
           }

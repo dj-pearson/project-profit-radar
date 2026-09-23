@@ -2,12 +2,15 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { Resend } from "https://esm.sh/resend@2.0.0";
 import { initializeAuthContext, errorResponse } from "../_shared/auth-helpers.ts";
 import { getCorsHeaders } from '../_shared/secure-cors.ts';
+import { validateBody } from "../_shared/validate-body.ts";
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
 
 const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 
-interface BookingConfirmationRequest {
-  bookingId: string;
-}
+// Sent by src/components/crm/PublicBookingForm.tsx with the inserted row's id.
+const BookingConfirmationSchema = z.object({
+  bookingId: z.string().uuid(),
+}).passthrough();
 
 const handler = async (req: Request): Promise<Response> => {
   const corsHeaders = getCorsHeaders(req);
@@ -24,7 +27,9 @@ const handler = async (req: Request): Promise<Response> => {
     const { supabase: supabaseClient } = authContext;
     console.log('[SEND-BOOKING-CONFIRMATION] Auth context initialized');
 
-    const { bookingId }: BookingConfirmationRequest = await req.json();
+    const parsed = await validateBody(req, BookingConfirmationSchema, { name: 'send-booking-confirmation' });
+    if (!parsed.ok) return parsed.response;
+    const { bookingId } = parsed.data;
 
     // Fetch booking details with booking page info
     const { data: booking, error: bookingError } = await supabaseClient

@@ -1,6 +1,8 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { getCorsHeaders } from '../_shared/secure-cors.ts';
 import { initializeAuthContext, errorResponse } from '../_shared/auth-helpers.ts';
+import { validateBody } from "../_shared/validate-body.ts";
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
 
 interface Project {
   id: string;
@@ -8,10 +10,16 @@ interface Project {
   client: string;
 }
 
-interface ClassificationRequest {
-  text: string;
-  projects: Project[];
-}
+// Sent by src/components/ocr/DocumentOCRProcessor.tsx, which trims text to
+// 4000 characters. client is a project's client_name and may be null.
+const ClassificationSchema = z.object({
+  text: z.string().max(20000),
+  projects: z.array(z.object({
+    id: z.string().max(100),
+    name: z.string().max(500).nullish(),
+    client: z.string().max(500).nullish(),
+  }).passthrough()).max(1000),
+}).passthrough();
 
 interface AIClassification {
   document_type: string;
@@ -41,7 +49,9 @@ serve(async (req) => {
       return errorResponse('Unauthorized', 401, req);
     }
 
-    const { text, projects }: ClassificationRequest = await req.json();
+    const parsed = await validateBody(req, ClassificationSchema, { name: 'document-classifier' });
+    if (!parsed.ok) return parsed.response;
+    const { text, projects } = parsed.data as { text: string; projects: Project[] };
     
     console.log('Processing document classification request');
     console.log('Text length:', text.length);

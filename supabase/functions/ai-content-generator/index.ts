@@ -5,6 +5,19 @@ import { aiService } from "../_shared/ai-service.ts";
 import { initializeAuthContext, errorResponse } from "../_shared/auth-helpers.ts";
 import { checkRateLimit, rateLimitResponse, RATE_LIMITS } from "../_shared/rate-limiter.ts";
 import { getCorsHeaders } from '../_shared/secure-cors.ts';
+import { validateBody } from "../_shared/validate-body.ts";
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
+
+// Body sent by src/services/AIModelService.ts. max_tokens and temperature are
+// sent but not used here; they stay accepted.
+const ContentSchema = z.object({
+  prompt: z.string().min(1).max(50000),
+  system_prompt: z.string().max(20000).nullish(),
+  model_alias: z.string().max(100).nullish(),
+  content_type: z.string().max(50).nullish(),
+  max_tokens: z.number().int().positive().max(200000).nullish(),
+  temperature: z.number().min(0).max(2).nullish(),
+}).passthrough();
 
 serve(async (req) => {
   const corsHeaders = getCorsHeaders(req);
@@ -32,7 +45,9 @@ serve(async (req) => {
 
     console.log('[AI-CONTENT-GENERATOR] User authenticated', { userId: user.id });
 
-    const { prompt, system_prompt, model_alias, content_type } = await req.json();
+    const parsed = await validateBody(req, ContentSchema, { name: 'ai-content-generator' });
+    if (!parsed.ok) return parsed.response;
+    const { prompt, system_prompt, model_alias, content_type } = parsed.data;
 
     if (!prompt) {
       throw new Error('Prompt is required');

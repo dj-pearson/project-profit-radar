@@ -4,6 +4,16 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@14.21.0";
 import { initializeAuthContext, errorResponse } from '../_shared/auth-helpers.ts';
 import { getCorsHeaders } from '../_shared/secure-cors.ts';
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
+
+// PaymentDashboard and PaymentFailureAlert invoke with no body at all;
+// SubscriptionManager sends {} or { flow: 'cancel' }. Parsed with safeParse
+// rather than validateBody on purpose: this is the cancellation path, and any
+// body that is missing, malformed or off-schema lands on the plain billing
+// portal instead of an error, exactly as before.
+const PortalSchema = z.object({
+  flow: z.string().max(50).nullish(),
+}).passthrough();
 
 const logStep = (step: string, details?: any) => {
   const detailsStr = details ? ` - ${JSON.stringify(details)}` : '';
@@ -62,8 +72,12 @@ serve(async (req) => {
     // flow: "cancel" drops them directly on the cancellation flow.
     let flow: string | null = null;
     try {
-      const body = await req.json();
-      if (body && typeof body.flow === "string") flow = body.flow;
+      const parsed = PortalSchema.safeParse(await req.json());
+      if (parsed.success && typeof parsed.data.flow === "string") {
+        flow = parsed.data.flow;
+      } else if (!parsed.success) {
+        console.error(`[input-validation] customer-portal ignored body: ${parsed.error.errors.map((e) => e.path.join(".") || "<root>").join(", ")}`);
+      }
     } catch {
       // No body is the normal case for the plain "manage billing" entry point.
     }
