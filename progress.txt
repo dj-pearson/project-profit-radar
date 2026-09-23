@@ -6328,3 +6328,28 @@ stopped. Closing that needs server-side enforcement (AAL2 or an RLS check),
 which is a bigger change than this story.
 
 10 new tests. Removing the listener gate fails 3 of them.
+
+## US-347: a password change now ends the other sessions
+
+Resetting a stolen password left the thief signed in. The reset called
+`admin.updateUserById` and stopped. The profile page called `updateUser`
+straight from the browser, with no reauthentication and no sign-out.
+
+supabase-js has no admin call that ends another user's sessions by user id;
+`admin.signOut` wants that user's JWT. So migration `20260923010000` adds
+`revoke_user_sessions`, callable by service_role only, which revokes the refresh
+tokens and deletes the session rows in `auth`. The reset calls it with nothing
+kept, then the sign-in page signs the user in fresh with the new password.
+
+The profile-page change moved to the server as well. A reauthentication check in
+the browser would be a UX step that anyone holding the session could skip by
+calling `updateUser` directly. The new `change-password` function checks the
+emailed code, applies the password policy, changes the password and revokes
+every other session, keeping the caller's own. The page then also calls
+`signOut({ scope: 'others' })`.
+
+The session test runs on the real-Postgres harness. After a change, the second
+session's refresh token is unusable and the current one still works. After a
+reset, none of the user's tokens is usable, and anon and signed-in users can't
+call the function. What it does not cover: an access token already issued keeps
+working against PostgREST until it expires, at most an hour.

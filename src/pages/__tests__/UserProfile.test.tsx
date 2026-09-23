@@ -11,7 +11,8 @@ const MOCK_PROFILE = {
   phone: '', avatar_url: '', company_id: 'co-1', role: 'admin',
 };
 const refreshProfile = vi.fn().mockResolvedValue(undefined);
-const MOCK_AUTH = { user: MOCK_USER, userProfile: MOCK_PROFILE, loading: false, refreshProfile };
+const sendOTP = vi.fn();
+const MOCK_AUTH = { user: MOCK_USER, userProfile: MOCK_PROFILE, loading: false, refreshProfile, sendOTP };
 
 vi.mock('@/contexts/AuthContext', () => ({ useAuth: () => MOCK_AUTH }));
 vi.mock('@/contexts/ThemeContext', () => ({ useTheme: () => ({ theme: 'light', setTheme: vi.fn() }) }));
@@ -32,9 +33,16 @@ const update = vi.fn();
 const eq = vi.fn();
 const select = vi.fn();
 const from = vi.fn();
+const invoke = vi.fn();
+const signOut = vi.fn();
+const updateUser = vi.fn();
 
 vi.mock('@/integrations/supabase/client', () => ({
-  supabase: { from: (...a: unknown[]) => from(...a) },
+  supabase: {
+    from: (...a: unknown[]) => from(...a),
+    functions: { invoke: (...a: unknown[]) => invoke(...a) },
+    auth: { signOut: (...a: unknown[]) => signOut(...a), updateUser: (...a: unknown[]) => updateUser(...a) },
+  },
 }));
 
 import UserProfile from '../UserProfile';
@@ -89,5 +97,58 @@ describe('UserProfile save (US-362)', () => {
 
     await waitFor(() => expect(toast).toHaveBeenCalledWith(expect.objectContaining({ variant: 'destructive' })));
     expect(toast).not.toHaveBeenCalledWith(expect.objectContaining({ title: 'Profile updated' }));
+  });
+});
+
+describe('UserProfile password change (US-347)', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    sendOTP.mockResolvedValue({});
+    invoke.mockResolvedValue({ data: { success: true, data: { revokedSessions: 1 } }, error: null });
+    signOut.mockResolvedValue({ error: null });
+  });
+
+  async function openSecurityTab(user: ReturnType<typeof userEvent.setup>) {
+    render(<UserProfile />);
+    await user.click(screen.getByRole('tab', { name: /security/i }));
+    await user.type(screen.getByLabelText('New Password'), 'N3w-long-passw0rd!');
+    await user.type(screen.getByLabelText('Confirm Password'), 'N3w-long-passw0rd!');
+  }
+
+  it('emails a reauthentication code first and changes nothing yet', async () => {
+    const user = userEvent.setup();
+    await openSecurityTab(user);
+    await user.click(screen.getByRole('button', { name: 'Change Password' }));
+
+    await waitFor(() => expect(sendOTP).toHaveBeenCalledWith({ email: 'dana@reyesbuild.com', type: 'reauthentication' }));
+    expect(invoke).not.toHaveBeenCalled();
+    expect(updateUser).not.toHaveBeenCalled();
+  });
+
+  it('changes the password on the server with the code, then signs out other sessions', async () => {
+    const user = userEvent.setup();
+    await openSecurityTab(user);
+    await user.click(screen.getByRole('button', { name: 'Change Password' }));
+    await user.type(await screen.findByLabelText(/Code sent to/), '123456');
+    await user.click(screen.getByRole('button', { name: 'Confirm Password Change' }));
+
+    await waitFor(() => expect(invoke).toHaveBeenCalledWith('change-password', {
+      body: { otpCode: '123456', newPassword: 'N3w-long-passw0rd!' },
+    }));
+    await waitFor(() => expect(signOut).toHaveBeenCalledWith({ scope: 'others' }));
+    // The browser never sets the password itself.
+    expect(updateUser).not.toHaveBeenCalled();
+  });
+
+  it('does not sign anyone out when the server refuses the code', async () => {
+    invoke.mockResolvedValue({ data: null, error: { message: 'Edge Function returned a non-2xx status code' } });
+    const user = userEvent.setup();
+    await openSecurityTab(user);
+    await user.click(screen.getByRole('button', { name: 'Change Password' }));
+    await user.type(await screen.findByLabelText(/Code sent to/), '000000');
+    await user.click(screen.getByRole('button', { name: 'Confirm Password Change' }));
+
+    await waitFor(() => expect(toast).toHaveBeenCalledWith(expect.objectContaining({ title: 'Password not changed' })));
+    expect(signOut).not.toHaveBeenCalled();
   });
 });

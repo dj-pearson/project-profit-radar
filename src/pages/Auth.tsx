@@ -267,14 +267,23 @@ const Auth = () => {
     setLoading(true);
     const result = await resetPasswordWithOTP(resetEmail, otpCode, newPassword);
     if (result.success) {
-      setOtpFlowState('verified'); toast({ title: "Password Reset!", description: "You can now sign in." });
-      setTimeout(() => { setOtpFlowState('idle'); setEmailSent(false); setEmailSentType(null); setOtpCode(""); setResetEmail(""); setNewPassword(""); setConfirmPassword(""); setActiveView("signin"); }, 2000);
+      setOtpFlowState('verified');
+      // The reset ended every existing session, so sign in fresh with the new
+      // password (US-347). This goes through signIn, so MFA still applies.
+      const fresh = await signIn(resetEmail, newPassword);
+      if (fresh.error) {
+        toast({ title: "Password Reset!", description: "Your other sessions were signed out. Sign in with your new password." });
+      } else if (!fresh.mfaRequired) {
+        toast({ title: "Password Reset!", description: "You're signed in, and your other sessions were signed out." });
+      }
+      const resetForm = () => { setOtpFlowState('idle'); setEmailSent(false); setEmailSentType(null); setOtpCode(""); setResetEmail(""); setNewPassword(""); setConfirmPassword(""); setActiveView("signin"); };
+      if (fresh.error) setTimeout(resetForm, 2000); else resetForm();
     } else {
       if (result.error?.toLowerCase().includes('code') || result.error?.toLowerCase().includes('otp')) setOtpFlowState('verifying');
       toast({ variant: "destructive", title: "Reset Failed", description: result.error || "Failed to reset password." });
     }
     setLoading(false);
-  }, [newPasswordValidation, newPassword, confirmPassword, resetEmail, otpCode, resetPasswordWithOTP]);
+  }, [newPasswordValidation, newPassword, confirmPassword, resetEmail, otpCode, resetPasswordWithOTP, signIn]);
 
   const handleResendResetOTP = useCallback(async () => {
     if (otpResendCooldown > 0) return;

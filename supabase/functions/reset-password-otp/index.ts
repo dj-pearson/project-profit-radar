@@ -304,6 +304,18 @@ async function handleVerifyReset(
     );
   }
 
+  // End every session the old password opened, a thief's included (US-347).
+  // The password is already changed, so a failure here is reported, not
+  // rolled back; the caller still gets success because the reset happened.
+  const { data: revoked, error: revokeError } = await supabaseAdmin.rpc('revoke_user_sessions', {
+    p_user_id: authUser.user.id,
+  });
+  if (revokeError) {
+    console.error('[ResetPasswordOTP] OTHER SESSIONS STILL ACTIVE after reset:', revokeError.message);
+  } else {
+    console.log(`[ResetPasswordOTP] Revoked ${revoked ?? 0} session(s) after reset`);
+  }
+
   console.log(`[ResetPasswordOTP] Password reset successfully for ${email}`);
 
   return new Response(

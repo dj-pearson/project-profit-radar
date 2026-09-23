@@ -68,7 +68,7 @@ const ProfileSkeleton = () => (
 );
 
 const UserProfile = () => {
-  const { user, userProfile, refreshProfile } = useAuth();
+  const { user, userProfile, refreshProfile, sendOTP } = useAuth();
   const { theme, setTheme } = useTheme();
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -85,7 +85,9 @@ const UserProfile = () => {
   const [display, setDisplay] = useState<DisplayPrefs>({
     date_format: 'MM/DD/YYYY', timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
   });
-  const [passwordForm, setPasswordForm] = useState({ current: '', new_password: '', confirm: '' });
+  const [passwordForm, setPasswordForm] = useState({ code: '', new_password: '', confirm: '' });
+  // Set once the reauthentication code has been emailed (US-347).
+  const [codeSentTo, setCodeSentTo] = useState<string | null>(null);
 
   useEffect(() => {
     if (!userProfile) return;
@@ -165,6 +167,9 @@ const UserProfile = () => {
     }
   };
 
+  // Step 1 of a password change: check the new password locally, then email
+  // a reauthentication code. The change itself happens on the server, in
+  // change-password, which will not act without that code (US-347).
   const handleChangePassword = async () => {
     if (passwordForm.new_password !== passwordForm.confirm) {
       toast({ variant: 'destructive', title: 'Error', description: 'Passwords do not match.' });
@@ -174,14 +179,52 @@ const UserProfile = () => {
       toast({ variant: 'destructive', title: 'Error', description: 'Password must be at least 8 characters.' });
       return;
     }
+    const email = user?.email;
+    if (!email) {
+      toast({ variant: 'destructive', title: 'Error', description: 'Your account has no email address to send a code to.' });
+      return;
+    }
     try {
       setSaving(true);
-      const { error } = await supabase.auth.updateUser({ password: passwordForm.new_password });
-      if (error) throw error;
-      setPasswordForm({ current: '', new_password: '', confirm: '' });
-      toast({ title: 'Password changed', description: 'Your password has been updated.' });
-    } catch {
-      toast({ variant: 'destructive', title: 'Error', description: 'Failed to change password.' });
+      const { error } = await sendOTP({ email, type: 'reauthentication' });
+      if (error) throw new Error(error);
+      setCodeSentTo(email);
+      toast({ title: 'Check your email', description: `We sent a 6-digit code to ${email}.` });
+    } catch (err) {
+      toast({ variant: 'destructive', title: 'Could not send code', description: errorMessage(err) });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  // Step 2: the server verifies the code, changes the password and ends every
+  // other session. signOut({ scope: 'others' }) repeats that last part from
+  // this side, in case the server-side revocation failed.
+  const handleConfirmPasswordChange = async () => {
+    try {
+      setSaving(true);
+      const { data, error } = await supabase.functions.invoke('change-password', {
+        body: { otpCode: passwordForm.code.trim(), newPassword: passwordForm.new_password },
+      });
+      if (error) {
+        // FunctionsHttpError carries the response; surface the server's reason.
+        const context = (error as { context?: Response }).context;
+        const body = context && typeof context.json === 'function' ? await context.json().catch(() => null) : null;
+        throw new Error(body?.error || error.message);
+      }
+      if (!data?.success) throw new Error(data?.error || 'Password was not changed.');
+
+      const { error: signOutError } = await supabase.auth.signOut({ scope: 'others' });
+      setPasswordForm({ code: '', new_password: '', confirm: '' });
+      setCodeSentTo(null);
+      toast({
+        title: 'Password changed',
+        description: signOutError
+          ? 'Your password was updated, but other devices could not be signed out. Sign out everywhere from Security settings.'
+          : 'Your password was updated and your other devices were signed out.',
+      });
+    } catch (err) {
+      toast({ variant: 'destructive', title: 'Password not changed', description: errorMessage(err) });
     } finally {
       setSaving(false);
     }
@@ -453,10 +496,34 @@ const UserProfile = () => {
                       placeholder="Confirm new password"
                     />
                   </div>
-                  <Button onClick={handleChangePassword} disabled={saving || !passwordForm.new_password}>
-                    <Lock className="h-4 w-4 mr-2" aria-hidden="true" />
-                    {saving ? 'Changing...' : 'Change Password'}
-                  </Button>
+                  {codeSentTo ? (
+                    <div className="space-y-2">
+                      <Label htmlFor="reauth_code">Code sent to {codeSentTo}</Label>
+                      <Input
+                        id="reauth_code"
+                        inputMode="numeric"
+                        autoComplete="one-time-code"
+                        maxLength={6}
+                        value={passwordForm.code}
+                        onChange={e => setPasswordForm(p => ({ ...p, code: e.target.value.replace(/\D/g, '') }))}
+                        placeholder="6-digit code"
+                      />
+                      <div className="flex gap-2">
+                        <Button onClick={handleConfirmPasswordChange} disabled={saving || passwordForm.code.length !== 6}>
+                          <Lock className="h-4 w-4 mr-2" aria-hidden="true" />
+                          {saving ? 'Changing...' : 'Confirm Password Change'}
+                        </Button>
+                        <Button variant="outline" onClick={handleChangePassword} disabled={saving}>
+                          Send a new code
+                        </Button>
+                      </div>
+                    </div>
+                  ) : (
+                    <Button onClick={handleChangePassword} disabled={saving || !passwordForm.new_password}>
+                      <Lock className="h-4 w-4 mr-2" aria-hidden="true" />
+                      {saving ? 'Sending code...' : 'Change Password'}
+                    </Button>
+                  )}
                   <Separator />
                   <div className="flex items-center justify-between">
                     <div>
