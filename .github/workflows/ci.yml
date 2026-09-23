@@ -154,6 +154,11 @@ jobs:
       - name: Run security unit tests
         run: npm run test:security
 
+      # Tenancy isolation against a real Postgres (US-343, US-394). The runner
+      # image ships the PostgreSQL server binaries; the script finds them.
+      - name: RLS tenancy tests
+        run: npm run test:rls
+
       - name: Secret scanning
         run: bash scripts/secret-scan.sh
 

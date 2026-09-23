@@ -43,6 +43,7 @@
     "test:auto:full": "npx tsx src/tools/automated-testing/cli.ts --url http://localhost:8080 --preset full",
     "test:auto:ci": "npx tsx src/tools/automated-testing/cli.ts --url http://localhost:8080 --preset ci",
     "test:security": "vitest run src/lib/security",
+    "test:rls": "bash scripts/run-rls-tests.sh",
     "preview": "vite preview",
     "build:prod": "npm run generate-sitemap && vite build --mode production && node scripts/copy-404.js",
     "build:mobile": "vite build --mode production --config vite.config.mobile.ts",

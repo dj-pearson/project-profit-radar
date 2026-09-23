@@ -5398,8 +5398,8 @@
         "A test as company A asserts zero rows from company B on each table"
       ],
       "priority": 1,
-      "passes": false,
-      "notes": "PROPOSED 2026-09-09 (production-readiness audit, six parallel reviews: auth, security, page/data flows, UI/UX, SEO, ops). HIGH. Per the US-298 pattern, prefer dropping the bad permissive policy over adding a restrictive one here, since the good policies already exist. Note user_roles itself is the subject of US-348."
+      "passes": true,
+      "notes": "PROPOSED 2026-09-09 (production-readiness audit, six parallel reviews: auth, security, page/data flows, UI/UX, SEO, ops). HIGH. Per the US-298 pattern, prefer dropping the bad permissive policy over adding a restrictive one here, since the good policies already exist. Note user_roles itself is the subject of US-348. || DONE 2026-09-23. Migration 20260923000000_scope_materials_suppliers_rls.sql drops the three 20250115000004 policies by name. On materials it also adds 'Company members can manage materials' (FOR ALL TO authenticated, company_id = get_user_company(auth.uid()) on USING and WITH CHECK), because the only remaining company-scoped write policy there covers admin/PM/office_staff/root_admin, and a bare drop would have stopped a field_supervisor writing materials in their own company - a same-tenant tightening. suppliers and material_suppliers already had company-scoped FOR ALL for every role. NULL company_id: NOT NULL on all three in the live types; the migration warns with a count if any environment differs. TEST: new real-Postgres harness, scripts/run-rls-tests.sh (npm run test:rls, now a step in the CI Security job) with supabase/tests/rls/_bootstrap.sql shims; materials_suppliers_tenancy.test.sql proves the leak before the migration and 18 isolation/same-company assertions after it. Mutation-checked twice: leaving the suppliers policy in place fails 'A reads zero B suppliers'; dropping without the materials replacement fails the field_supervisor insert."
     },
     {
       "id": "US-344",
@@ -6092,7 +6092,7 @@
       ],
       "priority": 2,
       "passes": false,
-      "notes": "PROPOSED 2026-09-09 (production-readiness audit, six parallel reviews: auth, security, page/data flows, UI/UX, SEO, ops). Also the first real evidence for US-247 (staging) and US-248 (do migrations replay), since supabase start applies them from zero and 22 ALTER-before-CREATE files will fail."
+      "notes": "PROPOSED 2026-09-09 (production-readiness audit, six parallel reviews: auth, security, page/data flows, UI/UX, SEO, ops). Also the first real evidence for US-247 (staging) and US-248 (do migrations replay), since supabase start applies them from zero and 22 ALTER-before-CREATE files will fail. || PROGRESS 2026-09-23 (US-343): a real-database harness now exists. scripts/run-rls-tests.sh initdb's a throwaway Postgres (the CI runner image ships PG 16), applies supabase/tests/rls/_bootstrap.sql (anon/authenticated/service_role, auth.uid() from request.jwt.claim.sub, user_profiles, get_user_company/get_user_role) and runs each supabase/tests/rls/*.test.sql in a fresh database; test_act_as(uid) and test_assert(ok, msg) are the helpers. It runs in CI as 'RLS tenancy tests'. Limitation: tests build only the tables and policies they name, copied from the cited migrations, rather than replaying the whole migration history, so a policy added elsewhere is not seen. The role-escalation paths are not covered yet."
     },
     {
       "id": "US-395",

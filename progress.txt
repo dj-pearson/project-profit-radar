@@ -6262,3 +6262,25 @@ now requires a guard call on every path. That turned up four more:
 
 Restoring the old `send-payment-reminder` makes the guard fail. 10 cases in
 `_shared/caller-company.test.ts`.
+
+## US-343: materials, suppliers and material_suppliers were open to every tenant
+
+`20250115000004` gave each table a FOR ALL policy that checked only "has a
+row in user_roles", and every user has one since the 2025-10 backfill. The
+company-scoped policies added later are permissive, so they OR'd with it and
+narrowed nothing.
+
+Migration `20260923000000` drops the three by name. `materials` needed one
+more line than the story suggested: its only company-scoped write policy is
+limited to admin, PM, office_staff and root_admin, so a bare drop would have
+stopped a field supervisor adding materials to their own company. It gets a
+company-scoped FOR ALL in its place, which keeps same-company access exactly as
+it was and removes only the cross-company reach.
+
+This is the first test here that runs against a real database.
+`scripts/run-rls-tests.sh` (`npm run test:rls`, and a step in the CI Security
+job) starts a throwaway Postgres, loads a small set of Supabase shims, and runs
+`supabase/tests/rls/*.test.sql`. The materials test shows the leak before the
+migration, then 18 assertions after it. I broke the migration two ways to check
+the test fails: leaving the suppliers policy fails "A reads zero B suppliers",
+and dropping without the replacement fails the field supervisor insert.
