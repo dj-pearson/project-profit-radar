@@ -39,11 +39,14 @@ export function ClientPortalPro() {
   }, [user]);
 
   const loadClients = async () => {
+    // Without a signed-in user this used to query user_profiles by an
+    // undefined id; there is nothing to load.
+    if (!user?.id) return;
     try {
       const { data: userProfile } = await supabase
         .from('user_profiles')
         .select('tenant_id')
-        .eq('id', user?.id)
+        .eq('id', user.id)
         .single();
 
       if (!userProfile?.tenant_id) return;
@@ -65,11 +68,14 @@ export function ClientPortalPro() {
   };
 
   const loadMessages = async () => {
+    // Without a signed-in user this used to query user_profiles by an
+    // undefined id; there is nothing to load.
+    if (!user?.id) return;
     try {
       const { data: userProfile } = await supabase
         .from('user_profiles')
         .select('tenant_id')
-        .eq('id', user?.id)
+        .eq('id', user.id)
         .single();
 
       if (!userProfile?.tenant_id) return;

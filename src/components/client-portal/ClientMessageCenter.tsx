@@ -39,6 +39,27 @@ interface ClientMessageCenterProps {
   projectId: string;
 }
 
+/**
+ * The embed returns no profile when RLS hides it; say who the other side is
+ * rather than printing "Unknown".
+ */
+function senderLabel(
+  sender: { first_name: string | null; last_name: string | null } | null | undefined,
+  senderType: string,
+): string {
+  const name = [sender?.first_name, sender?.last_name].filter(Boolean).join(' ').trim();
+  if (name) return name;
+  return senderType === 'contractor' ? 'Your contractor' : 'Client';
+}
+
+/**
+ * Whether the signed-in client is in this project's conversation (US-316).
+ * project_messages admits a client only through project_communication_participants,
+ * which portal enrolment keeps in step. 'none' means the composer would be
+ * refused by RLS, so the page says why instead of offering it.
+ */
+type Membership = { state: 'loading' } | { state: 'none' } | { state: 'member'; canUpload: boolean };
+
 export const ClientMessageCenter: React.FC<ClientMessageCenterProps> = ({ projectId }) => {
   const { user } = useAuth();
   const [messages, setMessages] = useState<Message[]>([]);
@@ -47,13 +68,39 @@ export const ClientMessageCenter: React.FC<ClientMessageCenterProps> = ({ projec
   const [messagePriority, setMessagePriority] = useState<Message['priority']>('normal');
   const [uploading, setUploading] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [membership, setMembership] = useState<Membership>({ state: 'loading' });
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    loadMessages();
-    setupRealtimeSubscription();
+    void loadMessages();
+    // Returning the cleanup matters: without it every project switch left a
+    // live channel behind, each appending to this list.
+    return setupRealtimeSubscription();
   }, [projectId]);
+
+  const userId = user?.id;
+  useEffect(() => {
+    if (!userId) return;
+    let cancelled = false;
+    setMembership({ state: 'loading' });
+    void (async () => {
+      const { data, error } = await supabase
+        .from('project_communication_participants')
+        .select('can_upload_files')
+        .eq('project_id', projectId)
+        .eq('user_id', userId)
+        .maybeSingle();
+      if (cancelled) return;
+      if (error) {
+        console.error('Error checking conversation membership:', error);
+        setMembership({ state: 'none' });
+        return;
+      }
+      setMembership(data ? { state: 'member', canUpload: data.can_upload_files } : { state: 'none' });
+    })();
+    return () => { cancelled = true; };
+  }, [projectId, userId]);
 
   useEffect(() => {
     scrollToBottom();
@@ -63,9 +110,9 @@ export const ClientMessageCenter: React.FC<ClientMessageCenterProps> = ({ projec
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
-  const loadMessages = async () => {
+  const loadMessages = async (showSpinner = true) => {
     try {
-      setLoading(true);
+      if (showSpinner) setLoading(true);
       const { data, error } = await supabase
         .from('project_messages')
         .select(`
@@ -83,7 +130,7 @@ export const ClientMessageCenter: React.FC<ClientMessageCenterProps> = ({ projec
         message_type: msg.message_type as 'text' | 'image' | 'file',
         category: msg.category as Message['category'],
         priority: msg.priority as Message['priority'],
-        sender_name: msg.sender ? `${msg.sender.first_name} ${msg.sender.last_name}`.trim() : 'Unknown'
+        sender_name: senderLabel(msg.sender, msg.sender_type)
       }));
 
       setMessages(formattedMessages);
@@ -111,8 +158,12 @@ export const ClientMessageCenter: React.FC<ClientMessageCenterProps> = ({ projec
           filter: `project_id=eq.${projectId}`
         },
         (payload) => {
-          const newMessage = payload.new as Message;
-          setMessages(prev => [...prev, newMessage]);
+          const incoming = payload.new as Message;
+          // The sender's own insert also reloads the list, so the same row can
+          // arrive twice.
+          setMessages(prev => prev.some(m => m.id === incoming.id)
+            ? prev
+            : [...prev, { ...incoming, sender_name: incoming.sender_name ?? senderLabel(null, incoming.sender_type) }]);
         }
       )
       .subscribe();
@@ -123,7 +174,7 @@ export const ClientMessageCenter: React.FC<ClientMessageCenterProps> = ({ projec
   };
 
   const sendMessage = async () => {
-    if (!newMessage.trim() || !user) return;
+    if (!newMessage.trim() || !user || membership.state !== 'member') return;
 
     try {
       const { error } = await supabase
@@ -143,6 +194,8 @@ export const ClientMessageCenter: React.FC<ClientMessageCenterProps> = ({ projec
       setNewMessage('');
       setMessageCategory('general');
       setMessagePriority('normal');
+      // Do not rely on realtime alone to show the sender their own message.
+      void loadMessages(false);
 
       toast({
         title: "Message sent",
@@ -201,6 +254,7 @@ export const ClientMessageCenter: React.FC<ClientMessageCenterProps> = ({ projec
         });
 
       if (messageError) throw messageError;
+      void loadMessages(false);
 
       toast({
         title: "File uploaded",
@@ -469,6 +523,14 @@ export const ClientMessageCenter: React.FC<ClientMessageCenterProps> = ({ projec
       </Tabs>
 
       {/* Message Input */}
+      {membership.state === 'none' ? (
+        <CardContent className="border-t p-4">
+          <p className="text-sm text-muted-foreground" role="status">
+            You have not been added to this project's conversation yet. Ask your contractor
+            to check your portal access for this project.
+          </p>
+        </CardContent>
+      ) : (
       <CardContent className="border-t p-4">
         <div className="space-y-3">
           <div className="grid grid-cols-2 gap-2">
@@ -514,35 +576,41 @@ export const ClientMessageCenter: React.FC<ClientMessageCenterProps> = ({ projec
               className="hidden"
             />
 
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={() => fileInputRef.current?.click()}
-              disabled={uploading}
-              className="shrink-0"
-            >
-              {uploading ? (
-                <LoadingSpinner size="sm" tone="current" label={null} />
-              ) : (
-                <Upload className="h-4 w-4" />
-              )}
-            </Button>
+            {membership.state === 'member' && membership.canUpload && (
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={uploading}
+                className="shrink-0"
+                aria-label="Attach a file"
+              >
+                {uploading ? (
+                  <LoadingSpinner size="sm" tone="current" label={null} />
+                ) : (
+                  <Upload className="h-4 w-4" />
+                )}
+              </Button>
+            )}
 
             <Button
               onClick={sendMessage}
-              disabled={!newMessage.trim()}
+              disabled={!newMessage.trim() || membership.state !== 'member'}
               size="icon"
               className="shrink-0"
+              aria-label="Send message"
             >
               <Send className="h-4 w-4" />
             </Button>
           </div>
 
           <p className="text-xs text-muted-foreground">
-            Press Enter to send, Shift+Enter for new line. Files up to 10MB.
+            Press Enter to send, Shift+Enter for new line.
+            {membership.state === 'member' && membership.canUpload ? ' Files up to 10MB.' : ''}
           </p>
         </div>
       </CardContent>
+      )}
     </Card>
   );
 };

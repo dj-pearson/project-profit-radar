@@ -17,6 +17,7 @@ import { ProjectProcurement } from '@/components/project/tabs/ProjectProcurement
 import { ProjectJobCosting } from '@/components/project/tabs/ProjectJobCosting';
 import { ProjectContacts } from '@/components/project/tabs/ProjectContacts';
 import { ProjectClientAccess } from '@/components/project/ProjectClientAccess';
+import { ProjectConversationParticipants } from '@/components/project/ProjectConversationParticipants';
 import { ProjectPermits } from '@/components/project/tabs/ProjectPermits';
 import { ProjectPunchList } from '@/components/project/tabs/ProjectPunchList';
 import { ProjectCostCodes } from '@/components/project/tabs/ProjectCostCodes';
@@ -368,6 +369,8 @@ export const ProjectContent: React.FC<ProjectContentProps> = ({
       {/* Client portal access lives with the project's people (US-319). It is
           the first surface anywhere that can actually give a customer a login. */}
       <ProjectClientAccess projectId={project.id} />
+      {/* Who is in the project conversation, and the one place to change it (US-316). */}
+      <ProjectConversationParticipants projectId={project.id} />
     </div>
   );
 

@@ -6722,3 +6722,17 @@ blog and SEO admin files are still on an allowlist, and two admin deletes still
 don't ask.
 
 TypeScript errors: 1583 to 1580.
+
+## US-316: client messaging works
+
+Client messaging had two blockers. Nothing kept `project_communication_participants`
+in step with portal access, so clients were missing from it and revoked clients
+stayed in it. And every client post sent `category` and `priority`, two columns
+that `project_messages` doesn't have, so PostgREST rejected them all. A trigger
+on `client_portal_access` now adds and removes the participant row, the two
+columns exist, a backfill enrols current clients, and messages arrive in real
+time. PMs see and manage the participant list on the project's Contacts tab.
+
+Still open: an expired enrolment keeps its row, and a client can still label a
+post as from the contractor. Fixing that means tightening a policy, which needs
+its own release.
