@@ -6785,3 +6785,17 @@ longer queries a `reviews` table nothing ever wrote. The table-definition
 guard's baseline is now empty.
 
 TypeScript errors: 1579 to 1536.
+
+## US-345: QuickBooks tokens are encrypted and kept out of the browser
+
+QuickBooks access and refresh tokens were stored in plaintext, and the
+integration screens selected them into the browser. The tokens are now
+encrypted with AES-256-GCM in new columns, and the browser can no longer read
+any token column, which the database enforces. The edge functions load tokens
+with the service client after checking the caller through RLS. This release
+writes both plaintext and ciphertext, so rolling back works. A backfill
+function encrypts existing rows. Plaintext is nulled next release and dropped
+the one after.
+
+Before deploying, set `QUICKBOOKS_TOKEN_ENCRYPTION_KEY`, then run the
+backfill until it reports nothing remaining.

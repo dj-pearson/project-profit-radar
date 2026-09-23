@@ -44,7 +44,9 @@ export const QuickBooksSyncStatus = ({ compact = false }: QuickBooksSyncStatusPr
 
       const { data, error } = await supabase
         .from('quickbooks_integrations')
-        .select('*')
+        // Only what the badge renders; the token columns are not readable by
+        // the authenticated role (US-345), so select('*') would fail.
+        .select('is_connected, qb_company_name, last_sync_at, last_sync_status')
         .eq('company_id', userProfile.company_id)
         .maybeSingle();
 

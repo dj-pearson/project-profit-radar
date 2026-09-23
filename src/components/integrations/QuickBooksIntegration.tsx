@@ -55,10 +55,11 @@ export const QuickBooksIntegration = () => {
     try {
       setLoading(true);
       
-      // Try to load real integration status
+      // Only the columns this card renders. The OAuth token columns are not
+      // readable by the authenticated role (US-345), so select('*') would fail.
       const { data: integrationData, error: integrationError } = await supabase
         .from('quickbooks_integrations')
-        .select('*')
+        .select('is_connected, qb_company_name, last_sync_at, last_sync_status, last_error_message')
         .eq('company_id', userProfile.company_id)
         .maybeSingle();
 

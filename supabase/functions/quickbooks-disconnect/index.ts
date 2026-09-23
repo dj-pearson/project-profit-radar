@@ -6,6 +6,10 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts"
 import { initializeAuthContext, errorResponse } from '../_shared/auth-helpers.ts';
 import { getCorsHeaders } from '../_shared/secure-cors.ts';
+import { createServiceClient } from '../_shared/service-client.ts';
+import {
+  CLEARED_TOKEN_COLUMNS, getQuickBooksTokenKey, loadQuickBooksTokens,
+} from '../_shared/quickbooks-token-crypto.ts';
 
 serve(async (req) => {
   const corsHeaders = getCorsHeaders(req);
@@ -29,10 +33,13 @@ serve(async (req) => {
       throw new Error('Company ID is required')
     }
 
-    // Get current integration data to revoke the token
+    // RLS decides whether the caller may see this company's integration (admin
+    // only). The token columns are not readable by authenticated (US-345), so
+    // only the id comes back here and the tokens are loaded with the service
+    // client for a row the caller has already been shown.
     const { data: integration, error: fetchError } = await supabaseClient
       .from('quickbooks_integrations')
-      .select('access_token, refresh_token')
+      .select('id')
       .eq('company_id', company_id)
       .single()
 
@@ -40,8 +47,21 @@ serve(async (req) => {
       throw new Error('Failed to fetch integration data')
     }
 
+    // Revocation is best-effort, and so is reading the tokens for it: a
+    // missing key or unreadable ciphertext must not stop the user
+    // disconnecting.
+    let stored: { accessToken: string | null; refreshToken: string | null } | null = null
+    if (integration?.id) {
+      try {
+        stored = await loadQuickBooksTokens(createServiceClient(), integration.id, getQuickBooksTokenKey())
+      } catch (loadError) {
+        console.error('[QUICKBOOKS-DISCONNECT] tokens not readable; skipping revocation:',
+          loadError instanceof Error ? loadError.message : String(loadError))
+      }
+    }
+
     // Attempt to revoke the token with QuickBooks (optional - best effort)
-    if (integration?.access_token) {
+    if (stored?.accessToken || stored?.refreshToken) {
       try {
         const clientId = Deno.env.get('QUICKBOOKS_CLIENT_ID')
         const clientSecret = Deno.env.get('QUICKBOOKS_CLIENT_SECRET')
@@ -57,7 +77,7 @@ serve(async (req) => {
               'Content-Type': 'application/json',
             },
             body: JSON.stringify({
-              token: integration.refresh_token || integration.access_token
+              token: stored.refreshToken || stored.accessToken
             }),
           })
         }
@@ -71,8 +91,7 @@ serve(async (req) => {
     const { error: updateError } = await supabaseClient
       .from('quickbooks_integrations')
       .update({
-        access_token: null,
-        refresh_token: null,
+        ...CLEARED_TOKEN_COLUMNS,
         access_token_expires_at: null,
         refresh_token_expires_at: null,
         realm_id: null,

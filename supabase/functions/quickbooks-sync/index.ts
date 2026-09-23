@@ -4,6 +4,10 @@ import { initializeAuthContext, errorResponse } from '../_shared/auth-helpers.ts
 import { getCorsHeaders } from '../_shared/secure-cors.ts';
 import { fetchQuickBooksData } from '../_shared/quickbooks-paging.ts';
 import { captureException } from '../_shared/observability.ts';
+import { createServiceClient } from '../_shared/service-client.ts';
+import {
+  getQuickBooksTokenKey, loadQuickBooksTokens, tokenColumnsForWrite, type QuickBooksTokens,
+} from '../_shared/quickbooks-token-crypto.ts';
 import {
   mapPurchase, mapPayment, type MappingContext,
 } from '../_shared/quickbooks-mapping.ts';
@@ -22,15 +26,26 @@ interface TokenResponse {
   x_refresh_token_expires_in?: number;
 }
 
+// The integration columns this function reads through the user-JWT client. The
+// token columns are not readable by authenticated (US-345); they are loaded
+// separately with the service client once RLS has returned this row.
+const INTEGRATION_COLUMNS =
+  'id, company_id, realm_id, is_connected, access_token_expires_at, refresh_token_expires_at'
+
 // Check if token needs refresh and refresh if necessary
-async function ensureValidToken(supabaseClient: any, integration: any): Promise<string> {
+async function ensureValidToken(
+  supabaseClient: any,
+  integration: any,
+  stored: QuickBooksTokens,
+  tokenKey: string,
+): Promise<string> {
   const expiresAt = new Date(integration.access_token_expires_at)
   const now = new Date()
   const bufferTime = 5 * 60 * 1000 // 5 minute buffer
 
   // If token is still valid (with buffer), return it
-  if (expiresAt.getTime() - now.getTime() > bufferTime) {
-    return integration.access_token
+  if (stored.accessToken && expiresAt.getTime() - now.getTime() > bufferTime) {
+    return stored.accessToken
   }
 
   console.log('Access token expired or expiring soon, refreshing...')
@@ -43,7 +58,7 @@ async function ensureValidToken(supabaseClient: any, integration: any): Promise<
     throw new Error('QuickBooks credentials not configured for token refresh')
   }
 
-  if (!integration.refresh_token) {
+  if (!stored.refreshToken) {
     throw new Error('No refresh token available. Please reconnect to QuickBooks.')
   }
 
@@ -58,7 +73,7 @@ async function ensureValidToken(supabaseClient: any, integration: any): Promise<
     },
     body: new URLSearchParams({
       grant_type: 'refresh_token',
-      refresh_token: integration.refresh_token,
+      refresh_token: stored.refreshToken,
     }).toString(),
   })
 
@@ -84,8 +99,10 @@ async function ensureValidToken(supabaseClient: any, integration: any): Promise<
   const { error: tokenError } = await supabaseClient
     .from('quickbooks_integrations')
     .update({
-      access_token: tokens.access_token,
-      refresh_token: tokens.refresh_token,
+      ...(await tokenColumnsForWrite(
+        { accessToken: tokens.access_token, refreshToken: tokens.refresh_token },
+        tokenKey,
+      )),
       access_token_expires_at: accessTokenExpires.toISOString(),
       refresh_token_expires_at: refreshTokenExpires.toISOString(),
       updated_at: now.toISOString(),
@@ -125,7 +142,7 @@ serve(async (req) => {
     // Get QuickBooks integration
     const { data: integration, error: integrationError } = await supabaseClient
       .from('quickbooks_integrations')
-      .select('*')
+      .select(INTEGRATION_COLUMNS)
       .eq('company_id', company_id)
       .eq('is_connected', true)
       .single()
@@ -152,7 +169,12 @@ serve(async (req) => {
 
     try {
       // Ensure we have a valid access token (refresh if needed)
-      const accessToken = await ensureValidToken(supabaseClient, integration)
+      // RLS has just returned this row to the caller, so they are an admin of
+      // the company; only then are the tokens read, with the service client
+      // because authenticated cannot SELECT them (US-345).
+      const tokenKey = getQuickBooksTokenKey()
+      const storedTokens = await loadQuickBooksTokens(createServiceClient(), integration.id, tokenKey)
+      const accessToken = await ensureValidToken(supabaseClient, integration, storedTokens, tokenKey)
 
       // Create sync log entry
       // A missing sync log means the run has no record at all: syncLogId below

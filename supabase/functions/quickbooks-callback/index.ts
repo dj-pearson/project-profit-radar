@@ -7,6 +7,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts"
 import { initializeAuthContext, errorResponse } from '../_shared/auth-helpers.ts';
 import { getCorsHeaders } from '../_shared/secure-cors.ts';
+import { getQuickBooksTokenKey, tokenColumnsForWrite } from '../_shared/quickbooks-token-crypto.ts';
 
 interface TokenResponse {
   access_token: string;
@@ -58,6 +59,11 @@ serve(async (req) => {
     if (!clientId || !clientSecret) {
       throw new Error('QuickBooks credentials not configured')
     }
+
+    // Resolve the token encryption key before spending the one-time auth code,
+    // so a missing secret fails here instead of after Intuit has issued tokens
+    // we cannot store (US-345).
+    const tokenKey = getQuickBooksTokenKey()
 
     // Verify state parameter matches stored state
     const { data: integration, error: stateError } = await supabaseClient
@@ -136,13 +142,18 @@ serve(async (req) => {
       }
     }
 
-    // Update integration record with tokens
+    // Update integration record with tokens, encrypted (US-345). The user-JWT
+    // client can still UPDATE these columns under the admin RLS policy; it just
+    // cannot read them back.
+    const tokenColumns = await tokenColumnsForWrite(
+      { accessToken: tokens.access_token, refreshToken: tokens.refresh_token },
+      tokenKey,
+    )
     const { error: updateError } = await supabaseClient
       .from('quickbooks_integrations')
       .update({
         realm_id: realm_id,
-        access_token: tokens.access_token,
-        refresh_token: tokens.refresh_token,
+        ...tokenColumns,
         access_token_expires_at: accessTokenExpires.toISOString(),
         refresh_token_expires_at: refreshTokenExpires.toISOString(),
         is_connected: true,
