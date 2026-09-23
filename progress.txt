@@ -6222,3 +6222,14 @@ then re-mutated.
 
 29 cases in `fakeSuccess.test.ts`. Full suite: 130 files, 2941 passing, 2
 skipped. TS budget 645, unchanged.
+
+## US-362: profile save filtered on a column that does not exist
+
+`UserProfile.tsx` updated `user_profiles` with `.eq('user_id', user.id)`. The
+table is keyed by `id`, so PostgREST 400'd every name, phone and avatar save.
+Both now filter on `id` and chain `.select('id')`, because an update that RLS
+refuses comes back with no error and no rows; that case is now a failed save.
+The toast carries the real error message, and `refreshProfile()` runs after a
+save so the header stops showing the old name until reload.
+
+3 cases in `src/pages/__tests__/UserProfile.test.tsx`.

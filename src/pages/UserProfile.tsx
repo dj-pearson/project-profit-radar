@@ -41,6 +41,11 @@ interface DisplayPrefs {
   timezone: string;
 }
 
+const errorMessage = (err: unknown): string =>
+  err && typeof err === 'object' && 'message' in err && typeof err.message === 'string' && err.message
+    ? err.message
+    : 'Something went wrong. Please try again.';
+
 const ProfileSkeleton = () => (
   <div className="space-y-6">
     <div className="flex items-center gap-6">
@@ -63,7 +68,7 @@ const ProfileSkeleton = () => (
 );
 
 const UserProfile = () => {
-  const { user, userProfile } = useAuth();
+  const { user, userProfile, refreshProfile } = useAuth();
   const { theme, setTheme } = useTheme();
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -98,19 +103,26 @@ const UserProfile = () => {
     if (!user) return;
     try {
       setSaving(true);
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('user_profiles')
         .update({
           first_name: profile.first_name,
           last_name: profile.last_name,
           phone: profile.phone,
         })
-        .eq('user_id', user.id);
+        // user_profiles is keyed by id (= auth user id); it has no user_id
+        // column, and filtering on one made PostgREST 400 every save (US-362).
+        .eq('id', user.id)
+        .select('id');
 
       if (error) throw error;
+      // RLS hides a row it will not let you touch instead of erroring, so an
+      // empty result is a failed save, not a successful one.
+      if (!data || data.length === 0) throw new Error('No profile row was updated.');
+      await refreshProfile();
       toast({ title: 'Profile updated', description: 'Your profile has been saved.' });
-    } catch {
-      toast({ variant: 'destructive', title: 'Error', description: 'Failed to update profile.' });
+    } catch (err) {
+      toast({ variant: 'destructive', title: 'Could not save profile', description: errorMessage(err) });
     } finally {
       setSaving(false);
     }
@@ -136,17 +148,20 @@ const UserProfile = () => {
 
       // Persist the storage path, not a permanent public URL (US-289).
       // Avatars are personal data and the bucket is not world-readable.
-      const { error: updateError } = await supabase
+      const { data: updated, error: updateError } = await supabase
         .from('user_profiles')
         .update({ avatar_url: path })
-        .eq('user_id', user.id);
+        .eq('id', user.id)
+        .select('id');
 
       if (updateError) throw updateError;
+      if (!updated || updated.length === 0) throw new Error('No profile row was updated.');
 
       setProfile(prev => ({ ...prev, avatar_url: path }));
+      await refreshProfile();
       toast({ title: 'Avatar updated', description: 'Your profile photo has been updated.' });
-    } catch {
-      toast({ variant: 'destructive', title: 'Upload failed', description: 'Could not upload avatar.' });
+    } catch (err) {
+      toast({ variant: 'destructive', title: 'Upload failed', description: errorMessage(err) });
     }
   };
 

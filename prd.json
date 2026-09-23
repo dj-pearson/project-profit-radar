@@ -5654,8 +5654,8 @@
         "A test renders UserProfile, saves, and asserts the update was issued with .eq('id', ...)"
       ],
       "priority": 1,
-      "passes": false,
-      "notes": "PROPOSED 2026-09-09 (production-readiness audit, six parallel reviews: auth, security, page/data flows, UI/UX, SEO, ops). P1: every user hits this on the first profile edit."
+      "passes": true,
+      "notes": "PROPOSED 2026-09-09 (production-readiness audit, six parallel reviews: auth, security, page/data flows, UI/UX, SEO, ops). P1: every user hits this on the first profile edit. || DONE 2026-09-23: both updates filter .eq('id', user.id) and chain .select('id'); an error or an empty result (RLS hides rows it refuses instead of erroring) is shown in the destructive toast with the real message, and refreshProfile() runs after a save so AuthContext stops showing the old name. src/pages/__tests__/UserProfile.test.tsx: 3 cases (filter on id and not user_id, PostgREST error surfaced, zero-row update treated as failure). No other user_profiles .eq('user_id') remains in src/."
     },
     {
       "id": "US-363",
