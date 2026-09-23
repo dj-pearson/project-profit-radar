@@ -20,6 +20,7 @@ export interface PurchaseOrderData {
   vendor_id?: string;
   vendor_name: string;
   project_id?: string;
+  /** Written to purchase_orders.delivery_address; there is no delivery_location column. */
   delivery_location?: string;
   delivery_date?: string;
   notes?: string;
@@ -48,7 +49,13 @@ class MaterialToPurchaseOrderService {
         .select('*')
         .in('id', materialIds);
 
-      if (materialsError || !materials || materials.length === 0) {
+      if (materialsError) {
+        return {
+          success: false,
+          error: `Failed to fetch material details: ${materialsError.message}`
+        };
+      }
+      if (!materials || materials.length === 0) {
         return {
           success: false,
           error: 'Failed to fetch material details'
@@ -64,13 +71,22 @@ class MaterialToPurchaseOrderService {
       // 3. Get or create vendor
       let vendorId = poData.vendor_id;
       if (!vendorId && poData.vendor_name) {
-        // Check if vendor exists
-        const { data: existingVendor } = await supabase
+        // maybeSingle: "no such vendor" is not an error, but a failed lookup
+        // is, and used to fall through to creating a duplicate vendor.
+        const { data: existingVendor, error: lookupError } = await supabase
           .from('vendors')
           .select('id')
           .eq('name', poData.vendor_name)
           .eq('company_id', companyId)
-          .single();
+          .limit(1)
+          .maybeSingle();
+
+        if (lookupError) {
+          return {
+            success: false,
+            error: `Failed to look up vendor: ${lookupError.message}`
+          };
+        }
 
         if (existingVendor) {
           vendorId = existingVendor.id;
@@ -81,8 +97,9 @@ class MaterialToPurchaseOrderService {
             .insert({
               company_id: companyId,
               name: poData.vendor_name,
-              vendor_type: 'supplier',
-              status: 'active'
+              // vendors has is_active, not vendor_type/status (US-368).
+              is_active: true,
+              created_by: userId
             })
             .select()
             .single();
@@ -91,7 +108,7 @@ class MaterialToPurchaseOrderService {
             console.error('Vendor creation error:', vendorError);
             return {
               success: false,
-              error: 'Failed to create vendor'
+              error: `Failed to create vendor: ${vendorError.message}`
             };
           }
 
@@ -111,11 +128,12 @@ class MaterialToPurchaseOrderService {
         .from('purchase_orders')
         .insert({
           company_id: companyId,
+          po_number: '', // set by set_po_number_trigger
           vendor_id: vendorId,
           project_id: poData.project_id || materials[0].project_id || null,
           po_date: new Date().toISOString().split('T')[0],
           delivery_date: poData.delivery_date || null,
-          delivery_location: poData.delivery_location || null,
+          delivery_address: poData.delivery_location || null,
           total_amount: totalAmount,
           status: 'draft',
           notes: poData.notes || '',
@@ -128,7 +146,7 @@ class MaterialToPurchaseOrderService {
         console.error('PO creation error:', poError);
         return {
           success: false,
-          error: 'Failed to create purchase order'
+          error: poError ? `Failed to create purchase order: ${poError.message}` : 'Failed to create purchase order'
         };
       }
 
@@ -167,16 +185,9 @@ class MaterialToPurchaseOrderService {
         }
       }
 
-      // 6. Update materials to link to PO
-      const { error: updateError } = await supabase
-        .from('materials')
-        .update({ purchase_order_id: newPO.id })
-        .in('id', materialIds);
-
-      if (updateError) {
-        console.error('Failed to link materials to PO:', updateError);
-        // Continue anyway
-      }
+      // materials has no purchase_order_id column, so the old "link materials
+      // to PO" update 400'd every time and was swallowed. The PO's lines are
+      // the record of what was ordered; nothing is written back to materials.
 
       return {
         success: true,
@@ -210,7 +221,15 @@ class MaterialToPurchaseOrderService {
         `)
         .in('id', materialIds);
 
-      if (error || !materials || materials.length === 0) {
+      if (error) {
+        return {
+          materials: null,
+          totalCost: 0,
+          canCreate: false,
+          issues: [`Failed to load materials: ${error.message}`]
+        };
+      }
+      if (!materials || materials.length === 0) {
         return {
           materials: null,
           totalCost: 0,
@@ -221,11 +240,8 @@ class MaterialToPurchaseOrderService {
 
       const issues: string[] = [];
 
-      // Check if already on PO
-      const alreadyOnPO = materials.filter(m => m.purchase_order_id);
-      if (alreadyOnPO.length > 0) {
-        issues.push(`${alreadyOnPO.length} material(s) already on a purchase order`);
-      }
+      // There is no materials.purchase_order_id, so "already on a PO" cannot
+      // be checked from the material row; that check was always false.
 
       // Check required fields
       const missingCost = materials.filter(m => !m.unit_cost || m.unit_cost <= 0);
@@ -281,28 +297,19 @@ class MaterialToPurchaseOrderService {
   /**
    * Gets suggested vendors for materials
    */
-  async getSuggestedVendors(companyId: string, category?: string): Promise<any[]> {
-    try {
-      const query = supabase
-        .from('vendors')
-        .select('id, name, email, phone')
-        .eq('company_id', companyId)
-        .eq('status', 'active')
-        .order('name');
+  async getSuggestedVendors(companyId: string, _category?: string): Promise<any[]> {
+    // vendors has is_active, not status (US-368). Throws on failure so the
+    // dialog can say the list failed rather than showing "no vendors".
+    const { data, error } = await supabase
+      .from('vendors')
+      .select('id, name, email, phone')
+      .eq('company_id', companyId)
+      .eq('is_active', true)
+      .order('name');
 
-      // Could filter by category/specialty if that data exists
-      const { data, error } = await query;
+    if (error) throw new Error(`Failed to load vendors: ${error.message}`);
 
-      if (error) {
-        console.error('Error fetching vendors:', error);
-        return [];
-      }
-
-      return data || [];
-    } catch (error) {
-      console.error('Error getting suggested vendors:', error);
-      return [];
-    }
+    return data || [];
   }
 }
 

@@ -10,7 +10,6 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import {
   ChevronLeft,
@@ -27,6 +26,7 @@ import {
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { ErrorState } from '@/components/ui/states';
 import {
   format,
   startOfMonth,
@@ -53,10 +53,12 @@ interface DemoRequest {
   demo_type: string;
   preferred_date?: string;
   preferred_time?: string;
-  scheduled_date?: string;
-  scheduled_time?: string;
+  // demo_requests stores one timestamptz, scheduled_at (20250202000000). There
+  // is no scheduled_date, scheduled_time or notes column; writing them 400'd.
+  scheduled_at?: string | null;
+  timezone?: string | null;
+  message?: string | null;
   status: 'requested' | 'scheduled' | 'completed' | 'cancelled';
-  notes?: string;
   created_at: string;
 }
 
@@ -71,10 +73,10 @@ export const DemoCalendar = ({ onDemoScheduled }: DemoCalendarProps) => {
   const [loading, setLoading] = useState(true);
   const [selectedDemo, setSelectedDemo] = useState<DemoRequest | null>(null);
   const [isScheduling, setIsScheduling] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [scheduleForm, setScheduleForm] = useState({
     scheduled_date: '',
     scheduled_time: '',
-    notes: '',
   });
 
   // Load demo requests
@@ -84,27 +86,33 @@ export const DemoCalendar = ({ onDemoScheduled }: DemoCalendarProps) => {
 
   const loadDemoRequests = async () => {
     setLoading(true);
+    setLoadError(null);
     try {
       // Get demos for current month and adjacent months
       const startDate = startOfMonth(subMonths(currentDate, 1));
       const endDate = endOfMonth(addMonths(currentDate, 1));
 
+      const from = format(startDate, 'yyyy-MM-dd');
+      const to = format(endDate, 'yyyy-MM-dd');
       const { data, error } = await (supabase as any)
         .from('demo_requests')
         .select('*')
-        .or(`preferred_date.gte.${format(startDate, 'yyyy-MM-dd')},scheduled_date.gte.${format(startDate, 'yyyy-MM-dd')}`)
-        .or(`preferred_date.lte.${format(endDate, 'yyyy-MM-dd')},scheduled_date.lte.${format(endDate, 'yyyy-MM-dd')}`)
+        .or(
+          `and(preferred_date.gte.${from},preferred_date.lte.${to}),` +
+          `and(scheduled_at.gte.${startDate.toISOString()},scheduled_at.lte.${endDate.toISOString()})`
+        )
         .order('created_at', { ascending: false });
 
-      if (error) {
-        // Table may not exist yet - fail silently
-        setDemoRequests([]);
-        return;
-      }
+      if (error) throw error;
       setDemoRequests(data || []);
     } catch (error) {
-      // Silently handle - demo_requests table may not exist yet
+      // An empty calendar is a claim that nobody asked for a demo. If the
+      // query failed, say so.
+      console.error('Failed to load demo requests:', error);
       setDemoRequests([]);
+      setLoadError(
+        (error as { message?: string } | null)?.message || 'Failed to load demo requests.'
+      );
     } finally {
       setLoading(false);
     }
@@ -147,9 +155,10 @@ export const DemoCalendar = ({ onDemoScheduled }: DemoCalendarProps) => {
       const { error } = await (supabase as any)
         .from('demo_requests')
         .update({
-          scheduled_date: scheduleForm.scheduled_date,
-          scheduled_time: scheduleForm.scheduled_time,
-          notes: scheduleForm.notes,
+          // The admin's local date + time, stored as one instant.
+          scheduled_at: new Date(
+            `${scheduleForm.scheduled_date}T${scheduleForm.scheduled_time}`
+          ).toISOString(),
           status: 'scheduled',
         })
         .eq('id', selectedDemo.id);
@@ -163,7 +172,7 @@ export const DemoCalendar = ({ onDemoScheduled }: DemoCalendarProps) => {
 
       loadDemoRequests();
       setSelectedDemo(null);
-      setScheduleForm({ scheduled_date: '', scheduled_time: '', notes: '' });
+      setScheduleForm({ scheduled_date: '', scheduled_time: '' });
       onDemoScheduled?.();
     } catch (error) {
       console.error('Failed to schedule demo:', error);
@@ -180,7 +189,7 @@ export const DemoCalendar = ({ onDemoScheduled }: DemoCalendarProps) => {
   // Get demos for a specific date
   const getDemosForDate = (date: Date): DemoRequest[] => {
     return demoRequests.filter((demo) => {
-      const demoDate = demo.scheduled_date || demo.preferred_date;
+      const demoDate = demo.scheduled_at || demo.preferred_date;
       if (!demoDate) return false;
       return isSameDay(parseISO(demoDate), date);
     });
@@ -252,6 +261,8 @@ export const DemoCalendar = ({ onDemoScheduled }: DemoCalendarProps) => {
         <CardContent>
           {loading ? (
             <div className="text-center py-8">Loading demos...</div>
+          ) : loadError ? (
+            <ErrorState error={loadError} onRetry={loadDemoRequests} />
           ) : (
             <div className="space-y-4">
               {/* Calendar Grid */}
@@ -306,7 +317,9 @@ export const DemoCalendar = ({ onDemoScheduled }: DemoCalendarProps) => {
                               `}
                             >
                               <span className="font-medium">
-                                {demo.scheduled_time || demo.preferred_time || 'TBD'}
+                                {demo.scheduled_at
+                                  ? format(parseISO(demo.scheduled_at), 'h:mm a')
+                                  : demo.preferred_time || 'TBD'}
                               </span>
                               {' - '}
                               {demo.company_name || demo.first_name || 'Anonymous'}
@@ -430,20 +443,20 @@ export const DemoCalendar = ({ onDemoScheduled }: DemoCalendarProps) => {
                       {selectedDemo.preferred_time || 'Not specified'}
                     </p>
                   </div>
-                  {selectedDemo.scheduled_date && (
+                  {selectedDemo.scheduled_at && (
                     <>
                       <div>
                         <Label className="text-sm text-muted-foreground">Scheduled Date</Label>
                         <p className="flex items-center gap-2 font-medium text-construction-orange">
                           <CalendarIcon className="w-4 h-4" />
-                          {selectedDemo.scheduled_date}
+                          {format(parseISO(selectedDemo.scheduled_at), 'yyyy-MM-dd')}
                         </p>
                       </div>
                       <div>
                         <Label className="text-sm text-muted-foreground">Scheduled Time</Label>
                         <p className="flex items-center gap-2 font-medium text-construction-orange">
                           <Clock className="w-4 h-4" />
-                          {selectedDemo.scheduled_time}
+                          {format(parseISO(selectedDemo.scheduled_at), 'h:mm a')}
                         </p>
                       </div>
                     </>
@@ -482,18 +495,6 @@ export const DemoCalendar = ({ onDemoScheduled }: DemoCalendarProps) => {
                         />
                       </div>
                     </div>
-                    <div>
-                      <Label htmlFor="notes">Notes (Optional)</Label>
-                      <Textarea
-                        id="notes"
-                        value={scheduleForm.notes}
-                        onChange={(e) =>
-                          setScheduleForm({ ...scheduleForm, notes: e.target.value })
-                        }
-                        placeholder="Add any notes about this demo..."
-                        rows={3}
-                      />
-                    </div>
                     <Button
                       onClick={scheduleDemo}
                       disabled={!scheduleForm.scheduled_date || !scheduleForm.scheduled_time || isScheduling}
@@ -505,11 +506,11 @@ export const DemoCalendar = ({ onDemoScheduled }: DemoCalendarProps) => {
                 </div>
               )}
 
-              {/* Notes */}
-              {selectedDemo.notes && (
+              {/* The requester's own message (demo_requests.message) */}
+              {selectedDemo.message && (
                 <div>
-                  <Label className="text-sm text-muted-foreground">Notes</Label>
-                  <p className="mt-1 text-sm bg-gray-50 p-3 rounded">{selectedDemo.notes}</p>
+                  <Label className="text-sm text-muted-foreground">Message from requester</Label>
+                  <p className="mt-1 text-sm bg-gray-50 p-3 rounded">{selectedDemo.message}</p>
                 </div>
               )}
 

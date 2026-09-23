@@ -6633,3 +6633,19 @@ statement of zeros, and the balance sheet and trial balance then said
 company with no activity gets an empty state pointing at journal entries or
 the chart of accounts. The empty states for the twelve list pages are still to
 do.
+
+## US-368, five of seven screens: writes that went nowhere
+
+Bulk "Archive" on projects wrote an `archived_at` column that doesn't exist
+and a status the CHECK constraint forbids. It's gone, and status changes go
+through `set_project_status`. The client portal's task list, the demo
+calendar and the material-to-PO service each read or wrote columns that don't
+exist, and now use the real ones. The mobile equipment check-out was the worst
+case: it "saved" seven fields that have no column, and queued an online
+check-out as an offline safety incident. It now saves status and location,
+which are real, and says so when offline. Every screen shows its load failures.
+
+Still open: CustomReportBuilder, and a column-level mode for the table guard.
+
+These four stories took TypeScript errors from 1635 to 1589; the baseline is
+lowered to match.

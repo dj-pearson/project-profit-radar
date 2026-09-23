@@ -4,36 +4,33 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Truck, MapPin, Clock, QrCode, Camera, X, LogIn, LogOut, Search, RefreshCw, Wrench } from 'lucide-react';
+import { Truck, MapPin, QrCode, X, LogIn, LogOut, Search, RefreshCw, Wrench } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { useOfflineSync } from '@/hooks/useOfflineSync';
 import { useGeolocation } from '@/hooks/useGeolocation';
 import { supabase } from '@/integrations/supabase/client';
-import { EnhancedMobileCamera } from './EnhancedMobileCamera';
 import EquipmentQRScanner, { type ScanResult } from '@/components/equipment/EquipmentQRScanner';
 import { format } from 'date-fns';
+import { ErrorState } from '@/components/ui/states';
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 
+// The columns equipment actually has (types.ts, migration 20250703175856).
+// There is no current_condition, current_location, assigned_to,
+// checked_out_by, checked_out_at, due_back_at, notes or make column: the old
+// update wrote seven of them and every check-out 400'd (US-368). Status and
+// location are the only per-transaction facts the table can hold.
 interface Equipment {
   id: string;
   name: string;
   equipment_type: string;
-  make: string;
-  model: string;
-  serial_number: string;
-  status: 'available' | 'checked_out' | 'maintenance' | 'out_of_service';
-  current_condition: 'excellent' | 'good' | 'fair' | 'poor';
-  current_location: string;
-  assigned_to?: string;
-  checked_out_by?: string;
-  checked_out_at?: string;
-  due_back_at?: string;
-  last_maintenance_date?: string;
-  next_maintenance_date?: string;
-  notes?: string;
+  model: string | null;
+  serial_number: string | null;
+  status: string | null;
+  location: string | null;
+  last_maintenance_date?: string | null;
+  next_maintenance_date?: string | null;
 }
 
 interface EquipmentTransaction {
@@ -42,12 +39,7 @@ interface EquipmentTransaction {
   user_id: string;
   project_id?: string;
   location: string;
-  condition_before?: string;
   condition_after?: string;
-  fuel_level?: number;
-  hours_used?: number;
-  notes?: string;
-  photos: string[];
   gps_latitude?: number;
   gps_longitude?: number;
 }
@@ -68,9 +60,9 @@ const MobileEquipmentManager: React.FC<MobileEquipmentManagerProps> = ({
   const [actionType, setActionType] = useState<'check_out' | 'check_in' | 'maintenance' | 'inspection'>('check_out');
   const [searchQuery, setSearchQuery] = useState('');
   const [filterStatus, setFilterStatus] = useState<string>('all');
-  const [showCamera, setShowCamera] = useState(false);
   const [showQRScanner, setShowQRScanner] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [projects, setProjects] = useState<{ id: string; name: string; client_name: string }[]>([]);
   const [selectedProject, setSelectedProject] = useState(projectId || '');
   
@@ -79,12 +71,11 @@ const MobileEquipmentManager: React.FC<MobileEquipmentManagerProps> = ({
     action_type: 'check_out',
     user_id: '',
     location: '',
-    photos: []
   });
 
   const { toast } = useToast();
   const { user, userProfile } = useAuth();
-  const { isOnline, saveOfflineData } = useOfflineSync();
+  const { isOnline } = useOfflineSync();
   const { position, getCurrentPosition } = useGeolocation();
 
   useEffect(() => {
@@ -96,10 +87,11 @@ const MobileEquipmentManager: React.FC<MobileEquipmentManagerProps> = ({
   const loadEquipment = async () => {
     try {
       if (!userProfile?.company_id) return;
+      setLoadError(null);
 
       const { data, error } = await supabase
         .from('equipment')
-        .select('*')
+        .select('id, name, equipment_type, model, serial_number, status, location, last_maintenance_date, next_maintenance_date')
         .eq('company_id', userProfile.company_id)
         .order('name');
 
@@ -107,6 +99,7 @@ const MobileEquipmentManager: React.FC<MobileEquipmentManagerProps> = ({
       setEquipment(data || []);
     } catch (error) {
       console.error('Error loading equipment:', error);
+      setLoadError((error as { message?: string } | null)?.message || 'Failed to load equipment list');
       toast({
         title: "Loading Error",
         description: "Failed to load equipment list",
@@ -132,32 +125,6 @@ const MobileEquipmentManager: React.FC<MobileEquipmentManagerProps> = ({
     }
   };
 
-  const handlePhotoCapture = (file: File, metadata?: Record<string, unknown>) => {
-    const reader = new FileReader();
-    reader.onload = () => {
-      const base64 = reader.result as string;
-      const base64Data = base64.split(',')[1];
-      setTransactionData(prev => ({
-        ...prev,
-        photos: [...prev.photos, base64Data]
-      }));
-    };
-    reader.readAsDataURL(file);
-    
-    setShowCamera(false);
-    toast({
-      title: "Photo Added",
-      description: "Equipment photo captured successfully",
-    });
-  };
-
-  const removePhoto = (index: number) => {
-    setTransactionData(prev => ({
-      ...prev,
-      photos: prev.photos.filter((_, i) => i !== index)
-    }));
-  };
-
   const scanQRCode = () => {
     setShowQRScanner(true);
   };
@@ -180,7 +147,7 @@ const MobileEquipmentManager: React.FC<MobileEquipmentManagerProps> = ({
           action_type: newActionType,
           equipment_id: foundEquipment.id,
           user_id: user?.id || '',
-          condition_before: foundEquipment.current_condition
+          location: foundEquipment.location || ''
         }));
 
         toast({
@@ -209,7 +176,7 @@ const MobileEquipmentManager: React.FC<MobileEquipmentManagerProps> = ({
       ...prev,
       equipment_id: item.id,
       user_id: user?.id || '',
-      condition_before: item.current_condition
+      location: item.location || ''
     }));
   };
 
@@ -218,6 +185,18 @@ const MobileEquipmentManager: React.FC<MobileEquipmentManagerProps> = ({
       toast({
         title: "Missing Information",
         description: "Please select equipment and provide location",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    // Equipment moves are a live write. The old offline branch queued the
+    // transaction as a 'safety_incident', which would have synced an
+    // equipment check-out into safety_incidents. Refuse honestly instead.
+    if (!isOnline) {
+      toast({
+        title: "You're offline",
+        description: "Checking equipment in or out needs a connection. Nothing was saved.",
         variant: "destructive"
       });
       return;
@@ -235,73 +214,37 @@ const MobileEquipmentManager: React.FC<MobileEquipmentManagerProps> = ({
         company_id: userProfile?.company_id
       };
 
-      // Update equipment status based on action
       let newStatus = selectedEquipment.status;
-      let assignedTo = selectedEquipment.assigned_to;
-      let checkedOutBy = selectedEquipment.checked_out_by;
-      let checkedOutAt = selectedEquipment.checked_out_at;
-      let dueBackAt = selectedEquipment.due_back_at;
-
       switch (actionType) {
         case 'check_out':
           newStatus = 'checked_out';
-          assignedTo = user?.id;
-          checkedOutBy = user?.id;
-          checkedOutAt = new Date().toISOString();
-          // Calculate due back time (8 hours from now by default)
-          dueBackAt = new Date(Date.now() + 8 * 60 * 60 * 1000).toISOString();
           break;
         case 'check_in':
           newStatus = transactionData.condition_after === 'poor' ? 'maintenance' : 'available';
-          assignedTo = null;
-          checkedOutBy = null;
-          checkedOutAt = null;
-          dueBackAt = null;
           break;
         case 'maintenance':
           newStatus = 'maintenance';
           break;
       }
 
-      if (isOnline) {
-        // Since equipment_transactions table doesn't exist, let's save offline for now
-        await saveOfflineData('safety_incident', transaction);
+      const { error: updateError } = await supabase
+        .from('equipment')
+        .update({
+          status: newStatus,
+          location: transactionData.location,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', selectedEquipment.id);
 
-        // Update equipment status directly (simplified for now)
-        const { error: updateError } = await supabase
-          .from('equipment')
-          .update({
-            status: newStatus,
-            current_condition: transactionData.condition_after || selectedEquipment.current_condition,
-            assigned_to: assignedTo,
-            checked_out_by: checkedOutBy,
-            checked_out_at: checkedOutAt,
-            due_back_at: dueBackAt,
-            current_location: transactionData.location,
-            notes: transactionData.notes || selectedEquipment.notes,
-            updated_at: new Date().toISOString()
-          })
-          .eq('id', selectedEquipment.id);
+      if (updateError) throw updateError;
 
-        if (updateError) throw updateError;
+      toast({
+        title: "Transaction Complete",
+        description: `Equipment ${actionType.replace('_', ' ')} completed successfully`,
+      });
 
-        toast({
-          title: "Transaction Complete",
-          description: `Equipment ${actionType.replace('_', ' ')} completed successfully`,
-        });
-
-        onTransactionComplete?.(transaction);
-        
-        // Refresh equipment list
-        loadEquipment();
-      } else {
-        await saveOfflineData('safety_incident', transaction);
-        
-        toast({
-          title: "Transaction Saved Offline",
-          description: "Transaction will be processed when connection is restored",
-        });
-      }
+      onTransactionComplete?.(transaction);
+      loadEquipment();
 
       // Reset form
       setSelectedEquipment(null);
@@ -310,14 +253,12 @@ const MobileEquipmentManager: React.FC<MobileEquipmentManagerProps> = ({
         action_type: 'check_out',
         user_id: '',
         location: '',
-        photos: []
       });
-
     } catch (error) {
       console.error('Error submitting transaction:', error);
       toast({
         title: "Transaction Error",
-        description: "Failed to process equipment transaction",
+        description: (error as { message?: string } | null)?.message || "Failed to process equipment transaction",
         variant: "destructive"
       });
     } finally {
@@ -335,40 +276,16 @@ const MobileEquipmentManager: React.FC<MobileEquipmentManagerProps> = ({
     }
   };
 
-  const getConditionColor = (condition: string) => {
-    switch (condition) {
-      case 'excellent': return 'bg-green-100 text-green-800 border-green-200';
-      case 'good': return 'bg-blue-100 text-blue-800 border-blue-200';
-      case 'fair': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
-      case 'poor': return 'bg-red-100 text-red-800 border-red-200';
-      default: return 'bg-gray-100 text-gray-800 border-gray-200';
-    }
-  };
-
-  const isOverdue = (dueBackAt: string) => {
-    return new Date(dueBackAt) < new Date();
-  };
-
   const filteredEquipment = equipment.filter(item => {
-    const makeModel = `${item.make} ${item.model}`.trim();
-    const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         makeModel.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         item.serial_number.toLowerCase().includes(searchQuery.toLowerCase());
+    const q = searchQuery.toLowerCase();
+    const matchesSearch = item.name.toLowerCase().includes(q) ||
+                         (item.model || '').toLowerCase().includes(q) ||
+                         (item.serial_number || '').toLowerCase().includes(q);
     
     const matchesFilter = filterStatus === 'all' || item.status === filterStatus;
     
     return matchesSearch && matchesFilter;
   });
-
-  if (showCamera) {
-    return (
-      <EnhancedMobileCamera
-        onCapture={handlePhotoCapture}
-        onCancel={() => setShowCamera(false)}
-        enableGeolocation={true}
-      />
-    );
-  }
 
   if (showQRScanner) {
     return (
@@ -422,14 +339,11 @@ const MobileEquipmentManager: React.FC<MobileEquipmentManagerProps> = ({
             <div className="bg-background p-3 rounded border">
               <div className="font-medium">{selectedEquipment.name}</div>
               <div className="text-sm text-muted-foreground">
-                {selectedEquipment.make} {selectedEquipment.model} • {selectedEquipment.serial_number}
+                {[selectedEquipment.model, selectedEquipment.serial_number].filter(Boolean).join(' • ')}
               </div>
               <div className="flex items-center gap-2 mt-1">
-                <Badge className={getStatusColor(selectedEquipment.status)}>
-                  {selectedEquipment.status.replace('_', ' ')}
-                </Badge>
-                <Badge className={getConditionColor(selectedEquipment.current_condition)}>
-                  {selectedEquipment.current_condition}
+                <Badge className={getStatusColor(selectedEquipment.status || '')}>
+                  {(selectedEquipment.status || 'unknown').replace('_', ' ')}
                 </Badge>
               </div>
             </div>
@@ -495,6 +409,9 @@ const MobileEquipmentManager: React.FC<MobileEquipmentManagerProps> = ({
             {(actionType === 'check_in' || actionType === 'inspection') && (
               <div>
                 <Label>Condition After Use</Label>
+                <p className="text-xs text-muted-foreground mb-1">
+                  Not stored. "Poor" on check-in sends the item to maintenance.
+                </p>
                 <Select value={transactionData.condition_after} onValueChange={(value) => 
                   setTransactionData(prev => ({ ...prev, condition_after: value }))
                 }>
@@ -510,80 +427,6 @@ const MobileEquipmentManager: React.FC<MobileEquipmentManagerProps> = ({
                 </Select>
               </div>
             )}
-
-            {actionType === 'check_in' && (
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label>Fuel Level (%)</Label>
-                  <Input
-                    type="number"
-                    min="0"
-                    max="100"
-                    value={transactionData.fuel_level || ''}
-                    onChange={(e) => setTransactionData(prev => ({ 
-                      ...prev, 
-                      fuel_level: parseInt(e.target.value) || 0 
-                    }))}
-                    placeholder="Fuel %"
-                  />
-                </div>
-                <div>
-                  <Label>Hours Used</Label>
-                  <Input
-                    type="number"
-                    min="0"
-                    step="0.1"
-                    value={transactionData.hours_used || ''}
-                    onChange={(e) => setTransactionData(prev => ({ 
-                      ...prev, 
-                      hours_used: parseFloat(e.target.value) || 0 
-                    }))}
-                    placeholder="Usage hours"
-                  />
-                </div>
-              </div>
-            )}
-
-            <div>
-              <Label>Notes</Label>
-              <Textarea
-                value={transactionData.notes || ''}
-                onChange={(e) => setTransactionData(prev => ({ ...prev, notes: e.target.value }))}
-                placeholder="Additional notes or observations..."
-                rows={3}
-              />
-            </div>
-
-            <div>
-              <Label>Photos</Label>
-              <div className="grid grid-cols-3 gap-2 mt-2">
-                <Button
-                  variant="outline"
-                  onClick={() => setShowCamera(true)}
-                  className="h-20 flex flex-col items-center justify-center gap-1"
-                >
-                  <Camera className="h-5 w-5" />
-                  <span className="text-xs">Add Photo</span>
-                </Button>
-                {transactionData.photos.map((photo, index) => (
-                  <div key={index} className="relative">
-                    <img
-                      src={`data:image/jpeg;base64,${photo}`}
-                      alt={`Equipment ${index + 1}`}
-                      className="w-full h-20 object-cover rounded border"
-                    />
-                    <Button
-                      variant="destructive"
-                      size="sm"
-                      className="absolute top-1 right-1 h-5 w-5 p-0"
-                      onClick={() => removePhoto(index)}
-                    >
-                      <X className="h-3 w-3" />
-                    </Button>
-                  </div>
-                ))}
-              </div>
-            </div>
 
             <Button
               onClick={submitTransaction}
@@ -669,33 +512,19 @@ const MobileEquipmentManager: React.FC<MobileEquipmentManagerProps> = ({
                 <div className="flex-1">
                   <div className="font-medium">{item.name}</div>
                   <div className="text-sm text-muted-foreground">
-                    {item.make} {item.model} • {item.serial_number}
+                    {[item.model, item.serial_number].filter(Boolean).join(' • ')}
                   </div>
-                  <div className="text-sm text-muted-foreground mt-1">
-                    📍 {item.current_location}
-                  </div>
-                  <div className="flex items-center gap-2 mt-2">
-                    <Badge className={getStatusColor(item.status)}>
-                      {item.status.replace('_', ' ')}
-                    </Badge>
-                    <Badge className={getConditionColor(item.current_condition)}>
-                      {item.current_condition}
-                    </Badge>
-                    {item.due_back_at && isOverdue(item.due_back_at) && (
-                      <Badge variant="destructive">
-                        <Clock className="h-3 w-3 mr-1" />
-                        Overdue
-                      </Badge>
-                    )}
-                  </div>
-                  {item.checked_out_by && (
-                    <div className="text-xs text-muted-foreground mt-1">
-                      Checked out {item.checked_out_at ? format(new Date(item.checked_out_at), 'MM/dd HH:mm') : ''}
-                      {item.due_back_at && (
-                        <span> • Due back {format(new Date(item.due_back_at), 'MM/dd HH:mm')}</span>
-                      )}
+                  {item.location && (
+                    <div className="text-sm text-muted-foreground mt-1">
+                      <MapPin className="h-3 w-3 inline mr-1" />
+                      {item.location}
                     </div>
                   )}
+                  <div className="flex items-center gap-2 mt-2">
+                    <Badge className={getStatusColor(item.status || '')}>
+                      {(item.status || 'unknown').replace('_', ' ')}
+                    </Badge>
+                  </div>
                 </div>
                 <div className="text-right">
                   <div className="text-xs text-muted-foreground">{item.equipment_type}</div>
@@ -711,7 +540,11 @@ const MobileEquipmentManager: React.FC<MobileEquipmentManagerProps> = ({
           </Card>
         ))}
 
-        {filteredEquipment.length === 0 && (
+        {loadError && (
+          <ErrorState error={loadError} onRetry={loadEquipment} />
+        )}
+
+        {!loadError && filteredEquipment.length === 0 && (
           <Card>
             <CardContent className="p-8 text-center">
               <Truck className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
@@ -727,7 +560,7 @@ const MobileEquipmentManager: React.FC<MobileEquipmentManagerProps> = ({
       {/* Offline Indicator */}
       {!isOnline && (
         <div className="fixed bottom-4 left-4 right-4 bg-yellow-100 border border-yellow-300 text-yellow-800 px-3 py-2 rounded-lg text-sm text-center">
-          📶 Offline - Transactions will be processed when connection is restored
+          Offline - equipment check-in and check-out need a connection
         </div>
       )}
     </div>

@@ -110,6 +110,12 @@ export const CreatePOFromMaterialDialog = ({
       setVendors(vendorList);
     } catch (error) {
       console.error('Error loading vendors:', error);
+      setVendors([]);
+      toast({
+        title: 'Could not load vendors',
+        description: error instanceof Error ? error.message : 'Failed to load vendors',
+        variant: 'destructive'
+      });
     }
   };
 

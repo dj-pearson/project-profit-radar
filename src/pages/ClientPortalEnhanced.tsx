@@ -23,6 +23,7 @@ import {
 import { ClientPortalSelections } from '@/components/client/ClientPortalSelections';
 import { ClientPortalRFIs } from '@/components/client/ClientPortalRFIs';
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
+import { ErrorState } from '@/components/ui/states';
 import {
   Building2,
   LayoutDashboard,
@@ -81,6 +82,10 @@ const ClientPortalEnhanced = () => {
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [loadingData, setLoadingData] = useState(true);
   const [processingPayment, setProcessingPayment] = useState<string | null>(null);
+  // A failed load is not an empty portal. Without these the screen said "No
+  // Projects Found" or showed an empty timeline when the query had 400'd.
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [detailsError, setDetailsError] = useState<string | null>(null);
 
   // These two components are company-scoped. Take the id from the project the
   // client is looking at rather than from their profile: a client enrolled on
@@ -119,6 +124,7 @@ const ClientPortalEnhanced = () => {
   const loadClientData = async () => {
     try {
       setLoadingData(true);
+      setLoadError(null);
 
       // Projects this client is ENROLLED on (US-319), not projects whose
       // client_email string happens to match. The old .eq('client_email',
@@ -158,6 +164,7 @@ const ClientPortalEnhanced = () => {
       }
     } catch (error: any) {
       console.error('Error loading client data:', error);
+      setLoadError(error?.message || 'Failed to load project data');
       toast({
         variant: "destructive",
         title: "Error",
@@ -169,98 +176,118 @@ const ClientPortalEnhanced = () => {
   };
 
   const loadProjectDetails = async (projectId: string) => {
-    try {
-      // Load change orders
-      const { data: changeOrdersData, error: coError } = await supabase
+    setDetailsError(null);
+    const failed: string[] = [];
+
+    const [coRes, invoicesRes, docsRes, tasksRes, reportsRes] = await Promise.all([
+      supabase
         .from('change_orders')
         .select('*')
         .eq('project_id', projectId)
-        .order('created_at', { ascending: false });
-
-      if (!coError && changeOrdersData) {
-        setChangeOrders(changeOrdersData.map(co => ({
-          ...co,
-          client_approved: co.client_approved
-        })));
-      }
-
-      // Load invoices
-      const { data: invoicesData, error: invoicesError } = await supabase
+        .order('created_at', { ascending: false }),
+      supabase
         .from('invoices')
         .select('*')
         .eq('project_id', projectId)
-        .order('created_at', { ascending: false });
-
-      if (!invoicesError) {
-        setInvoices(invoicesData || []);
-      }
-
-      // Load documents (photos and files)
-      // Note: This is placeholder - you'll need to implement document storage
-      const { data: documentsData, error: docsError } = await supabase
+        .order('created_at', { ascending: false }),
+      supabase
         .from('documents')
         .select('*')
         .eq('project_id', projectId)
-        .order('created_at', { ascending: false });
-
-      if (!docsError && documentsData) {
-        setDocuments(documentsData.map(doc => ({
-          id: doc.id,
-          name: doc.name || doc.file_name,
-          type: doc.category === 'photo' ? 'photo' : doc.category === 'plan' ? 'plan' : 'document',
-          url: doc.file_url || doc.url,
-          thumbnailUrl: doc.thumbnail_url,
-          uploadedBy: doc.uploaded_by_name,
-          uploadedDate: doc.created_at,
-          description: doc.description,
-          size: doc.file_size
-        })));
-      }
-
-      // Load project milestones/tasks as milestones
-      const { data: tasksData, error: tasksError } = await supabase
+        .order('created_at', { ascending: false }),
+      // Milestones are tasks flagged is_milestone. tasks has no target_date,
+      // title, completed_at, progress or phase column: ordering by target_date
+      // 400'd and the timeline was always empty (US-368). The real columns are
+      // name, due_date/end_date, completion_percentage and category.
+      supabase
         .from('tasks')
-        .select('*')
+        .select('id, name, description, status, due_date, end_date, completion_percentage, category')
         .eq('project_id', projectId)
         .eq('is_milestone', true)
-        .order('target_date', { ascending: true });
-
-      if (!tasksError && tasksData) {
-        setMilestones(tasksData.map(task => ({
-          id: task.id,
-          title: task.title || task.name,
-          description: task.description,
-          status: task.status === 'completed' ? 'completed' :
-                  task.status === 'in_progress' ? 'in_progress' :
-                  task.status === 'blocked' ? 'blocked' : 'pending',
-          targetDate: task.target_date || task.due_date,
-          completedDate: task.completed_at,
-          progress: task.progress || 0,
-          phase: task.phase || task.category
-        })));
-      }
-
-      // Load daily reports as project updates
-      const { data: reportsData, error: reportsError } = await supabase
+        .order('due_date', { ascending: true, nullsFirst: false }),
+      supabase
         .from('daily_reports')
         .select('*')
         .eq('project_id', projectId)
         .order('date', { ascending: false })
-        .limit(20);
+        .limit(20),
+    ]);
 
-      if (!reportsError && reportsData) {
-        setUpdates(reportsData.map(report => ({
-          id: report.id,
-          type: 'general' as const,
-          title: `Daily Update - ${new Date(report.date).toLocaleDateString()}`,
-          description: report.work_performed || report.notes || 'No details provided',
-          timestamp: report.created_at,
-          author: report.submitted_by_name,
-          isRead: true
-        })));
-      }
-    } catch (error: any) {
-      console.error('Error loading project details:', error);
+    if (coRes.error) {
+      console.error('Error loading change orders:', coRes.error);
+      failed.push('change orders');
+      setChangeOrders([]);
+    } else {
+      setChangeOrders((coRes.data || []).map(co => ({
+        ...co,
+        client_approved: co.client_approved
+      })) as ChangeOrder[]);
+    }
+
+    if (invoicesRes.error) {
+      console.error('Error loading invoices:', invoicesRes.error);
+      failed.push('invoices');
+      setInvoices([]);
+    } else {
+      setInvoices((invoicesRes.data || []) as Invoice[]);
+    }
+
+    if (docsRes.error) {
+      console.error('Error loading documents:', docsRes.error);
+      failed.push('documents');
+      setDocuments([]);
+    } else {
+      setDocuments((docsRes.data || []).map((doc: any) => ({
+        id: doc.id,
+        name: doc.name || doc.file_name,
+        type: doc.category === 'photo' ? 'photo' : doc.category === 'plan' ? 'plan' : 'document',
+        url: doc.file_url || doc.url,
+        thumbnailUrl: doc.thumbnail_url,
+        uploadedBy: doc.uploaded_by_name,
+        uploadedDate: doc.created_at,
+        description: doc.description,
+        size: doc.file_size
+      })));
+    }
+
+    if (tasksRes.error) {
+      console.error('Error loading milestones:', tasksRes.error);
+      failed.push('milestones');
+      setMilestones([]);
+    } else {
+      setMilestones((tasksRes.data || []).map(task => ({
+        id: task.id,
+        title: task.name,
+        description: task.description ?? undefined,
+        status: task.status === 'completed' ? 'completed' :
+                task.status === 'in_progress' ? 'in_progress' :
+                task.status === 'blocked' ? 'blocked' : 'pending',
+        targetDate: task.due_date || task.end_date || undefined,
+        // tasks records no completion timestamp, so none is shown.
+        completedDate: undefined,
+        progress: task.completion_percentage ?? 0,
+        phase: task.category ?? undefined
+      })));
+    }
+
+    if (reportsRes.error) {
+      console.error('Error loading daily reports:', reportsRes.error);
+      failed.push('project updates');
+      setUpdates([]);
+    } else {
+      setUpdates((reportsRes.data || []).map((report: any) => ({
+        id: report.id,
+        type: 'general' as const,
+        title: `Daily Update - ${new Date(report.date).toLocaleDateString()}`,
+        description: report.work_performed || report.notes || 'No details provided',
+        timestamp: report.created_at,
+        author: report.submitted_by_name,
+        isRead: true
+      })));
+    }
+
+    if (failed.length > 0) {
+      setDetailsError(`Could not load ${failed.join(', ')} for this project.`);
     }
   };
 
@@ -373,6 +400,14 @@ const ClientPortalEnhanced = () => {
     );
   }
 
+  if (loadError) {
+    return (
+      <DashboardLayout title="Client Portal">
+        <ErrorState error={loadError} onRetry={loadClientData} />
+      </DashboardLayout>
+    );
+  }
+
   if (projects.length === 0) {
     return (
       <DashboardLayout title="Client Portal">
@@ -421,6 +456,13 @@ const ClientPortalEnhanced = () => {
               project={selectedProject}
               stats={getProjectStats(selectedProject)}
             />
+
+            {detailsError && (
+              <ErrorState
+                error={detailsError}
+                onRetry={() => loadProjectDetails(selectedProject.id)}
+              />
+            )}
 
             {/* Main Content Tabs */}
             <Tabs defaultValue="overview" className="space-y-6">

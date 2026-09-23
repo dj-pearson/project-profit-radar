@@ -17,14 +17,39 @@ import {
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useAuditLog } from '@/hooks/useAuditLog';
+import { PROJECT_STATUSES, PROJECT_STATUS_LABELS } from '@/lib/projectStatus';
 import {
   CheckSquare,
   Square,
   X,
-  Archive,
   Download,
   RefreshCw,
 } from 'lucide-react';
+
+/**
+ * Moves one project through set_project_status(), the only path that keeps
+ * projects_status_check, status_changed_at and the audit trail honest
+ * (migration 20260903150000). A direct .update({ status }) skipped all three,
+ * and the old 'in_progress' option failed the CHECK constraint outright.
+ */
+async function setStatus(projectId: string, status: string) {
+  const { error } = await supabase.rpc('set_project_status', {
+    p_project_id: projectId,
+    p_status: status,
+    p_override_reason: null,
+  });
+  if (error) throw error;
+}
+
+// PostgrestError is a plain object, not an Error, so `instanceof Error` alone
+// hid the database's reason (e.g. "Cannot complete: 3 punch list item(s)...").
+function errorMessage(error: unknown, fallback: string): string {
+  if (error instanceof Error) return error.message;
+  if (error && typeof error === 'object' && 'message' in error && typeof error.message === 'string') {
+    return error.message;
+  }
+  return fallback;
+}
 
 interface Project {
   id: string;
@@ -55,7 +80,6 @@ export function BulkActionsToolbar({
   const { toast } = useToast();
   const { logAuditEvent, logDataAccess } = useAuditLog();
   const [showStatusDialog, setShowStatusDialog] = useState(false);
-  const [showArchiveDialog, setShowArchiveDialog] = useState(false);
   const [newStatus, setNewStatus] = useState<string>('');
   const [processing, setProcessing] = useState(false);
 
@@ -115,17 +139,12 @@ export function BulkActionsToolbar({
       updateItemStatus(projectId, 'processing');
 
       try {
-        const { error } = await supabase
-          .from('projects')
-          .update({ status: newStatus })
-          .eq('id', projectId);
-
-        if (error) throw error;
+        await setStatus(projectId, newStatus);
 
         updateItemStatus(projectId, 'success');
         successCount++;
       } catch (error: unknown) {
-        const message = error instanceof Error ? error.message : 'Update failed';
+        const message = errorMessage(error, 'Update failed');
         updateItemStatus(projectId, 'error', message);
         failed.push(projectId);
       }
@@ -152,60 +171,11 @@ export function BulkActionsToolbar({
         description: `${successCount} of ${selectedCount} ${selectedCount === 1 ? 'project' : 'projects'} updated`
       });
     }
-
-    onActionComplete();
-    if (failed.length === 0) {
-      onClearSelection();
-    }
-  };
-
-  const handleBulkArchive = async () => {
-    setShowArchiveDialog(false);
-    initializeProgressItems('Archiving Projects');
-    setProcessing(true);
-
-    const failed: string[] = [];
-    let successCount = 0;
-
-    for (const projectId of selectedProjectIds) {
-      updateItemStatus(projectId, 'processing');
-
-      try {
-        const { error } = await supabase
-          .from('projects')
-          .update({ status: 'archived', archived_at: new Date().toISOString() })
-          .eq('id', projectId);
-
-        if (error) throw error;
-
-        updateItemStatus(projectId, 'success');
-        successCount++;
-      } catch (error: unknown) {
-        const message = error instanceof Error ? error.message : 'Archive failed';
-        updateItemStatus(projectId, 'error', message);
-        failed.push(projectId);
-      }
-    }
-
-    setFailedProjectIds(failed);
-    setProcessing(false);
-
-    // AUDIT: Log bulk archive action
-    await logAuditEvent({
-      actionType: 'bulk_archive',
-      resourceType: 'project',
-      resourceName: `${selectedCount} projects`,
-      newValues: { status: 'archived', projectIds: selectedProjectIds },
-      riskLevel: 'high',
-      complianceCategory: 'data_access',
-      description: `Bulk archive: ${successCount} of ${selectedCount} projects archived`,
-      metadata: { projectCount: selectedCount, action: 'archive', successCount, failedCount: failed.length }
-    });
-
-    if (successCount > 0) {
+    if (failed.length > 0) {
       toast({
-        title: 'Projects Archived',
-        description: `${successCount} of ${selectedCount} ${selectedCount === 1 ? 'project' : 'projects'} archived`
+        variant: 'destructive',
+        title: 'Status Not Changed',
+        description: `${failed.length} of ${selectedCount} ${selectedCount === 1 ? 'project' : 'projects'} could not be updated. See the progress list for each reason.`
       });
     }
 
@@ -232,25 +202,12 @@ export function BulkActionsToolbar({
       updateItemStatus(projectId, 'processing');
 
       try {
-        // Retry based on the current operation type (status or archive)
-        if (progressTitle.includes('Archiving')) {
-          const { error } = await supabase
-            .from('projects')
-            .update({ status: 'archived', archived_at: new Date().toISOString() })
-            .eq('id', projectId);
-          if (error) throw error;
-        } else {
-          const { error } = await supabase
-            .from('projects')
-            .update({ status: newStatus })
-            .eq('id', projectId);
-          if (error) throw error;
-        }
+        await setStatus(projectId, newStatus);
 
         updateItemStatus(projectId, 'success');
         successCount++;
       } catch (error: unknown) {
-        const message = error instanceof Error ? error.message : 'Retry failed';
+        const message = errorMessage(error, 'Retry failed');
         updateItemStatus(projectId, 'error', message);
         stillFailed.push(projectId);
       }
@@ -266,11 +223,18 @@ export function BulkActionsToolbar({
       });
       onActionComplete();
     }
+    if (stillFailed.length > 0) {
+      toast({
+        variant: 'destructive',
+        title: 'Retry Failed',
+        description: `${stillFailed.length} ${stillFailed.length === 1 ? 'project' : 'projects'} still could not be updated`
+      });
+    }
 
     if (stillFailed.length === 0) {
       onClearSelection();
     }
-  }, [failedProjectIds, progressTitle, newStatus, updateItemStatus, toast, onActionComplete, onClearSelection]);
+  }, [failedProjectIds, newStatus, updateItemStatus, toast, onActionComplete, onClearSelection]);
 
   const handleBulkExport = async () => {
     // Export selected projects to CSV
@@ -395,16 +359,6 @@ export function BulkActionsToolbar({
             <Button
               variant="outline"
               size="sm"
-              onClick={() => setShowArchiveDialog(true)}
-              className="gap-2 flex-1 sm:flex-none"
-            >
-              <Archive className="h-4 w-4" />
-              <span className="hidden sm:inline">Archive</span>
-            </Button>
-
-            <Button
-              variant="outline"
-              size="sm"
               onClick={handleBulkExport}
               className="gap-2 flex-1 sm:flex-none"
             >
@@ -442,11 +396,11 @@ export function BulkActionsToolbar({
                 <SelectValue placeholder="Select new status" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="planning">Planning</SelectItem>
-                <SelectItem value="active">Active</SelectItem>
-                <SelectItem value="in_progress">In Progress</SelectItem>
-                <SelectItem value="on_hold">On Hold</SelectItem>
-                <SelectItem value="completed">Completed</SelectItem>
+                {PROJECT_STATUSES.map((status) => (
+                  <SelectItem key={status} value={status}>
+                    {PROJECT_STATUS_LABELS[status]}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
@@ -457,28 +411,6 @@ export function BulkActionsToolbar({
             </Button>
             <Button onClick={handleBulkStatusChange} disabled={processing || !newStatus}>
               {processing ? 'Updating...' : 'Update Status'}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Archive Dialog */}
-      <Dialog open={showArchiveDialog} onOpenChange={setShowArchiveDialog}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Archive Projects</DialogTitle>
-            <DialogDescription>
-              Are you sure you want to archive {selectedCount} {selectedCount === 1 ? 'project' : 'projects'}?
-              Archived projects can be restored later.
-            </DialogDescription>
-          </DialogHeader>
-
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowArchiveDialog(false)} disabled={processing}>
-              Cancel
-            </Button>
-            <Button variant="destructive" onClick={handleBulkArchive} disabled={processing}>
-              {processing ? 'Archiving...' : 'Archive Projects'}
             </Button>
           </DialogFooter>
         </DialogContent>
