@@ -6,7 +6,7 @@ Complete guide to all documentation for self-hosted Supabase Edge Functions depl
 
 | Document | Purpose | Time | Audience |
 |----------|---------|------|----------|
-| **[../EDGE_FUNCTIONS_SETUP_COMPLETE.md](../EDGE_FUNCTIONS_SETUP_COMPLETE.md)** | Overview of everything created | 10 min | Everyone |
+| **[../docs/archive/EDGE_FUNCTIONS_SETUP_COMPLETE.md](../docs/archive/EDGE_FUNCTIONS_SETUP_COMPLETE.md)** | Overview of everything created | 10 min | Everyone |
 | **[QUICKSTART.md](./QUICKSTART.md)** | Get running in 15 minutes | 5 min | Developers |
 | **[START_HERE.md](./START_HERE.md)** | Template introduction | 5 min | First-time users |
 
@@ -97,7 +97,7 @@ Complete guide to all documentation for self-hosted Supabase Edge Functions depl
 ### Project Managers
 
 **Essential Reading:**
-1. [../EDGE_FUNCTIONS_SETUP_COMPLETE.md](../EDGE_FUNCTIONS_SETUP_COMPLETE.md) - Project overview
+1. [../docs/archive/EDGE_FUNCTIONS_SETUP_COMPLETE.md](../docs/archive/EDGE_FUNCTIONS_SETUP_COMPLETE.md) - Project overview
 2. [DEPLOYMENT_SUMMARY.md](./DEPLOYMENT_SUMMARY.md) - Infrastructure summary
 3. [MIGRATION_FROM_CLOUD.md - Migration Timeline](./MIGRATION_FROM_CLOUD.md#phase-1-preparation-week-1)
 

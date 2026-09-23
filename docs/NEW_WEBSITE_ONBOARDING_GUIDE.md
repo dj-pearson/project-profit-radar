@@ -742,5 +742,5 @@ After successfully onboarding your first new site:
 **Questions?** Review the troubleshooting section or check:
 - `docs/EDGE_FUNCTION_MULTI_SITE_MIGRATION.md`
 - `docs/FRONTEND_MULTI_SITE_MIGRATION.md`
-- `Database_Migration.md`
+- `docs/archive/Database_Migration.md`
 

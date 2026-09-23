@@ -13,14 +13,15 @@
 import { getCorsHeaders } from '../_shared/secure-cors.ts';
 import { createServiceClient } from '../_shared/service-client.ts';
 import { enforceRateLimit, getClientIP, RATE_LIMITS } from '../_shared/rate-limiter.ts';
+import { siteUrl, functionsBaseUrl } from '../_shared/app-urls.ts';
 import {
   checkPendingState, decideLink, emailVerified, randomToken, readCookie, safeReturnPath,
   sha256Hex, signState, verifyState, type Candidate,
 } from './flow.ts';
 
 // Configuration from environment variables
-const FRONTEND_URL = Deno.env.get('FRONTEND_URL') || 'https://brikly.net';
-const FUNCTIONS_URL = Deno.env.get('FUNCTIONS_URL') || 'https://functions.brikly.net';
+const FRONTEND_URL = siteUrl();
+const FUNCTIONS_URL = functionsBaseUrl('https://functions.brikly.net');
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '';
 const GOOGLE_CLIENT_ID = Deno.env.get('GOOGLE_CLIENT_ID') || '';
 const GOOGLE_CLIENT_SECRET = Deno.env.get('GOOGLE_CLIENT_SECRET') || '';

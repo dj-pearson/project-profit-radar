@@ -237,7 +237,7 @@ Edge Functions: 150+ Deno-based serverless functions
 │   ├── README.md                    # Docs overview
 │   ├── LTS_ARCHITECTURE.md          # This document
 │   ├── IMPROVEMENT_PLAN.md          # Improvement roadmap
-│   ├── results.md                   # Testing analysis
+│   ├── archive/                     # Retired root docs (see archive/INDEX.md)
 │   ├── WEEK_*_DAY_*.md             # Implementation guides
 │   └── [other-docs]/               # Feature docs
 │

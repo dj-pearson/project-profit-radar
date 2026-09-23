@@ -11,22 +11,20 @@
 # It is a recovery tool. Reaching for it is an incident, and belongs in a
 # runbook with a human reading each step - see docs/RUNBOOK_MIGRATION_DEPLOY.md.
 #
-# The two historical scripts are exempt until US-248 AC2 deletes them; they are
-# the reconciliation itself, not a deploy step.
+# The two historical scripts (repair-migrations.ps1, mark-applied.ps1) were
+# deleted from the repo root in US-396; they survive only in git history.
 set -euo pipefail
 
 # Scoped to things that RUN: scripts, workflows, and package manifests. Prose
 # that describes the problem - this file, the runbook, the PRD - is not a deploy
 # path, and an exempt list that has to grow every time someone writes about it
 # would rot.
-# Two kinds of exemption, both bounded:
-#   - the historical reconciliation scripts, until AC2 deletes them;
-#   - this guard and its sibling drift check, which necessarily contain the
-#     phrase in their own match pattern and error text. A guard cannot be
-#     forbidden from naming the thing it guards against.
+# One exemption: this guard and its sibling drift check, which necessarily
+# contain the phrase in their own match pattern and error text. A guard cannot
+# be forbidden from naming the thing it guards against.
 # Everything else is scoped by file type below, and comments are stripped, so
 # documenting the rule elsewhere does not require an entry here.
-EXEMPT='^(repair-migrations\.ps1|mark-applied\.ps1|scripts/check-no-migration-repair\.sh|scripts/check-migration-drift\.sh)$'
+EXEMPT='^(scripts/check-no-migration-repair\.sh|scripts/check-migration-drift\.sh)$'
 
 # Comments are excluded, not exempted by filename. This script and the drift
 # check both explain in prose why repair is forbidden, and an exempt list that
@@ -55,4 +53,4 @@ if [[ -n "$hits" ]]; then
   exit 1
 fi
 
-echo "✅ No 'supabase migration repair' outside the historical reconciliation scripts."
+echo "✅ No 'supabase migration repair' in any script, workflow or manifest."

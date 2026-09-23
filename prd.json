@@ -6063,8 +6063,8 @@
         "The Cloudflare Pages build env is documented with VITE_APP_VERSION and the Sentry variables, and one deploy is confirmed to have uploaded source maps"
       ],
       "priority": 3,
-      "passes": false,
-      "notes": "PROPOSED 2026-09-09 (production-readiness audit, six parallel reviews: auth, security, page/data flows, UI/UX, SEO, ops)."
+      "passes": true,
+      "notes": "PROPOSED 2026-09-09 (production-readiness audit, six parallel reviews: auth, security, page/data flows, UI/UX, SEO, ops). || 71 Deno.env names (68 canonical + 3 aliases) and 13 web build names documented in generated docs/EDGE_SECRETS.md (need, where set, readers, what breaks). The five URL names were two URLs: SITE_URL (aliases FRONTEND_URL, APP_URL origin) and PUBLIC_FUNCTIONS_BASE_URL (alias FUNCTIONS_URL), read via _shared/app-urls.ts with a one-time deprecation log. scripts/check-edge-secrets.mjs in pre-commit + CI. Owner: set SITE_URL and PUBLIC_FUNCTIONS_BASE_URL (must equal the registered OAuth redirect base), redeploy, delete aliases; add SENTRY_* to Cloudflare Pages and confirm source-map upload; check QUICKBOOKS_ENVIRONMENT=production, CRON_SECRET set, GOOGLE_OAUTH_REDIRECT_URI set. Found: check-keyword-positions saves Math.random rankings without SERP_API_KEY."
     },
     {
       "id": "US-393",
@@ -6118,8 +6118,8 @@
         "A guard (extend scripts/check-migration-filenames.sh or a sibling) fails on new *.sql outside supabase/"
       ],
       "priority": 4,
-      "passes": false,
-      "notes": "PROPOSED 2026-09-09 (production-readiness audit, six parallel reviews: auth, security, page/data flows, UI/UX, SEO, ops). US-261 did a first pass in July; this is the rest."
+      "passes": true,
+      "notes": "PROPOSED 2026-09-09 (production-readiness audit, six parallel reviews: auth, security, page/data flows, UI/UX, SEO, ops). US-261 did a first pass in July; this is the rest. || Root 284 tracked files -> 36 (configs, CLAUDE.md, README, START_HERE, prd files). 210 docs moved to docs/archive/ with INDEX.md; 3 brand images to media/brand/; 35 deleted (21 root *.sql, 4 .ps1 incl. mark-applied/repair-migrations, debug HTML, logs). scripts/check-root-files.mjs (pre-commit + CI) allowlists root files and bans *.sql outside supabase/. Sensitive, still in git history: check_and_set_root_admin.sql (production user UUID), ConsoleLogs.md (user UUIDs), anon JWTs in two docs (redacted), and a real-looking BLOG_API_ x-api-key in three docs (redacted; rotate it). Dangling: EmailSyncSetup.tsx toast text and mobile-app/QUICK_START.md link point at moved docs."
     },
     {
       "id": "US-397",

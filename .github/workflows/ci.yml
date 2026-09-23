@@ -222,6 +222,9 @@ jobs:
       - name: Node version pins agree (US-389)
         run: node scripts/check-node-version-pins.mjs
 
+      - name: Environment names documented (US-392)
+        run: node scripts/check-edge-secrets.mjs
+
       - name: No source file hidden by .gitignore (US-402)
         run: node scripts/check-ignored-source-files.mjs
 
@@ -302,6 +305,7 @@ jobs:
       - name: Ad-hoc loader guard (US-285)
         run: node scripts/check-adhoc-loaders.mjs
 
+
       - name: Unreferenced-module guard (US-314 follow-up)
         run: node scripts/check-unreferenced-modules.mjs
 
@@ -319,6 +323,9 @@ jobs:
 
       - name: No tracked build/backup/env cruft (US-261)
         run: bash scripts/check-no-tracked-cruft.sh
+
+      - name: Repo root allowlist + no SQL outside supabase/ (US-396)
+        run: node scripts/check-root-files.mjs
 
       - name: Migration backward-compat guard (US-250)
         run: node scripts/check-migration-backcompat.mjs

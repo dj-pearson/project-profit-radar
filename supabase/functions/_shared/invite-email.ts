@@ -17,8 +17,9 @@
  */
 import { sendEmail, getSiteEmailConfig } from './ses-email-service.ts';
 import { escapeHtml } from './html-escape.ts';
+import { siteUrl } from './app-urls.ts';
 
-const FRONTEND_URL = Deno.env.get('FRONTEND_URL') || 'https://brikly.net';
+const FRONTEND_URL = siteUrl();
 
 export { escapeHtml };
 

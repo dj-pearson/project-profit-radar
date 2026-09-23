@@ -41,7 +41,7 @@ Create a strong API key for Make.com automation:
 
 # Or use this format:
 # BLOG_API_[random-string]
-# Example: BLOG_API_k8n2m9x5p7q3w1e6r4t8y2u9i1o5p3s7
+# Example: <BLOG_API_KEY - stored as a Supabase edge-function secret>
 ```
 
 ## Step 4: Update Make.com Configuration
@@ -58,7 +58,7 @@ https://ilhzuvemiuyfuxfegtlv.supabase.co/functions/v1/blog-ai-automation
 **Method 1 - Custom API Key (Recommended for Make.com):**
 ```
 Content-Type: application/json
-x-api-key: BLOG_API_k8n2m9x5p7q3w1e6r4t8y2u9i1o5p3s7
+x-api-key: <BLOG_API_KEY - stored as a Supabase edge-function secret>
 ```
 
 **Method 2 - Service Role Token:**

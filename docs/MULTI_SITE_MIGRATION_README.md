@@ -171,7 +171,7 @@ project-profit-radar/
 
 ### Core Guides
 
-1. **[Database_Migration.md](../Database_Migration.md)**
+1. **[Database_Migration.md](archive/Database_Migration.md)**
    - Original PRD and architectural overview
    - Problem statement and solution design
    - Phase breakdown

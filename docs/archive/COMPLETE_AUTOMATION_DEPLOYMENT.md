@@ -53,7 +53,7 @@ In Supabase Dashboard → Edge Functions → Settings:
 CLAUDE_API_KEY=sk-ant-api03-xxxxx
 SUPABASE_URL=https://ilhzuvemiuyfuxfegtlv.supabase.co
 SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
-BLOG_AUTOMATION_API_KEY=BLOG_API_k8n2m9x5p7q3w1e6r4t8y2u9i1o5p3s7
+BLOG_AUTOMATION_API_KEY=<BLOG_API_KEY - stored as a Supabase edge-function secret>
 ```
 
 ### Phase 3: Create Make.com Scenarios
@@ -71,7 +71,7 @@ BLOG_AUTOMATION_API_KEY=BLOG_API_k8n2m9x5p7q3w1e6r4t8y2u9i1o5p3s7
    - Headers:
      ```
      Content-Type: application/json
-     x-api-key: BLOG_API_k8n2m9x5p7q3w1e6r4t8y2u9i1o5p3s7
+     x-api-key: <BLOG_API_KEY - stored as a Supabase edge-function secret>
      ```
    - Body:
      ```json

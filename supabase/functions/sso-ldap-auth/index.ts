@@ -12,6 +12,7 @@ import { validateRequest, createErrorResponse, sanitizeError } from "../_shared/
 import { getCorsHeaders } from '../_shared/secure-cors.ts';
 import { writeSecurityLog } from '../_shared/security-log.ts';
 import { checkRateLimit, rateLimitResponse, getClientIP, RATE_LIMITS } from "../_shared/rate-limiter.ts";
+import { siteUrl as getSiteUrl } from '../_shared/app-urls.ts';
 
 // Input validation schema
 const LDAPAuthSchema = z.object({
@@ -302,7 +303,7 @@ serve(async (req) => {
     }
 
     // Create session via magic link
-    const siteUrl = Deno.env.get("SITE_URL") || "https://brikly.net";
+    const siteUrl = getSiteUrl();
     const { data: sessionData, error: sessionError } =
       await supabaseClient.auth.admin.generateLink({
         type: "magiclink",

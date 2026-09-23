@@ -13,7 +13,7 @@ supabase functions deploy social-content-generator
 CLAUDE_API_KEY=sk-ant-xxxxx
 SUPABASE_URL=https://ilhzuvemiuyfuxfegtlv.supabase.co
 SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
-BLOG_AUTOMATION_API_KEY=BLOG_API_k8n2m9x5p7q3w1e6r4t8y2u9i1o5p3s7
+BLOG_AUTOMATION_API_KEY=<BLOG_API_KEY - stored as a Supabase edge-function secret>
 ```
 
 ### 3. Make.com HTTP Modules Configuration
@@ -29,7 +29,7 @@ https://ilhzuvemiuyfuxfegtlv.supabase.co/functions/v1/blog-ai-automation
 **Headers:**
 ```
 Content-Type: application/json
-x-api-key: BLOG_API_k8n2m9x5p7q3w1e6r4t8y2u9i1o5p3s7
+x-api-key: <BLOG_API_KEY - stored as a Supabase edge-function secret>
 ```
 
 **Body:**

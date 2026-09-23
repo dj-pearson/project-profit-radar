@@ -7122,3 +7122,13 @@ duplicates of live screens, queries on tables that don't exist) and the 18
 modules only they used. The 20 kept are real features waiting for a route,
 each with a reason in docs/UNREFERENCED_COMPONENTS.md. TS errors 1449 ->
 1208, eslint warnings 4370 -> 3979.
+
+## US-396 + US-392 - repo root and edge secrets
+The root went from 284 files to 36; docs are in docs/archive/ and a guard
+allowlists the root. A production user UUID in a root SQL file, user ids in
+a console dump, and a blog-automation API key in three docs were removed or
+redacted; all remain in git history. Every env name an edge function or the
+web build reads is documented in docs/EDGE_SECRETS.md, generated and checked
+by check-edge-secrets.mjs. The app URL had three names; they now resolve
+through _shared/app-urls.ts. Caught before commit: two SSO functions
+shadowed the helper (const siteUrl = siteUrl()), which throws at runtime.

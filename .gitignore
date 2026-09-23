@@ -206,3 +206,6 @@ performance-budget-results.json
 
 # US-388: rollup-plugin-visualizer output from `npm run build:analyze` (kept out of dist/)
 .bundle-stats/
+
+# Output of scripts/scan-site-id-references.ps1 (US-396)
+site_id_references.csv

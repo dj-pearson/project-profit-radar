@@ -1,5 +1,10 @@
 # Deployment Environment Variables
 
+> The complete list, generated from the code and checked on every commit, is
+> [`EDGE_SECRETS.md`](EDGE_SECRETS.md): every edge-function secret and every
+> web build variable, including the Sentry source-map upload settings. This page
+> explains the Cloudflare Pages setup; when the two disagree, EDGE_SECRETS.md is right.
+
 Runtime configuration is injected per environment via the **Cloudflare Pages
 dashboard** (Settings → Environment variables), not committed to
 `wrangler.toml`. This keeps environment-specific config out of source, lets keys

@@ -37,6 +37,7 @@ import {
   type SiteEmailConfig,
 } from './ses-email-service.ts';
 import { canSendEmail, type EmailKind } from './email-consent.ts';
+import { functionsBaseUrl } from './app-urls.ts';
 
 export interface CommercialEmailOptions {
   to: string;
@@ -75,13 +76,13 @@ const BRIKLY_POSTAL_ADDRESS = `Brikly Inc.
 123 Construction Way, Suite 100
 Builder City, BC 12345, USA`;
 
-const FUNCTIONS_BASE =
-  Deno.env.get('PUBLIC_FUNCTIONS_BASE_URL') ??
+const FUNCTIONS_BASE = functionsBaseUrl(
   // Fallback: derive from SUPABASE_URL. If neither is set we disable
   // List-Unsubscribe rather than emit a broken link.
-  (Deno.env.get('SUPABASE_URL')
+  Deno.env.get('SUPABASE_URL')
     ? `${Deno.env.get('SUPABASE_URL')!.replace(/\/$/, '')}/functions/v1`
-    : '');
+    : '',
+);
 
 /**
  * Generate an HMAC-SHA256 signed unsubscribe token. Same format the

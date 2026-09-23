@@ -9,6 +9,7 @@ import { dispatchReminder, type ReminderBody } from './dispatch.ts';
 import { validateBody } from '../_shared/validate-body.ts';
 import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
 import { pickAllowed, WRITABLE_REMINDER_SETTINGS_COLUMNS } from '../_shared/writable-columns.ts';
+import { siteUrl } from '../_shared/app-urls.ts';
 
 // Request body (US-241), report mode by default - see _shared/validate-body.ts.
 // action stays a string here: dispatchReminder owns the unknown-action 400 and
@@ -671,7 +672,7 @@ function buildEmailContent(
     '{company_name}': 'Brikly',
     '{days_overdue}': daysOverdue.toString(),
     '{payment_link}': settings.include_payment_link
-      ? `Pay Now: ${Deno.env.get("SITE_URL") || 'https://brikly.net'}/pay/${invoice.id}`
+      ? `Pay Now: ${siteUrl()}/pay/${invoice.id}`
       : ''
   };
 

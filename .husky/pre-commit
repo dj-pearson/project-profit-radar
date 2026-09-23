@@ -52,6 +52,12 @@ node scripts/check-ignored-source-files.mjs || exit 1
 #      in under a second on every push.
 node scripts/check-node-version-pins.mjs || exit 1
 
+# 3h3. Environment names (US-392) - every Deno.env.get name, VITE_* name and
+#      vite.config.ts build variable is documented in docs/EDGE_SECRETS.md,
+#      which this script generates. 66 of 69 edge secrets were in no doc and
+#      the app URL was read under three names.
+node scripts/check-edge-secrets.mjs || exit 1
+
 # 3i. CSP inline-script hashes (US-202) — editing an inline script invalidates
 #     its hash and the browser silently stops running it.
 node scripts/check-csp-hashes.mjs || exit 1
@@ -168,6 +174,7 @@ node scripts/check-direct-formatting.mjs || exit 1
 #       text, spinner blocks or hand-rolled grey pulse divs. Exact ratchet.
 node scripts/check-adhoc-loaders.mjs || exit 1
 
+
 # 3u2. Unreferenced modules (US-314 follow-up) - the component guard below only
 #      looks at components/ and pages/. hooks, lib, services and utils were
 #      uncounted, and useCRM.ts is 1,945 lines that nothing imports.
@@ -182,6 +189,10 @@ bash scripts/check-migration-filenames.sh || exit 1
 bash scripts/check-no-stray-function-copies.sh || exit 1
 node scripts/check-rls-policies.mjs || exit 1
 bash scripts/check-no-tracked-cruft.sh || exit 1
+# US-396: only allowlisted files at the repo root, and no *.sql outside
+# supabase/. The root once held 285 loose files, debug SQL with a production
+# user id among them.
+node scripts/check-root-files.mjs || exit 1
 node scripts/check-migration-backcompat.mjs || exit 1
 node scripts/check-index-concurrently.mjs || exit 1
 

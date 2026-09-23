@@ -23,12 +23,13 @@ import { getCorsHeaders } from "../_shared/secure-cors.ts";
 import { writeAuditLog } from "../_shared/audit-log.ts";
 import { sendEmail, getSiteEmailConfig } from "../_shared/ses-email-service.ts";
 import { escapeHtml } from "../_shared/invite-email.ts";
+import { siteUrl } from '../_shared/app-urls.ts';
 
 const logStep = (step: string, details?: unknown) => {
   console.log(`[SEND-ESTIMATE] ${step}${details ? ` - ${JSON.stringify(details)}` : ""}`);
 };
 
-const FRONTEND_URL = Deno.env.get("FRONTEND_URL") || "https://brikly.net";
+const FRONTEND_URL = siteUrl();
 
 const SendEstimateSchema = z.object({
   estimate_id: z.string().uuid("A valid estimate id is required"),

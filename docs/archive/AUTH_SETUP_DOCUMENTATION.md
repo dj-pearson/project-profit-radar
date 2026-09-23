@@ -98,7 +98,7 @@ Navigate to: `Dashboard → Settings → Environment variables`
 ```bash
 # Core Supabase Configuration
 VITE_SUPABASE_URL=https://api.tryeatpal.com
-VITE_SUPABASE_ANON_KEY=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJzdXBhYmFzZSIsImlhdCI6MTc2NTI1MzE2MCwiZXhwIjo0OTIwOTI2NzYwLCJyb2xlIjoiYW5vbiJ9.HBFEkJdBlHpZozkyUAcaV2IO-065599yClMPfsYt3Ug
+VITE_SUPABASE_ANON_KEY=<SUPABASE_ANON_KEY - see Cloudflare Pages env>
 VITE_FUNCTIONS_URL=https://functions.tryeatpal.com
 
 # Application Metadata
@@ -122,7 +122,7 @@ Create a `.env` file in project root:
 ```bash
 # Self-Hosted Supabase
 VITE_SUPABASE_URL=https://api.tryeatpal.com
-VITE_SUPABASE_ANON_KEY=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJzdXBhYmFzZSIsImlhdCI6MTc2NTI1MzE2MCwiZXhwIjo0OTIwOTI2NzYwLCJyb2xlIjoiYW5vbiJ9.HBFEkJdBlHpZozkyUAcaV2IO-065599yClMPfsYt3Ug
+VITE_SUPABASE_ANON_KEY=<SUPABASE_ANON_KEY - see Cloudflare Pages env>
 VITE_FUNCTIONS_URL=https://functions.tryeatpal.com
 
 # Development-only (use test keys)
@@ -167,7 +167,7 @@ APPLE_CLIENT_SECRET=<apple-oauth-client-secret>
 
 # Security
 API_EXTERNAL_URL=https://api.tryeatpal.com
-ANON_KEY=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJzdXBhYmFzZSIsImlhdCI6MTc2NTI1MzE2MCwiZXhwIjo0OTIwOTI2NzYwLCJyb2xlIjoiYW5vbiJ9.HBFEkJdBlHpZozkyUAcaV2IO-065599yClMPfsYt3Ug
+ANON_KEY=<SUPABASE_ANON_KEY - see Cloudflare Pages env>
 SERVICE_ROLE_KEY=<service-role-jwt>
 ```
 
@@ -178,7 +178,7 @@ Separate Deno service environment:
 ```bash
 # Supabase Connection
 SUPABASE_URL=https://api.tryeatpal.com
-SUPABASE_ANON_KEY=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJzdXBhYmFzZSIsImlhdCI6MTc2NTI1MzE2MCwiZXhwIjo0OTIwOTI2NzYwLCJyb2xlIjoiYW5vbiJ9.HBFEkJdBlHpZozkyUAcaV2IO-065599yClMPfsYt3Ug
+SUPABASE_ANON_KEY=<SUPABASE_ANON_KEY - see Cloudflare Pages env>
 SUPABASE_SERVICE_ROLE_KEY=<service-role-jwt>
 
 # OpenAI (for AI features)

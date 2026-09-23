@@ -5,6 +5,7 @@ import { getCorsHeaders } from "../_shared/secure-cors.ts";
 import { requireInternalCallerOrRootAdmin } from "../_shared/system-auth.ts";
 import { validateBody } from "../_shared/validate-body.ts";
 import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
+import { siteUrl } from '../_shared/app-urls.ts';
 
 // RenewalNotificationPanel and check-renewal-notifications both invoke with no
 // body (a scheduled run); subscriber_id narrows a manual run to one row.
@@ -138,7 +139,7 @@ serve(async (req) => {
         month: 'long',
         day: 'numeric'
       });
-      const manageUrl = Deno.env.get("APP_URL") || 'https://brikly.net/subscription';
+      const manageUrl = `${siteUrl()}/subscription`;
       
       const html = `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">

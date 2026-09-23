@@ -9,6 +9,7 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.3";
 import { getCorsHeaders } from '../_shared/secure-cors.ts';
 import { writeSecurityLog } from '../_shared/security-log.ts';
+import { siteUrl as getSiteUrl } from '../_shared/app-urls.ts';
 
 // OAuth provider token endpoints
 const OAUTH_PROVIDERS: Record<
@@ -186,7 +187,7 @@ serve(async (req) => {
       { auth: { persistSession: false } }
     );
 
-    const siteUrl = Deno.env.get("SITE_URL") || "https://brikly.net";
+    const siteUrl = getSiteUrl();
 
     // Parse callback parameters
     const url = new URL(req.url);
@@ -482,7 +483,7 @@ serve(async (req) => {
     return Response.redirect(finalRedirectUrl);
   } catch (error) {
     console.error("[OAuth] Callback error:", error);
-    const siteUrl = Deno.env.get("SITE_URL") || "https://brikly.net";
+    const siteUrl = getSiteUrl();
     return Response.redirect(`${siteUrl}/auth?error=oauth_callback_failed`);
   }
 });

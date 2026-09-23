@@ -1,7 +1,9 @@
 # Applying migrations to staging and production
 
 US-248. Supersedes `repair-migrations.ps1` and `mark-applied.ps1`, which were a
-one-time reconciliation and must never become part of a deploy.
+one-time reconciliation and must never become part of a deploy. Both were
+deleted from the repo root in US-396; `git log --all -- repair-migrations.ps1`
+recovers them.
 
 ## Why this exists
 

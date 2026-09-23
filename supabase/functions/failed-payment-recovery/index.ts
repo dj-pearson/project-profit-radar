@@ -9,6 +9,7 @@ import { getCorsHeaders } from '../_shared/secure-cors.ts';
 import { validateBody } from '../_shared/validate-body.ts';
 import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
 import { pickAllowed, WRITABLE_RECOVERY_SETTINGS_COLUMNS } from '../_shared/writable-columns.ts';
+import { siteUrl } from '../_shared/app-urls.ts';
 
 // Request body (US-241), report mode by default - see _shared/validate-body.ts.
 // Every settings field is nullable: the web client round-trips the row that
@@ -402,7 +403,7 @@ Please update your payment method to continue your subscription.
     .replace('{customer_name}', (user.full_name as string) || 'Valued Customer')
     .replace('{failure_reason}', (failure.failure_reason as string) || 'Unknown error')
     .replace('{amount}', formatCurrency(0)) // Would need invoice amount
-    .replace('{update_payment_link}', `${Deno.env.get("SITE_URL") || 'https://brikly.net'}/settings/billing`);
+    .replace('{update_payment_link}', `${siteUrl()}/settings/billing`);
 
   // Send email
   const resendApiKey = Deno.env.get("RESEND_API_KEY");

@@ -1,5 +1,9 @@
 # Brikly Environment Variables Reference
 
+> Stale for edge functions and the web build. The generated, guarded list is
+> [`EDGE_SECRETS.md`](EDGE_SECRETS.md) (US-392); use it for anything Supabase or
+> Cloudflare Pages reads.
+
 **Last Updated**: 2025-12-27
 **Purpose**: Master reference for all environment variables required by the Brikly platform
 
@@ -295,8 +299,8 @@ Run `scripts/setup-stripe-products.sh` (or `.ps1` on Windows) to create products
 
 | Variable | Description | Used By |
 |----------|-------------|---------|
-| `TEST_USER_EMAIL` | Test user email | `test-script.js` |
-| `TEST_USER_PASSWORD` | Test user password | `test-script.js` |
+| `TEST_USER_EMAIL` | Test user email | `test-script.js` (deleted in US-396) |
+| `TEST_USER_PASSWORD` | Test user password | `test-script.js` (deleted in US-396) |
 
 ---
 

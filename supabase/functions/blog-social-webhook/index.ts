@@ -3,6 +3,7 @@ import { initializeAuthContext } from "../_shared/auth-helpers.ts";
 import { getCorsHeaders } from "../_shared/secure-cors.ts";
 import { validateBody } from "../_shared/validate-body.ts";
 import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
+import { siteUrl } from '../_shared/app-urls.ts';
 
 // Request body (US-241), report mode by default - see _shared/validate-body.ts.
 // The caller, src/hooks/useSocialMediaAutomation.ts, sends
@@ -19,7 +20,7 @@ const logStep = (step: string, data?: any) => {
 };
 
 // Use existing container env vars for URL rewriting
-const FRONTEND_URL = Deno.env.get("FRONTEND_URL") || "https://brikly.net";
+const FRONTEND_URL = siteUrl();
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "https://api.brikly.net";
 
 /**
