@@ -6649,3 +6649,13 @@ Still open: CustomReportBuilder, and a column-level mode for the table guard.
 
 These four stories took TypeScript errors from 1635 to 1589; the baseline is
 lowered to match.
+
+## US-391, indexes: company_id is indexed where RLS filters on it
+
+Every company-scoped policy filters on `company_id`, and 74 tables had no index
+leading with it. One migration adds them with `CREATE INDEX CONCURRENTLY`, so
+production tables aren't locked while they build. It isn't the story's 104,
+because some of those tables already have a unique constraint starting with
+`company_id`, and 48 exist in migrations but not in the live database. The file
+says how to apply it if `db push` refuses a non-transactional migration, and
+how to check for an index left invalid by a failed build.

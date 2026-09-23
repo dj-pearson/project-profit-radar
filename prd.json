@@ -6050,7 +6050,7 @@
       ],
       "priority": 2,
       "passes": false,
-      "notes": "PROPOSED 2026-09-09 (production-readiness audit, six parallel reviews: auth, security, page/data flows, UI/UX, SEO, ops)."
+      "notes": "PROPOSED 2026-09-09 (production-readiness audit, six parallel reviews: auth, security, page/data flows, UI/UX, SEO, ops). || INDEXES DONE 2026-09-23; open for the N+1 loops, paging list pages at 100 rows, and committing the generator. Migration 20260923140000 adds CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_<t>_company_id on 74 tables (no BEGIN/COMMIT, same shape as 20260903180000; passes check-index-concurrently). 74 not 104: estimates and bills already lead with company_id through a UNIQUE constraint; 48 tables are created in migrations but absent from the live types, and indexing a missing table would fail the push; 6 live tables have no creating migration. List = types.ts Rows with company_id, intersected with migration-created-and-not-dropped tables, minus tables already indexed on company_id. Operator notes in the file: apply with psql if db push refuses a non-transactional file, and check pg_index for INVALID indexes afterwards. Test: supabase/tests/rls/company_id_indexes.test.sql (reads the list from the migration; each table gets one valid index; a pre-existing index and an unlisted table are left alone; rerun is a no-op)."
     },
     {
       "id": "US-392",
