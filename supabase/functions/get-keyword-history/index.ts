@@ -2,6 +2,15 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { initializeAuthContext, errorResponse } from '../_shared/auth-helpers.ts';
 import { getCorsHeaders } from '../_shared/secure-cors.ts';
+import { validateBody } from '../_shared/validate-body.ts';
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
+
+// Request body (US-241), report mode by default - see _shared/validate-body.ts.
+// root_admin only; no caller in src/ or Brikly-iOS/.
+const KeywordHistorySchema = z.object({
+  keyword_id: z.string().max(255).nullish(),
+  limit: z.number().int().positive().max(1000).optional(),
+}).passthrough();
 
 serve(async (req) => {
   const corsHeaders = getCorsHeaders(req);
@@ -29,7 +38,9 @@ serve(async (req) => {
         { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
-    const { keyword_id, limit = 30 } = await req.json();
+    const parsed = await validateBody(req, KeywordHistorySchema, { name: 'get-keyword-history' });
+    if (!parsed.ok) return parsed.response;
+    const { keyword_id, limit = 30 } = parsed.data;
 
     if (!keyword_id) {
       // Get all keywords with latest position and site isolation

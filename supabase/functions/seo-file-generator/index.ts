@@ -2,6 +2,16 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts"
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.3";
 import { getCorsHeaders } from '../_shared/secure-cors.ts';
 import { initializeAuthContext, errorResponse } from '../_shared/auth-helpers.ts';
+import { validateBody } from '../_shared/validate-body.ts';
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
+
+// Request body (US-241), report mode by default - see _shared/validate-body.ts.
+// The caller, src/pages/UnifiedSEODashboard.tsx, sends { fileType: 'robots' }
+// or { fileType: 'llms' }. Any other value already fails in the handler, so
+// the enum rejects nothing that worked before.
+const SeoFileGeneratorSchema = z.object({
+  fileType: z.enum(['robots', 'llms']),
+}).passthrough();
 
 serve(async (req) => {
   const corsHeaders = getCorsHeaders(req);
@@ -23,7 +33,9 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
 
-    const { fileType } = await req.json()
+    const parsed = await validateBody(req, SeoFileGeneratorSchema, { name: 'seo-file-generator' })
+    if (!parsed.ok) return parsed.response
+    const { fileType } = parsed.data
 
     // Get SEO configuration
     const { data: config } = await supabaseClient

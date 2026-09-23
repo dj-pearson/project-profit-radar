@@ -3,6 +3,20 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.3";
 import { initializeAuthContext, errorResponse, successResponse } from '../_shared/auth-helpers.ts';
 import { getCorsHeaders } from '../_shared/secure-cors.ts';
+import { validateBody } from '../_shared/validate-body.ts';
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
+
+// Request body (US-241), report mode by default - see _shared/validate-body.ts.
+// The caller, src/pages/admin/SearchTrafficDashboard.tsx, sends
+// { connection_id, platform, date_range: { start_date, end_date } }.
+const SyncAnalyticsSchema = z.object({
+  connection_id: z.string().uuid(),
+  platform: z.string().min(1).max(50),
+  date_range: z.object({
+    start_date: z.string().max(64).nullish(),
+    end_date: z.string().max(64).nullish(),
+  }).passthrough().nullish(),
+}).passthrough();
 
 const logStep = (step: string, details?: any) => {
   const detailsStr = details ? ` - ${JSON.stringify(details)}` : '';
@@ -24,7 +38,9 @@ export default async (req: Request) => {
       return errorResponse('Unauthorized', 401, req);
     }
 
-    const body = await req.json();
+    const parsed = await validateBody(req, SyncAnalyticsSchema, { name: 'sync-analytics-data' });
+    if (!parsed.ok) return parsed.response;
+    const body = parsed.data;
     const { connection_id, platform, date_range } = body;
 
     if (!connection_id || !platform) {
@@ -47,6 +63,24 @@ export default async (req: Request) => {
       .single();
 
     if (connError || !connection) {
+      return errorResponse('Analytics connection not found', 404, req);
+    }
+
+    // SECURITY (US-241): the connection is read and then updated on the
+    // SERVICE ROLE by a body-supplied id, so any signed-in user could flip
+    // another company's connection into 'syncing', overwrite its sync error,
+    // and drive a sync of it through the platform functions. The connection
+    // must belong to the caller's company (root_admin excepted), and a miss
+    // answers exactly like a missing id.
+    const { data: callerProfile } = await serviceClient
+      .from('user_profiles')
+      .select('role, company_id')
+      .eq('id', authContext.user.id)
+      .maybeSingle();
+    const ownsConnection = callerProfile?.role === 'root_admin' ||
+      (!!callerProfile?.company_id && connection.company_id === callerProfile.company_id);
+    if (!ownsConnection) {
+      logStep("Refused cross-tenant connection", { connection_id, userId: authContext.user.id });
       return errorResponse('Analytics connection not found', 404, req);
     }
 

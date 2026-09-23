@@ -3,6 +3,16 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.3";
 import { initializeAuthContext, errorResponse, successResponse } from '../_shared/auth-helpers.ts';
 import { getCorsHeaders } from '../_shared/secure-cors.ts';
+import { validateBody } from '../_shared/validate-body.ts';
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
+
+// Request body (US-241), report mode by default - see _shared/validate-body.ts.
+// The account is looked up on the caller's JWT client first, so RLS decides
+// whether accountId is theirs before the service-role update runs.
+const EmailSyncSchema = z.object({
+  action: z.string().max(50),
+  accountId: z.string().uuid(),
+}).passthrough();
 
 const logStep = (step: string, details?: any) => {
   const detailsStr = details ? ` - ${JSON.stringify(details)}` : '';
@@ -25,7 +35,9 @@ export default async (req: Request) => {
     }
 
     const { user, supabase } = authContext;
-    const body = await req.json();
+    const parsed = await validateBody(req, EmailSyncSchema, { name: 'email-sync' });
+    if (!parsed.ok) return parsed.response;
+    const body = parsed.data;
     const { action, accountId } = body;
 
     if (!action || !accountId) {

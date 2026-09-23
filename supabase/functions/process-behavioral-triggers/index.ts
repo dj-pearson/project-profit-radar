@@ -2,6 +2,21 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.3";
 import { getCorsHeaders } from "../_shared/secure-cors.ts";
 import { requireSystemOrAdmin } from "../_shared/system-auth.ts";
+import { initializeAuthContext } from "../_shared/auth-helpers.ts";
+import { canActOnUser } from "../_shared/caller-company.ts";
+import { constantTimeEqual } from "../_shared/constant-time.ts";
+import { validateBody } from "../_shared/validate-body.ts";
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
+
+// Request body (US-241), report mode by default - see _shared/validate-body.ts.
+// The one caller, src/hooks/useBehavioralTriggers.ts, sends
+// { eventName, userId: user.id, eventData }. eventData is whatever the app
+// tracked, so it stays open.
+const BehavioralTriggerSchema = z.object({
+  eventName: z.string().min(1).max(200),
+  userId: z.string().uuid(),
+  eventData: z.unknown().optional(),
+}).passthrough();
 
 const logStep = (step: string, details?: any) => {
   const detailsStr = details ? ` - ${JSON.stringify(details)}` : '';
@@ -31,10 +46,59 @@ serve(async (req) => {
     );
 
     // Get request body
-    const { eventName, userId, eventData } = await req.json();
+    const parsed = await validateBody(req, BehavioralTriggerSchema, { name: 'process-behavioral-triggers' });
+    if (!parsed.ok) return parsed.response;
+    const { eventName, userId, eventData } = parsed.data;
 
     if (!eventName || !userId) {
       throw new Error("Missing required fields: eventName and userId");
+    }
+
+    // SECURITY (US-241): userId comes from the body and every action below -
+    // email, in-app notification, webhook, function call, and the execution
+    // and history rows - runs on the service role for THAT user. The guard
+    // above admits any company admin, so an admin could name a user in another
+    // tenant and fire that tenant's trigger rules at them. A signed-in caller
+    // may now only name themselves, someone in their own company, or anyone if
+    // root_admin. A scheduler presenting CRON_SECRET is trusted as before. The
+    // refusal answers exactly like "no rule matched" so it cannot be used to
+    // learn which user ids exist.
+    const cronSecret = Deno.env.get("CRON_SECRET");
+    const presented = req.headers.get("x-cron-secret");
+    const isScheduler = !!cronSecret && !!presented && constantTimeEqual(presented, cronSecret);
+    if (!isScheduler) {
+      const ctx = await initializeAuthContext(req);
+      if (ctx) {
+        const { data: callerProfile } = await ctx.supabase
+          .from('user_profiles')
+          .select('role, company_id')
+          .eq('id', ctx.user.id)
+          .maybeSingle();
+        const { data: targetProfile } = await supabaseClient
+          .from('user_profiles')
+          .select('company_id')
+          .eq('id', userId)
+          .maybeSingle();
+        const allowed = canActOnUser(
+          { id: ctx.user.id, role: callerProfile?.role, companyId: callerProfile?.company_id },
+          { id: userId, companyId: targetProfile?.company_id },
+        );
+        if (!allowed) {
+          logStep("Refused cross-tenant trigger", { caller: ctx.user.id, userId });
+          return new Response(JSON.stringify({
+            success: true,
+            message: 'No triggers matched',
+            triggered: 0,
+            timestamp: new Date().toISOString(),
+          }), {
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+            status: 200,
+          });
+        }
+      }
+      // No user context and no scheduler secret is only reachable while
+      // CRON_SECRET is unset - requireSystemOrAdmin's staged rollout, which
+      // fails open by design until the secret is configured.
     }
 
     logStep("Processing triggers for event", { eventName, userId });

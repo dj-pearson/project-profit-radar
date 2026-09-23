@@ -2,6 +2,16 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.3";
 import { getCorsHeaders } from "../_shared/secure-cors.ts";
 import { requireSystemOrAdmin } from "../_shared/system-auth.ts";
+import { validateBody } from "../_shared/validate-body.ts";
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
+
+// Request body (US-241), report mode by default - see _shared/validate-body.ts.
+// No caller in the repo passes a body (a scheduler may send {} or nothing,
+// which used to throw on req.json() and 500), so the body is optional and
+// schedule_id is the only field.
+const RunScheduledAuditSchema = z.object({
+  schedule_id: z.string().uuid().nullish(),
+}).passthrough();
 
 serve(async (req) => {
   const corsHeaders = getCorsHeaders(req);
@@ -16,7 +26,9 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
     );
 
-    const { schedule_id } = await req.json();
+    const parsed = await validateBody(req, RunScheduledAuditSchema, { name: 'run-scheduled-audit', allowEmpty: true });
+    if (!parsed.ok) return parsed.response;
+    const { schedule_id } = parsed.data;
 
     // Get due schedules if no specific schedule provided
     let schedules = [];

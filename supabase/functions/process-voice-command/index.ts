@@ -4,6 +4,20 @@ import { getCorsHeaders } from '../_shared/secure-cors.ts';
 import { enforceRateLimit, RATE_LIMITS, getClientIP } from '../_shared/rate-limiter.ts';
 import { createServiceClient } from '../_shared/service-client.ts';
 import { initializeAuthContext } from '../_shared/auth-helpers.ts';
+import { validateBody } from '../_shared/validate-body.ts';
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
+
+// Request body (US-241), report mode by default - see _shared/validate-body.ts.
+// The caller, src/components/mobile/VoiceCommandProcessor.tsx, sends
+// { audio_data (base64), project_id, user_id, company_id }. No database
+// write reads these ids; audio_data is capped at roughly 25MB of base64,
+// which is the Whisper upload ceiling it is forwarded to.
+const VoiceCommandSchema = z.object({
+  audio_data: z.string().min(1).max(35_000_000),
+  project_id: z.string().min(1).max(255),
+  user_id: z.string().min(1).max(255),
+  company_id: z.string().max(255).nullish(),
+}).passthrough();
 
 interface VoiceCommandRequest {
   audio_data: string; // base64 encoded audio
@@ -41,8 +55,9 @@ serve(async (req) => {
     );
     if (limited) return limited;
 
-    const { audio_data, project_id, user_id, company_id }: VoiceCommandRequest =
-      await req.json();
+    const parsed = await validateBody(req, VoiceCommandSchema, { name: 'process-voice-command' });
+    if (!parsed.ok) return parsed.response;
+    const { audio_data, project_id, user_id, company_id } = parsed.data as VoiceCommandRequest;
 
     if (!audio_data || !project_id || !user_id) {
       throw new Error("Missing required parameters");

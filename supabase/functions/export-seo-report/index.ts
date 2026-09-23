@@ -2,6 +2,18 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { initializeAuthContext, errorResponse } from '../_shared/auth-helpers.ts';
 import { getCorsHeaders } from '../_shared/secure-cors.ts';
+import { validateBody } from '../_shared/validate-body.ts';
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
+
+// Request body (US-241), report mode by default - see _shared/validate-body.ts.
+// root_admin only. SEOManager.tsx sends { report_type, format: 'json' }.
+const ExportSeoReportSchema = z.object({
+  report_type: z.string().max(50),
+  format: z.string().max(20).optional(),
+  start_date: z.string().max(64).nullish(),
+  end_date: z.string().max(64).nullish(),
+  url: z.string().max(2048).nullish(),
+}).passthrough();
 
 serve(async (req) => {
   const corsHeaders = getCorsHeaders(req);
@@ -29,7 +41,9 @@ serve(async (req) => {
         { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
-    const { report_type, format = 'json', start_date, end_date, url } = await req.json();
+    const parsed = await validateBody(req, ExportSeoReportSchema, { name: 'export-seo-report' });
+    if (!parsed.ok) return parsed.response;
+    const { report_type, format = 'json', start_date, end_date, url } = parsed.data;
 
     let reportData: any = {};
     const dateFilter = start_date && end_date ? { gte: start_date, lte: end_date } : null;

@@ -4,6 +4,21 @@ import { initializeAuthContext, errorResponse } from '../_shared/auth-helpers.ts
 import { getCorsHeaders } from '../_shared/secure-cors.ts';
 import { enforceRateLimit, RATE_LIMITS } from '../_shared/rate-limiter.ts';
 import { createServiceClient } from '../_shared/service-client.ts';
+import { validateBody } from '../_shared/validate-body.ts';
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
+
+// Request body (US-241), report mode by default - see _shared/validate-body.ts.
+// root_admin only; no caller in src/ or Brikly-iOS/. target_word_count and
+// secondary_keywords go into a paid model prompt, so they are bounded.
+const GenerateBlogContentSchema = z.object({
+  topic: z.string().max(1000).nullish(),
+  primary_keyword: z.string().max(200).nullish(),
+  secondary_keywords: z.array(z.string().max(200)).max(50).optional(),
+  target_word_count: z.number().int().positive().max(20000).optional(),
+  tone: z.string().max(50).optional(),
+  include_sections: z.boolean().optional(),
+  template_id: z.string().max(255).nullish(),
+}).passthrough();
 
 serve(async (req) => {
   const corsHeaders = getCorsHeaders(req);
@@ -41,6 +56,8 @@ serve(async (req) => {
         { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
+    const parsed = await validateBody(req, GenerateBlogContentSchema, { name: 'generate-blog-content' });
+    if (!parsed.ok) return parsed.response;
     const {
       topic,
       primary_keyword,
@@ -49,7 +66,7 @@ serve(async (req) => {
       tone = 'professional',
       include_sections = true,
       template_id = null,
-    } = await req.json();
+    } = parsed.data as z.infer<typeof GenerateBlogContentSchema> & { topic: string };
 
     if (!topic && !template_id) {
       return new Response(JSON.stringify({ error: 'Topic or template_id required' }),

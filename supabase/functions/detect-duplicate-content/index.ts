@@ -2,6 +2,17 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { initializeAuthContext, errorResponse } from '../_shared/auth-helpers.ts';
 import { getCorsHeaders } from '../_shared/secure-cors.ts';
+import { validateBody } from '../_shared/validate-body.ts';
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
+
+import { auditUrl } from "../_shared/audit-url.ts";
+// Request body (US-241), report mode by default - see _shared/validate-body.ts.
+// root_admin only; no caller in src/. Both URLs are fetched by this function,
+// so both go through auditUrl, the shared definition of a fetchable target.
+const DuplicateContentSchema = z.object({
+  url_1: auditUrl,
+  url_2: auditUrl,
+}).passthrough();
 
 serve(async (req) => {
   const corsHeaders = getCorsHeaders(req);
@@ -27,7 +38,9 @@ serve(async (req) => {
         { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
-    const { url_1, url_2 } = await req.json();
+    const parsed = await validateBody(req, DuplicateContentSchema, { name: 'detect-duplicate-content' });
+    if (!parsed.ok) return parsed.response;
+    const { url_1, url_2 } = parsed.data;
     if (!url_1 || !url_2) {
       return new Response(JSON.stringify({ error: 'Two URLs required' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });

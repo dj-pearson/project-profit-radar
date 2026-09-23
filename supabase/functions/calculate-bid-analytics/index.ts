@@ -2,6 +2,19 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { initializeAuthContext, errorResponse } from '../_shared/auth-helpers.ts';
 import { getCorsHeaders } from '../_shared/secure-cors.ts';
+import { validateBody } from '../_shared/validate-body.ts';
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
+
+// Request body (US-241), report mode by default - see _shared/validate-body.ts.
+// The caller, src/components/bids/BidManagementDashboard.tsx, sends
+// { company_id, period, start_date, end_date }. Reads run on the caller's JWT
+// client, so RLS scopes company_id.
+const BidAnalyticsSchema = z.object({
+  company_id: z.string().uuid(),
+  period: z.string().max(20).optional(),
+  start_date: z.string().max(64).nullish(),
+  end_date: z.string().max(64).nullish(),
+}).passthrough();
 
 serve(async (req) => {
   const corsHeaders = getCorsHeaders(req);
@@ -18,7 +31,9 @@ serve(async (req) => {
     const { user, supabase: supabaseClient } = authContext;
     console.log('[CALCULATE-BID-ANALYTICS] User authenticated', { userId: user.id });
 
-    const { company_id, period = 'monthly', start_date, end_date } = await req.json();
+    const parsed = await validateBody(req, BidAnalyticsSchema, { name: 'calculate-bid-analytics' });
+    if (!parsed.ok) return parsed.response;
+    const { company_id, period = 'monthly', start_date, end_date } = parsed.data;
 
     console.log('Calculating bid analytics for:', { company_id, period, start_date, end_date });
 

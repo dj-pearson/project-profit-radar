@@ -9,6 +9,21 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.50.3';
 import { initializeAuthContext, errorResponse } from '../_shared/auth-helpers.ts';
 import { getCorsHeaders } from '../_shared/secure-cors.ts';
+import { validateBody } from '../_shared/validate-body.ts';
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
+
+// Request body (US-241), report mode by default - see _shared/validate-body.ts.
+// No caller in src/ or Brikly-iOS/. trigger and entityType stay plain strings
+// rather than enums: an unknown trigger matches no automation rule and returns
+// processed: 0 today, and that should not become a 400. companyId is accepted
+// and ignored; the company comes from the caller's profile.
+const AutomationRequestSchema = z.object({
+  trigger: z.string().min(1).max(64),
+  entityType: z.string().min(1).max(32),
+  entityId: z.string().min(1).max(255),
+  companyId: z.string().max(255).nullish(),
+  metadata: z.record(z.unknown()).nullish(),
+}).passthrough();
 
 const logStep = (step: string, details?: Record<string, unknown>) => {
   const detailsStr = details ? ` - ${JSON.stringify(details)}` : '';
@@ -87,7 +102,9 @@ Deno.serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    const body = await req.json() as AutomationRequest;
+    const parsed = await validateBody(req, AutomationRequestSchema, { name: 'crm-email-automation' });
+    if (!parsed.ok) return parsed.response;
+    const body = parsed.data as AutomationRequest;
     const { trigger, entityType, entityId, metadata } = body;
     const companyId = callerProfile.company_id;
 

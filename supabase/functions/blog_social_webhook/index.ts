@@ -2,6 +2,22 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.3";
 import { getCorsHeaders } from '../_shared/secure-cors.ts';
 import { requireInternalCaller } from '../_shared/internal-only.ts';
+import { validateBody } from '../_shared/validate-body.ts';
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
+
+// Request body (US-241), report mode by default - see _shared/validate-body.ts.
+// The caller, enhanced-blog-ai-fixed, sends { blog_post_id, company_id, title,
+// excerpt, url }; trigger_type and webhook_url are read too. company_id is
+// logged and ignored - the blog post row carries the real company.
+const BlogSocialWebhookInternalSchema = z.object({
+  blog_post_id: z.string().uuid(),
+  company_id: z.string().max(255).nullish(),
+  trigger_type: z.string().max(50).optional(),
+  webhook_url: z.string().url().max(2048).nullish(),
+  title: z.string().max(500).nullish(),
+  excerpt: z.string().max(5000).nullish(),
+  url: z.string().max(2048).nullish(),
+}).passthrough();
 
 interface SocialPlatformContent {
   platform: string;
@@ -150,7 +166,9 @@ serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
     );
 
-    const body = await req.json();
+    const parsed = await validateBody(req, BlogSocialWebhookInternalSchema, { name: 'blog_social_webhook' });
+    if (!parsed.ok) return parsed.response;
+    const body = parsed.data;
     const {
       blog_post_id,
       company_id,

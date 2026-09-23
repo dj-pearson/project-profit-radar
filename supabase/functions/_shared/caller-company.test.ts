@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { resolveCompanyScope } from './caller-company.ts';
+import { resolveCompanyScope, canActOnUser } from './caller-company.ts';
 import { dispatchReminder, type ReminderDeps } from '../send-payment-reminder/dispatch.ts';
 
 describe('resolveCompanyScope (US-341)', () => {
@@ -79,5 +79,37 @@ describe('send-payment-reminder dispatch (US-341)', () => {
     const res = await dispatchReminder({ action: 'drop_tables' }, d);
     expect(res.status).toBe(400);
     expect(d.authenticate).not.toHaveBeenCalled();
+  });
+});
+
+describe('canActOnUser (US-241)', () => {
+  // process-behavioral-triggers took userId from the body and fired email,
+  // notification and webhook actions at that user on the service role. A
+  // company admin could name a user in another tenant.
+  const admin = { id: 'u-admin', role: 'admin', companyId: 'co-a' };
+
+  it('lets anyone act on themselves, company or not', () => {
+    expect(canActOnUser({ id: 'u-1', role: 'office_staff', companyId: null }, { id: 'u-1' })).toBe(true);
+  });
+
+  it('lets a caller act on a user in their own company', () => {
+    expect(canActOnUser(admin, { id: 'u-2', companyId: 'co-a' })).toBe(true);
+  });
+
+  it('refuses a user in another company', () => {
+    expect(canActOnUser(admin, { id: 'u-3', companyId: 'co-b' })).toBe(false);
+  });
+
+  it('fails closed when either company is unknown', () => {
+    expect(canActOnUser(admin, { id: 'u-4', companyId: null })).toBe(false);
+    expect(canActOnUser({ id: 'u-5', role: 'admin', companyId: null }, { id: 'u-6', companyId: null })).toBe(false);
+  });
+
+  it('lets root_admin act across tenants', () => {
+    expect(canActOnUser({ id: 'u-root', role: 'root_admin', companyId: null }, { id: 'u-7', companyId: 'co-b' })).toBe(true);
+  });
+
+  it('refuses empty ids rather than matching them to each other', () => {
+    expect(canActOnUser({ id: '', companyId: 'co-a' }, { id: '', companyId: 'co-a' })).toBe(false);
   });
 });

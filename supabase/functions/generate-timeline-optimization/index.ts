@@ -2,6 +2,17 @@ import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.3";
 import { getCorsHeaders } from '../_shared/secure-cors.ts';
+import { validateBody } from '../_shared/validate-body.ts';
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
+
+import { resolveCompanyScope } from '../_shared/caller-company.ts';
+
+// Request body (US-241), report mode by default - see _shared/validate-body.ts.
+// The caller, src/components/analytics/TimelineOptimization.tsx, sends
+// { company_id: userProfile.company_id }.
+const TimelineOptimizationSchema = z.object({
+  company_id: z.string().uuid(),
+}).passthrough();
 
 const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
 
@@ -24,8 +35,31 @@ serve(async (req) => {
     const { data: userData, error: userError } = await supabaseClient.auth.getUser(token);
     if (userError) throw new Error(`Authentication error: ${userError.message}`);
 
-    const { company_id } = await req.json();
-    if (!company_id) throw new Error("Company ID is required");
+    const parsed = await validateBody(req, TimelineOptimizationSchema, { name: 'generate-timeline-optimization' });
+    if (!parsed.ok) return parsed.response;
+    const { company_id: bodyCompanyId } = parsed.data;
+    if (!bodyCompanyId) throw new Error("Company ID is required");
+
+    // SECURITY (US-241): the reads below run on the SERVICE ROLE and were
+    // filtered only by the body company_id, so any signed-in user could read
+    // another tenant's projects (names, ids, dates), crew assignments and
+    // equipment back through the optimisation response. The company must now
+    // be the caller's own; a disagreeing body value is a 403.
+    const callerId = userData?.user?.id;
+    if (!callerId) throw new Error("Authentication error: no user");
+    const { data: callerProfile } = await supabaseClient
+      .from('user_profiles')
+      .select('company_id')
+      .eq('id', callerId)
+      .maybeSingle();
+    const scope = resolveCompanyScope(callerProfile?.company_id, bodyCompanyId);
+    if (!scope.ok) {
+      return new Response(
+        JSON.stringify({ success: false, error: scope.error, timestamp: new Date().toISOString() }),
+        { status: scope.status, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    }
+    const company_id = scope.companyId;
 
     // Load project and resource data
     const [

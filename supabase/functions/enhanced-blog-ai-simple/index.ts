@@ -1,6 +1,18 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { getCorsHeaders } from '../_shared/secure-cors.ts';
 import { initializeAuthContext, errorResponse } from '../_shared/auth-helpers.ts';
+import { validateBody } from '../_shared/validate-body.ts';
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
+
+// Request body (US-241), report mode by default - see _shared/validate-body.ts.
+// The caller, src/components/admin/BlogAIDebugger.tsx, sends
+// { action: 'test-generation' | 'test-claude', topic }. topic is interpolated
+// into a model prompt, so it is bounded.
+const EnhancedBlogAiSimpleSchema = z.object({
+  action: z.string().max(50),
+  topic: z.string().max(1000).nullish(),
+  customSettings: z.record(z.unknown()).nullish(),
+}).passthrough();
 
 serve(async (req) => {
   const corsHeaders = getCorsHeaders(req);
@@ -19,7 +31,9 @@ serve(async (req) => {
 
     console.log("Enhanced Blog AI Simple - Function started");
     
-    const body = await req.json();
+    const parsed = await validateBody(req, EnhancedBlogAiSimpleSchema, { name: 'enhanced-blog-ai-simple' });
+    if (!parsed.ok) return parsed.response;
+    const body = parsed.data;
     console.log("Request body:", JSON.stringify(body, null, 2));
     
     const { action, topic, customSettings } = body;

@@ -2,6 +2,18 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { initializeAuthContext, errorResponse } from '../_shared/auth-helpers.ts';
 import { getCorsHeaders } from '../_shared/secure-cors.ts';
+import { validateBody } from '../_shared/validate-body.ts';
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
+
+// Request body (US-241), report mode by default - see _shared/validate-body.ts.
+// root_admin only; no caller in src/. keyword and domain go into a search-API
+// query string built here, not a fetch target of their own.
+const SerpFeaturesSchema = z.object({
+  keyword: z.string().min(1).max(200),
+  domain: z.string().min(1).max(255),
+  country: z.string().max(10).optional(),
+  device: z.string().max(20).optional(),
+}).passthrough();
 
 serve(async (req) => {
   const corsHeaders = getCorsHeaders(req);
@@ -29,7 +41,9 @@ serve(async (req) => {
         { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
-    const { keyword, domain, country = 'us', device = 'desktop' } = await req.json();
+    const parsed = await validateBody(req, SerpFeaturesSchema, { name: 'track-serp-features' });
+    if (!parsed.ok) return parsed.response;
+    const { keyword, domain, country = 'us', device = 'desktop' } = parsed.data;
     if (!keyword) {
       return new Response(JSON.stringify({ error: 'keyword required' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
@@ -125,7 +139,7 @@ serve(async (req) => {
 
       for (const sim of simulatedFeatures) {
         const hasFeature = Math.random() < sim.probability;
-        const ownsFeature = hasFeature && domain && Math.random() < 0.3;
+        const ownsFeature = Boolean(hasFeature && domain && Math.random() < 0.3);
 
         serpFeatures.push({
           feature_type: sim.type,

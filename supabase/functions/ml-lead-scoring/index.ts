@@ -10,6 +10,18 @@
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.50.3';
 import { getCorsHeaders } from '../_shared/secure-cors.ts';
+import { validateBody } from '../_shared/validate-body.ts';
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
+
+// Request body (US-241), report mode by default - see _shared/validate-body.ts.
+// src/hooks/useLeadInsights.ts sends { action: 'score_lead', lead_id } (and a
+// batch_score shape with lead_ids that this handler has never supported; it
+// 400s on the missing lead_id either way). Nothing imports that hook today.
+const MlLeadScoringSchema = z.object({
+  action: z.string().max(50).optional(),
+  lead_id: z.string().uuid(),
+  include_ai_insights: z.boolean().optional(),
+}).passthrough();
 
 const logStep = (step: string, details?: Record<string, unknown>) => {
   const detailsStr = details ? ` - ${JSON.stringify(details)}` : '';
@@ -173,7 +185,9 @@ Deno.serve(async (req) => {
       });
     }
 
-    const body = await req.json();
+    const parsed = await validateBody(req, MlLeadScoringSchema, { name: 'ml-lead-scoring' });
+    if (!parsed.ok) return parsed.response;
+    const body = parsed.data;
     const { lead_id, include_ai_insights = true } = body;
 
     if (!lead_id) {
@@ -185,11 +199,27 @@ Deno.serve(async (req) => {
 
     logStep('Scoring lead', { lead_id, user_id: user.id });
 
+    // SECURITY (US-241): `leads` is Brikly's own inbound sales pipeline (the
+    // marketing forms write it; it has site_id and no company_id), and every
+    // read and write below is on the SERVICE ROLE by a body-supplied lead_id.
+    // Any signed-in customer could read a prospect's record and AI insights
+    // and rewrite their score. The only thing that stopped it was a bug: this
+    // lookup filtered user_profiles on a user_id column that does not exist
+    // (user_profiles.id IS the auth user id), so it always failed with 400.
+    // Fixing the lookup without a gate would have opened the hole, so the gate
+    // comes with it: root_admin only, 403 otherwise.
     const { data: userProfile } = await supabase
       .from('user_profiles')
-      .select('company_id')
-      .eq('user_id', user.id)
-      .single();
+      .select('company_id, role')
+      .eq('id', user.id)
+      .maybeSingle();
+
+    if (userProfile?.role !== 'root_admin') {
+      return new Response(JSON.stringify({ success: false, error: 'Access denied', timestamp: new Date().toISOString() }), {
+        status: 403,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
 
     if (!userProfile?.company_id) {
       return new Response(JSON.stringify({ error: 'User company not found' }), {

@@ -2,6 +2,18 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts"
 import { initializeAuthContext, errorResponse } from '../_shared/auth-helpers.ts'
 import { getCorsHeaders } from '../_shared/secure-cors.ts';
+import { validateBody } from '../_shared/validate-body.ts';
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
+
+// Request body (US-241), report mode by default - see _shared/validate-body.ts.
+// The caller, src/pages/admin/RiskPrediction.tsx, sends
+// { tenant_id, project_id, user_id }. Every query and insert below runs on the
+// caller's JWT client, so RLS scopes tenant_id rather than this schema.
+const RiskPredictionSchema = z.object({
+  tenant_id: z.string().uuid(),
+  project_id: z.string().uuid(),
+  user_id: z.string().uuid(),
+}).passthrough();
 
 interface RiskPredictionRequest {
   tenant_id: string
@@ -49,7 +61,9 @@ serve(async (req) => {
     const { user, supabase: supabaseClient } = authContext
     console.log('[RISK-PREDICTION] User authenticated', { userId: user.id })
 
-    const { tenant_id, project_id, user_id } = await req.json() as RiskPredictionRequest
+    const parsed = await validateBody(req, RiskPredictionSchema, { name: 'risk-prediction' })
+    if (!parsed.ok) return parsed.response
+    const { tenant_id, project_id, user_id } = parsed.data as RiskPredictionRequest
 
     if (!tenant_id || !project_id || !user_id) {
       throw new Error('Missing required fields: tenant_id, project_id, user_id')

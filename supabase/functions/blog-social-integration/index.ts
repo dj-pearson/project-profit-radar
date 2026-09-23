@@ -3,6 +3,20 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { initializeAuthContext, errorResponse } from '../_shared/auth-helpers.ts';
 import { aiService } from "../_shared/ai-service.ts";
 import { getCorsHeaders } from '../_shared/secure-cors.ts';
+import { validateBody } from '../_shared/validate-body.ts';
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
+
+// Request body (US-241), report mode by default - see _shared/validate-body.ts.
+// No caller in src/ or Brikly-iOS/. The drafts are inserted on the caller's
+// JWT client, so RLS, not this schema, decides whether companyId is theirs.
+const BlogSocialIntegrationSchema = z.object({
+  blogContent: z.object({
+    title: z.string().max(500),
+    excerpt: z.string().max(5000).nullish(),
+    content: z.string().max(200000).nullish(),
+  }).passthrough(),
+  companyId: z.string().uuid(),
+}).passthrough();
 
 serve(async (req) => {
   const corsHeaders = getCorsHeaders(req);
@@ -19,7 +33,9 @@ serve(async (req) => {
     const { user, supabase } = authContext;
     console.log("[BLOG-SOCIAL] User authenticated", { userId: user.id });
 
-    const { blogContent, companyId } = await req.json();
+    const parsed = await validateBody(req, BlogSocialIntegrationSchema, { name: 'blog-social-integration' });
+    if (!parsed.ok) return parsed.response;
+    const { blogContent, companyId } = parsed.data;
 
     console.log("Generating social media content from blog post");
 

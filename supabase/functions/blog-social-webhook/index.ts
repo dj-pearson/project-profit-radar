@@ -1,6 +1,18 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.3";
 import { initializeAuthContext } from "../_shared/auth-helpers.ts";
 import { getCorsHeaders } from "../_shared/secure-cors.ts";
+import { validateBody } from "../_shared/validate-body.ts";
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
+
+// Request body (US-241), report mode by default - see _shared/validate-body.ts.
+// The caller, src/hooks/useSocialMediaAutomation.ts, sends
+// { blog_post_id, company_id, status: 'published' }. status stays a plain
+// string: anything other than 'published' is a documented skip, not an error.
+const BlogSocialWebhookSchema = z.object({
+  blog_post_id: z.string().uuid(),
+  company_id: z.string().uuid(),
+  status: z.string().max(50),
+}).passthrough();
 
 const logStep = (step: string, data?: any) => {
   console.log(`[BLOG Social Webhook] ${step}:`, data || "");
@@ -50,7 +62,9 @@ export default async (req: Request) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
     );
 
-    const { blog_post_id, company_id, status } = await req.json();
+    const parsed = await validateBody(req, BlogSocialWebhookSchema, { name: 'blog-social-webhook' });
+    if (!parsed.ok) return parsed.response;
+    const { blog_post_id, company_id, status } = parsed.data;
 
     // Enforce that the caller owns the company_id from the body.
     const { data: callerProfile } = await supabaseClient

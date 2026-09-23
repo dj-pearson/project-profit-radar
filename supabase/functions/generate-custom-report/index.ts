@@ -4,6 +4,17 @@ import { isSafeIdentifier } from '../_shared/postgrest-filter.ts'
 import { getCorsHeaders } from '../_shared/secure-cors.ts';
 import { enforceRateLimit, RATE_LIMITS } from '../_shared/rate-limiter.ts';
 import { createServiceClient } from '../_shared/service-client.ts';
+import { validateBody } from '../_shared/validate-body.ts';
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
+
+// Request body (US-241), report mode by default - see _shared/validate-body.ts.
+// The report is read on the caller's JWT client, so RLS decides whether
+// report_id is theirs. output_format stays a string; the switch below owns
+// what it accepts.
+const CustomReportSchema = z.object({
+  report_id: z.string().uuid(),
+  output_format: z.string().max(20).optional(),
+}).passthrough();
 
 serve(async (req) => {
   const corsHeaders = getCorsHeaders(req);
@@ -22,7 +33,9 @@ serve(async (req) => {
       }
     )
 
-    const { report_id, output_format = 'csv' } = await req.json()
+    const parsed = await validateBody(req, CustomReportSchema, { name: 'generate-custom-report' })
+    if (!parsed.ok) return parsed.response
+    const { report_id, output_format = 'csv' } = parsed.data
 
     if (!report_id) {
       return new Response(

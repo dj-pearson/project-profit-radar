@@ -51,6 +51,28 @@ const reads = [...validated, ...unvalidated];
 
 // Functions already converted. Never remove a name from here.
 const VALIDATED = new Set([
+  // 2026-09-23 batch 2. data-subject-delete and data-subject-export use
+  // validateBody's allowEmpty option, because the iOS app calls
+  // data-subject-delete with no body at all. Seven of these also stopped a
+  // body-chosen id reaching a service-role read or write: image-processor,
+  // process-behavioral-triggers, enhanced-blog-ai-fixed, sync-analytics-data,
+  // social-webhook-deployer, generate-timeline-optimization, ml-lead-scoring.
+  'api-management', 'apply-seo-fixes', 'blog-ai-automation', 'blog-ai',
+  'blog-social-integration', 'blog-social-webhook', 'blog_social_webhook',
+  'calculate-bid-analytics', 'check-core-web-vitals', 'check-keyword-positions',
+  'crm-email-automation', 'data-subject-delete', 'data-subject-export',
+  'detect-duplicate-content', 'detect-redirect-chains', 'email-sync',
+  'enhanced-blog-ai-fixed', 'enhanced-blog-ai-simple', 'enhanced-blog-ai',
+  'export-seo-report', 'generate-blog-content', 'generate-custom-report',
+  'generate-performance-benchmarks', 'generate-predictive-analytics',
+  'generate-risk-assessment', 'generate-scaling-plan', 'generate-sitemap',
+  'generate-timeline-optimization', 'get-audit-history', 'get-crawl-results',
+  'get-keyword-history', 'gsc-sync-data', 'image-processor', 'ml-lead-scoring',
+  'optimize-resources', 'process-behavioral-triggers', 'process-voice-command',
+  'risk-prediction', 'run-scheduled-audit', 'send-seo-notification',
+  'seo-analytics', 'seo-file-generator', 'smart-data-analyzer',
+  'social-post-scheduler', 'social-webhook-deployer', 'sync-analytics-data',
+  'sync-backlinks', 'track-serp-features', 'voice-to-text',
   // 2026-09-23 batch, money and integrations first. failed-payment-recovery
   // and send-payment-reminder also moved their settings upsert onto a column
   // allowlist (a body company_id chose which tenant's row a service-role
@@ -102,7 +124,7 @@ const VALIDATED = new Set([
   'sso-ldap-auth', 'sso-manage', 'sso-oauth-init', 'sso-saml-init',
   'time-tracking', 'verify-auth-otp', 'verify-mfa-login', 'verify-mfa-setup',
 ]);
-const BASELINE = 70;
+const BASELINE = 21;
 
 console.log('Edge-function input-validation guard (US-241)');
 console.log(`  functions taking a JSON body:  ${reads.length}`);

@@ -2,6 +2,18 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { initializeAuthContext, errorResponse } from '../_shared/auth-helpers.ts';
 import { getCorsHeaders } from '../_shared/secure-cors.ts';
+import { validateBody } from '../_shared/validate-body.ts';
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
+
+import { auditUrl } from "../_shared/audit-url.ts";
+// Request body (US-241), report mode by default - see _shared/validate-body.ts.
+// root_admin only; no caller in src/. The URL is fetched, so it goes through
+// auditUrl. The hops it redirects to are NOT checked - a public URL that
+// redirects to a private address still gets followed (see audit-url.ts on
+// what a string check cannot do).
+const RedirectChainSchema = z.object({
+  url: auditUrl,
+}).passthrough();
 
 serve(async (req) => {
   const corsHeaders = getCorsHeaders(req);
@@ -27,7 +39,9 @@ serve(async (req) => {
         { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
-    const { url } = await req.json();
+    const parsed = await validateBody(req, RedirectChainSchema, { name: 'detect-redirect-chains' });
+    if (!parsed.ok) return parsed.response;
+    const { url } = parsed.data;
     if (!url) {
       return new Response(JSON.stringify({ error: 'URL required' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });

@@ -5,6 +5,24 @@ import { initializeAuthContext, errorResponse } from '../_shared/auth-helpers.ts
 import { getCorsHeaders } from '../_shared/secure-cors.ts';
 import { enforceRateLimit, RATE_LIMITS } from '../_shared/rate-limiter.ts';
 import { createServiceClient } from '../_shared/service-client.ts';
+import { validateBody } from '../_shared/validate-body.ts';
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
+
+// Request body (US-241), report mode by default - see _shared/validate-body.ts.
+// root_admin only; no caller in src/ (the admin screens call
+// enhanced-blog-ai-fixed). customSettings is GenerationSettings for the
+// generate actions and a whole ai_model_configurations row for
+// update-model-config, so it stays an open object; only the knobs that change
+// what a model call costs are bounded.
+const EnhancedBlogAiSchema = z.object({
+  action: z.string().max(50),
+  topic: z.string().max(1000).nullish(),
+  queueId: z.string().uuid().nullish(),
+  customSettings: z.object({
+    model_temperature: z.number().min(0).max(2).nullish(),
+    target_word_count: z.number().int().positive().max(20000).nullish(),
+  }).passthrough().nullish(),
+}).passthrough();
 
 const logStep = (step: string, details?: any) => {
   console.log(`[ENHANCED-BLOG-AI] ${step}${details ? ` - ${JSON.stringify(details)}` : ''}`);
@@ -80,7 +98,12 @@ serve(async (req) => {
       throw new Error("Insufficient permissions");
     }
 
-    const { action, topic, queueId, customSettings } = await req.json();
+    const parsed = await validateBody(req, EnhancedBlogAiSchema, { name: 'enhanced-blog-ai' });
+    if (!parsed.ok) return parsed.response;
+    // Typed as the handlers below expect; report mode can hand them the raw body.
+    const { action, topic, queueId, customSettings } = parsed.data as {
+      action: string; topic: string; queueId: string; customSettings?: Record<string, unknown>;
+    };
 
     if (action === 'generate-auto-content') {
       return await handleAutoGeneration(corsHeaders, supabaseClient, userProfile.company_id, topic, customSettings);

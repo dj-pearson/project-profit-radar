@@ -2,6 +2,19 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts"
 import { initializeAuthContext, errorResponse } from '../_shared/auth-helpers.ts';
 import { getCorsHeaders } from '../_shared/secure-cors.ts';
+import { validateBody } from '../_shared/validate-body.ts';
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
+
+// Request body (US-241), report mode by default - see _shared/validate-body.ts.
+// root_admin only. UnifiedSEODashboard.tsx sends { action: 'get_analytics_summary' }.
+// action stays a string: an unknown one falls to the switch's default today.
+const SEOAnalyticsSchema = z.object({
+  action: z.string().max(64),
+  data: z.unknown().optional(),
+  timeframe: z.string().max(32).nullish(),
+  startDate: z.string().max(64).nullish(),
+  endDate: z.string().max(64).nullish(),
+}).passthrough();
 
 interface SEOAnalyticsRequest {
   action: 'get_analytics_summary' | 'fetch_google_search_console' | 'fetch_bing_data' | 'generate_ai_insights' | 'get_google_auth_url' | 'get_microsoft_auth_url' | 'fetch-dashboard-data' | 'get-seo-data' | 'get-google-analytics' | 'get-search-console' | 'get-top-queries' | 'get-top-pages'
@@ -43,7 +56,9 @@ serve(async (req) => {
     }
 
     // Get request data
-    const requestData: SEOAnalyticsRequest = await req.json()
+    const parsed = await validateBody(req, SEOAnalyticsSchema, { name: 'seo-analytics' })
+    if (!parsed.ok) return parsed.response
+    const requestData = parsed.data as SEOAnalyticsRequest
 
     // Check if credentials are configured
     const googleClientEmail = Deno.env.get('GOOGLE_CLIENT_EMAIL')

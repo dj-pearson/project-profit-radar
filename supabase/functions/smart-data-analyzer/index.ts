@@ -5,6 +5,20 @@ import { initializeAuthContext, errorResponse } from '../_shared/auth-helpers.ts
 import { getCorsHeaders } from '../_shared/secure-cors.ts';
 import { enforceRateLimit, RATE_LIMITS } from '../_shared/rate-limiter.ts';
 import { createServiceClient } from '../_shared/service-client.ts';
+import { validateBody } from '../_shared/validate-body.ts';
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
+
+// Request body (US-241), report mode by default - see _shared/validate-body.ts.
+// The caller, src/components/smart-import/SmartImportWizard.tsx, sends
+// { sessionId, csvData: <whole file text>, fileName }. Only the first eleven
+// lines are used, but the wizard sends the whole file, so the csvData cap is
+// set well above any realistic import rather than at what is read. Writes run
+// on the caller's JWT client, so RLS decides whether sessionId is theirs.
+const SmartDataAnalyzerSchema = z.object({
+  sessionId: z.string().uuid(),
+  csvData: z.string().min(1).max(25_000_000),
+  fileName: z.string().max(500).nullish(),
+}).passthrough();
 
 const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
 
@@ -96,7 +110,9 @@ serve(async (req) => {
     if (limited) return limited;
     logStep("User authenticated", { userId: user.id });
 
-    const { sessionId, csvData, fileName } = await req.json();
+    const parsed = await validateBody(req, SmartDataAnalyzerSchema, { name: 'smart-data-analyzer' });
+    if (!parsed.ok) return parsed.response;
+    const { sessionId, csvData, fileName } = parsed.data;
     logStep("Analyzing data", {  sessionId, fileName });
 
     if (!openAIApiKey) {

@@ -32,6 +32,16 @@ import { initializeAuthContext, errorResponse, successResponse } from "../_share
 import { getCorsHeaders } from "../_shared/secure-cors.ts";
 import { checkRateLimit, getClientIP, rateLimitResponse } from "../_shared/rate-limiter.ts";
 import { createServiceClient } from "../_shared/service-client.ts";
+import { validateBody } from "../_shared/validate-body.ts";
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
+
+// Request body (US-241), report mode by default - see _shared/validate-body.ts.
+// The web app (PrivacyControls) sends { user_id, request_type: 'access' };
+// an empty body is fine too. user_id is ignored: the subject is the JWT caller.
+const DataSubjectExportSchema = z.object({
+  user_id: z.string().max(255).nullish(),
+  request_type: z.string().max(50).nullish(),
+}).passthrough();
 
 interface ExportPayload {
   /** Meta about the request itself for the audit trail. */
@@ -91,12 +101,13 @@ serve(async (req) => {
   if (!ipRl.allowed) return rateLimitResponse(ipRl, corsHeaders);
 
   // Read the request body only to allow the client to specify non-default
-  // behaviours in the future (e.g., format). We ignore unknown fields.
-  try {
-    await req.json().catch(() => ({}));
-  } catch {
-    /* noop — empty body is fine */
-  }
+  // behaviours in the future (e.g., format). We ignore unknown fields. The
+  // body is optional (allowEmpty), and nothing in it chooses the subject.
+  const parsed = await validateBody(req, DataSubjectExportSchema, {
+    name: 'data-subject-export',
+    allowEmpty: true,
+  });
+  if (!parsed.ok) return parsed.response;
 
   // Best-effort: queries that fail are logged and ignored so one missing
   // table doesn't prevent the rest of the export from returning.

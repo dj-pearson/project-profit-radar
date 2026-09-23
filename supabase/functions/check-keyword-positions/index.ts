@@ -2,6 +2,18 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { initializeAuthContext, errorResponse } from '../_shared/auth-helpers.ts';
 import { getCorsHeaders } from '../_shared/secure-cors.ts';
+import { validateBody } from '../_shared/validate-body.ts';
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
+
+// Request body (US-241), report mode by default - see _shared/validate-body.ts.
+// root_admin only. SEOManager.tsx sends { keywords, domain }, keywords being a
+// comma-split of a free-text input, so an empty string in the array is normal.
+const KeywordPositionsSchema = z.object({
+  keywords: z.array(z.string().max(200)).min(1).max(100),
+  domain: z.string().min(1).max(255),
+  country: z.string().max(10).optional(),
+  device: z.string().max(20).optional(),
+}).passthrough();
 
 serve(async (req) => {
   const corsHeaders = getCorsHeaders(req);
@@ -27,7 +39,9 @@ serve(async (req) => {
         { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
-    const { keywords, domain, country = 'us', device = 'desktop' } = await req.json();
+    const parsed = await validateBody(req, KeywordPositionsSchema, { name: 'check-keyword-positions' });
+    if (!parsed.ok) return parsed.response;
+    const { keywords, domain, country = 'us', device = 'desktop' } = parsed.data;
     if (!keywords || !Array.isArray(keywords) || keywords.length === 0) {
       return new Response(JSON.stringify({ error: 'Keywords array required' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });

@@ -2,6 +2,20 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { initializeAuthContext, errorResponse } from '../_shared/auth-helpers.ts';
 import { getCorsHeaders } from '../_shared/secure-cors.ts';
+import { validateBody } from '../_shared/validate-body.ts';
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
+
+// Request body (US-241), report mode by default - see _shared/validate-body.ts.
+// root_admin only; no caller in src/ or Brikly-iOS/. Only the three fix fields
+// the handler copies into seo_fixes_applied are named.
+const ApplySeoFixesSchema = z.object({
+  audit_id: z.string().uuid(),
+  fixes: z.array(z.object({
+    issue_type: z.string().max(200),
+    severity: z.string().max(50).nullish(),
+    fix_description: z.string().max(5000).nullish(),
+  }).passthrough()).min(1).max(500),
+}).passthrough();
 
 serve(async (req) => {
   const corsHeaders = getCorsHeaders(req);
@@ -27,7 +41,9 @@ serve(async (req) => {
         { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
-    const { audit_id, fixes } = await req.json();
+    const parsed = await validateBody(req, ApplySeoFixesSchema, { name: 'apply-seo-fixes' });
+    if (!parsed.ok) return parsed.response;
+    const { audit_id, fixes } = parsed.data;
     if (!audit_id || !fixes || !Array.isArray(fixes)) {
       return new Response(JSON.stringify({ error: 'audit_id and fixes array required' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });

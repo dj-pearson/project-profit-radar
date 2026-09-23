@@ -5,6 +5,45 @@ import { getCorsHeaders } from '../_shared/secure-cors.ts';
 import { WRITABLE_PROJECT_COLUMNS, pickAllowed } from '../_shared/writable-columns.ts';
 import { writeAuditLog } from '../_shared/audit-log.ts';
 import { requireInternalCaller } from '../_shared/internal-only.ts';
+import { validateBody } from '../_shared/validate-body.ts';
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
+
+// Request bodies (US-241), one per route that reads one; report mode by
+// default - see _shared/validate-body.ts. All .passthrough(): the web admin
+// screen (ApiManagement.tsx) adds an `action` field, and external API-key
+// clients of /api/projects are not in this repo, so nothing they send beyond
+// these fields is assumed away. The handlers keep their own checks (key_name,
+// the permission set, the rate-limit clamp, the project column allowlist)
+// because report mode hands them the raw body on a failed parse.
+const CreateKeySchema = z.object({
+  action: z.string().max(50).optional(),
+  key_name: z.string().trim().min(1).max(255),
+  permissions: z.array(z.string().max(100)).max(50).optional(),
+  expires_at: z.string().max(64).nullish(),
+  rate_limit_per_hour: z.union([z.number(), z.string().max(20)]).nullish(),
+}).passthrough();
+
+const TriggerWebhookSchema = z.object({
+  webhook_id: z.string().uuid(),
+  event_type: z.string().min(1).max(100),
+  payload: z.unknown().optional(),
+}).passthrough();
+
+const TestWebhookSchema = z.object({
+  action: z.string().max(50).optional(),
+  webhook_id: z.string().uuid(),
+}).passthrough();
+
+// Only the shape of what reaches pickAllowed(WRITABLE_PROJECT_COLUMNS). The
+// allowlist, not this schema, is what keeps tenancy columns out.
+const ApiProjectSchema = z.object({
+  name: z.string().min(1).max(255),
+  description: z.string().max(10000).nullish(),
+  status: z.string().max(50).nullish(),
+  project_type: z.string().max(100).nullish(),
+  client_name: z.string().max(255).nullish(),
+  client_email: z.string().max(255).nullish(),
+}).passthrough();
 // Using built-in crypto API instead
 
 // The complete set of grants an API key can carry. validateApiRequest() checks
@@ -124,7 +163,9 @@ async function validateApiKey(corsHeaders: Record<string, string>, req: Request,
 }
 
 async function createApiKey(corsHeaders: Record<string, string>, req: Request, supabase: any): Promise<Response> {
-  const { key_name, permissions, expires_at, rate_limit_per_hour } = await req.json();
+  const parsed = await validateBody(req, CreateKeySchema, { name: 'api-management/create-key' });
+  if (!parsed.ok) return parsed.response;
+  const { key_name, permissions, expires_at, rate_limit_per_hour } = parsed.data;
   const authHeader = req.headers.get('Authorization');
 
   if (!authHeader) {
@@ -274,7 +315,9 @@ async function triggerWebhook(corsHeaders: Record<string, string>, req: Request,
   const denied = requireInternalCaller(req);
   if (denied) return denied;
 
-  const { webhook_id, event_type, payload } = await req.json();
+  const parsed = await validateBody(req, TriggerWebhookSchema, { name: 'api-management/webhook/trigger' });
+  if (!parsed.ok) return parsed.response;
+  const { webhook_id, event_type, payload } = parsed.data;
   
   const { data: webhook, error: webhookError } = await supabase
     .from('webhook_endpoints')
@@ -426,7 +469,9 @@ async function testWebhook(corsHeaders: Record<string, string>, req: Request, su
   const denied = requireInternalCaller(req);
   if (denied) return denied;
 
-  const { webhook_id } = await req.json();
+  const parsed = await validateBody(req, TestWebhookSchema, { name: 'api-management/webhook/test' });
+  if (!parsed.ok) return parsed.response;
+  const { webhook_id } = parsed.data;
   
   return await triggerWebhook(
     corsHeaders, new Request(req.url, {
@@ -477,7 +522,9 @@ async function handleProjectsApi(corsHeaders: Record<string, string>, req: Reque
         return hasWritePermission.response!;
       }
 
-      const projectData = await req.json();
+      const parsed = await validateBody(req, ApiProjectSchema, { name: 'api-management/api/projects' });
+      if (!parsed.ok) return parsed.response;
+      const projectData = parsed.data as Record<string, unknown>;
 
       // This handler runs on the SERVICE ROLE key, so RLS is not a backstop:
       // whatever the body carries reaches Postgres. Spreading it let an API-key

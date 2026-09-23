@@ -4,6 +4,22 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.3";
 import { getCorsHeaders } from '../_shared/secure-cors.ts';
 import { requireInternalCaller } from '../_shared/internal-only.ts';
+import { validateBody } from '../_shared/validate-body.ts';
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
+
+// Request body (US-241), report mode by default - see _shared/validate-body.ts.
+// No caller in the repo (automation tools post here with x-api-key).
+// customSettings feeds the model call, so its token and temperature knobs are
+// bounded; everything else in it passes through.
+const BlogAutomationSchema = z.object({
+  action: z.string().max(50),
+  topic: z.string().max(1000).nullish(),
+  customSettings: z.object({
+    preferred_model: z.string().max(100).nullish(),
+    max_tokens: z.number().int().positive().max(16000).nullish(),
+    model_temperature: z.number().min(0).max(2).nullish(),
+  }).passthrough().nullish(),
+}).passthrough();
 
 const logStep = (step: string, details?: any) => {
   console.log(`[BLOG-AI-AUTOMATION] ${step}${details ? ` - ${JSON.stringify(details)}` : ''}`);
@@ -79,13 +95,15 @@ serve(async (req) => {
     }
 
     // Parse request body
-    const body = await req.json();
+    const parsed = await validateBody(req, BlogAutomationSchema, { name: 'blog-ai-automation' });
+    if (!parsed.ok) return parsed.response;
+    const body = parsed.data;
     const { action, topic, customSettings } = body;
     logStep("Request parsed", { action, topic, authMethod });
 
     // Handle different actions
     if (action === 'generate-auto-content' || action === 'test-generation') {
-      return await generateBlogContent(corsHeaders, supabaseClient, topic, customSettings);
+      return await generateBlogContent(corsHeaders, supabaseClient, topic ?? undefined, customSettings);
     }
 
     return new Response(JSON.stringify({

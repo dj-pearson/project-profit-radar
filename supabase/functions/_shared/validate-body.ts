@@ -29,6 +29,7 @@
 
 import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
 import { errorResponse } from "./auth-helpers.ts";
+import { parseJsonBodyText } from "./parse-json-body.ts";
 
 export type ValidationMode = "report" | "enforce";
 
@@ -53,20 +54,30 @@ function describe(error: z.ZodError): string {
  * A body that is not JSON at all is rejected in both modes — that is a
  * malformed request, not a schema tightening, and the handler could not have
  * done anything with it either.
+ *
+ * `allowEmpty: true` treats a missing (empty or whitespace-only) body as {}
+ * and runs it through the schema. Opt in only where a live caller sends no
+ * body at all; the iOS app calls data-subject-delete that way. It does not
+ * relax anything else: a body that is present but not JSON is still a 400.
  */
 export async function validateBody<T>(
   req: Request,
   schema: z.ZodType<T>,
-  options: { name?: string } = {},
+  options: { name?: string; allowEmpty?: boolean } = {},
 ): Promise<ValidatedBody<T>> {
   const label = options.name ?? new URL(req.url).pathname;
 
-  let raw: unknown;
+  let text: string;
   try {
-    raw = await req.json();
+    text = await req.text();
   } catch {
     return { ok: false, response: errorResponse("Request body must be valid JSON", 400, req) };
   }
+  const body = parseJsonBodyText(text, { allowEmpty: options.allowEmpty });
+  if (!body.ok) {
+    return { ok: false, response: errorResponse("Request body must be valid JSON", 400, req) };
+  }
+  const raw: unknown = body.value;
 
   const result = schema.safeParse(raw);
   if (result.success) {

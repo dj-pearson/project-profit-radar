@@ -2,6 +2,23 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.3";
 import { getCorsHeaders } from '../_shared/secure-cors.ts';
 import { requireInternalCaller } from '../_shared/internal-only.ts';
+import { validateBody } from '../_shared/validate-body.ts';
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
+
+// Request body (US-241), report mode by default - see _shared/validate-body.ts.
+// The one caller, run-scheduled-audit, sends { notification_type, subject,
+// message, severity, data }. notification_type comes from a stored alert rule,
+// so it stays a string rather than an enum.
+const SeoNotificationSchema = z.object({
+  alert_id: z.string().max(255).nullish(),
+  notification_type: z.string().max(20).optional(),
+  recipient_email: z.string().email().max(255).nullish(),
+  slack_webhook_url: z.string().url().max(2048).nullish(),
+  subject: z.string().min(1).max(500),
+  message: z.string().min(1).max(20000),
+  severity: z.string().max(20).optional(),
+  data: z.record(z.unknown()).optional(),
+}).passthrough();
 
 serve(async (req) => {
   const corsHeaders = getCorsHeaders(req);
@@ -19,6 +36,8 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
     );
 
+    const parsed = await validateBody(req, SeoNotificationSchema, { name: 'send-seo-notification' });
+    if (!parsed.ok) return parsed.response;
     const {
       alert_id,
       notification_type = 'email',
@@ -28,7 +47,7 @@ serve(async (req) => {
       message,
       severity = 'info',
       data = {},
-    } = await req.json();
+    } = parsed.data;
 
     if (!subject || !message) {
       return new Response(JSON.stringify({ error: 'Subject and message required' }),

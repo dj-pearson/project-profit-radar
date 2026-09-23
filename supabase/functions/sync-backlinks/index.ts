@@ -2,6 +2,16 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { initializeAuthContext, errorResponse } from '../_shared/auth-helpers.ts';
 import { getCorsHeaders } from '../_shared/secure-cors.ts';
+import { validateBody } from '../_shared/validate-body.ts';
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
+
+// Request body (US-241), report mode by default - see _shared/validate-body.ts.
+// root_admin only. SEOManager.tsx sends { target_url }. The URL is passed to
+// the backlink provider's API as a parameter, not fetched here.
+const SyncBacklinksSchema = z.object({
+  target_url: z.string().min(1).max(2048),
+  provider: z.string().max(50).optional(),
+}).passthrough();
 
 serve(async (req) => {
   const corsHeaders = getCorsHeaders(req);
@@ -29,7 +39,9 @@ serve(async (req) => {
         { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
-    const { target_url, provider = 'ahrefs' } = await req.json();
+    const parsed = await validateBody(req, SyncBacklinksSchema, { name: 'sync-backlinks' });
+    if (!parsed.ok) return parsed.response;
+    const { target_url, provider = 'ahrefs' } = parsed.data;
     if (!target_url) {
       return new Response(JSON.stringify({ error: 'target_url required' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });

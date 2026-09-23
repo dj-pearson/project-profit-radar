@@ -37,6 +37,17 @@ import { checkRateLimit, getClientIP, rateLimitResponse } from "../_shared/rate-
 import { writeAuditLog } from '../_shared/audit-log.ts';
 import { createServiceClient } from '../_shared/service-client.ts';
 import { resolveCompanyScope } from '../_shared/caller-company.ts';
+import { validateBody } from '../_shared/validate-body.ts';
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
+
+// Request body (US-241), report mode by default - see _shared/validate-body.ts.
+// The iOS app (ProjectListView) invokes this with NO body and the web app
+// (PrivacyControls) sends { user_id }, so the body is optional (allowEmpty)
+// and every field is. user_id is ignored: the subject is the JWT caller.
+const DataSubjectDeleteSchema = z.object({
+  user_id: z.string().max(255).nullish(),
+  company_id: z.string().max(255).nullish(),
+}).passthrough();
 
 serve(async (req) => {
   const corsHeaders = getCorsHeaders(req);
@@ -73,13 +84,12 @@ serve(async (req) => {
   // context is enough to identify the subject. The erasure ticket is filed
   // under the caller's own company; a body company_id is accepted only when
   // it agrees, so nobody can file a ticket against another tenant (US-341).
-  let bodyCompanyId: unknown;
-  try {
-    const body = await req.json();
-    bodyCompanyId = body?.company_id;
-  } catch {
-    /* noop */
-  }
+  const parsed = await validateBody(req, DataSubjectDeleteSchema, {
+    name: 'data-subject-delete',
+    allowEmpty: true,
+  });
+  if (!parsed.ok) return parsed.response;
+  const bodyCompanyId: unknown = (parsed.data as { company_id?: unknown } | null)?.company_id;
 
   // user_profiles.id is the auth user id (PK references auth.users(id));
   // there is no separate `user_id` column on this table.

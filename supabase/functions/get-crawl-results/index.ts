@@ -2,6 +2,15 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { initializeAuthContext, errorResponse } from '../_shared/auth-helpers.ts';
 import { getCorsHeaders } from '../_shared/secure-cors.ts';
+import { validateBody } from '../_shared/validate-body.ts';
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
+
+// Request body (US-241), report mode by default - see _shared/validate-body.ts.
+// root_admin only. SEOManager.tsx sends { limit: 50 }; base_url filters.
+const CrawlResultsSchema = z.object({
+  base_url: z.string().max(2048).nullish(),
+  limit: z.number().int().positive().max(1000).optional(),
+}).passthrough();
 
 serve(async (req) => {
   const corsHeaders = getCorsHeaders(req);
@@ -29,7 +38,9 @@ serve(async (req) => {
         { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
-    const { base_url, limit = 100 } = await req.json();
+    const parsed = await validateBody(req, CrawlResultsSchema, { name: 'get-crawl-results' });
+    if (!parsed.ok) return parsed.response;
+    const { base_url, limit = 100 } = parsed.data;
 
     let query = supabaseClient
       .from('seo_crawl_results')

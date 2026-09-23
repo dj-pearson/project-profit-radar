@@ -1,6 +1,16 @@
 // Generate Performance Benchmarks Edge Function
 import { initializeAuthContext, errorResponse } from '../_shared/auth-helpers.ts'
 import { getCorsHeaders } from '../_shared/secure-cors.ts';
+import { validateBody } from '../_shared/validate-body.ts';
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
+
+// Request body (US-241), report mode by default - see _shared/validate-body.ts.
+// The caller, src/components/analytics/PerformanceBenchmarking.tsx, sends
+// { company_id: userProfile.company_id }. Reads and writes run on the
+// caller's JWT client, so RLS scopes company_id.
+const PerformanceBenchmarksSchema = z.object({
+  company_id: z.string().uuid(),
+}).passthrough();
 
 Deno.serve(async (req) => {
   const corsHeaders = getCorsHeaders(req);
@@ -24,7 +34,9 @@ Deno.serve(async (req) => {
     const { user, supabase } = authContext;
     console.log('[GENERATE-PERFORMANCE-BENCHMARKS] User authenticated', { userId: user.id });
 
-    const { company_id } = await req.json();
+    const parsed = await validateBody(req, PerformanceBenchmarksSchema, { name: 'generate-performance-benchmarks' });
+    if (!parsed.ok) return parsed.response;
+    const { company_id } = parsed.data;
     if (!company_id) {
       throw new Error('Company ID is required');
     }

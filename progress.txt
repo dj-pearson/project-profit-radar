@@ -6999,3 +6999,12 @@ status column that doesn't exist); it now records applied optimizations
 from the body the web sends and returns 400 when it has nothing to apply.
 confirmAction: ConfirmDialogHost was already mounted; added the missing test.
 Response-envelope baseline 695 -> 694.
+
+## US-241 - Zod batch 3
+49 more functions validate through validateBody; backlog 70 -> 21.
+validateBody gains allowEmpty (empty body -> {}), so data-subject-delete
+(iOS sends no body) and -export could be converted. Seven service-role paths
+let a request-body id reach another tenant's rows; all fixed and pinned in
+_shared/tenantScope.test.ts (image-processor, process-behavioral-triggers,
+enhanced-blog-ai-fixed, sync-analytics-data, social-webhook-deployer,
+generate-timeline-optimization, ml-lead-scoring).

@@ -1,6 +1,21 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.3";
 import { getCorsHeaders } from '../_shared/secure-cors.ts';
 import { requireInternalCaller } from '../_shared/internal-only.ts';
+import { validateBody } from '../_shared/validate-body.ts';
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
+
+// Request body (US-241), report mode by default - see _shared/validate-body.ts.
+// Callers: the pg_cron job ({"manual_trigger": false}), cron-social-scheduler
+// ({ company_id, manual_trigger }), blog-social-webhook (adds blog_trigger and
+// blog_post_id) and useAutomatedSocialPosts.ts ({ company_id, manual_trigger,
+// content_type }). allowEmpty because the body was always optional here.
+const SocialPostSchedulerSchema = z.object({
+  manual_trigger: z.boolean().nullish(),
+  company_id: z.string().uuid().nullish(),
+  content_type: z.string().max(100).nullish(),
+  blog_trigger: z.boolean().nullish(),
+  blog_post_id: z.string().max(255).nullish(),
+}).passthrough();
 
 const logStep = (step: string, data?: any) => {
   console.log(`[Social Post Scheduler] ${step}:`, data || "");
@@ -22,14 +37,17 @@ export default async (req: Request) => {
     logStep("Social post scheduler started");
 
     // Parse request body for manual trigger parameters
+    // Only a JSON content type carries parameters; anything else is a plain
+    // scheduled run, as before.
     let requestBody: any = {};
-    try {
-      const contentType = req.headers.get("content-type");
-      if (contentType && contentType.includes("application/json")) {
-        requestBody = await req.json();
-      }
-    } catch (e) {
-      logStep("Failed to parse request body", e);
+    const contentType = req.headers.get("content-type");
+    if (contentType && contentType.includes("application/json")) {
+      const parsed = await validateBody(req, SocialPostSchedulerSchema, {
+        name: 'social-post-scheduler',
+        allowEmpty: true,
+      });
+      if (!parsed.ok) return parsed.response;
+      requestBody = parsed.data ?? {};
     }
 
     const {

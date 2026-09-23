@@ -2,6 +2,17 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { initializeAuthContext, errorResponse } from '../_shared/auth-helpers.ts';
 import { getCorsHeaders } from '../_shared/secure-cors.ts';
+import { validateBody } from '../_shared/validate-body.ts';
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
+
+// Request body (US-241), report mode by default - see _shared/validate-body.ts.
+// root_admin only; no caller in src/. The URL is handed to the PageSpeed
+// Insights API rather than fetched here, so it is shape-checked, not
+// run through auditUrl. device_type stays a string; the handler defaults it.
+const CoreWebVitalsSchema = z.object({
+  url: z.string().min(1).max(2048),
+  device_type: z.string().max(20).optional(),
+}).passthrough();
 
 interface CoreWebVitalsRequest {
   url: string;
@@ -38,7 +49,9 @@ serve(async (req) => {
       );
     }
 
-    const requestData: CoreWebVitalsRequest = await req.json();
+    const parsed = await validateBody(req, CoreWebVitalsSchema, { name: 'check-core-web-vitals' });
+    if (!parsed.ok) return parsed.response;
+    const requestData = parsed.data as CoreWebVitalsRequest;
     const { url, device_type = 'mobile' } = requestData;
 
     if (!url) {

@@ -675,7 +675,8 @@ describe('the eighth edge batch: two defaults, a stuck spinner, and a fake compr
     expect(src).toMatch(/const \{ error: queueError \} = await supabase/);
     expect(src).not.toMatch(/\.then\(\(\) => \{\}\)/);
     expect(src).toContain('no version of this image will ever be produced');
-    expect(src).toMatch(/const \{ error: documentError \} = await supabase/);
+    // userClient since US-241: the documents update runs on the caller's JWT.
+    expect(src).toMatch(/const \{ error: documentError \} = await userClient/);
   });
 
   it('generate-churn-predictions counts predictions it stored', () => {

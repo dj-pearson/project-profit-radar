@@ -11,6 +11,22 @@
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.50.3';
 import { getCorsHeaders } from '../_shared/secure-cors.ts';
+import { validateBody } from '../_shared/validate-body.ts';
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
+
+// Request body (US-241), report mode by default - see _shared/validate-body.ts.
+// Mirrors what src/hooks/useImageProcessor.ts sends. companyId is accepted and
+// ignored: the queue row takes the caller's own company.
+const ProcessingRequestSchema = z.object({
+  storagePath: z.string().min(1).max(1024),
+  bucket: z.string().min(1).max(100),
+  generateThumbnail: z.boolean().nullish(),
+  generateResponsiveSizes: z.boolean().nullish(),
+  convertToModernFormats: z.boolean().nullish(),
+  quality: z.number().int().min(1).max(100).nullish(),
+  companyId: z.string().max(255).nullish(),
+  documentId: z.string().uuid().nullish(),
+}).passthrough();
 
 const logStep = (step: string, details?: Record<string, unknown>) => {
   const detailsStr = details ? ` - ${JSON.stringify(details)}` : '';
@@ -133,7 +149,9 @@ Deno.serve(async (req) => {
       });
     }
 
-    const body = await req.json() as ProcessingRequest;
+    const parsed = await validateBody(req, ProcessingRequestSchema, { name: 'image-processor' });
+    if (!parsed.ok) return parsed.response;
+    const body = parsed.data as ProcessingRequest;
     const {
       storagePath,
       bucket,
@@ -141,9 +159,38 @@ Deno.serve(async (req) => {
       generateResponsiveSizes = true,
       convertToModernFormats = true,
       quality,
-      companyId,
+      companyId: claimedCompanyId,
       documentId,
     } = body;
+
+    // SECURITY (US-241): this ran every step on the SERVICE ROLE with a
+    // body-chosen bucket, path, documentId and companyId. Any signed-in user
+    // could have it download any object in any bucket, write copies next to it
+    // (upsert: true, so an existing <name>.webp was overwritten), repoint any
+    // tenant's documents row at those copies, and file the queue row under any
+    // company. Storage and the documents update now run on the caller's own
+    // JWT, so storage and table RLS decide what they may touch, and the queue
+    // row takes the caller's company from their profile.
+    const userClient = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
+      { global: { headers: { Authorization: authHeader } } }
+    );
+    const { data: callerProfile } = await supabase
+      .from('user_profiles')
+      .select('company_id')
+      .eq('id', user.id)
+      .maybeSingle();
+    const companyId = (callerProfile?.company_id as string | undefined) ?? undefined;
+    if (!companyId) {
+      return new Response(JSON.stringify({ success: false, error: 'Your account is not attached to a company', timestamp: new Date().toISOString() }), {
+        status: 403,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+    if (claimedCompanyId && claimedCompanyId !== companyId) {
+      logStep('Ignoring caller-supplied companyId', { claimed: claimedCompanyId, userId: user.id });
+    }
 
     if (!storagePath || !bucket) {
       return new Response(JSON.stringify({ error: 'Missing required parameters' }), {
@@ -155,7 +202,7 @@ Deno.serve(async (req) => {
     logStep('Processing image', { storagePath, bucket });
 
     // Download the original image
-    const { data: imageData, error: downloadError } = await supabase.storage
+    const { data: imageData, error: downloadError } = await userClient.storage
       .from(bucket)
       .download(storagePath);
 
@@ -196,6 +243,7 @@ Deno.serve(async (req) => {
     // Process the image
     const result = await processImage(
       supabase,
+      userClient,
       imageData,
       storagePath,
       bucket,
@@ -219,7 +267,7 @@ Deno.serve(async (req) => {
     // handed to image_processing_queue. 'pending' is what that queue row means
     // (US-300).
     if (documentId && result.success) {
-      const { error: documentError } = await supabase
+      const { error: documentError } = await userClient
         .from('documents')
         .update({
           thumbnail_url: result.thumbnail,
@@ -260,6 +308,8 @@ Deno.serve(async (req) => {
 
 async function processImage(
   supabase: ReturnType<typeof createClient>,
+  // Caller-scoped client for every storage read and write (see the handler).
+  storageClient: ReturnType<typeof createClient>,
   imageBlob: Blob,
   originalPath: string,
   bucket: string,
@@ -307,14 +357,14 @@ async function processImage(
 
       // Upload WebP version (in production, actually convert)
       // For now, we store the same image with different extension as a placeholder
-      await supabase.storage
+      await storageClient.storage
         .from(bucket)
         .upload(webpPath, imageBlob, {
           contentType: 'image/webp',
           upsert: true,
         });
 
-      const { data: { publicUrl: webpUrl } } = supabase.storage
+      const { data: { publicUrl: webpUrl } } = storageClient.storage
         .from(bucket)
         .getPublicUrl(webpPath);
 
@@ -335,14 +385,14 @@ async function processImage(
       });
 
       // Upload thumbnail (placeholder - in production, resize)
-      await supabase.storage
+      await storageClient.storage
         .from(bucket)
         .upload(thumbPath, imageBlob, {
           contentType: 'image/webp',
           upsert: true,
         });
 
-      const { data: { publicUrl: thumbUrl } } = supabase.storage
+      const { data: { publicUrl: thumbUrl } } = storageClient.storage
         .from(bucket)
         .getPublicUrl(thumbPath);
 
@@ -366,14 +416,14 @@ async function processImage(
           path: sizePath,
         });
 
-        await supabase.storage
+        await storageClient.storage
           .from(bucket)
           .upload(sizePath, imageBlob, {
             contentType: 'image/webp',
             upsert: true,
           });
 
-        const { data: { publicUrl: sizeUrl } } = supabase.storage
+        const { data: { publicUrl: sizeUrl } } = storageClient.storage
           .from(bucket)
           .getPublicUrl(sizePath);
 

@@ -3,6 +3,32 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.3";
 import { aiService } from "../_shared/ai-service.ts";
 import { getCorsHeaders } from "../_shared/secure-cors.ts";
 import { requireSystemOrAdmin } from "../_shared/system-auth.ts";
+import { validateBody } from "../_shared/validate-body.ts";
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
+
+import { initializeAuthContext } from "../_shared/auth-helpers.ts";
+import { resolveCompanyScope } from "../_shared/caller-company.ts";
+
+// Request body (US-241), report mode by default - see _shared/validate-body.ts.
+// Callers: BlogAutoGeneration.tsx (analyze-content-diversity, test-generation
+// with the settings row, generate-auto-content with ...settings plus
+// company_id), BlogAIDebugger.tsx and BlogManager.tsx (topic plus a few
+// generation settings), and process-blog-generation-queue ({ action, topic,
+// customSettings: { company_id, queue_id } }). customSettings is a whole
+// blog_auto_generation_settings row in one of those, so it stays open.
+const EnhancedBlogAiFixedSchema = z.object({
+  action: z.string().max(50).nullish(),
+  topic: z.string().max(1000).nullish(),
+  company_id: z.string().uuid().nullish(),
+  queue_id: z.string().uuid().nullish(),
+  customSettings: z.object({
+    company_id: z.string().uuid().nullish(),
+    queue_id: z.string().uuid().nullish(),
+    preferred_model: z.string().max(100).nullish(),
+    model_temperature: z.number().min(0).max(2).nullish(),
+    target_word_count: z.number().int().positive().max(20000).nullish(),
+  }).passthrough().nullish(),
+}).passthrough();
 
 const logStep = (step: string, details?: any) => {
   const timestamp = new Date().toISOString();
@@ -19,7 +45,9 @@ export default async (req: Request) => {
   if (denied) return denied;
 
   try {
-    const body = await req.json();
+    const parsed = await validateBody(req, EnhancedBlogAiFixedSchema, { name: 'enhanced-blog-ai-fixed' });
+    if (!parsed.ok) return parsed.response;
+    const body = parsed.data;
     const { topic, company_id, queue_id, action, customSettings } = body;
 
     logStep("Request received", { hasBody: !!body, action, hasTopic: !!topic });
@@ -27,12 +55,52 @@ export default async (req: Request) => {
     // Handle both payload formats
     let finalTopic = topic;
     let finalCompanyId = company_id || customSettings?.company_id;
-    const finalQueueId = queue_id || customSettings?.queue_id;
+    let finalQueueId = queue_id || customSettings?.queue_id;
 
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
+
+    // SECURITY (US-241): the guard above admits any company admin, and
+    // everything below runs on the service role - so a body company_id put a
+    // PUBLISHED blog post under another tenant, a body queue_id marked another
+    // tenant's queue item completed, and blog_social_webhook then fired that
+    // tenant's social automation. A signed-in caller now acts only for their
+    // own company (root_admin excepted), and a queue item must belong to it.
+    // A scheduler or service-role caller has no user context and keeps the
+    // body's company, as before.
+    const authContext = await initializeAuthContext(req);
+    if (authContext) {
+      const { data: callerProfile } = await supabaseClient
+        .from('user_profiles')
+        .select('role, company_id')
+        .eq('id', authContext.user.id)
+        .maybeSingle();
+      if (callerProfile?.role !== 'root_admin') {
+        const scope = resolveCompanyScope(callerProfile?.company_id, finalCompanyId);
+        if (!scope.ok) {
+          return new Response(
+            JSON.stringify({ success: false, error: scope.error, timestamp: new Date().toISOString() }),
+            { status: scope.status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+          );
+        }
+        finalCompanyId = scope.companyId;
+      }
+    }
+    if (finalQueueId) {
+      const { data: queueItem } = await supabaseClient
+        .from('blog_generation_queue')
+        .select('company_id')
+        .eq('id', finalQueueId)
+        .maybeSingle();
+      if (!queueItem || (finalCompanyId && queueItem.company_id !== finalCompanyId)) {
+        logStep("Ignoring queue_id that does not belong to this company", { queue_id: finalQueueId });
+        finalQueueId = undefined;
+      } else if (!finalCompanyId) {
+        finalCompanyId = queueItem.company_id;
+      }
+    }
     
     // If no topic provided, generate a random one
     if (!finalTopic || finalTopic.trim() === '') {

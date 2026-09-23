@@ -2,6 +2,16 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.3";
 import { getCorsHeaders } from '../_shared/secure-cors.ts';
 import { initializeAuthContext, errorResponse } from '../_shared/auth-helpers.ts';
+import { validateBody } from '../_shared/validate-body.ts';
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
+
+// Request body (US-241), report mode by default - see _shared/validate-body.ts.
+// The caller, src/components/social-media/PostQueueActions.tsx, sends
+// { queueId, forceRedeploy }.
+const SocialWebhookDeployerSchema = z.object({
+  queueId: z.string().uuid(),
+  forceRedeploy: z.boolean().nullish(),
+}).passthrough();
 
 const logStep = (step: string, data?: any) => {
   console.log(`[Social Webhook Deployer] ${step}:`, data || "");
@@ -28,7 +38,9 @@ serve(async (req) => {
 
     logStep("Social webhook deployer started");
 
-    const { queueId, forceRedeploy } = await req.json();
+    const parsed = await validateBody(req, SocialWebhookDeployerSchema, { name: 'social-webhook-deployer' });
+    if (!parsed.ok) return parsed.response;
+    const { queueId, forceRedeploy } = parsed.data;
 
     if (!queueId) {
       return new Response(
@@ -49,7 +61,23 @@ serve(async (req) => {
       .eq("id", queueId)
       .single();
 
-    if (queueError || !queueItem) {
+    // SECURITY (US-241): the queue item is looked up on the SERVICE ROLE by a
+    // body-supplied id, and its company's webhook is then fired with that
+    // company's posts. Any signed-in user could redeploy another tenant's
+    // queue item into that tenant's webhook. The item must belong to the
+    // caller's company (root_admin excepted); a miss answers like a missing id.
+    let callerOwnsItem = false;
+    if (queueItem) {
+      const { data: callerProfile } = await supabase
+        .from("user_profiles")
+        .select("role, company_id")
+        .eq("id", authContext.user.id)
+        .maybeSingle();
+      callerOwnsItem = callerProfile?.role === "root_admin" ||
+        (!!callerProfile?.company_id && queueItem.company_id === callerProfile.company_id);
+    }
+
+    if (queueError || !queueItem || !callerOwnsItem) {
       logStep("Queue item not found", { queueId, error: queueError });
       return new Response(
         JSON.stringify({ error: "Queue item not found" }),

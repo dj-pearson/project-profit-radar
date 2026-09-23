@@ -1,6 +1,22 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.3";
 import { getCorsHeaders } from '../_shared/secure-cors.ts';
+import { validateBody } from '../_shared/validate-body.ts';
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
+
+// Request body (US-241), report mode by default - see _shared/validate-body.ts.
+// root_admin only; no caller in src/ or Brikly-iOS/. Each entry is
+// interpolated into XML, so the fields are bounded; priority is accepted as a
+// number or a string because the template prints either.
+const GenerateSitemapSchema = z.object({
+  base_url: z.string().min(1).max(2048),
+  urls: z.array(z.object({
+    url: z.string().max(2048),
+    lastmod: z.string().max(64).nullish(),
+    changefreq: z.string().max(20).nullish(),
+    priority: z.union([z.number(), z.string().max(10)]).nullish(),
+  }).passthrough()).max(50000).nullish(),
+}).passthrough();
 
 serve(async (req) => {
   const corsHeaders = getCorsHeaders(req);
@@ -32,7 +48,9 @@ serve(async (req) => {
         { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
-    const { base_url, urls } = await req.json();
+    const parsed = await validateBody(req, GenerateSitemapSchema, { name: 'generate-sitemap' });
+    if (!parsed.ok) return parsed.response;
+    const { base_url, urls } = parsed.data;
     if (!base_url) {
       return new Response(JSON.stringify({ error: 'base_url required' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });

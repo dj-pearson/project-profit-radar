@@ -3,6 +3,16 @@ import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { initializeAuthContext, errorResponse } from '../_shared/auth-helpers.ts';
 import { getCorsHeaders } from '../_shared/secure-cors.ts';
+import { validateBody } from '../_shared/validate-body.ts';
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
+
+// Request body (US-241), report mode by default - see _shared/validate-body.ts.
+// The caller, src/components/analytics/PredictiveAnalytics.tsx, sends
+// { company_id: userProfile.company_id }. Reads and writes run on the
+// caller's JWT client, so RLS scopes company_id.
+const PredictiveAnalyticsSchema = z.object({
+  company_id: z.string().uuid(),
+}).passthrough();
 
 const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
 
@@ -29,7 +39,9 @@ serve(async (req) => {
     if (!user?.email) throw new Error("User not authenticated");
     logStep("User authenticated", { userId: user.id });
 
-    const { company_id } = await req.json();
+    const parsed = await validateBody(req, PredictiveAnalyticsSchema, { name: 'generate-predictive-analytics' });
+    if (!parsed.ok) return parsed.response;
+    const { company_id } = parsed.data;
     if (!company_id) throw new Error("Company ID is required");
 
     logStep("Loading company data", {  company_id });

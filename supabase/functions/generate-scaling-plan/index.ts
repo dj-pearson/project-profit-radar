@@ -2,6 +2,25 @@ import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.50.3';
 import { getCorsHeaders } from '../_shared/secure-cors.ts';
+import { validateBody } from '../_shared/validate-body.ts';
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
+
+// Request body (US-241), report mode by default - see _shared/validate-body.ts.
+// The caller, src/components/growth/ScalingGuidanceDashboard.tsx, sends
+// { company_id, current_metrics: CompanyMetrics }. company_id is not used for
+// the writes (they take the caller's profile company). The metrics are
+// user-typed numbers; teamSize is a divisor in the scoring, so a zero there
+// yields NaN scores rather than an error - bounded here, not fixed.
+const ScalingPlanSchema = z.object({
+  company_id: z.string().max(255).nullish(),
+  current_metrics: z.object({
+    revenue: z.number().min(0).max(1e12),
+    teamSize: z.number().min(0).max(1e6),
+    projectCount: z.number().min(0).max(1e7),
+    averageProjectValue: z.number().min(0).max(1e12).nullish(),
+    currentStage: z.string().max(50).nullish(),
+  }).passthrough(),
+}).passthrough();
 
 interface CompanyMetrics {
   revenue: number;
@@ -49,7 +68,10 @@ serve(async (req) => {
       supabaseClient.auth.setSession({ access_token: authHeader.replace('Bearer ', ''), refresh_token: '' });
     }
 
-    const { company_id, current_metrics } = await req.json();
+    const parsed = await validateBody(req, ScalingPlanSchema, { name: 'generate-scaling-plan' });
+    if (!parsed.ok) return parsed.response;
+    const { company_id } = parsed.data;
+    const current_metrics = parsed.data.current_metrics as CompanyMetrics;
 
     console.log('Generating scaling plan for company:', company_id);
 

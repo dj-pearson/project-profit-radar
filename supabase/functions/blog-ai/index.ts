@@ -4,6 +4,17 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { aiService } from "../_shared/ai-service.ts";
 import { initializeAuthContext, errorResponse } from '../_shared/auth-helpers.ts';
 import { getCorsHeaders } from '../_shared/secure-cors.ts';
+import { validateBody } from '../_shared/validate-body.ts';
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
+
+// Request body (US-241), report mode by default - see _shared/validate-body.ts.
+// root_admin only; no caller in src/ or Brikly-iOS/. prompt and blogTopic are
+// alternatives, so both are optional.
+const BlogAiSchema = z.object({
+  action: z.string().max(50),
+  prompt: z.string().max(10000).nullish(),
+  blogTopic: z.string().max(1000).nullish(),
+}).passthrough();
 
 const logStep = (step: string, details?: any) => {
   console.log(`[BLOG-AI] ${step}${details ? ` - ${JSON.stringify(details)}` : ''}`);
@@ -39,12 +50,14 @@ serve(async (req) => {
       throw new Error("Insufficient permissions");
     }
 
-    const { action, prompt, blogTopic } = await req.json();
+    const parsed = await validateBody(req, BlogAiSchema, { name: 'blog-ai' });
+    if (!parsed.ok) return parsed.response;
+    const { action, prompt, blogTopic } = parsed.data;
 
     if (action === 'generate-content') {
       logStep("Generating content with AI service");
 
-      const generatedContent = await aiService.generateBlogContent(blogTopic || prompt);
+      const generatedContent = await aiService.generateBlogContent((blogTopic || prompt) as string);
 
       return new Response(JSON.stringify({ content: generatedContent }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },

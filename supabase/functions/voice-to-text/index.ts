@@ -4,6 +4,15 @@ import { getCorsHeaders } from '../_shared/secure-cors.ts';
 import { enforceRateLimit, RATE_LIMITS, getClientIP } from '../_shared/rate-limiter.ts';
 import { createServiceClient } from '../_shared/service-client.ts';
 import { initializeAuthContext } from '../_shared/auth-helpers.ts';
+import { validateBody } from '../_shared/validate-body.ts';
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
+
+// Request body (US-241), report mode by default - see _shared/validate-body.ts.
+// Callers (SafetyIncidentReport, VoiceNotes, MobileDailyReport) send
+// { audio: <base64> }. Capped at roughly the 25MB Whisper upload ceiling.
+const VoiceToTextSchema = z.object({
+  audio: z.string().min(1).max(35_000_000),
+}).passthrough();
 
 // Process base64 in chunks to prevent memory issues
 function processBase64Chunks(base64String: string, chunkSize = 32768) {
@@ -59,7 +68,9 @@ serve(async (req) => {
 
     console.log('Voice-to-text request received');
     
-    const { audio } = await req.json()
+    const parsed = await validateBody(req, VoiceToTextSchema, { name: 'voice-to-text' })
+    if (!parsed.ok) return parsed.response
+    const { audio } = parsed.data
     
     if (!audio) {
       throw new Error('No audio data provided')
