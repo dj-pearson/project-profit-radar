@@ -47,6 +47,9 @@ export function BookingPageManager() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [isCreating, setIsCreating] = useState(false);
+  // The slug follows the title until the user types in the slug field. It used
+  // to fill only while the slug was empty, so it stopped after one character.
+  const [slugEdited, setSlugEdited] = useState(false);
 
   const form = useForm<BookingPageFormValues>({
     resolver: zodResolver(bookingPageFormSchema),
@@ -75,14 +78,16 @@ export function BookingPageManager() {
   });
 
   const createPageMutation = useMutation({
-    mutationFn: async (data: ReturnType<typeof buildBookingPageData> & { availability: AvailabilityRule[] }) => {
+    mutationFn: async ({ availability: rules, ...pageData }: ReturnType<typeof buildBookingPageData> & { availability: AvailabilityRule[] }) => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Not authenticated");
 
       const { data: page, error: pageError } = await supabase
         .from("booking_pages")
+        // booking_pages has no availability column; the rules go to
+        // availability_rules below, keyed by the new page id.
         .insert({
-          ...data,
+          ...pageData,
           user_id: user.id,
         })
         .select()
@@ -90,7 +95,7 @@ export function BookingPageManager() {
 
       if (pageError) throw pageError;
 
-      const availabilityRules = data.availability.map(rule => ({
+      const availabilityRules = rules.map(rule => ({
         booking_page_id: page.id,
         ...rule,
       }));
@@ -107,6 +112,7 @@ export function BookingPageManager() {
       queryClient.invalidateQueries({ queryKey: ["booking-pages"] });
       setIsCreating(false);
       form.reset(BOOKING_PAGE_DEFAULTS);
+      setSlugEdited(false);
       toast({ title: "Booking page created successfully" });
     },
     onError: (error: Error) => {
@@ -193,9 +199,8 @@ export function BookingPageManager() {
                         {...field}
                         onChange={(e) => {
                           field.onChange(e);
-                          // Fill the slug from the title while the slug is still empty.
-                          if (!form.getValues("slug")) {
-                            form.setValue("slug", slugify(e.target.value));
+                          if (!slugEdited) {
+                            form.setValue("slug", slugify(e.target.value), { shouldValidate: form.formState.isSubmitted });
                           }
                         }}
                         placeholder="15 Minute Consultation"
@@ -216,7 +221,16 @@ export function BookingPageManager() {
                     <div className="flex items-center gap-2">
                       <span className="text-sm text-muted-foreground">/book/</span>
                       <FormControl>
-                        <Input {...field} placeholder="15-min-consultation" aria-required="true" />
+                        <Input
+                          {...field}
+                          onChange={(e) => {
+                            field.onChange(e);
+                            // Clearing the slug hands it back to the title.
+                            setSlugEdited(e.target.value !== "");
+                          }}
+                          placeholder="15-min-consultation"
+                          aria-required="true"
+                        />
                       </FormControl>
                     </div>
                     <FormMessage />

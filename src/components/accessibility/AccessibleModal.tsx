@@ -3,11 +3,11 @@
  * WCAG 2.1 AA compliant with full keyboard navigation and screen reader support
  */
 
-import { ReactNode, useEffect, useRef } from 'react';
+import { type MouseEvent as ReactMouseEvent, ReactNode, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { useFocusTrap, useAriaId, useEscapeKey, useClickOutside } from '@/hooks/useAccessibilityHelpers';
+import { useFocusTrap, useAriaId, useEscapeKey } from '@/hooks/useAccessibilityHelpers';
 import { Button } from '@/components/ui/button';
 
 interface AccessibleModalProps {
@@ -67,7 +67,13 @@ export function AccessibleModal({
   footer,
 }: AccessibleModalProps) {
   const modalRef = useFocusTrap(isOpen);
-  const overlayRef = useClickOutside(onClose, isOpen && !disableClickOutside);
+  const overlayRef = useRef<HTMLDivElement>(null);
+  // A press that starts on the backdrop and is released on the backdrop closes
+  // the dialog. Anything else (a click inside the dialog, a text selection
+  // dragged out of it onto the backdrop, a click in a popover portaled out of
+  // the dialog) leaves it open. A document-level mousedown listener closed it
+  // on every click inside, and CreateTaskDialog resets its form on close.
+  const pressStartedOnBackdropRef = useRef(false);
   const titleId = useAriaId('modal-title');
   const descriptionId = useAriaId('modal-description');
   const previouslyFocusedRef = useRef<HTMLElement | null>(null);
@@ -100,10 +106,24 @@ export function AccessibleModal({
 
   if (!isOpen) return null;
 
+  const handleMouseDown = (e: ReactMouseEvent) => {
+    pressStartedOnBackdropRef.current = e.target === overlayRef.current;
+  };
+
+  const handleMouseUp = (e: ReactMouseEvent) => {
+    const startedOnBackdrop = pressStartedOnBackdropRef.current;
+    pressStartedOnBackdropRef.current = false;
+    if (!disableClickOutside && startedOnBackdrop && e.target === overlayRef.current) {
+      onClose();
+    }
+  };
+
   const modal = (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center p-4"
       role="presentation"
+      onMouseDown={handleMouseDown}
+      onMouseUp={handleMouseUp}
     >
       {/* Backdrop */}
       <div

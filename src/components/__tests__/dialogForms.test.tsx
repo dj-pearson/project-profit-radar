@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
@@ -219,12 +219,40 @@ describe('BookingPageManager', () => {
         duration_minutes: 30,
         location_type: 'video_zoom',
         is_active: true,
-        // The useState version spread its whole mutation argument, rules included.
-        availability: expect.any(Array),
+        // No availability key: booking_pages has no such column. The rules
+        // go to availability_rules.
         user_id: 'u-1',
       }),
     );
-    await waitFor(() => expect(h.insert).toHaveBeenCalledWith('availability_rules', expect.any(Array)));
+    const weekday = (day: number) => ({
+      booking_page_id: 'booking_pages-new',
+      day_of_week: day,
+      start_time: '09:00',
+      end_time: '17:00',
+    });
+    await waitFor(() =>
+      expect(h.insert).toHaveBeenCalledWith('availability_rules', [1, 2, 3, 4, 5].map(weekday)),
+    );
+  });
+
+  it('fills the slug from the whole title until the slug is edited', async () => {
+    const user = userEvent.setup();
+    wrap(<BookingPageManager />);
+    await user.click(await screen.findByRole('button', { name: /New Booking Page/ }));
+    const title = screen.getByLabelText('Page Title');
+    const slug = screen.getByLabelText('URL Slug');
+    await user.type(title, 'Site Walk 30');
+    expect(slug).toHaveValue('site-walk-30');
+
+    await user.clear(slug);
+    await user.type(slug, 'walk');
+    await user.type(title, ' min');
+    expect(slug).toHaveValue('walk');
+
+    // Clearing the slug hands it back to the title.
+    await user.clear(slug);
+    await user.type(title, 's');
+    expect(slug).toHaveValue('site-walk-30-mins');
   });
 });
 
@@ -331,24 +359,23 @@ describe('ProjectCostCodes add dialog', () => {
 });
 
 describe('CreateTaskDialog', () => {
-  // AccessibleModal's click-outside hook calls onClose on any mousedown that
-  // is not on the backdrop, and this dialog's onClose resets the form, so the
-  // footer button cannot be clicked here. Submitting the form is the same
-  // path the button takes (form="create-task-form").
-  const submit = () => fireEvent.submit(screen.getByRole('form', { name: 'Create task form' }));
-
+  // Real clicks and typing: AccessibleModal closed (and this dialog reset its
+  // form) on every mousedown inside it, which these would have caught.
   it('requires a name inline and inserts the same task row', async () => {
+    const user = userEvent.setup();
+    const onClose = vi.fn();
     const onTaskCreated = vi.fn();
-    render(<CreateTaskDialog isOpen onClose={vi.fn()} onTaskCreated={onTaskCreated} projectId="p-1" />);
-    submit();
+    render(<CreateTaskDialog isOpen onClose={onClose} onTaskCreated={onTaskCreated} projectId="p-1" />);
+    const submit = () => user.click(screen.getByRole('button', { name: 'Create Task' }));
+    await submit();
     expect(await screen.findByText('Task name is required')).toBeInTheDocument();
     expect(screen.getByLabelText('Task Name *')).toHaveAttribute('aria-invalid', 'true');
     expect(h.insert).not.toHaveBeenCalled();
 
-    // fireEvent.change rather than user.type: typing starts with a mousedown.
-    fireEvent.change(screen.getByLabelText('Task Name *'), { target: { value: '  Order rebar ' } });
-    fireEvent.change(screen.getByLabelText('Estimated Hours'), { target: { value: '2.5' } });
-    submit();
+    await user.type(screen.getByLabelText('Task Name *'), '  Order rebar ');
+    await user.type(screen.getByLabelText('Estimated Hours'), '2.5');
+    expect(onClose).not.toHaveBeenCalled();
+    await submit();
     await waitFor(() =>
       expect(h.insert).toHaveBeenCalledWith('tasks', {
         name: 'Order rebar',
