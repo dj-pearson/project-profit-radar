@@ -7088,3 +7088,11 @@ alone. AccessibleTable uses them, which covers most list pages; the ledger,
 journal, AP, timesheets and CRM lead cards were converted directly.
 Table semantics stay intact (the old InvoiceList path put divs inside one
 td). Modules baseline 98 -> 97, TS 1450 -> 1449.
+
+## US-410 - destructive contrast
+text-destructive was 2.00:1 on the dark background and 3.76:1 on white.
+Split the token: --destructive stays the fill, --destructive-text is the
+text colour, and Tailwind's text-destructive reads the new token, so no
+call site changed. Now 6.93 (light) and 7.06 (dark), with colour-blind
+separation from the orange primary. The other public-page fixes had
+already landed; an axe sweep of the 8 public pages is clean.

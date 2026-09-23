@@ -149,6 +149,17 @@ export default {
 					to: { opacity: '1', transform: 'scale(1)' },
 				},
 			},
+			// US-410: text-destructive reads --destructive-text, not the fill.
+			// Dark mode needs a lighter red for text than the button fill can
+			// use and still carry a white label, and this keeps the 267
+			// text-destructive call sites untouched. bg-, border- and ring-
+			// destructive still resolve through `colors` to the fill.
+			textColor: {
+				destructive: {
+					DEFAULT: 'hsl(var(--destructive-text))',
+					foreground: 'hsl(var(--destructive-foreground))'
+				}
+			},
 			animation: {
 				'accordion-down': 'accordion-down 0.2s ease-out',
 				'accordion-up': 'accordion-up 0.2s ease-out',

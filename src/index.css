@@ -66,12 +66,20 @@ All colors MUST be HSL.
     --shadow-construction: 0 10px 30px -10px hsl(var(--construction-orange) / 0.3);
     --shadow-card: 0 4px 20px -4px hsl(215 25% 27% / 0.15);
 
-    /* 45%, not 60.2%. text-destructive is used at 267 sites - every form
-       validation message in the app - and at 60.2% it reads 3.76:1 on white,
-       under AA. 45% gives 5.43:1, and it also lifts white-on-destructive
-       (the destructive button) from 3.76 to 5.43. Better on both pairings;
-       the dark-mode token is a separate problem, see US-410. */
-    --destructive: 0 84.2% 60.2%;
+    /* Destructive is two tokens (US-410). --destructive is the FILL
+       (bg-destructive, with --destructive-foreground as its label);
+       --destructive-text is what text-destructive resolves to (see
+       textColor in tailwind.config.ts). Light mode happens to use one value
+       for both; dark mode cannot, because a fill dark enough for a white
+       label is far too dark to read as text on the page.
+
+       Hue 355, not 0: darkening pure red to clear AA pulled it into
+       --primary's orange under deuteranopia/protanopia (deltaE 2.71 at
+       0 84.2% 45%). At 355 72% 40% it reads 6.93:1 on white, 6.62:1 for the
+       white button label, and stays deltaE 14.6 from --primary under both
+       deficiencies. src/test/destructive-contrast.test.ts holds the numbers. */
+    --destructive: 355 72% 40%;
+    --destructive-text: 355 72% 40%;
     --destructive-foreground: 210 40% 98%;
 
     --border: 214.3 31.8% 91.4%;
@@ -117,8 +125,11 @@ All colors MUST be HSL.
      * so the accent has to move up rather than down to clear AA. */
     --primary-on-glass: 24 100% 58%;
 
+    /* Fill stays dark so the white label keeps 9.58:1. Text gets its own
+       light value: the fill as text on this background was 2.00:1. */
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 210 40% 98%;
+    --destructive-text: 0 90% 70%;
 
     --border: 217.2 32.6% 17.5%;
     --input: 217.2 32.6% 17.5%;
@@ -290,6 +301,7 @@ All colors MUST be HSL.
   --accent-foreground: 0 0% 100%;
   --destructive: 0 100% 50%;
   --destructive-foreground: 0 0% 100%;
+  --destructive-text: 0 100% 70%;
   --border: 0 0% 30%;
   --input: 0 0% 20%;
   --ring: 0 0% 100%;
@@ -313,6 +325,7 @@ All colors MUST be HSL.
   --accent-foreground: 0 0% 0%;
   --destructive: 0 85% 35%;
   --destructive-foreground: 0 0% 100%;
+  --destructive-text: 0 85% 35%;
   --border: 0 0% 60%;
   --input: 0 0% 100%;
   --ring: 0 0% 0%;
