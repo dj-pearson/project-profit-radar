@@ -5,6 +5,14 @@
 # root. A 200 rewrite serves the same file at both paths, so there is one copy.
 /llms.txt  /.well-known/llms.txt  200
 
-# SPA catch-all: serve index.html for all non-static routes with 200 status
-# Cloudflare Pages checks static files first, then falls through to this rule
-/* /index.html 200
+# SPA catch-all for routes with no static file (the authenticated app).
+# Static files win: /pricing is served from the prerendered pricing.html
+# (scripts/prerender.mjs, US-222) before this rule is consulted.
+# The target is 404.html, not index.html: after prerendering, index.html holds
+# the rendered home page, while 404.html (scripts/copy-404.js) stays the empty
+# SPA shell. Pointing app routes at index.html would flash the marketing home
+# page and its metadata on every deep link.
+# Wrangler may report this rule as an "infinite loop" and ignore it; Pages
+# then serves 404.html for unmatched routes anyway (with a 404 status, which
+# public/sw.js already treats as an SPA route), so the shell is the same.
+/* /404.html 200

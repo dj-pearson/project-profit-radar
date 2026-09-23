@@ -134,7 +134,10 @@ jobs:
       # It is built here rather than taken from the build job's artifact
       # because that artifact bakes in the build job's placeholder URL, and a
       # staging E2E_SUPABASE_URL has to be compiled in to take effect.
+      # PRERENDER=0: the E2E suite drives the app, not crawler HTML (US-222).
       - run: npm run build
+        env:
+          PRERENDER: '0'
       # US-214 AC3: Mobile Chrome as well as desktop. playwright.config.ts has
       # defined Mobile Chrome (Pixel 5) and Mobile Safari (iPhone 12) since it
       # was written, and CI ran neither - so every responsive assertion in the

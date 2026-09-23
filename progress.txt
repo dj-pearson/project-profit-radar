@@ -7224,3 +7224,11 @@ image finished; it now renders a picture element (AVIF 8.8 KB, WebP 14.9 KB,
 PNG fallback) with fixed dimensions on first paint. The full PNG went from
 196 KB to 64 KB. Blog images declare their size, and three leftover hints
 to Google Fonts (which the app doesn't use) are gone.
+
+## US-222 - prerendered marketing pages
+npm run build now renders the public sitemap routes in headless Chromium
+and writes their HTML, so crawlers get titles, canonicals, OG tags and
+JSON-LD without running JS (76/76 locally). Without Chromium it skips with
+a warning. Because index.html is now the rendered home page, the SPA
+catch-all and the service worker fall back to 404.html. Owner: install
+Chromium in the Cloudflare Pages build command.

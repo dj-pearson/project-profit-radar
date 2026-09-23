@@ -8,8 +8,13 @@ const API_CACHE = `brikly-api-v${BUILD_VERSION}`;
 const IMAGE_CACHE = `brikly-images-v${BUILD_VERSION}`;
 
 // Resources to cache immediately
+// /404.html is the empty SPA shell. After prerendering (US-222) /index.html
+// holds the rendered home page, so app routes must fall back to /404.html.
+const APP_SHELL = '/404.html';
+
 const STATIC_ASSETS = [
   '/index.html',
+  APP_SHELL,
   '/manifest.json',
   '/BriklyLogo-384.png',
   '/robots.txt',
@@ -185,7 +190,7 @@ async function networkFirst(request) {
 
 // Network-first for navigation to prioritize fresh HTML on each deployment.
 // For SPA routing: if the server returns 404 for a client-side route,
-// serve index.html so React Router can handle it.
+// serve the empty app shell so React Router can handle it.
 async function navigationNetworkFirst(request) {
   try {
     const response = await fetch(request, { cache: 'no-store' });
@@ -199,12 +204,12 @@ async function navigationNetworkFirst(request) {
     // so React Router can handle the routing client-side
     if (response.status === 404) {
       const cache = await caches.open(STATIC_CACHE);
-      const appShell = await cache.match('/index.html');
+      const appShell = await cache.match(APP_SHELL);
       if (appShell) {
         return appShell;
       }
-      // If no cached app shell, fetch index.html from network
-      const freshShell = await fetch('/index.html', { cache: 'no-store' });
+      // If no cached app shell, fetch it from the network
+      const freshShell = await fetch(APP_SHELL, { cache: 'no-store' });
       if (freshShell.ok) {
         return freshShell;
       }
@@ -214,7 +219,7 @@ async function navigationNetworkFirst(request) {
   } catch (error) {
     console.warn('Service Worker: Navigation request failed, trying offline fallback:', request.url, error);
     const cache = await caches.open(STATIC_CACHE);
-    const appShell = await cache.match('/index.html');
+    const appShell = await cache.match(APP_SHELL);
     if (appShell) {
       return appShell;
     }
