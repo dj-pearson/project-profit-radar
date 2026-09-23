@@ -6669,3 +6669,11 @@ redirects, parameterised routes and duplicate aliases are dropped, and lastmod
 is each page's last commit date, or left out when git can't say. Published blog
 posts and pSEO pages come from the database at build time using the
 publishable key. Cloudflare Pages needs that key in its build environment.
+
+## US-383: blog links go somewhere, and missing pages say so
+
+Blog cards opened `/blog/<slug>`, which no route answered. That path is now an
+alias of the real `/resources/<slug>` page, whose canonical always names the
+`/resources` URL. A missing post, a missing pSEO page and the site-wide 404
+now carry `noindex`. The SPA still answers every URL with HTTP 200; a real 404
+status needs Cloudflare Pages configuration.

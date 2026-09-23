@@ -8,6 +8,7 @@ import { SEOMetaTags } from "@/components/SEOMetaTags";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import InternalLinking from "@/components/InternalLinking";
+import { blogPostPath } from "@/components/blog/blogPaths";
 
 interface BlogPost {
   id: string;
@@ -21,6 +22,8 @@ interface BlogPost {
   updated_at?: string;
   seo_title: string | null;
   seo_description: string | null;
+  // Not in blog_posts today; read if a later migration adds a byline.
+  author_name?: string | null;
 }
 
 const BlogPost = () => {
@@ -99,8 +102,15 @@ const BlogPost = () => {
   }
 
   if (notFound || !post) {
+    // The SPA can't set a 404 status, so tell crawlers not to index the
+    // soft-404 instead (US-383).
     return (
       <div className="min-h-screen bg-gradient-to-br from-construction-light via-white to-construction-light/30">
+        <SEOMetaTags
+          title="Article Not Found - Brikly"
+          description="The article you're looking for doesn't exist or has been removed."
+          noIndex
+        />
         <div className="container mx-auto px-4 py-8">
           <div className="max-w-4xl mx-auto text-center">
             <h1 className="text-3xl font-bold text-construction-dark mb-4">Article Not Found</h1>
@@ -119,17 +129,18 @@ const BlogPost = () => {
     );
   }
 
+  const canonicalPath = blogPostPath(post.slug);
+  const authorName = post.author_name?.trim();
+
   // Create structured data for the blog post
   const structuredData = {
     "@context": "https://schema.org",
     "@type": "Article",
     "headline": post.title,
     "description": post.seo_description || post.excerpt || post.title,
-    "author": {
-      "@type": "Organization",
-      "name": "Brikly",
-      "url": "https://brikly.net"
-    },
+    "author": authorName
+      ? { "@type": "Person", "name": authorName }
+      : { "@type": "Organization", "name": "Brikly", "url": "https://brikly.net" },
     "publisher": {
       "@type": "Organization",
       "name": "Brikly",
@@ -142,9 +153,10 @@ const BlogPost = () => {
     "dateModified": post.updated_at || post.published_at || post.created_at,
     "mainEntityOfPage": {
       "@type": "WebPage",
-      "@id": `https://brikly.net/resources/${post.slug}`
+      "@id": `https://brikly.net${canonicalPath}`
     },
-    "image": post.featured_image_url || "https://brikly.net/BriklyLogo.png",
+    // Only the post's own image; the publisher logo is not an article image.
+    ...(post.featured_image_url ? { "image": post.featured_image_url } : {}),
     "articleSection": "Construction Management",
     "keywords": "construction management, construction software, project management, contractors"
   };
@@ -158,7 +170,7 @@ const BlogPost = () => {
         ogTitle={post.seo_title || post.title}
         ogDescription={post.seo_description || post.excerpt || undefined}
         ogImage={post.featured_image_url || undefined}
-        canonicalUrl={`/resources/${post.slug}`}
+        canonicalUrl={canonicalPath}
         structuredData={structuredData}
       />
       
@@ -262,7 +274,7 @@ const BlogPost = () => {
 
             {/* Internal Linking for SEO */}
             <InternalLinking 
-              currentPage={`/resources/${post.slug}`}
+              currentPage={canonicalPath}
               context="construction"
             />
 

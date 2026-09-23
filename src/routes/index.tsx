@@ -5,6 +5,7 @@
  */
 
 import { Route, Outlet } from 'react-router-dom';
+import { Helmet } from 'react-helmet-async';
 import ErrorBoundary from '@/components/ErrorBoundary';
 import AccessDenied from '@/pages/AccessDenied';
 import { appRoutes } from './appRoutes';
@@ -40,6 +41,11 @@ export const notFoundRoute = (
     path="*"
     element={
       <div className="min-h-screen bg-background text-foreground flex items-center justify-center">
+        {/* The SPA answers every path with 200, so this is the only signal a
+            crawler gets that the URL is not a page (US-383). */}
+        <Helmet>
+          <meta name="robots" content="noindex, follow" />
+        </Helmet>
         <div className="text-center">
           <h1 className="text-4xl font-bold mb-4">Brikly</h1>
           <p className="text-muted-foreground">Page not found</p>

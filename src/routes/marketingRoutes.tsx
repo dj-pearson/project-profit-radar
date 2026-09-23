@@ -7,7 +7,7 @@
  */
 
 import { Route } from 'react-router-dom';
-import { createLazyRoute, LazyPSEOPageRenderer } from '@/utils/lazyRoutes';
+import { createLazyRoute, LazyPSEOPageRenderer, LazyBlogPost } from '@/utils/lazyRoutes';
 
 // Marketing pages - Lazy loaded with ErrorBoundary + Suspense
 const PricingPage = createLazyRoute(() => import('@/pages/Pricing'));
@@ -114,6 +114,8 @@ export const marketingRoutes = (
     <Route path="/payment-center" element={<PaymentCenter />} />
     <Route path="/features" element={<FeaturesPage />} />
     <Route path="/blog" element={<BlogPage />} />
+    {/* Alias of /resources/:slug (US-383); BlogPost sets the canonical to /resources/<slug>. */}
+    <Route path="/blog/:slug" element={<LazyBlogPost />} />
     <Route path="/solutions" element={<Solutions />} />
     <Route path="/faq" element={<FAQ />} />
 

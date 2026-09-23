@@ -2,7 +2,9 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Link } from 'react-router-dom';
 import { Edit, Trash2, Eye, Share2 } from 'lucide-react';
+import { blogPostPath } from './blogPaths';
 
 interface BlogPost {
   id: string;
@@ -67,13 +69,15 @@ export const BlogPostCard: React.FC<BlogPostCardProps> = ({
           </span>
           <div className="flex gap-1">
             {post.status === 'published' && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => window.open(`/blog/${post.slug}`, '_blank')}
-                aria-label={`View ${post.title}`}
-              >
-                <Eye className="h-4 w-4" aria-hidden="true" />
+              <Button variant="ghost" size="sm" asChild>
+                <Link
+                  to={blogPostPath(post.slug)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label={`View ${post.title}`}
+                >
+                  <Eye className="h-4 w-4" aria-hidden="true" />
+                </Link>
               </Button>
             )}
             <Button
