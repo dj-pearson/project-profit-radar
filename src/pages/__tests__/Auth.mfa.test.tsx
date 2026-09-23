@@ -48,6 +48,9 @@ describe('Auth page MFA challenge (US-346)', () => {
     renderAuth();
     await waitFor(() => expect(screen.getByText('Two-Factor Authentication')).toBeTruthy());
     expect(screen.getByText(/6-digit code from your authenticator app/)).toBeTruthy();
+    // Focus lands on digit 1 at open, not later: a deferred focus() used to
+    // fire mid-entry and swallow a digit.
+    expect(document.activeElement).toBe(screen.getByLabelText('Digit 1 of 6'));
   });
 
   it('sends the held token, not a body user id alone, and completes on success', async () => {

@@ -7232,3 +7232,10 @@ JSON-LD without running JS (76/76 locally). Without Chromium it skips with
 a warning. Because index.html is now the rendered home page, the SPA
 catch-all and the service worker fall back to 404.html. Owner: install
 Chromium in the Cloudflare Pages build command.
+
+## MFA code entry dropped a digit
+The MFA dialog focused digit 1 on a 100ms timer. A digit typed inside that
+window landed after focus jumped back to the already-filled first box and
+was dropped, so the code never auto-submitted. This was the flaky
+Auth.mfa test (3 in 10 alone) and a real user bug. Focus now moves
+synchronously; the test asserts digit 1 has focus when the dialog opens.

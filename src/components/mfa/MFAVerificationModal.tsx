@@ -35,10 +35,14 @@ export const MFAVerificationModal: React.FC<MFAVerificationModalProps> = ({
   const [error, setError] = useState<string | null>(null);
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
-  // Focus first input on open
+  // Focus first input on open. Synchronously: this effect runs after
+  // AccessibleModal's focus trap (child effects run first), so it already wins
+  // over the trap's initial focus. A delayed focus() fired after the user had
+  // started typing and pulled the caret back to digit 1, dropping a keystroke
+  // and the auto-submit with it.
   useEffect(() => {
-    if (isOpen && inputRefs.current[0]) {
-      setTimeout(() => inputRefs.current[0]?.focus(), 100);
+    if (isOpen) {
+      inputRefs.current[0]?.focus();
     }
   }, [isOpen]);
 
