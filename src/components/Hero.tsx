@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { ArrowRight, Play, Ruler, CheckCircle } from "lucide-react";
 import { Link } from "react-router-dom";
 import { ResponsiveContainer, ResponsiveGrid } from "@/components/layout/ResponsiveContainer";
+import ErrorBoundary from "@/components/ErrorBoundary";
 
 // Type for the 3D component props
 interface Blueprint3DProps {
@@ -16,7 +17,7 @@ const Hero3DFallback = () => (
     <div className="w-full max-w-sm rounded-2xl bg-card border shadow-xl overflow-hidden">
       <div className="flex items-center justify-between px-5 py-3 border-b bg-muted/30">
         <span className="font-semibold text-sm text-construction-dark dark:text-white">Westside Complex</span>
-        <span className="inline-flex items-center gap-1.5 text-xs font-medium text-green-600">
+        <span className="inline-flex items-center gap-1.5 text-xs font-medium text-green-700 dark:text-green-400">
           <span className="h-2 w-2 rounded-full bg-green-500 animate-pulse" />
           LIVE
         </span>
@@ -33,7 +34,7 @@ const Hero3DFallback = () => (
           </div>
           <div>
             <div className="text-xs text-muted-foreground mb-1">Margin</div>
-            <div className="text-sm font-bold text-green-600">28.8%</div>
+            <div className="text-sm font-bold text-green-700 dark:text-green-400">28.8%</div>
           </div>
         </div>
         <div>
@@ -329,7 +330,14 @@ const Hero = () => {
           <div className="relative order-1 lg:order-2 h-[400px] sm:h-[500px] lg:h-[700px] w-full">
             <div className="absolute inset-0 bg-gradient-to-tr from-construction-orange/5 to-blue-500/5 rounded-[2rem] transform rotate-3 scale-95 blur-2xl -z-10" />
             {Blueprint3D ? (
-              <Blueprint3D isBuildMode={isBuildMode} onToggleMode={() => setIsBuildMode(!isBuildMode)} />
+              // The scene fetches its HDR lighting from raw.githack.com at run
+              // time. When that fetch fails (ad blocker, corporate proxy, CDN
+              // outage) drei throws, and with no boundary here the route-level
+              // one replaced the whole homepage with "Something went wrong".
+              // The 3D is decoration; fall back to the static mockup instead.
+              <ErrorBoundary level="component" fallback={<Hero3DFallback />}>
+                <Blueprint3D isBuildMode={isBuildMode} onToggleMode={() => setIsBuildMode(!isBuildMode)} />
+              </ErrorBoundary>
             ) : (
               <Hero3DFallback />
             )}

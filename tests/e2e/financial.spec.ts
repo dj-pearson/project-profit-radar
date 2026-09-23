@@ -1,36 +1,33 @@
 import { test, expect } from '@playwright/test';
+import { expectSignInWall, requireTestCredentials, signInAndVisit } from './fixtures/auth';
 
-test.describe('Financial Management', () => {
-  test('should load financial overview page', async ({ page }) => {
-    await page.goto('/financial');
-    await expect(page).toHaveURL(/financial/);
+/**
+ * These specs used to goto a guarded route as a stranger and assert the URL
+ * still matched, with a second test checking `#root` was visible. Once the
+ * route guard redirected promptly they failed; before that they passed while
+ * rendering a spinner. What a signed-out visitor should see is the sign-in
+ * wall, so that is asserted here, and the page itself is checked signed in.
+ */
+const PATHS = ['/financial', '/estimates', '/invoices', '/expenses'];
+
+test.describe('Financial Management - signed out', () => {
+  for (const path of PATHS) {
+    test(`${path} sends a signed-out visitor to sign in`, async ({ page }) => {
+      await expectSignInWall(page, path);
+    });
+  }
+});
+
+test.describe('Financial Management - signed in', () => {
+  test.beforeEach(() => {
+    requireTestCredentials();
   });
 
-  test('should display financial page content', async ({ page }) => {
-    await page.goto('/financial');
-    const content = page.locator('main, [role="main"], .container, #root').first();
-    await expect(content).toBeVisible({ timeout: 10000 });
-  });
-
-  test('should load estimates page', async ({ page }) => {
-    await page.goto('/estimates');
-    await expect(page).toHaveURL(/estimates/);
-  });
-
-  test('should load invoices page', async ({ page }) => {
-    await page.goto('/invoices');
-    await expect(page).toHaveURL(/invoices/);
-  });
-
-  test('should load expenses page', async ({ page }) => {
-    await page.goto('/expenses');
-    await expect(page).toHaveURL(/expenses/);
-  });
-
-  test('should render financial dashboard elements', async ({ page }) => {
-    await page.goto('/financial');
-    // Check for cards or summary sections
-    const cards = page.locator('[class*="card"], [class*="Card"]');
-    await expect(cards.first()).toBeVisible({ timeout: 10000 });
-  });
+  for (const path of PATHS) {
+    test(`${path} renders for a signed-in user`, async ({ page }) => {
+      await signInAndVisit(page, path);
+      await expect(page).toHaveURL(new RegExp(`${path}$`));
+      await expect(page.getByRole('heading').first()).toBeVisible({ timeout: 10_000 });
+    });
+  }
 });

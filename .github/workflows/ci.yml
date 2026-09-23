@@ -100,7 +100,21 @@ jobs:
   e2e-test:
     name: E2E Tests
     runs-on: ubuntu-latest
-    needs: build
+    # No `needs: build` (US-409). That dependency is how this suite went dark
+    # for a month: build failed from 2026-08-13, so E2E was SKIPPED on every
+    # push rather than failing. This job builds for itself below, so a broken
+    # build now turns it red instead of switching it off.
+    env:
+      # Job-level so the build and the test step agree: the Supabase target is
+      # baked into dist/ at build time, and tests/e2e/global-setup.ts checks
+      # the same value before anything runs. Without these the app falls back
+      # to https://api.brikly.net - src/integrations/supabase/client.ts
+      # defaults to PRODUCTION when VITE_SUPABASE_URL is unset - and
+      # global-setup refuses to start. A placeholder, or a staging project if
+      # E2E_SUPABASE_URL is ever configured; never production (global-setup
+      # rejects the production hosts by name).
+      VITE_SUPABASE_URL: ${{ secrets.E2E_SUPABASE_URL || 'http://127.0.0.1:54321' }}
+      VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.E2E_SUPABASE_ANON_KEY || 'e2e-placeholder-no-backend' }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -111,9 +125,13 @@ jobs:
         env:
           PUPPETEER_SKIP_DOWNLOAD: true
       - run: npx playwright install chromium --with-deps
-      # US-258: no `npm run build` here — the e2e webServer runs the Vite dev
-      # server (npm run dev:ci), so dist/ is unused, and the production build is
-      # already verified by the `build` job (needs: build above).
+      # The suite runs against the production build served by `vite preview`
+      # (E2E_SERVE=build in playwright.config.ts), not the dev server: that is
+      # what ships, and the two timing assertions only mean something there.
+      # It is built here rather than taken from the build job's artifact
+      # because that artifact bakes in the build job's placeholder URL, and a
+      # staging E2E_SUPABASE_URL has to be compiled in to take effect.
+      - run: npm run build
       # US-214 AC3: Mobile Chrome as well as desktop. playwright.config.ts has
       # defined Mobile Chrome (Pixel 5) and Mobile Safari (iPhone 12) since it
       # was written, and CI ran neither - so every responsive assertion in the
@@ -123,20 +141,20 @@ jobs:
       - run: npx playwright test --project=chromium --project="Mobile Chrome"
         env:
           CI: true
-          # Without these the app falls back to https://api.brikly.net -
-          # src/integrations/supabase/client.ts defaults to PRODUCTION when
-          # VITE_SUPABASE_URL is unset. This job has been skipped since
-          # 2026-08-13 (the build job it depends on was failing), so nothing
-          # has run against that fallback; reviving the job without pinning the
-          # target would have pointed every pull request at the live database.
-          # A placeholder, or a staging project if one is ever configured.
-          VITE_SUPABASE_URL: ${{ secrets.E2E_SUPABASE_URL || 'http://127.0.0.1:54321' }}
-          VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.E2E_SUPABASE_ANON_KEY || 'e2e-placeholder-no-backend' }}
+          E2E_SERVE: build
           # Set these only against a backend that is NOT production: the auth
           # specs sign in for real. Unset, they skip with a stated reason
           # (tests/e2e/fixtures/auth.ts) rather than silently passing.
           TEST_USER_EMAIL: ${{ secrets.TEST_USER_EMAIL }}
           TEST_USER_PASSWORD: ${{ secrets.TEST_USER_PASSWORD }}
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report
+          path: |
+            playwright-report/
+            test-results/
+          retention-days: 7
 
   security:
     name: Security Smoke Tests

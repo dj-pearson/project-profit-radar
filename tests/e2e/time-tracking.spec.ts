@@ -1,29 +1,27 @@
 import { test, expect } from '@playwright/test';
+import { expectSignInWall, requireTestCredentials, signInAndVisit } from './fixtures/auth';
 
-test.describe('Time Tracking & Reports', () => {
-  test('should load time tracking page', async ({ page }) => {
-    await page.goto('/time-tracking');
-    await expect(page).toHaveURL(/time-tracking/);
+// Same shape as financial.spec.ts; see the note there for why.
+const PATHS = ['/time-tracking', '/daily-reports', '/timesheets'];
+
+test.describe('Time Tracking & Reports - signed out', () => {
+  for (const path of PATHS) {
+    test(`${path} sends a signed-out visitor to sign in`, async ({ page }) => {
+      await expectSignInWall(page, path);
+    });
+  }
+});
+
+test.describe('Time Tracking & Reports - signed in', () => {
+  test.beforeEach(() => {
+    requireTestCredentials();
   });
 
-  test('should display time tracking content', async ({ page }) => {
-    await page.goto('/time-tracking');
-    const content = page.locator('main, [role="main"], .container, #root').first();
-    await expect(content).toBeVisible({ timeout: 10000 });
-  });
-
-  test('should load daily reports page', async ({ page }) => {
-    await page.goto('/daily-reports');
-    await expect(page).toHaveURL(/daily-reports/);
-  });
-
-  test('should load timesheets page', async ({ page }) => {
-    await page.goto('/timesheets');
-    await expect(page).toHaveURL(/timesheets/);
-  });
-
-  test('should have page title', async ({ page }) => {
-    await page.goto('/time-tracking');
-    await expect(page).toHaveTitle(/.*/);
-  });
+  for (const path of PATHS) {
+    test(`${path} renders for a signed-in user`, async ({ page }) => {
+      await signInAndVisit(page, path);
+      await expect(page).toHaveURL(new RegExp(`${path}$`));
+      await expect(page.getByRole('heading').first()).toBeVisible({ timeout: 10_000 });
+    });
+  }
 });

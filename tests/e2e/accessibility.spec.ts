@@ -41,6 +41,11 @@ async function analyze(page: import('@playwright/test').Page): Promise<Violation
 
 for (const path of PUBLIC_PAGES) {
   test(`${path} has no serious or critical accessibility violations`, async ({ page }) => {
+    // The homepage hero fades its CTA in with GSAP after idle, so without this
+    // axe measured the button at whatever opacity the tween had reached (1.21:1
+    // in one run) and the result depended on timing. Reduced motion renders
+    // the settled colours, which are what WCAG contrast is about.
+    await page.emulateMedia({ reducedMotion: 'reduce' });
     await page.goto(path);
     await page.waitForLoadState('networkidle');
 

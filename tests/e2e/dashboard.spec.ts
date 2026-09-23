@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { requireTestCredentials, signIn } from './fixtures/auth';
+import { skipUnlessBuiltApp } from './fixtures/server';
 
 test.describe('Dashboard', () => {
   test.beforeEach(async ({ page }) => {
@@ -135,6 +136,7 @@ test.describe('Dashboard', () => {
 
   test('should have good performance metrics', async ({ page }) => {
     requireTestCredentials();
+    skipUnlessBuiltApp();
     await signIn(page);
     await page.goto('/dashboard');
 

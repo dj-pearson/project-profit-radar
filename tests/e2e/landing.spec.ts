@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { isCriticalConsoleError, skipUnlessBuiltApp } from './fixtures/server';
+import { isCriticalConsoleError, skipUnlessBuiltApp, WHY_HEAD_OWNER_SKIPPED } from './fixtures/server';
 
 test.describe('Landing Page', () => {
   test('should load and display the Brikly title', async ({ page }) => {
@@ -22,23 +22,47 @@ test.describe('Landing Page', () => {
   });
 
   test('should have proper meta tags for SEO', async ({ page }) => {
+    const singletons = [
+      'title',
+      'meta[name="description"]',
+      'link[rel="canonical"]',
+      'meta[property="og:title"]',
+      'meta[property="og:description"]',
+      'meta[name="twitter:title"]',
+      'meta[name="viewport"]',
+    ];
+    const counts = () =>
+      page.evaluate(
+        (sels) => sels.map((s) => [s, document.head.querySelectorAll(s).length] as const),
+        singletons,
+      );
+
+    // One of each at the load event, not only once things settle. This used to
+    // read two of nearly every tag here (index.html's static copy beside
+    // Helmet's) and then collapse to whichever renderer won the race (US-409).
     await page.goto('/');
+    for (const [sel, n] of await counts()) expect(n, sel).toBe(1);
 
-    const title = await page.title();
-    expect(title.length).toBeGreaterThan(0);
-
-    const viewportMeta = await page.locator('meta[name="viewport"]').getAttribute('content');
-    expect(viewportMeta).toContain('width=device-width');
-
-    // Exactly one. index.html ships a static description and the Helmet-driven
-    // SEO components render their own, so between them the head briefly carries
-    // two with different text - this assertion is what caught it (US-409).
-    // Wait for the settled head rather than the transient one at load.
     await page.waitForLoadState('networkidle');
-    const descriptions = page.locator('meta[name="description"]');
-    await expect(descriptions).toHaveCount(1);
-    const descriptionMeta = await descriptions.getAttribute('content');
-    expect((descriptionMeta || '').length).toBeGreaterThan(10);
+    for (const [sel, n] of await counts()) expect(n, sel).toBe(1);
+
+    expect(await page.locator('meta[name="viewport"]').getAttribute('content')).toContain('viewport-fit=cover');
+    expect((await page.locator('meta[name="description"]').getAttribute('content'))?.length).toBeGreaterThan(10);
+  });
+
+  test("the head settles on the homepage's own tags", async ({ page }) => {
+    skipUnlessBuiltApp(WHY_HEAD_OWNER_SKIPPED);
+    await page.goto('/');
+    await page.waitForLoadState('networkidle');
+
+    // Index.tsx's PageSEO, every time, rather than the index.html shell or
+    // UnifiedSEOSystem's site default.
+    await expect(page).toHaveTitle('Real-Time Job Costing for Contractors | Brikly');
+    await expect(page.locator('meta[name="description"]')).toHaveAttribute(
+      'content',
+      /^Construction job costing software with real-time budget tracking/,
+    );
+    await expect(page.locator('link[rel="canonical"]')).toHaveAttribute('href', 'https://brikly.net');
   });
 
   test('should load CSS and apply styles', async ({ page }) => {

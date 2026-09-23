@@ -17,6 +17,7 @@ import { Helmet } from 'react-helmet-async';
 import { useLocation } from 'react-router-dom';
 import { DEFAULT_OG_IMAGE, DEFAULT_OG_IMAGE_HEIGHT, DEFAULT_OG_IMAGE_WIDTH, SCHEMA_PRICE, getPriceValidUntil } from '@/config/seoConfig';
 import { toCanonicalUrl } from '@/lib/seo/canonical';
+import { useClaimPageHead } from '@/lib/seo/headOwner';
 
 export interface PageSEOProps {
   // Basic SEO
@@ -61,6 +62,9 @@ export const PageSEO: React.FC<PageSEOProps> = ({
   articlePublishDate
 }) => {
   const location = useLocation();
+  // This page owns its title/description/canonical/og/twitter tags; the global
+  // UnifiedSEOSystem stands down while it is mounted (US-409).
+  useClaimPageHead();
 
   // Always absolute: call sites pass paths like "/pricing" (US-381).
   const fullUrl = toCanonicalUrl(canonicalUrl, location.pathname);

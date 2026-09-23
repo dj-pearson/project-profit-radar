@@ -1,41 +1,38 @@
 import { test, expect } from '@playwright/test';
+import { expectSignInWall, requireTestCredentials, signInAndVisit } from './fixtures/auth';
 
-test.describe('Projects Management', () => {
-  test('should load projects page', async ({ page }) => {
-    await page.goto('/projects');
-    await expect(page).toHaveURL(/projects/);
+// Same shape as financial.spec.ts; see the note there for why. The old
+// "/project-templates" test is gone: there is no such route, so it passed by
+// asserting the URL of the 404 page.
+
+test.describe('Projects Management - signed out', () => {
+  test('/projects sends a signed-out visitor to sign in', async ({ page }) => {
+    await expectSignInWall(page, '/projects');
   });
 
-  test('should display projects page heading', async ({ page }) => {
-    await page.goto('/projects');
-    const heading = page.locator('h1, h2, [role="heading"]').first();
-    await expect(heading).toBeVisible({ timeout: 10000 });
-  });
-
-  test('should navigate to project detail from list', async ({ page }) => {
-    await page.goto('/projects');
-    // Look for any clickable project card or link
-    const projectLink = page.locator('a[href*="/project"], [data-testid*="project"]').first();
-    if (await projectLink.isVisible({ timeout: 5000 }).catch(() => false)) {
-      await projectLink.click();
-      await expect(page).toHaveURL(/project/);
-    }
-  });
-
-  test('should have navigation menu visible', async ({ page }) => {
-    await page.goto('/projects');
-    const nav = page.locator('nav, [role="navigation"]').first();
-    await expect(nav).toBeVisible({ timeout: 10000 });
-  });
-
-  test('should load project templates page', async ({ page }) => {
-    await page.goto('/project-templates');
-    await expect(page).toHaveURL(/project-templates/);
-  });
-
-  test('should have responsive layout on mobile', async ({ page }) => {
+  test('the sign-in wall is usable at phone width', async ({ page }) => {
     await page.setViewportSize({ width: 375, height: 667 });
-    await page.goto('/projects');
-    await expect(page.locator('body')).toBeVisible();
+    await expectSignInWall(page, '/projects');
+  });
+});
+
+test.describe('Projects Management - signed in', () => {
+  test.beforeEach(() => {
+    requireTestCredentials();
+  });
+
+  test('/projects renders with navigation', async ({ page }) => {
+    await signInAndVisit(page, '/projects');
+    await expect(page).toHaveURL(/\/projects$/);
+    await expect(page.getByRole('heading').first()).toBeVisible({ timeout: 10_000 });
+    await expect(page.getByRole('navigation').first()).toBeVisible();
+  });
+
+  test('opens a project from the list when one exists', async ({ page }) => {
+    await signInAndVisit(page, '/projects');
+    const projectLink = page.locator('a[href^="/projects/"]').first();
+    test.skip((await projectLink.count()) === 0, 'The test account has no projects to open.');
+    await projectLink.click();
+    await expect(page).toHaveURL(/\/projects\/[^/]+/);
   });
 });

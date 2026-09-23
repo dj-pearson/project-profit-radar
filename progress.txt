@@ -6757,3 +6757,17 @@ company-scoped one already exists, and otherwise adds a restrictive check,
 so legitimate same-company access doesn't change. The test shows every hole
 open before the migration and closed after. One side effect: signed-in
 non-admins no longer bump pSEO view counts.
+
+## US-409: the E2E suite runs again, and the homepage head has one owner
+
+The e2e job depended on the build job, so a red build silently skipped it for
+a month. It now builds and serves the app itself, against a Supabase URL that
+the setup refuses if it's production. The specs had drifted: some passed on the
+404 page, and some asserted that a signed-out visitor could stay on a guarded
+URL. After the fixes there are 113 passing, 0 failing and 55 skipped, against
+48, 15 and 17 before. The first real run caught one bug: a failed fetch of a
+third-party HDR image replaced the entire homepage with the error screen.
+
+The homepage title and description were a race between two SEO components and
+the static `index.html` tags. The page's own `PageSEO` now owns them while it's
+mounted, and Helmet adopts the static tags instead of duplicating them.

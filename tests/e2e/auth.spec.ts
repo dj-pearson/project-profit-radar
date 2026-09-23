@@ -1,113 +1,83 @@
 import { test, expect } from '@playwright/test';
-import { requireTestCredentials, signIn, TEST_EMAIL, TEST_PASSWORD } from './fixtures/auth';
+import { requireTestCredentials, signIn, signInForm, TEST_EMAIL, TEST_PASSWORD } from './fixtures/auth';
+import { answerCookieBanner } from './fixtures/server';
 
 test.describe('Authentication', () => {
   test.beforeEach(async ({ page }) => {
-    // Navigate to the auth page before each test
+    await answerCookieBanner(page);
     await page.goto('/auth');
   });
 
   test('should display the authentication page', async ({ page }) => {
-    // Check that the auth page loads
     await expect(page).toHaveTitle(/Brikly/i);
-
-    // Check for key elements
-    await expect(page.getByRole('heading', { name: /sign in/i })).toBeVisible();
+    // The sign-in view's heading is "Welcome back"; there has been no heading
+    // reading "Sign in" since the auth page was split into SignInForm.
+    await expect(page.getByRole('heading', { name: 'Welcome back' })).toBeVisible();
+    await expect(signInForm(page).form).toBeVisible();
   });
 
-  test('should show validation errors for empty form submission', async ({ page }) => {
-    // Try to submit without filling the form
-    const submitButton = page.getByRole('button', { name: /sign in/i });
-    await submitButton.click();
+  test('should block an empty form submission', async ({ page }) => {
+    const { email, submit } = signInForm(page);
+    await submit.click();
 
-    // Wait a bit for validation
-    await page.waitForTimeout(500);
-
-    // Check if the form is still on the auth page (didn't navigate)
-    await expect(page).toHaveURL(/\/auth/);
+    // The inputs are `required`, so the browser refuses the submit before any
+    // request is made. Assert that directly rather than waiting and hoping.
+    expect(await email.evaluate((el: HTMLInputElement) => el.validity.valueMissing)).toBe(true);
+    await expect(page).toHaveURL(/\/auth$/);
   });
 
-  test('should show error for invalid credentials', async ({ page }) => {
-    // Fill in invalid credentials
-    await page.getByLabel(/email/i).fill('invalid@example.com');
-    await page.getByLabel(/password/i).fill('wrongpassword');
+  test('a failed sign-in keeps the visitor on /auth and says why', async ({ page }) => {
+    // Against a real backend this is a credential rejection; against CI's
+    // placeholder it is an unreachable backend. Either way the visitor must
+    // stay here with the form back and a reason on screen. The unreachable
+    // case takes ~14s because the client retries with backoff, hence the
+    // longer budget.
+    test.setTimeout(60_000);
+    const { email, password, submit } = signInForm(page);
+    await email.fill('invalid@example.com');
+    await password.fill('wrongpassword');
+    await submit.click();
 
-    // Click sign in
-    await page.getByRole('button', { name: /sign in/i }).click();
-
-    // Wait for error message
-    await page.waitForTimeout(2000);
-
-    // Should still be on auth page (not redirected)
-    await expect(page).toHaveURL(/\/auth/);
+    await expect(submit).toBeEnabled({ timeout: 40_000 });
+    await expect(page).toHaveURL(/\/auth$/);
+    await expect(page.getByText(/sign in failed/i).first()).toBeVisible();
   });
 
   test('should toggle between sign in and sign up', async ({ page }) => {
-    // Check we're on sign in by default
-    await expect(page.getByRole('heading', { name: /sign in/i })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Welcome back' })).toBeVisible();
 
-    // Look for a link or button to switch to sign up
-    const signUpLink = page.getByText(/sign up/i).or(page.getByText(/create account/i));
-
-    if (await signUpLink.isVisible()) {
-      await signUpLink.click();
-
-      // Wait for the form to change
-      await page.waitForTimeout(500);
-
-      // Check we're now on sign up
-      await expect(
-        page.getByRole('heading', { name: /sign up/i }).or(
-          page.getByRole('heading', { name: /create account/i })
-        )
-      ).toBeVisible();
-    }
+    // Used to be wrapped in `if (await link.isVisible())`, which passed whether
+    // or not the toggle existed. It exists; assert it.
+    await page.getByRole('button', { name: 'Create one' }).click();
+    await expect(page.getByRole('heading', { name: 'Create your account' })).toBeVisible();
   });
 
   test('should have Google OAuth button', async ({ page }) => {
-    // Check for Google sign in button
-    const googleButton = page.getByRole('button', { name: /google/i });
-    await expect(googleButton).toBeVisible();
+    await expect(page.getByRole('button', { name: /google/i })).toBeVisible();
   });
 
   test('should navigate to password reset', async ({ page }) => {
-    // Look for forgot password link
-    const forgotPasswordLink = page.getByText(/forgot password/i);
-
-    if (await forgotPasswordLink.isVisible()) {
-      await forgotPasswordLink.click();
-
-      // Wait for navigation or modal
-      await page.waitForTimeout(500);
-
-      // Check for password reset UI
-      await expect(
-        page.getByText(/reset password/i).or(page.getByText(/enter your email/i))
-      ).toBeVisible();
-    }
+    await page.getByRole('button', { name: 'Forgot password?' }).click();
+    await expect(page.getByRole('heading', { name: 'Reset password' })).toBeVisible();
   });
 
   test('should have accessibility features', async ({ page }) => {
-    // Check that form inputs have labels
-    const emailInput = page.getByLabel(/email/i);
-    const passwordInput = page.getByLabel(/password/i);
-
-    await expect(emailInput).toBeVisible();
-    await expect(passwordInput).toBeVisible();
-
-    // Check that password input is type password
-    await expect(passwordInput).toHaveAttribute('type', 'password');
+    const { email, password } = signInForm(page);
+    await expect(email).toBeVisible();
+    await expect(password).toBeVisible();
+    await expect(password).toHaveAttribute('type', 'password');
+    // The show/hide toggle is labelled, which is why the password locator must
+    // be exact.
+    await expect(page.getByRole('button', { name: 'Show password' })).toBeVisible();
   });
 
   test('should be responsive on mobile', async ({ page, viewport }) => {
-    // This test will run on mobile viewports as defined in playwright.config.ts
-    if (viewport && viewport.width < 768) {
-      // Check that the auth form is still visible and usable
-      await expect(page.getByRole('heading', { name: /sign in/i })).toBeVisible();
-      await expect(page.getByLabel(/email/i)).toBeVisible();
-      await expect(page.getByLabel(/password/i)).toBeVisible();
-      await expect(page.getByRole('button', { name: /sign in/i })).toBeVisible();
-    }
+    test.skip(!viewport || viewport.width >= 768, 'Mobile-width check; runs under the Mobile Chrome project.');
+    const { email, password, submit } = signInForm(page);
+    await expect(page.getByRole('heading', { name: 'Welcome back' })).toBeVisible();
+    await expect(email).toBeVisible();
+    await expect(password).toBeVisible();
+    await expect(submit).toBeVisible();
   });
 });
 
@@ -121,15 +91,17 @@ test.describe('Authenticated User Flow', () => {
   });
 
   test('should successfully sign in with valid credentials', async ({ page }) => {
+    await answerCookieBanner(page);
     await page.goto('/auth');
 
     // Use test credentials from environment variables
     const testEmail = TEST_EMAIL!;
     const testPassword = TEST_PASSWORD!;
 
-    await page.getByLabel(/email/i).fill(testEmail);
-    await page.getByLabel(/password/i).fill(testPassword);
-    await page.getByRole('button', { name: /sign in/i }).click();
+    const form = signInForm(page);
+    await form.email.fill(testEmail);
+    await form.password.fill(testPassword);
+    await form.submit.click();
 
     // Wait for navigation to dashboard
     await page.waitForURL('**/dashboard', { timeout: 10000 });

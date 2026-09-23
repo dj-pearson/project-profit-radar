@@ -5,6 +5,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { DEFAULT_OG_IMAGE, DEFAULT_OG_IMAGE_HEIGHT, DEFAULT_OG_IMAGE_WIDTH, SCHEMA_PRICE, STARTING_MONTHLY_PRICE, getPriceValidUntil } from '@/config/seoConfig';
 import { logger } from '@/lib/logger';
 import { SITE_ORIGIN, toCanonicalUrl } from '@/lib/seo/canonical';
+import { usePageHeadClaimed } from '@/lib/seo/headOwner';
 
 export interface UnifiedSEOProps {
   // Allow manual override (existing pattern)
@@ -63,6 +64,7 @@ export const UnifiedSEOSystem: React.FC<UnifiedSEOProps> = ({
   competitorAnalysis = false
 }) => {
   const location = useLocation();
+  const pageOwnsHead = usePageHeadClaimed();
   const [dbConfig, setDbConfig] = useState<ExistingSEOConfig | null>(null);
   const [enterpriseConfig, setEnterpriseConfig] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -228,18 +230,25 @@ export const UnifiedSEOSystem: React.FC<UnifiedSEOProps> = ({
     }
   }, [enableAnalytics, isLoading, location.pathname]);
 
-  if (isLoading) {
-    return null; // Don't render anything while loading
+  // No early return while the seo_meta_tags lookup is in flight: index.html's
+  // static tags are adopted by Helmet (data-rh) and removed on its first
+  // commit, so rendering nothing here left the page with no description or
+  // canonical until the lookup settled. The defaults cover that window.
+
+  // A page that renders PageSEO owns these tags. Emitting them here as well
+  // made the homepage head a race between two lazy chunks (US-409).
+  if (pageOwnsHead) {
+    return null;
   }
 
   return (
     <Helmet>
-      {/* Basic Meta Tags */}
+      {/* Basic Meta Tags. viewport and theme-color belong to index.html; a
+          second viewport here dropped viewport-fit=cover (US-409). */}
       <title>{finalTitle}</title>
       <meta name="description" content={finalDescription} />
       <meta name="keywords" content={Array.isArray(finalKeywords) ? finalKeywords.join(', ') : finalKeywords} />
       <meta name="author" content="Brikly" />
-      <meta name="viewport" content="width=device-width, initial-scale=1.0" />
       
       {/* Canonical URL */}
       <link rel="canonical" href={finalCanonical} />
@@ -272,7 +281,6 @@ export const UnifiedSEOSystem: React.FC<UnifiedSEOProps> = ({
       <meta name="twitter:image" content={finalOgImage} />
       
       {/* Additional SEO Meta Tags */}
-      <meta name="theme-color" content="#ff6b00" />
       <meta name="msapplication-TileColor" content="#ff6b00" />
       <meta name="msapplication-config" content="/browserconfig.xml" />
       

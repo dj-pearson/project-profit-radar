@@ -7,6 +7,15 @@ import { defineConfig, devices } from '@playwright/test';
 // require('dotenv').config();
 
 /**
+ * Local escape hatch for a machine whose preinstalled Chromium does not match
+ * the revision this Playwright version expects. CI runs
+ * `npx playwright install chromium` and never sets this.
+ */
+const LOCAL_CHROMIUM = process.env.PW_CHROMIUM_EXECUTABLE
+  ? { launchOptions: { executablePath: process.env.PW_CHROMIUM_EXECUTABLE } }
+  : {};
+
+/**
  * See https://playwright.dev/docs/test-configuration.
  */
 export default defineConfig({
@@ -55,7 +64,7 @@ export default defineConfig({
   projects: [
     {
       name: 'chromium',
-      use: { ...devices['Desktop Chrome'] },
+      use: { ...devices['Desktop Chrome'], ...LOCAL_CHROMIUM },
     },
 
     {
@@ -71,7 +80,7 @@ export default defineConfig({
     /* Test against mobile viewports. */
     {
       name: 'Mobile Chrome',
-      use: { ...devices['Pixel 5'] },
+      use: { ...devices['Pixel 5'], ...LOCAL_CHROMIUM },
     },
     {
       name: 'Mobile Safari',
@@ -89,13 +98,33 @@ export default defineConfig({
     // },
   ],
 
-  /* Run your local dev server before starting the tests */
-  webServer: {
-    command: process.env.CI ? 'npm run dev:ci' : 'npm run dev',
-    url: 'http://localhost:8080',
-    reuseExistingServer: !process.env.CI,
-    timeout: 120000,
-  },
+  /* Refuses a production Supabase target before any server starts (US-409). */
+  globalSetup: './tests/e2e/global-setup.ts',
+
+  /*
+   * What gets served (US-409):
+   *   PLAYWRIGHT_BASE_URL set  -> nothing; test that URL.
+   *   E2E_SERVE=build          -> `vite preview` of an existing dist/. CI does
+   *                               this, so behaviour and timing are measured on
+   *                               what ships (minified, chunked, service worker,
+   *                               env guard), not on the dev server.
+   *   otherwise                -> the dev server, as before.
+   * E2E_HOST overrides the bind address for machines without IPv6, where
+   * vite.config's "::" fails with EAFNOSUPPORT.
+   */
+  webServer: process.env.PLAYWRIGHT_BASE_URL
+    ? undefined
+    : {
+        command:
+          process.env.E2E_SERVE === 'build'
+            ? `npx vite preview --port 8080 --strictPort${process.env.E2E_HOST ? ` --host ${process.env.E2E_HOST}` : ''}`
+            : process.env.CI
+              ? 'npm run dev:ci'
+              : 'npm run dev',
+        url: 'http://localhost:8080',
+        reuseExistingServer: !process.env.CI,
+        timeout: 120000,
+      },
 
   /* Global timeout for each test */
   timeout: 30000,

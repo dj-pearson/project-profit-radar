@@ -68,7 +68,9 @@ const FinancialIntelligenceShowcase = () => {
           <p className="text-muted-foreground">The only platform built for financial clarity.</p>
         </div>
 
-        <div className="overflow-x-auto">
+        {/* Focusable so a keyboard user can scroll the table sideways at phone
+            width (axe: scrollable-region-focusable). */}
+        <div className="overflow-x-auto" tabIndex={0} role="region" aria-label="Brikly compared with traditional PM tools">
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="border-b border-border/10">

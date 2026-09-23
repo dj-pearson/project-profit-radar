@@ -1,4 +1,6 @@
 import { test, expect } from '@playwright/test';
+import { signInForm } from './fixtures/auth';
+import { answerCookieBanner } from './fixtures/server';
 
 /**
  * US-317 AC5: a fresh signup completes setup and gets a company.
@@ -33,10 +35,12 @@ test.describe('Setup wizard provisions a tenant (US-317)', () => {
   test.skip(!hasFreshAccount, WHY_SKIPPED);
 
   test('completing setup creates a company and lands on a populated dashboard', async ({ page }) => {
+    await answerCookieBanner(page);
     await page.goto('/auth');
-    await page.getByLabel(/email/i).fill(EMAIL!);
-    await page.getByLabel(/password/i).fill(PASSWORD!);
-    await page.getByRole('button', { name: /sign in/i }).click();
+    const form = signInForm(page);
+    await form.email.fill(EMAIL!);
+    await form.password.fill(PASSWORD!);
+    await form.submit.click();
 
     await page.waitForURL(/\/(setup|dashboard)/, { timeout: 20_000 });
 

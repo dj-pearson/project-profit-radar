@@ -1,4 +1,5 @@
 import { test, type Page, expect } from '@playwright/test';
+import { answerCookieBanner } from './server';
 
 /**
  * The authenticated-flow path for E2E (US-214 AC2).
@@ -32,6 +33,35 @@ const WHY_SKIPPED =
   'Needs TEST_USER_EMAIL and TEST_USER_PASSWORD for an account on the target ' +
   'environment. Unset here, so the authenticated flows cannot run. See US-214 / US-247.';
 
+/**
+ * The sign-in form's controls, located exactly. The loose versions these specs
+ * used to share stopped being unique as the page grew: /password/i also matches
+ * the "Show password" toggle, and a /sign in/i button also matches "Sign in with
+ * Google" and "Sign in with Apple". Strict mode rejects both.
+ */
+export function signInForm(page: Page) {
+  const form = page.getByRole('form', { name: 'Sign in form' });
+  return {
+    form,
+    email: form.getByLabel('Email', { exact: true }),
+    password: form.getByLabel('Password', { exact: true }),
+    submit: form.getByRole('button', { name: 'Sign in', exact: true }),
+  };
+}
+
+/**
+ * A signed-out visitor who opens an app route is sent to /auth, and the page
+ * behind it never renders. This is what the "should load X page" specs were
+ * really observing once the route guard started redirecting promptly with no
+ * backend: they asserted the URL stayed put, which is the one thing a guarded
+ * route must not do for a stranger.
+ */
+export async function expectSignInWall(page: Page, path: string): Promise<void> {
+  await page.goto(path);
+  await expect(page).toHaveURL(/\/auth$/);
+  await expect(signInForm(page).form).toBeVisible();
+}
+
 /** Call first in any spec that needs a signed-in user. */
 export function requireTestCredentials(): void {
   test.skip(!hasTestCredentials, WHY_SKIPPED);
@@ -47,10 +77,12 @@ export async function signIn(page: Page): Promise<void> {
     throw new Error('signIn() called without credentials; call requireTestCredentials() first.');
   }
 
+  await answerCookieBanner(page);
   await page.goto('/auth');
-  await page.getByLabel(/email/i).fill(TEST_EMAIL!);
-  await page.getByLabel(/password/i).fill(TEST_PASSWORD!);
-  await page.getByRole('button', { name: /sign in/i }).click();
+  const form = signInForm(page);
+  await form.email.fill(TEST_EMAIL!);
+  await form.password.fill(TEST_PASSWORD!);
+  await form.submit.click();
   await page.waitForURL('**/dashboard', { timeout: 15_000 });
   await expect(page).toHaveURL(/\/dashboard/);
 }

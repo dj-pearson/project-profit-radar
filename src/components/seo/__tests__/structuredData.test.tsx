@@ -195,7 +195,8 @@ describe('index.html structured data (US-385)', () => {
 
   it('sets og:image to the 1200x630 public/og-image.png with width/height', () => {
     const tag = (prop: string) =>
-      INDEX_HTML.match(new RegExp(`<meta (?:property|name)="${prop}" content="([^"]*)"`))?.[1];
+      // data-rh marks the tag for Helmet to adopt (US-409).
+      INDEX_HTML.match(new RegExp(`<meta (?:data-rh="true" )?(?:property|name)="${prop}" content="([^"]*)"`))?.[1];
     expect(tag('og:image')).toBe(DEFAULT_OG_IMAGE);
     expect(tag('og:image:width')).toBe(String(DEFAULT_OG_IMAGE_WIDTH));
     expect(tag('og:image:height')).toBe(String(DEFAULT_OG_IMAGE_HEIGHT));
@@ -277,12 +278,17 @@ describe('React schema emitters (US-385)', () => {
 
   it('UnifiedSEOSystem on / uses the config price and a valid applicationCategory', async () => {
     renderWithProviders(<UnifiedSEOSystem title="Brikly" description="d" />, '/');
-    await waitFor(() => expect(meta('meta[property="og:image"]')).toBe(DEFAULT_OG_IMAGE));
+    // UnifiedSEOSystem renders its defaults at once and adds the schema when
+    // its seo_meta_tags lookup settles (US-409), so wait for the schema.
+    const findSoftware = () =>
+      renderedJsonLd().find(
+        (s) => (s as { '@type'?: string })['@type'] === 'SoftwareApplication',
+      ) as { offers: { price: string } } | undefined;
+    await waitFor(() => expect(findSoftware()).toBeDefined());
+    expect(meta('meta[property="og:image"]')).toBe(DEFAULT_OG_IMAGE);
     expect(meta('meta[property="og:image:width"]')).toBe('1200');
     expect(meta('meta[property="og:image:height"]')).toBe('630');
-    const software = renderedJsonLd().find(
-      (s) => (s as { '@type'?: string })['@type'] === 'SoftwareApplication',
-    ) as { offers: { price: string } } | undefined;
+    const software = findSoftware();
     expect(software?.offers.price).toBe(SCHEMA_PRICE);
     expect(renderedJsonLd().flatMap((s, i) => problemsIn(s, `unified#${i}`))).toEqual([]);
   });
