@@ -71,9 +71,18 @@ const initPostHog = async () => {
       autocapture: true,
       capture_pageview: true,
       capture_pageleave: true,
+      // US-360: replays and autocaptured events must not carry customer data.
+      // Every screen past sign-in shows invoice amounts, client names and
+      // emails, so text is masked everywhere rather than cell by cell: a
+      // selector list would miss the next column someone adds. Replays keep
+      // layout, clicks and navigation, which is what they are used for.
+      mask_all_text: true,
       session_recording: {
-        enabled: true,
-        recordCrossOriginIframes: true,
+        maskAllInputs: true,
+        maskTextSelector: '*',
+        // Stripe checkout and other embedded providers are cross-origin
+        // iframes; they are not ours to record.
+        recordCrossOriginIframes: false,
       },
     });
     logger.info('PostHog initialized successfully');

@@ -5628,8 +5628,8 @@
         "The privacy policy page reflects what is recorded"
       ],
       "priority": 3,
-      "passes": false,
-      "notes": "PROPOSED 2026-09-09 (production-readiness audit, six parallel reviews: auth, security, page/data flows, UI/UX, SEO, ops)."
+      "passes": true,
+      "notes": "PROPOSED 2026-09-09 (production-readiness audit, six parallel reviews: auth, security, page/data flows, UI/UX, SEO, ops). || DONE 2026-09-23. src/lib/analytics.ts PostHog init: session_recording { maskAllInputs: true, maskTextSelector: '*', recordCrossOriginIframes: false } plus top-level mask_all_text: true so autocaptured events drop element text too. Masking all text rather than a selector list for currency/name/email cells, because every screen past sign-in shows customer data and a selector list misses the next column someone adds; replays keep layout, clicks and navigation. recordCrossOriginIframes was TRUE, which would have recorded embedded Stripe checkout frames; now false. Consent gate unchanged. CookiePolicy gains a paragraph saying what a replay contains and that text and input are masked in the browser; Subprocessors lists session replay for PostHog. Test: src/lib/__tests__/analyticsRecording.test.ts asserts the init config. NOT changed: Analytics.identify still sends whatever user properties callers pass to PostHog; worth a look."
     },
     {
       "id": "US-361",

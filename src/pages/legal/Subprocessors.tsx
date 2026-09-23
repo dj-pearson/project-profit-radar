@@ -45,8 +45,8 @@ const SUBPROCESSORS: Subprocessor[] = [
   },
   {
     name: 'PostHog, Inc.',
-    purpose: 'Product analytics and feature flags',
-    dataCategories: 'Page views, feature usage events, pseudonymous user IDs',
+    purpose: 'Product analytics, session replay and feature flags',
+    dataCategories: 'Page views, feature usage events, pseudonymous user IDs, session replays with all page text and form input masked',
     region: 'United States / European Union (configurable)',
     url: 'https://posthog.com/privacy',
   },

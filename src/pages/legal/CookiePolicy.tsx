@@ -46,6 +46,13 @@ const CookiePolicy = () => (
       Help us understand how visitors interact with our marketing site and product so we can
       improve them. Currently provided by PostHog and Cloudflare Web Analytics.
     </p>
+    <p>
+      With your consent, PostHog also records session replays: page layout, clicks, scrolling
+      and navigation. All text on the page and everything typed into form fields is masked
+      before it leaves your browser, so a replay does not contain names, amounts, emails or
+      other content you enter or view. Content inside embedded third-party frames, such as
+      payment forms, is not recorded.
+    </p>
     <h3>Functional / Preferences</h3>
     <p>
       Remember choices you make (theme, language, layout) to personalize your experience.

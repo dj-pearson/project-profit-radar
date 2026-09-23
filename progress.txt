@@ -6444,3 +6444,17 @@ hero image. They now use the site-assets check, root_admin or admin, which
 matches who can open `/blog-manager`. That route admits company admins, which
 means a customer's admin can still edit the platform blog. That's a product
 decision for you.
+
+## US-360: session replays no longer carry customer data
+
+PostHog recorded sessions with no input masking, and with
+`recordCrossOriginIframes: true`, which would have captured embedded Stripe
+checkout frames. Every input and all page text is now masked in the browser,
+autocaptured events drop element text, and cross-origin frames aren't recorded.
+I masked all text instead of listing selectors for amount, name and email cells,
+because a selector list misses the next column someone adds. The cookie policy
+and subprocessor list now say what a replay contains.
+
+Getting the test to see the SDK call took three tries. `analytics.ts` calls
+`Analytics.init()` on import, so a second `init()` from the test returns early
+and the assertion ran before the dynamic import resolved.
