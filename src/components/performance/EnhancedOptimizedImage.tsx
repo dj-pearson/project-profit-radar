@@ -199,7 +199,7 @@ export const EnhancedOptimizedImage = ({
       {/* Error fallback */}
       {hasError && (
         <div className="absolute inset-0 w-full h-full bg-gray-100 flex items-center justify-center">
-          <div className="text-center text-gray-400">
+          <div className="text-center text-gray-500">
             <div className="text-2xl mb-2">📷</div>
             <div className="text-sm">Image unavailable</div>
           </div>

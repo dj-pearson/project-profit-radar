@@ -155,9 +155,9 @@ export const DownloadProgress: React.FC<DownloadProgressProps> = ({ progress, fi
 export const DotsLoading: React.FC = () => {
   return (
     <div className="flex items-center gap-1">
-      <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce [animation-delay:-0.3s]" />
-      <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce [animation-delay:-0.15s]" />
-      <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce" />
+      <div className="w-2 h-2 bg-blue-600 rounded-full animate-pulse [animation-delay:-0.3s]" />
+      <div className="w-2 h-2 bg-blue-600 rounded-full animate-pulse [animation-delay:-0.15s]" />
+      <div className="w-2 h-2 bg-blue-600 rounded-full animate-pulse" />
     </div>
   );
 };

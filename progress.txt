@@ -6886,3 +6886,12 @@ WorkflowVersionControl, EquipmentMaintenanceTracking, EnhancedJobCosting,
 WhiteLabelPortal, SubcontractorDisclosureForm, ThirdPartyMarketplace,
 MobileMaterialTracker, IntegrationEcosystemService.syncIntegration,
 IntegrationService non-QuickBooks methods. Left: connectQuickBooks.
+
+## US-378 - craft-floor tells
+npx impeccable detect src: 23 -> 7. Gradient h1s and border-l-4 cards were
+already gone. Removed the runtime Google Fonts Inter injection in
+CoreWebVitalsOptimizer (prop kept as a deprecated no-op), animate-bounce (5
+files), gray-on-color badge text, the Instagram purple gradient, and 4px left
+borders in email and test-report HTML. Left: Inter as a recorded choice,
+Arial in email, grid background, a test fixture, two report transitions, and
+purple gradients the ACs don't name.

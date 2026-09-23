@@ -293,7 +293,7 @@ export const DemoCalendar = ({ onDemoScheduled }: DemoCalendarProps) => {
                       }}
                       className={`
                         min-h-24 p-2 border rounded-lg text-left transition-colors
-                        ${isCurrentMonth ? 'bg-white hover:bg-gray-50' : 'bg-gray-50 text-gray-400'}
+                        ${isCurrentMonth ? 'bg-white hover:bg-gray-50' : 'bg-gray-50 text-gray-500'}
                         ${isCurrentDay ? 'border-construction-orange border-2' : 'border-gray-200'}
                         ${demosForDay.length > 0 ? 'cursor-pointer hover:shadow-md' : 'cursor-default'}
                       `}

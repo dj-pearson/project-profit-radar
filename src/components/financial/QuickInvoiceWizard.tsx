@@ -265,21 +265,21 @@ export const QuickInvoiceWizard: React.FC<QuickInvoiceWizardProps> = ({
 
           {/* Step indicators */}
           <div className="grid grid-cols-3 gap-4 mt-4">
-            <div className={`flex items-center gap-2 ${step >= 1 ? 'text-blue-600' : 'text-gray-400'}`}>
+            <div className={`flex items-center gap-2 ${step >= 1 ? 'text-blue-600' : 'text-muted-foreground'}`}>
               <div className={`w-8 h-8 rounded-full flex items-center justify-center ${step > 1 ? 'bg-blue-600 text-white' : step === 1 ? 'bg-blue-100' : 'bg-gray-100'}`}>
                 {step > 1 ? <Check className="h-5 w-5" /> : '1'}
               </div>
               <span className="text-sm font-medium">Client & Project</span>
             </div>
 
-            <div className={`flex items-center gap-2 ${step >= 2 ? 'text-blue-600' : 'text-gray-400'}`}>
+            <div className={`flex items-center gap-2 ${step >= 2 ? 'text-blue-600' : 'text-muted-foreground'}`}>
               <div className={`w-8 h-8 rounded-full flex items-center justify-center ${step > 2 ? 'bg-blue-600 text-white' : step === 2 ? 'bg-blue-100' : 'bg-gray-100'}`}>
                 {step > 2 ? <Check className="h-5 w-5" /> : '2'}
               </div>
               <span className="text-sm font-medium">Line Items</span>
             </div>
 
-            <div className={`flex items-center gap-2 ${step >= 3 ? 'text-blue-600' : 'text-gray-400'}`}>
+            <div className={`flex items-center gap-2 ${step >= 3 ? 'text-blue-600' : 'text-muted-foreground'}`}>
               <div className={`w-8 h-8 rounded-full flex items-center justify-center ${step === 3 ? 'bg-blue-100' : 'bg-gray-100'}`}>
                 3
               </div>

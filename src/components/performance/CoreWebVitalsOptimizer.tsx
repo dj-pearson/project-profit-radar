@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 
 interface CoreWebVitalsOptimizerProps {
   enableImageOptimization?: boolean;
+  /** @deprecated No-op since US-378: the font loads once from index.html. */
   enableFontOptimization?: boolean;
   enableCriticalCSS?: boolean;
   pageType?: 'homepage' | 'landing' | 'content' | 'app';
@@ -9,7 +10,6 @@ interface CoreWebVitalsOptimizerProps {
 
 export const CoreWebVitalsOptimizer: React.FC<CoreWebVitalsOptimizerProps> = ({
   enableImageOptimization = true,
-  enableFontOptimization = true,
   enableCriticalCSS = true,
   pageType = 'homepage'
 }) => {
@@ -25,19 +25,9 @@ export const CoreWebVitalsOptimizer: React.FC<CoreWebVitalsOptimizerProps> = ({
         document.head.appendChild(heroImageLink);
       }
 
-      // Preload critical fonts
-      if (enableFontOptimization) {
-        const fontLink = document.createElement('link');
-        fontLink.rel = 'preload';
-        fontLink.href = 'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap';
-        fontLink.as = 'style';
-        fontLink.onload = function() {
-          this.onload = null;
-          // @ts-expect-error - same handler, same `this`.
-          this.rel = 'stylesheet';
-        };
-        document.head.appendChild(fontLink);
-      }
+      // No font work here. Inter is self-hosted and loaded once from
+      // index.html (/fonts/inter.css); this used to inject a second copy
+      // from Google Fonts at runtime (US-378).
     };
 
     // Optimize Cumulative Layout Shift (CLS)
@@ -111,7 +101,7 @@ export const CoreWebVitalsOptimizer: React.FC<CoreWebVitalsOptimizerProps> = ({
     return () => {
       // Cleanup if needed
     };
-  }, [enableImageOptimization, enableFontOptimization, enableCriticalCSS, pageType]);
+  }, [enableImageOptimization, enableCriticalCSS, pageType]);
 
   return null; // This is a utility component with no UI
 };

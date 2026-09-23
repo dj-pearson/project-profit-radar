@@ -5871,8 +5871,8 @@
         "npx impeccable detect src reports under 60 hits, with the tab underline allowlisted"
       ],
       "priority": 3,
-      "passes": false,
-      "notes": "PROPOSED 2026-09-09 (production-readiness audit, six parallel reviews: auth, security, page/data flows, UI/UX, SEO, ops)."
+      "passes": true,
+      "notes": "PROPOSED 2026-09-09 (production-readiness audit, six parallel reviews: auth, security, page/data flows, UI/UX, SEO, ops). || impeccable detect src 23 -> 7 (AC: under 60). Gradient h1s and border-l-4 already gone; removed runtime Inter injection (Inter now loads once, self-hosted), bounce easing, gray-on-color, AI palette gradient, 4px side borders in email/report HTML. Remaining 7 are recorded decisions or test fixtures. Other purple gradients (UpgradeCTA, HelpCenter, ...) not named by ACs."
     },
     {
       "id": "US-379",

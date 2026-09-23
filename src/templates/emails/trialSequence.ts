@@ -32,7 +32,7 @@ export const welcomeEmail = (data: TrialEmailData): string => {
         <li style="margin-bottom: 12px;"><strong>QuickBooks integration</strong> - Seamless accounting sync</li>
       </ul>
 
-      <div style="background: #FEF3C7; border-left: 4px solid #F97316; padding: 16px; margin: 24px 0; border-radius: 4px;">
+      <div style="background: #FEF3C7; border: 1px solid #FCD34D; padding: 16px; margin: 24px 0; border-radius: 4px;">
         <p style="margin: 0; color: #92400E; font-weight: 600;">✨ Quick Start Tip:</p>
         <p style="margin: 8px 0 0; color: #92400E;">Create your first project today - it only takes 2 minutes and you'll immediately see how Brikly organizes everything.</p>
       </div>
@@ -89,7 +89,7 @@ export const day1GettingStarted = (data: TrialEmailData): string => {
         <li>Change order tracking</li>
       </ul>
 
-      <div style="background: #FEF3C7; border-left: 4px solid #F97316; padding: 16px; margin: 24px 0; border-radius: 4px;">
+      <div style="background: #FEF3C7; border: 1px solid #FCD34D; padding: 16px; margin: 24px 0; border-radius: 4px;">
         <p style="margin: 0; color: #92400E;">Set up a project with its real budget and cost codes. That is what makes the daily cost report meaningful in week one.</p>
       </div>
 
@@ -140,7 +140,7 @@ export const day3TimeTracking = (data: TrialEmailData): string => {
         <li style="margin-bottom: 8px;">Prove overtime claims with photo evidence</li>
       </ul>
 
-      <div style="background: #DCFCE7; border-left: 4px solid #16A34A; padding: 16px; margin: 24px 0; border-radius: 4px;">
+      <div style="background: #DCFCE7; border: 1px solid #86EFAC; padding: 16px; margin: 24px 0; border-radius: 4px;">
         <p style="margin: 0; color: #166534; font-weight: 600;">💰 ROI Example:</p>
         <p style="margin: 8px 0 0; color: #166534;">A 5-person crew losing just 30 minutes per day = $45/day wasted (at $30/hr). That's <strong>$11,700/year per crew</strong>. Brikly pays for itself in week 1.</p>
       </div>

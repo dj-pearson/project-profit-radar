@@ -200,8 +200,8 @@ export const CostVarianceVisualization: React.FC = () => {
                     className={cn(
                       "p-3 rounded text-center text-sm font-medium transition-all hover:scale-105 cursor-pointer",
                       item.variance > 5 ? "bg-red-500 text-white" :
-                      item.variance > 0 ? "bg-orange-400 text-white" :
-                      item.variance > -5 ? "bg-yellow-300 text-gray-800" :
+                      item.variance > 0 ? "bg-orange-400 text-orange-950" :
+                      item.variance > -5 ? "bg-yellow-300 text-yellow-950" :
                       "bg-green-500 text-white"
                     )}
                   >

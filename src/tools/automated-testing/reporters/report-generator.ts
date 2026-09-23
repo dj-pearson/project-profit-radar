@@ -480,14 +480,14 @@ export class ReportGenerator {
     table { width: 100%; border-collapse: collapse; }
     th, td { padding: 0.75rem; text-align: left; border-bottom: 1px solid #e5e7eb; }
     th { background: #f9fafb; font-weight: 600; }
-    .error-item { border-left: 4px solid #ef4444; padding-left: 1rem; margin-bottom: 1rem; }
-    .error-item.warning { border-color: #f59e0b; }
+    .error-item { border: 1px solid #fca5a5; background: #fef2f2; border-radius: 8px; padding: 0.75rem 1rem; margin-bottom: 1rem; }
+    .error-item.warning { border-color: #fcd34d; background: #fffbeb; }
     .error-message { font-family: monospace; font-size: 0.875rem; background: #f3f4f6; padding: 0.5rem; border-radius: 4px; overflow-x: auto; }
     .recommendation { padding: 1rem; border-radius: 8px; margin-bottom: 1rem; }
-    .recommendation.critical { background: #fee2e2; border-left: 4px solid #ef4444; }
-    .recommendation.high { background: #ffedd5; border-left: 4px solid #f97316; }
-    .recommendation.medium { background: #fef3c7; border-left: 4px solid #f59e0b; }
-    .recommendation.low { background: #e0f2fe; border-left: 4px solid #0ea5e9; }
+    .recommendation.critical { background: #fee2e2; border: 1px solid #fca5a5; }
+    .recommendation.high { background: #ffedd5; border: 1px solid #fdba74; }
+    .recommendation.medium { background: #fef3c7; border: 1px solid #fcd34d; }
+    .recommendation.low { background: #e0f2fe; border: 1px solid #7dd3fc; }
     .collapsible { cursor: pointer; }
     .collapsible::after { content: ' ▼'; font-size: 0.75rem; }
     .collapsible.collapsed::after { content: ' ▶'; }

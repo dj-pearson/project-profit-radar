@@ -168,7 +168,7 @@ const AutomatedProgressUpdates = () => {
           </div>
 
           {settings.autoUpdatesEnabled && (
-            <div className="space-y-4 border-l-2 border-construction-orange pl-4">
+            <div className="space-y-4 border-l border-border pl-4">
               <div>
                 <Label>Update Frequency</Label>
                 <Select 

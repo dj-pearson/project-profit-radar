@@ -26,6 +26,9 @@ const TabsTrigger = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <TabsPrimitive.Trigger
     ref={ref}
+    // Craft floor (US-378): this 2px active-tab underline is the ONE allowed
+    // colored side accent in the app. It marks selection state on a control,
+    // not decoration on a card. Cards and callouts use a 1px border or a tint.
     className={cn(
       "inline-flex items-center justify-center whitespace-nowrap border-b-2 border-transparent px-3 sm:px-4 py-3 text-sm font-medium text-muted-foreground transition-all hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:border-primary data-[state=active]:text-primary data-[state=active]:bg-background/50 flex-shrink-0 min-w-0",
       className

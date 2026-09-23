@@ -56,7 +56,7 @@ export const SocialAccountsManager: React.FC<SocialAccountsManagerProps> = ({
       id: 'instagram', 
       name: 'Instagram', 
       icon: Instagram, 
-      color: 'bg-gradient-to-r from-purple-500 to-pink-500',
+      color: 'bg-pink-600',
       description: 'Showcase project photos and behind-the-scenes content'
     }
   ];

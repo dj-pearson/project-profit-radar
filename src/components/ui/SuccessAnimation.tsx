@@ -161,7 +161,7 @@ export const ConfettiSuccess: React.FC<SuccessAnimationProps> = ({
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 animate-in fade-in">
       <div className="bg-white rounded-lg p-8 text-center max-w-md">
         <div className="relative mb-4">
-          <PartyPopper className="h-16 w-16 text-yellow-500 mx-auto animate-bounce" />
+          <PartyPopper className="h-16 w-16 text-yellow-500 mx-auto animate-in zoom-in-50 duration-500 ease-out" />
           <Sparkles className="h-6 w-6 text-yellow-400 absolute top-0 right-1/3 animate-ping" />
           <Sparkles className="h-6 w-6 text-blue-400 absolute bottom-0 left-1/3 animate-ping delay-150" />
         </div>
@@ -178,7 +178,7 @@ export const ThumbsUpSuccess: React.FC<SuccessAnimationProps> = ({
 }) => {
   return (
     <div className="flex items-center gap-3 p-4 bg-blue-50 border border-blue-200 rounded-lg animate-in fade-in slide-in-from-bottom-2">
-      <ThumbsUp className="h-6 w-6 text-blue-600 animate-bounce" />
+      <ThumbsUp className="h-6 w-6 text-blue-600 animate-in zoom-in-75 duration-300 ease-out" />
       <span className="text-sm font-medium text-blue-900">{message}</span>
     </div>
   );

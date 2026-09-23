@@ -427,7 +427,7 @@ export default function BriklyHero3D() {
       
       {/* Scroll Hint */}
       <div className={`absolute bottom-8 left-1/2 transform -translate-x-1/2 transition-opacity duration-500 ${progress > 0.1 ? 'opacity-0' : 'opacity-100'}`}>
-        <div className="flex flex-col items-center gap-2 animate-bounce text-slate-400">
+        <div className="flex flex-col items-center gap-2 animate-pulse text-slate-400">
           <span className="text-xs uppercase tracking-widest">Scroll to Dismantle</span>
           <Move className="w-5 h-5" />
         </div>

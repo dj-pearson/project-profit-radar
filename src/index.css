@@ -223,6 +223,12 @@ All colors MUST be HSL.
 
   body {
     @apply bg-background text-foreground;
+    /* Typeface decision (US-378): Inter is kept on purpose, not by default.
+       Brikly's screens are dense tables of money, quantities and dates, and
+       Inter's tall x-height and tabular figures hold up at 12-14px where most
+       alternatives smear. It is self-hosted (public/fonts/inter.css, 400/600)
+       and loaded exactly once, from index.html. Do not add a Google Fonts or
+       runtime copy; CoreWebVitalsOptimizer used to inject a second one. */
     font-family: Inter, Roboto, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Avenir, Helvetica, Arial, sans-serif;
     /* Enable smooth momentum scrolling on iOS */
     -webkit-overflow-scrolling: touch;

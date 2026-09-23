@@ -572,7 +572,7 @@ const PremiumBlueprint3D: React.FC<BlueprintProps> = ({ isBuildMode, onToggleMod
           transition-opacity duration-500 flex items-center gap-2 sm:gap-3 text-white/50 text-xs font-mono
           ${scrollProgress > 0.1 ? 'opacity-0' : 'opacity-100'}
         `}>
-                    <span className="animate-bounce">↓</span>
+                    <span className="animate-pulse">↓</span>
                     <span className="hidden sm:inline">SCROLL TO DISMANTLE</span>
                 </div>
 
