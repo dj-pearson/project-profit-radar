@@ -1,227 +1,216 @@
 import { Helmet } from "react-helmet-async";
+import { Link } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
 import { PageLayout } from "@/components/layouts/PageLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
-import { Camera, Upload, Eye, TrendingUp, AlertTriangle, CheckCircle } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
+import { ClipboardCheck, Eye, AlertTriangle, CheckCircle } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 
-// Simple mock data for demonstration
-const mockMetrics = {
-  overall_quality_score: 87,
-  total_inspections: 24,
-  critical_defects: 2,
-  resolved_defects: 18,
-  pending_inspections: 3,
-  compliance_score: 94,
-};
+/**
+ * US-370: this page used to render hardcoded mockMetrics / mockInspections
+ * ("87% quality score", "AI crack detection: Active") with no query at all.
+ * It now reads the company's quality_inspections rows. There is no AI or
+ * computer-vision scoring behind this table, so the page says so instead of
+ * showing a score it cannot compute.
+ */
 
-const mockInspections = [
-  {
-    id: "1",
-    date: "2024-01-10",
-    type: "Foundation",
-    score: 92,
-    status: "completed",
-    defects: 1,
-  },
-  {
-    id: "2", 
-    date: "2024-01-08",
-    type: "Framing",
-    score: 88,
-    status: "completed",
-    defects: 0,
-  },
-  {
-    id: "3",
-    date: "2024-01-05",
-    type: "Electrical",
-    score: 85,
-    status: "requires_attention",
-    defects: 2,
-  },
-];
+interface QualityInspectionRow {
+  id: string;
+  inspection_number: string;
+  inspection_type: string;
+  inspection_date: string;
+  status: string | null;
+  passed: boolean | null;
+  reinspection_required: boolean | null;
+  deficiencies: unknown;
+}
+
+const deficiencyCount = (d: unknown) => (Array.isArray(d) ? d.length : 0);
+
+function summarizeInspections(rows: QualityInspectionRow[]) {
+  const decided = rows.filter((r) => r.passed !== null);
+  const passed = decided.filter((r) => r.passed === true).length;
+  return {
+    total: rows.length,
+    decided: decided.length,
+    passRate: decided.length ? Math.round((passed / decided.length) * 100) : null,
+    failed: decided.length - passed,
+    reinspections: rows.filter((r) => r.reinspection_required).length,
+    pending: rows.filter((r) => r.status === "pending" || r.status === "scheduled" || r.status === "in_progress").length,
+  };
+}
 
 export default function AIQualityControlPage() {
+  const { userProfile } = useAuth();
+  const companyId = userProfile?.company_id;
+
+  const { data: inspections = [], isLoading, error } = useQuery({
+    queryKey: ["quality-inspections-overview", companyId],
+    enabled: !!companyId,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("quality_inspections")
+        .select("id, inspection_number, inspection_type, inspection_date, status, passed, reinspection_required, deficiencies")
+        .eq("company_id", companyId as string)
+        .order("inspection_date", { ascending: false });
+      if (error) throw error;
+      return (data ?? []) as QualityInspectionRow[];
+    },
+  });
+
+  const summary = summarizeInspections(inspections);
+
   return (
     <>
       <Helmet>
-        <title>AI Quality Control | Construction Management Platform</title>
+        <title>Quality Control | Construction Management Platform</title>
         <meta
           name="description"
-          content="AI-powered quality inspection with computer vision for construction defect detection and quality assessment."
+          content="Quality inspection results, pass rates and reinspections across your projects."
         />
       </Helmet>
       <PageLayout>
         <div className="container mx-auto p-6 space-y-6">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-bold tracking-tight">AI Quality Control</h1>
-              <p className="text-muted-foreground">
-                Automated quality inspection using computer vision and AI analysis
-              </p>
+              <h1 className="text-3xl font-bold tracking-tight">Quality Control</h1>
+              <p className="text-muted-foreground">Inspection results recorded across your projects</p>
             </div>
-            <div className="flex gap-2">
-              <Button>
-                <Camera className="mr-2 h-4 w-4" />
-                Start Inspection
-              </Button>
-              <Button variant="outline">
-                <Upload className="mr-2 h-4 w-4" />
-                Upload Photos
-              </Button>
-            </div>
+            <Button asChild>
+              <Link to="/workflow-management">
+                <ClipboardCheck className="mr-2 h-4 w-4" />
+                Manage Inspections
+              </Link>
+            </Button>
           </div>
 
-          {/* Quality Metrics Overview */}
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          {error ? (
             <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Overall Quality Score</CardTitle>
-                <TrendingUp className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{mockMetrics.overall_quality_score}%</div>
-                <Progress value={mockMetrics.overall_quality_score} className="mt-2" />
+              <CardContent className="py-6 text-sm text-destructive">
+                Couldn't load inspections: {error instanceof Error ? error.message : "unknown error"}
               </CardContent>
             </Card>
+          ) : isLoading ? (
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4" data-testid="qc-loading">
+              {[0, 1, 2, 3].map((i) => (
+                <Skeleton key={i} className="h-28" />
+              ))}
+            </div>
+          ) : (
+            <>
+              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+                <Card>
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Pass Rate</CardTitle>
+                    <CheckCircle className="h-4 w-4 text-muted-foreground" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">{summary.passRate === null ? "-" : `${summary.passRate}%`}</div>
+                    {summary.passRate !== null && <Progress value={summary.passRate} className="mt-2" />}
+                    <p className="text-xs text-muted-foreground">{summary.decided} inspections with a result</p>
+                  </CardContent>
+                </Card>
 
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Total Inspections</CardTitle>
-                <Eye className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{mockMetrics.total_inspections}</div>
-                <p className="text-xs text-muted-foreground">+12% from last month</p>
-              </CardContent>
-            </Card>
+                <Card>
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Total Inspections</CardTitle>
+                    <Eye className="h-4 w-4 text-muted-foreground" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">{summary.total}</div>
+                    <p className="text-xs text-muted-foreground">{summary.pending} pending or in progress</p>
+                  </CardContent>
+                </Card>
 
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Critical Defects</CardTitle>
-                <AlertTriangle className="h-4 w-4 text-destructive" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-destructive">{mockMetrics.critical_defects}</div>
-                <p className="text-xs text-muted-foreground">Require immediate attention</p>
-              </CardContent>
-            </Card>
+                <Card>
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Failed</CardTitle>
+                    <AlertTriangle className="h-4 w-4 text-destructive" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">{summary.failed}</div>
+                    <p className="text-xs text-muted-foreground">Inspections marked not passed</p>
+                  </CardContent>
+                </Card>
 
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Compliance Score</CardTitle>
-                <CheckCircle className="h-4 w-4 text-green-600" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-green-600">{mockMetrics.compliance_score}%</div>
-                <Progress value={mockMetrics.compliance_score} className="mt-2" />
-              </CardContent>
-            </Card>
-          </div>
+                <Card>
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Reinspections</CardTitle>
+                    <ClipboardCheck className="h-4 w-4 text-muted-foreground" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">{summary.reinspections}</div>
+                    <p className="text-xs text-muted-foreground">Flagged as requiring reinspection</p>
+                  </CardContent>
+                </Card>
+              </div>
 
-          {/* Recent Inspections */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Recent Inspections</CardTitle>
+                  <CardDescription>The 10 most recent inspections by date</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  {inspections.length === 0 ? (
+                    <p className="py-6 text-center text-sm text-muted-foreground">
+                      No quality inspections recorded yet. Inspections you schedule and complete will show up here.
+                    </p>
+                  ) : (
+                    <div className="space-y-4">
+                      {inspections.slice(0, 10).map((inspection) => (
+                        <div key={inspection.id} className="flex items-center justify-between p-4 border rounded-lg">
+                          <div>
+                            <p className="font-medium">
+                              {inspection.inspection_type} inspection {inspection.inspection_number}
+                            </p>
+                            <p className="text-sm text-muted-foreground">
+                              {new Date(inspection.inspection_date).toLocaleDateString()}
+                            </p>
+                          </div>
+                          <div className="flex items-center space-x-4">
+                            <p className="text-sm text-muted-foreground">
+                              {deficiencyCount(inspection.deficiencies)} deficiencies
+                            </p>
+                            <Badge
+                              variant={
+                                inspection.passed === true
+                                  ? "default"
+                                  : inspection.passed === false
+                                  ? "destructive"
+                                  : "secondary"
+                              }
+                            >
+                              {inspection.passed === true
+                                ? "passed"
+                                : inspection.passed === false
+                                ? "failed"
+                                : (inspection.status ?? "pending").replace(/_/g, " ")}
+                            </Badge>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </>
+          )}
+
           <Card>
             <CardHeader>
-              <CardTitle>Recent AI Inspections</CardTitle>
-              <CardDescription>
-                Latest quality inspections performed by AI computer vision
-              </CardDescription>
+              <CardTitle>Automated Photo Analysis</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
-                {mockInspections.map((inspection) => (
-                  <div key={inspection.id} className="flex items-center justify-between p-4 border rounded-lg">
-                    <div className="flex items-center space-x-4">
-                      <div>
-                        <p className="font-medium">{inspection.type} Inspection</p>
-                        <p className="text-sm text-muted-foreground">{inspection.date}</p>
-                      </div>
-                    </div>
-                    <div className="flex items-center space-x-4">
-                      <div className="text-right">
-                        <p className="font-medium">Score: {inspection.score}%</p>
-                        <p className="text-sm text-muted-foreground">{inspection.defects} defects</p>
-                      </div>
-                      <Badge
-                        variant={
-                          inspection.status === "completed"
-                            ? "default"
-                            : inspection.status === "requires_attention"
-                            ? "destructive"
-                            : "secondary"
-                        }
-                      >
-                        {inspection.status.replace("_", " ")}
-                      </Badge>
-                    </div>
-                  </div>
-                ))}
-              </div>
+              <p className="text-sm text-muted-foreground">
+                Computer-vision defect detection isn't available yet. The numbers above come from inspections your team records, not from AI scoring.
+              </p>
             </CardContent>
           </Card>
-
-          {/* AI Analysis Features */}
-          <div className="grid gap-4 md:grid-cols-2">
-            <Card>
-              <CardHeader>
-                <CardTitle>Computer Vision Analysis</CardTitle>
-                <CardDescription>
-                  Automated defect detection and quality assessment
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-2">
-                  <div className="flex justify-between">
-                    <span>Crack Detection</span>
-                    <span className="text-green-600">✓ Active</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Surface Quality</span>
-                    <span className="text-green-600">✓ Active</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Alignment Check</span>
-                    <span className="text-green-600">✓ Active</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Material Compliance</span>
-                    <span className="text-green-600">✓ Active</span>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Quality Trends</CardTitle>
-                <CardDescription>
-                  Quality score improvements over time
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-2">
-                  <div className="flex justify-between">
-                    <span>This Week</span>
-                    <span className="text-green-600">+5% improvement</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>This Month</span>
-                    <span className="text-green-600">+12% improvement</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Defect Reduction</span>
-                    <span className="text-green-600">-15% defects</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Compliance Rate</span>
-                    <span className="text-green-600">94% compliant</span>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
         </div>
       </PageLayout>
     </>

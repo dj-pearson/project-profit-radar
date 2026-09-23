@@ -5,11 +5,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { supabase } from '@/integrations/supabase/client';
-import { FileText, Code, PlayCircle, Search, BookOpen, Terminal, Copy, Check, TrendingUp, Eye } from 'lucide-react';
+import { FileText, Code, PlayCircle, Search, BookOpen, Copy, Check, TrendingUp, Eye } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 interface APIDoc {
@@ -36,10 +34,6 @@ export function DeveloperPortal() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedLanguage, setSelectedLanguage] = useState('javascript');
-  const [playgroundEndpoint, setPlaygroundEndpoint] = useState('');
-  const [playgroundMethod, setPlaygroundMethod] = useState('GET');
-  const [playgroundBody, setPlaygroundBody] = useState('');
-  const [playgroundResponse, setPlaygroundResponse] = useState('');
   const [copiedCode, setCopiedCode] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -75,8 +69,8 @@ export function DeveloperPortal() {
       }));
 
       setDocs(mappedDocs);
-      if (data && data.length > 0 && !selectedDoc) {
-        setSelectedDoc(data[0]);
+      if (mappedDocs.length > 0 && !selectedDoc) {
+        setSelectedDoc(mappedDocs[0]);
       }
     } catch (error: unknown) {
       toast({
@@ -119,35 +113,6 @@ export function DeveloperPortal() {
       description: 'Code copied to clipboard',
     });
     setTimeout(() => setCopiedCode(null), 2000);
-  };
-
-  const handleTestEndpoint = async () => {
-    try {
-      setPlaygroundResponse('Testing endpoint...');
-
-      // This is a demo - in production, this would make actual API calls
-      // through your API gateway with proper authentication
-
-      const mockResponse = {
-        status: 200,
-        data: {
-          message: 'Success',
-          endpoint: playgroundEndpoint,
-          method: playgroundMethod,
-          timestamp: new Date().toISOString(),
-        }
-      };
-
-      setPlaygroundResponse(JSON.stringify(mockResponse, null, 2));
-
-      toast({
-        title: 'Request Sent',
-        description: 'Check the response below',
-      });
-    } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : 'Unknown error';
-      setPlaygroundResponse(JSON.stringify({ error: message }, null, 2));
-    }
   };
 
   const getMethodColor = (method: string) => {
@@ -198,13 +163,13 @@ export function DeveloperPortal() {
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">API Requests</CardTitle>
+              <CardTitle className="text-sm font-medium">Doc Views</CardTitle>
               <TrendingUp className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{formatNumber(totalRequests)}</div>
               <p className="text-xs text-muted-foreground">
-                Total across all endpoints
+                Documentation page views, not API traffic
               </p>
             </CardContent>
           </Card>
@@ -521,68 +486,18 @@ print(response.json())`}
               <CardHeader>
                 <CardTitle>API Playground</CardTitle>
                 <CardDescription>
-                  Test API endpoints in real-time with interactive playground
+                  Not available yet
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="grid gap-4">
-                  {/* Method and Endpoint */}
-                  <div className="grid gap-4 md:grid-cols-4">
-                    <div>
-                      <Label>Method</Label>
-                      <Select value={playgroundMethod} onValueChange={setPlaygroundMethod}>
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="GET">GET</SelectItem>
-                          <SelectItem value="POST">POST</SelectItem>
-                          <SelectItem value="PUT">PUT</SelectItem>
-                          <SelectItem value="PATCH">PATCH</SelectItem>
-                          <SelectItem value="DELETE">DELETE</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="md:col-span-3">
-                      <Label>Endpoint</Label>
-                      <Input
-                        placeholder="/api/v1/projects"
-                        value={playgroundEndpoint}
-                        onChange={(e) => setPlaygroundEndpoint(e.target.value)}
-                      />
-                    </div>
-                  </div>
-
-                  {/* Request Body */}
-                  {playgroundMethod !== 'GET' && (
-                    <div>
-                      <Label>Request Body (JSON)</Label>
-                      <Textarea
-                        placeholder='{\n  "key": "value"\n}'
-                        value={playgroundBody}
-                        onChange={(e) => setPlaygroundBody(e.target.value)}
-                        rows={6}
-                        className="font-mono text-sm"
-                      />
-                    </div>
-                  )}
-
-                  {/* Send Button */}
-                  <Button onClick={handleTestEndpoint} className="w-full">
-                    <Terminal className="h-4 w-4 mr-2" />
-                    Send Request
-                  </Button>
-
-                  {/* Response */}
-                  {playgroundResponse && (
-                    <div>
-                      <Label>Response</Label>
-                      <pre className="bg-muted p-4 rounded-lg overflow-x-auto mt-2">
-                        <code className="text-sm">{playgroundResponse}</code>
-                      </pre>
-                    </div>
-                  )}
-                </div>
+                {/* US-370: this used to answer every request with a canned
+                    { status: 200, message: 'Success' } without calling anything.
+                    Until it can send a real authenticated request, say so. */}
+                <p className="text-sm text-muted-foreground">
+                  The playground doesn't send requests yet. Earlier versions showed a canned
+                  "200 Success" response for any endpoint, which told you nothing about the real API.
+                  To try an endpoint, copy the cURL example from the Code Examples tab and run it with your API key.
+                </p>
               </CardContent>
             </Card>
           </TabsContent>
@@ -593,7 +508,7 @@ print(response.json())`}
               <CardHeader>
                 <CardTitle>Popular Endpoints</CardTitle>
                 <CardDescription>
-                  Most frequently used API endpoints
+                  Most viewed endpoint documentation
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -615,7 +530,7 @@ print(response.json())`}
                           </div>
                           <div className="flex items-center gap-2 text-sm text-muted-foreground">
                             <Eye className="h-4 w-4" />
-                            {formatNumber(doc.usage_count)} requests
+                            {formatNumber(doc.usage_count)} views
                           </div>
                         </div>
                         <CardTitle className="text-base">{doc.title}</CardTitle>

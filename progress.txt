@@ -6612,3 +6612,15 @@ components that build canonicals. A scan test fails on a relative or off-host
 literal canonical. Six pages had canonicals and structured data on brikly.ai
 instead of brikly.net. Eighteen files pointed the schema logo at `/logo.png`,
 which doesn't exist; they now point at `/BriklyLogo.png`.
+
+## US-370 finished: four screens stop charting invented numbers
+
+`/admin/analytics` drew revenue, labour and efficiency from `Math.random` and
+hardcoded "+12.5%" badges. Revenue now comes from invoices, costs from
+`job_costs` (which it had been reading for every company and filtering in
+the browser), hours from `time_entries`, and trends from projects. Equipment
+use and efficiency have no source table, so the page says they aren't tracked.
+The AI quality-control page now shows real inspections instead of mock
+metrics. The developer portal's playground stops answering every request with
+a canned 200. The workflow tester stops reporting a random 90% success rate and
+now lists the actual step order.

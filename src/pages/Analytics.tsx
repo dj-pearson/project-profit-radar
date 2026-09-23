@@ -20,47 +20,50 @@ const PerformanceBenchmarking = React.lazy(() => import('@/components/analytics/
 const ResourceOptimization = React.lazy(() => import('@/components/analytics/ResourceOptimization'));
 const WorkflowAutomation = React.lazy(() => import('@/components/analytics/WorkflowAutomation'));
 import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, PieChart, Pie, Area, AreaChart } from 'recharts';
-import { TrendingUp, DollarSign, Building2, Target, Activity, BarChart3, Download } from 'lucide-react';
+import { TrendingUp, DollarSign, Building2, Target, Activity, Download } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import {
+  lastMonths,
+  buildRevenueByPeriod,
+  buildResourceUtilization,
+  buildTrendData,
+  buildStatusDistribution,
+  isSeriesEmpty,
+  type AnalyticsProjectRow,
+  type AnalyticsJobCostRow,
+  type AnalyticsTimeEntryRow,
+  type AnalyticsInvoiceRow,
+} from '@/lib/analyticsSeries';
+
+/** Shown in place of a chart when the queried rows hold nothing to plot. */
+const EmptyChart = ({ message }: { message: string }) => (
+  <div className="flex h-[300px] items-center justify-center rounded-lg border border-dashed p-6 text-center text-sm text-muted-foreground">
+    {message}
+  </div>
+);
 
 interface AnalyticsData {
   executiveMetrics: {
     totalRevenue: number;
     totalProjects: number;
-    activeUsers: number;
+    activeProjects: number;
     avgProfitMargin: number;
     projectsOnTime: number;
+    completedProjects: number;
     projectsOnBudget: number;
   };
   projectPerformance: Array<{
     projectId: string;
     projectName: string;
     budgetVariance: number;
-    scheduleVariance: number;
     profitMargin: number;
     completion: number;
   }>;
-  resourceUtilization: Array<{
-    period: string;
-    laborHours: number;
-    equipmentUsage: number;
-    materialCost: number;
-    efficiency: number;
-  }>;
-  revenueByPeriod: Array<{
-    period: string;
-    revenue: number;
-    costs: number;
-    profit: number;
-  }>;
-  trendData: Array<{
-    month: string;
-    projectsStarted: number;
-    projectsCompleted: number;
-    revenue: number;
-    avgProjectValue: number;
-  }>;
+  statusDistribution: ReturnType<typeof buildStatusDistribution>;
+  resourceUtilization: ReturnType<typeof buildResourceUtilization>;
+  revenueByPeriod: ReturnType<typeof buildRevenueByPeriod>;
+  trendData: ReturnType<typeof buildTrendData>;
 }
 
 const Analytics = () => {
@@ -88,32 +91,55 @@ const Analytics = () => {
   }, [user, userProfile, loading, navigate, selectedPeriod]);
 
   const loadAnalyticsData = useCallback(async () => {
+    const companyId = userProfile?.company_id;
+    if (!companyId) return;
     try {
       setAnalyticsLoading(true);
 
-      // Load projects and job costs in parallel
-      const [projectsResult, jobCostsResult] = await Promise.all([
-        supabase
-          .from('projects')
-          .select('*')
-          .eq('company_id', userProfile?.company_id),
-        supabase
-          .from('job_costs')
-          .select('*, projects(name)')
-      ]);
-
+      const projectsResult = await supabase
+        .from('projects')
+        .select('id, name, status, budget, start_date, end_date, completed_at, completion_percentage')
+        .eq('company_id', companyId);
       if (projectsResult.error) throw projectsResult.error;
-      if (jobCostsResult.error) throw jobCostsResult.error;
-
       const projects = projectsResult.data || [];
-      // Filter job costs to only include ones for our projects
-      const projectIds = new Set(projects.map(p => p.id));
-      const jobCosts = (jobCostsResult.data || []).filter(c => projectIds.has(c.project_id));
+      const projectIds = projects.map((p) => p.id);
 
-      // Process data
-      const processedData = processAnalyticsData(projects, jobCosts, []);
-      setAnalyticsData(processedData);
+      const months = lastMonths(12);
+      const since = `${months[0].key}-01`;
 
+      // Scoped by the company's project ids: job_costs.company_id and
+      // time_entries.company_id are nullable, so filtering on them would drop rows.
+      const [jobCostsResult, timeEntriesResult, invoicesResult] = projectIds.length
+        ? await Promise.all([
+            supabase
+              .from('job_costs')
+              .select('project_id, date, total_cost, material_cost')
+              .in('project_id', projectIds),
+            supabase
+              .from('time_entries')
+              .select('start_time, total_hours')
+              .in('project_id', projectIds)
+              .gte('start_time', since),
+            supabase
+              .from('invoices')
+              .select('issue_date, total_amount, status')
+              .eq('company_id', companyId)
+              .gte('issue_date', since),
+          ])
+        : [{ data: [], error: null }, { data: [], error: null }, { data: [], error: null }];
+
+      if (jobCostsResult.error) throw jobCostsResult.error;
+      if (timeEntriesResult.error) throw timeEntriesResult.error;
+      if (invoicesResult.error) throw invoicesResult.error;
+
+      setAnalyticsData(
+        processAnalyticsData(
+          projects,
+          (jobCostsResult.data || []) as AnalyticsJobCostRow[],
+          (timeEntriesResult.data || []) as AnalyticsTimeEntryRow[],
+          (invoicesResult.data || []) as AnalyticsInvoiceRow[],
+        ),
+      );
     } catch (error: unknown) {
       console.error('Error loading analytics:', error);
       toast({
@@ -126,91 +152,54 @@ const Analytics = () => {
     }
   }, [userProfile?.company_id, toast]);
 
-  const processAnalyticsData = (projects: any[], jobCosts: any[], timeEntries: any[]): AnalyticsData => {
-    // Calculate executive metrics
+  const processAnalyticsData = (
+    projects: Array<AnalyticsProjectRow & { name: string; end_date: string | null; completion_percentage: number | null }>,
+    jobCosts: AnalyticsJobCostRow[],
+    timeEntries: AnalyticsTimeEntryRow[],
+    invoices: AnalyticsInvoiceRow[],
+  ): AnalyticsData => {
+    const costOf = (projectId: string) =>
+      jobCosts.filter((c) => c.project_id === projectId).reduce((sum, c) => sum + (c.total_cost || 0), 0);
+
     const totalRevenue = projects.reduce((sum, p) => sum + (p.budget || 0), 0);
     const totalCosts = jobCosts.reduce((sum, c) => sum + (c.total_cost || 0), 0);
     const profitMargin = totalRevenue > 0 ? ((totalRevenue - totalCosts) / totalRevenue) * 100 : 0;
-    
-    const activeProjects = projects.filter(p => ['active', 'in_progress'].includes(p.status));
-    const completedProjects = projects.filter(p => p.status === 'completed');
-    const onTimeProjects = completedProjects.filter(p => 
-      new Date(p.actual_end_date || p.end_date) <= new Date(p.end_date)
-    );
-    const onBudgetProjects = completedProjects.filter(p => {
-      const projectCosts = jobCosts.filter(c => c.project_id === p.id).reduce((sum, c) => sum + (c.total_cost || 0), 0);
-      return projectCosts <= (p.budget || 0);
-    });
 
-    // Project performance data
-    const projectPerformance = projects.map(project => {
-      const projectCosts = jobCosts.filter(c => c.project_id === project.id).reduce((sum, c) => sum + (c.total_cost || 0), 0);
-      const budgetVariance = ((projectCosts - (project.budget || 0)) / (project.budget || 1)) * 100;
-      const profitMargin = project.budget > 0 ? ((project.budget - projectCosts) / project.budget) * 100 : 0;
-      
+    const activeProjects = projects.filter((p) => ['active', 'in_progress'].includes(p.status ?? ''));
+    const completedProjects = projects.filter((p) => p.status === 'completed');
+    const onTimeProjects = completedProjects.filter(
+      (p) => p.end_date && p.completed_at && new Date(p.completed_at) <= new Date(p.end_date),
+    );
+    const onBudgetProjects = completedProjects.filter((p) => costOf(p.id) <= (p.budget || 0));
+
+    const projectPerformance = projects.map((project) => {
+      const projectCosts = costOf(project.id);
+      const budget = project.budget || 0;
       return {
         projectId: project.id,
         projectName: project.name,
-        budgetVariance,
-        scheduleVariance: 0, // Calculate based on timeline
-        profitMargin,
-        completion: project.completion_percentage || 0
+        budgetVariance: ((projectCosts - budget) / (budget || 1)) * 100,
+        profitMargin: budget > 0 ? ((budget - projectCosts) / budget) * 100 : 0,
+        completion: project.completion_percentage || 0,
       };
     });
 
-    // Resource utilization (mock data for demonstration)
-    const resourceUtilization = Array.from({ length: 12 }, (_, i) => {
-      const month = new Date();
-      month.setMonth(month.getMonth() - i);
-      return {
-        period: month.toLocaleDateString('en-US', { month: 'short', year: 'numeric' }),
-        laborHours: Math.floor(Math.random() * 1000) + 500,
-        equipmentUsage: Math.floor(Math.random() * 80) + 60,
-        materialCost: Math.floor(Math.random() * 50000) + 20000,
-        efficiency: Math.floor(Math.random() * 20) + 75
-      };
-    }).reverse();
-
-    // Revenue by period
-    const revenueByPeriod = Array.from({ length: 12 }, (_, i) => {
-      const month = new Date();
-      month.setMonth(month.getMonth() - i);
-      const monthlyRevenue = Math.floor(Math.random() * 100000) + 50000;
-      const monthlyCosts = monthlyRevenue * 0.7;
-      return {
-        period: month.toLocaleDateString('en-US', { month: 'short', year: 'numeric' }),
-        revenue: monthlyRevenue,
-        costs: monthlyCosts,
-        profit: monthlyRevenue - monthlyCosts
-      };
-    }).reverse();
-
-    // Trend data
-    const trendData = Array.from({ length: 12 }, (_, i) => {
-      const month = new Date();
-      month.setMonth(month.getMonth() - i);
-      return {
-        month: month.toLocaleDateString('en-US', { month: 'short' }),
-        projectsStarted: Math.floor(Math.random() * 5) + 1,
-        projectsCompleted: Math.floor(Math.random() * 3) + 1,
-        revenue: Math.floor(Math.random() * 100000) + 50000,
-        avgProjectValue: Math.floor(Math.random() * 50000) + 25000
-      };
-    }).reverse();
-
+    const months = lastMonths(12);
     return {
       executiveMetrics: {
         totalRevenue,
         totalProjects: projects.length,
-        activeUsers: 0, // Would need user activity data
+        activeProjects: activeProjects.length,
         avgProfitMargin: profitMargin,
         projectsOnTime: onTimeProjects.length,
-        projectsOnBudget: onBudgetProjects.length
+        completedProjects: completedProjects.length,
+        projectsOnBudget: onBudgetProjects.length,
       },
       projectPerformance,
-      resourceUtilization,
-      revenueByPeriod,
-      trendData
+      statusDistribution: buildStatusDistribution(projects),
+      resourceUtilization: buildResourceUtilization(months, timeEntries, jobCosts),
+      revenueByPeriod: buildRevenueByPeriod(months, invoices, jobCosts),
+      trendData: buildTrendData(months, projects),
     };
   };
 
@@ -231,8 +220,8 @@ const Analytics = () => {
       label: "Labor Hours",
       color: "hsl(var(--chart-4))",
     },
-    efficiency: {
-      label: "Efficiency %",
+    materialCost: {
+      label: "Material Cost",
       color: "hsl(var(--chart-5))",
     }
   };
@@ -299,52 +288,34 @@ const Analytics = () => {
             {/* Executive KPIs */}
             <div className={mobileGridClasses.stats}>
               <KPICard
-                title="Total Revenue"
+                title="Contract Value"
                 value={`$${(analyticsData.executiveMetrics.totalRevenue / 1000).toFixed(0)}K`}
                 icon={DollarSign}
-                subtitle="All projects"
-                change="+12.5%"
-                changeType="positive"
+                subtitle="Sum of project budgets"
               />
               <KPICard
                 title="Active Projects"
-                value={analyticsData.executiveMetrics.totalProjects}
+                value={analyticsData.executiveMetrics.activeProjects}
                 icon={Building2}
-                subtitle="In portfolio"
-                change="+3"
-                changeType="positive"
+                subtitle={`${analyticsData.executiveMetrics.totalProjects} in portfolio`}
               />
               <KPICard
                 title="Profit Margin"
                 value={`${analyticsData.executiveMetrics.avgProfitMargin.toFixed(1)}%`}
                 icon={TrendingUp}
-                subtitle="Average"
-                change="+2.1%"
-                changeType="positive"
+                subtitle="Budgets vs. job costs"
               />
               <KPICard
                 title="On-Time Projects"
-                value={`${analyticsData.executiveMetrics.projectsOnTime}/${analyticsData.executiveMetrics.totalProjects}`}
+                value={`${analyticsData.executiveMetrics.projectsOnTime}/${analyticsData.executiveMetrics.completedProjects}`}
                 icon={Target}
-                subtitle="Delivery rate"
-                change="92%"
-                changeType="positive"
+                subtitle="Completed by end date"
               />
               <KPICard
                 title="On-Budget Projects"
-                value={`${analyticsData.executiveMetrics.projectsOnBudget}/${analyticsData.executiveMetrics.totalProjects}`}
+                value={`${analyticsData.executiveMetrics.projectsOnBudget}/${analyticsData.executiveMetrics.completedProjects}`}
                 icon={Activity}
-                subtitle="Budget control"
-                change="87%"
-                changeType="positive"
-              />
-              <KPICard
-                title="Efficiency Score"
-                value="89%"
-                icon={BarChart3}
-                subtitle="Overall performance"
-                change="+5%"
-                changeType="positive"
+                subtitle="Completed within budget"
               />
             </div>
 
@@ -353,9 +324,12 @@ const Analytics = () => {
               <Card>
                 <CardHeader>
                   <CardTitle>Revenue & Profit Trends</CardTitle>
-                  <CardDescription>Monthly financial performance</CardDescription>
+                  <CardDescription>Invoiced revenue (excluding drafts and cancelled) and job costs by month</CardDescription>
                 </CardHeader>
                 <CardContent>
+                  {isSeriesEmpty(analyticsData.revenueByPeriod, ['revenue', 'costs']) ? (
+                    <EmptyChart message="No invoices or job costs in the last 12 months." />
+                  ) : (
                   <DeferredChartContainer config={chartConfig} className="h-[300px]">
                     <AreaChart data={analyticsData.revenueByPeriod}>
                       <CartesianGrid strokeDasharray="3 3" />
@@ -383,6 +357,7 @@ const Analytics = () => {
                       />
                     </AreaChart>
                   </DeferredChartContainer>
+                  )}
                 </CardContent>
               </Card>
 
@@ -392,15 +367,13 @@ const Analytics = () => {
                   <CardDescription>Current project distribution</CardDescription>
                 </CardHeader>
                 <CardContent>
+                  {analyticsData.statusDistribution.length === 0 ? (
+                    <EmptyChart message="No projects yet." />
+                  ) : (
                   <DeferredChartContainer config={chartConfig} className="h-[300px]">
                     <PieChart>
                       <Pie
-                        data={[
-                          { name: 'Completed', value: 35, fill: 'hsl(var(--chart-1))' },
-                          { name: 'In Progress', value: 45, fill: 'hsl(var(--chart-2))' },
-                          { name: 'Planning', value: 15, fill: 'hsl(var(--chart-3))' },
-                          { name: 'On Hold', value: 5, fill: 'hsl(var(--chart-4))' }
-                        ]}
+                        data={analyticsData.statusDistribution}
                         cx="50%"
                         cy="50%"
                         outerRadius={80}
@@ -410,6 +383,7 @@ const Analytics = () => {
                       <ChartTooltip content={<ChartTooltipContent />} />
                     </PieChart>
                   </DeferredChartContainer>
+                  )}
                 </CardContent>
               </Card>
             </ResponsiveGrid>
@@ -454,10 +428,13 @@ const Analytics = () => {
             <ResponsiveGrid cols={{ default: 1, lg: 2 }}>
               <Card>
                 <CardHeader>
-                  <CardTitle>Labor Utilization</CardTitle>
-                  <CardDescription>Monthly labor hours and efficiency</CardDescription>
+                  <CardTitle>Labor Hours</CardTitle>
+                  <CardDescription>Hours logged in time entries, by month</CardDescription>
                 </CardHeader>
                 <CardContent>
+                  {isSeriesEmpty(analyticsData.resourceUtilization, ['laborHours']) ? (
+                    <EmptyChart message="No time entries in the last 12 months." />
+                  ) : (
                   <DeferredChartContainer config={chartConfig} className="h-[300px]">
                     <LineChart data={analyticsData.resourceUtilization}>
                       <CartesianGrid strokeDasharray="3 3" />
@@ -472,49 +449,44 @@ const Analytics = () => {
                       />
                     </LineChart>
                   </DeferredChartContainer>
+                  )}
                 </CardContent>
               </Card>
 
               <Card>
                 <CardHeader>
-                  <CardTitle>Efficiency Trends</CardTitle>
-                  <CardDescription>Resource efficiency over time</CardDescription>
+                  <CardTitle>Material Spend</CardTitle>
+                  <CardDescription>Material cost from job costs, last 6 months</CardDescription>
                 </CardHeader>
                 <CardContent>
+                  {isSeriesEmpty(analyticsData.resourceUtilization.slice(-6), ['materialCost']) ? (
+                    <EmptyChart message="No material costs recorded in the last 6 months." />
+                  ) : (
                   <DeferredChartContainer config={chartConfig} className="h-[300px]">
-                    <LineChart data={analyticsData.resourceUtilization}>
+                    <BarChart data={analyticsData.resourceUtilization.slice(-6)}>
                       <CartesianGrid strokeDasharray="3 3" />
                       <XAxis dataKey="period" />
                       <YAxis />
-                      <ChartTooltip content={<ChartTooltipContent />} />
-                      <Line
-                        type="monotone"
-                        dataKey="efficiency"
-                        stroke="var(--color-efficiency)"
-                        strokeWidth={2}
+                      <ChartTooltip
+                        content={<ChartTooltipContent />}
+                        formatter={(value) => [`$${Number(value).toLocaleString()}`, 'Material Cost']}
                       />
-                    </LineChart>
+                      <Bar dataKey="materialCost" fill="var(--color-materialCost)" />
+                    </BarChart>
                   </DeferredChartContainer>
+                  )}
                 </CardContent>
               </Card>
             </ResponsiveGrid>
 
             <Card>
               <CardHeader>
-                <CardTitle>Resource Allocation</CardTitle>
-                <CardDescription>Current resource distribution across projects</CardDescription>
+                <CardTitle>Equipment Usage and Efficiency</CardTitle>
               </CardHeader>
               <CardContent>
-                <DeferredChartContainer config={chartConfig} className="h-[300px]">
-                  <BarChart data={analyticsData.resourceUtilization.slice(-6)}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="period" />
-                    <YAxis />
-                    <ChartTooltip content={<ChartTooltipContent />} />
-                    <Bar dataKey="materialCost" fill="var(--color-revenue)" />
-                    <Bar dataKey="laborHours" fill="var(--color-costs)" />
-                  </BarChart>
-                </DeferredChartContainer>
+                <p className="text-sm text-muted-foreground">
+                  Brikly doesn't track equipment utilization or a crew efficiency score yet, so there is nothing to chart here.
+                </p>
               </CardContent>
             </Card>
           </TabsContent>
@@ -527,6 +499,9 @@ const Analytics = () => {
                   <CardDescription>Projects started vs completed by month</CardDescription>
                 </CardHeader>
                 <CardContent>
+                  {isSeriesEmpty(analyticsData.trendData, ['projectsStarted', 'projectsCompleted']) ? (
+                    <EmptyChart message="No projects started or completed in the last 12 months." />
+                  ) : (
                   <DeferredChartContainer config={chartConfig} className="h-[300px]">
                     <BarChart data={analyticsData.trendData}>
                       <CartesianGrid strokeDasharray="3 3" />
@@ -537,15 +512,19 @@ const Analytics = () => {
                       <Bar dataKey="projectsCompleted" fill="var(--color-profit)" />
                     </BarChart>
                   </DeferredChartContainer>
+                  )}
                 </CardContent>
               </Card>
 
               <Card>
                 <CardHeader>
                   <CardTitle>Average Project Value</CardTitle>
-                  <CardDescription>Project value trends over time</CardDescription>
+                  <CardDescription>Average budget of projects started each month</CardDescription>
                 </CardHeader>
                 <CardContent>
+                  {isSeriesEmpty(analyticsData.trendData, ['avgProjectValue']) ? (
+                    <EmptyChart message="No projects with a budget started in the last 12 months." />
+                  ) : (
                   <DeferredChartContainer config={chartConfig} className="h-[300px]">
                     <LineChart data={analyticsData.trendData}>
                       <CartesianGrid strokeDasharray="3 3" />
@@ -560,39 +539,15 @@ const Analytics = () => {
                         dataKey="avgProjectValue"
                         stroke="var(--color-revenue)"
                         strokeWidth={3}
+                        connectNulls
                       />
                     </LineChart>
                   </DeferredChartContainer>
+                  )}
                 </CardContent>
               </Card>
             </ResponsiveGrid>
 
-            <Card>
-              <CardHeader>
-                <CardTitle>Business Growth Indicators</CardTitle>
-                <CardDescription>Key metrics indicating business trajectory</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <ResponsiveGrid cols={{ default: 1, sm: 2, lg: 4 }}>
-                  <div className="p-4 bg-muted/50 rounded-lg">
-                    <div className="text-2xl font-bold text-foreground">+23%</div>
-                    <p className="text-sm text-muted-foreground">Revenue Growth (YoY)</p>
-                  </div>
-                  <div className="p-4 bg-muted/50 rounded-lg">
-                    <div className="text-2xl font-bold text-foreground">+15%</div>
-                    <p className="text-sm text-muted-foreground">Project Count Growth</p>
-                  </div>
-                  <div className="p-4 bg-muted/50 rounded-lg">
-                    <div className="text-2xl font-bold text-foreground">+8%</div>
-                    <p className="text-sm text-muted-foreground">Avg Project Value</p>
-                  </div>
-                  <div className="p-4 bg-muted/50 rounded-lg">
-                    <div className="text-2xl font-bold text-foreground">92%</div>
-                    <p className="text-sm text-muted-foreground">Client Retention</p>
-                  </div>
-                </ResponsiveGrid>
-              </CardContent>
-            </Card>
           </TabsContent>
 
           <TabsContent value="predictive">
